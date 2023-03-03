@@ -4,7 +4,7 @@ from operator import itemgetter
 from django.db import transaction
 from django.db.models import Q, QuerySet
 from django.utils.functional import cached_property
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
 from rest_framework.serializers import ValidationError

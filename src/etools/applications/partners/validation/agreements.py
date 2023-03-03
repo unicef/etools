@@ -209,3 +209,6 @@ class AgreementValid(CompleteValidation):
         if not today > agreement.end:
             raise StateValidationError([_('Today is not after the end date')])
         return True
+
+    def map_errors(self, errors):
+        return [_(self.VALID_ERRORS.get(error, error)) if isinstance(error, str) else error for error in errors]
