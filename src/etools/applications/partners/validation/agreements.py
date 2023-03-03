@@ -29,10 +29,10 @@ def agreement_transition_to_signed_valid(agreement):
         raise TransitionError(['agreement_transition_to_active_invalid_PCA'])
 
     if not agreement.start or agreement.start > today:
-        raise TransitionError(['Agreement cannot transition to signed until '
-                               'the start date is less than or equal to today'])
+        raise TransitionError([_('Agreement cannot transition to signed until '
+                                 'the start date is less than or equal to today')])
     if not agreement.end:
-        raise TransitionError(['Agreement cannot transition to signed unless the end date is defined'])
+        raise TransitionError([_('Agreement cannot transition to signed unless the end date is defined')])
 
     return True
 
@@ -151,14 +151,14 @@ class AgreementValid(CompleteValidation):
     ]
 
     VALID_ERRORS = {
-        'one_pca_per_cp_per_partner': 'A PCA with this partner already exists for this Country Programme Cycle. '
-                                      'If the record is in "Draft" status please edit that record.',
-        'start_end_dates_valid': 'Agreement start date needs to be earlier than or the same as the end date',
+        'one_pca_per_cp_per_partner': _('A PCA with this partner already exists for this Country Programme Cycle. '
+                                        'If the record is in "Draft" status please edit that record.'),
+        'start_end_dates_valid': _('Agreement start date needs to be earlier than or the same as the end date'),
         'generic_transition_fail': 'GENERIC TRANSITION FAIL',
-        'agreement_transition_to_active_invalid_PCA': "You cannot have more than 1 PCA active per Partner within 1 CP",
-        'partner_type_valid_cso': 'Partner must be CSO in order to create a PCA.',
-        'amendments_valid': {'signed_amendment': ['Please check that the Document is attached and'
-                                                  ' signatures are not in the future']},
+        'agreement_transition_to_active_invalid_PCA': _("You cannot have more than 1 PCA active per Partner within 1 CP"),
+        'partner_type_valid_cso': _('Partner must be CSO in order to create a PCA.'),
+        'amendments_valid': {'signed_amendment': [_('Please check that the Document is attached and'
+                                                    ' signatures are not in the future')]},
     }
 
     PERMISSIONS_CLASS = AgreementPermissions
@@ -167,7 +167,9 @@ class AgreementValid(CompleteValidation):
         required_fields = [f for f in self.permissions['required'] if self.permissions['required'][f] is True]
         required_valid, field = check_required_fields(intervention, required_fields)
         if not required_valid:
-            raise StateValidationError(['Required fields not completed in {}: {}'.format(intervention.status, field)])
+            raise StateValidationError([
+                _('Required fields not completed in %(status)s: %(field)s')
+                % {'status': intervention.status, 'field': field}])
 
     def check_rigid_fields(self, intervention, related=False):
         # this can be set if running in a task and old_instance is not set
@@ -176,7 +178,9 @@ class AgreementValid(CompleteValidation):
         rigid_fields = [f for f in self.permissions['edit'] if self.permissions['edit'][f] is False]
         rigid_valid, field = check_rigid_fields(intervention, rigid_fields, related=related)
         if not rigid_valid:
-            raise StateValidationError(['Cannot change fields while in {}: {}'.format(intervention.status, field)])
+            raise StateValidationError([
+                _('Cannot change fields while in %(status)s: %(field)s')
+                % {'status': intervention.status, 'field': field}])
 
     def state_draft_valid(self, agreement, user=None):
         # for SSFAs there will be no states valid since the states are forced by the Interventions

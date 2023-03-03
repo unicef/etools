@@ -146,12 +146,12 @@ class InterventionAmendmentCUSerializer(AttachmentSerializerMixin, serializers.M
 
     def validate_signed_by_unicef_date(self, value):
         if value and value > date.today():
-            raise ValidationError("Date cannot be in the future!")
+            raise ValidationError(_("Date cannot be in the future!"))
         return value
 
     def validate_signed_by_partner_date(self, value):
         if value and value > date.today():
-            raise ValidationError("Date cannot be in the future!")
+            raise ValidationError(_("Date cannot be in the future!"))
         return value
 
     def validate(self, data):
@@ -159,11 +159,11 @@ class InterventionAmendmentCUSerializer(AttachmentSerializerMixin, serializers.M
 
         if 'intervention' in data:
             if data['intervention'].agreement.partner.blocked is True:
-                raise ValidationError("Cannot add a new amendment while the partner is blocked in Vision.")
+                raise ValidationError(_("Cannot add a new amendment while the partner is blocked in Vision."))
 
         if InterventionAmendment.OTHER in data["types"]:
             if "other_description" not in data or not data["other_description"]:
-                raise ValidationError("Other description required, if type 'Other' selected.")
+                raise ValidationError(_("Other description required, if type 'Other' selected."))
 
         return data
 
@@ -181,9 +181,9 @@ class PlannedVisitsCUSerializer(serializers.ModelSerializer):
                 pk=self.initial_data.get("id"),
             )
             if self.instance.intervention.agreement.partner.partner_type == PartnerType.GOVERNMENT:
-                raise ValidationError("Planned Visit to be set only at Partner level")
+                raise ValidationError(_("Planned Visit to be set only at Partner level"))
             if self.instance.intervention.status == Intervention.TERMINATED:
-                raise ValidationError("Planned Visit cannot be set for Terminated interventions")
+                raise ValidationError(_("Planned Visit cannot be set for Terminated interventions"))
 
         except self.Meta.model.DoesNotExist:
             self.instance = None
@@ -406,7 +406,7 @@ class InterventionAttachmentSerializer(AttachmentSerializerMixin, serializers.Mo
     def update(self, instance, validated_data):
         intervention = validated_data.get('intervention', instance.intervention)
         if intervention and intervention.status in [Intervention.ENDED, Intervention.CLOSED, Intervention.TERMINATED]:
-            raise ValidationError('An attachment cannot be changed in statuses "Ended, Closed or Terminated"')
+            raise ValidationError(_('An attachment cannot be changed in statuses "Ended, Closed or Terminated"'))
         return super().update(instance, validated_data)
 
     class Meta:
@@ -510,14 +510,14 @@ class InterventionResultLinkSimpleCUSerializer(FullInterventionSnapshotSerialize
     def update(self, instance, validated_data):
         intervention = validated_data.get('intervention', instance.intervention)
         if intervention and intervention.agreement.partner.blocked is True:
-            raise ValidationError("An Output cannot be updated for a partner that is blocked in Vision")
+            raise ValidationError(_("An Output cannot be updated for a partner that is blocked in Vision"))
 
         return super().update(instance, validated_data)
 
     def create(self, validated_data):
         intervention = validated_data.get('intervention')
         if intervention and intervention.agreement.partner.blocked is True:
-            raise ValidationError("An Output cannot be updated for a partner that is blocked in Vision")
+            raise ValidationError(_("An Output cannot be updated for a partner that is blocked in Vision"))
         return super().create(validated_data)
 
     class Meta:
@@ -555,7 +555,7 @@ class InterventionResultCUSerializer(serializers.ModelSerializer):
                 try:
                     ll_result_instance = LowerResult.objects.get(pk=instance_id)
                 except LowerResult.DoesNotExist:
-                    raise ValidationError('lower_result has an id but cannot be found in the db')
+                    raise ValidationError(_('lower_result has an id but cannot be found in the db'))
 
                 ll_result_serializer = LowerResultCUSerializer(
                     instance=ll_result_instance,
@@ -597,7 +597,7 @@ class InterventionReportingPeriodSerializer(serializers.ModelSerializer):
         """
         if self.instance and value != self.instance.intervention:
             raise ValidationError(
-                'Cannot change the intervention that this reporting period is associated with.')
+                _('Cannot change the intervention that this reporting period is associated with.'))
         return value
 
     def check_date_order(self, start_date, end_date, due_date):
@@ -605,9 +605,9 @@ class InterventionReportingPeriodSerializer(serializers.ModelSerializer):
         Validate that start_date <= end_date <= due_date.
         """
         if start_date > end_date:
-            raise ValidationError('end_date must be on or after start_date')
+            raise ValidationError(_('end_date must be on or after start_date'))
         if end_date > due_date:
-            raise ValidationError('due_date must be on or after end_date')
+            raise ValidationError(_('due_date must be on or after end_date'))
 
     def check_for_overlapping_periods(self, intervention_pk, start_date, end_date):
         """
@@ -619,7 +619,7 @@ class InterventionReportingPeriodSerializer(serializers.ModelSerializer):
             periods = periods.exclude(pk=self.instance.pk)
         # How to identify overlapping periods: https://stackoverflow.com/a/325939/347942
         if periods.filter(start_date__lt=end_date).filter(end_date__gt=start_date).exists():
-            raise ValidationError('This period overlaps an existing reporting period.')
+            raise ValidationError(_('This period overlaps an existing reporting period.'))
 
     def validate(self, data):
         """
@@ -726,8 +726,8 @@ class InterventionCreateUpdateSerializer(
         for fr in frs:
             if fr.intervention:
                 if (self.instance is None) or (not self.instance.id) or (fr.intervention.id != self.instance.id):
-                    raise ValidationError(['One or more of the FRs selected is related to a different PD/SPD,'
-                                           ' {}'.format(fr.fr_number)])
+                    raise ValidationError([
+                        _('One or more of the FRs selected is related to a different PD/SPD, %s') % fr.fr_number])
             else:
                 pass
                 # unicef/etools-issues:779
@@ -741,9 +741,7 @@ class InterventionCreateUpdateSerializer(
     def _validate_character_limitation(self, value, limit=5000):
         if value and len(value) > limit:
             raise serializers.ValidationError(
-                "This field is limited to {} or less characters.".format(
-                    limit,
-                ),
+                _("This field is limited to %d or less characters.") % limit
             )
         return value
 
@@ -1094,7 +1092,7 @@ class InterventionReportingRequirementCreateSerializer(
             raise serializers.ValidationError({
                 "reporting_requirements": {
                     "start_date": _(
-                        "Start date needs to be on or after PD start date."
+                        _("Start date needs to be on or after PD start date.")
                     )
                 }
             })
@@ -1106,7 +1104,7 @@ class InterventionReportingRequirementCreateSerializer(
             raise serializers.ValidationError({
                 "reporting_requirements": {
                     "end_date": _(
-                        "End date needs to be on or before PD end date."
+                        _("End date needs to be on or before PD end date.")
                     )
                 }
             })
@@ -1118,7 +1116,7 @@ class InterventionReportingRequirementCreateSerializer(
                 raise serializers.ValidationError({
                     "reporting_requirements": {
                         "start_date": _(
-                            "End date needs to be after the start date."
+                            _("End date needs to be after the start date.")
                         )
                     }
                 })
@@ -1128,7 +1126,7 @@ class InterventionReportingRequirementCreateSerializer(
                     raise serializers.ValidationError({
                         "reporting_requirements": {
                             "start_date": _(
-                                "Next start date needs to be one day after previous end date."
+                                _("Next start date needs to be one day after previous end date.")
                             )
                         }
                     })
@@ -1231,9 +1229,9 @@ class InterventionReportingRequirementCreateSerializer(
                 req = ReportingRequirement.objects.get(pk=rr_id)
                 assert req.intervention.id == self.intervention.id
             except ReportingRequirement.DoesNotExist:
-                raise serializers.ValidationError("Requirement ID passed in does not exist")
+                raise serializers.ValidationError(_("Requirement ID passed in does not exist"))
             except AssertionError:
-                raise serializers.ValidationError("Requirement ID passed in belongs to a different intervention")
+                raise serializers.ValidationError(_("Requirement ID passed in belongs to a different intervention"))
             except KeyError:
                 pass
 
@@ -1260,7 +1258,7 @@ class InterventionReportingRequirementCreateSerializer(
 
         if not self._past_records_editable:
             if deletable_records.filter(start_date__lte=today).exists():
-                raise ValidationError("You're trying to delete a record that has a start date in the past")
+                raise ValidationError(_("You're trying to delete a record that has a start date in the past"))
 
         deletable_records.delete()
 
@@ -1271,8 +1269,8 @@ class InterventionReportingRequirementCreateSerializer(
                 # if this is a record that starts in the past and it's not editable and has changes (hash is different)
                 if r['start_date'] <= today and not self._past_records_editable and\
                         not current_reqs_dict.get(h11(self._get_hash_key_string(r))):
-                    raise ValidationError("A record that starts in the passed cannot"
-                                          " be modified on a non-draft PD/SPD")
+                    raise ValidationError(_("A record that starts in the passed cannot"
+                                          " be modified on a non-draft PD/SPD"))
                 ReportingRequirement.objects.filter(pk=pk).update(**r)
             else:
                 ReportingRequirement.objects.create(**r)

@@ -5,6 +5,7 @@ from datetime import date, datetime
 from django.db import models, transaction
 from django.db.models import Case, DateTimeField, DurationField, ExpressionWrapper, F, Max, OuterRef, Q, Subquery, When
 from django.shortcuts import get_object_or_404
+from django.utils.translation import gettext as _
 
 from etools_validator.mixins import ValidatorViewMixin
 from rest_framework import status
@@ -143,7 +144,7 @@ class PartnerOrganizationListAPIView(ExternalModuleFilterMixin, QueryStringFilte
                 try:
                     ids = [int(x) for x in query_params.get("values").split(",")]
                 except ValueError:
-                    raise ValidationError("ID values must be integers")
+                    raise ValidationError(_("ID values must be integers"))
                 else:
                     return PartnerOrganization.objects.filter(id__in=ids)
             queries = []
@@ -460,7 +461,7 @@ class PartnerOrganizationAssessmentUpdateDeleteView(RetrieveUpdateDestroyAPIView
     def delete(self, request, *args, **kwargs):
         instance = self.get_object()
         if instance.completed_date or instance.report:
-            raise ValidationError("Cannot delete a completed assessment")
+            raise ValidationError(_("Cannot delete a completed assessment"))
         return super().delete(request, *args, **kwargs)
 
 
@@ -473,7 +474,7 @@ class PartnerOrganizationAddView(CreateAPIView):
     def create(self, request, *args, **kwargs):
         vendor = self.request.query_params.get('vendor', None)
         if vendor is None:
-            return Response({"error": "No vendor number provided for Partner Organization"},
+            return Response({"error": _("No vendor number provided for Partner Organization")},
                             status=status.HTTP_400_BAD_REQUEST)
 
         error = sync_partner(vendor, request.user.profile.country)
@@ -495,12 +496,14 @@ class PartnerOrganizationDeleteView(DestroyAPIView):
         except PartnerOrganization.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
         if partner.agreements.exclude(status='draft').count() > 0:
-            raise ValidationError("There was a PCA/SSFA signed with this partner or a transaction was performed "
-                                  "against this partner. The Partner record cannot be deleted")
+            raise ValidationError(
+                _("There was a PCA/SSFA signed with this partner or a transaction was performed "
+                  "against this partner. The Partner record cannot be deleted")
+            )
         elif TravelActivity.objects.filter(partner=partner).count() > 0:
-            raise ValidationError("This partner has trips associated to it")
+            raise ValidationError(_("This partner has trips associated to it"))
         elif (partner.total_ct_cp or 0) > 0:
-            raise ValidationError("This partner has cash transactions associated to it")
+            raise ValidationError(_("This partner has cash transactions associated to it"))
         else:
             partner.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
