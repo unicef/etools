@@ -484,8 +484,8 @@ class InterventionValid(CompleteValidation):
     def map_errors(self, errors):
         error_list = []
         for error in errors:
-            error_value = self.VALID_ERRORS.get(error, error)
             if isinstance(error, str):
+                error_value = self.VALID_ERRORS.get(error, error)
                 if isinstance(error_value, str):
                     error_list.append(_(error_value))
                 else:
