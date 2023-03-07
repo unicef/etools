@@ -1,4 +1,4 @@
-from django.db import transaction
+from django.db import connection, transaction
 from django.http import HttpResponseForbidden
 from django.urls import reverse
 from django.utils import timezone
@@ -23,6 +23,7 @@ from etools.applications.partners.serializers.interventions_v3 import (
     InterventionReviewActionSerializer,
     InterventionReviewSendBackSerializer,
 )
+from etools.applications.partners.tasks import send_pd_to_vision
 from etools.applications.partners.views.interventions_v3 import InterventionDetailAPIView, PMPInterventionMixin
 
 
@@ -664,6 +665,9 @@ class PMPAmendedInterventionMerge(InterventionDetailAPIView):
                   'This can be caused by parallel merged amendment or changed original intervention. '
                   'Amendment should be re-created.') % {'field': ex.field, 'instance': ex.instance}
             )
+
+        transaction.on_commit(lambda: send_pd_to_vision.delay(connection.tenant.name, pd.pk))
+
         return Response(
             InterventionDetailSerializer(
                 amendment.intervention,

@@ -280,12 +280,12 @@ class PartnerOrganization(TimeStampedModel):
     RATING_NOT_ASSESSED = 'Not Assessed'
 
     PSEA_RISK_RATINGS = (
-        (PSEA_RATING_HIGH, PSEA_RATING_HIGH),
-        (PSEA_RATING_MEDIUM, PSEA_RATING_MEDIUM),
-        (PSEA_RATING_LOW, PSEA_RATING_LOW),
-        (RATING_HIGH_RISK_ASSUMED, RATING_HIGH_RISK_ASSUMED),
-        (RATING_LOW_RISK_ASSUMED, RATING_LOW_RISK_ASSUMED),
-        (RATING_NOT_ASSESSED, RATING_NOT_ASSESSED)
+        (PSEA_RATING_HIGH, _('Low Capacity (High Risk)')),
+        (PSEA_RATING_MEDIUM, _('Medium Capacity (Moderate Risk)')),
+        (PSEA_RATING_LOW, _('Full Capacity (Low Risk)')),
+        (RATING_HIGH_RISK_ASSUMED, _('Low Capacity Assumed - Emergency')),
+        (RATING_LOW_RISK_ASSUMED, _('No Contact with Beneficiaries')),
+        (RATING_NOT_ASSESSED, _('Not Assessed'))
     )
 
     ALL_COMBINED_RISK_RATING = RISK_RATINGS + PSEA_RISK_RATINGS

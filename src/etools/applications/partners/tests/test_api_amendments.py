@@ -1,10 +1,10 @@
 import datetime
-from unittest import skip
+from unittest import mock, skip
 
 from django.core.management import call_command
 from django.test import override_settings
 from django.urls import reverse
-from django.utils import timezone
+from django.utils import timezone, translation
 
 from rest_framework import status
 from rest_framework.exceptions import ErrorDetail
@@ -202,6 +202,27 @@ class TestInterventionAmendments(BaseTenantTestCase):
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
         self.assertEquals(response.data['intervention'], self.active_intervention.pk)
 
+    def test_create_amendment_not_unique_error_translated(self):
+        InterventionAmendmentFactory(
+            intervention=self.active_intervention, kind=InterventionAmendment.KIND_NORMAL,
+        )
+        with translation.override('fr'):
+            response = self.forced_auth_req(
+                'post',
+                reverse('partners_api:intervention-amendments-add', args=[self.active_intervention.pk]),
+                UserFactory(is_staff=True, groups__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
+                data={
+                    'types': [InterventionAmendment.TYPE_CHANGE],
+                    'kind': InterventionAmendment.KIND_NORMAL,
+                },
+                request_format='multipart',
+            )
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.data['non_field_errors'][0],
+            "On ne peut pas ajouter un nouvel amendement alors qu'un autre amendement du même type est en cours."
+        )
+
     def test_start_amendment(self):
         intervention = InterventionFactory()
         response = self.forced_auth_req(
@@ -240,7 +261,8 @@ class TestInterventionAmendments(BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
 
-    def test_amend_intervention(self):
+    @mock.patch("etools.applications.partners.tasks.send_pd_to_vision.delay")
+    def test_amend_intervention(self, send_to_vision_mock):
         country_programme = CountryProgrammeFactory()
         intervention = InterventionFactory(
             agreement__partner=self.partner,
@@ -329,17 +351,20 @@ class TestInterventionAmendments(BaseTenantTestCase):
         amended_intervention.refresh_from_db()
         self.assertEqual('signed', response.data['status'])
 
-        response = self.forced_auth_req(
-            'patch',
-            reverse('pmp_v3:intervention-amendment-merge', args=[amended_intervention.pk]),
-            intervention.budget_owner,
-            data={}
-        )
+        with self.captureOnCommitCallbacks(execute=True) as commit_callbacks:
+            response = self.forced_auth_req(
+                'patch',
+                reverse('pmp_v3:intervention-amendment-merge', args=[amended_intervention.pk]),
+                intervention.budget_owner,
+                data={}
+            )
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertEqual(response.data['id'], intervention.id)
 
         intervention.refresh_from_db()
         self.assertEqual(intervention.start, timezone.now().date() + datetime.timedelta(days=2))
+        send_to_vision_mock.assert_called()
+        self.assertEqual(len(commit_callbacks), 1)
 
     def test_merge_error(self):
         first_amendment = InterventionAmendmentFactory(
