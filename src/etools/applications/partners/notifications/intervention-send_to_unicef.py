@@ -5,7 +5,8 @@ defaults = {
     "content": """
     Dear Colleague,
 
-    PD {{reference_number}} has been sent to UNICEF
+    PD {{reference_number}} has been sent to UNICEF.
+    Please follow the link below to start the PD/SPD development.
 
     {{pd_link}}
 
@@ -17,7 +18,8 @@ defaults = {
     {% block content %}
     Dear Colleague,<br /><br />
 
-    PD {{reference_number}} has been sent to UNICEF
+    PD {{reference_number}} has been sent to UNICEF.<br />
+    Please follow the link below to start the PD/SPD development.<br />
 
     {{pd_link}}<br />
 

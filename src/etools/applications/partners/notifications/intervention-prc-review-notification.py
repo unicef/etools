@@ -5,9 +5,9 @@ defaults = {
     'content': """
     Dear Colleague,
 
-    Please review Programme Document / SSFA {{ intervention_number }} before {{ meeting_date }}.
+    Please review Programme Document / Simplified Programme Document {{ intervention_number }} before {{ meeting_date }}.
 
-    Please follow the link below to check details.
+    Please follow the link below to access the documents for your review.
 
     {{ url }}
 
