@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-03-03 13:28+0000\n"
+"POT-Creation-Date: 2023-03-07 11:40+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1722,6 +1722,12 @@ msgstr "تدخل غير معروف."
 
 msgid "EZHACT Vision integration disabled"
 msgstr "تم تعطيل تكامل مع برنامج vision- EZHACT"
+
+msgid "The vendor number could not be found in INSIGHT"
+msgstr "تعذر العثور على رقم المورد في INSIGHT"
+
+msgid "Partner skipped because one or more of the required fields are missing"
+msgstr "تم تخطي الشريك بسبب فقدان حقل واحد أو أكثر من الحقول المطلوبة"
 
 msgid "PDF could not be generated properly"
 msgstr "لا يمكن إنشاء PDF بشكل صحيح"

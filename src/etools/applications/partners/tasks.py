@@ -7,6 +7,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import connection, transaction
 from django.db.models import Prefetch
 from django.utils import timezone
+from django.utils.translation import gettext as _
 
 from celery.utils.log import get_task_logger
 from django_tenants.utils import get_tenant_model, schema_context
@@ -387,12 +388,12 @@ def sync_partner(vendor_number=None, country=None):
 
         if "ROWSET" not in response:
             logger.exception("{} sync failed: Invalid response".format(PartnerSynchronizer.__name__))
-            return 'The vendor number could not be found in INSIGHT'
+            return _('The vendor number could not be found in INSIGHT')
 
         partner_resp = response["ROWSET"]["ROW"]
         partner_sync = PartnerSynchronizer(business_area_code=country.business_area_code)
         if not partner_sync._filter_records([partner_resp]):
-            raise VisionException('Partner skipped because one or more of the required fields are missing')
+            raise VisionException(_('Partner skipped because one or more of the required fields are missing'))
 
         partner_sync._partner_save(partner_resp, full_sync=False)
     except VisionException as e:

@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: et-partners2-bk\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-03-03 13:28+0000\n"
+"POT-Creation-Date: 2023-03-07 11:40+0000\n"
 "Language: fr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -1756,6 +1756,13 @@ msgstr "Intervention inconnue."
 
 msgid "EZHACT Vision integration disabled"
 msgstr "Intégration d'EZHACT Vision désactivée"
+
+msgid "The vendor number could not be found in INSIGHT"
+msgstr "Le numéro du vendeur n'a pas pu être trouvé dans INSIGHT"
+
+msgid "Partner skipped because one or more of the required fields are missing"
+msgstr ""
+"Partenaire ignoré car un ou plusieurs champs obligatoires sont manquants"
 
 msgid "PDF could not be generated properly"
 msgstr "Le PDF n'a pas pu être généré correctement"
