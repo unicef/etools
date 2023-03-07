@@ -4,7 +4,17 @@
   "pk": 1,
   "fields": {
     "order": 1,
-    "name": "Community Engagement and Accountability"
+    "name": "Community Engagement and Accountability",
+    "translations": {
+      "name": {
+        "en": "Community Engagement and Accountability",
+        "fr": "Engagement Communautaire et Responsabilité",
+        "ru": "Вовлечение сообщества и подотчетность",
+        "pt": "Engajamento Comunitário e Prestação de Contas",
+        "es": "Participación comunitaria y rendición de cuentas",
+        "ar": "المشاركة المجتمعية والمساءلة"
+      }
+    }
   }
 },
 {
@@ -12,7 +22,17 @@
   "pk": 2,
   "fields": {
     "order": 2,
-    "name": "HACT"
+    "name": "HACT",
+    "translations": {
+      "name": {
+        "en": "",
+        "fr": "",
+        "ru": "",
+        "pt": "",
+        "es": "",
+        "ar": ""
+      }
+    }
   }
 },
 {
@@ -20,7 +40,17 @@
   "pk": 3,
   "fields": {
     "order": 3,
-    "name": "Quality"
+    "name": "Quality",
+    "translations": {
+      "name": {
+        "en": "Quality",
+        "fr": "Qualité",
+        "ru": "Качество",
+        "pt": "Qualidade",
+        "es": "Calidad",
+        "ar": "جودة"
+      }
+    }
   }
 },
 {
@@ -28,7 +58,17 @@
   "pk": 4,
   "fields": {
     "order": 4,
-    "name": "Reach"
+    "name": "Reach",
+    "translations": {
+      "name": {
+        "en": "Reach",
+        "fr": "Atteindre",
+        "ru": "Достигать",
+        "pt": "Alcançar",
+        "es": "Alcanzar",
+        "ar": "يصل"
+      }
+    }
   }
 },
 {
@@ -36,7 +76,17 @@
   "pk": 5,
   "fields": {
     "order": 5,
-    "name": "Enabling Environment"
+    "name": "Enabling Environment",
+    "translations": {
+      "name": {
+        "en": "Enabling Environment",
+        "fr": "Environnement Favorable",
+        "ru": "Создание благоприятных условий",
+        "pt": "Ambiente favorável",
+        "es": "Ambiente apto",
+        "ar": "احفظ البيئة"
+      }
+    }
   }
 },
 {
@@ -44,7 +94,17 @@
   "pk": 6,
   "fields": {
     "order": 6,
-    "name": "PSEA"
+    "name": "PSEA",
+    "translations": {
+      "name": {
+        "en": "",
+        "fr": "",
+        "ru": "",
+        "pt": "",
+        "es": "",
+        "ar": ""
+      }
+    }
   }
 },
 {
@@ -52,7 +112,17 @@
   "pk": 7,
   "fields": {
     "order": 7,
-    "name": "Supplies"
+    "name": "Supplies",
+    "translations": {
+      "name": {
+        "en": "Supplies",
+        "fr": "Produits",
+        "ru": "Запасы",
+        "pt": "Suprimentos",
+        "es": "Suministros",
+        "ar": "لوازم"
+      }
+    }
   }
 },
 {
@@ -60,7 +130,17 @@
   "pk": 8,
   "fields": {
     "order": 8,
-    "name": "Acceptability"
+    "name": "Acceptability",
+    "translations": {
+      "name": {
+        "en": "Acceptability",
+        "fr": "Acceptabilité",
+        "ru": "Приемлемость",
+        "pt": "Aceitabilidade",
+        "es": "Aceptabilidad",
+        "ar": "القبول"
+      }
+    }
   }
 }
 ]

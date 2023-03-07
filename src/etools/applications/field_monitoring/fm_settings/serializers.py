@@ -17,6 +17,7 @@ from unicef_restlib.serializers import UserContextSerializerMixin
 from unicef_snapshot.serializers import SnapshotModelSerializer
 
 from etools.applications.action_points.serializers import HistorySerializer
+from etools.applications.core.i18n.mixins import TranslationFieldsMixin
 from etools.applications.field_monitoring.fm_settings.models import (
     Category,
     LocationSite,
@@ -30,7 +31,7 @@ from etools.applications.reports.serializers.v2 import OutputListSerializer
 from etools.applications.users.serializers_v3 import MinimalUserSerializer
 
 
-class MethodSerializer(serializers.ModelSerializer):
+class MethodSerializer(TranslationFieldsMixin, serializers.ModelSerializer):
     class Meta:
         model = Method
         fields = ('id', 'name', 'short_name', 'use_information_source')
@@ -53,13 +54,13 @@ class OptionSerializer(serializers.ModelSerializer):
         }
 
 
-class CategorySerializer(serializers.ModelSerializer):
+class CategorySerializer(TranslationFieldsMixin, serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = ('id', 'name')
 
 
-class QuestionLightSerializer(serializers.ModelSerializer):
+class QuestionLightSerializer(TranslationFieldsMixin, serializers.ModelSerializer):
     class Meta:
         model = Question
         fields = (

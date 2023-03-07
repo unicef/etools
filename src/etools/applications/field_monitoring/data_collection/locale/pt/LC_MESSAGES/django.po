@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-10 10:07+0000\n"
+"POT-Creation-Date: 2023-02-15 15:40+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -35,6 +35,9 @@ msgstr "Detalhes específicos para sondar"
 
 msgid "Enabled"
 msgstr "Habilitado"
+
+msgid "Translations"
+msgstr ""
 
 msgid "Activity Question"
 msgstr "Questão de atividade"

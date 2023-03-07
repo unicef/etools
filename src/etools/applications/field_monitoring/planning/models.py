@@ -14,6 +14,7 @@ from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CodedGenericRelation
 
 from etools.applications.action_points.models import ActionPoint
+from etools.applications.core.i18n.utils import get_default_translated
 from etools.applications.core.permissions import import_permissions
 from etools.applications.core.urlresolvers import build_frontend_url
 from etools.applications.environment.notifications import send_notification_with_template
@@ -89,10 +90,13 @@ class QuestionTargetMixin(models.Model):
 
 
 class QuestionTemplate(QuestionTargetMixin, models.Model):
+    TRANSLATABLE_FIELDS = ('specific_details',)
+
     question = models.ForeignKey(Question, on_delete=models.CASCADE, verbose_name=_('Question'),
                                  related_name='templates')
     is_active = models.BooleanField(default=True, verbose_name=_('Is Active'))
     specific_details = models.TextField(verbose_name=_('Specific Details To Probe'), blank=True)
+    translations = models.JSONField(verbose_name=_('Translations'), default=dict)
 
     class Meta:
         verbose_name = _('Question Template')
@@ -390,12 +394,18 @@ class MonitoringActivity(
                 for target_question in target_questions:
                     activity_question = ActivityQuestion(
                         question=target_question, monitoring_activity=self,
-                        text=target_question.text, is_hact=target_question.is_hact,
+                        text=target_question.text, translations=target_question.translations,
+                        is_hact=target_question.is_hact,
                         is_enabled=target_question.template.is_active if target_question.template else False
                     )
 
                     if target_question.template:
                         activity_question.specific_details = target_question.template.specific_details
+                        if 'specific_details' in target_question.template.translations:
+                            activity_question.translations.update(
+                                {'specific_details': target_question.template.translations['specific_details']})
+                        else:
+                            activity_question.translations.update(get_default_translated('specific_details'))
 
                     setattr(activity_question, Question.get_target_relation_name(level), target)
 

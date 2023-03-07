@@ -1,5 +1,6 @@
 from django.db import connection
 from django.urls import reverse
+from django.utils import translation
 
 from rest_framework import status
 from unicef_attachments.models import Attachment, AttachmentLink, FileType
@@ -181,6 +182,28 @@ class TestActivityQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['is_enabled'], False)
+
+    def test_update_translatable_fields(self):
+        question = ActivityQuestionFactory(is_enabled=True, monitoring_activity__status='checklist')
+        translation.activate('fr')
+        response = self.forced_auth_req(
+            'patch',
+            reverse(
+                'field_monitoring_data_collection:activity-questions-detail',
+                args=(question.monitoring_activity.pk, question.pk)
+            ),
+            user=self.fm_user,
+            data={'text': 'Text FR',
+                  'specific_details': 'Specific details FR'}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['text'], 'Text FR')
+        self.assertEqual(response.data['specific_details'], 'Specific details FR')
+        question.refresh_from_db()
+        self.assertEqual(question.translations['text']['fr'], 'Text FR')
+        self.assertEqual(question.translations['specific_details']['fr'], 'Specific details FR')
+        translation.deactivate()
 
     def test_bulk_update(self):
         activity = MonitoringActivityFactory(status='checklist')

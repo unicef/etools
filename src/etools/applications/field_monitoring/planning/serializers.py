@@ -14,6 +14,7 @@ from unicef_snapshot.serializers import SnapshotModelSerializer
 from etools.applications.action_points.categories.models import Category
 from etools.applications.action_points.categories.serializers import CategoryModelChoiceField
 from etools.applications.action_points.serializers import ActionPointBaseSerializer, HistorySerializer
+from etools.applications.core.i18n.mixins import TranslationFieldsMixin
 from etools.applications.field_monitoring.fm_settings.models import Question
 from etools.applications.field_monitoring.fm_settings.serializers import LocationSiteSerializer, QuestionSerializer
 from etools.applications.field_monitoring.planning.activity_validation.permissions import ActivityPermissions
@@ -43,7 +44,7 @@ class YearPlanSerializer(SnapshotModelSerializer):
         )
 
 
-class QuestionTemplateSerializer(serializers.ModelSerializer):
+class QuestionTemplateSerializer(TranslationFieldsMixin, serializers.ModelSerializer):
     class Meta:
         model = QuestionTemplate
         fields = ('is_active', 'specific_details')

@@ -5,6 +5,7 @@ from django.core import mail
 from django.core.management import call_command
 from django.db import connection
 from django.urls import reverse
+from django.utils import translation
 
 from rest_framework import status
 from unicef_attachments.models import Attachment, AttachmentLink, FileType
@@ -27,7 +28,7 @@ from etools.applications.field_monitoring.data_collection.tests.factories import
 )
 from etools.applications.field_monitoring.fm_settings.models import Question
 from etools.applications.field_monitoring.fm_settings.tests.factories import QuestionFactory
-from etools.applications.field_monitoring.planning.models import MonitoringActivity, YearPlan
+from etools.applications.field_monitoring.planning.models import MonitoringActivity, QuestionTemplate, YearPlan
 from etools.applications.field_monitoring.planning.tests.factories import (
     MonitoringActivityActionPointFactory,
     MonitoringActivityFactory,
@@ -632,6 +633,30 @@ class TestQuestionTemplatesView(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.data['template']['specific_details'], 'new_details')
         self.assertEqual(question.templates.count(), 2)
 
+    def test_create_specific_template_translated(self):
+        translation.activate('fr')
+        question = QuestionFactory(level=Question.LEVELS.partner)
+        partner = PartnerFactory()
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse('field_monitoring_planning:question-templates-detail',
+                    kwargs={'level': 'partner', 'target_id': partner.id, 'pk': question.id}),
+            user=self.fm_user,
+            data={
+                'template': {
+                    'specific_details': 'new_details FR'
+                }
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsNotNone(response.data['template'])
+        self.assertEqual(response.data['template']['specific_details'], 'new_details FR')
+        question_template = QuestionTemplate.objects.filter(question_id=response.data['id']).last()
+        self.assertEqual(question_template.specific_details, 'new_details FR')
+        self.assertEqual(question_template.translations['specific_details']['fr'], 'new_details FR')
+        translation.deactivate()
+
     def test_update_specific_template(self):
         question = QuestionFactory(level=Question.LEVELS.partner)
         self.assertEqual(question.templates.count(), 1)
@@ -653,6 +678,31 @@ class TestQuestionTemplatesView(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIsNotNone(response.data['template'])
         self.assertEqual(response.data['template']['specific_details'], 'new_details')
+
+    def test_update_specific_template_translated(self):
+        translation.activate('fr')
+        question = QuestionFactory(level=Question.LEVELS.partner)
+        partner = PartnerFactory()
+        question_template = QuestionTemplateFactory(question=question, partner=partner)
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse('field_monitoring_planning:question-templates-detail',
+                    kwargs={'level': 'partner', 'target_id': partner.id, 'pk': question.id}),
+            user=self.fm_user,
+            data={
+                'template': {
+                    'specific_details': 'new_details FR'
+                }
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsNotNone(response.data['template'])
+        self.assertEqual(response.data['template']['specific_details'], 'new_details FR')
+        question_template.refresh_from_db()
+        self.assertEqual(question_template.specific_details, 'new_details FR')
+        self.assertEqual(question_template.translations['specific_details']['fr'], 'new_details FR')
+        translation.deactivate()
 
     def test_specific_template_returned(self):
         question = QuestionFactory(level=Question.LEVELS.partner)
