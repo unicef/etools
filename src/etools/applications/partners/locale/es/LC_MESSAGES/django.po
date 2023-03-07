@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: et-partners2-bk\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-03-07 11:40+0000\n"
+"POT-Creation-Date: 2023-03-07 13:01+0000\n"
 "Language: es\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -728,6 +728,24 @@ msgstr "Bajo"
 
 msgid "Not Required"
 msgstr "No es necesario"
+
+msgid "Low Capacity (High Risk)"
+msgstr "Baja capacidad (alto riesgo)"
+
+msgid "Medium Capacity (Moderate Risk)"
+msgstr "Capacidad media (riesgo moderado)"
+
+msgid "Full Capacity (Low Risk)"
+msgstr "Plena capacidad (bajo riesgo)"
+
+msgid "Low Capacity Assumed - Emergency"
+msgstr "Baja Capacidad Supuesta - Emergencia"
+
+msgid "No Contact with Beneficiaries"
+msgstr "Ningún contacto con los beneficiarios"
+
+msgid "Not Assessed"
+msgstr "No evaluado"
 
 msgid "International"
 msgstr "Internacional"

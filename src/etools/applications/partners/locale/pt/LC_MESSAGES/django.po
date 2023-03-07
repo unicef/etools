@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-03-07 11:40+0000\n"
+"POT-Creation-Date: 2023-03-07 13:01+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -746,6 +746,24 @@ msgstr "Baixo"
 
 msgid "Not Required"
 msgstr "Não é necessário"
+
+msgid "Low Capacity (High Risk)"
+msgstr "Baixa capacidade (Risco elevado)"
+
+msgid "Medium Capacity (Moderate Risk)"
+msgstr "Capacidade média (Risco moderado)"
+
+msgid "Full Capacity (Low Risk)"
+msgstr "Capacidade total (Risco baixo)"
+
+msgid "Low Capacity Assumed - Emergency"
+msgstr "Baixa Capacidade Assumida - Emergência"
+
+msgid "No Contact with Beneficiaries"
+msgstr "Sem contacto com os Beneficiários"
+
+msgid "Not Assessed"
+msgstr "Não Avaliado"
 
 msgid "International"
 msgstr "Internacional"
