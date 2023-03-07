@@ -561,6 +561,8 @@ def send_intervention_past_start_notification():
             context={
                 "reference_number": intervention.reference_number,
                 "title": intervention.title,
+                "partner_name": str(intervention.agreement.partner),
+                "start_date": intervention.start.strftime("%Y-%m-%d"),
                 "url": "{}pmp/interventions/{}/details".format(
                     settings.HOST,
                     intervention.pk,

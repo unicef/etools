@@ -6,8 +6,7 @@ defaults = {
     Dear Colleague,
 
     Please note that the Partnership ref {{ number }} with {{ partner }} will end in {{ days }} days.
-    Please follow-up with the Implementing Partner on status of implementation, which may require an
-    amendment.
+    Please follow-up with the Partner on status of implementation.
 
     {{ url }}.
 

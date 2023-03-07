@@ -15,6 +15,8 @@ defaults = {
 
     {{pd_link}}
 
+    Please review and address the comments and action points. The PD will need to be "accepted as final" in order to progress for internal review.
+
     Please note that this is an automated message and replies to this email address are not monitored.
     """,
     "html_content": """
@@ -29,8 +31,10 @@ defaults = {
     {{review_actions}}
     <br /><br />
 
-    You can review the PD at the following link:
-    {{pd_link}}
+    You can review the PD at the following link:<br />
+    {{pd_link}}<br />
+
+    Please review and address the comments and action points. The PD will need to be "accepted as final" in order to progress for internal review.<br />
 
     Please note that this is an automated message and replies to this email address are not monitored.
 
