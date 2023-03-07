@@ -4,7 +4,7 @@ from unittest import mock, skip
 from django.core.management import call_command
 from django.test import override_settings
 from django.urls import reverse
-from django.utils import timezone
+from django.utils import timezone, translation
 
 from rest_framework import status
 from rest_framework.exceptions import ErrorDetail
@@ -201,6 +201,27 @@ class TestInterventionAmendments(BaseTenantTestCase):
 
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
         self.assertEquals(response.data['intervention'], self.active_intervention.pk)
+
+    def test_create_amendment_not_unique_error_translated(self):
+        InterventionAmendmentFactory(
+            intervention=self.active_intervention, kind=InterventionAmendment.KIND_NORMAL,
+        )
+        with translation.override('fr'):
+            response = self.forced_auth_req(
+                'post',
+                reverse('partners_api:intervention-amendments-add', args=[self.active_intervention.pk]),
+                UserFactory(is_staff=True, groups__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
+                data={
+                    'types': [InterventionAmendment.TYPE_CHANGE],
+                    'kind': InterventionAmendment.KIND_NORMAL,
+                },
+                request_format='multipart',
+            )
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
+            response.data['non_field_errors'][0],
+            "On ne peut pas ajouter un nouvel amendement alors qu'un autre amendement du même type est en cours."
+        )
 
     def test_start_amendment(self):
         intervention = InterventionFactory()

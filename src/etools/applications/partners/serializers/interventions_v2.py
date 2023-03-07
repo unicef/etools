@@ -4,7 +4,7 @@ from operator import itemgetter
 from django.db import transaction
 from django.db.models import Q, QuerySet
 from django.utils.functional import cached_property
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext as _, gettext_lazy
 
 from rest_framework import serializers
 from rest_framework.serializers import ValidationError
@@ -136,7 +136,7 @@ class InterventionAmendmentCUSerializer(AttachmentSerializerMixin, serializers.M
             UniqueTogetherValidator(
                 queryset=InterventionAmendment.objects.filter(is_active=True),
                 fields=["intervention", "kind"],
-                message=_("Cannot add a new amendment while another amendment of same kind is in progress."),
+                message=gettext_lazy("Cannot add a new amendment while another amendment of same kind is in progress."),
             )
         ]
         extra_kwargs = {
@@ -528,7 +528,7 @@ class InterventionResultLinkSimpleCUSerializer(FullInterventionSnapshotSerialize
             UniqueTogetherValidator(
                 queryset=InterventionResultLink.objects.all(),
                 fields=["intervention", "cp_output"],
-                message=_("Invalid CP Output provided.")
+                message=gettext_lazy("Invalid CP Output provided.")
             )
         ]
 

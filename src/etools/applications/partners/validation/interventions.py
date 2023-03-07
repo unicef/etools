@@ -480,3 +480,16 @@ class InterventionValid(CompleteValidation):
         if not today > intervention.end:
             raise StateValidationError([_('Today is not after the end date')])
         return True
+
+    def map_errors(self, errors):
+        error_list = []
+        for error in errors:
+            if isinstance(error, str):
+                error_value = self.VALID_ERRORS.get(error, error)
+                if isinstance(error_value, str):
+                    error_list.append(_(error_value))
+                else:
+                    error_list.append(error_value)
+            else:
+                error_list.append(error)
+        return error_list

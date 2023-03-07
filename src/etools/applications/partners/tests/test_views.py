@@ -11,7 +11,7 @@ from django.db import connection
 from django.http import HttpResponse
 from django.test import override_settings, SimpleTestCase
 from django.urls import resolve, reverse
-from django.utils import timezone
+from django.utils import timezone, translation
 
 import mock
 from factory import fuzzy
@@ -1603,6 +1603,26 @@ class TestInterventionViews(BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data, ['Start date must precede end date'])
+
+    def test_intervention_validation_translation(self):
+        today = datetime.date.today()
+        data = {
+            "start": datetime.date(today.year + 1, 1, 1),
+            "end": today,
+        }
+        with translation.override('fr'):
+            response = self.forced_auth_req(
+                'patch',
+                reverse(
+                    "partners_api:intervention-detail",
+                    args=[self.intervention["id"]]
+                ),
+                user=self.partnership_manager_user,
+                data=data,
+            )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, ['La date de début doit précéder la date de fin'])
 
     def test_intervention_update_planned_visits(self):
         import copy

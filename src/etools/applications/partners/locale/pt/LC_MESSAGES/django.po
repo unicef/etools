@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-03-02 23:11+0200\n"
+"POT-Creation-Date: 2023-03-07 13:01+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -746,6 +746,24 @@ msgstr "Baixo"
 
 msgid "Not Required"
 msgstr "Não é necessário"
+
+msgid "Low Capacity (High Risk)"
+msgstr "Baixa capacidade (Risco elevado)"
+
+msgid "Medium Capacity (Moderate Risk)"
+msgstr "Capacidade média (Risco moderado)"
+
+msgid "Full Capacity (Low Risk)"
+msgstr "Capacidade total (Risco baixo)"
+
+msgid "Low Capacity Assumed - Emergency"
+msgstr "Baixa Capacidade Assumida - Emergência"
+
+msgid "No Contact with Beneficiaries"
+msgstr "Sem contacto com os Beneficiários"
+
+msgid "Not Assessed"
+msgstr "Não Avaliado"
 
 msgid "International"
 msgstr "Internacional"
@@ -1615,7 +1633,7 @@ msgstr ""
 "bloqueado no Vision."
 
 msgid "Other description required, if type 'Other' selected."
-msgstr "Outra descrição necessária, se o tipo &#39;Outro&#39; for selecionado."
+msgstr "Outra descrição necessária, se o tipo 'Outro' for selecionado."
 
 msgid "Planned Visit to be set only at Partner level"
 msgstr "Visita planejada a ser definida apenas no nível do parceiro"
@@ -1626,8 +1644,8 @@ msgstr "Visita planejada não pode ser definida para intervenções encerradas"
 msgid ""
 "An attachment cannot be changed in statuses \"Ended, Closed or Terminated\""
 msgstr ""
-"Um anexo não pode ser alterado nos status &quot;Finalizado, Fechado ou "
-"Encerrado&quot;"
+"Um anexo não pode ser alterado nos status \"Finalizado, Fechado ou Encerrado"
+"\""
 
 msgid "An Output cannot be updated for a partner that is blocked in Vision"
 msgstr ""
@@ -1773,6 +1791,12 @@ msgstr "Intervenção desconhecida."
 
 msgid "EZHACT Vision integration disabled"
 msgstr "Integração com o EZHACT Vision desativada"
+
+msgid "The vendor number could not be found in INSIGHT"
+msgstr "O número do fornecedor não pôde ser encontrado em INSIGHT"
+
+msgid "Partner skipped because one or more of the required fields are missing"
+msgstr "Parceiro pulado porque falta um ou mais dos campos requeridos"
 
 msgid "PDF could not be generated properly"
 msgstr "O PDF não pôde ser gerado corretamente"
@@ -1934,7 +1958,7 @@ msgid ""
 "the record is in \"Draft\" status please edit that record."
 msgstr ""
 "Já existe um PCA com este parceiro para este Ciclo do Programa de País. Se o "
-"registro estiver no status &quot;Rascunho&quot;, edite-o."
+"registro estiver no status \"Rascunho\", edite-o."
 
 msgid ""
 "Agreement start date needs to be earlier than or the same as the end date"
@@ -2355,7 +2379,7 @@ msgstr ""
 
 msgid "Partner Organization has no \"Authorized Officers selected\" selected"
 msgstr ""
-"A organização parceira não tem &quot;Oficiais autorizados selecionados&quot; "
+"A organização parceira não tem \"Oficiais autorizados selecionados\" "
 "selecionados"
 
 msgid ""
