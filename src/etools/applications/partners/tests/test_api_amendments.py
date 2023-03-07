@@ -1,5 +1,5 @@
 import datetime
-from unittest import skip
+from unittest import mock, skip
 
 from django.core.management import call_command
 from django.test import override_settings
@@ -240,7 +240,8 @@ class TestInterventionAmendments(BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
 
-    def test_amend_intervention(self):
+    @mock.patch("etools.applications.partners.tasks.send_pd_to_vision.delay")
+    def test_amend_intervention(self, send_to_vision_mock):
         country_programme = CountryProgrammeFactory()
         intervention = InterventionFactory(
             agreement__partner=self.partner,
@@ -329,17 +330,20 @@ class TestInterventionAmendments(BaseTenantTestCase):
         amended_intervention.refresh_from_db()
         self.assertEqual('signed', response.data['status'])
 
-        response = self.forced_auth_req(
-            'patch',
-            reverse('pmp_v3:intervention-amendment-merge', args=[amended_intervention.pk]),
-            intervention.budget_owner,
-            data={}
-        )
+        with self.captureOnCommitCallbacks(execute=True) as commit_callbacks:
+            response = self.forced_auth_req(
+                'patch',
+                reverse('pmp_v3:intervention-amendment-merge', args=[amended_intervention.pk]),
+                intervention.budget_owner,
+                data={}
+            )
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertEqual(response.data['id'], intervention.id)
 
         intervention.refresh_from_db()
         self.assertEqual(intervention.start, timezone.now().date() + datetime.timedelta(days=2))
+        send_to_vision_mock.assert_called()
+        self.assertEqual(len(commit_callbacks), 1)
 
     def test_merge_error(self):
         first_amendment = InterventionAmendmentFactory(
