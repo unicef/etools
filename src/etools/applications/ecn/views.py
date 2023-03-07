@@ -1,4 +1,4 @@
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext as _
 
 from rest_framework import status
 from rest_framework.generics import GenericAPIView
@@ -28,7 +28,10 @@ class ECNSyncView(GenericAPIView):
             )
 
         if not intervention:
-            return Response(status=404)
+            return Response(
+                {'non_field_errors': [_('The provided eCN number could not be found')]},
+                status=404
+            )
 
         return Response(
             InterventionDetailSerializer(intervention, context=self.get_serializer_context()).data,

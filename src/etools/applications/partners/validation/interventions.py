@@ -21,7 +21,7 @@ logger = logging.getLogger('partners.interventions.validation')
 def partnership_manager_only(i, user):
     # Transition cannot happen by a user that's not a Partnership Manager
     if not user.groups.filter(name__in=['Partnership Manager']).count():
-        raise TransitionError(['Only Partnership Managers can execute this transition'])
+        raise TransitionError([_('Only Partnership Managers can execute this transition')])
     return True
 
 
@@ -167,7 +167,7 @@ def transition_to_signature(i):
 
 
 def transition_to_signed(i):
-    from etools.applications.partners.models import Agreement, FileType, InterventionAmendment
+    from etools.applications.partners.models import Agreement, InterventionAmendment
 
     if i.has_active_amendment(InterventionAmendment.KIND_NORMAL):
         raise TransitionError([_('Cannot Transition status while adding an amendment')])
@@ -181,24 +181,6 @@ def transition_to_signed(i):
     if i.agreement.partner.blocked:
         raise TransitionError([
             _('PD cannot transition to signed if the Partner is Blocked in Vision')
-        ])
-
-    if i.has_data_processing_agreement and \
-            not i.attachments.filter(type__name=FileType.DATA_PROCESSING_AGREEMENT, active=True).exists():
-        raise TransitionError([
-            _(' %(file_type)s should be provided in attachments.') % {'file_type': FileType.DATA_PROCESSING_AGREEMENT}
-        ])
-
-    if i.has_activities_involving_children and \
-            not i.attachments.filter(type__name=FileType.ACTIVITIES_INVOLVING_CHILDREN, active=True).exists():
-        raise TransitionError([
-            _(' %(file_type)s should be provided in attachments.') % {'file_type': FileType.ACTIVITIES_INVOLVING_CHILDREN}
-        ])
-
-    if i.has_special_conditions_for_construction and \
-            not i.attachments.filter(type__name=FileType.SPECIAL_CONDITIONS_FOR_CONSTRUCTION, active=True).exists():
-        raise TransitionError([
-            _(' %(file_type)s should be provided in attachments.') % {'file_type': FileType.SPECIAL_CONDITIONS_FOR_CONSTRUCTION}
         ])
 
     return True
@@ -277,7 +259,7 @@ def ssfa_agreement_has_no_other_intervention(i):
     the only intervention for that ssfa agreement
     """
     if i.document_type == i.SSFA:
-        if not(i.agreement.agreement_type == i.agreement.SSFA):
+        if not (i.agreement.agreement_type == i.agreement.SSFA):
             raise BasicValidationError(_('Agreement selected is not of type SSFA'))
         return i.agreement.interventions.count() <= 1
     return True
@@ -296,7 +278,7 @@ def sections_valid(i):
         ind_sections.add(ind.section)
     intervention_sections = set(s for s in i.sections.all())
     if not ind_sections.issubset(intervention_sections):
-        draft_status_err = ' without deleting the indicators first' if i.status == i.DRAFT else ''
+        draft_status_err = _(' without deleting the indicators first') if i.status == i.DRAFT else ''
         raise BasicValidationError(
             _('The following sections have been selected on the PD/SPD indicators and cannot be removed '
               '%(sections)s ') % {'sections': draft_status_err + ', '.join([s.name for s in ind_sections - intervention_sections])})
@@ -361,30 +343,6 @@ def review_was_accepted(i):
         return True
 
     return r.overall_approval if r else False
-
-
-def check_flagged_document_provided(i):
-    from etools.applications.partners.models import FileType
-
-    if i.has_data_processing_agreement and \
-            not i.attachments.filter(type__name=FileType.DATA_PROCESSING_AGREEMENT, active=True).exists():
-        raise BasicValidationError([
-            _(' %(file_type)s should be provided in attachments.') % {'file_type': FileType.DATA_PROCESSING_AGREEMENT}
-        ])
-
-    if i.has_activities_involving_children and \
-            not i.attachments.filter(type__name=FileType.ACTIVITIES_INVOLVING_CHILDREN, active=True).exists():
-        raise BasicValidationError([
-            _(' %(file_type)s should be provided in attachments.') % {'file_type': FileType.ACTIVITIES_INVOLVING_CHILDREN}
-        ])
-
-    if i.has_special_conditions_for_construction and \
-            not i.attachments.filter(type__name=FileType.SPECIAL_CONDITIONS_FOR_CONSTRUCTION, active=True).exists():
-        raise BasicValidationError([
-            _(' %(file_type)s should be provided in attachments.') % {'file_type': FileType.SPECIAL_CONDITIONS_FOR_CONSTRUCTION}
-        ])
-
-    return True
 
 
 class InterventionValid(CompleteValidation):
@@ -481,7 +439,6 @@ class InterventionValid(CompleteValidation):
     def state_signed_valid(self, intervention, user=None):
         self.check_required_fields(intervention)
         self.check_rigid_fields(intervention, related=True)
-        check_flagged_document_provided(intervention)
         if not all_activities_have_timeframes(intervention):
             raise StateValidationError([_('All activities must have at least one time frame')])
         if not all_pd_outputs_are_associated(intervention):

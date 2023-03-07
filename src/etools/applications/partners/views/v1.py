@@ -4,6 +4,7 @@ from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse
 from django.utils.http import urlsafe_base64_decode
+from django.utils.translation import gettext as _
 from django.views.generic import TemplateView, View
 
 from easy_pdf.views import PDFTemplateView
@@ -42,7 +43,7 @@ class PCAPDFView(LoginRequiredMixin, PDFTemplateView):
         error = None
 
         if terms_acknowledged.lower() != 'true':
-            return {"error": "Terms to be acknowledged"}
+            return {"error": _("Terms to be acknowledged")}
 
         try:
             self.template_name = self.language_templates_mapping[lang]
@@ -52,13 +53,13 @@ class PCAPDFView(LoginRequiredMixin, PDFTemplateView):
         try:
             self.agreement = Agreement.objects.get(id=agr_id)
         except Agreement.DoesNotExist:
-            return {"error": 'Agreement with specified ID does not exist'}
+            return {"error": _('Agreement with specified ID does not exist')}
 
         if not self.agreement.partner.vendor_number:
-            return {"error": "Partner Organization has no vendor number stored, please report to an etools focal point"}
+            return {"error": _("Partner Organization has no vendor number stored, please report to an etools focal point")}
 
         if not self.agreement.authorized_officers.exists():
-            return {"error": 'Partner Organization has no "Authorized Officers selected" selected'}
+            return {"error": _('Partner Organization has no "Authorized Officers selected" selected')}
 
         url = 'partners/?vendor={vendor_code}'
         data = {"vendor_code": self.agreement.partner.vendor_number}
@@ -66,40 +67,41 @@ class PCAPDFView(LoginRequiredMixin, PDFTemplateView):
             url += '&key={key}'
             data["key"] = settings.INSIGHT_BANK_KEY
 
-        valid_response, response = get_data_from_insight(url, data)
-        if not valid_response:
-            return {"error": response}
-        try:
-            banks_records = response["ROWSET"]["ROW"]["VENDOR_BANK"]["VENDOR_BANK_ROW"]
-            if isinstance(banks_records, dict):
-                banks_records = [banks_records]
-        except (KeyError, TypeError):
-            return {"error": 'Response returned by the Server does not have the necessary values to generate PCA'}
-
-        bank_key_values = [
-            ('bank_address', "STREET"),
-            ('bank_name', 'BANK_NAME'),
-            ('account_title', "ACCT_HOLDER"),
-            ('routing_details', "SWIFT_CODE"),
-            ('account_number', "BANK_ACCOUNT_NO"),
-            ('account_currency', "BANK_ACCOUNT_CURRENCY"),
-            ('tax_number_5', "TAX_NUMBER_5"),
-        ]
-        Bank = namedtuple('Bank', ' '.join([i[0] for i in bank_key_values]))
         bank_objects = []
+        if not settings.PCA_SKIP_FINANCIAL_DATA:
+            valid_response, response = get_data_from_insight(url, data)
+            if not valid_response:
+                return {"error": response}
+            try:
+                banks_records = response["ROWSET"]["ROW"]["VENDOR_BANK"]["VENDOR_BANK_ROW"]
+                if isinstance(banks_records, dict):
+                    banks_records = [banks_records]
+            except (KeyError, TypeError):
+                return {"error": _('Response returned by the Server does not have the necessary values to generate PCA')}
 
-        tax_number_5 = None
-        if self.request.tenant.business_area_code == '3920' and response["ROWSET"]["ROW"]['TAX_NUMBER_5']:
-            tax_number_5 = response["ROWSET"]["ROW"]['TAX_NUMBER_5']
-        for b in banks_records:
-            if isinstance(b, dict):
-                b["BANK_ADDRESS"] = ', '.join(b[key] for key in ['STREET', 'CITY'] if key in b and b[key])
-                b["ACCT_HOLDER"] = b["ACCT_HOLDER"] if "ACCT_HOLDER" in b else ""
-                # TODO: fix currency field name when we have it
-                b["BANK_ACCOUNT_CURRENCY"] = b["BANK_ACCOUNT_CURRENCY"] if "BANK_ACCOUNT_CURRENCY" in b else ""
-                b["TAX_NUMBER_5"] = tax_number_5
+            bank_key_values = [
+                ('bank_address', "STREET"),
+                ('bank_name', 'BANK_NAME'),
+                ('account_title', "ACCT_HOLDER"),
+                ('routing_details', "SWIFT_CODE"),
+                ('account_number', "BANK_ACCOUNT_NO"),
+                ('account_currency', "BANK_ACCOUNT_CURRENCY"),
+                ('tax_number_5', "TAX_NUMBER_5"),
+            ]
+            Bank = namedtuple('Bank', ' '.join([i[0] for i in bank_key_values]))
 
-                bank_objects.append(Bank(*[b[i[1]] for i in bank_key_values]))
+            tax_number_5 = None
+            if self.request.tenant.business_area_code == '3920' and response["ROWSET"]["ROW"]['TAX_NUMBER_5']:
+                tax_number_5 = response["ROWSET"]["ROW"]['TAX_NUMBER_5']
+            for b in banks_records:
+                if isinstance(b, dict):
+                    b["BANK_ADDRESS"] = ', '.join(b[key] for key in ['STREET', 'CITY'] if key in b and b[key])
+                    b["ACCT_HOLDER"] = b["ACCT_HOLDER"] if "ACCT_HOLDER" in b else ""
+                    # TODO: fix currency field name when we have it
+                    b["BANK_ACCOUNT_CURRENCY"] = b["BANK_ACCOUNT_CURRENCY"] if "BANK_ACCOUNT_CURRENCY" in b else ""
+                    b["TAX_NUMBER_5"] = tax_number_5
+
+                    bank_objects.append(Bank(*[b[i[1]] for i in bank_key_values]))
 
         officers_list = []
         for officer in self.agreement.authorized_officers.filter(active=True):
@@ -113,7 +115,7 @@ class PCAPDFView(LoginRequiredMixin, PDFTemplateView):
         font_path = settings.PACKAGE_ROOT + '/assets/fonts/'
 
         if not self.request.user.groups.filter(name=PARTNERSHIP_MANAGER_GROUP).exists():
-            return {"error": 'Partnership Manager role required for pca export.'}
+            return {"error": _('Partnership Manager role required for pca export.')}
 
         self.agreement.terms_acknowledged_by = self.request.user
         self.agreement.save()

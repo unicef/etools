@@ -5,9 +5,9 @@ defaults = {
     "content": """
     Dear Colleague,
 
-    Please note that there is no PCA for Partner {{partner_name}}. There currently is an ongoing Partnership ref. {{reference_number}} with this partner.
+    Currently, there is an ongoing Partnership ref. {{reference_number}} with {{partner_name}} with UNICEF. However, there is no PCA for this.
 
-    A PCA with {{partner_name}} must signed as soon as possible. Please take action immediately.
+    A PCA is a required for every partnership. Please generate a new PCA with {{partner_name}} as soon as possible.
 
     {{pd_link}}
 
@@ -19,9 +19,9 @@ defaults = {
     {% block content %}
     Dear Colleague,<br /><br />
 
-    Please note that there is no PCA for Partner {{partner_name}}. There currently is an ongoing Partnership ref. {{reference_number}} with this partner.<br />
+    Currently, there is an ongoing Partnership ref. {{reference_number}} with {{partner_name}} with UNICEF. However, there is no PCA for this.<br />
 
-    A PCA with {{partner_name}} must signed as soon as possible. Please take action immediately.<br />
+    A PCA is a required for every partnership. Please generate a new PCA with {{partner_name}} as soon as possible.<br />
 
     {{pd_link}}<br />
 

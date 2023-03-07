@@ -1,0 +1,140 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-02-10 10:07+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Activity"
+msgstr "Actividad"
+
+msgid "Question"
+msgstr "Pregunta"
+
+msgid "Question Text"
+msgstr "Texto de la pregunta"
+
+msgid "Count as HACT"
+msgstr "Contar como HACT"
+
+msgid "Specific Details To Probe"
+msgstr "Detalles específicos para sondear"
+
+msgid "Enabled"
+msgstr "Activado"
+
+msgid "Activity Question"
+msgstr "Pregunta de actividad"
+
+msgid "Activity Questions"
+msgstr "Preguntas de actividad"
+
+msgid "Methods"
+msgstr "Métodos"
+
+msgid "Information Source"
+msgstr "Fuente de información"
+
+msgid "Author"
+msgstr "Autor"
+
+msgid "Started Checklist"
+msgstr "Lista de verificación iniciada"
+
+msgid "Started Checklists"
+msgstr "Listas de verificación iniciadas"
+
+msgid "Checklist"
+msgstr "Lista de Verificación"
+
+msgid "Value"
+msgstr "Valor"
+
+msgid "Checklist Finding"
+msgstr "Hallazgo de lista de verificación"
+
+msgid "Checklist Findings"
+msgstr "Hallazgos de la lista de verificación"
+
+msgid "Overall Activity Question Finding"
+msgstr "Resultado general de la pregunta de actividad"
+
+msgid "Overall Activity Question Findings"
+msgstr "Resultados generales de la pregunta de actividad"
+
+msgid "Narrative Finding"
+msgstr "Hallazgo narrativo"
+
+msgid "Attachments"
+msgstr "Archivos adjuntos"
+
+msgid "Checklist Overall Finding"
+msgstr "Lista de verificación Hallazgo general"
+
+msgid "Checklist Overall Findings"
+msgstr "Hallazgos generales de la lista de verificación"
+
+msgid "Activity Overall Finding"
+msgstr "Hallazgo general de la actividad"
+
+msgid "Activity Overall Findings"
+msgstr "Actividad Hallazgos generales"
+
+msgid "Source of Information"
+msgstr "Fuente de información"
+
+msgid "Overall Finding"
+msgstr "Hallazgo general"
+
+#, python-format
+msgid "Unable to find %(level)s with id %(target_id)s"
+msgstr "No se puede encontrar %(level)s con id %(target_id)s"
+
+#, python-format
+msgid ""
+"Unable to find finding for question %(question_id)s for %(level)s "
+"%(target_id)s"
+msgstr ""
+"No se pudo encontrar el resultado de la pregunta %(question_id)s para "
+"%(level)s %(target_id)s"
+
+msgid "Ensure this field has no more than 100 characters."
+msgstr "Asegúrese de que este campo no tenga más de 100 caracteres."
+
+msgid "Document Type"
+msgstr "Tipo de Documento"
+
+msgid "Information source is required"
+msgstr "Se requiere fuente de información"
+
+#, python-format
+msgid "Workspace code provided is not a valid business_area_code: %s"
+msgstr ""
+"El código de espacio de trabajo proporcionado no es un "
+"código_de_área_de_negocio válido: %s"
+
+msgid "Workspace is required"
+msgstr "Se requiere espacio de trabajo"
+
+msgid "User is required"
+msgstr "Se requiere usuario"
+
+msgid "Unable to fill checklists for current activity"
+msgstr ""
+"No se pueden completar las listas de verificación para la actividad actual"
+
+msgid "Report Attachments"
+msgstr "Adjuntos del informe"

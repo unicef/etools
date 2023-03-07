@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.admin.utils import quote
 from django.contrib.contenttypes.models import ContentType
@@ -313,6 +314,7 @@ class InterventionAdmin(
         'partner_focal_points',
         'flat_locations'
     )
+    country_office_admin_editable = ('unicef_court', )
     fieldsets = (
         (_('Intervention Details'), {
             'fields':
@@ -416,6 +418,29 @@ class InterventionAdmin(
         ))
 
     attachments_link.short_description = 'attachments'
+
+    def has_change_permission(self, request, obj=None):
+        return super().has_change_permission(request, obj=None) or request.user.groups.filter(name='Country Office Administrator').exists()
+
+    def changeform_view(self, request, *args, **kwargs):
+        self.readonly_fields = list(self.readonly_fields)
+
+        if request.user.groups.filter(name='Country Office Administrator').exists() and \
+                request.user.email not in settings.ADMIN_EDIT_EMAILS:
+            form_fields = [field for field in self.get_fields(request)
+                           if field not in self.country_office_admin_editable]
+            self.readonly_fields.extend(form_fields)
+
+        return super().changeform_view(request, *args, **kwargs)
+
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        _new_hq_cost_label = _('Capacity Strengthening Costs')
+        if 'hq_support_cost' in form.base_fields:  # when user has change permissions
+            form.base_fields['hq_support_cost'].label = _new_hq_cost_label
+        else:  # in view only more
+            form._meta.labels = {'hq_support_cost': _new_hq_cost_label}
+        return form
 
     def save_formset(self, request, form, formset, change):
         instances = formset.save()

@@ -3,6 +3,7 @@ import logging
 
 from django.db import transaction
 
+from unicef_vision.exceptions import VisionException
 from unicef_vision.settings import INSIGHT_DATE_FORMAT
 
 from etools.applications.reports.models import CountryProgramme, Indicator, Result, ResultType
@@ -298,7 +299,11 @@ class ProgrammeSynchronizer(VisionDataTenantSynchronizer):
         return {'cps': cps, 'outcomes': outcomes, 'outputs': outputs, 'activities': activities}
 
     def _convert_records(self, records):
-        records = records['ROWSET']['ROW']
+        try:
+            records = records['ROWSET']['ROW']
+        except KeyError as exc:
+            raise VisionException(f'Expected key {exc} is missing from API response {records}.')
+
         for r in records:
             for k in self.DATES:
                 r[k] = datetime.datetime.strptime(r[k], INSIGHT_DATE_FORMAT).date() if r[k] else None

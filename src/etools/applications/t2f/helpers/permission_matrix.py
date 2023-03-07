@@ -1,7 +1,7 @@
 from collections import defaultdict
 
 from django.core.cache import cache
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext as _
 
 from etools.applications.t2f.permission_action_points import action_points
 from etools.applications.t2f.permissions import permissions
