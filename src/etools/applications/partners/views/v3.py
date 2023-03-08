@@ -42,7 +42,7 @@ class PMPBaseViewMixin:
     def is_partner_staff(self):
         """Flag indicator whether user is a partner
         any active group out of IP... , """
-        return self.request.user.is_authenticated and self.request.user.get_partner()
+        return self.request.user.is_authenticated and bool(self.request.user.get_partner())
 
     def current_partner(self):
         """List of partners the user is associated with"""
