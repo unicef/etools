@@ -3,7 +3,7 @@ import logging
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
-from django.core.exceptions import PermissionDenied, ValidationError as DjangoValidationError
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import connection, transaction
 from django.db.models import OuterRef, Prefetch, Q, Subquery
 from django.http import HttpResponseForbidden, HttpResponseRedirect
@@ -151,7 +151,7 @@ class UsersDetailAPIView(RetrieveAPIView):
 
 class UsersListAPIView(PMPBaseViewMixin, QueryStringFilterMixin, ListAPIView):
     """
-    Gets a list of Unicef Staff users in the current country.
+    Gets a list of users in the current country.
     Country is determined by the currently logged in user.
     """
     model = get_user_model()
@@ -184,13 +184,13 @@ class UsersListAPIView(PMPBaseViewMixin, QueryStringFilterMixin, ListAPIView):
             p = self.current_partner()
             emails += p.active_staff_members.values_list("email", flat=True)
             qs = qs.filter(email__in=emails)
-        elif self.request.user.is_staff:
+        elif self.request.user.is_staff and self.request.user.is_unicef_user():
             qs = qs.filter(
                 profile__country=self.request.user.profile.country,
                 is_staff=True,
             )
         else:
-            raise PermissionDenied
+            return []
 
         return qs.prefetch_related(
             'profile',
