@@ -213,14 +213,15 @@ class TestUsersListAPIView(BaseTenantTestCase):
         )
         self.url = reverse("users_v3:users-list")
 
-    def test_not_admin(self):
-        user = UserFactory()
+    def test_not_staff(self):
+        user = UserFactory(is_staff=False)
         response = self.forced_auth_req(
             'get',
             self.url,
             user=user,
         )
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, [])
 
     def test_api_users_list(self):
         with self.assertNumQueries(3):
@@ -320,10 +321,13 @@ class TestUsersListAPIView(BaseTenantTestCase):
             'get',
             self.url,
             data={'verbosity': 'minimal'},
-            user=self.unicef_superuser
+            user=self.unicef_staff
         )
         response_json = json.loads(response.rendered_content)
-        self.assertEqual(len(response_json), 1)
+        self.assertEqual(len(response_json), 2)
+        self.assertEqual(
+            sorted([self.unicef_staff.id, self.partnership_manager_user.id]),
+            sorted(map(lambda x: x['id'], response_json)))
 
     def test_partner_user(self):
         partner = PartnerFactory()
