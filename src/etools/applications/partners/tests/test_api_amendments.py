@@ -534,9 +534,12 @@ class TestInterventionAmendmentDeleteView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_intervention_amendments_delete(self):
+        last_intervention_amendment = InterventionAmendment.objects.all().last()
+        inexistent_id = last_intervention_amendment.id + 1000
+
         response = self.forced_auth_req(
             'delete',
-            reverse("partners_api:intervention-amendments-del", args=[404]),
+            reverse("partners_api:intervention-amendments-del", args=[inexistent_id]),
             user=self.unicef_staff,
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
