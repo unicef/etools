@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model
 from django.db import connection
 from django.db.models import Q
 from django.utils import timezone
+from django.utils.translation import gettext as _
 
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
@@ -28,6 +29,7 @@ from etools.applications.partners.serializers.interventions_v2 import (
     InterventionListSerializer,
     InterventionMonitorSerializer,
 )
+from etools.applications.users.serializers import MinimalUserSerializer
 
 
 class CoreValuesAssessmentSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
@@ -134,13 +136,14 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
 
             else:
                 if user.is_unicef_user():
-                    raise ValidationError('Unable to associate staff member to UNICEF user')
+                    raise ValidationError(_('Unable to associate staff member to UNICEF user'))
 
                 if bool(user.get_staff_member_country()):
                     raise ValidationError(
                         {
-                            'active': 'The email for the partner contact is used by another partner contact. '
-                                      'Email has to be unique to proceed {}'.format(email)
+                            'active': _(
+                                'The email for the partner contact is used by another partner contact. '
+                                'Email has to be unique to proceed %s') % email
                         }
                     )
 
@@ -150,8 +153,9 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
             if email != self.instance.email:
                 raise ValidationError(
                     {
-                        "email": "User emails cannot be changed, please remove"
-                        " the user and add another one: {}".format(email)
+                        "email": _(
+                            "User emails cannot be changed, please remove"
+                            " the user and add another one: %s") % email
                     }
                 )
 
@@ -166,21 +170,21 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
                     psm_country = user.get_staff_member_country()
                     if psm_country and psm_country != connection.tenant:
                         raise ValidationError({
-                            'active': 'The Partner Staff member you are trying to activate is associated '
-                                      'with a different Partner Organization'
+                            'active': _('The Partner Staff member you are trying to activate is associated '
+                                        'with a different Partner Organization')
                         })
 
             # disabled is unavailable if user already synced to PRP to avoid data inconsistencies
             if self.instance.active and not active:
                 if Intervention.objects.filter(
-                    # todo epd: Q(date_sent_to_partner__isnull=False, agreement__partner__staff_members=self.instance) |
+                    Q(date_sent_to_partner__isnull=False, agreement__partner__staff_members=self.instance) |
                     Q(
                         ~Q(status=Intervention.DRAFT),
                         Q(partner_focal_points=self.instance) | Q(partner_authorized_officer_signatory=self.instance),
                     ),
                 ).exists():
-                    raise ValidationError({'active': 'User already synced to PRP and cannot be disabled. '
-                                                     'Please instruct the partner to disable from PRP'})
+                    raise ValidationError({'active': _('User already synced to PRP and cannot be disabled. '
+                                                       'Please instruct the partner to disable from PRP')})
 
         return data
 
@@ -189,7 +193,7 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
         if 'user' not in validated_data:
             validated_data['user'] = User.objects.create(
                 first_name=validated_data.get('first_name'),
-                last_name=validated_data.get('first_name'),
+                last_name=validated_data.get('last_name'),
                 username=validated_data['email'],
                 email=validated_data['email'],
                 is_staff=False,
@@ -224,6 +228,14 @@ class PartnerStaffMemberDetailSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class PartnerStaffMemberUserSerializer(serializers.ModelSerializer):
+    user = MinimalUserSerializer()
+
+    class Meta:
+        model = PartnerStaffMember
+        fields = "__all__"
+
+
 class AssessmentDetailSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
     report_attachment = AttachmentSingleFileField()
     report_file = serializers.FileField(source='report', read_only=True)
@@ -237,12 +249,11 @@ class AssessmentDetailSerializer(AttachmentSerializerMixin, serializers.ModelSer
     def validate_completed_date(self, completed_date):
         today = timezone.now().date()
         if completed_date > today:
-            raise serializers.ValidationError('The Date of Report cannot be in the future')
+            raise serializers.ValidationError(_('The Date of Report cannot be in the future'))
         return completed_date
 
 
 class PartnerOrganizationListSerializer(serializers.ModelSerializer):
-    rating = serializers.CharField(source='get_rating_display')
 
     class Meta:
         model = PartnerOrganization
@@ -381,7 +392,7 @@ class PartnerPlannedVisitsSerializer(serializers.ModelSerializer):
                 year=self.initial_data.get("year"),
             )
             if self.instance.partner.partner_type != PartnerType.GOVERNMENT:
-                raise ValidationError({'partner': 'Planned Visit can be set only for Government partners'})
+                raise ValidationError({'partner': _('Planned Visit can be set only for Government partners')})
 
         except self.Meta.model.DoesNotExist:
             self.instance = None
@@ -508,14 +519,14 @@ class PartnerOrganizationCreateUpdateSerializer(SnapshotModelSerializer):
         if basis_for_risk_rating and \
                 type_of_assessment in [PartnerOrganization.HIGH_RISK_ASSUMED, PartnerOrganization.LOW_RISK_ASSUMED]:
             raise ValidationError(
-                {'basis_for_risk_rating': 'The basis for risk rating has to be blank if Type is Low or High'})
+                {'basis_for_risk_rating': _('The basis for risk rating has to be blank if Type is Low or High')})
 
         if basis_for_risk_rating and \
                 rating == PartnerOrganization.RATING_NOT_REQUIRED and \
                 type_of_assessment == PartnerOrganization.MICRO_ASSESSMENT:
             raise ValidationError({
                 'basis_for_risk_rating':
-                    'The basis for risk rating has to be blank if rating is Not Required and type is Micro Assessment'
+                    _('The basis for risk rating has to be blank if rating is Not Required and type is Micro Assessment')
             })
 
         return data
@@ -563,7 +574,7 @@ class PartnerOrganizationCreateUpdateSerializer(SnapshotModelSerializer):
         extra_kwargs = {
             "partner_type": {
                 "error_messages": {
-                    "null": 'Vendor number must belong to PRG2 account group'
+                    "null": _('Vendor number must belong to PRG2 account group')
                 }
             }
         }

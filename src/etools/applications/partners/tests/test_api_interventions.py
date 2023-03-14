@@ -3,26 +3,24 @@ import json
 from unittest import skip
 
 from django.core.cache import cache
-from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import connection
 from django.test import SimpleTestCase
 from django.urls import resolve, reverse
 from django.utils import timezone
 
 from rest_framework import status
-from rest_framework.exceptions import ErrorDetail
 from rest_framework.test import APIRequestFactory
 from unicef_attachments.models import Attachment
 from unicef_locations.tests.factories import LocationFactory
 from unicef_snapshot.models import Activity
 
-from etools.applications.attachments.models import AttachmentFlat
-from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
+from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.core.tests.mixins import URLAssertionMixin
 from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.environment.tests.factories import TenantSwitchFactory
-from etools.applications.partners.models import Intervention, InterventionAmendment, InterventionResultLink
+from etools.applications.funds.tests.factories import FundsReservationItemFactory
+from etools.applications.partners.models import Intervention, InterventionResultLink
 from etools.applications.partners.permissions import InterventionPermissions
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
@@ -90,30 +88,102 @@ class TestInterventionsSwagger(BaseTenantTestCase):
 
 class TestInterventionsAPI(BaseTenantTestCase):
     EDITABLE_FIELDS = {
-        'draft': ["status", "attachments", "prc_review_document", 'travel_activities',
-                  "partner_authorized_officer_signatory", "partner_focal_points", "id",
-                  "country_programme", "amendments", "unicef_focal_points", "end", "title",
-                  "signed_by_partner_date", "review_date_prc", "frs", "start",
-                  "metadata", "submission_date", "agreement", "unicef_signatory_id",
-                  "result_links", "contingency_pd", "unicef_signatory", "agreement_id", "signed_by_unicef_date",
-                  "partner_authorized_officer_signatory_id", "created", "planned_visits",
-                  "planned_budget", "modified", "signed_pd_document", "submission_date_prc", "document_type",
-                  "offices", "population_focus", "country_programme_id", "engagement", "sections",
-                  "sections_present", "flat_locations", "reporting_periods", "activity",
-                  "prc_review_attachment", "signed_pd_attachment", "actionpoint",
-                  "reporting_requirements", "special_reporting_requirements", "reference_number_year", "number",
-                  "termination_doc_attachment", "monitoring_activities", "cfei_number"],
+        'draft': [
+            "accepted_on_behalf_of_partner",
+            "actionpoint",
+            "activation_protocol",
+            "activity",
+            "agreement",
+            "agreement_id",
+            "amendment",
+            "attachments",
+            "budget_owner",
+            "budget_owner_id",
+            "cancel_justification",
+            "capacity_development",
+            "cash_transfer_modalities",
+            "cfei_number",
+            "confidential",
+            "context",
+            "contingency_pd",
+            "country_programme",
+            "country_programmes",
+            "country_programme_id",
+            "created",
+            "date_sent_to_partner",
+            "document_currency",
+            "document_type",
+            "end",
+            "engagement",
+            "equity_narrative",
+            "equity_rating",
+            "flat_locations",
+            "frs",
+            "gender_narrative",
+            "gender_rating",
+            "has_data_processing_agreement",
+            "has_activities_involving_children",
+            "has_special_conditions_for_construction",
+            "hq_support_cost",
+            "humanitarian_flag",
+            "id",
+            "implementation_strategy",
+            "ip_program_contribution",
+            "management_budgets",
+            "metadata",
+            "modified",
+            "monitoring_activities",
+            "number",
+            "offices",
+            "other_details",
+            "other_info",
+            "other_partners_involved",
+            "partner_accepted",
+            "partner_authorized_officer_signatory_id",
+            "partner_focal_points",
+            "pd_outputs",
+            "planned_budget",
+            "planned_visits",
+            "population_focus",
+            "reference_number_year",
+            "reporting_periods",
+            "reporting_requirements",
+            "result_links",
+            "risks",
+            "sections",
+            "sections_present",
+            "special_reporting_requirements",
+            "sites",
+            "start",
+            "status",
+            "submission_date",
+            "supply_items",
+            "sustainability_narrative",
+            "sustainability_rating",
+            "technical_guidance",
+            "termination_doc",  # not used, legacy
+            "termination_doc_attachment",
+            "title",
+            "travel_activities",
+            "unicef_accepted",
+            "unicef_court",
+            "unicef_focal_points",
+            "unicef_review_type",
+            "unicef_signatory_id",
+            "quarters",
+        ],
         'signed': [],
         'active': ['']
     }
     REQUIRED_FIELDS = {
-        'draft': ['number', 'title', 'agreement', 'document_type', 'reference_number_year'],
+        'draft': ['number', 'title', 'agreement', 'document_type', 'document_currency'],
         'signed': [],
         'active': ['']
     }
     ALL_FIELDS = get_all_field_names(Intervention) + InterventionPermissions.EXTRA_FIELDS
 
     def setUp(self):
+        super().setUp()
         setup_intervention_test_data(self)
 
     def tearDown(self):
@@ -201,6 +271,15 @@ class TestInterventionsAPI(BaseTenantTestCase):
         self.assertEqual(status_code, status.HTTP_200_OK)
         self.assertEqual(len(response), 4)
 
+    def test_list_interventions_for_empty_result_link(self):
+        InterventionResultLinkFactory(cp_output=None)
+        response = self.forced_auth_req(
+            'get',
+            reverse('partners_api:intervention-list'),
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
     def test_add_contingency_pd(self):
         data = {
             "document_type": Intervention.PD,
@@ -208,6 +287,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
             "contingency_pd": True,
             "agreement": self.agreement.id,
             "reference_number_year": datetime.date.today().year,
+            "activation_protocol": "test",
         }
         status_code, response = self.run_request_list_ep(data, user=self.partnership_manager_user)
 
@@ -239,6 +319,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
             "contingency_pd": True,
             "agreement": self.agreement.pk,
             "reference_number_year": datetime.date.today().year,
+            "activation_protocol": "test",
 
         }
         status_code, response = self.run_request_list_ep(data, user=self.partnership_manager_user)
@@ -287,7 +368,8 @@ class TestInterventionsAPI(BaseTenantTestCase):
             "agreement": self.agreement.pk,
             "prc_review_attachment": attachment_prc.pk,
             "signed_pd_attachment": attachment_pd.pk,
-            "reference_number_year": datetime.date.today().year
+            "reference_number_year": datetime.date.today().year,
+            "activation_protocol": "test",
         }
         status_code, response = self.run_request_list_ep(data, user=self.partnership_manager_user)
         self.assertEqual(status_code, status.HTTP_201_CREATED)
@@ -478,7 +560,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
         self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response['frs'],
                          ['One or more of the FRs selected is related '
-                          'to a different PD/SSFA, {}'.format(self.fr_1.fr_number)])
+                          'to a different PD/SPD, {}'.format(self.fr_1.fr_number)])
         self.assertFalse(Activity.objects.exists())
 
     def test_add_same_frs_twice_on_pd(self):
@@ -567,7 +649,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
                               [perm for perm in required_permissions if required_permissions[perm]])
 
     def test_list_interventions(self):
-        EXPECTED_QUERIES = 9
+        EXPECTED_QUERIES = 10
         with self.assertNumQueries(EXPECTED_QUERIES):
             status_code, response = self.run_request_list_ep(user=self.unicef_staff, method='get')
 
@@ -601,7 +683,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
         self.ts = TenantSwitchFactory(name="prp_mode_off", countries=[connection.tenant])
         self.assertTrue(tenant_switch_is_active(self.ts.name))
 
-        EXPECTED_QUERIES = 9
+        EXPECTED_QUERIES = 10
         with self.assertNumQueries(EXPECTED_QUERIES):
             status_code, response = self.run_request_list_ep(user=self.unicef_staff, method='get')
 
@@ -615,8 +697,8 @@ class TestInterventionsAPI(BaseTenantTestCase):
         for i in range(0, EXTRA_INTERVENTIONS + 1):
             intervention = InterventionFactory(
                 document_type=Intervention.PD,
-                start=(timezone.now().date()).isoformat(),
-                end=(timezone.now().date() + datetime.timedelta(days=31)).isoformat(),
+                start=timezone.now().date(),
+                end=timezone.now().date() + datetime.timedelta(days=31),
                 agreement=self.agreement,
             )
             intervention.sections.add(section1.pk)
@@ -680,6 +762,59 @@ class TestInterventionsAPI(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), Intervention.objects.count())
 
+    def test_filtering_grants(self):
+        grant_number = "GE001"
+        FundsReservationItemFactory(
+            fund_reservation=self.fr_1,
+            grant_number=grant_number,
+        )
+        pd_qs = Intervention.objects.filter(
+            frs__fr_items__grant_number=grant_number,
+        )
+        self.assertTrue(pd_qs.count() < Intervention.objects.count())
+        response = self.forced_auth_req(
+            "get",
+            reverse('partners_api:intervention-list'),
+            user=self.unicef_staff,
+            data={"grants": grant_number}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), pd_qs.count())
+
+    def test_filtering_donors(self):
+        donor = "DON001"
+        FundsReservationItemFactory(
+            fund_reservation=self.fr_1,
+            donor=donor,
+        )
+        pd_qs = Intervention.objects.filter(frs__fr_items__donor=donor)
+        self.assertTrue(pd_qs.count() < Intervention.objects.count())
+        response = self.forced_auth_req(
+            "get",
+            reverse('partners_api:intervention-list'),
+            user=self.unicef_staff,
+            data={"donors": donor}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), pd_qs.count())
+
+    def test_permissions_cash_and_document_type_not_editable_when_locked(self):
+        draft_intervention = InterventionFactory(
+            agreement=self.agreement, status='draft',
+            unicef_accepted=False, partner_accepted=False, unicef_court=True,
+        )
+        draft_intervention.unicef_focal_points.add(self.partnership_manager_user)
+        status_code, response = self.run_request(draft_intervention.id, user=self.partnership_manager_user)
+        self.assertTrue(response['permissions']['edit']['document_type'])
+        self.assertTrue(response['permissions']['edit']['document_currency'])
+        self.assertTrue(response['permissions']['edit']['cash_transfer_modalities'])
+        draft_intervention.partner_accepted = True
+        draft_intervention.save()
+        status_code, response = self.run_request(draft_intervention.id, user=self.partnership_manager_user)
+        self.assertFalse(response['permissions']['edit']['document_type'])
+        self.assertFalse(response['permissions']['edit']['document_currency'])
+        self.assertFalse(response['permissions']['edit']['cash_transfer_modalities'])
+
 
 class TestAPIInterventionResultLinkListView(BaseTenantTestCase):
     """Exercise the list view for InterventionResultLinkListCreateView"""
@@ -703,6 +838,7 @@ class TestAPIInterventionResultLinkListView(BaseTenantTestCase):
             'intervention',
             'created',
             'modified',
+            'code',
         ))
 
     def _make_request(self, user):
@@ -842,6 +978,7 @@ class TestAPIInterventionResultLinkRetrieveView(BaseTenantTestCase):
             'intervention',
             'created',
             'modified',
+            'code',
         ))
 
     def _make_request(self, user):
@@ -1015,7 +1152,7 @@ class TestAPIInterventionLowerResultListView(BaseTenantTestCase):
                           kwargs={'result_link_pk': cls.result_link.id})
 
         # cls.expected_field_names is the list of field names expected in responses.
-        cls.expected_field_names = sorted(('id', 'code', 'created', 'modified', 'name', 'result_link'))
+        cls.expected_field_names = sorted(('id', 'is_active', 'code', 'created', 'modified', 'name', 'result_link'))
 
     def _make_request(self, user):
         return self.forced_auth_req('get', self.url, user=user)
@@ -1145,7 +1282,7 @@ class TestAPIInterventionLowerResultCreateView(BaseTenantTestCase):
         self.assertNotEqual(response_json.get('code'), 'ZZZ')
 
 
-class TestAPIInterventionIndicatorsListView(BaseTenantTestCase):
+class BaseAPIInterventionIndicatorsListMixin:
     """Exercise the list view for InterventionIndicatorsListView (these are AppliedIndicator instances)"""
     @classmethod
     def setUpClass(cls):
@@ -1161,9 +1298,6 @@ class TestAPIInterventionIndicatorsListView(BaseTenantTestCase):
         # Create another result link/lower result/indicator combo that will break this test if the views don't
         # filter properly
         AppliedIndicatorFactory(lower_result=LowerResultFactory(result_link=InterventionResultLinkFactory()))
-
-        cls.url = reverse('partners_api:intervention-indicators-list',
-                          kwargs={'lower_result_pk': cls.lower_result.id})
 
         # cls.expected_field_names is the list of field names expected in responses.
         cls.expected_field_names = sorted((
@@ -1250,7 +1384,20 @@ class TestAPIInterventionIndicatorsListView(BaseTenantTestCase):
         self.assertResponseFundamentals(response)
 
 
-class TestAPInterventionIndicatorsCreateView(BaseTenantTestCase):
+class TestAPIInterventionIndicatorsListView(
+        BaseAPIInterventionIndicatorsListMixin,
+        BaseTenantTestCase,
+):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.url = reverse(
+            'partners_api:intervention-indicators-list',
+            kwargs={'lower_result_pk': cls.lower_result.pk},
+        )
+
+
+class BaseAPIInterventionIndicatorsCreateMixin:
     """Exercise the create view for InterventionIndicatorsListView (these are AppliedIndicator instances)"""
     @classmethod
     def setUpClass(cls):
@@ -1313,11 +1460,12 @@ class TestAPInterventionIndicatorsCreateView(BaseTenantTestCase):
 
     def test_group_permission_non_staff(self):
         """Ensure group membership is sufficient for create; even non-staff group members can create"""
-        user = UserFactory()
+        user = UserFactory(is_staff=True)
         response = self._make_request(user)
         self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
 
         _add_user_to_partnership_manager_group(user)
+        self.lower_result.result_link.intervention.unicef_focal_points.add(user)
 
         # Now the request should succeed.
         response = self._make_request(user)
@@ -1327,8 +1475,9 @@ class TestAPInterventionIndicatorsCreateView(BaseTenantTestCase):
         """Ensure a different indicator blueprint can be associated with the same lower_result, but
         the same indicator can't be added twice.
         """
-        user = UserFactory()
+        user = UserFactory(is_staff=True)
         _add_user_to_partnership_manager_group(user)
+        self.lower_result.result_link.intervention.unicef_focal_points.add(user)
         data = self.data.copy()
         data['indicator'] = {'title': 'another indicator blueprint'}
         response = self._make_request(user, data)
@@ -1345,6 +1494,19 @@ class TestAPInterventionIndicatorsCreateView(BaseTenantTestCase):
                          ['This indicator is already being monitored for this Result'])
 
 
+class TestAPIInterventionIndicatorsCreateView(
+        BaseAPIInterventionIndicatorsCreateMixin,
+        BaseTenantTestCase,
+):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.url = reverse(
+            'partners_api:intervention-indicators-list',
+            kwargs={'lower_result_pk': cls.lower_result.pk},
+        )
+
+
 class TestAPInterventionIndicatorsUpdateView(BaseTenantTestCase):
     """Exercise the update view for InterventionIndicatorsUpdateView
     (these are AppliedIndicator instances)
@@ -1352,7 +1514,7 @@ class TestAPInterventionIndicatorsUpdateView(BaseTenantTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.intervention = InterventionFactory()
+        cls.intervention = InterventionFactory(status=Intervention.DRAFT)
         cls.result_link = InterventionResultLinkFactory(intervention=cls.intervention)
         cls.lower_result = LowerResultFactory(result_link=cls.result_link)
         # Create another result link/lower result pair that will break this
@@ -1429,7 +1591,7 @@ class TestInterventionAttachmentDeleteView(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.partnership_manager = UserFactory(is_staff=True)
         cls.partnership_manager.groups.add(GroupFactory())
-        cls.intervention = InterventionFactory()
+        cls.intervention = InterventionFactory(status=Intervention.DRAFT)
         cls.attachment = InterventionAttachmentFactory(
             intervention=cls.intervention,
             attachment="random_attachment.pdf",
@@ -1630,314 +1792,6 @@ class TestInterventionAmendmentListAPIView(BaseTenantTestCase):
         self.assertFalse(response_json)
 
 
-class TestInterventionAmendmentCreateAPIView(BaseTenantTestCase):
-    def setUp(self):
-        super().setUp()
-
-        self.partnership_manager_user = UserFactory(is_staff=True)
-        self.partnership_manager_user.groups.add(GroupFactory())
-
-        self.intervention = InterventionFactory(status=Intervention.SIGNED)
-        self.url = reverse(
-            "partners_api:intervention-amendments-add",
-            kwargs={'intervention_pk': self.intervention.id}
-        )
-
-        self.uploaded_file = SimpleUploadedFile('hello_world.txt', 'hello world!'.encode('utf-8'))
-        self.data = {
-            "types": InterventionAmendment.DATES,
-            "signed_date": datetime.date.today(),
-            "signed_amendment": self.uploaded_file,
-        }
-        self.file_type_signed_amendment_attachment = AttachmentFileTypeFactory(
-            code="partners_intervention_amendment_signed"
-        )
-        self.file_type_internal_prc_review = AttachmentFileTypeFactory(
-            code="partners_intervention_amendment_internal_prc_review"
-        )
-
-    def assertResponseFundamentals(self, response):
-        """Assert common fundamentals about the response."""
-        response_json = json.loads(response.rendered_content)
-        self.assertIsInstance(response_json, dict)
-        self.assertIn('id', response_json)
-        return response_json
-
-    def test_no_permission_user_forbidden(self):
-        """Ensure a non-staff user gets the 403 smackdown"""
-        response = self._make_request(user=UserFactory())
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
-
-    def test_unauthenticated_user_forbidden(self):
-        """Ensure an unauthenticated user gets the 403 smackdown"""
-        factory = APIRequestFactory()
-        view_info = resolve(self.url)
-        request = factory.post(self.url, data={})
-        response = view_info.func(request)
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
-
-    def test_group_permission_partnership_member(self):
-        """Ensure group membership is sufficient for create;"""
-        user = UserFactory(is_staff=True)
-        response = self._make_request(user=user)
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
-
-    def test_create_amendment_invalid_type(self):
-        invalid_type = 'invalid_choice'
-        response = self._make_request(
-            user=self.partnership_manager_user,
-            data={"types": [invalid_type], "signed_amendment": self.uploaded_file},
-            request_format='multipart',
-        )
-
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(response.data['types'],
-                          {0: [ErrorDetail(string='"invalid_choice" is not a valid choice.', code=f'{invalid_type}')]})
-
-    def test_create_amendment_other_type_no_description(self):
-        response = self._make_request(
-            user=self.partnership_manager_user,
-            data={
-                "types": [InterventionAmendment.OTHER],
-                "signed_amendment": self.uploaded_file,
-                "signed_date": datetime.date.today(),
-            },
-            request_format='multipart',
-        )
-
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(
-            response.data['non_field_errors'], [ErrorDetail(
-                string="Other description required, if type 'Other' selected.",
-                code='invalid'
-            )]
-        )
-
-    def test_create_amendment_invalid_file(self):
-        response = self._make_request(
-            user=self.partnership_manager_user,
-            data={},
-            request_format='multipart',
-        )
-
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(response.data['signed_amendment'], ['No file was submitted.'])
-
-        response = self._make_request(
-            user=self.partnership_manager_user,
-            data={'signed_amendment': 'asdf'},
-            request_format='multipart',
-        )
-
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(
-            response.data['signed_amendment'],
-            ['The submitted data was not a file. Check the encoding type on the form.']
-        )
-
-    def test_create_amendment_invalid_date(self):
-        tomorrow = datetime.date.today() + datetime.timedelta(days=1)
-        response = self._make_request(
-            user=self.partnership_manager_user,
-            data={
-                "signed_amendment": self.uploaded_file,
-                'signed_date': tomorrow,
-                'types': [InterventionAmendment.DATES, ]
-            },
-            request_format='multipart',
-        )
-
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(next(iter(response.data.values())), ['Date cannot be in the future!'])
-
-    def test_create_amendment_matching_date(self):
-        date = datetime.date.today() - datetime.timedelta(days=1)
-        InterventionAmendmentFactory(
-            intervention=self.intervention,
-            signed_date=date,
-        )
-        AttachmentFactory(
-            file="test_file.pdf",
-            file_type=None,
-            code="",
-        )
-        attachment_amendment = AttachmentFactory(
-            file="test_file_amendment.pdf",
-            file_type=None,
-            code="",
-        )
-        response = self._make_request(
-            user=self.partnership_manager_user,
-            data={
-                "signed_amendment_attachment": attachment_amendment.pk,
-                'signed_date': date,
-                'types': [InterventionAmendment.DATES, ]
-            },
-        )
-
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(
-            next(iter(response.data.values())),
-            ['There is already an amendment with this signed date.'],
-        )
-
-    def test_create_amendment_success(self):
-        response = self._make_request(
-            user=self.partnership_manager_user,
-            data=self.data,
-            request_format='multipart',
-        )
-
-        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
-        data = self.assertResponseFundamentals(response)
-        self.assertEquals(data['intervention'], self.intervention.id)
-
-    def test_create_amendment_with_signed_attachment(self):
-        attachment = AttachmentFactory(
-            file="test_file.pdf",
-            file_type=None,
-            code="",
-        )
-        self.data.pop("signed_amendment")
-        self.data["signed_amendment_attachment"] = attachment.pk
-        self.assertIsNone(attachment.file_type)
-        self.assertIsNone(attachment.content_object)
-        self.assertFalse(attachment.code)
-        response = self._make_request(
-            user=self.partnership_manager_user,
-            data=self.data,
-            request_format='multipart',
-        )
-
-        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
-        data = self.assertResponseFundamentals(response)
-        self.assertEquals(data['intervention'], self.intervention.pk)
-        attachment_updated = Attachment.objects.get(pk=attachment.pk)
-        self.assertEqual(
-            attachment_updated.file_type.code,
-            self.file_type_signed_amendment_attachment.code
-        )
-        self.assertEqual(attachment_updated.object_id, data["id"])
-        self.assertEqual(
-            attachment_updated.code,
-            self.file_type_signed_amendment_attachment.code
-        )
-
-    def test_create_amendment_with_internal_prc_review(self):
-        attachment = AttachmentFactory(
-            file="test_file.pdf",
-            file_type=None,
-            code="",
-        )
-        flat_qs = AttachmentFlat.objects.filter(attachment=attachment)
-        assert flat_qs.exists()
-        flat = flat_qs.first()
-        assert not flat.partner
-        self.data["internal_prc_review"] = attachment.pk
-        self.assertIsNone(attachment.file_type)
-        self.assertIsNone(attachment.content_object)
-        self.assertFalse(attachment.code)
-        response = self._make_request(
-            user=self.partnership_manager_user,
-            data=self.data,
-            request_format='multipart',
-        )
-
-        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
-        data = self.assertResponseFundamentals(response)
-        self.assertEquals(data['intervention'], self.intervention.pk)
-        attachment.refresh_from_db()
-        self.assertEqual(
-            attachment.file_type.code,
-            self.file_type_internal_prc_review.code
-        )
-        self.assertEqual(attachment.object_id, data["id"])
-        self.assertEqual(
-            attachment.code,
-            self.file_type_internal_prc_review.code
-        )
-
-        # check denormalization
-        flat = flat_qs.first()
-        assert flat.partner
-        assert flat.pd_ssfa
-        assert flat.pd_ssfa_number
-
-    def test_create_amendment_with_internal_prc_review_none(self):
-        response = self._make_request(
-            user=self.partnership_manager_user,
-            data=self.data,
-            request_format='multipart',
-        )
-
-        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
-        data = self.assertResponseFundamentals(response)
-        self.assertEquals(data['intervention'], self.intervention.pk)
-
-    def test_create_amendment_when_already_in_amendment(self):
-        self.intervention.in_amendment = True
-        self.intervention.save()
-
-        response = self._make_request(
-            user=self.partnership_manager_user,
-            data=self.data,
-            request_format='multipart',
-        )
-
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(
-            next(iter(response.data.values())),
-            ['Cannot add a new amendment while another amendment is in progress.']
-        )
-
-    def _make_request(self, user=None, data="", request_format='json', **kwargs):
-        return self.forced_auth_req('post', self.url, user=user, data=data, request_format=request_format, **kwargs)
-
-
-class TestInterventionAmendmentDeleteView(BaseTenantTestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.unicef_staff = UserFactory(is_staff=True)
-        cls.intervention = InterventionFactory()
-        cls.amendment = InterventionAmendmentFactory(
-            intervention=cls.intervention,
-            types=[InterventionAmendment.RESULTS],
-            signed_date=datetime.date.today(),
-            signed_amendment="random_amendment.pdf"
-        )
-        cls.url = reverse(
-            "partners_api:intervention-amendments-del",
-            args=[cls.amendment.pk]
-        )
-
-    def test_delete(self):
-        response = self.forced_auth_req(
-            'delete',
-            self.url,
-            user=self.unicef_staff,
-        )
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-
-    def test_delete_invalid(self):
-        self.intervention.status = Intervention.ACTIVE
-        self.intervention.save()
-        response = self.forced_auth_req(
-            'delete',
-            self.url,
-            user=self.unicef_staff,
-        )
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data, ["You do not have permissions to delete an amendment"])
-
-    def test_intervention_amendments_delete(self):
-        response = self.forced_auth_req(
-            'delete',
-            reverse("partners_api:intervention-amendments-del", args=[404]),
-            user=self.unicef_staff,
-        )
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-
-
 class TestInterventionListMapView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
@@ -2016,7 +1870,7 @@ class TestInterventionListMapView(BaseTenantTestCase):
         self.assertEqual(first["id"], intervention.pk)
 
 
-class TestInterventionReportingRequirementView(BaseTenantTestCase):
+class BaseInterventionReportingRequirementMixin:
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
@@ -2031,13 +1885,6 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
         )
         cls.lower_result = LowerResultFactory(result_link=cls.result_link)
         cls.indicator = AppliedIndicatorFactory(lower_result=cls.lower_result)
-
-    def _get_url(self, report_type, intervention=None):
-        intervention = self.intervention if intervention is None else intervention
-        return reverse(
-            "partners_api:intervention-reporting-requirements",
-            args=[intervention.pk, report_type]
-        )
 
     def test_get(self):
         for report_type, _ in ReportingRequirement.TYPE_CHOICES:
@@ -2390,3 +2237,15 @@ class TestInterventionReportingRequirementView(BaseTenantTestCase):
                 response.status_code,
                 status.HTTP_405_METHOD_NOT_ALLOWED
             )
+
+
+class TestInterventionReportingRequirementView(
+        BaseInterventionReportingRequirementMixin,
+        BaseTenantTestCase,
+):
+    def _get_url(self, report_type, intervention=None):
+        intervention = self.intervention if intervention is None else intervention
+        return reverse(
+            "partners_api:intervention-reporting-requirements",
+            args=[intervention.pk, report_type]
+        )

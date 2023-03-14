@@ -1,0 +1,215 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-02-10 10:07+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Methods"
+msgstr "Métodos"
+
+msgid "Site ID"
+msgstr "Identificação do sítio"
+
+#, python-format
+msgid "Admin %s - Name"
+msgstr "Admin %s - Nome"
+
+#, python-format
+msgid "Admin %s - Type"
+msgstr "Admin %s - Tipo"
+
+#, python-format
+msgid "Admin %s - Pcode"
+msgstr "Admin %s - Pcode"
+
+msgid "Site"
+msgstr "Sítio"
+
+msgid "Lat"
+msgstr "Lat"
+
+msgid "Long"
+msgstr "Longo"
+
+msgid "Active"
+msgstr "Activo"
+
+msgid "Related To"
+msgstr "Relacionado com"
+
+msgid "Name"
+msgstr "Nome"
+
+msgid "Issue for Attention"
+msgstr "Questão a ter em atenção"
+
+msgid "Status"
+msgstr "Estado"
+
+msgid "Attachments"
+msgstr "Anexos"
+
+msgid "Global Attachments"
+msgstr "Anexos Globais"
+
+msgid "Global Config"
+msgstr "Configuração global"
+
+msgid "Global Configs"
+msgstr "Configuração global"
+
+msgid "Short Name"
+msgstr "Nome curto"
+
+msgid "Ask for information source in checklist?"
+msgstr "Pedir fonte de informação na lista de verificação?"
+
+msgid "Method"
+msgstr "Método"
+
+msgid "Question Category"
+msgstr "Categoria da pergunta"
+
+msgid "Questions Categories"
+msgstr "Perguntas Categorias"
+
+msgid "Text"
+msgstr "Texto"
+
+msgid "Number"
+msgstr "Número"
+
+msgid "Boolean"
+msgstr "Booleano"
+
+msgid "Likert Scale"
+msgstr "Escala de Likert"
+
+msgid "Partner"
+msgstr "Parceiro"
+
+msgid "Output"
+msgstr "Saída"
+
+msgid "PD/SPD"
+msgstr "PD/SPD"
+
+msgid "Answer Type"
+msgstr "Tipo de resposta"
+
+msgid "Choices Size"
+msgstr "Escolha Tamanho"
+
+msgid "Level"
+msgstr "Nível"
+
+msgid "Category"
+msgstr "Categoria"
+
+msgid "Sections"
+msgstr "Secções"
+
+msgid "Question Text"
+msgstr "Texto da Pergunta"
+
+msgid "Count as HACT"
+msgstr "Conte como HACT"
+
+msgid "Is Custom"
+msgstr "É Personalizado"
+
+msgid "Is Active"
+msgstr "Está activo"
+
+msgid "Question"
+msgstr "Pergunta"
+
+msgid "Questions"
+msgstr "Perguntas"
+
+msgid "Label"
+msgstr "Etiqueta"
+
+msgid "Value"
+msgstr "Valor"
+
+msgid "Option"
+msgstr "Opção"
+
+msgid "Parent Location"
+msgstr "Localização dos pais"
+
+msgid "P Code"
+msgstr "Código P"
+
+msgid "Point"
+msgstr "Ponto"
+
+msgid "Location Site"
+msgstr "Localização"
+
+msgid "Location Sites"
+msgstr "Localizações"
+
+msgid "CP Output"
+msgstr "CP Saída"
+
+msgid "Location/Site"
+msgstr "Localização/local"
+
+msgid "Issue Raised By"
+msgstr "Edição Criada por"
+
+msgid "Location"
+msgstr "Localização"
+
+msgid "Issue For Attention/Probing"
+msgstr "Questão para atenção/Probing"
+
+msgid "Log Issue"
+msgstr "Emissão de log"
+
+msgid "Log Issues"
+msgstr "Questões de registo"
+
+msgid "Related object not provided"
+msgstr "Objecto relacionado não fornecido"
+
+msgid "Maximum one related object should be provided"
+msgstr "Deve ser fornecido, no máximo, um objecto relacionado"
+
+msgid "HACT questions can only be related at the Partner Organization Level"
+msgstr ""
+"As perguntas HACT só podem ser relacionadas ao nível da Organização Parceira"
+
+msgid "Only one hact question can be active at any time."
+msgstr "Apenas uma pergunta de facto pode estar activa em qualquer altura."
+
+msgid "The system provided questions cannot be edited."
+msgstr "O sistema previa que as perguntas não podiam ser editadas."
+
+msgid "Inactive"
+msgstr "Inactivo"
+
+msgid "Issue Closed By"
+msgstr "Edição Encerrada por"
+
+msgid "Issue Related To"
+msgstr "Questão relacionada com"
+
+msgid "Site Specific Locations"
+msgstr "Localizações específicas do local"

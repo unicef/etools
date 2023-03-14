@@ -6,7 +6,6 @@ from django.urls import reverse
 
 from django_tenants.test.client import TenantClient
 from rest_framework import status
-from unicef_djangolib.fields import CURRENCY_LIST
 from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
@@ -23,6 +22,7 @@ from etools.applications.partners.models import (
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.publics.tests.factories import PublicsCurrencyFactory
 from etools.applications.users.tests.factories import UserFactory
+from etools.libraries.djangolib.fields import CURRENCY_LIST
 
 
 class URLsTestCase(URLAssertionMixin, SimpleTestCase):
@@ -68,6 +68,9 @@ class TestPMPStaticDropdownsListApiView(BaseTenantTestCase):
                                      'partner_file_types',
                                      'partner_risk_rating',
                                      'sea_risk_ratings',
+                                     'gender_equity_sustainability_ratings',
+                                     'risk_types',
+                                     'cash_transfer_modalities',
                                      ))
 
     def _assertResponseFundamentals(self, response):

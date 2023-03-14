@@ -2,6 +2,8 @@
 import datetime
 from unittest import skip
 
+from django.utils import translation
+
 from rest_framework import serializers
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
@@ -148,6 +150,30 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
             'If the record is in "Draft" status please edit that record.'
         )
 
+    def test_validation_translation(self):
+        AgreementFactory(
+            agreement_type=Agreement.PCA,
+            partner=self.partner,
+            country_programme=self.country_programme,
+        )
+        data = {
+            "agreement_type": Agreement.PCA,
+            "partner": self.partner,
+            "country_programme": self.country_programme,
+        }
+        serializer = AgreementCreateUpdateSerializer()
+        serializer.context['request'] = self.fake_request
+
+        with translation.override('fr'):
+            with self.assertRaises(serializers.ValidationError) as context_manager:
+                serializer.validate(data=data)
+
+        self.assertSimpleExceptionFundamentals(
+            context_manager,
+            "Un PCA avec ce partenaire existe déjà pour ce cycle de programme de pays. Si "
+            "l'enregistrement est à l'état \"Brouillon\", veuillez le modifier."
+        )
+
     def test_create_ok_non_PCA_with_same_programme_and_partner(self):
         """Ensure it is OK to create non-PCA agreements that have the same country programme and partner.
 
@@ -257,7 +283,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
 
             self.assertSimpleExceptionFundamentals(
                 context_manager,
-                'Partner type must be CSO for PCA or SSFA agreement types.'
+                'Partner must be CSO in order to create a PCA.'
             )
 
         # Test for all agreement types that are not PCA or SSFA. These should not fail.

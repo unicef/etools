@@ -1,0 +1,136 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-02-10 10:07+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 "
+"&& n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
+
+msgid "Activity"
+msgstr "نشاط"
+
+msgid "Question"
+msgstr "سؤال"
+
+msgid "Question Text"
+msgstr "نص السؤال"
+
+msgid "Count as HACT"
+msgstr "عد على أنها HACT"
+
+msgid "Specific Details To Probe"
+msgstr "تفاصيل محددة للتحقيق"
+
+msgid "Enabled"
+msgstr "ممكن"
+
+msgid "Activity Question"
+msgstr "سؤال النشاط"
+
+msgid "Activity Questions"
+msgstr "أسئلة النشاط"
+
+msgid "Methods"
+msgstr "أساليب"
+
+msgid "Information Source"
+msgstr "مصدر المعلومات"
+
+msgid "Author"
+msgstr "مؤلف"
+
+msgid "Started Checklist"
+msgstr "بدأت قائمة التحقق"
+
+msgid "Started Checklists"
+msgstr "بدأت قوائم المراجعة"
+
+msgid "Checklist"
+msgstr "قائمة تدقيق"
+
+msgid "Value"
+msgstr "قيمة"
+
+msgid "Checklist Finding"
+msgstr "البحث عن قائمة التحقق"
+
+msgid "Checklist Findings"
+msgstr "نتائج قائمة التحقق"
+
+msgid "Overall Activity Question Finding"
+msgstr "إجمالي نشاط البحث عن الأسئلة"
+
+msgid "Overall Activity Question Findings"
+msgstr "نتائج أسئلة النشاط العام"
+
+msgid "Narrative Finding"
+msgstr "اكتشاف السرد"
+
+msgid "Attachments"
+msgstr "المرفقات"
+
+msgid "Checklist Overall Finding"
+msgstr "قائمة التحقق الشاملة"
+
+msgid "Checklist Overall Findings"
+msgstr "النتائج العامة قائمة التحقق"
+
+msgid "Activity Overall Finding"
+msgstr "الاكتشاف العام للنشاط"
+
+msgid "Activity Overall Findings"
+msgstr "النتائج العامة للنشاط"
+
+msgid "Source of Information"
+msgstr "مصدر المعلومات"
+
+msgid "Overall Finding"
+msgstr "النتيجة الشاملة"
+
+#, python-format
+msgid "Unable to find %(level)s with id %(target_id)s"
+msgstr "تعذر العثور على %(level)s بالمعرف %(target_id)s"
+
+#, python-format
+msgid ""
+"Unable to find finding for question %(question_id)s for %(level)s "
+"%(target_id)s"
+msgstr "تعذر العثور على السؤا %(question_id)s لـ %(level)s %(target_id)s"
+
+msgid "Ensure this field has no more than 100 characters."
+msgstr "تأكد من أن هذا الحقل لا يحتوي على أكثر من 100 حرف."
+
+msgid "Document Type"
+msgstr "نوع الوثيقة"
+
+msgid "Information source is required"
+msgstr "مطلوب مصدر المعلومات"
+
+#, python-format
+msgid "Workspace code provided is not a valid business_area_code: %s"
+msgstr "رمز مساحة العمل الذي تم توفيره ليس رمز منطقة_عمل صالحًا :%s"
+
+msgid "Workspace is required"
+msgstr "مساحة العمل مطلوبة"
+
+msgid "User is required"
+msgstr "المستخدم مطلوب"
+
+msgid "Unable to fill checklists for current activity"
+msgstr "غير قادر على ملء قوائم المراجعة للنشاط الحالي"
+
+msgid "Report Attachments"
+msgstr "تقرير المرفقات"

@@ -1,6 +1,6 @@
 from copy import copy
 
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext as _
 
 from rest_framework_csv.renderers import CSVRenderer
 from unicef_rest_export.renderers import FriendlyCSVRenderer
@@ -17,10 +17,10 @@ class TPMActivityCSVRenderer(FriendlyCSVRenderer):
         'activity': _('Task'),
         'is_pv': _('Is Programmatic Visit'),
         'section': _('Section'),
-        'cp_output': _('PD/SSFA output'),
+        'cp_output': _('PD/SPD output'),
         'partner': _('Partner'),
         'intervention': _('Partnership'),
-        'pd_ssfa': _('PD/SSFA'),
+        'pd_ssfa': _('PD/SPD'),
         'locations': _('Locations'),
         'date': _('Date'),
         'unicef_focal_points': _('Name of UNICEF Focal Point'),
@@ -42,10 +42,10 @@ class TPMLocationCSVRenderer(CSVRenderer):
         'visit_status': _('Status of Visit'),
         'activity': _('Task'),
         'section': _('Section'),
-        'cp_output': _('PD/SSFA output'),
+        'cp_output': _('PD/SPD output'),
         'partner': _('Partner'),
         'intervention': _('Partnership'),
-        'pd_ssfa': _('PD/SSFA'),
+        'pd_ssfa': _('PD/SPD'),
         'location': _('Location'),
         'date': _('Date'),
         'unicef_focal_points': _('Name of UNICEF Focal Point'),
@@ -96,7 +96,7 @@ class TPMVisitCSVRenderer(CSVRenderer):
         'sections': _('Sections'),
         'partners': _('Partners'),
         'interventions': _('Partnerships'),
-        'pd_ssfa': _('PD/SSFA'),
+        'pd_ssfa': _('PD/SPD'),
         'locations': _('Locations'),
         'start_date': _('Start Date'),
         'end_date': _('End Date'),

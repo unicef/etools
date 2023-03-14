@@ -12,7 +12,6 @@ from etools.applications.partners.tests.factories import (
     AgreementFactory,
     InterventionAmendmentFactory,
     InterventionAttachmentFactory,
-    InterventionBudgetFactory,
     InterventionFactory,
     InterventionPlannedVisitsFactory,
     InterventionResultLinkFactory,
@@ -66,8 +65,8 @@ class BaseInterventionModelExportTestCase(BaseTenantTestCase):
         AgreementFactory(signed_by_unicef_date=datetime.date.today())
         cls.intervention = InterventionFactory(
             agreement=agreement,
-            document_type=Intervention.SHPD,
-            status='draft',
+            document_type=Intervention.SPD,
+            status=Intervention.DRAFT,
             start=datetime.date.today(),
             end=datetime.date.today(),
             submission_date=datetime.date.today(),
@@ -79,11 +78,14 @@ class BaseInterventionModelExportTestCase(BaseTenantTestCase):
             population_focus="Population focus",
             partner_authorized_officer_signatory=partnerstaff,
             country_programme=agreement.country_programme,
+            cfei_number='cfei',
         )
-        cls.ib = InterventionBudgetFactory(
-            intervention=cls.intervention,
-            currency="USD"
-        )
+        cls.intervention.country_programmes.add(agreement.country_programme)
+
+        cls.ib = cls.intervention.planned_budget
+        cls.ib.currency = "USD"
+        cls.ib.save()
+
         cls.attachment = InterventionAttachmentFactory(
             intervention=cls.intervention,
         )
@@ -120,7 +122,7 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
             "Partner Type",
             "CSO Type",
             "Agreement",
-            "Country Programme",
+            "Country Programmes",
             "Document Type",
             "Reference Number",
             "Document Title",
@@ -137,7 +139,7 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
             "Total CSO Contribution",
             "UNICEF Cash",
             "UNICEF Supply",
-            "Total PD/SSFA Budget",
+            "Total PD/SPD Budget",
             "FR Number(s)",
             "FR Currency",
             "FR Posting Date",
@@ -160,6 +162,10 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
             "# of attachments",
             "CP Outputs",
             "URL",
+            "UNPP Number",
+            "Data Processing Agreement",
+            "Activities involving children and young people",
+            "Special Conditions for Construction Works by Implementing Partners",
         ])
 
         self.assertEqual(dataset[0], (
@@ -169,7 +175,10 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
             self.intervention.agreement.partner.partner_type,
             '',
             self.intervention.agreement.agreement_number,
-            str(self.intervention.country_programme.name),
+            ", ".join(self.intervention.country_programmes.values_list(
+                "name",
+                flat=True,
+            )),
             self.intervention.document_type,
             self.intervention.number,
             str(self.intervention.title),
@@ -209,7 +218,25 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
             str(self.intervention.attachments.count()),
             '',
             'https://testserver/pmp/interventions/{}/details/'.format(self.intervention.id),
+            'cfei',
+            str("Yes" if self.intervention.has_data_processing_agreement else "No"),
+            str("Yes" if self.intervention.has_activities_involving_children else "No"),
+            str("Yes" if self.intervention.has_special_conditions_for_construction else "No"),
         ))
+
+    def test_agreement_country_programmes_used(self):
+        self.intervention.country_programmes.clear()
+        response = self.forced_auth_req(
+            'get',
+            reverse('pmp_v3:intervention-list'),
+            user=self.unicef_staff,
+            data={"format": "csv"},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
+        country_programmes_idx = dataset._get_headers().index('Country Programmes')
+        self.assertEqual(dataset[0][country_programmes_idx], self.intervention.agreement.country_programme.name)
 
     def test_csv_flat_export_api(self):
         response = self.forced_auth_req(
@@ -222,8 +249,8 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertEqual(len(dataset._get_headers()), 67)
-        self.assertEqual(len(dataset[0]), 67)
+        self.assertEqual(len(dataset._get_headers()), 101)
+        self.assertEqual(len(dataset[0]), 101)
 
 
 class TestInterventionAmendmentModelExport(BaseInterventionModelExportTestCase):
@@ -253,8 +280,8 @@ class TestInterventionAmendmentModelExport(BaseInterventionModelExportTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertEqual(len(dataset._get_headers()), 10)
-        self.assertEqual(len(dataset[0]), 10)
+        self.assertEqual(len(dataset._get_headers()), 15)
+        self.assertEqual(len(dataset[0]), 15)
 
     def test_csv_flat_export_api(self):
         response = self.forced_auth_req(
@@ -267,8 +294,8 @@ class TestInterventionAmendmentModelExport(BaseInterventionModelExportTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertEqual(len(dataset._get_headers()), 10)
-        self.assertEqual(len(dataset[0]), 10)
+        self.assertEqual(len(dataset._get_headers()), 16)
+        self.assertEqual(len(dataset[0]), 16)
 
 
 class TestInterventionResultModelExport(BaseInterventionModelExportTestCase):
@@ -407,7 +434,13 @@ class TestInterventionLocationExport(BaseInterventionModelExportTestCase):
 
         # Another intervention, with no locations
         self.intervention2 = InterventionFactory(
-            agreement=AgreementFactory(partner=PartnerFactory(name='Partner 2', vendor_number='123')))
+            start=None,
+            end=None,
+            agreement=AgreementFactory(
+                partner=PartnerFactory(name='Partner 2', vendor_number='123'),
+            ),
+            status=Intervention.DRAFT,
+        )
         # Sections
         sec2 = SectionFactory(name='Section 2')
         sec3 = SectionFactory(name='Section 3')
@@ -420,7 +453,13 @@ class TestInterventionLocationExport(BaseInterventionModelExportTestCase):
 
         # Intervention with no sectors
         self.intervention3 = InterventionFactory(
-            agreement=AgreementFactory(partner=PartnerFactory(name='Partner 3', vendor_number='456')))
+            start=None,
+            end=None,
+            agreement=AgreementFactory(
+                partner=PartnerFactory(name='Partner 3', vendor_number='456'),
+            ),
+            status=Intervention.DRAFT,
+        )
         self.intervention3.flat_locations.add(LocationFactory(name='Location 2'))
         InterventionResultLinkFactory(intervention=self.intervention3, cp_output=ResultFactory(name='Result Fred'))
 

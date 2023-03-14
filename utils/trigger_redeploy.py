@@ -33,8 +33,11 @@ def get_env_vars():
                     "RANCHER_CLUSTER_PROJECT_ID",
                     "RANCHER_BEARER_TOKEN",
                     "RANCHER_ENDPOINT"]
-    prefix_map = {"develop": "DEV_",
-                  "staging": "STG_"}
+    prefix_map = {
+        "develop": "DEV_",
+        "staging": "STG_",
+        "epd": "EPD_",
+    }
 
     # script expects CIRCLE_BRANCH to be in the enviornment variables
     my_vars = {"environment": os.environ["CIRCLE_BRANCH"]}
@@ -68,6 +71,12 @@ def redeploy():
             "endpoint": "https://elbecerro.unicef.io/v3",
             "project": "etools-dev",
             "workloads": ["web-dev", "worker-dev", "beater-dev", "worker-vision-dev"],
+            "jobs": ["backend-migrations"]
+        },
+        "epd": {
+            "endpoint": "https://elbecerro.unicef.io/v3",
+            "project": "etools-test",
+            "workloads": ["web-tst", "worker-tst", "beater-tst", "worker-vision-tst"],
             "jobs": ["backend-migrations"]
         }
     }

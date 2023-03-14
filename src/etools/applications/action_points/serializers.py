@@ -1,5 +1,5 @@
 from django.utils import timezone
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext as _
 
 from django_comments.models import Comment
 from rest_framework import serializers
@@ -73,7 +73,7 @@ class ActionPointListSerializer(PermissionsBasedSerializerMixin, ActionPointBase
         read_field=MinimalPartnerOrganizationListSerializer(read_only=True, label=_('Partner')),
     )
     intervention = SeparatedReadWriteField(
-        read_field=MinimalInterventionListSerializer(read_only=True, label=_('PD/SSFA')),
+        read_field=MinimalInterventionListSerializer(read_only=True, label=_('PD/SPD')),
         required=False,
     )
 

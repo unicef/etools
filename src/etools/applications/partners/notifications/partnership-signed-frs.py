@@ -6,8 +6,8 @@ defaults = {
     Dear Colleague,
 
     Please note that the Partnership ref. {{ number }} with {{ partner }} is signed, the start date for the
-    PD/SSFA is {{ start_date }} and there is no FR associated with this partnership in eTools.
-    Please log into eTools and add the FR number to the record, so that the programme document/SSFA status
+    PD/SPD is {{ start_date }} and there is no FR associated with this partnership in eTools.
+    Please log into eTools and add the FR number to the record, so that the programme document/SPD status
     can change to active.
 
     {{ url }}.

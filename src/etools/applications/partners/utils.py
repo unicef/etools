@@ -1,13 +1,16 @@
 import datetime
 import html
 import logging
+import typing
 
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
+from django.db import connection
 from django.db.models import F, Q
 from django.urls import reverse
 from django.utils.timezone import make_aware, now
 
+from dateutil.relativedelta import relativedelta
 from unicef_attachments.models import Attachment, FileType
 
 from etools.applications.environment.notifications import send_notification_with_template
@@ -19,9 +22,13 @@ from etools.applications.partners.models import (
     Intervention,
     InterventionAmendment,
     InterventionAttachment,
+    PartnerOrganization,
+    PartnerStaffMember,
 )
+from etools.applications.partners.prp_api import PRPPartnerUserResponse
 from etools.applications.reports.models import CountryProgramme
 from etools.applications.t2f.models import TravelAttachment
+from etools.applications.users.models import User
 from etools.libraries.tenant_support.utils import run_on_all_tenants
 
 logger = logging.getLogger(__name__)
@@ -221,7 +228,7 @@ def copy_interventions(**kwargs):
     pd_file_type, _ = FileType.objects.get_or_create(
         code=pd_code,
         defaults={
-            "label": "Signed PD/SSFA",
+            "label": "Signed PD/SPD",
             "name": "intervention_signed_pd",
             "order": 0,
         }
@@ -307,7 +314,7 @@ def copy_intervention_amendments(**kwargs):
     file_type, _ = FileType.objects.get_or_create(
         code=code,
         defaults={
-            "label": "PD/SSFA Amendment",
+            "label": "PD/SPD Amendment",
             "name": "intervention_amendment_signed",
             "order": 0,
         }
@@ -515,7 +522,7 @@ def send_agreement_suspended_notification(agreement, user):
 
 
 def send_intervention_draft_notification():
-    """Send an email to PD/SHPD/SSFA's focal point(s) if in draft status"""
+    """Send an email to PD/SPD's focal point(s) if in draft status"""
     sdate_diff = make_aware(datetime.datetime.combine(now(), datetime.time.min) - datetime.timedelta(days=7))
     for intervention in Intervention.objects.filter(
             status=Intervention.DRAFT,
@@ -536,7 +543,7 @@ def send_intervention_draft_notification():
 
 
 def send_intervention_past_start_notification():
-    """Send an email to PD/SHPD/SSFA's focal point(s) if signed
+    """Send an email to PD/SPD's focal point(s) if signed
     and start date is past with no FR added"""
     intervention_qs = Intervention.objects.filter(
         status=Intervention.SIGNED,
@@ -554,6 +561,8 @@ def send_intervention_past_start_notification():
             context={
                 "reference_number": intervention.reference_number,
                 "title": intervention.title,
+                "partner_name": str(intervention.agreement.partner),
+                "start_date": intervention.start.strftime("%Y-%m-%d"),
                 "url": "{}pmp/interventions/{}/details".format(
                     settings.HOST,
                     intervention.pk,
@@ -563,7 +572,7 @@ def send_intervention_past_start_notification():
 
 
 def send_intervention_amendment_added_notification(intervention):
-    """Send an email to PD/SHPD/SSFA's focal point(s) if intervention amendment is added"""
+    """Send an email to PD/SPD's focal point(s) if intervention amendment is added"""
     recipients = [
         fp.email for fp in intervention.partner_focal_points.all()
         if fp.email
@@ -581,3 +590,66 @@ def send_intervention_amendment_added_notification(intervention):
             "amendment_type": ', '.join(amendment_choice_values),
         }
     )
+
+
+def sync_partner_staff_member(partner: PartnerOrganization, staff_member_data: PRPPartnerUserResponse):
+    user_update_fields = {
+        'is_active': staff_member_data.is_active,
+        'first_name': staff_member_data.first_name, 'last_name': staff_member_data.last_name,
+    }
+    user, user_created = User.objects.get_or_create(email__iexact=staff_member_data.email, defaults={
+        'email': staff_member_data.email, 'username': staff_member_data.email,
+        **user_update_fields
+    })
+    if not user_created:
+        for key, value in user_update_fields.items():
+            setattr(user, key, value)
+        user.save()
+
+    profile = user.profile
+    profile.job_title = staff_member_data.title
+    profile.phone_number = staff_member_data.phone_number
+    profile.country = profile.country or connection.tenant
+    profile.save()
+    profile.countries_available.add(connection.tenant)
+
+    staff_member_update_fields = {
+        'user': user,
+        'title': staff_member_data.title, 'active': staff_member_data.is_active,
+        'first_name': staff_member_data.first_name, 'last_name': staff_member_data.last_name,
+        'phone': staff_member_data.phone_number,
+    }
+    staff_member, staff_member_created = PartnerStaffMember.objects.get_or_create(
+        partner=partner, email__iexact=staff_member_data.email,
+        defaults={
+            'email': staff_member_data.email, 'partner': partner,
+            **staff_member_update_fields
+        }
+    )
+    if not staff_member_created:
+        for key, value in staff_member_update_fields.items():
+            setattr(staff_member, key, value)
+        staff_member.save()
+
+
+class Quarter(typing.NamedTuple):
+    quarter: int
+    start: datetime.date
+    end: datetime.date
+
+
+def get_quarters_range(start: datetime.date, end: datetime.date) -> typing.List[Quarter]:
+    """first date included, last excluded for every period in range"""
+    if not start or not end:
+        return []
+
+    quarters = []
+    i = 0
+    while start < end:
+        quarter_end = start + relativedelta(months=3) - relativedelta(days=1)
+        period_end = min(quarter_end, end)
+        quarters.append(Quarter(i + 1, start, period_end))
+        start = quarter_end + relativedelta(days=1)
+        i += 1
+
+    return quarters

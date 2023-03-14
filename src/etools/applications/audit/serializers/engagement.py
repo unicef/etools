@@ -124,7 +124,7 @@ class EngagementActionPointSerializer(PermissionsBasedSerializerMixin, ActionPoi
 
     partner = MinimalPartnerOrganizationListSerializer(read_only=True, label=_('Related Partner'))
     intervention = SeparatedReadWriteField(
-        label=_('Related PD/SSFA'), read_field=BaseInterventionListSerializer(), required=False,
+        label=_('Related PD/SPD'), read_field=BaseInterventionListSerializer(), required=False,
     )
 
     section = SeparatedReadWriteField(

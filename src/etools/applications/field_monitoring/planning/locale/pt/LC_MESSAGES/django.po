@@ -1,0 +1,266 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-02-10 10:08+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "TPM Partner selected for staff activity"
+msgstr "Parceiro TPM selecionado para atividade de equipe"
+
+msgid "Staff members do not belong to the selected partner"
+msgstr "Os funcionários não pertencem ao parceiro selecionado"
+
+#, python-format
+msgid ""
+"You've selected a PD/SPD and unselected some of it's corresponding partners, "
+"please either remove the PD or add the partners back before saving: %s"
+msgstr ""
+"Você selecionou um PD/SPD e desmarcou alguns de seus parceiros "
+"correspondentes, remova o PD ou adicione os parceiros antes de salvar: %s"
+
+#, python-format
+msgid ""
+"You've selected a PD/SPD and unselected some of it's corresponding outputs, "
+"please either remove the PD or add the outputs back before saving: %s"
+msgstr ""
+"Você selecionou um PD/SPD e desmarcou algumas de suas saídas "
+"correspondentes, remova o PD ou adicione as saídas antes de salvar: %s"
+
+msgid "Partner is not defined for TPM activity"
+msgstr "Parceiro não está definido para atividade TPM"
+
+msgid "At least one Partner, CP Output or PD/SPD should be added"
+msgstr "Pelo menos um Parceiro, Saída CP ou PD/SPD deve ser adicionado"
+
+msgid "Rejection reason should be provided."
+msgstr "O motivo da rejeição deve ser fornecido."
+
+msgid "Cancellation reason should be provided."
+msgstr "O motivo do cancelamento deve ser fornecido."
+
+msgid "Report reject reason should be provided."
+msgstr "O motivo da rejeição do relatório deve ser fornecido."
+
+msgid "At least one question should be enabled."
+msgstr "Pelo menos uma pergunta deve ser habilitada."
+
+msgid "At least one checklist should be completed."
+msgstr "Pelo menos uma lista de verificação deve ser concluída."
+
+msgid "At least one summary finding should be completed."
+msgstr "Pelo menos uma constatação resumida deve ser concluída."
+
+#, python-format
+msgid "Required fields not completed in %(status)s: %(fields)s"
+msgstr "Campos obrigatórios não preenchidos em %(status)s: %(fields)s"
+
+#, python-format
+msgid "Cannot change fields while in %(status)s: %(field)s"
+msgstr "Não é possível alterar os campos enquanto em %(status)s: %(field)s"
+
+msgid "Prioritization Criteria"
+msgstr "Critérios de Priorização"
+
+msgid "Methodology Notes & Standards"
+msgstr "Notas Metodológicas"
+
+msgid "Target Visits For The Year"
+msgstr "Visitas-alvo para o ano"
+
+msgid "Modalities"
+msgstr "Modalidades"
+
+msgid "Partner Engagement"
+msgstr "Engajamento do Parceiro"
+
+msgid "Other Aspects of the Field Monitoring Plan"
+msgstr "Outros Aspectos do Plano de Monitoramento de Campo"
+
+msgid "Year Plan"
+msgstr "Plano Anual"
+
+msgid "Year Plans"
+msgstr "Planos Anuais"
+
+msgid "Partner"
+msgstr "Parceiro"
+
+msgid "CP Output"
+msgstr "Saída CP"
+
+msgid "Intervention"
+msgstr "Intervenção"
+
+msgid "Question"
+msgstr "Pergunta"
+
+msgid "Is Active"
+msgstr "Está Ativo"
+
+msgid "Specific Details To Probe"
+msgstr "Detalhes específicos para sondar"
+
+msgid "Question Template"
+msgstr "Modelo de Pergunta"
+
+msgid "Question Templates"
+msgstr "Modelos de Pergunta"
+
+msgid "Staff"
+msgstr "Pessoal"
+
+msgid "TPM"
+msgstr ""
+
+msgid "Draft"
+msgstr ""
+
+msgid "Checklist"
+msgstr "Lista de verificação"
+
+msgid "Review"
+msgstr "Revisão"
+
+msgid "Assigned"
+msgstr "Atribuído"
+
+msgid "Data Collection"
+msgstr "Coleta de dados"
+
+msgid "Report Finalization"
+msgstr "Finalização do relatório"
+
+msgid "Submitted"
+msgstr "Enviado"
+
+msgid "Completed"
+msgstr "Concluído"
+
+msgid "Cancelled"
+msgstr "Cancelado"
+
+msgid "Reference Number"
+msgstr "Número de referência"
+
+msgid "TPM Partner"
+msgstr "Parceiro TPM"
+
+msgid "Team Members"
+msgstr "Membros da Equipe"
+
+msgid "Person Responsible"
+msgstr "Pessoa Responsável"
+
+msgid "Field Office"
+msgstr "Escritório de campo"
+
+msgid "Field Offices"
+msgstr "Escritórios de campo"
+
+msgid "Sections"
+msgstr "Seções"
+
+msgid "Location"
+msgstr "Localização"
+
+msgid "Site"
+msgstr ""
+
+msgid "PD/SPD"
+msgstr ""
+
+msgid "Outputs"
+msgstr "Saídas"
+
+msgid "Start Date"
+msgstr "Data de início"
+
+msgid "End Date"
+msgstr "Data Final"
+
+msgid "Status"
+msgstr "Estado"
+
+msgid "Activity Attachments"
+msgstr "Anexos de Atividade"
+
+msgid "Rejection reason"
+msgstr "Motivo da rejeição"
+
+msgid "Report rejection reason"
+msgstr "Motivo da rejeição do relatório"
+
+msgid "Cancellation reason"
+msgstr "Motivo do cancelamento"
+
+msgid "Monitoring Activity"
+msgstr "Atividade de Monitoramento"
+
+msgid "Monitoring Activities"
+msgstr "Atividades de Monitoramento"
+
+msgid "Monitoring Activity Action Point"
+msgstr "Ponto de Ação da Atividade de Monitoramento"
+
+msgid "Monitoring Activity Action Points"
+msgstr "Pontos de Ação da Atividade de Monitoramento"
+
+msgid "History"
+msgstr "História"
+
+msgid "Document Type"
+msgstr "Tipo de Documento"
+
+#, python-format
+msgid "[Inactive] %s"
+msgstr "[Inativo] %s"
+
+msgid "Reference No."
+msgstr "Nº de referência"
+
+msgid "Related Partner"
+msgstr "Parceiro Relacionado"
+
+msgid "Related PD/SPD"
+msgstr "PD/SPD relacionados"
+
+msgid "Related CP Output"
+msgstr "Saída CP Relacionada"
+
+msgid "Section of Assignee"
+msgstr "Seção do Cessionário"
+
+msgid "Office of Assignee"
+msgstr "Escritório do Cessionário"
+
+msgid "Action Point Category"
+msgstr "Categoria de Ponto de Ação"
+
+msgid "Link"
+msgstr ""
+
+msgid "Priority"
+msgstr "Prioridade"
+
+msgid "Annual Field Monitoring Rationale"
+msgstr "Justificativa do Monitoramento de Campo Anual"
+
+msgid "Templates"
+msgstr "Modelos"
+
+msgid "Attachments"
+msgstr "Anexos"

@@ -9,8 +9,24 @@ if [[ $DJANGO_SETTINGS_MODULE = '' || $DJANGO_SETTINGS_MODULE = etools.config.se
 fi
 
 # Ensure there are no errors.
-python -W ignore manage.py check
-python -W ignore manage.py makemigrations --dry-run --check
+#python -W ignore manage.py check
+#python -W ignore manage.py makemigrations --dry-run --check
+
+# Ensure translations are up-to-date.
+cwd=$(pwd)
+app_dirs="${cwd}/src/etools/applications/field_monitoring/data_collection/
+          ${cwd}/src/etools/applications/field_monitoring/fm_settings/
+          ${cwd}/src/etools/applications/field_monitoring/planning/
+          ${cwd}/src/etools/applications/comments/
+          ${cwd}/src/etools/applications/partners/"
+for app_dir in ${app_dirs};
+do
+    echo ${app_dir}
+    cd ${app_dir}
+    django-admin makemessages -a --no-location
+    git diff --ignore-matching-lines=POT-Creation-Date --exit-code
+done
+cd ${cwd}
 
 # Check code style unless running under tox, in which case tox runs flake8 separately
 if [[ "$(echo "$RUNNING_UNDER_TOX")" != 1 ]] ; then

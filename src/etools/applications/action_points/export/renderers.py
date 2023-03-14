@@ -1,4 +1,4 @@
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext as _
 
 from etools.applications.core.renderers import FriendlyCSVRenderer, ListSeperatorCSVRenderMixin
 
@@ -23,8 +23,8 @@ class ActionPointCSVRenderer(ListSeperatorCSVRenderMixin, FriendlyCSVRenderer):
         'status': _('Status'),
         'high_priority': _('High Priority'),
         'description': _('Description'),
-        'intervention': _('PD/SSFA Reference No.'),
-        'pd_ssfa': _('PD/SSFA Title'),
+        'intervention': _('PD/SPD Reference No.'),
+        'pd_ssfa': _('PD/SPD Title'),
         'location': _('Location'),
         'related_module': _('Module'),
         'assigned_by': _('Assigned By'),

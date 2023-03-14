@@ -1,6 +1,6 @@
 from copy import copy
 
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext as _
 
 from rest_framework import serializers
 from unicef_attachments.fields import FileTypeModelChoiceField
@@ -188,7 +188,7 @@ class FMUserSerializer(MinimalUserSerializer):
     def get_name(self, obj):
         if obj.is_active:
             return obj.get_full_name()
-        return _('[Inactive] {}').format(obj.get_full_name())
+        return _('[Inactive] %s') % obj.get_full_name()
 
 
 class CPOutputListSerializer(MinimalOutputListSerializer):
@@ -216,7 +216,7 @@ class MonitoringActivityActionPointSerializer(ActionPointBaseSerializer):
         label=_('Related Partner'), read_field=MinimalPartnerOrganizationListSerializer(), required=False,
     )
     intervention = SeparatedReadWriteField(
-        label=_('Related PD/SSFA'), read_field=FMInterventionListSerializer(), required=False,
+        label=_('Related PD/SPD'), read_field=FMInterventionListSerializer(), required=False,
     )
     cp_output = SeparatedReadWriteField(
         label=_('Related CP Output'), read_field=MinimalOutputListSerializer(), required=False,

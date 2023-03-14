@@ -1,7 +1,7 @@
 import itertools
 from copy import copy
 
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext as _
 
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
@@ -53,7 +53,7 @@ class TPMActionPointSerializer(PermissionsBasedSerializerMixin, ActionPointBaseS
     partner = MinimalPartnerOrganizationListSerializer(read_only=True, label=_('Related Partner'))
     intervention = SeparatedReadWriteField(
         read_field=BaseInterventionListSerializer(),
-        required=False, label=_('Related PD/SSFA')
+        required=False, label=_('Related PD/SPD')
     )
     cp_output = SeparatedReadWriteField(
         read_field=ResultSerializer(),
@@ -128,7 +128,7 @@ class TPMActivitySerializer(PermissionsBasedSerializerMixin, WritableNestedSeria
         read_field=MinimalPartnerOrganizationListSerializer(read_only=True, label=_('Implementing Partner')),
     )
     intervention = SeparatedReadWriteField(
-        read_field=InterventionCreateUpdateSerializer(read_only=True, label=_('PD/SSFA')),
+        read_field=InterventionCreateUpdateSerializer(read_only=True, label=_('PD/SPD')),
         required=False,
     )
 

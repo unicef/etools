@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-07-18 09:10+0000\n"
+"POT-Creation-Date: 2023-02-10 10:08+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,316 +18,252 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: activity_validation/validations/basic.py:12
 msgid "TPM Partner selected for staff activity"
 msgstr "Partenaire TPM sélectionné pour l'activité du personnel"
 
-#: activity_validation/validations/basic.py:23
-msgid "Staff members doesn't belong to the selected partner"
+msgid "Staff members do not belong to the selected partner"
 msgstr "Les membres du personnel n'appartiennent pas au partenaire sélectionné"
 
-#: activity_validation/validations/basic.py:33
+#, python-format
 msgid ""
-"You've selected a PD/SSFA and unselected some of it's corresponding "
-"partners, please either remove the PD or add the partners back before "
-"saving: {}"
+"You've selected a PD/SPD and unselected some of it's corresponding partners, "
+"please either remove the PD or add the partners back before saving: %s"
 msgstr ""
-"Vous avez sélectionné un PD/SSFA et désélectionné certains de ses partenaires "
-"correspondants, veuillez supprimer le PD ou rajouter les partenaires avant de "
-"sauvegarder: {}"
+"Vous avez sélectionné un PD/SSFA et désélectionné certains de ses "
+"partenaires correspondants, veuillez supprimer le PD ou rajouter les "
+"partenaires avant de sauvegarder: %s"
 
-#: activity_validation/validations/basic.py:50
+#, python-format
 msgid ""
-"You've selected a PD/SSFA and unselected some of it's corresponding outputs, "
-"please either remove the PD or add the outputs back before saving: {}"
+"You've selected a PD/SPD and unselected some of it's corresponding outputs, "
+"please either remove the PD or add the outputs back before saving: %s"
 msgstr ""
-"Vous avez sélectionné un PD/SSFA et désélectionné certaines de ses produits correspondantes, "
-"veuillez supprimer le PD ou rajouter les produits avant d'enregistrer: {}"
+"Vous avez sélectionné un PD/SSFA et désélectionné certaines de ses produits "
+"correspondantes, veuillez supprimer le PD ou rajouter les produits avant "
+"d'enregistrer: %s"
 
-#: activity_validation/validations/state.py:11
 msgid "Partner is not defined for TPM activity"
 msgstr "Le partenaire n'est pas défini pour l'activité TPM"
 
-#: activity_validation/validations/state.py:17
-msgid "At least one Partner, CP Output, or PD/SSFA should be added"
-msgstr "Au moins un partenaire, un produit du CP ou un PD/SSFA doit être ajouté"
+msgid "At least one Partner, CP Output or PD/SPD should be added"
+msgstr ""
+"Au moins un partenaire, un produit du CP ou un PD/SSFA doit être ajouté"
 
-#: activity_validation/validations/state.py:23
 msgid "Rejection reason should be provided."
 msgstr "La raison du rejet doit être fournie."
 
-#: activity_validation/validations/state.py:29
 msgid "Cancellation reason should be provided."
 msgstr "Le motif de l'annulation doit être fourni."
 
-#: activity_validation/validations/state.py:35
 msgid "Report reject reason should be provided."
 msgstr "Le motif du rejet du rapport doit être fourni."
 
-#: activity_validation/validations/state.py:41
 msgid "At least one question should be enabled."
 msgstr "Au moins une question doit être activée."
 
-#: activity_validation/validations/state.py:47
 msgid "At least one checklist should be completed."
 msgstr "Au moins une liste de contrôle doit être complétée."
 
-#: activity_validation/validations/state.py:59
 msgid "At least one summary finding should be completed."
 msgstr "Au moins une conclusion sommaire doit être complétée."
 
-#: models.py:44
+#, python-format
+msgid "Required fields not completed in %(status)s: %(fields)s"
+msgstr "Champs obligatoires non renseignés dans %(status)s: %(fields)s"
+
+#, python-format
+msgid "Cannot change fields while in %(status)s: %(field)s"
+msgstr "Impossible de modifier les champs dans %(status)s: %(field)s"
+
 msgid "Prioritization Criteria"
 msgstr "Critères de priorisation"
 
-#: models.py:45
 msgid "Methodology Notes & Standards"
 msgstr "Notes et normes méthodologiques"
 
-#: models.py:46
 msgid "Target Visits For The Year"
 msgstr "Visites cibles pour l'année"
 
-#: models.py:48
 msgid "Modalities"
 msgstr "Modalités"
 
-#: models.py:49
 msgid "Partner Engagement"
 msgstr "Engagement du partenaire"
 
-#: models.py:50
 msgid "Other Aspects of the Field Monitoring Plan"
 msgstr "Autres aspects du plan de suivi sur le terrain"
 
-#: models.py:55
 msgid "Year Plan"
 msgstr "Plan annuel"
 
-#: models.py:56
 msgid "Year Plans"
 msgstr "Plans annuels"
 
-#: models.py:76 models.py:251
 msgid "Partner"
 msgstr "Partenaires"
 
-#: models.py:78
 msgid "CP Output"
 msgstr "Produit du CP"
 
-#: models.py:80
 msgid "Intervention"
 msgstr "Intervention"
 
-#: models.py:92
 msgid "Question"
 msgstr "Question"
 
-#: models.py:94
 msgid "Is Active"
 msgstr "Est actif"
 
-#: models.py:95
 msgid "Specific Details To Probe"
 msgstr "Détails spécifiques à vérifier"
 
-#: models.py:98
 msgid "Question Template"
 msgstr "Modèle de questions"
 
-#: models.py:99
 msgid "Question Templates"
 msgstr "Modèles de questions"
 
-#: models.py:149
 msgid "Staff"
 msgstr "Personnel"
 
-#: models.py:150
 msgid "TPM"
 msgstr "TPM"
 
-#: models.py:163
 msgid "Draft"
-msgstr "Brouillon"
+msgstr "Draft"
 
-#: models.py:164
 msgid "Checklist"
 msgstr "Liste de contrôle"
 
-#: models.py:165
 msgid "Review"
 msgstr "Examen"
 
-#: models.py:166
 msgid "Assigned"
 msgstr "Assigné"
 
-#: models.py:167
 msgid "Data Collection"
 msgstr "Collecte de données"
 
-#: models.py:168
 msgid "Report Finalization"
 msgstr "Finalisation du rapport"
 
-#: models.py:169
 msgid "Submitted"
 msgstr "Soumis"
 
-#: models.py:170
 msgid "Completed"
 msgstr "Complété"
 
-#: models.py:171
 msgid "Cancelled"
 msgstr "Annulé"
 
-#: models.py:222
 msgid "Reference Number"
 msgstr "Numéro de réference"
 
-#: models.py:232
 msgid "TPM Partner"
 msgstr "Partenaire TPM"
 
-#: models.py:234
 msgid "Team Members"
 msgstr "Membres de l'équipe"
 
-#: models.py:237
 msgid "Person Responsible"
 msgstr "Personne responsable"
 
-#: models.py:240
 msgid "Field Office"
 msgstr "Bureau de terrain"
 
-#: models.py:242
 msgid "Field Offices"
 msgstr "Bureaux de terrain"
 
-#: models.py:244
 msgid "Sections"
 msgstr "Sections"
 
-#: models.py:246
 msgid "Location"
 msgstr "Localisation"
 
-#: models.py:248
 msgid "Site"
 msgstr "Site"
 
-#: models.py:254
-msgid "PD/SSFA"
+msgid "PD/SPD"
 msgstr "PD/SSFA"
 
-#: models.py:255
 msgid "Outputs"
 msgstr "Produits"
 
-#: models.py:258
 msgid "Start Date"
 msgstr "Date de début"
 
-#: models.py:259
 msgid "End Date"
 msgstr "Date de fin"
 
-#: models.py:261
 msgid "Status"
 msgstr "Statut"
 
-#: models.py:263 models.py:265
 msgid "Activity Attachments"
 msgstr "Pièces jointes d'activité"
 
-#: models.py:268
 msgid "Rejection reason"
 msgstr "Motif de rejet"
 
-#: models.py:269
 msgid "Report rejection reason"
 msgstr "Signaler le motif du rejet"
 
-#: models.py:270
 msgid "Cancellation reason"
 msgstr "Motif d'annulation"
 
-#: models.py:277
 msgid "Monitoring Activity"
 msgstr "Activité de suivi"
 
-#: models.py:278
 msgid "Monitoring Activities"
 msgstr "Activités de suivi"
 
-#: models.py:705
 msgid "Monitoring Activity Action Point"
 msgstr "Point d'action de l'activité de suivi"
 
-#: models.py:706
 msgid "Monitoring Activity Action Points"
 msgstr "Points d'action de l'activité de suivi"
 
-#: serializers.py:36 serializers.py:238
 msgid "History"
 msgstr "Historique"
 
-#: serializers.py:163
 msgid "Document Type"
 msgstr "Type de document"
 
-#: serializers.py:191
-msgid "[Inactive] {}"
-msgstr "[Inactif] {}"
+#, python-format
+msgid "[Inactive] %s"
+msgstr "[Inactif] %s"
 
-#: serializers.py:213
 msgid "Reference No."
 msgstr "Numéro de référence."
 
-#: serializers.py:216
 msgid "Related Partner"
-msgstr ""
+msgstr "Partenaire associé"
 
-#: serializers.py:219
-msgid "Related PD/SSFA"
-msgstr ""
+msgid "Related PD/SPD"
+msgstr "PD/SPD associés"
 
-#: serializers.py:222
 msgid "Related CP Output"
 msgstr "Produits du CP associée"
 
-#: serializers.py:227
 msgid "Section of Assignee"
 msgstr "Section du Destinataire"
 
-#: serializers.py:231
 msgid "Office of Assignee"
 msgstr "Bureau du Destinataire"
 
-#: serializers.py:234
 msgid "Action Point Category"
 msgstr "Catégorie de point d'action"
 
-#: serializers.py:240
 msgid "Link"
 msgstr "Lien"
 
-#: serializers.py:249
 msgid "Priority"
 msgstr "Priorité"
 
-#: views.py:77
 msgid "Annual Field Monitoring Rationale"
 msgstr "Justification du suivi annuel sur le terrain"
 
-#: views.py:133
 msgid "Templates"
 msgstr "Modèles"
 
-#: views.py:329
 msgid "Attachments"
 msgstr "Pièces jointes"

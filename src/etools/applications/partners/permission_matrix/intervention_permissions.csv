@@ -1,101 +1,338 @@
 Field no,Field Name,Group,Condition,Status,Action,Allowed
-3.2.2,agreement,Partnership Manager,,Draft,Edit,TRUE
-3.2.2,agreement,Partnership Manager,ssfa_in_amendment,*,Edit,TRUE
-3.2.3,document_type,Partnership Manager,,Draft,Edit,TRUE
-3.2.4,number,Partnership Manager,user_adds_amendment,*,Edit,TRUE
-3.2.4,number,Partnership Manager,,Draft,Edit,TRUE
-3.2.5,title,Partnership Manager,,Draft,Edit,TRUE
-3.2.7,partner_focal_points,Partnership Manager,,Draft,Edit,TRUE
-3.2.7,partner_focal_points,Partnership Manager,,Signed,Edit,TRUE
-3.2.7,partner_focal_points,Partnership Manager,,Active,Edit,TRUE
-3.2.8,offices,Partnership Manager,,Draft,Edit,TRUE
-3.2.9,unicef_focal_points,Partnership Manager,,Draft,Edit,TRUE
-3.2.9,unicef_focal_points,Partnership Manager,,Signed,Edit,TRUE
-3.2.9,unicef_focal_points,Partnership Manager,,Active,Edit,TRUE
-3.3.1,country_programme,Partnership Manager,,Draft,Edit,TRUE
-3.3.7,contingency_pd,Partnership Manager,,Draft,Edit,TRUE
-3.3.7,activation_letter,Partnership Manager,contingency on,Signed,Edit,TRUE
-3.3.7,activation_letter_attachment,Partnership Manager,contingency on,Signed,Edit,TRUE
-3.3.2,start,Partnership Manager,,Draft,Edit,TRUE
-3.3.2,start,Partnership Manager,,Signed,Edit,TRUE
-3.3.3,end,Partnership Manager,,Draft,Edit,TRUE
-3.3.3,end,Partnership Manager,,Signed,Edit,TRUE
-3.3.3,end,Partnership Manager,termination_doc_attached,Active,Edit,TRUE
-3.3.5,sections,Partnership Manager,,Draft,Edit,TRUE
-3.3.5,sections_present,UNICEF User,,*,Edit,TRUE
-3.4.1,result_links,Partnership Manager,prp_mode_on,Draft,Edit,TRUE
-3.4.1,result_links,Partnership Manager,prp_mode_on+contingency_on,Signed,Edit,TRUE
-3.5,planned_budget,Partnership Manager,,Draft,Edit,TRUE
-3.5,planned_budget,Partnership Manager,,Signed,Edit,TRUE
-3.6,planned_visits,Partnership Manager,,Draft,Edit,TRUE
-3.9.1,submission_date,Partnership Manager,,Draft,Edit,TRUE
-3.9.2,submission_date_prc,Partnership Manager,,Draft,Edit,TRUE
-3.9.3,review_date_prc,Partnership Manager,,Draft,Edit,TRUE
-3.9.4,prc_review_document,Partnership Manager,,Draft,Edit,TRUE
-3.9.5,prc_review_attachment,Partnership Manager,,Draft,Edit,TRUE
-3.9.11,signed_pd_document,Partnership Manager,,Draft,Edit,TRUE
-3.9.12,signed_pd_attachment,Partnership Manager,,Draft,Edit,TRUE
-3.9.5,partner_authorized_officer_signatory,Partnership Manager,,Draft,Edit,TRUE
-3.9.6,signed_by_partner_date,Partnership Manager,,Draft,Edit,TRUE
-3.9.7,unicef_signatory,Partnership Manager,,Draft,Edit,TRUE
-3.9.7,unicef_signatory,Partnership Manager,,Signed,Edit,TRUE
-3.9.8,signed_by_unicef_date,Partnership Manager,,Draft,Edit,TRUE
-3.10.1,frs,Partnership Manager,,Draft,Edit,TRUE
-3.10.1,frs,Partnership Manager,,Signed,Edit,TRUE
-3.10.1,frs,Partnership Manager,,Active,Edit,TRUE
-3.12,amendments,Partnership Manager,,Draft,Edit,TRUE
-3.12,amendments,Partnership Manager,not_in_amendment_mode,Signed,Edit,TRUE
-3.12,amendments,Partnership Manager,not_in_amendment_mode,Active,Edit,TRUE
-3.12.6,in_amendment,Partnership Manager,,Signed,Edit,TRUE
-3.12.6,in_amendment,Partnership Manager,,Active,Edit,TRUE
-3.2.5,title,Partnership Manager,user_adds_amendment,*,Edit,TRUE
-3.2.7,partner_focal_points,Partnership Manager,user_adds_amendment,*,Edit,TRUE
-3.2.8,offices,Partnership Manager,user_adds_amendment,*,Edit,TRUE
-3.2.9,unicef_focal_points,Partnership Manager,user_adds_amendment,*,Edit,TRUE
-3.3.1,country_programme,Partnership Manager,user_adds_amendment,*,Edit,TRUE
-3.3.3,end,Partnership Manager,user_adds_amendment,*,Edit,TRUE
-3.3.5,sections,Partnership Manager,user_adds_amendment,*,Edit,TRUE
-3.4.1,result_links,Partnership Manager,user_adds_amendment+prp_mode_on,*,Edit,TRUE
-3.4.2,result_links,UNICEF User,prp_mode_on,*,View,TRUE
-3.7,reference_number_year,UNICEF User,,*,View,TRUE
-3.7,reference_number_year,UNICEF User,not_ssfa,Draft,Edit,TRUE
-3.7,reference_number_year,UNICEF User,not_ssfa,*,Required,TRUE
-3.5,planned_budget,Partnership Manager,user_adds_amendment,*,Edit,TRUE
-3.6,planned_visits,Partnership Manager,,*,Edit,TRUE
-3.2.2,agreement,UNICEF User,,*,Required,TRUE
-3.2.3,document_type,UNICEF User,,*,Required,TRUE
-3.2.4,number,UNICEF User,,*,Required,TRUE
-3.2.5,title,UNICEF User,,*,Required,TRUE
-3.2.7,partner_focal_points,UNICEF User,,Draft,Required,FALSE
-3.2.7,submission_date,UNICEF User,,Draft,Required,FALSE
-3.2.8,offices,UNICEF User,,Draft,Required,FALSE
-3.2.9,unicef_focal_points,UNICEF User,,Draft,Required,FALSE
-3.3.1,country_programme,UNICEF User,,Draft,Required,FALSE
-3.3.2,start,UNICEF User,,Draft,Required,FALSE
-3.3.3,end,UNICEF User,,Draft,Required,FALSE
-3.3.2,start,UNICEF User,contingency on,Signed,Required,FALSE
-3.3.3,end,UNICEF User,contingency on,Signed,Required,FALSE
-3.3.5,sections_present,UNICEF User,,Draft,Required,FALSE
-3.9.11,signed_pd_attachment,UNICEF User,,Draft,Required,FALSE
-3.9.11,activation_letter_attachment,UNICEF User,contingency on,Active,Required,True
-3.9.11,termination_doc,UNICEF User,,Terminated,Required,True
-3.9.5,partner_authorized_officer_signatory,UNICEF User,,Draft,Required,FALSE
-3.9.6,signed_by_partner_date,UNICEF User,,Draft,Required,FALSE
-3.9.7,unicef_signatory,UNICEF User,,*,Required,FALSE
-3.9.8,signed_by_unicef_date,UNICEF User,,Draft,Required,FALSE
-3.10.1,frs,UNICEF User,,Draft,Required,FALSE
-3.10.1,frs,UNICEF User,,Signed,Required,FALSE
-3.10.1,frs,UNICEF User,,Suspended,Required,FALSE
-3.13.1,flat_locations,UNICEF User,,Draft,Edit,TRUE
-3.13.1,flat_locations,Partnership Manager,user_adds_amendment,Signed,Edit,TRUE
-3.13.1,flat_locations,Partnership Manager,contingency on,Signed,Edit,TRUE
-3.13.1,flat_locations,Partnership Manager,user_adds_amendment,Active,Edit,TRUE
-3.13.1,reporting_requirements,Partnership Manager,prp_mode_on,Draft,Edit,TRUE
-3.13.1,reporting_requirements,Partnership Manager,prp_mode_on+contingency_on,Signed,Edit,TRUE
-3.13.1,reporting_requirements,Partnership Manager,contingency on,Signed,Edit,TRUE
-3.13.1,reporting_requirements,Partnership Manager,user_adds_amendment+prp_mode_on,*,Edit,TRUE
-3.13.1,reporting_requirements,Partnership Manager,not_ended,Terminated,Edit,TRUE
-3.13.1,reporting_requirements,Partnership Manager,termination_doc_attached,Active,Edit,TRUE
-3.13.1,reporting_requirements,Partnership Manager,termination_doc_attached,Signed,Edit,TRUE
+3.2.2,activation_letter,Unicef Focal Point,contingency_on,Signed,Edit,TRUE
+3.2.3,activation_letter_attachment,Unicef Focal Point,contingency_on,Signed,Edit,TRUE
+3.2.4,activation_letter_attachment,*,contingency_on,Active,Required,TRUE
+,activation_protocol,Partnership Manager,,Draft,Edit,TRUE
+,activation_protocol,*,contingency_on,*,Required,TRUE
+3.2.4,agreement,Unicef Focal Point,unlocked,Draft,Edit,TRUE
+3.2.5,agreement,*,,*,Required,TRUE
+3.2.7,amendments,Partner User,,*,View,FALSE
+3.2.7,amendments,*,user_adds_amendment,*,View,FALSE
+3.2.7,amendments,*,,Draft,View,FALSE
+3.2.8,amendments,Unicef Focal Point,not_in_amendment_mode,Signed,Edit,TRUE
+3.2.9,amendments,Unicef Focal Point,not_in_amendment_mode,Active,Edit,TRUE
+3.3.7,attachments,*,not_in_amendment_mode,*,View,TRUE
+3.3.7,attachments,Unicef Focal Point,not_in_amendment_mode,Draft,Edit,TRUE
+3.3.7,attachments,Partner User,not_in_amendment_mode,Draft,Edit,TRUE
+3.3.7,attachments,Senior Management Team,not_in_amendment_mode,Draft,Edit,TRUE
+3.3.2,attachments,Representative Office,not_in_amendment_mode,Draft,Edit,TRUE
+3.3.7,attachments,Unicef Focal Point,not_in_amendment_mode,Review,Edit,TRUE
+3.3.7,attachments,Senior Management Team,not_in_amendment_mode,Review,Edit,TRUE
+3.3.2,attachments,Representative Office,not_in_amendment_mode,Review,Edit,TRUE
+3.3.7,attachments,Unicef Focal Point,not_in_amendment_mode,Signature,Edit,TRUE
+3.3.7,attachments,Senior Management Team,not_in_amendment_mode,Signature,Edit,TRUE
+3.3.2,attachments,Representative Office,not_in_amendment_mode,Signature,Edit,TRUE
+3.3.7,attachments,Unicef Focal Point,not_in_amendment_mode,Signed,Edit,TRUE
+3.3.7,attachments,Senior Management Team,not_in_amendment_mode,Signed,Edit,TRUE
+3.3.2,attachments,Representative Office,not_in_amendment_mode,Signed,Edit,TRUE
+3.3.7,attachments,Unicef Focal Point,not_in_amendment_mode,Active,Edit,TRUE
+3.3.7,attachments,Senior Management Team,not_in_amendment_mode,Active,Edit,TRUE
+3.3.2,attachments,Representative Office,not_in_amendment_mode,Active,Edit,TRUE
+3.3.7,attachments,Unicef Focal Point,not_in_amendment_mode,Ended,Edit,TRUE
+3.3.7,attachments,Senior Management Team,not_in_amendment_mode,Ended,Edit,TRUE
+3.3.2,attachments,Representative Office,not_in_amendment_mode,Ended,Edit,TRUE
+3.3.7,attachments,Unicef Focal Point,not_in_amendment_mode,Suspended,Edit,TRUE
+3.3.7,attachments,Senior Management Team,not_in_amendment_mode,Suspended,Edit,TRUE
+3.3.2,attachments,Representative Office,not_in_amendment_mode,Suspended,Edit,TRUE
+3.3.2,budget_owner,Unicef Focal Point,,Draft,Edit,TRUE
+3.3.2,budget_owner,*,unicef_not_accepted,Draft,Required,FALSE
+3.3.3,capacity_development,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
+3.3.3,capacity_development,Partner User,partner_court,Draft,Edit,TRUE
+3.3.3,capacity_development,*,unlocked,Draft,Required,FALSE
+3.3.3,cash_transfer_modalities,*,,*,View,TRUE
+3.3.3,cash_transfer_modalities,Unicef Focal Point,contingency_on,Review,Edit,TRUE
+3.3.3,cash_transfer_modalities,Unicef Focal Point,unlocked,Draft,Edit,TRUE
+3.3.5,cfei_number,*,,*,View,TRUE
+3.3.5,cfei_number,Unicef Focal Point,,Draft,Edit,TRUE
+3.3.5,context,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
+3.3.5,context,Partner User,partner_court,Draft,Edit,TRUE
+,has_data_processing_agreement,Unicef Focal Point,,Draft,Edit,TRUE
+,has_data_processing_agreement,Partner User,,Draft,Edit,TRUE
+,has_data_processing_agreement,Unicef Focal Point,,Review,Edit,TRUE
+,has_data_processing_agreement,Partner User,,Review,Edit,TRUE
+,has_data_processing_agreement,Unicef Focal Point,,Signature,Edit,TRUE
+,has_data_processing_agreement,Partner User,,Signature,Edit,TRUE
+,has_data_processing_agreement,Unicef Focal Point,,Signed,Edit,TRUE
+,has_data_processing_agreement,Unicef Focal Point,,Active,Edit,TRUE
+,has_data_processing_agreement,Unicef Focal Point,,Ended,Edit,TRUE
+,has_data_processing_agreement,Unicef Focal Point,,Suspended,Edit,TRUE
+,has_activities_involving_children,Unicef Focal Point,,Draft,Edit,TRUE
+,has_activities_involving_children,Partner User,,Draft,Edit,TRUE
+,has_activities_involving_children,Unicef Focal Point,,Review,Edit,TRUE
+,has_activities_involving_children,Partner User,,Review,Edit,TRUE
+,has_activities_involving_children,Unicef Focal Point,,Signature,Edit,TRUE
+,has_activities_involving_children,Partner User,,Signature,Edit,TRUE
+,has_activities_involving_children,Unicef Focal Point,,Signed,Edit,TRUE
+,has_activities_involving_children,Unicef Focal Point,,Active,Edit,TRUE
+,has_activities_involving_children,Unicef Focal Point,,Ended,Edit,TRUE
+,has_activities_involving_children,Unicef Focal Point,,Suspended,Edit,TRUE
+,has_special_conditions_for_construction,Unicef Focal Point,,Draft,Edit,TRUE
+,has_special_conditions_for_construction,Partner User,,Draft,Edit,TRUE
+,has_special_conditions_for_construction,Unicef Focal Point,,Review,Edit,TRUE
+,has_special_conditions_for_construction,Partner User,,Review,Edit,TRUE
+,has_special_conditions_for_construction,Unicef Focal Point,,Signature,Edit,TRUE
+,has_special_conditions_for_construction,Partner User,,Signature,Edit,TRUE
+,has_special_conditions_for_construction,Unicef Focal Point,,Signed,Edit,TRUE
+,has_special_conditions_for_construction,Unicef Focal Point,,Active,Edit,TRUE
+,has_special_conditions_for_construction,Unicef Focal Point,,Ended,Edit,TRUE
+,has_special_conditions_for_construction,Unicef Focal Point,,Suspended,Edit,TRUE
+3.4.1,contingency_pd,Unicef Focal Point,,Draft,Edit,TRUE
+3.5,country_programme,Unicef Focal Point,,Draft,Edit,TRUE
+3.5,country_programme,Unicef Focal Point,user_adds_amendment,*,Edit,TRUE
+3.5,country_programme,*,,*,Required,FALSE
+3.5,country_programmes,Unicef Focal Point,,Draft,Edit,TRUE
+3.5,country_programmes,Unicef Focal Point,user_adds_amendment,*,Edit,TRUE
+3.5,country_programmes,*,,*,Required,FALSE
+3.9.1,document_type,Unicef Focal Point,unlocked,Draft,Edit,TRUE
+3.9.1,document_type,*,,*,Required,TRUE
+,document_currency,Unicef Focal Point,unlocked,Draft,Edit,TRUE
+,document_currency,*,,*,Required,TRUE
+3.9.2,end,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
+3.9.2,end,Partner User,partner_court,Draft,Edit,TRUE
+3.9.3,end,Unicef Focal Point,contingency_on,Signed,Edit,TRUE
+3.9.3,end,Unicef Focal Point,termination_doc_attached,Active,Edit,TRUE
+3.9.5,end,Unicef Focal Point,user_adds_amendment,*,Edit,TRUE
+3.9.4,end,*,unicef_not_accepted_contingency,Draft,Required,FALSE
+3.9.5,end,*,contingency_on,Signed,Required,FALSE
+3.9.5,final_partnership_review,UNICEF User,,*,View,TRUE
+3.9.5,final_partnership_review,Unicef Focal Point,,Ended,Edit,TRUE
+3.9.5,date_partnership_review_performed,UNICEF User,,*,View,TRUE
+3.9.5,date_partnership_review_performed,Unicef Focal Point,,Ended,Edit,TRUE
+3.9.5,flat_locations,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
+3.9.6,flat_locations,Partner User,partner_court,Draft,Edit,TRUE
+3.9.6,flat_locations,Unicef Focal Point,user_adds_amendment,Signed,Edit,TRUE
+3.9.7,flat_locations,Unicef Focal Point,contingency_on,Signed,Edit,TRUE
+3.9.7,flat_locations,Unicef Focal Point,user_adds_amendment,Active,Edit,TRUE
+3.9.7,flat_locations,*,unlocked,Draft,Required,False
+3.9.8,frs,UNICEF User,not_in_amendment_mode,*,View,TRUE
+3.9.8,frs,Unicef Focal Point,not_in_amendment_mode,Draft,Edit,TRUE
+3.10.1,frs,Unicef Focal Point,not_in_amendment_mode,Review,Edit,TRUE
+3.10.1,frs,Unicef Focal Point,not_in_amendment_mode,Signature,Edit,TRUE
+3.10.1,frs,Unicef Focal Point,not_in_amendment_mode,Signed,Edit,TRUE
+3.10.1,frs,*,not_in_amendment_mode,Active,Required,TRUE
+3.10.1,frs,*,not_in_amendment_mode,Ended,Required,TRUE
+3.10.1,frs,*,,Implemented,Required,TRUE
+3.10.1,frs,*,,Closed,Required,TRUE
+0,equity_narrative,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
+0,equity_narrative,Partner User,partner_court,Draft,Edit,TRUE
+0,equity_narrative,Unicef Focal Point,contingency_on,Signed,Edit,TRUE
+0,equity_rating,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
+0,equity_rating,Partner User,partner_court,Draft,Edit,TRUE
+0,equity_rating,Unicef Focal Point,contingency_on,Signed,Edit,TRUE
+0,gender_narrative,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
+0,gender_narrative,Partner User,partner_court,Draft,Edit,TRUE
+0,gender_narrative,Unicef Focal Point,contingency_on,Signed,Edit,TRUE
+0,gender_rating,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
+0,gender_rating,Partner User,partner_court,Draft,Edit,TRUE
+0,gender_rating,Unicef Focal Point,contingency_on,Signed,Edit,TRUE
+0,sustainability_narrative,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
+0,sustainability_narrative,Partner User,partner_court,Draft,Edit,TRUE
+0,sustainability_narrative,Unicef Focal Point,contingency_on,Signed,Edit,TRUE
+0,sustainability_rating,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
+0,sustainability_rating,Partner User,partner_court,Draft,Edit,TRUE
+0,sustainability_rating,Unicef Focal Point,contingency_on,Signed,Edit,TRUE
+3.12,hq_support_cost,*,,*,View,TRUE
+3.12,hq_support_cost,Unicef Focal Point,,Draft,Edit,TRUE
+3.12.6,implementation_strategy,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
+3.12.6,implementation_strategy,Partner User,partner_court,Draft,Edit,TRUE
+3.12.6,implementation_strategy,Unicef Focal Point,contingency_on,Signed,Edit,TRUE
+3.2.5,in_amendment,Unicef Focal Point,,Signed,Edit,TRUE
+3.2.7,in_amendment,Unicef Focal Point,,Active,Edit,TRUE
+3.2.8,ip_program_contribution,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
+3.2.9,ip_program_contribution,Partner User,partner_court,Draft,Edit,TRUE
+3.3.1,management_budgets,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
+3.3.3,management_budgets,Partner User,partner_court,Draft,Edit,TRUE
+3.3.5,number,Unicef Focal Point,user_adds_amendment,*,Edit,TRUE
+3.4.1,number,Unicef Focal Point,,Draft,Edit,TRUE
+3.4.2,number,*,,*,Required,TRUE
+3.7,offices,Unicef Focal Point,,Draft,Edit,TRUE
+3.7,offices,Unicef Focal Point,,Review,Edit,TRUE
+3.7,offices,Unicef Focal Point,,Signature,Edit,TRUE
+3.5,offices,Unicef Focal Point,user_adds_amendment,*,Edit,TRUE
+3.6,offices,*,unicef_not_accepted,Draft,Required,FALSE
+3.6,other_info,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
+3.2.2,other_info,Partner User,partner_court,Draft,Edit,TRUE
+,other_details,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
+,other_details,Partner User,partner_court,Draft,Edit,TRUE
+,other_details,*,,*,Required,FALSE
+3.2.3,other_partners_involved,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
+3.2.4,other_partners_involved,Partner User,partner_court,Draft,Edit,TRUE
+3.2.4,other_partners_involved,*,unlocked,Draft,Required,FALSE
+3.2.5,partner_authorized_officer_signatory,*,,Draft,View,FALSE
+3.2.7,partner_authorized_officer_signatory,Partner User,,Signature,Edit,TRUE
+3.2.7,partner_authorized_officer_signatory,*,,Draft,Required,FALSE
+3.2.8,partner_focal_points,*,not_in_amendment_mode,*,View,TRUE
+3.2.8,partner_focal_points,*,,Closed,Edit,FALSE
+3.2.8,partner_focal_points,*,in_amendment_mode,*,Edit,FALSE
+3.3.1,partner_focal_points,*,unicef_not_accepted,Draft,Required,FALSE
+3.3.2,pd_outputs,*,,*,View,TRUE
+3.3.3,pd_outputs,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
+3.3.2,pd_outputs,Partner User,partner_court,Draft,Edit,TRUE
+3.3.3,pd_outputs,Unicef Focal Point,user_adds_amendment,*,Edit,TRUE
+3.3.3,planned_budget,Unicef Focal Point,,Draft,Edit,TRUE
+3.9.11,planned_budget,Unicef Focal Point,user_adds_amendment,*,Edit,TRUE
+3.9.11,planned_visits,UNICEF User,not_in_amendment_mode,*,View,TRUE
+3.9.11,planned_visits,Unicef Focal Point,not_in_amendment_mode,Draft,Edit,TRUE
+3.9.11,planned_visits,Unicef Focal Point,not_in_amendment_mode,Review,Edit,TRUE
+3.9.11,planned_visits,Unicef Focal Point,not_in_amendment_mode,Signature,Edit,TRUE
+3.9.11,planned_visits,Unicef Focal Point,not_in_amendment_mode,Signed,Edit,TRUE
+3.9.11,planned_visits,Unicef Focal Point,not_in_amendment_mode,Active,Edit,TRUE
+3.9.11,planned_visits,Unicef Focal Point,not_in_amendment_mode,Suspended,Edit,TRUE
+3.9.11,planned_visits,PME,not_in_amendment_mode,Draft,Edit,TRUE
+3.9.11,planned_visits,PME,not_in_amendment_mode,Review,Edit,TRUE
+3.9.11,planned_visits,PME,not_in_amendment_mode,Signature,Edit,TRUE
+3.9.11,planned_visits,PME,not_in_amendment_mode,Signed,Edit,TRUE
+3.9.11,planned_visits,PME,not_in_amendment_mode,Active,Edit,TRUE
+3.9.11,planned_visits,PME,not_in_amendment_mode,Suspended,Edit,TRUE
+3.9.5,prc_review_attachment,*,,*,View,TRUE
+3.9.6,prc_review_attachment,Unicef Focal Point,,Review,Edit,TRUE
+3.9.7,prc_review_document,*,,*,View,TRUE
+3.9.8,prc_review_document,Unicef Focal Point,,Review,Edit,TRUE
+3.10.1,reference_number_year,UNICEF User,,*,View,TRUE
+3.13.1,reference_number_year,UNICEF User,not_ssfa,Draft,Edit,TRUE
+3.13.1,reference_number_year,*,not_ssfa+unicef_not_accepted,Draft,Required,FALSE
+3.13.1,reporting_requirements,Unicef Focal Point,,Draft,Edit,TRUE
+3.13.1,reporting_requirements,Unicef Focal Point,contingency_on,Signed,Edit,TRUE
+3.13.1,reporting_requirements,Unicef Focal Point,not_ended,Terminated,Edit,TRUE
+3.13.1,reporting_requirements,Unicef Focal Point,termination_doc_attached,Active,Edit,TRUE
+3.13.1,reporting_requirements,Unicef Focal Point,termination_doc_attached,Signed,Edit,TRUE
 3.13.1,reporting_requirements,UNICEF User,prp_server_on,*,View,TRUE
-3.13.1,reporting_requirements,UNICEF User,,*,Required,FALSE
+3.13.1,reporting_requirements,*,unicef_not_accepted,Draft,Required,FALSE
+3.13.1,reporting_requirements,*,contingency_on,Draft,Required,FALSE
+3.13.1,reporting_requirements,*,contingency_on,Review,Required,FALSE
+3.13.1,reporting_requirements,*,contingency_on,Signature,Required,FALSE
+3.13.1,reporting_requirements,*,contingency_on,Signed,Required,FALSE
+,result_links,Partner User,partner_court,Draft,Edit,TRUE
+3.13.1,result_links,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
+3.13.1,result_links,Unicef Focal Point,contingency_on,Signed,Edit,TRUE
+3.13.1,result_links,Unicef Focal Point,user_adds_amendment,*,Edit,TRUE
+,result_links,UNICEF User,prp_mode_on,*,View,TRUE
+,review_date_prc,*,,*,View,TRUE
+,review_date_prc,Unicef Focal Point,,Signature,Edit,TRUE
+,review_date_prc,Overall Approver,,Signature,Edit,TRUE
+,review_date_prc,Unicef Focal Point,,Review,Edit,TRUE
+,review_date_prc,Overall Approver,,Review,Edit,TRUE
+,risks,*,,*,View,TRUE
+,risks,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
+,risks,Partner User,partner_court,Draft,Edit,TRUE
+,risks,*,,*,Required,False
+,sections,Unicef Focal Point,,Draft,Edit,TRUE
+,sections,Unicef Focal Point,,Review,Edit,TRUE
+,sections,Unicef Focal Point,,Signature,Edit,TRUE
+,sections,Unicef Focal Point,user_adds_amendment,*,Edit,TRUE
+,sections_present,UNICEF User,,*,Edit,TRUE
+,sections_present,*,unicef_not_accepted,Draft,Required,FALSE
+,signed_by_partner_date,*,,Draft,View,FALSE
+,signed_by_partner_date,Partner User,,Signature,Edit,TRUE
+,signed_by_partner_date,*,,Draft,Required,FALSE
+,signed_by_unicef_date,*,,Draft,View,FALSE
+,signed_by_unicef_date,Unicef Focal Point,,Signature,Edit,TRUE
+,signed_by_unicef_date,*,,Draft,Required,FALSE
+,signed_pd_attachment,*,,Draft,View,FALSE
+,signed_pd_attachment,Unicef Focal Point,,Signature,Edit,TRUE
+,signed_pd_attachment,*,,Draft,Required,FALSE
+,signed_pd_document,*,,Draft,View,FALSE
+,signed_pd_document,Unicef Focal Point,,Signature,Edit,TRUE
+,start,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
+,start,Partner User,partner_court,Draft,Edit,TRUE
+,start,Unicef Focal Point,contingency_on,Signed,Edit,TRUE
+,start,*,unicef_not_accepted_contingency,Draft,Required,FALSE
+,start,*,contingency_on,Signed,Required,FALSE
+,submission_date,*,,*,View,TRUE
+,submission_date,Unicef Focal Point,,Draft,Edit,TRUE
+,submission_date,Partner User,,Draft,Edit,TRUE
+,submission_date,*,,Draft,Required,FALSE
+,submission_date_prc,*,,*,View,TRUE
+,submission_date_prc,Unicef Users Involved,,Review,Edit,TRUE
+,supply_items,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
+,supply_items,Partner User,partner_court,Draft,Edit,TRUE
+,technical_guidance,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
+,technical_guidance,Partner User,partner_court,Draft,Edit,TRUE
+,termination_doc_attachment,*,,Terminated,Required,TRUE
+,title,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
+,title,Partner User,partner_court,Draft,Edit,TRUE
+,title,*,,*,Required,TRUE
+,unicef_focal_points,*,not_in_amendment_mode,*,View,TRUE
+,unicef_focal_points,Partnership Manager,,*,Edit,TRUE
+,unicef_focal_points,Partnership Manager,user_adds_amendment,*,Edit,TRUE
+,unicef_focal_points,*,unicef_not_accepted,Draft,Required,FALSE
+,sites,*,not_in_amendment_mode,*,View,TRUE
+,sites,Unicef Focal Point,not_in_amendment_mode,*,Edit,TRUE
+,sites,*,,*,Required,FALSE
+,unicef_signatory,*,,Draft,View,FALSE
+,unicef_signatory,Unicef Focal Point,,Signature,Edit,TRUE
+,unicef_signatory,*,,Draft,Required,FALSE
+,unicef_signatory,*,,Review,Required,FALSE
+,unicef_signatory,*,,Signature,Required,FALSE
+,unicef_accepted,*,,Draft,Edit,TRUE
+,unicef_accepted,*,,Draft,Required,FALSE
+,partner_accepted,*,,Draft,Required,FALSE
+,partner_accepted,*,,Draft,Edit,TRUE
+,reviews,PRC Secretary,,Review,Edit,TRUE
+,reviews,Overall Approver,,Review,Edit,TRUE
+,reviews,Partner User,,*,View,FALSE
+,prc_reviews,PRC Officer,,Review,Edit,TRUE
+,prc_reviews,UNICEF User,,Draft,View,FALSE
+,prc_reviews,Partner User,,*,View,FALSE
+,partner_authorized_officer_signatory,*,,Review,Required,FALSE
+,signed_by_partner_date,*,,Review,Required,FALSE
+,signed_by_unicef_date,*,,Review,Required,FALSE
+,signed_pd_attachment,*,,Review,Required,FALSE
+,date_sent_to_partner,*,,Draft,Required,FALSE
+,context,*,unlocked,Draft,Required,FALSE
+,implementation_strategy,*,unlocked_or_contingency,Draft,Required,FALSE
+,implementation_strategy,*,contingency_on,Review,Required,FALSE
+,implementation_strategy,*,contingency_on,Signature,Required,FALSE
+,implementation_strategy,*,contingency_on,Signed,Required,FALSE
+,sustainability_rating,*,unicef_not_accepted_spd_non_hum,Draft,Required,FALSE
+,sustainability_rating,*,is_spd_non_hum,Review,Required,FALSE
+,sustainability_rating,*,is_spd_non_hum,Signature,Required,FALSE
+,sustainability_rating,*,is_spd_non_hum,Signed,Required,FALSE
+,sustainability_rating,*,is_spd_non_hum,Active,Required,FALSE
+,sustainability_rating,*,is_spd_non_hum,Ended,Required,FALSE
+,sustainability_rating,*,is_spd_non_hum,Closed,Required,FALSE
+,sustainability_rating,*,is_spd_non_hum,Suspended,Required,FALSE
+,sustainability_rating,*,is_spd_non_hum,Terminated,Required,FALSE
+,sustainability_rating,*,is_spd_non_hum,Cancelled,Required,FALSE
+,gender_rating,*,unicef_not_accepted_spd_non_hum,Draft,Required,FALSE
+,gender_rating,*,is_spd_non_hum,Review,Required,FALSE
+,gender_rating,*,is_spd_non_hum,Signature,Required,FALSE
+,gender_rating,*,is_spd_non_hum,Signed,Required,FALSE
+,gender_rating,*,is_spd_non_hum,Active,Required,FALSE
+,gender_rating,*,is_spd_non_hum,Ended,Required,FALSE
+,gender_rating,*,is_spd_non_hum,Closed,Required,FALSE
+,gender_rating,*,is_spd_non_hum,Suspended,Required,FALSE
+,gender_rating,*,is_spd_non_hum,Terminated,Required,FALSE
+,gender_rating,*,is_spd_non_hum,Cancelled,Required,FALSE
+,equity_rating,*,unicef_not_accepted_spd_non_hum,Draft,Required,FALSE
+,equity_rating,*,is_spd_non_hum,Review,Required,FALSE
+,equity_rating,*,is_spd_non_hum,Signature,Required,FALSE
+,equity_rating,*,is_spd_non_hum,Signed,Required,FALSE
+,equity_rating,*,is_spd_non_hum,Active,Required,FALSE
+,equity_rating,*,is_spd_non_hum,Ended,Required,FALSE
+,equity_rating,*,is_spd_non_hum,Closed,Required,FALSE
+,equity_rating,*,is_spd_non_hum,Suspended,Required,FALSE
+,equity_rating,*,is_spd_non_hum,Terminated,Required,FALSE
+,equity_rating,*,is_spd_non_hum,Cancelled,Required,FALSE
+,hq_support_cost,*,unicef_not_accepted,Draft,Required,FALSE
+,ip_program_contribution,*,unlocked,Draft,Required,FALSE
+,ip_program_contribution,*,is_spd,*,Required,FALSE
+,cash_transfer_modalities,*,contingency_on,Signed,Required,FALSE
+,cash_transfer_modalities,*,contingency_on,Review,Required,FALSE
+,cash_transfer_modalities,*,unicef_not_accepted_contingency,Draft,Required,FALSE
+,cancel_justification,*,,Cancelled,Required,TRUE
+3.9.5,end,*,contingency_on,Review,Required,FALSE
+3.9.5,end,*,contingency_on,Signature,Required,FALSE
+3.9.5,start,*,contingency_on,Review,Required,FALSE
+3.9.5,start,*,contingency_on,Signature,Required,FALSE
+,signed_by_partner_date,*,,signature,Required,FALSE
+,signed_by_unicef_date,*,,signature,Required,FALSE
+,partner_authorized_officer_signatory,*,,signature,Required,FALSE
+,signed_pd_attachment,*,,signature,Required,FALSE
+3.2.7,partner_authorized_officer_signatory,Unicef Focal Point,,Signature,Edit,TRUE
+,signed_by_partner_date,Unicef Focal Point,,signature,Edit,TRUE
+,confidential,Unicef Focal Point,,Draft,Edit,TRUE
+,confidential,UNICEF User,,*,View,TRUE
+,final_review_approved,UNICEF User,,Ended,View,TRUE
+,final_review_approved,UNICEF User,,Closed,View,TRUE
+,final_review_approved,Unicef Users Involved,,Ended,Edit,TRUE

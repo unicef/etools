@@ -1,7 +1,6 @@
 
 from unittest import mock
-
-from mock import Mock, patch
+from unittest.mock import Mock, patch
 
 from etools.applications.audit.purchase_order import synchronizers
 from etools.applications.audit.purchase_order.models import AuditorFirm, PurchaseOrder, PurchaseOrderItem

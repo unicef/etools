@@ -1,0 +1,2379 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: et-partners2-bk\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-03-07 13:01+0000\n"
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Localazy (https://localazy.com)\n"
+"Plural-Forms: nplurals=2; plural=(n==0 || n==1) ? 0 : 1;\n"
+
+msgid "Signed Attachment"
+msgstr "Pièce jointe signée"
+
+msgid "PRC Reviewed Attachment"
+msgstr "Pièce jointe examinée par la CRP"
+
+msgid "Attachment"
+msgstr "Pièce jointe"
+
+msgid "Review Document by PRC"
+msgstr "Document d'examen par la PRC"
+
+msgid "Signed PD Document"
+msgstr "Document PD signé"
+
+msgid "Intervention Details"
+msgstr "Détails de l'intervention"
+
+msgid "Dates and Signatures"
+msgstr "Dates et signatures"
+
+msgid "ePD"
+msgstr "ePD"
+
+msgid "PD is not ready for Vision synchronization."
+msgstr "Le PD n'est pas prêt pour la synchronisation de la vision."
+
+msgid "PD was sent to Vision."
+msgstr "Le PD a été envoyé à Vision."
+
+msgid "Capacity Strengthening Costs"
+msgstr "Coûts de renforcement des capacités"
+
+msgid "Report"
+msgstr "Rapport"
+
+msgid "Partner Details"
+msgstr "Détails du partenaire"
+
+msgid "Hact"
+msgstr "Hact"
+
+msgid "Signed Amendment"
+msgstr "Amendement signé"
+
+msgid "Agreement Details"
+msgstr "Détails de l'accord"
+
+msgid ""
+"Please delete all interventions associated with the selected Agreements "
+"before deleting them."
+msgstr ""
+"Veuillez supprimer toutes les interventions associées aux accords "
+"sélectionnés avant de les supprimer."
+
+msgid ""
+"Please delete all interventions associated with this Agreement before "
+"deleting the agreement."
+msgstr ""
+"Veuillez supprimer toutes les interventions associées à cet accord avant de "
+"supprimer l'accord."
+
+msgid "Vendor Number"
+msgstr "Numéro du vendeur"
+
+msgid "Organizations Full Name"
+msgstr "Nom complet de l'organisation"
+
+msgid "Short Name"
+msgstr "Nom court"
+
+msgid "Alternate Name"
+msgstr "Nom alternatif"
+
+msgid "Partner Type"
+msgstr "Type de partenaire"
+
+msgid "Shared Partner"
+msgstr "Partenaire partagé"
+
+msgid "Address"
+msgstr "Adresse"
+
+msgid "Phone Number"
+msgstr "Numéro de téléphone"
+
+msgid "Email Address"
+msgstr "Adresse électronique"
+
+msgid "HACT Risk Rating"
+msgstr "Cote de risque HACT"
+
+msgid "Date Last Assessed Against Core Values"
+msgstr "Date de la dernière évaluation par rapport aux valeurs fondamentales"
+
+msgid "Actual Cash Transfer for CP (USD)"
+msgstr "Transfert en espèces réel pour le PC (USD)"
+
+msgid "Actual Cash Transfer for Current Year (USD)"
+msgstr "Transfert effectif en espèces pour l'année en cours (USD)"
+
+msgid "Marked for Deletion"
+msgstr "Marqué pour la suppression"
+
+msgid "Blocked"
+msgstr "Bloqué"
+
+msgid "Assessment Type"
+msgstr "Type d'évaluation"
+
+msgid "Date Assessed"
+msgstr "Date de l'évaluation"
+
+msgid "Assessment Type (Date Assessed)"
+msgstr "Type d'évaluation (date d'évaluation)"
+
+msgid "Staff Members"
+msgstr "Membres du personnel"
+
+msgid "Planned Programmatic Visits"
+msgstr "Visites programmées"
+
+msgid "Implementing Partner"
+msgstr "Partenaire de mise en œuvre"
+
+msgid "Shared IP"
+msgstr "IP partagée"
+
+msgid "Cash Transfer 1 OCT - 30 SEP"
+msgstr "Transfert d'argent liquide 1 OCT - 30 SEP"
+
+msgid "Liquidations 1 OCT - 30 SEP"
+msgstr "Liquidations 1 OCT - 30 SEP"
+
+msgid "Cash Transfers Jan - Dec"
+msgstr "Transferts de fonds Jan - Déc"
+
+msgid "Risk Rating"
+msgstr "Évaluation du risque"
+
+msgid "Expiring Threshold"
+msgstr "Seuil d'expiration"
+
+msgid "Approach Threshold"
+msgstr "Seuil d'approche"
+
+msgid "Programmatic Visits Planned Q1"
+msgstr "Visites programmées Q1"
+
+msgid "Q2"
+msgstr "Q2"
+
+msgid "Q3"
+msgstr "Q3"
+
+msgid "Q4"
+msgstr "Q4"
+
+msgid "Programmatic Visits M.R"
+msgstr "Visites programmées M.R"
+
+msgid "Programmatic Visits Completed Q1"
+msgstr "Visites programmatiques achevées Q1"
+
+msgid "Spot Checks Planned Q1"
+msgstr "Contrôles ponctuels prévus Q1"
+
+msgid "Spot Checks M.R"
+msgstr "Contrôles ponctuels M.R"
+
+msgid "Follow Up"
+msgstr "Suivi"
+
+msgid "Spot Checks Completed Q1"
+msgstr "Contrôles ponctuels achevés Q1"
+
+msgid "Audits M.R"
+msgstr "Audits M.R"
+
+msgid "Audit Completed"
+msgstr "Audit terminé"
+
+msgid "Audits Outstanding Findings"
+msgstr "Audits Constatations en suspens"
+
+msgid "Sections"
+msgstr "Sections"
+
+msgid "Locations"
+msgstr "Sites"
+
+msgid "Action Points #"
+msgstr "Points d'action"
+
+msgid "$ Cash in the Current CP Cycle"
+msgstr "$ Cash dans le cycle actuel du PC"
+
+msgid "$ Cash in the Current Year"
+msgstr "Argent liquide de l'année en cours"
+
+msgid "Days Since Last PV"
+msgstr "Jours depuis le dernier PV"
+
+msgid "Alert: No Recent PV"
+msgstr "Alerte : Pas de PV récent"
+
+msgid "Alert: No PV"
+msgstr "Alerte : Pas de PV"
+
+msgid "Outstanding DCT Amount between 6 and 9 months"
+msgstr "Montant du DCT impayé entre 6 et 9 mois"
+
+msgid "Outstanding DCT Amount more than 9 months"
+msgstr "Montant DCT impayé plus de 9 mois"
+
+msgid "Programmatic Visits Planned"
+msgstr "Visites programmées"
+
+msgid "Programmatic Visits Completed"
+msgstr "Visites programmatiques achevées"
+
+msgid "Spot Check Required"
+msgstr "Vérification ponctuelle requise"
+
+msgid "Spot Checks Completed"
+msgstr "Contrôles ponctuels effectués"
+
+msgid "Reference Number"
+msgstr "Numéro de référence"
+
+msgid "Status"
+msgstr "Statut"
+
+msgid "Partner Name"
+msgstr "Nom du partenaire"
+
+msgid "Agreement Type"
+msgstr "Type d'accord"
+
+msgid "Start Date"
+msgstr "Date de début"
+
+msgid "End Date"
+msgstr "Date de fin"
+
+msgid "Signed By Partner"
+msgstr "Signé par le partenaire"
+
+msgid "Signed By Partner Date"
+msgstr "Signé par le partenaire Date"
+
+msgid "Signed By UNICEF"
+msgstr "Signé par l'UNICEF"
+
+msgid "Signed By UNICEF Date"
+msgstr "Signé par l'UNICEF Date"
+
+msgid "Partner Authorized Officer"
+msgstr "Partenaire Agent autorisé"
+
+msgid "Amendments"
+msgstr "Amendements"
+
+msgid "Special Conditions PCA"
+msgstr "Conditions spéciales PCA"
+
+msgid "Terms Acknowledged By"
+msgstr "Conditions reconnues par"
+
+msgid "Partner"
+msgstr "Partenaire"
+
+msgid "Vendor no."
+msgstr "Numéro de vendeur."
+
+msgid "CSO Type"
+msgstr "Type de CSO"
+
+msgid "Agreement"
+msgstr "Accord"
+
+msgid "Country Programme"
+msgstr "Programme national"
+
+msgid "Document Type"
+msgstr "Type de document"
+
+msgid "Document Title"
+msgstr "Titre du document"
+
+msgid "UNICEF Office"
+msgstr "Bureau de l'UNICEF"
+
+msgid "Contingency PD?"
+msgstr "PD de contingence ?"
+
+msgid "Cluster"
+msgstr "Cluster"
+
+msgid "UNICEF Focal Points"
+msgstr "Points focaux de l'UNICEF"
+
+msgid "CSO Authorized Officials"
+msgstr "Fonctionnaires autorisés de l'OSC"
+
+msgid "Budget Currency"
+msgstr "Devise du budget"
+
+msgid "Total CSO Budget (USD)"
+msgstr "Budget total de l'OSC (USD)"
+
+msgid "UNICEF Cash (USD)"
+msgstr "UNICEF Cash (USD)"
+
+msgid "UNICEF Supply (USD)"
+msgstr "Fourniture de l'UNICEF (USD)"
+
+msgid "Total PD/SPD Budget (USD)"
+msgstr "Budget total du PD/SPD (USD)"
+
+msgid "FR Number(s)"
+msgstr "Numéro(s) FR"
+
+msgid "FR Currency"
+msgstr "FR Monnaie"
+
+msgid "FR Posting Date"
+msgstr "FR Date d'affichage"
+
+msgid "FR Amount"
+msgstr "Montant FR"
+
+msgid "FR Actual CT"
+msgstr "FR Réel CT"
+
+msgid "Outstanding DCT"
+msgstr "DCT exceptionnel"
+
+msgid "Planned Spot Checks"
+msgstr "Contrôles ponctuels planifiés"
+
+msgid "Planned Audits"
+msgstr "Audits planifiés"
+
+msgid "Document Submission Date by CSO"
+msgstr "Date de soumission du document par l'OSC"
+
+msgid "Submission Date to PRC"
+msgstr "Date de soumission à la PRC"
+
+msgid "Review Date by PRC"
+msgstr "Date de révision par la PRC"
+
+msgid "Signed by Partner"
+msgstr "Signé par le partenaire"
+
+msgid "Signed by Partner Date"
+msgstr "Signé par le partenaire Date"
+
+msgid "Signed by UNICEF"
+msgstr "Signé par l'UNICEF"
+
+msgid "Signed by UNICEF Date"
+msgstr "Signé par l'UNICEF Date"
+
+msgid "Days from Submission to Signed"
+msgstr "Jours entre la soumission et la signature"
+
+msgid "Days from Review to Signed"
+msgstr "Jours entre la révision et la signature"
+
+msgid "Total no. of amendments"
+msgstr "Nombre total d'amendements"
+
+msgid "Last amendment date"
+msgstr "Date de la dernière modification"
+
+msgid "Attachment Type"
+msgstr "Type de pièce jointe"
+
+msgid "# of attachments"
+msgstr "# Nombre de pièces jointes"
+
+msgid "CP Outputs"
+msgstr "Sorties CP"
+
+msgid "UNPP Number"
+msgstr "Numéro UNPP"
+
+msgid "Data Processing Agreement"
+msgstr "Accord sur le traitement des données"
+
+msgid "Activities involving children and young people"
+msgstr "Activités impliquant des enfants et des jeunes"
+
+msgid "Special Conditions for Construction Works by Implementing Partners"
+msgstr ""
+"Conditions spéciales pour les travaux de construction par les partenaires de "
+"mise en œuvre"
+
+msgid "IP Name"
+msgstr "Nom IP"
+
+msgid "PD/SPD Ref #"
+msgstr "PD/SPD Ref #"
+
+msgid "Section"
+msgstr "Section"
+
+msgid "Field Office"
+msgstr "Bureau local"
+
+msgid "PD Currency"
+msgstr "Monnaie PD"
+
+msgid "CSO Contribution (PD Currency)"
+msgstr "Contribution du CSO (monnaie PD)"
+
+msgid "Total UNICEF Supplies (PD Currency)"
+msgstr "Total des fournitures de l'UNICEF (monnaie PD)"
+
+msgid "Total UNICEF Cash (PD Currency)"
+msgstr "Total de l'argent de l'UNICEF (monnaie PD)"
+
+msgid "FR Grand Total"
+msgstr "FR Total général"
+
+msgid "Actual Disbursements"
+msgstr "Décaissements réels"
+
+msgid "Multi-currency Transaction"
+msgstr "Transaction multidevises"
+
+msgid "FR Grand Total (USD)"
+msgstr "FR Total général (USD)"
+
+msgid "Actual Disbursement (USD)"
+msgstr "Décaissement réel (USD)"
+
+msgid "Outstanding DCT (USD)"
+msgstr "DCT en cours (USD)"
+
+msgid "Disbursement To Date (%)"
+msgstr "Décaissement à ce jour (%)"
+
+msgid "Link"
+msgstr "Lien"
+
+msgid "CP output"
+msgstr "Sortie CP"
+
+msgid "Name of UNICEF Focal Point"
+msgstr "Nom du point focal de l'UNICEF"
+
+msgid "Hyperlink"
+msgstr "Hyperlien"
+
+msgid "Location"
+msgstr "Localisation"
+
+msgid "PD Ref Number"
+msgstr "Numéro de référence PD"
+
+msgid "Start date"
+msgstr "Date de début"
+
+#, python-format
+msgid "Currency %(currency)s"
+msgstr "Devise %(currency)s"
+
+msgid "Vendor #: "
+msgstr "Numéro de vendeur :"
+
+msgid "End date"
+msgstr "Date de fin"
+
+msgid "PD Reference"
+msgstr "Référence PD"
+
+msgid "Duration"
+msgstr "Durée"
+
+msgid "Total PD Budget"
+msgstr "Budget total du DP"
+
+msgid "UNICEF Contribution"
+msgstr "Contribution de l'UNICEF"
+
+msgid "Total Cash"
+msgstr "Total des liquidités"
+
+msgid "Prog effectiveness"
+msgstr "Efficacité de la Prog"
+
+msgid "Supplies in-kind"
+msgstr "Fournitures en nature"
+
+msgid "Partner Contribution"
+msgstr "Contribution des partenaires"
+
+msgid "PD Output/ PD Activity"
+msgstr "PD Output/ PD Activity"
+
+#, python-format
+msgid "Total (%s)"
+msgstr "Total (%s)"
+
+msgid "CSO"
+msgstr "CSO"
+
+msgid "contribution"
+msgstr "Contribution"
+
+msgid "UNICEF"
+msgstr "UNICEF"
+
+msgid "PD Quarters"
+msgstr "Quartiers PD"
+
+msgid "Result Level"
+msgstr "Niveau de résultat"
+
+msgid "CP Output "
+msgstr "Sortie CP"
+
+msgid "PD Output"
+msgstr "SORTIE PD"
+
+msgid "EEPM"
+msgstr "MIEP"
+
+msgid "Effective and efficient programme management"
+msgstr "Gestion efficace et efficiente du programme"
+
+msgid "EEPM.1"
+msgstr "EEMP.1"
+
+msgid "In-country management & support"
+msgstr "Gestion et soutien dans le pays"
+
+msgid "EEPM.2"
+msgstr "EEMP.2"
+
+msgid "Operational costs"
+msgstr "Coûts opérationnels"
+
+msgid "EEPM.3"
+msgstr "EEMP.3"
+
+msgid "Planning, monitoring, evaluation, and communication"
+msgstr "Planification, suivi, évaluation et communication"
+
+msgid "Subtotal for the programme costs"
+msgstr "Sous-total pour les coûts du programme"
+
+#, python-format
+msgid ""
+"Capacity Strengthening Costs ({%(cost)d}%% of UNICEF the cash component)"
+msgstr ""
+"Coûts de renforcement des capacités ({%(cost)d}%% de l'UNICEF la composante "
+"en espèces)"
+
+msgid "Total PD budget cash"
+msgstr "Total du budget PD en espèces"
+
+msgid "No."
+msgstr "Non."
+
+msgid "PD Output/ PD Activity / Item Description"
+msgstr "PD Output/ PD Activity / Item Description"
+
+msgid "Unit Type"
+msgstr "Type d'unité"
+
+msgid "Number of Units"
+msgstr "Nombre d'unités"
+
+msgid "Price/Unit"
+msgstr "Prix/Unité"
+
+msgid "Total"
+msgstr "TOTAL"
+
+msgid "Other Notes"
+msgstr "Autres notes"
+
+msgid "PD OUTPUT "
+msgstr "SORTIE PD"
+
+msgid "Activity"
+msgstr "Activité"
+
+msgid "Activity: In-country management & support"
+msgstr "Activité : Gestion et soutien dans le pays"
+
+#, python-format
+msgid "EEPM.1.%d"
+msgstr "EEPM.1.%d"
+
+msgid "Activity: Operational costs"
+msgstr "Activité : Coûts opérationnels"
+
+#, python-format
+msgid "EEPM.2.%d"
+msgstr "EEPM.2.%d"
+
+msgid "Activity: Planning, monitoring, evaluation, and communication"
+msgstr "Activité : Planification, suivi, évaluation et communication"
+
+#, python-format
+msgid "EEPM.3.%d"
+msgstr "EEPM.3.%d"
+
+msgid "Total Cost for all outputs"
+msgstr "Coût total pour tous les produits"
+
+msgid "Item"
+msgstr "Article"
+
+msgid "Price/unit"
+msgstr "Prix/Unité"
+
+msgid "Total Price"
+msgstr "Prix total"
+
+msgid "Provided By"
+msgstr "Fourni par"
+
+msgid "CP Output"
+msgstr "Sortie CP"
+
+msgid "Other Mentions"
+msgstr "Autres mentions"
+
+msgid "UNICEF Product Number"
+msgstr "Numéro de produit de l'UNICEF"
+
+msgid "Total Value"
+msgstr "Valeur totale"
+
+msgid "Partner non-financial contribution:"
+msgstr "Contribution non-financière du partenaire :"
+
+msgid "Budget Summary"
+msgstr "Résumé du budget"
+
+msgid "Activity Budget"
+msgstr "Budget des activités"
+
+msgid "Detailed Budget"
+msgstr "Budget détaillé"
+
+msgid "Supply Cost"
+msgstr "Coût de l'approvisionnement"
+
+msgid "Workplan Budget"
+msgstr "Plan de travail Budget"
+
+msgid "Detailed Workplan Budget"
+msgstr "Plan de travail détaillé Budget"
+
+msgid "Supply Contribution (Planned)"
+msgstr "Contribution à l'offre (prévue)"
+
+msgid "You must select a type for this CSO"
+msgstr "Vous devez sélectionner un type pour ce CSO"
+
+msgid ""
+"\"CSO Type\" does not apply to non-CSO organizations, please remove type"
+msgstr ""
+"Le \"Type d'OSC\" ne s'applique pas aux organisations non OSC, veuillez "
+"supprimer le type."
+
+msgid "Unable to associate staff member to UNICEF user"
+msgstr "Impossible d'associer un membre du personnel à un utilisateur UNICEF"
+
+#, python-format
+msgid "This user already exists under a different partnership: %s"
+msgstr "Cet utilisateur existe déjà sous un autre partenariat: %s"
+
+#, python-format
+msgid ""
+"User emails cannot be changed, please remove the user and add another one: %s"
+msgstr ""
+"Les e-mails des utilisateurs ne peuvent pas être modifiés, veuillez "
+"supprimer l'utilisateur et en ajouter un autre: %s"
+
+msgid "User already synced to PRP and cannot be disabled."
+msgstr ""
+"L'utilisateur est déjà synchronisé avec PRP et ne peut pas être désactivé."
+
+msgid "Name"
+msgstr "Nom"
+
+msgid "Bilateral / Multilateral"
+msgstr "Bilatéral / Multilatéral"
+
+msgid "Civil Society Organization"
+msgstr "Organisation de la société civile"
+
+msgid "Government"
+msgstr "Gouvernement"
+
+msgid "UN Agency"
+msgstr "Agence des Nations Unies"
+
+msgid "High"
+msgstr "Haut"
+
+msgid "Significant"
+msgstr "Significatif"
+
+msgid "Medium"
+msgstr "Moyen"
+
+msgid "Low"
+msgstr "Faible"
+
+msgid "Not Required"
+msgstr "Non requis"
+
+msgid "Low Capacity (High Risk)"
+msgstr "Faible capacité (risque élevé)"
+
+msgid "Medium Capacity (Moderate Risk)"
+msgstr "Capacité moyenne (risque modéré)"
+
+msgid "Full Capacity (Low Risk)"
+msgstr "Pleine capacité (faible risque)"
+
+msgid "Low Capacity Assumed - Emergency"
+msgstr "Faible capacité présumée - Urgence"
+
+msgid "No Contact with Beneficiaries"
+msgstr "Aucun contact avec les bénéficiaires"
+
+msgid "Not Assessed"
+msgstr "Non évalué"
+
+msgid "International"
+msgstr "International"
+
+msgid "National"
+msgstr "National"
+
+msgid "Community Based Organization"
+msgstr "Organisation à base communautaire"
+
+msgid "Academic Institution"
+msgstr "Institution académique"
+
+msgid "Red Cross/Red Crescent National Societies"
+msgstr "Sociétés nationales de la Croix-Rouge et du Croissant-Rouge"
+
+msgid "Description"
+msgstr "Description"
+
+msgid "Street Address"
+msgstr "Adresse de la rue"
+
+msgid "City"
+msgstr "Ville"
+
+msgid "Postal Code"
+msgstr "Code postal"
+
+msgid "Country"
+msgstr "Pays"
+
+msgid "Alternate ID"
+msgstr "ID alternatif"
+
+msgid "Last Assessment Date"
+msgstr "Date de la dernière évaluation"
+
+msgid "Date positively assessed against core values"
+msgstr "Date évaluée positivement par rapport aux valeurs fondamentales"
+
+msgid "VISION Synced"
+msgstr "VISION Synchronisée"
+
+msgid "Marked for deletion"
+msgstr "Marqué pour la suppression"
+
+msgid "Manually Hidden"
+msgstr "Caché manuellement"
+
+msgid "Hidden"
+msgstr "Caché"
+
+msgid "Total Cash Transferred for Country Programme"
+msgstr "Total des transferts d'espèces pour le programme national"
+
+msgid "Total Cash Transferred per Current Year"
+msgstr "Total des transferts en espèces pour l'année en cours"
+
+msgid "Net Cash Transferred"
+msgstr "Transfert net d'argent"
+
+msgid "Liquidation"
+msgstr "LIQUIDATION"
+
+msgid "Cash Transfer Jan - Dec"
+msgstr "Transfert d'argent Jan - Dec"
+
+msgid "Outstanding DCT 6/9 months"
+msgstr "DCT en suspens 6/9 mois"
+
+msgid "Outstanding DCT more than 9 months"
+msgstr "DCT en suspens depuis plus de 9 mois"
+
+msgid "Basis for Risk Rating"
+msgstr "Base de l'évaluation du risque"
+
+msgid "Last PSEA Assess. Date"
+msgstr "Dernière évaluation de la PSEA Date"
+
+msgid "PSEA Risk Rating"
+msgstr "Cote de risque de la LEFP"
+
+msgid "Highest Risk Rating Type"
+msgstr "Type d'évaluation du risque le plus élevé"
+
+msgid "Highest Risk Rating Name"
+msgstr "Nom de l'évaluation du risque le plus élevé"
+
+msgid "Lead Office"
+msgstr "Bureau principal"
+
+msgid "Lead Section"
+msgstr "Section principale"
+
+msgid "Core Values Assessment"
+msgstr "Évaluation des valeurs fondamentales"
+
+msgid "User"
+msgstr "Utilisateur"
+
+msgid "Title"
+msgstr "Titre"
+
+msgid "First Name"
+msgstr "Prénom"
+
+msgid "Last Name"
+msgstr "Nom de famille"
+
+msgid "Active"
+msgstr "Actif"
+
+msgid "Spot Check Follow Up Required"
+msgstr "Suivi des contrôles ponctuels requis"
+
+msgid "Spot Check Q1"
+msgstr "Spot Check Q1"
+
+msgid "Spot Check Q2"
+msgstr "Spot Check Q2"
+
+msgid "Spot Check Q3"
+msgstr "Spot Check Q3"
+
+msgid "Spot Check Q4"
+msgstr "Spot Check Q4"
+
+msgid "Scheduled Audit"
+msgstr "Audit programmé"
+
+msgid "Special Audit"
+msgstr "Audit spécial"
+
+msgid "Micro Assessment"
+msgstr "Évaluation micro"
+
+msgid "Simplified Checklist"
+msgstr "Liste de contrôle simplifiée"
+
+msgid "Scheduled Audit report"
+msgstr "Rapport d'audit programmé"
+
+msgid "Special Audit report"
+msgstr "Rapport d'audit spécial"
+
+msgid "Other"
+msgstr "Autre"
+
+msgid "Type"
+msgstr "Tapez"
+
+msgid "Other Agencies"
+msgstr "Autres agences"
+
+msgid "Planned amount"
+msgstr "Montant prévu"
+
+msgid "Special requests"
+msgstr "Demandes spéciales"
+
+msgid "Requested Date"
+msgstr "Date demandée"
+
+msgid "Requesting Officer"
+msgstr "Agent demandeur"
+
+msgid "Approving Officer"
+msgstr "Agent approbateur"
+
+msgid "Planned Date"
+msgstr "Date prévue"
+
+msgid "Completed Date"
+msgstr "Date d'achèvement"
+
+msgid "Rating"
+msgstr "Classement"
+
+msgid "Basis for risk rating"
+msgstr "Base de l'évaluation du risque"
+
+msgid "Programme Cooperation Agreement"
+msgstr "Accord de coopération en matière de programmes"
+
+msgid "Small Scale Funding Agreement"
+msgstr "Accord de financement à petite échelle"
+
+msgid "Memorandum of Understanding"
+msgstr "Protocole d'accord"
+
+msgid "Draft"
+msgstr "Draft"
+
+msgid "Signed"
+msgstr "Signé"
+
+msgid "Ended"
+msgstr "Fini"
+
+msgid "Suspended"
+msgstr "Suspendu"
+
+msgid "Terminated"
+msgstr "Terminé"
+
+msgid "Attached Agreement"
+msgstr "Accord ci-joint"
+
+msgid "Termination document for PCAs"
+msgstr "Document de fin de contrat pour les APC"
+
+msgid "Signed by partner"
+msgstr "Signé par le partenaire"
+
+msgid "Change in Legal Name of Implementing Partner"
+msgstr "Changement de nom légal du partenaire de mise en œuvre"
+
+msgid "Change Authorized Officer(s)"
+msgstr "Changement d'agent(s) autorisé(s)"
+
+msgid "Banking Information"
+msgstr "Informations bancaires"
+
+msgid "Change in clause"
+msgstr "Changement de clause"
+
+msgid "Number"
+msgstr "Numéro"
+
+msgid "Types"
+msgstr "Types"
+
+msgid "Signed Date"
+msgstr "Signé Date"
+
+msgid "Amendment"
+msgstr "Amendement"
+
+msgid "Agreement amendments"
+msgstr "Modifications de l'accord"
+
+msgid "Development"
+msgstr "Développement"
+
+msgid "Review"
+msgstr "Consultez le site"
+
+msgid "Signature"
+msgstr "Signature"
+
+msgid "Cancelled"
+msgstr "Annulé"
+
+msgid "Closed"
+msgstr "Fermé"
+
+msgid "Expired"
+msgstr "Expiré"
+
+msgid "Programme Document"
+msgstr "Document de programme"
+
+msgid "Simplified Programme Document"
+msgstr "Document de programme simplifié"
+
+msgid "None"
+msgstr "Aucun"
+
+msgid "Marginal"
+msgstr "Marginal"
+
+msgid "Principal"
+msgstr "Principal"
+
+msgid "Direct Payment"
+msgstr "Paiement direct"
+
+msgid "Reimbursement"
+msgstr "Remboursement"
+
+msgid "Direct Cash Transfer"
+msgstr "Transfert direct en espèces"
+
+msgid "Country Programmes"
+msgstr "Programmes nationaux"
+
+msgid "Date Final Partnership Review Performed"
+msgstr "Date de la révision finale du partenariat"
+
+msgid "Final Review Approved"
+msgstr "Révision finale approuvée"
+
+msgid "Contingency PD"
+msgstr "PD pour imprévus"
+
+msgid "Activation Document for Contingency PDs"
+msgstr "Document d'activation pour les DP de contingence"
+
+msgid "Activation Protocol"
+msgstr "Protocole d'activation"
+
+msgid "Termination document for PDs"
+msgstr "Document de fin de contrat pour les PD"
+
+msgid "Office"
+msgstr "Bureau"
+
+msgid "Sites"
+msgstr "Sites"
+
+msgid "Population Focus"
+msgstr "Focus sur la population"
+
+msgid "Amendment Open"
+msgstr "Amendement ouvert"
+
+msgid "Humanitarian"
+msgstr "Humanitaire"
+
+msgid "Date first sent to Partner"
+msgstr "Date du premier envoi au partenaire"
+
+msgid "Context"
+msgstr "Contexte"
+
+msgid "Implementation Strategy"
+msgstr "Stratégie de mise en œuvre"
+
+msgid "Gender Rating"
+msgstr "Classement par sexe"
+
+msgid "Gender Narrative"
+msgstr "Récit de genre"
+
+msgid "Equity Rating"
+msgstr "Notation des actions"
+
+msgid "Equity Narrative"
+msgstr "Equity Narrative"
+
+msgid "Sustainability Rating"
+msgstr "Évaluation de la durabilité"
+
+msgid "Sustainability Narrative"
+msgstr "Narration sur la durabilité"
+
+msgid "Partner Non-Financial Contribution to Programme"
+msgstr "Partenaire Contribution non financière au programme"
+
+msgid "Budget Owner"
+msgstr "Propriétaire du budget"
+
+msgid "HQ Support Cost"
+msgstr "Coût du soutien du QG"
+
+msgid "Cash Transfer Modalities"
+msgstr "Modalités de transfert de fonds"
+
+msgid "UNICEF Review Type"
+msgstr "UNICEF Type d'examen"
+
+msgid "Capacity Development"
+msgstr "Développement des capacités"
+
+msgid "Other Info"
+msgstr "Autres informations"
+
+msgid "Other Document Details"
+msgstr "Autres détails du document"
+
+msgid "Other Partners Involved"
+msgstr "Autres partenaires impliqués"
+
+msgid "Technical Guidance"
+msgstr "Conseils techniques"
+
+msgid "Cancel Justification"
+msgstr "Justification de l'annulation"
+
+msgid "Metadata"
+msgstr "Métadonnées"
+
+msgid "Confidential"
+msgstr "Confidentiel"
+
+msgid "Unknown"
+msgstr "Inconnu"
+
+msgid "Type 1: Administrative error (correction)"
+msgstr "Type 1 : erreur administrative (correction)"
+
+msgid "Type 2: Budget <= 20%"
+msgstr "Type 2 : Budget <= 20"
+
+msgid "Type 3: Budget > 20%"
+msgstr "Type 3 : Budget > 20"
+
+msgid "Type 4: Changes to planned results"
+msgstr "Type 4 : modifications des résultats planifiés"
+
+msgid "Type 5: No cost extension"
+msgstr "Type 5 : Extension sans frais"
+
+msgid "Type 6: Other"
+msgstr "Type 6 : Autre"
+
+msgid "Normal"
+msgstr "Normal"
+
+msgid "Contingency"
+msgstr "Contingence"
+
+msgid "Kind"
+msgstr "Kind"
+
+msgid "Amendment Document"
+msgstr "Document d'amendement"
+
+msgid "Internal PRC Review"
+msgstr "Examen interne du CEP"
+
+msgid "Amended Intervention"
+msgstr "Intervention modifiée"
+
+msgid "Intervention amendments"
+msgstr "Modifications de l'intervention"
+
+msgid "Intervention"
+msgstr "Intervention"
+
+msgid "Year"
+msgstr "Année"
+
+msgid "Programmatic Q1"
+msgstr "Programmation Q1"
+
+msgid "Programmatic Q2"
+msgstr "Programmatique Q2"
+
+msgid "Programmatic Q3"
+msgstr "Programmatique Q3"
+
+msgid "Programmatic Q4"
+msgstr "Programmatique Q4"
+
+msgid "Intervention Planned Visits"
+msgstr "Intervention Visites planifiées"
+
+msgid "Code"
+msgstr "Code"
+
+msgid "RAM Indicators"
+msgstr "Indicateurs de la RAM"
+
+msgid "Unicef Cash"
+msgstr "Unicef Cash"
+
+msgid "UNICEF Supplies"
+msgstr "Fournitures de l'UNICEF"
+
+msgid "Partner Contribution Local"
+msgstr "Contribution du partenaire Local"
+
+msgid "Partner Supplies Local"
+msgstr "Fournitures des partenaires locaux"
+
+msgid "Total Partner Contribution"
+msgstr "Contribution totale des partenaires"
+
+msgid "Total HQ Cash Local"
+msgstr "Total HQ Cash Local"
+
+msgid "Unicef Cash Local"
+msgstr "Unicef Cash Local"
+
+msgid "UNICEF Supplies Local"
+msgstr "Fournitures UNICEF locales"
+
+msgid "Currency"
+msgstr "Monnaie"
+
+msgid "Total Local"
+msgstr "Total Local"
+
+msgid "Programme Effectiveness (%)"
+msgstr "Efficacité du programme (%)"
+
+msgid "Intervention budget"
+msgstr "Budget d'intervention"
+
+msgid "Not decided yet"
+msgstr "Pas encore décidé"
+
+msgid "Yes, strongly agree"
+msgstr "Oui, tout à fait d'accord"
+
+msgid "Yes, agree"
+msgstr "Oui, d'accord"
+
+msgid "No, disagree"
+msgstr "Non, pas d'accord"
+
+msgid "No, strongly disagree"
+msgstr "Non, pas du tout d'accord"
+
+msgid ""
+"The proposed relationship is best represented and regulated by partnership "
+"(as opposed to procurement), with both UNICEF and the CSO making clear "
+"contributions to the PD/SPD"
+msgstr ""
+"La relation proposée est mieux représentée et régie par le partenariat (par "
+"opposition à la passation de marchés), l'UNICEF et l'OSC apportant tous deux "
+"des contributions claires au PD/SPD."
+
+msgid ""
+"The partner selection evidences the CSO’s comparative advantage and value "
+"for money in relation to the planned results"
+msgstr ""
+"La sélection du partenaire met en évidence l'avantage comparatif et le "
+"rapport qualité-prix de l'OSC par rapport aux résultats prévus."
+
+msgid ""
+"Previous UNICEF/UN relationships with the proposed CSO have been positive"
+msgstr ""
+"Les relations précédentes de l'UNICEF/des Nations unies avec l'OSC proposée "
+"ont été positives."
+
+msgid ""
+"The proposed PD/SPD is relevant to achieving results in the country "
+"programme document, the relevant sector workplan and or humanitarian "
+"response plan"
+msgstr ""
+"Le PD/SPD proposé est pertinent pour atteindre les résultats du document de "
+"programme du pays, du plan de travail sectoriel pertinent et/ou du plan de "
+"réponse humanitaire."
+
+msgid ""
+"The results framework of the proposed PD/SPD has been guided by M&E feedback "
+"during the drafting process"
+msgstr ""
+"Le cadre de résultats du PD/SPD proposé a été guidé par le retour "
+"d'information du S&E pendant le processus de rédaction."
+
+msgid ""
+"Gender, equity and sustainability have been considered in the programme "
+"design process"
+msgstr ""
+"Le genre, l'équité et la durabilité ont été pris en compte dans le processus "
+"de conception du programme."
+
+msgid ""
+"The budget of the proposed PD/SPD is aligned with the principles of value "
+"for money with the effective and efficient programme management costs "
+"adhering to office defined limits"
+msgstr ""
+"Le budget du PD/SPD proposé est aligné sur les principes d'optimisation des "
+"ressources, les coûts de gestion du programme étant conformes aux limites "
+"définies par le bureau."
+
+msgid "The relevant supply issues have been duly considered"
+msgstr ""
+"Les questions d'approvisionnement pertinentes ont été dûment prises en compte"
+
+msgid "PRC Review"
+msgstr "Examen de la CRP"
+
+msgid "Non-PRC Review"
+msgstr "Examen hors CRP"
+
+msgid "No Review Required"
+msgstr "Aucun examen requis"
+
+msgid "Actions List"
+msgstr "Liste des actions"
+
+msgid "PRC Submitted By"
+msgstr "PRC Présenté par"
+
+msgid "Review Date"
+msgstr "Date de révision"
+
+msgid "Meeting Date"
+msgstr "Date de la réunion"
+
+msgid "PRC Officers"
+msgstr "Agents de la RPC"
+
+msgid "Overall Approver"
+msgstr "Approbation générale"
+
+msgid "Sent Back by Secretary Comment"
+msgstr "Renvoyé par le secrétaire Commentaire"
+
+msgid "FACE"
+msgstr "Visage"
+
+msgid "Progress Report"
+msgstr "Rapport d'activité"
+
+msgid "(Legacy) Final Partnership Review"
+msgstr "Revue finale du partenariat (héritage)"
+
+msgid "Correspondence"
+msgstr "Correspondance"
+
+msgid "Supply/Distribution Plan"
+msgstr "Plan d'approvisionnement/distribution"
+
+msgid "Special Conditions for Construction Works"
+msgstr "Conditions spéciales pour les travaux de construction"
+
+msgid "Intervention Attachment"
+msgstr "Attachement d'intervention"
+
+msgid "Fund Commitment Reference"
+msgstr "Référence de l'engagement du fonds"
+
+msgid "Amount (USD)"
+msgstr "Montant (USD)"
+
+msgid "Liquidation (USD)"
+msgstr "Liquidation (USD)"
+
+msgid "Outstanding Balance (USD)"
+msgstr "Solde impayé (USD)"
+
+msgid "Amount less than 3 months (USD)"
+msgstr "Montant à moins de 3 mois (USD)"
+
+msgid "Amount between 3 and 6 months (USD)"
+msgstr "Montant entre 3 et 6 mois (USD)"
+
+msgid "Amount between 6 and 9 months (USD)"
+msgstr "Montant entre 6 et 9 mois (USD)"
+
+msgid "Amount more than 9 months (USD)"
+msgstr "Montant plus de 9 mois (USD)"
+
+msgid "Partner Planned Visits"
+msgstr "Visites planifiées par les partenaires"
+
+msgid "Social & Environmental"
+msgstr "Social et environnemental"
+
+msgid "Financial"
+msgstr "Financier"
+
+msgid "Operational"
+msgstr "Opérationnel"
+
+msgid "Organizational"
+msgstr "Organisation"
+
+msgid "Political"
+msgstr "Politique"
+
+msgid "Strategic"
+msgstr "Stratégique"
+
+msgid "Safety & security"
+msgstr "Sûreté et sécurité"
+
+msgid "Risk Type"
+msgstr "Type de risque"
+
+msgid ""
+"UNICEF contribution for In-country management and support staff prorated to "
+"their contribution to the programme (representation, planning, coordination, "
+"logistics, administration, finance)"
+msgstr ""
+"Contribution de l'UNICEF pour le personnel de gestion et d'appui dans le "
+"pays au prorata de leur contribution au programme (représentation, "
+"planification, coordination, logistique, administration, finances)."
+
+msgid ""
+"Partner contribution for In-country management and support staff prorated to "
+"their contribution to the programme (representation, planning, coordination, "
+"logistics, administration, finance)"
+msgstr ""
+"Contribution du partenaire pour le personnel de gestion et de soutien dans "
+"le pays au prorata de leur contribution au programme (représentation, "
+"planification, coordination, logistique, administration, finances)."
+
+msgid ""
+"UNICEF contribution for Operational costs prorated to their contribution to "
+"the programme (office space, equipment, office supplies, maintenance)"
+msgstr ""
+"Contribution de l'UNICEF pour les coûts opérationnels au prorata de leur "
+"contribution au programme (espace de bureau, équipement, fournitures de "
+"bureau, entretien)."
+
+msgid ""
+"Partner contribution for Operational costs prorated to their contribution to "
+"the programme (office space, equipment, office supplies, maintenance)"
+msgstr ""
+"Contribution des partenaires pour les coûts opérationnels au prorata de leur "
+"contribution au programme (espace de bureau, équipement, fournitures de "
+"bureau, entretien)."
+
+msgid ""
+"UNICEF contribution for Planning, monitoring, evaluation and communication, "
+"prorated to their contribution to the programme (venue, travels, etc.)"
+msgstr ""
+"Contribution de l'UNICEF pour la planification, le suivi, l'évaluation et la "
+"communication, au prorata de leur contribution au programme (lieu, voyages, "
+"etc.)."
+
+msgid ""
+"Partner contribution for Planning, monitoring, evaluation and communication, "
+"prorated to their contribution to the programme (venue, travels, etc.)"
+msgstr ""
+"Contribution des partenaires pour la planification, le suivi, l'évaluation "
+"et la communication, au prorata de leur contribution au programme (lieu, "
+"voyages, etc.)."
+
+msgid "Unit Number"
+msgstr "Numéro d'unité"
+
+msgid "Unit Price"
+msgstr "Prix unitaire"
+
+msgid "Result"
+msgstr "Résultat"
+
+msgid ""
+"In-country management and support staff prorated to their contribution to "
+"the programme (representation, planning, coordination, logistics, "
+"administration, finance)"
+msgstr ""
+"Personnel de gestion et d'appui dans le pays au prorata de leur contribution "
+"au programme (représentation, planification, coordination, logistique, "
+"administration, finances)."
+
+msgid ""
+"Operational costs prorated to their contribution to the programme (office "
+"space, equipment, office supplies, maintenance)"
+msgstr ""
+"Coûts opérationnels au prorata de leur contribution au programme (espace de "
+"bureau, équipement, fournitures de bureau, maintenance)"
+
+msgid ""
+"Planning, monitoring, evaluation and communication, prorated to their "
+"contribution to the programme (venue, travels, etc.)"
+msgstr ""
+"Planification, suivi, évaluation et communication, au prorata de leur "
+"contribution au programme (lieu de réunion, voyages, etc.)."
+
+msgid "Budget"
+msgstr "Budget"
+
+msgid "Unit"
+msgstr "Unité"
+
+msgid "Units Number"
+msgstr "Nombre d'unités"
+
+msgid "UNICEF Cash Local"
+msgstr "Unicef Cash Local"
+
+msgid "CSO Cash Local"
+msgstr "CSO Cash Local"
+
+msgid "Accessing this item is not allowed."
+msgstr "L'accès à cet élément n'est pas autorisé."
+
+msgid "Country Programme is required for PCAs!"
+msgstr "Le programme de pays est requis pour les PCA!"
+
+msgid "URL"
+msgstr "URL"
+
+msgid "Result Type"
+msgstr "Type de résultat"
+
+msgid "From Date"
+msgstr "De la date"
+
+msgid "To Date"
+msgstr "A ce jour"
+
+msgid "Parent"
+msgstr "Parent"
+
+msgid "WBS"
+msgstr "WBS"
+
+msgid "VISION ID"
+msgstr "VISION ID"
+
+msgid "GIC Code"
+msgstr "Code CPG"
+
+msgid "GIC Name"
+msgstr "Nom du CPG"
+
+msgid "SIC Code"
+msgstr "Code SIC"
+
+msgid "SIC Name"
+msgstr "Nom du SIC"
+
+msgid "Activity Focus Code"
+msgstr "Code de l'activité principale"
+
+msgid "Activity Focus Name"
+msgstr "Nom du centre d'intérêt de l'activité"
+
+msgid "Total CSO Contribution"
+msgstr "Contribution totale des OSC"
+
+msgid "UNICEF Cash"
+msgstr "Unicef Cash"
+
+msgid "UNICEF Supply"
+msgstr "Approvisionnement de l'UNICEF"
+
+msgid "Total PD/SPD Budget"
+msgstr "Budget total PD/SPD"
+
+msgid "Attachment type"
+msgstr "Type de pièce jointe"
+
+msgid "N/A"
+msgstr "N/A"
+
+msgid "Attachments"
+msgstr "Pièces jointes"
+
+msgid "CSO Contribution"
+msgstr "Contribution des OSC"
+
+msgid "In Kind Amount"
+msgstr "Montant en nature"
+
+msgid "CSO Contribution (Local)"
+msgstr "Contribution des OSC (locales)"
+
+msgid "UNICEF Cash (Local)"
+msgstr "UNICEF Cash (Local)"
+
+msgid "In Kind Amount (Local)"
+msgstr "Montant en nature (local)"
+
+msgid "SEA Risk Rating"
+msgstr "Cote de risque SEA"
+
+msgid "HACT"
+msgstr "Hact"
+
+msgid ""
+"Cannot add a new amendment while another amendment of same kind is in "
+"progress."
+msgstr ""
+"On ne peut pas ajouter un nouvel amendement alors qu'un autre amendement du "
+"même type est en cours."
+
+msgid "Date cannot be in the future!"
+msgstr "La date ne peut pas être dans le futur!"
+
+msgid "Cannot add a new amendment while the partner is blocked in Vision."
+msgstr ""
+"Impossible d'ajouter un nouvel amendement tant que le partenaire est bloqué "
+"dans Vision."
+
+msgid "Other description required, if type 'Other' selected."
+msgstr "Autre description requise, si le type \"Autre\" est sélectionné."
+
+msgid "Planned Visit to be set only at Partner level"
+msgstr "Visite planifiée à définir uniquement au niveau du partenaire"
+
+msgid "Planned Visit cannot be set for Terminated interventions"
+msgstr ""
+"La visite planifiée ne peut pas être définie pour les interventions terminées"
+
+msgid ""
+"An attachment cannot be changed in statuses \"Ended, Closed or Terminated\""
+msgstr ""
+"Une pièce jointe ne peut pas être modifiée dans les statuts \"Terminé, Fermé "
+"ou Terminé\""
+
+msgid "An Output cannot be updated for a partner that is blocked in Vision"
+msgstr ""
+"Une sortie ne peut pas être mise à jour pour un partenaire bloqué dans Vision"
+
+msgid "Invalid CP Output provided."
+msgstr "Sortie CP invalide fournie."
+
+msgid "lower_result has an id but cannot be found in the db"
+msgstr ""
+"lower_result a un identifiant mais est introuvable dans la base de données"
+
+msgid ""
+"Cannot change the intervention that this reporting period is associated with."
+msgstr ""
+"Impossible de modifier l'intervention à laquelle cette période de rapport "
+"est associée."
+
+msgid "end_date must be on or after start_date"
+msgstr "end_date doit être le ou après start_date"
+
+msgid "due_date must be on or after end_date"
+msgstr "due_date doit être le ou après end_date"
+
+msgid "This period overlaps an existing reporting period."
+msgstr "Cette période chevauche une période de déclaration existante."
+
+#, python-format
+msgid "One or more of the FRs selected is related to a different PD/SPD, %s"
+msgstr ""
+"Un ou plusieurs des FR sélectionnés sont liés à un PD/SPD différent, %s"
+
+#, python-format
+msgid "This field is limited to %d or less characters."
+msgstr "Ce champ est limité à %d caractères ou moins."
+
+#, python-format
+msgid ""
+"Please adjust activities to not use the quarters to be removed (%(names)s)."
+msgstr ""
+"Veuillez adapter les activités afin de ne pas utiliser les trimestres à "
+"supprimer (%(names)s)."
+
+msgid "Indicator needs to be either cluster or high frequency."
+msgstr "L'indicateur doit être soit en grappe, soit à haute fréquence."
+
+msgid "Start date needs to be on or after PD start date."
+msgstr ""
+"La date de début doit être égale ou postérieure à la date de début du PD."
+
+msgid "End date needs to be on or before PD end date."
+msgstr "La date de fin doit être égale ou antérieure à la date de fin du PD."
+
+msgid "End date needs to be after the start date."
+msgstr "La date de fin doit être postérieure à la date de début."
+
+msgid "Next start date needs to be one day after previous end date."
+msgstr ""
+"La date de début suivante doit être un jour après la date de fin précédente."
+
+msgid "Changes not allowed when PD is terminated."
+msgstr "Les changements ne sont pas autorisés lorsque le DP est terminé."
+
+msgid "Changes not allowed when PD not in amendment state."
+msgstr ""
+"Les modifications ne sont pas autorisées lorsque le DP n'est pas en état de "
+"modification."
+
+msgid "PD needs to have a start date."
+msgstr "Le DP doit avoir une date de début."
+
+msgid "This field cannot be empty."
+msgstr "Ce champ ne peut pas être vide."
+
+msgid "Requirement ID passed in does not exist"
+msgstr "L'ID d'exigence transmis n'existe pas"
+
+msgid "Requirement ID passed in belongs to a different intervention"
+msgstr "L'ID d'exigence transmis appartient à une autre intervention"
+
+msgid "You're trying to delete a record that has a start date in the past"
+msgstr ""
+"Vous essayez de supprimer un enregistrement dont la date de début est située "
+"dans le passé"
+
+msgid ""
+"A record that starts in the passed cannot be modified on a non-draft PD/SPD"
+msgstr ""
+"Un enregistrement commençant par le passé ne peut pas être modifié sur un PD/"
+"SPD non brouillon"
+
+msgid ""
+"Invalid budget data. Total cash should be equal to items number * price per "
+"item."
+msgstr ""
+"Données budgétaires non valides. Le total des liquidités doit être égal au "
+"nombre d'articles * prix par article."
+
+#, python-format
+msgid ""
+"The email for the partner contact is used by another partner contact. Email "
+"has to be unique to proceed %s"
+msgstr ""
+"L'adresse e-mail du contact partenaire est utilisée par un autre contact "
+"partenaire. L'e-mail doit être unique pour continuer %s"
+
+msgid ""
+"The Partner Staff member you are trying to activate is associated with a "
+"different Partner Organization"
+msgstr ""
+"Le membre du personnel partenaire que vous essayez d'activer est associé à "
+"une autre organisation partenaire"
+
+msgid ""
+"User already synced to PRP and cannot be disabled. Please instruct the "
+"partner to disable from PRP"
+msgstr ""
+"L'utilisateur est déjà synchronisé avec PRP et ne peut pas être désactivé. "
+"Veuillez demander au partenaire de désactiver le PRP"
+
+msgid "The Date of Report cannot be in the future"
+msgstr "La date du rapport ne peut pas être dans le futur"
+
+msgid "Planned Visit can be set only for Government partners"
+msgstr ""
+"La visite planifiée ne peut être définie que pour les partenaires "
+"gouvernementaux"
+
+msgid "The basis for risk rating has to be blank if Type is Low or High"
+msgstr ""
+"La base de la cote de risque doit être vide si le type est faible ou élevé"
+
+msgid ""
+"The basis for risk rating has to be blank if rating is Not Required and type "
+"is Micro Assessment"
+msgstr ""
+"La base de la notation du risque doit être vide si la notation est Non "
+"requise et le type est Micro évaluation"
+
+msgid "Vendor number must belong to PRG2 account group"
+msgstr "Le numéro de fournisseur doit appartenir au groupe de comptes PRG2"
+
+msgid "Unknown intervention."
+msgstr "Intervention inconnue."
+
+msgid "EZHACT Vision integration disabled"
+msgstr "Intégration d'EZHACT Vision désactivée"
+
+msgid "The vendor number could not be found in INSIGHT"
+msgstr "Le numéro du vendeur n'a pas pu être trouvé dans INSIGHT"
+
+msgid "Partner skipped because one or more of the required fields are missing"
+msgstr ""
+"Partenaire ignoré car un ou plusieurs champs obligatoires sont manquants"
+
+msgid "PDF could not be generated properly"
+msgstr "Le PDF n'a pas pu être généré correctement"
+
+msgid "eTools ref no"
+msgstr "eTools ref no"
+
+msgid "Organization Name"
+msgstr "Nom de l'organisation"
+
+msgid "Programme Title"
+msgstr "Titre du programme"
+
+msgid "Planned duration"
+msgstr "Durée prévue"
+
+msgid "Geographical coverage"
+msgstr "Couverture géographique"
+
+msgid "Supplies"
+msgstr "Fournitures"
+
+msgid "Partner Cash"
+msgstr "Partenaires en espèces"
+
+msgid "Supplies:"
+msgstr "Fournitures :"
+
+msgid "Total:"
+msgstr "Total :"
+
+msgid "Strategy"
+msgstr "Stratégie"
+
+msgid "Implementation Strategy & Technical Guidance"
+msgstr "Stratégie de mise en œuvre et conseils techniques"
+
+msgid "Other Partners involved"
+msgstr "Autres partenaires impliqués"
+
+msgid "Yes"
+msgstr "Oui"
+
+msgid "No"
+msgstr "Non"
+
+msgid "Risk & Proposed Mitigation Measures"
+msgstr "Risque et mesures d'atténuation proposées"
+
+msgid "Workplan Result"
+msgstr "Résultat du plan de travail"
+
+msgid "Result statement"
+msgstr "Déclaration de résultat"
+
+msgid "Performance indicator/s"
+msgstr "Indicateur(s) de performance"
+
+msgid "Baseline"
+msgstr "ligne de base"
+
+msgid "Target"
+msgstr "Cible"
+
+msgid "Means of Verification"
+msgstr "Moyens de vérification"
+
+msgid "Result/activity"
+msgstr "Résultat/activité"
+
+msgid "Timeframe"
+msgstr "Cadre temporel"
+
+msgid "Total (CSO + UNICEF)"
+msgstr "Total (OSC + UNICEF)"
+
+msgid "CSO contribution"
+msgstr "Contribution des OSC"
+
+msgid "UNICEF contribution"
+msgstr "Contribution de l'UNICEF"
+
+msgid "Prog. Output"
+msgstr "Prog. Sortie"
+
+msgid "Sub-total for programme costs"
+msgstr "Sous-total pour les coûts du programme"
+
+msgid "Total Cash budget"
+msgstr "Budget de trésorerie total"
+
+msgid "Supply Contribution Plan"
+msgstr "Plan de contribution à l'approvisionnement"
+
+msgid "Provided by"
+msgstr "Fourni par"
+
+msgid "No. of units"
+msgstr "Nombre d'unités"
+
+msgid "Total supply Cost"
+msgstr "Coût total de l'approvisionnement"
+
+msgid "Others"
+msgstr "Autres"
+
+msgid "Partner non-financial contribution"
+msgstr "Contribution non-financière du partenaire"
+
+msgid "Cash Transfer modality"
+msgstr "Modalité de transfert d'argent"
+
+msgid "Signatures and date"
+msgstr "Signatures et date"
+
+msgid "CSO Authorized Officer"
+msgstr "Agent autorisé de l'OSC"
+
+msgid "Date"
+msgstr "Date"
+
+msgid "UNICEF Authorized Officer"
+msgstr "Agent autorisé de l'UNICEF"
+
+msgid "Date Uploaded"
+msgstr "Date du téléchargement"
+
+msgid "Document"
+msgstr "Document"
+
+msgid "Invalid"
+msgstr "Invalide"
+
+msgid ""
+"Agreement cannot transition to signed until the start date is less than or "
+"equal to today"
+msgstr ""
+"L'accord ne peut pas passer à signé tant que la date de début n'est pas "
+"inférieure ou égale à aujourd'hui"
+
+msgid "Agreement cannot transition to signed unless the end date is defined"
+msgstr ""
+"L'accord ne peut pas passer à signé tant que la date de fin n'est pas définie"
+
+msgid "Cannot Transition without termination doc attached"
+msgstr "Impossible de faire la transition sans document de résiliation joint"
+
+msgid "None of the signatures can be dated in the future"
+msgstr "Aucune des signatures ne peut être datée dans le futur."
+
+msgid "Start and end dates don't match the Document's start and end"
+msgstr ""
+"Les dates de début et de fin ne correspondent pas aux dates de début et de "
+"fin du document."
+
+msgid ""
+"A PCA with this partner already exists for this Country Programme Cycle. If "
+"the record is in \"Draft\" status please edit that record."
+msgstr ""
+"Un PCA avec ce partenaire existe déjà pour ce cycle de programme de pays. Si "
+"l'enregistrement est à l'état \"Brouillon\", veuillez le modifier."
+
+msgid ""
+"Agreement start date needs to be earlier than or the same as the end date"
+msgstr ""
+"La date de début de l'accord doit être antérieure ou identique à la date de "
+"fin"
+
+msgid "You cannot have more than 1 PCA active per Partner within 1 CP"
+msgstr ""
+"Vous ne pouvez pas avoir plus d'un PCA actif par partenaire dans un même PC"
+
+msgid "Partner must be CSO in order to create a PCA."
+msgstr "Le partenaire doit être CSO pour créer une PCA."
+
+msgid ""
+"Please check that the Document is attached and signatures are not in the "
+"future"
+msgstr ""
+"Veuillez vérifier que le document est joint et que les signatures ne sont "
+"pas dans le futur"
+
+#, python-format
+msgid "Required fields not completed in %(status)s: %(field)s"
+msgstr "Champs obligatoires non remplis dans %(status)s : %(field)s"
+
+#, python-format
+msgid "Cannot change fields while in %(status)s: %(field)s"
+msgstr "Impossible de modifier les champs en %(status)s : %(field)s"
+
+msgid "Today is not after the end date"
+msgstr "Aujourd'hui n'est pas après la date de fin"
+
+msgid "Only Partnership Managers can execute this transition"
+msgstr ""
+"Seuls les gestionnaires de partenariat peuvent exécuter cette transition"
+
+msgid "End date is in the future"
+msgstr "La date de fin est dans le futur"
+
+msgid "Total Outstanding DCTs need to equal to 0"
+msgstr "Le nombre total de DCT en suspens doit être égal à 0."
+
+msgid ""
+"Total FR amount needs to equal total actual amount, and Total Outstanding "
+"DCTs need to equal to 0"
+msgstr ""
+"Le montant total du FR doit être égal au montant réel total, et le total des "
+"DCT en suspens doit être égal à 0."
+
+msgid ""
+"Final Review must be approved for documents having amount transferred "
+"greater than 100,000"
+msgstr ""
+"L'examen final doit être approuvé pour les documents dont le montant "
+"transféré est supérieur à 100 000 euros."
+
+msgid "Cannot Transition status while adding an amendment"
+msgstr "Impossible de changer de statut en ajoutant un amendement"
+
+msgid "PD cannot be closed if the Partner is Blocked in Vision"
+msgstr "Le DP ne peut être fermé si le partenaire est bloqué dans la vision."
+
+msgid "Cannot Transition to ended if termination_doc attached"
+msgstr ""
+"Impossible de faire la transition vers la fin si le document de fin de "
+"contrat est joint."
+
+msgid "PD cannot transition to ended if the Partner is Blocked in Vision"
+msgstr ""
+"Le DP ne peut pas passer à la fin si le partenaire est bloqué en vision."
+
+msgid "PD cannot be suspended if the Partner is Blocked in Vision"
+msgstr ""
+"Le DP ne peut être suspendu si le partenaire est bloqué dans la vision."
+
+msgid "Justification required for cancellation"
+msgstr "Justification requise pour l'annulation"
+
+msgid ""
+"The PCA related to this record is Draft, Suspended or Terminated. This "
+"Programme Document will not change status until the related PCA is in Signed "
+"status"
+msgstr ""
+"L'APC lié à ce document est en projet, suspendu ou terminé. Ce document de "
+"programme ne changera pas de statut tant que l'APC correspondant n'aura pas "
+"le statut Signé."
+
+msgid "PD cannot transition to signed if the Partner is Blocked in Vision"
+msgstr ""
+"Le DP ne peut pas passer à la signature si le partenaire est bloqué en "
+"vision."
+
+msgid "PD cannot be activated if the associated Agreement is not active"
+msgstr "Le DP ne peut être activé si l'accord associé n'est pas actif."
+
+msgid "PD cannot be activated if the Partner is Blocked in Vision"
+msgstr "Le DP ne peut pas être activé si le partenaire est bloqué en vision."
+
+msgid "Agreement selected is not of type SSFA"
+msgstr "L'accord sélectionné n'est pas de type SSFA"
+
+msgid " without deleting the indicators first"
+msgstr "sans supprimer les indicateurs au préalable"
+
+#, python-format
+msgid ""
+"The following sections have been selected on the PD/SPD indicators and "
+"cannot be removed %(sections)s "
+msgstr ""
+"Les sections suivantes ont été sélectionnées sur les indicateurs PD/SPD et "
+"ne peuvent pas être supprimées %(sections)s"
+
+#, python-format
+msgid ""
+"The following locations have been selected on the PD/SPD indicators and "
+"cannot be removed without removing them from the indicators first: "
+"%(locations)s"
+msgstr ""
+"Les emplacements suivants ont été sélectionnés sur les indicateurs PD/SPD et "
+"ne peuvent pas être retirés sans qu'ils soient d'abord retirés des "
+"indicateurs : %(locations)s"
+
+#, python-format
+msgid ""
+"The Country Programme selected on this PD is not the same as the Country "
+"Programme selected on the Agreement, please select %(cp)s"
+msgstr ""
+"Le programme pays sélectionné sur cette DP n'est pas le même que le "
+"programme pays sélectionné sur la convention, veuillez sélectionner %(cp)s"
+
+msgid ""
+"State suspended cannot be modified since the end date of the intervention "
+"surpasses today"
+msgstr ""
+"L'état suspendu ne peut être modifié car la date de fin de l'intervention "
+"dépasse aujourd'hui."
+
+msgid "Start date must precede end date"
+msgstr "La date de début doit précéder la date de fin"
+
+msgid "Signatures cannot be dated in the future"
+msgstr "Les signatures ne peuvent pas être datées dans le futur"
+
+msgid "Document type PD or HPD can only be associated with a PCA agreement."
+msgstr "Le type de document PD ou HPD ne peut être associé qu'à un accord PCA."
+
+msgid "The agreement selected has at least one other SSFA Document connected"
+msgstr "L'accord sélectionné a au moins un autre document SSFA connecté."
+
+msgid "The start date cannot be before the later of signature dates."
+msgstr ""
+"La date de début ne peut être antérieure à la dernière des dates de "
+"signature."
+
+msgid "PD start date cannot be earlier than the Start Date of the related PCA"
+msgstr ""
+"La date de début du DP ne peut être antérieure à la date de début de l'APC "
+"correspondant."
+
+msgid "Amendment Flag cannot be turned on without adding an amendment"
+msgstr ""
+"Le drapeau d'amendement ne peut pas être activé sans ajouter un amendement."
+
+msgid ""
+"The sections selected on the PD/SPD are not a subset of all sections "
+"selected for this PD/SPD's indicators"
+msgstr ""
+"Les sections sélectionnées sur le DP/DSP ne sont pas un sous-ensemble de "
+"toutes les sections sélectionnées pour les indicateurs de ce DP/DSP."
+
+msgid ""
+"The locations selected on the PD/SPD are not a subset of all locations "
+"selected for this PD/SPD's indicators"
+msgstr ""
+"Les lieux sélectionnés sur le DP/SPD ne sont pas un sous-ensemble de tous "
+"les lieux sélectionnés pour les indicateurs de ce DP/SPD."
+
+#, python-format
+msgid "Required fields not completed in %(status)s: %(fields)s"
+msgstr "Champs obligatoires non remplis dans %(status)s : %(fields)s"
+
+msgid "All activities must have at least one time frame"
+msgstr "Toutes les activités doivent avoir au moins un délai"
+
+msgid "Results section is empty"
+msgstr "La section des résultats est vide"
+
+msgid "All PD Outputs need to have at least one indicator"
+msgstr "Tous les résultats du DP doivent avoir au moins un indicateur."
+
+msgid "Total UNICEF Contribution must be greater than 0"
+msgstr "La contribution totale de l'UNICEF doit être supérieure à 0"
+
+msgid "All PD Outputs need to be associated to a CP Output"
+msgstr "Toutes les sorties PD doivent être associées à une sortie CP."
+
+msgid "Unicef and Partner both need to accept"
+msgstr "L'Unicef et Partner doivent tous deux accepter"
+
+msgid "Review needs to be approved"
+msgstr "La révision doit être approuvée"
+
+msgid "UNICEF Cash $ or UNICEF Supplies $ should not be 0"
+msgstr "UNICEF Cash $ ou UNICEF Supplies $ ne doit pas être 0"
+
+msgid "Only original PD can be active"
+msgstr "Seul le DP d'origine peut être actif"
+
+msgid "Today is not after the start date"
+msgstr "La date d'aujourd'hui n'est pas postérieure à la date de début"
+
+msgid "Cannot delete a signed amendment"
+msgstr "Impossible de supprimer un avenant signé"
+
+msgid ""
+"Cannot delete an agreement that is not Draft or has PDs/SSFAs associated "
+"with it"
+msgstr ""
+"Impossible de supprimer un accord qui n'est pas un brouillon ou qui est "
+"associé à des PD/SSFA"
+
+msgid "Workspace is required as a queryparam"
+msgstr "L'espace de travail est requis en tant que paramètre de requête"
+
+#, python-format
+msgid "Workspace code provided is not a valid business_area_code: %s"
+msgstr ""
+"Le code d'espace de travail fourni n'est pas un business_area_code valide: %s"
+
+msgid "ID values must be integers"
+msgstr "Les valeurs d'ID doivent être des nombres entiers"
+
+msgid "Deleting an attachment can only be done in Draft status"
+msgstr ""
+"La suppression d'une pièce jointe ne peut être effectuée qu'en état Brouillon"
+
+msgid ""
+"This PD Output has indicators related, please remove the indicators first"
+msgstr ""
+"Ce produit PD a des indicateurs liés, veuillez d'abord supprimer les "
+"indicateurs"
+
+msgid ""
+"This CP Output cannot be removed from this Intervention because there are "
+"nested Results, please remove all Document Results to continue"
+msgstr ""
+"Cette sortie CP ne peut pas être supprimée de cette intervention car il y a "
+"des résultats imbriqués, veuillez supprimer tous les résultats du document "
+"pour continuer"
+
+msgid "Deleting an indicator is only possible in status Draft."
+msgstr "La suppression d'un indicateur n'est possible qu'en état Brouillon."
+
+msgid "Cannot delete a PD or SSFA that is not Draft"
+msgstr "Impossible de supprimer un PD ou SSFA qui n'est pas un brouillon"
+
+msgid "Cannot delete a PD or SSFA that has Planned Trips"
+msgstr "Impossible de supprimer un PD ou SSFA qui a des trajets planifiés"
+
+msgid "Cannot delete a PD or SSFA that was manually moved back to Draft"
+msgstr ""
+"Impossible de supprimer un PD ou une SSFA qui a été déplacé manuellement "
+"vers le brouillon"
+
+msgid "PD has already been sent to Partner."
+msgstr "PD a déjà été envoyé au partenaire."
+
+msgid "Meeting date is not available."
+msgstr "La date de la réunion n'est pas disponible."
+
+msgid "Action is not allowed"
+msgstr "L'action n'est pas autorisée"
+
+msgid "You need to be a focal point in order to perform this action"
+msgstr "Vous devez être un point focal pour effectuer cette action"
+
+msgid "Partner has already accepted this PD."
+msgstr "Le partenaire a déjà accepté ce PD."
+
+msgid ""
+"You cannot perform this action while the PD is not available for partner to "
+"edit"
+msgstr ""
+"Vous ne pouvez pas effectuer cette action tant que le PD n'est pas "
+"disponible pour que le partenaire puisse le modifier"
+
+msgid ""
+"You cannot perform this action while the PD is not available for UNICEF to "
+"edit"
+msgstr ""
+"Vous ne pouvez pas effectuer cette action tant que le PD n'est pas "
+"disponible pour que l'UNICEF puisse le modifier"
+
+msgid "UNICEF has already accepted this PD."
+msgstr "L'UNICEF a déjà accepté ce DP."
+
+msgid "Only focal points or budget owners can accept"
+msgstr ""
+"Seuls les points focaux ou les propriétaires de budget peuvent accepter"
+
+msgid "Only focal points can accept"
+msgstr "Seuls les points focaux peuvent accepter"
+
+msgid "PD needs to be in Review state"
+msgstr "PD doit être à l'état Révision"
+
+msgid "PD review is missing"
+msgstr "L'examen de PD est manquant"
+
+msgid "Only overall approver can reject review."
+msgstr "Seul l'approbateur général peut rejeter la révision."
+
+msgid "PD review already approved"
+msgstr "Revue PD déjà approuvée"
+
+msgid "PD is already in Review status."
+msgstr "PD est déjà en statut Révision."
+
+#, python-format
+msgid ""
+"Merge Error: Amended field was already changed (%(field)s at %(instance)s). "
+"This can be caused by parallel merged amendment or changed original "
+"intervention. Amendment should be re-created."
+msgstr ""
+"Erreur de fusion: le champ modifié a déjà été modifié (%(field)s à "
+"%(instance)s). Cela peut être causé par un amendement fusionné parallèle ou "
+"une intervention originale modifiée. L'amendement devrait être recréé."
+
+msgid "PD has already been cancelled."
+msgstr "PD a déjà été annulé."
+
+msgid "Only focal points or budget owners can cancel"
+msgstr "Seuls les points focaux ou les propriétaires de budget peuvent annuler"
+
+msgid "PD has already been terminated."
+msgstr "PD a déjà été terminé."
+
+msgid "Only focal points or budget owners can terminate"
+msgstr ""
+"Seuls les points focaux ou les propriétaires de budget peuvent résilier"
+
+msgid "PD has already been suspended."
+msgstr "PD a déjà été suspendu."
+
+msgid "Only focal points or budget owners can suspend"
+msgstr ""
+"Seuls les points focaux ou les propriétaires de budget peuvent suspendre"
+
+msgid "PD is not suspended."
+msgstr "PD n'est pas suspendu."
+
+msgid "Only focal points or budget owners can unsuspend"
+msgstr ""
+"Seuls les points focaux ou les propriétaires de budget peuvent lever la "
+"suspension"
+
+msgid "PD is already in Signature status."
+msgstr "PD est déjà en statut Signature."
+
+msgid "Only overall approver can accept review."
+msgstr "Seul l'approbateur général peut accepter la révision."
+
+msgid "PD is already unlocked."
+msgstr "PD est déjà déverrouillé."
+
+msgid "PD is currently with Partner"
+msgstr "PD est actuellement avec Partner"
+
+msgid "Only focal points or budget owners can send to partner"
+msgstr ""
+"Seuls les points focaux ou les propriétaires de budget peuvent envoyer au "
+"partenaire"
+
+msgid "PD is currently with UNICEF"
+msgstr "PD est actuellement avec l'UNICEF"
+
+msgid "Only partner focal points can send to UNICEF"
+msgstr "Seuls les points focaux partenaires peuvent envoyer à l'UNICEF"
+
+msgid "Only amended interventions can be merged"
+msgstr "Seules les interventions modifiées peuvent être fusionnées"
+
+msgid "Amendment cannot be merged yet"
+msgstr "L'amendement ne peut pas encore être fusionné"
+
+msgid "Amendment does not exist for this pd"
+msgstr "L'amendement n'existe pas pour ce pd"
+
+msgid "Cannot delete a completed assessment"
+msgstr "Impossible de supprimer une évaluation terminée"
+
+msgid "No vendor number provided for Partner Organization"
+msgstr "Aucun numéro de fournisseur fourni pour l'organisation partenaire"
+
+msgid ""
+"There was a PCA/SSFA signed with this partner or a transaction was performed "
+"against this partner. The Partner record cannot be deleted"
+msgstr ""
+"Un PCA/SSFA a été signé avec ce partenaire ou une transaction a été "
+"effectuée contre ce partenaire. L'enregistrement de partenaire ne peut pas "
+"être supprimé"
+
+msgid "This partner has trips associated to it"
+msgstr "Ce partenaire est associé à des voyages"
+
+msgid "This partner has cash transactions associated to it"
+msgstr "Ce partenaire est associé à des transactions en espèces"
+
+msgid "Terms to be acknowledged"
+msgstr "Termes à reconnaître"
+
+msgid "Agreement with specified ID does not exist"
+msgstr "L'accord avec l'ID spécifié n'existe pas"
+
+msgid ""
+"Partner Organization has no vendor number stored, please report to an etools "
+"focal point"
+msgstr ""
+"L'organisation partenaire n'a pas de numéro de fournisseur stocké, veuillez "
+"le signaler à un point focal etools"
+
+msgid "Partner Organization has no \"Authorized Officers selected\" selected"
+msgstr ""
+"L'organisation partenaire n'a pas sélectionné de \"dirigeants autorisés "
+"sélectionnés\""
+
+msgid ""
+"Response returned by the Server does not have the necessary values to "
+"generate PCA"
+msgstr ""
+"La réponse renvoyée par le serveur n'a pas les valeurs nécessaires pour "
+"générer PCA"
+
+msgid "Partnership Manager role required for pca export."
+msgstr "Rôle de gestionnaire de partenariat requis pour l'exportation pca."

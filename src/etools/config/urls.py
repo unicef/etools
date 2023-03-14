@@ -7,7 +7,7 @@ from rest_framework_nested import routers
 from rest_framework_swagger.renderers import OpenAPIRenderer
 
 from etools.applications.core.schemas import get_schema_view, get_swagger_view
-from etools.applications.core.views import IssueJWTRedirectView, logout_view, MainView
+from etools.applications.core.views import IssueJWTRedirectView, logout_view, MainView, SocialLogoutView
 from etools.applications.locations.views import (
     CartoDBTablesView,
     LocationQuerySetView,
@@ -26,6 +26,7 @@ from etools.applications.reports.views.v1 import (
     UnitViewSet,
 )
 from etools.applications.reports.views.v2 import OfficeViewSet
+from etools.applications.reports.views.v3 import PMPOfficeViewSet, PMPSectionViewSet
 from etools.applications.t2f.urls import urlpatterns as t2f_patterns
 from etools.applications.users.views import CountriesViewSet, GroupViewSet, ModuleRedirectView, UserViewSet
 
@@ -44,8 +45,10 @@ api.register(r'partners/file-types', FileTypeViewSet, basename='filetypes')
 
 api.register(r'users', UserViewSet, basename='users')
 api.register(r'groups', GroupViewSet, basename='groups')
+api.register(r'offices/v3', PMPOfficeViewSet, basename='offices-pmp')
 api.register(r'offices', OfficeViewSet, basename='offices')
 
+api.register(r'sections/v3', PMPSectionViewSet, basename='sections-pmp')
 api.register(r'sections', SectionViewSet, basename='sections')
 
 api.register(r'reports/result-types', ResultTypeViewSet, basename='resulttypes')
@@ -70,6 +73,8 @@ urlpatterns = [
     re_path(r'^locations/cartodbtables/$', CartoDBTablesView.as_view(), name='cartodbtables'),
     re_path(r'^locations/autocomplete/$', LocationQuerySetView.as_view(), name='locations_autocomplete'),
     re_path(r'^api/v1/field-monitoring/', include('etools.applications.field_monitoring.urls')),
+    re_path(r'^api/comments/v1/', include('etools.applications.comments.urls')),
+    re_path(r'^api/ecn/v1/', include('etools.applications.ecn.urls_v1', namespace='ecn_v1')),
 
     # GIS API urls
     re_path(r'^api/management/gis/', include('etools.applications.management.urls_gis')),
@@ -101,7 +106,14 @@ urlpatterns = [
 
     # ***************  API version 3  ******************
     re_path(r'^api/v3/users/', include('etools.applications.users.urls_v3', namespace='users_v3')),
-
+    re_path(
+        r'^api/pmp/v3/',
+        include('etools.applications.partners.urls_v3', namespace='pmp_v3'),
+    ),
+    re_path(
+        r'^api/reports/v3/',
+        include('etools.applications.reports.urls_v3', namespace='reports_v3'),
+    ),
 
     re_path(r'^api/docs/', schema_view),
     re_path(r'^api/schema/coreapi', schema_view_json_coreapi),
@@ -114,6 +126,7 @@ urlpatterns = [
     re_path(r'^api/jwt/get/$', IssueJWTRedirectView.as_view(), name='issue JWT'),
 
     re_path('^social/', include('social_django.urls', namespace='social')),
+    re_path(r'^social/unicef-logout/', SocialLogoutView.as_view(), name='social-logout'),
     re_path('^monitoring/', include('etools.libraries.monitoring.urls')),
 ]
 

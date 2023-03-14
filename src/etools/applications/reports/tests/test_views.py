@@ -1,4 +1,5 @@
 import datetime
+import itertools
 from operator import itemgetter
 
 from django.test import SimpleTestCase
@@ -7,6 +8,7 @@ from django.urls import resolve, reverse
 from rest_framework import status
 from rest_framework.test import APIRequestFactory
 from tablib.core import Dataset
+from unicef_snapshot.models import Activity
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.core.tests.mixins import URLAssertionMixin
@@ -337,7 +339,23 @@ class TestDisaggregationListCreateViews(BaseTenantTestCase):
         data = {
             'name': 'Gender',
             'disaggregation_values': [
+                {'id': 998, 'value': 'Male'},
                 {'id': 999, 'value': 'Female'},
+            ]
+        }
+        response = self.forced_auth_req(
+            'post',
+            self.url,
+            user=self.pme_user,
+            data=data
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_create_one_group(self):
+        data = {
+            'name': 'Gender',
+            'disaggregation_values': [
+                {'value': 'Female'},
             ]
         }
         response = self.forced_auth_req(
@@ -687,6 +705,25 @@ class TestLowerResultDeleteView(BaseTenantTestCase):
             LowerResult.objects.filter(pk=self.lower_result.pk).exists()
         )
 
+    def test_intervention_snapshot_on_delete(self):
+        self.intervention.unicef_focal_points.add(self.unicef_staff)
+        response = self.forced_auth_req(
+            "delete",
+            self.url,
+            user=self.unicef_staff
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        activity = Activity.objects.first()
+        self.assertIsNotNone(activity)
+        self.assertEqual(activity.target, self.intervention)
+        self.assertEqual(activity.change['result_links'][0]['ll_results']['after'], [])
+        self.assertNotEqual(activity.change['result_links'][0]['ll_results']['before'], [])
+        self.assertIn(
+            self.lower_result.id,
+            [pr['pk'] for pr in itertools.chain(*[r['ll_results'] for r in activity.data['result_links']])],
+        )
+
     def test_delete_not_found(self):
         response = self.forced_auth_req(
             "delete",
@@ -708,7 +745,7 @@ class TestLowerResultDeleteView(BaseTenantTestCase):
             self.url,
             user=user
         )
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertTrue(
             LowerResult.objects.filter(pk=self.lower_result.pk).exists()
         )
@@ -743,8 +780,8 @@ class TestLowerResultExportList(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertEqual(len(dataset._get_headers()), 6)
-        self.assertEqual(len(dataset[0]), 6)
+        self.assertEqual(len(dataset._get_headers()), 7)
+        self.assertEqual(len(dataset[0]), 7)
 
     def test_csv_flat_export_api(self):
         response = self.forced_auth_req(
@@ -757,8 +794,8 @@ class TestLowerResultExportList(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertEqual(len(dataset._get_headers()), 6)
-        self.assertEqual(len(dataset[0]), 6)
+        self.assertEqual(len(dataset._get_headers()), 7)
+        self.assertEqual(len(dataset[0]), 7)
 
 
 class TestAppliedIndicatorListAPIView(BaseTenantTestCase):
@@ -930,7 +967,7 @@ class TestClusterListAPIView(BaseTenantTestCase):
         self.assertEquals(['ABC', 'XYZ'], clusters)
 
 
-class TestSpecialReportingRequirementListCreateView(BaseTenantTestCase):
+class SpecialReportingRequirementListCreateMixin:
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
@@ -1023,6 +1060,19 @@ class TestSpecialReportingRequirementListCreateView(BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(requirement_qs.count(), init_count + 1)
+
+
+class TestSpecialReportingRequirementListCreateView(
+        SpecialReportingRequirementListCreateMixin,
+        BaseTenantTestCase,
+):
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.url = reverse(
+            "reports:interventions-special-reporting-requirements",
+            kwargs={'intervention_pk': cls.intervention.pk}
+        )
 
 
 class TestSpecialReportingRequirementRetrieveUpdateDestroyView(BaseTenantTestCase):

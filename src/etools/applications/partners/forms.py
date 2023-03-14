@@ -58,7 +58,7 @@ class PartnerStaffMemberForm(forms.ModelForm):
 
     class Meta:
         model = PartnerStaffMember
-        exclude = ['user', ]
+        exclude = ("user", )
 
     def clean(self):
         cleaned_data = super().clean()
@@ -75,18 +75,19 @@ class PartnerStaffMemberForm(forms.ModelForm):
             user = User.objects.filter(email__iexact=email).first()
             if user:
                 if user.is_unicef_user():
-                    raise ValidationError('Unable to associate staff member to UNICEF user')
+                    raise ValidationError(_('Unable to associate staff member to UNICEF user'))
 
                 staff_member = user.get_partner_staff_member()
                 if staff_member:
-                    raise ValidationError("This user already exists under a different partnership: {}".format(email))
+                    raise ValidationError(
+                        _("This user already exists under a different partnership: %s") % email)
 
                 cleaned_data['user'] = user
         else:
             # make sure email addresses are not editable after creation.. user must be removed and re-added
             if email != self.instance.email:
                 raise ValidationError(
-                    "User emails cannot be changed, please remove the user and add another one: {}".format(email))
+                    _("User emails cannot be changed, please remove the user and add another one: %s") % email)
 
             # when adding the active tag to a previously untagged user
             if active and not self.instance.active:
@@ -106,13 +107,13 @@ class PartnerStaffMemberForm(forms.ModelForm):
             # disabled is unavailable if user already synced to PRP to avoid data inconsistencies
             if self.instance.active and not active:
                 if Intervention.objects.filter(
-                    # todo epd: Q(date_sent_to_partner__isnull=False, agreement__partner__staff_members=self.instance) |
+                    Q(date_sent_to_partner__isnull=False, agreement__partner__staff_members=self.instance) |
                     Q(
                         ~Q(status=Intervention.DRAFT),
                         Q(partner_focal_points=self.instance) | Q(partner_authorized_officer_signatory=self.instance),
                     ),
                 ).exists():
-                    raise ValidationError({'active': 'User already synced to PRP and cannot be disabled.'})
+                    raise ValidationError({'active': _('User already synced to PRP and cannot be disabled.')})
 
         return cleaned_data
 

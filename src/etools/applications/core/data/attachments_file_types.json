@@ -132,7 +132,7 @@
         "pk": 22,
         "fields": {
             "order": 9,
-            "label": "Signed PD/SSFA",
+            "label": "Signed PD/SPD",
             "name": "signed_pd/ssfa",
             "code": "tpm",
             "group": ["tpm"]
@@ -673,6 +673,39 @@
             "label": "Partners Intervention Signed Pd",
             "code": "partners_intervention_signed_pd",
             "group": "[\"pmp_documents\"]"
+        }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 2012,
+        "fields": {
+            "order": 5,
+            "name": "Data Processing Agreement",
+            "label": "Data Processing Agreement",
+            "code": "data_processing_agreement",
+            "group": ["pmp_documents"]
+        }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 2013,
+        "fields": {
+            "order": 5,
+            "name": "Activities involving children and young people",
+            "label": "Activities involving children and young people",
+            "code": "activities_involving_children",
+            "group": ["pmp_documents"]
+        }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 2014,
+        "fields": {
+            "order": 5,
+            "name": "Special Conditions for Construction Works",
+            "label": "Special Conditions for Construction Works",
+            "code": "special_conditions_for_construction",
+            "group": ["pmp_documents"]
         }
     },
     {

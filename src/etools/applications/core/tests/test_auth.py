@@ -1,7 +1,9 @@
 from unittest.mock import Mock, patch
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.test import SimpleTestCase
+from django.urls import reverse
 
 from etools.applications.core import auth
 from etools.applications.core.tests.cases import BaseTenantTestCase
@@ -150,3 +152,17 @@ class TestUserDetails(BaseTenantTestCase):
         )
         user_updated = get_user_model().objects.get(pk=user.pk)
         self.assertTrue(user_updated.is_staff)
+
+
+class TestSocialLogoutView(BaseTenantTestCase):
+
+    def test_logout(self):
+        user = UserFactory()
+        response = self.forced_auth_req(
+            method='get',
+            url=reverse("social-logout"),
+            user=user
+        )
+        self.assertRedirects(
+            response, settings.SOCIAL_LOGOUT_URL, fetch_redirect_response=False
+        )

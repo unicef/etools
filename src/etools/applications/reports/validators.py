@@ -3,7 +3,7 @@ import re
 from decimal import Decimal, InvalidOperation
 
 from django import forms
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext as _
 
 from rest_framework.exceptions import ValidationError
 from rest_framework.utils.representation import smart_repr
@@ -22,6 +22,9 @@ def value_numbers(data):
         try:
             Decimal(v)
         except (TypeError, InvalidOperation):
+            if v and ',' in v:
+                raise forms.ValidationError(
+                    "Invalid format. Use '.' (dot) instead of ',' (comma) for decimal values.")
             raise forms.ValidationError("Invalid number")
 
 
@@ -37,6 +40,9 @@ def value_none_or_numbers(data):
             try:
                 Decimal(v)
             except (TypeError, InvalidOperation):
+                if ',' in v:
+                    raise forms.ValidationError(
+                        "Invalid format. Use '.' (dot) instead of ',' (comma) for decimal values.")
                 raise forms.ValidationError("Invalid number")
 
 

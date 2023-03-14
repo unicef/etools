@@ -12,9 +12,9 @@ from etools.applications.partners.models import Intervention, PartnerOrganizatio
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
     CountryProgrammeFactory,
-    InterventionBudgetFactory,
     InterventionFactory,
     InterventionPlannedVisitsFactory,
+    InterventionResultLinkFactory,
     PartnerFactory,
     PartnerPlannedVisitsFactory,
     PartnerStaffFactory,
@@ -67,7 +67,7 @@ class TestModelExport(BaseTenantTestCase):
         AgreementFactory(signed_by_unicef_date=datetime.date.today())
         cls.intervention = InterventionFactory(
             agreement=cls.agreement,
-            document_type=Intervention.SHPD,
+            document_type=Intervention.SPD,
             status='draft',
             start=datetime.date.today(),
             end=datetime.date.today(),
@@ -81,7 +81,11 @@ class TestModelExport(BaseTenantTestCase):
             partner_authorized_officer_signatory=cls.partnerstaff,
             country_programme=cls.agreement.country_programme,
         )
-        cls.ib = InterventionBudgetFactory(intervention=cls.intervention, currency="USD")
+
+        cls.ib = cls.intervention.planned_budget
+        cls.ib.currency = "USD"
+        cls.ib.save()
+
         cls.planned_visit = PartnerPlannedVisitsFactory(partner=cls.partner)
 
         output_res_type, _ = ResultType.objects.get_or_create(name='Output')
@@ -109,7 +113,7 @@ class TestModelExport(BaseTenantTestCase):
             "Partner Type",
             "CSO Type",
             "Agreement",
-            "Country Programme",
+            "Country Programmes",
             "Document Type",
             "Reference Number",
             "Document Title",
@@ -126,7 +130,7 @@ class TestModelExport(BaseTenantTestCase):
             "Total CSO Contribution",
             "UNICEF Cash",
             "UNICEF Supply",
-            "Total PD/SSFA Budget",
+            "Total PD/SPD Budget",
             "FR Number(s)",
             "FR Currency",
             "FR Posting Date",
@@ -149,6 +153,10 @@ class TestModelExport(BaseTenantTestCase):
             "# of attachments",
             "CP Outputs",
             "URL",
+            "UNPP Number",
+            "Data Processing Agreement",
+            "Activities involving children and young people",
+            "Special Conditions for Construction Works by Implementing Partners",
         ])
 
         self.assertEqual(dataset[0], (
@@ -158,7 +166,10 @@ class TestModelExport(BaseTenantTestCase):
             self.intervention.agreement.partner.partner_type,
             '',
             self.intervention.agreement.agreement_number,
-            str(self.intervention.country_programme.name),
+            ", ".join(self.intervention.country_programmes.values_list(
+                "name",
+                flat=True,
+            )),
             self.intervention.document_type,
             self.intervention.number,
             str(self.intervention.title),
@@ -202,6 +213,138 @@ class TestModelExport(BaseTenantTestCase):
             str(self.intervention.attachments.count()),
             '',
             'https://testserver/pmp/interventions/{}/details/'.format(self.intervention.id),
+            '',
+            str("Yes" if self.intervention.has_data_processing_agreement else "No"),
+            str("Yes" if self.intervention.has_activities_involving_children else "No"),
+            str("Yes" if self.intervention.has_special_conditions_for_construction else "No"),
+        ))
+
+    def test_v3_intervention_export_api(self):
+        InterventionResultLinkFactory(intervention=self.intervention, cp_output=None)
+        finalized_result_link = InterventionResultLinkFactory(intervention=self.intervention)
+
+        response = self.forced_auth_req(
+            'get',
+            '/api/pmp/v3/interventions/',
+            user=self.unicef_staff,
+            data={"format": "csv"},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
+        self.assertEqual(dataset.height, 1)
+
+        self.assertEqual(dataset._get_headers(), [
+            "Partner",
+            "Vendor Number",
+            "Status",
+            "Partner Type",
+            "CSO Type",
+            "Agreement",
+            "Country Programmes",
+            "Document Type",
+            "Reference Number",
+            "Document Title",
+            "Start Date",
+            "End Date",
+            "UNICEF Office",
+            "Sections",
+            "Locations",
+            "Contingency PD",
+            "Cluster",
+            "UNICEF Focal Points",
+            "CSO Authorized Officials",
+            "Budget Currency",
+            "Total CSO Contribution",
+            "UNICEF Cash",
+            "UNICEF Supply",
+            "Total PD/SPD Budget",
+            "FR Number(s)",
+            "FR Currency",
+            "FR Posting Date",
+            "FR Amount",
+            "FR Actual CT",
+            "Outstanding DCT",
+            "Planned Programmatic Visits",
+            "Document Submission Date by CSO",
+            "Submission Date to PRC",
+            "Review Date by PRC",
+            "Signed by Partner",
+            "Signed by Partner Date",
+            "Signed by UNICEF",
+            "Signed by UNICEF Date",
+            "Days from Submission to Signed",
+            "Days from Review to Signed",
+            "Total no. of amendments",
+            "Last amendment date",
+            "Attachment type",
+            "# of attachments",
+            "CP Outputs",
+            "URL",
+            "UNPP Number",
+            "Data Processing Agreement",
+            "Activities involving children and young people",
+            "Special Conditions for Construction Works by Implementing Partners",
+        ])
+
+        self.assertEqual(dataset[0], (
+            str(self.intervention.agreement.partner.name),
+            str(self.intervention.agreement.partner.vendor_number),
+            self.intervention.status,
+            self.intervention.agreement.partner.partner_type,
+            '',
+            self.intervention.agreement.agreement_number,
+            ", ".join(self.intervention.country_programmes.values_list(
+                "name",
+                flat=True,
+            )),
+            self.intervention.document_type,
+            self.intervention.number,
+            str(self.intervention.title),
+            '{}'.format(self.intervention.start),
+            '{}'.format(self.intervention.end),
+            '',
+            '',
+            '',
+            str("Yes" if self.intervention.contingency_pd else "No"),
+            '',
+            '',
+            '',
+            str(self.ib.currency),
+            '{:.2f}'.format(self.intervention.total_partner_contribution),
+            '{:.2f}'.format(self.intervention.total_unicef_cash),
+            '{:.2f}'.format(self.intervention.total_in_kind_amount),
+            '{:.2f}'.format(self.intervention.total_budget),
+            ', '.join([fr.fr_numbers for fr in self.intervention.frs.all()]),
+            '',
+            '',
+            '',
+            '',
+            '',
+            '{} (Q1:{} Q2:{}, Q3:{}, Q4:{})'.format(self.planned_visit.year,
+                                                    self.planned_visit.programmatic_q1,
+                                                    self.planned_visit.programmatic_q2,
+                                                    self.planned_visit.programmatic_q3,
+                                                    self.planned_visit.programmatic_q4),
+            '{}'.format(self.intervention.submission_date),
+            '{}'.format(self.intervention.submission_date_prc),
+            '{}'.format(self.intervention.review_date_prc),
+            '{}'.format(self.intervention.partner_authorized_officer_signatory.get_full_name()),
+            '{}'.format(self.intervention.signed_by_partner_date),
+            self.unicef_staff.get_full_name(),
+            '{}'.format(self.intervention.signed_by_unicef_date),
+            '{}'.format(self.intervention.days_from_submission_to_signed),
+            '{}'.format(self.intervention.days_from_review_to_signed),
+            str(self.intervention.amendments.count()),
+            '',
+            str(', '.join(['{}'.format(att.type.name) for att in self.intervention.attachments.all()])),
+            str(self.intervention.attachments.count()),
+            finalized_result_link.cp_output.name,
+            'https://testserver/pmp/interventions/{}/details/'.format(self.intervention.id),
+            '',
+            str("Yes" if self.intervention.has_data_processing_agreement else "No"),
+            str("Yes" if self.intervention.has_activities_involving_children else "No"),
+            str("Yes" if self.intervention.has_special_conditions_for_construction else "No"),
         ))
 
     def test_agreement_export_api(self):
@@ -231,6 +374,7 @@ class TestModelExport(BaseTenantTestCase):
             'Amendments',
             'URL',
             'Special Conditions PCA',
+            'Terms Acknowledged By',
         ])
 
         # we're interested in the first agreement, so it will be last in the exported list
@@ -251,6 +395,7 @@ class TestModelExport(BaseTenantTestCase):
             '',
             'https://testserver/pmp/agreements/{}/details/'.format(self.agreement.id),
             'No',
+            '',
         )
         )
 

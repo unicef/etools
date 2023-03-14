@@ -1,0 +1,282 @@
+{
+  "id": 2,
+  "planned_budget": {
+    "id": 2,
+    "intervention": 2,
+    "partner_contribution_local": "16615.00",
+    "unicef_cash_local": "62899.00",
+    "in_kind_amount_local": "2496.00",
+    "partner_supply_local": "421.00",
+    "currency": "USD",
+    "programme_effectiveness": "86.19",
+    "total_partner_contribution_local": "17036.00",
+    "total_local": "82431.00",
+    "partner_contribution_percent": 20.66698208198372,
+    "total_unicef_contribution_local": "65395.00",
+    "total_cash_local": "79514.00",
+    "total_unicef_cash_local_wo_hq": "62899.00",
+    "total_hq_cash_local": "0.00",
+    "total_supply": "2917.00"
+  },
+  "result_links": [
+    {
+      "id": 2,
+      "ll_results": [
+        {
+          "id": 2,
+          "activities": [
+            {
+              "id": 2,
+              "items": [
+                {
+                  "id": 2,
+                  "code": "0.1.1.1",
+                  "name": "item 1",
+                  "unit": "item",
+                  "unit_price": "200.00",
+                  "no_units": "42.00",
+                  "unicef_cash": "400.00",
+                  "cso_cash": "8000.00"
+                }
+              ],
+              "time_frames": [
+                2
+              ],
+              "created": "2022-07-19T08:09:28.879510Z",
+              "modified": "2022-07-19T08:09:29.072593Z",
+              "name": "activity 1",
+              "code": "0.1.1",
+              "context_details": "1",
+              "unicef_cash": "400.00",
+              "cso_cash": "8000.00",
+              "is_active": true,
+              "result": 2
+            },
+            {
+              "id": 3,
+              "items": [],
+              "time_frames": [
+                1
+              ],
+              "created": "2022-07-19T08:09:44.046982Z",
+              "modified": "2022-07-19T08:09:44.046982Z",
+              "name": "activity 2",
+              "code": "0.1.2",
+              "context_details": null,
+              "unicef_cash": "24.00",
+              "cso_cash": "42.00",
+              "is_active": true,
+              "result": 2
+            }
+          ],
+          "applied_indicators": [
+            {
+              "id": 2,
+              "indicator": {
+                "id": 2,
+                "created": "2022-07-19T08:10:00.969503Z",
+                "modified": "2022-07-19T08:10:00.969503Z",
+                "title": "test indicator 1",
+                "unit": "number",
+                "description": null,
+                "code": null,
+                "subdomain": null,
+                "disaggregatable": false,
+                "calculation_formula_across_periods": "sum",
+                "calculation_formula_across_locations": "sum",
+                "display_type": "number"
+              },
+              "target": {
+                "d": 1,
+                "v": 42
+              },
+              "baseline": {
+                "d": 1,
+                "v": 24
+              },
+              "created": "2022-07-19T08:10:01.010304Z",
+              "modified": "2022-07-19T08:10:01.010304Z",
+              "measurement_specifications": null,
+              "label": null,
+              "numerator_label": "",
+              "denominator_label": "",
+              "context_code": null,
+              "assumptions": null,
+              "means_of_verification": null,
+              "total": 0,
+              "is_high_frequency": false,
+              "is_active": true,
+              "lower_result": 2
+            }
+          ],
+          "created": "2022-07-19T08:09:02.014781Z",
+          "modified": "2022-07-19T08:09:02.014781Z",
+          "name": "pd output 1",
+          "code": "0.1",
+          "result_link": 2
+        },
+        {
+          "id": 3,
+          "activities": [
+            {
+              "id": 4,
+              "items": [],
+              "time_frames": [
+                2
+              ],
+              "created": "2022-07-19T08:10:21.415376Z",
+              "modified": "2022-07-19T08:10:21.415376Z",
+              "name": "activity 3",
+              "code": "0.2.1",
+              "context_details": null,
+              "unicef_cash": "2.00",
+              "cso_cash": "1.00",
+              "is_active": true,
+              "result": 3
+            }
+          ],
+          "applied_indicators": [
+            {
+              "id": 3,
+              "indicator": {
+                "id": 3,
+                "created": "2022-07-19T08:14:36.767411Z",
+                "modified": "2022-07-19T08:14:36.767411Z",
+                "title": "indicator 2",
+                "unit": "number",
+                "description": null,
+                "code": null,
+                "subdomain": null,
+                "disaggregatable": false,
+                "calculation_formula_across_periods": "sum",
+                "calculation_formula_across_locations": "sum",
+                "display_type": "number"
+              },
+              "target": {
+                "d": 1,
+                "v": 4
+              },
+              "baseline": {
+                "d": 1,
+                "v": 1
+              },
+              "created": "2022-07-19T08:14:36.798084Z",
+              "modified": "2022-07-19T08:14:36.798084Z",
+              "measurement_specifications": null,
+              "label": null,
+              "numerator_label": "",
+              "denominator_label": "",
+              "context_code": null,
+              "assumptions": null,
+              "means_of_verification": null,
+              "total": 0,
+              "is_high_frequency": false,
+              "is_active": true,
+              "lower_result": 3
+            }
+          ],
+          "created": "2022-07-19T08:10:11.845091Z",
+          "modified": "2022-07-19T08:10:11.845091Z",
+          "name": "pd output 2",
+          "code": "0.2",
+          "result_link": 2
+        }
+      ],
+      "created": "2022-07-19T08:09:01.968746Z",
+      "modified": "2022-07-19T08:09:01.968746Z",
+      "code": "0",
+      "intervention": 2
+    }
+  ],
+  "risks": [
+    {
+      "id": 1,
+      "risk_type": "environment",
+      "mitigation_measures": "idk",
+      "intervention": 2
+    }
+  ],
+  "supply_items": [
+    {
+      "id": 1,
+      "title": "test",
+      "unit_number": "4.00",
+      "unit_price": "624.00",
+      "result": null,
+      "total_price": "2496.00",
+      "other_mentions": "",
+      "unicef_product_number": "",
+      "provided_by": "unicef"
+    },
+    {
+      "id": 2,
+      "title": "123",
+      "unit_number": "421.00",
+      "unit_price": "1.00",
+      "result": null,
+      "total_price": "421.00",
+      "other_mentions": "",
+      "unicef_product_number": "",
+      "provided_by": "partner"
+    }
+  ],
+  "management_budgets": {
+    "items": [
+      {
+        "id": 1,
+        "kind": "in_country",
+        "name": "2",
+        "unit": "51",
+        "unit_price": "4.00",
+        "no_units": "612.00",
+        "unicef_cash": "0.00",
+        "cso_cash": "2448.00"
+      }
+    ],
+    "act1_unicef": "0.00",
+    "act1_partner": "2448.00",
+    "act1_total": "2448.00",
+    "act2_unicef": "62471.00",
+    "act2_partner": "6123.00",
+    "act2_total": "68594.00",
+    "act3_unicef": "2.00",
+    "act3_partner": "1.00",
+    "act3_total": "3.00",
+    "partner_total": "8572.00",
+    "unicef_total": "62473.00",
+    "total": "71045.00"
+  },
+  "creator": {
+    "id": 1,
+    "name": "",
+    "first_name": "",
+    "last_name": ""
+  },
+  "created": "2022-07-19T07:17:43.784177Z",
+  "modified": "2022-07-19T08:14:42.281632Z",
+  "title": "document 2",
+  "start": "2022-07-18",
+  "end": "2022-11-25",
+  "context": "ctx",
+  "implementation_strategy": "istg",
+  "capacity_development": "cd",
+  "other_info": null,
+  "other_partners_involved": "opi",
+  "gender_rating": "significant",
+  "gender_narrative": "1",
+  "equity_rating": "marginal",
+  "equity_narrative": "2",
+  "sustainability_rating": "principal",
+  "sustainability_narrative": "3",
+  "ip_program_contribution": "none",
+  "number": "f20zrk",
+  "reference_number_year": null,
+  "status": "completed",
+  "partner_name": "Some important organisation",
+  "partner_focal_points": [
+    "admin@admin.com",
+    "test@example.com"
+  ],
+  "locations": "location 1, location 2",
+  "document": null
+}

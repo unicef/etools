@@ -1,6 +1,6 @@
 from typing import Any
 
-from django.utils.encoding import force_text
+from django.utils.encoding import force_str
 
 from etools.applications.offline.errors import ValueTypeMismatch
 from etools.applications.offline.fields.base import BaseTypedField
@@ -10,7 +10,7 @@ class TextField(BaseTypedField):
     input_type = 'text'
 
     def cast_value(self, value: Any) -> str:
-        return force_text(value)
+        return force_str(value)
 
 
 class IntegerField(BaseTypedField):

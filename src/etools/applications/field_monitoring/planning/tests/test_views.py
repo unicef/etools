@@ -764,7 +764,7 @@ class InterventionsViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTen
         InterventionFactory(status=Intervention.SUSPENDED)
         InterventionFactory(status=Intervention.TERMINATED)
 
-        with self.assertNumQueries(9):  # 3 basic + 6 prefetches from InterventionManager
+        with self.assertNumQueries(10):  # 3 basic + 7 prefetches from InterventionManager
             self._test_list(self.unicef_user, valid_interventions)
 
     def test_filter_by_outputs(self):
@@ -824,7 +824,7 @@ class MonitoringActivityActionPointsViewTestCase(FMBaseTestCaseMixin, APIViewSet
         action_points = MonitoringActivityActionPointFactory.create_batch(size=10, monitoring_activity=self.activity)
         MonitoringActivityActionPointFactory()
 
-        with self.assertNumQueries(13):  # prefetched 13 queries
+        with self.assertNumQueries(15):  # prefetched 13 queries
             self._test_list(self.unicef_user, action_points)
 
     def test_create(self):

@@ -6,7 +6,7 @@ from django.core.exceptions import ValidationError
 from django.db import connection, models
 from django.db.transaction import atomic
 from django.utils import timezone
-from django.utils.encoding import force_text
+from django.utils.encoding import force_str
 from django.utils.translation import gettext_lazy as _
 
 from django_fsm import FSMField, transition
@@ -15,7 +15,7 @@ from model_utils.managers import InheritanceManager
 from model_utils.models import TimeStampedModel
 from ordered_model.models import OrderedModel
 from unicef_attachments.models import Attachment
-from unicef_djangolib.fields import CodedGenericRelation, CurrencyField
+from unicef_djangolib.fields import CodedGenericRelation
 
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.audit.purchase_order.models import AuditorStaffMember, PurchaseOrder, PurchaseOrderItem
@@ -34,6 +34,7 @@ from etools.applications.core.urlresolvers import build_frontend_url
 from etools.applications.environment.notifications import send_notification_with_template
 from etools.applications.partners.models import PartnerOrganization, PartnerStaffMember
 from etools.applications.reports.models import Office, Section
+from etools.libraries.djangolib.fields import CurrencyField
 from etools.libraries.djangolib.models import GroupWrapper, InheritedModelMixin
 from etools.libraries.djangolib.utils import get_environment
 from etools.libraries.fsm.views import has_action_permission
@@ -244,8 +245,8 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
             'reference_number': self.reference_number,
             'engagement_type': self.get_engagement_type_display(),
             'object_url': object_url,
-            'partner': force_text(self.partner),
-            'auditor_firm': force_text(self.agreement.auditor_firm),
+            'partner': force_str(self.partner),
+            'auditor_firm': force_str(self.agreement.auditor_firm),
         }
 
     def _notify_focal_points(self, template_name, context=None):

@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.db import connection
 from django.db.models import Prefetch
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext as _
 
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, status, viewsets
@@ -77,18 +77,19 @@ class ActivityDataCollectionViewSet(
                 # similar to set_tenant_or_fail but use schema_name to find country
                 ws = Country.objects.exclude(name__in=['Global']).get(schema_name=workspace)
             except Country.DoesNotExist:
-                raise Response(
+                return Response(
                     status=status.HTTP_400_BAD_REQUEST,
                     data={
-                        'non_field_errors': [f'Workspace code provided is not a valid business_area_code: {workspace}']
-                    }
-                )
+                        'non_field_errors': [
+                            _('Workspace code provided is not a valid business_area_code: %s') % workspace
+                        ]
+                    })
             else:
                 connection.set_tenant(ws)
         else:
             return Response(
                 status=status.HTTP_400_BAD_REQUEST,
-                data={'non_field_errors': ['Workspace is required']}
+                data={'non_field_errors': [_('Workspace is required')]}
             )
 
         user_email = request.query_params.get('user', '')
@@ -98,7 +99,7 @@ class ActivityDataCollectionViewSet(
         if not user_email:
             return Response(
                 status=status.HTTP_400_BAD_REQUEST,
-                data={'non_field_errors': ['User is required']}
+                data={'non_field_errors': [_('User is required')]}
             )
 
         user = get_object_or_404(User.objects, email=user_email)
@@ -110,7 +111,7 @@ class ActivityDataCollectionViewSet(
         if not has_edit_permission:
             return Response(
                 status=status.HTTP_400_BAD_REQUEST,
-                data={'non_field_errors': ['Unable to fill checklists for current activity']}
+                data={'non_field_errors': [_('Unable to fill checklists for current activity')]}
             )
 
         method = get_object_or_404(Method.objects, pk=method_pk)

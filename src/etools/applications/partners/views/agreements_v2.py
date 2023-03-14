@@ -4,6 +4,7 @@ import operator
 
 from django.db import transaction
 from django.db.models import Q
+from django.utils.translation import gettext as _
 
 from etools_validator.mixins import ValidatorViewMixin
 from rest_framework import status
@@ -50,7 +51,7 @@ class AgreementListAPIView(QueryStringFilterMixin, ExportModelMixin, ValidatorVi
         CSVFlatRenderer,
     )
 
-    filters = (
+    filters = [
         ('agreement_type', 'agreement_type__in'),
         ('cpStructures', 'country_programme__in'),
         ('status', 'status__in'),
@@ -58,7 +59,7 @@ class AgreementListAPIView(QueryStringFilterMixin, ExportModelMixin, ValidatorVi
         ('start', 'start__gt'),
         ('end', 'end__lte'),
         ('special_conditions_pca', 'special_conditions_pca'),
-    )
+    ]
     search_terms = ('partner__name__icontains', 'agreement_number__icontains')
 
     SERIALIZER_MAP = {
@@ -114,23 +115,23 @@ class AgreementListAPIView(QueryStringFilterMixin, ExportModelMixin, ValidatorVi
     def create(self, request, *args, **kwargs):
         related_fields = ['amendments']
         serializer = self.my_create(request, related_fields, **kwargs)
-        instance = serializer.instance
+        self.instance = serializer.instance
 
-        validator = AgreementValid(instance, user=request.user)
+        validator = AgreementValid(self.instance, user=request.user)
         if not validator.is_valid:
             logging.debug(validator.errors)
             raise ValidationError({'errors': validator.errors})
 
-        headers = self.get_success_headers(serializer.data)
+        self.headers = self.get_success_headers(serializer.data)
         if getattr(serializer.instance, '_prefetched_objects_cache', None):
             # If 'prefetch_related' has been applied to a queryset, we need to
             # refresh the instance from the database.
-            instance = self.get_object()
+            self.instance = self.get_object()
 
         return Response(
-            AgreementDetailSerializer(instance, context=self.get_serializer_context()).data,
+            AgreementDetailSerializer(self.instance, context=self.get_serializer_context()).data,
             status=status.HTTP_201_CREATED,
-            headers=headers)
+            headers=self.headers)
 
 
 class AgreementDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
@@ -158,24 +159,37 @@ class AgreementDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
     @transaction.atomic
     def update(self, request, *args, **kwargs):
         related_fields = ['amendments']
-        instance, old_instance, serializer = self.my_update(request, related_fields, **kwargs)
+        self.instance, old_instance, serializer = self.my_update(
+            request,
+            related_fields,
+            **kwargs,
+        )
 
-        validator = AgreementValid(instance, old=old_instance, user=request.user)
+        validator = AgreementValid(
+            self.instance,
+            old=old_instance,
+            user=request.user,
+        )
 
         if not validator.is_valid:
             logging.debug(validator.errors)
             raise ValidationError(validator.errors)
 
-        if getattr(instance, '_prefetched_objects_cache', None):
+        if getattr(self.instance, '_prefetched_objects_cache', None):
             # If 'prefetch_related' has been applied to a queryset, we need to
             # refresh the instance from the database.
-            instance = self.get_object()
+            self.instance = self.get_object()
 
         # if agreement becomes suspended, send notification
-        if instance.status == instance.SUSPENDED and instance.status != old_instance.status:
-            send_agreement_suspended_notification(instance, request.user)
+        if self.instance.status == self.instance.SUSPENDED and self.instance.status != old_instance.status:
+            send_agreement_suspended_notification(self.instance, request.user)
 
-        return Response(AgreementDetailSerializer(instance, context=self.get_serializer_context()).data)
+        return Response(
+            AgreementDetailSerializer(
+                self.instance,
+                context=self.get_serializer_context(),
+            ).data,
+        )
 
 
 class AgreementAmendmentListAPIView(ExportModelMixin, ListAPIView):
@@ -238,6 +252,7 @@ class AgreementAmendmentListAPIView(ExportModelMixin, ListAPIView):
 
 
 class AgreementAmendmentDeleteView(DestroyAPIView):
+    # todo: permission_classes are ignored here. see comments in InterventionAmendmentDeleteView.delete
     permission_classes = (PartnershipManagerRepPermission,)
 
     def delete(self, request, *args, **kwargs):
@@ -246,13 +261,14 @@ class AgreementAmendmentDeleteView(DestroyAPIView):
         except AgreementAmendment.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
         if amendment.signed_amendment or amendment.signed_date:
-            raise ValidationError("Cannot delete a signed amendment")
+            raise ValidationError(_("Cannot delete a signed amendment"))
         else:
             amendment.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class AgreementDeleteView(DestroyAPIView):
+    # todo: permission_classes are ignored here. see comments in InterventionAmendmentDeleteView.delete
     permission_classes = (PartnershipManagerRepPermission,)
 
     def delete(self, request, *args, **kwargs):
@@ -262,7 +278,7 @@ class AgreementDeleteView(DestroyAPIView):
             return Response(status=status.HTTP_404_NOT_FOUND)
         if agreement.status != Agreement.DRAFT or \
                 agreement.interventions.count():
-            raise ValidationError("Cannot delete an agreement that is not Draft or has PDs/SSFAs associated with it")
+            raise ValidationError(_("Cannot delete an agreement that is not Draft or has PDs/SSFAs associated with it"))
         else:
             agreement.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)

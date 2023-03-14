@@ -70,7 +70,7 @@ class ActionPoint(TimeStampedModel):
                                 on_delete=models.CASCADE)
     cp_output = models.ForeignKey('reports.Result', verbose_name=_('CP Output'), blank=True, null=True,
                                   on_delete=models.CASCADE)
-    intervention = models.ForeignKey('partners.Intervention', verbose_name=_('PD/SSFA'), blank=True, null=True,
+    intervention = models.ForeignKey('partners.Intervention', verbose_name=_('PD/SPD'), blank=True, null=True,
                                      on_delete=models.CASCADE)
     engagement = models.ForeignKey('audit.Engagement', verbose_name=_('Engagement'), blank=True, null=True,
                                    related_name='action_points', on_delete=models.CASCADE)

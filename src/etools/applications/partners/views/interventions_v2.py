@@ -8,12 +8,13 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import connection, transaction
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
+from django.utils.translation import gettext as _
 
 from etools_validator.mixins import ValidatorViewMixin
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import DestroyAPIView, ListAPIView, ListCreateAPIView, RetrieveUpdateDestroyAPIView
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -30,6 +31,7 @@ from etools.applications.partners.filters import (
     InterventionFilter,
     InterventionResultLinkFilter,
     PartnerScopeFilter,
+    ShowAmendmentsFilter,
 )
 from etools.applications.partners.models import (
     Agreement,
@@ -40,7 +42,15 @@ from etools.applications.partners.models import (
     InterventionReportingPeriod,
     InterventionResultLink,
 )
-from etools.applications.partners.permissions import PartnershipManagerPermission, PartnershipManagerRepPermission
+from etools.applications.partners.permissions import (
+    InterventionAmendmentIsNotCompleted,
+    InterventionIsDraftPermission,
+    IsInterventionBudgetOwnerPermission,
+    PartnershipManagerPermission,
+    PartnershipManagerRepPermission,
+    UserIsNotPartnerStaffMemberPermission,
+    UserIsUnicefFocalPoint,
+)
 from etools.applications.partners.serializers.exports.interventions import (
     InterventionAmendmentExportFlatSerializer,
     InterventionAmendmentExportSerializer,
@@ -54,7 +64,6 @@ from etools.applications.partners.serializers.exports.interventions import (
 from etools.applications.partners.serializers.interventions_v2 import (
     InterventionAmendmentCUSerializer,
     InterventionAttachmentSerializer,
-    InterventionBudgetCUSerializer,
     InterventionCreateUpdateSerializer,
     InterventionDetailSerializer,
     InterventionIndicatorSerializer,
@@ -74,6 +83,7 @@ from etools.applications.partners.serializers.interventions_v2 import (
 )
 from etools.applications.partners.utils import send_intervention_amendment_added_notification
 from etools.applications.partners.validation.interventions import InterventionValid
+from etools.applications.partners.views.intervention_snapshot import FullInterventionSnapshotDeleteMixin
 from etools.applications.reports.models import AppliedIndicator, LowerResult, ReportingRequirement
 from etools.applications.reports.serializers.v2 import AppliedIndicatorSerializer, LowerResultSimpleCUSerializer
 from etools.applications.users.models import Country
@@ -92,7 +102,7 @@ class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, Interven
     """
     serializer_class = InterventionListSerializer
     permission_classes = (PartnershipManagerPermission,)
-    filter_backends = (PartnerScopeFilter,)
+    filter_backends = (PartnerScopeFilter, ShowAmendmentsFilter)
     renderer_classes = (
         JSONRenderer,
         InterventionCSVRenderer,
@@ -100,7 +110,7 @@ class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, Interven
     )
 
     search_terms = ('title__icontains', 'agreement__partner__name__icontains', 'number__icontains')
-    filters = (
+    filters = [
         ('partners', 'agreement__partner__in'),
         ('agreements', 'agreement__in'),
         ('document_type', 'document_type__in'),
@@ -117,10 +127,12 @@ class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, Interven
         ('location', 'result_links__ll_results__applied_indicators__locations__name__icontains'),
         ('contingency_pd', 'contingency_pd'),
         ('grants', 'frs__fr_items__grant_number__in'),
-    )
+        ('grants__contains', 'frs__fr_items__grant_number__icontains'),
+        ('donors', 'frs__fr_items__donor__icontains'),
+        ('budget_owner__in', 'budget_owner__in'),
+    ]
 
     SERIALIZER_MAP = {
-        'planned_budget': InterventionBudgetCUSerializer,
         'planned_visits': PlannedVisitsCUSerializer,
         'result_links': InterventionResultCUSerializer
     }
@@ -150,7 +162,6 @@ class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, Interven
         :return: JSON
         """
         related_fields = [
-            'planned_budget',
             'planned_visits',
             'result_links'
         ]
@@ -169,22 +180,22 @@ class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, Interven
                                     nested_related_names=nested_related_names,
                                     **kwargs)
 
-        instance = serializer.instance
+        self.instance = serializer.instance
 
-        validator = InterventionValid(instance, user=request.user)
+        validator = InterventionValid(self.instance, user=request.user)
         if not validator.is_valid:
             logging.debug(validator.errors)
             raise ValidationError(validator.errors)
 
-        headers = self.get_success_headers(serializer.data)
-        if getattr(instance, '_prefetched_objects_cache', None):
+        self.headers = self.get_success_headers(serializer.data)
+        if getattr(self.instance, '_prefetched_objects_cache', None):
             # If 'prefetch_related' has been applied to a queryset, we need to
             # refresh the instance from the database.
-            instance = self.get_object()
+            self.instance = self.get_object()
         return Response(
-            InterventionDetailSerializer(instance, context=self.get_serializer_context()).data,
+            InterventionDetailSerializer(self.instance, context=self.get_serializer_context()).data,
             status=status.HTTP_201_CREATED,
-            headers=headers
+            headers=self.headers
         )
 
     def get_queryset(self, format=None):
@@ -198,7 +209,7 @@ class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, Interven
                 try:
                     ids = [int(x) for x in query_params.get("values").split(",")]
                 except ValueError:
-                    raise ValidationError("ID values must be integers")
+                    raise ValidationError(_("ID values must be integers"))
                 else:
                     return q.filter(id__in=ids)
             if query_params.get("my_partnerships", "").lower() == "true":
@@ -277,10 +288,22 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
     permission_classes = (PartnershipManagerPermission,)
 
     SERIALIZER_MAP = {
-        'planned_budget': InterventionBudgetCUSerializer,
         'planned_visits': PlannedVisitsCUSerializer,
         'result_links': InterventionResultCUSerializer
     }
+    related_fields = [
+        'planned_visits',
+        'result_links'
+    ]
+    nested_related_names = [
+        'll_results'
+    ]
+    related_non_serialized_fields = [
+        # todo: add other CodedGenericRelation fields. at this moment they're not managed by permissions matrix
+        'prc_review_attachment',
+        'final_partnership_review',
+        'signed_pd_attachment',
+    ]
 
     def get_serializer_class(self):
         """
@@ -292,32 +315,34 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
 
     @transaction.atomic
     def update(self, request, *args, **kwargs):
-        related_fields = ['planned_budget',
-                          'planned_visits',
-                          'result_links']
-        nested_related_names = ['ll_results']
-        instance, old_instance, serializer = self.my_update(
+        self.instance, old_instance, serializer = self.my_update(
             request,
-            related_fields,
-            nested_related_names=nested_related_names,
+            self.related_fields,
+            nested_related_names=self.nested_related_names,
+            related_non_serialized_fields=self.related_non_serialized_fields,
             **kwargs
         )
 
-        validator = InterventionValid(instance, old=old_instance, user=request.user)
+        validator = InterventionValid(self.instance, old=old_instance, user=request.user)
         if not validator.is_valid:
             logging.debug(validator.errors)
             raise ValidationError(validator.errors)
 
         if tenant_switch_is_active('intervention_amendment_notifications_on') and \
-                old_instance and not instance.in_amendment and old_instance.in_amendment:
-            send_intervention_amendment_added_notification(instance)
+                old_instance and not self.instance.in_amendment and old_instance.in_amendment:
+            send_intervention_amendment_added_notification(self.instance)
 
-        if getattr(instance, '_prefetched_objects_cache', None):
+        if getattr(self.instance, '_prefetched_objects_cache', None):
             # If 'prefetch_related' has been applied to a queryset, we need to
             # refresh the instance from the database.
-            instance = self.get_object()
+            self.instance = self.get_object()
 
-        return Response(InterventionDetailSerializer(instance, context=self.get_serializer_context()).data)
+        return Response(
+            InterventionDetailSerializer(
+                self.instance,
+                context=self.get_serializer_context(),
+            ).data,
+        )
 
 
 class InterventionAttachmentListCreateView(ListCreateAPIView):
@@ -349,7 +374,7 @@ class InterventionAttachmentUpdateDeleteView(RetrieveUpdateDestroyAPIView):
         if obj.intervention.status in [Intervention.DRAFT]:
             return super().delete(request, *args, **kwargs)
         else:
-            raise ValidationError("Deleting an attachment can only be done in Draft status")
+            raise ValidationError(_("Deleting an attachment can only be done in Draft status"))
 
 
 class InterventionResultListAPIView(ExportModelMixin, ListAPIView):
@@ -448,7 +473,7 @@ class InterventionAmendmentListAPIView(ExportModelMixin, ValidatorViewMixin, Lis
     Returns a list of InterventionAmendments.
     """
     serializer_class = InterventionAmendmentCUSerializer
-    permission_classes = (PartnershipManagerPermission,)
+    permission_classes = (PartnershipManagerPermission, UserIsNotPartnerStaffMemberPermission)
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (
         JSONRenderer,
@@ -494,22 +519,20 @@ class InterventionAmendmentListAPIView(ExportModelMixin, ValidatorViewMixin, Lis
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
-class InterventionAmendmentDeleteView(DestroyAPIView):
-    permission_classes = (PartnershipManagerRepPermission,)
+class InterventionAmendmentDeleteView(FullInterventionSnapshotDeleteMixin, DestroyAPIView):
+    permission_classes = (
+        IsAuthenticated,
+        InterventionAmendmentIsNotCompleted,
+        UserIsUnicefFocalPoint | IsInterventionBudgetOwnerPermission,
+    )
+    queryset = InterventionAmendment.objects.all()
 
-    def delete(self, request, *args, **kwargs):
-        try:
-            intervention_amendment = InterventionAmendment.objects.get(id=int(kwargs['pk']))
-        except InterventionAmendment.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        if intervention_amendment.intervention.status in [Intervention.DRAFT] or \
-            request.user in intervention_amendment.intervention.unicef_focal_points.all() or \
-            request.user.groups.filter(name__in=['Partnership Manager',
-                                                 'Senior Management Team']).exists():
-            intervention_amendment.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        else:
-            raise ValidationError("You do not have permissions to delete an amendment")
+    def get_intervention(self):
+        return self.get_root_object()
+
+    @functools.cache
+    def get_root_object(self):
+        return get_object_or_404(Intervention.objects, amendments=self.kwargs.get('pk'))
 
 
 class InterventionListMapView(QueryStringFilterMixin, ListCreateAPIView):
@@ -580,7 +603,7 @@ class InterventionLowerResultUpdateView(RetrieveUpdateDestroyAPIView):
         # make sure there are no indicators added to this LLO
         obj = self.get_object()
         if obj.applied_indicators.exists():
-            raise ValidationError('This PD Output has indicators related, please remove the indicators first')
+            raise ValidationError(_('This PD Output has indicators related, please remove the indicators first'))
         return super().delete(request, *args, **kwargs)
 
 
@@ -603,20 +626,23 @@ class InterventionResultLinkListCreateView(ListCreateAPIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
-class InterventionResultLinkUpdateView(RetrieveUpdateDestroyAPIView):
-
+class InterventionResultLinkUpdateView(FullInterventionSnapshotDeleteMixin, RetrieveUpdateDestroyAPIView):
     serializer_class = InterventionResultLinkSimpleCUSerializer
     permission_classes = (PartnershipManagerPermission,)
     filter_backends = (InterventionFilter,)
     renderer_classes = (JSONRenderer,)
     queryset = InterventionResultLink.objects.all()
 
+    @functools.cache
+    def get_intervention(self):
+        return self.get_object().intervention
+
     def delete(self, request, *args, **kwargs):
         # make sure there are no indicators added to this LLO
         obj = self.get_object()
         if obj.ll_results.exists():
-            raise ValidationError('This CP Output cannot be removed from this Intervention because there are nested'
-                                  ' Results, please remove all Document Results to continue')
+            raise ValidationError(_('This CP Output cannot be removed from this Intervention because there are nested'
+                                  ' Results, please remove all Document Results to continue'))
         return super().delete(request, *args, **kwargs)
 
 
@@ -656,19 +682,22 @@ class InterventionIndicatorsListView(ListCreateAPIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
-class InterventionIndicatorsUpdateView(RetrieveUpdateDestroyAPIView):
-
+class InterventionIndicatorsUpdateView(FullInterventionSnapshotDeleteMixin, RetrieveUpdateDestroyAPIView):
     serializer_class = AppliedIndicatorSerializer
     permission_classes = (PartnershipManagerPermission,)
     filter_backends = (AppliedIndicatorsFilter,)
     renderer_classes = (JSONRenderer,)
     queryset = AppliedIndicator.objects.all()
 
+    @functools.cache
+    def get_intervention(self):
+        return self.get_object().lower_result.result_link.intervention
+
     def delete(self, request, *args, **kwargs):
         ai = self.get_object()
         intervention = ai.lower_result.result_link.intervention
         if not intervention.status == Intervention.DRAFT:
-            raise ValidationError('Deleting an indicator is only possible in status Draft.')
+            raise ValidationError(_('Deleting an indicator is only possible in status Draft.'))
         return super().delete(request, *args, **kwargs)
 
 
@@ -756,19 +785,17 @@ class InterventionLocationListAPIView(QueryStringFilterMixin, ListAPIView):
 
 
 class InterventionDeleteView(DestroyAPIView):
+    # todo: permission_classes are ignored here. see comments in InterventionAmendmentDeleteView.delete
     permission_classes = (PartnershipManagerRepPermission,)
+    queryset = Intervention.objects
 
     def delete(self, request, *args, **kwargs):
-        try:
-            intervention = Intervention.objects.get(id=int(kwargs['pk']))
-        except Intervention.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-
+        intervention = self.get_object()
         if intervention.status != Intervention.DRAFT:
-            raise ValidationError("Cannot delete a PD or SSFA that is not Draft")
+            raise ValidationError(_("Cannot delete a PD or SSFA that is not Draft"))
 
         if intervention.travel_activities.count():
-            raise ValidationError("Cannot delete a PD or SSFA that has Planned Trips")
+            raise ValidationError(_("Cannot delete a PD or SSFA that has Planned Trips"))
 
         else:
             # get the history of this PD and make sure it wasn't manually moved back to draft before allowing deletion
@@ -777,10 +804,21 @@ class InterventionDeleteView(DestroyAPIView):
             historical_statuses = set(a.data.get('status', Intervention.DRAFT) for a in act.all())
             if len(historical_statuses) > 1 or \
                     (len(historical_statuses) == 1 and historical_statuses.pop() != Intervention.DRAFT):
-                raise ValidationError("Cannot delete a PD or SSFA that was manually moved back to Draft")
-            else:
-                intervention.delete()
-                return Response(status=status.HTTP_204_NO_CONTENT)
+                raise ValidationError(_("Cannot delete a PD or SSFA that was manually moved back to Draft"))
+
+            # do not delete any PDs that have been sent to a partner before
+            date_sent_to_partner_qs = Activity.objects.filter(
+                target_content_type=ContentType.objects.get_for_model(
+                    Intervention,
+                ),
+                target_object_id=intervention.pk,
+                change__has_key="date_sent_to_partner"
+            )
+            if date_sent_to_partner_qs.exists():
+                raise ValidationError(_("PD has already been sent to Partner."))
+
+            intervention.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class InterventionReportingRequirementView(APIView):
@@ -814,6 +852,7 @@ class InterventionReportingRequirementView(APIView):
         serializer = self.serializer_create_class(
             data=self.request.data,
             context={
+                "user": request.user,
                 "intervention": self.intervention,
             }
         )
@@ -841,22 +880,16 @@ class InterventionRamIndicatorsView(APIView):
         )
 
 
-class InterventionPlannedVisitsDeleteView(DestroyAPIView):
-    permission_classes = (PartnershipManagerPermission,)
+class InterventionPlannedVisitsDeleteView(FullInterventionSnapshotDeleteMixin, DestroyAPIView):
+    permission_classes = (PartnershipManagerPermission, InterventionIsDraftPermission)
+    queryset = InterventionPlannedVisits.objects.all()
 
-    def delete(self, request, *args, **kwargs):
-        intervention = get_object_or_404(
-            Intervention,
-            pk=int(kwargs['intervention_pk'])
-        )
-        if intervention.status != Intervention.DRAFT:
-            raise ValidationError("Planned visits can only be deleted in Draft status")
+    def get_queryset(self):
+        return super().get_queryset().filter(intervention=int(self.kwargs['intervention_pk']))
 
-        intervention_planned_visit = get_object_or_404(
-            InterventionPlannedVisits,
-            pk=int(kwargs['pk']),
-            intervention=int(kwargs['intervention_pk'])
-        )
-        self.check_object_permissions(request, intervention_planned_visit)
-        intervention_planned_visit.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+    def get_intervention(self):
+        return self.get_root_object()
+
+    @functools.cache
+    def get_root_object(self):
+        return get_object_or_404(Intervention.objects, pk=self.kwargs.get('intervention_pk'))

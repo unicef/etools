@@ -84,20 +84,20 @@ class FRsView(APIView):
             not_found = set(values) - set(qs.values_list('fr_number', flat=True))
             if not_found:
                 frs_not_found = FundsReservationHeader.objects.filter(fr_number__in=not_found)
-                errors = ['FR #{0} is already being used by PD/SSFA ref [{0.intervention}]'.format(
+                errors = ['FR #{0} is already being used by PD/SPD ref [{0.intervention}]'.format(
                     fr) for fr in frs_not_found]
                 return self.bad_request(', '.join(errors))
         else:
             qs = qs.filter(intervention__isnull=True)
 
         if qs.count() != len(values):
-            return self.bad_request('One or more of the FRs are used by another PD/SSFA '
+            return self.bad_request('One or more of the FRs are used by another PD/SPD '
                                     'or could not be found in eTools.')
 
         all_frs_vendor_numbers = [fr.vendor_code for fr in qs.all()]
         if len(set(all_frs_vendor_numbers)) != 1:
             return self.bad_request('The FRs selected relate to various partners, please make sure to select '
-                                    'FRs that relate to the PD/SSFA Partner')
+                                    'FRs that relate to the PD/SPD Partner')
 
         if intervention_id is not None:
             try:
