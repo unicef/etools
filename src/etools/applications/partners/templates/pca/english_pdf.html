@@ -627,36 +627,36 @@
               </tr>
               <tr>
                   <td style="width: 45%;">Bank Name</td>
-                  <td>{{ bank_detail.bank_name }}</td>
+                  <td style="width: 55%;">{{ bank_detail.bank_name }}</td>
               </tr>
               <tr>
                   <td style="width: 45%;">Bank Address</td>
-                  <td>{{ bank_detail.bank_address }}</td>
+                  <td style="width: 55%;">{{ bank_detail.bank_address }}</td>
               </tr>
               <tr>
                   <td style="width: 45%;">Account Title</td>
-                  <td>{{ bank_detail.account_title }}</td>
+                  <td style="width: 55%;">{{ bank_detail.account_title }}</td>
               </tr>
               <tr>
                   <td style="width: 45%;">Account No.</td>
-                  <td>{{ bank_detail.account_number }}</td>
+                  <td style="width: 55%;">{{ bank_detail.account_number }}</td>
               </tr>
               <tr>
                   <td style="width: 45%;">Account Currency</td>
-                  <td>{{ bank_detail.account_currency }}</td>
+                  <td style="width: 55%;">{{ bank_detail.account_currency }}</td>
               </tr>
               <tr>
                   <td style="width: 45%;">Routing Details <br/> SWIFT/IBAN</td>
-                  <td>{{ bank_detail.routing_details }}</td>
+                  <td style="width: 55%;">{{ bank_detail.routing_details }}</td>
               </tr>
               <tr>
                   <td style="width: 45%;">Bank Contact Person</td>
-                  <td>{% firstof bank_detail.bank_contact_person '&nbsp;' %}</td>
+                  <td style="width: 55%;">{% firstof bank_detail.bank_contact_person '&nbsp;' %}</td>
               </tr>
               {% if bank_detail.tax_number_5 %}
               <tr>
                   <td style="width: 45%;">Hawala Banking Details</td>
-                  <td>{{ bank_detail.tax_number_5 }}</td>
+                  <td style="width: 55%;">{{ bank_detail.tax_number_5 }}</td>
               </tr>
               {% endif %}
           </table>
