@@ -6,7 +6,8 @@ from django.db import transaction
 from django.db.models import Q, QuerySet
 from django.utils.functional import cached_property
 from django.utils.translation import gettext as _, gettext_lazy
-from rest_framework import serializers, fields
+
+from rest_framework import fields, serializers
 from rest_framework.relations import RelatedField
 from rest_framework.serializers import ValidationError
 from rest_framework.validators import UniqueTogetherValidator
@@ -27,8 +28,8 @@ from etools.applications.partners.models import (
     InterventionAttachment,
     InterventionBudget,
     InterventionPlannedVisits,
-    InterventionReportingPeriod,
     InterventionPlannedVisitSite,
+    InterventionReportingPeriod,
     InterventionResultLink,
     PartnerStaffMember,
     PartnerType,
