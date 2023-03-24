@@ -216,10 +216,10 @@ class PlannedVisitSitesQuarterSerializer(fields.ListField):
 
 
 class PlannedVisitsCUSerializer(serializers.ModelSerializer):
-    programmatic_q1_sites = PlannedVisitSitesQuarterSerializer(quarter=InterventionPlannedVisitSite.Q1)
-    programmatic_q2_sites = PlannedVisitSitesQuarterSerializer(quarter=InterventionPlannedVisitSite.Q2)
-    programmatic_q3_sites = PlannedVisitSitesQuarterSerializer(quarter=InterventionPlannedVisitSite.Q3)
-    programmatic_q4_sites = PlannedVisitSitesQuarterSerializer(quarter=InterventionPlannedVisitSite.Q4)
+    programmatic_q1_sites = PlannedVisitSitesQuarterSerializer(quarter=InterventionPlannedVisitSite.Q1, required=False)
+    programmatic_q2_sites = PlannedVisitSitesQuarterSerializer(quarter=InterventionPlannedVisitSite.Q2, required=False)
+    programmatic_q3_sites = PlannedVisitSitesQuarterSerializer(quarter=InterventionPlannedVisitSite.Q3, required=False)
+    programmatic_q4_sites = PlannedVisitSitesQuarterSerializer(quarter=InterventionPlannedVisitSite.Q4, required=False)
 
     class Meta:
         model = InterventionPlannedVisits
