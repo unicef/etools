@@ -1,7 +1,8 @@
-from django.db import transaction
+from django.db import connection, transaction
 from django.http import HttpResponseForbidden
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.translation import gettext as _
 
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
@@ -22,6 +23,7 @@ from etools.applications.partners.serializers.interventions_v3 import (
     InterventionReviewActionSerializer,
     InterventionReviewSendBackSerializer,
 )
+from etools.applications.partners.tasks import send_pd_to_vision
 from etools.applications.partners.views.interventions_v3 import InterventionDetailAPIView, PMPInterventionMixin
 
 
@@ -65,15 +67,15 @@ class PMPInterventionAcceptView(PMPInterventionActionView):
         pd = self.get_object()
         request.data.clear()
         if pd.status not in [Intervention.DRAFT]:
-            raise ValidationError("Action is not allowed")
+            raise ValidationError(_("Action is not allowed"))
         if self.is_partner_staff():
             if not self.is_partner_focal_point(pd):
-                raise ValidationError("You need to be a focal point in order to perform this action")
+                raise ValidationError(_("You need to be a focal point in order to perform this action"))
             if pd.partner_accepted:
-                raise ValidationError("Partner has already accepted this PD.")
+                raise ValidationError(_("Partner has already accepted this PD."))
             if pd.unicef_court:
-                raise ValidationError("You cannot perform this action while the PD "
-                                      "is not available for partner to edit")
+                raise ValidationError(_("You cannot perform this action while the PD "
+                                      "is not available for partner to edit"))
             # When accepting on behalf of the partner since there is no further action, it will automatically
             # be sent to unicef
             request.data.update({"partner_accepted": True, "unicef_court": True})
@@ -88,14 +90,14 @@ class PMPInterventionAcceptView(PMPInterventionActionView):
             template_name = 'partners/intervention/partner_accepted'
         else:
             if not pd.unicef_court:
-                raise ValidationError("You cannot perform this action while the PD "
-                                      "is not available for UNICEF to edit")
+                raise ValidationError(_("You cannot perform this action while the PD "
+                                      "is not available for UNICEF to edit"))
 
             if pd.unicef_accepted:
-                raise ValidationError("UNICEF has already accepted this PD.")
+                raise ValidationError(_("UNICEF has already accepted this PD."))
 
             if self.request.user not in pd.unicef_focal_points.all() and self.request.user != pd.budget_owner:
-                raise ValidationError("Only focal points or budget owners can accept")
+                raise ValidationError(_("Only focal points or budget owners can accept"))
 
             request.data.update({"unicef_accepted": True})
             recipients = [u.email for u in pd.partner_focal_points.all()]
@@ -124,13 +126,13 @@ class PMPInterventionAcceptOnBehalfOfPartner(PMPInterventionActionView):
         pd = self.get_object()
         request.data.clear()
         if pd.status not in [Intervention.DRAFT]:
-            raise ValidationError("Action is not allowed")
+            raise ValidationError(_("Action is not allowed"))
 
         if self.request.user not in pd.unicef_users_involved:
-            raise ValidationError("Only focal points can accept")
+            raise ValidationError(_("Only focal points can accept"))
 
         if pd.partner_accepted:
-            raise ValidationError("Partner has already accepted this PD.")
+            raise ValidationError(_("Partner has already accepted this PD."))
 
         request.data.update({
             "partner_accepted": True,
@@ -182,11 +184,11 @@ class PMPInterventionRejectReviewView(PMPInterventionActionView):
             return HttpResponseForbidden()
         pd = self.get_object()
         if pd.status != Intervention.REVIEW:
-            raise ValidationError("PD needs to be in Review state")
+            raise ValidationError(_("PD needs to be in Review state"))
         if not pd.review:
-            raise ValidationError("PD review is missing")
+            raise ValidationError(_("PD review is missing"))
         if pd.review.overall_approver_id != request.user.pk:
-            raise ValidationError("Only overall approver can reject review.")
+            raise ValidationError(_("Only overall approver can reject review."))
 
         pd.review.overall_approval = False
         if not pd.review.review_date:
@@ -231,11 +233,11 @@ class PMPInterventionSendBackViewReview(PMPInterventionActionView):
     def update(self, request, *args, **kwargs):
         pd = self.get_object()
         if pd.status != Intervention.REVIEW:
-            raise ValidationError("PD needs to be in Review state")
+            raise ValidationError(_("PD needs to be in Review state"))
         if not pd.review:
-            raise ValidationError("PD review is missing")
+            raise ValidationError(_("PD review is missing"))
         if pd.review.overall_approval is not None:
-            raise ValidationError("PD review already approved")
+            raise ValidationError(_("PD review already approved"))
 
         serializer = InterventionReviewSendBackSerializer(data=request.data, instance=pd.review)
         serializer.is_valid(raise_exception=True)
@@ -276,7 +278,7 @@ class PMPInterventionReviewView(PMPInterventionActionView):
             return HttpResponseForbidden()
         pd = self.get_object()
         if pd.status == Intervention.REVIEW:
-            raise ValidationError("PD is already in Review status.")
+            raise ValidationError(_("PD is already in Review status."))
 
         if pd.in_amendment:
             serializer = AmendedInterventionReviewActionSerializer(data=request.data)
@@ -308,9 +310,9 @@ class PMPInterventionReviewView(PMPInterventionActionView):
                 pass
             except MergeError as ex:
                 raise ValidationError(
-                    f'Merge Error: Amended field was already changed ({ex.field} at {ex.instance}). '
-                    'This can be caused by parallel merged amendment or changed original intervention. '
-                    'Amendment should be re-created.'
+                    _('Merge Error: Amended field was already changed (%(field)s at %(instance)s). '
+                      'This can be caused by parallel merged amendment or changed original intervention. '
+                      'Amendment should be re-created.') % {'field': ex.field, 'instance': ex.instance}
                 )
 
         if response.status_code == 200:
@@ -347,10 +349,10 @@ class PMPInterventionCancelView(PMPInterventionActionView):
             return HttpResponseForbidden()
         pd = self.get_object()
         if pd.status == Intervention.CANCELLED:
-            raise ValidationError("PD has already been cancelled.")
+            raise ValidationError(_("PD has already been cancelled."))
 
         if self.request.user not in pd.unicef_focal_points.all() and self.request.user != pd.budget_owner:
-            raise ValidationError("Only focal points or budget owners can cancel")
+            raise ValidationError(_("Only focal points or budget owners can cancel"))
 
         request.data.update({"status": Intervention.CANCELLED})
 
@@ -383,10 +385,10 @@ class PMPInterventionTerminateView(PMPInterventionActionView):
             return HttpResponseForbidden()
         pd = self.get_object()
         if pd.status == Intervention.TERMINATED:
-            raise ValidationError("PD has already been terminated.")
+            raise ValidationError(_("PD has already been terminated."))
 
         if self.request.user not in pd.unicef_focal_points.all() and self.request.user != pd.budget_owner:
-            raise ValidationError("Only focal points or budget owners can terminate")
+            raise ValidationError(_("Only focal points or budget owners can terminate"))
 
         # override status as terminated
         request.data.update({"status": Intervention.TERMINATED})
@@ -419,10 +421,10 @@ class PMPInterventionSuspendView(PMPInterventionActionView):
             return HttpResponseForbidden()
         pd = self.get_object()
         if pd.status == Intervention.SUSPENDED:
-            raise ValidationError("PD has already been suspended.")
+            raise ValidationError(_("PD has already been suspended."))
 
         if self.request.user not in pd.unicef_focal_points.all() and self.request.user != pd.budget_owner:
-            raise ValidationError("Only focal points or budget owners can suspend")
+            raise ValidationError(_("Only focal points or budget owners can suspend"))
 
         # override status as suspended
         request.data.update({"status": Intervention.SUSPENDED})
@@ -455,10 +457,10 @@ class PMPInterventionUnsuspendView(PMPInterventionActionView):
             return HttpResponseForbidden()
         pd = self.get_object()
         if pd.status != Intervention.SUSPENDED:
-            raise ValidationError("PD is not suspended.")
+            raise ValidationError(_("PD is not suspended."))
 
         if self.request.user not in pd.unicef_focal_points.all() and self.request.user != pd.budget_owner:
-            raise ValidationError("Only focal points or budget owners can unsuspend")
+            raise ValidationError(_("Only focal points or budget owners can unsuspend"))
 
         # override status as active
         request.data.update({"status": Intervention.ACTIVE})
@@ -495,11 +497,11 @@ class PMPInterventionSignatureView(PMPInterventionActionView):
             return HttpResponseForbidden()
         pd = self.get_object()
         if pd.status == Intervention.SIGNATURE:
-            raise ValidationError("PD is already in Signature status.")
+            raise ValidationError(_("PD is already in Signature status."))
         if not pd.review:
-            raise ValidationError("PD review is missing")
+            raise ValidationError(_("PD review is missing"))
         if pd.review.overall_approver_id != request.user.pk:
-            raise ValidationError("Only overall approver can accept review.")
+            raise ValidationError(_("Only overall approver can accept review."))
 
         pd.review.overall_approval = True
         if not pd.review.review_date:
@@ -537,7 +539,7 @@ class PMPInterventionUnlockView(PMPInterventionActionView):
         pd = self.get_object()
         request.data.clear()
         if not pd.locked:
-            raise ValidationError("PD is already unlocked.")
+            raise ValidationError(_("PD is already unlocked."))
 
         if self.is_partner_staff():
             recipients = [u.email for u in pd.unicef_focal_points.all()]
@@ -569,10 +571,10 @@ class PMPInterventionSendToPartnerView(PMPInterventionActionView):
     def update(self, request, *args, **kwargs):
         pd = self.get_object()
         if not pd.unicef_court:
-            raise ValidationError("PD is currently with Partner")
+            raise ValidationError(_("PD is currently with Partner"))
 
         if self.request.user not in pd.unicef_focal_points.all() and self.request.user != pd.budget_owner:
-            raise ValidationError("Only focal points or budget owners can send to partner")
+            raise ValidationError(_("Only focal points or budget owners can send to partner"))
 
         request.data.clear()
         request.data.update({"unicef_court": False})
@@ -604,10 +606,10 @@ class PMPInterventionSendToUNICEFView(PMPInterventionActionView):
     def update(self, request, *args, **kwargs):
         pd = self.get_object()
         if pd.unicef_court:
-            raise ValidationError("PD is currently with UNICEF")
+            raise ValidationError(_("PD is currently with UNICEF"))
 
         if not self.is_partner_focal_point(pd):
-            raise ValidationError("Only partner focal points can send to UNICEF")
+            raise ValidationError(_("Only partner focal points can send to UNICEF"))
 
         request.data.clear()
         request.data.update({"unicef_court": True})
@@ -644,22 +646,24 @@ class PMPAmendedInterventionMerge(InterventionDetailAPIView):
     def update(self, request, *args, **kwargs):
         pd = self.get_object()
         if not pd.in_amendment:
-            raise ValidationError('Only amended interventions can be merged')
+            raise ValidationError(_('Only amended interventions can be merged'))
         if not pd.status == Intervention.SIGNED:
-            raise ValidationError('Amendment cannot be merged yet')
+            raise ValidationError(_('Amendment cannot be merged yet'))
         try:
             amendment = pd.amendment
         except InterventionAmendment.DoesNotExist:
-            raise ValidationError('Amendment does not exist for this pd')
+            raise ValidationError(_('Amendment does not exist for this pd'))
 
         try:
             amendment.merge_amendment()
         except MergeError as ex:
             raise ValidationError(
-                f'Merge Error: Amended field was already changed ({ex.field} at {ex.instance}). '
-                'This can be caused by parallel merged amendment or changed original intervention. '
-                'Amendment should be re-created.'
+                _('Merge Error: Amended field was already changed (%(field)s at %(instance)s). '
+                  'This can be caused by parallel merged amendment or changed original intervention. '
+                  'Amendment should be re-created.') % {'field': ex.field, 'instance': ex.instance}
             )
+
+        transaction.on_commit(lambda: send_pd_to_vision.delay(connection.tenant.name, pd.pk))
 
         return Response(
             InterventionDetailSerializer(

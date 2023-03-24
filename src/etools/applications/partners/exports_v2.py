@@ -1,6 +1,8 @@
 from copy import copy
 from tempfile import NamedTemporaryFile
 
+from django.utils.translation import gettext as _
+
 from openpyxl import Workbook
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
@@ -21,27 +23,27 @@ class PartnerOrganizationCSVRenderer(r.CSVRenderer):
               'type_of_assessment', 'date_assessed', 'assessments', 'staff_members', 'url', 'planned_visits', ]
 
     labels = {
-        'vendor_number': 'Vendor Number',
-        'organization_full_name': 'Organizations Full Name',
-        'short_name': 'Short Name',
-        'alternate_name': 'Alternate Name',
-        'partner_type': 'Partner Type',
-        'shared_with': 'Shared Partner',
-        'address': 'Address',
-        'phone_number': 'Phone Number',
-        'email_address': 'Email Address',
-        'risk_rating': 'HACT Risk Rating',
-        'date_last_assessment_against_core_values': 'Date Last Assessed Against Core Values',
-        'actual_cash_transfer_for_cp': 'Actual Cash Transfer for CP (USD)',
-        'actual_cash_transfer_for_current_year': 'Actual Cash Transfer for Current Year (USD)',
-        'marked_for_deletion': 'Marked for Deletion',
-        'blocked': 'Blocked',
-        'type_of_assessment': 'Assessment Type',
-        'date_assessed': 'Date Assessed',
-        'assessments': 'Assessment Type (Date Assessed)',
-        'staff_members': 'Staff Members',
+        'vendor_number': _('Vendor Number'),
+        'organization_full_name': _('Organizations Full Name'),
+        'short_name': _('Short Name'),
+        'alternate_name': _('Alternate Name'),
+        'partner_type': _('Partner Type'),
+        'shared_with': _('Shared Partner'),
+        'address': _('Address'),
+        'phone_number': _('Phone Number'),
+        'email_address': _('Email Address'),
+        'risk_rating': _('HACT Risk Rating'),
+        'date_last_assessment_against_core_values': _('Date Last Assessed Against Core Values'),
+        'actual_cash_transfer_for_cp': _('Actual Cash Transfer for CP (USD)'),
+        'actual_cash_transfer_for_current_year': _('Actual Cash Transfer for Current Year (USD)'),
+        'marked_for_deletion': _('Marked for Deletion'),
+        'blocked': _('Blocked'),
+        'type_of_assessment': _('Assessment Type'),
+        'date_assessed': _('Date Assessed'),
+        'assessments': _('Assessment Type (Date Assessed)'),
+        'staff_members': _('Staff Members'),
         'url': 'URL',
-        'planned_visits': "Planned Programmatic Visits",
+        'planned_visits': _("Planned Programmatic Visits"),
     }
 
 
@@ -84,39 +86,39 @@ class PartnerOrganizationHactCsvRenderer(FriendlyCSVRenderer):
     ]
 
     labels = {
-        'name': 'Implementing Partner',
-        'vendor_number': 'Vendor Number',
-        'partner_type': 'Partner Type',
-        'shared_with': 'Shared IP',
-        'type_of_assessment': 'Assessment Type',
-        'net_ct_cy': 'Cash Transfer 1 OCT - 30 SEP',
-        'reported_cy': 'Liquidations 1 OCT - 30 SEP',
-        'total_ct_ytd': 'Cash Transfers Jan - Dec',
-        'rating': 'Risk Rating',
-        'flags.expiring_assessment_flag': 'Expiring Threshold',
-        'flags.approaching_threshold_flag': 'Approach Threshold',
-        'hact_values.programmatic_visits.planned.q1': 'Programmatic Visits Planned Q1',
-        'hact_values.programmatic_visits.planned.q2': 'Q2',
-        'hact_values.programmatic_visits.planned.q3': 'Q3',
-        'hact_values.programmatic_visits.planned.q4': 'Q4',
-        'hact_min_requirements.programmatic_visits': 'Programmatic Visits M.R',
-        'hact_values.programmatic_visits.completed.q1': 'Programmatic Visits Completed Q1',
-        'hact_values.programmatic_visits.completed.q2': 'Q2',
-        'hact_values.programmatic_visits.completed.q3': 'Q3',
-        'hact_values.programmatic_visits.completed.q4': 'Q4',
-        'planned_engagement.spot_check_planned_q1': 'Spot Checks Planned Q1',
-        'planned_engagement.spot_check_planned_q2': 'Q2',
-        'planned_engagement.spot_check_planned_q3': 'Q3',
-        'planned_engagement.spot_check_planned_q4': 'Q4',
-        'hact_min_requirements.spot_checks': 'Spot Checks M.R',
-        'planned_engagement.spot_check_follow_up': 'Follow Up',
-        'hact_values.spot_checks.completed.q1': 'Spot Checks Completed Q1',
-        'hact_values.spot_checks.completed.q2': 'Q2',
-        'hact_values.spot_checks.completed.q3': 'Q3',
-        'hact_values.spot_checks.completed.q4': 'Q4',
-        'hact_min_requirements.audits': 'Audits M.R',
-        'hact_values.audits.completed': 'Audit Completed',
-        'hact_values.outstanding_findings': 'Audits Outstanding Findings',
+        'name': _('Implementing Partner'),
+        'vendor_number': _('Vendor Number'),
+        'partner_type': _('Partner Type'),
+        'shared_with': _('Shared IP'),
+        'type_of_assessment': _('Assessment Type'),
+        'net_ct_cy': _('Cash Transfer 1 OCT - 30 SEP'),
+        'reported_cy': _('Liquidations 1 OCT - 30 SEP'),
+        'total_ct_ytd': _('Cash Transfers Jan - Dec'),
+        'rating': _('Risk Rating'),
+        'flags.expiring_assessment_flag': _('Expiring Threshold'),
+        'flags.approaching_threshold_flag': _('Approach Threshold'),
+        'hact_values.programmatic_visits.planned.q1': _('Programmatic Visits Planned Q1'),
+        'hact_values.programmatic_visits.planned.q2': _('Q2'),
+        'hact_values.programmatic_visits.planned.q3': _('Q3'),
+        'hact_values.programmatic_visits.planned.q4': _('Q4'),
+        'hact_min_requirements.programmatic_visits': _('Programmatic Visits M.R'),
+        'hact_values.programmatic_visits.completed.q1': _('Programmatic Visits Completed Q1'),
+        'hact_values.programmatic_visits.completed.q2': _('Q2'),
+        'hact_values.programmatic_visits.completed.q3': _('Q3'),
+        'hact_values.programmatic_visits.completed.q4': _('Q4'),
+        'planned_engagement.spot_check_planned_q1': _('Spot Checks Planned Q1'),
+        'planned_engagement.spot_check_planned_q2': _('Q2'),
+        'planned_engagement.spot_check_planned_q3': _('Q3'),
+        'planned_engagement.spot_check_planned_q4': _('Q4'),
+        'hact_min_requirements.spot_checks': _('Spot Checks M.R'),
+        'planned_engagement.spot_check_follow_up': _('Follow Up'),
+        'hact_values.spot_checks.completed.q1': _('Spot Checks Completed Q1'),
+        'hact_values.spot_checks.completed.q2': _('Q2'),
+        'hact_values.spot_checks.completed.q3': _('Q3'),
+        'hact_values.spot_checks.completed.q4': _('Q4'),
+        'hact_min_requirements.audits': _('Audits M.R'),
+        'hact_values.audits.completed': _('Audit Completed'),
+        'hact_values.outstanding_findings': _('Audits Outstanding Findings'),
     }
 
 
@@ -136,17 +138,17 @@ class PartnerOrganizationDashboardCsvRenderer(FriendlyCSVRenderer):
     ]
 
     labels = {
-        'name': 'Implementing Partner',
-        'sections': 'Sections',
-        'locations': 'Locations',
-        'action_points': 'Action Points #',
-        'total_ct_cp': '$ Cash in the Current CP Cycle',
-        'total_ct_ytd': '$ Cash in the Current Year',
-        'days_last_pv': 'Days Since Last PV',
-        'alert_no_recent_pv': 'Alert: No Recent PV',
-        'alert_no_pv': 'Alert: No PV',
-        'outstanding_dct_amount_6_to_9_months_usd': 'Outstanding DCT Amount between 6 and 9 months',
-        'outstanding_dct_amount_more_than_9_months_usd': 'Outstanding DCT Amount more than 9 months',
+        'name': _('Implementing Partner'),
+        'sections': _('Sections'),
+        'locations': _('Locations'),
+        'action_points': _('Action Points #'),
+        'total_ct_cp': _('$ Cash in the Current CP Cycle'),
+        'total_ct_ytd': _('$ Cash in the Current Year'),
+        'days_last_pv': _('Days Since Last PV'),
+        'alert_no_recent_pv': _('Alert: No Recent PV'),
+        'alert_no_pv': _('Alert: No PV'),
+        'outstanding_dct_amount_6_to_9_months_usd': _('Outstanding DCT Amount between 6 and 9 months'),
+        'outstanding_dct_amount_more_than_9_months_usd': _('Outstanding DCT Amount more than 9 months'),
     }
 
 
@@ -173,23 +175,23 @@ class PartnerOrganizationSimpleHactCsvRenderer(FriendlyCSVRenderer):
     ]
 
     labels = {
-        'name': 'Implementing Partner',
-        'vendor_number': 'Vendor Number',
-        'partner_type': 'Partner Type',
-        'shared_with': 'Shared IP',
-        'total_ct_ytd': 'Cash Transfers Jan - Dec',
-        'type_of_assessment': 'Assessment Type',
-        'rating': 'Risk Rating',
-        'flags.expiring_assessment_flag': 'Expiring Threshold',
-        'flags.approaching_threshold_flag': 'Approach Threshold',
-        'hact_values.programmatic_visits.planned.total': 'Programmatic Visits Planned',
-        'hact_min_requirements.programmatic_visits': 'Programmatic Visits M.R',
-        'hact_values.programmatic_visits.completed.total': 'Programmatic Visits Completed',
-        'planned_engagement.spot_check_required': 'Spot Check Required',
-        'hact_values.spot_checks.completed.total': 'Spot Checks Completed',
-        'hact_min_requirements.audits': 'Audits M.R',
-        'hact_values.audits.completed': 'Audit Completed',
-        'hact_values.outstanding_findings': 'Audits Outstanding Findings',
+        'name': _('Implementing Partner'),
+        'vendor_number': _('Vendor Number'),
+        'partner_type': _('Partner Type'),
+        'shared_with': _('Shared IP'),
+        'total_ct_ytd': _('Cash Transfers Jan - Dec'),
+        'type_of_assessment': _('Assessment Type'),
+        'rating': _('Risk Rating'),
+        'flags.expiring_assessment_flag': _('Expiring Threshold'),
+        'flags.approaching_threshold_flag': _('Approach Threshold'),
+        'hact_values.programmatic_visits.planned.total': _('Programmatic Visits Planned'),
+        'hact_min_requirements.programmatic_visits': _('Programmatic Visits M.R'),
+        'hact_values.programmatic_visits.completed.total': _('Programmatic Visits Completed'),
+        'planned_engagement.spot_check_required': _('Spot Check Required'),
+        'hact_values.spot_checks.completed.total': _('Spot Checks Completed'),
+        'hact_min_requirements.audits': _('Audits M.R'),
+        'hact_values.audits.completed': _('Audit Completed'),
+        'hact_values.outstanding_findings': _('Audits Outstanding Findings'),
     }
 
 
@@ -214,22 +216,22 @@ class AgreementCSVRenderer(r.CSVRenderer):
     ]
 
     labels = {
-        "agreement_number": 'Reference Number',
-        "status": 'Status',
-        "partner_name": 'Partner Name',
-        "partner_number": "Vendor Number",
-        "agreement_type": 'Agreement Type',
-        "start": 'Start Date',
-        "end": 'End Date',
-        "partner_manager_name": 'Signed By Partner',
-        "signed_by_partner_date": 'Signed By Partner Date',
-        "signed_by_name": 'Signed By UNICEF',
-        "signed_by_unicef_date": 'Signed By UNICEF Date',
-        "staff_members": 'Partner Authorized Officer',
-        "amendments": 'Amendments',
+        "agreement_number": _('Reference Number'),
+        "status": _('Status'),
+        "partner_name": _('Partner Name'),
+        "partner_number": _("Vendor Number"),
+        "agreement_type": _('Agreement Type'),
+        "start": _('Start Date'),
+        "end": _('End Date'),
+        "partner_manager_name": _('Signed By Partner'),
+        "signed_by_partner_date": _('Signed By Partner Date'),
+        "signed_by_name": _('Signed By UNICEF'),
+        "signed_by_unicef_date": _('Signed By UNICEF Date'),
+        "staff_members": _('Partner Authorized Officer'),
+        "amendments": _('Amendments'),
         "url": "URL",
-        "special_conditions_pca": "Special Conditions PCA",
-        "terms_acknowledged_by": "Terms Acknowledged By",
+        "special_conditions_pca": _("Special Conditions PCA"),
+        "terms_acknowledged_by": _("Terms Acknowledged By"),
     }
 
 
@@ -248,58 +250,58 @@ class InterventionCSVRenderer(r.CSVRenderer):
     ]
 
     labels = {
-        "partner_name": "Partner",
-        "vendor_number": "Vendor no.",
-        "status": "Status",
-        "partner_type": "Partner Type",
-        "cso_type": "CSO Type",
-        "agreement_number": "Agreement",
-        "country_programmes": "Country Programme",
-        "document_type": "Document Type",
-        "number": "Reference Number",
-        "title": "Document Title",
-        "start": "Start Date",
-        "end": "End Date",
-        "offices": "UNICEF Office",
-        "sectors": "Sections",
-        "locations": "Locations",
-        "contingency_pd": "Contingency PD?",
-        "intervention_clusters": "Cluster",
-        "unicef_focal_points": "UNICEF Focal Points",
-        "partner_focal_points": "CSO Authorized Officials",
-        "budget_currency": "Budget Currency",
-        "cso_contribution": "Total CSO Budget (USD)",
-        "unicef_budget": "UNICEF Cash (USD)",
-        "unicef_supply": "UNICEF Supply (USD)",
-        "total_planned_budget": "Total PD/SPD Budget (USD)",
-        "fr_numbers": "FR Number(s)",
-        "fr_currency": "FR Currency",
-        "fr_posting_date": "FR Posting Date",
-        "fr_amount": "FR Amount",
-        "fr_actual_amount": "FR Actual CT",
-        "fr_outstanding_amt": "Outstanding DCT",
-        "planned_visits": "Planned Programmatic Visits",
-        "spot_checks": "Planned Spot Checks",
-        "audit": "Planned Audits",
-        "submission_date": "Document Submission Date by CSO",
-        "submission_date_prc": "Submission Date to PRC",
-        "review_date_prc": "Review Date by PRC",
-        "partner_authorized_officer_signatory": "Signed by Partner",
-        "signed_by_partner_date": "Signed by Partner Date",
-        "unicef_signatory": "Signed by UNICEF",
-        "signed_by_unicef_date": "Signed by UNICEF Date",
-        "days_from_submission_to_signed": "Days from Submission to Signed",
-        "days_from_review_to_signed": "Days from Review to Signed",
-        "amendment_sum": "Total no. of amendments",
-        "last_amendment_date": "Last amendment date",
-        "attachment_type": "Attachment Type",
-        "total_attachments": "# of attachments",
-        "cp_outputs": "CP Outputs",
+        "partner_name": _("Partner"),
+        "vendor_number": _("Vendor no."),
+        "status": _("Status"),
+        "partner_type": _("Partner Type"),
+        "cso_type": _("CSO Type"),
+        "agreement_number": _("Agreement"),
+        "country_programmes": _("Country Programme"),
+        "document_type": _("Document Type"),
+        "number": _("Reference Number"),
+        "title": _("Document Title"),
+        "start": _("Start Date"),
+        "end": _("End Date"),
+        "offices": _("UNICEF Office"),
+        "sectors": _("Sections"),
+        "locations": _("Locations"),
+        "contingency_pd": _("Contingency PD?"),
+        "intervention_clusters": _("Cluster"),
+        "unicef_focal_points": _("UNICEF Focal Points"),
+        "partner_focal_points": _("CSO Authorized Officials"),
+        "budget_currency": _("Budget Currency"),
+        "cso_contribution": _("Total CSO Budget (USD)"),
+        "unicef_budget": _("UNICEF Cash (USD)"),
+        "unicef_supply": _("UNICEF Supply (USD)"),
+        "total_planned_budget": _("Total PD/SPD Budget (USD)"),
+        "fr_numbers": _("FR Number(s)"),
+        "fr_currency": _("FR Currency"),
+        "fr_posting_date": _("FR Posting Date"),
+        "fr_amount": _("FR Amount"),
+        "fr_actual_amount": _("FR Actual CT"),
+        "fr_outstanding_amt": _("Outstanding DCT"),
+        "planned_visits": _("Planned Programmatic Visits"),
+        "spot_checks": _("Planned Spot Checks"),
+        "audit": _("Planned Audits"),
+        "submission_date": _("Document Submission Date by CSO"),
+        "submission_date_prc": _("Submission Date to PRC"),
+        "review_date_prc": _("Review Date by PRC"),
+        "partner_authorized_officer_signatory": _("Signed by Partner"),
+        "signed_by_partner_date": _("Signed by Partner Date"),
+        "unicef_signatory": _("Signed by UNICEF"),
+        "signed_by_unicef_date": _("Signed by UNICEF Date"),
+        "days_from_submission_to_signed": _("Days from Submission to Signed"),
+        "days_from_review_to_signed": _("Days from Review to Signed"),
+        "amendment_sum": _("Total no. of amendments"),
+        "last_amendment_date": _("Last amendment date"),
+        "attachment_type": _("Attachment Type"),
+        "total_attachments": _("# of attachments"),
+        "cp_outputs": _("CP Outputs"),
         "url": "URL",
-        "cfei_number": "UNPP Number",
-        "has_data_processing_agreement": "Data Processing Agreement",
-        "has_activities_involving_children": "Activities involving children and young people",
-        "has_special_conditions_for_construction": "Special Conditions for Construction Works by Implementing Partners",
+        "cfei_number": _("UNPP Number"),
+        "has_data_processing_agreement": _("Data Processing Agreement"),
+        "has_activities_involving_children": _("Activities involving children and young people"),
+        "has_special_conditions_for_construction": _("Special Conditions for Construction Works by Implementing Partners"),
     }
 
 
@@ -331,29 +333,29 @@ class PartnershipDashCSVRenderer(r.CSVRenderer):
     ]
 
     labels = {
-        "partner_name": "IP Name",
-        "partner_vendor_number": "Vendor Number",
-        "number": "PD/SPD Ref #",
-        "sections": "Section",
-        "offices_names": "Field Office",
-        "status": "Status",
-        "start": "Start Date",
-        "end": "End Date",
-        "budget_currency": "PD Currency",
-        "cso_contribution": "CSO Contribution (PD Currency)",
-        "unicef_supplies": "Total UNICEF Supplies (PD Currency)",
-        "unicef_cash": "Total UNICEF Cash (PD Currency)",
-        "fr_currency": "FR Currency",
-        "frs_total_frs_amt": "FR Grand Total",
-        "disbursement": "Actual Disbursements",
-        'multi_curr_flag': "Multi-currency Transaction",
-        "outstanding_dct": "Outstanding DCT",
-        "frs_total_frs_amt_usd": "FR Grand Total (USD)",
-        "disbursement_usd": "Actual Disbursement (USD)",
-        "outstanding_dct_usd": "Outstanding DCT (USD)",
-        "disbursement_percent": "Disbursement To Date (%)",
-        "days_last_pv": "Days Since Last PV",
-        "link": "Link"
+        "partner_name": _("IP Name"),
+        "partner_vendor_number": _("Vendor Number"),
+        "number": _("PD/SPD Ref #"),
+        "sections": _("Section"),
+        "offices_names": _("Field Office"),
+        "status": _("Status"),
+        "start": _("Start Date"),
+        "end": _("End Date"),
+        "budget_currency": _("PD Currency"),
+        "cso_contribution": _("CSO Contribution (PD Currency)"),
+        "unicef_supplies": _("Total UNICEF Supplies (PD Currency)"),
+        "unicef_cash": _("Total UNICEF Cash (PD Currency)"),
+        "fr_currency": _("FR Currency"),
+        "frs_total_frs_amt": _("FR Grand Total"),
+        "disbursement": _("Actual Disbursements"),
+        'multi_curr_flag': _("Multi-currency Transaction"),
+        "outstanding_dct": _("Outstanding DCT"),
+        "frs_total_frs_amt_usd": _("FR Grand Total (USD)"),
+        "disbursement_usd": _("Actual Disbursement (USD)"),
+        "outstanding_dct_usd": _("Outstanding DCT (USD)"),
+        "disbursement_percent": _("Disbursement To Date (%)"),
+        "days_last_pv": _("Days Since Last PV"),
+        "link": _("Link")
     }
 
 
@@ -373,18 +375,18 @@ class InterventionLocationCSVRenderer(r.CSVRenderer):
         'hyperlink',
     ]
     labels = {
-        'cp_output': 'CP output',
-        'end': 'End Date',
-        'focal_point': 'Name of UNICEF Focal Point',
-        'hyperlink': 'Hyperlink',
-        'location': 'Location',
-        'partner': 'Partner',
-        "partner_vendor_number": "Vendor Number",
-        'partnership': 'Agreement',
-        'pd_ref_number': 'PD Ref Number',
-        'section': 'Section',
-        'start': 'Start Date',
-        'status': 'Status'
+        'cp_output': _('CP output'),
+        'end': _('End Date'),
+        'focal_point': _('Name of UNICEF Focal Point'),
+        'hyperlink': _('Hyperlink'),
+        'location': _('Location'),
+        'partner': _('Partner'),
+        "partner_vendor_number": _("Vendor Number"),
+        'partnership': _('Agreement'),
+        'pd_ref_number': _('PD Ref Number'),
+        'section': _('Section'),
+        'start': _('Start Date'),
+        'status': _('Status')
     }
 
 
@@ -495,20 +497,20 @@ class InterventionXLSRenderer:
         self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, 1, [self.font_bold])
 
         worksheet.append([
-            'Partner',
+            _('Partner'),
             self.intervention.agreement.partner.name,
-            'Start date', self.intervention.start.strftime('%d-%b-%y'),
-            f"Currency {self.intervention.planned_budget.currency}"
+            _('Start date'), self.intervention.start.strftime('%d-%b-%y'),
+            _('Currency %(currency)s') % {"currency": self.intervention.planned_budget.currency}
         ])
         worksheet.append([
             '',
-            'Vendor #: ' + self.intervention.agreement.partner.vendor_number,
-            'End date', self.intervention.end.strftime('%d-%b-%y')
+            _('Vendor #: ') + self.intervention.agreement.partner.vendor_number,
+            _('End date'), self.intervention.end.strftime('%d-%b-%y')
         ])
         worksheet.append([
-            'PD Reference',
+            _('PD Reference'),
             self.intervention.number,
-            'Duration',
+            _('Duration'),
             self.td_format(self.intervention.end - self.intervention.start)
         ])
 
@@ -536,14 +538,14 @@ class InterventionXLSRenderer:
         partner_prog_effectivness_p = self.intervention.management_budgets.partner_total / partner_contribution * 100 \
             if partner_contribution else 0
 
-        worksheet.append(['Total PD Budget', currency_format(budget.total_local), '%'])
+        worksheet.append([_('Total PD Budget'), currency_format(budget.total_local), '%'])
         self.apply_styles_to_cells(
             worksheet, worksheet.max_row, 1, worksheet.max_row, 3, [self.fill_blue, self.font_white]
         )
         self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, 2, [self.font_white_bold])
         self.apply_styles_to_cells(worksheet, worksheet.max_row, 3, worksheet.max_row, 3, [self.font_white_italic])
         worksheet.append([
-            'UNICEF Contribution',
+            _('UNICEF Contribution'),
             currency_format(unicef_contribution),
             '{:.2f}'.format(unicef_contribution_p)
         ])
@@ -551,29 +553,29 @@ class InterventionXLSRenderer:
             worksheet, worksheet.max_row, 1, worksheet.max_row, 3, [self.font_bold, self.fill_blue_pale]
         )
         worksheet.append([
-            'Total Cash',
+            _('Total Cash'),
             currency_format(budget.total_unicef_cash_local_wo_hq),
             '{:.2f}'.format(total_cash_p)
         ])
         self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, 3, [self.fill_yellow_light])
         worksheet.append([
-            'Prog effectiveness',
+            _('Prog effectiveness'),
             currency_format(self.intervention.management_budgets.unicef_total),
             '{:.2f}'.format(prog_effectivness_p)
         ])
         worksheet.append([
-            'HQ cost',
+            _('Capacity Strengthening Costs'),
             currency_format(budget.total_hq_cash_local),
             '{:.2f}'.format(self.intervention.hq_support_cost)
         ])
         worksheet.append(
-            ['Supplies in-kind', currency_format(budget.in_kind_amount_local), '{:.2f}'.format(supplies_p)]
+            [_('Supplies in-kind'), currency_format(budget.in_kind_amount_local), '{:.2f}'.format(supplies_p)]
         )
         self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, 3, [self.fill_yellow_light])
         self.apply_styles_to_cells(worksheet, worksheet.max_row - 4, 3, worksheet.max_row, 3, [self.font_italic])
 
         worksheet.append([
-            'Partner Contribution',
+            _('Partner Contribution'),
             currency_format(partner_contribution),
             '{:.2f}'.format(budget.partner_contribution_percent)
         ])
@@ -581,18 +583,18 @@ class InterventionXLSRenderer:
         self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, 2, [self.font_bold])
         self.apply_styles_to_cells(worksheet, worksheet.max_row, 3, worksheet.max_row, 3, [self.font_italic])
         worksheet.append([
-            'Total Cash',
+            _('Total Cash'),
             currency_format(budget.partner_contribution_local),
             '{:.2f}'.format(partner_total_cash)
         ])
         self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, 3, [self.fill_yellow_light])
         worksheet.append([
-            'Prog effectiveness',
+            _('Prog effectiveness'),
             currency_format(self.intervention.management_budgets.partner_total),
             '{:.2f}'.format(partner_prog_effectivness_p)
         ])
         worksheet.append([
-            'Supplies in-kind',
+            _('Supplies in-kind'),
             currency_format(budget.partner_supply_local),
             '{:.2f}'.format(partner_supplies_p)
         ])
@@ -622,11 +624,11 @@ class InterventionXLSRenderer:
     def render_workplan_budget(self, worksheet):
         worksheet.append([
             '',
-            'PD Output/ PD Activity',
-            f'Total ({self.intervention.planned_budget.currency})\n(CSO + UNICEF)',
-            'CSO\ncontribution',
-            'UNICEF\ncontribution',
-            'PD Quarters'
+            _('PD Output/ PD Activity'),
+            _('Total (%s)') % self.intervention.planned_budget.currency + '\n' + '(CSO + UNICEF)',
+            _('CSO') + '\n' + _('contribution'),
+            _('UNICEF') + '\n' + _('contribution'),
+            _('PD Quarters')
         ])
         quarters = get_quarters_range(self.intervention.start, self.intervention.end)
         total_columns = 5 + len(quarters)
@@ -642,7 +644,7 @@ class InterventionXLSRenderer:
             [self.border_blue_top_left_right]
         )
         worksheet.append([
-            'Result Level', '', '', '', ''
+            _('Result Level'), '', '', '', ''
         ] + [f'Q{q.quarter}' for q in quarters])
         self.apply_styles_to_cells(
             worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns,
@@ -655,7 +657,7 @@ class InterventionXLSRenderer:
 
         for result_link in self.intervention.result_links.all():
             worksheet.append([
-                "CP Output " + result_link.code + ":",
+                _("CP Output ") + result_link.code + ":",
                 result_link.cp_output.name if result_link.cp_output else ""
             ])
             self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns,
@@ -667,7 +669,7 @@ class InterventionXLSRenderer:
             )
             for pd_output in result_link.ll_results.all():
                 worksheet.append([
-                    "PD Output\n" + pd_output.code + ":",
+                    _("PD Output") + "\n" + pd_output.code + ":",
                     pd_output.name,
                     currency_format(pd_output.total()),
                     currency_format(pd_output.total_cso()),
@@ -727,7 +729,7 @@ class InterventionXLSRenderer:
                         )
 
         worksheet.append([
-            'EEPM', 'Effective and efficient programme management',
+            _('EEPM'), _('Effective and efficient programme management'),
             currency_format(self.intervention.management_budgets.total),
             currency_format(self.intervention.management_budgets.partner_total),
             currency_format(self.intervention.management_budgets.unicef_total),
@@ -751,7 +753,7 @@ class InterventionXLSRenderer:
         )
 
         worksheet.append([
-            'EEPM.1', 'In-country management & support',
+            _('EEPM.1'), _('In-country management & support'),
             currency_format(self.intervention.management_budgets.act1_unicef +
                             self.intervention.management_budgets.act1_partner),
             currency_format(self.intervention.management_budgets.act1_partner),
@@ -764,7 +766,7 @@ class InterventionXLSRenderer:
             worksheet, worksheet.max_row, 1, worksheet.max_row, 1, [self.border_black_top_left_right]
         )
         worksheet.append([
-            'EEPM.2', 'Operational costs',
+            _('EEPM.2'), _('Operational costs'),
             currency_format(self.intervention.management_budgets.act2_unicef +
                             self.intervention.management_budgets.act2_partner),
             currency_format(self.intervention.management_budgets.act2_partner),
@@ -777,7 +779,7 @@ class InterventionXLSRenderer:
             worksheet, worksheet.max_row, 1, worksheet.max_row, 1, [self.border_black_top_left_right]
         )
         worksheet.append([
-            'EEPM.3', 'Planning, monitoring, evaluation, and communication',
+            _('EEPM.3'), _('Planning, monitoring, evaluation, and communication'),
             currency_format(self.intervention.management_budgets.act3_unicef +
                             self.intervention.management_budgets.act3_partner),
             currency_format(self.intervention.management_budgets.act3_partner),
@@ -787,7 +789,7 @@ class InterventionXLSRenderer:
             worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns, [self.border_black_all]
         )
         worksheet.append([
-            'Subtotal for the programme costs', '',
+            _('Subtotal for the programme costs'), '',
             currency_format(self.intervention.planned_budget.partner_contribution_local +
                             self.intervention.planned_budget.total_unicef_cash_local_wo_hq),
             currency_format(self.intervention.planned_budget.partner_contribution_local),
@@ -808,9 +810,8 @@ class InterventionXLSRenderer:
             start_row=worksheet.max_row, start_column=6, end_row=worksheet.max_row, end_column=total_columns
         )
         worksheet.append([
-            'HQ Support/Capacity Building  ({0}% of UNICEF the cash component)'.format(
-                self.intervention.hq_support_cost
-            ),
+            _('Capacity Strengthening Costs ({%(cost)d}%% of UNICEF the cash component)')
+            % {'cost': self.intervention.hq_support_cost},
             '', '', '',
             currency_format(self.intervention.planned_budget.total_hq_cash_local),
         ])
@@ -829,7 +830,7 @@ class InterventionXLSRenderer:
             start_row=worksheet.max_row, start_column=6, end_row=worksheet.max_row, end_column=total_columns
         )
         worksheet.append([
-            'Total PD budget cash', '',
+            _('Total PD budget cash'), '',
             currency_format(self.intervention.planned_budget.total_cash_local()),
             currency_format(self.intervention.planned_budget.partner_contribution_local),
             currency_format(self.intervention.planned_budget.unicef_cash_local),
@@ -855,16 +856,16 @@ class InterventionXLSRenderer:
     def render_detailed_workplan_budget(self, worksheet):
         quarters = get_quarters_range(self.intervention.start, self.intervention.end)
         worksheet.append([
-            'No.',
-            'PD Output/ PD Activity / Item Description',
-            'Unit Type',
-            'Number of Units',
-            'Price/Unit',
-            'CSO\ncontribution',
-            'UNICEF\ncontribution',
-            'Total',
-            'PD Quarters',
-        ] + [''] * (len(quarters) - 1) + ['Other Notes'])
+            _('No.'),
+            _('PD Output/ PD Activity / Item Description'),
+            _('Unit Type'),
+            _('Number of Units'),
+            _('Price/Unit'),
+            _('CSO') + '\n' + _('contribution'),
+            _('UNICEF') + '\n' + _('contribution'),
+            _('Total'),
+            _('PD Quarters'),
+        ] + [''] * (len(quarters) - 1) + [_('Other Notes')])
 
         total_columns = 9 + len(quarters)
         worksheet.merge_cells(
@@ -894,7 +895,7 @@ class InterventionXLSRenderer:
         for result_link in self.intervention.result_links.all():
             worksheet.append([
                 result_link.code,
-                "CP Output " + result_link.code + ": " + result_link.cp_output.name if result_link.cp_output else ""
+                _("CP Output ") + result_link.code + ": " + result_link.cp_output.name if result_link.cp_output else ""
             ])
             self.apply_styles_to_cells(
                 worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns, [self.fill_blue_pale, self.font_bold]
@@ -911,7 +912,7 @@ class InterventionXLSRenderer:
             for pd_output in result_link.ll_results.all():
                 worksheet.append([
                     pd_output.code,
-                    "PD OUTPUT " + pd_output.code + ": " + pd_output.name,
+                    _("PD OUTPUT ") + pd_output.code + ": " + pd_output.name,
                     '',
                     '',
                     '',
@@ -936,7 +937,7 @@ class InterventionXLSRenderer:
                     worksheet.append(
                         [
                             activity.code,
-                            "Activity:" + activity.name,
+                            _("Activity") + ":" + activity.name,
                             '',
                             '',
                             '',
@@ -976,7 +977,7 @@ class InterventionXLSRenderer:
                         )
 
         worksheet.append([
-            'EEPM', 'Effective and efficient programme management',
+            _('EEPM'), _('Effective and efficient programme management'),
             '', '', '',
             currency_format(self.intervention.management_budgets.total),
             currency_format(self.intervention.management_budgets.partner_total),
@@ -990,7 +991,7 @@ class InterventionXLSRenderer:
         )
 
         worksheet.append([
-            'EEPM.1', 'Activity: In-country management & support',
+            _('EEPM.1'), _('Activity: In-country management & support'),
             '', '', '',
             currency_format(self.intervention.management_budgets.act1_partner),
             currency_format(self.intervention.management_budgets.act1_unicef),
@@ -1004,9 +1005,9 @@ class InterventionXLSRenderer:
             start_row=worksheet.max_row, start_column=2, end_row=worksheet.max_row, end_column=5
         )
 
-        for i, item in enumerate(self.intervention.management_budgets.items.filter(kind='in_country')):
+        for idx, item in enumerate(self.intervention.management_budgets.items.filter(kind='in_country'), start=1):
             worksheet.append([
-                'EEPM.1.{0}'.format(i + 1),
+                _('EEPM.1.%d') % idx,
                 item.name,
                 '', '', '',
                 currency_format(item.cso_cash),
@@ -1015,7 +1016,7 @@ class InterventionXLSRenderer:
             ])
 
         worksheet.append([
-            'EEPM.2', 'Activity: Operational costs',
+            _('EEPM.2'), _('Activity: Operational costs'),
             '', '', '',
             currency_format(self.intervention.management_budgets.act2_partner),
             currency_format(self.intervention.management_budgets.act2_unicef),
@@ -1029,9 +1030,9 @@ class InterventionXLSRenderer:
             start_row=worksheet.max_row, start_column=2, end_row=worksheet.max_row, end_column=5
         )
 
-        for i, item in enumerate(self.intervention.management_budgets.items.filter(kind='operational')):
+        for idx, item in enumerate(self.intervention.management_budgets.items.filter(kind='operational'), start=1):
             worksheet.append([
-                'EEPM.2.{0}'.format(i + 1),
+                _('EEPM.2.%d') % idx,
                 item.name,
                 '', '', '',
                 currency_format(item.cso_cash),
@@ -1040,7 +1041,7 @@ class InterventionXLSRenderer:
             ])
 
         worksheet.append([
-            'EEPM.3', 'Activity: Planning, monitoring, evaluation, and communication',
+            _('EEPM.3'), _('Activity: Planning, monitoring, evaluation, and communication'),
             '', '', '',
             currency_format(self.intervention.management_budgets.act3_partner),
             currency_format(self.intervention.management_budgets.act3_unicef),
@@ -1054,9 +1055,9 @@ class InterventionXLSRenderer:
             start_row=worksheet.max_row, start_column=2, end_row=worksheet.max_row, end_column=5
         )
 
-        for i, item in enumerate(self.intervention.management_budgets.items.filter(kind='planning')):
+        for idx, item in enumerate(self.intervention.management_budgets.items.filter(kind='planning'), start=1):
             worksheet.append([
-                'EEPM.3.{0}'.format(i + 1),
+                _('EEPM.3.%d') % idx,
                 item.name,
                 '', '', '',
                 currency_format(item.cso_cash),
@@ -1069,7 +1070,7 @@ class InterventionXLSRenderer:
         )
 
         worksheet.append([
-            'Total Cost for all outputs', '', '', '', '',
+            _('Total Cost for all outputs'), '', '', '', '',
             currency_format(self.intervention.planned_budget.partner_contribution_local +
                             self.intervention.planned_budget.total_unicef_cash_local_wo_hq),
             currency_format(self.intervention.planned_budget.partner_contribution_local),
@@ -1098,8 +1099,8 @@ class InterventionXLSRenderer:
 
     def render_supply_plan(self, worksheet):
         worksheet.append([
-            'Item', 'Number of Units', 'Price/unit', 'Total Price',
-            'Provided By', 'CP Output', 'Other Mentions', 'UNICEF Product Number'
+            _('Item'), _('Number of Units'), _('Price/unit'), _('Total Price'),
+            _('Provided By'), _('CP Output'), _('Other Mentions'), _('UNICEF Product Number')
         ])
         self.apply_styles_to_cells(
             worksheet, worksheet.max_row, 1, worksheet.max_row, 8, [self.fill_blue, self.font_white_bold]
@@ -1126,14 +1127,14 @@ class InterventionXLSRenderer:
         )
 
         worksheet.append(
-            ['Total Value', '', '', currency_format(self.intervention.planned_budget.in_kind_amount_local +
-                                                    self.intervention.planned_budget.partner_supply_local)]
+            [_('Total Value'), '', '', currency_format(self.intervention.planned_budget.in_kind_amount_local +
+                                                       self.intervention.planned_budget.partner_supply_local)]
         )
         worksheet.append(
-            ['UNICEF Contribution', '', '', currency_format(self.intervention.planned_budget.in_kind_amount_local)]
+            [_('UNICEF Contribution'), '', '', currency_format(self.intervention.planned_budget.in_kind_amount_local)]
         )
         worksheet.append(
-            ['Partner Contribution', '', '', currency_format(self.intervention.planned_budget.partner_supply_local)]
+            [_('Partner Contribution'), '', '', currency_format(self.intervention.planned_budget.partner_supply_local)]
         )
 
         self.apply_styles_to_cells(
@@ -1150,7 +1151,7 @@ class InterventionXLSRenderer:
 
     def render_others_section(self, worksheet):
         if self.intervention.ip_program_contribution:
-            worksheet.append(['Partner non-financial contribution:'])
+            worksheet.append([_('Partner non-financial contribution:')])
             self.apply_styles_to_cells(
                 worksheet, worksheet.max_row, 1, worksheet.max_row, 1, [self.fill_blue, self.font_white]
             )
@@ -1164,25 +1165,25 @@ class InterventionXLSRenderer:
             # remove default sheet
             workbook.remove(workbook.active)
 
-        budget_summary_sheet = workbook.create_sheet('Budget Summary')
+        budget_summary_sheet = workbook.create_sheet(_('Budget Summary'))
         budget_summary_sheet.sheet_properties.tabColor = 'F4B183'
-        activity_sheet = workbook.create_sheet('Activity Budget')
+        activity_sheet = workbook.create_sheet(_('Activity Budget'))
         activity_sheet.sheet_properties.tabColor = '92D050'
-        detailed_budget_sheet = workbook.create_sheet('Detailed Budget')
+        detailed_budget_sheet = workbook.create_sheet(_('Detailed Budget'))
         detailed_budget_sheet.sheet_properties.tabColor = 'FFD966'
-        supply_cost_sheet = workbook.create_sheet('Supply Cost')
+        supply_cost_sheet = workbook.create_sheet(_('Supply Cost'))
         supply_cost_sheet.sheet_properties.tabColor = '00B0F0'
 
-        self.sheet_header(budget_summary_sheet, 'Budget Summary')
+        self.sheet_header(budget_summary_sheet, _('Budget Summary'))
         self.budget_summary(budget_summary_sheet)
 
-        self.sheet_header(activity_sheet, 'Workplan Budget')
+        self.sheet_header(activity_sheet, _('Workplan Budget'))
         self.render_workplan_budget(activity_sheet)
 
-        self.sheet_header(detailed_budget_sheet, 'Detailed Workplan Budget')
+        self.sheet_header(detailed_budget_sheet, _('Detailed Workplan Budget'))
         self.render_detailed_workplan_budget(detailed_budget_sheet)
 
-        self.sheet_header(supply_cost_sheet, 'Supply Contribution (Planned)')
+        self.sheet_header(supply_cost_sheet, _('Supply Contribution (Planned)'))
         self.render_supply_plan(supply_cost_sheet)
 
         with NamedTemporaryFile() as tmp:

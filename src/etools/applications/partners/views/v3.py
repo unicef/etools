@@ -10,7 +10,6 @@ from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from unicef_attachments.models import FileType as AttachmentFileType
-from unicef_djangolib.fields import CURRENCIES
 from unicef_locations.models import GatewayType
 
 from etools.applications.attachments.models import AttachmentFlat
@@ -32,6 +31,7 @@ from etools.applications.partners.models import (
 from etools.applications.partners.permissions import UserIsPartnerStaffMemberPermission
 from etools.applications.partners.views.v2 import choices_to_json_ready
 from etools.applications.reports.models import CountryProgramme, Result, ResultType
+from etools.libraries.djangolib.fields import CURRENCIES
 
 
 class PMPBaseViewMixin:

@@ -1,0 +1,267 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-03-24 08:39+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 "
+"&& n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
+
+msgid "TPM Partner selected for staff activity"
+msgstr "اختيار شريك TPM لنشاط الموظفين"
+
+msgid "Staff members do not belong to the selected partner"
+msgstr "لا ينتمي الموظفون إلى الشريك المختار"
+
+#, python-format
+msgid ""
+"You've selected a PD/SPD and unselected some of it's corresponding partners, "
+"please either remove the PD or add the partners back before saving: %s"
+msgstr ""
+"لقد حددت PD / SPD وألغيت تحديد بعض الشركاء المطابقين لها ، يرجى إما إزالة PD "
+"أو إضافة الشركاء مرة أخرى قبل الحفظ:%s"
+
+#, python-format
+msgid ""
+"You've selected a PD/SPD and unselected some of it's corresponding outputs, "
+"please either remove the PD or add the outputs back before saving: %s"
+msgstr ""
+"لقد حددت PD / SPD وألغيت تحديد بعض النواتج المقابلة لها ، يرجى إما إزالة PD "
+"أو إضافة النواتج مرة أخرى قبل الحفظ:%s"
+
+msgid "Partner is not defined for TPM activity"
+msgstr "لم يتم تعريف الشريك لنشاط TPM"
+
+msgid "At least one Partner, CP Output or PD/SPD should be added"
+msgstr "يجب إضافة شريك واحد على الأقل أو إخراج CP أو PD / SPD"
+
+msgid "Rejection reason should be provided."
+msgstr "يجب تقديم سبب الرفض."
+
+msgid "Cancellation reason should be provided."
+msgstr "يجب تقديم سبب الإلغاء."
+
+msgid "Report reject reason should be provided."
+msgstr "يجب تقديم سبب رفض التقرير."
+
+msgid "At least one question should be enabled."
+msgstr "يجب تمكين سؤال واحد على الأقل."
+
+msgid "At least one checklist should be completed."
+msgstr "يجب إكمال قائمة تحقق واحدة على الأقل."
+
+msgid "At least one summary finding should be completed."
+msgstr "يجب إكمال نتيجة موجزة واحدة على الأقل."
+
+#, python-format
+msgid "Required fields not completed in %(status)s: %(fields)s"
+msgstr "الحقول المطلوبة غير مكتملة في %(status)s: %(fields)s "
+
+#, python-format
+msgid "Cannot change fields while in %(status)s: %(field)s"
+msgstr "لا يمكن تغيير الحقول أثناء وجودك في %(status)s: %(field)s"
+
+msgid "Prioritization Criteria"
+msgstr "معايير ترتيب الأولويات"
+
+msgid "Methodology Notes & Standards"
+msgstr "ملاحظات المنهجية"
+
+msgid "Target Visits For The Year"
+msgstr "الزيارات المستهدفة للعام"
+
+msgid "Modalities"
+msgstr "الطرائق"
+
+msgid "Partner Engagement"
+msgstr "مشاركة الشريك"
+
+msgid "Other Aspects of the Field Monitoring Plan"
+msgstr "جوانب أخرى لخطة الرصد الميداني"
+
+msgid "Year Plan"
+msgstr "الخطة السنوية"
+
+msgid "Year Plans"
+msgstr "الخطط السنوية"
+
+msgid "Partner"
+msgstr "شريك"
+
+msgid "CP Output"
+msgstr "إخراج CP"
+
+msgid "Intervention"
+msgstr "التدخل"
+
+msgid "Question"
+msgstr "سؤال"
+
+msgid "Is Active"
+msgstr "نشط"
+
+msgid "Specific Details To Probe"
+msgstr "تفاصيل محددة للتحقيق"
+
+msgid "Question Template"
+msgstr "نموذج السؤال"
+
+msgid "Question Templates"
+msgstr "قوالب الأسئلة"
+
+msgid "Staff"
+msgstr "الطاقم"
+
+msgid "TPM"
+msgstr ""
+
+msgid "Draft"
+msgstr ""
+
+msgid "Checklist"
+msgstr "قائمة التحقق"
+
+msgid "Review"
+msgstr "مراجعة"
+
+msgid "Assigned"
+msgstr "معين"
+
+msgid "Data Collection"
+msgstr "جمع البيانات"
+
+msgid "Report Finalization"
+msgstr "إنهاء التقرير"
+
+msgid "Submitted"
+msgstr "مقدم"
+
+msgid "Completed"
+msgstr "اكتمل"
+
+msgid "Cancelled"
+msgstr "ملغاة"
+
+msgid "Reference Number"
+msgstr "الرقم المرجعي"
+
+msgid "TPM Partner"
+msgstr "شريك TPM"
+
+msgid "Team Members"
+msgstr "أعضاء الفريق"
+
+msgid "Person Responsible"
+msgstr "الشخص المسؤول"
+
+msgid "Field Office"
+msgstr "المكتب الميداني"
+
+msgid "Field Offices"
+msgstr "المكاتب الميدانية"
+
+msgid "Sections"
+msgstr "الأقسام"
+
+msgid "Location"
+msgstr "الموقع"
+
+msgid "Site"
+msgstr "موقع"
+
+msgid "PD/SPD"
+msgstr "PD / SPD"
+
+msgid "Outputs"
+msgstr "النواتج"
+
+msgid "Start Date"
+msgstr "تاريخ البدء"
+
+msgid "End Date"
+msgstr "تاريخ الانتهاء"
+
+msgid "Status"
+msgstr "الحالة"
+
+msgid "Activity Attachments"
+msgstr "مرفقات النشاط"
+
+msgid "Rejection reason"
+msgstr "سبب الرفض"
+
+msgid "Report rejection reason"
+msgstr "الإبلاغ عن سبب الرفض"
+
+msgid "Cancellation reason"
+msgstr "سبب الإلغاء"
+
+msgid "Monitoring Activity"
+msgstr "نشاط المراقبة"
+
+msgid "Monitoring Activities"
+msgstr "أنشطة المراقبة"
+
+msgid "Monitoring Activity Action Point"
+msgstr "مراقبة نشاط نقطة العمل"
+
+msgid "Monitoring Activity Action Points"
+msgstr "مراقبة نقاط عمل النشاط"
+
+msgid "History"
+msgstr "التاريخ"
+
+msgid "Document Type"
+msgstr "نوع الوثيقة"
+
+#, python-format
+msgid "[Inactive] %s"
+msgstr "[غير نشط] %s"
+
+msgid "Reference No."
+msgstr "رقم المرجع."
+
+msgid "Related Partner"
+msgstr "الشريك المرتبط"
+
+msgid "Related PD/SPD"
+msgstr "PD / SPD ذات الصلة"
+
+msgid "Related CP Output"
+msgstr "مخرجات CP ذات الصلة"
+
+msgid "Section of Assignee"
+msgstr "قسم الوكيل"
+
+msgid "Office of Assignee"
+msgstr "مكتب الوكيل"
+
+msgid "Action Point Category"
+msgstr "فئة نقطة العمل"
+
+msgid "Link"
+msgstr "رابط"
+
+msgid "Priority"
+msgstr "الأولوية"
+
+msgid "Annual Field Monitoring Rationale"
+msgstr "مسوغات المراقبة الميدانية السنوية"
+
+msgid "Templates"
+msgstr "القوالب"
+
+msgid "Attachments"
+msgstr "المرفقات"

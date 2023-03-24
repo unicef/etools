@@ -15,7 +15,7 @@ from model_utils.managers import InheritanceManager
 from model_utils.models import TimeStampedModel
 from ordered_model.models import OrderedModel
 from unicef_attachments.models import Attachment
-from unicef_djangolib.fields import CodedGenericRelation, CurrencyField
+from unicef_djangolib.fields import CodedGenericRelation
 
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.audit.purchase_order.models import PurchaseOrder, PurchaseOrderItem
@@ -34,6 +34,7 @@ from etools.applications.core.urlresolvers import build_frontend_url
 from etools.applications.environment.notifications import send_notification_with_template
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.reports.models import Office, Section
+from etools.libraries.djangolib.fields import CurrencyField
 from etools.libraries.djangolib.models import GroupWrapper, InheritedModelMixin
 from etools.libraries.djangolib.utils import get_environment
 from etools.libraries.fsm.views import has_action_permission

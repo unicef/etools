@@ -7,6 +7,7 @@ from unittest.mock import Mock, patch
 from django.db import connection
 from django.test import SimpleTestCase
 from django.urls import reverse
+from django.utils import translation
 
 from rest_framework import status
 from rest_framework.exceptions import ErrorDetail
@@ -794,7 +795,7 @@ class TestPartnerOrganizationAddView(BaseTenantTestCase):
             {"error": "No vendor number provided for Partner Organization"}
         )
 
-    def test_no_insight_reponse(self):
+    def test_no_insight_response(self):
         mock_insight = Mock(return_value=(False, "The vendor number could not be found in INSIGHT"))
         with patch(INSIGHT_PATH, mock_insight):
             response = self.forced_auth_req(
@@ -805,6 +806,19 @@ class TestPartnerOrganizationAddView(BaseTenantTestCase):
             )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data, {"error": "The vendor number could not be found in INSIGHT"})
+
+    @translation.override('fr')
+    def test_no_insight_response_translated(self):
+        mock_insight = Mock(return_value=(False, "Le numéro du vendeur n'a pas pu être trouvé dans INSIGHT"))
+        with patch(INSIGHT_PATH, mock_insight):
+            response = self.forced_auth_req(
+                'post',
+                "{}?vendor=123".format(self.url),
+                data={},
+                view=self.view
+            )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, {"error": "Le numéro du vendeur n'a pas pu être trouvé dans INSIGHT"})
 
     def test_vendor_exists(self):
         PartnerFactory(organization=OrganizationFactory(vendor_number="321"))

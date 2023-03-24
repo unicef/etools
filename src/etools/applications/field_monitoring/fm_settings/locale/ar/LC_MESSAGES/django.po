@@ -1,0 +1,215 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-03-24 08:39+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 "
+"&& n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
+
+msgid "Methods"
+msgstr "أساليب"
+
+msgid "Site ID"
+msgstr "معرف الموقع"
+
+#, python-format
+msgid "Admin %s - Name"
+msgstr "المسؤول %s - الاسم"
+
+#, python-format
+msgid "Admin %s - Type"
+msgstr "المسؤول %s - النوع"
+
+#, python-format
+msgid "Admin %s - Pcode"
+msgstr "المسؤول %s - Pcode"
+
+msgid "Site"
+msgstr "موقع"
+
+msgid "Lat"
+msgstr "لات"
+
+msgid "Long"
+msgstr "طويل"
+
+msgid "Active"
+msgstr "نشيط"
+
+msgid "Related To"
+msgstr "متعلق ب"
+
+msgid "Name"
+msgstr "اسم"
+
+msgid "Issue for Attention"
+msgstr "قضية للانتباه"
+
+msgid "Status"
+msgstr "حالة"
+
+msgid "Attachments"
+msgstr "المرفقات"
+
+msgid "Global Attachments"
+msgstr "المرفقات العالمية"
+
+msgid "Global Config"
+msgstr "التكوين العام"
+
+msgid "Global Configs"
+msgstr "التكوينات العالمية"
+
+msgid "Short Name"
+msgstr "اسم قصير"
+
+msgid "Ask for information source in checklist?"
+msgstr "اسأل عن مصدر المعلومات في قائمة التحقق؟"
+
+msgid "Method"
+msgstr "طريقة"
+
+msgid "Question Category"
+msgstr "فئة السؤال"
+
+msgid "Questions Categories"
+msgstr "فئات الأسئلة"
+
+msgid "Text"
+msgstr "نص"
+
+msgid "Number"
+msgstr "عدد"
+
+msgid "Boolean"
+msgstr "قيمة منطقية"
+
+msgid "Likert Scale"
+msgstr "مقياس ليكرت"
+
+msgid "Partner"
+msgstr "شريك"
+
+msgid "Output"
+msgstr "انتاج |"
+
+msgid "PD/SPD"
+msgstr "PD/SPD"
+
+msgid "Answer Type"
+msgstr "نوع الإجابة"
+
+msgid "Choices Size"
+msgstr "حجم الاختيارات"
+
+msgid "Level"
+msgstr "مستوى"
+
+msgid "Category"
+msgstr "فئة"
+
+msgid "Sections"
+msgstr "الأقسام"
+
+msgid "Question Text"
+msgstr "نص السؤال"
+
+msgid "Count as HACT"
+msgstr "عد على أنها HACT"
+
+msgid "Is Custom"
+msgstr "هو العرف"
+
+msgid "Is Active"
+msgstr "نشط"
+
+msgid "Question"
+msgstr "سؤال"
+
+msgid "Questions"
+msgstr "أسئلة"
+
+msgid "Label"
+msgstr "مُلصَق"
+
+msgid "Value"
+msgstr "قيمة"
+
+msgid "Option"
+msgstr "خيار"
+
+msgid "Parent Location"
+msgstr "موقع الوالد"
+
+msgid "P Code"
+msgstr ""
+
+msgid "Point"
+msgstr "نقطة"
+
+msgid "Location Site"
+msgstr "موقع الموقع"
+
+msgid "Location Sites"
+msgstr "مواقع الموقع"
+
+msgid "CP Output"
+msgstr "خرج CP"
+
+msgid "Location/Site"
+msgstr "الموقع / الموقع"
+
+msgid "Issue Raised By"
+msgstr "قضية أثارها"
+
+msgid "Location"
+msgstr "موقع"
+
+msgid "Issue For Attention/Probing"
+msgstr "قضية للاهتمام / التحقيق"
+
+msgid "Log Issue"
+msgstr "مشكلة في السجل"
+
+msgid "Log Issues"
+msgstr "قضايا السجل"
+
+msgid "Related object not provided"
+msgstr "لم يتم توفير الكائن ذي الصلة"
+
+msgid "Maximum one related object should be provided"
+msgstr "يجب توفير كائن واحد مرتبط كحد أقصى"
+
+msgid "HACT questions can only be related at the Partner Organization Level"
+msgstr "لا يمكن ربط أسئلة HACT إلا على مستوى المؤسسة الشريكة"
+
+msgid "Only one hact question can be active at any time."
+msgstr "يمكن أن يكون سؤال hact واحد فقط نشطًا في أي وقت."
+
+msgid "The system provided questions cannot be edited."
+msgstr "لا يمكن تحرير الأسئلة المقدمة من النظام."
+
+msgid "Inactive"
+msgstr "غير نشط"
+
+msgid "Issue Closed By"
+msgstr "تم إغلاق الإصدار من قبل"
+
+msgid "Issue Related To"
+msgstr "قضية متعلقة ب"
+
+msgid "Site Specific Locations"
+msgstr "مواقع محددة الموقع"

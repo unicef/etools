@@ -5,18 +5,14 @@ defaults = {
     'content': """
     Dear Partner,
 
-    Please note that UNICEF focal point has added an amendment to the Programme Document with your organization.
+    Please note that the UNICEF focal point has initiated an amendment to the Programme Document with your organization.
     The details are as follows:
 
     Programme Document Title: {{title}}
     Reference Number: {{reference_number}}
     Amendment Type: {{amendment_type}}
 
-    Some of these changes, like addition of new indicators or locations, may require that you refresh your reports
-    in the Partner Reporting Portal.
-    To do so, please hit the "Refresh" button on the report you wish to refresh and the changes will take effect.
-    Please note that there hitting refresh will delete data on all of other reports that were not submitted,
-     so please make sure that there all drafts are saved before hitting "Refresh".
+    Depending on the amendment type selected, changes can be made to the strategy, workplan (results structure, budget and supply plan) and PD timing including reporting and PV requirements of the PD.
 
     Please note that this is an automatically generated email and any replies are not monitored.
 
@@ -24,18 +20,14 @@ defaults = {
     'html_content': """
         Dear Partner,
 
-    Please note that UNICEF focal point has added an amendment to the Programme Document with your organization.
+    Please note that the UNICEF focal point has initiated an amendment to the Programme Document with your organization.<br />
     The details are as follows:
 
     Programme Document Title: {{title}}
     Reference Number: {{reference_number}}
     Amendment Type: {{amendment_type}}
 
-    Some of these changes, like addition of new indicators or locations, may require that you refresh your reports
-    in the Partner Reporting Portal.
-    To do so, please hit the "Refresh" button on the report you wish to refresh and the changes will take effect.
-    Please note that there hitting refresh will delete data on all of other reports that were not submitted,
-     so please make sure that there all drafts are saved before hitting "Refresh".
+    Depending on the amendment type selected, changes can be made to the strategy, workplan (results structure, budget and supply plan) and PD timing including reporting and PV requirements of the PD.<br />
 
     Please note that this is an automatically generated email and any replies are not monitored.
 

@@ -4,7 +4,7 @@ from django.db import connection
 from django.db.models import Q
 from django.http import Http404
 from django.utils import timezone
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext as _
 
 from django_filters.rest_framework import DjangoFilterBackend
 from easy_pdf.rendering import render_to_pdf_response

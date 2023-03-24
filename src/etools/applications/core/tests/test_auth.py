@@ -1,7 +1,9 @@
 from unittest.mock import Mock, patch
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.test import SimpleTestCase
+from django.urls import reverse
 
 from etools.applications.core import auth
 from etools.applications.core.tests.cases import BaseTenantTestCase
@@ -160,4 +162,18 @@ class TestUserDetails(BaseTenantTestCase):
         self.assertEqual(
             user_updated.profile.organization,
             Organization.objects.get(name='UNICEF', vendor_number='000')
+        )
+
+
+class TestSocialLogoutView(BaseTenantTestCase):
+
+    def test_logout(self):
+        user = UserFactory()
+        response = self.forced_auth_req(
+            method='get',
+            url=reverse("social-logout"),
+            user=user
+        )
+        self.assertRedirects(
+            response, settings.SOCIAL_LOGOUT_URL, fetch_redirect_response=False
         )

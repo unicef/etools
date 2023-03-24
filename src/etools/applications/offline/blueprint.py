@@ -1,4 +1,4 @@
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext as _
 
 from etools.applications.offline.errors import ValidationError
 from etools.applications.offline.fields import Group, Structure

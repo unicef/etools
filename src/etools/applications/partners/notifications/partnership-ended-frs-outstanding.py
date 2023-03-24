@@ -7,7 +7,7 @@ defaults = {
 
     Please note that the Partnership ref. {{ number }} with {{ partner }} has ended but the disbursement
     amount is less than the FR amount.
-    Please follow-up with the IP or adjust your FR.
+    Please follow-up with the Partner or adjust your FR.
 
     {{ url }}.
 

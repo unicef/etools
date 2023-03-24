@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 from django.db import connection, transaction
 from django.db.models import Count, Prefetch, Q
 from django.http import Http404
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext as _
 
 from django_filters.rest_framework import DjangoFilterBackend
 from easy_pdf.rendering import render_to_pdf_response
