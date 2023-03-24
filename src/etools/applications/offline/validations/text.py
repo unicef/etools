@@ -1,6 +1,6 @@
 import re
 
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext as _
 
 from etools.applications.offline.errors import BadValueError, ValidationError, ValueTypeMismatch
 from etools.applications.offline.validations.base import BaseValidation

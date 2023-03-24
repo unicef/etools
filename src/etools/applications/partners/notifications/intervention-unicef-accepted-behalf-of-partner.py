@@ -5,7 +5,10 @@ defaults = {
     "content": """
     Dear Colleague,
 
-    PD {{reference_number}} has been accepted by UNICEF on behalf of Partner
+    PD {{reference_number}} has been accepted by UNICEF on your behalf.
+
+    Please reach out to the PD focal point for details on the PD.
+
 
     {{pd_link}}
 
@@ -16,7 +19,9 @@ defaults = {
     {% block content %}
     Dear Colleague,<br /><br />
 
-    PD {{reference_number}} has been accepted by UNICEF on behalf of Partner
+    PD {{reference_number}} has been accepted by UNICEF on your behalf.<br />
+
+    Please reach out to the PD focal point for details on the PD.<br />
 
     {{pd_link}}<br />
 

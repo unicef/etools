@@ -4,6 +4,7 @@ from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse
 from django.utils.http import urlsafe_base64_decode
+from django.utils.translation import gettext as _
 from django.views.generic import TemplateView, View
 
 from easy_pdf.views import PDFTemplateView
@@ -42,7 +43,7 @@ class PCAPDFView(LoginRequiredMixin, PDFTemplateView):
         error = None
 
         if terms_acknowledged.lower() != 'true':
-            return {"error": "Terms to be acknowledged"}
+            return {"error": _("Terms to be acknowledged")}
 
         try:
             self.template_name = self.language_templates_mapping[lang]
@@ -52,13 +53,13 @@ class PCAPDFView(LoginRequiredMixin, PDFTemplateView):
         try:
             self.agreement = Agreement.objects.get(id=agr_id)
         except Agreement.DoesNotExist:
-            return {"error": 'Agreement with specified ID does not exist'}
+            return {"error": _('Agreement with specified ID does not exist')}
 
         if not self.agreement.partner.vendor_number:
-            return {"error": "Partner Organization has no vendor number stored, please report to an etools focal point"}
+            return {"error": _("Partner Organization has no vendor number stored, please report to an etools focal point")}
 
         if not self.agreement.authorized_officers.exists():
-            return {"error": 'Partner Organization has no "Authorized Officers selected" selected'}
+            return {"error": _('Partner Organization has no "Authorized Officers selected" selected')}
 
         url = 'partners/?vendor={vendor_code}'
         data = {"vendor_code": self.agreement.partner.vendor_number}
@@ -76,7 +77,7 @@ class PCAPDFView(LoginRequiredMixin, PDFTemplateView):
                 if isinstance(banks_records, dict):
                     banks_records = [banks_records]
             except (KeyError, TypeError):
-                return {"error": 'Response returned by the Server does not have the necessary values to generate PCA'}
+                return {"error": _('Response returned by the Server does not have the necessary values to generate PCA')}
 
             bank_key_values = [
                 ('bank_address', "STREET"),
@@ -114,7 +115,7 @@ class PCAPDFView(LoginRequiredMixin, PDFTemplateView):
         font_path = settings.PACKAGE_ROOT + '/assets/fonts/'
 
         if not self.request.user.groups.filter(name=PARTNERSHIP_MANAGER_GROUP).exists():
-            return {"error": 'Partnership Manager role required for pca export.'}
+            return {"error": _('Partnership Manager role required for pca export.')}
 
         self.agreement.terms_acknowledged_by = self.request.user
         self.agreement.save()

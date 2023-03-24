@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 from django.db.models import Q
+from django.utils.translation import gettext as _
 
 from etools.applications.partners.models import Intervention, InterventionAttachment, PartnerStaffMember
 
@@ -43,18 +44,19 @@ class PartnerStaffMemberForm(forms.ModelForm):
             user = User.objects.filter(email__iexact=email).first()
             if user:
                 if user.is_unicef_user():
-                    raise ValidationError('Unable to associate staff member to UNICEF user')
+                    raise ValidationError(_('Unable to associate staff member to UNICEF user'))
 
                 staff_member = user.get_partner_staff_member()
                 if staff_member:
-                    raise ValidationError("This user already exists under a different partnership: {}".format(email))
+                    raise ValidationError(
+                        _("This user already exists under a different partnership: %s") % email)
 
                 cleaned_data['user'] = user
         else:
             # make sure email addresses are not editable after creation.. user must be removed and re-added
             if email != self.instance.email:
                 raise ValidationError(
-                    "User emails cannot be changed, please remove the user and add another one: {}".format(email))
+                    _("User emails cannot be changed, please remove the user and add another one: %s") % email)
 
             # when adding the active tag to a previously untagged user
             if active and not self.instance.active:
@@ -75,7 +77,7 @@ class PartnerStaffMemberForm(forms.ModelForm):
                         Q(partner_focal_points=self.instance) | Q(partner_authorized_officer_signatory=self.instance),
                     ),
                 ).exists():
-                    raise ValidationError({'active': 'User already synced to PRP and cannot be disabled.'})
+                    raise ValidationError({'active': _('User already synced to PRP and cannot be disabled.')})
 
         return cleaned_data
 

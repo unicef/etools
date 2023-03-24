@@ -5,7 +5,7 @@ import string
 
 from django.contrib.auth import get_user_model
 from django.db import transaction
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext as _
 
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
@@ -28,7 +28,6 @@ from etools.applications.partners.permissions import (
     PRC_SECRETARY,
     SENIOR_MANAGEMENT_GROUP,
 )
-from etools.applications.partners.serializers.exports.vision.export_mixin import InterventionVisionSynchronizerMixin
 from etools.applications.partners.serializers.intervention_snapshot import FullInterventionSnapshotSerializerMixin
 from etools.applications.partners.serializers.interventions_v2 import (
     FRsSerializer,
@@ -57,9 +56,7 @@ class InterventionRiskSerializer(FullInterventionSnapshotSerializerMixin, serial
     def validate_mitigation_measures(self, value):
         if value and len(value) > 2500:
             raise serializers.ValidationError(
-                "This field is limited to {} or less characters.".format(
-                    2500,
-                ),
+                _("This field is limited to %d or less characters.") % 2500
             )
         return value
 
@@ -185,7 +182,6 @@ class InterventionManagementBudgetItemSerializer(serializers.ModelSerializer):
 
 
 class InterventionManagementBudgetSerializer(
-    InterventionVisionSynchronizerMixin,
     FullInterventionSnapshotSerializerMixin,
     serializers.ModelSerializer,
 ):
@@ -260,7 +256,6 @@ class InterventionManagementBudgetSerializer(
 
 
 class InterventionDetailSerializer(
-    InterventionVisionSynchronizerMixin,
     FullInterventionSnapshotSerializerMixin,
     serializers.ModelSerializer,
 ):

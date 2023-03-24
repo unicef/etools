@@ -4,6 +4,7 @@ import operator
 
 from django.db import transaction
 from django.db.models import Q
+from django.utils.translation import gettext as _
 
 from etools_validator.mixins import ValidatorViewMixin
 from rest_framework import status
@@ -260,7 +261,7 @@ class AgreementAmendmentDeleteView(DestroyAPIView):
         except AgreementAmendment.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
         if amendment.signed_amendment or amendment.signed_date:
-            raise ValidationError("Cannot delete a signed amendment")
+            raise ValidationError(_("Cannot delete a signed amendment"))
         else:
             amendment.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
@@ -277,7 +278,7 @@ class AgreementDeleteView(DestroyAPIView):
             return Response(status=status.HTTP_404_NOT_FOUND)
         if agreement.status != Agreement.DRAFT or \
                 agreement.interventions.count():
-            raise ValidationError("Cannot delete an agreement that is not Draft or has PDs/SSFAs associated with it")
+            raise ValidationError(_("Cannot delete an agreement that is not Draft or has PDs/SSFAs associated with it"))
         else:
             agreement.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)

@@ -21,7 +21,7 @@ logger = logging.getLogger('partners.interventions.validation')
 def partnership_manager_only(i, user):
     # Transition cannot happen by a user that's not a Partnership Manager
     if not user.groups.filter(name__in=['Partnership Manager']).count():
-        raise TransitionError(['Only Partnership Managers can execute this transition'])
+        raise TransitionError([_('Only Partnership Managers can execute this transition')])
     return True
 
 
@@ -278,7 +278,7 @@ def sections_valid(i):
         ind_sections.add(ind.section)
     intervention_sections = set(s for s in i.sections.all())
     if not ind_sections.issubset(intervention_sections):
-        draft_status_err = ' without deleting the indicators first' if i.status == i.DRAFT else ''
+        draft_status_err = _(' without deleting the indicators first') if i.status == i.DRAFT else ''
         raise BasicValidationError(
             _('The following sections have been selected on the PD/SPD indicators and cannot be removed '
               '%(sections)s ') % {'sections': draft_status_err + ', '.join([s.name for s in ind_sections - intervention_sections])})
@@ -480,3 +480,16 @@ class InterventionValid(CompleteValidation):
         if not today > intervention.end:
             raise StateValidationError([_('Today is not after the end date')])
         return True
+
+    def map_errors(self, errors):
+        error_list = []
+        for error in errors:
+            if isinstance(error, str):
+                error_value = self.VALID_ERRORS.get(error, error)
+                if isinstance(error_value, str):
+                    error_list.append(_(error_value))
+                else:
+                    error_list.append(error_value)
+            else:
+                error_list.append(error)
+        return error_list

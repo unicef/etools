@@ -1,3 +1,5 @@
+from django.utils.translation import gettext as _
+
 from rest_framework import serializers
 from rest_framework.serializers import ValidationError
 from unicef_attachments.fields import AttachmentSingleFileField
@@ -116,7 +118,7 @@ class AgreementCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotModelSe
                 country_programme = self.instance.country_programme
 
             if country_programme is None:
-                raise ValidationError({'country_programme': 'Country Programme is required for PCAs!'})
+                raise ValidationError({'country_programme': _('Country Programme is required for PCAs!')})
 
         # When running validations in the serializer.. keep in mind that the
         # related fields have not been updated and therefore not accessible on old_instance.relatedfield_old.
