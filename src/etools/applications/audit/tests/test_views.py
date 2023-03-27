@@ -1043,12 +1043,15 @@ class TestAuditorFirmViewSet(AuditTestCaseMixin, BaseTenantTestCase):
 
 class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, BaseTenantTestCase):
     def test_list_view(self):
+        inactive_auditor = AuditorUserFactory(is_active=False, partner_firm=self.auditor_firm)
         response = self.forced_auth_req(
             'get',
             '/api/audit/audit-firms/{0}/staff-members/'.format(self.auditor_firm.id),
             user=self.unicef_focal_point
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 3)
+        self.assertTrue(inactive_auditor.pk in map(lambda x: x['id'], response.data['results']))
 
         response = self.forced_auth_req(
             'get',
