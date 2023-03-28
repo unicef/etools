@@ -680,6 +680,7 @@ class TestInterventionModel(BaseTenantTestCase):
                 'true': [
                     {'status': 'signed', 'group': 'Unicef Focal Point', 'condition': 'not_in_amendment_mode'},
                     {'status': 'active', 'group': 'Unicef Focal Point', 'condition': 'not_in_amendment_mode'},
+                    {'status': 'ended', 'group': 'Unicef Focal Point', 'condition': 'post_epd_temp_conditions'}
                 ]
             }
         })

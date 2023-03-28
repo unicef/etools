@@ -126,7 +126,7 @@ class InterventionPermissions(PMPPermissions):
             available_til = datetime.date(2023, 7, 1)
             begin_date = datetime.date(2022, 12, 1)
             release_date = datetime.date(2023, 4, 30)
-            if begin_date <= i.end_date < release_date \
+            if i.end and begin_date <= i.end < release_date \
                     and today < available_til \
                     and i.document_type != "SSFA":
                 return True
