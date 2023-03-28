@@ -123,9 +123,9 @@ class InterventionPermissions(PMPPermissions):
         def post_epd_temp_conditions(i):
             # quick fix for offices that have not added their amendments in the system before the release date.
             today = datetime.date.today()
-            available_til = datetime.date(2023,7,1)
-            begin_date = datetime.date(2022,12,1)
-            release_date = datetime.date(2023,4,1)
+            available_til = datetime.date(2023, 7, 1)
+            begin_date = datetime.date(2022, 12, 1)
+            release_date = datetime.date(2023, 4, 30)
             if begin_date <= i.end_date < release_date \
                     and today < available_til \
                     and i.document_type != "SSFA":
