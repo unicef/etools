@@ -58,6 +58,7 @@ class InterventionBudgetCUSerializer(
     total_cash_local = serializers.DecimalField(max_digits=20, decimal_places=2)
     total_local = serializers.DecimalField(max_digits=20, decimal_places=2)
     total_supply = serializers.DecimalField(max_digits=20, decimal_places=2)
+    unfunded_cash_local = serializers.DecimalField(max_digits=20, decimal_places=2)
 
     class Meta:
         model = InterventionBudget
@@ -77,7 +78,9 @@ class InterventionBudgetCUSerializer(
             "total_cash_local",
             "total_unicef_cash_local_wo_hq",
             "total_hq_cash_local",
-            "total_supply"
+            "total_supply",
+            "unfunded_cash_local",
+            "has_unfunded_cash"
         )
         read_only_fields = (
             "total_local",
