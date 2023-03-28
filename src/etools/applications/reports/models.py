@@ -1036,6 +1036,12 @@ class InterventionActivity(TimeStampedModel):
         max_digits=20,
         default=0,
     )
+    unfunded_cash = models.DecimalField(
+        verbose_name=_("Unfunded Cash"),
+        decimal_places=2,
+        max_digits=20,
+        default=0,
+    )
 
     time_frames = models.ManyToManyField(
         'InterventionTimeFrame',
@@ -1145,6 +1151,12 @@ class InterventionActivityItem(TimeStampedModel):
     )
     cso_cash = models.DecimalField(
         verbose_name=_("CSO Cash"),
+        decimal_places=2,
+        max_digits=20,
+        default=0,
+    )
+    unfunded_cash = models.DecimalField(
+        verbose_name=_("Unfunded Cash"),
         decimal_places=2,
         max_digits=20,
         default=0,
