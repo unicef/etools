@@ -3270,7 +3270,7 @@ class InterventionReviewNotification(TimeStampedModel):
             'intervention_number': self.review.intervention.reference_number,
             'meeting_date': self.review.meeting_date.strftime('%d-%m-%Y'),
             'user_name': self.user.get_full_name(),
-            'url': '{}{}'.format(settings.HOST, self.review.intervention.get_frontend_object_url(suffix='review'))
+            'url': self.review.intervention.get_frontend_object_url(suffix='review')
         }
 
         send_notification_with_template(
