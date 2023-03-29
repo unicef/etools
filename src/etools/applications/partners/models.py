@@ -2864,6 +2864,11 @@ class InterventionAmendment(TimeStampedModel):
         self.is_active = False
         self.save()
 
+        # TODO: Technical debt - remove after tempoorary exception for ended amendments is removed.
+        if self.intervention.status == self.intervention.ENDED:
+            if self.intervention.end >= datetime.date.today() >= self.intervention.start:
+                self.intervention.status = self.intervention.ACTIVE
+
         self.intervention.save(amendment_number=self.intervention.amendments.filter(is_active=False).count())
 
         amended_intervention.delete()
