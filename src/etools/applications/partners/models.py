@@ -2864,6 +2864,11 @@ class InterventionAmendment(TimeStampedModel):
         self.is_active = False
         self.save()
 
+        # TODO: Technical debt - remove after tempoorary exception for ended amendments is removed.
+        if self.intervention.status == self.intervention.ENDED:
+            if self.intervention.end >= datetime.date.today() >= self.intervention.start:
+                self.intervention.status = self.intervention.ACTIVE
+
         self.intervention.save(amendment_number=self.intervention.amendments.filter(is_active=False).count())
 
         amended_intervention.delete()
@@ -3270,7 +3275,7 @@ class InterventionReviewNotification(TimeStampedModel):
             'intervention_number': self.review.intervention.reference_number,
             'meeting_date': self.review.meeting_date.strftime('%d-%m-%Y'),
             'user_name': self.user.get_full_name(),
-            'url': '{}{}'.format(settings.HOST, self.review.intervention.get_frontend_object_url(suffix='review'))
+            'url': self.review.intervention.get_frontend_object_url(suffix='review')
         }
 
         send_notification_with_template(
