@@ -17,6 +17,7 @@ from unicef_snapshot.admin import ActivityInline, SnapshotModelAdmin
 
 from etools.applications.funds.tasks import sync_all_delegated_frs, sync_country_delegated_fr
 from etools.applications.hact.tasks import update_hact_for_country, update_hact_values
+from etools.applications.users.forms import RealmForm
 from etools.applications.users.models import Country, Realm, UserProfile, WorkspaceCounter
 from etools.applications.vision.tasks import sync_handler, vision_sync_task
 from etools.libraries.azure_graph_api.tasks import sync_user
@@ -188,8 +189,9 @@ class RealmInline(admin.StackedInline):
     verbose_name_plural = "Realms in current country"
 
     model = Realm
-    raw_id_fields = ('country', 'organization', 'group')
+    raw_id_fields = ('organization', 'group')
     extra = 0
+    form = RealmForm
 
     def get_queryset(self, request):
         if isinstance(connection.tenant, FakeTenant):
