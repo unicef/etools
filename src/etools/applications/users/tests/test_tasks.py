@@ -1,17 +1,22 @@
+import datetime
+from typing import NamedTuple
 from unittest import skip
+from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
-
+from django.test import override_settings
 from django_tenants.utils import schema_context
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.organizations.models import Organization
 from etools.applications.users import tasks
 from etools.applications.users.models import UserProfile
+from etools.applications.users.tasks import sync_realms_to_prp
 from etools.applications.users.tests.factories import (
     CountryFactory,
     GroupFactory,
     ProfileFactory,
+    RealmFactory,
     SCHEMA_NAME,
     UserFactory,
 )
@@ -199,3 +204,23 @@ class TestUserMapper(BaseTenantTestCase):
         )
         profile = UserProfile.objects.get(user__email=email)
         self.assertEqual(profile.phone_number, phone)
+
+
+class TestRealmsPRPExport(BaseTenantTestCase):
+    @override_settings(PRP_API_ENDPOINT='http://example.com/api/')
+    @patch('etools.applications.users.signals.sync_realms_to_prp.apply_async')
+    @patch('etools.applications.partners.prp_api.requests.post')
+    def test_realms_sync(self, requests_post_mock, sync_mock):
+        class Response(NamedTuple):
+            status_code: int
+            text: str
+
+        requests_post_mock.return_value = Response(200, '{}')
+        sync_mock.side_effect = lambda *args, **_kwargs: sync_realms_to_prp(*args[0])
+
+        user = UserFactory()
+        with self.captureOnCommitCallbacks(execute=True) as commit_callbacks:
+            realm = RealmFactory(user=user)
+        sync_mock.assert_called_with((user.pk, realm.modified), eta=realm.modified + datetime.timedelta(minutes=5))
+        requests_post_mock.assert_called()
+        self.assertEqual(len(commit_callbacks), 1)

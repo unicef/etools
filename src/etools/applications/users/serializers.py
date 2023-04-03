@@ -268,3 +268,28 @@ class CountrySerializer(SimpleUserSerializer):
             'iso3_code',
             'schema_name',
         )
+
+
+class PRPSyncRealmSerializer(serializers.ModelSerializer):
+    country = serializers.CharField(source='country.name')
+    organization = serializers.CharField(source='organization.name')
+    group = serializers.CharField(source='group.name')
+
+    class Meta:
+        model = Realm
+        fields = (
+            'country',
+            'organization',
+            'group',
+        )
+
+
+class PRPSyncUserSerializer(serializers.ModelSerializer):
+    realms = PRPSyncRealmSerializer(many=True)
+
+    class Meta:
+        model = get_user_model()
+        fields = (
+            'email',
+            'realms',
+        )
