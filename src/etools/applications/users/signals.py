@@ -10,6 +10,10 @@ from etools.applications.users.tasks import sync_realms_to_prp
 
 @receiver(post_save, sender=Realm)
 def sync_realms_to_prp_on_update(instance: Realm, created: bool, **kwargs):
+    if instance.user.is_unicef_user():
+        # only external users are allowed to be synced to prp
+        return
+
     transaction.on_commit(
         lambda:
             sync_realms_to_prp.apply_async(

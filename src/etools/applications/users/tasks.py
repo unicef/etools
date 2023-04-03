@@ -1,11 +1,12 @@
 import datetime
 
-from celery.utils.log import get_task_logger
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.db import connection, IntegrityError, transaction
 from django.db.models import Prefetch
 from django.utils import timezone
+
+from celery.utils.log import get_task_logger
 from requests import HTTPError
 
 from etools.applications.environment.notifications import send_notification_with_template
