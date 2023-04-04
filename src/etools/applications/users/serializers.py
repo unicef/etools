@@ -272,14 +272,18 @@ class CountrySerializer(SimpleUserSerializer):
 
 class PRPSyncRealmSerializer(serializers.ModelSerializer):
     country = serializers.CharField(source='country.name')
+    country_id = serializers.IntegerField()
     organization = serializers.CharField(source='organization.name')
+    organization_id = serializers.IntegerField()
     group = serializers.CharField(source='group.name')
 
     class Meta:
         model = Realm
         fields = (
             'country',
+            'country_id',
             'organization',
+            'organization_id',
             'group',
         )
 
