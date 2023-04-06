@@ -1,4 +1,6 @@
-from django.db import connection
+import datetime
+
+from django.db import connection, transaction
 from django.db.models.signals import m2m_changed, post_delete, post_save
 from django.dispatch import receiver
 
@@ -9,7 +11,8 @@ from etools.applications.partners.models import (
     InterventionSupplyItem,
     PRCOfficerInterventionReview,
 )
-from etools.applications.partners.tasks import sync_partner_to_prp
+from etools.applications.partners.tasks import sync_partner_to_prp, sync_realms_to_prp
+from etools.applications.users.models import Realm
 
 
 @receiver(post_save, sender=Intervention)
@@ -70,3 +73,18 @@ def sync_budget_owner_to_amendment(instance: Intervention, created: bool, **kwar
         for amendment in instance.amendments.filter(is_active=True):
             amendment.amended_intervention.budget_owner_id = instance.budget_owner_id
             amendment.amended_intervention.save()
+
+
+@receiver(post_save, sender=Realm)
+def sync_realms_to_prp_on_update(instance: Realm, created: bool, **kwargs):
+    if instance.user.is_unicef_user():
+        # only external users are allowed to be synced to prp
+        return
+
+    transaction.on_commit(
+        lambda:
+            sync_realms_to_prp.apply_async(
+                (instance.user_id, instance.modified),
+                eta=instance.modified + datetime.timedelta(minutes=5)
+            )
+    )

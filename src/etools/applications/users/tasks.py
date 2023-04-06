@@ -1,19 +1,12 @@
-import datetime
-
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.db import connection, IntegrityError, transaction
-from django.db.models import Prefetch
-from django.utils import timezone
 
 from celery.utils.log import get_task_logger
-from requests import HTTPError
 
 from etools.applications.environment.notifications import send_notification_with_template
 from etools.applications.organizations.models import Organization
-from etools.applications.partners.prp_api import PRPAPI
 from etools.applications.users.models import Country, Realm, User, UserProfile
-from etools.applications.users.serializers import PRPSyncUserSerializer
 from etools.config.celery import app
 
 logger = get_task_logger(__name__)
@@ -220,30 +213,3 @@ def notify_user_on_realm_update(user_pk):
             template_name='users/amp/role-update',
             context=email_context
         )
-
-
-@app.task
-def sync_realms_to_prp(user_pk, last_modified_at, retry_counter=0):
-    last_modified_instance = Realm.objects.filter(user_id=user_pk).order_by('modified').last()
-    if last_modified_instance and last_modified_instance.modified != last_modified_at:
-        # there were updates to user realms. skip
-        return
-
-    user = User.objects.filter(pk=user_pk).prefetch_related(
-        Prefetch('realms', Realm.objects.filter(is_active=True).select_related('country', 'organization', 'group')),
-    ).get()
-    data = PRPSyncUserSerializer(instance=user).data
-
-    try:
-        PRPAPI().send_user_realms(data)
-    except HTTPError as ex:
-        if retry_counter < 2:
-            logger.info(f'Received {ex} from prp api. retrying')
-            sync_realms_to_prp.apply_async(
-                (user_pk, last_modified_at),
-                {'retry_counter': retry_counter + 1},
-                eta=timezone.now() + datetime.timedelta(minutes=1 + retry_counter)
-            )
-        else:
-            logger.exception(f'Received {ex} from prp api while trying to send realms after 3 attempts. '
-                             f'User pk: {user_pk}.')

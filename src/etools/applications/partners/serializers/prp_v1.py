@@ -17,6 +17,7 @@ from etools.applications.reports.models import (
     SpecialReportingRequirement,
 )
 from etools.applications.reports.serializers.v1 import SectionSerializer
+from etools.applications.users.models import Realm
 
 
 class InterventionPDFileSerializer(serializers.ModelSerializer):
@@ -334,4 +335,29 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
             'unicef_budget_supplies',
             'disbursement',
             'disbursement_percent'
+        )
+
+
+class PRPSyncRealmSerializer(serializers.ModelSerializer):
+    country = serializers.CharField(source='country.id')
+    organization = serializers.CharField(source='organization.vendor_number')
+    group = serializers.CharField(source='group.name')
+
+    class Meta:
+        model = Realm
+        fields = (
+            'country',
+            'organization',
+            'group',
+        )
+
+
+class PRPSyncUserSerializer(serializers.ModelSerializer):
+    realms = PRPSyncRealmSerializer(many=True)
+
+    class Meta:
+        model = get_user_model()
+        fields = (
+            'email',
+            'realms',
         )
