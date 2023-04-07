@@ -6,7 +6,6 @@ from collections import namedtuple
 from datetime import timedelta
 from decimal import Decimal
 from pprint import pformat
-from typing import NamedTuple
 from unittest import mock
 from unittest.mock import patch
 
@@ -1284,20 +1283,85 @@ class TestRealmsPRPExport(BaseTenantTestCase):
     @override_settings(UNICEF_USER_EMAIL="@another_example.com")
     @override_settings(PRP_API_ENDPOINT='http://example.com/api/')
     @patch('etools.applications.partners.signals.sync_realms_to_prp.apply_async')
-    @patch('etools.applications.partners.prp_api.requests.post')
-    def test_realms_sync(self, requests_post_mock, sync_mock):
-        class Response(NamedTuple):
-            status_code: int
-            text: str
-
-        requests_post_mock.return_value = Response(200, '{}')
+    @patch(
+        'etools.applications.partners.prp_api.requests.post',
+        return_value=namedtuple('Response', ['status_code', 'text'])(200, '{}')
+    )
+    def test_realms_sync_on_create(self, requests_post_mock, sync_mock):
         sync_mock.side_effect = lambda *args, **_kwargs: sync_realms_to_prp(*args[0])
 
         user = UserFactory(realms__data=[])
         self.assertFalse(user.is_unicef_user())
         with self.captureOnCommitCallbacks(execute=True) as commit_callbacks:
             realm = RealmFactory(user=user)
-        sync_mock.assert_called_with((user.pk, realm.modified), eta=realm.modified + datetime.timedelta(minutes=5))
+        sync_mock.assert_called_with(
+            (user.pk, realm.modified.timestamp()),
+            eta=realm.modified + datetime.timedelta(minutes=5),
+        )
+        requests_post_mock.assert_called()
+        self.assertEqual(len(commit_callbacks), 1)
+
+    @override_settings(UNICEF_USER_EMAIL="@another_example.com")
+    @override_settings(PRP_API_ENDPOINT='http://example.com/api/')
+    @patch('etools.applications.partners.signals.sync_realms_to_prp.apply_async')
+    @patch(
+        'etools.applications.partners.prp_api.requests.post',
+        return_value=namedtuple('Response', ['status_code', 'text'])(200, '{}')
+    )
+    def test_realms_call_once_on_create(self, requests_post_mock, sync_mock):
+        sync_mock.side_effect = lambda *args, **_kwargs: sync_realms_to_prp(*args[0])
+
+        user = UserFactory(realms__data=[])
+        self.assertFalse(user.is_unicef_user())
+        with self.captureOnCommitCallbacks(execute=False) as commit_callbacks:
+            RealmFactory(user=user)
+            RealmFactory(user=user)
+
+        for callback in commit_callbacks:
+            callback()
+
+        self.assertEqual(sync_mock.call_count, 2)
+        requests_post_mock.assert_called_once()
+
+    @override_settings(UNICEF_USER_EMAIL="@another_example.com")
+    @override_settings(PRP_API_ENDPOINT='http://example.com/api/')
+    @patch('etools.applications.partners.signals.sync_realms_to_prp.apply_async')
+    @patch(
+        'etools.applications.partners.prp_api.requests.post',
+        return_value=namedtuple('Response', ['status_code', 'text'])(200, '{}')
+    )
+    def test_realms_sync_on_delete(self, requests_post_mock, sync_mock):
+        sync_mock.side_effect = lambda *args, **_kwargs: sync_realms_to_prp(*args[0])
+
+        user = UserFactory(realms__data=[])
+        self.assertFalse(user.is_unicef_user())
+        realm = RealmFactory(user=user)
+        with self.captureOnCommitCallbacks(execute=True) as commit_callbacks:
+            realm.delete()
+        sync_mock.assert_called()
+        requests_post_mock.assert_called()
+        self.assertEqual(len(commit_callbacks), 1)
+
+    @override_settings(UNICEF_USER_EMAIL="@another_example.com")
+    @override_settings(PRP_API_ENDPOINT='http://example.com/api/')
+    @patch('etools.applications.partners.signals.sync_realms_to_prp.apply_async')
+    @patch(
+        'etools.applications.partners.prp_api.requests.post',
+        return_value=namedtuple('Response', ['status_code', 'text'])(200, '{}')
+    )
+    def test_realms_sync_on_change(self, requests_post_mock, sync_mock):
+        sync_mock.side_effect = lambda *args, **_kwargs: sync_realms_to_prp(*args[0])
+
+        user = UserFactory(realms__data=[])
+        self.assertFalse(user.is_unicef_user())
+        realm = RealmFactory(user=user)
+        with self.captureOnCommitCallbacks(execute=True) as commit_callbacks:
+            realm.is_active = False
+            realm.save()
+        sync_mock.assert_called_with(
+            (user.pk, realm.modified.timestamp()),
+            eta=realm.modified + datetime.timedelta(minutes=5),
+        )
         requests_post_mock.assert_called()
         self.assertEqual(len(commit_callbacks), 1)
 

@@ -587,9 +587,9 @@ def send_pd_to_vision(tenant_name: str, intervention_pk: int, retry_counter=0):
 
 
 @app.task
-def sync_realms_to_prp(user_pk, last_modified_at, retry_counter=0):
+def sync_realms_to_prp(user_pk, last_modified_at_timestamp, retry_counter=0):
     last_modified_instance = Realm.objects.filter(user_id=user_pk).order_by('modified').last()
-    if last_modified_instance and last_modified_instance.modified != last_modified_at:
+    if last_modified_instance and last_modified_instance.modified.timestamp() > last_modified_at_timestamp:
         # there were updates to user realms. skip
         return
 
@@ -604,7 +604,7 @@ def sync_realms_to_prp(user_pk, last_modified_at, retry_counter=0):
         if retry_counter < 2:
             logger.info(f'Received {ex} from prp api. retrying')
             sync_realms_to_prp.apply_async(
-                (user_pk, last_modified_at),
+                (user_pk, last_modified_at_timestamp),
                 {'retry_counter': retry_counter + 1},
                 eta=timezone.now() + datetime.timedelta(minutes=1 + retry_counter)
             )
