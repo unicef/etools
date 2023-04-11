@@ -3035,6 +3035,10 @@ class InterventionBudget(TimeStampedModel):
         max_digits=20, decimal_places=2, default=0,
         verbose_name=_('Total HQ Cash Local')
     )
+    unfunded_cash_local = models.DecimalField(
+        max_digits=20, decimal_places=2, default=0,
+        verbose_name=_('Unfunded HQ Cash Local')
+    )
     # unicef cash including headquarters contribution
     unicef_cash_local = models.DecimalField(max_digits=20, decimal_places=2, default=0,
                                             verbose_name=_('Unicef Cash Local'))
@@ -3043,6 +3047,7 @@ class InterventionBudget(TimeStampedModel):
         max_digits=20, decimal_places=2, default=0,
         verbose_name=_('UNICEF Supplies Local')
     )
+    has_unfunded_cash = models.BooleanField(verbose_name=_("Unfunded Cash"), default=False)
     currency = CurrencyField(verbose_name=_('Currency'), null=False, default='')
     total_local = models.DecimalField(max_digits=20, decimal_places=2, verbose_name=_('Total Local'))
     programme_effectiveness = models.DecimalField(
@@ -3576,6 +3581,12 @@ class InterventionManagementBudget(TimeStampedModel):
         max_digits=20,
         default=0,
     )
+    act1_unfunded = models.DecimalField(
+        verbose_name=_("Unfunded amount for In-country management and support staff prorated to their contribution to the programme (representation, planning, coordination, logistics, administration, finance)"),
+        decimal_places=2,
+        max_digits=20,
+        default=0,
+    )
     act2_unicef = models.DecimalField(
         verbose_name=_("UNICEF contribution for Operational costs prorated to their contribution to the programme (office space, equipment, office supplies, maintenance)"),
         decimal_places=2,
@@ -3588,6 +3599,12 @@ class InterventionManagementBudget(TimeStampedModel):
         max_digits=20,
         default=0,
     )
+    act2_unfunded = models.DecimalField(
+        verbose_name=_("Unfunded amount for Operational costs prorated to their contribution to the programme (office space, equipment, office supplies, maintenance)"),
+        decimal_places=2,
+        max_digits=20,
+        default=0,
+    )
     act3_unicef = models.DecimalField(
         verbose_name=_("UNICEF contribution for Planning, monitoring, evaluation and communication, prorated to their contribution to the programme (venue, travels, etc.)"),
         decimal_places=2,
@@ -3596,6 +3613,12 @@ class InterventionManagementBudget(TimeStampedModel):
     )
     act3_partner = models.DecimalField(
         verbose_name=_("Partner contribution for Planning, monitoring, evaluation and communication, prorated to their contribution to the programme (venue, travels, etc.)"),
+        decimal_places=2,
+        max_digits=20,
+        default=0,
+    )
+    act3_unfunded = models.DecimalField(
+        verbose_name=_("Unfunded amount for Planning, monitoring, evaluation and communication, prorated to their contribution to the programme (venue, travels, etc.)"),
         decimal_places=2,
         max_digits=20,
         default=0,
@@ -3758,6 +3781,12 @@ class InterventionManagementBudgetItem(models.Model):
     )
     cso_cash = models.DecimalField(
         verbose_name=_("CSO Cash Local"),
+        decimal_places=2,
+        max_digits=20,
+        default=0,
+    )
+    unfunded_cash = models.DecimalField(
+        verbose_name=_("Unfunded Cash Local"),
         decimal_places=2,
         max_digits=20,
         default=0,
