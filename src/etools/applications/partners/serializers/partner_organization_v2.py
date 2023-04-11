@@ -437,6 +437,7 @@ class MonitoringActivityGroupSerializer(serializers.Field):
 
 
 class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
+    organization_id = serializers.CharField(read_only=True)
     name = serializers.CharField(source='organization.name', read_only=True)
     vendor_number = serializers.CharField(source='organization.vendor_number', read_only=True)
     short_name = serializers.CharField(source='organization.short_name', read_only=True)
