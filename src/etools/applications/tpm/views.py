@@ -215,7 +215,7 @@ class TPMStaffMembersViewSet(
     viewsets.GenericViewSet
 ):
     metadata_class = PermissionBasedMetadata
-    queryset = get_user_model().objects.filter(is_active=True)
+    queryset = get_user_model().objects.all()
     serializer_class = TPMPartnerStaffMemberSerializer
     permission_classes = BaseTPMViewSet.permission_classes + [
         get_permission_for_targets('tpmpartners.tpmpartner.staff_members')
