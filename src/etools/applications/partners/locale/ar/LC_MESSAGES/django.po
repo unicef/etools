@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-03-24 08:39+0000\n"
+"POT-Creation-Date: 2023-04-11 13:53+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1197,11 +1197,17 @@ msgstr "إجمالي مساهمة الشريك"
 msgid "Total HQ Cash Local"
 msgstr "إجمالي النقد المحلي للمقر الرئيسي"
 
+msgid "Unfunded HQ Cash Local"
+msgstr ""
+
 msgid "Unicef Cash Local"
 msgstr "منظمة اليونيسف النقدية المحلية"
 
 msgid "UNICEF Supplies Local"
 msgstr "مستلزمات اليونيسف محلية"
+
+msgid "Unfunded Cash"
+msgstr ""
 
 msgid "Currency"
 msgstr "عملة"
@@ -1405,6 +1411,12 @@ msgstr ""
 "البرنامج (التمثيل ، التخطيط ، التنسيق ، اللوجستيات ، الإدارة ، المالية)"
 
 msgid ""
+"Unfunded amount for In-country management and support staff prorated to "
+"their contribution to the programme (representation, planning, coordination, "
+"logistics, administration, finance)"
+msgstr ""
+
+msgid ""
 "UNICEF contribution for Operational costs prorated to their contribution to "
 "the programme (office space, equipment, office supplies, maintenance)"
 msgstr ""
@@ -1419,6 +1431,11 @@ msgstr ""
 "(مساحة مكتبية ، معدات ، لوازم مكتبية ، صيانة)"
 
 msgid ""
+"Unfunded amount for Operational costs prorated to their contribution to the "
+"programme (office space, equipment, office supplies, maintenance)"
+msgstr ""
+
+msgid ""
 "UNICEF contribution for Planning, monitoring, evaluation and communication, "
 "prorated to their contribution to the programme (venue, travels, etc.)"
 msgstr ""
@@ -1431,6 +1448,11 @@ msgid ""
 msgstr ""
 "مساهمة الشريك في التخطيط والمراقبة والتقييم والاتصال ، مُتناسبة مع مساهمتهم "
 "في البرنامج (المكان ، والسفر ، وما إلى ذلك)"
+
+msgid ""
+"Unfunded amount for Planning, monitoring, evaluation and communication, "
+"prorated to their contribution to the programme (venue, travels, etc.)"
+msgstr ""
 
 msgid "Unit Number"
 msgstr "رقم الوحدة"
@@ -1477,6 +1499,9 @@ msgstr "منظمة اليونيسف النقدية المحلية"
 
 msgid "CSO Cash Local"
 msgstr "مساهمة منظمة المجتمع المدني النقدية"
+
+msgid "Unfunded Cash Local"
+msgstr ""
 
 msgid "Accessing this item is not allowed."
 msgstr "الوصول إلى هذا العنصر غير مسموح به."

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-03-24 08:39+0000\n"
+"POT-Creation-Date: 2023-04-11 13:53+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -925,10 +925,8 @@ msgstr "Suspendu"
 msgid "Terminated"
 msgstr "Terminé"
 
-#, fuzzy
-#| msgid "Partner Authorized Officer"
 msgid "(old)Partner Authorized Officer"
-msgstr "Partenaire Agent autorisé"
+msgstr "(old)Partenaire Agent autorisé"
 
 msgid "Attached Agreement"
 msgstr "Accord ci-joint"
@@ -936,10 +934,8 @@ msgstr "Accord ci-joint"
 msgid "Termination document for PCAs"
 msgstr "Document de fin de contrat pour les APC"
 
-#, fuzzy
-#| msgid "Signed by partner"
 msgid "(old)Signed by partner"
-msgstr "Signé par le partenaire"
+msgstr "(old)Signé par le partenaire"
 
 msgid "Signed by partner"
 msgstr "Signé par le partenaire"
@@ -1022,15 +1018,11 @@ msgstr "Date de la révision finale du partenariat"
 msgid "Final Review Approved"
 msgstr "Révision finale approuvée"
 
-#, fuzzy
-#| msgid "Signed by Partner"
 msgid "(old)Signed by Partner"
-msgstr "Signé par le partenaire"
+msgstr "(old)Signé par le partenaire"
 
-#, fuzzy
-#| msgid "CSO Authorized Officials"
 msgid "(old)CSO Authorized Officials"
-msgstr "Fonctionnaires autorisés de l'OSC"
+msgstr "(old)Fonctionnaires autorisés de l'OSC"
 
 msgid "Contingency PD"
 msgstr "PD pour imprévus"
@@ -1212,11 +1204,17 @@ msgstr "Contribution totale des partenaires"
 msgid "Total HQ Cash Local"
 msgstr "Total HQ Cash Local"
 
+msgid "Unfunded HQ Cash Local"
+msgstr ""
+
 msgid "Unicef Cash Local"
 msgstr "Unicef Cash Local"
 
 msgid "UNICEF Supplies Local"
 msgstr "Fournitures UNICEF locales"
+
+msgid "Unfunded Cash"
+msgstr ""
 
 msgid "Currency"
 msgstr "Monnaie"
@@ -1424,6 +1422,12 @@ msgstr ""
 "planification, coordination, logistique, administration, finances)."
 
 msgid ""
+"Unfunded amount for In-country management and support staff prorated to "
+"their contribution to the programme (representation, planning, coordination, "
+"logistics, administration, finance)"
+msgstr ""
+
+msgid ""
 "UNICEF contribution for Operational costs prorated to their contribution to "
 "the programme (office space, equipment, office supplies, maintenance)"
 msgstr ""
@@ -1440,6 +1444,11 @@ msgstr ""
 "bureau, entretien)."
 
 msgid ""
+"Unfunded amount for Operational costs prorated to their contribution to the "
+"programme (office space, equipment, office supplies, maintenance)"
+msgstr ""
+
+msgid ""
 "UNICEF contribution for Planning, monitoring, evaluation and communication, "
 "prorated to their contribution to the programme (venue, travels, etc.)"
 msgstr ""
@@ -1454,6 +1463,11 @@ msgstr ""
 "Contribution des partenaires pour la planification, le suivi, l'évaluation "
 "et la communication, au prorata de leur contribution au programme (lieu, "
 "voyages, etc.)."
+
+msgid ""
+"Unfunded amount for Planning, monitoring, evaluation and communication, "
+"prorated to their contribution to the programme (venue, travels, etc.)"
+msgstr ""
 
 msgid "Unit Number"
 msgstr "Numéro d'unité"
@@ -1501,6 +1515,9 @@ msgstr "Unicef Cash Local"
 
 msgid "CSO Cash Local"
 msgstr "CSO Cash Local"
+
+msgid "Unfunded Cash Local"
+msgstr ""
 
 msgid "Accessing this item is not allowed."
 msgstr "L'accès à cet élément n'est pas autorisé."
