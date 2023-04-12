@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-03-07 13:01+0000\n"
+"POT-Creation-Date: 2023-03-16 08:26+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1176,6 +1176,9 @@ msgstr "التدخل المعدل"
 msgid "Intervention amendments"
 msgstr "تعديلات التدخل"
 
+msgid "Q1"
+msgstr ""
+
 msgid "Intervention"
 msgstr "تدخل"
 
@@ -1602,6 +1605,11 @@ msgstr "لا يمكن إضافة تعديل جديد أثناء حظر الشر�
 
 msgid "Other description required, if type 'Other' selected."
 msgstr "مطلوب وصف آخر ، إذا تم تحديد نوع \"أخرى\"."
+
+#, fuzzy
+#| msgid "Active"
+msgid "Inactive"
+msgstr "نشيط"
 
 msgid "Planned Visit to be set only at Partner level"
 msgstr "سيتم تعيين الزيارة المخططة على مستوى الشريك فقط"
