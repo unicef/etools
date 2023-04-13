@@ -359,5 +359,8 @@ class PRPSyncUserSerializer(serializers.ModelSerializer):
         model = get_user_model()
         fields = (
             'email',
+            'first_name',
+            'middle_name',
+            'last_name',
             'realms',
         )
