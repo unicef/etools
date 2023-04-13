@@ -4,6 +4,7 @@ import factory
 from factory import fuzzy
 
 from etools.applications.attachments.tests.factories import AttachmentFactory
+from etools.applications.field_monitoring.fm_settings.tests.factories import LocationSiteFactory
 from etools.applications.partners import models
 from etools.applications.partners.models import InterventionManagementBudgetItem
 from etools.applications.reports.tests.factories import CountryProgrammeFactory, ResultFactory
@@ -211,6 +212,15 @@ class InterventionPlannedVisitsFactory(factory.django.DjangoModelFactory):
 
     intervention = factory.SubFactory(InterventionFactory)
     year = datetime.datetime.today().year
+
+
+class InterventionPlannedVisitSiteFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.InterventionPlannedVisitSite
+
+    planned_visit = factory.SubFactory(InterventionPlannedVisitsFactory)
+    site = factory.SubFactory(LocationSiteFactory)
+    quarter = 1
 
 
 class AgreementAmendmentFactory(factory.django.DjangoModelFactory):
