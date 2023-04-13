@@ -142,5 +142,77 @@
       "module": "fm",
       "description": "Other"
     }
+  },
+  {
+    "model": "categories.category",
+    "pk": 17,
+    "fields": {
+      "order": 17,
+      "module": "fm",
+      "description": "Bottleneck Fix / Remedy"
+    }
+  },
+  {
+    "model": "categories.category",
+    "pk": 18,
+    "fields": {
+      "order": 18,
+      "module": "fm",
+      "description": "Improving Performance Against Targets"
+    }
+  },
+  {
+    "model": "categories.category",
+    "pk": 19,
+    "fields": {
+      "order": 19,
+      "module": "fm",
+      "description": "Supplies Issue"
+    }
+  },
+  {
+    "model": "categories.category",
+    "pk": 20,
+    "fields": {
+      "order": 20,
+      "module": "fm",
+      "description": "Partner Performance Issue"
+    }
+  },
+  {
+    "model": "categories.category",
+    "pk": 21,
+    "fields": {
+      "order": 21,
+      "module": "fm",
+      "description": "Coordination Issue"
+    }
+  },
+  {
+    "model": "categories.category",
+    "pk": 22,
+    "fields": {
+      "order": 22,
+      "module": "fm",
+      "description": "Risk to Beneficiaries"
+    }
+  },
+  {
+    "model": "categories.category",
+    "pk": 23,
+    "fields": {
+      "order": 23,
+      "module": "fm",
+      "description": "Preparedness"
+    }
+  },
+  {
+    "model": "categories.category",
+    "pk": 24,
+    "fields": {
+      "order": 24,
+      "module": "fm",
+      "description": "Life Saving"
+    }
   }
 ]
