@@ -73,6 +73,7 @@ class Command(BaseCommand):
         'audit.engagement.po_item',
         'audit.engagement.partner_contacted_at',
         'audit.engagement.engagement_type',
+        'audit.engagement.year_of_audit',
         'audit.engagement.start_date',
         'audit.engagement.end_date',
         'audit.engagement.total_value',

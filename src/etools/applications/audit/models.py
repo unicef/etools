@@ -610,6 +610,10 @@ class DetailedFindingInfo(models.Model):
         return 'Finding for {}'.format(self.micro_assesment)
 
 
+def get_current_year():
+    return timezone.now().year
+
+
 class Audit(Engagement):
 
     OPTION_UNQUALIFIED = "unqualified"
@@ -623,6 +627,8 @@ class Audit(Engagement):
         (OPTION_DENIAL, _("Disclaimer opinion")),
         (OPTION_ADVERSE, _("Adverse opinion")),
     )
+
+    year_of_audit = models.PositiveSmallIntegerField(default=get_current_year)
 
     # USD
     audited_expenditure = models.DecimalField(verbose_name=_('Audited Expenditure $'), blank=True, default=0,
