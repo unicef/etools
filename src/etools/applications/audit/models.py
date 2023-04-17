@@ -164,7 +164,7 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
     )
 
     joint_audit = models.BooleanField(verbose_name=_('Joint Audit'), default=False, blank=True)
-    year_of_audit = models.PositiveSmallIntegerField(null=True, default=get_current_year)
+    year_of_audit = models.PositiveSmallIntegerField(null=True, default=get_current_year, db_index=True)
     shared_ip_with = ArrayField(models.CharField(
         max_length=20, choices=PartnerOrganization.AGENCY_CHOICES
     ), blank=True, default=list, verbose_name=_('Shared Audit with'))
