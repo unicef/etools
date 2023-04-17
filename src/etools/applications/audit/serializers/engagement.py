@@ -284,7 +284,7 @@ class EngagementSerializer(
     class Meta(EngagementListSerializer.Meta):
         fields = EngagementListSerializer.Meta.fields + [
             'total_value', 'staff_members', 'active_pd', 'authorized_officers', 'users_notified',
-            'joint_audit', 'shared_ip_with', 'exchange_rate', 'currency_of_report',
+            'joint_audit', 'year_of_audit', 'shared_ip_with', 'exchange_rate', 'currency_of_report',
             'start_date', 'end_date', 'partner_contacted_at', 'date_of_field_visit', 'date_of_draft_report_to_ip',
             'date_of_comments_by_ip', 'date_of_draft_report_to_unicef', 'date_of_comments_by_unicef',
             'date_of_report_submit', 'date_of_final_report', 'date_of_cancel',
@@ -528,12 +528,12 @@ class AuditSerializer(ActivePDValidationMixin, RiskCategoriesUpdateMixin, Engage
             'key_internal_weakness', 'key_internal_controls', 'amount_refunded',
             'additional_supporting_documentation_provided', 'justification_provided_and_accepted', 'write_off_required',
             'pending_unsupported_amount', 'explanation_for_additional_information',
-            'year_of_audit',
         ]
         fields.remove('specific_procedures')
         extra_kwargs = EngagementSerializer.Meta.extra_kwargs.copy()
         extra_kwargs.update({
             'engagement_type': {'read_only': True},
+            'year_of_audit': {'required': True},
         })
 
     def get_number_of_financial_findings(self, obj):

@@ -9,19 +9,20 @@ import etools.applications.audit.models
 
 
 def fill_year_of_audit(apps, schema_editor):
-    Audit = apps.get_model('audit', 'Audit')
-    Audit.objects.filter(
-        end_date__isnull=False
+    Engagement = apps.get_model('audit', 'Engagement')
+    Engagement.objects.filter(
+        engagement_type='audit',
+        end_date__isnull=False,
     ).update(
         year_of_audit=Subquery(
-            Audit.objects.filter(
+            Engagement.objects.filter(
                 pk=OuterRef('pk')
             ).annotate(
                 end_year=Extract("end_date", "year")
             ).values('end_year')[:1]
         )
     )
-    Audit.objects.filter(end_date__isnull=True).update(year_of_audit=timezone.now().year)
+    Engagement.objects.filter(engagement_type='audit', end_date__isnull=True).update(year_of_audit=timezone.now().year)
 
 
 class Migration(migrations.Migration):
@@ -32,14 +33,14 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AddField(
-            model_name='audit',
+            model_name='engagement',
             name='year_of_audit',
-            field=models.PositiveSmallIntegerField(default=1),
+            field=models.PositiveSmallIntegerField(default=1, null=True),
         ),
         migrations.RunPython(fill_year_of_audit, migrations.RunPython.noop),
         migrations.AlterField(
-            model_name='audit',
+            model_name='engagement',
             name='year_of_audit',
-            field=models.PositiveSmallIntegerField(default=etools.applications.audit.models.get_current_year),
+            field=models.PositiveSmallIntegerField(default=etools.applications.audit.models.get_current_year, null=True),
         ),
     ]
