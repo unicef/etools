@@ -12,17 +12,22 @@ def fill_year_of_audit(apps, schema_editor):
     Engagement = apps.get_model('audit', 'Engagement')
     Engagement.objects.filter(
         engagement_type='audit',
-        end_date__isnull=False,
+        date_of_draft_report_to_ip__isnull=False,
     ).update(
         year_of_audit=Subquery(
             Engagement.objects.filter(
                 pk=OuterRef('pk')
             ).annotate(
-                end_year=Extract("end_date", "year")
+                end_year=Extract("date_of_draft_report_to_ip", "year")
             ).values('end_year')[:1]
         )
     )
-    Engagement.objects.filter(engagement_type='audit', end_date__isnull=True).update(year_of_audit=timezone.now().year)
+    Engagement.objects.filter(
+        engagement_type='audit',
+        date_of_draft_report_to_ip__isnull=True,
+    ).update(
+        year_of_audit=timezone.now().year,
+    )
 
 
 class Migration(migrations.Migration):
