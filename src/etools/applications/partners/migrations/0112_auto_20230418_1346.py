@@ -35,6 +35,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('partners', '0111_auto_20230315_0932'),
+        ('audit', '0024_audit_year_of_audit'),
     ]
 
     operations = [
