@@ -3013,6 +3013,7 @@ class InterventionBudget(TimeStampedModel):
         verbose_name=_('UNICEF Supplies')
     )
     total = models.DecimalField(max_digits=20, decimal_places=2, verbose_name=_('Total'))
+    total_unfunded = models.DecimalField(max_digits=20, decimal_places=2, verbose_name=_('Total Unfunded'))
 
     # sum of all activity/management budget cso/partner values
     partner_contribution_local = models.DecimalField(max_digits=20, decimal_places=2, default=0,
