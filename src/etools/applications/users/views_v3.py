@@ -26,6 +26,7 @@ from etools.applications.organizations.models import Organization
 from etools.applications.partners.permissions import user_group_permission
 from etools.applications.partners.views.v3 import PMPBaseViewMixin
 from etools.applications.users import views as v1, views_v2 as v2
+from etools.applications.users.filters import UserRoleFilter, UserStatusFilter
 from etools.applications.users.mixins import (
     AUDIT_ACTIVE_GROUPS,
     GroupEditPermissionMixin,
@@ -276,7 +277,7 @@ class UserRealmViewSet(
     serializer_class = UserRealmRetrieveSerializer
 
     pagination_class = DynamicPageNumberPagination
-    filter_backends = (SearchFilter, DjangoFilterBackend, OrderingFilter)
+    filter_backends = (SearchFilter, DjangoFilterBackend, OrderingFilter, UserRoleFilter, UserStatusFilter)
 
     search_fields = ('first_name', 'last_name', 'email', 'profile__job_title')
     filter_fields = ('is_active', )
@@ -332,10 +333,6 @@ class UserRealmViewSet(
             [group for _type in organization.relationship_types for group in ORGANIZATION_GROUP_MAP.get(_type)]
         qs_context.update({"group__name__in": group_names})
 
-        if self.request.query_params.get('roles'):
-            qs_context.update(
-                {"group__id__in": self.request.query_params.getlist('roles')}
-            )
         context_realms_qs = Realm.objects.filter(**qs_context).select_related('group')
 
         return self.model.objects \

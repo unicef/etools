@@ -650,10 +650,7 @@ class TestUserRealmView(BaseTenantTestCase):
             self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_get_list_filter_by_roles(self):
-        data = {"roles": [
-            IPEditor.as_group().pk,
-            IPViewer.as_group().pk
-        ]}
+        data = {"roles": f"{IPEditor.as_group().pk},{IPViewer.as_group().pk}"}
         for auth_user in [self.ip_viewer, self.ip_editor, self.ip_admin,
                           self.ip_auth_officer]:
             response = self.make_request_list(auth_user, method='get', data=data)
