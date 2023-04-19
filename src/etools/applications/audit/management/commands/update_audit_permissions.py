@@ -77,6 +77,7 @@ class Command(BaseCommand):
         'audit.engagement.end_date',
         'audit.engagement.total_value',
         'audit.engagement.joint_audit',
+        'audit.engagement.year_of_audit',
         'audit.engagement.shared_ip_with',
         'audit.engagement.related_agreement',
         'audit.engagement.sections',
