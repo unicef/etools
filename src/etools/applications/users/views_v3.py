@@ -307,14 +307,16 @@ class UserRealmViewSet(
         return super().get_serializer_class()
 
     def get_queryset(self):
-        organization_id = self.request.query_params.get('organization_id')
+        organization_id = self.request.query_params.get('organization_id') or self.request.data.get('organization')
         relationship_type = self.request.query_params.get('organization_type')
         if organization_id:
             if self.request.user.is_unicef_user():
                 organization = get_object_or_404(
                     Organization.objects.all().select_related('partner', 'auditorfirm', 'tpmpartner'),
                     pk=organization_id)
-                if not organization.relationship_types or relationship_type not in organization.relationship_types:
+                if (self.request.method == 'GET' and relationship_type is None) or \
+                        (relationship_type and relationship_type not in organization.relationship_types) or \
+                        not organization.relationship_types:
                     logger.error(f"The provided organization id {organization_id} and type {relationship_type} do not match.")
                     return self.model.objects.none()
             else:
@@ -348,7 +350,7 @@ class UserRealmViewSet(
         self.perform_create(serializer)
 
         headers = self.get_success_headers(serializer.data)
-        return Response(UserRealmRetrieveSerializer(instance=serializer.instance).data,
+        return Response(UserRealmRetrieveSerializer(instance=self.get_queryset().get(pk=serializer.instance.pk)).data,
                         status=status.HTTP_201_CREATED, headers=headers)
 
     def partial_update(self, request, *args, **kwargs):
@@ -362,8 +364,7 @@ class UserRealmViewSet(
 
         if getattr(instance, '_prefetched_objects_cache', None):
             instance._prefetched_objects_cache = {}
-
-        return Response(UserRealmRetrieveSerializer(instance=serializer.instance).data)
+        return Response(UserRealmRetrieveSerializer(instance=self.get_queryset().get(pk=serializer.instance.pk)).data)
 
 
 class ExternalUserViewSet(

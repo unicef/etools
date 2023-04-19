@@ -163,7 +163,7 @@ class UserRealmBaseSerializer(GroupEditPermissionMixin, serializers.ModelSeriali
         if organization_id:
             if not self.context['request'].user.is_unicef_user():
                 raise PermissionDenied(
-                    _('You do not have permission to set roles for organization with %(id)s.'
+                    _('You do not have permission to set roles for organization with id %(id)s.'
                       % {'id': organization_id}))
             organization = get_object_or_404(Organization, pk=organization_id)
             if not organization.relationship_types:
