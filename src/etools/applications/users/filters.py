@@ -20,7 +20,7 @@ class UserStatusFilter(BaseFilterBackend):
                     filters |= models.Q(is_active=True, last_login__isnull=False)
                 if status == 'INACTIVE':
                     filters |= models.Q(is_active=False)
-                if status == 'INCOMPLETE':
+                if status == 'INVITED':
                     filters |= models.Q(is_active=True, last_login__isnull=True)
             return queryset.filter(filters)
         return queryset
