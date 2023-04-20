@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-03-07 13:01+0000\n"
+"POT-Creation-Date: 2023-03-16 08:26+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1191,6 +1191,9 @@ msgstr "Intervenção alterada"
 msgid "Intervention amendments"
 msgstr "Aditivos da implementação do programa"
 
+msgid "Q1"
+msgstr ""
+
 msgid "Intervention"
 msgstr "Intervenção"
 
@@ -1634,6 +1637,11 @@ msgstr ""
 
 msgid "Other description required, if type 'Other' selected."
 msgstr "Outra descrição necessária, se o tipo 'Outro' for selecionado."
+
+#, fuzzy
+#| msgid "Active"
+msgid "Inactive"
+msgstr "Ativo"
 
 msgid "Planned Visit to be set only at Partner level"
 msgstr "Visita planejada a ser definida apenas no nível do parceiro"

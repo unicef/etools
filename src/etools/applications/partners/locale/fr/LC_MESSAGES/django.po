@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: et-partners2-bk\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-03-07 13:01+0000\n"
+"POT-Creation-Date: 2023-03-16 08:26+0000\n"
 "Language: fr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -1175,6 +1175,9 @@ msgstr "Intervention modifiée"
 msgid "Intervention amendments"
 msgstr "Modifications de l'intervention"
 
+msgid "Q1"
+msgstr ""
+
 msgid "Intervention"
 msgstr "Intervention"
 
@@ -1614,6 +1617,11 @@ msgstr ""
 
 msgid "Other description required, if type 'Other' selected."
 msgstr "Autre description requise, si le type \"Autre\" est sélectionné."
+
+#, fuzzy
+#| msgid "Active"
+msgid "Inactive"
+msgstr "Actif"
 
 msgid "Planned Visit to be set only at Partner level"
 msgstr "Visite planifiée à définir uniquement au niveau du partenaire"

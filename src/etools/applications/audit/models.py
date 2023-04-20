@@ -40,6 +40,10 @@ from etools.libraries.djangolib.utils import get_environment
 from etools.libraries.fsm.views import has_action_permission
 
 
+def get_current_year():
+    return timezone.now().year
+
+
 class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
     TYPE_AUDIT = 'audit'
     TYPE_MICRO_ASSESSMENT = 'ma'
@@ -160,6 +164,7 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
     )
 
     joint_audit = models.BooleanField(verbose_name=_('Joint Audit'), default=False, blank=True)
+    year_of_audit = models.PositiveSmallIntegerField(null=True, default=get_current_year, db_index=True)
     shared_ip_with = ArrayField(models.CharField(
         max_length=20, choices=PartnerOrganization.AGENCY_CHOICES
     ), blank=True, default=list, verbose_name=_('Shared Audit with'))
