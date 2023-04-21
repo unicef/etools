@@ -717,6 +717,7 @@ class TestCreate(BaseInterventionTestCase):
             "context": "long text" * 5000,
             "implementation_strategy": "long text" * 5000,
             "ip_program_contribution": "long text" * 5000,
+            "other_details": "*" * 5001,
         }
         response = self.forced_auth_req(
             "post",
@@ -729,6 +730,7 @@ class TestCreate(BaseInterventionTestCase):
             ("context", 7000),
             ("implementation_strategy", 5000),
             ("ip_program_contribution", 5000),
+            ("other_details", 5000),
         ]:
             self.assertEqual(
                 response.data[field_name],
@@ -759,27 +761,6 @@ class TestUpdate(BaseInterventionTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         budget.refresh_from_db()
         self.assertEqual(budget.currency, "PEN")
-
-    @mock.patch('etools.applications.partners.tasks.logger', spec=['info'])
-    @override_settings(
-        EZHACT_PD_VISION_URL='https://example.com/upload/pd/',
-        CELERY_TASK_ALWAYS_EAGER=True,
-        CELERY_EAGER_PROPAGATES_EXCEPTIONS=True,
-    )
-    def test_send_pd_to_vision(self, logger_mock):
-        intervention = InterventionFactory()
-        intervention.unicef_focal_points.add(self.unicef_user)
-
-        with self.captureOnCommitCallbacks(execute=True) as callbacks:
-            response = self.forced_auth_req(
-                "patch",
-                reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
-                user=self.unicef_user,
-                data={'start': datetime.date(year=1970, month=5, day=1)}
-            )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(callbacks), 1)
-        self.assertTrue(mock.call(f'Starting {intervention} upload to vision') in logger_mock.info.mock_calls)
 
     def test_patch_country_programme(self):
         intervention = InterventionFactory()

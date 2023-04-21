@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 from django.db import connection
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext as _
 
 from unicef_attachments.models import FileType
 

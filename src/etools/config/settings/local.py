@@ -140,3 +140,6 @@ if os.path.isfile(join(CONFIG_ROOT, 'keys/jwt/key.pem')):
 
 # Optional for debugging db queries
 # MIDDLEWARE += ('etools.applications.core.middleware.QueryCountDebugMiddleware',)
+
+# Skip request for bank information on PCA template
+PCA_SKIP_FINANCIAL_DATA = True

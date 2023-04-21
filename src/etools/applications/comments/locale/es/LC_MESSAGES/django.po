@@ -1,0 +1,70 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-03-24 08:39+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "ID"
+msgstr "ID"
+
+msgid "Created"
+msgstr "Creada"
+
+msgid "User"
+msgstr "Usuario"
+
+msgid "State"
+msgstr "Estado"
+
+msgid "Users Related"
+msgstr "Usuarios relacionados"
+
+msgid "Related To"
+msgstr "Relacionado con"
+
+msgid "Related To (description)"
+msgstr "Relacionado con (descripción)"
+
+msgid "Text"
+msgstr "Texto"
+
+msgid "Active"
+msgstr "Activo"
+
+msgid "Resolved"
+msgstr "Resueltas"
+
+msgid "Deleted"
+msgstr "Eliminada"
+
+msgid "Content Type"
+msgstr "Tipo de contenido"
+
+msgid "Object ID"
+msgstr "ID de objeto"
+
+msgid "Comment"
+msgstr "Comentario"
+
+msgid "Comments"
+msgstr "Comentarios"
+
+msgid "Unable to resolve deleted comment"
+msgstr "No se puede resolver el comentario eliminado"
+
+msgid "This comment has answers. Unable to delete."
+msgstr "Este comentario tiene respuestas. No se puede eliminar."

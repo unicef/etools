@@ -5,7 +5,9 @@ defaults = {
     "content": """
     Dear Colleague,
 
-    PD {{reference_number}} has been suspended by UNICEF
+    PD {{reference_number}} has been suspended by UNICEF.
+
+    Please reach out to the PD focal point for details on the PD.
 
     {{pd_link}}
 
@@ -16,7 +18,9 @@ defaults = {
     {% block content %}
     Dear Colleague,<br /><br />
 
-    PD {{reference_number}} has been suspended by UNICEF
+    PD {{reference_number}} has been suspended by UNICEF.<br />
+
+    Please reach out to the PD focal point for details on the PD.<br />
 
     {{pd_link}}<br />
 

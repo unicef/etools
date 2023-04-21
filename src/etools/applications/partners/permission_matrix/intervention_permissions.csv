@@ -152,6 +152,9 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.6,offices,*,unicef_not_accepted,Draft,Required,FALSE
 3.6,other_info,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
 3.2.2,other_info,Partner User,partner_court,Draft,Edit,TRUE
+,other_details,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
+,other_details,Partner User,partner_court,Draft,Edit,TRUE
+,other_details,*,,*,Required,FALSE
 3.2.3,other_partners_involved,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
 3.2.4,other_partners_involved,Partner User,partner_court,Draft,Edit,TRUE
 3.2.4,other_partners_involved,*,unlocked,Draft,Required,FALSE
@@ -169,7 +172,18 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.3.3,planned_budget,Unicef Focal Point,,Draft,Edit,TRUE
 3.9.11,planned_budget,Unicef Focal Point,user_adds_amendment,*,Edit,TRUE
 3.9.11,planned_visits,UNICEF User,not_in_amendment_mode,*,View,TRUE
-3.9.11,planned_visits,Unicef Focal Point,not_in_amendment_mode,*,Edit,TRUE
+3.9.11,planned_visits,Unicef Focal Point,not_in_amendment_mode,Draft,Edit,TRUE
+3.9.11,planned_visits,Unicef Focal Point,not_in_amendment_mode,Review,Edit,TRUE
+3.9.11,planned_visits,Unicef Focal Point,not_in_amendment_mode,Signature,Edit,TRUE
+3.9.11,planned_visits,Unicef Focal Point,not_in_amendment_mode,Signed,Edit,TRUE
+3.9.11,planned_visits,Unicef Focal Point,not_in_amendment_mode,Active,Edit,TRUE
+3.9.11,planned_visits,Unicef Focal Point,not_in_amendment_mode,Suspended,Edit,TRUE
+3.9.11,planned_visits,PME,not_in_amendment_mode,Draft,Edit,TRUE
+3.9.11,planned_visits,PME,not_in_amendment_mode,Review,Edit,TRUE
+3.9.11,planned_visits,PME,not_in_amendment_mode,Signature,Edit,TRUE
+3.9.11,planned_visits,PME,not_in_amendment_mode,Signed,Edit,TRUE
+3.9.11,planned_visits,PME,not_in_amendment_mode,Active,Edit,TRUE
+3.9.11,planned_visits,PME,not_in_amendment_mode,Suspended,Edit,TRUE
 3.9.5,prc_review_attachment,*,,*,View,TRUE
 3.9.6,prc_review_attachment,Unicef Focal Point,,Review,Edit,TRUE
 3.9.7,prc_review_document,*,,*,View,TRUE

@@ -12,7 +12,6 @@ from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from unicef_attachments.models import FileType as AttachmentFileType
-from unicef_djangolib.fields import CURRENCIES
 
 from etools.applications.attachments.models import AttachmentFlat
 from etools.applications.funds.models import FundsReservationItem
@@ -35,6 +34,7 @@ from etools.applications.partners.serializers.partner_organization_v2 import \
     PartnerStaffMemberCreateUpdateSerializer  # TODO REALMS cleanup
 from etools.applications.partners.serializers.partner_organization_v2 import PartnerStaffMemberDetailSerializer
 from etools.applications.reports.models import CountryProgramme, Result, ResultType
+from etools.libraries.djangolib.fields import CURRENCIES
 
 
 # TODO REALMS clean up
