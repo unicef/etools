@@ -28,8 +28,8 @@ class GroupEditPermissionMixin:
         "IP Admin": {"partner": ["IP Viewer", "IP Editor", "IP Authorized Officer"]},
         "IP Authorized Officer": {"partner": ["IP Viewer", "IP Editor", "IP Authorized Officer"]},
         "UNICEF User": {},
-        "PME": {},
-        "Partnership Manager": ORGANIZATION_GROUP_MAP,
+        "PME": {"tpm": TPM_ACTIVE_GROUPS},
+        "Partnership Manager": {"partner": PARTNER_ACTIVE_GROUPS},
         "UNICEF Audit Focal Point": {"audit": ["Auditor"]},
     }
 
