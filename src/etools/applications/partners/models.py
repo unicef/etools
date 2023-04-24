@@ -875,12 +875,12 @@ class PartnerOrganization(TimeStampedModel):
         from etools.applications.audit.models import Audit, Engagement, SpecialAudit
         audits = Audit.objects.filter(
             partner=self,
-            date_of_draft_report_to_ip__year=datetime.datetime.now().year
+            year_of_audit=datetime.datetime.now().year
         ).exclude(status=Engagement.CANCELLED)
 
         s_audits = SpecialAudit.objects.filter(
             partner=self,
-            date_of_draft_report_to_ip__year=datetime.datetime.now().year
+            year_of_audit=datetime.datetime.now().year
         ).exclude(status=Engagement.CANCELLED)
         return audits, s_audits
 
@@ -1675,6 +1675,7 @@ class InterventionManager(models.Manager):
             'management_budgets__items',
             'flat_locations',
             'sites',
+            'planned_visits__sites',
             Prefetch('supply_items',
                      queryset=InterventionSupplyItem.objects.order_by('-id')),
         )
@@ -2904,6 +2905,11 @@ class InterventionAmendment(TimeStampedModel):
         self.is_active = False
         self.save()
 
+        # TODO: Technical debt - remove after tempoorary exception for ended amendments is removed.
+        if self.intervention.status == self.intervention.ENDED:
+            if self.intervention.end >= datetime.date.today() >= self.intervention.start:
+                self.intervention.status = self.intervention.ACTIVE
+
         self.intervention.save(amendment_number=self.intervention.amendments.filter(is_active=False).count())
 
         amended_intervention.delete()
@@ -2919,6 +2925,27 @@ class InterventionAmendment(TimeStampedModel):
         )
 
 
+class InterventionPlannedVisitSite(models.Model):
+    Q1 = 1
+    Q2 = 2
+    Q3 = 3
+    Q4 = 4
+
+    QUARTER_CHOICES = (
+        (Q1, _('Q1')),
+        (Q2, _('Q2')),
+        (Q3, _('Q3')),
+        (Q4, _('Q4')),
+    )
+
+    planned_visits = models.ForeignKey('partners.InterventionPlannedVisits', on_delete=models.CASCADE)
+    site = models.ForeignKey('field_monitoring_settings.LocationSite', on_delete=models.CASCADE)
+    quarter = models.PositiveSmallIntegerField(choices=QUARTER_CHOICES)
+
+    class Meta:
+        unique_together = ('planned_visits', 'site', 'quarter')
+
+
 class InterventionPlannedVisits(TimeStampedModel):
     """Represents planned visits for the intervention"""
 
@@ -2931,6 +2958,12 @@ class InterventionPlannedVisits(TimeStampedModel):
     programmatic_q2 = models.IntegerField(default=0, verbose_name=_('Programmatic Q2'))
     programmatic_q3 = models.IntegerField(default=0, verbose_name=_('Programmatic Q3'))
     programmatic_q4 = models.IntegerField(default=0, verbose_name=_('Programmatic Q4'))
+    sites = models.ManyToManyField(
+        'field_monitoring_settings.LocationSite',
+        through=InterventionPlannedVisitSite,
+        verbose_name=_('Sites'),
+        blank=True,
+    )
 
     tracker = FieldTracker()
 
@@ -2940,6 +2973,32 @@ class InterventionPlannedVisits(TimeStampedModel):
 
     def __str__(self):
         return '{} {}'.format(self.intervention, self.year)
+
+    def programmatic_sites(self, quarter):
+        from etools.applications.field_monitoring.fm_settings.models import LocationSite
+        return LocationSite.objects.filter(
+            pk__in=InterventionPlannedVisitSite.objects.filter(
+                site__in=self.sites.all(),
+                planned_visits=self,
+                quarter=quarter
+            ).values_list('site', flat=True)
+        )
+
+    @property
+    def programmatic_q1_sites(self):
+        return self.programmatic_sites(InterventionPlannedVisitSite.Q1)
+
+    @property
+    def programmatic_q2_sites(self):
+        return self.programmatic_sites(InterventionPlannedVisitSite.Q2)
+
+    @property
+    def programmatic_q3_sites(self):
+        return self.programmatic_sites(InterventionPlannedVisitSite.Q3)
+
+    @property
+    def programmatic_q4_sites(self):
+        return self.programmatic_sites(InterventionPlannedVisitSite.Q4)
 
 
 class InterventionResultLink(TimeStampedModel):
@@ -3310,7 +3369,7 @@ class InterventionReviewNotification(TimeStampedModel):
             'intervention_number': self.review.intervention.reference_number,
             'meeting_date': self.review.meeting_date.strftime('%d-%m-%Y'),
             'user_name': self.user.get_full_name(),
-            'url': '{}{}'.format(settings.HOST, self.review.intervention.get_frontend_object_url(suffix='review'))
+            'url': self.review.intervention.get_frontend_object_url(suffix='review')
         }
 
         send_notification_with_template(

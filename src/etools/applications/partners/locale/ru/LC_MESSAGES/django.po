@@ -1159,6 +1159,9 @@ msgstr "Программа с поправками"
 msgid "Intervention amendments"
 msgstr "Поправки к программе"
 
+msgid "Q1"
+msgstr ""
+
 msgid "Intervention"
 msgstr "Программа"
 

@@ -1,7 +1,9 @@
 import datetime
 from unittest import mock, skip
+from unittest.mock import patch
 
 from django.core.management import call_command
+from django.db import connection
 from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone, translation
@@ -13,6 +15,7 @@ from unicef_locations.tests.factories import LocationFactory
 from etools.applications.attachments.models import AttachmentFlat
 from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.environment.tests.factories import TenantSwitchFactory
 from etools.applications.field_monitoring.fm_settings.tests.factories import LocationSiteFactory
 from etools.applications.partners.models import Intervention, InterventionAmendment
 from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, UNICEF_USER
@@ -191,7 +194,11 @@ class TestInterventionAmendments(BaseTenantTestCase):
         assert flat.pd_ssfa
         assert flat.pd_ssfa_number
 
-    def test_create_amendment_with_internal_prc_review_none(self):
+    @patch("etools.applications.partners.utils.send_notification_with_template")
+    def test_create_amendment_with_internal_prc_review_none(self, mock_send):
+        ts = TenantSwitchFactory(name="intervention_amendment_notifications_on", countries=[connection.tenant])
+        self.assertTrue(ts.is_active)
+
         response = self.forced_auth_req(
             'post',
             reverse('partners_api:intervention-amendments-add', args=[self.active_intervention.pk]),
@@ -202,7 +209,7 @@ class TestInterventionAmendments(BaseTenantTestCase):
             },
             request_format='multipart',
         )
-
+        self.assertEqual(mock_send.call_count, 1)
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
         self.assertEquals(response.data['intervention'], self.active_intervention.pk)
 
