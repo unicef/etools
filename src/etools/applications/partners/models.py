@@ -559,7 +559,7 @@ class PartnerOrganization(TimeStampedModel):
             realms__organization=self.organization,
             realms__country=connection.tenant,
             realms__group__name__in=PARTNER_ACTIVE_GROUPS,
-        )
+        ).distinct()
 
     @cached_property
     def active_staff_members(self):

@@ -33,7 +33,7 @@ class GroupEditPermissionMixin:
         "UNICEF Audit Focal Point": {"audit": ["Auditor"]},
     }
 
-    CAN_ADD_USER = ["IP Admin", "IP Authorized Officer",
+    CAN_ADD_USER = ["IP Admin", "IP Authorized Officer", "PME",
                     "Partnership Manager", "UNICEF Audit Focal Point"]
 
     def get_user_allowed_groups(self, organization_types, user=None):
