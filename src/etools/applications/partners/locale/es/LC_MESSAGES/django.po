@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: et-partners2-bk\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-03-24 08:39+0000\n"
+"POT-Creation-Date: 2023-04-24 10:09+0000\n"
 "Language: es\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -1598,6 +1598,9 @@ msgstr ""
 
 msgid "Other description required, if type 'Other' selected."
 msgstr "Se requiere otra descripción, si se selecciona el tipo 'Otro'."
+
+msgid "Inactive"
+msgstr "Inactivo"
 
 msgid "Planned Visit cannot be set for Terminated interventions"
 msgstr ""
