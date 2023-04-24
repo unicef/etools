@@ -15,7 +15,7 @@ class PartnerScopeFilter(BaseFilterBackend):
                 realms__country=connection.tenant,
                 realms__organization=partner.organization,
                 realms__group__name__in=PARTNER_ACTIVE_GROUPS,
-            )
+            ).distinct()
         return queryset
 
 

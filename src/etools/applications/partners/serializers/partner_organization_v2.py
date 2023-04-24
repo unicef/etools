@@ -207,12 +207,13 @@ class PartnerStaffMemberDetailSerializer(serializers.ModelSerializer):
     active = serializers.BooleanField(source='is_active')
     phone = serializers.CharField(source='profile.phone_number')
     title = serializers.CharField(source='profile.job_title')
+    has_active_realm = serializers.BooleanField()
 
     class Meta:
         model = get_user_model()
         fields = (
             'id', 'email', 'first_name', 'last_name', 'created', 'modified',
-            'active', 'phone', 'title',
+            'active', 'phone', 'title', 'has_active_realm'
             # TODO REALMS check with frontend if partner id is used
             # 'partner'
         )

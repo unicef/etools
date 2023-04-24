@@ -61,7 +61,7 @@ class UserTypeFilter(BaseFilterBackend):
                 realms__country=connection.tenant,
                 realms__organization__tpmpartner__isnull=False,
                 realms__group__name__in=TPM_ACTIVE_GROUPS,
-            )
+            ).distinct()
         else:
             return queryset.filter(is_staff=True)
 
@@ -76,7 +76,7 @@ class UserTPMPartnerFilter(BaseFilterBackend):
             realms__country=connection.tenant,
             realms__organization__tpmpartner=value,
             realms__group__name__in=TPM_ACTIVE_GROUPS,
-        )
+        ).distinct()
 
 
 class CPOutputsFilterSet(filters.FilterSet):

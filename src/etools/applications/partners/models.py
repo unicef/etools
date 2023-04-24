@@ -7,7 +7,21 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import ArrayField
 from django.core.validators import MinValueValidator
 from django.db import connection, models, transaction
-from django.db.models import Case, CharField, Count, F, Max, Min, OuterRef, Prefetch, Q, Subquery, Sum, When
+from django.db.models import (
+    BooleanField,
+    Case,
+    CharField,
+    Count,
+    F,
+    Max,
+    Min,
+    OuterRef,
+    Prefetch,
+    Q,
+    Subquery,
+    Sum,
+    When,
+)
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.functional import cached_property
@@ -555,18 +569,27 @@ class PartnerOrganization(TimeStampedModel):
 
     @cached_property
     def all_staff_members(self):
-        return User.objects.filter(
+        user_qs = User.objects.filter(
             realms__organization=self.organization,
             realms__country=connection.tenant,
-            realms__group__name__in=PARTNER_ACTIVE_GROUPS,
+            realms__group__name__in=PARTNER_ACTIVE_GROUPS)
+
+        return user_qs.annotate(
+            has_active_realm=Case(
+                When(realms__is_active=True, then=True),
+                default=False, output_field=BooleanField()
+            )
         ).distinct()
 
     @cached_property
     def active_staff_members(self):
         return self.all_staff_members.filter(
             is_active=True,
-            realms__is_active=True
-        )
+            has_active_realm=True,
+            realms__organization=self.organization,
+            realms__country=connection.tenant,
+            realms__group__name__in=PARTNER_ACTIVE_GROUPS,
+        ).distinct()
 
     def get_object_url(self):
         return reverse("partners_api:partner-detail", args=[self.pk])

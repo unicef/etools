@@ -28,7 +28,7 @@ class PMPPartnerStaffMemberMixin(PMPBaseViewMixin):
                 realms__country=connection.tenant,
                 realms__organization__partner=self.current_partner(),
                 realms__group__name__in=PARTNER_ACTIVE_GROUPS,
-            )
+            ).distinct()
         return qs
 
 
