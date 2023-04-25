@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import connection, transaction
-from django.db.models import BooleanField, Case, OuterRef, Prefetch, Q, Subquery, When
+from django.db.models import Exists, OuterRef, Prefetch, Q, Subquery
 from django.http import HttpResponseForbidden, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 
@@ -338,9 +338,7 @@ class UserRealmViewSet(
         return self.model.objects \
             .filter(realms__in=context_realms_qs) \
             .prefetch_related(Prefetch('realms', queryset=context_realms_qs)) \
-            .annotate(has_active_realm=Case(
-                When(realms__is_active=True, then=True),
-                default=False, output_field=BooleanField())) \
+            .annotate(has_active_realm=Exists(Realm.objects.filter(user=OuterRef('pk'), is_active=True))) \
             .distinct()
 
     @transaction.atomic

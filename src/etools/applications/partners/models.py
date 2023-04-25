@@ -7,21 +7,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import ArrayField
 from django.core.validators import MinValueValidator
 from django.db import connection, models, transaction
-from django.db.models import (
-    BooleanField,
-    Case,
-    CharField,
-    Count,
-    F,
-    Max,
-    Min,
-    OuterRef,
-    Prefetch,
-    Q,
-    Subquery,
-    Sum,
-    When,
-)
+from django.db.models import Case, CharField, Count, Exists, F, Max, Min, OuterRef, Prefetch, Q, Subquery, Sum, When
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.functional import cached_property
@@ -574,12 +560,9 @@ class PartnerOrganization(TimeStampedModel):
             realms__country=connection.tenant,
             realms__group__name__in=PARTNER_ACTIVE_GROUPS)
 
-        return user_qs.annotate(
-            has_active_realm=Case(
-                When(realms__is_active=True, then=True),
-                default=False, output_field=BooleanField()
-            )
-        ).distinct()
+        return user_qs\
+            .annotate(has_active_realm=Exists(Realm.objects.filter(user=OuterRef('pk'), is_active=True)))\
+            .distinct()
 
     @cached_property
     def active_staff_members(self):
