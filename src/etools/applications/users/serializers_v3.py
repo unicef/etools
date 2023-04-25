@@ -163,7 +163,7 @@ class UserRealmBaseSerializer(GroupEditPermissionMixin, serializers.ModelSeriali
         if organization_id:
             if not self.context['request'].user.is_unicef_user():
                 raise PermissionDenied(
-                    _('You do not have permission to set roles for organization with %(id)s.'
+                    _('You do not have permission to set roles for organization with id %(id)s.'
                       % {'id': organization_id}))
             organization = get_object_or_404(Organization, pk=organization_id)
             if not organization.relationship_types:
@@ -209,6 +209,7 @@ class UserRealmBaseSerializer(GroupEditPermissionMixin, serializers.ModelSeriali
 class UserRealmCreateSerializer(UserRealmBaseSerializer):
     email = serializers.CharField(required=True, write_only=True)
     job_title = serializers.CharField(required=False, allow_blank=True, write_only=True)
+    phone_number = serializers.CharField(required=False, allow_blank=True, write_only=True)
 
     class Meta(UserRealmBaseSerializer.Meta):
         model = get_user_model()
@@ -217,6 +218,7 @@ class UserRealmCreateSerializer(UserRealmBaseSerializer):
             'last_name',
             'email',
             'job_title',
+            'phone_number'
         ]
         extra_kwargs = {
             'first_name': {'required': True},
@@ -233,6 +235,7 @@ class UserRealmCreateSerializer(UserRealmBaseSerializer):
         organization_id = validated_data.pop('organization', self.context['request'].user.profile.organization.id)
         group_ids = validated_data.pop("groups")
         job_title = validated_data.pop("job_title", None)
+        phone_number = validated_data.pop("phone_number", None)
 
         email = validated_data.pop('email')
         validated_data.update({"username": email})
@@ -245,12 +248,14 @@ class UserRealmCreateSerializer(UserRealmBaseSerializer):
 
         if job_title:
             instance.profile.job_title = job_title
+        if phone_number:
+            instance.profile.phone_number = phone_number
         instance.profile.country = connection.tenant
 
         if not instance.profile.organization and instance != self.context['request'].user:
             instance.profile.organization_id = organization_id
 
-        instance.profile.save(update_fields=['country', 'organization_id', 'job_title'])
+        instance.profile.save(update_fields=['country', 'organization_id', 'job_title', 'phone_number'])
 
         self.create_realms(instance, organization_id, group_ids)
         instance.update_active_state()

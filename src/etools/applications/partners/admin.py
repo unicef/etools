@@ -12,6 +12,7 @@ from django.utils.translation import gettext_lazy as _
 
 from admin_extra_urls.decorators import button
 from admin_extra_urls.mixins import ExtraUrlMixin
+from django_tenants.postgresql_backend.base import FakeTenant
 from import_export.admin import ExportMixin
 from unicef_attachments.admin import AttachmentSingleInline
 from unicef_attachments.models import Attachment
@@ -425,6 +426,8 @@ class InterventionAdmin(
     attachments_link.short_description = 'attachments'
 
     def has_change_permission(self, request, obj=None):
+        if isinstance(connection.tenant, FakeTenant):
+            return False
         return super().has_change_permission(request, obj=None) or request.user.groups.filter(name='Country Office Administrator').exists()
 
     def changeform_view(self, request, *args, **kwargs):

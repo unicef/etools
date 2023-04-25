@@ -30,7 +30,7 @@ class Migration(migrations.Migration):
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         ('users', '0021_migrate_to_realms'),
         ('purchase_order', '0012_alter_auditorstaffmember_auditor_firm'),
-        ('audit', '0024_alter_engagement_staff_members'),
+        ('audit', '0026_alter_engagement_staff_members'),
     ]
 
     operations = [

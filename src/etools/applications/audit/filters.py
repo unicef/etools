@@ -83,6 +83,7 @@ class EngagementFilter(filters.FilterSet):
             'date_of_draft_report_to_ip': ['lte', 'gte', 'gt', 'lt'],
             'offices': ['exact', 'in'],
             'sections': ['exact', 'in'],
+            'year_of_audit': ['exact', 'in'],
         }
 
 

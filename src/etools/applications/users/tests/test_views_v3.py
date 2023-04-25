@@ -650,10 +650,7 @@ class TestUserRealmView(BaseTenantTestCase):
             self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_get_list_filter_by_roles(self):
-        data = {"roles": [
-            IPEditor.as_group().pk,
-            IPViewer.as_group().pk
-        ]}
+        data = {"roles": f"{IPEditor.as_group().pk},{IPViewer.as_group().pk}"}
         for auth_user in [self.ip_viewer, self.ip_editor, self.ip_admin,
                           self.ip_auth_officer]:
             response = self.make_request_list(auth_user, method='get', data=data)
@@ -727,12 +724,14 @@ class TestUserRealmView(BaseTenantTestCase):
                 "first_name": "First Name",
                 "last_name": f"{auth_user.id} Last Name",
                 "email": email,
+                "phone_number": "+10999909999",
                 "groups": [GroupFactory(name=group.name).pk],
             }
             response = self.make_request_list(auth_user, data=data)
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
             new_user = User.objects.get(email=email)
             self.assertEqual(new_user.realms.count(), 1)
+            self.assertEqual(new_user.profile.phone_number, data['phone_number'])
             self.assertEqual(group.name, response.data['realms'][0]['group_name'])
 
     def test_post_user_exists_201(self):

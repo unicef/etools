@@ -8,6 +8,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.management import call_command
 from django.db import connection
 from django.urls import reverse
+from django.utils import timezone
 
 from factory import fuzzy
 from rest_framework import status
@@ -555,6 +556,10 @@ class TestMicroAssessmentCreateViewSet(TestEngagementCreateActivePDViewSet, Base
 
 class TestAuditCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEngagementsCreateViewSet, BaseTenantTestCase):
     engagement_factory = AuditFactory
+
+    def setUp(self):
+        super().setUp()
+        self.create_data['year_of_audit'] = timezone.now().year
 
 
 class TestSpotCheckCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEngagementsCreateViewSet,

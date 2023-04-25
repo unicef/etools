@@ -28,12 +28,12 @@ class GroupEditPermissionMixin:
         "IP Admin": {"partner": ["IP Viewer", "IP Editor", "IP Authorized Officer"]},
         "IP Authorized Officer": {"partner": ["IP Viewer", "IP Editor", "IP Authorized Officer"]},
         "UNICEF User": {},
-        "PME": {},
-        "Partnership Manager": ORGANIZATION_GROUP_MAP,
+        "PME": {"tpm": TPM_ACTIVE_GROUPS},
+        "Partnership Manager": {"partner": PARTNER_ACTIVE_GROUPS},
         "UNICEF Audit Focal Point": {"audit": ["Auditor"]},
     }
 
-    CAN_ADD_USER = ["IP Admin", "IP Authorized Officer",
+    CAN_ADD_USER = ["IP Admin", "IP Authorized Officer", "PME",
                     "Partnership Manager", "UNICEF Audit Focal Point"]
 
     def get_user_allowed_groups(self, organization_types, user=None):

@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import connection, transaction
-from django.db.models import OuterRef, Prefetch, Q, Subquery
+from django.db.models import Exists, OuterRef, Prefetch, Q, Subquery
 from django.http import HttpResponseForbidden, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 
@@ -26,6 +26,7 @@ from etools.applications.organizations.models import Organization
 from etools.applications.partners.permissions import user_group_permission
 from etools.applications.partners.views.v3 import PMPBaseViewMixin
 from etools.applications.users import views as v1, views_v2 as v2
+from etools.applications.users.filters import UserRoleFilter, UserStatusFilter
 from etools.applications.users.mixins import (
     AUDIT_ACTIVE_GROUPS,
     GroupEditPermissionMixin,
@@ -276,7 +277,7 @@ class UserRealmViewSet(
     serializer_class = UserRealmRetrieveSerializer
 
     pagination_class = DynamicPageNumberPagination
-    filter_backends = (SearchFilter, DjangoFilterBackend, OrderingFilter)
+    filter_backends = (SearchFilter, DjangoFilterBackend, OrderingFilter, UserRoleFilter, UserStatusFilter)
 
     search_fields = ('first_name', 'last_name', 'email', 'profile__job_title')
     filter_fields = ('is_active', )
@@ -307,14 +308,16 @@ class UserRealmViewSet(
         return super().get_serializer_class()
 
     def get_queryset(self):
-        organization_id = self.request.query_params.get('organization_id')
+        organization_id = self.request.query_params.get('organization_id') or self.request.data.get('organization')
         relationship_type = self.request.query_params.get('organization_type')
         if organization_id:
             if self.request.user.is_unicef_user():
                 organization = get_object_or_404(
                     Organization.objects.all().select_related('partner', 'auditorfirm', 'tpmpartner'),
                     pk=organization_id)
-                if not organization.relationship_types or relationship_type not in organization.relationship_types:
+                if (self.request.method == 'GET' and relationship_type is None) or \
+                        (relationship_type and relationship_type not in organization.relationship_types) or \
+                        not organization.relationship_types:
                     logger.error(f"The provided organization id {organization_id} and type {relationship_type} do not match.")
                     return self.model.objects.none()
             else:
@@ -330,15 +333,12 @@ class UserRealmViewSet(
             [group for _type in organization.relationship_types for group in ORGANIZATION_GROUP_MAP.get(_type)]
         qs_context.update({"group__name__in": group_names})
 
-        if self.request.query_params.get('roles'):
-            qs_context.update(
-                {"group__id__in": self.request.query_params.getlist('roles')}
-            )
         context_realms_qs = Realm.objects.filter(**qs_context).select_related('group')
 
         return self.model.objects \
             .filter(realms__in=context_realms_qs) \
-            .prefetch_related(Prefetch('realms', queryset=context_realms_qs))\
+            .prefetch_related(Prefetch('realms', queryset=context_realms_qs)) \
+            .annotate(has_active_realm=Exists(Realm.objects.filter(user=OuterRef('pk'), is_active=True))) \
             .distinct()
 
     @transaction.atomic
@@ -348,7 +348,7 @@ class UserRealmViewSet(
         self.perform_create(serializer)
 
         headers = self.get_success_headers(serializer.data)
-        return Response(UserRealmRetrieveSerializer(instance=serializer.instance).data,
+        return Response(UserRealmRetrieveSerializer(instance=self.get_queryset().get(pk=serializer.instance.pk)).data,
                         status=status.HTTP_201_CREATED, headers=headers)
 
     def partial_update(self, request, *args, **kwargs):
@@ -362,8 +362,7 @@ class UserRealmViewSet(
 
         if getattr(instance, '_prefetched_objects_cache', None):
             instance._prefetched_objects_cache = {}
-
-        return Response(UserRealmRetrieveSerializer(instance=serializer.instance).data)
+        return Response(UserRealmRetrieveSerializer(instance=self.get_queryset().get(pk=serializer.instance.pk)).data)
 
 
 class ExternalUserViewSet(
