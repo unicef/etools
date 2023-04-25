@@ -207,16 +207,21 @@ class PartnerStaffMemberDetailSerializer(serializers.ModelSerializer):
     active = serializers.BooleanField(source='is_active')
     phone = serializers.CharField(source='profile.phone_number')
     title = serializers.CharField(source='profile.job_title')
-    has_active_realm = serializers.BooleanField()
 
     class Meta:
         model = get_user_model()
         fields = (
             'id', 'email', 'first_name', 'last_name', 'created', 'modified',
-            'active', 'phone', 'title', 'has_active_realm'
-            # TODO REALMS check with frontend if partner id is used
-            # 'partner'
+            'active', 'phone', 'title'
         )
+
+
+class PartnerStaffMemberRealmSerializer(PartnerStaffMemberDetailSerializer):
+    has_active_realm = serializers.BooleanField()
+
+    class Meta(PartnerStaffMemberDetailSerializer.Meta):
+        model = get_user_model()
+        fields = PartnerStaffMemberDetailSerializer.Meta.fields + ('has_active_realm',)
 
 
 class PartnerStaffMemberUserSerializer(PartnerStaffMemberDetailSerializer):
@@ -444,7 +449,7 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
     short_name = serializers.CharField(source='organization.short_name', read_only=True)
     partner_type = serializers.CharField(source='organization.organization_type', read_only=True)
     cso_type = serializers.CharField(source='organization.cso_type', read_only=True)
-    staff_members = PartnerStaffMemberDetailSerializer(source='all_staff_members', many=True, read_only=True)
+    staff_members = PartnerStaffMemberRealmSerializer(source='all_staff_members', many=True, read_only=True)
     assessments = AssessmentDetailSerializer(many=True, read_only=True)
     planned_engagement = PlannedEngagementSerializer(read_only=True)
     interventions = serializers.SerializerMethodField(read_only=True)
