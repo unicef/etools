@@ -16,10 +16,13 @@ from unicef_vision.synchronizers import FileDataSynchronizer
 from unicef_vision.utils import comp_decimals
 
 from etools.applications.environment.helpers import tenant_switch_is_active
+from etools.applications.organizations.models import Organization
 from etools.applications.partners.models import Intervention, PartnerOrganization, PlannedEngagement
 from etools.applications.partners.serializers.exports.vision.interventions_v1 import InterventionSerializer
 from etools.applications.partners.tasks import notify_partner_hidden
 from etools.applications.reports.models import InterventionActivity
+from etools.applications.users.mixins import PARTNER_ACTIVE_GROUPS
+from etools.applications.users.models import Country, Realm
 from etools.applications.vision.synchronizers import VisionDataTenantSynchronizer, VisionSyncLog
 
 logger = logging.getLogger(__name__)
@@ -141,7 +144,7 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
             if field == 'blocked':
                 apiobj_field = mapped_key in api_obj
 
-            if getattr(local_obj, field) != apiobj_field:
+            if getattr(local_obj, field, None) != apiobj_field:
                 logger.debug('field changed', field)
                 return True
         return False
@@ -152,10 +155,11 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
         notify_block = False
 
         try:
-            partner_org, new = PartnerOrganization.objects.get_or_create(vendor_number=partner['VENDOR_CODE'])
+            org, created = Organization.objects.get_or_create(vendor_number=partner['VENDOR_CODE'])
+            partner_org, new = PartnerOrganization.objects.get_or_create(organization=org)
 
             if not self.get_partner_type(partner):
-                logger.info('Partner {} skipped, because PartnerType is {}'.format(
+                logger.info('Partner {} skipped, because OrganizationType is {}'.format(
                     partner['VENDOR_NAME'], partner['PARTNER_TYPE_DESC']
                 ))
 
@@ -166,9 +170,13 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
                     partner_org.save()
                 return processed
 
+            if created or self._changed_fields(org, partner):
+                org.name = partner['VENDOR_NAME']
+                org.short_name = partner['SEARCH_TERM1'] or ''
+                org.organization_type = self.get_partner_type(partner)
+                org.cso_type = self.get_cso_type(partner)
+
             if new or self._changed_fields(partner_org, partner):
-                partner_org.name = partner['VENDOR_NAME']
-                partner_org.cso_type = self.get_cso_type(partner)
                 partner_org.rating = self.get_partner_rating(partner)
                 partner_org.type_of_assessment = self.get_type_of_assessment(partner)
                 partner_org.address = partner.get('STREET', '')
@@ -182,7 +190,7 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
                     '%d-%b-%y') if partner['CORE_VALUE_ASSESSMENT_DT'] else None
                 partner_org.last_assessment_date = datetime.strptime(
                     partner['DATE_OF_ASSESSMENT'], '%d-%b-%y') if partner["DATE_OF_ASSESSMENT"] else None
-                partner_org.partner_type = self.get_partner_type(partner)
+
                 partner_org.deleted_flag = bool(partner['MARKED_FOR_DELETION'])
                 posting_block = bool(partner['POSTING_BLOCK'])
 
@@ -192,7 +200,7 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
 
                 partner_org.hidden = partner_org.deleted_flag or partner_org.blocked or partner_org.manually_blocked
                 partner_org.vision_synced = True
-                partner_org.short_name = partner['SEARCH_TERM1'] or ''
+
                 partner_org.highest_risk_rating_name = self.get_partner_higest_rating(partner)
                 partner_org.highest_risk_rating_type = partner.get("HIGEST_RISK_RATING_TYPE", "")
                 partner_org.psea_assessment_date = datetime.strptime(
@@ -233,10 +241,14 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
                         partner_org.type_of_assessment == PartnerOrganization.MICRO_ASSESSMENT)
                 ):
                     partner_org.basis_for_risk_rating = ''
+                org.save()
                 partner_org.save()
 
                 if notify_block:
                     notify_partner_hidden.delay(partner_org.pk, connection.schema_name)
+
+                if partner_org.deleted_flag:
+                    self.deactivate_staff_members(partner_org)
 
             if new:
                 PlannedEngagement.objects.get_or_create(partner=partner_org)
@@ -301,6 +313,23 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
         if partner['TYPE_OF_ASSESSMENT']:
             return type_of_assessments.get(partner['TYPE_OF_ASSESSMENT'].upper(), partner['TYPE_OF_ASSESSMENT'])
         return ''
+
+    @staticmethod
+    def deactivate_staff_members(partner_org):
+        # deactivate the users that are staff members
+        staff_members_ids = list(partner_org.active_staff_members.values_list('id', flat=True))
+        partner_org.active_staff_members.update(is_active=False)
+        try:
+            country = Country.objects.get(schema_name=partner_org.country)
+            Realm.objects.filter(
+                user_id__in=staff_members_ids,
+                country=country,
+                organization=partner_org.organization,
+                group__name__in=PARTNER_ACTIVE_GROUPS)\
+                .update(is_active=False)
+        except Country.DoesNotExist:
+            logging.error(f"No country with name {partner_org.country} exists. "
+                          f"Cannot deactivate realms for users.")
 
 
 class FilePartnerSynchronizer(FileDataSynchronizer, PartnerSynchronizer):

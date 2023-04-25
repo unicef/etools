@@ -1,6 +1,7 @@
 from datetime import date, datetime, timedelta
 from operator import itemgetter
 
+from django.contrib.auth import get_user_model
 from django.core.exceptions import ImproperlyConfigured
 from django.db import transaction
 from django.db.models import Q, QuerySet
@@ -21,6 +22,7 @@ from unicef_snapshot.serializers import SnapshotModelSerializer
 from etools.applications.field_monitoring.fm_settings.models import LocationSite
 from etools.applications.funds.models import FundsCommitmentItem, FundsReservationHeader
 from etools.applications.funds.serializers import FRHeaderSerializer, FRsSerializer
+from etools.applications.organizations.models import OrganizationType
 from etools.applications.partners.models import (
     FileType,
     Intervention,
@@ -31,8 +33,6 @@ from etools.applications.partners.models import (
     InterventionPlannedVisitSite,
     InterventionReportingPeriod,
     InterventionResultLink,
-    PartnerStaffMember,
-    PartnerType,
 )
 from etools.applications.partners.permissions import InterventionPermissions
 from etools.applications.partners.serializers.intervention_snapshot import FullInterventionSnapshotSerializerMixin
@@ -99,11 +99,18 @@ class InterventionBudgetCUSerializer(
 
 
 class PartnerStaffMemberUserSerializer(serializers.ModelSerializer):
-    user = MinimalUserSerializer()
+    active = serializers.BooleanField(source='is_active')
+    phone = serializers.CharField(source='profile.phone_number')
+    title = serializers.CharField(source='profile.job_title')
 
     class Meta:
-        model = PartnerStaffMember
-        fields = "__all__"
+        model = get_user_model()
+        fields = (
+            'id', 'email', 'first_name', 'last_name', 'created', 'modified',
+            'active', 'phone', 'title',
+            # TODO REALMS check with frontend if partner id is used
+            # 'partner'
+        )
 
 
 class InterventionAmendmentCUSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
@@ -243,8 +250,8 @@ class PlannedVisitsCUSerializer(serializers.ModelSerializer):
                 intervention=self.initial_data.get("intervention"),
                 pk=self.initial_data.get("id"),
             )
-            if self.instance.intervention.agreement.partner.partner_type == PartnerType.GOVERNMENT:
-                raise ValidationError(_("Planned Visit to be set only at Partner level"))
+            if self.instance.intervention.agreement.partner.partner_type == OrganizationType.GOVERNMENT:
+                raise ValidationError("Planned Visit to be set only at Partner level")
             if self.instance.intervention.status == Intervention.TERMINATED:
                 raise ValidationError(_("Planned Visit cannot be set for Terminated interventions"))
 

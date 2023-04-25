@@ -1,6 +1,9 @@
 from datetime import datetime
+from unittest import skip
+from unittest.mock import Mock, patch
 
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.db import connection
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext as _
@@ -16,7 +19,7 @@ from etools.applications.attachments.tests.factories import (
     AttachmentLinkFactory,
 )
 from etools.applications.core.tests.cases import BaseTenantTestCase
-from etools.applications.partners.models import PartnerType
+from etools.applications.organizations.models import OrganizationType
 from etools.applications.partners.tests.factories import InterventionAttachmentFactory
 from etools.applications.reports.tests.factories import OfficeFactory, SectionFactory
 from etools.applications.tpm.models import ThirdPartyMonitor, TPMVisit
@@ -28,6 +31,7 @@ from etools.applications.tpm.tests.factories import (
     TPMUserFactory,
     TPMVisitFactory,
 )
+from etools.applications.tpm.tpmpartners.models import TPMPartner
 from etools.applications.users.tests.factories import UserFactory
 from etools.libraries.djangolib.tests.utils import TestExportMixin
 
@@ -61,21 +65,21 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
         self._test_list_view(self.tpm_user, [])
 
         visit = TPMVisitFactory(status='assigned',
-                                tpm_partner=self.tpm_user.tpmpartners_tpmpartnerstaffmember.tpm_partner,
-                                tpm_partner_focal_points=[self.tpm_user.tpmpartners_tpmpartnerstaffmember])
+                                tpm_partner=self.tpm_user.profile.organization.tpmpartner,
+                                tpm_partner_focal_points=[self.tpm_user])
 
         self._test_list_view(self.tpm_user, [visit])
 
     def test_list_view_filter_single(self):
-        staff = self.tpm_user.tpmpartners_tpmpartnerstaffmember
+        staff = self.tpm_user
         visit_assigned = TPMVisitFactory(
             status=TPMVisit.ASSIGNED,
-            tpm_partner=staff.tpm_partner,
+            tpm_partner=staff.profile.organization.tpmpartner,
             tpm_partner_focal_points=[staff]
         )
         TPMVisitFactory(
             status=TPMVisit.REPORTED,
-            tpm_partner=staff.tpm_partner,
+            tpm_partner=staff.profile.organization.tpmpartner,
             tpm_partner_focal_points=[staff]
         )
         self._test_list_view(
@@ -85,15 +89,15 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
         )
 
     def test_list_view_filter_multiple(self):
-        staff = self.tpm_user.tpmpartners_tpmpartnerstaffmember
+        staff = self.tpm_user
         visit_assigned = TPMVisitFactory(
             status=TPMVisit.ASSIGNED,
-            tpm_partner=staff.tpm_partner,
+            tpm_partner=staff.profile.organization.tpmpartner,
             tpm_partner_focal_points=[staff]
         )
         visit_reported = TPMVisitFactory(
             status=TPMVisit.REPORTED,
-            tpm_partner=staff.tpm_partner,
+            tpm_partner=staff.profile.organization.tpmpartner,
             tpm_partner_focal_points=[staff]
         )
         self._test_list_view(
@@ -105,17 +109,17 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
         )
 
     def test_list_view_filter_office_single(self):
-        staff = self.tpm_user.tpmpartners_tpmpartnerstaffmember
+        staff = self.tpm_user
         visit = TPMVisitFactory(
             status=TPMVisit.ASSIGNED,
-            tpm_partner=staff.tpm_partner,
+            tpm_partner=staff.profile.organization.tpmpartner,
             tpm_partner_focal_points=[staff]
         )
         office = OfficeFactory()
         TPMActivityFactory(tpm_visit=visit, offices=[office])
         TPMVisitFactory(
             status=TPMVisit.ASSIGNED,
-            tpm_partner=staff.tpm_partner,
+            tpm_partner=staff.profile.organization.tpmpartner,
             tpm_partner_focal_points=[staff]
         )
         self.assertIn(
@@ -129,24 +133,24 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
         )
 
     def test_list_view_filter_office_multiple(self):
-        staff = self.tpm_user.tpmpartners_tpmpartnerstaffmember
+        staff = self.tpm_user
         visit_1 = TPMVisitFactory(
             status=TPMVisit.ASSIGNED,
-            tpm_partner=staff.tpm_partner,
+            tpm_partner=staff.profile.organization.tpmpartner,
             tpm_partner_focal_points=[staff]
         )
         office_1 = OfficeFactory()
         TPMActivityFactory(tpm_visit=visit_1, offices=[office_1])
         visit_2 = TPMVisitFactory(
             status=TPMVisit.ASSIGNED,
-            tpm_partner=staff.tpm_partner,
+            tpm_partner=staff.profile.organization.tpmpartner,
             tpm_partner_focal_points=[staff]
         )
         office_2 = OfficeFactory()
         TPMActivityFactory(tpm_visit=visit_2, offices=[office_2])
         TPMVisitFactory(
             status=TPMVisit.ASSIGNED,
-            tpm_partner=staff.tpm_partner,
+            tpm_partner=staff.profile.organization.tpmpartner,
             tpm_partner_focal_points=[staff]
         )
         self.assertEqual(
@@ -167,10 +171,15 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
         )
 
     def test_list_view_without_tpm_organization(self):
-        user = UserFactory()
-        user.groups.add(ThirdPartyMonitor.as_group())
+        user = UserFactory(realms__data=[ThirdPartyMonitor.name])
 
-        self._test_list_view(user, [])
+        response = self.forced_auth_req(
+            'get',
+            reverse('tpm:visits-list'),
+            user=user
+        )
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 0)
 
     def test_create_empty(self):
         create_response = self.forced_auth_req(
@@ -185,7 +194,7 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
     def test_intervention_bilateral_partner(self):
         visit = TPMVisitFactory(
             tpm_activities__count=1,
-            tpm_activities__intervention__agreement__partner__partner_type=PartnerType.BILATERAL_MULTILATERAL
+            tpm_activities__intervention__agreement__partner__organization__organization_type=OrganizationType.BILATERAL_MULTILATERAL
         )
 
         existing_activity = visit.tpm_activities.first()
@@ -212,7 +221,7 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
     def test_intervention_government_partner(self):
         visit = TPMVisitFactory(
             tpm_activities__count=1,
-            tpm_activities__intervention__agreement__partner__partner_type=PartnerType.GOVERNMENT
+            tpm_activities__intervention__agreement__partner__organization__organization_type=OrganizationType.GOVERNMENT
         )
 
         existing_activity = visit.tpm_activities.first()
@@ -239,7 +248,7 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
     def test_intervention_other_partner(self):
         visit = TPMVisitFactory(
             tpm_activities__count=1,
-            tpm_activities__intervention__agreement__partner__partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION
+            tpm_activities__intervention__agreement__partner__organization__organization_type=OrganizationType.CIVIL_SOCIETY_ORGANIZATION
         )
 
         existing_activity = visit.tpm_activities.first()
@@ -476,11 +485,13 @@ class TestTPMActionPointViewSet(TPMTestCaseMixin, BaseTenantTestCase):
 
 class TestTPMStaffMembersViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase):
     def test_list_view(self):
-        response = self.forced_auth_req(
-            'get',
-            reverse('tpm:tpmstaffmembers-list', args=(self.tpm_partner.id,)),
-            user=self.pme_user
-        )
+        # TODO REALMS improve queries perf
+        with self.assertNumQueries(21):
+            response = self.forced_auth_req(
+                'get',
+                reverse('tpm:tpmstaffmembers-list', args=(self.tpm_partner.id,)),
+                user=self.pme_user
+            )
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
         response = self.forced_auth_req(
@@ -498,12 +509,14 @@ class TestTPMStaffMembersViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTe
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
     def test_detail_view(self):
-        response = self.forced_auth_req(
-            'get',
-            reverse('tpm:tpmstaffmembers-detail',
-                    args=(self.tpm_partner.id, self.tpm_partner.staff_members.first().id)),
-            user=self.pme_user
-        )
+        # TODO REALMS improve queries perf
+        with self.assertNumQueries(28):
+            response = self.forced_auth_req(
+                'get',
+                reverse('tpm:tpmstaffmembers-detail',
+                        args=(self.tpm_partner.id, self.tpm_partner.staff_members.first().id)),
+                user=self.pme_user
+            )
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
         response = self.forced_auth_req(
@@ -522,6 +535,7 @@ class TestTPMStaffMembersViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTe
         )
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
+    @skip('TODO: REALMS - users are not editable through tpm portal anymore')
     def test_create_view(self):
         user_data = {
             "user": {
@@ -555,6 +569,7 @@ class TestTPMStaffMembersViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTe
         )
         self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
 
+    @skip('TODO: REALMS - users are not editable through tpm portal anymore')
     def test_update_view(self):
         user_data = {
             "user": {
@@ -649,6 +664,37 @@ class TestTPMPartnerViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCas
         else:
             self.assertNotIn('PUT', response.data['actions'])
 
+    @patch("etools.applications.vision.synchronizers.get_public_schema_name", Mock(return_value="test"))
+    def test_sync(self):
+        self._test_list_view(self.pme_user, [self.tpm_partner, self.second_tpm_partner])
+        mock_data = {
+            "ROWSET": {
+                "ROW": {
+                    "VENDOR_CODE": "1234",
+                    "VENDOR_NAME": "TPM Partner",
+                    "COUNTRY": connection.tenant.schema_name,
+                    "STREET": "",
+                    "CITY": "",
+                    "POSTAL_CODE": "",
+                    "EMAIL": "",
+                    "PHONE_NUMBER": "",
+                    "POSTING_BLOCK": "",
+                    "MARKED_FOR_DELETION": "",
+                }
+            }
+        }
+        with patch("unicef_vision.loaders.VisionDataLoader.get", Mock(return_value=mock_data)):
+            response = self.forced_auth_req(
+                'get',
+                reverse('tpm:partners-sync', args=('1234',)),
+                user=self.pme_user
+            )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        new_tpm_partner = TPMPartner.objects.get(organization__vendor_number='1234')
+        self.assertTrue(new_tpm_partner.vision_synced)
+        # new_tpm_partner has not been activated (no countries set), so partner list is unchanged
+        self._test_list_view(self.pme_user, [self.tpm_partner, self.second_tpm_partner])
+
     def test_activation(self):
         partner = TPMPartnerFactory(countries=[])
         # partner is deactivated yet, so wouldn't appear in list
@@ -664,13 +710,16 @@ class TestTPMPartnerViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCas
         self._test_list_view(self.pme_user, [self.tpm_partner, self.second_tpm_partner, partner])
 
     def test_pme_list_view(self):
-        self._test_list_view(self.pme_user, [self.tpm_partner, self.second_tpm_partner])
+        with self.assertNumQueries(6):
+            self._test_list_view(self.pme_user, [self.tpm_partner, self.second_tpm_partner])
 
     def test_unicef_list_view(self):
-        self._test_list_view(self.unicef_user, [self.tpm_partner, self.second_tpm_partner])
+        with self.assertNumQueries(6):
+            self._test_list_view(self.unicef_user, [self.tpm_partner, self.second_tpm_partner])
 
     def test_tpm_partner_list_view(self):
-        self._test_list_view(self.tpm_user, [self.tpm_partner])
+        with self.assertNumQueries(7):
+            self._test_list_view(self.tpm_user, [self.tpm_partner])
 
     def test_pme_list_options(self):
         self._test_list_options(
@@ -759,8 +808,8 @@ class TestVisitAttachmentsView(TPMTestCaseMixin, BaseTenantTestCase):
         super().setUpTestData()
 
         cls.visit = TPMVisitFactory(status='draft',
-                                    tpm_partner=cls.tpm_user.tpmpartners_tpmpartnerstaffmember.tpm_partner,
-                                    tpm_partner_focal_points=[cls.tpm_user.tpmpartners_tpmpartnerstaffmember])
+                                    tpm_partner=cls.tpm_user.profile.organization.tpmpartner,
+                                    tpm_partner_focal_points=[cls.tpm_user])
 
     def test_add(self):
         attachments_num = self.visit.attachments.count()
@@ -792,8 +841,8 @@ class TestVisitReportAttachmentsView(TPMTestCaseMixin, BaseTenantTestCase):
         super().setUpTestData()
 
         cls.visit = TPMVisitFactory(status='tpm_accepted',
-                                    tpm_partner=cls.tpm_user.tpmpartners_tpmpartnerstaffmember.tpm_partner,
-                                    tpm_partner_focal_points=[cls.tpm_user.tpmpartners_tpmpartnerstaffmember])
+                                    tpm_partner=cls.tpm_user.profile.organization.tpmpartner,
+                                    tpm_partner_focal_points=[cls.tpm_user])
 
     def test_add(self):
         attachments_num = self.visit.report_attachments.count()
@@ -825,8 +874,8 @@ class TestActivityAttachmentsView(TPMTestCaseMixin, BaseTenantTestCase):
         super().setUpTestData()
 
         cls.visit = TPMVisitFactory(status='draft',
-                                    tpm_partner=cls.tpm_user.tpmpartners_tpmpartnerstaffmember.tpm_partner,
-                                    tpm_partner_focal_points=[cls.tpm_user.tpmpartners_tpmpartnerstaffmember],
+                                    tpm_partner=cls.tpm_user.profile.organization.tpmpartner,
+                                    tpm_partner_focal_points=[cls.tpm_user],
                                     tpm_activities__count=1)
         cls.activity = cls.visit.tpm_activities.first()
 
@@ -860,8 +909,8 @@ class TestActivityReportAttachmentsView(TPMTestCaseMixin, BaseTenantTestCase):
         super().setUpTestData()
 
         cls.visit = TPMVisitFactory(status='tpm_accepted',
-                                    tpm_partner=cls.tpm_user.tpmpartners_tpmpartnerstaffmember.tpm_partner,
-                                    tpm_partner_focal_points=[cls.tpm_user.tpmpartners_tpmpartnerstaffmember],
+                                    tpm_partner=cls.tpm_user.profile.organization.tpmpartner,
+                                    tpm_partner_focal_points=[cls.tpm_user],
                                     tpm_activities__count=1)
         cls.activity = cls.visit.tpm_activities.first()
 
@@ -896,8 +945,8 @@ class TestActivityAttachmentLinkView(TPMTestCaseMixin, BaseTenantTestCase):
 
         cls.visit = TPMVisitFactory(
             status='draft',
-            tpm_partner=cls.tpm_user.tpmpartners_tpmpartnerstaffmember.tpm_partner,
-            tpm_partner_focal_points=[cls.tpm_user.tpmpartners_tpmpartnerstaffmember],
+            tpm_partner=cls.tpm_user.profile.organization.tpmpartner,
+            tpm_partner_focal_points=[cls.tpm_user],
             tpm_activities__count=1
         )
         cls.activity = cls.visit.tpm_activities.first()
@@ -931,8 +980,8 @@ class TestVisitAttachmentLinkView(TPMTestCaseMixin, BaseTenantTestCase):
 
         cls.visit = TPMVisitFactory(
             status='draft',
-            tpm_partner=cls.tpm_user.tpmpartners_tpmpartnerstaffmember.tpm_partner,
-            tpm_partner_focal_points=[cls.tpm_user.tpmpartners_tpmpartnerstaffmember],
+            tpm_partner=cls.tpm_user.profile.organization.tpmpartner,
+            tpm_partner_focal_points=[cls.tpm_user],
             tpm_activities__count=1
         )
         cls.activity = cls.visit.tpm_activities.first()

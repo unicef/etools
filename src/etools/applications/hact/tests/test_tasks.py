@@ -4,6 +4,7 @@ from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.hact.models import AggregateHact
 from etools.applications.hact.tasks import update_aggregate_hact_values, update_hact_for_country, update_hact_values
 from etools.applications.hact.tests.factories import AggregateHactFactory
+from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.vision.models import VisionSyncLog
 
@@ -30,7 +31,7 @@ class TestHactForCountry(BaseTenantTestCase):
     def test_task_create(self):
         logs = VisionSyncLog.objects.all()
         self.assertEqual(logs.count(), 0)
-        PartnerFactory(name="Partner XYZ", reported_cy=20000)
+        PartnerFactory(organization=OrganizationFactory(name="Partner XYZ"), reported_cy=20000)
         update_hact_for_country(self.tenant.business_area_code)
         self.assertEqual(logs.count(), 1)
 

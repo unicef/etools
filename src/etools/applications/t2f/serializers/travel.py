@@ -18,7 +18,7 @@ from unicef_attachments.serializers import AttachmentSerializerMixin
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.action_points.serializers import ActionPointBaseSerializer
 from etools.applications.locations.models import Location
-from etools.applications.partners.models import PartnerType
+from etools.applications.organizations.models import OrganizationType
 from etools.applications.publics.models import AirlineCompany
 from etools.applications.t2f.helpers.permission_matrix import PermissionMatrix
 from etools.applications.t2f.models import ItineraryItem, Travel, TravelActivity, TravelAttachment, TravelType
@@ -114,7 +114,7 @@ class TravelActivitySerializer(PermissionBasedModelSerializer):
         partner = attrs.get('partner', getattr(self.instance, 'partner', None))
         travel_type = attrs.get('travel_type', getattr(self.instance, 'travel_type', None))
 
-        if partner and partner.partner_type == PartnerType.GOVERNMENT and \
+        if partner and partner.partner_type == OrganizationType.GOVERNMENT and \
                 travel_type in [TravelType.PROGRAMME_MONITORING, TravelType.SPOT_CHECK] and \
                 'result' not in attrs:
             raise ValidationError({'result': serializers.Field.default_error_messages['required']})

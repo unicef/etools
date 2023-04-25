@@ -525,7 +525,7 @@ class OfficeViewSet(
     permission_classes = (IsAuthenticated,)
     queryset = Office.objects
     module2filters = {
-        'tpm': ['tpmactivity__tpm_visit__tpm_partner__staff_members__user'],
+        'tpm': [lambda user: Q(tpmactivity__tpm_visit__tpm_partner__organization=user.profile.organization)],
     }
 
     def get_queryset(self):

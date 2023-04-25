@@ -141,11 +141,13 @@ class MonitoringActivitiesViewSet(
     """
     Retrieve and Update Agreement.
     """
-    queryset = MonitoringActivity.objects.annotate(checklists_count=Count('checklists')).select_related(
-        'tpm_partner', 'visit_lead', 'location', 'location_site',
-    ).prefetch_related(
-        'team_members', 'partners', 'interventions', 'cp_outputs'
-    ).order_by("-id")
+    queryset = MonitoringActivity.objects\
+        .annotate(checklists_count=Count('checklists'))\
+        .select_related('tpm_partner', 'tpm_partner__organization',
+                        'visit_lead', 'location', 'location_site')\
+        .prefetch_related('team_members', 'partners', 'partners__organization',
+                          'interventions', 'cp_outputs')\
+        .order_by("-id")
     serializer_class = MonitoringActivitySerializer
     serializer_action_classes = {
         'list': MonitoringActivityLightSerializer
@@ -268,7 +270,7 @@ class FMUsersViewSet(
 
     filter_backends = (SearchFilter, UserTypeFilter, UserTPMPartnerFilter)
     search_fields = ('email',)
-    queryset = get_user_model().objects.select_related('tpmpartners_tpmpartnerstaffmember__tpm_partner')
+    queryset = get_user_model().objects.select_related('profile__organization__tpmpartner')
     queryset = queryset.order_by('first_name', 'middle_name', 'last_name')
     serializer_class = FMUserSerializer
 

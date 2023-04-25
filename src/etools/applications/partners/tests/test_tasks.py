@@ -22,8 +22,8 @@ import etools.applications.partners.tasks
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
+from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.models import Agreement, Intervention
-from etools.applications.partners.permissions import UNICEF_USER
 from etools.applications.partners.synchronizers import PDVisionUploader
 from etools.applications.partners.tasks import transfer_active_pds_to_new_cp
 from etools.applications.partners.tests.factories import (
@@ -678,9 +678,13 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
     @mock.patch("etools.applications.partners.tasks.send_pd_to_vision.delay")
     def test_activate_intervention_with_task(self, send_to_vision_mock, _mock_db_connection, _mock_logger):
         today = datetime.date.today()
-        unicef_staff = UserFactory(is_staff=True, groups__data=[UNICEF_USER])
+        unicef_staff = UserFactory(is_staff=True)
 
-        partner = PartnerFactory(name='Partner 2')
+        partner = PartnerFactory(organization=OrganizationFactory(name='Partner 2'))
+        partner_user = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=partner.organization
+        )
         active_agreement = AgreementFactory(
             partner=partner,
             status=Agreement.SIGNED,
@@ -701,11 +705,11 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
             signed_by_unicef_date=today - datetime.timedelta(days=1),
             signed_by_partner_date=today - datetime.timedelta(days=1),
             unicef_signatory=unicef_staff,
-            partner_authorized_officer_signatory=partner.staff_members.all().first(),
+            partner_authorized_officer_signatory=partner.active_staff_members.all().first(),
             cash_transfer_modalities=[Intervention.CASH_TRANSFER_DIRECT],
         )
         active_intervention.flat_locations.add(LocationFactory())
-        active_intervention.partner_focal_points.add(partner.staff_members.all().first())
+        active_intervention.partner_focal_points.add(partner_user)
         active_intervention.unicef_focal_points.add(unicef_staff)
         active_intervention.offices.add(OfficeFactory())
         active_intervention.sections.add(SectionFactory())

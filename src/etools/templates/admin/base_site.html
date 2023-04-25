@@ -61,6 +61,11 @@
         float: right;
     }
 
+    #header #menu {
+        text-shadow: none;
+        width: 300px;
+    }
+
     .module caption.tenant-app {
         background: #f7d904;
     }
@@ -142,30 +147,33 @@
 
 {% block title %}{{ title }} | eTools{% endblock %}
 {% block branding %}
-
-    <div id="site-name"><img class="logoimg" src="{{ STATIC_URL }}images/UNICEF_logo_white.png" width="100" style="padding-right: 30px" ><a href="{% url 'admin:index' %}" class="logo">e<span>Tools <span id="test-text"></span></span></a></div>
+    <div id="site-name">
+        <img class="logoimg" src="{{ STATIC_URL }}images/UNICEF_logo_white.png" width="100" style="padding-right: 30px" >
+        <a href="{% url 'admin:index' %}" class="logo">e<span>Tools Admin<span id="test-text"></span></span></a>
+        <a href="{% url 'dashboard' %}" class="logo" style="padding-left: 30px"><span>MENU</span></a>
+    </div>
 {% endblock %}
+
 {% block usertools %}
         {% if has_permission %}
             <div id="user-tools">
                 {% block welcome-msg %}
                     {% trans 'Welcome,' %}
-                <a href="{{ user.get_admin_url }}">
-                    <strong>{% firstof user.get_short_name user.get_username %}</strong>.
-                </a>
-
+                    <a href="{{ user.get_admin_url }}">
+                        <strong>{% firstof user.get_short_name user.get_username %}</strong>.
+                    </a>
                 {% endblock %}
+
                 {% block userlinks %}
-                <a href="{% url 'admin:logout' %}">{% trans 'Log out' %}</a>
+                    <a href="{% url 'admin:logout' %}">{% trans 'Log out' %}</a>
                 {% endblock %}
             </div>
-
         {% endif %}
 {% endblock %}
 
 {% block nav-global %}
  <div id="country-select">
-    {% show_country_select user.profile %}
+    {% show_country_select user %}
  </div>
 
 {% endblock %}
