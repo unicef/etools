@@ -173,7 +173,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
         self.assertSimpleExceptionFundamentals(
             context_manager,
             "Un PCA avec ce partenaire existe déjà pour ce cycle de programme de pays. Si "
-            "l'enregistrement est à l'état \"Brouillon\", veuillez le modifier."
+            "l'enregistrement est à l'état \"Développement\", veuillez le modifier."
         )
 
     def test_create_ok_non_PCA_with_same_programme_and_partner(self):
@@ -742,8 +742,8 @@ class TestPartnerOrganizationDetailSerializer(BaseTenantTestCase):
             'address', 'alternate_id', 'alternate_name', 'assessments', 'basis_for_risk_rating', 'blocked', 'city',
             'core_values_assessment_date', 'country', 'core_values_assessments',
             'created', 'cso_type', 'deleted_flag', 'description', 'email', 'hact_min_requirements', 'hact_values',
-            'hidden', 'id', 'interventions', 'last_assessment_date', 'modified', 'name', 'net_ct_cy', 'partner_type',
-            'phone_number', 'planned_engagement', 'postal_code', 'rating', 'reported_cy', 'shared_with', 'short_name',
+            'hidden', 'id', 'interventions', 'last_assessment_date', 'modified', 'name', 'net_ct_cy', 'organization_id',
+            'partner_type', 'phone_number', 'planned_engagement', 'postal_code', 'rating', 'reported_cy', 'shared_with', 'short_name',
             'staff_members', 'street_address', 'total_ct_cp', 'total_ct_cy', 'total_ct_ytd', 'type_of_assessment',
             'vendor_number', 'vision_synced', 'planned_visits', 'manually_blocked', 'flags', 'partner_type_slug',
             'outstanding_dct_amount_6_to_9_months_usd', 'outstanding_dct_amount_more_than_9_months_usd',
@@ -761,5 +761,5 @@ class TestPartnerOrganizationDetailSerializer(BaseTenantTestCase):
         self.assertEquals(len(data['staff_members']), 2)
         self.assertCountEqual(data['staff_members'][0].keys(), [
             'active', 'created', 'email', 'first_name', 'id',
-            'last_name', 'modified', 'phone', 'title'
+            'last_name', 'modified', 'phone', 'title', 'has_active_realm'
         ])

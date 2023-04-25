@@ -109,7 +109,7 @@ class TenantFlagTest(BaseTenantTestCase):
 
     def test_empty_user_set_is_cached(self):
         f = TenantFlagFactory()
-        with self.assertNumQueries(6):
+        with self.assertNumQueries(4):
             self.assertFalse(f.is_active(self.request))
         with self.assertNumQueries(1):
             # we still need to query the user's list of groups
@@ -126,7 +126,7 @@ class TenantFlagTest(BaseTenantTestCase):
             country=CountryFactory(),
             organization=OrganizationFactory()
         )
-        with self.assertNumQueries(6):
+        with self.assertNumQueries(4):
             self.assertTrue(f.is_active(self.request))
         with self.assertNumQueries(1):
             # we still need to query the user's list of groups

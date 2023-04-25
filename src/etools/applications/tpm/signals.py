@@ -30,10 +30,11 @@ def tpmvisit_save_receiver(instance, created, **kwargs):
         country_in_use = Country.objects.get(schema_name=connection.schema_name)
         for staff in instance.tpm_partner.staff_members.exclude(realms__country=country_in_use):
             Realm.objects.update_or_create(
-                user=staff.user,
+                user=staff,
                 country=country_in_use,
                 organization=instance.tpm_partner.organization,
                 group=ThirdPartyMonitor.as_group()
             )
-            staff.profile.organization = instance.tpm_partner.organization
-            staff.profile.save(update_fields=['organization'])
+            if not staff.profile.organization:
+                staff.profile.organization = instance.tpm_partner.organization
+                staff.profile.save(update_fields=['organization'])

@@ -104,7 +104,7 @@ class TestPartnerStaffMemberList(BasePartnerOrganizationTestCase):
         for __ in range(10):
             UserFactory(
                 realms__data=['IP Viewer'],
-                profile__organization=self.partner.organization
+                profile__organization=partner.organization
             )
         response = self.forced_auth_req(
             "get",
@@ -116,13 +116,50 @@ class TestPartnerStaffMemberList(BasePartnerOrganizationTestCase):
             len(response.data),
             partner.all_staff_members.count(),
         )
+        self.assertEqual(
+            partner.all_staff_members.count(),
+            10
+        )
+
+    def test_list_with_realm_active_inactive(self):
+        partner = PartnerFactory()
+        for __ in range(10):
+            UserFactory(
+                realms__data=['IP Viewer'],
+                profile__organization=partner.organization
+            )
+        for __ in range(5):
+            user = UserFactory(
+                realms__data=['IP Editor'],
+                profile__organization=partner.organization
+            )
+            user.realms.update(is_active=False)
+
+        response = self.forced_auth_req(
+            "get",
+            reverse('pmp_v3:partner-staff-members-list', args=[partner.pk]),
+            user=self.unicef_user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            len(response.data),
+            partner.all_staff_members.count(),
+        )
+        self.assertEqual(
+            partner.all_staff_members.count(),
+            15
+        )
+        self.assertEqual(
+            partner.active_staff_members.count(),
+            10
+        )
 
     def test_list_for_partner(self):
         partner = PartnerFactory()
         for __ in range(10):
             user = UserFactory(
                 realms__data=['IP Viewer'],
-                profile__organization=self.partner.organization
+                profile__organization=partner.organization
             )
 
         response = self.forced_auth_req(
@@ -135,7 +172,10 @@ class TestPartnerStaffMemberList(BasePartnerOrganizationTestCase):
             len(response.data),
             partner.all_staff_members.count(),
         )
-
+        self.assertEqual(
+            partner.all_staff_members.count(),
+            10
+        )
         # partner user not able to view another partners users
         partner_2 = PartnerFactory()
         user_2 = UserFactory(

@@ -6,7 +6,6 @@ from django_filters import rest_framework as filters
 from rest_framework.filters import BaseFilterBackend, OrderingFilter
 
 from etools.applications.audit.models import Engagement
-from etools.applications.organizations.models import Organization
 
 
 class DisplayStatusFilter(BaseFilterBackend):
@@ -84,6 +83,7 @@ class EngagementFilter(filters.FilterSet):
             'date_of_draft_report_to_ip': ['lte', 'gte', 'gt', 'lt'],
             'offices': ['exact', 'in'],
             'sections': ['exact', 'in'],
+            'year_of_audit': ['exact', 'in'],
         }
 
 
@@ -93,23 +93,6 @@ class AuditorStaffMembersFilterSet(filters.FilterSet):
     class Meta:
         model = get_user_model()
         fields = {}
-
-
-class UnicefUsersAllowedFilter(BaseFilterBackend):
-    def filter_queryset(self, request, queryset, view):
-        unicef_users_allowed = request.query_params.get(
-            'purchase_order_auditorstaffmember__auditor_firm__unicef_users_allowed',
-            '',
-        ).lower()
-        if unicef_users_allowed not in ['true', 'false']:
-            return queryset
-
-        unicef_filter = models.Q(profile__organization=Organization.objects.get(name='UNICEF'))
-
-        if unicef_users_allowed == 'true':
-            return queryset.filter(unicef_filter)
-        else:
-            return queryset.filter(~unicef_filter)
 
 
 class StaffMembersOrderingFilter(OrderingFilter):

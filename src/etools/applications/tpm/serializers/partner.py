@@ -19,20 +19,22 @@ class TPMPartnerStaffMemberSerializer(UserSerializer):
 
 
 class TPMPartnerLightSerializer(PermissionsBasedSerializerMixin, serializers.ModelSerializer):
+    organization_id = serializers.IntegerField(read_only=True, source='organization.id')
+
     class Meta:
         model = TPMPartner
         fields = [
             'id', 'vendor_number', 'name',
             'street_address', 'city', 'postal_code', 'country',
             'email', 'phone_number',
-            'hidden', 'blocked', 'vision_synced', 'deleted_flag',
+            'hidden', 'blocked', 'vision_synced', 'deleted_flag', 'organization_id'
         ]
         extra_kwargs = {
             field: {'read_only': True}
             for field in [
                 'vendor_number', 'name',
                 'street_address', 'city', 'postal_code', 'country',
-                'blocked', 'vision_synced', 'deleted_flag',
+                'blocked', 'vision_synced', 'deleted_flag', 'organization_id'
             ]
         }
         extra_kwargs['name'].update({

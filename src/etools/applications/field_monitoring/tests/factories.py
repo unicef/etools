@@ -34,7 +34,7 @@ class UserFactory(BaseUserFactory):
 
         if extracted:
             if "UNICEF User" in extracted:
-                organization = OrganizationFactory(name='UNICEF', vendor_number='UNICEF')
+                organization = OrganizationFactory(name='UNICEF', vendor_number='000')
                 if hasattr(self, 'profile') and self.profile:
                     self.profile.organization = organization
                     self.profile.save(update_fields=['organization'])

@@ -24,7 +24,7 @@ class AuditorFirm(BaseFirm):
     def get_for_user(cls, user):
         try:
             return user.profile.organization.auditorfirm
-        except AuditorFirm.DoesNotExist:
+        except (AttributeError, AuditorFirm.DoesNotExist):
             return None
 
     @property

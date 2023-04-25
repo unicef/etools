@@ -161,7 +161,7 @@ class TestUserDetails(BaseTenantTestCase):
         self.assertTrue(user_updated.is_staff)
         self.assertEqual(
             user_updated.profile.organization,
-            Organization.objects.get(vendor_number='UNICEF')
+            Organization.objects.get(name='UNICEF', vendor_number='000')
         )
 
 

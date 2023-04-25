@@ -8,6 +8,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.management import call_command
 from django.db import connection
 from django.urls import reverse
+from django.utils import timezone
 
 from factory import fuzzy
 from rest_framework import status
@@ -556,6 +557,10 @@ class TestMicroAssessmentCreateViewSet(TestEngagementCreateActivePDViewSet, Base
 class TestAuditCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEngagementsCreateViewSet, BaseTenantTestCase):
     engagement_factory = AuditFactory
 
+    def setUp(self):
+        super().setUp()
+        self.create_data['year_of_audit'] = timezone.now().year
+
 
 class TestSpotCheckCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEngagementsCreateViewSet,
                                  BaseTenantTestCase):
@@ -949,6 +954,7 @@ class TestAuditorFirmViewSet(AuditTestCaseMixin, BaseTenantTestCase):
     def setUp(self):
         super().setUp()
         self.second_auditor_firm = AuditPartnerFactory()
+        self.engagement = EngagementFactory(agreement__auditor_firm=self.auditor_firm)
 
     def _test_list_view(self, user, expected_firms=None, expected_status=status.HTTP_200_OK):
         response = self.forced_auth_req(
@@ -995,23 +1001,10 @@ class TestAuditorFirmViewSet(AuditTestCaseMixin, BaseTenantTestCase):
     def test_usual_user_list_view(self):
         self._test_list_view(self.usual_user, expected_status=status.HTTP_403_FORBIDDEN)
 
-    def test_auditor_search_view(self):
-        UserFactory()
-        auditor = AuditorUserFactory(email='test@example.com')
-
-        response = self.forced_auth_req(
-            'get',
-            '/api/audit/audit-firms/users/',
-            user=self.unicef_user,
-            data={'search': auditor.email}
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]['auditor_firm'], auditor.profile.organization.auditorfirm.id)
-
-    def test_user_search_view(self):
+    def test_unicef_search_view(self):
         UserFactory()
         user = UserFactory(email='test@example.com')
+        self.engagement.staff_members.add(user)
 
         response = self.forced_auth_req(
             'get',
@@ -1023,26 +1016,12 @@ class TestAuditorFirmViewSet(AuditTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(len(response.data), 1)
         self.assertIsNone(response.data[0]['auditor_firm'])
 
-    def test_unicef_users_filter_view(self):
-        AuditorUserFactory(partner_firm=self.auditor_firm)
-        another_unicef_user = UserFactory(email='test@unicef.com')
-
-        response = self.forced_auth_req(
-            'get',
-            '/api/audit/audit-firms/users/',
-            user=self.unicef_user,
-            data={'purchase_order_auditorstaffmember__auditor_firm__unicef_users_allowed': 'true'}
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertCountEqual(
-            [u['email'] for u in response.data],
-            [self.unicef_user.email, self.unicef_focal_point.email, another_unicef_user.email],
-        )
-
     def test_users_list_queries(self):
-        [UserFactory() for _i in range(10)]
+        for _i in range(10):
+            user = UserFactory()
+            self.engagement.staff_members.add(user)
 
-        with self.assertNumQueries(1):
+        with self.assertNumQueries(2):
             response = self.forced_auth_req(
                 'get',
                 '/api/audit/audit-firms/users/',
@@ -1052,9 +1031,11 @@ class TestAuditorFirmViewSet(AuditTestCaseMixin, BaseTenantTestCase):
         self.assertIn('auditor_firm', response.data[0])
 
     def test_users_list_queries_verbosity_minimal(self):
-        [UserFactory() for _i in range(10)]
+        for _i in range(10):
+            user = UserFactory()
+            self.engagement.staff_members.add(user)
 
-        with self.assertNumQueries(1):
+        with self.assertNumQueries(2):
             response = self.forced_auth_req(
                 'get',
                 '/api/audit/audit-firms/users/',
@@ -1067,12 +1048,15 @@ class TestAuditorFirmViewSet(AuditTestCaseMixin, BaseTenantTestCase):
 
 class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, BaseTenantTestCase):
     def test_list_view(self):
+        inactive_auditor = AuditorUserFactory(is_active=False, partner_firm=self.auditor_firm)
         response = self.forced_auth_req(
             'get',
             '/api/audit/audit-firms/{0}/staff-members/'.format(self.auditor_firm.id),
             user=self.unicef_focal_point
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 3)
+        self.assertTrue(inactive_auditor.pk in map(lambda x: x['id'], response.data['results']))
 
         response = self.forced_auth_req(
             'get',
@@ -1084,6 +1068,7 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, BaseTenantTestCase):
     def test_global_search(self):
         UserFactory()
         user = UserFactory()
+        EngagementFactory(staff_members=[user])
 
         response = self.forced_auth_req(
             'get',

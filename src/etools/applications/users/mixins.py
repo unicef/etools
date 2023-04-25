@@ -14,18 +14,26 @@ ORGANIZATION_GROUP_MAP = {
 
 
 class GroupEditPermissionMixin:
+    """
+    Mixin that handles roles for editing/adding in AMP based on the authenticated user roles.
+    GROUPS_ALLOWED_MAP structure:
+     - the keys are used for matching the current auth user roles
+     - the values {'partner': [...]} map the organization relationship_type to its specific roles:
+     e.g. An authenticated IP Admin can change roles only for a partner organization,
+     the roles being limited to IP Viewer, Editor, IP Authorized Officer
+    """
 
     GROUPS_ALLOWED_MAP = {
         "IP Editor": {"partner": ["IP Viewer"]},
         "IP Admin": {"partner": ["IP Viewer", "IP Editor", "IP Authorized Officer"]},
         "IP Authorized Officer": {"partner": ["IP Viewer", "IP Editor", "IP Authorized Officer"]},
         "UNICEF User": {},
-        "PME": {},
-        "Partnership Manager": ORGANIZATION_GROUP_MAP,
+        "PME": {"tpm": TPM_ACTIVE_GROUPS},
+        "Partnership Manager": {"partner": PARTNER_ACTIVE_GROUPS},
         "UNICEF Audit Focal Point": {"audit": ["Auditor"]},
     }
 
-    CAN_ADD_USER = ["IP Admin", "IP Authorized Officer",
+    CAN_ADD_USER = ["IP Admin", "IP Authorized Officer", "PME",
                     "Partnership Manager", "UNICEF Audit Focal Point"]
 
     def get_user_allowed_groups(self, organization_types, user=None):

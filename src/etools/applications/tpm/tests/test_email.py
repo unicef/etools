@@ -56,11 +56,12 @@ class TPMVisitEmailsTestCase(BaseTenantTestCase):
         self.assertEqual(len(mail.outbox), len(visit.unicef_focal_points) + 1)
 
     def test_send_report_inactive_author(self):
-        PMEUserFactory()
-        visit = TPMVisitFactory(status='pre_tpm_reported', author__is_active=False)
+        visit = TPMVisitFactory(status='pre_tpm_reported')
+        visit.author.is_active = False
+        visit.author.save(update_fields=['is_active'])
 
         visit.send_report()
-        self.assertEqual(len(mail.outbox), len(visit.unicef_focal_points))
+        self.assertEqual(len(mail.outbox), len(visit.unicef_focal_points_with_emails))
 
     def test_report_rejected(self):
         visit = TPMVisitFactory(status='pre_tpm_report_rejected')

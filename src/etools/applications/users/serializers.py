@@ -21,6 +21,10 @@ class SimpleOrganizationSerializer(serializers.ModelSerializer):
 
 
 class OrganizationSerializer(SimpleOrganizationSerializer):
+    """
+    Used for the current organization only on user profile.
+    Do not use this serializer on a list of Organizations due to performance issues.
+    """
     relationship_types = serializers.ListSerializer(child=serializers.CharField(), read_only=True)
 
     class Meta(SimpleOrganizationSerializer.Meta):
