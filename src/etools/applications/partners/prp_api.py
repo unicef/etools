@@ -110,3 +110,11 @@ class PRPAPI(object):
                 break
 
             page += 1
+
+    def send_user_realms(self, data: dict):
+        if not self.enabled:
+            return
+
+        self.url = self.url_prototype + '/unicef/users/realms/import/'
+        response_data = self._push_request(data=data)
+        return response_data
