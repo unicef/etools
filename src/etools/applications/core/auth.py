@@ -90,7 +90,7 @@ def user_details(strategy, details, backend, user=None, *args, **kwargs):
                     country=user.profile.country or country,
                     organization=unicef_org,
                     group=Group.objects.get(name='UNICEF User'),
-                    active=False, defaults={"active": True}
+                    is_active=False, defaults={"is_active": True}
                 )
                 user.is_staff = True
                 user.save(update_fields=['is_staff'])
