@@ -71,21 +71,26 @@ def user_details(strategy, details, backend, user=None, *args, **kwargs):
     # This is where we update the user
     # see what the property to map by is here
     if user:
-        user_groups = [group.name for group in user.groups]
         business_area_code = details.get("business_area_code", 'defaultBA1235')
-
+        unicef_org = Organization.objects.get(name='UNICEF')
         try:
             country = Country.objects.get(business_area_code=business_area_code)
         except Country.DoesNotExist:
             country = Country.objects.get(name='UAT')
 
-        if details.get("idp") == "UNICEF Azure AD" and "UNICEF User" not in user_groups:
-            unicef_org = Organization.objects.get(name='UNICEF')
-            Realm.objects.create(
+        user_has_unicef_group = user.realms.filter(country=user.profile.country or country,
+                                                   organization=unicef_org,
+                                                   is_active=True,
+                                                   group=Group.objects.get(name='UNICEF User')).exists()
+
+        if details.get("idp") == "UNICEF Azure AD" and not user_has_unicef_group:
+            Realm.objects.update_or_create(
                 user=user,
-                country=country,
+                country=user.profile.country or country,
                 organization=unicef_org,
-                group=Group.objects.get(name='UNICEF User'))
+                group=Group.objects.get(name='UNICEF User'),
+                active=False, defaults={"active": True}
+            )
             user.is_staff = True
             user.save(update_fields=['is_staff'])
             user.profile.organization = unicef_org
