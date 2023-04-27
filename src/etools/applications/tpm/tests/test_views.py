@@ -508,6 +508,21 @@ class TestTPMStaffMembersViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTe
         )
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
+    def test_list_active_inactive_realms(self):
+        inactive_tpm_user = TPMUserFactory(tpm_partner=self.tpm_partner)
+        inactive_tpm_user.realms.update(is_active=False)
+
+        response = self.forced_auth_req(
+            'get',
+            reverse('tpm:tpmstaffmembers-list', args=(self.tpm_partner.id,)),
+            user=self.pme_user
+        )
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(len(response.data['results']), 3)
+        self.assertEquals(
+            [inactive_tpm_user.pk],
+            [staff['pk'] for staff in response.data['results'] if not staff['has_active_realm']])
+
     def test_detail_view(self):
         # TODO REALMS improve queries perf
         with self.assertNumQueries(28):
