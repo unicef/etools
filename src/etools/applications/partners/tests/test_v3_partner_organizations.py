@@ -53,11 +53,12 @@ class BasePartnerOrganizationTestCase(BaseTenantTestCase):
 class TestPartnerOrganizationList(BasePartnerOrganizationTestCase):
     def test_list_for_unicef(self):
         PartnerFactory()
-        response = self.forced_auth_req(
-            "get",
-            reverse('pmp_v3:partner-list'),
-            user=self.unicef_user,
-        )
+        with self.assertNumQueries(2):
+            response = self.forced_auth_req(
+                "get",
+                reverse('pmp_v3:partner-list'),
+                user=self.unicef_user,
+            )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
             len(response.data),
@@ -70,12 +71,12 @@ class TestPartnerOrganizationList(BasePartnerOrganizationTestCase):
             realms__data=['IP Viewer'],
             profile__organization=partner.organization
         )
-
-        response = self.forced_auth_req(
-            "get",
-            reverse('pmp_v3:partner-list'),
-            user=user,
-        )
+        with self.assertNumQueries(7):
+            response = self.forced_auth_req(
+                "get",
+                reverse('pmp_v3:partner-list'),
+                user=user,
+            )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]["id"], partner.pk)
