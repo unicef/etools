@@ -80,6 +80,13 @@ class AuditorStaffMemberSerializer(UserSerializer):
         fields = ['id', 'user', 'hidden']
 
 
+class AuditorStaffMemberRealmSerializer(AuditorStaffMemberSerializer):
+    has_active_realm = serializers.BooleanField(read_only=True)
+
+    class Meta(AuditorStaffMemberSerializer.Meta):
+        fields = AuditorStaffMemberSerializer.Meta.fields + ['has_active_realm']
+
+
 class AuditorFirmLightSerializer(PermissionsBasedSerializerMixin, serializers.ModelSerializer):
     organization_id = serializers.IntegerField(read_only=True, source='organization.id')
 

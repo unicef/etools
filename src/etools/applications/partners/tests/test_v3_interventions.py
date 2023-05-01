@@ -147,11 +147,12 @@ class TestList(BaseInterventionTestCase):
         intervention.partner_focal_points.add(staff_member)
 
         # not sent to partner
-        response = self.forced_auth_req(
-            "get",
-            reverse('pmp_v3:intervention-list'),
-            user=staff_member,
-        )
+        with self.assertNumQueries(10):
+            response = self.forced_auth_req(
+                "get",
+                reverse('pmp_v3:intervention-list'),
+                user=staff_member,
+            )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 0)
 
@@ -170,26 +171,30 @@ class TestList(BaseInterventionTestCase):
 
     def test_intervention_list_without_show_amendments_flag(self):
         InterventionAmendmentFactory()
-        response = self.forced_auth_req(
-            'get',
-            reverse('pmp_v3:intervention-list'),
-            user=self.unicef_user,
-        )
+        with self.assertNumQueries(10):
+            response = self.forced_auth_req(
+                'get',
+                reverse('pmp_v3:intervention-list'),
+                user=self.unicef_user,
+            )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
 
     def test_intervention_list_with_show_amendments_flag(self):
-        InterventionAmendmentFactory()
-        response = self.forced_auth_req(
-            'get',
-            reverse('pmp_v3:intervention-list'),
-            user=self.unicef_user,
-            data={'show_amendments': True}
-        )
+        for i in range(20):
+            InterventionAmendmentFactory()
+
+        with self.assertNumQueries(10):
+            response = self.forced_auth_req(
+                'get',
+                reverse('pmp_v3:intervention-list'),
+                user=self.unicef_user,
+                data={'show_amendments': True}
+            )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 2)
+        self.assertEqual(len(response.data), 40)
 
     def test_not_authenticated(self):
         response = self.forced_auth_req(

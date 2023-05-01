@@ -541,7 +541,7 @@ class AuditorStaffMembersViewSet(
             realms__country=connection.tenant,
             realms__organization=self.get_parent_object().organization,
             realms__group__name__in=AUDIT_ACTIVE_GROUPS,
-        )
+        ).distinct()
         return queryset
 
     def get_serializer_context(self):

@@ -20,6 +20,7 @@ from etools.applications.audit.models import Auditor, Engagement, Risk, SpotChec
 from etools.applications.audit.tests.base import AuditTestCaseMixin, EngagementTransitionsTestCaseMixin
 from etools.applications.audit.tests.factories import (
     AuditFactory,
+    AuditFocalPointUserFactory,
     AuditorUserFactory,
     AuditPartnerFactory,
     EngagementFactory,
@@ -831,6 +832,32 @@ class TestStaffSpotCheck(AuditTestCaseMixin, BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertIsNotNone(response.data['agreement'])
+
+    def test_detail_staff_members(self):
+        active_staff_list = []
+        for i in range(3):
+            active_staff_list.append(AuditFocalPointUserFactory())
+
+        inactive_unicef_focal_point = AuditFocalPointUserFactory()
+        inactive_unicef_focal_point.realms.update(is_active=False)
+
+        spot_check = SpotCheckFactory(staff_members=active_staff_list + [inactive_unicef_focal_point])
+
+        response = self.forced_auth_req(
+            'get',
+            reverse('audit:staff-spot-checks-detail', args=[spot_check.pk]),
+            user=self.unicef_focal_point,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['staff_members']), spot_check.staff_members.count())
+        self.assertEqual(
+            [inactive_unicef_focal_point.pk],
+            [staff['id'] for staff in response.data['staff_members'] if not staff['has_active_realm']]
+        )
+        self.assertEqual(
+            sorted([staff.pk for staff in active_staff_list]),
+            sorted([staff['id'] for staff in response.data['staff_members'] if staff['has_active_realm']])
+        )
 
     def test_list(self):
         SpotCheckFactory()
