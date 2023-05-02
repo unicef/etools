@@ -46,6 +46,10 @@ class TestInterventionPartnerSyncTask(BaseTenantTestCase):
     )
     def test_request_to_prp_sent(self, request_mock):
         intervention = InterventionFactory(date_sent_to_partner=None)
+
+        partner_staff = UserFactory(
+            profile__organization=intervention.agreement.partner.organization, realms__data=['IP Viewer']
+        )
         request_mock.assert_not_called()
 
         sync_partner_to_prp(connection.tenant.name, intervention.agreement.partner_id)

@@ -306,9 +306,7 @@ def sync_partner_to_prp(tenant: str, partner_id: int):
     tenant = get_tenant_model().objects.get(name=tenant)
     connection.set_tenant(tenant)
 
-    partner = PartnerOrganization.objects.filter(id=partner_id).prefetch_related(
-        Prefetch('organization__realms__users', User.objects.filter(is_active=True))
-    ).get()
+    partner = PartnerOrganization.objects.get(id=partner_id)
     partner_data = PRPPartnerOrganizationWithStaffMembersSerializer(instance=partner).data
     PRPAPI().send_partner_data(tenant.business_area_code, partner_data)
 
