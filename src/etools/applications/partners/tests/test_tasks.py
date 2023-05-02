@@ -1198,7 +1198,8 @@ class ActivePDTransferToNewCPTestCase(BaseTenantTestCase):
         transfer_active_pds_to_new_cp()
 
         pd.refresh_from_db()
-        self.assertListEqual(list(pd.country_programmes.all()), [self.old_cp, self.active_cp])
+        self.assertListEqual(list(pd.country_programmes.all().order_by('id')),
+                             sorted([self.old_cp, self.active_cp], key=lambda x: x.pk))
 
     def test_skip_transfer_if_one_programme_already_active(self):
         second_active_cp = CountryProgrammeFactory(
