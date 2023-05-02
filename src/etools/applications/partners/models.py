@@ -1878,7 +1878,7 @@ class Intervention(TimeStampedModel):
         null=True,
         unique=True,
     )
-    title = models.CharField(verbose_name=_("Document Title"), max_length=256)
+    title = models.CharField(verbose_name=_("Document Title"), max_length=306)
     status = FSMField(
         verbose_name=_("Status"),
         max_length=32,
