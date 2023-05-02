@@ -3,7 +3,7 @@ import logging
 from etools.applications.organizations.models import Organization
 from etools.applications.tpm.tpmpartners.models import TPMPartner
 from etools.applications.users.mixins import TPM_ACTIVE_GROUPS
-from etools.applications.users.models import Country, Realm
+from etools.applications.users.models import Realm
 from etools.applications.vision.synchronizers import VisionDataTenantSynchronizer
 
 logger = logging.getLogger(__name__)
