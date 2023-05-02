@@ -320,7 +320,7 @@ class PartnerSynchronizer(VisionDataTenantSynchronizer):
         staff_members_ids = list(partner_org.active_staff_members.values_list('id', flat=True))
         partner_org.active_staff_members.update(is_active=False)
         try:
-            country = Country.objects.get(schema_name=partner_org.country)
+            country = Country.objects.get(schema_name=connection.tenant.schema_name)
             Realm.objects.filter(
                 user_id__in=staff_members_ids,
                 country=country,
