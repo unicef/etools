@@ -22,7 +22,7 @@ from etools.applications.field_monitoring.planning.tests.factories import Monito
 from etools.applications.field_monitoring.tests.base import APIViewSetTestCase
 from etools.applications.field_monitoring.tests.factories import UserFactory
 from etools.applications.partners.tests.factories import PartnerFactory
-from etools.applications.tpm.tests.factories import TPMPartnerFactory, TPMPartnerStaffMemberFactory
+from etools.applications.tpm.tests.factories import TPMPartnerFactory, TPMUserFactory
 
 
 class ChecklistBlueprintViewTestCase(APIViewSetTestCase, BaseTenantTestCase):
@@ -172,8 +172,7 @@ class MonitoringActivityOfflineBlueprintsSyncTestCase(APIViewSetTestCase, BaseTe
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
-        cls.fm_user = UserFactory(first_name='Field Monitoring User', fm_user=True, is_staff=True,
-                                  profile__countries_available=[connection.tenant])
+        cls.fm_user = UserFactory(first_name='Field Monitoring User', fm_user=True, is_staff=True)
 
     def setUp(self):
         super().setUp()
@@ -184,7 +183,7 @@ class MonitoringActivityOfflineBlueprintsSyncTestCase(APIViewSetTestCase, BaseTe
     @patch('etools.applications.field_monitoring.data_collection.offline.synchronizer.OfflineCollect.add')
     def test_blueprints_sent_on_tpm_data_collection(self, add_mock):
         tpm_partner = TPMPartnerFactory()
-        visit_lead = TPMPartnerStaffMemberFactory(tpm_partner=tpm_partner).user
+        visit_lead = TPMUserFactory(tpm_partner=tpm_partner)
         activity = MonitoringActivityFactory(
             status='assigned', partners=[PartnerFactory()], monitor_type='tpm', tpm_partner=tpm_partner,
             visit_lead=visit_lead, team_members=[visit_lead]

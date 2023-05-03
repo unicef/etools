@@ -1,5 +1,7 @@
 from copy import copy
 
+from django.db import connection
+from django.db.models import Exists, OuterRef
 from django.utils.translation import gettext as _
 
 from rest_framework import serializers
@@ -29,7 +31,7 @@ from etools.applications.audit.models import (
 )
 from etools.applications.audit.purchase_order.models import PurchaseOrder
 from etools.applications.audit.serializers.auditor import (
-    AuditorStaffMemberSerializer,
+    AuditorStaffMemberRealmSerializer,
     PurchaseOrderItemSerializer,
     PurchaseOrderSerializer,
 )
@@ -43,11 +45,12 @@ from etools.applications.partners.serializers.interventions_v2 import BaseInterv
 from etools.applications.partners.serializers.partner_organization_v2 import (
     MinimalPartnerOrganizationListSerializer,
     PartnerOrganizationListSerializer,
-    PartnerStaffMemberNestedSerializer,
 )
 from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin
 from etools.applications.reports.serializers.v1 import SectionSerializer
 from etools.applications.reports.serializers.v2 import OfficeLightSerializer, OfficeSerializer
+from etools.applications.users.mixins import AUDIT_ACTIVE_GROUPS
+from etools.applications.users.models import Realm
 from etools.applications.users.serializers_v3 import MinimalUserSerializer
 
 
@@ -254,15 +257,13 @@ class EngagementSerializer(
         WritableNestedParentSerializerMixin,
         EngagementListSerializer
 ):
-    staff_members = SeparatedReadWriteField(
-        read_field=AuditorStaffMemberSerializer(many=True, required=False), label=_('Audit Staff Team Members')
-    )
+    staff_members = serializers.SerializerMethodField(label=_('Audit Staff Team Members'))
     active_pd = SeparatedReadWriteField(
         read_field=BaseInterventionListSerializer(many=True, required=False),
         label=_('Programme Document(s) or SSFA(s) - (optional)'), required=False
     )
     authorized_officers = SeparatedReadWriteField(
-        read_field=PartnerStaffMemberNestedSerializer(many=True, read_only=True), label=_('Authorized Officers')
+        read_field=MinimalUserSerializer(many=True, read_only=True), label=_('Authorized Officers')
     )
     users_notified = SeparatedReadWriteField(
         read_field=MinimalUserSerializer(many=True, read_only=True), required=False, label=_('Notified When Completed')
@@ -308,6 +309,17 @@ class EngagementSerializer(
             ]
         }
         extra_kwargs['engagement_type'] = {'label': _('Engagement Type')}
+
+    def get_staff_members(self, obj):
+        staff_members_qs = obj.staff_members\
+            .annotate(has_active_realm=Exists(
+                Realm.objects.filter(
+                    user=OuterRef('pk'),
+                    country=connection.tenant,
+                    group__name__in=AUDIT_ACTIVE_GROUPS,
+                    is_active=True))
+            )
+        return AuditorStaffMemberRealmSerializer(staff_members_qs, many=True).data
 
     def get_sections(self, obj):
         return [{"id": s.pk, "name": s.name} for s in obj.all()]

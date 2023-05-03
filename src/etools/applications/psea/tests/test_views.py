@@ -4,7 +4,6 @@ from unittest.mock import Mock, patch
 
 from django.contrib.contenttypes.models import ContentType
 from django.core.management import call_command
-from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
 
@@ -15,13 +14,11 @@ from unicef_rest_export import renderers
 
 from etools.applications.action_points.tests.factories import ActionPointFactory
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
-from etools.applications.audit.models import UNICEFAuditFocalPoint
-from etools.applications.audit.tests.factories import (
-    AuditorStaffMemberFactory,
-    AuditPartnerFactory,
-    PurchaseOrderFactory,
-)
+from etools.applications.audit.models import UNICEFAuditFocalPoint, UNICEFUser
+from etools.applications.audit.tests.factories import AuditorUserFactory, AuditPartnerFactory, PurchaseOrderFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.organizations.tests.factories import OrganizationFactory
+from etools.applications.partners.permissions import UNICEF_USER
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.psea.models import Answer, Assessment, AssessmentStatusHistory, Assessor, Indicator
 from etools.applications.psea.tests.factories import (
@@ -34,7 +31,7 @@ from etools.applications.psea.tests.factories import (
     RatingFactory,
 )
 from etools.applications.reports.tests.factories import SectionFactory
-from etools.applications.users.tests.factories import GroupFactory, UserFactory
+from etools.applications.users.tests.factories import UserFactory
 
 
 class TestPSEAStaticDropdownsListApiView(BaseTenantTestCase):
@@ -59,13 +56,11 @@ class TestAssessmentViewSet(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.send_path = "etools.applications.psea.validation.send_notification_with_template"
         cls.user = UserFactory()
-        cls.focal_user = UserFactory()
-        cls.focal_user.groups.add(
-            GroupFactory(name=UNICEFAuditFocalPoint.name),
+        cls.focal_user = UserFactory(
+            is_staff=True, realms__data=[UNICEF_USER, UNICEFAuditFocalPoint.name]
         )
         cls.partner = PartnerFactory()
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_list(self):
         num = 10
         for _ in range(num):
@@ -80,13 +75,12 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data.get("results")), num)
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_list_external_user(self):
         num = 10
         for _ in range(num):
             assessment = AssessmentFactory()
             AnswerFactory(assessment=assessment)
-        external_user = UserFactory(email="me@extra.example.com")
+        external_user = UserFactory(realms__data=['PSEA Assessor'])
         assessor = AssessorFactory(user=external_user)
         assessment = AssessmentFactory(assessor=assessor)
 
@@ -98,7 +92,6 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data.get("results")), 1)
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_get(self):
         partner = PartnerFactory()
         date = str(timezone.now().date())
@@ -121,7 +114,6 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         self.assertEqual(data["available_actions"], ["assign", "cancel"])
         self.assertTrue(data["permissions"]["edit"]["info_card"])
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_filter_status(self):
         for _ in range(10):
             AssessmentFactory()
@@ -146,7 +138,6 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         )
         self.assertEqual(data[0]["id"], assessment.pk)
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_filter_partner(self):
         for _ in range(10):
             AssessmentFactory()
@@ -165,7 +156,6 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         self.assertEqual(len(data), 1)
         self.assertEqual(data[0]["id"], assessment.pk)
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_filter_focal_point(self):
         for _ in range(10):
             AssessmentFactory()
@@ -184,7 +174,6 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         self.assertEqual(len(data), 1)
         self.assertEqual(data[0]["id"], assessment.pk)
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_filter_assessment_date_before(self):
         date = datetime.date(2001, 1, 1)
         assessment = AssessmentFactory(assessment_date=date)
@@ -207,7 +196,6 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         self.assertEqual(len(data), 1)
         self.assertEqual(data[0]["id"], assessment.pk)
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_filter_assessment_date_after(self):
         date = datetime.date(2001, 1, 1)
         assessment = AssessmentFactory(assessment_date=date)
@@ -230,7 +218,6 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         self.assertEqual(len(data), 1)
         self.assertEqual(data[0]["id"], assessment.pk)
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_filter_assessor_staff(self):
         for _ in range(10):
             AssessmentFactory()
@@ -250,7 +237,6 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         self.assertEqual(len(data), 1)
         self.assertEqual(data[0]["id"], assessment.pk)
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_filter_assessor_firm(self):
         for _ in range(10):
             AssessmentFactory()
@@ -270,7 +256,6 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         self.assertEqual(len(data), 1)
         self.assertEqual(data[0]["id"], assessment.pk)
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_search_reference_number(self):
         for _ in range(10):
             AssessmentFactory()
@@ -288,12 +273,11 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         self.assertEqual(len(data), 1)
         self.assertEqual(data[0]["id"], assessment.pk)
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_search_auditor_firm(self):
         for _ in range(10):
             AssessmentFactory()
 
-        firm = AuditPartnerFactory(name="Auditor")
+        firm = AuditPartnerFactory(organization=OrganizationFactory(name="Auditor"))
         assessment = AssessmentFactory()
         AssessorFactory(assessment=assessment, auditor_firm=firm)
 
@@ -308,7 +292,6 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         self.assertEqual(len(data), 1)
         self.assertEqual(data[0]["id"], assessment.pk)
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_search_user_first_name(self):
         for _ in range(10):
             AssessmentFactory()
@@ -328,7 +311,6 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         self.assertEqual(len(data), 1)
         self.assertEqual(data[0]["id"], assessment.pk)
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_search_user_last_name(self):
         for _ in range(10):
             AssessmentFactory()
@@ -348,7 +330,6 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         self.assertEqual(len(data), 1)
         self.assertEqual(data[0]["id"], assessment.pk)
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_sort_reference_number_asc(self):
         for _ in range(10):
             AssessmentFactory()
@@ -367,7 +348,6 @@ class TestAssessmentViewSet(BaseTenantTestCase):
             Assessment.objects.order_by("reference_number").first().pk,
         )
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_sort_reference_number_desc(self):
         for _ in range(10):
             AssessmentFactory()
@@ -386,7 +366,6 @@ class TestAssessmentViewSet(BaseTenantTestCase):
             Assessment.objects.order_by("-reference_number").first().pk,
         )
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_sort_assessment_date_asc(self):
         date = datetime.date.today()
         for i in range(10):
@@ -408,7 +387,6 @@ class TestAssessmentViewSet(BaseTenantTestCase):
             Assessment.objects.order_by("assessment_date").first().pk,
         )
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_sort_assessment_date_desc(self):
         date = datetime.date.today()
         for i in range(10):
@@ -430,7 +408,6 @@ class TestAssessmentViewSet(BaseTenantTestCase):
             Assessment.objects.order_by("-assessment_date").first().pk,
         )
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_sort_partner_name_asc(self):
         for _ in range(10):
             partner = PartnerFactory()
@@ -447,10 +424,9 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         self.assertEqual(len(data), Assessment.objects.count())
         self.assertEqual(
             data[0]["id"],
-            Assessment.objects.order_by("partner__name").first().pk,
+            Assessment.objects.order_by("partner__organization__name").first().pk,
         )
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_sort_partner_name_desc(self):
         for _ in range(10):
             partner = PartnerFactory()
@@ -467,10 +443,9 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         self.assertEqual(len(data), Assessment.objects.count())
         self.assertEqual(
             data[0]["id"],
-            Assessment.objects.order_by("-partner__name").first().pk,
+            Assessment.objects.order_by("-partner__organization__name").first().pk,
         )
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_sort_multiple(self):
         for _ in range(10):
             partner = PartnerFactory()
@@ -489,11 +464,10 @@ class TestAssessmentViewSet(BaseTenantTestCase):
             data[0]["id"],
             Assessment.objects.order_by(
                 "-reference_number",
-                "partner__name",
+                "partner__organization__name",
             ).first().pk,
         )
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_post(self):
         partner = PartnerFactory()
         assessment_qs = Assessment.objects.filter(partner=partner)
@@ -518,7 +492,6 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         self.assertEqual(assessment.status, Assessment.STATUS_DRAFT)
         self.assertIn(self.user, assessment.focal_points.all())
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_post_assessment_date(self):
         partner = PartnerFactory()
         assessment_qs = Assessment.objects.filter(partner=partner)
@@ -542,7 +515,6 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         self.assertEqual(assessment.status, Assessment.STATUS_DRAFT)
         self.assertIn(self.user, assessment.focal_points.all())
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_post_permission(self):
         partner = PartnerFactory()
         assessment_qs = Assessment.objects.filter(partner=partner)
@@ -559,7 +531,6 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_validation(self):
         partner_1 = PartnerFactory()
         partner_2 = PartnerFactory()
@@ -577,7 +548,6 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         assessment.refresh_from_db()
         self.assertEqual(assessment.partner, partner_1)
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_patch(self):
         partner_1 = PartnerFactory()
         partner_2 = PartnerFactory()
@@ -599,7 +569,6 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         self.assertEqual(assessment.partner, partner_2)
         self.assertEqual(list(assessment.focal_points.all()), [user])
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_patch_assessment_date(self):
         assessment = AssessmentFactory(assessment_date=None)
         assessment.status = Assessment.STATUS_IN_PROGRESS
@@ -620,7 +589,6 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         assessment.refresh_from_db()
         self.assertEqual(assessment.assessment_date, date)
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_assign(self):
         assessment = AssessmentFactory(partner=self.partner)
         self.assertEqual(assessment.status, assessment.STATUS_DRAFT)
@@ -656,12 +624,11 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         self.assertEqual(assessment.status, assessment.STATUS_IN_PROGRESS)
         self.assertEqual(mock_send.call_count, 0)
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_assign_staff_member_required(self):
         assessment = AssessmentFactory(partner=self.partner)
         self.assertEqual(assessment.status, assessment.STATUS_DRAFT)
         firm = AuditPartnerFactory()
-        staff = AuditorStaffMemberFactory(auditor_firm=firm)
+        staff = AuditorUserFactory(partner_firm=firm)
         assessor = AssessorFactory(
             assessment=assessment,
             assessor_type=Assessor.TYPE_VENDOR,
@@ -696,7 +663,6 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         self.assertEqual(assessment.status, assessment.STATUS_IN_PROGRESS)
         self.assertEqual(mock_send.call_count, 2)
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_submit(self):
         assessment = AssessmentFactory(
             partner=self.partner,
@@ -744,7 +710,6 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         self.assertIsNotNone(assessment.assessment_date)
         self.assertEqual(mock_send.call_count, 1)
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_finalize(self):
         assessment = AssessmentFactory(partner=self.partner)
         assessment.status = assessment.STATUS_SUBMITTED
@@ -782,7 +747,6 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(mock_send.call_count, 0)
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_cancel(self):
         assessment = AssessmentFactory(partner=self.partner)
         assessment.status = assessment.STATUS_IN_PROGRESS
@@ -803,7 +767,6 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         assessment.refresh_from_db()
         self.assertEqual(assessment.status, assessment.STATUS_CANCELLED)
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_cancel_assessor(self):
         assessment = AssessmentFactory(partner=self.partner)
         assessment.status = assessment.STATUS_IN_PROGRESS
@@ -822,7 +785,6 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         assessment.refresh_from_db()
         self.assertEqual(assessment.status, assessment.STATUS_IN_PROGRESS)
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_reject(self):
         assessment = AssessmentFactory(partner=self.partner)
         assessment.status = assessment.STATUS_SUBMITTED
@@ -866,7 +828,6 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(mock_send.call_count, 0)
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_reject_validation(self):
         assessment = AssessmentFactory(partner=self.partner)
         assessment.status = assessment.STATUS_SUBMITTED
@@ -891,7 +852,6 @@ class TestAssessmentViewSet(BaseTenantTestCase):
         self.assertEqual(history_qs.count(), status_count)
         self.assertEqual(mock_send.call_count, 0)
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_list_export_csv(self):
         assessment = AssessmentFactory(partner=self.partner)
         assessment.focal_points.set([self.user])
@@ -908,7 +868,6 @@ class TestAssessmentViewSet(BaseTenantTestCase):
             )
         )
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_get_export_csv(self):
         assessment = AssessmentFactory(partner=self.partner)
         assessment.focal_points.set([self.user])
@@ -928,7 +887,6 @@ class TestAssessmentViewSet(BaseTenantTestCase):
             )
         )
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_list_export_xlsx(self):
         assessment = AssessmentFactory(partner=self.partner)
         assessment.focal_points.set([self.user])
@@ -945,7 +903,6 @@ class TestAssessmentViewSet(BaseTenantTestCase):
             )
         )
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_get_export_xlsx(self):
         assessment = AssessmentFactory(partner=self.partner)
         assessment.focal_points.set([self.user])
@@ -965,7 +922,6 @@ class TestAssessmentViewSet(BaseTenantTestCase):
             )
         )
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_answer_permissions(self):
         assessment = AssessmentFactory(partner=self.partner)
         AssessorFactory(
@@ -990,7 +946,6 @@ class TestAssessmentViewSet(BaseTenantTestCase):
             else:
                 self.assertFalse(perm)
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_focal_point_permissions(self):
         assessment = AssessmentFactory(partner=self.partner)
         self.assertNotIn(self.user, assessment.focal_points.all())
@@ -1057,16 +1012,9 @@ class TestAssessmentActionPointViewSet(BaseTenantTestCase):
         call_command('update_psea_permissions', verbosity=0)
         call_command('update_notifications')
         cls.send_path = "etools.applications.action_points.models.send_notification_with_template"
-        cls.focal_user = UserFactory()
-        cls.focal_user.groups.add(
-            GroupFactory(name=UNICEFAuditFocalPoint.name),
-        )
+        cls.focal_user = UserFactory(realms__data=[UNICEFUser.name, UNICEFAuditFocalPoint.name])
         cls.unicef_user = UserFactory()
-        cls.unicef_user.groups.add(
-            GroupFactory(name="UNICEF User"),
-        )
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_action_point_added(self):
         assessment = AssessmentFactory()
         assessment.status = Assessment.STATUS_FINAL
@@ -1089,7 +1037,6 @@ class TestAssessmentActionPointViewSet(BaseTenantTestCase):
         self.assertIsNotNone(assessment.action_points.first().partner)
         self.assertTrue(mock_send)
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_action_point_added_no_assessor(self):
         assessment = AssessmentFactory()
         mock_send = Mock()
@@ -1146,7 +1093,6 @@ class TestAssessmentActionPointViewSet(BaseTenantTestCase):
         else:
             self.assertNotIn('PUT', response.data['actions'].keys())
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_action_point_editable_by_focal_user(self):
         assessment = AssessmentFactory()
         action_point = ActionPointFactory(
@@ -1156,7 +1102,6 @@ class TestAssessmentActionPointViewSet(BaseTenantTestCase):
 
         self._test_action_point_editable(action_point, self.focal_user)
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_action_point_readonly_by_unicef_user(self):
         assessment = AssessmentFactory()
         action_point = ActionPointFactory(
@@ -1171,11 +1116,14 @@ class TestAssessmentActionPointViewSet(BaseTenantTestCase):
         )
 
 
+class UNICEFUNICEFAuditFocalPoint(object):
+    pass
+
+
 class TestAssessorViewSet(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.user = UserFactory()
-        cls.user.groups.add(GroupFactory(name=UNICEFAuditFocalPoint.name))
+        cls.user = UserFactory(realms__data=[UNICEFUser.name, UNICEFAuditFocalPoint.name])
         cls.unicef_user = UserFactory(email="staff@unicef.org")
 
     def _validate_assessor(self, assessor, expected):
@@ -1236,14 +1184,14 @@ class TestAssessorViewSet(BaseTenantTestCase):
         assessment = AssessmentFactory()
         assessor_qs = Assessor.objects.filter(assessment=assessment)
         self.assertFalse(assessor_qs.exists())
-
+        user = UserFactory(realms__data=[])
         response = self.forced_auth_req(
             "post",
             reverse('psea:assessor-list', args=[assessment.pk]),
             user=self.user,
             data={
                 "assessor_type": Assessor.TYPE_EXTERNAL,
-                "user": self.user.pk,
+                "user": user.pk,
             },
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -1251,7 +1199,7 @@ class TestAssessorViewSet(BaseTenantTestCase):
         assessor = assessor_qs.first()
         self._validate_assessor(assessor, {
             "assessor_type": Assessor.TYPE_EXTERNAL,
-            "user": self.user,
+            "user": user,
             "auditor_firm": None,
             "order_number": "",
         })
@@ -1331,8 +1279,8 @@ class TestAssessorViewSet(BaseTenantTestCase):
 
     def test_patch_vendor_staff(self):
         firm = AuditPartnerFactory()
-        staff_1 = AuditorStaffMemberFactory(auditor_firm=firm)
-        staff_2 = AuditorStaffMemberFactory(auditor_firm=firm)
+        staff_1 = AuditorUserFactory(partner_firm=firm)
+        staff_2 = AuditorUserFactory(partner_firm=firm)
         assessor = AssessorFactory(
             assessor_type=Assessor.TYPE_VENDOR,
             auditor_firm=firm,
@@ -1360,8 +1308,8 @@ class TestAssessorViewSet(BaseTenantTestCase):
 
     def test_patch_vendor_to_unicef(self):
         firm = AuditPartnerFactory()
-        staff_1 = AuditorStaffMemberFactory(auditor_firm=firm)
-        staff_2 = AuditorStaffMemberFactory(auditor_firm=firm)
+        staff_1 = AuditorUserFactory(partner_firm=firm)
+        staff_2 = AuditorUserFactory(partner_firm=firm)
         assessment = AssessmentFactory()
         assessor = AssessorFactory(
             assessment=assessment,
@@ -1392,8 +1340,8 @@ class TestAssessorViewSet(BaseTenantTestCase):
     def test_patch_unicef_to_vendor(self):
         firm = AuditPartnerFactory()
         purchase_order = PurchaseOrderFactory(auditor_firm=firm)
-        staff_1 = AuditorStaffMemberFactory(auditor_firm=firm)
-        staff_2 = AuditorStaffMemberFactory(auditor_firm=firm)
+        staff_1 = AuditorUserFactory(partner_firm=firm)
+        staff_2 = AuditorUserFactory(partner_firm=firm)
         assessment = AssessmentFactory()
         assessor = AssessorFactory(
             assessment=assessment,

@@ -112,7 +112,6 @@ class MonitoringActivityLightSerializer(serializers.ModelSerializer):
 
     visit_lead = SeparatedReadWriteField(read_field=MinimalUserSerializer())
     team_members = SeparatedReadWriteField(read_field=MinimalUserSerializer(many=True))
-
     partners = SeparatedReadWriteField(read_field=MinimalPartnerOrganizationListSerializer(many=True))
     interventions = SeparatedReadWriteField(read_field=FMInterventionListSerializer(many=True))
     cp_outputs = SeparatedReadWriteField(read_field=MinimalOutputListSerializer(many=True))
@@ -174,7 +173,7 @@ class ActivityAttachmentSerializer(BaseAttachmentSerializer):
 class FMUserSerializer(MinimalUserSerializer):
     name = serializers.SerializerMethodField()
     user_type = serializers.SerializerMethodField()
-    tpm_partner = serializers.ReadOnlyField(source='tpmpartners_tpmpartnerstaffmember.tpm_partner.id', allow_null=True)
+    tpm_partner = serializers.ReadOnlyField(source='profile.organization.tpmpartner.id', allow_null=True)
 
     class Meta(MinimalUserSerializer.Meta):
         fields = MinimalUserSerializer.Meta.fields + (
@@ -182,8 +181,9 @@ class FMUserSerializer(MinimalUserSerializer):
         )
 
     def get_user_type(self, obj):
-        # we check is_staff flag instead of more complex tpmpartners_tpmpartnerstaffmember to avoid unneeded db queries
-        return 'staff' if obj.is_staff else 'tpm'
+        if hasattr(obj.profile.organization, 'tpmpartner'):
+            return 'tpm'
+        return 'staff'
 
     def get_name(self, obj):
         if obj.is_active:

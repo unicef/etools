@@ -6,7 +6,9 @@ from tablib.core import Dataset
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.hact.tests.factories import HactHistoryFactory
-from etools.applications.partners.models import PartnerOrganization, PartnerType
+from etools.applications.organizations.models import OrganizationType
+from etools.applications.organizations.tests.factories import OrganizationFactory
+from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.users.tests.factories import UserFactory
 
@@ -16,8 +18,10 @@ class TestHactBaseAPIView(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.unicef_user = UserFactory(is_staff=True)
         cls.partner = PartnerFactory(
-            name="Partner Name",
-            partner_type=PartnerType.UN_AGENCY,
+            organization=OrganizationFactory(
+                name="Partner Name",
+                organization_type=OrganizationType.UN_AGENCY
+            ),
             shared_with=[PartnerOrganization.AGENCY_CHOICES.UN],
             rating=PartnerOrganization.RATING_HIGH,
             total_ct_cp=200.0,
@@ -31,7 +35,7 @@ class TestHactBaseAPIView(BaseTenantTestCase):
     def setUp(self):
         self.hact_data = [
             ['Implementing Partner', "Partner Name"],
-            ['Partner Type', PartnerType.UN_AGENCY],
+            ['Partner Type', OrganizationType.UN_AGENCY],
             ['Shared', "with UNFPA"],
             ['Shared IP', PartnerOrganization.AGENCY_CHOICES.UN],
             ['TOTAL for current CP cycle', "200.00"],
@@ -136,7 +140,7 @@ class TestHactHistoryAPIView(TestHactBaseAPIView):
         ])
         self.assertEqual(dataset[0], (
             "Partner Name",
-            PartnerType.UN_AGENCY,
+            OrganizationType.UN_AGENCY,
             "with UNFPA",
             PartnerOrganization.AGENCY_CHOICES.UN,
             "200.00",
@@ -161,8 +165,10 @@ class TestHactHistoryAPIView(TestHactBaseAPIView):
         make sure we handle that gracefully
         """
         partner = PartnerFactory(
-            name="Partner Name",
-            partner_type=PartnerType.UN_AGENCY,
+            organization=OrganizationFactory(
+                name="Partner Name",
+                organization_type=OrganizationType.UN_AGENCY
+            ),
             shared_with=None,
             rating="High",
             total_ct_cp=200.0,
@@ -184,7 +190,7 @@ class TestHactHistoryAPIView(TestHactBaseAPIView):
         self.assertEqual(dataset.height, 1)
         self.assertEqual(dataset[0], (
             "Partner Name",
-            PartnerType.UN_AGENCY,
+            OrganizationType.UN_AGENCY,
             "with UNFPA",
             PartnerOrganization.AGENCY_CHOICES.UN,
             "200.00",

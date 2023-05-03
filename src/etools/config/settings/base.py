@@ -97,9 +97,9 @@ SERVICE_NOW_USER = get_from_secrets_or_env('SERVICE_NOW_USER', 'api_servicenow_e
 # DJANGO: EMAIL
 DEFAULT_FROM_EMAIL = get_from_secrets_or_env('DEFAULT_FROM_EMAIL', "no-reply@unicef.org")
 EMAIL_BACKEND = 'unicef_notification.backends.EmailBackend'
-EMAIL_HOST = get_from_secrets_or_env('EMAIL_HOST', '')
-EMAIL_HOST_USER = get_from_secrets_or_env('EMAIL_HOST_USER', '')
-EMAIL_HOST_PASSWORD = get_from_secrets_or_env('EMAIL_HOST_PASSWORD', '')
+EMAIL_HOST = get_from_secrets_or_env('EMAIL_HOST', 'smtp.mailtrap.io')
+EMAIL_HOST_USER = get_from_secrets_or_env('EMAIL_HOST_USER', 'd2c74c97ef4173')
+EMAIL_HOST_PASSWORD = get_from_secrets_or_env('EMAIL_HOST_PASSWORD', '32fd3b3a7073cd')
 EMAIL_PORT = get_from_secrets_or_env('EMAIL_HOST_PORT', 587)
 EMAIL_USE_TLS = str2bool(get_from_secrets_or_env('EMAIL_USE_TLS'))  # set True if using TLS
 
@@ -210,6 +210,7 @@ SHARED_APPS = (
     'unicef_notification',
     'etools_offline',
     'etools.applications.offline',
+    'etools.applications.organizations',
 )
 
 TENANT_APPS = (

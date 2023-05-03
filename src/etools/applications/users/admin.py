@@ -1,20 +1,25 @@
 from django.contrib import admin, messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.forms import UserChangeForm
 from django.db import connection
 from django.http.response import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from admin_extra_urls.decorators import button
 from admin_extra_urls.mixins import ExtraUrlMixin
 from django_tenants.admin import TenantAdminMixin
+from django_tenants.postgresql_backend.base import FakeTenant
 from django_tenants.utils import get_public_schema_name
+from unicef_snapshot.admin import ActivityInline, SnapshotModelAdmin
 
 from etools.applications.funds.tasks import sync_all_delegated_frs, sync_country_delegated_fr
 from etools.applications.hact.tasks import update_hact_for_country, update_hact_values
-from etools.applications.users.models import Country, UserProfile, WorkspaceCounter
+from etools.applications.partners.tasks import sync_realms_to_prp
+from etools.applications.users.models import Country, Realm, UserProfile, WorkspaceCounter
 from etools.applications.vision.tasks import sync_handler, vision_sync_task
 from etools.libraries.azure_graph_api.tasks import sync_user
 
@@ -34,7 +39,8 @@ class ProfileInline(admin.StackedInline):
     fields = [
         'country',
         'country_override',
-        'countries_available',
+        'organization',
+        'old_countries_available',
         'office',
         'job_title',
         'post_title',
@@ -42,7 +48,7 @@ class ProfileInline(admin.StackedInline):
         'staff_id',
     ]
     filter_horizontal = (
-        'countries_available',
+        'old_countries_available',
     )
     search_fields = (
         'tenant_profile__office__name',
@@ -52,6 +58,10 @@ class ProfileInline(admin.StackedInline):
     readonly_fields = (
         'user',
         'country',
+    )
+
+    autocomplete_fields = (
+        'organization',
     )
 
     fk_name = 'user'
@@ -65,11 +75,11 @@ class ProfileInline(admin.StackedInline):
 
     def formfield_for_manytomany(self, db_field, request=None, **kwargs):
 
-        if db_field.name == 'countries_available':
+        if db_field.name == 'old_countries_available':
             if request and request.user.is_superuser:
                 kwargs['queryset'] = Country.objects.all()
             else:
-                kwargs['queryset'] = request.user.profile.countries_available.all()
+                kwargs['queryset'] = request.user.profile.old_countries_available.all()
 
         return super().formfield_for_manytomany(
             db_field, request, **kwargs
@@ -83,7 +93,7 @@ class ProfileAdmin(admin.ModelAdmin):
     fields = [
         'country',
         'country_override',
-        'countries_available',
+        'old_countries_available',
         'office',
         'job_title',
         'phone_number',
@@ -111,7 +121,7 @@ class ProfileAdmin(admin.ModelAdmin):
         'office',
     )
     filter_horizontal = (
-        'countries_available',
+        'old_countries_available',
     )
     search_fields = (
         'tenant_profile__office__name',
@@ -140,7 +150,7 @@ class ProfileAdmin(admin.ModelAdmin):
         if not request.user.is_superuser:
             queryset = queryset.filter(
                 user__is_staff=True,
-                country__in=request.user.profile.countries_available.all()
+                country__in=request.user.profile.old_countries_available.all()
             )
         return queryset
 
@@ -153,11 +163,11 @@ class ProfileAdmin(admin.ModelAdmin):
 
     def formfield_for_manytomany(self, db_field, request=None, **kwargs):
 
-        if db_field.name == 'countries_available':
+        if db_field.name == 'old_countries_available':
             if request and request.user.is_superuser:
                 kwargs['queryset'] = Country.objects.all()
             else:
-                kwargs['queryset'] = request.user.profile.countries_available.all()
+                kwargs['queryset'] = request.user.profile.old_countries_available.all()
 
         return super().formfield_for_manytomany(
             db_field, request, **kwargs
@@ -176,17 +186,33 @@ class ProfileAdmin(admin.ModelAdmin):
         obj.save()
 
 
+class RealmInline(admin.StackedInline):
+    verbose_name_plural = "Realms in current country"
+
+    model = Realm
+    raw_id_fields = ('country', 'organization', 'group')
+    extra = 0
+
+    def get_queryset(self, request):
+        if isinstance(connection.tenant, FakeTenant):
+            return super().get_queryset(request)
+        return super().get_queryset(request).filter(country=connection.tenant)
+
+
 class UserAdminPlus(ExtraUrlMixin, UserAdmin):
-    fieldsets = UserAdmin.fieldsets + (
-        (_('User Preferences'), {
-            'fields':
-                (
-                    'preferences',
-                )
+    fieldsets = (
+        (None, {'fields': ('username', 'password')}),
+        (_('Personal info'), {'fields': ('first_name', 'last_name', 'email')}),
+        (_('Permissions'), {
+            'fields': ('is_active', 'is_staff', 'is_superuser', 'old_groups', 'user_permissions'),
         }),
+        (_('Important dates'), {'fields': ('last_login', 'date_joined')}),
+        (_('User Preferences'), {'fields': ('preferences', )}),
     )
-    inlines = [ProfileInline]
-    readonly_fields = ('date_joined',)
+    list_filter = ('is_staff', 'is_superuser', 'is_active', 'old_groups')
+    filter_horizontal = ('old_groups', 'user_permissions',)
+    inlines = [ProfileInline, RealmInline]
+    readonly_fields = ('last_login', 'date_joined',)
 
     list_display = [
         'email',
@@ -199,11 +225,20 @@ class UserAdminPlus(ExtraUrlMixin, UserAdmin):
         'is_active',
         'country',
     ]
+    list_select_related = ('country', 'office')
+
+    UserChangeForm.Meta.exclude = ('groups',)
 
     @button()
     def sync_user(self, request, pk):
         user = get_object_or_404(get_user_model(), pk=pk)
         sync_user.delay(user.username)
+        return HttpResponseRedirect(reverse('admin:users_user_change', args=[user.pk]))
+
+    @button()
+    def sync_realms_to_prp(self, request, pk):
+        user = get_object_or_404(get_user_model(), pk=pk)
+        sync_realms_to_prp.delay(user.id, timezone.now().timestamp())
         return HttpResponseRedirect(reverse('admin:users_user_change', args=[user.pk]))
 
     @button()
@@ -271,6 +306,7 @@ class CountryAdmin(ExtraUrlMixin, TenantAdminMixin, admin.ModelAdmin):
     filter_horizontal = (
         'offices',
     )
+    search_fields = ('name', )
 
     @button()
     def sync_fund_reservation_delegated(self, request, pk):
@@ -324,8 +360,18 @@ class CountryAdmin(ExtraUrlMixin, TenantAdminMixin, admin.ModelAdmin):
         return HttpResponseRedirect(reverse('admin:users_country_change', args=[country.pk]))
 
 
+class RealmAdmin(SnapshotModelAdmin):
+    raw_id_fields = ('user', )
+    search_fields = ('user__email', 'user__first_name', 'user__last_name', 'country__name',
+                     'organization__name', 'organization__vendor_number', 'group__name')
+    autocomplete_fields = ('country', 'organization', 'group')
+
+    inlines = (ActivityInline, )
+
+
 # Re-register UserAdmin
 admin.site.register(get_user_model(), UserAdminPlus)
 admin.site.register(UserProfile, ProfileAdmin)
 admin.site.register(Country, CountryAdmin)
 admin.site.register(WorkspaceCounter)
+admin.site.register(Realm, RealmAdmin)

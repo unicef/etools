@@ -7,12 +7,7 @@ from unicef_snapshot.models import Activity
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.admin import AgreementAdmin, InterventionAdmin, PartnerStaffMemberAdmin
 from etools.applications.partners.models import Agreement, Intervention, PartnerStaffMember
-from etools.applications.partners.tests.factories import (
-    AgreementFactory,
-    InterventionFactory,
-    PartnerFactory,
-    PartnerStaffFactory,
-)
+from etools.applications.partners.tests.factories import AgreementFactory, InterventionFactory, PartnerFactory
 from etools.applications.reports.tests.factories import CountryProgrammeFactory
 from etools.applications.users.tests.factories import UserFactory
 
@@ -66,6 +61,7 @@ class TestInterventionAdmin(TestAdminCase):
         })
 
 
+# TODO REALMS clean up
 class TestPartnerStaffMemberAdmin(TestAdminCase):
     @classmethod
     def setUpTestData(cls):
@@ -87,26 +83,6 @@ class TestPartnerStaffMemberAdmin(TestAdminCase):
         self.assertEqual(activity.target, obj)
         self.assertEqual(activity.by_user, self.user)
         self.assertEqual(activity.change, {})
-
-    def test_save_model_update(self):
-        self.assertFalse(Activity.objects.exists())
-        sa = PartnerStaffMemberAdmin(PartnerStaffMember, self.site)
-        obj = PartnerStaffFactory(partner=self.partner)
-        email_before = obj.email
-        obj.email = "change@example.com"
-        sa.save_model(self.request, obj, {}, True)
-        self.assertTrue(
-            Activity.objects.filter(action=Activity.UPDATE).exists()
-        )
-        activity = Activity.objects.first()
-        self.assertEqual(activity.target, obj)
-        self.assertEqual(activity.by_user, self.user)
-        self.assertDictEqual(activity.change, {
-            "email": {
-                "before": email_before,
-                "after": "change@example.com"
-            }
-        })
 
 
 class TestAgreementAdmin(TestAdminCase):

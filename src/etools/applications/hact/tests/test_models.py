@@ -10,7 +10,9 @@ from etools.applications.audit.tests.factories import (
 )
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.hact.tests.factories import AggregateHactFactory
-from etools.applications.partners.models import PartnerOrganization, PartnerType
+from etools.applications.organizations.models import OrganizationType
+from etools.applications.organizations.tests.factories import OrganizationFactory
+from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.tests.factories import PartnerFactory, PlannedEngagementFactory
 
 
@@ -23,8 +25,10 @@ class TestAggregateHact(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.aggregate_hact = AggregateHactFactory()
         cls.partner = PartnerFactory(
-            name="Partner Name",
-            partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION,
+            organization=OrganizationFactory(
+                name="Partner Name",
+                organization_type=OrganizationType.CIVIL_SOCIETY_ORGANIZATION
+            ),
             shared_with=[PartnerOrganization.AGENCY_CHOICES.UN],
             rating=PartnerOrganization.RATING_LOW,
             highest_risk_rating_name=PartnerOrganization.RATING_HIGH,
@@ -35,8 +39,10 @@ class TestAggregateHact(BaseTenantTestCase):
             total_ct_ytd=140000.0,
         )
         cls.partner2 = PartnerFactory(
-            name="Partner Name",
-            partner_type=PartnerType.GOVERNMENT,
+            organization=OrganizationFactory(
+                name="Partner Name",
+                organization_type=OrganizationType.GOVERNMENT
+            ),
             shared_with=[PartnerOrganization.AGENCY_CHOICES.UNHCR],
             rating=PartnerOrganization.RATING_HIGH,
             highest_risk_rating_name=PartnerOrganization.RATING_LOW,

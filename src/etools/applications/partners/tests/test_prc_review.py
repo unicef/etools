@@ -10,14 +10,10 @@ from rest_framework import status
 from unicef_snapshot.models import Activity
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.models import Intervention
-from etools.applications.partners.permissions import PRC_SECRETARY, UNICEF_USER
-from etools.applications.partners.tests.factories import (
-    InterventionFactory,
-    InterventionReviewFactory,
-    PartnerFactory,
-    PartnerStaffFactory,
-)
+from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, PRC_SECRETARY, UNICEF_USER
+from etools.applications.partners.tests.factories import InterventionFactory, InterventionReviewFactory, PartnerFactory
 from etools.applications.reports.tests.factories import (
     CountryProgrammeFactory,
     OfficeFactory,
@@ -31,14 +27,14 @@ class BaseInterventionMixin:
     def setUp(self):
         super().setUp()
         self.country_programme = CountryProgrammeFactory()
-        self.partner = PartnerFactory(vendor_number=fuzzy.FuzzyText(length=20).fuzz())
-        self.partner_authorized_officer = UserFactory(is_staff=False, groups__data=[])
-        self.partner_authorized_officer_staff = PartnerStaffFactory(
-            partner=self.partner, email=self.partner_authorized_officer.email, user=self.partner_authorized_officer
+        self.partner = PartnerFactory(organization=OrganizationFactory(vendor_number=fuzzy.FuzzyText(length=20).fuzz()))
+        self.partner_authorized_officer = UserFactory(
+            realms__data=['IP Authorized Officer'],
+            profile__organization=self.partner.organization,
         )
-        self.partner_focal_point = UserFactory(is_staff=False, groups__data=[])
-        self.partner_focal_point_staff = PartnerStaffFactory(
-            partner=self.partner, email=self.partner_focal_point.email, user=self.partner_focal_point
+        self.partner_focal_point = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=self.partner.organization,
         )
 
 
@@ -48,7 +44,7 @@ class DevelopInterventionMixin(BaseInterventionMixin):
         self.develop_intervention = InterventionFactory(
             agreement__partner=self.partner,
             status=Intervention.DRAFT,
-            partner_authorized_officer_signatory=self.partner_authorized_officer_staff,
+            partner_authorized_officer_signatory=self.partner_authorized_officer,
             country_programme=self.country_programme,
             start=date(year=1970, month=2, day=1),
             end=date(year=1970, month=3, day=1),
@@ -56,7 +52,7 @@ class DevelopInterventionMixin(BaseInterventionMixin):
             cash_transfer_modalities=[Intervention.CASH_TRANSFER_DIRECT],
             budget_owner=UserFactory(),
         )
-        self.develop_intervention.partner_focal_points.add(self.partner_focal_point_staff)
+        self.develop_intervention.partner_focal_points.add(self.partner_focal_point)
 
 
 class ReviewInterventionMixin(BaseInterventionMixin):
@@ -65,7 +61,7 @@ class ReviewInterventionMixin(BaseInterventionMixin):
         self.review_intervention = InterventionFactory(
             agreement__partner=self.partner,
             status=Intervention.REVIEW,
-            partner_authorized_officer_signatory=self.partner_authorized_officer_staff,
+            partner_authorized_officer_signatory=self.partner_authorized_officer,
             country_programme=self.country_programme,
             start=date(year=1970, month=2, day=1),
             end=date(year=1970, month=3, day=1),
@@ -83,12 +79,12 @@ class ReviewInterventionMixin(BaseInterventionMixin):
             meeting_date=timezone.now().date(),
             submitted_by=UserFactory(),
             review_type='prc',
-            overall_approver=UserFactory(is_staff=True, groups__data=[UNICEF_USER]),
+            overall_approver=UserFactory(is_staff=True),
         )
         self.review_intervention.unicef_focal_points.add(UserFactory())
         self.review_intervention.sections.add(SectionFactory())
         self.review_intervention.offices.add(OfficeFactory())
-        self.review_intervention.partner_focal_points.add(self.partner_focal_point_staff)
+        self.review_intervention.partner_focal_points.add(self.partner_focal_point)
 
 
 class TestPermissionsMixin:
@@ -101,7 +97,7 @@ class TestPermissionsMixin:
 class OverallReviewTestCase(ReviewInterventionMixin, BaseTenantTestCase):
     def setUp(self):
         super().setUp()
-        self.prc_secretary = UserFactory(is_staff=True, groups__data=[UNICEF_USER, PRC_SECRETARY])
+        self.prc_secretary = UserFactory(is_staff=True, realms__data=[UNICEF_USER, PRC_SECRETARY])
         self.url = reverse('pmp_v3:intervention-reviews-detail', args=[self.review_intervention.pk, self.review.pk])
 
     def test_details(self):
@@ -134,7 +130,7 @@ class OverallReviewTestCase(ReviewInterventionMixin, BaseTenantTestCase):
 
     def test_review_update_other_user(self):
         response = self.forced_auth_req(
-            'patch', self.url, UserFactory(is_staff=True, groups__data=[UNICEF_USER]),
+            'patch', self.url, UserFactory(is_staff=True),
             data={'prc_officers': []},
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
@@ -187,7 +183,7 @@ class PRCReviewTestCase(ReviewInterventionMixin, BaseTenantTestCase):
     def test_prc_review_list(self):
         prc_member = UserFactory()
         self.review.prc_officers.add(prc_member)
-        user = UserFactory(is_staff=True, groups__data=['UNICEF User', 'Partnership Manager'])
+        user = UserFactory(is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP])
         response = self.forced_auth_req('get', self.list_url, user)
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertListEqual(
@@ -264,7 +260,7 @@ class PRCReviewTestCase(ReviewInterventionMixin, BaseTenantTestCase):
 
 class DevelopPermissionsTestCase(TestPermissionsMixin, DevelopInterventionMixin, BaseTenantTestCase):
     def test_unicef_user_permissions(self):
-        user = UserFactory(is_staff=True, groups__data=[UNICEF_USER])
+        user = UserFactory(is_staff=True)
         permissions = self.get_permissions(self.develop_intervention, user)
         self.assertFalse(permissions['edit']['reviews'])
         self.assertFalse(permissions['edit']['prc_reviews'])
@@ -279,7 +275,7 @@ class DevelopPermissionsTestCase(TestPermissionsMixin, DevelopInterventionMixin,
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_secretary_permissions(self):
-        user = UserFactory(is_staff=True, groups__data=[UNICEF_USER, PRC_SECRETARY])
+        user = UserFactory(is_staff=True, realms__data=[UNICEF_USER, PRC_SECRETARY])
         permissions = self.get_permissions(self.develop_intervention, user)
         self.assertFalse(permissions['edit']['reviews'])
         self.assertFalse(permissions['edit']['prc_reviews'])
@@ -303,7 +299,7 @@ class DevelopSentToPartnerPermissionsTestCase(TestPermissionsMixin, DevelopInter
 
 class ReviewPermissionsTestCase(TestPermissionsMixin, ReviewInterventionMixin, BaseTenantTestCase):
     def test_unicef_user_permissions(self):
-        user = UserFactory(is_staff=True, groups__data=[UNICEF_USER])
+        user = UserFactory(is_staff=True, realms__data=[UNICEF_USER])
         permissions = self.get_permissions(self.review_intervention, user)
         self.assertFalse(permissions['edit']['reviews'])
         self.assertFalse(permissions['edit']['prc_reviews'])
@@ -318,7 +314,7 @@ class ReviewPermissionsTestCase(TestPermissionsMixin, ReviewInterventionMixin, B
         self.assertFalse(permissions['view']['prc_reviews'])
 
     def test_secretary_permissions(self):
-        user = UserFactory(is_staff=True, groups__data=[UNICEF_USER, PRC_SECRETARY])
+        user = UserFactory(is_staff=True, realms__data=[UNICEF_USER, PRC_SECRETARY])
         permissions = self.get_permissions(self.review_intervention, user)
         self.assertTrue(permissions['edit']['reviews'])
         self.assertFalse(permissions['edit']['prc_reviews'])
@@ -333,7 +329,7 @@ class ReviewPermissionsTestCase(TestPermissionsMixin, ReviewInterventionMixin, B
         self.assertTrue(permissions['view']['prc_reviews'])
 
     def test_prc_reviewer_permissions(self):
-        user = UserFactory(is_staff=True, groups__data=[UNICEF_USER])
+        user = UserFactory(is_staff=True)
         self.review.prc_officers.add(user)
         permissions = self.get_permissions(self.review_intervention, user)
         self.assertFalse(permissions['edit']['reviews'])

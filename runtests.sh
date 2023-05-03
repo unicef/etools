@@ -18,6 +18,7 @@ app_dirs="${cwd}/src/etools/applications/field_monitoring/data_collection/
           ${cwd}/src/etools/applications/field_monitoring/fm_settings/
           ${cwd}/src/etools/applications/field_monitoring/planning/
           ${cwd}/src/etools/applications/comments/
+          ${cwd}/src/etools/applications/organizations/
           ${cwd}/src/etools/applications/partners/"
 for app_dir in ${app_dirs};
 do

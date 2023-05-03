@@ -1,19 +1,18 @@
 
 from django.db import connection
-from django.db.models.signals import post_delete, post_save
+from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-from etools.applications.tpm.models import TPMActionPoint, TPMVisit
-from etools.applications.tpm.tpmpartners.models import TPMPartnerStaffMember
-from etools.applications.users.models import Country
+from etools.applications.tpm.models import ThirdPartyMonitor, TPMActionPoint, TPMVisit
+from etools.applications.users.models import Country, Realm
 
-
-@receiver(post_delete, sender=TPMPartnerStaffMember)
-def delete_user_receiver(instance, **kwargs):
-    user = instance.user
-    if not user.is_unicef_user():
-        user.is_active = False
-        user.save()
+# todo: remove this signal after staff members model remove
+# @receiver(post_delete, sender=TPMPartnerStaffMember)
+# def delete_user_receiver(instance, **kwargs):
+#     user = instance.user
+#     if not user.is_unicef_user():
+#         user.is_active = False
+#         user.save()
 
 
 @receiver(post_save, sender=TPMActionPoint)
@@ -29,5 +28,13 @@ def action_point_updated_receiver(instance, created, **kwargs):
 def tpmvisit_save_receiver(instance, created, **kwargs):
     if instance.tpm_partner and (created or instance.tpm_partner_tracker.has_changed('tpm_partner')):
         country_in_use = Country.objects.get(schema_name=connection.schema_name)
-        for staff in instance.tpm_partner.staff_members.exclude(user__profile__countries_available=country_in_use):
-            staff.user.profile.countries_available.add(country_in_use)
+        for staff in instance.tpm_partner.staff_members.exclude(realms__country=country_in_use):
+            Realm.objects.update_or_create(
+                user=staff,
+                country=country_in_use,
+                organization=instance.tpm_partner.organization,
+                group=ThirdPartyMonitor.as_group()
+            )
+            if not staff.profile.organization:
+                staff.profile.organization = instance.tpm_partner.organization
+                staff.profile.save(update_fields=['organization'])

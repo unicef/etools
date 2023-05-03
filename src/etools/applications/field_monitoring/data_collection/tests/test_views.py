@@ -1,4 +1,3 @@
-from django.db import connection
 from django.urls import reverse
 
 from rest_framework import status
@@ -31,8 +30,7 @@ class TestActivityReportAttachmentsView(FMBaseTestCaseMixin, APIViewSetTestCase)
     def setUpTestData(cls):
         super().setUpTestData()
 
-        cls.user = UserFactory(first_name='Team Member', unicef_user=True,
-                               profile__countries_available=[connection.tenant])
+        cls.user = UserFactory(first_name='Team Member', unicef_user=True)
 
         cls.activity = MonitoringActivityFactory(status='data_collection')
         cls.activity.team_members.add(cls.user)

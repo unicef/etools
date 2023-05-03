@@ -1,19 +1,14 @@
 import datetime
 
-from django.test import override_settings
 from django.urls import reverse
 
 from rest_framework import status
 from tablib.core import Dataset
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
-from etools.applications.partners.models import PartnerType
-from etools.applications.partners.tests.factories import (
-    AssessmentFactory,
-    PartnerFactory,
-    PartnerPlannedVisitsFactory,
-    PartnerStaffFactory,
-)
+from etools.applications.organizations.models import OrganizationType
+from etools.applications.organizations.tests.factories import OrganizationFactory
+from etools.applications.partners.tests.factories import AssessmentFactory, PartnerFactory, PartnerPlannedVisitsFactory
 from etools.applications.users.tests.factories import UserFactory
 
 
@@ -22,9 +17,11 @@ class PartnerModelExportTestCase(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
         cls.partner = PartnerFactory(
-            partner_type=PartnerType.UN_AGENCY,
-            vendor_number='Vendor No',
-            short_name="Short Name",
+            organization=OrganizationFactory(
+                organization_type=OrganizationType.UN_AGENCY,
+                vendor_number='Vendor No',
+                short_name="Short Name"
+            ),
             alternate_name="Alternate Name",
             shared_with=["DPKO", "ECA"],
             address="Address 123",
@@ -80,7 +77,14 @@ class PartnerModelExportTestCase(BaseTenantTestCase):
                 }
             },
         )
-        cls.partnerstaff = PartnerStaffFactory(partner=cls.partner)
+        cls.partnerstaff = UserFactory(
+            profile__organization=cls.partner.organization,
+            realms__data=['IP Viewer']
+        )
+        cls.partnerstaff2 = UserFactory(
+            profile__organization=cls.partner.organization,
+            realms__data=['IP Editor']
+        )
         cls.planned_visit = PartnerPlannedVisitsFactory(partner=cls.partner)
 
 
@@ -95,7 +99,6 @@ class TestPartnerOrganizationModelExport(PartnerModelExportTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_csv_export_api(self):
         response = self.forced_auth_req(
             'get',
@@ -140,7 +143,7 @@ class TestPartnerOrganizationModelExport(PartnerModelExportTestCase):
 
         # the order of staff members in the results is hard to determine
         # so just ensuring that all relevant staff members are in the results
-        for sm in self.partner.staff_members.filter(active=True).all():
+        for sm in self.partner.active_staff_members.all():
             member = "{} ({})".format(sm.get_full_name(), sm.email)
             self.assertIn(member, test_option[22])
 
@@ -178,7 +181,6 @@ class TestPartnerOrganizationModelExport(PartnerModelExportTestCase):
             ),
         ))
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_csv_flat_export_api(self):
         response = self.forced_auth_req(
             'get',
@@ -193,11 +195,11 @@ class TestPartnerOrganizationModelExport(PartnerModelExportTestCase):
         self.assertEqual(len(dataset._get_headers()), 55)
         self.assertEqual(len(dataset[0]), 55)
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_csv_flat_export_api_hact_value_string(self):
         partner = self.partner
         partner.pk = None
-        partner.vendor_number = "Vendor New Num"
+        organization = OrganizationFactory(vendor_number="Vendor New Num")
+        partner.organization = organization
         partner.hact_values = {"key": "random string"}
         partner.save()
         response = self.forced_auth_req(
@@ -213,7 +215,6 @@ class TestPartnerOrganizationModelExport(PartnerModelExportTestCase):
         self.assertEqual(len(dataset._get_headers()), 55)
         self.assertEqual(len(dataset[0]), 55)
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_csv_flat_export_api_hidden(self):
         response = self.forced_auth_req(
             'get',
@@ -240,7 +241,6 @@ class TestPartnerStaffMemberModelExport(PartnerModelExportTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_csv_export_api(self):
         response = self.forced_auth_req(
             'get',
@@ -252,10 +252,9 @@ class TestPartnerStaffMemberModelExport(PartnerModelExportTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 2)
-        self.assertEqual(len(dataset._get_headers()), 11)
-        self.assertEqual(len(dataset[0]), 11)
+        self.assertEqual(len(dataset._get_headers()), 10)
+        self.assertEqual(len(dataset[0]), 10)
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_csv_flat_export_api(self):
         response = self.forced_auth_req(
             'get',

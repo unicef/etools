@@ -1,6 +1,7 @@
 import itertools
 from collections import OrderedDict
 
+from django.contrib.auth import get_user_model
 from django.utils.translation import gettext as _
 
 from rest_framework import serializers
@@ -18,7 +19,7 @@ from etools.applications.audit.models import (
     SpecificProcedure,
     SpotCheck,
 )
-from etools.applications.audit.purchase_order.models import AuditorFirm, AuditorStaffMember, PurchaseOrder
+from etools.applications.audit.purchase_order.models import AuditorFirm, PurchaseOrder
 from etools.applications.audit.serializers.auditor import PurchaseOrderItemSerializer
 from etools.applications.audit.serializers.engagement import DetailedFindingInfoSerializer, KeyInternalControlSerializer
 from etools.applications.audit.serializers.risks import (
@@ -65,14 +66,11 @@ class PartnerPDFSerializer(serializers.ModelSerializer):
 
 
 class StaffMemberPDFSerializer(serializers.ModelSerializer):
-    first_name = serializers.CharField(source='user.first_name')
-    last_name = serializers.CharField(source='user.last_name')
-    job_title = serializers.CharField(source='user.profile.job_title')
-    phone_number = serializers.CharField(source='user.profile.phone_number')
-    email = serializers.CharField(source='user.email')
+    job_title = serializers.CharField(source='profile.job_title')
+    phone_number = serializers.CharField(source='profile.phone_number')
 
     class Meta:
-        model = AuditorStaffMember
+        model = get_user_model()
         fields = (
             'first_name', 'last_name', 'job_title', 'phone_number', 'email'
         )

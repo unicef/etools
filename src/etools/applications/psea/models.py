@@ -13,7 +13,7 @@ from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CodedGenericRelation
 
 from etools.applications.action_points.models import ActionPoint
-from etools.applications.audit.purchase_order.models import AuditorFirm, AuditorStaffMember
+from etools.applications.audit.purchase_order.models import AuditorFirm
 from etools.applications.core.permissions import import_permissions
 from etools.applications.core.urlresolvers import build_frontend_url
 from etools.applications.psea.validation import (
@@ -252,7 +252,7 @@ class Assessment(TimeStampedModel):
         if assessor_qs.filter(user=user).exists():
             return True
         for assessor in assessor_qs.all():
-            if assessor.auditor_firm_staff.filter(user=user).exists():
+            if assessor.auditor_firm_staff.filter(id=user.id).exists():
                 return True
         return False
 
@@ -581,9 +581,10 @@ class Assessor(TimeStampedModel):
         max_length=30
     )
     auditor_firm_staff = models.ManyToManyField(
-        AuditorStaffMember,
+        settings.AUTH_USER_MODEL,
         blank=True,
         verbose_name=_("Auditor Staff"),
+        related_name='+'
     )
 
     class Meta:
@@ -599,4 +600,4 @@ class Assessor(TimeStampedModel):
         if self.assessor_type in [self.TYPE_EXTERNAL, self.TYPE_UNICEF]:
             return [self.user.email]
         else:
-            return [s.user.email for s in self.auditor_firm_staff.all()]
+            return [s.email for s in self.auditor_firm_staff.all()]

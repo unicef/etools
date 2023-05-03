@@ -6,12 +6,7 @@ from rest_framework import serializers
 from unicef_attachments.fields import AttachmentSingleFileField
 
 from etools.applications.locations.models import Location
-from etools.applications.partners.models import (
-    Intervention,
-    InterventionAmendment,
-    PartnerOrganization,
-    PartnerStaffMember,
-)
+from etools.applications.partners.models import Intervention, InterventionAmendment, PartnerOrganization
 from etools.applications.reports.models import (
     AppliedIndicator,
     Disaggregation,
@@ -22,6 +17,7 @@ from etools.applications.reports.models import (
     SpecialReportingRequirement,
 )
 from etools.applications.reports.serializers.v1 import SectionSerializer
+from etools.applications.users.models import Realm
 
 
 class InterventionPDFileSerializer(serializers.ModelSerializer):
@@ -68,21 +64,23 @@ class PRPPartnerOrganizationListSerializer(serializers.ModelSerializer):
 
 
 class PRPPartnerStaffMemberSerializer(serializers.ModelSerializer):
-    name = serializers.CharField(source='get_full_name', read_only=True)
-    phone_num = serializers.CharField(source='phone', read_only=True)
+    name = serializers.CharField(source='full_name', read_only=True)
+    phone_num = serializers.CharField(source='profile.phone_number', read_only=True)
+    active = serializers.BooleanField(source='is_active')
+    title = serializers.CharField(source='profile.job_title')
 
     class Meta:
-        model = PartnerStaffMember
+        model = get_user_model()
         depth = 1
         fields = ('name', 'title', 'phone_num', 'email', 'active')
 
 
 class PRPPartnerOrganizationWithStaffMembersSerializer(PRPPartnerOrganizationListSerializer):
-    staff_members = PRPPartnerStaffMemberSerializer(read_only=True, many=True)
+    all_staff_members = PRPPartnerStaffMemberSerializer(read_only=True, many=True)
 
     class Meta(PRPPartnerOrganizationListSerializer.Meta):
         fields = PRPPartnerOrganizationListSerializer.Meta.fields + (
-            'staff_members',
+            'all_staff_members',
         )
 
 
@@ -337,4 +335,32 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
             'unicef_budget_supplies',
             'disbursement',
             'disbursement_percent'
+        )
+
+
+class PRPSyncRealmSerializer(serializers.ModelSerializer):
+    country = serializers.CharField(source='country.id')
+    organization = serializers.CharField(source='organization.vendor_number')
+    group = serializers.CharField(source='group.name')
+
+    class Meta:
+        model = Realm
+        fields = (
+            'country',
+            'organization',
+            'group',
+        )
+
+
+class PRPSyncUserSerializer(serializers.ModelSerializer):
+    realms = PRPSyncRealmSerializer(many=True)
+
+    class Meta:
+        model = get_user_model()
+        fields = (
+            'email',
+            'first_name',
+            'middle_name',
+            'last_name',
+            'realms',
         )
