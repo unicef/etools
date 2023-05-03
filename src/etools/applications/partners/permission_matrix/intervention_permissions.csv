@@ -45,6 +45,8 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.3.3,cash_transfer_modalities,Unicef Focal Point,unlocked,Draft,Edit,TRUE
 3.3.5,cfei_number,*,,*,View,TRUE
 3.3.5,cfei_number,Unicef Focal Point,,Draft,Edit,TRUE
+3.3.5,cfei_number,Unicef Focal Point,cfei_absent,*,Edit,TRUE
+3.3.5,cfei_number,Country Office Administrator,,*,Edit,TRUE
 3.3.5,context,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
 3.3.5,context,Partner User,partner_court,Draft,Edit,TRUE
 ,has_data_processing_agreement,Unicef Focal Point,,Draft,Edit,TRUE
