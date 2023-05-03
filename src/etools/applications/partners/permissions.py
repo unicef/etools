@@ -227,6 +227,7 @@ class InterventionPermissions(PMPPermissions):
             'unicef_not_accepted_spd_non_hum': unicef_not_accepted_spd_non_hum(self.instance),
             'not_ssfa+unicef_not_accepted': not_ssfa(self.instance) and unicef_not_accepted(self.instance),
             'post_epd_temp_conditions': post_epd_temp_conditions(self.instance),
+            'cfei_absent': not self.instance.cfei_number
         }
 
     # override get_permissions to enable us to prevent old interventions from being blocked on transitions
