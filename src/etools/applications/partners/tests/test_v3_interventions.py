@@ -422,13 +422,13 @@ class TestDetail(BaseInterventionTestCase):
         self.assertFalse(response.data['permissions']['edit']['confidential'])
 
     def test_cfei_number_permissions_unicef_focal(self):
-        self.intervention.unicef_focal_points.add(self.user)
+        self.intervention.unicef_focal_points.add(self.unicef_user)
         self.assertFalse(self.intervention.cfei_number)
         self.assertEqual(self.intervention.status, Intervention.DRAFT)
         response = self.forced_auth_req(
             "get",
             reverse('pmp_v3:intervention-detail', args=[self.intervention.pk]),
-            user=self.user,
+            user=self.unicef_user,
         )
         self.assertTrue(response.data['permissions']['view']['cfei_number'])
         self.assertTrue(response.data['permissions']['edit']['cfei_number'])
@@ -438,7 +438,7 @@ class TestDetail(BaseInterventionTestCase):
         response = self.forced_auth_req(
             "get",
             reverse('pmp_v3:intervention-detail', args=[self.intervention.pk]),
-            user=self.user,
+            user=self.unicef_user,
         )
         self.assertTrue(response.data['permissions']['view']['cfei_number'])
         self.assertTrue(response.data['permissions']['edit']['cfei_number'])
@@ -448,14 +448,14 @@ class TestDetail(BaseInterventionTestCase):
         response = self.forced_auth_req(
             "get",
             reverse('pmp_v3:intervention-detail', args=[self.intervention.pk]),
-            user=self.user,
+            user=self.unicef_user,
         )
         self.assertTrue(response.data['permissions']['view']['cfei_number'])
         self.assertFalse(response.data['permissions']['edit']['cfei_number'])
 
     def test_cfei_number_permissions_country_office_admin(self):
         country_office_admin = UserFactory(
-            is_staff=True, groups__data=[UNICEF_USER, "Country Office Administrator"]
+            is_staff=True, realms__data=[UNICEF_USER, "Country Office Administrator"]
         )
         response = self.forced_auth_req(
             "get",
