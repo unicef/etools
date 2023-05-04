@@ -1,3 +1,5 @@
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.db import connection, transaction
 from django.http import HttpResponseForbidden
 from django.urls import reverse
@@ -320,9 +322,9 @@ class PMPInterventionReviewView(PMPInterventionActionView):
 
         if response.status_code == 200:
             # send notification
-            recipients = [
+            recipients = set(
                 u.email for u in pd.unicef_focal_points.all()
-            ]
+            )
             # context should be valid for both templates mentioned below
             context = {
                 "reference_number": pd.reference_number,
@@ -335,6 +337,11 @@ class PMPInterventionReviewView(PMPInterventionActionView):
                 template_name = 'partners/intervention/unicef_signature'
             else:
                 template_name = 'partners/intervention/unicef_sent_for_review'
+                recipients = recipients.union(set(
+                    get_user_model().objects.filter(
+                        groups=Group.objects.get(name=PRC_SECRETARY),
+                    ).values_list('email', flat=True)
+                ))
 
             self.send_notification(
                 pd,
