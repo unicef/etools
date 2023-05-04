@@ -20,6 +20,7 @@ from rest_framework.views import APIView
 from unicef_restlib.pagination import DynamicPageNumberPagination
 from unicef_restlib.views import QueryStringFilterMixin, SafeTenantViewSetMixin
 
+from etools.applications.action_points.models import PME
 from etools.applications.audit.models import UNICEFAuditFocalPoint
 from etools.applications.core.permissions import IsUNICEFUser
 from etools.applications.organizations.models import Organization
@@ -33,8 +34,8 @@ from etools.applications.users.mixins import (
     ORGANIZATION_GROUP_MAP,
     TPM_ACTIVE_GROUPS,
 )
-from etools.applications.users.models import IPAdmin, IPAuthorizedOfficer, IPEditor, Realm
-from etools.applications.users.permissions import IsActiveInRealm, IsPartnershipManager
+from etools.applications.users.models import IPAdmin, IPAuthorizedOfficer, IPEditor, PartnershipManager, Realm
+from etools.applications.users.permissions import IsActiveInRealm
 from etools.applications.users.serializers import SimpleGroupSerializer, SimpleOrganizationSerializer
 from etools.applications.users.serializers_v3 import (
     CountryDetailSerializer,
@@ -209,7 +210,7 @@ class OrganizationListView(ListAPIView):
     """
     model = Organization
     serializer_class = SimpleOrganizationSerializer
-    permission_classes = (IsAuthenticated, IsUNICEFUser | IsPartnershipManager)
+    permission_classes = (IsAuthenticated, IsUNICEFUser)
 
     def get_queryset(self):
         queryset = Organization.objects.all() \
@@ -290,13 +291,16 @@ class UserRealmViewSet(
         if self.action == 'create':
             self.permission_classes = (
                 IsAuthenticated,
-                user_group_permission(IPAdmin.name, IPAuthorizedOfficer.name) | IsPartnershipManager)
+                user_group_permission(
+                    IPAdmin.name, IPAuthorizedOfficer.name,
+                    UNICEFAuditFocalPoint.name, PartnershipManager.name, PME.name)
+            )
         if self.action == 'partial_update':
             self.permission_classes = (
                 IsAuthenticated,
                 user_group_permission(
-                    IPEditor.name, IPAdmin.name,
-                    IPAuthorizedOfficer.name, UNICEFAuditFocalPoint.name) | IsPartnershipManager
+                    IPEditor.name, IPAdmin.name, IPAuthorizedOfficer.name,
+                    UNICEFAuditFocalPoint.name, PartnershipManager.name, PME.name)
             )
         return super().get_permissions()
 

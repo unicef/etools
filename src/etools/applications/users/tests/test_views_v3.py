@@ -3,6 +3,7 @@ import json
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
+from django.db import connection
 from django.urls import reverse
 
 from rest_framework import status
@@ -15,7 +16,12 @@ from etools.applications.organizations.tests.factories import OrganizationFactor
 from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, UNICEF_USER
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.tpm.models import ThirdPartyMonitor
-from etools.applications.tpm.tests.factories import BaseTPMVisitFactory, SimpleTPMPartnerFactory, TPMUserFactory
+from etools.applications.tpm.tests.factories import (
+    BaseTPMVisitFactory,
+    SimpleTPMPartnerFactory,
+    TPMPartnerFactory,
+    TPMUserFactory,
+)
 from etools.applications.users.mixins import GroupEditPermissionMixin, ORGANIZATION_GROUP_MAP
 from etools.applications.users.models import (
     IPAdmin,
@@ -27,7 +33,13 @@ from etools.applications.users.models import (
     UserProfile,
 )
 from etools.applications.users.serializers_v3 import AP_ALLOWED_COUNTRIES
-from etools.applications.users.tests.factories import GroupFactory, ProfileFactory, RealmFactory, UserFactory
+from etools.applications.users.tests.factories import (
+    GroupFactory,
+    PMEUserFactory,
+    ProfileFactory,
+    RealmFactory,
+    UserFactory,
+)
 from etools.libraries.djangolib.models import GroupWrapper
 
 
@@ -621,9 +633,10 @@ class TestUserRealmView(BaseTenantTestCase):
         cls.ip_admin = UserFactory(realms__data=[IPAdmin.name], profile__organization=cls.organization)
         cls.ip_auth_officer = UserFactory(realms__data=[IPAuthorizedOfficer.name], profile__organization=cls.organization)
 
-        cls.partnership_manager = UserFactory(realms__data=[UNICEF_USER, PartnershipManager.name])
-        cls.audit_focal_point = AuditFocalPointUserFactory()
-        cls.unicef_user = UserFactory()
+        cls.partnership_manager = UserFactory(is_staff=True, realms__data=[UNICEF_USER, PartnershipManager.name])
+        cls.audit_focal_point = AuditFocalPointUserFactory(is_staff=True)
+        cls.pme = PMEUserFactory(is_staff=True)
+        cls.unicef_user = UserFactory(is_staff=True)
 
     def make_request_list(self, auth_user, method='post', data=None):
         response = self.forced_auth_req(
@@ -699,7 +712,7 @@ class TestUserRealmView(BaseTenantTestCase):
         self.assertEqual(response.data['count'], 0)
 
     def test_post_forbidden(self):
-        for auth_user in [self.ip_viewer, self.ip_editor, self.audit_focal_point]:
+        for auth_user in [self.ip_viewer, self.ip_editor]:
             self.assertEqual(self.user.realms.count(), 0)
 
             response = self.make_request_list(auth_user, data={})
@@ -715,7 +728,7 @@ class TestUserRealmView(BaseTenantTestCase):
         response = self.make_request_list(auth_user, data=data)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_post_create_new(self):
+    def test_post_new_partner_user(self):
         for auth_user, group in zip(
                 [self.ip_admin, self.ip_auth_officer],
                 [IPViewer, IPEditor]):
@@ -733,6 +746,48 @@ class TestUserRealmView(BaseTenantTestCase):
             self.assertEqual(new_user.realms.count(), 1)
             self.assertEqual(new_user.profile.phone_number, data['phone_number'])
             self.assertEqual(group.name, response.data['realms'][0]['group_name'])
+
+    def test_post_new_auditor_user(self):
+        self.assertFalse(self.audit_focal_point.is_superuser)
+        self.assertTrue(self.audit_focal_point.is_staff)
+
+        email = "auditor_email@example.com"
+        data = {
+            "first_name": "First Name",
+            "last_name": "Last Name",
+            "email": email,
+            "phone_number": "+10999909999",
+            "groups": [GroupFactory(name=Auditor.name).pk],
+            "organization": EngagementFactory().agreement.auditor_firm.organization.pk
+        }
+        response = self.make_request_list(self.audit_focal_point, data=data)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        new_user = User.objects.get(email=email)
+        self.assertEqual(new_user.realms.count(), 1)
+        self.assertEqual(new_user.profile.phone_number, data['phone_number'])
+        self.assertEqual(Auditor.name, response.data['realms'][0]['group_name'])
+
+    def test_post_new_tpm_user(self):
+        self.assertFalse(self.pme.is_superuser)
+        self.assertTrue(self.pme.is_staff)
+
+        email = "tpm_email@example.com"
+        data = {
+            "first_name": "First Name",
+            "last_name": "Last Name",
+            "email": email,
+            "phone_number": "+10999909999",
+            "groups": [GroupFactory(name=ThirdPartyMonitor.name).pk],
+            "organization": TPMPartnerFactory(countries=[connection.tenant]).organization.pk
+        }
+        response = self.make_request_list(self.pme, data=data)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        new_user = User.objects.get(email=email)
+        self.assertEqual(new_user.realms.count(), 1)
+        self.assertEqual(new_user.profile.phone_number, data['phone_number'])
+        self.assertEqual(ThirdPartyMonitor.name, response.data['realms'][0]['group_name'])
 
     def test_post_user_exists_201(self):
         for auth_user, group in zip(
@@ -758,6 +813,9 @@ class TestUserRealmView(BaseTenantTestCase):
             self.assertIn(group.as_group(), existing_user.groups)
 
     def test_post_partnership_manager_201(self):
+        self.assertFalse(self.partnership_manager.is_superuser)
+        self.assertTrue(self.partnership_manager.is_staff)
+
         group = GroupFactory(name=IPEditor.name)
         email = "new_email@example.com"
         data = {
@@ -775,6 +833,9 @@ class TestUserRealmView(BaseTenantTestCase):
         self.assertEqual(group.name, response.data['realms'][0]['group_name'])
 
     def test_patch_reactivate_groups(self):
+        self.assertFalse(self.ip_admin.is_superuser)
+        self.assertFalse(self.ip_admin.is_staff)
+
         self.assertEqual(self.user.realms.count(), 0)
         # create IPViewer and IPEditor realms
         data = {
