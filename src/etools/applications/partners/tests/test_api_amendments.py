@@ -34,7 +34,7 @@ from etools.applications.reports.tests.factories import (
 from etools.applications.users.tests.factories import UserFactory
 
 
-class TestInterventionAmendments(BaseTenantTestCase):
+class BaseTestInterventionAmendments:
     # test basic api flow
     @classmethod
     def setUpTestData(cls):
@@ -78,6 +78,8 @@ class TestInterventionAmendments(BaseTenantTestCase):
         self.active_intervention.sections.add(SectionFactory())
         ReportingRequirementFactory(intervention=self.active_intervention)
 
+
+class TestInterventionAmendments(BaseTestInterventionAmendments, BaseTenantTestCase):
     def test_no_permission_user_forbidden(self):
         '''Ensure a non-staff user gets the 403 smackdown'''
         response = self.forced_auth_req(
@@ -260,135 +262,6 @@ class TestInterventionAmendments(BaseTenantTestCase):
             request_format='multipart',
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
-
-    @mock.patch("etools.applications.partners.tasks.send_pd_to_vision.delay")
-    def test_amend_intervention(self, send_to_vision_mock):
-        country_programme = CountryProgrammeFactory()
-        intervention = InterventionFactory(
-            agreement__partner=self.partner,
-            partner_authorized_officer_signatory=PartnerStaffFactory(
-                partner=self.partner, user__is_staff=False, user__groups__data=[]
-            ),
-            unicef_signatory=UserFactory(),
-            country_programme=country_programme,
-            submission_date=timezone.now().date(),
-            start=timezone.now().date() + datetime.timedelta(days=1),
-            end=timezone.now().date() + datetime.timedelta(days=30),
-            date_sent_to_partner=timezone.now().date(),
-            signed_by_unicef_date=timezone.now().date(),
-            signed_by_partner_date=timezone.now().date(),
-            agreement__country_programme=country_programme,
-            cash_transfer_modalities=[Intervention.CASH_TRANSFER_DIRECT],
-            budget_owner=UserFactory(),
-            contingency_pd=False,
-            unicef_court=True,
-        )
-        intervention.flat_locations.add(LocationFactory())
-        intervention.planned_budget.total_hq_cash_local = 10
-        intervention.planned_budget.save()
-        # FundsReservationHeaderFactory(intervention=intervention, currency='USD') # frs code is unique
-        ReportingRequirementFactory(intervention=intervention)
-        unicef_user = UserFactory(is_staff=True, groups__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP])
-        intervention.unicef_focal_points.add(unicef_user)
-        intervention.sections.add(SectionFactory())
-        intervention.offices.add(OfficeFactory())
-        intervention.partner_focal_points.add(PartnerStaffFactory(
-            partner=self.partner, user__is_staff=False, user__groups__data=[]
-        ))
-        ReportingRequirementFactory(intervention=intervention)
-
-        amendment = InterventionAmendment.objects.create(
-            intervention=intervention,
-            types=[InterventionAmendment.TYPE_ADMIN_ERROR],
-        )
-        amended_intervention = amendment.amended_intervention
-
-        response = self.forced_auth_req(
-            'patch',
-            reverse('pmp_v3:intervention-detail', args=[amended_intervention.pk]),
-            unicef_user,
-            data={
-                'start': timezone.now().date() + datetime.timedelta(days=2),
-            },
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
-
-        amended_intervention.refresh_from_db()
-        self.assertEqual(amended_intervention.start, timezone.now().date() + datetime.timedelta(days=2))
-
-        amended_intervention.unicef_accepted = True
-        amended_intervention.partner_accepted = True
-        amended_intervention.date_sent_to_partner = timezone.now().date()
-        amended_intervention.status = Intervention.REVIEW
-        amended_intervention.save()
-        review = InterventionReviewFactory(
-            intervention=amended_intervention, overall_approval=True,
-            overall_approver=UserFactory(is_staff=True, groups__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
-        )
-
-        # sign amended intervention
-        amended_intervention.signed_by_partner_date = intervention.signed_by_partner_date
-        amended_intervention.signed_by_unicef_date = intervention.signed_by_unicef_date
-        amended_intervention.partner_authorized_officer_signatory = intervention.partner_authorized_officer_signatory
-        amended_intervention.unicef_signatory = intervention.unicef_signatory
-        amended_intervention.save()
-        AttachmentFactory(
-            code='partners_intervention_signed_pd',
-            file='sample1.pdf',
-            content_object=amended_intervention
-        )
-
-        intervention.refresh_from_db()
-        self.assertEqual(intervention.start, timezone.now().date() + datetime.timedelta(days=1))
-
-        response = self.forced_auth_req(
-            'patch',
-            reverse('pmp_v3:intervention-signature', args=[amended_intervention.pk]),
-            review.overall_approver,
-            data={}
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
-        amended_intervention.refresh_from_db()
-        self.assertEqual('signed', response.data['status'])
-
-        with self.captureOnCommitCallbacks(execute=True) as commit_callbacks:
-            response = self.forced_auth_req(
-                'patch',
-                reverse('pmp_v3:intervention-amendment-merge', args=[amended_intervention.pk]),
-                intervention.budget_owner,
-                data={}
-            )
-        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
-        self.assertEqual(response.data['id'], intervention.id)
-
-        intervention.refresh_from_db()
-        self.assertEqual(intervention.start, timezone.now().date() + datetime.timedelta(days=2))
-        send_to_vision_mock.assert_called()
-        self.assertEqual(len(commit_callbacks), 1)
-
-    def test_merge_error(self):
-        first_amendment = InterventionAmendmentFactory(
-            intervention=self.active_intervention, kind=InterventionAmendment.KIND_NORMAL,
-        )
-        second_amendment = InterventionAmendmentFactory(
-            intervention=self.active_intervention, kind=InterventionAmendment.KIND_CONTINGENCY,
-        )
-        second_amendment.amended_intervention.start = timezone.now().date() - datetime.timedelta(days=15)
-        second_amendment.amended_intervention.save()
-        second_amendment.merge_amendment()
-
-        first_amendment.amended_intervention.start = timezone.now().date() - datetime.timedelta(days=14)
-        first_amendment.amended_intervention.status = Intervention.SIGNED
-        first_amendment.amended_intervention.save()
-
-        response = self.forced_auth_req(
-            'patch',
-            reverse('pmp_v3:intervention-amendment-merge', args=[first_amendment.amended_intervention.pk]),
-            self.active_intervention.budget_owner,
-            data={}
-        )
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('Merge Error', response.data[0])
 
     def test_permissions_fields_hidden(self):
         amendment = InterventionAmendmentFactory(intervention=self.active_intervention)
@@ -574,3 +447,146 @@ class TestInterventionAmendmentDeleteView(BaseTenantTestCase):
             user=UserFactory(is_staff=True, groups__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
         )
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+
+class TestInterventionAmendmentsMerge(BaseTestInterventionAmendments, BaseTenantTestCase):
+    def setUp(self):
+        super().setUp()
+
+        country_programme = CountryProgrammeFactory()
+        self.intervention = InterventionFactory(
+            agreement__partner=self.partner,
+            partner_authorized_officer_signatory=PartnerStaffFactory(
+                partner=self.partner, user__is_staff=False, user__groups__data=[]
+            ),
+            unicef_signatory=UserFactory(),
+            country_programme=country_programme,
+            submission_date=timezone.now().date(),
+            start=timezone.now().date() + datetime.timedelta(days=1),
+            end=timezone.now().date() + datetime.timedelta(days=30),
+            date_sent_to_partner=timezone.now().date(),
+            signed_by_unicef_date=timezone.now().date(),
+            signed_by_partner_date=timezone.now().date(),
+            agreement__country_programme=country_programme,
+            cash_transfer_modalities=[Intervention.CASH_TRANSFER_DIRECT],
+            budget_owner=UserFactory(),
+            contingency_pd=False,
+            unicef_court=True,
+        )
+        self.intervention.flat_locations.add(LocationFactory())
+        self.intervention.planned_budget.total_hq_cash_local = 10
+        self.intervention.planned_budget.save()
+        # FundsReservationHeaderFactory(intervention=intervention, currency='USD') # frs code is unique
+        ReportingRequirementFactory(intervention=self.intervention)
+        self.unicef_focal_point = UserFactory(is_staff=True, groups__data=[UNICEF_USER])
+        self.intervention.unicef_focal_points.add(self.unicef_focal_point)
+        self.intervention.sections.add(SectionFactory())
+        self.intervention.offices.add(OfficeFactory())
+        self.intervention.partner_focal_points.add(PartnerStaffFactory(
+            partner=self.partner, user__is_staff=False, user__groups__data=[]
+        ))
+        ReportingRequirementFactory(intervention=self.intervention)
+
+        amendment = InterventionAmendment.objects.create(
+            intervention=self.intervention,
+            types=[InterventionAmendment.TYPE_ADMIN_ERROR],
+        )
+        self.amended_intervention = amendment.amended_intervention
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse('pmp_v3:intervention-detail', args=[self.amended_intervention.pk]),
+            self.unicef_focal_point,
+            data={
+                'start': timezone.now().date() + datetime.timedelta(days=2),
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+
+        self.amended_intervention.refresh_from_db()
+        self.assertEqual(self.amended_intervention.start, timezone.now().date() + datetime.timedelta(days=2))
+
+        self.amended_intervention.unicef_accepted = True
+        self.amended_intervention.partner_accepted = True
+        self.amended_intervention.date_sent_to_partner = timezone.now().date()
+        self.amended_intervention.status = Intervention.REVIEW
+        self.amended_intervention.save()
+        review = InterventionReviewFactory(
+            intervention=self.amended_intervention, overall_approval=True,
+            overall_approver=UserFactory(is_staff=True, groups__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
+        )
+
+        # sign amended intervention
+        self.amended_intervention.signed_by_partner_date = self.intervention.signed_by_partner_date
+        self.amended_intervention.signed_by_unicef_date = self.intervention.signed_by_unicef_date
+        self.amended_intervention.partner_authorized_officer_signatory = self.intervention.partner_authorized_officer_signatory
+        self.amended_intervention.unicef_signatory = self.intervention.unicef_signatory
+        self.amended_intervention.save()
+        AttachmentFactory(
+            code='partners_intervention_signed_pd',
+            file='sample1.pdf',
+            content_object=self.amended_intervention
+        )
+
+        self.intervention.refresh_from_db()
+        self.assertEqual(self.intervention.start, timezone.now().date() + datetime.timedelta(days=1))
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse('pmp_v3:intervention-signature', args=[self.amended_intervention.pk]),
+            review.overall_approver,
+            data={}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.amended_intervention.refresh_from_db()
+        self.assertEqual('signed', response.data['status'])
+
+    @mock.patch("etools.applications.partners.tasks.send_pd_to_vision.delay")
+    def test_amend_intervention_budget_owner(self, send_to_vision_mock):
+        with self.captureOnCommitCallbacks(execute=True) as commit_callbacks:
+            response = self.forced_auth_req(
+                'patch',
+                reverse('pmp_v3:intervention-amendment-merge', args=[self.amended_intervention.pk]),
+                self.intervention.budget_owner,
+                data={}
+            )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.data['id'], self.intervention.id)
+
+        self.intervention.refresh_from_db()
+        self.assertEqual(self.intervention.start, timezone.now().date() + datetime.timedelta(days=2))
+        send_to_vision_mock.assert_called()
+        self.assertEqual(len(commit_callbacks), 1)
+
+    def test_amend_intervention_focal_point(self):
+        response = self.forced_auth_req(
+            'patch',
+            reverse('pmp_v3:intervention-amendment-merge', args=[self.amended_intervention.pk]),
+            self.unicef_focal_point,
+            data={}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+
+    def test_merge_error(self):
+        first_amendment = InterventionAmendmentFactory(
+            intervention=self.active_intervention, kind=InterventionAmendment.KIND_NORMAL,
+        )
+        second_amendment = InterventionAmendmentFactory(
+            intervention=self.active_intervention, kind=InterventionAmendment.KIND_CONTINGENCY,
+        )
+        second_amendment.amended_intervention.start = timezone.now().date() - datetime.timedelta(days=15)
+        second_amendment.amended_intervention.save()
+        second_amendment.merge_amendment()
+
+        first_amendment.amended_intervention.start = timezone.now().date() - datetime.timedelta(days=14)
+        first_amendment.amended_intervention.status = Intervention.SIGNED
+        first_amendment.amended_intervention.save()
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse('pmp_v3:intervention-amendment-merge', args=[first_amendment.amended_intervention.pk]),
+            self.active_intervention.budget_owner,
+            data={}
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('Merge Error', response.data[0])

@@ -16,6 +16,7 @@ from etools.applications.partners.permissions import (
     PARTNERSHIP_MANAGER_GROUP,
     PRC_SECRETARY,
     user_group_permission,
+    UserIsUnicefFocalPoint,
 )
 from etools.applications.partners.serializers.interventions_v3 import (
     AmendedInterventionReviewActionSerializer,
@@ -642,7 +643,7 @@ class PMPInterventionSendToUNICEFView(PMPInterventionActionView):
 
 class PMPAmendedInterventionMerge(InterventionDetailAPIView):
     permission_classes = (
-        user_group_permission(PARTNERSHIP_MANAGER_GROUP) | IsInterventionBudgetOwnerPermission,
+        user_group_permission(PARTNERSHIP_MANAGER_GROUP) | IsInterventionBudgetOwnerPermission | UserIsUnicefFocalPoint,
     )
 
     @transaction.atomic
