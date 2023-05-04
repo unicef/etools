@@ -979,9 +979,9 @@ class InterventionXLSRenderer:
         worksheet.append([
             _('EEPM'), _('Effective and efficient programme management'),
             '', '', '',
-            currency_format(self.intervention.management_budgets.total),
             currency_format(self.intervention.management_budgets.partner_total),
             currency_format(self.intervention.management_budgets.unicef_total),
+            currency_format(self.intervention.management_budgets.total),
         ])
         self.apply_styles_to_cells(
             worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns, [self.fill_blue_pale_light]
@@ -1071,10 +1071,10 @@ class InterventionXLSRenderer:
 
         worksheet.append([
             _('Total Cost for all outputs'), '', '', '', '',
-            currency_format(self.intervention.planned_budget.partner_contribution_local +
-                            self.intervention.planned_budget.total_unicef_cash_local_wo_hq),
             currency_format(self.intervention.planned_budget.partner_contribution_local),
             currency_format(self.intervention.planned_budget.total_unicef_cash_local_wo_hq),
+            currency_format(self.intervention.planned_budget.partner_contribution_local +
+                            self.intervention.planned_budget.total_unicef_cash_local_wo_hq),
         ])
         self.apply_styles_to_cells(
             worksheet,
