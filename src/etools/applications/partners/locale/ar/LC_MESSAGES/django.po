@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-03-16 08:26+0000\n"
+"POT-Creation-Date: 2023-05-04 15:48+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -2275,19 +2275,6 @@ msgstr "لا يمكن حذف تقييم مكتمل"
 msgid "No vendor number provided for Partner Organization"
 msgstr "لم يتم توفير رقم البائع للمؤسسة الشريكة"
 
-msgid ""
-"There was a PCA/SSFA signed with this partner or a transaction was performed "
-"against this partner. The Partner record cannot be deleted"
-msgstr ""
-"كان هناك PCA / SSFA موقعة مع هذا الشريك أو تم إجراء معاملة ضد هذا الشريك. لا "
-"يمكن حذف سجل الشريك"
-
-msgid "This partner has trips associated to it"
-msgstr "هذا الشريك لديه رحلات مرتبطة به"
-
-msgid "This partner has cash transactions associated to it"
-msgstr "هذا الشريك لديه معاملات نقدية مرتبطة به"
-
 msgid "Terms to be acknowledged"
 msgstr "يجب الاعتراف بالشروط"
 
@@ -2310,3 +2297,16 @@ msgstr "لا تحتوي الاستجابة التي أرجعها الخادم ع
 
 msgid "Partnership Manager role required for pca export."
 msgstr "دور مدير الشراكة المطلوب لتصدير pca."
+
+#~ msgid ""
+#~ "There was a PCA/SSFA signed with this partner or a transaction was "
+#~ "performed against this partner. The Partner record cannot be deleted"
+#~ msgstr ""
+#~ "كان هناك PCA / SSFA موقعة مع هذا الشريك أو تم إجراء معاملة ضد هذا الشريك. "
+#~ "لا يمكن حذف سجل الشريك"
+
+#~ msgid "This partner has trips associated to it"
+#~ msgstr "هذا الشريك لديه رحلات مرتبطة به"
+
+#~ msgid "This partner has cash transactions associated to it"
+#~ msgstr "هذا الشريك لديه معاملات نقدية مرتبطة به"
