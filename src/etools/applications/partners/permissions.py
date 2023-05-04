@@ -509,6 +509,9 @@ def user_group_permission(*groups):
         def has_permission(self, request, view):
             return request.user.is_authenticated and is_user_in_groups(request.user, groups)
 
+        def has_object_permission(self, request, view, obj):
+            return self.has_permission(request, view)
+
     return UserGroupPermission
 
 
@@ -643,6 +646,7 @@ class InterventionAmendmentIsNotCompleted(BasePermission):
 
 
 class UserIsUnicefFocalPoint(BasePermission):
-    def has_permission(self, request, view):
-        intervention = view.get_root_object()
-        return request.user in intervention.unicef_focal_points.all()
+    def has_object_permission(self, request, view, obj):
+        if hasattr(view, 'get_root_object'):
+            obj = view.get_root_object()
+        return request.user in obj.unicef_focal_points.all()
