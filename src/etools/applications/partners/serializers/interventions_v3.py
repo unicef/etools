@@ -461,7 +461,7 @@ class InterventionDetailSerializer(
         ).exists():
             available_actions.append("individual_review")
 
-        if obj.in_amendment and obj.status == obj.SIGNED and obj.budget_owner == user:
+        if obj.in_amendment and obj.status == obj.SIGNED and budget_owner_or_focal_point:
             available_actions.append("amendment_merge")
 
         # if NOT in Development status then we're done
