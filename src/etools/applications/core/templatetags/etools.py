@@ -1,7 +1,8 @@
+from textwrap import wrap
+
 from django import template
 from django.conf import settings
 from django.utils.safestring import mark_safe
-from textwrap import wrap
 
 from etools import NAME, VERSION
 from etools.applications.core.util_scripts import currency_format
