@@ -1,3 +1,5 @@
+from textwrap import wrap
+
 from django import template
 from django.conf import settings
 from django.utils.safestring import mark_safe
@@ -61,3 +63,14 @@ def call_method(obj, method_name, *args):
 @register.filter(is_safe=True)
 def currency(value):
     return currency_format(value)
+
+
+@register.filter
+def text_wrap(text, width=70):
+    """
+    The used PDF libs don't allow CSS word-wrap, so to split long words (e.g. urls)
+    we wrap the text by lines and join them with spaces to have multiple lines. See:
+    https://github.com/nigma/django-easy-pdf/issues/65
+    https://github.com/xhtml2pdf/xhtml2pdf/issues/379
+    """
+    return ' '.join(wrap(text, width))

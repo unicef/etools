@@ -1,20 +1,24 @@
 from datetime import date, datetime, timedelta
 from operator import itemgetter
 
+from django.core.exceptions import ImproperlyConfigured
 from django.db import transaction
 from django.db.models import Q, QuerySet
 from django.utils.functional import cached_property
 from django.utils.translation import gettext as _, gettext_lazy
 
-from rest_framework import serializers
+from rest_framework import fields, serializers
+from rest_framework.relations import RelatedField
 from rest_framework.serializers import ValidationError
 from rest_framework.validators import UniqueTogetherValidator
+from rest_framework_gis.fields import GeometryField
 from unicef_attachments.fields import AttachmentSingleFileField
 from unicef_attachments.models import Attachment
 from unicef_attachments.serializers import AttachmentSerializerMixin
 from unicef_locations.serializers import LocationSerializer
 from unicef_snapshot.serializers import SnapshotModelSerializer
 
+from etools.applications.field_monitoring.fm_settings.models import LocationSite
 from etools.applications.funds.models import FundsCommitmentItem, FundsReservationHeader
 from etools.applications.funds.serializers import FRHeaderSerializer, FRsSerializer
 from etools.applications.partners.models import (
@@ -24,6 +28,7 @@ from etools.applications.partners.models import (
     InterventionAttachment,
     InterventionBudget,
     InterventionPlannedVisits,
+    InterventionPlannedVisitSite,
     InterventionReportingPeriod,
     InterventionResultLink,
     PartnerStaffMember,
@@ -168,11 +173,69 @@ class InterventionAmendmentCUSerializer(AttachmentSerializerMixin, serializers.M
         return data
 
 
+class LocationSiteSerializer(serializers.ModelSerializer):
+    is_active = serializers.ChoiceField(choices=(
+        (True, _('Active')),
+        (False, _('Inactive')),
+    ), label=_('Status'), required=False)
+    point = GeometryField(precision=5)
+
+    class Meta:
+        model = LocationSite
+        fields = ['id', 'name', 'point', 'is_active']
+
+
+class PlannedVisitSitesQuarterSerializer(fields.ListField):
+    child = RelatedField(queryset=LocationSite.objects.all())
+    child_serializer = LocationSiteSerializer
+
+    def __init__(self, *args, **kwargs):
+        self.quarter = kwargs.pop('quarter', None)
+        if self.quarter is None:
+            raise ImproperlyConfigured('`quarter` is required')
+        super().__init__(*args, **kwargs)
+
+    def to_internal_value(self, data: list[int]):
+        return LocationSite.objects.filter(pk__in=data)
+
+    def to_representation(self, data: list[LocationSite]):
+        return self.child_serializer(data, many=True).data
+
+    def save(self, planned_visits: InterventionPlannedVisits, sites: list[LocationSite]):
+        sites = set(sites)
+        planned_sites = set(planned_visits.sites.all())
+        sites_to_create = sites - planned_sites
+        sites_to_delete = planned_sites - sites
+        InterventionPlannedVisitSite.objects.bulk_create((
+            InterventionPlannedVisitSite(planned_visits=planned_visits, quarter=self.quarter, site=site)
+            for site in sites_to_create
+        ))
+        InterventionPlannedVisitSite.objects.filter(
+            planned_visits=planned_visits, quarter=self.quarter, site__in=sites_to_delete,
+        ).delete()
+
+
 class PlannedVisitsCUSerializer(serializers.ModelSerializer):
+    programmatic_q1_sites = PlannedVisitSitesQuarterSerializer(quarter=InterventionPlannedVisitSite.Q1, required=False)
+    programmatic_q2_sites = PlannedVisitSitesQuarterSerializer(quarter=InterventionPlannedVisitSite.Q2, required=False)
+    programmatic_q3_sites = PlannedVisitSitesQuarterSerializer(quarter=InterventionPlannedVisitSite.Q3, required=False)
+    programmatic_q4_sites = PlannedVisitSitesQuarterSerializer(quarter=InterventionPlannedVisitSite.Q4, required=False)
 
     class Meta:
         model = InterventionPlannedVisits
-        fields = "__all__"
+        fields = (
+            'id',
+            'intervention',
+            'year',
+            'programmatic_q1',
+            'programmatic_q1_sites',
+            'programmatic_q2',
+            'programmatic_q2_sites',
+            'programmatic_q3',
+            'programmatic_q3_sites',
+            'programmatic_q4',
+            'programmatic_q4_sites',
+        )
 
     def is_valid(self, raise_exception=True):
         try:
@@ -189,18 +252,58 @@ class PlannedVisitsCUSerializer(serializers.ModelSerializer):
             self.instance = None
         return super().is_valid(raise_exception=True)
 
+    def create(self, validated_data):
+        sites_q1 = validated_data.pop('programmatic_q1_sites', None)
+        sites_q2 = validated_data.pop('programmatic_q2_sites', None)
+        sites_q3 = validated_data.pop('programmatic_q3_sites', None)
+        sites_q4 = validated_data.pop('programmatic_q4_sites', None)
+        instance = super().create(validated_data)
+        if sites_q1 is not None:
+            self.fields['programmatic_q1_sites'].save(instance, sites_q1)
+        if sites_q2 is not None:
+            self.fields['programmatic_q2_sites'].save(instance, sites_q2)
+        if sites_q3 is not None:
+            self.fields['programmatic_q3_sites'].save(instance, sites_q3)
+        if sites_q4 is not None:
+            self.fields['programmatic_q4_sites'].save(instance, sites_q4)
+        return instance
+
+    def update(self, instance, validated_data):
+        sites_q1 = validated_data.pop('programmatic_q1_sites', None)
+        sites_q2 = validated_data.pop('programmatic_q2_sites', None)
+        sites_q3 = validated_data.pop('programmatic_q3_sites', None)
+        sites_q4 = validated_data.pop('programmatic_q4_sites', None)
+        instance = super().update(instance, validated_data)
+        if sites_q1 is not None:
+            self.fields['programmatic_q1_sites'].save(instance, sites_q1)
+        if sites_q2 is not None:
+            self.fields['programmatic_q2_sites'].save(instance, sites_q2)
+        if sites_q3 is not None:
+            self.fields['programmatic_q3_sites'].save(instance, sites_q3)
+        if sites_q4 is not None:
+            self.fields['programmatic_q4_sites'].save(instance, sites_q4)
+        return instance
+
 
 class PlannedVisitsNestedSerializer(serializers.ModelSerializer):
+    programmatic_q1_sites = PlannedVisitSitesQuarterSerializer(quarter=InterventionPlannedVisitSite.Q1, required=False)
+    programmatic_q2_sites = PlannedVisitSitesQuarterSerializer(quarter=InterventionPlannedVisitSite.Q2, required=False)
+    programmatic_q3_sites = PlannedVisitSitesQuarterSerializer(quarter=InterventionPlannedVisitSite.Q3, required=False)
+    programmatic_q4_sites = PlannedVisitSitesQuarterSerializer(quarter=InterventionPlannedVisitSite.Q4, required=False)
 
     class Meta:
         model = InterventionPlannedVisits
         fields = (
             "id",
             "year",
-            "programmatic_q1",
-            "programmatic_q2",
-            "programmatic_q3",
-            "programmatic_q4",
+            'programmatic_q1',
+            'programmatic_q1_sites',
+            'programmatic_q2',
+            'programmatic_q2_sites',
+            'programmatic_q3',
+            'programmatic_q3_sites',
+            'programmatic_q4',
+            'programmatic_q4_sites',
         )
 
 

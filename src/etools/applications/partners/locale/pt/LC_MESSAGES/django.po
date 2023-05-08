@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-03-07 13:01+0000\n"
+"POT-Creation-Date: 2023-05-04 15:48+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1191,6 +1191,9 @@ msgstr "Intervenção alterada"
 msgid "Intervention amendments"
 msgstr "Aditivos da implementação do programa"
 
+msgid "Q1"
+msgstr ""
+
 msgid "Intervention"
 msgstr "Intervenção"
 
@@ -1634,6 +1637,11 @@ msgstr ""
 
 msgid "Other description required, if type 'Other' selected."
 msgstr "Outra descrição necessária, se o tipo 'Outro' for selecionado."
+
+#, fuzzy
+#| msgid "Active"
+msgid "Inactive"
+msgstr "Ativo"
 
 msgid "Planned Visit to be set only at Partner level"
 msgstr "Visita planejada a ser definida apenas no nível do parceiro"
@@ -2351,19 +2359,6 @@ msgstr "Não é possível excluir uma avaliação concluída"
 msgid "No vendor number provided for Partner Organization"
 msgstr "Nenhum número de fornecedor fornecido para organização parceira"
 
-msgid ""
-"There was a PCA/SSFA signed with this partner or a transaction was performed "
-"against this partner. The Partner record cannot be deleted"
-msgstr ""
-"Houve um PCA/SSFA assinado com este parceiro ou uma transação foi realizada "
-"contra este parceiro. O registro do parceiro não pode ser excluído"
-
-msgid "This partner has trips associated to it"
-msgstr "Este parceiro tem viagens associadas"
-
-msgid "This partner has cash transactions associated to it"
-msgstr "Este parceiro tem transações em dinheiro associadas a ele"
-
 msgid "Terms to be acknowledged"
 msgstr "Termos a serem reconhecidos"
 
@@ -2391,3 +2386,17 @@ msgstr ""
 
 msgid "Partnership Manager role required for pca export."
 msgstr "A função de gerente de parceria é necessária para a exportação de pca."
+
+#~ msgid ""
+#~ "There was a PCA/SSFA signed with this partner or a transaction was "
+#~ "performed against this partner. The Partner record cannot be deleted"
+#~ msgstr ""
+#~ "Houve um PCA/SSFA assinado com este parceiro ou uma transação foi "
+#~ "realizada contra este parceiro. O registro do parceiro não pode ser "
+#~ "excluído"
+
+#~ msgid "This partner has trips associated to it"
+#~ msgstr "Este parceiro tem viagens associadas"
+
+#~ msgid "This partner has cash transactions associated to it"
+#~ msgstr "Este parceiro tem transações em dinheiro associadas a ele"

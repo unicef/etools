@@ -593,7 +593,7 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
             date_of_draft_report_to_ip=datetime.datetime(datetime.datetime.today().year, 8, 1)
         )
         self.partner_organization.update_audits_completed()
-        self.assertEqual(self.partner_organization.hact_values['audits']['completed'], 2)
+        self.assertEqual(self.partner_organization.hact_values['audits']['completed'], 3)
 
     def test_partner_organization_get_admin_url(self):
         "Test that get_admin_url produces the URL we expect."

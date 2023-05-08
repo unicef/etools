@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: et-partners2-bk\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-03-07 13:01+0000\n"
+"POT-Creation-Date: 2023-05-04 15:48+0000\n"
 "Language: ru\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -1170,6 +1170,9 @@ msgstr "Программа с поправками"
 msgid "Intervention amendments"
 msgstr "Поправки к программе"
 
+msgid "Q1"
+msgstr ""
+
 msgid "Intervention"
 msgstr "Программа"
 
@@ -1606,6 +1609,11 @@ msgstr ""
 
 msgid "Other description required, if type 'Other' selected."
 msgstr "Требуется другое описание, если выбран тип «Другое»."
+
+#, fuzzy
+#| msgid "Active"
+msgid "Inactive"
+msgstr "Активный"
 
 msgid "Planned Visit to be set only at Partner level"
 msgstr "Запланированный визит устанавливается только на уровне партнера"
@@ -2311,19 +2319,6 @@ msgstr "Невозможно удалить завершенную оценку"
 msgid "No vendor number provided for Partner Organization"
 msgstr "Не указан номер поставщика для партнерской организации"
 
-msgid ""
-"There was a PCA/SSFA signed with this partner or a transaction was performed "
-"against this partner. The Partner record cannot be deleted"
-msgstr ""
-"С этим партнером было подписано соглашение PCA/SSFA или с ним была проведена "
-"транзакция. Запись партнера не может быть удалена"
-
-msgid "This partner has trips associated to it"
-msgstr "С этим партнером связаны поездки"
-
-msgid "This partner has cash transactions associated to it"
-msgstr "С этим партнером связаны операции с наличными"
-
 msgid "Terms to be acknowledged"
 msgstr "Условия, которые необходимо принять"
 
@@ -2349,3 +2344,16 @@ msgstr ""
 
 msgid "Partnership Manager role required for pca export."
 msgstr "Для экспорта PCA требуется роль менеджера по партнерству."
+
+#~ msgid ""
+#~ "There was a PCA/SSFA signed with this partner or a transaction was "
+#~ "performed against this partner. The Partner record cannot be deleted"
+#~ msgstr ""
+#~ "С этим партнером было подписано соглашение PCA/SSFA или с ним была "
+#~ "проведена транзакция. Запись партнера не может быть удалена"
+
+#~ msgid "This partner has trips associated to it"
+#~ msgstr "С этим партнером связаны поездки"
+
+#~ msgid "This partner has cash transactions associated to it"
+#~ msgstr "С этим партнером связаны операции с наличными"
