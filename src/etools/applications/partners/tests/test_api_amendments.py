@@ -518,7 +518,7 @@ class TestInterventionAmendmentsMerge(BaseTestInterventionAmendments, BaseTenant
         self.amended_intervention.save()
         review = InterventionReviewFactory(
             intervention=self.amended_intervention, overall_approval=True,
-            overall_approver=UserFactory(is_staff=True, groups__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
+            overall_approver=UserFactory(is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
         )
 
         # sign amended intervention
