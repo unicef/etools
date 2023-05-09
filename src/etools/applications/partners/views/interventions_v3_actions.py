@@ -340,6 +340,7 @@ class PMPInterventionReviewView(PMPInterventionActionView):
                 template_name = 'partners/intervention/unicef_sent_for_review'
                 recipients = recipients.union(set(
                     get_user_model().objects.filter(
+                        profile__country=connection.tenant,
                         groups=Group.objects.get(name=PRC_SECRETARY),
                     ).values_list('email', flat=True)
                 ))
