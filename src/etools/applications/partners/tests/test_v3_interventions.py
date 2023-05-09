@@ -421,6 +421,51 @@ class TestDetail(BaseInterventionTestCase):
         self.assertFalse(response.data['permissions']['view']['confidential'])
         self.assertFalse(response.data['permissions']['edit']['confidential'])
 
+    def test_cfei_number_permissions_unicef_focal(self):
+        self.intervention.unicef_focal_points.add(self.unicef_user)
+        self.assertFalse(self.intervention.cfei_number)
+        self.assertEqual(self.intervention.status, Intervention.DRAFT)
+        response = self.forced_auth_req(
+            "get",
+            reverse('pmp_v3:intervention-detail', args=[self.intervention.pk]),
+            user=self.unicef_user,
+        )
+        self.assertTrue(response.data['permissions']['view']['cfei_number'])
+        self.assertTrue(response.data['permissions']['edit']['cfei_number'])
+
+        self.intervention.status = Intervention.ACTIVE
+        self.intervention.save(update_fields=['status'])
+        response = self.forced_auth_req(
+            "get",
+            reverse('pmp_v3:intervention-detail', args=[self.intervention.pk]),
+            user=self.unicef_user,
+        )
+        self.assertTrue(response.data['permissions']['view']['cfei_number'])
+        self.assertTrue(response.data['permissions']['edit']['cfei_number'])
+
+        self.intervention.cfei_number = '12345'
+        self.intervention.save(update_fields=['cfei_number'])
+        response = self.forced_auth_req(
+            "get",
+            reverse('pmp_v3:intervention-detail', args=[self.intervention.pk]),
+            user=self.unicef_user,
+        )
+        self.assertTrue(response.data['permissions']['view']['cfei_number'])
+        self.assertFalse(response.data['permissions']['edit']['cfei_number'])
+
+    def test_cfei_number_permissions_country_office_admin(self):
+        country_office_admin = UserFactory(
+            is_staff=True, realms__data=[UNICEF_USER, "Country Office Administrator"]
+        )
+        response = self.forced_auth_req(
+            "get",
+            reverse('pmp_v3:intervention-detail', args=[self.intervention.pk]),
+            user=country_office_admin,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['permissions']['view']['cfei_number'])
+        self.assertTrue(response.data['permissions']['edit']['cfei_number'])
+
     def test_pdf_partner_user(self):
         staff_member = UserFactory(
             realms__data=['IP Viewer'],
