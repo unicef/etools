@@ -3,7 +3,7 @@ import logging
 from etools.applications.organizations.models import Organization
 from etools.applications.tpm.tpmpartners.models import TPMPartner
 from etools.applications.users.mixins import TPM_ACTIVE_GROUPS
-from etools.applications.users.models import Country, Realm
+from etools.applications.users.models import Realm
 from etools.applications.vision.synchronizers import VisionDataTenantSynchronizer
 
 logger = logging.getLogger(__name__)
@@ -92,11 +92,7 @@ class TPMPartnerSynchronizer(VisionDataTenantSynchronizer):
         # # deactivate the users
         # users_deactivate = User.objects.filter(tpmpartners_tpmpartnerstaffmember__in=staff_members)
         # users_deactivate.update(is_active=False)
-        try:
-            Realm.objects.filter(
-                organization=partner.organization,
-                group__name__in=TPM_ACTIVE_GROUPS,
-            ).update(is_active=False)
-        except Country.DoesNotExist:
-            logging.error(f"No country with name {partner.country} exists. "
-                          f"Cannot deactivate realms for users.")
+        Realm.objects.filter(
+            organization=partner.organization,
+            group__name__in=TPM_ACTIVE_GROUPS,
+        ).update(is_active=False)
