@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: et-partners2-bk\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-24 10:09+0000\n"
+"POT-Creation-Date: 2023-05-09 15:05+0000\n"
 "Language: es\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -2302,19 +2302,6 @@ msgstr "No se puede eliminar una evaluación completa"
 msgid "No vendor number provided for Partner Organization"
 msgstr "No se proporcionó un número de proveedor para la organización asociada"
 
-msgid ""
-"There was a PCA/SSFA signed with this partner or a transaction was performed "
-"against this partner. The Partner record cannot be deleted"
-msgstr ""
-"Se firmó un PCA/SSFA con este socio o se realizó una transacción contra este "
-"socio. El registro de socio no se puede eliminar"
-
-msgid "This partner has trips associated to it"
-msgstr "Este socio tiene viajes asociados"
-
-msgid "This partner has cash transactions associated to it"
-msgstr "Este socio tiene transacciones en efectivo asociadas"
-
 msgid "Terms to be acknowledged"
 msgstr "Términos a reconocer"
 
@@ -2343,6 +2330,19 @@ msgstr ""
 msgid "Partnership Manager role required for pca export."
 msgstr ""
 "Se requiere el rol de Gerente de asociación para la exportación de PCA."
+
+#~ msgid ""
+#~ "There was a PCA/SSFA signed with this partner or a transaction was "
+#~ "performed against this partner. The Partner record cannot be deleted"
+#~ msgstr ""
+#~ "Se firmó un PCA/SSFA con este socio o se realizó una transacción contra "
+#~ "este socio. El registro de socio no se puede eliminar"
+
+#~ msgid "This partner has trips associated to it"
+#~ msgstr "Este socio tiene viajes asociados"
+
+#~ msgid "This partner has cash transactions associated to it"
+#~ msgstr "Este socio tiene transacciones en efectivo asociadas"
 
 #~ msgid "You must select a type for this CSO"
 #~ msgstr "Debe seleccionar un tipo para este CSO"

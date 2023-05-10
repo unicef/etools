@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-04-24 10:09+0000\n"
+"POT-Creation-Date: 2023-05-09 15:05+0000\n"
 "Language: ru\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -2288,19 +2288,6 @@ msgstr "Невозможно удалить завершенную оценку"
 msgid "No vendor number provided for Partner Organization"
 msgstr "Не указан номер поставщика для партнерской организации"
 
-msgid ""
-"There was a PCA/SSFA signed with this partner or a transaction was performed "
-"against this partner. The Partner record cannot be deleted"
-msgstr ""
-"С этим партнером было подписано соглашение PCA/SSFA или с ним была проведена "
-"транзакция. Запись партнера не может быть удалена"
-
-msgid "This partner has trips associated to it"
-msgstr "С этим партнером связаны поездки"
-
-msgid "This partner has cash transactions associated to it"
-msgstr "С этим партнером связаны операции с наличными"
-
 msgid "Terms to be acknowledged"
 msgstr "Условия, которые необходимо принять"
 
@@ -2368,3 +2355,16 @@ msgstr "Для экспорта PCA требуется роль менеджер
 #~ msgstr ""
 #~ "Партнерский сотрудник, которого вы пытаетесь активировать, связан с "
 #~ "другой партнерской организацией."
+
+#~ msgid ""
+#~ "There was a PCA/SSFA signed with this partner or a transaction was "
+#~ "performed against this partner. The Partner record cannot be deleted"
+#~ msgstr ""
+#~ "С этим партнером было подписано соглашение PCA/SSFA или с ним была "
+#~ "проведена транзакция. Запись партнера не может быть удалена"
+
+#~ msgid "This partner has trips associated to it"
+#~ msgstr "С этим партнером связаны поездки"
+
+#~ msgid "This partner has cash transactions associated to it"
+#~ msgstr "С этим партнером связаны операции с наличными"

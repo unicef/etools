@@ -4,6 +4,7 @@ from decimal import Decimal
 from unittest import mock, skip
 from unittest.mock import patch
 
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.models import ContentType
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -2315,6 +2316,29 @@ class TestInterventionReview(BaseInterventionActionTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("PD is already in Review status.", response.data)
         mock_send.assert_not_called()
+
+    def test_notification_sent_to_prc_secretary(self):
+        self.intervention.partner_accepted = True
+        self.intervention.unicef_accepted = True
+        self.intervention.date_sent_to_partner = datetime.date.today()
+        self.intervention.submission_date_prc = None
+        self.intervention.save()
+
+        UserFactory(realms__data=[PRC_SECRETARY, UNICEF_USER])
+
+        # unicef reviews
+        mock_send = mock.Mock(return_value=self.mock_email)
+        with mock.patch(self.notify_path, mock_send):
+            response = self.forced_auth_req("patch", self.url, user=self.unicef_user, data={'review_type': 'prc'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.intervention.refresh_from_db()
+        self.assertEqual(self.intervention.status, Intervention.REVIEW)
+        mock_send.assert_called()
+        prc_secretaries_number = get_user_model().objects.filter(realms__group__name=PRC_SECRETARY).distinct().count()
+        self.assertEqual(
+            len(mock_send.mock_calls[0].kwargs['recipients']),
+            self.intervention.unicef_focal_points.count() + prc_secretaries_number
+        )
 
     def test_patch_after_reject(self):
         self.intervention.partner_accepted = True
