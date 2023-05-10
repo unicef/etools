@@ -461,7 +461,7 @@ class TestInterventionAmendmentsMerge(BaseTestInterventionAmendments, BaseTenant
             agreement__partner=self.partner,
             partner_authorized_officer_signatory=UserFactory(
                 profile__organization=self.partner.organization,
-                user__is_staff=False, realms__data=['IP Viewer']
+                is_staff=False, realms__data=['IP Viewer']
             ),
             unicef_signatory=UserFactory(),
             country_programme=country_programme,
@@ -488,7 +488,7 @@ class TestInterventionAmendmentsMerge(BaseTestInterventionAmendments, BaseTenant
         self.intervention.offices.add(OfficeFactory())
         self.intervention.partner_focal_points.add(UserFactory(
             profile__organization=self.partner.organization,
-            user__is_staff=False, realms__data=['IP Viewer']
+            is_staff=False, realms__data=['IP Viewer']
         ))
         ReportingRequirementFactory(intervention=self.intervention)
 

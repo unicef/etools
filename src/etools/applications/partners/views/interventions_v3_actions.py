@@ -338,8 +338,8 @@ class PMPInterventionReviewView(PMPInterventionActionView):
                 recipients = recipients.union(set(
                     get_user_model().objects.filter(
                         profile__country=connection.tenant,
-                        groups=Group.objects.get(name=PRC_SECRETARY),
-                    ).values_list('email', flat=True)
+                        realms__group=Group.objects.get(name=PRC_SECRETARY),
+                    ).distinct().values_list('email', flat=True)
                 ))
 
             self.send_notification(

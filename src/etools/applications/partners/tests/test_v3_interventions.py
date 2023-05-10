@@ -2324,17 +2324,17 @@ class TestInterventionReview(BaseInterventionActionTestCase):
         self.intervention.submission_date_prc = None
         self.intervention.save()
 
-        UserFactory(groups__data=[PRC_SECRETARY, UNICEF_USER])
+        UserFactory(realms__data=[PRC_SECRETARY, UNICEF_USER])
 
         # unicef reviews
         mock_send = mock.Mock(return_value=self.mock_email)
         with mock.patch(self.notify_path, mock_send):
-            response = self.forced_auth_req("patch", self.url, user=self.user, data={'review_type': 'prc'})
+            response = self.forced_auth_req("patch", self.url, user=self.unicef_user, data={'review_type': 'prc'})
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.intervention.refresh_from_db()
         self.assertEqual(self.intervention.status, Intervention.REVIEW)
         mock_send.assert_called()
-        prc_secretaries_number = get_user_model().objects.filter(groups__name=PRC_SECRETARY).count()
+        prc_secretaries_number = get_user_model().objects.filter(realms__group__name=PRC_SECRETARY).distinct().count()
         self.assertEqual(
             len(mock_send.mock_calls[0].kwargs['recipients']),
             self.intervention.unicef_focal_points.count() + prc_secretaries_number
