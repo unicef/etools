@@ -1204,7 +1204,7 @@
         "pk": 126,
         "fields": {
             "order": 4,
-            "header": "Warehouse (It may not be possible to inspect warehouses as part of the assessment, and it is not a requirement to do so. The response should state which warehouses, if any, have been physically verified. In cases where they have not been physically reviewed, the scores should be at least moderate risk.)",
+            "header": "Warehouse<br><i>It may not be possible to inspect warehouses as part of the assessment, and it is not a requirement to do so. The response should state which warehouses, if any, have been physically verified. In cases where they have not been physically reviewed, the scores should be at least moderate risk.</i>",
             "parent": 105,
             "category_type": "default",
             "code": "ma_questionnaire_v2"
