@@ -31,11 +31,16 @@ class BaseTransitionCheck:
 class ValidateRiskCategories(BaseTransitionCheck):
     VALIDATE_CATEGORIES_BEFORE_SUBMIT = {}
 
+    def get_categories_to_validate_before_submit(self, instance):
+        return self.VALIDATE_CATEGORIES_BEFORE_SUBMIT
+
     def get_errors(self, instance, fields_to_check=None, *args, **kwargs):
         from etools.applications.audit.models import RiskBluePrint
 
+        categories_to_validate = self.get_categories_to_validate_before_submit(instance)
+
         if not fields_to_check:
-            fields_to_check = self.VALIDATE_CATEGORIES_BEFORE_SUBMIT.keys()
+            fields_to_check = categories_to_validate.keys()
 
         errors = super().get_errors(*args, **kwargs)
 
@@ -43,7 +48,7 @@ class ValidateRiskCategories(BaseTransitionCheck):
             questions_count = RiskBluePrint.objects.filter(category__code=code).count()
             answers_count = instance.risks.filter(blueprint__category__code=code).count()
             if questions_count != answers_count:
-                errors[self.VALIDATE_CATEGORIES_BEFORE_SUBMIT[code]] = _('Please answer all questions')
+                errors[categories_to_validate[code]] = _('Please answer all questions')
 
         return errors
 
@@ -146,10 +151,16 @@ class AuditSubmitReportRequiredFieldsCheck(EngagementSubmitReportRequiredFieldsC
 
 class ValidateMARiskCategories(ValidateRiskCategories):
     VALIDATE_CATEGORIES_BEFORE_SUBMIT = {
-        'ma_questionnaire': 'questionnaire',
         'ma_subject_areas': 'test_subject_areas',
         'ma_global_assessment': 'overall_risk_assessment',
     }
+
+    def get_categories_to_validate_before_submit(self, instance):
+        from etools.applications.audit.models import MicroAssessment
+
+        categories = self.VALIDATE_CATEGORIES_BEFORE_SUBMIT
+        categories[MicroAssessment.get_questionnaire_code(instance)] = 'questionnaire'
+        return categories
 
 
 class ValidateMARiskExtra(ValidateRiskExtra):

@@ -455,7 +455,10 @@ class DetailedFindingInfoSerializer(WritableNestedSerializerMixin, serializers.M
 
 
 class MicroAssessmentSerializer(ActivePDValidationMixin, RiskCategoriesUpdateMixin, EngagementSerializer):
-    questionnaire = AggregatedRiskRootSerializer(code='ma_questionnaire', required=False)
+    questionnaire = AggregatedRiskRootSerializer(
+        code=lambda ma: MicroAssessment.get_questionnaire_code(ma.questionnaire_version),
+        required=False,
+    )
     test_subject_areas = RiskRootSerializer(
         code='ma_subject_areas', required=False, label=_('Tested Subject Areas')
     )
