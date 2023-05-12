@@ -82,8 +82,8 @@ class EngagementActionPointPDFSerializer(serializers.ModelSerializer):
     status = serializers.CharField(source='get_status_display')
     due_date = serializers.DateField(format='%d %b %Y')
     assigned_to = serializers.CharField(source='assigned_to.get_full_name')
-    office = serializers.CharField(source='office.name')
-    section = serializers.CharField(source='section.name')
+    office = serializers.CharField(source='office.name', allow_null=True)
+    section = serializers.CharField(source='section.name', allow_null=True)
 
     class Meta:
         model = EngagementActionPoint
