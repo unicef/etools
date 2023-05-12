@@ -103,7 +103,7 @@ class MicroAssessmentDetailCSVRenderer(BaseCSVRenderer):
             ),
             RiskCategory.objects.get(code='ma_questionnaire', parent__isnull=True).children.all()
         )):
-            labels['questionnaire.{}'.format(blueprint.id)] = "Questionnaire v1 - ".format(blueprint.header)
+            labels['questionnaire.{}'.format(blueprint.id)] = "Questionnaire v1 - {}".format(blueprint.header)
 
         for blueprint in itertools.chain(*map(
             lambda c: itertools.chain(
