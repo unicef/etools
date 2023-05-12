@@ -53,6 +53,7 @@ class MATransitionsTestCaseMixin(EngagementTransitionsTestCaseMixin):
     def _init_filled_engagement(self):
         super()._init_filled_engagement()
         self._fill_category('ma_questionnaire')
+        self._fill_category('ma_questionnaire_v2')
         self._fill_category('ma_subject_areas', extra={"comments": "some info"})
         self._fill_category('ma_global_assessment', extra={"comments": "some info"})
 
@@ -129,6 +130,7 @@ class TestMATransitionsTestCase(
     def test_missing_comments_subject_areas(self):
         self._fill_date_fields()
         self._fill_category('ma_questionnaire')
+        self._fill_category('ma_questionnaire_v2')
         self._fill_category('ma_subject_areas')
         self._fill_category('ma_global_assessment')
         self._test_submit(self.auditor, status.HTTP_400_BAD_REQUEST,
@@ -137,6 +139,7 @@ class TestMATransitionsTestCase(
     def test_attachments_required(self):
         self._fill_date_fields()
         self._fill_category('ma_questionnaire')
+        self._fill_category('ma_questionnaire_v2')
         self._fill_category('ma_subject_areas', extra={"comments": "some info"})
         self._fill_category('ma_global_assessment', extra={"comments": "some info"})
         self._test_submit(self.auditor, status.HTTP_400_BAD_REQUEST, errors=['report_attachments'])

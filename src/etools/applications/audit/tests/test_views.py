@@ -219,6 +219,10 @@ class TestMARisksViewSet(BaseTestCategoryRisksViewSet, BaseTenantTestCase):
             allowed_user=self.auditor
         )
         self._test_engagement_categories(
+            category_code='ma_questionnaire_v2', field_name='questionnaire',
+            allowed_user=self.auditor
+        )
+        self._test_engagement_categories(
             category_code='ma_subject_areas', field_name='test_subject_areas',
             allowed_user=self.auditor
         )
@@ -236,6 +240,10 @@ class TestMARisksViewSet(BaseTestCategoryRisksViewSet, BaseTenantTestCase):
     def test_ma_risks_update_without_perms(self):
         self._test_category_update_by_user_without_permissions(
             category_code='ma_questionnaire', field_name='questionnaire',
+            not_allowed=self.unicef_focal_point
+        )
+        self._test_category_update_by_user_without_permissions(
+            category_code='ma_questionnaire_v2', field_name='questionnaire',
             not_allowed=self.unicef_focal_point
         )
         self._test_category_update_by_user_without_permissions(
