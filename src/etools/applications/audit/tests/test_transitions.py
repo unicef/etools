@@ -125,7 +125,7 @@ class TestMATransitionsTestCase(
     def test_filled_questionnaire(self):
         self._fill_date_fields()
         self._test_submit(self.auditor, status.HTTP_400_BAD_REQUEST,
-                          errors=['questionnaire', 'test_subject_areas', 'overall_risk_assessment'])
+                          errors=['test_subject_areas', 'overall_risk_assessment', 'questionnaire'])
 
     def test_missing_comments_subject_areas(self):
         self._fill_date_fields()
