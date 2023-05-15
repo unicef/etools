@@ -159,7 +159,7 @@ class ValidateMARiskCategories(ValidateRiskCategories):
         from etools.applications.audit.models import MicroAssessment
 
         categories = self.VALIDATE_CATEGORIES_BEFORE_SUBMIT
-        categories[MicroAssessment.get_questionnaire_code(instance)] = 'questionnaire'
+        categories[MicroAssessment.get_questionnaire_code(instance.questionnaire_version)] = 'questionnaire'
         return categories
 
 
