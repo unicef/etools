@@ -50,7 +50,6 @@ from etools.applications.partners.views.partner_organization_v2 import (
     PartnerOrganizationListAPIView,
     PartnerOrganizationSimpleHactAPIView,
     PartnerPlannedVisitsDeleteView,
-    PartnerStaffMemberListAPIVIew,
     PartnerWithScheduledAuditCompleted,
     PartnerWithSpecialAuditCompleted,
     PlannedEngagementAPIView,
@@ -129,9 +128,9 @@ urlpatterns = (
     re_path(r'^partners/add/$', view=PartnerOrganizationAddView.as_view(http_method_names=['post']),
             name='partner-add'),
 
-    re_path(r'^partners/(?P<partner_pk>\d+)/staff-members/$',
-            view=PartnerStaffMemberListAPIVIew.as_view(http_method_names=['get']),
-            name='partner-staff-members-list'),
+    # re_path(r'^partners/(?P<partner_pk>\d+)/staff-members/$',
+    #         view=PartnerStaffMemberListAPIVIew.as_view(http_method_names=['get']),
+    #         name='partner-staff-members-list'),
 
     re_path(r'^interventions/$',
             view=InterventionListAPIView.as_view(http_method_names=['get', 'post']),
