@@ -225,7 +225,7 @@ class UserAdminPlus(ExtraUrlMixin, UserAdmin):
         'is_active',
         'country',
     ]
-    list_select_related = ('country', 'office')
+    list_select_related = ('profile__country', 'profile__office')
 
     UserChangeForm.Meta.exclude = ('groups',)
 
@@ -361,10 +361,10 @@ class CountryAdmin(ExtraUrlMixin, TenantAdminMixin, admin.ModelAdmin):
 
 
 class RealmAdmin(SnapshotModelAdmin):
-    raw_id_fields = ('user', )
+    raw_id_fields = ('user', 'organization')
     search_fields = ('user__email', 'user__first_name', 'user__last_name', 'country__name',
                      'organization__name', 'organization__vendor_number', 'group__name')
-    autocomplete_fields = ('country', 'organization', 'group')
+    autocomplete_fields = ('country', 'group')
 
     inlines = (ActivityInline, )
 

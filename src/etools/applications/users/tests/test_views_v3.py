@@ -236,7 +236,7 @@ class TestUsersListAPIView(BaseTenantTestCase):
         self.assertEqual(response.data, [])
 
     def test_api_users_list(self):
-        with self.assertNumQueries(3):
+        with self.assertNumQueries(5):
             response = self.forced_auth_req('get', self.url, user=self.unicef_staff)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -674,7 +674,7 @@ class TestUserRealmView(BaseTenantTestCase):
         # uses profile.organization = self.organization
         for auth_user in [self.ip_viewer, self.ip_editor, self.ip_admin,
                           self.ip_auth_officer]:
-            with self.assertNumQueries(4):
+            with self.assertNumQueries(3):
                 response = self.make_request_list(auth_user, method='get')
             self.assertEqual(response.status_code, status.HTTP_200_OK)
             self.assertEqual(response.data['count'], 4, "Number of users in realm")
@@ -685,7 +685,7 @@ class TestUserRealmView(BaseTenantTestCase):
                 "organization_id": self.organization.id,
                 "organization_type": self.organization.relationship_types[0]
             }
-            with self.assertNumQueries(5):
+            with self.assertNumQueries(4):
                 response = self.make_request_list(auth_user, method='get', data=data)
             self.assertEqual(response.status_code, status.HTTP_200_OK)
             self.assertEqual(response.data['count'], 4)

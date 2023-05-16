@@ -342,7 +342,7 @@ class UserRealmViewSet(
         return self.model.objects \
             .filter(realms__in=context_realms_qs) \
             .prefetch_related(Prefetch('realms', queryset=context_realms_qs)) \
-            .annotate(has_active_realm=Exists(Realm.objects.filter(user=OuterRef('pk'), is_active=True))) \
+            .annotate(has_active_realm=Exists(context_realms_qs.filter(user=OuterRef('pk'), is_active=True))) \
             .distinct()
 
     @transaction.atomic
