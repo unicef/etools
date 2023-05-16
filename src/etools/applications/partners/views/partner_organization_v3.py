@@ -1,9 +1,11 @@
+from django.shortcuts import get_object_or_404
+
 from rest_framework.generics import ListAPIView
 from rest_framework_csv import renderers as r
 
 from etools.applications.core.mixins import ExportModelMixin
 from etools.applications.core.renderers import CSVFlatRenderer
-from etools.applications.partners.filters import PartnerScopeFilter
+from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.permissions import AllowSafeAuthenticated
 from etools.applications.partners.serializers.exports.partner_organization import (
     PartnerStaffMemberExportFlatSerializer,
@@ -29,18 +31,13 @@ class PMPPartnerOrganizationListAPIView(
 
 
 class PMPPartnerStaffMemberListAPIVIew(
-    PMPBaseViewMixin,
-    ExternalModuleFilterMixin,
-    ExportModelMixin,
-    ListAPIView
-):
+        PMPBaseViewMixin, ExternalModuleFilterMixin, ExportModelMixin, ListAPIView):
     """
     Returns a list of all Partner staff members
     """
     queryset = User.objects.all()
     serializer_class = PartnerStaffMemberRealmSerializer
     permission_classes = (AllowSafeAuthenticated,)
-    filter_backends = (PartnerScopeFilter,)
     renderer_classes = (
         r.JSONRenderer,
         r.CSVRenderer,
@@ -63,9 +60,15 @@ class PMPPartnerStaffMemberListAPIVIew(
                 return PartnerStaffMemberExportFlatSerializer
         return super().get_serializer_class()
 
-    def get_queryset(self):
-        qs = self.queryset
+    def get_queryset(self, module=None):
+        if self.request.parser_context['kwargs'] and 'partner_pk' in self.request.parser_context['kwargs']:
+            partner = get_object_or_404(PartnerOrganization, pk=self.request.parser_context['kwargs']['partner_pk'])
+            qs = partner.all_staff_members
 
-        if self.is_partner_staff():
-            qs = qs.filter(realms__organization__partner=self.current_partner()).distinct()
-        return qs
+            if (not self.is_partner_staff() and self.request.user.is_unicef_user()) or \
+                    (self.is_partner_staff() and partner == self.current_partner()):
+                return qs
+
+            return self.queryset.none()
+
+        return self.queryset.none()
