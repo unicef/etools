@@ -148,7 +148,7 @@ class TestList(BaseInterventionTestCase):
         intervention.partner_focal_points.add(staff_member)
 
         # not sent to partner
-        with self.assertNumQueries(10):
+        with self.assertNumQueries(6):
             response = self.forced_auth_req(
                 "get",
                 reverse('pmp_v3:intervention-list'),
@@ -2487,20 +2487,13 @@ class TestInterventionReviewSendBack(BaseInterventionActionTestCase):
 class TestInterventionReviews(BaseInterventionTestCase):
     def setUp(self):
         super().setUp()
-        self.partner = PartnerFactory()
         self.intervention = InterventionFactory(
             date_sent_to_partner=datetime.date.today(),
-            agreement__partner=self.partner,
             status=Intervention.REVIEW,
         )
-        RealmFactory(
-            user=self.unicef_user,
-            organization=self.partner.organization,
-            country=connection.tenant,
-            group=GroupFactory(name=PRC_SECRETARY)
+        self.unicef_prc_secretary = UserFactory(
+            is_staff=True, realms__data=[UNICEF_USER, PRC_SECRETARY]
         )
-        self.unicef_user.profile.organization = self.partner.organization
-        self.unicef_user.profile.save(update_fields=['organization'])
 
     def test_list(self):
         for __ in range(10):
@@ -2515,7 +2508,7 @@ class TestInterventionReviews(BaseInterventionTestCase):
                 "pmp_v3:intervention-reviews",
                 args=[self.intervention.pk],
             ),
-            user=self.unicef_user,
+            user=self.unicef_prc_secretary,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), review_qs.count())
@@ -2529,7 +2522,7 @@ class TestInterventionReviews(BaseInterventionTestCase):
                 args=[self.intervention.pk],
             ),
             data={},
-            user=self.unicef_user,
+            user=self.unicef_prc_secretary,
         )
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
@@ -2541,7 +2534,7 @@ class TestInterventionReviews(BaseInterventionTestCase):
                 "pmp_v3:intervention-reviews-detail",
                 args=[self.intervention.pk, review.pk],
             ),
-            user=self.unicef_user
+            user=self.unicef_prc_secretary
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["id"], review.pk)
@@ -2560,7 +2553,7 @@ class TestInterventionReviews(BaseInterventionTestCase):
             data={
                 "overall_comment": "second",
             },
-            user=self.unicef_user
+            user=self.unicef_prc_secretary
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["id"], review.pk)
