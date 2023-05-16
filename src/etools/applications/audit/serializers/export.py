@@ -80,8 +80,8 @@ class EngagementActionPointPDFSerializer(serializers.ModelSerializer):
     status = serializers.CharField(source='get_status_display')
     due_date = serializers.DateField(format='%d %b %Y')
     assigned_to = serializers.CharField(source='assigned_to.get_full_name')
-    office = serializers.CharField(source='office.name')
-    section = serializers.CharField(source='section.name')
+    office = serializers.CharField(source='office.name', allow_null=True)
+    section = serializers.CharField(source='section.name', allow_null=True)
 
     class Meta:
         model = EngagementActionPoint
@@ -140,7 +140,10 @@ class EngagementPDFSerializer(serializers.ModelSerializer):
 
 
 class MicroAssessmentPDFSerializer(EngagementPDFSerializer):
-    questionnaire = AggregatedRiskRootSerializer(code='ma_questionnaire', required=False)
+    questionnaire = AggregatedRiskRootSerializer(
+        lambda ma: MicroAssessment.get_questionnaire_code(ma.questionnaire_version),
+        required=False,
+    )
     test_subject_areas = RiskRootSerializer(
         code='ma_subject_areas', required=False, label=_('Tested Subject Areas')
     )
@@ -310,6 +313,7 @@ class MicroAssessmentDetailCSVSerializer(EngagementBaseDetailCSVSerializer):
     overall_risk_assessment = serializers.SerializerMethodField()
     subject_areas = serializers.SerializerMethodField()
     questionnaire = serializers.SerializerMethodField()
+    questionnaire_v2 = serializers.SerializerMethodField()
 
     def get_overall_risk_assessment(self, obj):
         serializer = RiskRootSerializer(code='ma_global_assessment')
@@ -329,6 +333,20 @@ class MicroAssessmentDetailCSVSerializer(EngagementBaseDetailCSVSerializer):
 
     def get_questionnaire(self, obj):
         serializer = AggregatedRiskRootSerializer(code='ma_questionnaire')
+        questionnaire = serializer.to_representation(serializer.get_attribute(instance=obj))
+
+        return OrderedDict(
+            (b['id'], b['risk']['value_display'] if b['risk'] else 'N/A')
+            for b in itertools.chain(*map(
+                lambda c: itertools.chain(itertools.chain(*map(
+                    lambda sc: sc['blueprints'], c['children']
+                )), c['blueprints']),
+                questionnaire['children']
+            ))
+        )
+
+    def get_questionnaire_v2(self, obj):
+        serializer = AggregatedRiskRootSerializer(code='ma_questionnaire_v2')
         questionnaire = serializer.to_representation(serializer.get_attribute(instance=obj))
 
         return OrderedDict(
