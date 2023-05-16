@@ -1,6 +1,10 @@
+from datetime import timedelta
+
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.db import connection, IntegrityError, transaction
+from django.utils import timezone
 
 from celery.utils.log import get_task_logger
 
@@ -213,3 +217,15 @@ def notify_user_on_realm_update(user_pk):
             template_name='users/amp/role-update',
             context=email_context
         )
+
+
+@app.task
+def deactivate_stale_users():
+    active_users = User.objects.filter(is_active=True)
+    non_unicef_users = active_users.exclude(email__endswith=settings.UNICEF_USER_EMAIL)
+    users_to_deactivate = non_unicef_users.filter(last_login__lt=timezone.now() - timedelta(days=3 * 30))
+    for user in users_to_deactivate:
+        logger.info(f'Deactivated user as it was inactive for more than 3 months: {user.email}')
+        # save one by one instead of .update(is_active=True) to enable signals/save events
+        user.is_active = False
+        user.save()
