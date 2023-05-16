@@ -7,9 +7,9 @@ from etools.applications.partners.models import PartnerOrganization
 
 class PartnerScopeFilter(BaseFilterBackend):
     def filter_queryset(self, request, queryset, view):
-        if request.parser_context['kwargs'] and 'partner_pk' in request.parser_context['kwargs']:
+        if queryset and request.parser_context['kwargs'] and 'partner_pk' in request.parser_context['kwargs']:
             partner = get_object_or_404(PartnerOrganization, pk=request.parser_context['kwargs']['partner_pk'])
-            return partner.all_staff_members
+            return partner.all_staff_members.filter(pk__in=queryset.values_list('pk', flat=True))
         return queryset
 
 

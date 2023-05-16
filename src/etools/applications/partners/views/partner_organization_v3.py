@@ -28,18 +28,12 @@ class PMPPartnerOrganizationListAPIView(
         return qs
 
 
-class PMPPartnerStaffMemberMixin(PMPBaseViewMixin):
-    def get_queryset(self):
-        qs = self.queryset
-        if self.is_partner_staff():
-            qs = qs.filter(
-                realms__organization__partner=self.current_partner(),
-            ).distinct()
-        return qs
-
-
 class PMPPartnerStaffMemberListAPIVIew(
-        PMPPartnerStaffMemberMixin, ExternalModuleFilterMixin, ExportModelMixin, ListAPIView):
+    PMPBaseViewMixin,
+    ExternalModuleFilterMixin,
+    ExportModelMixin,
+    ListAPIView
+):
     """
     Returns a list of all Partner staff members
     """
@@ -68,3 +62,10 @@ class PMPPartnerStaffMemberListAPIVIew(
             if query_params.get("format") == 'csv_flat':
                 return PartnerStaffMemberExportFlatSerializer
         return super().get_serializer_class()
+
+    def get_queryset(self):
+        qs = self.queryset
+
+        if self.is_partner_staff():
+            qs = qs.filter(realms__organization__partner=self.current_partner()).distinct()
+        return qs

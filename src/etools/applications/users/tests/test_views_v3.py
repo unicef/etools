@@ -236,7 +236,7 @@ class TestUsersListAPIView(BaseTenantTestCase):
         self.assertEqual(response.data, [])
 
     def test_api_users_list(self):
-        with self.assertNumQueries(3):
+        with self.assertNumQueries(5):
             response = self.forced_auth_req('get', self.url, user=self.unicef_staff)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
