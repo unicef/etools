@@ -701,15 +701,22 @@ class FMUsersViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase):
         self.assertEqual(response.data['results'][0]['user_type'], 'staff')
 
     def test_filter_default(self):
-        with self.assertNumQueries(2):
+        with self.assertNumQueries(3):
             self._test_list(self.unicef_user, [
-                self.unicef_user, self.fm_user, self.pme, self.usual_user, self.tpm_user, self.another_tpm_user
+                self.unicef_user, self.fm_user, self.pme, self.tpm_user, self.another_tpm_user
             ])
 
     def test_filter_tpm(self):
-        response = self._test_list(self.unicef_user, [self.tpm_user, self.another_tpm_user], data={'user_type': 'tpm'})
+        new_tpm_user = TPMUserFactory(tpm_partner=SimpleTPMPartnerFactory())
+        new_tpm_user.profile.organization = None
+        new_tpm_user.profile.save(update_fields=['organization'])
+
+        response = self._test_list(
+            self.unicef_user, [self.tpm_user, self.another_tpm_user, new_tpm_user], data={'user_type': 'tpm'})
+
         self.assertEqual(response.data['results'][0]['user_type'], 'tpm')
         self.assertEqual(response.data['results'][1]['user_type'], 'tpm')
+        self.assertEqual(response.data['results'][2]['user_type'], 'tpm')
 
     def test_filter_tpm_partner(self):
         tpm_partner = self.tpm_user.profile.organization.tpmpartner.id
