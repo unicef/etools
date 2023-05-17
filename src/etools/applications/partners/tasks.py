@@ -262,7 +262,7 @@ def notify_partner_hidden(partner_pk, tenant_name):
     with schema_context(tenant_name):
         partner = PartnerOrganization.objects.get(pk=partner_pk)
         pds = Intervention.objects.filter(
-            agreement__partner__name=partner.name,
+            agreement__partner=partner,
             status__in=[Intervention.SIGNED, Intervention.ACTIVE, Intervention.ENDED]
         )
         if pds:
