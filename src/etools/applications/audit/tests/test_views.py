@@ -966,6 +966,19 @@ class TestMetadataDetailViewSet(EngagementTransitionsTestCaseMixin):
         )
 
 
+class TestEngagementMetadataViewSet(AuditTestCaseMixin, BaseTenantTestCase):
+    endpoint = "engagements"
+
+    def test_staff_members(self):
+        response = self.forced_auth_req(
+            'options',
+            '/api/audit/{}/'.format(self.endpoint),
+            user=self.unicef_focal_point
+        )
+        self.assertIn('POST', response.data['actions'])
+        self.assertIn('staff_members', response.data['actions']['POST'])
+
+
 class TestMicroAssessmentMetadataDetailViewSet(TestMetadataDetailViewSet, BaseTenantTestCase):
     engagement_factory = MicroAssessmentFactory
     endpoint = 'micro-assessments'
