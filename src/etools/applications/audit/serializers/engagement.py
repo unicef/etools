@@ -321,7 +321,7 @@ class EngagementSerializer(
                     country=connection.tenant,
                     group__name__in=AUDIT_ACTIVE_GROUPS,
                     is_active=True))
-            )
+        )
         return AuditorStaffMemberRealmSerializer(staff_members_qs, many=True).data
 
     def get_sections(self, obj):
