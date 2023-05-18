@@ -173,7 +173,7 @@ class ActivityAttachmentSerializer(BaseAttachmentSerializer):
 class FMUserSerializer(MinimalUserSerializer):
     name = serializers.SerializerMethodField()
     user_type = serializers.SerializerMethodField()
-    tpm_partner = serializers.ReadOnlyField(source='profile.organization.tpmpartner.id', allow_null=True)
+    tpm_partner = serializers.ReadOnlyField(allow_null=True)
 
     class Meta(MinimalUserSerializer.Meta):
         fields = MinimalUserSerializer.Meta.fields + (
@@ -181,7 +181,7 @@ class FMUserSerializer(MinimalUserSerializer):
         )
 
     def get_user_type(self, obj):
-        if hasattr(obj.profile.organization, 'tpmpartner'):
+        if obj.tpm_partner:
             return 'tpm'
         return 'staff'
 
