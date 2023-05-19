@@ -30,7 +30,7 @@ class BaseJWTAPI:
             'username': self.user.username,
             'email': self.user.email,
         })
-        print(decoded_token)
+
         encoded = jwt.encode(
             decoded_token,
             settings.SIMPLE_JWT['SIGNING_KEY'],

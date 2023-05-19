@@ -357,7 +357,7 @@ class UserRealmViewSet(
         headers = self.get_success_headers(serializer.data)
         sync_realms_to_prp.apply_async(
             (request.user.pk, serializer.instance.pk, timezone.now().timestamp()),
-            eta=timezone.now() + datetime.timedelta(seconds=1)
+            eta=timezone.now() + datetime.timedelta(minutes=5)
         )
         return Response(UserRealmRetrieveSerializer(instance=self.get_queryset().get(pk=serializer.instance.pk)).data,
                         status=status.HTTP_201_CREATED, headers=headers)
@@ -372,7 +372,7 @@ class UserRealmViewSet(
         self.perform_update(serializer)
         sync_realms_to_prp.apply_async(
             (request.user.pk, serializer.instance.pk, timezone.now().timestamp()),
-            eta=timezone.now() + datetime.timedelta(seconds=1)
+            eta=timezone.now() + datetime.timedelta(minutes=5)
         )
         if getattr(instance, '_prefetched_objects_cache', None):
             instance._prefetched_objects_cache = {}
