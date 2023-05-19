@@ -1,6 +1,7 @@
 import json
 
 from django.conf import settings
+from django.db import connection
 
 import jwt
 import requests
@@ -25,8 +26,9 @@ class BaseJWTAPI:
                                    leeway=settings.SIMPLE_JWT['LEEWAY'],
                                    )
 
+        groups = list(self.user.groups.values_list('name', flat=True)) if connection.schema_name == "public" else []
         decoded_token.update({
-            'groups': list(self.user.groups.values_list('name', flat=True)),
+            'groups': groups,
             'username': self.user.username,
             'email': self.user.email,
         })
