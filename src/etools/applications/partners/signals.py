@@ -1,9 +1,5 @@
-import datetime
-
-from django.db import connection, transaction
 from django.db.models.signals import m2m_changed, post_delete, post_save
 from django.dispatch import receiver
-from django.utils import timezone
 
 from etools.applications.partners.models import (
     Intervention,
@@ -12,14 +8,12 @@ from etools.applications.partners.models import (
     InterventionSupplyItem,
     PRCOfficerInterventionReview,
 )
-from etools.applications.partners.tasks import sync_partner_to_prp, sync_realms_to_prp
-from etools.applications.users.models import Realm
 
-
-@receiver(post_save, sender=Intervention)
-def sync_pd_partner_to_prp(instance: Intervention, created: bool, **kwargs):
-    if instance.date_sent_to_partner and instance.tracker.has_changed('date_sent_to_partner'):
-        sync_partner_to_prp.delay(connection.tenant.name, instance.agreement.partner_id)
+# TODO clean up: endpoint removed in prp
+# @receiver(post_save, sender=Intervention)
+# def sync_pd_partner_to_prp(instance: Intervention, created: bool, **kwargs):
+#     if instance.date_sent_to_partner and instance.tracker.has_changed('date_sent_to_partner'):
+#         sync_partner_to_prp.delay(connection.tenant.name, instance.agreement.partner_id)
 
 
 @receiver(post_delete, sender=InterventionSupplyItem)
@@ -74,34 +68,3 @@ def sync_budget_owner_to_amendment(instance: Intervention, created: bool, **kwar
         for amendment in instance.amendments.filter(is_active=True):
             amendment.amended_intervention.budget_owner_id = instance.budget_owner_id
             amendment.amended_intervention.save()
-
-
-@receiver(post_save, sender=Realm)
-def sync_realms_to_prp_on_update(instance: Realm, created: bool, **kwargs):
-    if instance.user.is_unicef_user():
-        # only external users are allowed to be synced to prp
-        return
-
-    transaction.on_commit(
-        lambda:
-            sync_realms_to_prp.apply_async(
-                (instance.user_id, instance.modified.timestamp()),
-                eta=instance.modified + datetime.timedelta(minutes=5)
-            )
-    )
-
-
-@receiver(post_delete, sender=Realm)
-def sync_realms_to_prp_on_delete(instance: Realm, **kwargs):
-    if instance.user.is_unicef_user():
-        # only external users are allowed to be synced to prp
-        return
-
-    now = timezone.now()
-    transaction.on_commit(
-        lambda:
-            sync_realms_to_prp.apply_async(
-                (instance.user_id, now.timestamp()),
-                eta=now + datetime.timedelta(minutes=5)
-            )
-    )

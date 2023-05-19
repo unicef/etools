@@ -611,7 +611,6 @@ UNICEF_LOCATIONS_MODEL = 'locations.Location'
 # https://github.com/unicef/etools-partner-reporting-portal
 PRP_API_ENDPOINT = get_from_secrets_or_env('PRP_API_ENDPOINT', '')  # example: http://172.18.0.1:8083/api
 PRP_API_USER = get_from_secrets_or_env('PRP_API_USER', '')
-PRP_API_PASSWORD = get_from_secrets_or_env('PRP_API_PASSWORD', '')
 
 
 # EPD settings
