@@ -26,7 +26,7 @@ class BaseJWTAPI:
                                    leeway=settings.SIMPLE_JWT['LEEWAY'],
                                    )
 
-        groups = list(self.user.groups.values_list('name', flat=True)) if connection.schema_name == "public" else []
+        groups = list(self.user.groups.values_list('name', flat=True)) if not connection.schema_name == "public" else []
         decoded_token.update({
             'groups': groups,
             'username': self.user.username,
