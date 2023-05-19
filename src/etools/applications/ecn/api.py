@@ -1,9 +1,10 @@
 import json
 
+from django.conf import settings
+
 from requests import HTTPError
 
 from etools.applications.core.jwt_api import BaseJWTAPI
-from etools.config import settings
 
 
 class ECNAPI(BaseJWTAPI):
