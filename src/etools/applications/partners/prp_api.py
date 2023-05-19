@@ -30,7 +30,7 @@ class PRPPartnerUserResponse(NamedTuple):
 class PRPAPI(BaseJWTAPI):
     def __init__(self, user=None):
         if not user:
-            user = get_user_model().objects.get(pk=settings.PRP_API_USER)
+            user = get_user_model().objects.get(email=settings.PRP_API_USER)
         super().__init__(user, url=settings.PRP_API_ENDPOINT)
 
     def _simple_get_request(self, timeout=None):
