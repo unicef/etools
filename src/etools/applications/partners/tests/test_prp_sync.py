@@ -7,14 +7,12 @@ from django.test import override_settings
 from django.utils import timezone
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
-from etools.applications.partners.tasks import sync_partner_to_prp, sync_partners_staff_members_from_prp
 from etools.applications.partners.tests.factories import InterventionFactory, PartnerFactory
 from etools.applications.users.models import User
 from etools.applications.users.tests.factories import UserFactory
 
 
 class TestInterventionPartnerSyncSignal(BaseTenantTestCase):
-    @patch('etools.applications.partners.signals.sync_partner_to_prp.delay')
     def test_intervention_sync_called(self, sync_task_mock):
         intervention = InterventionFactory(date_sent_to_partner=None)
         sync_task_mock.assert_not_called()
@@ -23,7 +21,6 @@ class TestInterventionPartnerSyncSignal(BaseTenantTestCase):
         intervention.save()
         sync_task_mock.assert_called_with(connection.tenant.name, intervention.agreement.partner_id)
 
-    @patch('etools.applications.partners.signals.sync_partner_to_prp.delay')
     def test_intervention_sync_not_called_on_save(self, sync_task_mock):
         intervention = InterventionFactory(date_sent_to_partner=None)
         sync_task_mock.assert_not_called()
@@ -32,7 +29,6 @@ class TestInterventionPartnerSyncSignal(BaseTenantTestCase):
         intervention.save()
         sync_task_mock.assert_not_called()
 
-    @patch('etools.applications.partners.signals.sync_partner_to_prp.delay')
     def test_intervention_sync_called_on_create(self, sync_task_mock):
         intervention = InterventionFactory(date_sent_to_partner=timezone.now())
         sync_task_mock.assert_called_with(connection.tenant.name, intervention.agreement.partner_id)

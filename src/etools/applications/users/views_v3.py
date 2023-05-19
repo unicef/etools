@@ -1,3 +1,4 @@
+import datetime
 import logging
 
 from django.conf import settings
@@ -8,6 +9,7 @@ from django.db import connection, transaction
 from django.db.models import Exists, OuterRef, Prefetch, Q, Subquery
 from django.http import HttpResponseForbidden, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, status, viewsets
@@ -47,6 +49,7 @@ from etools.applications.users.serializers_v3 import (
     UserRealmRetrieveSerializer,
     UserRealmUpdateSerializer,
 )
+from etools.applications.users.tasks import sync_realms_to_prp
 from etools.applications.utils.pagination import AppendablePageNumberPagination
 
 logger = logging.getLogger(__name__)
@@ -352,6 +355,10 @@ class UserRealmViewSet(
         self.perform_create(serializer)
 
         headers = self.get_success_headers(serializer.data)
+        sync_realms_to_prp.apply_async(
+            (request.user.pk, serializer.instance.pk, timezone.now().timestamp()),
+            eta=timezone.now() + datetime.timedelta(seconds=1)
+        )
         return Response(UserRealmRetrieveSerializer(instance=self.get_queryset().get(pk=serializer.instance.pk)).data,
                         status=status.HTTP_201_CREATED, headers=headers)
 
@@ -363,7 +370,10 @@ class UserRealmViewSet(
         serializer = self.get_serializer(instance, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
-
+        sync_realms_to_prp.apply_async(
+            (request.user.pk, serializer.instance.pk, timezone.now().timestamp()),
+            eta=timezone.now() + datetime.timedelta(seconds=1)
+        )
         if getattr(instance, '_prefetched_objects_cache', None):
             instance._prefetched_objects_cache = {}
         return Response(UserRealmRetrieveSerializer(instance=self.get_queryset().get(pk=serializer.instance.pk)).data)

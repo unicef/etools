@@ -18,8 +18,8 @@ from unicef_snapshot.admin import ActivityInline, SnapshotModelAdmin
 
 from etools.applications.funds.tasks import sync_all_delegated_frs, sync_country_delegated_fr
 from etools.applications.hact.tasks import update_hact_for_country, update_hact_values
-from etools.applications.partners.tasks import sync_realms_to_prp
 from etools.applications.users.models import Country, Realm, UserProfile, WorkspaceCounter
+from etools.applications.users.tasks import sync_realms_to_prp
 from etools.applications.vision.tasks import sync_handler, vision_sync_task
 from etools.libraries.azure_graph_api.tasks import sync_user
 
@@ -238,7 +238,7 @@ class UserAdminPlus(ExtraUrlMixin, UserAdmin):
     @button()
     def sync_realms_to_prp(self, request, pk):
         user = get_object_or_404(get_user_model(), pk=pk)
-        sync_realms_to_prp.delay(user.id, timezone.now().timestamp())
+        sync_realms_to_prp.delay(request.user.id, user.id, timezone.now().timestamp())
         return HttpResponseRedirect(reverse('admin:users_user_change', args=[user.pk]))
 
     @button()
