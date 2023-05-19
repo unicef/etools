@@ -1,30 +1,30 @@
-from django.db import connection
-from django.utils import timezone
+# from django.db import connection
+# from django.utils import timezone
+#
+# from etools.applications.core.tests.cases import BaseTenantTestCase
+# from etools.applications.partners.tests.factories import InterventionFactory
 
-from etools.applications.core.tests.cases import BaseTenantTestCase
-from etools.applications.partners.tests.factories import InterventionFactory
-
-
-class TestInterventionPartnerSyncSignal(BaseTenantTestCase):
-    def test_intervention_sync_called(self, sync_task_mock):
-        intervention = InterventionFactory(date_sent_to_partner=None)
-        sync_task_mock.assert_not_called()
-
-        intervention.date_sent_to_partner = timezone.now()
-        intervention.save()
-        sync_task_mock.assert_called_with(connection.tenant.name, intervention.agreement.partner_id)
-
-    def test_intervention_sync_not_called_on_save(self, sync_task_mock):
-        intervention = InterventionFactory(date_sent_to_partner=None)
-        sync_task_mock.assert_not_called()
-
-        intervention.start = timezone.now().date()
-        intervention.save()
-        sync_task_mock.assert_not_called()
-
-    def test_intervention_sync_called_on_create(self, sync_task_mock):
-        intervention = InterventionFactory(date_sent_to_partner=timezone.now())
-        sync_task_mock.assert_called_with(connection.tenant.name, intervention.agreement.partner_id)
+# TODO clean up: endpoint removed in prp'
+# class TestInterventionPartnerSyncSignal(BaseTenantTestCase):
+#     def test_intervention_sync_called(self, sync_task_mock):
+#         intervention = InterventionFactory(date_sent_to_partner=None)
+#         sync_task_mock.assert_not_called()
+#
+#         intervention.date_sent_to_partner = timezone.now()
+#         intervention.save()
+#         sync_task_mock.assert_called_with(connection.tenant.name, intervention.agreement.partner_id)
+#
+#     def test_intervention_sync_not_called_on_save(self, sync_task_mock):
+#         intervention = InterventionFactory(date_sent_to_partner=None)
+#         sync_task_mock.assert_not_called()
+#
+#         intervention.start = timezone.now().date()
+#         intervention.save()
+#         sync_task_mock.assert_not_called()
+#
+#     def test_intervention_sync_called_on_create(self, sync_task_mock):
+#         intervention = InterventionFactory(date_sent_to_partner=timezone.now())
+#         sync_task_mock.assert_called_with(connection.tenant.name, intervention.agreement.partner_id)
 
 
 # TODO clean up: endpoint removed in prp'

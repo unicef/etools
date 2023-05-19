@@ -238,7 +238,7 @@ class UserAdminPlus(ExtraUrlMixin, UserAdmin):
     @button()
     def sync_realms_to_prp(self, request, pk):
         user = get_object_or_404(get_user_model(), pk=pk)
-        sync_realms_to_prp.delay(request.user.id, user.id, timezone.now().timestamp())
+        sync_realms_to_prp.delay(user.id, timezone.now().timestamp())
         return HttpResponseRedirect(reverse('admin:users_user_change', args=[user.pk]))
 
     @button()

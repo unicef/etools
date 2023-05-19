@@ -223,12 +223,11 @@ def notify_user_on_realm_update(user_pk):
 
 
 @app.task
-def sync_realms_to_prp(request_user_pk, user_pk, last_modified_at_timestamp, retry_counter=0):
+def sync_realms_to_prp(user_pk, last_modified_at_timestamp, retry_counter=0):
     last_modified_instance = Realm.objects.filter(user_id=user_pk).order_by('modified').last()
     if last_modified_instance and last_modified_instance.modified.timestamp() > last_modified_at_timestamp:
         # there were updates to user realms. skip
         return
-    request_user = User.objects.get(pk=request_user_pk)
 
     user = User.objects.filter(pk=user_pk).prefetch_related(
         Prefetch('realms', Realm.objects.filter(is_active=True).select_related('country', 'organization', 'group')),
@@ -236,12 +235,12 @@ def sync_realms_to_prp(request_user_pk, user_pk, last_modified_at_timestamp, ret
     data = PRPSyncUserSerializer(instance=user).data
 
     try:
-        PRPAPI(request_user).send_user_realms(data)
+        PRPAPI().send_user_realms(data)
     except HTTPError as ex:
         if retry_counter < 2:
             logger.info(f'Received {ex} from prp api. retrying')
             sync_realms_to_prp.apply_async(
-                (request_user_pk, user_pk, last_modified_at_timestamp),
+                (user_pk, last_modified_at_timestamp),
                 {'retry_counter': retry_counter + 1},
                 eta=timezone.now() + datetime.timedelta(minutes=1 + retry_counter)
             )
