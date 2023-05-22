@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.db import connection
-from django.db.models import Prefetch
+from django.db.models import Exists, OuterRef, Prefetch
 from django.http import Http404
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -71,6 +71,7 @@ from etools.applications.audit.serializers.auditor import (
     AuditorFirmExportSerializer,
     AuditorFirmLightSerializer,
     AuditorFirmSerializer,
+    AuditorStaffMemberRealmSerializer,
     AuditorStaffMemberSerializer,
     AuditUserSerializer,
     PurchaseOrderSerializer,
@@ -518,8 +519,8 @@ class AuditorStaffMembersViewSet(
     viewsets.GenericViewSet
 ):
     metadata_class = PermissionBasedMetadata
-    queryset = get_user_model().objects.prefetch_related('realms').distinct()
-    serializer_class = AuditorStaffMemberSerializer
+    queryset = get_user_model().base_objects.all()
+    serializer_class = AuditorStaffMemberRealmSerializer
     permission_classes = BaseAuditViewSet.permission_classes + [
         get_permission_for_targets('purchase_order.auditorfirm.staff_members')
     ]
@@ -537,11 +538,17 @@ class AuditorStaffMembersViewSet(
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        queryset = queryset.filter(
-            realms__country=connection.tenant,
-            realms__organization=self.get_parent_object().organization,
-            realms__group__name__in=AUDIT_ACTIVE_GROUPS,
-        ).distinct()
+
+        context_realms_qs = Realm.objects.filter(
+            organization=self.get_parent_object().organization,
+            country=connection.tenant,
+            group__name__in=AUDIT_ACTIVE_GROUPS
+        )
+        queryset = queryset\
+            .filter(realms__in=context_realms_qs) \
+            .prefetch_related(Prefetch('realms', queryset=context_realms_qs)) \
+            .annotate(has_active_realm=Exists(context_realms_qs.filter(user=OuterRef('pk'), is_active=True)))\
+            .distinct()
         return queryset
 
     def get_serializer_context(self):
