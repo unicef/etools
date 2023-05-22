@@ -18,7 +18,7 @@ from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CodedGenericRelation
 
 from etools.applications.action_points.models import ActionPoint
-from etools.applications.audit.purchase_order.models import AuditorStaffMember, PurchaseOrder, PurchaseOrderItem
+from etools.applications.audit.purchase_order.models import PurchaseOrder, PurchaseOrderItem
 from etools.applications.audit.transitions.conditions import (
     AuditSubmitReportRequiredFieldsCheck,
     EngagementHasReportAttachmentsCheck,
@@ -32,7 +32,7 @@ from etools.applications.audit.transitions.serializers import EngagementCancelSe
 from etools.applications.audit.utils import generate_final_report
 from etools.applications.core.urlresolvers import build_frontend_url
 from etools.applications.environment.notifications import send_notification_with_template
-from etools.applications.partners.models import PartnerOrganization, PartnerStaffMember
+from etools.applications.partners.models import PartnerOrganization
 from etools.applications.reports.models import Office, Section
 from etools.libraries.djangolib.fields import CurrencyField
 from etools.libraries.djangolib.models import GroupWrapper, InheritedModelMixin
@@ -169,16 +169,15 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
         max_length=20, choices=PartnerOrganization.AGENCY_CHOICES
     ), blank=True, default=list, verbose_name=_('Shared Audit with'))
 
-    staff_members = models.ManyToManyField(AuditorStaffMember, verbose_name=_('Staff Members'))
+    staff_members = models.ManyToManyField(get_user_model(), verbose_name=_('Staff Members'), related_name='engagements')
     users_notified = models.ManyToManyField(get_user_model(), blank=True, verbose_name=_('Notified When Completed'))
 
     cancel_comment = models.TextField(blank=True, verbose_name=_('Cancel Comment'))
 
     active_pd = models.ManyToManyField('partners.Intervention', verbose_name=_('Active PDs'), blank=True)
 
-    # TODO: clarify this.. do we even need this
     authorized_officers = models.ManyToManyField(
-        PartnerStaffMember, verbose_name=_('Authorized Officers'), blank=True, related_name="engagement_authorizations"
+        get_user_model(), verbose_name=_('Authorized Officers'), blank=True, related_name="engagement_authorizations"
     )
     sections = models.ManyToManyField(
         Section,
@@ -313,7 +312,7 @@ class RiskCategory(OrderedModel, models.Model):
         ('primary', _('Primary')),
     )
 
-    header = models.CharField(verbose_name=_('Header'), max_length=255)
+    header = models.CharField(verbose_name=_('Header'), max_length=500)
     parent = models.ForeignKey(
         'self', verbose_name=_('Parent'), null=True, blank=True, related_name='children', db_index=True,
         on_delete=models.CASCADE,
@@ -555,6 +554,7 @@ class MicroAssessment(Engagement):
         code='micro_assessment_final_report',
         blank=True,
     )
+    questionnaire_version = models.PositiveSmallIntegerField(default=2)
 
     objects = models.Manager()
 
@@ -566,6 +566,13 @@ class MicroAssessment(Engagement):
     def save(self, *args, **kwargs):
         self.engagement_type = Engagement.TYPES.ma
         return super().save(*args, **kwargs)
+
+    @staticmethod
+    def get_questionnaire_code(version: int):
+        return {
+            1: 'ma_questionnaire',
+            2: 'ma_questionnaire_v2'
+        }[version]
 
     @transition(
         'status',

@@ -6,11 +6,8 @@ from rest_framework import status
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import Intervention
-from etools.applications.partners.tests.factories import (
-    InterventionFactory,
-    InterventionResultLinkFactory,
-    PartnerStaffFactory,
-)
+from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, UNICEF_USER
+from etools.applications.partners.tests.factories import InterventionFactory, InterventionResultLinkFactory
 from etools.applications.reports.models import ResultType
 from etools.applications.reports.tests.factories import (
     InterventionActivityFactory,
@@ -23,19 +20,19 @@ from etools.applications.users.tests.factories import UserFactory
 class TestAPIInterventionRetrieveResultsStructure(BaseTenantTestCase):
     def setUp(self):
         super().setUp()
-        self.user = UserFactory(is_staff=True, groups__data=['Partnership Manager', 'UNICEF User'])
+        self.user = UserFactory(is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP])
         self.intervention = InterventionFactory(
             status=Intervention.DRAFT, unicef_court=True,
             start=date(year=1970, month=1, day=1),
             end=date(year=1970, month=12, day=31),
         )
 
-        self.partner_focal_point = UserFactory(groups__data=[])
-        self.staff_member = PartnerStaffFactory(
-            partner=self.intervention.agreement.partner,
-            user=self.partner_focal_point,
+        self.partner_focal_point = UserFactory(realms__data=[])
+        self.staff_member = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=self.intervention.agreement.partner.organization
         )
-        self.intervention.partner_focal_points.add(self.staff_member)
+        self.intervention.partner_focal_points.add(self.partner_focal_point)
         self.intervention.unicef_focal_points.add(self.user)
 
         self.result_link = InterventionResultLinkFactory(

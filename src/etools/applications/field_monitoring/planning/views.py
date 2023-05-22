@@ -3,7 +3,7 @@ from datetime import date
 
 from django.contrib.auth import get_user_model
 from django.db import connection, transaction
-from django.db.models import Count, Prefetch, Q
+from django.db.models import Count, F, Prefetch, Q
 from django.http import Http404
 from django.utils.translation import gettext as _
 
@@ -59,6 +59,8 @@ from etools.applications.field_monitoring.views import FMBaseViewSet, LinkedAtta
 from etools.applications.partners.models import Intervention, PartnerOrganization
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.reports.models import Result, ResultType
+from etools.applications.tpm.models import ThirdPartyMonitor
+from etools.applications.users.models import Realm
 
 
 class YearPlanViewSet(
@@ -141,11 +143,13 @@ class MonitoringActivitiesViewSet(
     """
     Retrieve and Update Agreement.
     """
-    queryset = MonitoringActivity.objects.annotate(checklists_count=Count('checklists')).select_related(
-        'tpm_partner', 'visit_lead', 'location', 'location_site',
-    ).prefetch_related(
-        'team_members', 'partners', 'interventions', 'cp_outputs'
-    ).order_by("-id")
+    queryset = MonitoringActivity.objects\
+        .annotate(checklists_count=Count('checklists'))\
+        .select_related('tpm_partner', 'tpm_partner__organization',
+                        'visit_lead', 'location', 'location_site')\
+        .prefetch_related('team_members', 'partners', 'partners__organization',
+                          'interventions', 'cp_outputs')\
+        .order_by("-id")
     serializer_class = MonitoringActivitySerializer
     serializer_action_classes = {
         'list': MonitoringActivityLightSerializer
@@ -268,15 +272,24 @@ class FMUsersViewSet(
 
     filter_backends = (SearchFilter, UserTypeFilter, UserTPMPartnerFilter)
     search_fields = ('email',)
-    queryset = get_user_model().objects.select_related('tpmpartners_tpmpartnerstaffmember__tpm_partner')
+    queryset = get_user_model().objects.all()
     queryset = queryset.order_by('first_name', 'middle_name', 'last_name')
     serializer_class = FMUserSerializer
 
     def get_queryset(self):
-        user = self.request.user
-        qs = super().get_queryset().filter(
-            Q(profile__country=user.profile.country) | Q(monitoring_activities__isnull=False)
-        ).order_by('first_name').distinct()
+        user_groups = [UNICEFUser.name, ThirdPartyMonitor.name]
+        qs_context = {
+            "country": connection.tenant,
+            "group__name__in": user_groups,
+            "is_active": True,
+        }
+        context_realms_qs = Realm.objects.filter(**qs_context).select_related('organization__tpmpartner')
+
+        qs = super().get_queryset()\
+            .filter(Q(realms__in=context_realms_qs) | Q(monitoring_activities__isnull=False)) \
+            .prefetch_related(Prefetch('realms', queryset=context_realms_qs)) \
+            .annotate(tpm_partner=F('realms__organization__tpmpartner')) \
+            .distinct()
 
         return qs
 

@@ -173,13 +173,12 @@ class TestInterventionsAPIListPermissions(BaseTenantTestCase):
 
     def test_no_permission_user_forbidden(self):
         """Ensure a non-staff user gets the 403 smackdown"""
-        response = self.forced_auth_req('get', self.url, user=UserFactory())
+        response = self.forced_auth_req('get', self.url, user=UserFactory(realms__data=[]))
         self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_group_member_has_access(self):
         """Ensure a non-staff user in the correct group has access"""
-        user = UserFactory()
-        user.groups.add(self.readonly_group)
+        user = UserFactory(realms__data=[self.readonly_group.name])
         response = self.forced_auth_req('get', self.url, user=user, data=self.query_param_data)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 

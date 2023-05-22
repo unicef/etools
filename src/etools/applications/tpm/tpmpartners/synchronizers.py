@@ -1,6 +1,9 @@
 import logging
 
+from etools.applications.organizations.models import Organization
 from etools.applications.tpm.tpmpartners.models import TPMPartner
+from etools.applications.users.mixins import TPM_ACTIVE_GROUPS
+from etools.applications.users.models import Realm
 from etools.applications.vision.synchronizers import VisionDataTenantSynchronizer
 
 logger = logging.getLogger(__name__)
@@ -31,8 +34,13 @@ class TPMPartnerSynchronizer(VisionDataTenantSynchronizer):
         processed = 0
 
         try:
+            organization, _ = Organization.objects.update_or_create(
+                vendor_number=partner['VENDOR_CODE'],
+                defaults={
+                    'name': partner['VENDOR_NAME'],
+                }
+            )
             defaults = {
-                'name': partner['VENDOR_NAME'],
                 'street_address': partner['STREET'] if partner['STREET'] else '',
                 'city': partner['CITY'] if partner['CITY'] else '',
                 'postal_code': partner['POSTAL_CODE'] if partner["POSTAL_CODE"] else '',
@@ -44,7 +52,10 @@ class TPMPartnerSynchronizer(VisionDataTenantSynchronizer):
                 'deleted_flag': True if partner['MARKED_FOR_DELETION'] else False,
                 'hidden': True if partner['POSTING_BLOCK'] or partner['MARKED_FOR_DELETION'] else False,
             }
-            TPMPartner.objects.update_or_create(vendor_number=partner['VENDOR_CODE'], defaults=defaults)
+            partner, _ = TPMPartner.objects.update_or_create(organization=organization, defaults=defaults)
+
+            if partner.deleted_flag:
+                self.deactivate_staff_members(partner)
             processed = 1
 
         except Exception:
@@ -73,3 +84,15 @@ class TPMPartnerSynchronizer(VisionDataTenantSynchronizer):
             processed += self._partner_save(partner)
 
         return processed
+
+    @staticmethod
+    def deactivate_staff_members(partner):
+        # TODO: REALMS - do cleanup
+        # staff_members = partner.staff_members.all()
+        # # deactivate the users
+        # users_deactivate = User.objects.filter(tpmpartners_tpmpartnerstaffmember__in=staff_members)
+        # users_deactivate.update(is_active=False)
+        Realm.objects.filter(
+            organization=partner.organization,
+            group__name__in=TPM_ACTIVE_GROUPS,
+        ).update(is_active=False)

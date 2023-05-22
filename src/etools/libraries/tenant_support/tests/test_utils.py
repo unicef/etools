@@ -28,7 +28,6 @@ class TestSetCountry(BaseTenantTestCase):
         """Ideally we would be setup a different country
         But having issues creating another country outside of current schema
         """
-        self.user.profile.countries_available.add(self.country)
         request = self.factory.get("/?{}={}".format(
             settings.SCHEMA_OVERRIDE_PARAM,
             self.country.name
@@ -42,7 +41,6 @@ class TestSetCountry(BaseTenantTestCase):
         """Ideally we would be setup a different country
         But having issues creating another country outside of current schema
         """
-        self.user.profile.countries_available.add(self.country)
         request = self.factory.get(
             "/?{}={}".format(
                 settings.SCHEMA_OVERRIDE_PARAM,
@@ -67,7 +65,7 @@ class TestSetCountry(BaseTenantTestCase):
         """Ideally we would be setup a different country
         But having issues creating another country outside of current schema
         """
-        self.user.profile.countries_available.remove(self.country)
+        self.user.realms.filter(country=self.country).delete()
         request = self.factory.get("/?{}={}".format(
             settings.SCHEMA_OVERRIDE_PARAM,
             self.country.name

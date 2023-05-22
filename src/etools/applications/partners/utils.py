@@ -4,6 +4,7 @@ import logging
 import typing
 
 from django.conf import settings
+from django.contrib.auth.models import Group
 from django.contrib.contenttypes.models import ContentType
 from django.db import connection
 from django.db.models import F, Q
@@ -28,7 +29,7 @@ from etools.applications.partners.models import (
 from etools.applications.partners.prp_api import PRPPartnerUserResponse
 from etools.applications.reports.models import CountryProgramme
 from etools.applications.t2f.models import TravelAttachment
-from etools.applications.users.models import User
+from etools.applications.users.models import Realm, User
 from etools.libraries.tenant_support.utils import run_on_all_tenants
 
 logger = logging.getLogger(__name__)
@@ -592,6 +593,7 @@ def send_intervention_amendment_added_notification(intervention):
     )
 
 
+# TODO REALMS PRP - cleanup
 def sync_partner_staff_member(partner: PartnerOrganization, staff_member_data: PRPPartnerUserResponse):
     user_update_fields = {
         'is_active': staff_member_data.is_active,
@@ -611,7 +613,13 @@ def sync_partner_staff_member(partner: PartnerOrganization, staff_member_data: P
     profile.phone_number = staff_member_data.phone_number
     profile.country = profile.country or connection.tenant
     profile.save()
-    profile.countries_available.add(connection.tenant)
+    Realm.objects.update_or_create(
+        user=user,
+        country=connection.tenant,
+        organization=partner.organization,
+        group=Group.objects.get_or_create(name='IP Viewer')[0],
+        defaults={'is_active': user.is_active}
+    )
 
     staff_member_update_fields = {
         'user': user,

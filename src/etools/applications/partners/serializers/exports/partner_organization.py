@@ -1,21 +1,29 @@
+from django.contrib.auth import get_user_model
 from django.utils.translation import gettext as _
 
 from rest_framework import serializers
 
 from etools.applications.core.mixins import ExportSerializerMixin
-from etools.applications.partners.models import Assessment, PartnerOrganization, PartnerStaffMember, PartnerType
+from etools.applications.organizations.models import OrganizationType
+from etools.applications.partners.models import Assessment, PartnerOrganization
 from etools.applications.partners.serializers.fields import HactValuesField
 
 
 class PartnerStaffMemberExportSerializer(serializers.ModelSerializer):
     active = serializers.SerializerMethodField()
+    phone = serializers.CharField(source='profile.phone_number')
+    title = serializers.CharField(source='profile.job_title')
+    partner_id = serializers.CharField(source="partner.id")
 
     class Meta:
-        model = PartnerStaffMember
-        fields = "__all__"
+        model = get_user_model()
+        fields = [
+            'id', 'email', 'first_name', 'last_name', 'created', 'modified',
+            'active', 'phone', 'title', 'partner_id'
+        ]
 
     def get_active(self, obj):
-        return "Yes" if obj.active else "No"
+        return "Yes" if obj.is_active else "No"
 
 
 class PartnerStaffMemberExportFlatSerializer(
@@ -23,6 +31,9 @@ class PartnerStaffMemberExportFlatSerializer(
         PartnerStaffMemberExportSerializer
 ):
     partner_name = serializers.CharField(source="partner.name")
+
+    class Meta(PartnerStaffMemberExportSerializer.Meta):
+        fields = PartnerStaffMemberExportSerializer.Meta.fields + ['partner_name']
 
 
 class PartnerOrganizationExportSerializer(serializers.ModelSerializer):
@@ -32,7 +43,7 @@ class PartnerOrganizationExportSerializer(serializers.ModelSerializer):
     )
     organization_full_name = serializers.CharField(
         label=_("Organizations Full Name"),
-        source='name'
+        source='organization.name'
     )
     email_address = serializers.CharField(
         label=_("Email Address"),
@@ -86,7 +97,7 @@ class PartnerOrganizationExportSerializer(serializers.ModelSerializer):
 
     def get_staff_members(self, obj):
         return ', '.join(['{} ({})'.format(sm.get_full_name(), sm.email)
-                          for sm in obj.staff_members.filter(active=True).all()])
+                          for sm in obj.active_staff_members.all()])
 
     def get_assessments(self, obj):
         return ', '.join(["{} ({})".format(a.type, a.completed_date) for a in obj.assessments.all()])
@@ -104,7 +115,7 @@ class PartnerOrganizationExportSerializer(serializers.ModelSerializer):
         return "Yes" if obj.blocked else "No"
 
     def get_partner_type(self, obj):
-        if obj.partner_type == PartnerType.CIVIL_SOCIETY_ORGANIZATION and obj.cso_type:
+        if obj.partner_type == OrganizationType.CIVIL_SOCIETY_ORGANIZATION and obj.cso_type:
             return "{}/{}".format(obj.partner_type, obj.cso_type)
         return "{}".format(obj.partner_type)
 
@@ -122,13 +133,34 @@ class PartnerOrganizationExportFlatSerializer(
         ExportSerializerMixin,
         PartnerOrganizationExportSerializer
 ):
+    name = serializers.SerializerMethodField(label=_("Name"))
+    vendor_number = serializers.SerializerMethodField(label=_("Vendor Number"))
+    short_name = serializers.SerializerMethodField(label=_("Short Name"))
+    partner_type = serializers.SerializerMethodField(label=_("Partner Type"))
+    cso_type = serializers.SerializerMethodField(label=_("CSO Type"))
+
     vision_synced = serializers.SerializerMethodField(label=_("VISION Synced"))
     hidden = serializers.SerializerMethodField(label=_("Hidden"))
     hact_values = HactValuesField(label=_("HACT"))
 
     class Meta:
         model = PartnerOrganization
-        exclude = ('sea_risk_rating_name', )
+        exclude = ('sea_risk_rating_name', 'organization')
+
+    def get_name(self, obj):
+        return obj.name
+
+    def get_short_name(self, obj):
+        return obj.short_name
+
+    def get_vendor_number(self, obj):
+        return obj.vendor_number
+
+    def get_partner_type(self, obj):
+        return obj.partner_type
+
+    def get_cso_type(self, obj):
+        return obj.cso_type
 
     def get_vision_synced(self, obj):
         return "Yes" if obj.vision_synced else "No"

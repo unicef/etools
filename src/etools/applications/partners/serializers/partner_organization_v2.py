@@ -2,7 +2,6 @@ import datetime
 import itertools
 
 from django.contrib.auth import get_user_model
-from django.db import connection
 from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import gettext as _
@@ -19,17 +18,16 @@ from etools.applications.partners.models import (
     Assessment,
     CoreValuesAssessment,
     Intervention,
+    OrganizationType,
     PartnerOrganization,
     PartnerPlannedVisits,
     PartnerStaffMember,
-    PartnerType,
     PlannedEngagement,
 )
 from etools.applications.partners.serializers.interventions_v2 import (
     InterventionListSerializer,
     InterventionMonitorSerializer,
 )
-from etools.applications.users.serializers import MinimalUserSerializer
 
 
 class CoreValuesAssessmentSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
@@ -42,6 +40,7 @@ class CoreValuesAssessmentSerializer(AttachmentSerializerMixin, serializers.Mode
         fields = "__all__"
 
 
+# TODO REALMS clean up
 class PartnerStaffMemberCreateSerializer(serializers.ModelSerializer):
     # legacy serializer; not actually being used for creating
 
@@ -74,14 +73,11 @@ class PartnerStaffMemberCreateSerializer(serializers.ModelSerializer):
         return data
 
 
-class SimpleStaffMemberSerializer(PartnerStaffMemberCreateSerializer):
-    """
-    A serializer to be used for nested staff member handling. The 'partner' field
-    is removed in this case to avoid validation errors for e.g. when creating
-    the partner and the member at the same time.
-    """
+class PartnerManagerSerializer(serializers.ModelSerializer):
+    title = serializers.CharField(source='profile.job_title')
+
     class Meta:
-        model = PartnerStaffMember
+        model = get_user_model()
         fields = (
             "id",
             "title",
@@ -109,6 +105,7 @@ class PartnerStaffMemberNestedSerializer(PartnerStaffMemberCreateSerializer):
         )
 
 
+# TODO REALMS cleanup
 class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(required=True)
 
@@ -138,15 +135,6 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
                 if user.is_unicef_user():
                     raise ValidationError(_('Unable to associate staff member to UNICEF user'))
 
-                if bool(user.get_staff_member_country()):
-                    raise ValidationError(
-                        {
-                            'active': _(
-                                'The email for the partner contact is used by another partner contact. '
-                                'Email has to be unique to proceed %s') % email
-                        }
-                    )
-
                 data['user'] = user
         else:
             # make sure email addresses are not editable after creation.. user must be removed and re-added
@@ -166,13 +154,6 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
                     user = User.objects.get(email=email)
                 except User.DoesNotExist:
                     pass
-                else:
-                    psm_country = user.get_staff_member_country()
-                    if psm_country and psm_country != connection.tenant:
-                        raise ValidationError({
-                            'active': _('The Partner Staff member you are trying to activate is associated '
-                                        'with a different Partner Organization')
-                        })
 
             # disabled is unavailable if user already synced to PRP to avoid data inconsistencies
             if self.instance.active and not active:
@@ -223,17 +204,28 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
 
 
 class PartnerStaffMemberDetailSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = PartnerStaffMember
-        fields = "__all__"
-
-
-class PartnerStaffMemberUserSerializer(serializers.ModelSerializer):
-    user = MinimalUserSerializer()
+    active = serializers.BooleanField(source='is_active')
+    phone = serializers.CharField(source='profile.phone_number')
+    title = serializers.CharField(source='profile.job_title')
 
     class Meta:
-        model = PartnerStaffMember
-        fields = "__all__"
+        model = get_user_model()
+        fields = (
+            'id', 'email', 'first_name', 'last_name', 'created', 'modified',
+            'active', 'phone', 'title'
+        )
+
+
+class PartnerStaffMemberRealmSerializer(PartnerStaffMemberDetailSerializer):
+    has_active_realm = serializers.BooleanField()
+
+    class Meta(PartnerStaffMemberDetailSerializer.Meta):
+        model = get_user_model()
+        fields = PartnerStaffMemberDetailSerializer.Meta.fields + ('has_active_realm',)
+
+
+class PartnerStaffMemberUserSerializer(PartnerStaffMemberDetailSerializer):
+    pass
 
 
 class AssessmentDetailSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
@@ -254,6 +246,11 @@ class AssessmentDetailSerializer(AttachmentSerializerMixin, serializers.ModelSer
 
 
 class PartnerOrganizationListSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(source='organization.name')
+    vendor_number = serializers.CharField(source='organization.vendor_number')
+    short_name = serializers.CharField(source='organization.short_name')
+    partner_type = serializers.CharField(source='organization.organization_type')
+    cso_type = serializers.CharField(source='organization.cso_type')
 
     class Meta:
         model = PartnerOrganization
@@ -290,9 +287,14 @@ class PartnerOrganizationListSerializer(serializers.ModelSerializer):
 
 class PartnerOrgPSEADetailsSerializer(serializers.ModelSerializer):
     staff_members = serializers.SerializerMethodField()
+    name = serializers.CharField(source='organization.name')
+    vendor_number = serializers.CharField(source='organization.vendor_number')
+    short_name = serializers.CharField(source='organization.short_name')
+    partner_type = serializers.CharField(source='organization.organization_type')
+    cso_type = serializers.CharField(source='organization.cso_type')
 
     def get_staff_members(self, obj):
-        return [s.get_full_name() for s in obj.staff_members.all()]
+        return [s.get_full_name() for s in obj.active_staff_members.all()]
 
     class Meta:
         model = PartnerOrganization
@@ -391,7 +393,7 @@ class PartnerPlannedVisitsSerializer(serializers.ModelSerializer):
                 partner=self.initial_data.get("partner"),
                 year=self.initial_data.get("year"),
             )
-            if self.instance.partner.partner_type != PartnerType.GOVERNMENT:
+            if self.instance.partner.partner_type != OrganizationType.GOVERNMENT:
                 raise ValidationError({'partner': _('Planned Visit can be set only for Government partners')})
 
         except self.Meta.model.DoesNotExist:
@@ -441,8 +443,13 @@ class MonitoringActivityGroupSerializer(serializers.Field):
 
 
 class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
-
-    staff_members = PartnerStaffMemberDetailSerializer(many=True, read_only=True)
+    organization_id = serializers.CharField(read_only=True)
+    name = serializers.CharField(source='organization.name', read_only=True)
+    vendor_number = serializers.CharField(source='organization.vendor_number', read_only=True)
+    short_name = serializers.CharField(source='organization.short_name', read_only=True)
+    partner_type = serializers.CharField(source='organization.organization_type', read_only=True)
+    cso_type = serializers.CharField(source='organization.cso_type', read_only=True)
+    staff_members = PartnerStaffMemberRealmSerializer(source='all_staff_members', many=True, read_only=True)
     assessments = AssessmentDetailSerializer(many=True, read_only=True)
     planned_engagement = PlannedEngagementSerializer(read_only=True)
     interventions = serializers.SerializerMethodField(read_only=True)
@@ -469,10 +476,13 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PartnerOrganization
-        fields = "__all__"
+        exclude = ('organization',)
 
 
 class PartnerOrganizationDashboardSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(source='organization.name')
+    vendor_number = serializers.CharField(source='organization.vendor_number')
+    partner_type = serializers.CharField(source='organization.organization_type')
     sections = serializers.ReadOnlyField(read_only=True)
     locations = serializers.ReadOnlyField(read_only=True)
     action_points = serializers.ReadOnlyField(read_only=True)
@@ -501,7 +511,11 @@ class PartnerOrganizationDashboardSerializer(serializers.ModelSerializer):
 
 
 class PartnerOrganizationCreateUpdateSerializer(SnapshotModelSerializer):
-
+    name = serializers.CharField(source='organization.name', read_only=True)
+    vendor_number = serializers.CharField(source='organization.vendor_number', read_only=True)
+    short_name = serializers.CharField(source='organization.short_name', read_only=True)
+    partner_type = serializers.CharField(source='organization.organization_type', read_only=True)
+    cso_type = serializers.CharField(source='organization.cso_type', read_only=True)
     staff_members = PartnerStaffMemberNestedSerializer(many=True, read_only=True)
     planned_engagement = PlannedEngagementNestedSerializer(read_only=True)
     hidden = serializers.BooleanField(read_only=True)
@@ -581,7 +595,11 @@ class PartnerOrganizationCreateUpdateSerializer(SnapshotModelSerializer):
 
 
 class PartnerOrganizationHactSerializer(serializers.ModelSerializer):
-
+    name = serializers.CharField(source='organization.name')
+    vendor_number = serializers.CharField(source='organization.vendor_number')
+    short_name = serializers.CharField(source='organization.short_name')
+    partner_type = serializers.CharField(source='organization.organization_type')
+    cso_type = serializers.CharField(source='organization.cso_type')
     planned_engagement = PlannedEngagementSerializer(read_only=True)
     hact_min_requirements = serializers.JSONField()
     rating = serializers.CharField(source='get_rating_display')

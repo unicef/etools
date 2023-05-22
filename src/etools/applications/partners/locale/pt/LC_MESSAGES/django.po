@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-05-04 15:48+0000\n"
+"POT-Creation-Date: 2023-05-18 09:35+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -692,14 +692,6 @@ msgstr "Orçamento detalhado do plano de trabalho"
 msgid "Supply Contribution (Planned)"
 msgstr "Contribuição de supimentos (planejada)"
 
-msgid "You must select a type for this CSO"
-msgstr "Você deve selecionar um tipo para a OSC"
-
-msgid ""
-"\"CSO Type\" does not apply to non-CSO organizations, please remove type"
-msgstr ""
-"O “Tipo de CSO” não se aplica a organizações que não são OnG. Remova o tipo"
-
 msgid "Unable to associate staff member to UNICEF user"
 msgstr "Não é possível associar o funcionário ao usuário UNICEF"
 
@@ -719,18 +711,6 @@ msgstr "O usuário já está sincronizado com o PRP e não pode ser desabilitado
 
 msgid "Name"
 msgstr "Nome"
-
-msgid "Bilateral / Multilateral"
-msgstr "Bilateral/Multilateral"
-
-msgid "Civil Society Organization"
-msgstr "Organização da Sociedade Civil"
-
-msgid "Government"
-msgstr "Governo"
-
-msgid "UN Agency"
-msgstr "Agência da ONU"
 
 msgid "High"
 msgstr "Alto"
@@ -764,21 +744,6 @@ msgstr "Sem contacto com os Beneficiários"
 
 msgid "Not Assessed"
 msgstr "Não Avaliado"
-
-msgid "International"
-msgstr "Internacional"
-
-msgid "National"
-msgstr "Nacional"
-
-msgid "Community Based Organization"
-msgstr "Organização de Base Comunitária"
-
-msgid "Academic Institution"
-msgstr "Instituição acadêmica"
-
-msgid "Red Cross/Red Crescent National Societies"
-msgstr "Sociedades Nacionais da Cruz Vermelha/Crescente Vermelho"
 
 msgid "Description"
 msgstr "Descrição"
@@ -969,11 +934,21 @@ msgstr "Suspenso"
 msgid "Terminated"
 msgstr "Rescindido"
 
+#, fuzzy
+#| msgid "Partner Authorized Officer"
+msgid "(old)Partner Authorized Officer"
+msgstr "Oficial autorizado do parceiro"
+
 msgid "Attached Agreement"
 msgstr "Acordo anexo"
 
 msgid "Termination document for PCAs"
 msgstr "Documento de rescisão para PCAs"
+
+#, fuzzy
+#| msgid "Signed by partner"
+msgid "(old)Signed by partner"
+msgstr "Assinado pelo parceiro"
 
 msgid "Signed by partner"
 msgstr "Assinado pelo parceiro"
@@ -1055,6 +1030,16 @@ msgstr "Data de realização da revisão final da parceria"
 
 msgid "Final Review Approved"
 msgstr "Revisão final aprovada"
+
+#, fuzzy
+#| msgid "Signed by Partner"
+msgid "(old)Signed by Partner"
+msgstr "Assinado pelo parceiro"
+
+#, fuzzy
+#| msgid "CSO Authorized Officials"
+msgid "(old)CSO Authorized Officials"
+msgstr "Oficiais da OSC (organização da Sociedade Civil) Autorizados a assinar"
 
 msgid "Contingency PD"
 msgstr "PD de contingência"
@@ -1363,7 +1348,7 @@ msgid "Sent Back by Secretary Comment"
 msgstr "Enviado para comentário do(a) secretário(a)"
 
 msgid "FACE"
-msgstr "FACE"
+msgstr ""
 
 msgid "Progress Report"
 msgstr "Relatório de progresso"
@@ -1638,13 +1623,8 @@ msgstr ""
 msgid "Other description required, if type 'Other' selected."
 msgstr "Outra descrição necessária, se o tipo 'Outro' for selecionado."
 
-#, fuzzy
-#| msgid "Active"
 msgid "Inactive"
-msgstr "Ativo"
-
-msgid "Planned Visit to be set only at Partner level"
-msgstr "Visita planejada a ser definida apenas no nível do parceiro"
+msgstr "Inativo"
 
 msgid "Planned Visit cannot be set for Terminated interventions"
 msgstr "Visita planejada não pode ser definida para intervenções encerradas"
@@ -1749,21 +1729,6 @@ msgid ""
 msgstr ""
 "Dados de orçamento inválidos. O valor financeiro total deve ser igual ao "
 "número dos itens * preço por item."
-
-#, python-format
-msgid ""
-"The email for the partner contact is used by another partner contact. Email "
-"has to be unique to proceed %s"
-msgstr ""
-"O e-mail do contato do parceiro é usado por outro contato do parceiro. O e-"
-"mail deve ser exclusivo para prosseguir %s"
-
-msgid ""
-"The Partner Staff member you are trying to activate is associated with a "
-"different Partner Organization"
-msgstr ""
-"O membro da equipe parceira que você está tentando ativar está associado a "
-"uma organização parceira diferente"
 
 msgid ""
 "User already synced to PRP and cannot be disabled. Please instruct the "
@@ -2386,6 +2351,59 @@ msgstr ""
 
 msgid "Partnership Manager role required for pca export."
 msgstr "A função de gerente de parceria é necessária para a exportação de pca."
+
+#~ msgid "Planned Visit to be set only at Partner level"
+#~ msgstr "Visita planejada a ser definida apenas no nível do parceiro"
+
+#~ msgid ""
+#~ "The email for the partner contact is used by another partner contact. "
+#~ "Email has to be unique to proceed %s"
+#~ msgstr ""
+#~ "O e-mail do contato do parceiro é usado por outro contato do parceiro. O "
+#~ "e-mail deve ser exclusivo para prosseguir %s"
+
+#~ msgid ""
+#~ "The Partner Staff member you are trying to activate is associated with a "
+#~ "different Partner Organization"
+#~ msgstr ""
+#~ "O membro da equipe parceira que você está tentando ativar está associado "
+#~ "a uma organização parceira diferente"
+
+#~ msgid "You must select a type for this CSO"
+#~ msgstr "Você deve selecionar um tipo para a OSC"
+
+#~ msgid ""
+#~ "\"CSO Type\" does not apply to non-CSO organizations, please remove type"
+#~ msgstr ""
+#~ "O “Tipo de CSO” não se aplica a organizações que não são OnG. Remova o "
+#~ "tipo"
+
+#~ msgid "Bilateral / Multilateral"
+#~ msgstr "Bilateral/Multilateral"
+
+#~ msgid "Civil Society Organization"
+#~ msgstr "Organização da Sociedade Civil"
+
+#~ msgid "Government"
+#~ msgstr "Governo"
+
+#~ msgid "UN Agency"
+#~ msgstr "Agência da ONU"
+
+#~ msgid "International"
+#~ msgstr "Internacional"
+
+#~ msgid "National"
+#~ msgstr "Nacional"
+
+#~ msgid "Community Based Organization"
+#~ msgstr "Organização de Base Comunitária"
+
+#~ msgid "Academic Institution"
+#~ msgstr "Instituição acadêmica"
+
+#~ msgid "Red Cross/Red Crescent National Societies"
+#~ msgstr "Sociedades Nacionais da Cruz Vermelha/Crescente Vermelho"
 
 #~ msgid ""
 #~ "There was a PCA/SSFA signed with this partner or a transaction was "

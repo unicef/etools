@@ -27,7 +27,10 @@ class ExternalModuleFilterMixin:
             if module in self.module2filters:
                 queries = []
                 for user_filter in self.module2filters[module]:
-                    queries.append(Q(**{user_filter: user}))
+                    if callable(user_filter):
+                        queries.append(user_filter(user))
+                    else:
+                        queries.append(Q(**{user_filter: user}))
                 if queries:
                     qs = qs.filter(functools.reduce(operator.or_, queries)).distinct()
             else:
