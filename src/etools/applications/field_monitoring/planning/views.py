@@ -3,7 +3,7 @@ from datetime import date
 
 from django.contrib.auth import get_user_model
 from django.db import connection, transaction
-from django.db.models import Count, Exists, F, OuterRef, Prefetch, Q
+from django.db.models import Count, F, Prefetch, Q
 from django.http import Http404
 from django.utils.translation import gettext as _
 

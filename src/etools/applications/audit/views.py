@@ -72,7 +72,6 @@ from etools.applications.audit.serializers.auditor import (
     AuditorFirmLightSerializer,
     AuditorFirmSerializer,
     AuditorStaffMemberRealmSerializer,
-    AuditorStaffMemberSerializer,
     AuditUserSerializer,
     PurchaseOrderSerializer,
 )
