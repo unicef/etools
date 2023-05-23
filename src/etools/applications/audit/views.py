@@ -547,7 +547,6 @@ class AuditorStaffMembersViewSet(
             realms__organization=self.get_parent_object().organization,
             realms__country=connection.tenant,
             realms__group__name__in=AUDIT_ACTIVE_GROUPS) \
-            .prefetch_related('realms') \
             .annotate(has_active_realm=Exists(context_realms_qs.filter(user=OuterRef('pk'), is_active=True)))\
             .distinct()
 
