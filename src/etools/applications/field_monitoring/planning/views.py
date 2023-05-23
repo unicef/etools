@@ -280,15 +280,15 @@ class FMUsersViewSet(
         user_groups = [UNICEFUser.name, ThirdPartyMonitor.name]
         qs_context = {
             "country": connection.tenant,
-            "group__name__in": user_groups,
-            "is_active": True,
+            "group__name__in": user_groups
         }
         context_realms_qs = Realm.objects.filter(**qs_context).select_related('organization__tpmpartner')
 
         qs = super().get_queryset()\
             .filter(Q(realms__in=context_realms_qs) | Q(monitoring_activities__isnull=False)) \
             .prefetch_related(Prefetch('realms', queryset=context_realms_qs)) \
-            .annotate(tpm_partner=F('realms__organization__tpmpartner')) \
+            .annotate(tpm_partner=F('realms__organization__tpmpartner'),
+                      has_active_realm=F('realms__is_active')) \
             .distinct()
 
         return qs

@@ -186,7 +186,7 @@ class FMUserSerializer(MinimalUserSerializer):
         return 'staff'
 
     def get_name(self, obj):
-        if obj.is_active:
+        if obj.has_active_realm:
             return obj.get_full_name()
         return _('[Inactive] %s') % obj.get_full_name()
 
