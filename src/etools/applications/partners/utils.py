@@ -593,7 +593,7 @@ def send_intervention_amendment_added_notification(intervention):
     )
 
 
-# TODO REALMS PRP
+# TODO REALMS PRP - cleanup
 def sync_partner_staff_member(partner: PartnerOrganization, staff_member_data: PRPPartnerUserResponse):
     user_update_fields = {
         'is_active': staff_member_data.is_active,

@@ -312,7 +312,7 @@ class RiskCategory(OrderedModel, models.Model):
         ('primary', _('Primary')),
     )
 
-    header = models.CharField(verbose_name=_('Header'), max_length=255)
+    header = models.CharField(verbose_name=_('Header'), max_length=500)
     parent = models.ForeignKey(
         'self', verbose_name=_('Parent'), null=True, blank=True, related_name='children', db_index=True,
         on_delete=models.CASCADE,
@@ -554,6 +554,7 @@ class MicroAssessment(Engagement):
         code='micro_assessment_final_report',
         blank=True,
     )
+    questionnaire_version = models.PositiveSmallIntegerField(default=2)
 
     objects = models.Manager()
 
@@ -565,6 +566,13 @@ class MicroAssessment(Engagement):
     def save(self, *args, **kwargs):
         self.engagement_type = Engagement.TYPES.ma
         return super().save(*args, **kwargs)
+
+    @staticmethod
+    def get_questionnaire_code(version: int):
+        return {
+            1: 'ma_questionnaire',
+            2: 'ma_questionnaire_v2'
+        }[version]
 
     @transition(
         'status',

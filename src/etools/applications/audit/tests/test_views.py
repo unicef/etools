@@ -213,7 +213,9 @@ class TestMARisksViewSet(BaseTestCategoryRisksViewSet, BaseTenantTestCase):
     engagement_factory = MicroAssessmentFactory
     endpoint = 'micro-assessments'
 
-    def test_ma_risks(self):
+    def test_ma_risks_v1(self):
+        self.engagement.questionnaire_version = 1
+        self.engagement.save()
         self._test_engagement_categories(
             category_code='ma_questionnaire', field_name='questionnaire',
             allowed_user=self.auditor
@@ -223,7 +225,19 @@ class TestMARisksViewSet(BaseTestCategoryRisksViewSet, BaseTenantTestCase):
             allowed_user=self.auditor
         )
 
-    def test_update_unexisted_blueprint(self):
+    def test_ma_risks(self):
+        self._test_engagement_categories(
+            category_code='ma_questionnaire_v2', field_name='questionnaire',
+            allowed_user=self.auditor
+        )
+        self._test_engagement_categories(
+            category_code='ma_subject_areas', field_name='test_subject_areas',
+            allowed_user=self.auditor
+        )
+
+    def test_update_unexisted_blueprint_v1(self):
+        self.engagement.questionnaire_version = 1
+        self.engagement.save()
         self._update_unexisted_blueprint(
             field_name='questionnaire', category_code='ma_questionnaire',
             allowed_user=self.auditor
@@ -233,9 +247,31 @@ class TestMARisksViewSet(BaseTestCategoryRisksViewSet, BaseTenantTestCase):
             allowed_user=self.auditor
         )
 
-    def test_ma_risks_update_without_perms(self):
+    def test_update_unexisted_blueprint(self):
+        self._update_unexisted_blueprint(
+            field_name='questionnaire', category_code='ma_questionnaire_v2',
+            allowed_user=self.auditor
+        )
+        self._update_unexisted_blueprint(
+            field_name='test_subject_areas', category_code='ma_subject_areas',
+            allowed_user=self.auditor
+        )
+
+    def test_ma_risks_update_without_perms_v1(self):
+        self.engagement.questionnaire_version = 1
+        self.engagement.save()
         self._test_category_update_by_user_without_permissions(
             category_code='ma_questionnaire', field_name='questionnaire',
+            not_allowed=self.unicef_focal_point
+        )
+        self._test_category_update_by_user_without_permissions(
+            category_code='test_subject_areas', field_name='ma_subject_areas',
+            not_allowed=self.unicef_focal_point
+        )
+
+    def test_ma_risks_update_without_perms(self):
+        self._test_category_update_by_user_without_permissions(
+            category_code='ma_questionnaire_v2', field_name='questionnaire',
             not_allowed=self.unicef_focal_point
         )
         self._test_category_update_by_user_without_permissions(
@@ -928,6 +964,19 @@ class TestMetadataDetailViewSet(EngagementTransitionsTestCaseMixin):
             [{'value': c, 'display_name': str(v)} for c, v in expected_choices],
             risk_fields['value']['choices']
         )
+
+
+class TestEngagementMetadataViewSet(AuditTestCaseMixin, BaseTenantTestCase):
+    endpoint = "engagements"
+
+    def test_staff_members(self):
+        response = self.forced_auth_req(
+            'options',
+            '/api/audit/{}/'.format(self.endpoint),
+            user=self.unicef_focal_point
+        )
+        self.assertIn('POST', response.data['actions'])
+        self.assertIn('staff_members', response.data['actions']['POST'])
 
 
 class TestMicroAssessmentMetadataDetailViewSet(TestMetadataDetailViewSet, BaseTenantTestCase):

@@ -342,7 +342,7 @@ class UserRealmViewSet(
         return self.model.objects \
             .filter(realms__in=context_realms_qs) \
             .prefetch_related(Prefetch('realms', queryset=context_realms_qs)) \
-            .annotate(has_active_realm=Exists(Realm.objects.filter(user=OuterRef('pk'), is_active=True))) \
+            .annotate(has_active_realm=Exists(context_realms_qs.filter(user=OuterRef('pk'), is_active=True))) \
             .distinct()
 
     @transaction.atomic
@@ -363,7 +363,6 @@ class UserRealmViewSet(
         serializer = self.get_serializer(instance, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
-
         if getattr(instance, '_prefetched_objects_cache', None):
             instance._prefetched_objects_cache = {}
         return Response(UserRealmRetrieveSerializer(instance=self.get_queryset().get(pk=serializer.instance.pk)).data)

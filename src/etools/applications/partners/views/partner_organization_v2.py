@@ -51,8 +51,6 @@ from etools.applications.partners.serializers.exports.partner_organization impor
     AssessmentExportSerializer,
     PartnerOrganizationExportFlatSerializer,
     PartnerOrganizationExportSerializer,
-    PartnerStaffMemberExportFlatSerializer,
-    PartnerStaffMemberExportSerializer,
 )
 from etools.applications.partners.serializers.partner_organization_v2 import (
     AssessmentDetailSerializer,
@@ -64,14 +62,12 @@ from etools.applications.partners.serializers.partner_organization_v2 import (
     PartnerOrganizationHactSerializer,
     PartnerOrganizationListSerializer,
     PartnerPlannedVisitsSerializer,
-    PartnerStaffMemberDetailSerializer,
     PlannedEngagementNestedSerializer,
     PlannedEngagementSerializer,
 )
 from etools.applications.partners.tasks import sync_partner
 from etools.applications.partners.views.helpers import set_tenant_or_fail
 from etools.applications.t2f.models import Travel, TravelType
-from etools.applications.users.models import User
 from etools.applications.utils.pagination import AppendablePageNumberPagination
 from etools.libraries.djangolib.models import StringConcat
 from etools.libraries.djangolib.views import ExternalModuleFilterMixin
@@ -397,37 +393,6 @@ class PlannedEngagementAPIView(ListAPIView):
     permission_classes = (IsAdminUser,)
     queryset = PlannedEngagement.objects.all()
     serializer_class = PlannedEngagementSerializer
-
-
-class PartnerStaffMemberListAPIVIew(ExternalModuleFilterMixin, ExportModelMixin, ListAPIView):
-    """
-    Returns a list of all Partner staff members
-    """
-    queryset = User.objects.all()
-    serializer_class = PartnerStaffMemberDetailSerializer
-    permission_classes = (AllowSafeAuthenticated,)
-    filter_backends = (PartnerScopeFilter,)
-    renderer_classes = (
-        r.JSONRenderer,
-        r.CSVRenderer,
-        CSVFlatRenderer,
-    )
-    module2filters = {
-        'psea': ['partner__psea_assessment__assessor__auditor_firm_staff__user',
-                 'partner__psea_assessment__assessor__user']
-    }
-
-    def get_serializer_class(self, format=None):
-        """
-        Use restriceted field set for listing
-        """
-        query_params = self.request.query_params
-        if "format" in query_params.keys():
-            if query_params.get("format") == 'csv':
-                return PartnerStaffMemberExportSerializer
-            if query_params.get("format") == 'csv_flat':
-                return PartnerStaffMemberExportFlatSerializer
-        return super().get_serializer_class()
 
 
 class PartnerOrganizationAssessmentListCreateView(ExportModelMixin, ListCreateAPIView):

@@ -53,7 +53,7 @@ class BasePartnerOrganizationTestCase(BaseTenantTestCase):
 class TestPartnerOrganizationList(BasePartnerOrganizationTestCase):
     def test_list_for_unicef(self):
         PartnerFactory()
-        with self.assertNumQueries(2):
+        with self.assertNumQueries(4):
             response = self.forced_auth_req(
                 "get",
                 reverse('pmp_v3:partner-list'),
@@ -71,7 +71,7 @@ class TestPartnerOrganizationList(BasePartnerOrganizationTestCase):
             realms__data=['IP Viewer'],
             profile__organization=partner.organization
         )
-        with self.assertNumQueries(7):
+        with self.assertNumQueries(3):
             response = self.forced_auth_req(
                 "get",
                 reverse('pmp_v3:partner-list'),

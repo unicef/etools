@@ -85,7 +85,6 @@ class URLsTestCase(URLAssertionMixin, SimpleTestCase):
             ('partner-delete', 'delete/1/', {'pk': 1}),
             ('partner-assessment-detail', 'assessments/1/', {'pk': 1}),
             ('partner-add', 'add/', {}),
-            ('partner-staff-members-list', '1/staff-members/', {'partner_pk': 1}),
         )
         self.assertReversal(names_and_paths, 'partners_api:', '/api/v2/partners/')
         self.assertIntParamRegexes(names_and_paths, 'partners_api:')
@@ -1228,35 +1227,6 @@ class TestAgreementAPIView(BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data["amendments"][1]["types"]), 2)
-
-
-class TestPartnerStaffMemberAPIView(BaseTenantTestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.unicef_staff = UserFactory(is_staff=True)
-        cls.partner = PartnerFactory(
-            organization=OrganizationFactory(organization_type=OrganizationType.CIVIL_SOCIETY_ORGANIZATION))
-
-        cls.partner_staff = UserFactory(
-            realms__data=['IP Viewer'],
-            profile__organization=cls.partner.organization,
-        )
-        cls.url = reverse(
-            "partners_api:partner-staff-members-list",
-            args=[cls.partner.pk]
-        )
-
-    def test_get(self):
-        response = self.forced_auth_req(
-            'get',
-            self.url,
-            user=self.unicef_staff
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        data = json.loads(response.rendered_content)
-        self.assertIn(data[0]["first_name"], self.partner_staff.first_name)
-        self.assertIn(data[0]["last_name"], self.partner_staff.last_name)
 
 
 class TestInterventionViews(BaseTenantTestCase):

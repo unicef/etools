@@ -12,7 +12,7 @@ class UserRoleFilter(BaseFilterBackend):
 
 class UserStatusFilter(BaseFilterBackend):
     def filter_queryset(self, request, queryset, view):
-        if 'status' in request.query_params and request.query_params['status']:
+        if queryset and 'status' in request.query_params and request.query_params['status']:
             status_list = [status.strip().upper() for status in request.query_params['status'].split(',')]
             filters = models.Q()
             for status in status_list:
