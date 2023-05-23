@@ -172,13 +172,13 @@ class MonitoringActivitiesViewSet(
     def get_queryset(self):
         queryset = super().get_queryset()
 
-        # todo: change to the user.is_unicef
-        if UNICEFUser.name not in [g.name for g in self.request.user.groups.all()]:
+        if not self.request.user.is_unicef_user():
             # we should hide activities before assignment
             # if reject reason available activity should be visible (draft + reject_reason = rejected)
             queryset = queryset.filter(
                 Q(visit_lead=self.request.user) | Q(team_members=self.request.user),
                 Q(status__in=MonitoringActivity.TPM_AVAILABLE_STATUSES) | ~Q(reject_reason=''),
+                tpm_partner__organization=self.request.user.profile.organization,
             )
 
         return queryset
@@ -281,6 +281,9 @@ class FMUsersViewSet(
             "country": connection.tenant,
             "group__name__in": user_groups
         }
+        if not self.request.user.is_unicef_user():
+            qs_context.update({"organization": self.request.user.profile.organization})
+
         context_realms_qs = Realm.objects.filter(**qs_context).select_related('organization__tpmpartner')
 
         qs = super().get_queryset()\
