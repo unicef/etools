@@ -257,7 +257,10 @@ class EngagementSerializer(
         WritableNestedParentSerializerMixin,
         EngagementListSerializer
 ):
-    staff_members = serializers.SerializerMethodField(label=_('Audit Staff Team Members'))
+    staff_members = SeparatedReadWriteField(
+        read_field=serializers.SerializerMethodField(),
+        label=_('Audit Staff Team Members')
+    )
     active_pd = SeparatedReadWriteField(
         read_field=BaseInterventionListSerializer(many=True, required=False),
         label=_('Programme Document(s) or SSFA(s) - (optional)'), required=False
@@ -311,14 +314,14 @@ class EngagementSerializer(
         extra_kwargs['engagement_type'] = {'label': _('Engagement Type')}
 
     def get_staff_members(self, obj):
-        staff_members_qs = obj.staff_members\
+        staff_members_qs = obj.all()\
             .annotate(has_active_realm=Exists(
                 Realm.objects.filter(
                     user=OuterRef('pk'),
                     country=connection.tenant,
                     group__name__in=AUDIT_ACTIVE_GROUPS,
                     is_active=True))
-            )
+        )
         return AuditorStaffMemberRealmSerializer(staff_members_qs, many=True).data
 
     def get_sections(self, obj):

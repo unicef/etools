@@ -26,7 +26,7 @@ from etools.applications.funds.tests.factories import FundsReservationHeaderFact
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.models import Agreement, Intervention
 from etools.applications.partners.synchronizers import PDVisionUploader
-from etools.applications.partners.tasks import sync_realms_to_prp, transfer_active_pds_to_new_cp
+from etools.applications.partners.tasks import transfer_active_pds_to_new_cp
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
     CoreValuesAssessmentFactory,
@@ -43,6 +43,7 @@ from etools.applications.reports.tests.factories import (
     ReportingRequirementFactory,
     SectionFactory,
 )
+from etools.applications.users.tasks import sync_realms_to_prp
 from etools.applications.users.tests.factories import CountryFactory, RealmFactory, UserFactory
 
 
@@ -1281,9 +1282,14 @@ class SendPDToVisionTestCase(BaseTenantTestCase):
 
 
 class TestRealmsPRPExport(BaseTenantTestCase):
-    @override_settings(UNICEF_USER_EMAIL="@another_example.com")
-    @override_settings(PRP_API_ENDPOINT='http://example.com/api/')
-    @patch('etools.applications.partners.signals.sync_realms_to_prp.apply_async')
+    @classmethod
+    def setUpTestData(cls):
+        UserFactory(email='prp@example.com', realms__data=[])
+
+    @override_settings(UNICEF_USER_EMAIL="@another_example.com",
+                       PRP_API_ENDPOINT='http://example.com/api/',
+                       PRP_API_USER='prp@example.com')
+    @patch('etools.applications.users.signals.sync_realms_to_prp.apply_async')
     @patch(
         'etools.applications.partners.prp_api.requests.post',
         return_value=namedtuple('Response', ['status_code', 'text'])(200, '{}')
@@ -1302,9 +1308,10 @@ class TestRealmsPRPExport(BaseTenantTestCase):
         requests_post_mock.assert_called()
         self.assertEqual(len(commit_callbacks), 1)
 
-    @override_settings(UNICEF_USER_EMAIL="@another_example.com")
-    @override_settings(PRP_API_ENDPOINT='http://example.com/api/')
-    @patch('etools.applications.partners.signals.sync_realms_to_prp.apply_async')
+    @override_settings(UNICEF_USER_EMAIL="@another_example.com",
+                       PRP_API_ENDPOINT='http://example.com/api/',
+                       PRP_API_USER='prp@example.com')
+    @patch('etools.applications.users.signals.sync_realms_to_prp.apply_async')
     @patch(
         'etools.applications.partners.prp_api.requests.post',
         return_value=namedtuple('Response', ['status_code', 'text'])(200, '{}')
@@ -1324,9 +1331,10 @@ class TestRealmsPRPExport(BaseTenantTestCase):
         self.assertEqual(sync_mock.call_count, 2)
         requests_post_mock.assert_called_once()
 
-    @override_settings(UNICEF_USER_EMAIL="@another_example.com")
-    @override_settings(PRP_API_ENDPOINT='http://example.com/api/')
-    @patch('etools.applications.partners.signals.sync_realms_to_prp.apply_async')
+    @override_settings(UNICEF_USER_EMAIL="@another_example.com",
+                       PRP_API_ENDPOINT='http://example.com/api/',
+                       PRP_API_USER='prp@example.com')
+    @patch('etools.applications.users.signals.sync_realms_to_prp.apply_async')
     @patch(
         'etools.applications.partners.prp_api.requests.post',
         return_value=namedtuple('Response', ['status_code', 'text'])(200, '{}')
@@ -1343,9 +1351,10 @@ class TestRealmsPRPExport(BaseTenantTestCase):
         requests_post_mock.assert_called()
         self.assertEqual(len(commit_callbacks), 1)
 
-    @override_settings(UNICEF_USER_EMAIL="@another_example.com")
-    @override_settings(PRP_API_ENDPOINT='http://example.com/api/')
-    @patch('etools.applications.partners.signals.sync_realms_to_prp.apply_async')
+    @override_settings(UNICEF_USER_EMAIL="@another_example.com",
+                       PRP_API_ENDPOINT='http://example.com/api/',
+                       PRP_API_USER='prp@example.com')
+    @patch('etools.applications.users.signals.sync_realms_to_prp.apply_async')
     @patch(
         'etools.applications.partners.prp_api.requests.post',
         return_value=namedtuple('Response', ['status_code', 'text'])(200, '{}')
@@ -1367,7 +1376,7 @@ class TestRealmsPRPExport(BaseTenantTestCase):
         self.assertEqual(len(commit_callbacks), 1)
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
-    @patch('etools.applications.partners.signals.sync_realms_to_prp.apply_async')
+    @patch('etools.applications.users.signals.sync_realms_to_prp.apply_async')
     def test_realms_sync_unicef(self, sync_mock):
         user = UserFactory()
         self.assertTrue(user.is_unicef_user())
