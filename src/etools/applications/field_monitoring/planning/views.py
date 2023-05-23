@@ -272,8 +272,7 @@ class FMUsersViewSet(
 
     filter_backends = (SearchFilter, UserTypeFilter, UserTPMPartnerFilter)
     search_fields = ('email',)
-    queryset = get_user_model().objects.all()
-    queryset = queryset.order_by('first_name', 'middle_name', 'last_name')
+    queryset = get_user_model().objects.all().order_by('first_name', 'middle_name', 'last_name')
     serializer_class = FMUserSerializer
 
     def get_queryset(self):
