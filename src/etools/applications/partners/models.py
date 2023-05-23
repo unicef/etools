@@ -2,8 +2,8 @@ import datetime
 import decimal
 
 from django.conf import settings
-from django.contrib.auth.models import Group
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import ArrayField
 from django.core.validators import MinValueValidator
