@@ -1,10 +1,20 @@
+import datetime
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
-from django.db import IntegrityError, transaction
+from django.db import connection, IntegrityError, transaction
+from django.db.models import Prefetch
+from django.utils import timezone
 
 from celery.utils.log import get_task_logger
+from requests import HTTPError
 
-from etools.applications.users.models import Country, UserProfile
+from etools.applications.environment.notifications import send_notification_with_template
+from etools.applications.organizations.models import Organization
+from etools.applications.partners.prp_api import PRPAPI
+from etools.applications.partners.serializers.prp_v1 import PRPSyncUserSerializer
+from etools.applications.users.models import Country, Realm, User, UserProfile
+from etools.config.celery import app
 
 logger = get_task_logger(__name__)
 
@@ -42,6 +52,7 @@ class AzureUserMapper:
         self.countries = {}
         self.groups = {}
         self.groups['UNICEF User'] = Group.objects.get(name='UNICEF User')
+        self.unicef_organization = Organization.objects.get(name='UNICEF')
 
     def _get_country(self, business_area_code):
         if not self.countries.get('UAT', None):
@@ -59,16 +70,27 @@ class AzureUserMapper:
         return False
 
     def _set_special_attr(self, obj, attr, cleaned_value):
-
         if attr == 'country':
             # ONLY SYNC WORKSPACE IF IT HASN'T BEEN SET ALREADY
             if not obj.country_override:
                 # cleaned value is actually business area code -> see mapper
                 new_country = self._get_country(cleaned_value)
                 if not obj.country == new_country:
+                    obj.organization = self.unicef_organization
+                    Realm.objects.get_or_create(
+                        user=obj.user,
+                        country=new_country,
+                        organization=self.unicef_organization,
+                        group=self.groups['UNICEF User'])
+                    logger.info('UNICEF User Group added to user {}'.format(obj.user))
+
+                    # deactivate realms from previous user country
+                    Realm.objects.filter(
+                        user=obj.user,
+                        country=obj.country,
+                        organization=self.unicef_organization).update(is_active=False)
+
                     obj.country = self._get_country(cleaned_value)
-                    obj.countries_available.add(obj.country)
-                    obj.user.groups.set([self.groups['UNICEF User']])  # reset permission when changing country
                     logger.info("Country Updated for {}".format(obj))
                     return True
 
@@ -112,8 +134,9 @@ class AzureUserMapper:
             if created:
                 status['created'] = int(created)
                 user.set_unusable_password()
-                user.groups.add(self.groups['UNICEF User'])
-                logger.info('Group added to user {}'.format(user))
+
+                user.profile.organization = self.unicef_organization
+                user.profile.save(update_fields=['organization'])
 
             profile, _ = UserProfile.objects.get_or_create(user=user)
             user_updated = self.update_user(user, record)
@@ -177,3 +200,50 @@ class AzureUserMapper:
             profile.save()
 
         return modified
+
+
+@app.task
+def notify_user_on_realm_update(user_pk):
+    user = User.objects.get(pk=user_pk)
+    active_realms = user.realms\
+        .filter(country=connection.tenant, is_active=True)\
+        .values('country__name', 'organization__name', 'group__name')
+    if active_realms:
+        email_context = {
+            'user_full_name': user.get_full_name(),
+            'active_realms': list(active_realms),
+        }
+        recipients = [user.email]
+
+        send_notification_with_template(
+            recipients=recipients,
+            template_name='users/amp/role-update',
+            context=email_context
+        )
+
+
+@app.task
+def sync_realms_to_prp(user_pk, last_modified_at_timestamp, retry_counter=0):
+    last_modified_instance = Realm.objects.filter(user_id=user_pk).order_by('modified').last()
+    if last_modified_instance and last_modified_instance.modified.timestamp() > last_modified_at_timestamp:
+        # there were updates to user realms. skip
+        return
+
+    user = User.objects.filter(pk=user_pk).prefetch_related(
+        Prefetch('realms', Realm.objects.filter(is_active=True).select_related('country', 'organization', 'group')),
+    ).get()
+    data = PRPSyncUserSerializer(instance=user).data
+
+    try:
+        PRPAPI().send_user_realms(data)
+    except HTTPError as ex:
+        if retry_counter < 2:
+            logger.info(f'Received {ex} from prp api. retrying')
+            sync_realms_to_prp.apply_async(
+                (user_pk, last_modified_at_timestamp),
+                {'retry_counter': retry_counter + 1},
+                eta=timezone.now() + datetime.timedelta(minutes=1 + retry_counter)
+            )
+        else:
+            logger.exception(f'Received {ex} from prp api while trying to send realms after 3 attempts. '
+                             f'User pk: {user_pk}.')

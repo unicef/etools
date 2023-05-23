@@ -4,6 +4,8 @@ import factory
 from factory import fuzzy
 
 from etools.applications.attachments.tests.factories import AttachmentFactory
+from etools.applications.field_monitoring.fm_settings.tests.factories import LocationSiteFactory
+from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners import models
 from etools.applications.partners.models import InterventionManagementBudgetItem
 from etools.applications.reports.tests.factories import CountryProgrammeFactory, ResultFactory
@@ -17,24 +19,11 @@ class WorkspaceFileTypeFactory(factory.django.DjangoModelFactory):
     name = factory.Sequence(lambda n: 'workspace file type {}'.format(n))
 
 
-class PartnerStaffFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = models.PartnerStaffMember
-
-    user = factory.SubFactory(UserFactory, groups__data=[], is_staff=False)
-    partner = factory.SubFactory('etools.applications.partners.tests.factories.PartnerFactory')
-    title = 'Jedi Master'
-    first_name = 'Mace'
-    last_name = 'Windu'
-    email = factory.SelfAttribute('user.email')
-
-
 class PartnerFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.PartnerOrganization
 
-    name = factory.Sequence(lambda n: 'Partner {}'.format(n))
-    staff_members = factory.RelatedFactory(PartnerStaffFactory, 'partner')
+    organization = factory.SubFactory(OrganizationFactory)
 
 
 class CoreValuesAssessmentFactory(factory.django.DjangoModelFactory):
@@ -211,6 +200,15 @@ class InterventionPlannedVisitsFactory(factory.django.DjangoModelFactory):
 
     intervention = factory.SubFactory(InterventionFactory)
     year = datetime.datetime.today().year
+
+
+class InterventionPlannedVisitSiteFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.InterventionPlannedVisitSite
+
+    planned_visit = factory.SubFactory(InterventionPlannedVisitsFactory)
+    site = factory.SubFactory(LocationSiteFactory)
+    quarter = 1
 
 
 class AgreementAmendmentFactory(factory.django.DjangoModelFactory):

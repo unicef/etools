@@ -6,12 +6,7 @@ from etools_validator.exceptions import BasicValidationError, TransitionError
 from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import Agreement
-from etools.applications.partners.tests.factories import (
-    AgreementAmendmentFactory,
-    AgreementFactory,
-    PartnerFactory,
-    PartnerStaffFactory,
-)
+from etools.applications.partners.tests.factories import AgreementAmendmentFactory, AgreementFactory, PartnerFactory
 from etools.applications.partners.validation import agreements
 from etools.applications.reports.tests.factories import CountryProgrammeFactory
 from etools.applications.users.tests.factories import UserFactory
@@ -218,14 +213,14 @@ class TestSignaturesValid(BaseTenantTestCase):
     def test_invalid(self):
         tomorrow = datetime.date.today() + datetime.timedelta(days=1)
         partner = PartnerFactory()
-        user = UserFactory()
-        staff = PartnerStaffFactory(
-            partner=partner,
+        staff = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=partner.organization
         )
         agreement = AgreementFactory(
             partner=partner,
             signed_by_unicef_date=datetime.date.today(),
-            signed_by=user,
+            signed_by=staff,
             signed_by_partner_date=tomorrow,
             partner_manager=staff,
         )
@@ -235,14 +230,14 @@ class TestSignaturesValid(BaseTenantTestCase):
 
     def test_valid(self):
         partner = PartnerFactory()
-        user = UserFactory()
-        staff = PartnerStaffFactory(
-            partner=partner,
+        staff = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=partner.organization
         )
         agreement = AgreementFactory(
             partner=partner,
             signed_by_unicef_date=datetime.date.today(),
-            signed_by=user,
+            signed_by=staff,
             signed_by_partner_date=datetime.date.today(),
             partner_manager=staff,
         )

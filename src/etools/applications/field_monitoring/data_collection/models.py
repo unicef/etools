@@ -17,7 +17,7 @@ class ActivityQuestionQuerySet(models.QuerySet):
                 models.When(cp_output__isnull=False,
                             then=models.F('cp_output__name')),
                 models.When(partner__isnull=False,
-                            then=models.F('partner__name')),
+                            then=models.F('partner__organization__name')),
                 output_field=models.TextField()))
 
 
@@ -102,7 +102,7 @@ class FindingQuerySet(models.QuerySet):
                 models.When(activity_question__cp_output__isnull=False,
                             then=models.F('activity_question__cp_output__name')),
                 models.When(activity_question__partner__isnull=False,
-                            then=models.F('activity_question__partner__name')),
+                            then=models.F('activity_question__partner__organization__name')),
                 output_field=models.TextField()))
 
 
@@ -148,7 +148,7 @@ class ChecklistOverallFindingQuerySet(models.QuerySet):
     def annotate_for_activity_export(self):
         return self.annotate(entity_name=models.Case(
             models.When(cp_output__isnull=False, then=models.F('cp_output__name')),
-            models.When(partner__isnull=False, then=models.F('partner__name')),
+            models.When(partner__isnull=False, then=models.F('partner__organization__name')),
             output_field=models.TextField()))
 
 
@@ -176,7 +176,7 @@ class ActivityOverallFindingQuerySet(models.QuerySet):
     def annotate_for_activity_export(self):
         return self.annotate(entity_name=models.Case(
             models.When(cp_output__isnull=False, then=models.F('cp_output__name')),
-            models.When(partner__isnull=False, then=models.F('partner__name')),
+            models.When(partner__isnull=False, then=models.F('partner__organization__name')),
             output_field=models.TextField()))
 
 

@@ -1,17 +1,16 @@
 import datetime
 
-from django.test import override_settings
 from django.urls import reverse
 
 from rest_framework import status
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import Intervention
+from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, UNICEF_USER
 from etools.applications.partners.tests.factories import (
     InterventionFactory,
     InterventionResultLinkFactory,
     PartnerFactory,
-    PartnerStaffFactory,
 )
 from etools.applications.reports.models import Office, Section, SpecialReportingRequirement
 from etools.applications.reports.tests.factories import (
@@ -22,7 +21,7 @@ from etools.applications.reports.tests.factories import (
     SectionFactory,
     SpecialReportingRequirementFactory,
 )
-from etools.applications.users.tests.factories import GroupFactory, UserFactory
+from etools.applications.users.tests.factories import UserFactory
 
 
 class BasePMPTestCase(BaseTenantTestCase):
@@ -30,8 +29,10 @@ class BasePMPTestCase(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.user = UserFactory(is_staff=True)
         cls.partner = PartnerFactory()
-        cls.partner_staff = cls.partner.staff_members.all().first()
-        cls.partner_user = cls.partner_staff.user
+        cls.partner_user = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=cls.partner.organization
+        )
 
 
 class TestPMPOfficeViews(BasePMPTestCase):
@@ -44,13 +45,12 @@ class TestPMPOfficeViews(BasePMPTestCase):
             # check partner will get not receive duplicates
             pd = InterventionFactory()
             pd.offices.add(self.office)
-            pd.partner_focal_points.add(self.partner_staff)
+            pd.partner_focal_points.add(self.partner_user)
 
         self.url = reverse('offices-pmp-list')
         self.office_qs = Office.objects
         self.assertTrue(self.office_qs.count() > 10)
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_list(self):
         # unicef staff
         self.assertTrue(self.user.is_unicef_user())
@@ -70,12 +70,11 @@ class TestPMPOfficeViews(BasePMPTestCase):
         self.assertEqual(str(response.data[0]["id"]), str(self.office.pk))
 
         # partner no interventions
-        user = UserFactory(is_staff=False)
+        user = UserFactory(realms__data=[])
         response = self.forced_auth_req('get', self.url, user=user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, [])
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_detail(self):
         office = OfficeFactory()
 
@@ -97,7 +96,7 @@ class TestPMPOfficeViews(BasePMPTestCase):
         # partner
         pd = InterventionFactory()
         pd.offices.add(office)
-        pd.partner_focal_points.add(self.partner_staff)
+        pd.partner_focal_points.add(self.partner_user)
         response = self.forced_auth_req('get', url, user=self.partner_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -112,13 +111,12 @@ class TestPMPSectionViews(BasePMPTestCase):
             # check partner will get not receive duplicates
             pd = InterventionFactory()
             pd.sections.add(self.section)
-            pd.partner_focal_points.add(self.partner_staff)
+            pd.partner_focal_points.add(self.partner_user)
 
         self.url = reverse('sections-pmp-list')
         self.section_qs = Section.objects
         self.assertTrue(self.section_qs.count() > 10)
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_list(self):
         # unicef staff
         response = self.forced_auth_req('get', self.url)
@@ -137,12 +135,11 @@ class TestPMPSectionViews(BasePMPTestCase):
         self.assertEqual(str(response.data[0]["id"]), str(self.section.pk))
 
         # partner no relationship
-        user = UserFactory(is_staff=False)
+        user = UserFactory(realms__data=[])
         response = self.forced_auth_req('get', self.url, user=user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, [])
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_detail(self):
         section = SectionFactory()
 
@@ -164,7 +161,7 @@ class TestPMPSectionViews(BasePMPTestCase):
         # partner
         pd = InterventionFactory()
         pd.sections.add(section)
-        pd.partner_focal_points.add(self.partner_staff)
+        pd.partner_focal_points.add(self.partner_user)
         response = self.forced_auth_req('get', url, user=self.partner_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -173,9 +170,9 @@ class TestPMPSpecialReportingRequirementListCreateView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
-        cls.unicef_staff = UserFactory(is_staff=True)
-        group = GroupFactory(name='Partnership Manager')
-        cls.unicef_staff.groups.add(group)
+        cls.unicef_staff = UserFactory(
+            is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]
+        )
         cls.intervention = InterventionFactory(
             start=datetime.date(2001, 1, 1),
             status=Intervention.DRAFT,
@@ -270,12 +267,14 @@ class TestPMPSpecialReportingRequirementListCreateView(BaseTenantTestCase):
 class TestSpecialReportingRequirementRetrieveUpdateDestroyView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.unicef_staff = UserFactory(is_staff=True)
-        group = GroupFactory(name='Partnership Manager')
-        cls.unicef_staff.groups.add(group)
-
+        cls.unicef_staff = UserFactory(
+            is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]
+        )
         cls.partner = PartnerFactory()
-        cls.partner_focal_point = PartnerStaffFactory(partner=cls.partner).user
+        cls.partner_focal_point = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=cls.partner.organization
+        )
 
         cls.intervention = InterventionFactory(
             start=datetime.date(2001, 1, 1),
@@ -284,7 +283,7 @@ class TestSpecialReportingRequirementRetrieveUpdateDestroyView(BaseTenantTestCas
             agreement__partner=cls.partner,
             date_sent_to_partner=datetime.date.today()
         )
-        cls.intervention.partner_focal_points.add(cls.partner_focal_point.get_partner_staff_member())
+        cls.intervention.partner_focal_points.add(cls.partner_focal_point)
         cls.intervention.unicef_focal_points.add(cls.unicef_staff)
 
     def _get_url(self, requirement):
@@ -392,13 +391,15 @@ class TestResultFrameworkView(BaseTenantTestCase):
         cls.unicef_staff = UserFactory(is_staff=True)
 
         cls.partner = PartnerFactory()
-        cls.partner_focal_point = PartnerStaffFactory(partner=cls.partner).user
-
+        cls.partner_focal_point = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=cls.partner.organization
+        )
         cls.intervention = InterventionFactory(
             agreement__partner=cls.partner,
             date_sent_to_partner=datetime.date.today()
         )
-        cls.intervention.partner_focal_points.add(cls.partner_focal_point.get_partner_staff_member())
+        cls.intervention.partner_focal_points.add(cls.partner_focal_point)
 
         cls.result_link = InterventionResultLinkFactory(
             intervention=cls.intervention,

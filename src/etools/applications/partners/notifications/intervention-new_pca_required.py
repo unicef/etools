@@ -11,6 +11,8 @@ defaults = {
 
     {{pd_link}}
 
+    Please generate a new PCA with {{partner_name}} as soon as possible.
+
     Please note that this is an automated message and replies to this email address are not monitored.
     """,
     "html_content": """
@@ -24,6 +26,8 @@ defaults = {
     A new PCA will have to be signed with the partner for the new Country Programme.</br >
 
     {{pd_link}}<br />
+
+    Please generate a new PCA with {{partner_name}} as soon as possible.<br/>
 
     Please note that this is an automated message and replies to this email address are not monitored.<br />
     {% endblock content %}

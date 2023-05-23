@@ -2,13 +2,13 @@
 import datetime
 import tempfile
 
-from django.test import override_settings
-
 from rest_framework import status
 from tablib.core import Dataset
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
-from etools.applications.partners.models import Intervention, PartnerOrganization, PartnerType
+from etools.applications.organizations.models import OrganizationType
+from etools.applications.organizations.tests.factories import OrganizationFactory
+from etools.applications.partners.models import Intervention, PartnerOrganization
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
     CountryProgrammeFactory,
@@ -17,7 +17,6 @@ from etools.applications.partners.tests.factories import (
     InterventionResultLinkFactory,
     PartnerFactory,
     PartnerPlannedVisitsFactory,
-    PartnerStaffFactory,
 )
 from etools.applications.reports.models import ResultType
 from etools.applications.reports.tests.factories import ResultFactory
@@ -29,9 +28,11 @@ class TestModelExport(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
         cls.partner = PartnerFactory(
-            partner_type=PartnerType.UN_AGENCY,
-            vendor_number='Vendor No',
-            short_name="Short Name",
+            organization=OrganizationFactory(
+                organization_type=OrganizationType.UN_AGENCY,
+                vendor_number='Vendor No',
+                short_name="Short Name"
+            ),
             alternate_name="Alternate Name",
             shared_with=["DPKO", "ECA"],
             address="Address 123",
@@ -49,7 +50,10 @@ class TestModelExport(BaseTenantTestCase):
             type_of_assessment="Type of Assessment",
             last_assessment_date=datetime.date.today(),
         )
-        cls.partnerstaff = PartnerStaffFactory(partner=cls.partner)
+        cls.partnerstaff = UserFactory(
+            profile__organization=cls.partner.organization,
+            realms__data=['IP Viewer']
+        )
         attachment = tempfile.NamedTemporaryFile(suffix=".pdf").name
         cls.agreement = AgreementFactory(
             partner=cls.partner,
@@ -399,7 +403,6 @@ class TestModelExport(BaseTenantTestCase):
         )
         )
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_partners_export_api(self):
         response = self.forced_auth_req(
             'get',
@@ -466,7 +469,7 @@ class TestModelExport(BaseTenantTestCase):
             '{}'.format(self.partner.last_assessment_date),
             '',
             ', '.join(["{} ({})".format(sm.get_full_name(), sm.email)
-                       for sm in self.partner.staff_members.filter(active=True).all()]),
+                       for sm in self.partner.active_staff_members.all()]),
             'https://testserver/pmp/partners/{}/details/'.format(self.partner.id),
             '{} (Q1:{} Q2:{}, Q3:{}, Q4:{})'.format(
                 self.planned_visit.year,

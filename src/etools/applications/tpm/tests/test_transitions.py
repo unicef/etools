@@ -41,8 +41,8 @@ class TestTPMTransitionConditions(TPMTransitionTestCase):
 
         cls.pme_user = PMEUserFactory()
         cls.tpm_user = TPMUserFactory()
-        cls.tpm_staff = cls.tpm_user.tpmpartners_tpmpartnerstaffmember
-        cls.tpm_partner = cls.tpm_staff.tpm_partner
+        cls.tpm_staff = cls.tpm_user
+        cls.tpm_partner = cls.tpm_staff.profile.organization.tpmpartner
 
     def test_assign_without_activities(self):
         visit = TPMVisitFactory(status='draft',
@@ -281,12 +281,12 @@ class TPMPermissionsForTPMTransitionTestCase(TPMTransitionPermissionsTestCase):
         cls.user = TPMUserFactory()
         cls.user_role = 'Simple Third Party Monitor'
 
-        cls.second_user = TPMUserFactory(tpm_partner=cls.user.tpmpartners_tpmpartnerstaffmember.tpm_partner)
+        cls.second_user = TPMUserFactory(tpm_partner=cls.user.profile.organization.tpmpartner)
 
     def create_object(self, transition, **kwargs):
         opts = {
-            'tpm_partner': self.user.tpmpartners_tpmpartnerstaffmember.tpm_partner,
-            'tpm_partner_focal_points': [self.second_user.tpmpartners_tpmpartnerstaffmember],
+            'tpm_partner': self.user.profile.organization.tpmpartner,
+            'tpm_partner_focal_points': [self.second_user],
         }
 
         opts.update(kwargs)
@@ -319,8 +319,8 @@ class TPMFocalPointPermissionsForTPMTransitionTestCase(TPMTransitionPermissionsT
 
     def create_object(self, transition, **kwargs):
         opts = {
-            'tpm_partner': self.user.tpmpartners_tpmpartnerstaffmember.tpm_partner,
-            'tpm_partner_focal_points': [self.user.tpmpartners_tpmpartnerstaffmember],
+            'tpm_partner': self.user.profile.organization.tpmpartner,
+            'tpm_partner_focal_points': [self.user],
         }
 
         opts.update(kwargs)

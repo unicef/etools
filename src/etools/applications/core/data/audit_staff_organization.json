@@ -1,9 +1,21 @@
 [
   {
+    "model": "organizations.organization",
+    "pk": 1,
+    "fields": {
+      "parent": null,
+      "name": "UNICEF",
+      "vendor_number": "000",
+      "organization_type": "UN Agency",
+      "cso_type": "International",
+      "short_name": "",
+      "other": null
+    }
+  },
+  {
     "model": "purchase_order.auditorfirm",
     "fields": {
-      "vendor_number": "000",
-      "name": "UNICEF Staff Org.",
+      "organization": ["000"],
       "street_address": "3 United Nations Plaza",
       "city": "New York",
       "postal_code": "10017",

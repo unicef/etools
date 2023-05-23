@@ -6,7 +6,6 @@ from rest_framework.exceptions import ValidationError
 from unicef_rest_export.serializers import ExportSerializer
 
 from etools.applications.partners.models import Intervention
-from etools.applications.partners.serializers.exports.vision.export_mixin import InterventionVisionSynchronizerMixin
 from etools.applications.partners.serializers.intervention_snapshot import FullInterventionSnapshotSerializerMixin
 from etools.applications.reports.models import (
     AppliedIndicator,
@@ -637,7 +636,6 @@ class InterventionTimeFrameSerializer(serializers.ModelSerializer):
 
 
 class InterventionActivityDetailSerializer(
-    InterventionVisionSynchronizerMixin,
     FullInterventionSnapshotSerializerMixin,
     serializers.ModelSerializer,
 ):

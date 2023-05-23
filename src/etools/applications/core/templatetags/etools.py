@@ -1,3 +1,5 @@
+from textwrap import wrap
+
 from django import template
 from django.conf import settings
 from django.utils.safestring import mark_safe
@@ -19,18 +21,19 @@ def vision_url():
 
 
 @register.simple_tag(takes_context=True)
-def show_country_select(context, profile):
+def show_country_select(context, user):
 
-    if not profile:
+    if not user:
         return ''
-    countries = profile.countries_available.all().order_by('name')  # Country.objects.all()
+    # only countries from active realms are in the dropdown list
+    countries = user.profile.countries_available.order_by('name')
 
     if 'opts' in context and context['opts'].app_label in settings.TENANT_APPS:
         countries = countries.exclude(schema_name='public')
 
     html = ''
     for country in countries:
-        if country == profile.country:
+        if country == user.profile.country:
             html += '<option value="' + str(country.id) + '" selected>' + country.name + '</option>'
         else:
             html += '<option value="' + str(country.id) + '">' + country.name + '</option>'
@@ -61,3 +64,14 @@ def call_method(obj, method_name, *args):
 @register.filter(is_safe=True)
 def currency(value):
     return currency_format(value)
+
+
+@register.filter
+def text_wrap(text, width=70):
+    """
+    The used PDF libs don't allow CSS word-wrap, so to split long words (e.g. urls)
+    we wrap the text by lines and join them with spaces to have multiple lines. See:
+    https://github.com/nigma/django-easy-pdf/issues/65
+    https://github.com/xhtml2pdf/xhtml2pdf/issues/379
+    """
+    return ' '.join(wrap(text, width))

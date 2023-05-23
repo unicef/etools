@@ -12,6 +12,7 @@ from django.utils.translation import gettext_lazy as _
 
 from admin_extra_urls.decorators import button
 from admin_extra_urls.mixins import ExtraUrlMixin
+from django_tenants.postgresql_backend.base import FakeTenant
 from import_export.admin import ExportMixin
 from unicef_attachments.admin import AttachmentSingleInline
 from unicef_attachments.models import Attachment
@@ -20,7 +21,6 @@ from unicef_snapshot.admin import ActivityInline, SnapshotModelAdmin
 from etools.applications.partners.exports import PartnerExport
 from etools.applications.partners.forms import (  # TODO intervention sector locations cleanup
     InterventionAttachmentForm,
-    PartnersAdminForm,
     PartnerStaffMemberForm,
 )
 from etools.applications.partners.mixins import CountryUsersAdminMixin, HiddenPartnerMixin
@@ -89,7 +89,8 @@ class InterventionAmendmentPRCReviewInline(AttachmentSingleInline):
     code = 'partners_intervention_amendment_internal_prc_review'
 
 
-class InterventionAmendmentsAdmin(AttachmentInlineAdminMixin, RestrictedEditAdmin):
+class InterventionAmendmentsAdmin(AttachmentInlineAdminMixin, CountryUsersAdminMixin, RestrictedEditAdmin):
+    staff_only = False
     model = InterventionAmendment
     readonly_fields = [
         'amendment_number',
@@ -288,10 +289,12 @@ class InterventionAdmin(
         'agreement',
         'flat_locations',
         'partner_authorized_officer_signatory',
+        'old_partner_authorized_officer_signatory',  # TODO REALMS clean up
         'unicef_signatory',
         'budget_owner',
         'unicef_focal_points',
         'partner_focal_points',
+        'old_partner_focal_points',  # TODO REALMS clean up
     ]
     list_filter = (
         'document_type',
@@ -311,6 +314,7 @@ class InterventionAdmin(
     filter_horizontal = (
         'sections',
         'unicef_focal_points',
+        'old_partner_focal_points',  # TODO REALMS clean up
         'partner_focal_points',
         'flat_locations'
     )
@@ -339,8 +343,10 @@ class InterventionAdmin(
                  'review_date_prc',
                  'prc_review_document',
                  'signed_pd_document',
-                 ('partner_authorized_officer_signatory', 'signed_by_partner_date',),
+                 ('old_partner_authorized_officer_signatory', 'signed_by_partner_date',),  # TODO REALMS clean up
+                 'partner_authorized_officer_signatory',
                  ('unicef_signatory', 'signed_by_unicef_date',),
+                 'old_partner_focal_points',  # TODO REALMS clean up
                  'partner_focal_points',
                  'unicef_focal_points',
                  ('start', 'end'),
@@ -420,6 +426,8 @@ class InterventionAdmin(
     attachments_link.short_description = 'attachments'
 
     def has_change_permission(self, request, obj=None):
+        if isinstance(connection.tenant, FakeTenant):
+            return False
         return super().has_change_permission(request, obj=None) or request.user.groups.filter(name='Country Office Administrator').exists()
 
     def changeform_view(self, request, *args, **kwargs):
@@ -482,6 +490,7 @@ class AssessmentAdmin(AttachmentInlineAdminMixin, RestrictedEditAdmin):
     ]
 
 
+# TODO REALMS clean up
 class PartnerStaffMemberAdmin(RestrictedEditAdminMixin, SnapshotModelAdmin):
     model = PartnerStaffMember
     form = PartnerStaffMemberForm
@@ -508,7 +517,7 @@ class PartnerStaffMemberAdmin(RestrictedEditAdminMixin, SnapshotModelAdmin):
         'email',
         'user__first_name',
         'user__last_name',
-        'partner__name'
+        'partner__organization__name'
     )
     inlines = [
         ActivityInline,
@@ -533,6 +542,8 @@ class HiddenPartnerFilter(admin.SimpleListFilter):
     def queryset(self, request, queryset):
 
         value = self.value()
+        if not value:
+            return queryset
         if value == 'True':
             return queryset.filter(hidden=True)
         return queryset.filter(hidden=False)
@@ -544,21 +555,21 @@ class CoreValueAssessmentInline(RestrictedEditAdminMixin, admin.StackedInline):
 
 
 class PartnerAdmin(ExtraUrlMixin, ExportMixin, RestrictedEditAdmin):
-    form = PartnersAdminForm
     resource_class = PartnerExport
     search_fields = (
-        'name',
-        'vendor_number',
+        'alternate_name',
+        'organization__name',
+        'organization__vendor_number',
+        'organization__short_name'
     )
+    autocomplete_fields = ('lead_office', 'lead_section')
     list_filter = (
-        'partner_type',
+        'organization__organization_type',
         'rating',
         HiddenPartnerFilter,
     )
     list_display = (
-        'name',
-        'vendor_number',
-        'partner_type',
+        'organization',
         'rating',
         'highest_risk_rating_name',
         'highest_risk_rating_type',
@@ -573,7 +584,7 @@ class PartnerAdmin(ExtraUrlMixin, ExportMixin, RestrictedEditAdmin):
     ]
     readonly_fields = (
         'vision_synced',
-        'vendor_number',
+        'organization',
         'rating',
         'type_of_assessment',
         'last_assessment_date',
@@ -582,7 +593,6 @@ class PartnerAdmin(ExtraUrlMixin, ExportMixin, RestrictedEditAdmin):
         'total_ct_cp',
         'deleted_flag',
         'blocked',
-        'name',
         'hact_values',
         'total_ct_cp',
         'total_ct_cy',
@@ -599,13 +609,10 @@ class PartnerAdmin(ExtraUrlMixin, ExportMixin, RestrictedEditAdmin):
     fieldsets = (
         (_('Partner Details'), {
             'fields':
-                (('name', 'vision_synced',),
-                 ('short_name', 'alternate_name',),
-                 ('partner_type', 'cso_type',),
+                (('organization', 'vision_synced',),
                  'lead_office',
                  'lead_section',
                  'shared_with',
-                 'vendor_number',
                  'rating',
                  'type_of_assessment',
                  'last_assessment_date',
@@ -684,7 +691,8 @@ class PartnerAdmin(ExtraUrlMixin, ExportMixin, RestrictedEditAdmin):
 class PlannedEngagementAdmin(RestrictedEditAdmin):
     model = PlannedEngagement
     search_fields = (
-        'partner__name',
+        'partner__organization__name',
+        'partner__organization__short_name',
     )
     fields = (
         'partner',
@@ -768,6 +776,7 @@ class AgreementAdmin(
         RestrictedEditAdminMixin,
         SnapshotModelAdmin,
 ):
+    staff_only = False
 
     list_filter = (
         'partner',
@@ -782,7 +791,7 @@ class AgreementAdmin(
     )
     search_fields = (
         'agreement_number',
-        'partner__name',
+        'partner__organization__name',
     )
     raw_id_fields = (
         'partner_manager',
@@ -801,16 +810,19 @@ class AgreementAdmin(
                     'attached_agreement',
                     ('start', 'end',),
                     'signed_by_partner_date',
+                    'old_partner_manager',  # TODO REALMS clean up
                     'partner_manager',
                     'signed_by_unicef_date',
                     'signed_by',
                     'terms_acknowledged_by',
                     'authorized_officers',
+                    'old_authorized_officers',  # TODO REALMS clean up
                 )
         }),
     )
     filter_horizontal = (
         'authorized_officers',
+        'old_authorized_officers',  # TODO REALMS clean up
     )
     inlines = [
         ActivityInline,
@@ -886,7 +898,7 @@ class InterventionSupplyItemAdmin(RestrictedEditAdmin):
 
 admin.site.register(PartnerOrganization, PartnerAdmin)
 admin.site.register(Assessment, AssessmentAdmin)
-admin.site.register(PartnerStaffMember, PartnerStaffMemberAdmin)
+admin.site.register(PartnerStaffMember, PartnerStaffMemberAdmin)  # TODO REALMS clean up
 admin.site.register(PlannedEngagement, PlannedEngagementAdmin)
 
 admin.site.register(Agreement, AgreementAdmin)

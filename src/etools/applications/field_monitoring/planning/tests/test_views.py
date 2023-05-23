@@ -36,6 +36,7 @@ from etools.applications.field_monitoring.planning.tests.factories import (
 )
 from etools.applications.field_monitoring.tests.base import APIViewSetTestCase, FMBaseTestCaseMixin
 from etools.applications.field_monitoring.tests.factories import UserFactory
+from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.models import Intervention
 from etools.applications.partners.tests.factories import (
     InterventionFactory,
@@ -45,12 +46,7 @@ from etools.applications.partners.tests.factories import (
 from etools.applications.reports.models import ResultType
 from etools.applications.reports.tests.factories import OfficeFactory, ResultFactory, SectionFactory
 from etools.applications.tpm.models import PME
-from etools.applications.tpm.tests.factories import (
-    SimpleTPMPartnerFactory,
-    TPMPartnerFactory,
-    TPMPartnerStaffMemberFactory,
-    TPMUserFactory,
-)
+from etools.applications.tpm.tests.factories import SimpleTPMPartnerFactory, TPMPartnerFactory, TPMUserFactory
 
 
 class YearPlanViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
@@ -235,7 +231,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
     def test_dont_auto_accept_activity_if_tpm(self):
         tpm_partner = SimpleTPMPartnerFactory()
         team_members = [
-            staff.user for staff in TPMPartnerStaffMemberFactory.create_batch(size=2, tpm_partner=tpm_partner)
+            staff for staff in TPMUserFactory.create_batch(size=2, tpm_partner=tpm_partner)
         ]
 
         activity = MonitoringActivityFactory(
@@ -350,6 +346,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
     def test_reject_as_tpm(self):
         tpm_partner = SimpleTPMPartnerFactory()
         visit_lead = TPMUserFactory(tpm_partner=tpm_partner)
+
         activity = MonitoringActivityFactory(
             monitor_type='tpm', status='assigned',
             tpm_partner=tpm_partner, visit_lead=visit_lead, team_members=[visit_lead],
@@ -704,18 +701,25 @@ class FMUsersViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase):
         self.assertEqual(response.data['results'][0]['user_type'], 'staff')
 
     def test_filter_default(self):
-        with self.assertNumQueries(2):
+        with self.assertNumQueries(3):
             self._test_list(self.unicef_user, [
-                self.unicef_user, self.fm_user, self.pme, self.usual_user, self.tpm_user, self.another_tpm_user
+                self.unicef_user, self.fm_user, self.pme, self.tpm_user, self.another_tpm_user
             ])
 
     def test_filter_tpm(self):
-        response = self._test_list(self.unicef_user, [self.tpm_user, self.another_tpm_user], data={'user_type': 'tpm'})
+        new_tpm_user = TPMUserFactory(tpm_partner=SimpleTPMPartnerFactory())
+        new_tpm_user.profile.organization = None
+        new_tpm_user.profile.save(update_fields=['organization'])
+
+        response = self._test_list(
+            self.unicef_user, [self.tpm_user, self.another_tpm_user, new_tpm_user], data={'user_type': 'tpm'})
+
         self.assertEqual(response.data['results'][0]['user_type'], 'tpm')
         self.assertEqual(response.data['results'][1]['user_type'], 'tpm')
+        self.assertEqual(response.data['results'][2]['user_type'], 'tpm')
 
     def test_filter_tpm_partner(self):
-        tpm_partner = self.tpm_user.tpmpartners_tpmpartnerstaffmember.tpm_partner.id
+        tpm_partner = self.tpm_user.profile.organization.tpmpartner.id
 
         response = self._test_list(self.unicef_user, [self.tpm_user],
                                    data={'user_type': 'tpm', 'tpm_partner': tpm_partner})
@@ -824,7 +828,7 @@ class MonitoringActivityActionPointsViewTestCase(FMBaseTestCaseMixin, APIViewSet
         action_points = MonitoringActivityActionPointFactory.create_batch(size=10, monitoring_activity=self.activity)
         MonitoringActivityActionPointFactory()
 
-        with self.assertNumQueries(15):  # prefetched 13 queries
+        with self.assertNumQueries(14):  # prefetched 13 queries
             self._test_list(self.unicef_user, action_points)
 
     def test_create(self):
@@ -850,8 +854,9 @@ class PartnersViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenantTe
 
     def test_list(self):
         PartnerFactory(deleted_flag=True)
-        PartnerFactory(name='')
-        valid_partners = [PartnerFactory(name='b'), PartnerFactory(name='a')]
+        PartnerFactory(organization=OrganizationFactory(name=''))
+        valid_partners = [PartnerFactory(organization=OrganizationFactory(name='b')),
+                          PartnerFactory(organization=OrganizationFactory(name='a'))]
         valid_partners.reverse()
 
         self._test_list(self.unicef_user, valid_partners)

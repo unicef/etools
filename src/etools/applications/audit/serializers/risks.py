@@ -1,7 +1,7 @@
 import itertools
 
 from django.db import models
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext as _
 
 from rest_framework import serializers
 from unicef_restlib.fields import WriteListSerializeFriendlyRecursiveField
@@ -179,12 +179,17 @@ class RiskRootSerializer(WritableNestedSerializerMixin, serializers.ModelSeriali
             if 'risks' in blueprint_fields:
                 blueprint_fields['risks'].child.fields['value'].choices = to_choices_list(self.risk_choices)
 
+    def get_code(self, instance):
+        if callable(self.code):
+            return self.code(instance)
+        return self.code
+
     def get_attribute(self, instance):
         """
         Collect categories tree with connected blueprints and risks related to engagement.
         This allows us to avoid passing instance deeper for filtering risks.
         """
-        categories = self.Meta.model.objects.filter(code=self.code).prefetch_related(
+        categories = self.Meta.model.objects.filter(code=self.get_code(instance)).prefetch_related(
             'blueprints',
             models.Prefetch('blueprints__risks', Risk.objects.filter(engagement=instance))
         )

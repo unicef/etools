@@ -5,7 +5,7 @@ import string
 
 from django.contrib.auth import get_user_model
 from django.db import transaction
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext as _
 
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
@@ -28,7 +28,6 @@ from etools.applications.partners.permissions import (
     PRC_SECRETARY,
     SENIOR_MANAGEMENT_GROUP,
 )
-from etools.applications.partners.serializers.exports.vision.export_mixin import InterventionVisionSynchronizerMixin
 from etools.applications.partners.serializers.intervention_snapshot import FullInterventionSnapshotSerializerMixin
 from etools.applications.partners.serializers.interventions_v2 import (
     FRsSerializer,
@@ -57,9 +56,7 @@ class InterventionRiskSerializer(FullInterventionSnapshotSerializerMixin, serial
     def validate_mitigation_measures(self, value):
         if value and len(value) > 2500:
             raise serializers.ValidationError(
-                "This field is limited to {} or less characters.".format(
-                    2500,
-                ),
+                _("This field is limited to %d or less characters.") % 2500
             )
         return value
 
@@ -185,7 +182,6 @@ class InterventionManagementBudgetItemSerializer(serializers.ModelSerializer):
 
 
 class InterventionManagementBudgetSerializer(
-    InterventionVisionSynchronizerMixin,
     FullInterventionSnapshotSerializerMixin,
     serializers.ModelSerializer,
 ):
@@ -260,7 +256,6 @@ class InterventionManagementBudgetSerializer(
 
 
 class InterventionDetailSerializer(
-    InterventionVisionSynchronizerMixin,
     FullInterventionSnapshotSerializerMixin,
     serializers.ModelSerializer,
 ):
@@ -375,21 +370,21 @@ class InterventionDetailSerializer(
     def _is_management(self):
         return get_user_model().objects.filter(
             pk=self.context['request'].user.pk,
-            groups__name__in=[SENIOR_MANAGEMENT_GROUP],
+            realms__group__name__in=[SENIOR_MANAGEMENT_GROUP],
             profile__country=self.context['request'].user.profile.country
         ).exists()
 
     def _is_partnership_manager(self):
         return get_user_model().objects.filter(
             pk=self.context['request'].user.pk,
-            groups__name__in=[PARTNERSHIP_MANAGER_GROUP],
+            realms__group__name__in=[PARTNERSHIP_MANAGER_GROUP],
             profile__country=self.context['request'].user.profile.country
         ).exists()
 
     def _is_prc_secretary(self):
         return get_user_model().objects.filter(
             pk=self.context['request'].user.pk,
-            groups__name__in=[PRC_SECRETARY],
+            realms__group__name__in=[PRC_SECRETARY],
             profile__country=self.context['request'].user.profile.country
         ).exists()
 
@@ -466,7 +461,7 @@ class InterventionDetailSerializer(
         ).exists():
             available_actions.append("individual_review")
 
-        if obj.in_amendment and obj.status == obj.SIGNED and obj.budget_owner == user:
+        if obj.in_amendment and obj.status == obj.SIGNED and budget_owner_or_focal_point:
             available_actions.append("amendment_merge")
 
         # if NOT in Development status then we're done

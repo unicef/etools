@@ -7,6 +7,8 @@ from tablib import Dataset
 from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.organizations.models import OrganizationType
+from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.models import Intervention
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
@@ -24,9 +26,11 @@ class TestInterventionAppliedIndicatorsV2Export(BaseTenantTestCase):
         super().setUpTestData()
         cls.unicef_staff = UserFactory(is_staff=True)
         cls.partner = PartnerFactory(
-            partner_type='Government',
-            vendor_number='Vendor No',
-            short_name="Short Name",
+            organization=OrganizationFactory(
+                organization_type=OrganizationType.GOVERNMENT,
+                vendor_number='Vendor No',
+                short_name="Short Name",
+            ),
             alternate_name="Alternate Name",
             shared_with=["DPKO", "ECA"],
             address="Address 123",

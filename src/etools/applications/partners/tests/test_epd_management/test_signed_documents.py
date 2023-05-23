@@ -7,7 +7,7 @@ from rest_framework import status
 
 from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.field_monitoring.tests.base import APIViewSetTestCase
-from etools.applications.partners.tests.factories import PartnerStaffFactory
+from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.tests.test_epd_management.base import BaseTestCase
 from etools.applications.users.tests.factories import UserFactory
 
@@ -27,7 +27,9 @@ class TestSignedDocumentsManagement(APIViewSetTestCase, BaseTestCase):
             'signed_pd_attachment': AttachmentFactory(file=SimpleUploadedFile('hello_world.txt', b'hello world!')).pk,
         }
         self.signature_partner_data = {
-            'partner_authorized_officer_signatory': PartnerStaffFactory(partner=self.partner).pk,
+            'partner_authorized_officer_signatory': UserFactory(
+                realms__data=['IP Viewer'], profile__organization=OrganizationFactory()
+            ).pk,
             'signed_by_partner_date': '1970-01-02',
         }
         self.contingency_signed_data = {
