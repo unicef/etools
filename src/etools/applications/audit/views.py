@@ -352,7 +352,9 @@ class EngagementViewSet(
             # no need to filter queryset
             pass
         elif Auditor.as_group() in user_groups:
-            queryset = queryset.filter(staff_members=self.request.user)
+            queryset = queryset.filter(
+                agreement__auditor_firm__organization=self.request.user.profile.organization,
+                staff_members=self.request.user)
         else:
             queryset = queryset.none()
 

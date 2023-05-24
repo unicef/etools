@@ -39,7 +39,7 @@ from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.organizations.models import OrganizationType
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.reports.tests.factories import SectionFactory
-from etools.applications.users.tests.factories import CountryFactory, OfficeFactory, RealmFactory
+from etools.applications.users.tests.factories import CountryFactory, OfficeFactory, RealmFactory, GroupFactory
 
 
 class BaseTestCategoryRisksViewSet(EngagementTransitionsTestCaseMixin):
@@ -335,6 +335,19 @@ class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, BaseTenantT
 
     def test_engagement_staff_list(self):
         self._test_list(self.auditor, [self.engagement])
+
+    def test_engagement_staff_list_multiple_auditor_realms(self):
+        auditor_firm_1 = AuditPartnerFactory()
+        engagement_1 = self.engagement_factory(agreement__auditor_firm=auditor_firm_1, staff_members=[self.auditor])
+        RealmFactory(
+            user=self.auditor, country=CountryFactory(),
+            organization=auditor_firm_1.organization, group=GroupFactory(name="Auditor")
+        )
+        self._test_list(self.auditor, [self.engagement])
+
+        self.auditor.profile.organization = auditor_firm_1.organization
+        self.auditor.profile.save(update_fields=['organization'])
+        self._test_list(self.auditor, [engagement_1])
 
     def test_non_engagement_staff_list(self):
         self._test_list(self.non_engagement_auditor, [])
