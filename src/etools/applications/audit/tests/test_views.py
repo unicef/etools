@@ -39,7 +39,7 @@ from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.organizations.models import OrganizationType
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.reports.tests.factories import SectionFactory
-from etools.applications.users.tests.factories import CountryFactory, OfficeFactory, RealmFactory, GroupFactory
+from etools.applications.users.tests.factories import CountryFactory, GroupFactory, OfficeFactory, RealmFactory
 
 
 class BaseTestCategoryRisksViewSet(EngagementTransitionsTestCaseMixin):
