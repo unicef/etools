@@ -197,7 +197,8 @@ class MonitoringActivityOfflineBlueprintsSyncTestCase(APIViewSetTestCase, BaseTe
         )
         add_mock.assert_called()
 
-    @override_settings(ETOOLS_OFFLINE_API='http://example.com/b/api/remote/blueprint/')
+    @override_settings(ETOOLS_OFFLINE_API='http://example.com/b/api/remote/blueprint/',
+                       UNICEF_USER_EMAIL="@example.com")
     @patch('etools.applications.field_monitoring.data_collection.offline.synchronizer.OfflineCollect.add')
     def test_blueprints_sent_on_staff_assignment(self, add_mock):
         activity = MonitoringActivityFactory(status='pre_assigned', partners=[PartnerFactory()])
@@ -207,7 +208,8 @@ class MonitoringActivityOfflineBlueprintsSyncTestCase(APIViewSetTestCase, BaseTe
         self._test_update(self.fm_user, activity, {'status': 'assigned'})
         add_mock.assert_called()
 
-    @override_settings(ETOOLS_OFFLINE_API='http://example.com/b/api/remote/blueprint/')
+    @override_settings(ETOOLS_OFFLINE_API='http://example.com/b/api/remote/blueprint/',
+                       UNICEF_USER_EMAIL="@example.com")
     @patch('etools.applications.field_monitoring.data_collection.offline.synchronizer.OfflineCollect.add')
     def test_tenant_switch_missing(self, add_mock):
         activity = MonitoringActivityFactory(status='pre_assigned', partners=[PartnerFactory()])
@@ -217,7 +219,8 @@ class MonitoringActivityOfflineBlueprintsSyncTestCase(APIViewSetTestCase, BaseTe
         self._test_update(self.fm_user, activity, {'status': 'assigned'})
         add_mock.assert_called()
 
-    @override_settings(ETOOLS_OFFLINE_API='http://example.com/b/api/remote/blueprint/')
+    @override_settings(ETOOLS_OFFLINE_API='http://example.com/b/api/remote/blueprint/',
+                       UNICEF_USER_EMAIL="@example.com")
     @patch('etools.applications.field_monitoring.data_collection.offline.synchronizer.OfflineCollect.add')
     def test_tenant_switch_enabled(self, add_mock):
         TenantSwitchFactory(name="fm_offline_sync_disabled", countries=[connection.tenant], active=True)
@@ -228,7 +231,8 @@ class MonitoringActivityOfflineBlueprintsSyncTestCase(APIViewSetTestCase, BaseTe
         self._test_update(self.fm_user, activity, {'status': 'assigned'})
         add_mock.assert_not_called()
 
-    @override_settings(ETOOLS_OFFLINE_API='http://example.com/b/api/remote/blueprint/')
+    @override_settings(ETOOLS_OFFLINE_API='http://example.com/b/api/remote/blueprint/',
+                       UNICEF_USER_EMAIL="@example.com")
     @patch('etools.applications.field_monitoring.data_collection.offline.synchronizer.OfflineCollect.add')
     def test_tenant_switch_disabled(self, add_mock):
         TenantSwitchFactory(name="fm_offline_sync_disabled", countries=[connection.tenant], active=False)
@@ -270,7 +274,8 @@ class MonitoringActivityOfflineBlueprintsSyncTestCase(APIViewSetTestCase, BaseTe
         activity.team_members.remove(activity.team_members.first())
         update_mock.assert_called()
 
-    @override_settings(ETOOLS_OFFLINE_API='http://example.com/b/api/remote/blueprint/')
+    @override_settings(ETOOLS_OFFLINE_API='http://example.com/b/api/remote/blueprint/',
+                       UNICEF_USER_EMAIL="@example.com")
     @patch('etools.applications.field_monitoring.data_collection.offline.synchronizer.OfflineCollect.delete')
     def test_blueprints_deleted_on_activity_cancel(self, delete_mock):
         activity = MonitoringActivityFactory(status='data_collection', partners=[PartnerFactory()])
@@ -280,7 +285,8 @@ class MonitoringActivityOfflineBlueprintsSyncTestCase(APIViewSetTestCase, BaseTe
         self._test_update(self.fm_user, activity, {'status': 'cancelled', 'cancel_reason': 'For testing purposes'})
         delete_mock.assert_called()
 
-    @override_settings(ETOOLS_OFFLINE_API='http://example.com/b/api/remote/blueprint/')
+    @override_settings(ETOOLS_OFFLINE_API='http://example.com/b/api/remote/blueprint/',
+                       UNICEF_USER_EMAIL="@example.com")
     @patch('etools.applications.field_monitoring.data_collection.offline.synchronizer.OfflineCollect.delete')
     def test_blueprints_deleted_on_activity_report_finalization(self, delete_mock):
         activity = MonitoringActivityFactory(status='data_collection', partners=[PartnerFactory()])
@@ -292,7 +298,7 @@ class MonitoringActivityOfflineBlueprintsSyncTestCase(APIViewSetTestCase, BaseTe
         self._test_update(activity.visit_lead, activity, {'status': 'report_finalization'})
         delete_mock.assert_called()
 
-    @override_settings(ETOOLS_OFFLINE_API='')
+    @override_settings(ETOOLS_OFFLINE_API='', UNICEF_USER_EMAIL="@example.com")
     @patch('etools.applications.field_monitoring.data_collection.offline.synchronizer.OfflineCollect.add')
     def test_tenant_switch_missing_but_api_not_configured(self, add_mock):
         activity = MonitoringActivityFactory(status='pre_assigned', partners=[PartnerFactory()])
@@ -302,7 +308,9 @@ class MonitoringActivityOfflineBlueprintsSyncTestCase(APIViewSetTestCase, BaseTe
         self._test_update(self.fm_user, activity, {'status': 'assigned'})
         add_mock.assert_not_called()
 
-    @override_settings(ETOOLS_OFFLINE_API='http://example.com/b/api/remote/blueprint/', SENTRY_DSN='https://test.dns')
+    @override_settings(ETOOLS_OFFLINE_API='http://example.com/b/api/remote/blueprint/',
+                       SENTRY_DSN='https://test.dns',
+                       UNICEF_USER_EMAIL="@example.com")
     @patch('sentry_sdk.api.Hub.current.capture_exception')
     @patch('etools.applications.field_monitoring.data_collection.offline.synchronizer.OfflineCollect.add')
     def test_add_offline_backend_unavailable(self, add_mock, capture_event_mock):
@@ -320,7 +328,9 @@ class MonitoringActivityOfflineBlueprintsSyncTestCase(APIViewSetTestCase, BaseTe
         self._test_update(self.fm_user, activity, {'status': 'assigned'})
         capture_event_mock.assert_called()
 
-    @override_settings(ETOOLS_OFFLINE_API='http://example.com/b/api/remote/blueprint/', SENTRY_DSN='https://test.dns')
+    @override_settings(ETOOLS_OFFLINE_API='http://example.com/b/api/remote/blueprint/',
+                       SENTRY_DSN='https://test.dns',
+                       UNICEF_USER_EMAIL="@example.com")
     @patch('sentry_sdk.api.Hub.current.capture_exception')
     @patch('etools.applications.field_monitoring.data_collection.offline.synchronizer.OfflineCollect.update')
     def test_update_offline_backend_unavailable(self, update_mock, capture_event_mock):
@@ -338,7 +348,9 @@ class MonitoringActivityOfflineBlueprintsSyncTestCase(APIViewSetTestCase, BaseTe
         activity.team_members.remove(activity.team_members.first())
         capture_event_mock.assert_called()
 
-    @override_settings(ETOOLS_OFFLINE_API='http://example.com/b/api/remote/blueprint/', SENTRY_DSN='https://test.dns')
+    @override_settings(ETOOLS_OFFLINE_API='http://example.com/b/api/remote/blueprint/',
+                       SENTRY_DSN='https://test.dns',
+                       UNICEF_USER_EMAIL="@example.com")
     @patch('sentry_sdk.api.Hub.current.capture_exception')
     @patch('etools.applications.field_monitoring.data_collection.offline.synchronizer.OfflineCollect.delete')
     def test_delete_offline_backend_unavailable(self, delete_mock, capture_event_mock):
