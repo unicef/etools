@@ -40,6 +40,7 @@ from etools.applications.field_monitoring.planning.filters import (
     UserTPMPartnerFilter,
     UserTypeFilter,
 )
+from etools.applications.field_monitoring.planning.mixins import EmptyQuerysetForExternal
 from etools.applications.field_monitoring.planning.models import (
     MonitoringActivity,
     MonitoringActivityActionPoint,
@@ -298,6 +299,7 @@ class FMUsersViewSet(
 
 class CPOutputsViewSet(
     FMBaseViewSet,
+    EmptyQuerysetForExternal,
     mixins.ListModelMixin,
     viewsets.GenericViewSet,
 ):
@@ -309,6 +311,7 @@ class CPOutputsViewSet(
 
 class InterventionsViewSet(
     FMBaseViewSet,
+    EmptyQuerysetForExternal,
     mixins.ListModelMixin,
     viewsets.GenericViewSet,
 ):
@@ -325,6 +328,7 @@ class InterventionsViewSet(
 
 class PartnersViewSet(
     FMBaseViewSet,
+    EmptyQuerysetForExternal,
     mixins.ListModelMixin,
     viewsets.GenericViewSet,
 ):

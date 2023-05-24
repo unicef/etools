@@ -787,6 +787,7 @@ class FMUsersViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase):
 class CPOutputsViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenantTestCase):
     base_view = 'field_monitoring_planning:cp_outputs'
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_filter_by_partners(self):
         ResultFactory(result_type__name=ResultType.OUTPUT)
         result_link = InterventionResultLinkFactory(cp_output__result_type__name=ResultType.OUTPUT)
@@ -798,20 +799,29 @@ class CPOutputsViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenantT
             }
         )
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_output_name_contains_wbs_code(self):
         result = ResultFactory(result_type__name=ResultType.OUTPUT, wbs='wbs-code')
         response = self._test_list(self.unicef_user, [result])
         self.assertIn('wbs-code', response.data['results'][0]['name'])
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_queries_number(self):
         results = [ResultFactory(result_type__name=ResultType.OUTPUT) for _i in range(9)]
         with self.assertNumQueries(2):
             self._test_list(self.unicef_user, results)
 
+    def test_empty_list_for_tpm_staff(self):
+        ResultFactory(result_type__name=ResultType.OUTPUT)
+        tpm_staff = TPMUserFactory(tpm_partner=TPMPartnerFactory())
+
+        self._test_list(tpm_staff, [])
+
 
 class InterventionsViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenantTestCase):
     base_view = 'field_monitoring_planning:interventions'
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_list(self):
         InterventionFactory(status=Intervention.DRAFT)
         valid_interventions = [
@@ -827,6 +837,7 @@ class InterventionsViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTen
         with self.assertNumQueries(10):  # 3 basic + 7 prefetches from InterventionManager
             self._test_list(self.unicef_user, valid_interventions)
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_filter_by_outputs(self):
         InterventionFactory(status=Intervention.SIGNED)
         result_link = InterventionResultLinkFactory(
@@ -839,6 +850,7 @@ class InterventionsViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTen
             data={'cp_outputs__in': str(result_link.cp_output.id)},
         )
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_filter_by_partners(self):
         InterventionFactory(status=Intervention.SIGNED)
         result_link = InterventionResultLinkFactory(intervention__status=Intervention.SIGNED)
@@ -848,6 +860,7 @@ class InterventionsViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTen
             data={'partners__in': str(result_link.intervention.agreement.partner.id)}
         )
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_linked_data(self):
         result_link = InterventionResultLinkFactory(intervention__status=Intervention.SIGNED)
 
@@ -855,6 +868,12 @@ class InterventionsViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTen
 
         self.assertEqual(response.data['results'][0]['partner'], result_link.intervention.agreement.partner_id)
         self.assertListEqual(response.data['results'][0]['cp_outputs'], [result_link.cp_output_id])
+
+    def test_empty_list_for_tpm_staff(self):
+        InterventionResultLinkFactory(intervention__status=Intervention.SIGNED)
+        tpm_staff = TPMUserFactory(tpm_partner=TPMPartnerFactory())
+
+        self._test_list(tpm_staff, [])
 
 
 class MonitoringActivityActionPointsViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenantTestCase):
@@ -913,11 +932,22 @@ class MonitoringActivityActionPointsViewTestCase(FMBaseTestCaseMixin, APIViewSet
 class PartnersViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenantTestCase):
     base_view = 'field_monitoring_planning:partners'
 
-    def test_list(self):
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
         PartnerFactory(deleted_flag=True)
         PartnerFactory(organization=OrganizationFactory(name=''))
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_list(self):
+
         valid_partners = [PartnerFactory(organization=OrganizationFactory(name='b')),
                           PartnerFactory(organization=OrganizationFactory(name='a'))]
         valid_partners.reverse()
 
         self._test_list(self.unicef_user, valid_partners)
+
+    def test_empty_list_for_tpm_staff(self):
+        tpm_staff = TPMUserFactory(tpm_partner=TPMPartnerFactory())
+
+        self._test_list(tpm_staff, [])
