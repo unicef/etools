@@ -13,16 +13,16 @@ class UserRoleFilter(BaseFilterBackend):
 class UserStatusFilter(BaseFilterBackend):
     def filter_queryset(self, request, queryset, view):
         if queryset and 'status' in request.query_params and request.query_params['status']:
-            status_list = [status.strip().upper() for status in request.query_params['status'].split(',')]
+            status_list = [status.strip().lower() for status in request.query_params['status'].split(',')]
             filters = models.Q()
             for status in status_list:
-                if status == 'INACTIVE':
+                if status == 'inactive':
                     filters |= models.Q(is_active=False)
-                if status == 'ACTIVE':
+                if status == 'active':
                     filters |= models.Q(is_active=True, last_login__isnull=False, has_active_realm=True)
-                if status == 'INVITED':
+                if status == 'invited':
                     filters |= models.Q(is_active=True, last_login__isnull=True, has_active_realm=True)
-                if status == 'INOPERATIVE':
+                if status == 'no access':
                     filters |= models.Q(is_active=True, has_active_realm=False)
             return queryset.filter(filters)
         return queryset

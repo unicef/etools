@@ -186,9 +186,16 @@ class FMUserSerializer(MinimalUserSerializer):
         return 'staff'
 
     def get_name(self, obj):
-        if obj.has_active_realm:
-            return obj.get_full_name()
-        return _('[Inactive] %s') % obj.get_full_name()
+        if not obj.is_active:
+            status = _('Inactive')
+        elif hasattr(obj, 'has_active_realm') and obj.has_active_realm:
+            if obj.last_login:
+                return obj.get_full_name()
+            status = _('Invited')
+        else:
+            status = _('No Access')
+
+        return f'[{status}] {obj.get_full_name()}'
 
 
 class CPOutputListSerializer(MinimalOutputListSerializer):
