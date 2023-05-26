@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-05-25 09:32+0000\n"
+"POT-Creation-Date: 2023-05-26 10:45+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -226,14 +226,11 @@ msgstr "التاريخ"
 msgid "Document Type"
 msgstr "نوع الوثيقة"
 
-msgid "Inactive"
-msgstr "غير نشط"
-
-msgid "Invited"
-msgstr "مدعو"
-
 msgid "No Access"
 msgstr "ممنوع الدخول"
+
+msgid "Inactive"
+msgstr "غير نشط"
 
 msgid "Reference No."
 msgstr "رقم المرجع."
@@ -270,3 +267,6 @@ msgstr "القوالب"
 
 msgid "Attachments"
 msgstr "المرفقات"
+
+#~ msgid "Invited"
+#~ msgstr "مدعو"

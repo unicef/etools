@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-05-25 09:32+0000\n"
+"POT-Creation-Date: 2023-05-26 10:45+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -225,14 +225,11 @@ msgstr "História"
 msgid "Document Type"
 msgstr "Tipo de Documento"
 
-msgid "Inactive"
-msgstr "Inativo"
-
-msgid "Invited"
-msgstr "Convidado"
-
 msgid "No Access"
 msgstr "Sem acesso"
+
+msgid "Inactive"
+msgstr "Inativo"
 
 msgid "Reference No."
 msgstr "Nº de referência"
@@ -269,3 +266,6 @@ msgstr "Modelos"
 
 msgid "Attachments"
 msgstr "Anexos"
+
+#~ msgid "Invited"
+#~ msgstr "Convidado"
