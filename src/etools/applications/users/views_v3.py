@@ -355,6 +355,7 @@ class UserRealmViewSet(
         return Response(UserRealmRetrieveSerializer(instance=self.get_queryset().get(pk=serializer.instance.pk)).data,
                         status=status.HTTP_201_CREATED, headers=headers)
 
+    @transaction.atomic
     def partial_update(self, request, *args, **kwargs):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
         filter_kwargs = {self.lookup_field: self.kwargs[lookup_url_kwarg]}
