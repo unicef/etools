@@ -37,7 +37,7 @@ class GlobalConfig(models.Model):
         return cls._config
 
     def get_related_third_party_users(self):
-        return get_user_model().objects.filter(groups=FMUser.as_group())
+        return get_user_model().objects.filter(realms__group=FMUser.as_group())
 
 
 class Method(models.Model):
@@ -293,4 +293,4 @@ class LogIssue(TimeStampedModel):
             return self.RELATED_TO_TYPE_CHOICES.location
 
     def get_related_third_party_users(self):
-        return get_user_model().objects.filter(groups=FMUser.as_group())
+        return get_user_model().objects.filter(realms__group=FMUser.as_group())

@@ -1,5 +1,4 @@
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.db import connection
 from django.urls import reverse
 
 from rest_framework import status
@@ -51,15 +50,14 @@ class DownloadAttachmentsBaseTestCase(BaseTenantTestCase):
 
 class DownloadUnlinkedAttachmentTestCase(DownloadAttachmentsBaseTestCase):
     def test_attachment_user_not_in_schema(self):
-        another_schema_user = UserFactory(is_staff=True, profile__countries_available=[], profile__country=None)
+        another_schema_user = UserFactory(is_staff=True, realms__data=[], profile__country=None)
         self._test_download(self.attachment, another_schema_user, status.HTTP_403_FORBIDDEN)
 
     def test_attachment_unicef(self):
         self._test_download(self.attachment, self.unicef_user, status.HTTP_302_FOUND)
 
     def test_attachment_auditor(self):
-        auditor = AuditorUserFactory(is_staff=False, profile__countries_available=[connection.tenant],
-                                     profile__country=connection.tenant)
+        auditor = AuditorUserFactory(is_staff=False)
         self._test_download(self.attachment, auditor, status.HTTP_302_FOUND)
 
 
@@ -67,22 +65,20 @@ class DownloadAPAttachmentTestCase(DownloadAttachmentsBaseTestCase):
     def setUp(self):
         super().setUp()
         self.auditor_firm = AuditPartnerFactory()
-        self.auditor = AuditorUserFactory(partner_firm=self.auditor_firm, is_staff=False,
-                                          profile__countries_available=[connection.tenant],
-                                          profile__country=connection.tenant)
+        self.auditor = AuditorUserFactory(partner_firm=self.auditor_firm, is_staff=False)
         self.specialaudit = SpecialAuditFactory()
         self.attachment.content_object = self.specialaudit
         self.attachment.save()
 
     def test_attachment_user_not_in_schema(self):
-        another_schema_user = UserFactory(is_staff=True, profile__countries_available=[], profile__country=None)
+        another_schema_user = UserFactory(is_staff=True, realms__data=[], profile__country=None)
         self._test_download(self.attachment, another_schema_user, status.HTTP_403_FORBIDDEN)
 
     def test_attachment_unicef(self):
         self._test_download(self.attachment, self.unicef_user, status.HTTP_302_FOUND)
 
     def test_attachment_authorized_officer(self):
-        self.specialaudit.staff_members.add(self.auditor.purchase_order_auditorstaffmember)
+        self.specialaudit.staff_members.add(self.auditor)
         self._test_download(self.attachment, self.auditor, status.HTTP_302_FOUND)
 
     def test_attachment_unrelated_auditor(self):
@@ -93,15 +89,13 @@ class DownloadTPMVisitAttachmentTestCase(DownloadAttachmentsBaseTestCase):
     def setUp(self):
         super().setUp()
         self.tpm_organization = TPMPartnerFactory()
-        self.tpm_staff = TPMUserFactory(tpm_partner=self.tpm_organization, is_staff=False,
-                                        profile__countries_available=[connection.tenant],
-                                        profile__country=connection.tenant)
+        self.tpm_staff = TPMUserFactory(tpm_partner=self.tpm_organization, is_staff=False)
         self.visit = TPMVisitFactory(tpm_partner=self.tpm_organization)
         self.attachment.content_object = self.visit
         self.attachment.save()
 
     def test_attachment_user_not_in_schema(self):
-        another_schema_user = UserFactory(is_staff=True, profile__countries_available=[], profile__country=None)
+        another_schema_user = UserFactory(is_staff=True, realms__data=[], profile__country=None)
         self._test_download(self.attachment, another_schema_user, status.HTTP_403_FORBIDDEN)
 
     def test_attachment_unicef(self):
@@ -111,8 +105,7 @@ class DownloadTPMVisitAttachmentTestCase(DownloadAttachmentsBaseTestCase):
         self._test_download(self.attachment, self.tpm_staff, status.HTTP_302_FOUND)
 
     def test_attachment_unrelated_staff(self):
-        another_tpm_staff = TPMUserFactory(is_staff=False, profile__countries_available=[connection.tenant],
-                                           profile__country=connection.tenant)
+        another_tpm_staff = TPMUserFactory(is_staff=False)
         self._test_download(self.attachment, another_tpm_staff, status.HTTP_403_FORBIDDEN)
 
 
@@ -120,16 +113,14 @@ class DownloadTPMVisitActivityAttachmentTestCase(DownloadAttachmentsBaseTestCase
     def setUp(self):
         super().setUp()
         self.tpm_organization = TPMPartnerFactory()
-        self.tpm_staff = TPMUserFactory(tpm_partner=self.tpm_organization, is_staff=False,
-                                        profile__countries_available=[connection.tenant],
-                                        profile__country=connection.tenant)
+        self.tpm_staff = TPMUserFactory(tpm_partner=self.tpm_organization, is_staff=False)
         self.visit = TPMVisitFactory(tpm_partner=self.tpm_organization)
         self.activity = TPMActivityFactory(tpm_visit=self.visit)
         self.attachment.content_object = self.activity
         self.attachment.save()
 
     def test_attachment_user_not_in_schema(self):
-        another_schema_user = UserFactory(is_staff=True, profile__countries_available=[], profile__country=None)
+        another_schema_user = UserFactory(is_staff=True, realms__data=[], profile__country=None)
         self._test_download(self.attachment, another_schema_user, status.HTTP_403_FORBIDDEN)
 
     def test_attachment_unicef(self):
@@ -139,8 +130,7 @@ class DownloadTPMVisitActivityAttachmentTestCase(DownloadAttachmentsBaseTestCase
         self._test_download(self.attachment, self.tpm_staff, status.HTTP_302_FOUND)
 
     def test_attachment_unrelated_staff(self):
-        another_tpm_staff = TPMUserFactory(is_staff=False, profile__countries_available=[connection.tenant],
-                                           profile__country=connection.tenant)
+        another_tpm_staff = TPMUserFactory(is_staff=False)
         self._test_download(self.attachment, another_tpm_staff, status.HTTP_403_FORBIDDEN)
 
 
@@ -148,14 +138,12 @@ class DownloadTPMPartnerAttachmentTestCase(DownloadAttachmentsBaseTestCase):
     def setUp(self):
         super().setUp()
         self.tpm_organization = TPMPartnerFactory()
-        self.tpm_staff = TPMUserFactory(tpm_partner=self.tpm_organization, is_staff=False,
-                                        profile__countries_available=[connection.tenant],
-                                        profile__country=connection.tenant)
+        self.tpm_staff = TPMUserFactory(tpm_partner=self.tpm_organization, is_staff=False)
         self.attachment.content_object = self.tpm_organization
         self.attachment.save()
 
     def test_attachment_user_not_in_schema(self):
-        another_schema_user = UserFactory(is_staff=True, profile__countries_available=[], profile__country=None)
+        another_schema_user = UserFactory(is_staff=True, realms__data=[], profile__country=None)
         self._test_download(self.attachment, another_schema_user, status.HTTP_403_FORBIDDEN)
 
     def test_attachment_unicef(self):
@@ -165,25 +153,24 @@ class DownloadTPMPartnerAttachmentTestCase(DownloadAttachmentsBaseTestCase):
         self._test_download(self.attachment, self.tpm_staff, status.HTTP_302_FOUND)
 
     def test_attachment_unrelated_staff(self):
-        another_tpm_staff = TPMUserFactory(is_staff=False, profile__countries_available=[connection.tenant],
-                                           profile__country=connection.tenant)
+        another_tpm_staff = TPMUserFactory(is_staff=False)
         self._test_download(self.attachment, another_tpm_staff, status.HTTP_403_FORBIDDEN)
 
 
 class DownloadFMGlobalConfigAttachmentTestCase(DownloadAttachmentsBaseTestCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.config = GlobalConfig.get_current()
+
     def setUp(self):
         super().setUp()
-        self.tpm_organization = TPMPartnerFactory()
-        self.fm_user = UserFactory(is_staff=False,
-                                   profile__countries_available=[connection.tenant],
-                                   profile__country=connection.tenant,
-                                   groups__data=[FMUser.name])
-        self.config = GlobalConfig.get_current()
+        self.fm_user = UserFactory(is_staff=False, realms__data=[FMUser.name])
         self.attachment.content_object = self.config
         self.attachment.save()
 
     def test_attachment_user_not_in_schema(self):
-        another_schema_user = UserFactory(is_staff=True, profile__countries_available=[], profile__country=None)
+        another_schema_user = UserFactory(is_staff=True, realms__data=[], profile__country=None)
         self._test_download(self.attachment, another_schema_user, status.HTTP_403_FORBIDDEN)
 
     def test_attachment_unicef(self):
@@ -193,10 +180,7 @@ class DownloadFMGlobalConfigAttachmentTestCase(DownloadAttachmentsBaseTestCase):
         self._test_download(self.attachment, self.fm_user, status.HTTP_302_FOUND)
 
     def test_attachment_not_fm_user(self):
-        user = UserFactory(is_staff=False,
-                           profile__countries_available=[connection.tenant],
-                           profile__country=connection.tenant,
-                           groups__data=["Unknown"])
+        user = UserFactory(is_staff=False, realms__data=["Unknown"])
         self._test_download(self.attachment, user, status.HTTP_403_FORBIDDEN)
 
 
@@ -204,16 +188,13 @@ class DownloadFMLogIssueAttachmentTestCase(DownloadAttachmentsBaseTestCase):
     def setUp(self):
         super().setUp()
         self.tpm_organization = TPMPartnerFactory()
-        self.fm_user = UserFactory(is_staff=False,
-                                   profile__countries_available=[connection.tenant],
-                                   profile__country=connection.tenant,
-                                   groups__data=[FMUser.name])
+        self.fm_user = UserFactory(is_staff=False, realms__data=[FMUser.name])
         self.log_issue = LogIssueFactory(partner=PartnerFactory())
         self.attachment.content_object = self.log_issue
         self.attachment.save()
 
     def test_attachment_user_not_in_schema(self):
-        another_schema_user = UserFactory(is_staff=True, profile__countries_available=[], profile__country=None)
+        another_schema_user = UserFactory(is_staff=True, realms__data=[], profile__country=None)
         self._test_download(self.attachment, another_schema_user, status.HTTP_403_FORBIDDEN)
 
     def test_attachment_unicef(self):
@@ -223,10 +204,7 @@ class DownloadFMLogIssueAttachmentTestCase(DownloadAttachmentsBaseTestCase):
         self._test_download(self.attachment, self.fm_user, status.HTTP_302_FOUND)
 
     def test_attachment_not_fm_user(self):
-        user = UserFactory(is_staff=False,
-                           profile__countries_available=[connection.tenant],
-                           profile__country=connection.tenant,
-                           groups__data=["Unknown"])
+        user = UserFactory(is_staff=False, realms__data=["Unknown"])
         self._test_download(self.attachment, user, status.HTTP_403_FORBIDDEN)
 
 
@@ -234,9 +212,7 @@ class DownloadFMActivityAttachmentTestCase(DownloadAttachmentsBaseTestCase):
     def setUp(self):
         super().setUp()
         self.tpm_organization = TPMPartnerFactory()
-        self.tpm_staff = TPMUserFactory(tpm_partner=self.tpm_organization, is_staff=False,
-                                        profile__countries_available=[connection.tenant],
-                                        profile__country=connection.tenant)
+        self.tpm_staff = TPMUserFactory(tpm_partner=self.tpm_organization, is_staff=False)
         self.activity = MonitoringActivityFactory(
             tpm_partner=self.tpm_organization,
             monitor_type=MonitoringActivity.MONITOR_TYPE_CHOICES.tpm,
@@ -245,7 +221,7 @@ class DownloadFMActivityAttachmentTestCase(DownloadAttachmentsBaseTestCase):
         self.attachment.save()
 
     def test_attachment_user_not_in_schema(self):
-        another_schema_user = UserFactory(is_staff=True, profile__countries_available=[], profile__country=None)
+        another_schema_user = UserFactory(is_staff=True, realms__data=[], profile__country=None)
         self._test_download(self.attachment, another_schema_user, status.HTTP_403_FORBIDDEN)
 
     def test_attachment_unicef(self):
@@ -268,9 +244,7 @@ class DownloadFMActivityCheckListAttachmentTestCase(DownloadAttachmentsBaseTestC
     def setUp(self):
         super().setUp()
         self.tpm_organization = TPMPartnerFactory()
-        self.tpm_staff = TPMUserFactory(tpm_partner=self.tpm_organization, is_staff=False,
-                                        profile__countries_available=[connection.tenant],
-                                        profile__country=connection.tenant)
+        self.tpm_staff = TPMUserFactory(tpm_partner=self.tpm_organization, is_staff=False)
         self.activity = MonitoringActivityFactory(
             tpm_partner=self.tpm_organization,
             monitor_type=MonitoringActivity.MONITOR_TYPE_CHOICES.tpm,
@@ -284,7 +258,7 @@ class DownloadFMActivityCheckListAttachmentTestCase(DownloadAttachmentsBaseTestC
         self.attachment.save()
 
     def test_attachment_user_not_in_schema(self):
-        another_schema_user = UserFactory(is_staff=True, profile__countries_available=[], profile__country=None)
+        another_schema_user = UserFactory(is_staff=True, realms__data=[], profile__country=None)
         self._test_download(self.attachment, another_schema_user, status.HTTP_403_FORBIDDEN)
 
     def test_attachment_unicef(self):
@@ -307,15 +281,13 @@ class DownloadPSEAAssessmentAttachmentTestCase(DownloadAttachmentsBaseTestCase):
     def setUp(self):
         super().setUp()
         self.auditor_firm = AuditPartnerFactory()
-        self.auditor = AuditorUserFactory(partner_firm=self.auditor_firm, is_staff=False,
-                                          profile__countries_available=[connection.tenant],
-                                          profile__country=connection.tenant)
+        self.auditor = AuditorUserFactory(partner_firm=self.auditor_firm, is_staff=False)
         self.assessment = AssessmentFactory()
         self.attachment.content_object = self.assessment
         self.attachment.save()
 
     def test_attachment_user_not_in_schema(self):
-        another_schema_user = UserFactory(is_staff=True, profile__countries_available=[], profile__country=None)
+        another_schema_user = UserFactory(is_staff=True, realms__data=[], profile__country=None)
         self._test_download(self.attachment, another_schema_user, status.HTTP_403_FORBIDDEN)
 
     def test_attachment_unicef(self):
@@ -323,10 +295,7 @@ class DownloadPSEAAssessmentAttachmentTestCase(DownloadAttachmentsBaseTestCase):
 
     def test_attachment_external_accessor(self):
         external_user = UserFactory(
-            is_staff=False,
-            profile__countries_available=[connection.tenant],
-            profile__country=connection.tenant,
-            groups__data=[],
+            is_staff=False, realms__data=[]
         )
         AssessorFactory(
             assessment=self.assessment,
@@ -351,7 +320,7 @@ class DownloadPSEAAssessmentAttachmentTestCase(DownloadAttachmentsBaseTestCase):
             auditor_firm=self.auditor_firm,
             user=None,
         )
-        assessor.auditor_firm_staff.add(self.auditor.purchase_order_auditorstaffmember)
+        assessor.auditor_firm_staff.add(self.auditor)
         self._test_download(self.attachment, self.auditor, status.HTTP_302_FOUND)
 
 
@@ -359,28 +328,21 @@ class DownloadPSEAAnswerAttachmentTestCase(DownloadAttachmentsBaseTestCase):
     def setUp(self):
         super().setUp()
         self.auditor_firm = AuditPartnerFactory()
-        self.auditor = AuditorUserFactory(partner_firm=self.auditor_firm, is_staff=False,
-                                          profile__countries_available=[connection.tenant],
-                                          profile__country=connection.tenant)
+        self.auditor = AuditorUserFactory(partner_firm=self.auditor_firm, is_staff=False)
         self.assessment = AssessmentFactory()
         self.answer = AnswerFactory(assessment=self.assessment)
         self.attachment.content_object = self.answer
         self.attachment.save()
 
     def test_attachment_user_not_in_schema(self):
-        another_schema_user = UserFactory(is_staff=True, profile__countries_available=[], profile__country=None)
+        another_schema_user = UserFactory(is_staff=True, realms__data=[], profile__country=None)
         self._test_download(self.attachment, another_schema_user, status.HTTP_403_FORBIDDEN)
 
     def test_attachment_unicef(self):
         self._test_download(self.attachment, self.unicef_user, status.HTTP_302_FOUND)
 
     def test_attachment_external_accessor(self):
-        external_user = UserFactory(
-            is_staff=False,
-            profile__countries_available=[connection.tenant],
-            profile__country=connection.tenant,
-            groups__data=[],
-        )
+        external_user = UserFactory(is_staff=False, realms__data=[])
         AssessorFactory(
             assessment=self.assessment,
             assessor_type=Assessor.TYPE_EXTERNAL,
@@ -404,7 +366,7 @@ class DownloadPSEAAnswerAttachmentTestCase(DownloadAttachmentsBaseTestCase):
             auditor_firm=self.auditor_firm,
             user=None,
         )
-        assessor.auditor_firm_staff.add(self.auditor.purchase_order_auditorstaffmember)
+        assessor.auditor_firm_staff.add(self.auditor)
         self._test_download(self.attachment, self.auditor, status.HTTP_302_FOUND)
 
 
@@ -436,15 +398,13 @@ class TPMVisitAttachmentLinkTestCase(AttachmentLinkBaseTestCase):
     def setUp(self):
         super().setUp()
         self.tpm_organization = TPMPartnerFactory()
-        self.tpm_staff = TPMUserFactory(tpm_partner=self.tpm_organization, is_staff=False,
-                                        profile__countries_available=[connection.tenant],
-                                        profile__country=connection.tenant)
+        self.tpm_staff = TPMUserFactory(tpm_partner=self.tpm_organization, is_staff=False)
         self.visit = TPMVisitFactory(tpm_partner=self.tpm_organization)
         self.attachment_link.content_object = self.visit
         self.attachment_link.save()
 
     def test_attachment_user_not_in_schema(self):
-        another_schema_user = UserFactory(is_staff=True, profile__countries_available=[], profile__country=None)
+        another_schema_user = UserFactory(is_staff=True, realms__data=[], profile__country=None)
         self._test_delete(self.attachment_link, another_schema_user, status.HTTP_403_FORBIDDEN)
 
     def test_attachment_unicef(self):
@@ -454,6 +414,5 @@ class TPMVisitAttachmentLinkTestCase(AttachmentLinkBaseTestCase):
         self._test_delete(self.attachment_link, self.tpm_staff, status.HTTP_204_NO_CONTENT)
 
     def test_attachment_unrelated_staff(self):
-        another_tpm_staff = TPMUserFactory(is_staff=False, profile__countries_available=[connection.tenant],
-                                           profile__country=connection.tenant)
+        another_tpm_staff = TPMUserFactory(is_staff=False)
         self._test_delete(self.attachment_link, another_tpm_staff, status.HTTP_403_FORBIDDEN)

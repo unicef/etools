@@ -428,7 +428,7 @@ class Assessment(TimeStampedModel):
     def get_related_third_party_users(self):
         return get_user_model().objects.filter(
             models.Q(pk=self.assessor.user_id) |
-            models.Q(pk__in=self.assessor.auditor_firm_staff.values_list('user_id', flat=True))
+            models.Q(pk__in=self.assessor.auditor_firm_staff.values_list('id', flat=True))
         )
 
 

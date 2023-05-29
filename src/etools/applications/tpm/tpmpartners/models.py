@@ -44,7 +44,7 @@ class TPMPartner(BaseFirm):
         )
 
     def get_related_third_party_users(self):
-        return get_user_model().objects.filter(models.Q(pk__in=self.staff_members.values_list('user_id')))
+        return self.staff_members.all()
 
 
 class TPMPartnerStaffMember(BaseStaffMember):
