@@ -250,7 +250,10 @@ class UserRealmCreateSerializer(UserRealmBaseSerializer):
             instance.profile.job_title = job_title
         if phone_number:
             instance.profile.phone_number = phone_number
-        instance.profile.country = connection.tenant
+
+        if not instance.profile.country or \
+                not instance.realms.filter(country=instance.profile.country, is_active=True).exists():
+            instance.profile.country = connection.tenant
 
         if not instance.profile.organization and instance != self.context['request'].user:
             instance.profile.organization_id = organization_id
