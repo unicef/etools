@@ -290,10 +290,7 @@ class Command(BaseCommand):
             self.report_editable_block
         )
 
-        self.add_permissions([self.focal_point, self.auditor], 'edit', [
-            'purchase_order.auditorfirm.staff_members',
-            'purchase_order.auditorstaffmember.*',
-        ] + self.engagement_attachments_block)
+        self.add_permissions([self.focal_point, self.auditor], 'edit', self.engagement_attachments_block)
 
         self.add_permissions(self.focal_point, 'edit', [
             'purchase_order.purchaseorder.contract_end_date',
