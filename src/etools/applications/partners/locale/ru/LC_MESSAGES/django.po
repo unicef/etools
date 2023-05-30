@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-05-18 09:35+0000\n"
+"POT-Creation-Date: 2023-05-30 08:57+0000\n"
 "Language: ru\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -1111,6 +1111,9 @@ msgstr "Техническое руководство"
 msgid "Cancel Justification"
 msgstr "Отменить обоснование"
 
+msgid "Attachments"
+msgstr "Вложения"
+
 msgid "Metadata"
 msgstr "Метаданные"
 
@@ -1558,9 +1561,6 @@ msgstr "Тип вложения"
 msgid "N/A"
 msgstr "н/д"
 
-msgid "Attachments"
-msgstr "Вложения"
-
 msgid "CSO Contribution"
 msgstr "Вклад ОГО"
 
@@ -1611,6 +1611,9 @@ msgid ""
 msgstr ""
 "Вложение не может быть изменено в статусах «Завершено», «Закрыто» или "
 "«Прервано»."
+
+msgid "Unable to find corresponding file type."
+msgstr ""
 
 msgid "An Output cannot be updated for a partner that is blocked in Vision"
 msgstr ""
@@ -1872,11 +1875,11 @@ msgstr "Уполномоченный сотрудник ЮНИСЕФ"
 msgid "Date Uploaded"
 msgstr "Дата загрузки"
 
-msgid "Document"
-msgstr "Документ"
-
 msgid "Invalid"
 msgstr "Неверно"
+
+msgid "Document"
+msgstr "Документ"
 
 msgid ""
 "Agreement cannot transition to signed until the start date is less than or "

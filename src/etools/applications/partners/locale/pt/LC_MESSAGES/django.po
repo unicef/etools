@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-05-18 09:35+0000\n"
+"POT-Creation-Date: 2023-05-30 08:57+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1128,6 +1128,9 @@ msgstr "Orientação técnica"
 msgid "Cancel Justification"
 msgstr "Cancelar Justificativa"
 
+msgid "Attachments"
+msgstr "Anexos"
+
 msgid "Metadata"
 msgstr "Metadados"
 
@@ -1581,9 +1584,6 @@ msgstr "Tipo de anexo"
 msgid "N/A"
 msgstr "N/A"
 
-msgid "Attachments"
-msgstr "Anexos"
-
 msgid "CSO Contribution"
 msgstr "Contribuição da OSC (Organização da Sociedade Civil)"
 
@@ -1634,6 +1634,9 @@ msgid ""
 msgstr ""
 "Um anexo não pode ser alterado nos status \"Finalizado, Fechado ou Encerrado"
 "\""
+
+msgid "Unable to find corresponding file type."
+msgstr ""
 
 msgid "An Output cannot be updated for a partner that is blocked in Vision"
 msgstr ""
@@ -1897,11 +1900,11 @@ msgstr "Oficial autorizado do UNICEF"
 msgid "Date Uploaded"
 msgstr "Data de upload"
 
-msgid "Document"
-msgstr "Documento"
-
 msgid "Invalid"
 msgstr "Inválido"
+
+msgid "Document"
+msgstr "Documento"
 
 msgid ""
 "Agreement cannot transition to signed until the start date is less than or "
