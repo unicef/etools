@@ -1009,7 +1009,9 @@ class InterventionXLSRenderer:
             worksheet.append([
                 _('EEPM.1.%d') % idx,
                 item.name,
-                '', '', '',
+                item.unit,
+                item.no_units,
+                item.unit_price,
                 currency_format(item.cso_cash),
                 currency_format(item.unicef_cash),
                 currency_format(item.unicef_cash + item.cso_cash),
@@ -1034,7 +1036,9 @@ class InterventionXLSRenderer:
             worksheet.append([
                 _('EEPM.2.%d') % idx,
                 item.name,
-                '', '', '',
+                item.unit,
+                item.no_units,
+                item.unit_price,
                 currency_format(item.cso_cash),
                 currency_format(item.unicef_cash),
                 currency_format(item.unicef_cash + item.cso_cash),
@@ -1059,7 +1063,9 @@ class InterventionXLSRenderer:
             worksheet.append([
                 _('EEPM.3.%d') % idx,
                 item.name,
-                '', '', '',
+                item.unit,
+                item.no_units,
+                item.unit_price,
                 currency_format(item.cso_cash),
                 currency_format(item.unicef_cash),
                 currency_format(item.unicef_cash + item.cso_cash),
