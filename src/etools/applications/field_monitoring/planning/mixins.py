@@ -37,3 +37,13 @@ class ProtectUnknownTransitionsMeta(type):
             )(new_transition)
 
         return super().__new__(cls, name, bases, new_attrs, **kwargs)
+
+
+class EmptyQuerysetForExternal:
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        if not self.request.user.is_unicef_user():
+            return queryset.none()
+
+        return queryset

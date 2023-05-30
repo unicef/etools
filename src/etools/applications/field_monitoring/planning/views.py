@@ -40,6 +40,7 @@ from etools.applications.field_monitoring.planning.filters import (
     UserTPMPartnerFilter,
     UserTypeFilter,
 )
+from etools.applications.field_monitoring.planning.mixins import EmptyQuerysetForExternal
 from etools.applications.field_monitoring.planning.models import (
     MonitoringActivity,
     MonitoringActivityActionPoint,
@@ -172,13 +173,13 @@ class MonitoringActivitiesViewSet(
     def get_queryset(self):
         queryset = super().get_queryset()
 
-        # todo: change to the user.is_unicef
-        if UNICEFUser.name not in [g.name for g in self.request.user.groups.all()]:
+        if not self.request.user.is_unicef_user():
             # we should hide activities before assignment
             # if reject reason available activity should be visible (draft + reject_reason = rejected)
             queryset = queryset.filter(
                 Q(visit_lead=self.request.user) | Q(team_members=self.request.user),
                 Q(status__in=MonitoringActivity.TPM_AVAILABLE_STATUSES) | ~Q(reject_reason=''),
+                tpm_partner__organization=self.request.user.profile.organization,
             )
 
         return queryset
@@ -272,8 +273,7 @@ class FMUsersViewSet(
 
     filter_backends = (SearchFilter, UserTypeFilter, UserTPMPartnerFilter)
     search_fields = ('email',)
-    queryset = get_user_model().objects.all()
-    queryset = queryset.order_by('first_name', 'middle_name', 'last_name')
+    queryset = get_user_model().objects.all().order_by('first_name', 'middle_name', 'last_name')
     serializer_class = FMUserSerializer
 
     def get_queryset(self):
@@ -282,6 +282,9 @@ class FMUsersViewSet(
             "country": connection.tenant,
             "group__name__in": user_groups
         }
+        if not self.request.user.is_unicef_user():
+            qs_context.update({"organization": self.request.user.profile.organization})
+
         context_realms_qs = Realm.objects.filter(**qs_context).select_related('organization__tpmpartner')
 
         qs = super().get_queryset()\
@@ -296,6 +299,7 @@ class FMUsersViewSet(
 
 class CPOutputsViewSet(
     FMBaseViewSet,
+    EmptyQuerysetForExternal,
     mixins.ListModelMixin,
     viewsets.GenericViewSet,
 ):
@@ -307,6 +311,7 @@ class CPOutputsViewSet(
 
 class InterventionsViewSet(
     FMBaseViewSet,
+    EmptyQuerysetForExternal,
     mixins.ListModelMixin,
     viewsets.GenericViewSet,
 ):
@@ -323,6 +328,7 @@ class InterventionsViewSet(
 
 class PartnersViewSet(
     FMBaseViewSet,
+    EmptyQuerysetForExternal,
     mixins.ListModelMixin,
     viewsets.GenericViewSet,
 ):

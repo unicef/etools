@@ -134,7 +134,6 @@ class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
     preferences = models.JSONField(default=preferences_default_dict)
 
     objects = UsersManager()
-    base_objects = UserManager()
 
     class Meta:
         db_table = "auth_user"
