@@ -4,6 +4,7 @@ from unittest import skip
 from django.core import mail
 from django.core.management import call_command
 from django.db import connection
+from django.test.utils import override_settings
 from django.urls import reverse
 
 from rest_framework import status
@@ -95,13 +96,16 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         super().setUp()
         call_command("update_notifications")
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_create_empty_visit(self):
         response = self._test_create(self.fm_user, {}, expected_status=status.HTTP_400_BAD_REQUEST)
         self.assertIn('location', response.data[0])
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_create_minimum_visit(self):
         self._test_create(self.fm_user, {'location': LocationFactory().id})
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_list(self):
         activities = [
             MonitoringActivityFactory(monitor_type='tpm', tpm_partner=None),
@@ -109,15 +113,32 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             MonitoringActivityFactory(monitor_type='staff'),
         ]
 
-        with self.assertNumQueries(10):
+        with self.assertNumQueries(9):
             self._test_list(self.unicef_user, activities, data={'page': 1, 'page_size': 10})
 
+    def test_list_as_tpm_user(self):
+        tpm_partner = TPMPartnerFactory()
+        tpm_staff = TPMUserFactory(tpm_partner=tpm_partner, profile__organization=tpm_partner.organization)
+
+        activities = [
+            MonitoringActivityFactory(
+                monitor_type='tpm', tpm_partner=tpm_partner, status='assigned', team_members=[tpm_staff]),
+            MonitoringActivityFactory(
+                monitor_type='tpm', tpm_partner=TPMPartnerFactory(), status='assigned'),
+            MonitoringActivityFactory(
+                monitor_type='staff', status='assigned')
+        ]
+        with self.assertNumQueries(7):
+            self._test_list(tpm_staff, [activities[0]], data={'page': 1, 'page_size': 10})
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_search_by_ref_number(self):
         activity = MonitoringActivityFactory(monitor_type='staff')
         MonitoringActivityFactory(monitor_type='staff')
 
         self._test_list(self.unicef_user, [activity], data={'search': activity.reference_number})
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_filter_by_visit_lead(self):
         activity1 = MonitoringActivityFactory(monitor_type='staff', visit_lead=UserFactory())
         activity2 = MonitoringActivityFactory(monitor_type='staff', visit_lead=UserFactory())
@@ -128,6 +149,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             data={'visit_lead__in': f'{activity1.visit_lead.pk},{activity2.visit_lead.pk}'}
         )
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_filter_by_partner_hact(self):
         partner = PartnerFactory()
         activity1 = MonitoringActivityFactory(partners=[partner], status='completed')
@@ -164,6 +186,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
 
         self._test_list(self.unicef_user, [activity1], data={'hact_for_partner': partner.id})
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_details(self):
         activity = MonitoringActivityFactory(monitor_type='staff', team_members=[UserFactory(unicef_user=True)])
 
@@ -179,12 +202,14 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             ['cancel', 'mark_details_configured']
         )
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_unlinked_intervention(self):
         intervention = InterventionFactory()
         activity = MonitoringActivityFactory(monitor_type='staff', interventions=[intervention],
                                              partners=[intervention.agreement.partner])
         self._test_update(self.fm_user, activity, data={'partners': []}, expected_status=status.HTTP_400_BAD_REQUEST)
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_add_linked_intervention(self):
         intervention = InterventionFactory()
         link = InterventionResultLinkFactory(intervention=intervention)
@@ -197,6 +222,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         response = self._test_update(self.fm_user, activity, data=data, expected_status=status.HTTP_200_OK)
         self.assertNotEqual(response.data['cp_outputs'], [])
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_update_draft_success(self):
         activity = MonitoringActivityFactory(monitor_type='tpm', tpm_partner=None)
 
@@ -205,6 +231,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         self.assertIsNotNone(response.data['tpm_partner'])
         self.assertNotEqual(response.data['tpm_partner'], {})
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_update_tpm_partner_staff_activity(self):
         activity = MonitoringActivityFactory(monitor_type='staff')
 
@@ -215,6 +242,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             basic_errors=['TPM Partner selected for staff activity'],
         )
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_auto_accept_activity(self):
         activity = MonitoringActivityFactory(monitor_type='staff',
                                              status='pre_' + MonitoringActivity.STATUSES.assigned)
@@ -228,6 +256,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             len(activity.team_members.all()) + 1,
         )
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_dont_auto_accept_activity_if_tpm(self):
         tpm_partner = SimpleTPMPartnerFactory()
         team_members = [
@@ -248,6 +277,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         self.assertEqual(response.data['status'], 'assigned')
         self.assertEqual(len(mail.outbox), len(team_members) + 1)
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_cancel_activity(self):
         activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.review)
 
@@ -256,6 +286,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['status'], 'cancelled')
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_cancel_submitted_activity_fail(self):
         activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.submitted)
 
@@ -264,6 +295,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             expected_status=status.HTTP_400_BAD_REQUEST, basic_errors=['generic_transition_fail']
         )
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_flow(self):
         activity = MonitoringActivityFactory(
             monitor_type='staff', status='draft',
@@ -309,12 +341,14 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
              mail_count=len(PME.as_group().user_set.filter(profile__country=connection.tenant)))
         goto('completed', self.pme)
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_sections_are_displayed_correctly(self):
         activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.draft, sections=[SectionFactory()])
 
         response = self._test_retrieve(self.unicef_user, activity)
         self.assertIsNotNone(response.data['sections'][0]['name'])
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_reject_reason_required(self):
         visit_lead = UserFactory(unicef_user=True)
         activity = MonitoringActivityFactory(monitor_type='staff', status='assigned',
@@ -324,6 +358,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
                           expected_status=status.HTTP_400_BAD_REQUEST)
         self._test_update(visit_lead, activity, {'status': 'draft', 'reject_reason': 'just because'})
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_cancel_reason_required(self):
         activity = MonitoringActivityFactory(monitor_type='staff', status='assigned',
                                              visit_lead=self.unicef_user)
@@ -355,6 +390,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         self._test_update(visit_lead, activity, {'status': 'draft', 'reject_reason': 'just because'})
         self.assertEqual(len(mail.outbox), 1)
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_draft_status_permissions(self):
         activity = MonitoringActivityFactory(monitor_type='staff', status='draft')
 
@@ -368,6 +404,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         self.assertFalse(permissions['edit']['activity_question_set'])
         self.assertFalse(permissions['view']['additional_info'])
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_checklist_status_permissions(self):
         activity = MonitoringActivityFactory(monitor_type='staff', status='checklist')
 
@@ -381,6 +418,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         self.assertFalse(permissions['view']['activity_question_set_review'])
         self.assertTrue(permissions['view']['additional_info'])
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_review_status_permissions(self):
         activity = MonitoringActivityFactory(monitor_type='staff', status='review')
 
@@ -391,6 +429,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         self.assertTrue(permissions['view']['activity_question_set_review'])
         self.assertTrue(permissions['view']['additional_info'])
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_offices_update(self):
         activity = MonitoringActivityFactory(monitor_type='staff', status='draft')
         activity.offices.set([])
@@ -404,6 +443,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         self.assertTrue(permissions['view']['offices'])
         self.assertTrue(permissions['edit']['offices'])
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_offices_not_editable_in_checklist(self):
         activity = MonitoringActivityFactory(monitor_type='staff', status='checklist')
         response = self._test_retrieve(self.fm_user, activity)
@@ -411,6 +451,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         self.assertTrue(permissions['view']['offices'])
         self.assertFalse(permissions['edit']['offices'])
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_filter_by_offices(self):
         MonitoringActivityFactory(monitor_type='staff', status='draft')
         o1 = OfficeFactory()
@@ -422,6 +463,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             data={'offices__in': f'{activity1.offices.first().id},{activity2.offices.first().id}'},
         )
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_filter_by_section(self):
         MonitoringActivityFactory(monitor_type='staff', status='draft')
         section = SectionFactory()
@@ -440,6 +482,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             data={'sections__in': f'{section.id}'},
         )
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_visit_pdf_export(self):
         partner = PartnerFactory()
         activity = MonitoringActivityFactory(partners=[partner])
@@ -473,6 +516,7 @@ class TestActivityAttachmentsView(FMBaseTestCaseMixin, APIViewSetTestCase):
     def set_attachments(self, user, data):
         return self.make_request_to_viewset(user, action='bulk_update', method='put', data=data)
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_bulk_add(self):
         self.assertEqual(self.activity.attachments.count(), 0)
 
@@ -488,6 +532,7 @@ class TestActivityAttachmentsView(FMBaseTestCaseMixin, APIViewSetTestCase):
         self.assertEqual(self.activity.attachments.count(), 2)
         self.assertEqual(AttachmentLink.objects.filter(object_id=self.activity.id).count(), 2)
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_list(self):
         attachments = AttachmentFactory.create_batch(size=2, content_object=self.activity, code='attachments')
         for attachment in attachments:
@@ -497,6 +542,7 @@ class TestActivityAttachmentsView(FMBaseTestCaseMixin, APIViewSetTestCase):
 
         self._test_list(self.unicef_user, attachments)
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_bulk_change_file_type(self):
         attachment = AttachmentFactory(content_object=self.activity, file_type__code='fm_common',
                                        file_type__name='before', code='attachments')
@@ -512,6 +558,7 @@ class TestActivityAttachmentsView(FMBaseTestCaseMixin, APIViewSetTestCase):
         self.assertEqual(self.activity.attachments.count(), 1)
         self.assertEqual(Attachment.objects.get(pk=attachment.pk, object_id=self.activity.id).file_type.name, 'after')
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_bulk_remove(self):
         attachment = AttachmentFactory(content_object=self.activity, file_type__code='fm_common',
                                        file_type__name='before', code='attachments')
@@ -523,6 +570,7 @@ class TestActivityAttachmentsView(FMBaseTestCaseMixin, APIViewSetTestCase):
         self.assertEqual(self.activity.attachments.count(), 0)
         self.assertEqual(AttachmentLink.objects.filter(object_id=self.activity.id).count(), 0)
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_add(self):
         self.assertFalse(self.activity.attachments.exists())
 
@@ -535,6 +583,7 @@ class TestActivityAttachmentsView(FMBaseTestCaseMixin, APIViewSetTestCase):
         )
         self.assertTrue(self.activity.attachments.exists())
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_update(self):
         attachment = AttachmentFactory(code='attachments', content_object=self.activity)
 
@@ -544,6 +593,7 @@ class TestActivityAttachmentsView(FMBaseTestCaseMixin, APIViewSetTestCase):
         )
         self.assertNotEqual(Attachment.objects.get(pk=attachment.pk).file_type_id, attachment.file_type_id)
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_destroy(self):
         attachment = AttachmentFactory(code='attachments', content_object=self.activity)
         self.assertTrue(Attachment.objects.filter(pk=attachment.pk).exists())
@@ -551,11 +601,13 @@ class TestActivityAttachmentsView(FMBaseTestCaseMixin, APIViewSetTestCase):
         self._test_destroy(self.fm_user, attachment)
         self.assertFalse(Attachment.objects.filter(pk=attachment.pk).exists())
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_add_unicef(self):
         response = self.set_attachments(self.unicef_user, [])
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_file_types(self):
         wrong_file_type = AttachmentFileTypeFactory()
         file_type = AttachmentFileTypeFactory(code='fm_common')
@@ -695,17 +747,20 @@ class FMUsersViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase):
         cls.tpm_user = TPMUserFactory(tpm_partner=SimpleTPMPartnerFactory())
         cls.another_tpm_user = TPMUserFactory(tpm_partner=SimpleTPMPartnerFactory())
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_filter_unicef(self):
         response = self._test_list(self.unicef_user, [self.unicef_user, self.fm_user, self.pme],
                                    data={'user_type': 'unicef'})
         self.assertEqual(response.data['results'][0]['user_type'], 'staff')
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_filter_default(self):
         with self.assertNumQueries(3):
             self._test_list(self.unicef_user, [
                 self.unicef_user, self.fm_user, self.pme, self.tpm_user, self.another_tpm_user
             ])
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_filter_tpm(self):
         new_tpm_user = TPMUserFactory(tpm_partner=SimpleTPMPartnerFactory())
         new_tpm_user.profile.organization = None
@@ -718,6 +773,7 @@ class FMUsersViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase):
         self.assertEqual(response.data['results'][1]['user_type'], 'tpm')
         self.assertEqual(response.data['results'][2]['user_type'], 'tpm')
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_filter_tpm_partner(self):
         tpm_partner = self.tpm_user.profile.organization.tpmpartner.id
 
@@ -731,6 +787,7 @@ class FMUsersViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase):
 class CPOutputsViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenantTestCase):
     base_view = 'field_monitoring_planning:cp_outputs'
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_filter_by_partners(self):
         ResultFactory(result_type__name=ResultType.OUTPUT)
         result_link = InterventionResultLinkFactory(cp_output__result_type__name=ResultType.OUTPUT)
@@ -742,20 +799,29 @@ class CPOutputsViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenantT
             }
         )
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_output_name_contains_wbs_code(self):
         result = ResultFactory(result_type__name=ResultType.OUTPUT, wbs='wbs-code')
         response = self._test_list(self.unicef_user, [result])
         self.assertIn('wbs-code', response.data['results'][0]['name'])
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_queries_number(self):
         results = [ResultFactory(result_type__name=ResultType.OUTPUT) for _i in range(9)]
         with self.assertNumQueries(2):
             self._test_list(self.unicef_user, results)
 
+    def test_empty_list_for_tpm_staff(self):
+        ResultFactory(result_type__name=ResultType.OUTPUT)
+        tpm_staff = TPMUserFactory(tpm_partner=TPMPartnerFactory())
+
+        self._test_list(tpm_staff, [])
+
 
 class InterventionsViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenantTestCase):
     base_view = 'field_monitoring_planning:interventions'
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_list(self):
         InterventionFactory(status=Intervention.DRAFT)
         valid_interventions = [
@@ -771,6 +837,7 @@ class InterventionsViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTen
         with self.assertNumQueries(10):  # 3 basic + 7 prefetches from InterventionManager
             self._test_list(self.unicef_user, valid_interventions)
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_filter_by_outputs(self):
         InterventionFactory(status=Intervention.SIGNED)
         result_link = InterventionResultLinkFactory(
@@ -783,6 +850,7 @@ class InterventionsViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTen
             data={'cp_outputs__in': str(result_link.cp_output.id)},
         )
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_filter_by_partners(self):
         InterventionFactory(status=Intervention.SIGNED)
         result_link = InterventionResultLinkFactory(intervention__status=Intervention.SIGNED)
@@ -792,6 +860,7 @@ class InterventionsViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTen
             data={'partners__in': str(result_link.intervention.agreement.partner.id)}
         )
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_linked_data(self):
         result_link = InterventionResultLinkFactory(intervention__status=Intervention.SIGNED)
 
@@ -799,6 +868,12 @@ class InterventionsViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTen
 
         self.assertEqual(response.data['results'][0]['partner'], result_link.intervention.agreement.partner_id)
         self.assertListEqual(response.data['results'][0]['cp_outputs'], [result_link.cp_output_id])
+
+    def test_empty_list_for_tpm_staff(self):
+        InterventionResultLinkFactory(intervention__status=Intervention.SIGNED)
+        tpm_staff = TPMUserFactory(tpm_partner=TPMPartnerFactory())
+
+        self._test_list(tpm_staff, [])
 
 
 class MonitoringActivityActionPointsViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenantTestCase):
@@ -824,6 +899,7 @@ class MonitoringActivityActionPointsViewTestCase(FMBaseTestCaseMixin, APIViewSet
     def get_list_args(self):
         return [self.activity.pk]
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_list(self):
         action_points = MonitoringActivityActionPointFactory.create_batch(size=10, monitoring_activity=self.activity)
         MonitoringActivityActionPointFactory()
@@ -831,6 +907,7 @@ class MonitoringActivityActionPointsViewTestCase(FMBaseTestCaseMixin, APIViewSet
         with self.assertNumQueries(14):  # prefetched 13 queries
             self._test_list(self.unicef_user, action_points)
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_create(self):
         response = self._test_create(
             self.fm_user,
@@ -838,12 +915,15 @@ class MonitoringActivityActionPointsViewTestCase(FMBaseTestCaseMixin, APIViewSet
         )
         self.assertEqual(len(response.data['history']), 1)
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_create_visit_lead(self):
         self._test_create(self.activity.visit_lead, data=self.create_data)
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_create_unicef_user(self):
         self._test_create(self.unicef_user, data={}, expected_status=status.HTTP_403_FORBIDDEN)
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_create_wrong_activity_status(self):
         self.activity = MonitoringActivityFactory(status='draft')
         self._test_create(self.fm_user, data={}, expected_status=status.HTTP_403_FORBIDDEN)
@@ -852,11 +932,22 @@ class MonitoringActivityActionPointsViewTestCase(FMBaseTestCaseMixin, APIViewSet
 class PartnersViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenantTestCase):
     base_view = 'field_monitoring_planning:partners'
 
-    def test_list(self):
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
         PartnerFactory(deleted_flag=True)
         PartnerFactory(organization=OrganizationFactory(name=''))
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_list(self):
+
         valid_partners = [PartnerFactory(organization=OrganizationFactory(name='b')),
                           PartnerFactory(organization=OrganizationFactory(name='a'))]
         valid_partners.reverse()
 
         self._test_list(self.unicef_user, valid_partners)
+
+    def test_empty_list_for_tpm_staff(self):
+        tpm_staff = TPMUserFactory(tpm_partner=TPMPartnerFactory())
+
+        self._test_list(tpm_staff, [])

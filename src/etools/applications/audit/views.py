@@ -352,7 +352,9 @@ class EngagementViewSet(
             # no need to filter queryset
             pass
         elif Auditor.as_group() in user_groups:
-            queryset = queryset.filter(staff_members=self.request.user)
+            queryset = queryset.filter(
+                agreement__auditor_firm__organization=self.request.user.profile.organization,
+                staff_members=self.request.user)
         else:
             queryset = queryset.none()
 
@@ -518,7 +520,7 @@ class AuditorStaffMembersViewSet(
     viewsets.GenericViewSet
 ):
     metadata_class = PermissionBasedMetadata
-    queryset = get_user_model().base_objects.all()
+    queryset = get_user_model().objects.all()
     serializer_class = AuditorStaffMemberRealmSerializer
     permission_classes = BaseAuditViewSet.permission_classes + [
         get_permission_for_targets('purchase_order.auditorfirm.staff_members')
@@ -543,11 +545,13 @@ class AuditorStaffMembersViewSet(
             country=connection.tenant,
             group__name__in=AUDIT_ACTIVE_GROUPS
         )
-        queryset = queryset\
-            .filter(realms__in=context_realms_qs) \
-            .prefetch_related(Prefetch('realms', queryset=context_realms_qs)) \
+        queryset = queryset.filter(
+            realms__organization=self.get_parent_object().organization,
+            realms__country=connection.tenant,
+            realms__group__name__in=AUDIT_ACTIVE_GROUPS) \
             .annotate(has_active_realm=Exists(context_realms_qs.filter(user=OuterRef('pk'), is_active=True)))\
             .distinct()
+
         return queryset
 
     def get_serializer_context(self):
