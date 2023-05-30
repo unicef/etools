@@ -9,7 +9,8 @@ from unicef_locations.tests.factories import LocationFactory
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.core.tests.mixins import URLAssertionMixin
-from etools.applications.partners.models import PartnerType
+from etools.applications.organizations.models import OrganizationType
+from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.publics.models import DSARegion
 from etools.applications.publics.tests.factories import PublicsAirlineCompanyFactory, PublicsDSARegionFactory
@@ -69,7 +70,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
             name='\u0628\u0631\u0646\u0627\u0645\u062c \u062a\u062f\u0631\u064a\u0628 \u0627\u0644\u0645\u062a\u0627\u0628\u0639\u064a\u0646.pdf',  # noqa
             file=factory.django.FileField(filename='travels/lebanon/24800/\u0628\u0631\u0646\u0627\u0645\u062c_\u062a\u062f\u0631\u064a\u0628_\u0627\u0644\u0645\u062a\u0627\u0628\u0639\u064a\u0646.pdf')  # noqa
         )
-        with self.assertNumQueries(16):
+        with self.assertNumQueries(15):
             response = self.forced_auth_req(
                 'get',
                 reverse('t2f:travels:details:index', args=[self.travel.pk]),
@@ -306,7 +307,8 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
             'activities': [{
                 'is_primary_traveler': True,
                 'locations': [location.id, location_2.id],
-                'partner': PartnerFactory(partner_type=PartnerType.GOVERNMENT).id,
+                'partner': PartnerFactory(organization=OrganizationFactory(
+                    organization_type=OrganizationType.GOVERNMENT)).id,
                 'travel_type': TravelType.PROGRAMME_MONITORING,
                 'date': self.travel.start_date,
             }],

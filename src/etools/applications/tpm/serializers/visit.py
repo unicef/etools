@@ -1,6 +1,7 @@
 import itertools
 from copy import copy
 
+from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
@@ -15,7 +16,8 @@ from unicef_restlib.serializers import (
 
 from etools.applications.action_points.serializers import ActionPointBaseSerializer, HistorySerializer
 from etools.applications.activities.serializers import ActivitySerializer
-from etools.applications.partners.models import InterventionResultLink, PartnerType
+from etools.applications.organizations.models import OrganizationType
+from etools.applications.partners.models import InterventionResultLink
 from etools.applications.partners.serializers.interventions_v2 import (
     BaseInterventionListSerializer,
     InterventionCreateUpdateSerializer,
@@ -26,7 +28,6 @@ from etools.applications.reports.serializers.v1 import ResultSerializer, Section
 from etools.applications.reports.serializers.v2 import OfficeSerializer
 from etools.applications.tpm.models import TPMActionPoint, TPMActivity, TPMVisit, TPMVisitReportRejectComment
 from etools.applications.tpm.serializers.partner import TPMPartnerLightSerializer, TPMPartnerStaffMemberSerializer
-from etools.applications.tpm.tpmpartners.models import TPMPartnerStaffMember
 from etools.applications.users.serializers import MinimalUserSerializer
 
 
@@ -165,7 +166,7 @@ class TPMActivitySerializer(PermissionsBasedSerializerMixin, WritableNestedSeria
         partner = validated_data.get('partner', instance.partner if instance else None)
         intervention = validated_data.get('intervention', instance.intervention if instance else None)
 
-        if partner and partner.partner_type not in [PartnerType.GOVERNMENT, PartnerType.BILATERAL_MULTILATERAL] \
+        if partner and partner.partner_type not in [OrganizationType.GOVERNMENT, OrganizationType.BILATERAL_MULTILATERAL] \
                 and not intervention:
             raise ValidationError({'intervention': _('This field is required.')})
 
@@ -280,9 +281,9 @@ class TPMVisitSerializer(WritableNestedParentSerializerMixin,
 
         if 'tpm_partner_focal_points' in validated_data:
             tpm_partner_focal_points = set(map(lambda x: x.id, validated_data['tpm_partner_focal_points']))
-            diff = tpm_partner_focal_points - set(TPMPartnerStaffMember.objects.filter(
+            diff = tpm_partner_focal_points - set(get_user_model().objects.filter(
                 id__in=tpm_partner_focal_points,
-                tpm_partner_id=tpm_partner.id
+                profile__organization__tpmpartner=tpm_partner.id
             ).values_list('id', flat=True))
 
             if diff:

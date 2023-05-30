@@ -5,7 +5,7 @@ defaults = {
     "content": """
     Dear Colleague,
 
-    PD {{reference_number}} is ready to be signed. Please download it at the following link:
+    PD {{reference_number}} is ready to be signed. Please download it at the following link and share it with the relevant authorized officers for signature:
 
     {{pd_link}}
 
@@ -16,7 +16,7 @@ defaults = {
     {% block content %}
     Dear Colleague,<br /><br />
 
-    PD {{reference_number}} is ready to be signed. Please download it at the following link:
+    PD {{reference_number}} is ready to be signed. Please download it at the following link and share it with the relevant authorized officers for signature:<br />
 
     {{pd_link}}<br />
 

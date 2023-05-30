@@ -21,7 +21,7 @@ from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.environment.tests.factories import TenantSwitchFactory
 from etools.applications.funds.tests.factories import FundsReservationItemFactory
 from etools.applications.partners.models import Intervention, InterventionResultLink
-from etools.applications.partners.permissions import InterventionPermissions
+from etools.applications.partners.permissions import InterventionPermissions, PARTNERSHIP_MANAGER_GROUP, UNICEF_USER
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
     InterventionAmendmentFactory,
@@ -40,14 +40,20 @@ from etools.applications.reports.tests.factories import (
     ResultFactory,
     SectionFactory,
 )
-from etools.applications.users.tests.factories import GroupFactory, UserFactory
+from etools.applications.users.tests.factories import CountryFactory, GroupFactory, RealmFactory, UserFactory
 from etools.libraries.djangolib.utils import get_all_field_names
 
 
 def _add_user_to_partnership_manager_group(user):
-    """Utility function to add a user to the 'Partnership Manager' group which may or may not exist"""
-    group = GroupFactory(name='Partnership Manager')
-    user.groups.add(group)
+    """
+    Utility function to add a user to the 'Partnership Manager' group which may or may not exist
+    """
+    RealmFactory(
+        user=user,
+        country=CountryFactory(),
+        organization=user.profile.organization,
+        group=GroupFactory(name=PARTNERSHIP_MANAGER_GROUP)
+    )
 
 
 class URLsTestCase(URLAssertionMixin, SimpleTestCase):
@@ -611,9 +617,9 @@ class TestInterventionsAPI(BaseTenantTestCase):
         self.assertCountEqual(self.ALL_FIELDS, response['permissions']['edit'].keys())
         edit_permissions = response['permissions']['edit']
         required_permissions = response['permissions']['required']
-
+        # TODO REALMS: remove perm.startswith('old')
         self.assertCountEqual(self.EDITABLE_FIELDS['draft'],
-                              [perm for perm in edit_permissions if edit_permissions[perm]])
+                              [perm for perm in edit_permissions if not perm.startswith('old') and edit_permissions[perm]])
         self.assertCountEqual(self.REQUIRED_FIELDS['draft'],
                               [perm for perm in required_permissions if required_permissions[perm]])
 
@@ -1576,8 +1582,9 @@ class TestAPInterventionIndicatorsUpdateView(BaseTenantTestCase):
 class TestInterventionAttachmentDeleteView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.partnership_manager = UserFactory(is_staff=True)
-        cls.partnership_manager.groups.add(GroupFactory())
+        cls.partnership_manager = UserFactory(
+            is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]
+        )
         cls.intervention = InterventionFactory(status=Intervention.DRAFT)
         cls.attachment = AttachmentFactory(
             content_object=cls.intervention,

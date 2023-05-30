@@ -5,6 +5,7 @@ from django.utils import timezone
 
 from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.amendment_utils import INTERVENTION_AMENDMENT_RELATED_FIELDS, MergeError
 from etools.applications.partners.models import (
     Intervention,
@@ -22,7 +23,6 @@ from etools.applications.partners.tests.factories import (
     InterventionRiskFactory,
     InterventionSupplyItemFactory,
     PartnerFactory,
-    PartnerStaffFactory,
 )
 from etools.applications.reports.models import InterventionActivity, ResultType
 from etools.applications.reports.tests.factories import (
@@ -41,10 +41,10 @@ class AmendmentTestCase(BaseTenantTestCase):
     def setUp(self):
         super().setUp()
         today = timezone.now().date()
-        self.unicef_staff = UserFactory(is_staff=True, groups__data=[UNICEF_USER])
-        self.pme = UserFactory(is_staff=True, groups__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP])
+        self.unicef_staff = UserFactory(is_staff=True)
+        self.pme = UserFactory(is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP])
 
-        self.partner1 = PartnerFactory(name='Partner 2')
+        self.partner1 = PartnerFactory(organization=OrganizationFactory(name='Partner 2'))
         self.active_agreement = AgreementFactory(
             partner=self.partner1,
             status='active',
@@ -63,7 +63,7 @@ class AmendmentTestCase(BaseTenantTestCase):
             signed_by_unicef_date=today - datetime.timedelta(days=1),
             signed_by_partner_date=today - datetime.timedelta(days=1),
             unicef_signatory=self.unicef_staff,
-            partner_authorized_officer_signatory=self.partner1.staff_members.all().first(),
+            partner_authorized_officer_signatory=self.partner1.active_staff_members.all().first(),
             cash_transfer_modalities=[Intervention.CASH_TRANSFER_DIRECT],
         )
         ReportingRequirementFactory(intervention=self.active_intervention)
@@ -319,8 +319,11 @@ class AmendmentTestCase(BaseTenantTestCase):
         today = timezone.now().date()
         amended_intervention.signed_by_unicef_date = today
         amended_intervention.signed_by_partner_date = today
-        amended_intervention.unicef_signatory = UserFactory(is_staff=True, groups__data=[UNICEF_USER])
-        amended_intervention.partner_authorized_officer_signatory = PartnerStaffFactory(partner=self.partner1)
+        amended_intervention.unicef_signatory = UserFactory(is_staff=True)
+        amended_intervention.partner_authorized_officer_signatory = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=self.active_intervention.agreement.partner.organization
+        )
         new_signed_document = AttachmentFactory(
             code='partners_intervention_signed_pd',
             content_object=amendment.amended_intervention,
@@ -760,6 +763,8 @@ class AmendmentTestCase(BaseTenantTestCase):
                 'monitoring_activities',
                 'country_programme',
                 'unicef_signatory',
+                'old_partner_authorized_officer_signatory',  # TODO REALMS clean up
+                'old_partner_focal_points',  # TODO REALMS clean up
                 'partner_authorized_officer_signatory',
                 'prc_review_attachment',
                 'signed_pd_attachment',
@@ -815,9 +820,18 @@ class AmendmentTestCase(BaseTenantTestCase):
         self.assertTrue(completed_focal_points.filter(pk=focal_point_to_remove.pk).exists())
 
     def test_amendment_partner_focal_points_synchronization(self):
-        focal_point_to_add = PartnerStaffFactory(partner=self.active_intervention.agreement.partner)
-        focal_point_to_keep = PartnerStaffFactory(partner=self.active_intervention.agreement.partner)
-        focal_point_to_remove = PartnerStaffFactory(partner=self.active_intervention.agreement.partner)
+        focal_point_to_add = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=self.active_intervention.agreement.partner.organization
+        )
+        focal_point_to_keep = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=self.active_intervention.agreement.partner.organization
+        )
+        focal_point_to_remove = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=self.active_intervention.agreement.partner.organization
+        )
         self.active_intervention.partner_focal_points.add(focal_point_to_keep, focal_point_to_remove)
         focal_points_initial_count = self.active_intervention.partner_focal_points.count()
 

@@ -4,6 +4,7 @@ import operator
 
 from django.db import transaction
 from django.db.models import Q
+from django.utils.translation import gettext as _
 
 from etools_validator.mixins import ValidatorViewMixin
 from rest_framework import status
@@ -54,12 +55,12 @@ class AgreementListAPIView(QueryStringFilterMixin, ExportModelMixin, ValidatorVi
         ('agreement_type', 'agreement_type__in'),
         ('cpStructures', 'country_programme__in'),
         ('status', 'status__in'),
-        ('partner_name', 'partner__name__in'),
+        ('partner_name', 'partner__organization__name__in'),
         ('start', 'start__gt'),
         ('end', 'end__lte'),
         ('special_conditions_pca', 'special_conditions_pca'),
     ]
-    search_terms = ('partner__name__icontains', 'agreement_number__icontains')
+    search_terms = ('partner__organization__name__icontains', 'agreement_number__icontains')
 
     SERIALIZER_MAP = {
         'amendments': AgreementAmendmentCreateUpdateSerializer
@@ -260,7 +261,7 @@ class AgreementAmendmentDeleteView(DestroyAPIView):
         except AgreementAmendment.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
         if amendment.signed_amendment or amendment.signed_date:
-            raise ValidationError("Cannot delete a signed amendment")
+            raise ValidationError(_("Cannot delete a signed amendment"))
         else:
             amendment.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
@@ -277,7 +278,7 @@ class AgreementDeleteView(DestroyAPIView):
             return Response(status=status.HTTP_404_NOT_FOUND)
         if agreement.status != Agreement.DRAFT or \
                 agreement.interventions.count():
-            raise ValidationError("Cannot delete an agreement that is not Draft or has PDs/SSFAs associated with it")
+            raise ValidationError(_("Cannot delete an agreement that is not Draft or has PDs/SSFAs associated with it"))
         else:
             agreement.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)

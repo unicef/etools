@@ -1,7 +1,7 @@
 from copy import copy
 from tempfile import NamedTemporaryFile
 
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from openpyxl import Workbook
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
@@ -979,9 +979,9 @@ class InterventionXLSRenderer:
         worksheet.append([
             _('EEPM'), _('Effective and efficient programme management'),
             '', '', '',
-            currency_format(self.intervention.management_budgets.total),
             currency_format(self.intervention.management_budgets.partner_total),
             currency_format(self.intervention.management_budgets.unicef_total),
+            currency_format(self.intervention.management_budgets.total),
         ])
         self.apply_styles_to_cells(
             worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns, [self.fill_blue_pale_light]
@@ -1005,9 +1005,9 @@ class InterventionXLSRenderer:
             start_row=worksheet.max_row, start_column=2, end_row=worksheet.max_row, end_column=5
         )
 
-        for i, item in enumerate(self.intervention.management_budgets.items.filter(kind='in_country')):
+        for idx, item in enumerate(self.intervention.management_budgets.items.filter(kind='in_country'), start=1):
             worksheet.append([
-                _('EEPM.1.{%d}') % i + 1,
+                _('EEPM.1.%d') % idx,
                 item.name,
                 '', '', '',
                 currency_format(item.cso_cash),
@@ -1030,9 +1030,9 @@ class InterventionXLSRenderer:
             start_row=worksheet.max_row, start_column=2, end_row=worksheet.max_row, end_column=5
         )
 
-        for i, item in enumerate(self.intervention.management_budgets.items.filter(kind='operational')):
+        for idx, item in enumerate(self.intervention.management_budgets.items.filter(kind='operational'), start=1):
             worksheet.append([
-                _('EEPM.2.{%d}') % i + 1,
+                _('EEPM.2.%d') % idx,
                 item.name,
                 '', '', '',
                 currency_format(item.cso_cash),
@@ -1055,9 +1055,9 @@ class InterventionXLSRenderer:
             start_row=worksheet.max_row, start_column=2, end_row=worksheet.max_row, end_column=5
         )
 
-        for i, item in enumerate(self.intervention.management_budgets.items.filter(kind='planning')):
+        for idx, item in enumerate(self.intervention.management_budgets.items.filter(kind='planning'), start=1):
             worksheet.append([
-                _('EEPM.3.{%d}') % i + 1,
+                _('EEPM.3.%d') % idx,
                 item.name,
                 '', '', '',
                 currency_format(item.cso_cash),
@@ -1071,10 +1071,10 @@ class InterventionXLSRenderer:
 
         worksheet.append([
             _('Total Cost for all outputs'), '', '', '', '',
-            currency_format(self.intervention.planned_budget.partner_contribution_local +
-                            self.intervention.planned_budget.total_unicef_cash_local_wo_hq),
             currency_format(self.intervention.planned_budget.partner_contribution_local),
             currency_format(self.intervention.planned_budget.total_unicef_cash_local_wo_hq),
+            currency_format(self.intervention.planned_budget.partner_contribution_local +
+                            self.intervention.planned_budget.total_unicef_cash_local_wo_hq),
         ])
         self.apply_styles_to_cells(
             worksheet,

@@ -7,6 +7,7 @@ from datetime import timedelta
 from decimal import Decimal
 from pprint import pformat
 from unittest import mock
+from unittest.mock import patch
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -22,8 +23,8 @@ import etools.applications.partners.tasks
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
+from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.models import Agreement, Intervention
-from etools.applications.partners.permissions import UNICEF_USER
 from etools.applications.partners.synchronizers import PDVisionUploader
 from etools.applications.partners.tasks import transfer_active_pds_to_new_cp
 from etools.applications.partners.tests.factories import (
@@ -42,7 +43,8 @@ from etools.applications.reports.tests.factories import (
     ReportingRequirementFactory,
     SectionFactory,
 )
-from etools.applications.users.tests.factories import CountryFactory, UserFactory
+from etools.applications.users.tasks import sync_realms_to_prp
+from etools.applications.users.tests.factories import CountryFactory, RealmFactory, UserFactory
 
 
 def _build_country(name):
@@ -678,9 +680,13 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
     @mock.patch("etools.applications.partners.tasks.send_pd_to_vision.delay")
     def test_activate_intervention_with_task(self, send_to_vision_mock, _mock_db_connection, _mock_logger):
         today = datetime.date.today()
-        unicef_staff = UserFactory(is_staff=True, groups__data=[UNICEF_USER])
+        unicef_staff = UserFactory(is_staff=True)
 
-        partner = PartnerFactory(name='Partner 2')
+        partner = PartnerFactory(organization=OrganizationFactory(name='Partner 2'))
+        partner_user = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=partner.organization
+        )
         active_agreement = AgreementFactory(
             partner=partner,
             status=Agreement.SIGNED,
@@ -701,11 +707,11 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
             signed_by_unicef_date=today - datetime.timedelta(days=1),
             signed_by_partner_date=today - datetime.timedelta(days=1),
             unicef_signatory=unicef_staff,
-            partner_authorized_officer_signatory=partner.staff_members.all().first(),
+            partner_authorized_officer_signatory=partner.active_staff_members.all().first(),
             cash_transfer_modalities=[Intervention.CASH_TRANSFER_DIRECT],
         )
         active_intervention.flat_locations.add(LocationFactory())
-        active_intervention.partner_focal_points.add(partner.staff_members.all().first())
+        active_intervention.partner_focal_points.add(partner_user)
         active_intervention.unicef_focal_points.add(unicef_staff)
         active_intervention.offices.add(OfficeFactory())
         active_intervention.sections.add(SectionFactory())
@@ -1193,7 +1199,8 @@ class ActivePDTransferToNewCPTestCase(BaseTenantTestCase):
         transfer_active_pds_to_new_cp()
 
         pd.refresh_from_db()
-        self.assertListEqual(list(pd.country_programmes.all()), [self.old_cp, self.active_cp])
+        self.assertListEqual(list(pd.country_programmes.all().order_by('id')),
+                             sorted([self.old_cp, self.active_cp], key=lambda x: x.pk))
 
     def test_skip_transfer_if_one_programme_already_active(self):
         second_active_cp = CountryProgrammeFactory(
@@ -1272,3 +1279,108 @@ class SendPDToVisionTestCase(BaseTenantTestCase):
         str_data = synchronizer.render()
         self.assertIsInstance(str_data, bytes)
         self.assertGreater(len(str_data), 100)
+
+
+class TestRealmsPRPExport(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        UserFactory(email='prp@example.com', realms__data=[])
+
+    @override_settings(UNICEF_USER_EMAIL="@another_example.com",
+                       PRP_API_ENDPOINT='http://example.com/api/',
+                       PRP_API_USER='prp@example.com')
+    @patch('etools.applications.users.signals.sync_realms_to_prp.apply_async')
+    @patch(
+        'etools.applications.partners.prp_api.requests.post',
+        return_value=namedtuple('Response', ['status_code', 'text'])(200, '{}')
+    )
+    def test_realms_sync_on_create(self, requests_post_mock, sync_mock):
+        sync_mock.side_effect = lambda *args, **_kwargs: sync_realms_to_prp(*args[0])
+
+        user = UserFactory(realms__data=[])
+        self.assertFalse(user.is_unicef_user())
+        with self.captureOnCommitCallbacks(execute=True) as commit_callbacks:
+            realm = RealmFactory(user=user)
+        sync_mock.assert_called_with(
+            (user.pk, realm.modified.timestamp()),
+            eta=realm.modified + datetime.timedelta(minutes=5),
+        )
+        requests_post_mock.assert_called()
+        self.assertEqual(len(commit_callbacks), 1)
+
+    @override_settings(UNICEF_USER_EMAIL="@another_example.com",
+                       PRP_API_ENDPOINT='http://example.com/api/',
+                       PRP_API_USER='prp@example.com')
+    @patch('etools.applications.users.signals.sync_realms_to_prp.apply_async')
+    @patch(
+        'etools.applications.partners.prp_api.requests.post',
+        return_value=namedtuple('Response', ['status_code', 'text'])(200, '{}')
+    )
+    def test_realms_call_once_on_create(self, requests_post_mock, sync_mock):
+        sync_mock.side_effect = lambda *args, **_kwargs: sync_realms_to_prp(*args[0])
+
+        user = UserFactory(realms__data=[])
+        self.assertFalse(user.is_unicef_user())
+        with self.captureOnCommitCallbacks(execute=False) as commit_callbacks:
+            RealmFactory(user=user)
+            RealmFactory(user=user)
+
+        for callback in commit_callbacks:
+            callback()
+
+        self.assertEqual(sync_mock.call_count, 2)
+        requests_post_mock.assert_called_once()
+
+    @override_settings(UNICEF_USER_EMAIL="@another_example.com",
+                       PRP_API_ENDPOINT='http://example.com/api/',
+                       PRP_API_USER='prp@example.com')
+    @patch('etools.applications.users.signals.sync_realms_to_prp.apply_async')
+    @patch(
+        'etools.applications.partners.prp_api.requests.post',
+        return_value=namedtuple('Response', ['status_code', 'text'])(200, '{}')
+    )
+    def test_realms_sync_on_delete(self, requests_post_mock, sync_mock):
+        sync_mock.side_effect = lambda *args, **_kwargs: sync_realms_to_prp(*args[0])
+
+        user = UserFactory(realms__data=[])
+        self.assertFalse(user.is_unicef_user())
+        realm = RealmFactory(user=user)
+        with self.captureOnCommitCallbacks(execute=True) as commit_callbacks:
+            realm.delete()
+        sync_mock.assert_called()
+        requests_post_mock.assert_called()
+        self.assertEqual(len(commit_callbacks), 1)
+
+    @override_settings(UNICEF_USER_EMAIL="@another_example.com",
+                       PRP_API_ENDPOINT='http://example.com/api/',
+                       PRP_API_USER='prp@example.com')
+    @patch('etools.applications.users.signals.sync_realms_to_prp.apply_async')
+    @patch(
+        'etools.applications.partners.prp_api.requests.post',
+        return_value=namedtuple('Response', ['status_code', 'text'])(200, '{}')
+    )
+    def test_realms_sync_on_change(self, requests_post_mock, sync_mock):
+        sync_mock.side_effect = lambda *args, **_kwargs: sync_realms_to_prp(*args[0])
+
+        user = UserFactory(realms__data=[])
+        self.assertFalse(user.is_unicef_user())
+        realm = RealmFactory(user=user)
+        with self.captureOnCommitCallbacks(execute=True) as commit_callbacks:
+            realm.is_active = False
+            realm.save()
+        sync_mock.assert_called_with(
+            (user.pk, realm.modified.timestamp()),
+            eta=realm.modified + datetime.timedelta(minutes=5),
+        )
+        requests_post_mock.assert_called()
+        self.assertEqual(len(commit_callbacks), 1)
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    @patch('etools.applications.users.signals.sync_realms_to_prp.apply_async')
+    def test_realms_sync_unicef(self, sync_mock):
+        user = UserFactory()
+        self.assertTrue(user.is_unicef_user())
+        with self.captureOnCommitCallbacks(execute=True) as commit_callbacks:
+            RealmFactory(user=user)
+        sync_mock.assert_not_called()
+        self.assertEqual(len(commit_callbacks), 0)

@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
@@ -49,7 +50,7 @@ class TestUserProfileModel(BaseTenantTestCase):
 
     def test_email(self):
         p = models.UserProfile(user=self.user)
-        self.assertEqual(p.email(), "user@example.com")
+        self.assertEqual(p.email(), f"user{p.user.id}{settings.UNICEF_USER_EMAIL}")
 
     def test_first_name(self):
         p = models.UserProfile(user=self.user)
@@ -107,13 +108,13 @@ class TestUserModel(BaseTenantTestCase):
     def test_conversion_to_string(self):
         """Exercise converting instances to string."""
         user = UserFactory(first_name='Pel\xe9', last_name='Arantes do Nascimento')
-        self.assertEqual(str(user), 'Pel\xe9 Arantes do Nascimento')
+        self.assertEqual(str(user), 'Pel\xe9 Arantes do Nascimento (UNICEF)')
 
     def test_is_unicef_user(self):
         user = UserFactory(email='macioce@unicef.org')
         self.assertTrue(user.is_unicef_user())
 
-        user = UserFactory(email='unicef@macioce.org')
+        user = UserFactory(email='unicef@macioce.org', realms__data=[])
         self.assertFalse(user.is_unicef_user())
 
     def test_save(self):

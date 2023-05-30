@@ -1,6 +1,6 @@
 from django.utils import timezone
 from django.utils.decorators import method_decorator
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext as _
 from django.views.decorators.cache import cache_control, cache_page
 
 from django_filters.rest_framework import DjangoFilterBackend

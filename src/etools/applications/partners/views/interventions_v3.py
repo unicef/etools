@@ -5,7 +5,7 @@ from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction, utils
 from django.http import HttpResponse
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from easy_pdf.rendering import render_to_pdf_response
 from rest_framework import status
@@ -92,16 +92,18 @@ from etools.libraries.djangolib.utils import get_current_site
 class PMPInterventionMixin(PMPBaseViewMixin):
     def get_partner_staff_qs(self, qs):
         return qs.filter(
-            agreement__partner__in=self.partners(),
+            agreement__partner=self.current_partner(),
             date_sent_to_partner__isnull=False,
         )
 
     def get_queryset(self, format=None):
         qs = super().get_queryset()
+        if self.request.user.is_unicef_user():
+            return qs
         # if partner, limit to interventions that they are associated with
         if self.is_partner_staff():
-            qs = self.get_partner_staff_qs(qs)
-        return qs
+            return self.get_partner_staff_qs(qs)
+        return qs.none()
 
 
 class DetailedInterventionResponseMixin:
@@ -132,7 +134,7 @@ class PMPInterventionListCreateView(PMPInterventionMixin, InterventionListAPIVie
     permission_classes = (IsAuthenticated, PMPInterventionPermission)
     search_terms = (
         'title__icontains',
-        'agreement__partner__name__icontains',
+        'agreement__partner__organization__name__icontains',
         'number__icontains',
         'cfei_number__icontains',
     )
@@ -410,7 +412,7 @@ class PMPInterventionSupplyItemMixin(
 
     def get_partner_staff_qs(self, qs):
         return qs.filter(
-            intervention__agreement__partner__in=self.partners(),
+            intervention__agreement__partner=self.current_partner(),
             intervention__date_sent_to_partner__isnull=False,
         ).distinct()
 

@@ -1,37 +1,47 @@
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext as _
 
 from rest_framework import serializers
 from unicef_restlib.serializers import WritableNestedSerializerMixin
 
-from etools.applications.firms.serializers import BaseStaffMemberSerializer
+from etools.applications.firms.serializers import UserSerializer
 from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin
-from etools.applications.tpm.models import TPMPartnerStaffMember
 from etools.applications.tpm.tpmpartners.models import TPMPartner
 
 
-class TPMPartnerStaffMemberSerializer(PermissionsBasedSerializerMixin, BaseStaffMemberSerializer):
-    class Meta(BaseStaffMemberSerializer.Meta):
-        model = TPMPartnerStaffMember
-        fields = BaseStaffMemberSerializer.Meta.fields + [
-            'receive_tpm_notifications',
+class TPMPartnerStaffMemberSerializer(UserSerializer):
+    user = UserSerializer(required=False, source='*')
+    receive_tpm_notifications = serializers.BooleanField(source='profile.receive_tpm_notifications', required=False)
+
+    class Meta(UserSerializer.Meta):
+        fields = UserSerializer.Meta.fields + [
+            'id', 'user', 'receive_tpm_notifications',
         ]
 
 
+class TPMPartnerStaffMemberRealmSerializer(TPMPartnerStaffMemberSerializer):
+    has_active_realm = serializers.BooleanField(read_only=True)
+
+    class Meta(TPMPartnerStaffMemberSerializer.Meta):
+        fields = TPMPartnerStaffMemberSerializer.Meta.fields + ['has_active_realm']
+
+
 class TPMPartnerLightSerializer(PermissionsBasedSerializerMixin, serializers.ModelSerializer):
+    organization_id = serializers.IntegerField(read_only=True, source='organization.id')
+
     class Meta:
         model = TPMPartner
         fields = [
             'id', 'vendor_number', 'name',
             'street_address', 'city', 'postal_code', 'country',
             'email', 'phone_number',
-            'hidden', 'blocked', 'vision_synced', 'deleted_flag',
+            'hidden', 'blocked', 'vision_synced', 'deleted_flag', 'organization_id'
         ]
         extra_kwargs = {
             field: {'read_only': True}
             for field in [
                 'vendor_number', 'name',
                 'street_address', 'city', 'postal_code', 'country',
-                'blocked', 'vision_synced', 'deleted_flag',
+                'blocked', 'vision_synced', 'deleted_flag', 'organization_id'
             ]
         }
         extra_kwargs['name'].update({

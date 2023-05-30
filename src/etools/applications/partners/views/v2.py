@@ -25,25 +25,26 @@ from etools.applications.partners.models import (
     Intervention,
     InterventionAmendment,
     InterventionRisk,
+    OrganizationType,
     PartnerOrganization,
     PartnerStaffMember,
-    PartnerType,
 )
 from etools.applications.partners.permissions import PartnershipManagerPermission, SENIOR_MANAGEMENT_GROUP
-from etools.applications.partners.serializers.partner_organization_v2 import (
-    PartnerStaffMemberCreateUpdateSerializer,
-    PartnerStaffMemberDetailSerializer,
-)
+from etools.applications.partners.serializers.partner_organization_v2 import \
+    PartnerStaffMemberCreateUpdateSerializer  # TODO REALMS cleanup
+from etools.applications.partners.serializers.partner_organization_v2 import PartnerStaffMemberDetailSerializer
 from etools.applications.reports.models import CountryProgramme, Result, ResultType
 from etools.libraries.djangolib.fields import CURRENCIES
 
 
+# TODO REALMS clean up
 class PartnerStaffMemberDetailAPIView(RetrieveUpdateDestroyAPIView):
     queryset = PartnerStaffMember.objects.all()
     serializer_class = PartnerStaffMemberDetailSerializer
     permission_classes = (PartnershipManagerPermission,)
     filter_backends = (PartnerScopeFilter,)
 
+    # TODO REALMS cleanup
     def get_serializer_class(self, format=None):
         if self.request.method in ["PUT", "PATCH"]:
             return PartnerStaffMemberCreateUpdateSerializer
@@ -84,7 +85,7 @@ class PMPStaticDropdownsListAPIView(APIView):
         cso_types = cso_types.exclude(cso_type__isnull=True).exclude(cso_type__exact='')
         cso_types = cso_types.order_by('cso_type').distinct('cso_type')
         cso_types = choices_to_json_ready(list(cso_types))
-        partner_types = choices_to_json_ready(PartnerType.CHOICES)
+        partner_types = choices_to_json_ready(OrganizationType.CHOICES)
         agency_choices = choices_to_json_ready(PartnerOrganization.AGENCY_CHOICES)
         partner_risk_rating = choices_to_json_ready(PartnerOrganization.RISK_RATINGS)
         assessment_types = choices_to_json_ready(Assessment.ASSESSMENT_TYPES)
@@ -145,7 +146,7 @@ class PMPDropdownsListApiView(APIView):
         Return All dropdown values used for Agreements form
         """
         signed_by_unicef = list(get_user_model().objects.filter(
-            groups__name__in=[SENIOR_MANAGEMENT_GROUP],
+            realms__group__name__in=[SENIOR_MANAGEMENT_GROUP],
             profile__country=request.user.profile.country
         ).annotate(
             name=Concat('first_name', Value(' '), 'last_name')
@@ -228,15 +229,15 @@ class PartnershipDashboardAPIView(APIView):
 
         # Count active Interventions by its type
         for p_type in [
-            PartnerType.BILATERAL_MULTILATERAL,
-            PartnerType.CIVIL_SOCIETY_ORGANIZATION,
-            PartnerType.UN_AGENCY,
+            OrganizationType.BILATERAL_MULTILATERAL,
+            OrganizationType.CIVIL_SOCIETY_ORGANIZATION,
+            OrganizationType.UN_AGENCY,
         ]:
             result['partners'][p_type] = active_partnerships.filter(
                 agreement__partner__partner_type=p_type).count()
 
         # Count GovernmentInterventions separately
-        result['partners'][PartnerType.GOVERNMENT] = 0
+        result['partners'][OrganizationType.GOVERNMENT] = 0
 
         # (1) Number and value of Active Interventions for this year
         result['active_count'] = len(active_partnerships)

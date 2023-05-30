@@ -4,9 +4,14 @@ from rest_framework import serializers
 
 
 class InterventionVisionSynchronizerMixin(serializers.ModelSerializer):
+
+    def get_intervention(self):
+        raise NotImplementedError
+
     def save(self, **kwargs):
         from etools.applications.partners.tasks import send_pd_to_vision
 
         instance = super().save(**kwargs)
-        transaction.on_commit(lambda: send_pd_to_vision.delay(connection.tenant.name, instance.pk))
+        intervention = self.get_intervention()
+        transaction.on_commit(lambda: send_pd_to_vision.delay(connection.tenant.name, intervention.pk))
         return instance

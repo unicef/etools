@@ -1,3 +1,4 @@
+from django.db import connection
 from django.db.models.functions import TruncYear
 
 from django_filters import rest_framework as filters
@@ -7,6 +8,7 @@ from etools.applications.field_monitoring.planning.models import MonitoringActiv
 from etools.applications.field_monitoring.utils.filters import M2MInFilter
 from etools.applications.partners.models import Intervention
 from etools.applications.reports.models import Result
+from etools.applications.users.mixins import TPM_ACTIVE_GROUPS
 
 
 class MonitoringActivitiesFilterSet(filters.FilterSet):
@@ -55,7 +57,7 @@ class UserTypeFilter(BaseFilterBackend):
             return queryset
 
         if value == 'tpm':
-            return queryset.filter(tpmpartners_tpmpartnerstaffmember__isnull=False)
+            return queryset.filter(tpm_partner__isnull=False).distinct()
         else:
             return queryset.filter(is_staff=True)
 
@@ -67,8 +69,10 @@ class UserTPMPartnerFilter(BaseFilterBackend):
             return queryset
 
         return queryset.filter(
-            tpmpartners_tpmpartnerstaffmember__tpm_partner=value
-        )
+            realms__country=connection.tenant,
+            realms__organization__tpmpartner=value,
+            realms__group__name__in=TPM_ACTIVE_GROUPS,
+        ).distinct()
 
 
 class CPOutputsFilterSet(filters.FilterSet):

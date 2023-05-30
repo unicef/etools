@@ -2,10 +2,14 @@
 import datetime
 from unittest import skip
 
+from django.utils import translation
+
 from rest_framework import serializers
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
-from etools.applications.partners.models import Agreement, PartnerType
+from etools.applications.organizations.models import OrganizationType
+from etools.applications.organizations.tests.factories import OrganizationFactory
+from etools.applications.partners.models import Agreement
 from etools.applications.partners.serializers.agreements_v2 import AgreementCreateUpdateSerializer
 from etools.applications.partners.serializers.partner_organization_v2 import PartnerOrganizationDetailSerializer
 from etools.applications.partners.tests.factories import (
@@ -13,7 +17,6 @@ from etools.applications.partners.tests.factories import (
     AgreementFactory,
     InterventionFactory,
     PartnerFactory,
-    PartnerStaffFactory,
     PlannedEngagementFactory,
 )
 from etools.applications.reports.tests.factories import CountryProgrammeFactory
@@ -28,7 +31,8 @@ class AgreementCreateUpdateSerializerBase(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.user = UserFactory()
 
-        cls.partner = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
+        cls.partner = PartnerFactory(
+            organization=OrganizationFactory(organization_type=OrganizationType.CIVIL_SOCIETY_ORGANIZATION))
 
         cls.today = datetime.date.today()
 
@@ -148,6 +152,30 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
             'If the record is in "Draft" status please edit that record.'
         )
 
+    def test_validation_translation(self):
+        AgreementFactory(
+            agreement_type=Agreement.PCA,
+            partner=self.partner,
+            country_programme=self.country_programme,
+        )
+        data = {
+            "agreement_type": Agreement.PCA,
+            "partner": self.partner,
+            "country_programme": self.country_programme,
+        }
+        serializer = AgreementCreateUpdateSerializer()
+        serializer.context['request'] = self.fake_request
+
+        with translation.override('fr'):
+            with self.assertRaises(serializers.ValidationError) as context_manager:
+                serializer.validate(data=data)
+
+        self.assertSimpleExceptionFundamentals(
+            context_manager,
+            "Un PCA avec ce partenaire existe déjà pour ce cycle de programme de pays. Si "
+            "l'enregistrement est à l'état \"Développement\", veuillez le modifier."
+        )
+
     def test_create_ok_non_PCA_with_same_programme_and_partner(self):
         """Ensure it is OK to create non-PCA agreements that have the same country programme and partner.
 
@@ -238,7 +266,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
     def test_create_with_partner_type(self):
         """Exercise create success & failure related to the rules regarding agreement type and partner type"""
         # Set partner to something other than civil society org.
-        self.partner.partner_type = PartnerType.UN_AGENCY
+        self.partner.partner_type = OrganizationType.UN_AGENCY
         self.partner.save()
 
         # Create PCA & SSFA should fail now.
@@ -278,7 +306,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
             self.assertTrue(serializer.is_valid(raise_exception=True))
 
         # Set partner to civil service org; create all agreement types should succeed
-        self.partner.partner_type = PartnerType.CIVIL_SOCIETY_ORGANIZATION
+        self.partner.partner_type = OrganizationType.CIVIL_SOCIETY_ORGANIZATION
         self.partner.save()
 
         for agreement_type in _ALL_AGREEMENT_TYPES:
@@ -316,7 +344,10 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
     def test_create_ok_and_fail_due_to_signatures_non_SSFA(self):
         """Ensure signature validation works correctly for non-SSFA types"""
         signatory = UserFactory()
-        partner_signatory = PartnerStaffFactory(partner=self.partner)
+        partner_signatory = UserFactory(
+            profile__organization=self.partner.organization,
+            realms__data=['IP Viewer']
+        )
 
         # This should succeed; it's OK to have only one set of signatures (UNICEF)
         data = {
@@ -687,21 +718,32 @@ class TestAgreementSerializerTransitions(AgreementCreateUpdateSerializerBase):
 class TestPartnerOrganizationDetailSerializer(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.user = UserFactory()
+        cls.partner = PartnerFactory(
+            organization=OrganizationFactory(organization_type=OrganizationType.CIVIL_SOCIETY_ORGANIZATION))
+        cls.user = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=cls.partner.organization
+        )
 
-        cls.partner = PartnerFactory(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION)
         cls.engagement = PlannedEngagementFactory(partner=cls.partner)
 
     def test_retrieve(self):
         serializer = PartnerOrganizationDetailSerializer(instance=self.partner)
-
+        inactive_partner_user2 = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=self.partner.organization,
+        )
+        inactive_partner_user2.realms.update(is_active=False)
+        # user is overall active, but not active in the context realm
+        self.assertEqual(inactive_partner_user2.is_active, True)
+        self.assertEqual(inactive_partner_user2.realms.filter(is_active=True).count(), 0)
         data = serializer.data
         self.assertCountEqual(data.keys(), [
             'address', 'alternate_id', 'alternate_name', 'assessments', 'basis_for_risk_rating', 'blocked', 'city',
             'core_values_assessment_date', 'country', 'core_values_assessments',
             'created', 'cso_type', 'deleted_flag', 'description', 'email', 'hact_min_requirements', 'hact_values',
-            'hidden', 'id', 'interventions', 'last_assessment_date', 'modified', 'name', 'net_ct_cy', 'partner_type',
-            'phone_number', 'planned_engagement', 'postal_code', 'rating', 'reported_cy', 'shared_with', 'short_name',
+            'hidden', 'id', 'interventions', 'last_assessment_date', 'modified', 'name', 'net_ct_cy', 'organization_id',
+            'partner_type', 'phone_number', 'planned_engagement', 'postal_code', 'rating', 'reported_cy', 'shared_with', 'short_name',
             'staff_members', 'street_address', 'total_ct_cp', 'total_ct_cy', 'total_ct_ytd', 'type_of_assessment',
             'vendor_number', 'vision_synced', 'planned_visits', 'manually_blocked', 'flags', 'partner_type_slug',
             'outstanding_dct_amount_6_to_9_months_usd', 'outstanding_dct_amount_more_than_9_months_usd',
@@ -715,9 +757,9 @@ class TestPartnerOrganizationDetailSerializer(BaseTenantTestCase):
             'total_spot_check_planned', 'required_audit'
         ])
         self.assertNotEqual(data['planned_engagement']['spot_check_planned_q1'], '')
-
-        self.assertEquals(len(data['staff_members']), 1)
+        # active & inactive partner staff members
+        self.assertEquals(len(data['staff_members']), 2)
         self.assertCountEqual(data['staff_members'][0].keys(), [
             'active', 'created', 'email', 'first_name', 'id',
-            'last_name', 'modified', 'partner', 'phone', 'title', 'user',
+            'last_name', 'modified', 'phone', 'title', 'has_active_realm'
         ])

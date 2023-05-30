@@ -1,15 +1,16 @@
 from django.contrib.auth import get_user_model
-from django.utils.translation import gettext_lazy as _
+from django.db import connection
+from django.utils.translation import gettext as _
 
 from rest_framework.exceptions import ValidationError
 from rest_framework.validators import UniqueValidator
 
+from etools.applications.users.mixins import AUDIT_ACTIVE_GROUPS, TPM_ACTIVE_GROUPS
+from etools.applications.users.models import Realm
+
 
 class ExternalUserValidator:
     def __call__(self, value):
-        from etools.applications.audit.purchase_order.models import AuditorStaffMember
-        from etools.applications.tpm.tpmpartners.models import TPMPartnerStaffMember
-
         # email cannot end with UNICEF domain
         if value.endswith("@unicef.org"):
             raise ValidationError(
@@ -20,8 +21,18 @@ class ExternalUserValidator:
             raise ValidationError(_("Email needs to be lower case."))
 
         # make sure user is not staff member
-        tpm_staff_qs = TPMPartnerStaffMember.objects.filter(user__email=value)
-        audit_staff = AuditorStaffMember.objects.filter(user__email=value)
+        tpm_staff_qs = Realm.objects.filter(
+            user__email=value,
+            country=connection.tenant,
+            organization__tpmpartner__isnull=False,
+            group__name__in=TPM_ACTIVE_GROUPS,
+        )
+        audit_staff = Realm.objects.filter(
+            user__email=value,
+            country=connection.tenant,
+            organization__auditorfirm__isnull=False,
+            group__name__in=AUDIT_ACTIVE_GROUPS,
+        )
         if tpm_staff_qs.exists() or audit_staff.exists():
             raise ValidationError(_("User is a staff member."))
 

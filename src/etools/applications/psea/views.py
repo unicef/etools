@@ -4,7 +4,7 @@ from django.db.models import ObjectDoesNotExist, Q
 from django.http import HttpResponseForbidden
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext as _
 
 from django_filters.rest_framework import DjangoFilterBackend
 from easy_pdf.rendering import render_to_pdf_response
@@ -92,7 +92,7 @@ class AssessmentViewSet(
     filters = (
         ('q', [
             'reference_number__icontains',
-            'assessor__auditor_firm__name__icontains',
+            'assessor__auditor_firm__organization__name__icontains',
             'assessor__user__first_name__icontains',
             'assessor__user__last_name__icontains',
         ]),
@@ -120,7 +120,7 @@ class AssessmentViewSet(
         MAP_SORT = {
             "reference_number": "reference_number",
             "assessment_date": "assessment_date",
-            "partner_name": "partner__name",
+            "partner_name": "partner__organization__name",
         }
         sort_param = self.request.GET.get("sort")
         ordering = []
@@ -142,7 +142,7 @@ class AssessmentViewSet(
         user = self.request.user
         # if the user is not unicef, filter only what they can see
         if not user.is_unicef_user():
-            qs = qs.filter(Q(assessor__auditor_firm_staff__user=user) | Q(assessor__user=user))
+            qs = qs.filter(Q(assessor__auditor_firm_staff=user) | Q(assessor__user=user))
         if "sort" in self.request.GET:
             qs = qs.order_by(*self.parse_sort_params())
         return qs

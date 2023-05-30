@@ -7,17 +7,18 @@ from django.urls import reverse
 from rest_framework import status
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, UNICEF_USER
 from etools.applications.users.models import UserProfile
-from etools.applications.users.tests.factories import GroupFactory, UserFactory
+from etools.applications.users.tests.factories import UserFactory
 
 
 class TestMyProfileAPIView(BaseTenantTestCase):
     def setUp(self):
         self.unicef_staff = UserFactory(is_staff=True)
         self.unicef_superuser = UserFactory(is_superuser=True)
-        self.partnership_manager_user = UserFactory(is_staff=True)
-        self.group = GroupFactory()
-        self.partnership_manager_user.groups.add(self.group)
+        self.partnership_manager_user = UserFactory(
+            is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]
+        )
         self.url = reverse('users_v2:myprofile-detail')
 
     def test_get(self):
@@ -109,9 +110,9 @@ class TestCountryView(BaseTenantTestCase):
 class TestCountriesViewSet(BaseTenantTestCase):
     def setUp(self):
         self.unicef_superuser = UserFactory(is_superuser=True)
-        self.partnership_manager_user = UserFactory(is_staff=True)
-        self.group = GroupFactory()
-        self.partnership_manager_user.groups.add(self.group)
+        self.partnership_manager_user = UserFactory(
+            is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]
+        )
 
     def test_workspace_api(self):
         response = self.forced_auth_req(

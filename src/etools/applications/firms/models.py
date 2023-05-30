@@ -1,31 +1,32 @@
 from django.conf import settings
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
+from django.db.models import F
+from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 
 from model_utils.models import TimeStampedModel
 
+from etools.applications.organizations.models import Organization
 from etools.libraries.tenant_support.models import ModelHavingTenantRelationsMixin
 
 
 class BaseFirmManager(models.Manager):
     def get_by_natural_key(self, vendor_number):
-        return self.get(vendor_number=vendor_number)
+        return self.get(organization__vendor_number=vendor_number)
+
+    def get_queryset(self):
+        return super().get_queryset() \
+            .select_related('organization') \
+            .annotate(name=F('organization__name')) \
+            .annotate(vendor_number=F('organization__vendor_number'))
 
 
 class BaseFirm(TimeStampedModel, models.Model):
-    vendor_number = models.CharField(
-        verbose_name=_('Vendor Number'),
-        blank=True,
-        default='',
-        unique=True,
-        max_length=30
+    organization = models.OneToOneField(
+        Organization,
+        on_delete=models.CASCADE,
     )
-    name = models.CharField(
-        verbose_name=_('Vendor Name'),
-        max_length=255,
-    )
-
     street_address = models.CharField(
         verbose_name=_('Address'),
         max_length=500,
@@ -67,15 +68,27 @@ class BaseFirm(TimeStampedModel, models.Model):
 
     class Meta:
         abstract = True
-        ordering = ('name',)
+        # https://docs.djangoproject.com/en/3.2/topics/db/managers/#using-managers-for-related-object-access
+        base_manager_name = 'objects'
+        ordering = ('organization__name',)
         verbose_name = _('Organization')
         verbose_name_plural = _('Organizations')
 
     def __str__(self):
-        return self.name
+        if self.organization:
+            return self.organization.name if self.organization.name else self.organization.vendor_number
+        return ''
 
     def natural_key(self):
-        return self.vendor_number,
+        return self.organization.vendor_number,
+
+    @cached_property
+    def name(self):
+        return self.organization.name if self.organization and self.organization.name else ''
+
+    @cached_property
+    def vendor_number(self):
+        return self.organization.vendor_number if self.organization and self.organization.vendor_number else ''
 
 
 class BaseStaffMember(ModelHavingTenantRelationsMixin, TimeStampedModel):

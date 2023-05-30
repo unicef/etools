@@ -18,7 +18,7 @@ def tpm_staff_members_belongs_to_the_partner(i):
         return True
 
     team_members = set(i.team_members.values_list('id', flat=True))
-    partner_staff_members = set(i.tpm_partner.staff_members.all().values_list('user', flat=True))
+    partner_staff_members = set(i.tpm_partner.staff_members.all().values_list('id', flat=True))
     if team_members - partner_staff_members:
         raise BasicValidationError(_('Staff members do not belong to the selected partner'))
 

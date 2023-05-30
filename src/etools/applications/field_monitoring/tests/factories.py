@@ -1,11 +1,11 @@
-from django.contrib.auth.models import Group
-
 import factory
 
 from etools.applications.audit.models import UNICEFUser
 from etools.applications.field_monitoring.groups import FMUser
 from etools.applications.firms.tests.factories import BaseUserFactory
+from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.tpm.models import PME
+from etools.applications.users.tests.factories import CountryFactory, GroupFactory, RealmFactory
 
 
 class UserFactory(BaseUserFactory):
@@ -14,28 +14,35 @@ class UserFactory(BaseUserFactory):
     """
     class Params:
         unicef_user = factory.Trait(
-            groups__data=[UNICEFUser.name],
+            realms__data=[UNICEFUser.name],
         )
 
         fm_user = factory.Trait(
-            groups__data=[UNICEFUser.name, FMUser.name],
+            realms__data=[UNICEFUser.name, FMUser.name],
         )
 
         pme = factory.Trait(
-            groups__data=[UNICEFUser.name, PME.name],
+            realms__data=[UNICEFUser.name, PME.name],
         )
 
     @factory.post_generation
-    def groups(self, create, extracted, data=None, **kwargs):
+    def realms(self, create, extracted, data=None, **kwargs):
         if not create:
             return
 
         extracted = (extracted or []) + (data or [])
 
-        if extracted is not None:
-            extracted = extracted[:]
-            for i, group in enumerate(extracted):
+        if extracted:
+            if "UNICEF User" in extracted:
+                organization = OrganizationFactory(name='UNICEF', vendor_number='000')
+                if hasattr(self, 'profile') and self.profile:
+                    self.profile.organization = organization
+                    self.profile.save(update_fields=['organization'])
+            else:
+                organization = self.profile.organization
+            for group in extracted:
                 if isinstance(group, str):
-                    extracted[i] = Group.objects.get_or_create(name=group)[0]
-
-            self.groups.add(*extracted)
+                    RealmFactory(user=self,
+                                 country=CountryFactory(),
+                                 organization=organization,
+                                 group=GroupFactory(name=group))

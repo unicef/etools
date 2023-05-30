@@ -241,6 +241,1595 @@
             "code": "audit_key_weakness"
         }
     },
+
+
+
+
+    {
+        "model": "audit.riskcategory",
+        "pk": 100,
+        "fields": {
+            "order": 0,
+            "header": "Micro Assesment Questionarie",
+            "parent": null,
+            "category_type": "primary",
+            "code": "ma_questionnaire_v2"
+        }
+    },
+
+    {
+        "model": "audit.riskcategory",
+        "pk": 101,
+        "fields": {
+            "order": 0,
+            "header": "A. Organisation",
+            "parent": 100,
+            "category_type": "default",
+            "code": "ma_questionnaire_v2"
+        }
+    },
+
+    {
+        "model": "audit.riskcategory",
+        "pk": 102,
+        "fields": {
+            "order": 1,
+            "header": "B. People and behaviours",
+            "parent": 100,
+            "category_type": "default",
+            "code": "ma_questionnaire_v2"
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 103,
+        "fields": {
+            "order": 2,
+            "header": "C. Activities",
+            "parent": 100,
+            "category_type": "default",
+            "code": "ma_questionnaire_v2"
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 104,
+        "fields": {
+            "order": 3,
+            "header": "D. Reporting and accountability",
+            "parent": 100,
+            "category_type": "default",
+            "code": "ma_questionnaire_v2"
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 105,
+        "fields": {
+            "order": 4,
+            "header": "E. Assets and inventory",
+            "parent": 100,
+            "category_type": "default",
+            "code": "ma_questionnaire_v2"
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 106,
+        "fields": {
+            "order": 5,
+            "header": "F. Procurement",
+            "parent": 100,
+            "category_type": "default",
+            "code": "ma_questionnaire_v2"
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 107,
+        "fields": {
+            "order": 6,
+            "header": "G. Sub-partners",
+            "parent": 100,
+            "category_type": "default",
+            "code": "ma_questionnaire_v2"
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 108,
+        "fields": {
+            "order": 7,
+            "header": "H. Systems",
+            "parent": 100,
+            "category_type": "default",
+            "code": "ma_questionnaire_v2"
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 109,
+        "fields": {
+            "order": 0,
+            "header": "General",
+            "parent": 101,
+            "category_type": "default",
+            "code": "ma_questionnaire_v2"
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 200,
+        "fields": {
+            "order": 0,
+            "weight": 2,
+            "is_key": true,
+            "header": "1. Is the entity in compliance with national registration requirements?",
+            "description": "If the organisation is a government entity, answer \"N/A\".\nFor NGO / INGO / Other entity types, please record the legal status and date of registration in country.",
+            "category": 109
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 201,
+        "fields": {
+            "order": 1,
+            "weight": 2,
+            "is_key": true,
+            "header": "2. Does an internet search indicate there have been no known cases of fraud, or other allegations of malpractice, concerning the entity or its staff in the last five years?",
+            "description": "The search should be performed using terms such as \"fraud\", \"allegations\", \"abuse\", and \"criminal\".",
+            "category": 109
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 202,
+        "fields": {
+            "order": 2,
+            "weight": 1,
+            "is_key": false,
+            "header": "3. Does management confirm there are no ongoing legal proceedings that are likely materially to impact the organisation or its activities?",
+            "description": "Obtain and file the statement in writing, indicating the name and position of the senior official making it, and the date it was made.",
+            "category": 109
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 110,
+        "fields": {
+            "order": 1,
+            "header": "Organisational structure and governance",
+            "parent": 101,
+            "category_type": "default",
+            "code": "ma_questionnaire_v2"
+        }
+    },
+
+    {
+        "model": "audit.riskblueprint",
+        "pk": 203,
+        "fields": {
+            "order": 0,
+            "weight": 1,
+            "is_key": false,
+            "header": "4. Does the governing body meet on a regular basis and perform sufficient oversight functions?",
+            "description": "The \"governing body\" may be a management board, committee or similar, and has responsibility for ensuring that the actions of the organisation and its staff meet the stated objectives. Evidence of their involvement should be obtained.",
+            "category": 110
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 204,
+        "fields": {
+            "order": 1,
+            "weight": 1,
+            "is_key": false,
+            "header": "5. Are minutes of oversight meetings maintained, with evidence of action plans and appropriate follow?",
+            "description": "",
+            "category": 110
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 205,
+        "fields": {
+            "order": 2,
+            "weight": 1,
+            "is_key": false,
+            "header": "6. Is the organisation structured in such a way that enables clear reporting lines and designates particular areas of responsibility?",
+            "description": "Attach the organisation's organogram under Annex III.",
+            "category": 110
+        }
+    },
+
+    {
+        "model": "audit.riskblueprint",
+        "pk": 206,
+        "fields": {
+            "order": 3,
+            "weight": 1,
+            "is_key": false,
+            "header": "7. Are there sufficient procedures in place to ensure that activities performed by sub-offices are carried out in accordance with the overall policies of the organisation?",
+            "description": "\"Sub-offices refer to other physical offices in the same country that form part of the legal entity under review.\nIf there are no sub-offices, answer \"N/A\".",
+            "category": 110
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 207,
+        "fields": {
+            "order": 4,
+            "weight": 1,
+            "is_key": false,
+            "header": "8. Are there sufficient procedures in place to ensure that financial transactions initiated by sub-offices are executed and recorded in accordance with the overall policies of the organisation?",
+            "description": "If there are no sub-offices, answer \"N/A\".",
+            "category": 110
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 208,
+        "fields": {
+            "order": 5,
+            "weight": 1,
+            "is_key": false,
+            "header": "9. Does the organisation review the accuracy and completeness of the supporting documentation for transactions incurred by its sub-offices prior to the amounts being consolidated into the central records?",
+            "description": "\"If there are no sub-offices, answer \"N/A\".",
+            "category": 110
+        }
+    },
+
+    {
+        "model": "audit.riskcategory",
+        "pk": 111,
+        "fields": {
+            "order": 0,
+            "header": "General",
+            "parent": 102,
+            "category_type": "default",
+            "code": "ma_questionnaire_v2"
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 209,
+        "fields": {
+            "order": 0,
+            "weight": 2,
+            "is_key": true,
+            "header": "1. Is there an HR manual that covers key areas such as recruitment, employment and personnel practices, and which is provided to all staff?",
+            "description": "",
+            "category": 111
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 112,
+        "fields": {
+            "order": 1,
+            "header": "Recruitment and retention",
+            "parent": 102,
+            "category_type": "default",
+            "code": "ma_questionnaire_v2"
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 210,
+        "fields": {
+            "order": 0,
+            "weight": 1,
+            "is_key": false,
+            "header": "2. Are vacant positions widely advertised?",
+            "description": "",
+            "category": 112
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 211,
+        "fields": {
+            "order": 1,
+            "weight": 1,
+            "is_key": false,
+            "header": "3. Are the selected candidates appointed to roles in a competitive and transparent way, that is documented and filed?",
+            "description": "",
+            "category": 112
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 212,
+        "fields": {
+            "order": 2,
+            "weight": 1,
+            "is_key": false,
+            "header": "4. Are background checks performed on potential new recruits, and the results documented and filed?",
+            "description": "",
+            "category": 112
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 213,
+        "fields": {
+            "order": 3,
+            "weight": 1,
+            "is_key": false,
+            "header": "5. Have key positions been filled throughout the last three years, (or with only limited gaps between new appointments), without evidence of regular turnover of the same positions?",
+            "description": "Key positions include those with management responsibilities, or for important process tasks that cannot be performed by others.",
+            "category": 112
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 214,
+        "fields": {
+            "order": 4,
+            "weight": 1,
+            "is_key": false,
+            "header": "6. Are procedures in place to ensure that, when staff leave employment with the organisation, they are removed from the payroll after receipt of the final salary due, are required to return any equipment belonging to the organisation, and have any access rights to in-house systems terminated?",
+            "description": "",
+            "category": 112
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 113,
+        "fields": {
+            "order": 2,
+            "header": "Qualifications and training",
+            "parent": 102,
+            "category_type": "default",
+            "code": "ma_questionnaire_v2"
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 215,
+        "fields": {
+            "order": 0,
+            "weight": 2,
+            "is_key": true,
+            "header": "7. Does the finance team contain a sufficient number of suitably experienced staff, so that team members are competent to perform the tasks assigned to them, and with sufficient segregation of duties?",
+            "description": "",
+            "category": 113
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 216,
+        "fields": {
+            "order": 1,
+            "weight": 1,
+            "is_key": false,
+            "header": "8. Are there sufficient job descriptions for the various roles within the organisation, and the minimum expected qualifications required for each?",
+            "description": "",
+            "category": 113
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 217,
+        "fields": {
+            "order": 2,
+            "weight": 1,
+            "is_key": false,
+            "header": "9. Does the organisation provide sufficient training opportunities to its staff?",
+            "description": "",
+            "category": 113
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 114,
+        "fields": {
+            "order": 3,
+            "header": "Practices",
+            "parent": 102,
+            "category_type": "default",
+            "code": "ma_questionnaire_v2"
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 218,
+        "fields": {
+            "order": 0,
+            "weight": 2,
+            "is_key": true,
+            "header": "10. Does the organisation have a clear set of policies concerning the expected conduct of its staff, and procedures to follow up on allegations of misconduct?",
+            "description": "Such policies should cover areas such as the prevention of violence, intimidation and sexual harassment, and require people to act with honesty, integrity and diligence.",
+            "category": 114
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 219,
+        "fields": {
+            "order": 1,
+            "weight": 2,
+            "is_key": true,
+            "header": "11. Does the organisation have an anti-fraud and anti-corruption policy that is readily accessible to all staff?",
+            "description": "",
+            "category": 114
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 220,
+        "fields": {
+            "order": 2,
+            "weight": 1,
+            "is_key": false,
+            "header": "12. Is it clear to whom staff should report concerns about suspected fraud, corruption or other malpractice, and are procedures in place to protect staff from potential retaliation as a result?",
+            "description": "",
+            "category": 114
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 221,
+        "fields": {
+            "order": 3,
+            "weight": 1,
+            "is_key": false,
+            "header": "13. Does the organisation have policies and procedures to help prevent discrimination on the basis of gender?",
+            "description": "This should cover areas such as recruitment, pay and promotion opportunities.",
+            "category": 114
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 222,
+        "fields": {
+            "order": 4,
+            "weight": 1,
+            "is_key": false,
+            "header": "14. Does the organisation integrate social and environmental standards in their activities?",
+            "description": "Are there practices, guidelines, tools, or a policy that integrate social and environmental standards in the organisation's activities?",
+            "category": 114
+        }
+    },
+
+    {
+        "model": "audit.riskcategory",
+        "pk": 115,
+        "fields": {
+            "order": 0,
+            "header": "Workplans",
+            "parent": 103,
+            "category_type": "default",
+            "code": "ma_questionnaire_v2"
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 223,
+        "fields": {
+            "order": 0,
+            "weight": 2,
+            "is_key": true,
+            "header": "1. Does the organisation have and use sufficiently detailed written policies, procedures and other tools to develop and manage programmes and plans?",
+            "description": "",
+            "category": 115
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 224,
+        "fields": {
+            "order": 1,
+            "weight": 1,
+            "is_key": false,
+            "header": "2. Are the workplans sufficiently detailed to allow a clear understanding of the objectives, expected activities, budget, and timeframe?",
+            "description": "",
+            "category": 115
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 225,
+        "fields": {
+            "order": 2,
+            "weight": 1,
+            "is_key": false,
+            "header": "3. Are revisions and amendments to workplans appropriately reviewed, documented and communicated?",
+            "description": "",
+            "category": 115
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 116,
+        "fields": {
+            "order": 1,
+            "header": "Risk management",
+            "parent": 103,
+            "category_type": "default",
+            "code": "ma_questionnaire_v2"
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 226,
+        "fields": {
+            "order": 0,
+            "weight": 2,
+            "is_key": true,
+            "header": "4. Does the organisation identify the potential risks for achieving its objectives and programme delivery and mechanisms to mitigate them?",
+            "description": "This could include areas such as a lack of skills and resources, political instability, or environmental factors.",
+            "category": 116
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 227,
+        "fields": {
+            "order": 1,
+            "weight": 1,
+            "is_key": false,
+            "header": "5. Is a sufficiently detailed risk register maintained for the organisation?",
+            "description": "Risks should be identified and documented in a formal risk register, and assessed for their likelihood and impact.",
+            "category": 116
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 228,
+        "fields": {
+            "order": 2,
+            "weight": 1,
+            "is_key": false,
+            "header": "6. Are risk management procedures undertaken and / or approved by sufficiently senior members of staff?",
+            "description": "",
+            "category": 116
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 117,
+        "fields": {
+            "order": 2,
+            "header": "Monitoring and evaluation",
+            "parent": 103,
+            "category_type": "default",
+            "code": "ma_questionnaire_v2"
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 229,
+        "fields": {
+            "order": 0,
+            "weight": 2,
+            "is_key": true,
+            "header": "7. Does the organisation have and use sufficiently detailed policies, procedures, guidelines and other tools for monitoring and evaluation?",
+            "description": "",
+            "category": 117
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 230,
+        "fields": {
+            "order": 1,
+            "weight": 1,
+            "is_key": false,
+            "header": "8. Does the organisation carry out and document regular monitoring activities such as review meetings and on-site project visits, to assess implementation against the stated objectives of the work plan?",
+            "description": "",
+            "category": 117
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 231,
+        "fields": {
+            "order": 2,
+            "weight": 1,
+            "is_key": false,
+            "header": "9. Does the organisation prepare sufficiently detailed narrative reports, based on the evidence it has obtained, that provide donors and other stakeholders with a clear understanding of current progress against the objectives?",
+            "description": "",
+            "category": 117
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 232,
+        "fields": {
+            "order": 3,
+            "weight": 1,
+            "is_key": false,
+            "header": "10. Is data collected during monitoring and evaluation procedures documented and filed in accordance with written policies?",
+            "description": "",
+            "category": 117
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 118,
+        "fields": {
+            "order": 0,
+            "header": "General",
+            "parent": 104,
+            "category_type": "default",
+            "code": "ma_questionnaire_v2"
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 233,
+        "fields": {
+            "order": 0,
+            "weight": 2,
+            "is_key": true,
+            "header": "1. Is there a finance manual, or similar, that clearly sets out the main policies and procedures to be followed?",
+            "description": "",
+            "category": 118
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 119,
+        "fields": {
+            "order": 1,
+            "header": "Audit environment",
+            "parent": 104,
+            "category_type": "default",
+            "code": "ma_questionnaire_v2"
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 234,
+        "fields": {
+            "order": 0,
+            "weight": 2,
+            "is_key": true,
+            "header": "2. Has the organisation complied with its statutory reporting requirements for the last three years?",
+            "description": "If no such reporting requirements, state \"N/A\".",
+            "category": 119
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 235,
+        "fields": {
+            "order": 1,
+            "weight": 1,
+            "is_key": false,
+            "header": "3. Did the statutory audits from the last three years result in unmodified (clean) audit opinions and without other significant issues being raised?",
+            "description": "If no such reports issued, state \"N/A\".",
+            "category": 119
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 236,
+        "fields": {
+            "order": 2,
+            "weight": 2,
+            "is_key": true,
+            "header": "4. Has the organisation received UN audit reports, or other assurance activities commissioned by UN organisations, which report a good control environment, and without significant amounts of unsupported expenditure being identified?",
+            "description": "If no such activities have taken place, answer \"no\" and record \"significant risk\". If such activities have reported significant issues, answer \"no\" and record \"high risk\".",
+            "category": 119
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 237,
+        "fields": {
+            "order": 3,
+            "weight": 1,
+            "is_key": false,
+            "header": "5. Does the organisation have an internal audit function?",
+            "description": "This may be either an internal or outsourced internal audit function.",
+            "category": 119
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 238,
+        "fields": {
+            "order": 4,
+            "weight": 1,
+            "is_key": false,
+            "header": "6. Is the internal audit department sufficiently independent so that it is able to make recommendations?",
+            "description": "",
+            "category": 119
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 239,
+        "fields": {
+            "order": 5,
+            "weight": 1,
+            "is_key": false,
+            "header": "7. Does the internal audit function include donor-funded activities within its remit?",
+            "description": "",
+            "category": 119
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 240,
+        "fields": {
+            "order": 6,
+            "weight": 1,
+            "is_key": false,
+            "header": "8. Are recommendations made by internal and external reviewers logged centrally, indicating the follow-up status, who is responsible for implementation, and the timeframe?",
+            "description": "",
+            "category": 119
+        }
+    },
+
+    {
+        "model": "audit.riskcategory",
+        "pk": 120,
+        "fields": {
+            "order": 2,
+            "header": "Financial reporting tools",
+            "parent": 104,
+            "category_type": "default",
+            "code": "ma_questionnaire_v2"
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 241,
+        "fields": {
+            "order": 0,
+            "weight": 1,
+            "is_key": false,
+            "header": "9. Can the figures for donor financial reporting, by total and by budget and / or activity line, be generated automatically from the accounting system?",
+            "description": "",
+            "category": 120
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 242,
+        "fields": {
+            "order": 1,
+            "weight": 1,
+            "is_key": false,
+            "header": "10. Are donor reports reviewed and approved by a suitable member of staff other than the preparer?",
+            "description": "",
+            "category": 120
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 121,
+        "fields": {
+            "order": 3,
+            "header": "Budget preparation and monitoring",
+            "parent": 104,
+            "category_type": "default",
+            "code": "ma_questionnaire_v2"
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 243,
+        "fields": {
+            "order": 0,
+            "weight": 2,
+            "is_key": true,
+            "header": "11. Are budgets prepared in sufficient detail so that they can be used as a meaningful monitoring and control tool?",
+            "description": "",
+            "category": 121
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 244,
+        "fields": {
+            "order": 1,
+            "weight": 1,
+            "is_key": false,
+            "header": "12. Are budgets authorised by a suitably senior member of staff?",
+            "description": "",
+            "category": 121
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 245,
+        "fields": {
+            "order": 2,
+            "weight": 1,
+            "is_key": false,
+            "header": "13. Are budgets compared against actual expenditure on a sufficiently regular basis, with unexpected variances investigated?",
+            "description": "",
+            "category": 121
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 246,
+        "fields": {
+            "order": 3,
+            "weight": 1,
+            "is_key": false,
+            "header": "14. Is there a policy stating how budget amendments are to be considered, and who is responsible for authorising these?",
+            "description": "",
+            "category": 121
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 122,
+        "fields": {
+            "order": 0,
+            "header": "Fixed asset register",
+            "parent": 105,
+            "category_type": "default",
+            "code": "ma_questionnaire_v2"
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 247,
+        "fields": {
+            "order": 0,
+            "weight": 2,
+            "is_key": true,
+            "header": "1. Does the organisation maintain a comprehensive and up to date fixed asset register, that records all relevant details (such as purchase date, cost, condition, location, tag number, serial number, and owner) for each asset held?",
+            "description": "",
+            "category": 122
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 248,
+        "fields": {
+            "order": 1,
+            "weight": 1,
+            "is_key": false,
+            "header": "2. Are there sufficient measures and procedures in place to protect assets from theft, damage or misuse?",
+            "description": "",
+            "category": 122
+        }
+    },
+
+    {
+        "model": "audit.riskcategory",
+        "pk": 123,
+        "fields": {
+            "order": 1,
+            "header": "Insurance",
+            "parent": 105,
+            "category_type": "default",
+            "code": "ma_questionnaire_v2"
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 249,
+        "fields": {
+            "order": 0,
+            "weight": 1,
+            "is_key": false,
+            "header": "3. Are significant assets either insured, or can otherwise be readily replaced, in the event of theft or damage?",
+            "description": "",
+            "category": 123
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 124,
+        "fields": {
+            "order": 2,
+            "header": "Verifications",
+            "parent": 105,
+            "category_type": "default",
+            "code": "ma_questionnaire_v2"
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 250,
+        "fields": {
+            "order": 0,
+            "weight": 1,
+            "is_key": false,
+            "header": "4. Are assets subject to at least annual physical verifications?",
+            "description": "",
+            "category": 124
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 251,
+        "fields": {
+            "order": 1,
+            "weight": 1,
+            "is_key": false,
+            "header": "5. Are the physical verifications performed by more than one person, and are the results, and any necessary adjustments, appropriately documented and approved?",
+            "description": "",
+            "category": 124
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 125,
+        "fields": {
+            "order": 3,
+            "header": "Inventory",
+            "parent": 105,
+            "category_type": "default",
+            "code": "ma_questionnaire_v2"
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 252,
+        "fields": {
+            "order": 0,
+            "weight": 1,
+            "is_key": false,
+            "header": "6. Is inventory managed through a computerised system that provides an up to date picture of items held?",
+            "description": "If a computerised system is not used, provide details of the procedures in place and assess risk accordingly, considering the levels of inventory held.",
+            "category": 125
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 253,
+        "fields": {
+            "order": 0,
+            "weight": 1,
+            "is_key": false,
+            "header": "7. Are physical verifications of inventory items reconciled to the records held on a sufficiently frequent basis, and the results, and any necessary adjustments, documented and approved?",
+            "description": "",
+            "category": 125
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 254,
+        "fields": {
+            "order": 0,
+            "weight": 1,
+            "is_key": false,
+            "header": "8. Are items with a limited shelf-life sufficiently monitored to ensure they do not expire prior to issue?",
+            "description": "",
+            "category": 125
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 126,
+        "fields": {
+            "order": 4,
+            "header": "Warehouse<br><i>It may not be possible to inspect warehouses as part of the assessment, and it is not a requirement to do so. The response should state which warehouses, if any, have been physically verified. In cases where they have not been physically reviewed, the scores should be at least moderate risk.</i>",
+            "parent": 105,
+            "category_type": "default",
+            "code": "ma_questionnaire_v2"
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 255,
+        "fields": {
+            "order": 0,
+            "weight": 1,
+            "is_key": false,
+            "header": "9. Are the warehouse facilities sufficiently secure, providing suitable conditions for the items held, with adequate protection against environmental factors?",
+            "description": "Provide details of the evidence available to support the assessment (e.g. physical inspection, information provided by the partner, internal reviews, or external assessments).",
+            "category": 126
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 256,
+        "fields": {
+            "order": 1,
+            "weight": 1,
+            "is_key": false,
+            "header": "10. Are warehouse items maintained in a way that allows authorised persons safe and ready access to them?",
+            "description": "Provide details of the evidence available to support the assessment (e.g. physical inspection, information provided by the partner, internal reviews, or external assessments).",
+            "category": 126
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 127,
+        "fields": {
+            "order": 5,
+            "header": "Cash",
+            "parent": 105,
+            "category_type": "default",
+            "code": "ma_questionnaire_v2"
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 257,
+        "fields": {
+            "order": 0,
+            "weight": 2,
+            "is_key": true,
+            "header": "11. Is cash held in a secure place that can be accessed only by certain designated individuals?",
+            "description": "If no cash is held, state \"N/A\".",
+            "category": 127
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 258,
+        "fields": {
+            "order": 1,
+            "weight": 2,
+            "is_key": true,
+            "header": "12. Are cash reconciliations performed on a frequent basis, by more than one individual at the same time, and the results documented and approved?",
+            "description": "",
+            "category": 127
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 259,
+        "fields": {
+            "order": 0,
+            "weight": 2,
+            "is_key": true,
+            "header": "1. Does the organisation have written procurement policies and procedures, which facilitate competition, transparency and obtaining value for money?",
+            "description": "",
+            "category": 106
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 260,
+        "fields": {
+            "order": 1,
+            "weight": 1,
+            "is_key": false,
+            "header": "2. Do the procurement policies specify appropriate thresholds at which points different procurement procedures apply?",
+            "description": "",
+            "category": 106
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 261,
+        "fields": {
+            "order": 2,
+            "weight": 1,
+            "is_key": false,
+            "header": "3. Are all procurements authorised through documented approval from an appropriate member of staff?",
+            "description": "",
+            "category": 106
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 262,
+        "fields": {
+            "order": 3,
+            "weight": 2,
+            "is_key": true,
+            "header": "4. Is there adequate segregation of duties in the procurement process?",
+            "description": "",
+            "category": 106
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 263,
+        "fields": {
+            "order": 4,
+            "weight": 1,
+            "is_key": false,
+            "header": "5. Is there a stated basis for the assessment of bids, and is this followed in practice and documented?",
+            "description": "",
+            "category": 106
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 264,
+        "fields": {
+            "order": 5,
+            "weight": 1,
+            "is_key": false,
+            "header": "6. Does the organisation have a policy that sets out how any exceptions to the stated procurement procedures are to be implemented and managed, along with appropriate approval requirements?",
+            "description": "Such exceptions may, for example, be where the usual requirement for three quotations has been overridden due to the specific circumstances of that purchase.",
+            "category": 106
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 265,
+        "fields": {
+            "order": 6,
+            "weight": 1,
+            "is_key": false,
+            "header": "7. Does the organisation have adequate policies to ensure staff consider and document whether they have any conflicts of interest with potential suppliers?",
+            "description": "",
+            "category": 106
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 266,
+        "fields": {
+            "order": 7,
+            "weight": 1,
+            "is_key": false,
+            "header": "8. If a conflict is identified, is it evident that the staff member concerned is required to recuse themselves from any procurement process in which that entity is involved?",
+            "description": "",
+            "category": 106
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 267,
+        "fields": {
+            "order": 8,
+            "weight": 1,
+            "is_key": false,
+            "header": "9. Are background checks performed on suppliers to ensure there are no publicly known cases of fraud or other malpractice?",
+            "description": "",
+            "category": 106
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 268,
+        "fields": {
+            "order": 9,
+            "weight": 1,
+            "is_key": false,
+            "header": "10. Does the organisation have policies in relation to contract management?",
+            "description": "\"This will cover areas such as monitoring contract expiration, performance securities, and contract risk management procedures.\nIf no contracts are managed, state \"N/A\".",
+            "category": 106
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 269,
+        "fields": {
+            "order": 10,
+            "weight": 1,
+            "is_key": false,
+            "header": "11. Does the organisation require its suppliers to uphold high ethical standards at all times?",
+            "description": "For commercial suppliers / businesses this could include principles and exclusionary factors in line with the Ten Principles | UN Global Compact.",
+            "category": 106
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 140,
+        "fields": {
+            "order": 0,
+            "header": "Sub-partners are external parties (separate legal entities) with whom the organisation engages to perform project activities. The sub-partners are required to account for the funds disbursed to them, and to show that the amounts have been incurred in line with the project's objectives and agreed activities, and in accordance with the budgets they have been issued.",
+            "parent": 107,
+            "category_type": "default",
+            "code": "ma_questionnaire_v2"
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 270,
+        "fields": {
+            "order": 0,
+            "weight": 1,
+            "is_key": false,
+            "header": "1. Are sub-partners selected on the basis of standard procedures, such as pre-award assessments, to ensure they are appropriately registered, suitably qualified to perform the role to be assigned, have adequate internal control systems, and that there are not significant ethical or reputational concerns?",
+            "description": "If sub-partners are not used, state \"N/A\" to each of these questions.",
+            "category": 140
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 271,
+        "fields": {
+            "order": 1,
+            "weight": 1,
+            "is_key": false,
+            "header": "2. If sub-partners are engaged, are formal agreements signed between the parties, clearly stating the work to be performed, the reporting and documentation obligations, and any other conditions of funding, in line with the agreement between the UN agency (or other donor) and the organisation, prior to activities being undertaken or funds advanced?",
+            "description": "",
+            "category": 140
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 272,
+        "fields": {
+            "order": 2,
+            "weight": 1,
+            "is_key": false,
+            "header": "3. Does the organisation implement procedures to verify the financial reports and corresponding documentation submitted by the sub-partner prior to onward reporting to the donor?",
+            "description": "",
+            "category": 140
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 273,
+        "fields": {
+            "order": 3,
+            "weight": 1,
+            "is_key": false,
+            "header": "4. Does the organisation implement procedures to monitor the implementation of project activities by the sub-partners?",
+            "description": "",
+            "category": 140
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 274,
+        "fields": {
+            "order": 4,
+            "weight": 1,
+            "is_key": false,
+            "header": "5. Does the organisation have suitable procedures for dealing with instances of poor performance, mismanagement and misconduct by sub-partners, or non-compliance with the terms of engagement?",
+            "description": "",
+            "category": 140
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 275,
+        "fields": {
+            "order": 5,
+            "weight": 1,
+            "is_key": false,
+            "header": "6. Does the organisation require its sub-partners to uphold high ethical standards, such as evidenced by a code of conduct?",
+            "description": "",
+            "category": 140
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 128,
+        "fields": {
+            "order": 0,
+            "header": "Accounting system",
+            "parent": 108,
+            "category_type": "default",
+            "code": "ma_questionnaire_v2"
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 276,
+        "fields": {
+            "order": 0,
+            "weight": 1,
+            "is_key": false,
+            "header": "1. Does the organisation have and make use of a computerised accounting system that records sufficient details of each transaction to allow it to be linked to the corresponding documentation and allocated to the relevant funding source?",
+            "description": "",
+            "category": 128
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 277,
+        "fields": {
+            "order": 1,
+            "weight": 2,
+            "is_key": true,
+            "header": "2. Is access to the accounting system protected through the use of usernames and passwords?",
+            "description": "",
+            "category": 128
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 278,
+        "fields": {
+            "order": 2,
+            "weight": 1,
+            "is_key": false,
+            "header": "3. Do different users have different access rights so that they are only able to review or make changes to information that is relevant to their function?",
+            "description": "",
+            "category": 128
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 279,
+        "fields": {
+            "order": 3,
+            "weight": 1,
+            "is_key": false,
+            "header": "4. Is the accounting system backed up to a secure offsite location on a sufficiently regular basis?",
+            "description": "",
+            "category": 128
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 280,
+        "fields": {
+            "order": 4,
+            "weight": 1,
+            "is_key": false,
+            "header": "5. Can the system be accessed from premises other than the organisation's offices (for example if staff are working remotely) so that recording or reviewing financial transactions is not adversely impacted in the event that staff are not physically present?",
+            "description": "",
+            "category": 128
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 281,
+        "fields": {
+            "order": 5,
+            "weight": 2,
+            "is_key": true,
+            "header": "6. Do appropriate procedures and controls exist to ensure that the same or similar level of oversight is maintained even if staff are not physically present in the office?",
+            "description": "",
+            "category": 128
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 282,
+        "fields": {
+            "order": 6,
+            "weight": 1,
+            "is_key": false,
+            "header": "7. Are all staff issued with computers that are maintained by and accessible to the organisation's IT department, and that have adequate anti-malware installed?",
+            "description": "",
+            "category": 128
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 129,
+        "fields": {
+            "order": 1,
+            "header": "Banking",
+            "parent": 108,
+            "category_type": "default",
+            "code": "ma_questionnaire_v2"
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 283,
+        "fields": {
+            "order": 0,
+            "weight": 2,
+            "is_key": true,
+            "header": "8. Does the organisation perform bank reconciliations on at least a monthly basis?",
+            "description": "If the organisation's bank account is pooled with other accounts, and therefore cannot perform a reconciliation, state \"N/A\" and provide comments explaining the cirucmstances.",
+            "category": 129
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 284,
+        "fields": {
+            "order": 1,
+            "weight": 1,
+            "is_key": false,
+            "header": "9. Are bank reconciliations performed by someone other than those responsible for making or approving payments?",
+            "description": "",
+            "category": 129
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 285,
+        "fields": {
+            "order": 2,
+            "weight": 1,
+            "is_key": false,
+            "header": "10. Are reconciling items identified and investigated in a timely manner?",
+            "description": "",
+            "category": 129
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 130,
+        "fields": {
+            "order": 2,
+            "header": "Payments",
+            "parent": 108,
+            "category_type": "default",
+            "code": "ma_questionnaire_v2"
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 286,
+        "fields": {
+            "order": 0,
+            "weight": 2,
+            "is_key": true,
+            "header": "11. Are payments subject to a clear approval process with adequate segregation of duties?",
+            "description": "",
+            "category": 130
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 287,
+        "fields": {
+            "order": 1,
+            "weight": 1,
+            "is_key": false,
+            "header": "12. Are appropriate authorisation thresholds in place for approval of payments?",
+            "description": "",
+            "category": 130
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 288,
+        "fields": {
+            "order": 2,
+            "weight": 1,
+            "is_key": false,
+            "header": "13. Are all, or substantially all, payments made in a traceable form, such as bank transfer, cheques made out to the specific payee, or mobile money transfer?",
+            "description": "",
+            "category": 130
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 289,
+        "fields": {
+            "order": 3,
+            "weight": 1,
+            "is_key": false,
+            "header": "14. If online payments are used, do these require dual signatories?",
+            "description": "",
+            "category": 130
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 290,
+        "fields": {
+            "order": 4,
+            "weight": 2,
+            "is_key": true,
+            "header": "15. Is there a stated and reasonable limit for the amount that can be paid in cash?",
+            "description": "",
+            "category": 130
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 291,
+        "fields": {
+            "order": 5,
+            "weight": 1,
+            "is_key": false,
+            "header": "16. If staff have to transport significant amounts of cash (for example when withdrawn from the bank, or carried to project sites), are sufficient security arrangements in place?",
+            "description": "Although definitions of \"significant\" may vary, a starting point can be considered the equivalent of approximately US$ 1,000.",
+            "category": 130
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 292,
+        "fields": {
+            "order": 6,
+            "weight": 1,
+            "is_key": false,
+            "header": "17. Does the organisation perform a three-way match between the invoice received from the supplier, the purchase order raised, and the goods received, with evidence of these checks maintained and signed?",
+            "description": "",
+            "category": 130
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 293,
+        "fields": {
+            "order": 7,
+            "weight": 1,
+            "is_key": false,
+            "header": "18. For payments that are not made on the basis of an invoice, such as for daily allowances, are appropriate procedures in place to ensure the amounts are in line with a stated policy, there is adequate review and approval, and that relevant supporting documents are maintained?",
+            "description": "",
+            "category": 130
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 294,
+        "fields": {
+            "order": 8,
+            "weight": 2,
+            "is_key": true,
+            "header": "19. Are supporting documents stamped as \"Paid\" and marked with the donor or project name after payment has been made, or does the accounting system otherwise have inbuilt controls to ensure payments cannot be made more than once or claimed against more than one funding source?",
+            "description": "",
+            "category": 130
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 131,
+        "fields": {
+            "order": 3,
+            "header": "Cost allocations",
+            "parent": 108,
+            "category_type": "default",
+            "code": "ma_questionnaire_v2"
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 295,
+        "fields": {
+            "order": 0,
+            "weight": 1,
+            "is_key": false,
+            "header": "20. Does the organisation have a clear policy for allocating shared costs across different projects or donors?",
+            "description": "",
+            "category": 131
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 296,
+        "fields": {
+            "order": 1,
+            "weight": 1,
+            "is_key": false,
+            "header": "21. Are salary costs charged to the project on the basis of an identifiable proportion of the actual costs incurred?",
+            "description": "",
+            "category": 131
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 132,
+        "fields": {
+            "order": 4,
+            "header": "Document management / record keeping",
+            "parent": 108,
+            "category_type": "default",
+            "code": "ma_questionnaire_v2"
+        }
+    },
+        {
+        "model": "audit.riskblueprint",
+        "pk": 297,
+        "fields": {
+            "order": 0,
+            "weight": 2,
+            "is_key": true,
+            "header": "22. Does the organisation maintain all its records in an orderly and consistent way, that enables the ready identification of relevant documentation?",
+            "description": "",
+            "category": 132
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 298,
+        "fields": {
+            "order": 1,
+            "weight": 1,
+            "is_key": false,
+            "header": "23. Does the organisation have a stated document management policy that ensures documents are maintained for at least the period required by donors?",
+            "description": "",
+            "category": 132
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 299,
+        "fields": {
+            "order": 2,
+            "weight": 1,
+            "is_key": false,
+            "header": "24. Does the organisation have a data protection policy?",
+            "description": "",
+            "category": 132
+        }
+    },
+
+
+
     {
         "model": "audit.riskblueprint",
         "pk": 1,
