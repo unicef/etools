@@ -624,3 +624,9 @@ ECN_API_ENDPOINT = get_from_secrets_or_env('ECN_API_ENDPOINT', '')  # example: h
 
 # Emails allowed to edit admin models in Partners and Reports apps
 ADMIN_EDIT_EMAILS = get_from_secrets_or_env('ADMIN_EDIT_EMAILS', '')
+
+
+# Stale non-UNICEF users deactivation threshold
+STALE_USERS_DEACTIVATION_THRESHOLD_DAYS = int(
+    get_from_secrets_or_env('STALE_USERS_DEACTIVATION_THRESHOLD_DAYS', 3 * 30)
+)

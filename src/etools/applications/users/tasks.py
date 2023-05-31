@@ -254,7 +254,9 @@ def sync_realms_to_prp(user_pk, last_modified_at_timestamp, retry_counter=0):
 def deactivate_stale_users():
     active_users = User.objects.filter(is_active=True)
     non_unicef_users = active_users.exclude(email__endswith=settings.UNICEF_USER_EMAIL)
-    users_to_deactivate = non_unicef_users.filter(last_login__lt=timezone.now() - datetime.timedelta(days=3 * 30))
+    users_to_deactivate = non_unicef_users.filter(
+        last_login__lt=timezone.now() - datetime.timedelta(days=settings.STALE_USERS_DEACTIVATION_THRESHOLD_DAYS),
+    )
     for user in users_to_deactivate:
         logger.info(f'Deactivated user as it was inactive for more than 3 months: {user.email}')
         # save one by one instead of .update(is_active=True) to enable signals/save events
