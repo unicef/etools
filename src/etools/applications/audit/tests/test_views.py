@@ -39,7 +39,7 @@ from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.organizations.models import OrganizationType
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.reports.tests.factories import SectionFactory
-from etools.applications.users.tests.factories import CountryFactory, OfficeFactory, RealmFactory
+from etools.applications.users.tests.factories import CountryFactory, GroupFactory, OfficeFactory, RealmFactory
 
 
 class BaseTestCategoryRisksViewSet(EngagementTransitionsTestCaseMixin):
@@ -335,6 +335,19 @@ class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, BaseTenantT
 
     def test_engagement_staff_list(self):
         self._test_list(self.auditor, [self.engagement])
+
+    def test_engagement_staff_list_multiple_auditor_realms(self):
+        auditor_firm_1 = AuditPartnerFactory()
+        engagement_1 = self.engagement_factory(agreement__auditor_firm=auditor_firm_1, staff_members=[self.auditor])
+        RealmFactory(
+            user=self.auditor, country=CountryFactory(),
+            organization=auditor_firm_1.organization, group=GroupFactory(name="Auditor")
+        )
+        self._test_list(self.auditor, [self.engagement])
+
+        self.auditor.profile.organization = auditor_firm_1.organization
+        self.auditor.profile.save(update_fields=['organization'])
+        self._test_list(self.auditor, [engagement_1])
 
     def test_non_engagement_staff_list(self):
         self._test_list(self.non_engagement_auditor, [])
@@ -997,11 +1010,19 @@ class TestAuditMetadataDetailViewSet(TestMetadataDetailViewSet, BaseTenantTestCa
     def test_weaknesses_choices(self):
         self._test_risk_choices('key_internal_weakness', Risk.AUDIT_VALUES)
 
-    def test_users_notified_auditor_not_staff(self):
-        self.assertFalse(self.auditor.is_staff)
+
+class TestSpotCheckMetadataDetailViewSet(TestMetadataDetailViewSet, BaseTenantTestCase):
+    engagement_factory = StaffSpotCheckFactory
+    endpoint = 'spot-checks'
+
+    def test_users_notified_auditor_not_unicef(self):
+        self.assertFalse(self.auditor.is_unicef_user())
+        spot_check = self.engagement_factory(
+            staff_members=[self.auditor], agreement__auditor_firm=self.auditor_firm
+        )
         response = self.forced_auth_req(
             'options',
-            '/api/audit/{}/{}/'.format(self.endpoint, self.engagement.id),
+            '/api/audit/{}/{}/'.format(self.endpoint, spot_check.id),
             user=self.auditor
         )
         self.assertIn('GET', response.data['actions'])
@@ -1010,14 +1031,15 @@ class TestAuditMetadataDetailViewSet(TestMetadataDetailViewSet, BaseTenantTestCa
         put = response.data['actions']['PUT']
         self.assertNotIn('users_notified', put)
 
-    def test_users_notified_auditor_is_staff(self):
-        self.auditor.is_staff = True
-        self.auditor.save()
-        self.assertTrue(self.auditor.is_staff)
+    def test_users_notified_auditor_is_unicef(self):
+        spot_check = self.engagement_factory(
+            staff_members=[self.unicef_focal_point], agreement__auditor_firm=self.auditor_firm
+        )
+        self.assertTrue(self.unicef_focal_point.is_unicef_user())
         response = self.forced_auth_req(
             'options',
-            '/api/audit/{}/{}/'.format(self.endpoint, self.engagement.id),
-            user=self.auditor
+            '/api/audit/{}/{}/'.format(self.endpoint, spot_check.id),
+            user=self.unicef_focal_point
         )
         self.assertIn('GET', response.data['actions'])
         get = response.data['actions']['GET']

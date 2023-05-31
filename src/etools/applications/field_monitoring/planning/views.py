@@ -40,6 +40,7 @@ from etools.applications.field_monitoring.planning.filters import (
     UserTPMPartnerFilter,
     UserTypeFilter,
 )
+from etools.applications.field_monitoring.planning.mixins import EmptyQuerysetForExternal
 from etools.applications.field_monitoring.planning.models import (
     MonitoringActivity,
     MonitoringActivityActionPoint,
@@ -172,13 +173,13 @@ class MonitoringActivitiesViewSet(
     def get_queryset(self):
         queryset = super().get_queryset()
 
-        # todo: change to the user.is_unicef
-        if UNICEFUser.name not in [g.name for g in self.request.user.groups.all()]:
+        if not self.request.user.is_unicef_user():
             # we should hide activities before assignment
             # if reject reason available activity should be visible (draft + reject_reason = rejected)
             queryset = queryset.filter(
                 Q(visit_lead=self.request.user) | Q(team_members=self.request.user),
                 Q(status__in=MonitoringActivity.TPM_AVAILABLE_STATUSES) | ~Q(reject_reason=''),
+                tpm_partner__organization=self.request.user.profile.organization,
             )
 
         return queryset
@@ -272,23 +273,25 @@ class FMUsersViewSet(
 
     filter_backends = (SearchFilter, UserTypeFilter, UserTPMPartnerFilter)
     search_fields = ('email',)
-    queryset = get_user_model().objects.all()
-    queryset = queryset.order_by('first_name', 'middle_name', 'last_name')
+    queryset = get_user_model().objects.all().order_by('first_name', 'middle_name', 'last_name')
     serializer_class = FMUserSerializer
 
     def get_queryset(self):
         user_groups = [UNICEFUser.name, ThirdPartyMonitor.name]
         qs_context = {
             "country": connection.tenant,
-            "group__name__in": user_groups,
-            "is_active": True,
+            "group__name__in": user_groups
         }
+        if not self.request.user.is_unicef_user():
+            qs_context.update({"organization": self.request.user.profile.organization})
+
         context_realms_qs = Realm.objects.filter(**qs_context).select_related('organization__tpmpartner')
 
         qs = super().get_queryset()\
-            .filter(Q(realms__in=context_realms_qs) | Q(monitoring_activities__isnull=False)) \
+            .filter(realms__in=context_realms_qs) \
             .prefetch_related(Prefetch('realms', queryset=context_realms_qs)) \
-            .annotate(tpm_partner=F('realms__organization__tpmpartner')) \
+            .annotate(tpm_partner=F('realms__organization__tpmpartner'),
+                      has_active_realm=F('realms__is_active')) \
             .distinct()
 
         return qs
@@ -296,6 +299,7 @@ class FMUsersViewSet(
 
 class CPOutputsViewSet(
     FMBaseViewSet,
+    EmptyQuerysetForExternal,
     mixins.ListModelMixin,
     viewsets.GenericViewSet,
 ):
@@ -307,6 +311,7 @@ class CPOutputsViewSet(
 
 class InterventionsViewSet(
     FMBaseViewSet,
+    EmptyQuerysetForExternal,
     mixins.ListModelMixin,
     viewsets.GenericViewSet,
 ):
@@ -323,6 +328,7 @@ class InterventionsViewSet(
 
 class PartnersViewSet(
     FMBaseViewSet,
+    EmptyQuerysetForExternal,
     mixins.ListModelMixin,
     viewsets.GenericViewSet,
 ):
