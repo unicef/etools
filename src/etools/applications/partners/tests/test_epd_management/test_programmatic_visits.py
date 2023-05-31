@@ -108,6 +108,9 @@ class TestProgrammaticVisitsManagement(BaseTestCase):
     # test functionality
     def test_add(self):
         self.assertEqual(self.draft_intervention.planned_visits.count(), 0)
+        site_2 = LocationSiteFactory()
+        site_3 = LocationSiteFactory()
+        site_5 = LocationSiteFactory()
         response = self.forced_auth_req(
             'patch',
             reverse('pmp_v3:intervention-detail', args=[self.draft_intervention.pk]),
@@ -119,10 +122,10 @@ class TestProgrammaticVisitsManagement(BaseTestCase):
                     'programmatic_q2': 2,
                     'programmatic_q3': 3,
                     'programmatic_q4': 4,
-                    "programmatic_q1_sites": [LocationSiteFactory().pk for _ in range(1)],
-                    "programmatic_q2_sites": [LocationSiteFactory().pk for _ in range(2)],
-                    "programmatic_q3_sites": [LocationSiteFactory().pk for _ in range(3)],
-                    "programmatic_q4_sites": [LocationSiteFactory().pk for _ in range(4)],
+                    "programmatic_q1_sites": [site_3.pk],
+                    "programmatic_q2_sites": [site_3.pk],
+                    "programmatic_q3_sites": [site_2.pk, site_3.pk],
+                    "programmatic_q4_sites": [site_3.pk, site_5.pk],
                 }],
             },
         )
@@ -132,11 +135,11 @@ class TestProgrammaticVisitsManagement(BaseTestCase):
         planned_visits = self.draft_intervention.planned_visits.first()
         planned_sites = InterventionPlannedVisitSite.objects.filter(planned_visits=planned_visits)
         self.assertEqual(planned_sites.filter(quarter=InterventionPlannedVisitSite.Q1).count(), 1)
-        self.assertEqual(planned_sites.filter(quarter=InterventionPlannedVisitSite.Q2).count(), 2)
-        self.assertEqual(planned_sites.filter(quarter=InterventionPlannedVisitSite.Q3).count(), 3)
-        self.assertEqual(planned_sites.filter(quarter=InterventionPlannedVisitSite.Q4).count(), 4)
-        self.assertEqual(self.draft_intervention.planned_visits.first().sites.count(), 1 + 2 + 3 + 4)
-        self.assertEqual(len(response.data['planned_visits'][0]['programmatic_q4_sites']), 4)
+        self.assertEqual(planned_sites.filter(quarter=InterventionPlannedVisitSite.Q2).count(), 1)
+        self.assertEqual(planned_sites.filter(quarter=InterventionPlannedVisitSite.Q3).count(), 2)
+        self.assertEqual(planned_sites.filter(quarter=InterventionPlannedVisitSite.Q4).count(), 2)
+        self.assertEqual(self.draft_intervention.planned_visits.first().sites.count(), 1 + 1 + 2 + 2)
+        self.assertEqual(len(response.data['planned_visits'][0]['programmatic_q4_sites']), 2)
         self.assertIn('name', response.data['planned_visits'][0]['programmatic_q4_sites'][0])
 
     def test_update(self):

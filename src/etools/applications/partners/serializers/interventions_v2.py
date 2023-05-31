@@ -209,7 +209,10 @@ class PlannedVisitSitesQuarterSerializer(fields.ListField):
 
     def save(self, planned_visits: InterventionPlannedVisits, sites: list[LocationSite]):
         sites = set(sites)
-        planned_sites = set(planned_visits.sites.all())
+        planned_sites = set(InterventionPlannedVisitSite.objects.filter(
+            planned_visits=planned_visits,
+            quarter=self.quarter,
+        ))
         sites_to_create = sites - planned_sites
         sites_to_delete = planned_sites - sites
         InterventionPlannedVisitSite.objects.bulk_create((
