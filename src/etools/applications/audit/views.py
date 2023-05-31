@@ -29,7 +29,7 @@ from etools.applications.audit.conditions import (
     AuditModuleCondition,
     AuditStaffMemberCondition,
     EngagementStaffMemberCondition,
-    IsStaffMemberCondition,
+    IsUnicefUserCondition,
 )
 from etools.applications.audit.exports import (
     AuditDetailCSVRenderer,
@@ -384,7 +384,7 @@ class EngagementViewSet(
             ObjectStatusCondition(obj),
             AuditStaffMemberCondition(obj.agreement.auditor_firm.organization, self.request.user),
             EngagementStaffMemberCondition(obj, self.request.user),
-            IsStaffMemberCondition(self.request.user)
+            IsUnicefUserCondition(self.request.user)
         ])
         return context
 

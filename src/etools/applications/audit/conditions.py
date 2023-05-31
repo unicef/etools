@@ -28,11 +28,11 @@ class EngagementStaffMemberCondition(SimpleCondition):
         return self.user in self.engagement.staff_members.all()
 
 
-class IsStaffMemberCondition(SimpleCondition):
-    predicate = 'user.is_staff'
+class IsUnicefUserCondition(SimpleCondition):
+    predicate = 'user.is_unicef_user'
 
     def __init__(self, user):
         self.user = user
 
     def is_satisfied(self):
-        return self.user.is_staff
+        return self.user.is_unicef_user()
