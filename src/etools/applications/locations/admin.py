@@ -22,6 +22,12 @@ class EtoolsCartoDBTableAdmin(CartoDBTableAdmin):
         messages.info(request, 'Import Scheduled')
 
 
+class eToolsLocationAdmin(LocationAdmin):
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).defer("geom", "point")
+
+
 admin.site.unregister(CartoDBTable)
 admin.site.register(CartoDBTable, EtoolsCartoDBTableAdmin)
-admin.site.register(Location, LocationAdmin)
+admin.site.register(Location, eToolsLocationAdmin)
