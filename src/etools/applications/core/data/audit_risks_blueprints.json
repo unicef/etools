@@ -1179,7 +1179,7 @@
         "model": "audit.riskblueprint",
         "pk": 253,
         "fields": {
-            "order": 0,
+            "order": 1,
             "weight": 1,
             "is_key": false,
             "header": "7. Are physical verifications of inventory items reconciled to the records held on a sufficiently frequent basis, and the results, and any necessary adjustments, documented and approved?",
@@ -1191,7 +1191,7 @@
         "model": "audit.riskblueprint",
         "pk": 254,
         "fields": {
-            "order": 0,
+            "order": 2,
             "weight": 1,
             "is_key": false,
             "header": "8. Are items with a limited shelf-life sufficiently monitored to ensure they do not expire prior to issue?",
@@ -1262,8 +1262,8 @@
         "pk": 258,
         "fields": {
             "order": 1,
-            "weight": 2,
-            "is_key": true,
+            "weight": 1,
+            "is_key": false,
             "header": "12. Are cash reconciliations performed on a frequent basis, by more than one individual at the same time, and the results documented and approved?",
             "description": "",
             "category": 127
@@ -1500,8 +1500,8 @@
         "pk": 276,
         "fields": {
             "order": 0,
-            "weight": 1,
-            "is_key": false,
+            "weight": 2,
+            "is_key": true,
             "header": "1. Does the organisation have and make use of a computerised accounting system that records sufficient details of each transaction to allow it to be linked to the corresponding documentation and allocated to the relevant funding source?",
             "description": "",
             "category": 128
@@ -1512,8 +1512,8 @@
         "pk": 277,
         "fields": {
             "order": 1,
-            "weight": 2,
-            "is_key": true,
+            "weight": 1,
+            "is_key": false,
             "header": "2. Is access to the accounting system protected through the use of usernames and passwords?",
             "description": "",
             "category": 128
