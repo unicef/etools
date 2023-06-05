@@ -27,6 +27,7 @@ class eToolsLocationAdmin(LocationAdmin):
         ActiveLocationsFilter,
         "admin_level",
     )
+
     def get_queryset(self, request):
         return super().get_queryset(request).defer("geom", "point")
 
