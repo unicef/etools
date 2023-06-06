@@ -3,7 +3,7 @@ from django.contrib.gis import admin
 
 from admin_extra_urls.decorators import button
 from celery import chain
-from unicef_locations.admin import CartoDBTableAdmin, LocationAdmin, ActiveLocationsFilter
+from unicef_locations.admin import ActiveLocationsFilter, CartoDBTableAdmin, LocationAdmin
 from unicef_locations.models import CartoDBTable
 
 from etools.applications.locations.models import Location
@@ -27,6 +27,7 @@ class eToolsLocationAdmin(LocationAdmin):
         ActiveLocationsFilter,
         "admin_level",
     )
+
     def get_queryset(self, request):
         return super().get_queryset(request).defer("geom", "point")
 
