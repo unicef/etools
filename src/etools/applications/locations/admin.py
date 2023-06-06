@@ -3,7 +3,7 @@ from django.contrib.gis import admin
 
 from admin_extra_urls.decorators import button
 from celery import chain
-from unicef_locations.admin import CartoDBTableAdmin, LocationAdmin
+from unicef_locations.admin import ActiveLocationsFilter, CartoDBTableAdmin, LocationAdmin
 from unicef_locations.models import CartoDBTable
 
 from etools.applications.locations.models import Location
@@ -22,6 +22,16 @@ class EtoolsCartoDBTableAdmin(CartoDBTableAdmin):
         messages.info(request, 'Import Scheduled')
 
 
+class eToolsLocationAdmin(LocationAdmin):
+    list_filter = (
+        ActiveLocationsFilter,
+        "admin_level",
+    )
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).defer("geom", "point")
+
+
 admin.site.unregister(CartoDBTable)
 admin.site.register(CartoDBTable, EtoolsCartoDBTableAdmin)
-admin.site.register(Location, LocationAdmin)
+admin.site.register(Location, eToolsLocationAdmin)
