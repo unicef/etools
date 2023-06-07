@@ -813,6 +813,61 @@ class TestUpdate(BaseInterventionTestCase):
         budget.refresh_from_db()
         self.assertEqual(budget.currency, "PEN")
 
+    def test_patch_has_unfunded_cash(self):
+        intervention = InterventionFactory()
+        intervention.unicef_focal_points.add(self.unicef_user)
+        budget = intervention.planned_budget
+        self.assertFalse(budget.has_unfunded_cash)
+
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+            user=self.unicef_user,
+            data={'planned_budget': {
+                "id": budget.pk,
+                "has_unfunded_cash": True,
+            }}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        budget.refresh_from_db()
+        self.assertTrue(budget.has_unfunded_cash)
+
+    def test_patch_unfunded_cash_local(self):
+        intervention = InterventionFactory()
+        intervention.unicef_focal_points.add(self.unicef_user)
+        budget = intervention.planned_budget
+        self.assertEqual(budget.unfunded_cash_local, 0)
+
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+            user=self.unicef_user,
+            data={'planned_budget': {
+                "id": budget.pk,
+                "unfunded_cash_local": 1234,
+            }}
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn(
+            'This programme document does not include unfunded amounts',
+            response.data['planned_budget']['unfunded_cash_local']
+        )
+        budget.has_unfunded_cash = True
+        budget.save(update_fields=['has_unfunded_cash'])
+
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+            user=self.unicef_user,
+            data={'planned_budget': {
+                "id": budget.pk,
+                "unfunded_cash_local": 1234,
+            }}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        budget.refresh_from_db()
+        self.assertEqual(budget.unfunded_cash_local, 1234)
+
     def test_patch_country_programme(self):
         intervention = InterventionFactory()
         agreement = intervention.agreement
