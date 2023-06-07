@@ -24,7 +24,7 @@ from etools.applications.audit.models import (
 class EngagementAdmin(admin.ModelAdmin):
     list_display = [
         '__str__', 'status', 'partner', 'date_of_field_visit',
-        'engagement_type', 'start_date', 'end_date',
+        'engagement_type', 'start_date', 'end_date', 'year_of_audit',
     ]
     list_filter = [
         'status', 'start_date', 'end_date', 'status', 'engagement_type',

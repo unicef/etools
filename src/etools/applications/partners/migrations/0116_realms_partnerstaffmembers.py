@@ -75,7 +75,7 @@ def migrate_partnerstaffmembers(apps, schema_editor):
 
 class Migration(migrations.Migration):
     dependencies = [
-        ('partners', '0113_alter_partnerorganization_organization'),
+        ('partners', '0115_alter_partnerorganization_organization'),
         ('users', '0021_migrate_to_realms'),
         ('organizations', '0001_initial'),
     ]

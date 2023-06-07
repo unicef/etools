@@ -9,7 +9,7 @@ from django.utils.translation import gettext as _
 
 from etools_validator.mixins import ValidatorViewMixin
 from rest_framework import status
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.generics import (
     CreateAPIView,
     DestroyAPIView,
@@ -51,8 +51,6 @@ from etools.applications.partners.serializers.exports.partner_organization impor
     AssessmentExportSerializer,
     PartnerOrganizationExportFlatSerializer,
     PartnerOrganizationExportSerializer,
-    PartnerStaffMemberExportFlatSerializer,
-    PartnerStaffMemberExportSerializer,
 )
 from etools.applications.partners.serializers.partner_organization_v2 import (
     AssessmentDetailSerializer,
@@ -64,14 +62,12 @@ from etools.applications.partners.serializers.partner_organization_v2 import (
     PartnerOrganizationHactSerializer,
     PartnerOrganizationListSerializer,
     PartnerPlannedVisitsSerializer,
-    PartnerStaffMemberDetailSerializer,
     PlannedEngagementNestedSerializer,
     PlannedEngagementSerializer,
 )
 from etools.applications.partners.tasks import sync_partner
 from etools.applications.partners.views.helpers import set_tenant_or_fail
-from etools.applications.t2f.models import Travel, TravelActivity, TravelType
-from etools.applications.users.models import User
+from etools.applications.t2f.models import Travel, TravelType
 from etools.applications.utils.pagination import AppendablePageNumberPagination
 from etools.libraries.djangolib.models import StringConcat
 from etools.libraries.djangolib.views import ExternalModuleFilterMixin
@@ -399,37 +395,6 @@ class PlannedEngagementAPIView(ListAPIView):
     serializer_class = PlannedEngagementSerializer
 
 
-class PartnerStaffMemberListAPIVIew(ExternalModuleFilterMixin, ExportModelMixin, ListAPIView):
-    """
-    Returns a list of all Partner staff members
-    """
-    queryset = User.objects.all()
-    serializer_class = PartnerStaffMemberDetailSerializer
-    permission_classes = (AllowSafeAuthenticated,)
-    filter_backends = (PartnerScopeFilter,)
-    renderer_classes = (
-        r.JSONRenderer,
-        r.CSVRenderer,
-        CSVFlatRenderer,
-    )
-    module2filters = {
-        'psea': ['partner__psea_assessment__assessor__auditor_firm_staff__user',
-                 'partner__psea_assessment__assessor__user']
-    }
-
-    def get_serializer_class(self, format=None):
-        """
-        Use restriceted field set for listing
-        """
-        query_params = self.request.query_params
-        if "format" in query_params.keys():
-            if query_params.get("format") == 'csv':
-                return PartnerStaffMemberExportSerializer
-            if query_params.get("format") == 'csv_flat':
-                return PartnerStaffMemberExportFlatSerializer
-        return super().get_serializer_class()
-
-
 class PartnerOrganizationAssessmentListCreateView(ExportModelMixin, ListCreateAPIView):
     """
     Returns a list of all Partner staff members
@@ -493,22 +458,24 @@ class PartnerOrganizationDeleteView(DestroyAPIView):
     permission_classes = (PartnershipManagerRepPermission,)
 
     def delete(self, request, *args, **kwargs):
-        try:
-            partner = PartnerOrganization.objects.get(id=int(kwargs['pk']))
-        except PartnerOrganization.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        if partner.agreements.exclude(status='draft').count() > 0:
-            raise ValidationError(
-                _("There was a PCA/SSFA signed with this partner or a transaction was performed "
-                  "against this partner. The Partner record cannot be deleted")
-            )
-        elif TravelActivity.objects.filter(partner=partner).count() > 0:
-            raise ValidationError(_("This partner has trips associated to it"))
-        elif (partner.total_ct_cp or 0) > 0:
-            raise ValidationError(_("This partner has cash transactions associated to it"))
-        else:
-            partner.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+        # TODO: hotfix to be addressed
+        raise PermissionDenied()
+        # try:
+        #     partner = PartnerOrganization.objects.get(id=int(kwargs['pk']))
+        # except PartnerOrganization.DoesNotExist:
+        #     return Response(status=status.HTTP_404_NOT_FOUND)
+        # if partner.agreements.exclude(status='draft').count() > 0:
+        #     raise ValidationError(
+        #         _("There was a PCA/SSFA signed with this partner or a transaction was performed "
+        #           "against this partner. The Partner record cannot be deleted")
+        #     )
+        # elif TravelActivity.objects.filter(partner=partner).count() > 0:
+        #     raise ValidationError(_("This partner has trips associated to it"))
+        # elif (partner.total_ct_cp or 0) > 0:
+        #     raise ValidationError(_("This partner has cash transactions associated to it"))
+        # else:
+        #     partner.delete()
+        #     return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class PartnerNotProgrammaticVisitCompliant(PartnerOrganizationListAPIView):

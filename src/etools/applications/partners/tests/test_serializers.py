@@ -173,7 +173,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
         self.assertSimpleExceptionFundamentals(
             context_manager,
             "Un PCA avec ce partenaire existe déjà pour ce cycle de programme de pays. Si "
-            "l'enregistrement est à l'état \"Brouillon\", veuillez le modifier."
+            "l'enregistrement est à l'état \"Développement\", veuillez le modifier."
         )
 
     def test_create_ok_non_PCA_with_same_programme_and_partner(self):
@@ -761,5 +761,5 @@ class TestPartnerOrganizationDetailSerializer(BaseTenantTestCase):
         self.assertEquals(len(data['staff_members']), 2)
         self.assertCountEqual(data['staff_members'][0].keys(), [
             'active', 'created', 'email', 'first_name', 'id',
-            'last_name', 'modified', 'phone', 'title'
+            'last_name', 'modified', 'phone', 'title', 'has_active_realm'
         ])

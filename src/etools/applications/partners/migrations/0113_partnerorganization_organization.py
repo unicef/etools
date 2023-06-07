@@ -37,7 +37,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('organizations', '0001_initial'),
-        ('partners', '0110_intervention_other_details'),
+        ('partners', '0112_auto_20230418_1346'),
     ]
 
     operations = [

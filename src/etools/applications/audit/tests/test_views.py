@@ -8,6 +8,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.management import call_command
 from django.db import connection
 from django.urls import reverse
+from django.utils import timezone
 
 from factory import fuzzy
 from rest_framework import status
@@ -19,6 +20,7 @@ from etools.applications.audit.models import Auditor, Engagement, Risk, SpotChec
 from etools.applications.audit.tests.base import AuditTestCaseMixin, EngagementTransitionsTestCaseMixin
 from etools.applications.audit.tests.factories import (
     AuditFactory,
+    AuditFocalPointUserFactory,
     AuditorUserFactory,
     AuditPartnerFactory,
     EngagementFactory,
@@ -37,7 +39,7 @@ from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.organizations.models import OrganizationType
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.reports.tests.factories import SectionFactory
-from etools.applications.users.tests.factories import CountryFactory, OfficeFactory, RealmFactory
+from etools.applications.users.tests.factories import CountryFactory, GroupFactory, OfficeFactory, RealmFactory
 
 
 class BaseTestCategoryRisksViewSet(EngagementTransitionsTestCaseMixin):
@@ -211,7 +213,9 @@ class TestMARisksViewSet(BaseTestCategoryRisksViewSet, BaseTenantTestCase):
     engagement_factory = MicroAssessmentFactory
     endpoint = 'micro-assessments'
 
-    def test_ma_risks(self):
+    def test_ma_risks_v1(self):
+        self.engagement.questionnaire_version = 1
+        self.engagement.save()
         self._test_engagement_categories(
             category_code='ma_questionnaire', field_name='questionnaire',
             allowed_user=self.auditor
@@ -221,7 +225,19 @@ class TestMARisksViewSet(BaseTestCategoryRisksViewSet, BaseTenantTestCase):
             allowed_user=self.auditor
         )
 
-    def test_update_unexisted_blueprint(self):
+    def test_ma_risks(self):
+        self._test_engagement_categories(
+            category_code='ma_questionnaire_v2', field_name='questionnaire',
+            allowed_user=self.auditor
+        )
+        self._test_engagement_categories(
+            category_code='ma_subject_areas', field_name='test_subject_areas',
+            allowed_user=self.auditor
+        )
+
+    def test_update_unexisted_blueprint_v1(self):
+        self.engagement.questionnaire_version = 1
+        self.engagement.save()
         self._update_unexisted_blueprint(
             field_name='questionnaire', category_code='ma_questionnaire',
             allowed_user=self.auditor
@@ -231,9 +247,31 @@ class TestMARisksViewSet(BaseTestCategoryRisksViewSet, BaseTenantTestCase):
             allowed_user=self.auditor
         )
 
-    def test_ma_risks_update_without_perms(self):
+    def test_update_unexisted_blueprint(self):
+        self._update_unexisted_blueprint(
+            field_name='questionnaire', category_code='ma_questionnaire_v2',
+            allowed_user=self.auditor
+        )
+        self._update_unexisted_blueprint(
+            field_name='test_subject_areas', category_code='ma_subject_areas',
+            allowed_user=self.auditor
+        )
+
+    def test_ma_risks_update_without_perms_v1(self):
+        self.engagement.questionnaire_version = 1
+        self.engagement.save()
         self._test_category_update_by_user_without_permissions(
             category_code='ma_questionnaire', field_name='questionnaire',
+            not_allowed=self.unicef_focal_point
+        )
+        self._test_category_update_by_user_without_permissions(
+            category_code='test_subject_areas', field_name='ma_subject_areas',
+            not_allowed=self.unicef_focal_point
+        )
+
+    def test_ma_risks_update_without_perms(self):
+        self._test_category_update_by_user_without_permissions(
+            category_code='ma_questionnaire_v2', field_name='questionnaire',
             not_allowed=self.unicef_focal_point
         )
         self._test_category_update_by_user_without_permissions(
@@ -297,6 +335,19 @@ class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, BaseTenantT
 
     def test_engagement_staff_list(self):
         self._test_list(self.auditor, [self.engagement])
+
+    def test_engagement_staff_list_multiple_auditor_realms(self):
+        auditor_firm_1 = AuditPartnerFactory()
+        engagement_1 = self.engagement_factory(agreement__auditor_firm=auditor_firm_1, staff_members=[self.auditor])
+        RealmFactory(
+            user=self.auditor, country=CountryFactory(),
+            organization=auditor_firm_1.organization, group=GroupFactory(name="Auditor")
+        )
+        self._test_list(self.auditor, [self.engagement])
+
+        self.auditor.profile.organization = auditor_firm_1.organization
+        self.auditor.profile.save(update_fields=['organization'])
+        self._test_list(self.auditor, [engagement_1])
 
     def test_non_engagement_staff_list(self):
         self._test_list(self.non_engagement_auditor, [])
@@ -555,6 +606,10 @@ class TestMicroAssessmentCreateViewSet(TestEngagementCreateActivePDViewSet, Base
 
 class TestAuditCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEngagementsCreateViewSet, BaseTenantTestCase):
     engagement_factory = AuditFactory
+
+    def setUp(self):
+        super().setUp()
+        self.create_data['year_of_audit'] = timezone.now().year
 
 
 class TestSpotCheckCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEngagementsCreateViewSet,
@@ -827,6 +882,32 @@ class TestStaffSpotCheck(AuditTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertIsNotNone(response.data['agreement'])
 
+    def test_detail_staff_members(self):
+        active_staff_list = []
+        for i in range(3):
+            active_staff_list.append(AuditFocalPointUserFactory())
+
+        inactive_unicef_focal_point = AuditFocalPointUserFactory()
+        inactive_unicef_focal_point.realms.update(is_active=False)
+
+        spot_check = SpotCheckFactory(staff_members=active_staff_list + [inactive_unicef_focal_point])
+
+        response = self.forced_auth_req(
+            'get',
+            reverse('audit:staff-spot-checks-detail', args=[spot_check.pk]),
+            user=self.unicef_focal_point,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['staff_members']), spot_check.staff_members.count())
+        self.assertEqual(
+            [inactive_unicef_focal_point.pk],
+            [staff['id'] for staff in response.data['staff_members'] if not staff['has_active_realm']]
+        )
+        self.assertEqual(
+            sorted([staff.pk for staff in active_staff_list]),
+            sorted([staff['id'] for staff in response.data['staff_members'] if staff['has_active_realm']])
+        )
+
     def test_list(self):
         SpotCheckFactory()
         staff_spot_check = StaffSpotCheckFactory()
@@ -898,6 +979,19 @@ class TestMetadataDetailViewSet(EngagementTransitionsTestCaseMixin):
         )
 
 
+class TestEngagementMetadataViewSet(AuditTestCaseMixin, BaseTenantTestCase):
+    endpoint = "engagements"
+
+    def test_staff_members(self):
+        response = self.forced_auth_req(
+            'options',
+            '/api/audit/{}/'.format(self.endpoint),
+            user=self.unicef_focal_point
+        )
+        self.assertIn('POST', response.data['actions'])
+        self.assertIn('staff_members', response.data['actions']['POST'])
+
+
 class TestMicroAssessmentMetadataDetailViewSet(TestMetadataDetailViewSet, BaseTenantTestCase):
     engagement_factory = MicroAssessmentFactory
     endpoint = 'micro-assessments'
@@ -916,11 +1010,19 @@ class TestAuditMetadataDetailViewSet(TestMetadataDetailViewSet, BaseTenantTestCa
     def test_weaknesses_choices(self):
         self._test_risk_choices('key_internal_weakness', Risk.AUDIT_VALUES)
 
-    def test_users_notified_auditor_not_staff(self):
-        self.assertFalse(self.auditor.is_staff)
+
+class TestSpotCheckMetadataDetailViewSet(TestMetadataDetailViewSet, BaseTenantTestCase):
+    engagement_factory = StaffSpotCheckFactory
+    endpoint = 'spot-checks'
+
+    def test_users_notified_auditor_not_unicef(self):
+        self.assertFalse(self.auditor.is_unicef_user())
+        spot_check = self.engagement_factory(
+            staff_members=[self.auditor], agreement__auditor_firm=self.auditor_firm
+        )
         response = self.forced_auth_req(
             'options',
-            '/api/audit/{}/{}/'.format(self.endpoint, self.engagement.id),
+            '/api/audit/{}/{}/'.format(self.endpoint, spot_check.id),
             user=self.auditor
         )
         self.assertIn('GET', response.data['actions'])
@@ -929,14 +1031,15 @@ class TestAuditMetadataDetailViewSet(TestMetadataDetailViewSet, BaseTenantTestCa
         put = response.data['actions']['PUT']
         self.assertNotIn('users_notified', put)
 
-    def test_users_notified_auditor_is_staff(self):
-        self.auditor.is_staff = True
-        self.auditor.save()
-        self.assertTrue(self.auditor.is_staff)
+    def test_users_notified_auditor_is_unicef(self):
+        spot_check = self.engagement_factory(
+            staff_members=[self.unicef_focal_point], agreement__auditor_firm=self.auditor_firm
+        )
+        self.assertTrue(self.unicef_focal_point.is_unicef_user())
         response = self.forced_auth_req(
             'options',
-            '/api/audit/{}/{}/'.format(self.endpoint, self.engagement.id),
-            user=self.auditor
+            '/api/audit/{}/{}/'.format(self.endpoint, spot_check.id),
+            user=self.unicef_focal_point
         )
         self.assertIn('GET', response.data['actions'])
         get = response.data['actions']['GET']

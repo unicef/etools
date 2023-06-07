@@ -4,6 +4,8 @@ from django.urls import reverse
 
 from rest_framework import status
 
+from etools.applications.field_monitoring.fm_settings.tests.factories import LocationSiteFactory
+from etools.applications.partners.models import InterventionPlannedVisitSite
 from etools.applications.partners.tests.factories import InterventionFactory, InterventionPlannedVisitsFactory
 from etools.applications.partners.tests.test_epd_management.base import BaseTestCase
 from etools.applications.users.tests.factories import PMEUserFactory, UserFactory
@@ -106,6 +108,9 @@ class TestProgrammaticVisitsManagement(BaseTestCase):
     # test functionality
     def test_add(self):
         self.assertEqual(self.draft_intervention.planned_visits.count(), 0)
+        site_2 = LocationSiteFactory()
+        site_3 = LocationSiteFactory()
+        site_5 = LocationSiteFactory()
         response = self.forced_auth_req(
             'patch',
             reverse('pmp_v3:intervention-detail', args=[self.draft_intervention.pk]),
@@ -117,12 +122,25 @@ class TestProgrammaticVisitsManagement(BaseTestCase):
                     'programmatic_q2': 2,
                     'programmatic_q3': 3,
                     'programmatic_q4': 4,
+                    "programmatic_q1_sites": [site_3.pk],
+                    "programmatic_q2_sites": [site_3.pk],
+                    "programmatic_q3_sites": [site_2.pk, site_3.pk],
+                    "programmatic_q4_sites": [site_3.pk, site_5.pk],
                 }],
             },
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertEqual(response.data['permissions']['edit']['planned_visits'], True)
         self.assertEqual(self.draft_intervention.planned_visits.count(), 1)
+        planned_visits = self.draft_intervention.planned_visits.first()
+        planned_sites = InterventionPlannedVisitSite.objects.filter(planned_visits=planned_visits)
+        self.assertEqual(planned_sites.filter(quarter=InterventionPlannedVisitSite.Q1).count(), 1)
+        self.assertEqual(planned_sites.filter(quarter=InterventionPlannedVisitSite.Q2).count(), 1)
+        self.assertEqual(planned_sites.filter(quarter=InterventionPlannedVisitSite.Q3).count(), 2)
+        self.assertEqual(planned_sites.filter(quarter=InterventionPlannedVisitSite.Q4).count(), 2)
+        self.assertEqual(self.draft_intervention.planned_visits.first().sites.count(), 1 + 1 + 2 + 2)
+        self.assertEqual(len(response.data['planned_visits'][0]['programmatic_q4_sites']), 2)
+        self.assertIn('name', response.data['planned_visits'][0]['programmatic_q4_sites'][0])
 
     def test_update(self):
         visit = InterventionPlannedVisitsFactory(

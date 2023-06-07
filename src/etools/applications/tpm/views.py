@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.db import connection
-from django.db.models import Q
+from django.db.models import Exists, OuterRef, Q
 from django.http import Http404
 from django.utils import timezone
 from django.utils.translation import gettext as _
@@ -76,7 +76,7 @@ from etools.applications.tpm.serializers.attachments import (
 from etools.applications.tpm.serializers.partner import (
     TPMPartnerLightSerializer,
     TPMPartnerSerializer,
-    TPMPartnerStaffMemberSerializer,
+    TPMPartnerStaffMemberRealmSerializer,
 )
 from etools.applications.tpm.serializers.visit import (
     TPMActionPointSerializer,
@@ -88,6 +88,7 @@ from etools.applications.tpm.serializers.visit import (
 from etools.applications.tpm.tpmpartners.models import TPMPartner
 from etools.applications.tpm.tpmpartners.synchronizers import TPMPartnerSynchronizer
 from etools.applications.users.mixins import TPM_ACTIVE_GROUPS
+from etools.applications.users.models import Realm
 
 
 class BaseTPMViewSet(
@@ -216,7 +217,7 @@ class TPMStaffMembersViewSet(
 ):
     metadata_class = PermissionBasedMetadata
     queryset = get_user_model().objects.all()
-    serializer_class = TPMPartnerStaffMemberSerializer
+    serializer_class = TPMPartnerStaffMemberRealmSerializer
     permission_classes = BaseTPMViewSet.permission_classes + [
         get_permission_for_targets('tpmpartners.tpmpartner.staff_members')
     ]
@@ -228,11 +229,15 @@ class TPMStaffMembersViewSet(
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        queryset = queryset.filter(
-            realms__country=connection.tenant,
-            realms__organization=self.get_parent_object().organization,
-            realms__group__name__in=TPM_ACTIVE_GROUPS,
-        ).distinct()
+        context_realms_qs = Realm.objects.filter(
+            organization=self.get_parent_object().organization,
+            country=connection.tenant,
+            group__name__in=TPM_ACTIVE_GROUPS
+        )
+        queryset = queryset\
+            .filter(realms__in=context_realms_qs)\
+            .annotate(has_active_realm=Exists(context_realms_qs.filter(user=OuterRef('pk'), is_active=True)))\
+            .distinct()
         return queryset
 
     def get_parent_filter(self):

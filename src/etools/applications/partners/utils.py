@@ -530,8 +530,8 @@ def send_intervention_draft_notification():
             created__lt=sdate_diff,
     ):
         recipients = [
-            u.user.email for u in intervention.unicef_focal_points.all()
-            if u.user.email
+            u.email for u in intervention.unicef_focal_points.all()
+            if u.email
         ]
         send_notification_with_template(
             recipients=recipients,
@@ -593,7 +593,7 @@ def send_intervention_amendment_added_notification(intervention):
     )
 
 
-# TODO REALMS PRP
+# TODO REALMS PRP - cleanup
 def sync_partner_staff_member(partner: PartnerOrganization, staff_member_data: PRPPartnerUserResponse):
     user_update_fields = {
         'is_active': staff_member_data.is_active,

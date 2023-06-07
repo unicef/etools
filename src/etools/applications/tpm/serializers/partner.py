@@ -18,6 +18,13 @@ class TPMPartnerStaffMemberSerializer(UserSerializer):
         ]
 
 
+class TPMPartnerStaffMemberRealmSerializer(TPMPartnerStaffMemberSerializer):
+    has_active_realm = serializers.BooleanField(read_only=True)
+
+    class Meta(TPMPartnerStaffMemberSerializer.Meta):
+        fields = TPMPartnerStaffMemberSerializer.Meta.fields + ['has_active_realm']
+
+
 class TPMPartnerLightSerializer(PermissionsBasedSerializerMixin, serializers.ModelSerializer):
     organization_id = serializers.IntegerField(read_only=True, source='organization.id')
 

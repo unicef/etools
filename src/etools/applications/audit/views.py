@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.db import connection
-from django.db.models import Prefetch
+from django.db.models import Exists, OuterRef, Prefetch
 from django.http import Http404
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -29,7 +29,7 @@ from etools.applications.audit.conditions import (
     AuditModuleCondition,
     AuditStaffMemberCondition,
     EngagementStaffMemberCondition,
-    IsStaffMemberCondition,
+    IsUnicefUserCondition,
 )
 from etools.applications.audit.exports import (
     AuditDetailCSVRenderer,
@@ -71,7 +71,7 @@ from etools.applications.audit.serializers.auditor import (
     AuditorFirmExportSerializer,
     AuditorFirmLightSerializer,
     AuditorFirmSerializer,
-    AuditorStaffMemberSerializer,
+    AuditorStaffMemberRealmSerializer,
     AuditUserSerializer,
     PurchaseOrderSerializer,
 )
@@ -352,7 +352,9 @@ class EngagementViewSet(
             # no need to filter queryset
             pass
         elif Auditor.as_group() in user_groups:
-            queryset = queryset.filter(staff_members=self.request.user)
+            queryset = queryset.filter(
+                agreement__auditor_firm__organization=self.request.user.profile.organization,
+                staff_members=self.request.user)
         else:
             queryset = queryset.none()
 
@@ -382,7 +384,7 @@ class EngagementViewSet(
             ObjectStatusCondition(obj),
             AuditStaffMemberCondition(obj.agreement.auditor_firm.organization, self.request.user),
             EngagementStaffMemberCondition(obj, self.request.user),
-            IsStaffMemberCondition(self.request.user)
+            IsUnicefUserCondition(self.request.user)
         ])
         return context
 
@@ -518,8 +520,8 @@ class AuditorStaffMembersViewSet(
     viewsets.GenericViewSet
 ):
     metadata_class = PermissionBasedMetadata
-    queryset = get_user_model().objects.prefetch_related('realms').distinct()
-    serializer_class = AuditorStaffMemberSerializer
+    queryset = get_user_model().objects.all()
+    serializer_class = AuditorStaffMemberRealmSerializer
     permission_classes = BaseAuditViewSet.permission_classes + [
         get_permission_for_targets('purchase_order.auditorfirm.staff_members')
     ]
@@ -537,11 +539,19 @@ class AuditorStaffMembersViewSet(
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        queryset = queryset.filter(
-            realms__country=connection.tenant,
-            realms__organization=self.get_parent_object().organization,
-            realms__group__name__in=AUDIT_ACTIVE_GROUPS,
+
+        context_realms_qs = Realm.objects.filter(
+            organization=self.get_parent_object().organization,
+            country=connection.tenant,
+            group__name__in=AUDIT_ACTIVE_GROUPS
         )
+        queryset = queryset.filter(
+            realms__organization=self.get_parent_object().organization,
+            realms__country=connection.tenant,
+            realms__group__name__in=AUDIT_ACTIVE_GROUPS) \
+            .annotate(has_active_realm=Exists(context_realms_qs.filter(user=OuterRef('pk'), is_active=True)))\
+            .distinct()
+
         return queryset
 
     def get_serializer_context(self):

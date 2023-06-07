@@ -1042,6 +1042,7 @@ class InterventionActivity(TimeStampedModel):
         max_digits=20,
         default=0,
     )
+
     time_frames = models.ManyToManyField(
         'InterventionTimeFrame',
         verbose_name=_('Time Frames Enabled'),

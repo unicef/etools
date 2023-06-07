@@ -453,7 +453,7 @@ class TestTripViewSet(BaseTenantTestCase):
         for _ in range(10):
             TripFactory()
 
-        user = UserFactory(first_name="First name", last_name="Last name")
+        user = UserFactory(first_name="Traveller First name", last_name="Traveller Last name")
         trip = TripFactory(traveller=user)
 
         def _validate_response(response):
@@ -465,7 +465,7 @@ class TestTripViewSet(BaseTenantTestCase):
         response = self.forced_auth_req(
             "get",
             reverse('travel:trip-list'),
-            data={"search": user.first_name[:4]},
+            data={"search": user.first_name[:9]},
             user=self.user,
         )
         _validate_response(response)

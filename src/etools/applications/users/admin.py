@@ -6,6 +6,7 @@ from django.db import connection
 from django.http.response import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from admin_extra_urls.decorators import button
@@ -18,6 +19,7 @@ from unicef_snapshot.admin import ActivityInline, SnapshotModelAdmin
 from etools.applications.funds.tasks import sync_all_delegated_frs, sync_country_delegated_fr
 from etools.applications.hact.tasks import update_hact_for_country, update_hact_values
 from etools.applications.users.models import Country, Realm, UserProfile, WorkspaceCounter
+from etools.applications.users.tasks import sync_realms_to_prp
 from etools.applications.vision.tasks import sync_handler, vision_sync_task
 from etools.libraries.azure_graph_api.tasks import sync_user
 
@@ -223,7 +225,7 @@ class UserAdminPlus(ExtraUrlMixin, UserAdmin):
         'is_active',
         'country',
     ]
-    list_select_related = ('country', 'office')
+    list_select_related = ('profile__country', 'profile__office')
 
     UserChangeForm.Meta.exclude = ('groups',)
 
@@ -231,6 +233,12 @@ class UserAdminPlus(ExtraUrlMixin, UserAdmin):
     def sync_user(self, request, pk):
         user = get_object_or_404(get_user_model(), pk=pk)
         sync_user.delay(user.username)
+        return HttpResponseRedirect(reverse('admin:users_user_change', args=[user.pk]))
+
+    @button()
+    def sync_realms_to_prp(self, request, pk):
+        user = get_object_or_404(get_user_model(), pk=pk)
+        sync_realms_to_prp.delay(user.id, timezone.now().timestamp())
         return HttpResponseRedirect(reverse('admin:users_user_change', args=[user.pk]))
 
     @button()
@@ -353,10 +361,10 @@ class CountryAdmin(ExtraUrlMixin, TenantAdminMixin, admin.ModelAdmin):
 
 
 class RealmAdmin(SnapshotModelAdmin):
-    raw_id_fields = ('user', )
+    raw_id_fields = ('user', 'organization')
     search_fields = ('user__email', 'user__first_name', 'user__last_name', 'country__name',
                      'organization__name', 'organization__vendor_number', 'group__name')
-    autocomplete_fields = ('country', 'organization', 'group')
+    autocomplete_fields = ('country', 'group')
 
     inlines = (ActivityInline, )
 

@@ -146,7 +146,7 @@ class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
         self.email = self.__class__.objects.normalize_email(self.email)
 
     def __str__(self):
-        return'{} {} ({})'.format(
+        return '{} {} ({})'.format(
             self.first_name,
             self.last_name,
             self.profile.organization.name if self.profile.organization else '-'

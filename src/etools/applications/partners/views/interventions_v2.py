@@ -328,10 +328,6 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
             logging.debug(validator.errors)
             raise ValidationError(validator.errors)
 
-        if tenant_switch_is_active('intervention_amendment_notifications_on') and \
-                old_instance and not self.instance.in_amendment and old_instance.in_amendment:
-            send_intervention_amendment_added_notification(self.instance)
-
         if getattr(self.instance, '_prefetched_objects_cache', None):
             # If 'prefetch_related' has been applied to a queryset, we need to
             # refresh the instance from the database.
@@ -515,6 +511,10 @@ class InterventionAmendmentListAPIView(ExportModelMixin, ValidatorViewMixin, Lis
         serializer = self.get_serializer(data=raw_data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
+
+        if tenant_switch_is_active('intervention_amendment_notifications_on'):
+            send_intervention_amendment_added_notification(serializer.instance.intervention)
+
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 

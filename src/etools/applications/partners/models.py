@@ -7,7 +7,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import ArrayField
 from django.core.validators import MinValueValidator
 from django.db import connection, models, transaction
-from django.db.models import Case, CharField, Count, F, Max, Min, OuterRef, Prefetch, Q, Subquery, Sum, When
+from django.db.models import Case, CharField, Count, Exists, F, Max, Min, OuterRef, Prefetch, Q, Subquery, Sum, When
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.functional import cached_property
@@ -554,19 +554,26 @@ class PartnerOrganization(TimeStampedModel):
         return self.organization.cso_type
 
     @cached_property
-    def all_staff_members(self):
-        return User.objects.filter(
-            realms__organization=self.organization,
-            realms__country=connection.tenant,
-            realms__group__name__in=PARTNER_ACTIVE_GROUPS,
+    def context_realms(self):
+        return Realm.objects.filter(
+            organization=self.organization,
+            country=connection.tenant,
+            group__name__in=PARTNER_ACTIVE_GROUPS,
         )
 
     @cached_property
+    def all_staff_members(self):
+        user_qs = User.objects.filter(realms__in=self.context_realms)
+
+        return user_qs\
+            .annotate(has_active_realm=Exists(self.context_realms.filter(user=OuterRef('pk'), is_active=True)))\
+            .distinct()
+
+    @cached_property
     def active_staff_members(self):
-        return self.all_staff_members.filter(
-            is_active=True,
-            realms__is_active=True
-        )
+        return self.all_staff_members\
+            .filter(is_active=True, has_active_realm=True)\
+            .distinct()
 
     def get_object_url(self):
         return reverse("partners_api:partner-detail", args=[self.pk])
@@ -875,12 +882,12 @@ class PartnerOrganization(TimeStampedModel):
         from etools.applications.audit.models import Audit, Engagement, SpecialAudit
         audits = Audit.objects.filter(
             partner=self,
-            date_of_draft_report_to_ip__year=datetime.datetime.now().year
+            year_of_audit=datetime.datetime.now().year
         ).exclude(status=Engagement.CANCELLED)
 
         s_audits = SpecialAudit.objects.filter(
             partner=self,
-            date_of_draft_report_to_ip__year=datetime.datetime.now().year
+            year_of_audit=datetime.datetime.now().year
         ).exclude(status=Engagement.CANCELLED)
         return audits, s_audits
 
@@ -1675,6 +1682,7 @@ class InterventionManager(models.Manager):
             'management_budgets__items',
             'flat_locations',
             'sites',
+            'planned_visits__sites',
             Prefetch('supply_items',
                      queryset=InterventionSupplyItem.objects.order_by('-id')),
         )
@@ -1891,7 +1899,7 @@ class Intervention(TimeStampedModel):
         null=True,
         unique=True,
     )
-    title = models.CharField(verbose_name=_("Document Title"), max_length=256)
+    title = models.CharField(verbose_name=_("Document Title"), max_length=306)
     status = FSMField(
         verbose_name=_("Status"),
         max_length=32,
@@ -2904,6 +2912,11 @@ class InterventionAmendment(TimeStampedModel):
         self.is_active = False
         self.save()
 
+        # TODO: Technical debt - remove after tempoorary exception for ended amendments is removed.
+        if self.intervention.status == self.intervention.ENDED:
+            if self.intervention.end >= datetime.date.today() >= self.intervention.start:
+                self.intervention.status = self.intervention.ACTIVE
+
         self.intervention.save(amendment_number=self.intervention.amendments.filter(is_active=False).count())
 
         amended_intervention.delete()
@@ -2919,6 +2932,27 @@ class InterventionAmendment(TimeStampedModel):
         )
 
 
+class InterventionPlannedVisitSite(models.Model):
+    Q1 = 1
+    Q2 = 2
+    Q3 = 3
+    Q4 = 4
+
+    QUARTER_CHOICES = (
+        (Q1, _('Q1')),
+        (Q2, _('Q2')),
+        (Q3, _('Q3')),
+        (Q4, _('Q4')),
+    )
+
+    planned_visits = models.ForeignKey('partners.InterventionPlannedVisits', on_delete=models.CASCADE)
+    site = models.ForeignKey('field_monitoring_settings.LocationSite', on_delete=models.CASCADE)
+    quarter = models.PositiveSmallIntegerField(choices=QUARTER_CHOICES)
+
+    class Meta:
+        unique_together = ('planned_visits', 'site', 'quarter')
+
+
 class InterventionPlannedVisits(TimeStampedModel):
     """Represents planned visits for the intervention"""
 
@@ -2931,6 +2965,12 @@ class InterventionPlannedVisits(TimeStampedModel):
     programmatic_q2 = models.IntegerField(default=0, verbose_name=_('Programmatic Q2'))
     programmatic_q3 = models.IntegerField(default=0, verbose_name=_('Programmatic Q3'))
     programmatic_q4 = models.IntegerField(default=0, verbose_name=_('Programmatic Q4'))
+    sites = models.ManyToManyField(
+        'field_monitoring_settings.LocationSite',
+        through=InterventionPlannedVisitSite,
+        verbose_name=_('Sites'),
+        blank=True,
+    )
 
     tracker = FieldTracker()
 
@@ -2940,6 +2980,32 @@ class InterventionPlannedVisits(TimeStampedModel):
 
     def __str__(self):
         return '{} {}'.format(self.intervention, self.year)
+
+    def programmatic_sites(self, quarter):
+        from etools.applications.field_monitoring.fm_settings.models import LocationSite
+        return LocationSite.objects.filter(
+            pk__in=InterventionPlannedVisitSite.objects.filter(
+                site__in=self.sites.all(),
+                planned_visits=self,
+                quarter=quarter
+            ).values_list('site', flat=True)
+        )
+
+    @property
+    def programmatic_q1_sites(self):
+        return self.programmatic_sites(InterventionPlannedVisitSite.Q1)
+
+    @property
+    def programmatic_q2_sites(self):
+        return self.programmatic_sites(InterventionPlannedVisitSite.Q2)
+
+    @property
+    def programmatic_q3_sites(self):
+        return self.programmatic_sites(InterventionPlannedVisitSite.Q3)
+
+    @property
+    def programmatic_q4_sites(self):
+        return self.programmatic_sites(InterventionPlannedVisitSite.Q4)
 
 
 class InterventionResultLink(TimeStampedModel):
@@ -3049,6 +3115,7 @@ class InterventionBudget(TimeStampedModel):
         verbose_name=_('UNICEF Supplies Local')
     )
     has_unfunded_cash = models.BooleanField(verbose_name=_("Unfunded Cash"), default=False)
+
     currency = CurrencyField(verbose_name=_('Currency'), null=False, default='')
     total_local = models.DecimalField(max_digits=20, decimal_places=2, verbose_name=_('Total Local'))
     programme_effectiveness = models.DecimalField(
@@ -3316,7 +3383,7 @@ class InterventionReviewNotification(TimeStampedModel):
             'intervention_number': self.review.intervention.reference_number,
             'meeting_date': self.review.meeting_date.strftime('%d-%m-%Y'),
             'user_name': self.user.get_full_name(),
-            'url': '{}{}'.format(settings.HOST, self.review.intervention.get_frontend_object_url(suffix='review'))
+            'url': self.review.intervention.get_frontend_object_url(suffix='review')
         }
 
         send_notification_with_template(
@@ -3588,6 +3655,12 @@ class InterventionManagementBudget(TimeStampedModel):
         max_digits=20,
         default=0,
     )
+    act1_unfunded = models.DecimalField(
+        verbose_name=_("Unfunded amount for In-country management and support staff prorated to their contribution to the programme (representation, planning, coordination, logistics, administration, finance)"),
+        decimal_places=2,
+        max_digits=20,
+        default=0,
+    )
     act2_unicef = models.DecimalField(
         verbose_name=_("UNICEF contribution for Operational costs prorated to their contribution to the programme (office space, equipment, office supplies, maintenance)"),
         decimal_places=2,
@@ -3786,6 +3859,7 @@ class InterventionManagementBudgetItem(models.Model):
         max_digits=20,
         default=0,
     )
+
     unfunded_cash = models.DecimalField(
         verbose_name=_("Unfunded Cash Local"),
         decimal_places=2,
