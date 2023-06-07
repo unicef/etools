@@ -9,22 +9,23 @@ from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.action_points.tests.factories import ActionPointFactory
 from etools.applications.attachments.tests.factories import AttachmentFactory
-from etools.applications.firms.tests.factories import BaseFirmFactory, BaseStaffMemberFactory
+from etools.applications.firms.tests.factories import BaseFirmFactory
 from etools.applications.partners.models import InterventionResultLink
 from etools.applications.partners.tests.factories import InterventionFactory
 from etools.applications.reports.tests.factories import OfficeFactory, ResultFactory, SectionFactory
-from etools.applications.tpm.models import TPMActivity, TPMVisit, TPMVisitReportRejectComment
-from etools.applications.tpm.tpmpartners.models import TPMPartner, TPMPartnerStaffMember
-from etools.applications.users.tests.factories import PMEUserFactory, UserFactory
+from etools.applications.tpm.models import ThirdPartyMonitor, TPMActivity, TPMVisit, TPMVisitReportRejectComment
+from etools.applications.tpm.tpmpartners.models import TPMPartner
+from etools.applications.users.tests.factories import (
+    CountryFactory,
+    GroupFactory,
+    PMEUserFactory,
+    RealmFactory,
+    UserFactory,
+)
 from etools.libraries.tests.factories import StatusFactoryMetaClass
 
 _FUZZY_START_DATE = timezone.now().date() - datetime.timedelta(days=5)
 _FUZZY_END_DATE = timezone.now().date() + datetime.timedelta(days=5)
-
-
-class TPMPartnerStaffMemberFactory(BaseStaffMemberFactory):
-    class Meta:
-        model = TPMPartnerStaffMember
 
 
 class SimpleTPMPartnerFactory(BaseFirmFactory):
@@ -32,8 +33,40 @@ class SimpleTPMPartnerFactory(BaseFirmFactory):
         model = TPMPartner
 
 
+class TPMUserFactory(UserFactory):
+    realms__data = [ThirdPartyMonitor.name]
+
+    @factory.post_generation
+    def tpm_partner(self, create, extracted, **kwargs):
+        if not create:
+            return
+
+        if not extracted:
+            extracted = TPMPartnerFactory()
+
+        self.profile.organization = extracted.organization
+        self.profile.save(update_fields=['organization'])
+
+    @factory.post_generation
+    def realms(self, create, extracted, data=None, **kwargs):
+        if not create:
+            return
+
+        extracted = (extracted or []) + (data or [])
+        if extracted:
+            organization = self.profile.organization
+            for group in extracted:
+                if isinstance(group, str):
+                    RealmFactory(
+                        user=self,
+                        country=CountryFactory(),
+                        organization=organization,
+                        group=GroupFactory(name=group)
+                    )
+
+
 class TPMPartnerFactory(SimpleTPMPartnerFactory):
-    staff_members = factory.RelatedFactory(TPMPartnerStaffMemberFactory, 'tpm_partner')
+    staff_members = factory.RelatedFactory(TPMUserFactory, 'tpm_partner')
 
     @factory.post_generation
     def countries(self, create, extracted, **kwargs):
@@ -121,20 +154,6 @@ class TPMActivityFactory(factory.django.DjangoModelFactory):
             ActionPointFactory(tpm_activity=self, **kwargs)
 
 
-class TPMUserFactory(UserFactory):
-    groups__data = ['Third Party Monitor']
-
-    @factory.post_generation
-    def tpm_partner(self, create, extracted, **kwargs):
-        if not create:
-            return
-
-        if not extracted:
-            extracted = TPMPartnerFactory()
-
-        TPMPartnerStaffMemberFactory(tpm_partner=extracted, user=self)
-
-
 class BaseTPMVisitFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = TPMVisit
@@ -153,8 +172,7 @@ class BaseTPMVisitFactory(factory.django.DjangoModelFactory):
         if extracted is not None:
             self.tpm_partner_focal_points.add(*extracted)
         else:
-            self.tpm_partner_focal_points.add(*[TPMPartnerStaffMemberFactory(tpm_partner=self.tpm_partner)
-                                                for i in range(count)])
+            self.tpm_partner_focal_points.add(*[TPMUserFactory(tpm_partner=self.tpm_partner) for _i in range(count)])
 
     @factory.post_generation
     def tpm_activities(self, create, extracted, count=0, **kwargs):

@@ -17,9 +17,15 @@ def tpm_staff_members_belongs_to_the_partner(i):
     if not i.tpm_partner:
         return True
 
-    team_members = set(i.team_members.values_list('id', flat=True))
-    partner_staff_members = set(i.tpm_partner.staff_members.all().values_list('user', flat=True))
-    if team_members - partner_staff_members:
+    team_members = set([tm.id for tm in i.team_members.all()])
+    if i.old_instance:
+        old_team_members = set([tm.id for tm in i.old_instance.team_members.all()])
+        members_to_validate = team_members - old_team_members
+    else:
+        members_to_validate = team_members
+
+    partner_staff_members = set(i.tpm_partner.staff_members.all().values_list('id', flat=True))
+    if members_to_validate - partner_staff_members:
         raise BasicValidationError(_('Staff members do not belong to the selected partner'))
 
     return True

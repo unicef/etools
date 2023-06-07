@@ -7,7 +7,7 @@ from etools.applications.partners.models import Intervention
 
 class InterventionDashSerializer(serializers.ModelSerializer):
     intervention_id = serializers.CharField(source='id', read_only=True)
-    partner_name = serializers.CharField(source='agreement.partner.name', read_only=True)
+    partner_name = serializers.CharField(source='agreement.partner.organization.name', read_only=True)
     partner_id = serializers.CharField(source='agreement.partner.id', read_only=True)
     partner_blocked = serializers.BooleanField(source='agreement.partner.blocked', read_only=True)
     partner_marked_for_deletion = serializers.BooleanField(source='agreement.partner.deleted_flag', read_only=True)

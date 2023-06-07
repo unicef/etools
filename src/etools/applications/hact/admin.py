@@ -6,7 +6,7 @@ from etools.applications.hact.models import AggregateHact, HactHistory
 @admin.register(HactHistory)
 class HactHistoryAdmin(admin.ModelAdmin):
     list_filter = ('year', )
-    search_fields = ('partner__name', 'year')
+    search_fields = ('partner__organization__name', 'year')
     list_display = ('partner', 'year')
 
 

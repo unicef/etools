@@ -2,11 +2,12 @@ import datetime
 import decimal
 
 from django.conf import settings
+from django.contrib.auth.models import Group
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import ArrayField
 from django.core.validators import MinValueValidator
-from django.db import connection, IntegrityError, models, transaction
-from django.db.models import Case, CharField, Count, F, Max, Min, OuterRef, Prefetch, Q, Subquery, Sum, When
+from django.db import connection, models, transaction
+from django.db.models import Case, CharField, Count, Exists, F, Max, Min, OuterRef, Prefetch, Q, Subquery, Sum, When
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.functional import cached_property
@@ -24,6 +25,7 @@ from etools.applications.core.permissions import import_permissions
 from etools.applications.environment.notifications import send_notification_with_template
 from etools.applications.funds.models import FundsReservationHeader
 from etools.applications.locations.models import Location
+from etools.applications.organizations.models import Organization, OrganizationType
 from etools.applications.partners.amendment_utils import (
     calculate_difference,
     copy_instance,
@@ -47,7 +49,8 @@ from etools.applications.partners.validation.agreements import (
 from etools.applications.reports.models import CountryProgramme, Indicator, Office, Result, Section
 from etools.applications.t2f.models import Travel, TravelActivity, TravelType
 from etools.applications.tpm.models import TPMActivity, TPMVisit
-from etools.applications.users.models import Country
+from etools.applications.users.mixins import PARTNER_ACTIVE_GROUPS
+from etools.applications.users.models import Country, Realm, User
 from etools.libraries.djangolib.fields import CurrencyField
 from etools.libraries.djangolib.models import MaxDistinct, StringConcat
 from etools.libraries.djangolib.utils import get_environment
@@ -157,20 +160,6 @@ class WorkspaceFileType(models.Model):
         return self.name
 
 
-class PartnerType:
-    BILATERAL_MULTILATERAL = 'Bilateral / Multilateral'
-    CIVIL_SOCIETY_ORGANIZATION = 'Civil Society Organization'
-    GOVERNMENT = 'Government'
-    UN_AGENCY = 'UN Agency'
-
-    CHOICES = Choices(
-        (BILATERAL_MULTILATERAL, _('Bilateral / Multilateral')),
-        (CIVIL_SOCIETY_ORGANIZATION, _('Civil Society Organization')),
-        (GOVERNMENT, _('Government')),
-        (UN_AGENCY, _('UN Agency'))
-    )
-
-
 def hact_default():
     return {
         'audits': {
@@ -214,7 +203,7 @@ class PartnerOrganizationQuerySet(models.QuerySet):
 
     def active(self, *args, **kwargs):
         return self.filter(
-            Q(partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION, agreements__interventions__status__in=[
+            Q(partner_type=OrganizationType.CIVIL_SOCIETY_ORGANIZATION, agreements__interventions__status__in=[
                 Intervention.ACTIVE, Intervention.SIGNED, Intervention.SUSPENDED, Intervention.ENDED]) |
             Q(total_ct_cp__gt=0), hidden=False, *args, **kwargs)
 
@@ -239,15 +228,25 @@ class PartnerOrganizationQuerySet(models.QuerySet):
         return self.not_programmatic_visit_compliant().not_spot_check_compliant(*args, **kwargs)
 
 
+class PartnerOrganizationManager(models.Manager.from_queryset(PartnerOrganizationQuerySet)):
+
+    def get_queryset(self):
+        return super().get_queryset()\
+            .select_related('organization')\
+            .annotate(name=F('organization__name')) \
+            .annotate(vendor_number=F('organization__vendor_number')) \
+            .annotate(partner_type=F('organization__organization_type')) \
+            .annotate(cso_type=F('organization__cso_type')) \
+            .order_by('organization__name')
+
+
 class PartnerOrganization(TimeStampedModel):
     """
     Represents a partner organization
 
     related models:
+        Organization: "organization"
         Assessment: "assessments"
-        PartnerStaffMember: "staff_members"
-
-
     """
     # When cash transferred to a country programme exceeds CT_CP_AUDIT_TRIGGER_LEVEL, an audit is triggered.
     EXPIRING_ASSESSMENT_LIMIT_YEAR = 4
@@ -334,46 +333,14 @@ class PartnerOrganization(TimeStampedModel):
         ('WHO', 'WHO')
     )
 
-    CSO_TYPE_INTERNATIONAL = 'International'
-    CSO_TYPE_NATIONAL = 'National'
-    CSO_TYPE_COMMUNITY = 'Community Based Organization'
-    CSO_TYPE_ACADEMIC = 'Academic Institution'
-    CSO_TYPE_REDCROSS = 'Red Cross/Red Crescent National Societies'
-    CSO_TYPES = Choices(
-        (CSO_TYPE_INTERNATIONAL, _('International')),
-        (CSO_TYPE_NATIONAL, _('National')),
-        (CSO_TYPE_COMMUNITY, _('Community Based Organization')),
-        (CSO_TYPE_ACADEMIC, _('Academic Institution')),
-        (CSO_TYPE_REDCROSS, _('Red Cross/Red Crescent National Societies')),
-    )
-
     ASSURANCE_VOID = 'void'
     ASSURANCE_PARTIAL = 'partial'
     ASSURANCE_COMPLETE = 'complete'
 
-    partner_type = models.CharField(
-        verbose_name=_("Partner Type"),
-        max_length=50,
-        choices=PartnerType.CHOICES
-    )
-
-    # this is only applicable if type is CSO
-    cso_type = models.CharField(
-        verbose_name=_('CSO Type'),
-        max_length=50,
-        choices=CSO_TYPES,
-        blank=True,
-        null=True,
-    )
-    name = models.CharField(
-        verbose_name=_('Name'),
-        max_length=255,
-        help_text='Please make sure this matches the name you enter in VISION'
-    )
-    short_name = models.CharField(
-        verbose_name=_("Short Name"),
-        max_length=50,
-        blank=True
+    organization = models.OneToOneField(
+        Organization,
+        on_delete=models.CASCADE,
+        related_name='partner'
     )
     description = models.CharField(
         verbose_name=_("Description"),
@@ -431,13 +398,7 @@ class PartnerOrganization(TimeStampedModel):
         blank=True,
         null=True,
     )
-    vendor_number = models.CharField(
-        verbose_name=_("Vendor Number"),
-        blank=True,
-        null=True,  # nullable so it can be optional and not interfere with uniqueness
-        unique=True,
-        max_length=30
-    )
+
     alternate_id = models.IntegerField(
         verbose_name=_("Alternate ID"),
         blank=True,
@@ -564,14 +525,55 @@ class PartnerOrganization(TimeStampedModel):
                                      blank=True, null=True, on_delete=models.SET_NULL)
 
     tracker = FieldTracker()
-    objects = PartnerOrganizationQuerySet.as_manager()
+    objects = PartnerOrganizationManager()
 
     class Meta:
-        ordering = ['name']
-        unique_together = ('name', 'vendor_number')
+        base_manager_name = 'objects'
 
     def __str__(self):
-        return self.name
+        return self.organization.name if self.organization and self.organization.name else self.vendor_number
+
+    @cached_property
+    def name(self):
+        return self.organization.name if self.organization and self.organization.name else ''
+
+    @cached_property
+    def short_name(self):
+        return self.organization.short_name if self.organization and self.organization.short_name else ''
+
+    @cached_property
+    def vendor_number(self):
+        return self.organization.vendor_number if self.organization and self.organization.vendor_number else ''
+
+    @cached_property
+    def partner_type(self):
+        return self.organization.organization_type
+
+    @cached_property
+    def cso_type(self):
+        return self.organization.cso_type
+
+    @cached_property
+    def context_realms(self):
+        return Realm.objects.filter(
+            organization=self.organization,
+            country=connection.tenant,
+            group__name__in=PARTNER_ACTIVE_GROUPS,
+        )
+
+    @cached_property
+    def all_staff_members(self):
+        user_qs = User.objects.filter(realms__in=self.context_realms)
+
+        return user_qs\
+            .annotate(has_active_realm=Exists(self.context_realms.filter(user=OuterRef('pk'), is_active=True)))\
+            .distinct()
+
+    @cached_property
+    def active_staff_members(self):
+        return self.all_staff_members\
+            .filter(is_active=True, has_active_realm=True)\
+            .distinct()
 
     def get_object_url(self):
         return reverse("partners_api:partner-detail", args=[self.pk])
@@ -582,10 +584,10 @@ class PartnerOrganization(TimeStampedModel):
     @cached_property
     def partner_type_slug(self):
         slugs = {
-            PartnerType.BILATERAL_MULTILATERAL: 'Multi',
-            PartnerType.CIVIL_SOCIETY_ORGANIZATION: 'CSO',
-            PartnerType.GOVERNMENT: 'Gov',
-            PartnerType.UN_AGENCY: 'UN',
+            OrganizationType.BILATERAL_MULTILATERAL: 'Multi',
+            OrganizationType.CIVIL_SOCIETY_ORGANIZATION: 'CSO',
+            OrganizationType.GOVERNMENT: 'Gov',
+            OrganizationType.UN_AGENCY: 'UN',
         }
         return slugs.get(self.partner_type, self.partner_type)
 
@@ -632,7 +634,7 @@ class PartnerOrganization(TimeStampedModel):
     @cached_property
     def min_req_programme_visits(self):
         programme_visits = 0
-        if self.partner_type not in [PartnerType.BILATERAL_MULTILATERAL, PartnerType.UN_AGENCY]:
+        if self.partner_type not in [OrganizationType.BILATERAL_MULTILATERAL, OrganizationType.UN_AGENCY]:
             ct = self.net_ct_cy or 0  # Must be integer, but net_ct_cy could be None
 
             if ct <= PartnerOrganization.CT_MR_AUDIT_TRIGGER_LEVEL:
@@ -671,7 +673,7 @@ class PartnerOrganization(TimeStampedModel):
     def min_req_spot_checks(self):
         # reported_cy can be None
         reported_cy = self.reported_cy or 0
-        if self.partner_type in [PartnerType.BILATERAL_MULTILATERAL, PartnerType.UN_AGENCY]:
+        if self.partner_type in [OrganizationType.BILATERAL_MULTILATERAL, OrganizationType.UN_AGENCY]:
             return 0
         if self.type_of_assessment == 'Low Risk Assumed' or reported_cy <= PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL:
             return 0
@@ -686,7 +688,7 @@ class PartnerOrganization(TimeStampedModel):
 
     @cached_property
     def min_req_audits(self):
-        if self.partner_type in [PartnerType.BILATERAL_MULTILATERAL, PartnerType.UN_AGENCY]:
+        if self.partner_type in [OrganizationType.BILATERAL_MULTILATERAL, OrganizationType.UN_AGENCY]:
             return 0
         return self.planned_engagement.required_audit if getattr(self, 'planned_engagement', None) else 0
 
@@ -880,12 +882,12 @@ class PartnerOrganization(TimeStampedModel):
         from etools.applications.audit.models import Audit, Engagement, SpecialAudit
         audits = Audit.objects.filter(
             partner=self,
-            date_of_draft_report_to_ip__year=datetime.datetime.now().year
+            year_of_audit=datetime.datetime.now().year
         ).exclude(status=Engagement.CANCELLED)
 
         s_audits = SpecialAudit.objects.filter(
             partner=self,
-            date_of_draft_report_to_ip__year=datetime.datetime.now().year
+            year_of_audit=datetime.datetime.now().year
         ).exclude(status=Engagement.CANCELLED)
         return audits, s_audits
 
@@ -927,11 +929,7 @@ class PartnerOrganization(TimeStampedModel):
         return reverse(admin_url_name, args=(self.id,))
 
     def user_is_staff_member(self, user):
-        staff_member = user.get_partner_staff_member()
-        if not staff_member:
-            return False
-
-        return staff_member.id in self.staff_members.values_list('id', flat=True)
+        return user.id in self.active_staff_members.values_list('id', flat=True)
 
 
 class CoreValuesAssessment(TimeStampedModel):
@@ -953,6 +951,7 @@ class PartnerStaffMemberManager(models.Manager):
         return super().get_queryset().select_related('partner')
 
 
+# TODO REALMS clean up
 class PartnerStaffMember(TimeStampedModel):
     """
     Represents a staff member at the partner organization.
@@ -968,13 +967,13 @@ class PartnerStaffMember(TimeStampedModel):
     partner = models.ForeignKey(
         PartnerOrganization,
         verbose_name=_("Partner"),
-        related_name='staff_members',
+        related_name='old_staff_members',
         on_delete=models.CASCADE,
     )
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         verbose_name=_("User"),
-        related_name='partner_staff_member',
+        related_name='old_partner_staff_member',
         on_delete=models.PROTECT,
         null=True,
         blank=True,
@@ -1027,26 +1026,27 @@ class PartnerStaffMember(TimeStampedModel):
         2. only one user staff member can be active through all tenants
         """
 
-        # make sure no other partner staff records exist with matching email
-        if not self.pk and self.user:
-            if bool(self.user.get_staff_member_country()):
-                raise IntegrityError(
-                    "Partner Staff Member record already exists with matching email.",
-                )
-
         if self.user and self.tracker.has_changed('active'):
+
             if self.active:
                 # staff is activated
-                self.user.profile.countries_available.add(connection.tenant)
                 self.user.profile.country = connection.tenant
-                self.user.profile.save()
+                self.user.profile.organization = self.partner.organization
+                self.user.profile.save(update_fields=['country', 'organization'])
             else:
                 # staff is deactivated
-                self.user.profile.countries_available.remove(connection.tenant)
                 # using first() here because public schema unavailable during testing
                 self.user.profile.country = Country.objects.filter(schema_name=get_public_schema_name()).first()
-                self.user.profile.save()
-
+                self.user.profile.organization = None
+                self.user.profile.save(update_fields=['country', 'organization'])
+            # create or update (activate/deactivate) corresponding Realm
+            Realm.objects.update_or_create(
+                user=self.user,
+                country=connection.tenant,
+                organization=self.partner.organization,
+                group=Group.objects.get_or_create(name='IP Viewer')[0],
+                defaults={'is_active': self.active}
+            )
             self.user.is_active = self.active
             self.user.save()
 
@@ -1228,7 +1228,11 @@ class Assessment(TimeStampedModel):
 class AgreementManager(models.Manager):
 
     def get_queryset(self):
-        return super().get_queryset().select_related('partner')
+        return super().get_queryset().select_related('partner', 'partner__organization')
+
+
+class MainAgreementManager(models.Manager):
+    use_in_migrations = True
 
 
 def activity_to_active_side_effects(i, old_instance=None, user=None):
@@ -1287,11 +1291,19 @@ class Agreement(TimeStampedModel):
         null=True,
         on_delete=models.CASCADE,
     )
-    authorized_officers = models.ManyToManyField(
+    # TODO REALMS clean up
+    old_authorized_officers = models.ManyToManyField(
         PartnerStaffMember,
+        verbose_name=_("(old)Partner Authorized Officer"),
+        blank=True,
+        related_name="agreement_authorizations"
+    )
+    authorized_officers = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
         verbose_name=_("Partner Authorized Officer"),
         blank=True,
-        related_name="agreement_authorizations")
+        related_name="agreement_authorizations"
+    )
     agreement_type = models.CharField(
         verbose_name=_("Agreement Type"),
         max_length=10,
@@ -1358,8 +1370,17 @@ class Agreement(TimeStampedModel):
         blank=True,
     )
     # Signatory on behalf of the PartnerOrganization
-    partner_manager = models.ForeignKey(
+    # TODO REALMS clean up
+    old_partner_manager = models.ForeignKey(
         PartnerStaffMember,
+        related_name='agreements_signed',
+        verbose_name=_('(old)Signed by partner'),
+        blank=True, null=True,
+        db_index=False,
+        on_delete=models.CASCADE,
+    )
+    partner_manager = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
         related_name='agreements_signed',
         verbose_name=_('Signed by partner'),
         blank=True, null=True,
@@ -1385,7 +1406,7 @@ class Agreement(TimeStampedModel):
 
     tracker = FieldTracker()
     view_objects = AgreementManager()
-    objects = models.Manager()
+    objects = MainAgreementManager()
 
     class Meta:
         ordering = ['-created']
@@ -1638,6 +1659,7 @@ class InterventionManager(models.Manager):
     def get_queryset(self):
         return super().get_queryset().prefetch_related(
             'agreement__partner',
+            'agreement__partner__organization',
             'partner_focal_points',
             'unicef_focal_points',
             'offices',
@@ -1660,6 +1682,7 @@ class InterventionManager(models.Manager):
             'management_budgets__items',
             'flat_locations',
             'sites',
+            'planned_visits__sites',
             Prefetch('supply_items',
                      queryset=InterventionSupplyItem.objects.order_by('-id')),
         )
@@ -1750,7 +1773,6 @@ class Intervention(TimeStampedModel):
     Relates to :model:`partners.Agreement`
     Relates to :model:`reports.CountryProgramme`
     Relates to :model:`AUTH_USER_MODEL`
-    Relates to :model:`partners.PartnerStaffMember`
     Relates to :model:`reports.Office`
     """
 
@@ -1877,7 +1899,7 @@ class Intervention(TimeStampedModel):
         null=True,
         unique=True,
     )
-    title = models.CharField(verbose_name=_("Document Title"), max_length=256)
+    title = models.CharField(verbose_name=_("Document Title"), max_length=306)
     status = FSMField(
         verbose_name=_("Status"),
         max_length=32,
@@ -1971,9 +1993,19 @@ class Intervention(TimeStampedModel):
         null=True,
         on_delete=models.CASCADE,
     )
+    # TODO REALMS clean up
     # part of the Agreement authorized officers
-    partner_authorized_officer_signatory = models.ForeignKey(
+    old_partner_authorized_officer_signatory = models.ForeignKey(
         PartnerStaffMember,
+        verbose_name=_("(old)Signed by Partner"),
+        related_name='signed_interventions',
+        blank=True,
+        null=True,
+        db_index=False,
+        on_delete=models.CASCADE,
+    )
+    partner_authorized_officer_signatory = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
         verbose_name=_("Signed by Partner"),
         related_name='signed_interventions',
         blank=True,
@@ -1987,14 +2019,20 @@ class Intervention(TimeStampedModel):
         blank=True,
         related_name='unicef_interventions_focal_points+'
     )
-    # any PartnerStaffMember on the ParterOrganization
-    partner_focal_points = models.ManyToManyField(
+    # TODO REALMS clean up
+    # any PartnerStaffMember on the PartnerOrganization
+    old_partner_focal_points = models.ManyToManyField(
         PartnerStaffMember,
+        verbose_name=_("(old)CSO Authorized Officials"),
+        related_name='interventions_focal_points+',
+        blank=True
+    )
+    partner_focal_points = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
         verbose_name=_("CSO Authorized Officials"),
         related_name='interventions_focal_points+',
         blank=True
     )
-
     contingency_pd = models.BooleanField(
         verbose_name=_("Contingency PD"),
         default=False,
@@ -2583,7 +2621,7 @@ class Intervention(TimeStampedModel):
     def save(self, force_insert=False, save_from_agreement=False, **kwargs):
         # automatically set hq_support_cost to 7% for INGOs
         if not self.pk:
-            if self.agreement.partner.cso_type == PartnerOrganization.CSO_TYPE_INTERNATIONAL:
+            if self.agreement.partner.cso_type == Organization.CSO_TYPE_INTERNATIONAL:
                 if not self.hq_support_cost:
                     self.hq_support_cost = 7.0
 
@@ -2745,9 +2783,19 @@ class InterventionAmendment(TimeStampedModel):
         null=True,
         on_delete=models.CASCADE,
     )
+    # TODO REALMS clean up
     # part of the Agreement authorized officers
-    partner_authorized_officer_signatory = models.ForeignKey(
+    old_partner_authorized_officer_signatory = models.ForeignKey(
         PartnerStaffMember,
+        verbose_name=_("(old)Signed by Partner"),
+        related_name='+',
+        blank=True,
+        null=True,
+        db_index=False,
+        on_delete=models.CASCADE,
+    )
+    partner_authorized_officer_signatory = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
         verbose_name=_("Signed by Partner"),
         related_name='+',
         blank=True,
@@ -2864,6 +2912,11 @@ class InterventionAmendment(TimeStampedModel):
         self.is_active = False
         self.save()
 
+        # TODO: Technical debt - remove after tempoorary exception for ended amendments is removed.
+        if self.intervention.status == self.intervention.ENDED:
+            if self.intervention.end >= datetime.date.today() >= self.intervention.start:
+                self.intervention.status = self.intervention.ACTIVE
+
         self.intervention.save(amendment_number=self.intervention.amendments.filter(is_active=False).count())
 
         amended_intervention.delete()
@@ -2879,6 +2932,27 @@ class InterventionAmendment(TimeStampedModel):
         )
 
 
+class InterventionPlannedVisitSite(models.Model):
+    Q1 = 1
+    Q2 = 2
+    Q3 = 3
+    Q4 = 4
+
+    QUARTER_CHOICES = (
+        (Q1, _('Q1')),
+        (Q2, _('Q2')),
+        (Q3, _('Q3')),
+        (Q4, _('Q4')),
+    )
+
+    planned_visits = models.ForeignKey('partners.InterventionPlannedVisits', on_delete=models.CASCADE)
+    site = models.ForeignKey('field_monitoring_settings.LocationSite', on_delete=models.CASCADE)
+    quarter = models.PositiveSmallIntegerField(choices=QUARTER_CHOICES)
+
+    class Meta:
+        unique_together = ('planned_visits', 'site', 'quarter')
+
+
 class InterventionPlannedVisits(TimeStampedModel):
     """Represents planned visits for the intervention"""
 
@@ -2891,6 +2965,12 @@ class InterventionPlannedVisits(TimeStampedModel):
     programmatic_q2 = models.IntegerField(default=0, verbose_name=_('Programmatic Q2'))
     programmatic_q3 = models.IntegerField(default=0, verbose_name=_('Programmatic Q3'))
     programmatic_q4 = models.IntegerField(default=0, verbose_name=_('Programmatic Q4'))
+    sites = models.ManyToManyField(
+        'field_monitoring_settings.LocationSite',
+        through=InterventionPlannedVisitSite,
+        verbose_name=_('Sites'),
+        blank=True,
+    )
 
     tracker = FieldTracker()
 
@@ -2900,6 +2980,32 @@ class InterventionPlannedVisits(TimeStampedModel):
 
     def __str__(self):
         return '{} {}'.format(self.intervention, self.year)
+
+    def programmatic_sites(self, quarter):
+        from etools.applications.field_monitoring.fm_settings.models import LocationSite
+        return LocationSite.objects.filter(
+            pk__in=InterventionPlannedVisitSite.objects.filter(
+                site__in=self.sites.all(),
+                planned_visits=self,
+                quarter=quarter
+            ).values_list('site', flat=True)
+        )
+
+    @property
+    def programmatic_q1_sites(self):
+        return self.programmatic_sites(InterventionPlannedVisitSite.Q1)
+
+    @property
+    def programmatic_q2_sites(self):
+        return self.programmatic_sites(InterventionPlannedVisitSite.Q2)
+
+    @property
+    def programmatic_q3_sites(self):
+        return self.programmatic_sites(InterventionPlannedVisitSite.Q3)
+
+    @property
+    def programmatic_q4_sites(self):
+        return self.programmatic_sites(InterventionPlannedVisitSite.Q4)
 
 
 class InterventionResultLink(TimeStampedModel):
@@ -3276,7 +3382,7 @@ class InterventionReviewNotification(TimeStampedModel):
             'intervention_number': self.review.intervention.reference_number,
             'meeting_date': self.review.meeting_date.strftime('%d-%m-%Y'),
             'user_name': self.user.get_full_name(),
-            'url': '{}{}'.format(settings.HOST, self.review.intervention.get_frontend_object_url(suffix='review'))
+            'url': self.review.intervention.get_frontend_object_url(suffix='review')
         }
 
         send_notification_with_template(

@@ -119,6 +119,19 @@ class InterventionPermissions(PMPPermissions):
         def user_added_amendment(instance):
             return instance.in_amendment is True
 
+        # TODO: remove this as sooon as it expires on July first. Technical Debt - hard coded exception
+        def post_epd_temp_conditions(i):
+            # quick fix for offices that have not added their amendments in the system before the release date.
+            today = datetime.date.today()
+            available_til = datetime.date(2023, 7, 1)
+            begin_date = datetime.date(2022, 12, 1)
+            release_date = datetime.date(2023, 4, 30)
+            if i.end and begin_date <= i.end < release_date \
+                    and today < available_til \
+                    and i.document_type != "SSFA":
+                return True
+            return False
+
         def prp_mode_off():
             return tenant_switch_is_active("prp_mode_off")
 
@@ -154,7 +167,7 @@ class InterventionPermissions(PMPPermissions):
         def not_ssfa(instance):
             return not is_spd_non_hum(instance)
 
-        staff_member = self.user.get_partner_staff_member()
+        staff_member = self.user
 
         # focal points are prefetched, so just cast to array to collect ids
         partner_focal_points = [fp.id for fp in self.instance.partner_focal_points.all()]
@@ -213,6 +226,8 @@ class InterventionPermissions(PMPPermissions):
             'unlocked_or_spd': not not_spd(self.instance) or unlocked(self.instance),
             'unicef_not_accepted_spd_non_hum': unicef_not_accepted_spd_non_hum(self.instance),
             'not_ssfa+unicef_not_accepted': not_ssfa(self.instance) and unicef_not_accepted(self.instance),
+            'post_epd_temp_conditions': post_epd_temp_conditions(self.instance),
+            'cfei_absent': not self.instance.cfei_number
         }
 
     # override get_permissions to enable us to prevent old interventions from being blocked on transitions
@@ -428,7 +443,7 @@ class ListCreateAPIMixedPermission(permissions.BasePermission):
 
 
 class AllowSafeAuthenticated(permissions.BasePermission):
-    """"only read peremissions if authenticated, no write"""
+    """"only read permissions if authenticated, no write"""
     def has_permission(self, request, view):
         if request.method in permissions.SAFE_METHODS:
             if request.user.is_authenticated:
@@ -494,17 +509,20 @@ def user_group_permission(*groups):
         def has_permission(self, request, view):
             return request.user.is_authenticated and is_user_in_groups(request.user, groups)
 
+        def has_object_permission(self, request, view, obj):
+            return self.has_permission(request, view)
+
     return UserGroupPermission
 
 
 class UserIsPartnerStaffMemberPermission(BasePermission):
     def has_permission(self, request, view):
-        return request.user.get_partner_staff_member()
+        return request.user.get_partner()
 
 
 class UserIsNotPartnerStaffMemberPermission(BasePermission):
     def has_permission(self, request, view):
-        return not request.user.get_partner_staff_member()
+        return not request.user.get_partner()
 
 
 class UserIsObjectPartnerStaffMember(UserIsPartnerStaffMemberPermission):
@@ -628,6 +646,7 @@ class InterventionAmendmentIsNotCompleted(BasePermission):
 
 
 class UserIsUnicefFocalPoint(BasePermission):
-    def has_permission(self, request, view):
-        intervention = view.get_root_object()
-        return request.user in intervention.unicef_focal_points.all()
+    def has_object_permission(self, request, view, obj):
+        if hasattr(view, 'get_root_object'):
+            obj = view.get_root_object()
+        return request.user in obj.unicef_focal_points.all()

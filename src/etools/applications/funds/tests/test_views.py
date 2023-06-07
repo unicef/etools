@@ -14,6 +14,7 @@ from etools.applications.funds.tests.factories import (
     FundsReservationItemFactory,
     GrantFactory,
 )
+from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.tests.factories import AgreementFactory, InterventionFactory, PartnerFactory
 from etools.applications.users.tests.factories import UserFactory
 from etools.libraries.tests.vcrpy import VCR
@@ -23,7 +24,7 @@ class TestFRHeaderView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
-        partner = PartnerFactory(vendor_number="PVN")
+        partner = PartnerFactory(organization=OrganizationFactory(vendor_number="PVN"))
         agreement = AgreementFactory(partner=partner)
         cls.intervention = InterventionFactory(agreement=agreement)
 

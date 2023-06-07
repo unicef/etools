@@ -11,7 +11,7 @@ from etools.applications.audit.conditions import (
     AuditModuleCondition,
     AuditStaffMemberCondition,
     EngagementStaffMemberCondition,
-    IsStaffMemberCondition,
+    IsUnicefUserCondition,
 )
 from etools.applications.audit.models import (
     Auditor,
@@ -77,6 +77,7 @@ class Command(BaseCommand):
         'audit.engagement.end_date',
         'audit.engagement.total_value',
         'audit.engagement.joint_audit',
+        'audit.engagement.year_of_audit',
         'audit.engagement.shared_ip_with',
         'audit.engagement.related_agreement',
         'audit.engagement.sections',
@@ -289,10 +290,7 @@ class Command(BaseCommand):
             self.report_editable_block
         )
 
-        self.add_permissions([self.focal_point, self.auditor], 'edit', [
-            'purchase_order.auditorfirm.staff_members',
-            'purchase_order.auditorstaffmember.*',
-        ] + self.engagement_attachments_block)
+        self.add_permissions([self.focal_point, self.auditor], 'edit', self.engagement_attachments_block)
 
         self.add_permissions(self.focal_point, 'edit', [
             'purchase_order.purchaseorder.contract_end_date',
@@ -321,11 +319,11 @@ class Command(BaseCommand):
             self.report_readonly_block,
             condition=partner_contacted_condition
         )
-        is_staff_condition = [IsStaffMemberCondition.predicate]
+        is_unicef_user = [IsUnicefUserCondition.predicate]
         self.add_permissions(
             self.engagement_staff_auditor, 'edit',
             self.users_notified_block,
-            condition=partner_contacted_condition + is_staff_condition
+            condition=partner_contacted_condition + is_unicef_user
         )
         self.add_permissions(
             self.engagement_staff_auditor, 'edit',

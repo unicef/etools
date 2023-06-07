@@ -92,7 +92,7 @@ class AssessmentViewSet(
     filters = (
         ('q', [
             'reference_number__icontains',
-            'assessor__auditor_firm__name__icontains',
+            'assessor__auditor_firm__organization__name__icontains',
             'assessor__user__first_name__icontains',
             'assessor__user__last_name__icontains',
         ]),
@@ -120,7 +120,7 @@ class AssessmentViewSet(
         MAP_SORT = {
             "reference_number": "reference_number",
             "assessment_date": "assessment_date",
-            "partner_name": "partner__name",
+            "partner_name": "partner__organization__name",
         }
         sort_param = self.request.GET.get("sort")
         ordering = []
@@ -142,7 +142,7 @@ class AssessmentViewSet(
         user = self.request.user
         # if the user is not unicef, filter only what they can see
         if not user.is_unicef_user():
-            qs = qs.filter(Q(assessor__auditor_firm_staff__user=user) | Q(assessor__user=user))
+            qs = qs.filter(Q(assessor__auditor_firm_staff=user) | Q(assessor__user=user))
         if "sort" in self.request.GET:
             qs = qs.order_by(*self.parse_sort_params())
         return qs

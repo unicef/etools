@@ -1,5 +1,6 @@
 {% extends "easy_pdf/base.html" %}
 {% load humanize %}
+{% load etools %}
 
 {% block style_base %}
     {% comment %}
@@ -105,6 +106,11 @@
             padding-left: 25px;
           }
 
+          .indent2 {
+            padding-left: 50px;
+          }
+
+
           .page-break {
             page-break-after: always;
           }
@@ -158,7 +164,7 @@
             <tr>
                 <td>{{ officer.first_name }} {{ officer.last_name }}</td>
                 <td>{{ officer.title }}</td>
-                <td>{{ officer.email }}</td>
+                <td>{{ officer.email|text_wrap:30 }}</td>
                 <td width="140px">&nbsp;</td>
             </tr>
             {% endfor %}
@@ -234,11 +240,11 @@
       </p>
       <p>
         1.10 "<span class="underline"
-          >Support costs for organizational capacity strengthening</span
-        >" means those costs incurred by the Partner for organizational capacity
-        strengthening which cannot be unequivocally attributed to a specific
-        activity implemented by the Partner in accordance with this Agreement,
-        including any Programme Document.
+          >Support costs for organizational capacity</span
+        >" means those costs incurred by the Partner for organizational capacity 
+        strengthening and/or capacity maintenance, including HQ support costs, which 
+        cannot be unequivocally attributed to a specific activity implemented by the 
+        Partner in accordance with this Agreement, including any Programme Document.
       </p>
       <p>
         1.11 "<span class="underline">United Nations Children`s Fund</span>" or
@@ -288,11 +294,11 @@
         Documents.
       </p>
       <p>
-        4.3 The Parties shall keep each other informed of all relevant activities
-        pertaining to the implementation of the Programme Documents, and shall
-        hold consultations when either Party considers it appropriate, including
-        any circumstance that may affect the achievement of the results of the
-        Programme and the Programme Documents.
+        4.3 The Parties will keep each other informed of all relevant activities 
+        pertaining to the implementation of the Programme Documents, and will hold 
+        consultations when either Party considers it appropriate, including any 
+        circumstance that may affect the achievement of the results of the Programme 
+        and the Programme Documents.
       </p>
       <p>
         4.4 The Parties will fulfill their commitments with the fullest regard for
@@ -413,13 +419,13 @@
         </p>
       </div>
       <p>
-        6.2 Support costs for organizational capacity strengthening with respect
-        to any single Programme Document and associated budget will be
-        reimbursable by UNICEF to the Partner at a rate of seven percent (7%) of
-        actual expenditures in connection with that Programme Document and
-        associated budget. The Partner will record the support costs for
-        organizational capacity strengthening in the FACE forms to be submitted to
-        UNICEF in accordance with the terms of this Agreement.
+        6.2 At the Partner’s request, support costs for organizational capacity 
+        with respect to any single Programme Document and associated budget will 
+        be reimbursable by UNICEF to the Partner up to a rate of seven percent (7%) 
+        of actual expenditures in connection with that Programme Document and associated 
+        budget. For it to be reimbursable, the Partner must record the support costs for 
+        organizational capacity in the FACE forms to be submitted to UNICEF in accordance 
+        with the terms of this Agreement.
       </p>
       <p class="strong">7. Programme Documents</p>
       <p>
@@ -484,10 +490,10 @@
         </p>
       </div>
       <p>
-        8.5 UNICEF will make each Cash Transfer Installment to (or, where the
-        Direct Payment modality is used, on behalf of the Partner) in response to
-        a written request from the Partner, in accordance with the following
-        procedures:
+        8.5 UNICEF will make each Cash Transfer Installment to the Partner 
+        (or, where the Direct Payment modality is used, on behalf of the Partner) 
+        in response to a written request from the Partner, in accordance with the 
+        following procedures:
       </p>
       <p class="underline">
         Procedures for requests for Cash Transfer Installments under all three
@@ -504,23 +510,23 @@
           Estimate. The request must be signed by an Authorized Officer.
         </p>
         <p>
-          (b) The first written request, using the FACE form, may be made as soon
-          as this Agreement and the relevant Programme Document have been signed
-          by both Parties. If such written request is in proper form and complete,
-          UNICEF will determine the amount to be transferred and will transfer
-          that amount to (or, where the modality of Direct Payment is used, on
-          behalf of the Partner) within a reasonable time.
+          (b) The first written request, using the FACE form, may be made as soon as this
+          Agreement and the relevant Programme Document have been signed by
+          both Parties. If such written request is in proper form and complete, UNICEF
+          will determine the amount to be transferred and will transfer that amount
+          to the Partner (or, where the modality of Direct Payment is used, on behalf
+          of the Partner) within a reasonable time.
         </p>
         <p>
           (c) Unless otherwise decided by UNICEF, the second and each subsequent
-          written request, using the FACE form, requires that reporting on the use
-          of the first Cash Transfer Installment has been received by UNICEF
-          before a Cash Transfer Installment for a subsequent three month period
-          will be released. If such second or subsequent request is received in a
-          timely fashion and is in proper form and complete, UNICEF will determine
-          the amount to be transferred and will transfer that amount to (or, where
-          the modality of Direct Payment is used, on behalf of the Partner) within
-          a reasonable time.
+          written request, using the FACE form, requires that reporting on the use of
+          the first Cash Transfer Installment has been received by UNICEF before a
+          Cash Transfer Installment for a subsequent three-month period will be
+          released. If such second or subsequent request is received in a timely
+          fashion and is in proper form and complete, UNICEF will determine the
+          amount to be transferred and will transfer that amount to the Partner (or,
+          where the modality of Direct Payment is used, on behalf of the Partner)
+          within a reasonable time.
         </p>
         <p class="underline">
           Additional procedures applicable only to Direct Payment modality:
@@ -627,36 +633,36 @@
               </tr>
               <tr>
                   <td style="width: 45%;">Bank Name</td>
-                  <td>{{ bank_detail.bank_name }}</td>
+                  <td style="width: 55%;">{{ bank_detail.bank_name }}</td>
               </tr>
               <tr>
                   <td style="width: 45%;">Bank Address</td>
-                  <td>{{ bank_detail.bank_address }}</td>
+                  <td style="width: 55%;">{{ bank_detail.bank_address }}</td>
               </tr>
               <tr>
                   <td style="width: 45%;">Account Title</td>
-                  <td>{{ bank_detail.account_title }}</td>
+                  <td style="width: 55%;">{{ bank_detail.account_title }}</td>
               </tr>
               <tr>
                   <td style="width: 45%;">Account No.</td>
-                  <td>{{ bank_detail.account_number }}</td>
+                  <td style="width: 55%;">{{ bank_detail.account_number }}</td>
               </tr>
               <tr>
                   <td style="width: 45%;">Account Currency</td>
-                  <td>{{ bank_detail.account_currency }}</td>
+                  <td style="width: 55%;">{{ bank_detail.account_currency }}</td>
               </tr>
               <tr>
                   <td style="width: 45%;">Routing Details <br/> SWIFT/IBAN</td>
-                  <td>{{ bank_detail.routing_details }}</td>
+                  <td style="width: 55%;">{{ bank_detail.routing_details }}</td>
               </tr>
               <tr>
                   <td style="width: 45%;">Bank Contact Person</td>
-                  <td>{% firstof bank_detail.bank_contact_person '&nbsp;' %}</td>
+                  <td style="width: 55%;">{% firstof bank_detail.bank_contact_person '&nbsp;' %}</td>
               </tr>
               {% if bank_detail.tax_number_5 %}
               <tr>
                   <td style="width: 45%;">Hawala Banking Details</td>
-                  <td>{{ bank_detail.tax_number_5 }}</td>
+                  <td style="width: 55%;">{{ bank_detail.tax_number_5 }}</td>
               </tr>
               {% endif %}
           </table>
@@ -834,14 +840,13 @@
             in-kind contribution from another donor or entity;
           </p>
           <p>
-            (vi) Support costs for organizational capacity strengthening exceeding
-            the rate referred to in Article 6.2 of this Agreement;
+            (vi) Support costs for organizational capacity exceeding the rate
+            referred to in Article 6.2 of this Agreement;
           </p>
           <p>
-            (vii) Expenditures that are not verifiable by records as provided in
-            Article 9 of this Agreement (other than support costs for
-            organizational capacity strengthening referred to in Article 6.2 of 
-            this Agreement);
+            (vii) Expenditures that are not verifiable by records as provided
+            in Article 9 of this Agreement (other than support costs for organizational
+            capacity referred to in Article 6.2 of this Agreement);
           </p>
           <p>
             (viii) Salaries for the Partner`s employees exceeding the rates
@@ -980,27 +985,25 @@
         writing.
       </p>
       <p>
-        12.3 Any dispute, controversy, or claim between the Parties arising out of
-        this Agreement which is not solved within ninety (90) days after one Party
-        receives a request from the other Party for amicable settlement, can be
-        referred by either Party to arbitration. The arbitration will take place
-        in accordance with the UNCITRAL Arbitration Rules then in force. The venue
-        of the arbitration will be New York, NY, USA. The decisions of the
-        arbitral tribunal will be based on general principles of international
-        commercial law. The arbitral tribunal will have no authority to award
+        12.3 Any dispute, controversy, or claim between the Parties arising out of this Agreement
+        which is not solved within ninety (90) days after one Party receives a request from
+        the other Party for amicable settlement, can be referred by either Party to
+        arbitration. The arbitration will take place in accordance with the UNCITRAL
+        Arbitration Rules then in force. The venue of the arbitration will be New York, NY,
+        USA. The decisions of the arbitral tribunal will be based on general principles of
+        international commercial law. The arbitral tribunal will have no authority to award
         punitive damages. In addition, unless otherwise expressly provided in the
-        Agreement, the arbitral tribunal will have no authority to award interest
-        in excess of the London Inter-Bank Offered Rate ("LIBOR") then prevailing,
-        and any such interest will be simple interest only. Should LIBOR no longer
-        be available, the United States Federal Reserve Bank of New York`s Secured
-        Overnight Financing Rate (SOFR) then prevailing shall be used, and any
-        such interest shall be simple interest only. In light of the privileges
-        and immunities of UNICEF, references in the UNCITRAL Arbitration Rules to
-        the place of arbitration shall connote only the actual location for the
-        arbitral proceedings but shall not mean the "seat" or "juridical seat" or
-        "juridical place" for such proceedings. The Parties will be bound by any
-        arbitration award rendered as a result of such arbitration as the final
-        adjudication of any such dispute, controversy, or claim.
+        Agreement, the arbitral tribunal will have no authority to award interest in excess of
+        the London Inter-Bank Offered Rate (“LIBOR”) then prevailing, and any such interest
+        will be simple interest only. Should LIBOR no longer be available, the United States
+        Federal Reserve Bank of New York’s Secured Overnight Financing Rate (SOFR) then
+        prevailing will be used, and any such interest will be simple interest only. In light of
+        the privileges and immunities of UNICEF, references in the UNCITRAL Arbitration
+        Rules to the place of arbitration will connote only the actual location for the arbitral
+        proceedings but will not mean the “seat” or “juridical seat” or “juridical place” for
+        such proceedings. The Parties will be bound by any arbitration award rendered as a
+        result of such arbitration as the final adjudication of any such dispute, controversy,
+        or claim.
       </p>
       <p class="strong">13. Final Provisions</p>
       <p>
@@ -1103,26 +1106,23 @@
           >Partner`s Responsibility for Employees, Personnel and
           Subcontractors:</span
         >
-        The Partner will be responsible for the professional and technical
-        competence of its employees, personnel and subcontractors and will select,
-        for work under this Agreement, reliable persons and entities who will
-        perform effectively in the implementation of this Agreement, respect the
-        local laws and customs, and conform to a high standard of moral and
-        ethical conduct, which includes safeguarding. Before selection, employees
-        and other personnel and subcontractors` personnel will be asked if they
-        have been dismissed from a previous employer for misconduct, or left while
-        being investigated for misconduct and were never cleared. Appropriate
-        reference or background checks will also be conducted. The Partner will
-        disclose whether it has any dismissed any individuals for safeguarding
-        violations or sexual exploitation and abuse in the last 5 years, and
-        whether any are still working at the Partner and proposed to work under
-        the Agreement. At any time during the term of the Agreement, UNICEF can
-        make a written request that the Partner replace one or more of the
-        assigned employees or other personnel or subcontractors` personnel. UNICEF
-        will not be required to give an explanation or justification for this
-        request. Within seven (7) working days of receiving UNICEF`s request, the
-        Partner must replace the individual in question with an individual
-        acceptable to UNICEF.
+        The Partner will be responsible for the professional and technical competence of its employees,
+        personnel and subcontractors and will select, for work under this Agreement,
+        reliable persons and entities who will perform effectively in the implementation of
+        this Agreement, respect the local laws and customs, and conform to a high standard
+        of moral and ethical conduct, which includes safeguarding. Before appointment,
+        employees and other personnel and subcontractors’ personnel will be asked, to the
+        extent legally permissible, if they have been dismissed from a previous employer for
+        misconduct, or left while being investigated for misconduct and were never cleared.
+        To the extent legally permissible, appropriate reference or background checks will
+        also be conducted. At UNICEF’s request, the Partner will disclose if (i) it has
+        dismissed any employees or personnel for breach of a Partner’s safeguarding policy,
+        including sexual exploitation and abuse in the last 5 years, and (ii) any employees or
+        personnel working under this Agreement for the Partner have been investigated (and the 
+        findings of the investigation have been substantiated) and/or are under
+        investigation for safeguarding violations, including sexual exploitation and abuse
+        allegations; provided that the Partner will not be required to disclose any Personal
+        Data.
       </p>
       <p>
         4.3
@@ -1271,182 +1271,197 @@
           Abuse:</span
         >
       </p>
-      <ol type="a">
-        <li>
-          In this Agreement the following definitions are used:
-          <div class="indent">
-            <p>
-              (i) "sexual exploitation" means any actual or attempted abuse of a
-              position of vulnerability, differential power, or trust, for sexual
-              purposes, including, but not limited to, profiting monetarily,
-              socially or politically from the sexual exploitation of another;
-            </p>
-            <p>
-              (ii) "sexual abuse" means the actual or threatened physical
-              intrusion of a sexual nature, whether by force or under unequal or
-              coercive conditions. Sexual exploitation and abuse are strictly
-              prohibited;
-            </p>
-            <p>
-              (iii) "child" means any person less than eighteen (18) years of age,
-              regardless of any laws relating to consent or when one legally
-              becomes an adult.
-            </p>
-            <p>
-              (iv) "safeguarding" is the reduction of risks of harm arising from a
-              party`s work, employees or other personnel, or subcontractors.
-            </p>
-            <p>
-              (v) "safeguarding violation" is a conduct by a party`s employees,
-              personnel or subcontractors that actually or likely causes
-              significant harm to a person, including any kind of physical,
-              emotional or sexual abuse, neglect or exploitation.
-            </p>
-          </div>
-        </li>
 
-        <li>
-          In addition, in this Agreement:
-          <div class="indent">
-            <p>
-              (i) Any sexual acts involving a person who cannot consent or is not
-              consenting at the time, will be sexual abuse.
-            </p>
-            <p>
-              (ii) Sexual activity with a child will always be sexual abuse, even
-              if there is a mistake about the age of the child, or the person is
-              married to the child.
-            </p>
-            <p>
-              (iii) Demanding, giving, offering or receiving anything (money,
-              employment, goods, services, or other things of value) for sexual
-              touching or sexual activities with anyone will be sexual
-              exploitation. This includes paying or offering money for sex with a
-              prostitute.
-            </p>
-            <p>
-              (iv) Anyone who might affect who gets goods or services must not
-              have sex with anyone who may get that help. It will be sexual
-              exploitation.
-            </p>
-            <p>
-              (v) Exploitative labor is a safeguarding violation. This means
-              workers must be allowed to freely associate and collectively
-              bargain. Workers must not be forced or compelled to work. Workers
-              must not be subject to discrimination. Workers must be given a safe
-              and healthy working environment.
-            </p>
-            <p>
-              (vi) Child labor is a safeguarding violation. This means no child
-              under 14 will work under the Agreement. Further, any child working
-              must be above the age the law requires for mandatory school and the
-              minimum age for work.
-            </p>
-          </div>
-        </li>
+      <p class="indent">
+        a. In this Agreement the following definitions are used:
+        <div class="indent2">
+          <p>
+            (i) "<span class="underline">sexual exploitation</span>" means any actual or attempted abuse of a
+            position of vulnerability, differential power, or trust, for sexual
+            purposes, including, but not limited to, profiting monetarily,
+            socially or politically from the sexual exploitation of another;
+          </p>
+          <p>
+            (ii) "<span class="underline">sexual abuse</span>" means the actual or threatened physical
+            intrusion of a sexual nature, whether by force or under unequal or
+            coercive conditions. Sexual exploitation and abuse are strictly
+            prohibited;
+          </p>
+          <p>
+            (iii) "<span class="underline">child</span>" means any person less than eighteen (18) years of age,
+            regardless of any laws relating to consent or when one legally
+            becomes an adult.
+          </p>
+          <p>
+            (iv) "<span class="underline">safeguarding</span>" is the reduction of risks of harm arising from a
+            party`s work, employees or other personnel, or subcontractors.
+          </p>
+          <p>
+            (v) "<span class="underline"></span>" is conduct by a party’s employees, personnel or
+            subcontractors that actually or likely causes harm to a person, including
+            any kind of physical, emotional or sexual abuse, neglect or exploitation.
+          </p>
+        </div>
+      </p>
 
-        <li>
-          Policies. The Partner has read (a) ST/SGB/2003/13 entitled "Special
-          Measures for Protection from Sexual Exploitation and Sexual Abuse",
-          which is available at
-          <a href="https://undocs.org/ST/SGB/2003/13"
-            >https://undocs.org/ST/SGB/2003/13</a
-          >; and (b) UNICEF`s policies related to safeguarding, available at
-          <a href="https://www.unicef.org/supply/documents/safeguarding-policy"
-            >https://www.unicef.org/supply/documents/safeguarding-policy</a
-          >
-          (or another URL given to the Partner). The Partner will either adopt its
-          own policy/policies that are at least as stringent as these policies, or
-          apply these policies. The Partner will require subcontractors to do the
-          same. The Partner will also have a policy that makes it a misconduct to
-          retaliate against anyone for reporting or cooperating in an
-          investigation of safeguarding violations, including sexual exploitation
-          and abuse. The Partner shall require its employees and other personnel
-          and persons working for subcontractors to agree to a code of conduct
-          that covers behavior in these policies.
-        </li>
+      <p class="indent">
+        b. In addition, in this Agreement:
+        <div class="indent2">
+          <p>
+            (i) Any sexual acts involving a person who cannot consent or is not
+            consenting at the time, will be sexual abuse.
+          </p>
+          <p>
+            (ii) Sexual activity with a child will always be sexual abuse, even
+            if there is a mistake about the age of the child, or the person is
+            married to the child.
+          </p>
+          <p>
+            (iii) Demanding, giving, offering or receiving anything (money,
+            employment, goods, services, or other things of value) for sexual
+            touching or sexual activities with anyone will be sexual
+            exploitation. This includes paying or offering money for sex with a
+            prostitute.
+          </p>
+          <p>
+            (iv) Anyone who might affect who gets goods or services must not
+            have sex with anyone who may get that help. It will be sexual
+            exploitation.
+          </p>
+          <p>
+            (v) Exploitative labor is a safeguarding concern. This means workers must
+            be allowed to freely associate and collectively bargain. Workers must
+            not be forced or compelled to work. Workers must not be subject to
+            discrimination. Workers must be given a safe and healthy working
+            environment.
+          </p>
+          <p>
+            (vi) Child labor is a safeguarding violation. This means no child
+            under 14 will work under the Agreement. Further, any child working
+            must be above the age the law requires for mandatory school and the
+            minimum age for work.
+          </p>
+        </div>
+      </p>
 
-        <li>
-          Prevention. The Partner will take all appropriate measures to have its
-          employees and other personnel and subcontractors demonstrate behaviour
-          that proactively safeguards, including protecting from sexual
-          exploitation and abuse. The Partner must ensure employees and other
-          personnel and subcontractors have an understanding of their obligations
-          and: (i) what is safeguarding in programming, the importance of risk
-          assessments of planned activities, events, and interventions to plan
-          mitigation measures, and reflect those in relevant Programme Documents;
-          (ii) of the kinds of safeguarding concerns, and definitions of
-          safeguarding violations and sexual exploitation and sexual abuse; (iii)
-          why any unsafe or prohibited behavior as outlined in UNICEF Safeguarding
-          Policy, including any form of sexual exploitation and abuse, is
-          unacceptable, as it harms people and destroys trust in the work; (iv)
-          the need to properly supervise children and workers; (v) the
-          requirements in this Agreement to promptly report to UNICEF safeguarding
-          violations, sexual exploitation and sexual abuse; (vi) how other
-          safeguarding concerns should be raised by employees or other personnel
-          or subcontractors at the Partner, and addressed in consultation with
-          UNICEF; and (vii) the requirements in this Agreement to facilitate
-          victim assistance. To gain this understanding, the Partner will, among
-          other things, ensure that its employees, personnel or subcontractors
-          successfully complete and renew appropriate training.
-        </li>
-        <li>
-          Reporting of allegations to UNICEF. The Partner will promptly and
-          confidentially, in a manner that assures the safety of all involved,
-          report allegations of safeguarding violations, including but not limited
-          to sexual exploitation and abuse, arising from this Agreement, of which
-          the Partner has been informed or has otherwise become aware, to (i) the
-          UNICEF head of office, or (ii) the UNICEF Director Office of Internal
-          Audit and Investigation (<a href="mailto:integrity1@unicef.org"
-            >integrity1@unicef.org</a
-          >), or (iii) other reporting channels established locally by UNICEF
-          Country Offices and communicated to the Partner. This obligation
-          survives the expiry or termination of the Agreement, with respect to
-          incidents occurring during the term of this Agreement.
-        </li>
+      <p class="indent">
+        c. <span class="underline">Policies</span>. The Partner has read (a) ST/SGB/2003/13 entitled “Special Measures
+        for Protection from Sexual Exploitation and Sexual Abuse”, which is available at
+        <a href="https://undocs.org/ST/SGB/2003/13"
+          >https://undocs.org/ST/SGB/2003/13</a
+        >; and (b) UNICEF`s policies related to safeguarding, available at
+        <a href="https://www.unicef.org/supply/documents/safeguarding-policy"
+          >https://www.unicef.org/supply/documents/safeguarding-policy</a
+        >
+        (or another URL given to the Partner). The Partner will either adopt its own policy/policies that
+        are at least as stringent as these policies or apply these policies. The Partner will
+        require subcontractors to do the same. The Partner will also have a policy that
+        makes it a misconduct to retaliate against anyone for reporting or cooperating in
+        an investigation of safeguarding violations, including sexual exploitation and
+        abuse. The Partner will require its employees and other personnel and persons
+        working for subcontractors to agree to a code of conduct that covers behavior in
+        these policies.
+      </p>
 
-        <li>
-          Assistance. Alleged victims of safeguarding concerns, including sexual
-          exploitation and abuse, will be promptly informed of and referred to
-          available professional assistance, according to their consent and in
-          coordination with UNICEF. This obligation survives the expiry or
-          termination of the Agreement, with respect to incidents occurring during
-          the term of this Agreement.
-        </li>
+      <p class="indent">
+        d. <span class="underline">Prevention</span>. The Partner will take all appropriate measures to have its employees
+        and other personnel and subcontractors demonstrate behaviour that proactively
+        safeguards, including protecting from sexual exploitation and abuse. The Partner
+        must ensure employees and other personnel and subcontractors have an
+        understanding of their obligations and:
+        <div class="indent2">
+          <p>
+            (i) what is safeguarding in programming, the importance of risk assessments of
+            planned activities, events, and interventions to plan mitigation measures, and
+            reflect those in relevant Programme Documents;
+          </p>
+          <p>
+            (ii) of the kinds of safeguarding concerns, including sexual exploitation and
+            sexual abuse;
+          </p>
+          <p>
+            (iii) why any unsafe or prohibited behavior as outlined in UNICEF Safeguarding
+            Policy, including any form of sexual exploitation and abuse, is unacceptable, as it
+            harms people and destroys trust in the work;
+          </p>
+          <p>
+            (iv) the need to properly supervise children and workers;
+          </p>
+          <p>
+            (v) the requirements in this Agreement to promptly report to UNICEF
+            safeguarding violations, including sexual exploitation and sexual abuse in
+            accordance with Article 4.5(e) below;
+          </p>
+          <p>
+            (vi) how other safeguarding concerns should be raised by employees or other
+            personnel or subcontractors at the Partner, and addressed in consultation with
+            UNICEF; and
+          </p>
+          <p>
+            (vii) the requirements in this Agreement to facilitate victim assistance.
+            To gain this understanding, the Partner will, among other things, ensure that its
+            employees, personnel or subcontractors successfully complete and renew
+            appropriate training.
+          </p>
+        </div>
+      </p>
+      <p class="indent">
+        e. <span class="underline">Reporting of allegations to UNICEF</span>. The Partner will promptly and confidentially,
+        in a manner that assures the safety of all involved, report any allegations of
+        sexual exploitation and abuse and safeguarding violations causing or likely to
+        cause significant harm to a child, arising from this Agreement or which the
+        Partner has been informed or has otherwise become aware and which, in the
+        Partner’s view, could have a significant impact to UNICEF, to (i) the UNICEF head
+        of office, or (ii) the UNICEF Director Office of Internal Audit and Investigation 
+        <a href="mailto:integrity1@unicef.org">integrity1@unicef.org</a>), or (iii) other 
+        reporting channels established locally by UNICEF Country Offices and communicated 
+        to the Partner. This obligation survives the expiry or termination of the Agreement, 
+        with respect to incidents occurring during the term of this Agreement.
+      </p>
 
-        <li>
-          Investigation. The Partner will properly and without delay investigate
-          allegations of safeguarding violations, including sexual exploitation
-          and abuse, by the Partner`s employees, personnel, or subcontractors. The
-          Partner will keep UNICEF informed during the conduct of the
-          investigation, without prejudice to the due process rights of any
-          persons concerned. UNICEF may require the Partner to suspend any
-          individual from work under this Agreement while under investigation.
-          Following the conclusion of the investigation by the Partner, the
-          Partner will promptly provide reports on the outcome of the
-          investigation, including any relevant details relating to the alleged
-          offender, to the extent legally possible. Upon request, the Partner will
-          provide relevant evidence to UNICEF for examination and further use by
-          UNICEF as deemed necessary solely by UNICEF. UNICEF may decide that the
-          obligation on the part of the Partner under the first sentence of this
-          Article 4.5(g) to conduct an investigation will not apply if an
-          investigation is being or has been conducted by competent national
-          authorities. In the event that competent national authorities are
-          conducting or have conducted the investigation, the Partner will assist
-          UNICEF and take all necessary steps, to the extent legally possible, for
-          UNICEF to obtain information on the status and outcome of the
-          investigation. These obligations will survive the expiry or termination
-          of this Agreement, with respect to incidents occurring during the term
-          of this Agreement. The Partner will provide information to UNICEF about
-          any action it has taken in response to the incident to meet safeguarding
-          standards and reduce the chance of similar concerns in the future. It is
-          understood that UNICEF expects that safeguarding concerns and violations
-          will always be addressed. It is further understood that any
-          investigation conducted by the Partner under this clause will be without
-          prejudice to the right of UNICEF under Article 15.3 to conduct
-          investigations.
-        </li>
-      </ol>
+      <p class="indent">
+        f. <span class="underline">Assistance</span>. Alleged survivors of safeguarding violations, including sexual
+        exploitation and abuse, will be promptly informed of and referred to available
+        professional assistance by the Partner with the consent of the alleged survivors.
+        Where reasonably practicable and ensuring that the safety of alleged survivors is
+        not compromised, the Partner will inform UNICEF if such a referral has been
+        made or not, including the types of assistance provided, and where not
+        provided, the general reason for that. This obligation survives the expiry or
+        termination of the Agreement, with respect to incidents occurring during the
+        term of this Agreement.
+      </p>
+
+      <p class="indent">
+        g. <span class="underline">Investigation</span>. The Partner will properly and without delay investigate allegations
+        of safeguarding violations, including sexual exploitation and abuse, by the
+        Partner’s employees, personnel, or subcontractors (where the subcontractors
+        do not follow their own processes). The Partner will keep UNICEF informed
+        during the conduct of the investigation, without prejudice to the due process
+        rights of any persons concerned. UNICEF may, with a clear rationale and
+        justification, require the Partner to suspend any individual from work under this
+        Agreement while under investigation, provided that the safety of any such
+        individual or other individuals involved in the investigation is not compromised,
+        and subject to applicable law. Following the conclusion of the investigation by
+        the Partner, the Partner will promptly provide reports on the outcome of the
+        investigation, including any relevant details relating to the alleged offender, to
+        the extent legally possible. Upon request, the Partner will provide relevant
+        evidence to UNICEF for examination and further use by UNICEF as deemed
+        necessary solely by UNICEF. UNICEF may decide that the obligation on the part
+        of the Partner under the first sentence of this Article 4.5(g) to conduct an
+        investigation will not apply if an investigation is being or has been conducted by
+        competent national authorities. In the event that competent national authorities
+        are conducting or have conducted the investigation, the Partner will assist
+        UNICEF and take all necessary steps, to the extent legally possible, for UNICEF to
+        obtain information on the status and outcome of the investigation. These
+        obligations will survive the expiry or termination of this Agreement, with respect
+        to incidents occurring during the term of this Agreement.  The Partner will
+        provide information to UNICEF about any action it has taken in response to the
+        incident to meet safeguarding standards and reduce the chance of similar
+        concerns in the future. It is understood that UNICEF expects that safeguarding
+        concerns and violations will always be addressed. It is further understood that
+        any investigation conducted by the Partner under this clause will be without
+        prejudice to the right of UNICEF under Article 15.3 to conduct investigations.
+      </p>
       <p>
         4.6
         <span class="strong">Ethical Standards in Evidence Generation:</span> For
@@ -1636,24 +1651,19 @@
         appropriate alternative arrangements.
       </p>
       <p>
-        11. <span class="strong"> COMMITMENT TO TRANSPARENCY.</span> UNICEF and
-        the Partner acknowledge their shared commitment to transparency. In this
-        regard, each Party may include references to this Agreement and to their
-        respective contributions to the implementation of this Agreement in their
-        public reports and in other materials in accordance with their respective
-        regulations, rules, policies and practices. UNICEF may disclose
-        information about the Partner pursuant to its policies, regulations, rules
-        and procedures and resolutions or regulations of UNICEF`s governing
-        bodies; this includes public disclosure by UNICEF of the Partner`s name,
-        the cash transfer amount from UNICEF to the Partner, location, purpose and
-        title of the Programme interventions. UNICEF may disclose to other UN
-        entities (i) the identities of individuals the Partner has dismissed or
-        removed for safeguarding violations, including sexual exploitation and
-        abuse; and (ii) the name of the Partner if this Agreement is suspended or
-        terminated, for failure to adequately safeguard or protect against sexual
-        exploitation and abuse. UNICEF may also disclose publicly non-personal
-        data about allegations of safeguarding violations, including sexual
-        exploitation and abuse.
+        11. <span class="strong"> COMMITMENT TO TRANSPARENCY.</span> UNICEF and the Partner acknowledge their shared
+        commitment to transparency. In this regard, each Party may include references to this
+        Agreement and to their respective contributions to the implementation of this
+        Agreement in their public reports and in other materials in accordance with their
+        respective regulations, rules, policies and practices. UNICEF may disclose information
+        about the Partner pursuant to its policies, regulations, rules and procedures and
+        resolutions or regulations of UNICEF’s governing bodies; this includes public disclosure
+        by UNICEF of the Partner’s name, the cash transfer amount from UNICEF to the Partner,
+        location, purpose and title of the Programme interventions. UNICEF may disclose to
+        other UN entities the name of the Partner if this Agreement is suspended or terminated
+        for cause, including for failure to adequately safeguard or protect against sexual
+        exploitation and abuse. UNICEF may also disclose publicly aggregated non-personal data
+        about allegations of safeguarding violations, including sexual exploitation and abuse.
       </p>
       <p>
         12.
@@ -1779,13 +1789,25 @@
         or any other liability of any kind.
       </p>
       <p>
-        13.4 Immediately upon sending or receiving a notice of termination UNICEF
+        13.4 As an alternative to suspension or termination, in case of any safeguarding concerns,
+        UNICEF can, with a clear rationale and justification, make a written request that the
+        Partner replaces one or more of the employees or other personnel or
+        subcontractors’ personnel assigned for a particular Programme under this
+        Agreement. UNICEF will work in consultation with the Partner to support the
+        replacement of the employee(s) in question with suitable qualified staff. Where the
+        Partner is not willing to accept a request to replace one or more of the employees or
+        other personnel or subcontractor’s personnel assigned for a particular Programme
+        under this Agreement, UNICEF may suspend or terminate this Agreement with
+        immediate effect upon written notice to the Partner.
+      </p>
+      <p>
+        13.5 Immediately upon sending or receiving a notice of termination UNICEF
         will cease disbursement of any funds under this Agreement and the Partner
         will not make any forward commitments, financial or otherwise, in
         connection with this Agreement.
       </p>
       <p>
-        13.5 On termination of this Agreement pursuant to this Article 13, the
+        13.6 On termination of this Agreement pursuant to this Article 13, the
         Partner will (a) transfer either to UNICEF or in accordance with UNICEF`s
         instructions the unexpended balance of the Cash Transfer held by the
         Partner and the unused supplies and equipment provided by UNICEF under
@@ -1797,7 +1819,7 @@
         return to UNICEF all of UNICEF`s confidential information.
       </p>
       <p>
-        13.6 If UNICEF exercises its right to terminate this Agreement, UNICEF
+        13.7 If UNICEF exercises its right to terminate this Agreement, UNICEF
         will have the right to require the Partner to repay to UNICEF such amount
         of money, up to the total amount paid to the Partner by UNICEF prior to
         the date of the notice of termination, as UNICEF will determine. It is
@@ -1807,15 +1829,15 @@
         promptly upon receipt of UNICEF`s notice to pay.
       </p>
       <p>
-        13.7 If UNICEF exercises its right to terminate this Agreement and decides
+        13.8 If UNICEF exercises its right to terminate this Agreement and decides
         that the Programme is to be implemented by another organization or
         programming modality, the Partner will promptly provide full cooperation
         to UNICEF in the orderly transfer of all unused supplies and equipment
-        provided to the Partner by UNICEF and the provisions of Article 13.5 above
+        provided to the Partner by UNICEF and the provisions of Article 13.6 above
         will apply.
       </p>
       <p>
-        13.8 The suspension or termination of a Programme Document in accordance
+        13.9 The suspension or termination of a Programme Document in accordance
         with this Section 13 will be without prejudice to the Programme
         Cooperation Agreement and other Programme Documents under this Agreement
         which will continue in effect, unless the Programme Cooperation Agreement

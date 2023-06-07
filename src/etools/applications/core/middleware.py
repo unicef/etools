@@ -113,6 +113,12 @@ class EToolsLocaleMiddleware(MiddlewareMixin):
     def process_request(self, request):
         if request.user.is_anonymous:
             return
+
+        header_language_code = request.META.get('HTTP_LANGUAGE', '')
+        if header_language_code and header_language_code in get_languages():
+            translation.activate(header_language_code)
+            return
+
         preferences = request.user.preferences
         if preferences and 'language' in preferences:
             language_code = preferences['language']

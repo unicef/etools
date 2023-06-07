@@ -17,7 +17,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from unicef_restlib.permissions import IsSuperUser
 
-from etools.applications.users.models import Country, UserProfile
+from etools.applications.organizations.models import Organization
+from etools.applications.users.models import Country, Realm, UserProfile
 from etools.applications.users.permissions import IsServiceNowUser
 from etools.applications.users.serializers import (
     CountrySerializer,
@@ -75,6 +76,8 @@ class ChangeUserRoleView(CreateAPIView, GenericAPIView):
             roles = []
             for desired_role_name in data["roles"]:
                 roles.append(get_object_or_404(Group, name=desired_role_name))
+                # add unicef user role to roles list by default
+                roles.append(Group.objects.get(name="UNICEF User"))
         except Http404 as e:
             raise ValidationError({"error": e})
 
@@ -82,17 +85,24 @@ class ChangeUserRoleView(CreateAPIView, GenericAPIView):
             raise ValidationError({"error": "only users with UNICEF email addresses can be updated"})
 
         details["previous_roles"] = list(user.groups.all().values_list("name", flat=True))
+        unicef_organization = Organization.objects.get(name='UNICEF', vendor_number='000')
 
-        if data["access_type"] == "grant":
-            # add unicef user role to roles list by default
-            roles.append(Group.objects.get(name="UNICEF User"))
-            user.groups.add(*roles)
-        elif data["access_type"] == "set":
-            # add unicef user role to roles list by default
-            roles.append(Group.objects.get(name="UNICEF User"))
-            user.groups.set(roles)
+        if data["access_type"] == "revoke":
+            user.realms\
+                .filter(group__in=roles, country=workspace, organization=unicef_organization)\
+                .update(is_active=False)
         else:
-            user.groups.remove(*roles)
+            realms = []
+            for role in roles:
+                realms.append(Realm.objects.update_or_create(
+                    user=user,
+                    country=workspace,
+                    organization=unicef_organization,
+                    group=role,
+                    is_active=True
+                )[0])
+            if data["access_type"] == "set":
+                user.realms.exclude(id__in=[realm.id for realm in realms]).update(is_active=False)
 
         if user.profile.country_override and user.profile.country_override != workspace:
             user.profile.country_override = None
@@ -101,7 +111,6 @@ class ChangeUserRoleView(CreateAPIView, GenericAPIView):
             details["country"] = "The user has been moved from {} to {}".format(user.profile.country.name,
                                                                                 workspace.name)
         user.profile.country = workspace
-        user.profile.countries_available.set([workspace])
         user.profile.save()
         details["current_roles"] = list(user.groups.filter().values_list("name", flat=True))
         return JsonResponse({'email': user.email, "status": "success", "details": details},
@@ -146,8 +155,11 @@ class ChangeUserCountryView(APIView):
         if country not in user.profile.countries_available.all():
             raise DjangoValidationError(self.ERROR_MESSAGES['access_to_country_denied'],
                                         code='access_to_country_denied')
-
         user.profile.country_override = country
+
+        if user.profile.organization not in Organization.objects\
+                .filter(realms__country=country, realms__user=user):
+            user.profile.organization = None
         user.profile.save()
 
     def get_redirect_url(self):
@@ -300,15 +312,15 @@ class UserViewSet(mixins.RetrieveModelMixin,
     def get_queryset(self):
         # we should only return workspace users.
         queryset = super().get_queryset()
-        queryset = queryset.prefetch_related('profile', 'groups', 'user_permissions')
+        queryset = queryset.prefetch_related('profile', 'realms', 'user_permissions')
         # Filter for Partnership Managers only
         driver_qps = self.request.query_params.get("drivers", "")
         if driver_qps.lower() == "true":
-            queryset = queryset.filter(groups__name='Driver')
+            queryset = queryset.filter(realms__group__name='Driver')
 
         filter_param = self.request.query_params.get("partnership_managers", "")
         if filter_param.lower() == "true":
-            queryset = queryset.filter(groups__name="Partnership Manager")
+            queryset = queryset.filter(realms__group__name="Partnership Manager")
 
         if "values" in self.request.query_params.keys():
             # Used for ghost data - filter in all(), and return straight away.
@@ -323,7 +335,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
-        queryset = queryset.filter(groups__name="UNICEF User")
+        queryset = queryset.filter(realms__group__name="UNICEF User")
         filter_param = self.request.query_params.get("all", "")
         if filter_param.lower() != "true":
             queryset = queryset.filter(profile__country=self.request.user.profile.country)

@@ -1,6 +1,6 @@
 import datetime
 
-from django.test import override_settings, SimpleTestCase
+from django.test import SimpleTestCase
 from django.urls import reverse
 
 from rest_framework import status
@@ -9,10 +9,13 @@ from unicef_snapshot.models import Activity
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.core.tests.mixins import URLAssertionMixin
-from etools.applications.partners.models import Agreement, PartnerType
-from etools.applications.partners.tests.factories import AgreementFactory, PartnerFactory, PartnerStaffFactory
+from etools.applications.organizations.models import OrganizationType
+from etools.applications.organizations.tests.factories import OrganizationFactory
+from etools.applications.partners.models import Agreement
+from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, UNICEF_USER
+from etools.applications.partners.tests.factories import AgreementFactory, PartnerFactory
 from etools.applications.reports.tests.factories import CountryProgrammeFactory
-from etools.applications.users.tests.factories import GroupFactory, UserFactory
+from etools.applications.users.tests.factories import UserFactory
 
 
 class URLsTestCase(URLAssertionMixin, SimpleTestCase):
@@ -33,15 +36,17 @@ class URLsTestCase(URLAssertionMixin, SimpleTestCase):
 class BaseAgreementTestCase(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.pme_user = UserFactory(is_staff=True)
-        cls.pme_user.groups.add(GroupFactory())
-        cls.partner_user = UserFactory(is_staff=False)
-        cls.partner = PartnerFactory(
-            partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION,
+        cls.pme_user = UserFactory(
+            is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]
         )
-        cls.partner_staff = PartnerStaffFactory(
-            partner=cls.partner,
-            user=cls.partner_user,
+        cls.partner = PartnerFactory(
+            organization=OrganizationFactory(
+                organization_type=OrganizationType.CIVIL_SOCIETY_ORGANIZATION,
+            )
+        )
+        cls.partner_staff = UserFactory(
+            is_staff=False, realms__data=['IP Viewer'],
+            profile__organization=cls.partner.organization
         )
         cls.country_programme = CountryProgrammeFactory()
         cls.agreement = AgreementFactory(partner=cls.partner)
@@ -51,7 +56,6 @@ class BaseAgreementTestCase(BaseTenantTestCase):
 
 
 class TestList(BaseAgreementTestCase):
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_get(self):
         agreement_qs = Agreement.objects
         response = self.forced_auth_req(
@@ -68,21 +72,25 @@ class TestList(BaseAgreementTestCase):
         response = self.forced_auth_req(
             "get",
             reverse("pmp_v3:agreement-list"),
-            user=self.partner_user,
+            user=self.partner_staff,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(len(response.data) > 0)
         self.assertEqual(len(response.data), agreement_qs.count())
 
     def test_get_by_partner_not_related(self):
-        staff = PartnerStaffFactory()
+        staff = UserFactory(
+            is_staff=False, realms__data=['IP Viewer'],
+            profile__organization=OrganizationFactory()
+        )
         response = self.forced_auth_req(
             "get",
             reverse("pmp_v3:agreement-list"),
-            user=staff.user,
+            user=staff,
         )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data, [])
+        # TODO REALMS: check with frontend: instead of 200 OK empty is now forbidden:
+        #  see UserIsPartnerStaffMemberPermission
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_get_filter_partner_id(self):
         agreement = AgreementFactory(partner=self.partner)
@@ -91,7 +99,7 @@ class TestList(BaseAgreementTestCase):
         response = self.forced_auth_req(
             "get",
             reverse("pmp_v3:agreement-list"),
-            user=self.partner_user,
+            user=self.partner_staff,
             partner_id=self.partner.pk,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -99,7 +107,6 @@ class TestList(BaseAgreementTestCase):
         for data in response.data:
             self.assertEqual(data["partner"], self.partner.pk)
 
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_export_csv(self):
         AgreementFactory()
         response = self.forced_auth_req(
@@ -168,7 +175,7 @@ class TestCreate(BaseAgreementTestCase):
         response = self.forced_auth_req(
             "post",
             reverse('pmp_v3:agreement-list'),
-            user=self.partner_user,
+            user=self.partner_staff,
             data=data
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
@@ -185,10 +192,13 @@ class TestUpdate(BaseAgreementTestCase):
             start=datetime.date.today(),
         )
         agreement.authorized_officers.add(self.partner_staff)
+        # only UNICEF users can update reference_number_year - see agreement_permissions matrix
+        unicef_user = UserFactory(is_staff=True)
+
         response = self.forced_auth_req(
             "patch",
             reverse('pmp_v3:agreement-detail', args=[agreement.pk]),
-            user=self.partner_user,
+            user=unicef_user,
             data={
                 "reference_number_year": 2020,
             },

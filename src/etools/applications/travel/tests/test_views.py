@@ -18,7 +18,7 @@ from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.reports.tests.factories import OfficeFactory, SectionFactory
 from etools.applications.travel.models import Activity, ItineraryItem, Report, Trip, TripStatusHistory
 from etools.applications.travel.tests.factories import ActivityFactory, ItineraryFactory, ReportFactory, TripFactory
-from etools.applications.users.tests.factories import GroupFactory, UserFactory
+from etools.applications.users.tests.factories import CountryFactory, GroupFactory, RealmFactory, UserFactory
 
 
 class TestTripViewSet(BaseTenantTestCase):
@@ -65,7 +65,12 @@ class TestTripViewSet(BaseTenantTestCase):
                 self.assertTrue(actual_trip['permissions']['delete'])
 
         travel_adm_group = GroupFactory(name='Travel Administrator')
-        self.user.groups.add(travel_adm_group)
+        RealmFactory(
+            user=self.user,
+            country=CountryFactory(),
+            organization=self.user.profile.organization,
+            group=travel_adm_group
+        )
         response = self.forced_auth_req(
             "get",
             reverse('travel:trip-list'),
@@ -448,7 +453,7 @@ class TestTripViewSet(BaseTenantTestCase):
         for _ in range(10):
             TripFactory()
 
-        user = UserFactory(first_name="First name", last_name="Last name")
+        user = UserFactory(first_name="Traveller First name", last_name="Traveller Last name")
         trip = TripFactory(traveller=user)
 
         def _validate_response(response):
@@ -460,7 +465,7 @@ class TestTripViewSet(BaseTenantTestCase):
         response = self.forced_auth_req(
             "get",
             reverse('travel:trip-list'),
-            data={"search": user.first_name[:4]},
+            data={"search": user.first_name[:9]},
             user=self.user,
         )
         _validate_response(response)
