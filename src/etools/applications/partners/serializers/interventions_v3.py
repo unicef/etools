@@ -191,6 +191,7 @@ class InterventionManagementBudgetSerializer(
     act3_total = serializers.SerializerMethodField()
     partner_total = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True)
     unicef_total = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True)
+    unfunded_total = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True)
     total = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True)
 
     class Meta:
@@ -199,26 +200,30 @@ class InterventionManagementBudgetSerializer(
             "items",
             "act1_unicef",
             "act1_partner",
+            "act1_unfunded",
             "act1_total",
             "act2_unicef",
             "act2_partner",
+            "act2_unfunded",
             "act2_total",
             "act3_unicef",
             "act3_partner",
+            "act3_unfunded",
             "act3_total",
             "partner_total",
             "unicef_total",
+            "unfunded_total",
             "total",
         )
 
     def get_act1_total(self, obj):
-        return str(obj.act1_unicef + obj.act1_partner)
+        return str(obj.act1_unicef + obj.act1_partner + obj.act1_unfunded)
 
     def get_act2_total(self, obj):
-        return str(obj.act2_unicef + obj.act2_partner)
+        return str(obj.act2_unicef + obj.act2_partner + obj.act2_unfunded)
 
     def get_act3_total(self, obj):
-        return str(obj.act3_unicef + obj.act3_partner)
+        return str(obj.act3_unicef + obj.act3_partner + obj.act3_unfunded)
 
     @transaction.atomic
     def update(self, instance, validated_data):

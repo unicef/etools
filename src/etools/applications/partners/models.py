@@ -3079,7 +3079,7 @@ class InterventionBudget(TimeStampedModel):
         verbose_name=_('UNICEF Supplies')
     )
     total = models.DecimalField(max_digits=20, decimal_places=2, verbose_name=_('Total'))
-    total_unfunded = models.DecimalField(max_digits=20, decimal_places=2, verbose_name=_('Total Unfunded'))
+    total_unfunded = models.DecimalField(max_digits=20, decimal_places=2, default=0, verbose_name=_('Total Unfunded'))
 
     # sum of all activity/management budget cso/partner values
     partner_contribution_local = models.DecimalField(max_digits=20, decimal_places=2, default=0,
@@ -3701,8 +3701,12 @@ class InterventionManagementBudget(TimeStampedModel):
         return self.act1_unicef + self.act2_unicef + self.act3_unicef
 
     @property
+    def unfunded_total(self):
+        return self.act1_unfunded + self.act2_unfunded + self.act3_unfunded
+
+    @property
     def total(self):
-        return self.partner_total + self.unicef_total
+        return self.partner_total + self.unicef_total + self.unfunded_total
 
     def save(self, *args, **kwargs):
         create = not self.pk
@@ -3714,17 +3718,22 @@ class InterventionManagementBudget(TimeStampedModel):
 
     def update_cash(self):
         aggregated_items = self.items.values('kind').order_by('kind')
-        aggregated_items = aggregated_items.annotate(unicef_cash=Sum('unicef_cash'), cso_cash=Sum('cso_cash'))
+        aggregated_items = aggregated_items.annotate(
+            unicef_cash=Sum('unicef_cash'), cso_cash=Sum('cso_cash'), unfunded_cash=Sum('unfunded_cash')
+        )
         for item in aggregated_items:
             if item['kind'] == InterventionManagementBudgetItem.KIND_CHOICES.in_country:
                 self.act1_unicef = item['unicef_cash']
                 self.act1_partner = item['cso_cash']
+                self.act1_unfunded = item['unfunded_cash']
             elif item['kind'] == InterventionManagementBudgetItem.KIND_CHOICES.operational:
                 self.act2_unicef = item['unicef_cash']
                 self.act2_partner = item['cso_cash']
+                self.act2_unfunded = item['unfunded_cash']
             elif item['kind'] == InterventionManagementBudgetItem.KIND_CHOICES.planning:
                 self.act3_unicef = item['unicef_cash']
                 self.act3_partner = item['cso_cash']
+                self.act3_unfunded = item['unfunded_cash']
         self.save()
 
 
