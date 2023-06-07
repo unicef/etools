@@ -3655,12 +3655,6 @@ class InterventionManagementBudget(TimeStampedModel):
         max_digits=20,
         default=0,
     )
-    act1_unfunded = models.DecimalField(
-        verbose_name=_("Unfunded amount for In-country management and support staff prorated to their contribution to the programme (representation, planning, coordination, logistics, administration, finance)"),
-        decimal_places=2,
-        max_digits=20,
-        default=0,
-    )
     act2_unicef = models.DecimalField(
         verbose_name=_("UNICEF contribution for Operational costs prorated to their contribution to the programme (office space, equipment, office supplies, maintenance)"),
         decimal_places=2,
