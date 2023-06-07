@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-05-18 09:35+0000\n"
+"POT-Creation-Date: 2023-06-07 13:42+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1188,6 +1188,9 @@ msgstr "يونيسيف كاش"
 msgid "UNICEF Supplies"
 msgstr "لوازم اليونيسف"
 
+msgid "Total Unfunded"
+msgstr ""
+
 msgid "Partner Contribution Local"
 msgstr "مساهمة الشريك بالعملة المحلية"
 
@@ -1592,6 +1595,9 @@ msgstr "تصنيف مخاطر الإستغلال و الإنتهاك الجنس�
 
 msgid "HACT"
 msgstr "اطار النهج المنسق للتحويلات النقدية"
+
+msgid "This programme document does not include unfunded amounts"
+msgstr ""
 
 msgid ""
 "Cannot add a new amendment while another amendment of same kind is in "

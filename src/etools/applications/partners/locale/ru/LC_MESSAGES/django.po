@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-05-18 09:35+0000\n"
+"POT-Creation-Date: 2023-06-07 13:42+0000\n"
 "Language: ru\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -1187,6 +1187,9 @@ msgstr "Денежные средства ЮНИСЕФ"
 msgid "UNICEF Supplies"
 msgstr "Снабжение ЮНИСЕФ"
 
+msgid "Total Unfunded"
+msgstr ""
+
 msgid "Partner Contribution Local"
 msgstr "Вклад партнера (в местной валюте)"
 
@@ -1598,6 +1601,9 @@ msgstr "Рейтинг риска СЭН"
 
 msgid "HACT"
 msgstr "ГПДП"
+
+msgid "This programme document does not include unfunded amounts"
+msgstr ""
 
 msgid ""
 "Cannot add a new amendment while another amendment of same kind is in "
