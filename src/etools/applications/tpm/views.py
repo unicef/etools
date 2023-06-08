@@ -134,7 +134,6 @@ class TPMPartnerViewSet(
 
         if getattr(self, 'action', None) == 'list':
             queryset = queryset.country_partners()
-
         user_groups = self.request.user.groups.values_list('name', flat=True)
 
         if UNICEFUser.name in user_groups or PME.name in user_groups:
@@ -194,10 +193,9 @@ class TPMPartnerViewSet(
 
     @action(detail=False, methods=['get'], url_path='export', renderer_classes=(TPMPartnerCSVRenderer,))
     def export(self, request, *args, **kwargs):
-        tpm_partners = self.filter_queryset(
-            TPMPartner.objects.filter(
-                countries__id__contains=request.user.profile.country.id).order_by('organization__vendor_number')
-        )
+
+        tpm_partners = self.filter_queryset(self.get_queryset()).order_by('organization__vendor_number')
+
         serializer = TPMPartnerExportSerializer(tpm_partners, many=True)
         return Response(serializer.data, headers={
             'Content-Disposition': 'attachment;filename=tpm_vendors_{}.csv'.format(timezone.now().date())
