@@ -3104,7 +3104,7 @@ class InterventionBudget(TimeStampedModel):
     )
     unfunded_cash_local = models.DecimalField(
         max_digits=20, decimal_places=2, default=0,
-        verbose_name=_('Unfunded HQ Cash Local')
+        verbose_name=_('Unfunded Capacity Strengthening Cash Local')
     )
     # unicef cash including headquarters contribution
     unicef_cash_local = models.DecimalField(max_digits=20, decimal_places=2, default=0,
@@ -3180,6 +3180,7 @@ class InterventionBudget(TimeStampedModel):
         def init_totals():
             self.partner_contribution_local = 0
             self.total_unicef_cash_local_wo_hq = 0
+            self.total_unfunded = 0
 
         init = False
         for link in intervention.result_links.all():
@@ -3190,6 +3191,7 @@ class InterventionBudget(TimeStampedModel):
                         init = True
                     self.partner_contribution_local += activity.cso_cash
                     self.total_unicef_cash_local_wo_hq += activity.unicef_cash
+                    self.total_unfunded += activity.unfunded_cash
 
         programme_effectiveness = 0
         if not init:
@@ -3197,7 +3199,11 @@ class InterventionBudget(TimeStampedModel):
         programme_effectiveness += intervention.management_budgets.total
         self.partner_contribution_local += intervention.management_budgets.partner_total
         self.total_unicef_cash_local_wo_hq += intervention.management_budgets.unicef_total
+        self.total_unfunded += intervention.management_budgets.unfunded_total
         self.unicef_cash_local = self.total_unicef_cash_local_wo_hq + self.total_hq_cash_local
+
+        # add Capacity Strenghtening Unfunded to total_unfunded
+        self.total_unfunded += self.unfunded_cash_local
 
         # in kind totals
         self.in_kind_amount_local = 0
@@ -3208,7 +3214,7 @@ class InterventionBudget(TimeStampedModel):
             else:
                 self.partner_supply_local += item.total_price
 
-        self.total = self.total_unicef_contribution() + self.partner_contribution
+        self.total = self.total_unicef_contribution() + self.partner_contribution + self.total_unfunded
         self.total_partner_contribution_local = self.partner_contribution_local + self.partner_supply_local
         self.total_local = self.total_unicef_contribution_local() + self.total_partner_contribution_local
         if self.total_local:

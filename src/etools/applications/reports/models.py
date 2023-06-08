@@ -1069,14 +1069,16 @@ class InterventionActivity(TimeStampedModel):
         aggregates = items.aggregate(
             unicef_cash=Sum('unicef_cash'),
             cso_cash=Sum('cso_cash'),
+            unfunded_cash=Sum('unfunded_cash'),
         )
         self.unicef_cash = aggregates['unicef_cash']
         self.cso_cash = aggregates['cso_cash']
+        self.unfunded_cash = aggregates['unfunded_cash']
         self.save()
 
     @property
     def total(self):
-        return self.unicef_cash + self.cso_cash
+        return self.unicef_cash + self.cso_cash + self.unfunded_cash
 
     @property
     def partner_percentage(self):
@@ -1105,6 +1107,7 @@ class InterventionActivity(TimeStampedModel):
         cls.objects.bulk_update(activities, fields=['code'])
 
     def get_amended_name(self):
+        # TODO TBD add also Unfunded cash?
         return f'{self.result} {self.name} (Total: {self.total}, UNICEF: {self.unicef_cash}, Partner: {self.cso_cash})'
 
     def get_time_frames_display(self):
