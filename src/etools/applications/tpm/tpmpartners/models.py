@@ -43,6 +43,9 @@ class TPMPartner(BaseFirm):
             ).values_list('user_id', flat=True)
         )
 
+    def get_related_third_party_users(self):
+        return self.staff_members.all()
+
 
 class TPMPartnerStaffMember(BaseStaffMember):
     """
