@@ -142,6 +142,46 @@ class TestProgrammaticVisitsManagement(BaseTestCase):
         self.assertEqual(len(response.data['planned_visits'][0]['programmatic_q4_sites']), 2)
         self.assertIn('name', response.data['planned_visits'][0]['programmatic_q4_sites'][0])
 
+    def test_update_after_save(self):
+        self.assertEqual(self.draft_intervention.planned_visits.count(), 0)
+        site_1 = LocationSiteFactory()
+        site_2 = LocationSiteFactory()
+        site_3 = LocationSiteFactory()
+        site_4 = LocationSiteFactory()
+        data = {
+            'planned_visits': [{
+                'year': date.today().year,
+                'programmatic_q1': 2,
+                'programmatic_q2': 2,
+                'programmatic_q3': 4,
+                'programmatic_q4': 2,
+                "programmatic_q1_sites": [site_1.pk, site_3.pk],
+                "programmatic_q2_sites": [site_2.pk, site_3.pk],
+                "programmatic_q3_sites": [site_1.pk, site_2.pk, site_3.pk, site_4.pk],
+                "programmatic_q4_sites": [site_2.pk, site_4.pk],
+            }],
+        }
+
+        def try_save():
+            response = self.forced_auth_req(
+                'patch',
+                reverse('pmp_v3:intervention-detail', args=[self.draft_intervention.pk]),
+                user=self.partnership_manager,
+                data=data,
+            )
+            self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+            self.assertEqual(self.draft_intervention.planned_visits.count(), 1)
+            planned_visits = self.draft_intervention.planned_visits.first()
+            planned_sites = InterventionPlannedVisitSite.objects.filter(planned_visits=planned_visits)
+            self.assertEqual(planned_sites.filter(quarter=InterventionPlannedVisitSite.Q1).count(), 2)
+            self.assertEqual(planned_sites.filter(quarter=InterventionPlannedVisitSite.Q2).count(), 2)
+            self.assertEqual(planned_sites.filter(quarter=InterventionPlannedVisitSite.Q3).count(), 4)
+            self.assertEqual(planned_sites.filter(quarter=InterventionPlannedVisitSite.Q4).count(), 2)
+
+        try_save()
+        data['planned_visits'][0]['id'] = self.draft_intervention.planned_visits.first().id
+        try_save()
+
     def test_update(self):
         visit = InterventionPlannedVisitsFactory(
             intervention=self.draft_intervention,
