@@ -1,5 +1,6 @@
 import datetime
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.db import connection, IntegrityError, transaction
@@ -247,3 +248,17 @@ def sync_realms_to_prp(user_pk, last_modified_at_timestamp, retry_counter=0):
         else:
             logger.exception(f'Received {ex} from prp api while trying to send realms after 3 attempts. '
                              f'User pk: {user_pk}.')
+
+
+@app.task
+def deactivate_stale_users():
+    active_users = User.objects.filter(is_active=True)
+    non_unicef_users = active_users.exclude(email__endswith=settings.UNICEF_USER_EMAIL)
+    users_to_deactivate = non_unicef_users.filter(
+        last_login__lt=timezone.now() - datetime.timedelta(days=settings.STALE_USERS_DEACTIVATION_THRESHOLD_DAYS),
+    )
+    for user in users_to_deactivate:
+        logger.info(f'Deactivated user as it was inactive for more than 3 months: {user.email}')
+        # save one by one instead of .update(is_active=True) to enable signals/save events
+        user.is_active = False
+        user.save()
