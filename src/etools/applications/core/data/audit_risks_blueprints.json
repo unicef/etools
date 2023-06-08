@@ -364,7 +364,7 @@
             "order": 0,
             "weight": 2,
             "is_key": true,
-            "header": "1. Is the entity in compliance with national registration requirements?",
+            "header": "<b>1. Is the entity in compliance with national registration requirements?</b>",
             "description": "If the organisation is a government entity, answer \"N/A\".\nFor NGO / INGO / Other entity types, please record the legal status and date of registration in country.",
             "category": 109
         }
@@ -376,7 +376,7 @@
             "order": 1,
             "weight": 2,
             "is_key": true,
-            "header": "2. Does an internet search indicate there have been no known cases of fraud, or other allegations of malpractice, concerning the entity or its staff in the last five years?",
+            "header": "<b>2. Does an internet search indicate there have been no known cases of fraud, or other allegations of malpractice, concerning the entity or its staff in the last five years?</b>",
             "description": "The search should be performed using terms such as \"fraud\", \"allegations\", \"abuse\", and \"criminal\".",
             "category": 109
         }
@@ -497,7 +497,7 @@
             "order": 0,
             "weight": 2,
             "is_key": true,
-            "header": "1. Is there an HR manual that covers key areas such as recruitment, employment and personnel practices, and which is provided to all staff?",
+            "header": "<b>1. Is there an HR manual that covers key areas such as recruitment, employment and personnel practices, and which is provided to all staff?</b>",
             "description": "",
             "category": 111
         }
@@ -591,7 +591,7 @@
             "order": 0,
             "weight": 2,
             "is_key": true,
-            "header": "7. Does the finance team contain a sufficient number of suitably experienced staff, so that team members are competent to perform the tasks assigned to them, and with sufficient segregation of duties?",
+            "header": "<b>7. Does the finance team contain a sufficient number of suitably experienced staff, so that team members are competent to perform the tasks assigned to them, and with sufficient segregation of duties?</b>",
             "description": "",
             "category": 113
         }
@@ -638,7 +638,7 @@
             "order": 0,
             "weight": 2,
             "is_key": true,
-            "header": "10. Does the organisation have a clear set of policies concerning the expected conduct of its staff, and procedures to follow up on allegations of misconduct?",
+            "header": "<b>10. Does the organisation have a clear set of policies concerning the expected conduct of its staff, and procedures to follow up on allegations of misconduct?</b>",
             "description": "Such policies should cover areas such as the prevention of violence, intimidation and sexual harassment, and require people to act with honesty, integrity and diligence.",
             "category": 114
         }
@@ -650,7 +650,7 @@
             "order": 1,
             "weight": 2,
             "is_key": true,
-            "header": "11. Does the organisation have an anti-fraud and anti-corruption policy that is readily accessible to all staff?",
+            "header": "<b>11. Does the organisation have an anti-fraud and anti-corruption policy that is readily accessible to all staff?</b>",
             "description": "",
             "category": 114
         }
@@ -710,7 +710,7 @@
             "order": 0,
             "weight": 2,
             "is_key": true,
-            "header": "1. Does the organisation have and use sufficiently detailed written policies, procedures and other tools to develop and manage programmes and plans?",
+            "header": "<b>1. Does the organisation have and use sufficiently detailed written policies, procedures and other tools to develop and manage programmes and plans?</b>",
             "description": "",
             "category": 115
         }
@@ -757,7 +757,7 @@
             "order": 0,
             "weight": 2,
             "is_key": true,
-            "header": "4. Does the organisation identify the potential risks for achieving its objectives and programme delivery and mechanisms to mitigate them?",
+            "header": "<b>4. Does the organisation identify the potential risks for achieving its objectives and programme delivery and mechanisms to mitigate them?</b>",
             "description": "This could include areas such as a lack of skills and resources, political instability, or environmental factors.",
             "category": 116
         }
@@ -804,7 +804,7 @@
             "order": 0,
             "weight": 2,
             "is_key": true,
-            "header": "7. Does the organisation have and use sufficiently detailed policies, procedures, guidelines and other tools for monitoring and evaluation?",
+            "header": "<b>7. Does the organisation have and use sufficiently detailed policies, procedures, guidelines and other tools for monitoring and evaluation?</b>",
             "description": "",
             "category": 117
         }
@@ -863,7 +863,7 @@
             "order": 0,
             "weight": 2,
             "is_key": true,
-            "header": "1. Is there a finance manual, or similar, that clearly sets out the main policies and procedures to be followed?",
+            "header": "<b>1. Is there a finance manual, or similar, that clearly sets out the main policies and procedures to be followed?</b>",
             "description": "",
             "category": 118
         }
@@ -886,7 +886,7 @@
             "order": 0,
             "weight": 2,
             "is_key": true,
-            "header": "2. Has the organisation complied with its statutory reporting requirements for the last three years?",
+            "header": "<b>2. Has the organisation complied with its statutory reporting requirements for the last three years?</b>",
             "description": "If no such reporting requirements, state \"N/A\".",
             "category": 119
         }
@@ -910,7 +910,7 @@
             "order": 2,
             "weight": 2,
             "is_key": true,
-            "header": "4. Has the organisation received UN audit reports, or other assurance activities commissioned by UN organisations, which report a good control environment, and without significant amounts of unsupported expenditure being identified?",
+            "header": "<b>4. Has the organisation received UN audit reports, or other assurance activities commissioned by UN organisations, which report a good control environment, and without significant amounts of unsupported expenditure being identified?</b>",
             "description": "If no such activities have taken place, answer \"no\" and record \"significant risk\". If such activities have reported significant issues, answer \"no\" and record \"high risk\".",
             "category": 119
         }
@@ -1017,7 +1017,7 @@
             "order": 0,
             "weight": 2,
             "is_key": true,
-            "header": "11. Are budgets prepared in sufficient detail so that they can be used as a meaningful monitoring and control tool?",
+            "header": "<b>11. Are budgets prepared in sufficient detail so that they can be used as a meaningful monitoring and control tool?</b>",
             "description": "",
             "category": 121
         }
@@ -1076,7 +1076,7 @@
             "order": 0,
             "weight": 2,
             "is_key": true,
-            "header": "1. Does the organisation maintain a comprehensive and up to date fixed asset register, that records all relevant details (such as purchase date, cost, condition, location, tag number, serial number, and owner) for each asset held?",
+            "header": "<b>1. Does the organisation maintain a comprehensive and up to date fixed asset register, that records all relevant details (such as purchase date, cost, condition, location, tag number, serial number, and owner) for each asset held?</b>",
             "description": "",
             "category": 122
         }
@@ -1179,7 +1179,7 @@
         "model": "audit.riskblueprint",
         "pk": 253,
         "fields": {
-            "order": 0,
+            "order": 1,
             "weight": 1,
             "is_key": false,
             "header": "7. Are physical verifications of inventory items reconciled to the records held on a sufficiently frequent basis, and the results, and any necessary adjustments, documented and approved?",
@@ -1191,7 +1191,7 @@
         "model": "audit.riskblueprint",
         "pk": 254,
         "fields": {
-            "order": 0,
+            "order": 2,
             "weight": 1,
             "is_key": false,
             "header": "8. Are items with a limited shelf-life sufficiently monitored to ensure they do not expire prior to issue?",
@@ -1252,7 +1252,7 @@
             "order": 0,
             "weight": 2,
             "is_key": true,
-            "header": "11. Is cash held in a secure place that can be accessed only by certain designated individuals?",
+            "header": "<b>11. Is cash held in a secure place that can be accessed only by certain designated individuals?</b>",
             "description": "If no cash is held, state \"N/A\".",
             "category": 127
         }
@@ -1262,8 +1262,8 @@
         "pk": 258,
         "fields": {
             "order": 1,
-            "weight": 2,
-            "is_key": true,
+            "weight": 1,
+            "is_key": false,
             "header": "12. Are cash reconciliations performed on a frequent basis, by more than one individual at the same time, and the results documented and approved?",
             "description": "",
             "category": 127
@@ -1276,7 +1276,7 @@
             "order": 0,
             "weight": 2,
             "is_key": true,
-            "header": "1. Does the organisation have written procurement policies and procedures, which facilitate competition, transparency and obtaining value for money?",
+            "header": "<b>1. Does the organisation have written procurement policies and procedures, which facilitate competition, transparency and obtaining value for money?</b>",
             "description": "",
             "category": 106
         }
@@ -1312,7 +1312,7 @@
             "order": 3,
             "weight": 2,
             "is_key": true,
-            "header": "4. Is there adequate segregation of duties in the procurement process?",
+            "header": "<b>4. Is there adequate segregation of duties in the procurement process?</b>",
             "description": "",
             "category": 106
         }
@@ -1500,9 +1500,9 @@
         "pk": 276,
         "fields": {
             "order": 0,
-            "weight": 1,
-            "is_key": false,
-            "header": "1. Does the organisation have and make use of a computerised accounting system that records sufficient details of each transaction to allow it to be linked to the corresponding documentation and allocated to the relevant funding source?",
+            "weight": 2,
+            "is_key": true,
+            "header": "<b>1. Does the organisation have and make use of a computerised accounting system that records sufficient details of each transaction to allow it to be linked to the corresponding documentation and allocated to the relevant funding source?</b>",
             "description": "",
             "category": 128
         }
@@ -1512,8 +1512,8 @@
         "pk": 277,
         "fields": {
             "order": 1,
-            "weight": 2,
-            "is_key": true,
+            "weight": 1,
+            "is_key": false,
             "header": "2. Is access to the accounting system protected through the use of usernames and passwords?",
             "description": "",
             "category": 128
@@ -1562,7 +1562,7 @@
             "order": 5,
             "weight": 2,
             "is_key": true,
-            "header": "6. Do appropriate procedures and controls exist to ensure that the same or similar level of oversight is maintained even if staff are not physically present in the office?",
+            "header": "<b>6. Do appropriate procedures and controls exist to ensure that the same or similar level of oversight is maintained even if staff are not physically present in the office?</b>",
             "description": "",
             "category": 128
         }
@@ -1597,7 +1597,7 @@
             "order": 0,
             "weight": 2,
             "is_key": true,
-            "header": "8. Does the organisation perform bank reconciliations on at least a monthly basis?",
+            "header": "<b>8. Does the organisation perform bank reconciliations on at least a monthly basis?</b>",
             "description": "If the organisation's bank account is pooled with other accounts, and therefore cannot perform a reconciliation, state \"N/A\" and provide comments explaining the cirucmstances.",
             "category": 129
         }
@@ -1644,7 +1644,7 @@
             "order": 0,
             "weight": 2,
             "is_key": true,
-            "header": "11. Are payments subject to a clear approval process with adequate segregation of duties?",
+            "header": "<b>11. Are payments subject to a clear approval process with adequate segregation of duties?</b>",
             "description": "",
             "category": 130
         }
@@ -1692,7 +1692,7 @@
             "order": 4,
             "weight": 2,
             "is_key": true,
-            "header": "15. Is there a stated and reasonable limit for the amount that can be paid in cash?",
+            "header": "<b>15. Is there a stated and reasonable limit for the amount that can be paid in cash?</b>",
             "description": "",
             "category": 130
         }
@@ -1740,7 +1740,7 @@
             "order": 8,
             "weight": 2,
             "is_key": true,
-            "header": "19. Are supporting documents stamped as \"Paid\" and marked with the donor or project name after payment has been made, or does the accounting system otherwise have inbuilt controls to ensure payments cannot be made more than once or claimed against more than one funding source?",
+            "header": "<b>19. Are supporting documents stamped as \"Paid\" and marked with the donor or project name after payment has been made, or does the accounting system otherwise have inbuilt controls to ensure payments cannot be made more than once or claimed against more than one funding source?</b>",
             "description": "",
             "category": 130
         }
@@ -1798,7 +1798,7 @@
             "order": 0,
             "weight": 2,
             "is_key": true,
-            "header": "22. Does the organisation maintain all its records in an orderly and consistent way, that enables the ready identification of relevant documentation?",
+            "header": "<b>22. Does the organisation maintain all its records in an orderly and consistent way, that enables the ready identification of relevant documentation?</b>",
             "description": "",
             "category": 132
         }
