@@ -76,6 +76,43 @@ class TestFunctionality(BaseTestCase):
             str(self.intervention.planned_budget.total_cash_local()),
         )
 
+    def test_set_unfunded_cash_when_pd_funded(self):
+        self.assertFalse(self.intervention.planned_budget.has_unfunded_cash)
+        response = self.forced_auth_req(
+            'patch', self.detail_url,
+            user=self.user,
+            data={
+                'unicef_cash': 1,
+                'cso_cash': 2,
+                'unfunded_cash': 1
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_set_unfunded_cash_when_pd_unfunded(self):
+        self.intervention.planned_budget.has_unfunded_cash = True
+        self.intervention.planned_budget.save()
+        response = self.forced_auth_req(
+            'patch', self.detail_url,
+            user=self.user,
+            data={
+                'unicef_cash': 1,
+                'cso_cash': 2,
+                'unfunded_cash': 1
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.data['unicef_cash'], '1.00')
+        self.assertEqual(response.data['cso_cash'], '2.00')
+        self.assertEqual(response.data['unfunded_cash'], '1.00')
+        self.assertEqual(response.data['partner_percentage'], '50.00')
+        self.intervention.refresh_from_db()
+        budget_response = response.data["intervention"]["planned_budget"]
+        self.assertEqual(
+            budget_response["total_cash_local"],
+            str(self.intervention.planned_budget.total_cash_local()),
+        )
+
     def test_set_cash_values_from_items(self):
         InterventionActivityItemFactory(activity=self.activity, unicef_cash=8)
         response = self.forced_auth_req(
