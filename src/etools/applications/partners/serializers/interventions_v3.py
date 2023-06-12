@@ -149,7 +149,8 @@ class InterventionSupplyItemUploadSerializer(serializers.Serializer):
 
 class InterventionManagementBudgetItemSerializer(serializers.ModelSerializer):
     default_error_messages = {
-        'invalid_budget': _('Invalid budget data. Total cash should be equal to items number * price per item.')
+        'invalid_budget': _('Invalid budget data. Total cash should be equal to items number * price per item.'),
+        'pd_is_funded': _('This programme document does not include unfunded amounts')
     }
 
     id = serializers.IntegerField(required=False)
@@ -159,7 +160,7 @@ class InterventionManagementBudgetItemSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'kind', 'name',
             'unit', 'unit_price', 'no_units',
-            'unicef_cash', 'cso_cash'
+            'unicef_cash', 'cso_cash', 'unfunded_cash'
         )
 
     def validate(self, attrs):
@@ -169,10 +170,14 @@ class InterventionManagementBudgetItemSerializer(serializers.ModelSerializer):
         if 'id' in attrs:
             instance = self.Meta.model.objects.filter(id=attrs['id']).first()
 
-        unit_price = attrs.get('unit_price', instance.unit_price if instance else None)
-        no_units = attrs.get('no_units', instance.no_units if instance else None)
-        unicef_cash = attrs.get('unicef_cash', instance.unicef_cash if instance else None)
-        cso_cash = attrs.get('cso_cash', instance.cso_cash if instance else None)
+        unit_price = attrs.get('unit_price', instance.unit_price if instance else 0)
+        no_units = attrs.get('no_units', instance.no_units if instance else 0)
+        unicef_cash = attrs.get('unicef_cash', instance.unicef_cash if instance else 0)
+        cso_cash = attrs.get('cso_cash', instance.cso_cash if instance else 0)
+        unfunded_cash = attrs.get('unfunded_cash', self.instance.unfunded_cash if self.instance else 0)
+
+        if unfunded_cash and not self.instance.intervention.planned_budget.has_unfunded_cash:
+            self.fail('pd_is_funded')
 
         # unit_price * no_units can contain more decimal places than we're able to save
         if abs((unit_price * no_units) - (unicef_cash + cso_cash)) > 0.01:
