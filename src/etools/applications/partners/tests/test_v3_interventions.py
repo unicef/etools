@@ -813,7 +813,7 @@ class TestUpdate(BaseInterventionTestCase):
         budget.refresh_from_db()
         self.assertEqual(budget.currency, "PEN")
 
-    def test_patch_has_unfunded_cash(self):
+    def test_patch_activate_has_unfunded_cash(self):
         intervention = InterventionFactory()
         intervention.unicef_focal_points.add(self.unicef_user)
         budget = intervention.planned_budget
@@ -831,6 +831,39 @@ class TestUpdate(BaseInterventionTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         budget.refresh_from_db()
         self.assertTrue(budget.has_unfunded_cash)
+
+    def test_patch_deactivate_has_unfunded_cash(self):
+        intervention = InterventionFactory()
+        intervention.unicef_focal_points.add(self.unicef_user)
+        budget = intervention.planned_budget
+        budget.has_unfunded_cash = True
+        budget.save()
+        self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+            user=self.unicef_user,
+            data={'planned_budget': {
+                "id": budget.pk,
+                "unfunded_cash_local": 1234,
+            }}
+        )
+        budget.refresh_from_db()
+        self.assertEqual(budget.unfunded_cash_local, 1234)
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+            user=self.unicef_user,
+            data={'planned_budget': {
+                "id": budget.pk,
+                "has_unfunded_cash": False,
+            }}
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn(
+            'This programme document has unfunded amounts. '
+            'Please fix them before deactivating.',
+            response.data['planned_budget']['has_unfunded_cash']
+        )
 
     def test_patch_unfunded_cash_local(self):
         intervention = InterventionFactory()
