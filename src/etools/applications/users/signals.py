@@ -1,5 +1,6 @@
 import datetime
 
+from django.conf import settings
 from django.db import transaction
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
@@ -19,7 +20,7 @@ def sync_realms_to_prp_on_update(instance: Realm, created: bool, **kwargs):
         lambda:
             sync_realms_to_prp.apply_async(
                 (instance.user_id, instance.modified.timestamp()),
-                eta=instance.modified + datetime.timedelta(minutes=5)
+                eta=instance.modified + datetime.timedelta(minutes=settings.PRP_USER_SYNC_DELAY)
             )
     )
 
@@ -35,6 +36,6 @@ def sync_realms_to_prp_on_delete(instance: Realm, **kwargs):
         lambda:
             sync_realms_to_prp.apply_async(
                 (instance.user_id, now.timestamp()),
-                eta=now + datetime.timedelta(minutes=5)
+                eta=now + datetime.timedelta(minutes=settings.PRP_USER_SYNC_DELAY)
             )
     )
