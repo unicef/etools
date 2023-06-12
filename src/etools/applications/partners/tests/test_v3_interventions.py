@@ -1232,6 +1232,98 @@ class TestManagementBudget(BaseInterventionTestCase):
         self.assertEqual(response.data['act3_unicef'], '0.00')
         self.assertEqual(response.data['act3_partner'], '2.00')
 
+    def test_set_cash_values_from_items_unfunded(self):
+        intervention = InterventionFactory()
+        intervention.planned_budget.has_unfunded_cash = True
+        intervention.planned_budget.save()
+
+        InterventionManagementBudgetItemFactory(budget=intervention.management_budgets, unicef_cash=8)
+        response = self.forced_auth_req(
+            'patch',
+            reverse(
+                "pmp_v3:intervention-budget",
+                args=[intervention.pk],
+            ),
+            user=self.unicef_user,
+            data={
+                'act1_unicef': 1,
+                'act1_partner': 2,
+                'act2_unicef': 3,
+                'act2_partner': 4,
+                'items': [
+                    {
+                        'name': 'first_item', 'kind': 'operational',
+                        'unit': 'item', 'no_units': '1.0', 'unit_price': '7.0',
+                        'unicef_cash': '3.0', 'cso_cash': '1.5', 'unfunded_cash': '2.5'
+                    },
+                    {
+                        'name': 'second_item', 'kind': 'planning',
+                        'unit': 'item', 'no_units': '1.0', 'unit_price': '2.0',
+                        'unicef_cash': '0.0', 'cso_cash': '2.0',
+                    },
+                    {
+                        'name': 'third_item', 'kind': 'operational',
+                        'unit': 'item', 'no_units': '1.0', 'unit_price': '0.2',
+                        'unicef_cash': '0.0', 'cso_cash': '0.2',
+                    }
+                ],
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.data['act1_unicef'], '1.00')
+        self.assertEqual(response.data['act1_partner'], '2.00')
+        self.assertEqual(response.data['act1_unfunded'], '0.00')
+        self.assertEqual(response.data['act2_unicef'], '3.00')
+        self.assertEqual(response.data['act2_partner'], '1.70')
+        self.assertEqual(response.data['act2_unfunded'], '2.50')
+        self.assertEqual(response.data['act3_unicef'], '0.00')
+        self.assertEqual(response.data['act3_partner'], '2.00')
+        self.assertEqual(response.data['act3_unfunded'], '0.00')
+
+    def test_update_items_unfunded_cash(self):
+        intervention = InterventionFactory()
+        item_to_update = InterventionManagementBudgetItemFactory(
+            budget=intervention.management_budgets,
+            kind='planning',
+            no_units=1, unit_price=42,
+            unicef_cash=20, cso_cash=20,
+            unfunded_cash=2
+        )
+        self.assertEqual(intervention.management_budgets.items.count(), 1)
+        intervention.planned_budget.has_unfunded_cash = True
+        intervention.planned_budget.save()
+        response = self.forced_auth_req(
+            'patch',
+            reverse(
+                "pmp_v3:intervention-budget",
+                args=[intervention.pk],
+            ),
+            user=self.unicef_user,
+            data={
+                'items': [
+                    {'id': item_to_update.id, 'unit_price': '44', 'unfunded_cash': '4'},
+                    {
+                        'name': 'first_item', 'kind': 'operational',
+                        'unit': 'test', 'no_units': '1.0', 'unit_price': '6.0',
+                        'unicef_cash': '1.0', 'cso_cash': '2.0', 'unfunded_cash': '3.0'
+                    }
+                ],
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(intervention.management_budgets.items.count(), 2)
+        self.assertEqual(len(response.data['items']), 2)
+        self.assertEqual(response.data['act1_unicef'], '0.00')
+        self.assertEqual(response.data['act1_partner'], '0.00')
+        self.assertEqual(response.data['act1_unfunded'], '0.00')
+        self.assertEqual(response.data['act2_unicef'], '1.00')
+        self.assertEqual(response.data['act2_partner'], '2.00')
+        self.assertEqual(response.data['act2_unfunded'], '3.00')
+        self.assertEqual(response.data['act3_unicef'], '20.00')
+        self.assertEqual(response.data['act3_partner'], '20.00')
+        self.assertEqual(response.data['act3_unfunded'], '4.00')
+
     def test_set_items(self):
         intervention = InterventionFactory()
         item_to_remove = InterventionManagementBudgetItemFactory(
