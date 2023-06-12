@@ -467,6 +467,19 @@ class TestDetail(BaseInterventionTestCase):
         self.assertTrue(response.data['permissions']['view']['cfei_number'])
         self.assertTrue(response.data['permissions']['edit']['cfei_number'])
 
+    def test_has_unfunded_cash_permissions_partnership_manager(self):
+        partnership_man = UserFactory(
+            is_staff=True, realms__data=[UNICEF_USER, "Partnership Manager"]
+        )
+        response = self.forced_auth_req(
+            "get",
+            reverse('pmp_v3:intervention-detail', args=[self.intervention.pk]),
+            user=partnership_man,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['permissions']['view']['has_unfunded_cash'])
+        self.assertTrue(response.data['permissions']['edit']['has_unfunded_cash'])
+
     def test_pdf_partner_user(self):
         staff_member = UserFactory(
             realms__data=['IP Viewer'],
