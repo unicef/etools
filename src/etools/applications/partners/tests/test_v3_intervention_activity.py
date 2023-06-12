@@ -143,6 +143,40 @@ class TestFunctionality(BaseTestCase):
         self.assertEqual(response.data['cso_cash'], '6.20')
         self.assertEqual(response.data['partner_percentage'], '67.39')  # cso_cash / (unicef_cash + cso_cash)
 
+    def test_set_cash_values_from_items_unfunded(self):
+        self.intervention.planned_budget.has_unfunded_cash = True
+        self.intervention.planned_budget.save()
+        InterventionActivityItemFactory(activity=self.activity, unicef_cash=8)
+        response = self.forced_auth_req(
+            'patch', self.detail_url,
+            user=self.user,
+            data={
+                'items': [
+                    {
+                        'name': 'first_item',
+                        'unit': 'item', 'no_units': 1, 'unit_price': '8.0',
+                        'unicef_cash': '3.0', 'cso_cash': '4.0', 'unfunded_cash': '1.0'
+                    },
+                    {
+                        'name': 'second_item',
+                        'unit': 'item', 'no_units': 1, 'unit_price': '2.0',
+                        'unicef_cash': '0.0', 'cso_cash': '1.0', 'unfunded_cash': '1.0'
+                    },
+                    {
+                        'name': 'third_item',
+                        'unit': 'item', 'no_units': 1, 'unit_price': '2.0',
+                        'unicef_cash': '0.8', 'cso_cash': '0.2', 'unfunded_cash': '1.0'
+                    }
+                ],
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.data['unicef_cash'], '3.80')
+        self.assertEqual(response.data['cso_cash'], '5.20')
+        self.assertEqual(response.data['partner_percentage'], '43.33')  # cso_cash / (unicef_cash + cso_cash)
+        self.assertEqual(response.data['unfunded_cash'], '3.00')
+        self.assertEqual(response.data['intervention']['planned_budget']['total_unfunded'], '3.00')
+
     def test_set_bad_cash_values_having_items(self):
         InterventionActivityItemFactory(activity=self.activity, unicef_cash=8, cso_cash=5)
         self.activity.update_cash()

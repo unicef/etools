@@ -537,7 +537,7 @@ class InterventionActivityItemSerializer(serializers.ModelSerializer):
         cso_cash = attrs.get('cso_cash', self.instance.cso_cash if self.instance else 0)
         unfunded_cash = attrs.get('unfunded_cash', self.instance.unfunded_cash if self.instance else 0)
 
-        if unfunded_cash and not self.instance.intervention.planned_budget.has_unfunded_cash:
+        if unfunded_cash and not self.root.intervention.planned_budget.has_unfunded_cash:
             self.fail('pd_is_funded')
 
         # unit_price * no_units can contain more decimal places than we're able to save

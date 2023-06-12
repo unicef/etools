@@ -1107,8 +1107,8 @@ class InterventionActivity(TimeStampedModel):
         cls.objects.bulk_update(activities, fields=['code'])
 
     def get_amended_name(self):
-        # TODO TBD add also Unfunded cash?
-        return f'{self.result} {self.name} (Total: {self.total}, UNICEF: {self.unicef_cash}, Partner: {self.cso_cash})'
+        return f'{self.result} {self.name} (Total: {self.total}, ' \
+               f'UNICEF: {self.unicef_cash} | Unfunded: {self.unfunded_cash}, Partner: {self.cso_cash})'
 
     def get_time_frames_display(self):
         return ', '.join([f'{tf.start_date.year} Q{tf.quarter}' for tf in self.time_frames.all()])

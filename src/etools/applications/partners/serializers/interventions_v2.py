@@ -63,6 +63,7 @@ class InterventionBudgetCUSerializer(
     total_cash_local = serializers.DecimalField(max_digits=20, decimal_places=2)
     total_local = serializers.DecimalField(max_digits=20, decimal_places=2)
     total_supply = serializers.DecimalField(max_digits=20, decimal_places=2)
+    total_unfunded = serializers.DecimalField(max_digits=20, decimal_places=2)
     unfunded_cash_local = serializers.DecimalField(max_digits=20, decimal_places=2)
 
     class Meta:
@@ -84,6 +85,7 @@ class InterventionBudgetCUSerializer(
             "total_unicef_cash_local_wo_hq",
             "total_hq_cash_local",
             "total_supply",
+            "total_unfunded",
             "unfunded_cash_local",
             "has_unfunded_cash"
         )
@@ -94,7 +96,8 @@ class InterventionBudgetCUSerializer(
             "total_unicef_cash_local_wo_hq",
             "partner_supply_local",
             "total_partner_contribution_local",
-            "total_supply"
+            "total_supply",
+            "total_unfunded"
         )
 
     def validate_unfunded_cash_local(self, value):
