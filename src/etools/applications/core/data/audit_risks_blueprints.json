@@ -23,6 +23,17 @@
     },
     {
         "model": "audit.riskcategory",
+        "pk": 400,
+        "fields": {
+            "order": 1,
+            "header": "Tested Subject Areas",
+            "parent": null,
+            "category_type": "primary",
+            "code": "ma_subject_areas_v2"
+        }
+    },
+    {
+        "model": "audit.riskcategory",
         "pk": 11,
         "fields": {
             "order": 0,
@@ -3164,6 +3175,166 @@
             "order": 0,
             "header": "Procurement",
             "category": 38
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 401,
+        "fields": {
+            "order": 0,
+            "header": "Organisation",
+            "parent": 400,
+            "category_type": "default",
+            "code": "ma_subject_areas_v2"
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 401,
+        "fields": {
+            "order": 0,
+            "header": "Organisation",
+            "category": 401
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 402,
+        "fields": {
+            "order": 1,
+            "header": "People and behaviours",
+            "parent": 400,
+            "category_type": "default",
+            "code": "ma_subject_areas_v2"
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 402,
+        "fields": {
+            "order": 0,
+            "header": "People and behaviours",
+            "category": 402
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 403,
+        "fields": {
+            "order": 2,
+            "header": "Activities",
+            "parent": 400,
+            "category_type": "default",
+            "code": "ma_subject_areas_v2"
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 403,
+        "fields": {
+            "order": 0,
+            "header": "Activities",
+            "category": 403
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 404,
+        "fields": {
+            "order": 3,
+            "header": "Reporting and accountability",
+            "parent": 400,
+            "category_type": "default",
+            "code": "ma_subject_areas_v2"
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 404,
+        "fields": {
+            "order": 0,
+            "header": "Reporting and accountability",
+            "category": 404
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 405,
+        "fields": {
+            "order": 4,
+            "header": "Assets and inventory",
+            "parent": 400,
+            "category_type": "default",
+            "code": "ma_subject_areas_v2"
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 405,
+        "fields": {
+            "order": 0,
+            "header": "Assets and inventory",
+            "category": 405
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 406,
+        "fields": {
+            "order": 5,
+            "header": "Procurement",
+            "parent": 400,
+            "category_type": "default",
+            "code": "ma_subject_areas_v2"
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 406,
+        "fields": {
+            "order": 0,
+            "header": "Procurement",
+            "category": 406
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 407,
+        "fields": {
+            "order": 6,
+            "header": "Sub-partners",
+            "parent": 400,
+            "category_type": "default",
+            "code": "ma_subject_areas_v2"
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 407,
+        "fields": {
+            "order": 0,
+            "header": "Sub-partners",
+            "category": 407
+        }
+    },
+    {
+        "model": "audit.riskcategory",
+        "pk": 408,
+        "fields": {
+            "order": 7,
+            "header": "Systems",
+            "parent": 400,
+            "category_type": "default",
+            "code": "ma_subject_areas_v2"
+        }
+    },
+    {
+        "model": "audit.riskblueprint",
+        "pk": 408,
+        "fields": {
+            "order": 0,
+            "header": "Systems",
+            "category": 408
         }
     }
 ]

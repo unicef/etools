@@ -574,6 +574,13 @@ class MicroAssessment(Engagement):
             2: 'ma_questionnaire_v2'
         }[version]
 
+    @staticmethod
+    def get_subject_areas_code(version: int):
+        return {
+            1: 'ma_subject_areas',
+            2: 'ma_subject_areas_v2'
+        }[version]
+
     @transition(
         'status',
         source=Engagement.STATUSES.partner_contacted, target=Engagement.STATUSES.report_submitted,
