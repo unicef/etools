@@ -145,7 +145,8 @@ class MicroAssessmentPDFSerializer(EngagementPDFSerializer):
         required=False,
     )
     test_subject_areas = RiskRootSerializer(
-        code='ma_subject_areas', required=False, label=_('Tested Subject Areas')
+        lambda ma: MicroAssessment.get_subject_areas_code(ma.questionnaire_version),
+        required=False, label=_('Tested Subject Areas')
     )
     overall_risk_assessment = RiskRootSerializer(
         code='ma_global_assessment', required=False, label=_('Overall Risk Assessment')
