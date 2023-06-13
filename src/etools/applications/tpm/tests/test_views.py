@@ -10,6 +10,7 @@ from django.utils.translation import gettext as _
 
 from factory import fuzzy
 from rest_framework import status
+from tablib import Dataset
 from unicef_attachments.models import AttachmentLink
 
 from etools.applications.action_points.tests.factories import ActionPointFactory
@@ -754,8 +755,24 @@ class TestTPMPartnerViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCas
     def test_tpm_partner_detail_options(self):
         self._test_detail_options(self.tpm_user, can_update=False)
 
-    def test_partners_csv(self):
-        self._test_export(self.pme_user, 'tpm:partners-export')
+    def test_partners_csv_pme_user(self):
+        response = self._test_export(self.pme_user, 'tpm:partners-export')
+
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
+        self.assertEqual(dataset.height, 2)
+        self.assertEqual(dataset[0][1], self.tpm_partner.name)
+        self.assertEqual(dataset[1][1], self.second_tpm_partner.name)
+
+    def test_partners_csv_empty_list_external_user(self):
+        external_user = UserFactory(realms__data=['IP Admin'])
+        response = self._test_export(external_user, 'tpm:partners-export')
+
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
+        self.assertEqual(dataset.height, 0)
+        self.assertEqual(
+            dataset._get_headers(),
+            ['Vendor Number', 'TPM Name', 'Address', 'Postal Code', 'City', 'Phone Number', 'Email Address']
+        )
 
 
 class TestPartnerAttachmentsView(TPMTestCaseMixin, BaseTenantTestCase):

@@ -611,6 +611,7 @@ UNICEF_LOCATIONS_MODEL = 'locations.Location'
 # https://github.com/unicef/etools-partner-reporting-portal
 PRP_API_ENDPOINT = get_from_secrets_or_env('PRP_API_ENDPOINT', '')  # example: http://172.18.0.1:8083/api
 PRP_API_USER = get_from_secrets_or_env('PRP_API_USER', '')
+PRP_USER_SYNC_DELAY = int(get_from_secrets_or_env('PRP_USER_SYNC_DELAY', 5))
 
 
 # EPD settings
@@ -624,3 +625,9 @@ ECN_API_ENDPOINT = get_from_secrets_or_env('ECN_API_ENDPOINT', '')  # example: h
 
 # Emails allowed to edit admin models in Partners and Reports apps
 ADMIN_EDIT_EMAILS = get_from_secrets_or_env('ADMIN_EDIT_EMAILS', '')
+
+
+# Stale non-UNICEF users deactivation threshold
+STALE_USERS_DEACTIVATION_THRESHOLD_DAYS = int(
+    get_from_secrets_or_env('STALE_USERS_DEACTIVATION_THRESHOLD_DAYS', 3 * 30)
+)
