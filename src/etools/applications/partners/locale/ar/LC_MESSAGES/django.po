@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-05-18 09:35+0000\n"
+"POT-Creation-Date: 2023-05-30 08:57+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1104,6 +1104,9 @@ msgstr "التوجيه الفني"
 msgid "Cancel Justification"
 msgstr "إلغاء التبرير"
 
+msgid "Attachments"
+msgstr "المرفقات"
+
 msgid "Metadata"
 msgstr "البيانات الوصفية"
 
@@ -1544,9 +1547,6 @@ msgstr "نوع المرفق"
 msgid "N/A"
 msgstr "غير متاح"
 
-msgid "Attachments"
-msgstr "المرفقات"
-
 msgid "CSO Contribution"
 msgstr "مساهمة منظمات المجتمع المدني"
 
@@ -1591,6 +1591,9 @@ msgstr "لا يمكن تعيين الزيارة المخططة للتدخلات 
 msgid ""
 "An attachment cannot be changed in statuses \"Ended, Closed or Terminated\""
 msgstr "لا يمكن تغيير المرفق في الحالات \"منتهي أو مغلق أو منتهي\""
+
+msgid "Unable to find corresponding file type."
+msgstr ""
 
 msgid "An Output cannot be updated for a partner that is blocked in Vision"
 msgstr "لا يمكن تحديث الإخراج لشريك محظور في Vision"
@@ -1839,11 +1842,11 @@ msgstr "مسؤول اليونيسف المعتمد"
 msgid "Date Uploaded"
 msgstr "تاريخ الرفع"
 
-msgid "Document"
-msgstr "وثيقة"
-
 msgid "Invalid"
 msgstr "غير صالح"
+
+msgid "Document"
+msgstr "وثيقة"
 
 msgid ""
 "Agreement cannot transition to signed until the start date is less than or "

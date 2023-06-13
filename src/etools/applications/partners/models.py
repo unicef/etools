@@ -2252,6 +2252,13 @@ class Intervention(TimeStampedModel):
         verbose_name=_("Special Conditions for Construction Works by Implementing Partners"),
         default=False,
     )
+    attachments = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Attachments'),
+        code='partners_intervention_attachments',
+        blank=True,
+        null=True
+    )
 
     # Flag if this has been migrated to a status that is not correct
     # previous status
@@ -2451,7 +2458,7 @@ class Intervention(TimeStampedModel):
     @property
     def final_partnership_review(self):
         # to be used only to track changes in validator mixin
-        return self.attachments.filter(type__name=FileType.FINAL_PARTNERSHIP_REVIEW, active=True)
+        return self.attachments.filter(file_type__name='final_partnership_review', is_active=True)
 
     @property
     def document_currency(self):
@@ -3455,7 +3462,7 @@ class InterventionAttachment(TimeStampedModel):
     Relates to :model:`partners.WorkspaceFileType`
     """
     intervention = models.ForeignKey(
-        Intervention, related_name='attachments', verbose_name=_('Intervention'),
+        Intervention, related_name='old_attachments', verbose_name=_('Intervention'),
         on_delete=models.CASCADE,
     )
     type = models.ForeignKey(
