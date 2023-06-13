@@ -54,7 +54,7 @@ class TestAPIInterventionRetrieveResultsStructure(BaseTenantTestCase):
 
         activity2 = InterventionActivityFactory(result=self.pd_output)
         InterventionActivityItemFactory(activity=activity2, unicef_cash=8)
-        InterventionActivityItemFactory(activity=activity2, unicef_cash=8)
+        InterventionActivityItemFactory(activity=activity2, unicef_cash=8, unfunded_cash=10)
         quarter.activities.add(activity2)
 
         response = self.forced_auth_req(
@@ -66,8 +66,12 @@ class TestAPIInterventionRetrieveResultsStructure(BaseTenantTestCase):
 
         links = response.data["result_links"][0]
         self.assertIn("total", links)
+
         self.assertEqual(len(links["ll_results"]), 1)
         self.assertEqual(len(links["ll_results"][0]['activities']), 2)
+        # test unfunded_cash is added to result_links total
+        self.assertEqual(links["ll_results"][0]['total'] + 10, links['total'])
+
         for actual_activity, expected_activity in zip(links["ll_results"][0]['activities'],
                                                       [activity1, activity2]):
             self.assertEqual(actual_activity['id'], expected_activity.pk)
@@ -77,14 +81,14 @@ class TestAPIInterventionRetrieveResultsStructure(BaseTenantTestCase):
                 expected_activity.created.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
             )
             for field in ['name', 'code', 'context_details',
-                          'unicef_cash', 'cso_cash']:
+                          'unicef_cash', 'cso_cash', 'unfunded_cash']:
                 self.assertEqual(actual_activity[field], str(getattr(expected_activity, field)))
 
             self.assertEqual(len(actual_activity['items']), expected_activity.items.count())
             for actual_item, expected_item in zip(actual_activity['items'],
                                                   expected_activity.items.all()):
                 for field in ['name', 'unit', 'unit_price', 'no_units',
-                              'unicef_cash', 'cso_cash']:
+                              'unicef_cash', 'cso_cash', 'unfunded_cash']:
                     self.assertEqual(actual_item[field], str(getattr(expected_item, field)))
 
     def test_retrieve_no_result_activities(self):
