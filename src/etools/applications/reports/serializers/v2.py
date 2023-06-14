@@ -509,7 +509,7 @@ class OfficeSerializer(serializers.ModelSerializer):
 class InterventionActivityItemSerializer(serializers.ModelSerializer):
     default_error_messages = {
         'invalid_budget': _('Invalid budget data. Total cash should be equal to items number * price per item.'),
-        'pd_is_funded': _('This programme document does not include unfunded amounts')
+        'pd_is_funded': _('This programme document does not include unfunded amounts.')
     }
 
     id = serializers.IntegerField(required=False)
@@ -672,7 +672,7 @@ class InterventionActivityDetailSerializer(
 
     def validate_unfunded_cash(self, value):
         if value and not self.intervention.planned_budget.has_unfunded_cash:
-            raise serializers.ValidationError(_('This programme document does not include unfunded amounts'))
+            raise serializers.ValidationError(_('This programme document does not include unfunded amounts.'))
         return value
 
     def validate(self, attrs):

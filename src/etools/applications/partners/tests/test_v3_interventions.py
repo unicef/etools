@@ -911,8 +911,8 @@ class TestUpdate(BaseInterventionTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn(
-            'This programme document does not include unfunded amounts',
-            response.data['planned_budget']['unfunded_cash_local']
+            'This programme document does not include unfunded amounts.',
+            response.data['planned_budget']['unfunded_hq_cash']
         )
         budget.has_unfunded_cash = True
         budget.save(update_fields=['has_unfunded_cash'])

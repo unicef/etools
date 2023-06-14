@@ -150,7 +150,7 @@ class InterventionSupplyItemUploadSerializer(serializers.Serializer):
 class InterventionManagementBudgetItemSerializer(serializers.ModelSerializer):
     default_error_messages = {
         'invalid_budget': _('Invalid budget data. Total cash should be equal to items number * price per item.'),
-        'pd_is_funded': _('This programme document does not include unfunded amounts')
+        'pd_is_funded': _('This programme document does not include unfunded amounts.')
     }
 
     id = serializers.IntegerField(required=False)

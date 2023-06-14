@@ -108,7 +108,7 @@ class InterventionBudgetCUSerializer(
 
     def validate_unfunded_cash_local(self, value):
         if value and not self.instance.has_unfunded_cash:
-            raise serializers.ValidationError(_('This programme document does not include unfunded amounts'))
+            raise serializers.ValidationError(_('This programme document does not include unfunded amounts.'))
         return value
 
     def get_intervention(self):
