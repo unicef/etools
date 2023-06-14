@@ -69,8 +69,8 @@ class TestAPIInterventionRetrieveResultsStructure(BaseTenantTestCase):
 
         self.assertEqual(len(links["ll_results"]), 1)
         self.assertEqual(len(links["ll_results"][0]['activities']), 2)
-        # test unfunded_cash is added to result_links total
-        self.assertEqual(links["ll_results"][0]['total'] + 10, links['total'])
+        # test unfunded_cash is added to result_links total and ll_results total
+        self.assertEqual(links["ll_results"][0]['total'], links['total'])
 
         for actual_activity, expected_activity in zip(links["ll_results"][0]['activities'],
                                                       [activity1, activity2]):

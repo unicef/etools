@@ -467,6 +467,22 @@ class TestDetail(BaseInterventionTestCase):
         self.assertTrue(response.data['permissions']['view']['cfei_number'])
         self.assertTrue(response.data['permissions']['edit']['cfei_number'])
 
+    def test_unfunded_cash_totals_in_result_links(self):
+        result_link = self.intervention.result_links.first()
+        ll_result = result_link.ll_results.first()
+        InterventionActivityFactory(result=ll_result, unicef_cash=10, cso_cash=20, unfunded_cash=30)
+        response = self.forced_auth_req(
+            "get",
+            reverse('pmp_v3:intervention-detail', args=[self.intervention.pk]),
+            user=self.unicef_user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        links = response.data["result_links"][0]
+        self.assertIn("total", links)
+        # test unfunded_cash is added to result_links total and ll_results total
+        self.assertEqual(links['total'], 90)
+        self.assertEqual(links['total'], links["ll_results"][0]['total'])
+
     def test_has_unfunded_cash_permissions_partnership_manager(self):
         partnership_man = UserFactory(
             is_staff=True, realms__data=[UNICEF_USER, "Partnership Manager"]
