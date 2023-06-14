@@ -3103,7 +3103,7 @@ class InterventionBudget(TimeStampedModel):
         max_digits=20, decimal_places=2, default=0,
         verbose_name=_('Total HQ Cash Local')
     )
-    unfunded_cash_local = models.DecimalField(
+    unfunded_hq_cash = models.DecimalField(
         max_digits=20, decimal_places=2, default=0,
         verbose_name=_('Unfunded Capacity Strengthening Cash Local')
     )
@@ -3204,7 +3204,7 @@ class InterventionBudget(TimeStampedModel):
         self.unicef_cash_local = self.total_unicef_cash_local_wo_hq + self.total_hq_cash_local
 
         # add Capacity Strenghtening Unfunded to total_unfunded
-        self.total_unfunded += self.unfunded_cash_local
+        self.total_unfunded += self.unfunded_hq_cash
 
         # in kind totals
         self.in_kind_amount_local = 0

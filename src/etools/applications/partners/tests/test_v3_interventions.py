@@ -873,11 +873,11 @@ class TestUpdate(BaseInterventionTestCase):
             user=self.unicef_user,
             data={'planned_budget': {
                 "id": budget.pk,
-                "unfunded_cash_local": 1234,
+                "unfunded_hq_cash": 1234,
             }}
         )
         budget.refresh_from_db()
-        self.assertEqual(budget.unfunded_cash_local, 1234)
+        self.assertEqual(budget.unfunded_hq_cash, 1234)
         response = self.forced_auth_req(
             "patch",
             reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
@@ -894,11 +894,11 @@ class TestUpdate(BaseInterventionTestCase):
             response.data['planned_budget']['has_unfunded_cash']
         )
 
-    def test_patch_unfunded_cash_local(self):
+    def test_patch_unfunded_hq_cash(self):
         intervention = InterventionFactory()
         intervention.unicef_focal_points.add(self.unicef_user)
         budget = intervention.planned_budget
-        self.assertEqual(budget.unfunded_cash_local, 0)
+        self.assertEqual(budget.unfunded_hq_cash, 0)
 
         response = self.forced_auth_req(
             "patch",
@@ -906,7 +906,7 @@ class TestUpdate(BaseInterventionTestCase):
             user=self.unicef_user,
             data={'planned_budget': {
                 "id": budget.pk,
-                "unfunded_cash_local": 1234,
+                "unfunded_hq_cash": 1234,
             }}
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -923,12 +923,12 @@ class TestUpdate(BaseInterventionTestCase):
             user=self.unicef_user,
             data={'planned_budget': {
                 "id": budget.pk,
-                "unfunded_cash_local": 1234,
+                "unfunded_hq_cash": 1234,
             }}
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         budget.refresh_from_db()
-        self.assertEqual(budget.unfunded_cash_local, 1234)
+        self.assertEqual(budget.unfunded_hq_cash, 1234)
 
     def test_patch_country_programme(self):
         intervention = InterventionFactory()
