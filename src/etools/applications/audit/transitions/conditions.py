@@ -54,13 +54,18 @@ class ValidateRiskCategories(BaseTransitionCheck):
 
 
 class ValidateRiskExtra(BaseTransitionCheck):
-    VALIDATE_CATEGORIES = {}
+    VALIDATE_CATEGORIES_BEFORE_SUBMIT = {}
     REQUIRED_EXTRA_FIELDS = []
+
+    def get_categories_to_validate_before_submit(self, instance):
+        return self.VALIDATE_CATEGORIES_BEFORE_SUBMIT
 
     def get_errors(self, instance, *args, **kwargs):
         errors = super().get_errors(*args, **kwargs)
 
-        for code, category in self.VALIDATE_CATEGORIES.items():
+        categories_to_validate = self.get_categories_to_validate_before_submit(instance)
+
+        for code, category in categories_to_validate.items():
             answers = instance.risks.filter(blueprint__category__code=code)
             for answer in answers:
                 extra_errors = {}
@@ -151,7 +156,6 @@ class AuditSubmitReportRequiredFieldsCheck(EngagementSubmitReportRequiredFieldsC
 
 class ValidateMARiskCategories(ValidateRiskCategories):
     VALIDATE_CATEGORIES_BEFORE_SUBMIT = {
-        'ma_subject_areas': 'test_subject_areas',
         'ma_global_assessment': 'overall_risk_assessment',
     }
 
@@ -160,12 +164,19 @@ class ValidateMARiskCategories(ValidateRiskCategories):
 
         categories = self.VALIDATE_CATEGORIES_BEFORE_SUBMIT
         categories[MicroAssessment.get_questionnaire_code(instance.questionnaire_version)] = 'questionnaire'
+        categories[MicroAssessment.get_subject_areas_code(instance.questionnaire_version)] = 'test_subject_areas'
         return categories
 
 
 class ValidateMARiskExtra(ValidateRiskExtra):
-    VALIDATE_CATEGORIES = {
-        'ma_subject_areas': 'test_subject_areas',
+    VALIDATE_CATEGORIES_BEFORE_SUBMIT = {
         'ma_global_assessment': 'overall_risk_assessment',
     }
     REQUIRED_EXTRA_FIELDS = ['comments']
+
+    def get_categories_to_validate_before_submit(self, instance):
+        from etools.applications.audit.models import MicroAssessment
+
+        categories = self.VALIDATE_CATEGORIES_BEFORE_SUBMIT
+        categories[MicroAssessment.get_subject_areas_code(instance.questionnaire_version)] = 'test_subject_areas'
+        return categories
