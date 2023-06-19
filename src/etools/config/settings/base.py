@@ -583,6 +583,30 @@ ATTACHMENT_FILEPATH_PREFIX_FUNC = "etools.applications.attachments.utils.get_fil
 ATTACHMENT_FLAT_MODEL = "etools.applications.attachments.models.AttachmentFlat"
 ATTACHMENT_DENORMALIZE_FUNC = "etools.applications.attachments.utils.denormalize_attachment"
 ATTACHMENT_PERMISSIONS = "etools.applications.attachments.permissions.IsInSchema"
+ATTACHMENT_INVALID_FILE_TYPES = [
+    "application/json",
+    "application/x-msdownload",
+    "applications/x-ms-installer",
+    "application/x-sh",
+    "text/x-perl",
+    "text/x-python",
+    "text/x-script.python",
+    "application/x-bytecode.python",
+    "text/javascript",
+    "application/x-typescript",
+    "text/x.typescript",
+    "text/prs.typescript",
+    # archive files
+    "application/x-bzip",
+    "application/x-bzip2",
+    "application/gzip",
+    "application/java-archive",
+    "application/x-httpd-php",
+    "application/vnd.rar",
+    "application/x-tar",
+    "application/zip",
+    "application/x-7z-compressed",
+]
 
 GEOS_LIBRARY_PATH = os.getenv('GEOS_LIBRARY_PATH', '/usr/lib/libgeos_c.so.1')  # default path
 GDAL_LIBRARY_PATH = os.getenv('GDAL_LIBRARY_PATH', '/usr/lib/libgdal.so.28')  # default path
