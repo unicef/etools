@@ -880,12 +880,14 @@ class PartnerOrganization(TimeStampedModel):
         from etools.applications.audit.models import Audit, Engagement, SpecialAudit
         audits = Audit.objects.filter(
             partner=self,
-            year_of_audit=datetime.datetime.now().year
+            year_of_audit=datetime.datetime.now().year,
+            date_of_draft_report_to_ip__isnull=False,
         ).exclude(status=Engagement.CANCELLED)
 
         s_audits = SpecialAudit.objects.filter(
             partner=self,
-            year_of_audit=datetime.datetime.now().year
+            year_of_audit=datetime.datetime.now().year,
+            date_of_draft_report_to_ip__isnull=False,
         ).exclude(status=Engagement.CANCELLED)
         return audits, s_audits
 
