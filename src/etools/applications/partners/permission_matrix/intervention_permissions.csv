@@ -81,8 +81,6 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,has_special_conditions_for_construction,Unicef Focal Point,,Suspended,Edit,TRUE
 ,has_unfunded_cash,*,,*,View,TRUE
 ,has_unfunded_cash,Unicef Focal Point,,Draft,Edit,TRUE
-,has_unfunded_cash,Partnership Manager,,Draft,Edit,TRUE
-,has_unfunded_cash,Partner User,,Draft,Edit,TRUE
 3.4.1,contingency_pd,Unicef Focal Point,,Draft,Edit,TRUE
 3.5,country_programme,Unicef Focal Point,,Draft,Edit,TRUE
 3.5,country_programme,Unicef Focal Point,user_adds_amendment,*,Edit,TRUE

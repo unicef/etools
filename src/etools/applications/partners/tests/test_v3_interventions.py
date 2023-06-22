@@ -483,18 +483,20 @@ class TestDetail(BaseInterventionTestCase):
         self.assertEqual(links['total'], 90)
         self.assertEqual(links['total'], links["ll_results"][0]['total'])
 
-    def test_has_unfunded_cash_permissions_partnership_manager(self):
-        partnership_man = UserFactory(
-            is_staff=True, realms__data=[UNICEF_USER, "Partnership Manager"]
+    def test_has_unfunded_cash_permissions_partner_user(self):
+        staff_member = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=self.intervention.agreement.partner.organization,
         )
+        self.intervention.partner_focal_points.add(staff_member)
         response = self.forced_auth_req(
             "get",
             reverse('pmp_v3:intervention-detail', args=[self.intervention.pk]),
-            user=partnership_man,
+            user=staff_member,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(response.data['permissions']['view']['has_unfunded_cash'])
-        self.assertTrue(response.data['permissions']['edit']['has_unfunded_cash'])
+        self.assertFalse(response.data['permissions']['edit']['has_unfunded_cash'])
 
     def test_pdf_partner_user(self):
         staff_member = UserFactory(
@@ -842,7 +844,7 @@ class TestUpdate(BaseInterventionTestCase):
         budget.refresh_from_db()
         self.assertEqual(budget.currency, "PEN")
 
-    def test_patch_activate_has_unfunded_cash(self):
+    def test_patch_activate_has_unfunded_cash_unicef_focal_point(self):
         intervention = InterventionFactory()
         intervention.unicef_focal_points.add(self.unicef_user)
         budget = intervention.planned_budget
@@ -860,6 +862,28 @@ class TestUpdate(BaseInterventionTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         budget.refresh_from_db()
         self.assertTrue(budget.has_unfunded_cash)
+
+    def test_patch_activate_has_unfunded_cash_partner_user(self):
+        intervention = InterventionFactory(date_sent_to_partner=datetime.date.today())
+        staff_member = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=intervention.agreement.partner.organization,
+        )
+        intervention.partner_focal_points.add(staff_member)
+        budget = intervention.planned_budget
+        self.assertFalse(budget.has_unfunded_cash)
+
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+            user=staff_member,
+            data={'planned_budget': {
+                "id": budget.pk,
+                "has_unfunded_cash": True
+            }}
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, ["Cannot change fields while in draft: planned_budget"])
 
     def test_patch_deactivate_has_unfunded_cash(self):
         intervention = InterventionFactory()
@@ -894,7 +918,7 @@ class TestUpdate(BaseInterventionTestCase):
             response.data['planned_budget']['has_unfunded_cash']
         )
 
-    def test_patch_unfunded_hq_cash(self):
+    def test_patch_unfunded_hq_cash_unicef_focal_point(self):
         intervention = InterventionFactory()
         intervention.unicef_focal_points.add(self.unicef_user)
         budget = intervention.planned_budget
@@ -1474,7 +1498,7 @@ class TestManagementBudget(BaseInterventionTestCase):
             response.data['items'][0]['non_field_errors'],
         )
 
-    def test_budget_item_validation_rouding_ok(self):
+    def test_budget_item_validation_rounding_ok(self):
         intervention = InterventionFactory()
         item_to_update = InterventionManagementBudgetItemFactory(budget=intervention.management_budgets)
 
