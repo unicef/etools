@@ -128,8 +128,10 @@ class InterventionBudgetAdmin(RestrictedEditAdmin):
     fields = (
         'intervention',
         'currency',
+        'has_unfunded_cash',
         'partner_contribution',
         'unicef_cash',
+        'total_unfunded',
         'in_kind_amount',
         'partner_contribution_local',
         'unicef_cash_local',
