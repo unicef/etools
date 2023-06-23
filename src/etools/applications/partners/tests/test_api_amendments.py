@@ -23,12 +23,17 @@ from etools.applications.partners.tests.factories import (
     AgreementFactory,
     InterventionAmendmentFactory,
     InterventionFactory,
+    InterventionResultLinkFactory,
     InterventionReviewFactory,
     InterventionSupplyItemFactory,
     PartnerFactory,
 )
+from etools.applications.reports.models import ResultType
 from etools.applications.reports.tests.factories import (
     CountryProgrammeFactory,
+    InterventionActivityFactory,
+    InterventionActivityItemFactory,
+    LowerResultFactory,
     OfficeFactory,
     ReportingRequirementFactory,
     SectionFactory,
@@ -595,3 +600,26 @@ class TestInterventionAmendmentsMerge(BaseTestInterventionAmendments, BaseTenant
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('Merge Error', response.data[0])
+
+    def test_merge_unfunded_cash(self):
+        amended_budget = self.amended_intervention.planned_budget
+        amended_budget.has_unfunded_cash = True
+        amended_budget.unfunded_hq_cash = 13
+        amended_budget.save()
+
+        result_link = InterventionResultLinkFactory(
+            intervention=self.amended_intervention,
+            cp_output__result_type__name=ResultType.OUTPUT,
+        )
+        pd_output = LowerResultFactory(result_link=result_link)
+        activity = InterventionActivityFactory(result=pd_output)
+        InterventionActivityItemFactory(activity=activity, unicef_cash=8)
+        InterventionActivityItemFactory(activity=activity, unicef_cash=8, unfunded_cash=10)
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse('pmp_v3:intervention-amendment-merge', args=[self.amended_intervention.pk]),
+            self.unicef_focal_point,
+            data={}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
