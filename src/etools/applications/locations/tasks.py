@@ -1,4 +1,8 @@
+import logging
+from datetime import datetime
+
 from django.contrib.auth import get_user_model
+from django.db.models.deletion import Collector, ProtectedError
 
 import celery
 from carto.exceptions import CartoException
@@ -6,6 +10,7 @@ from celery.utils.log import get_task_logger
 from tenant_schemas_celery.app import get_schema_name_from_task
 from unicef_locations.models import CartoDBTable
 from unicef_locations.synchronizers import LocationSynchronizer
+from unicef_locations.utils import get_location_model
 from unicef_vision.utils import get_vision_logger_domain_model
 
 from etools.applications.environment.notifications import send_notification_with_template
@@ -55,6 +60,29 @@ class eToolsLocationSynchronizer(LocationSynchronizer):
             if activity.site.parent != activity.location:
                 activity.location = activity.site.parent
                 activity.save()
+
+    def handle_obsolete_locations(self, to_deactivate):
+        """
+        Handle obsolate locations:
+        - deactivate referenced locations
+        - delete non referenced locations
+        """
+        logging.info('Clean Obsolate Locations')
+        for location in get_location_model().objects.filter(p_code__in=to_deactivate):
+            collector = Collector(using='default')
+            protected = False
+            try:
+                collector.collect([location])
+            except ProtectedError:
+                protected = True
+            if protected or collector.dependencies or location.get_children():
+                location.name = f"{location.name} [{datetime.today().strftime('%Y-%m-%d')}]"
+                location.is_active = False
+                location.save()
+                logger.info(f'Deactivating {location}')
+            else:
+                location.delete()
+                logger.info(f'Deleting {location}')
 
 
 @celery.current_app.task(bind=True)
