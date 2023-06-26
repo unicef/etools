@@ -6,6 +6,8 @@ from rest_framework.response import Response
 from unicef_restlib.permissions import IsSuperUser
 
 from etools.applications.activities.models import Activity
+from etools.applications.field_monitoring.fm_settings.models import LocationSite
+from etools.applications.field_monitoring.planning.models import MonitoringActivity
 from etools.applications.locations.models import Location
 from etools.applications.management.serializers import (
     GisLocationGeojsonSerializer,
@@ -47,7 +49,13 @@ class GisLocationsInUseViewset(ListAPIView):
             tpm_activity_locs = Activity.objects.exclude(locations__isnull=True).values_list(
                 "locations", flat=True).distinct()
 
-            all_locs = set(locs) | set(t2f_locs) | set(tpm_activity_locs)
+            monitoring_activity_locs = MonitoringActivity.objects.exclude(location__isnull=True).values_list(
+                "location_id", flat=True)
+
+            site_locs = LocationSite.objects.exclude(is_active=False).values_list("parent_id", flat=True)
+
+            all_locs = set(locs) | set(t2f_locs) | set(tpm_activity_locs) | \
+                set(monitoring_activity_locs) | set(site_locs)
 
             locations = Location.objects.filter(
                 pk__in=list(all_locs),
