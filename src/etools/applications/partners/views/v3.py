@@ -40,9 +40,11 @@ class PMPBaseViewMixin:
     permission_classes = [IsAuthenticated]
 
     def is_partner_staff(self):
-        """Flag indicator whether user is a partner
-        any active group out of IP... , """
-        return self.request.user.is_authenticated and \
+        """
+        Flag indicator shows whether authenticated user is a partner staff
+        based on profile organization relationship_type
+        """
+        return self.request.user.is_authenticated and self.request.user.profile.organization and \
             'partner' in self.request.user.profile.organization.relationship_types
 
     def current_partner(self):
