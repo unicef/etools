@@ -388,9 +388,15 @@ class StagedUserViewSet(
     permission_classes = (IsAuthenticated, IsActiveInRealm)
 
     def get_queryset(self):
-        organization_id = self.request.query_params.get('organization_id', self.request.user.profile.organization.id)
+        qs_context = {
+            'request_state': StagedUser.PENDING,
+            'country': connection.tenant
+        }
+        organization_id = self.request.query_params.get('organization_id')
+        if organization_id:
+            qs_context['organization_id'] = organization_id
 
-        return self.model.objects.filter(organization_id=organization_id, country=connection.tenant)
+        return self.model.objects.filter(**qs_context)
 
     @action(detail=True, methods=['post'],
             permission_classes=(IsAuthenticated, user_group_permission(UserReviewer.name)))

@@ -638,7 +638,7 @@ class StagedUser(models.Model):
     country = models.ForeignKey(Country, on_delete=models.CASCADE)
 
     request_state = models.CharField(max_length=10, choices=REQUEST_STATE, default=PENDING)
-    state_timestamp = models.DateTimeField(_('state timestamp'), default=timezone.now)
+    state_timestamp = models.DateTimeField(_('state timestamp'), auto_now=True)
 
     @transaction.atomic
     def save(self, *args, **kwargs):
