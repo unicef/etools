@@ -16,6 +16,7 @@ from etools.applications.users.serializers import (
     GroupSerializer,
     OrganizationSerializer,
     SimpleCountrySerializer,
+    SimpleGroupSerializer,
     SimpleOrganizationSerializer,
 )
 from etools.applications.users.tasks import notify_user_on_realm_update
@@ -234,16 +235,37 @@ class UserRealmCreateSerializer(UserRealmBaseSerializer):
 
     def create(self, validated_data):
         organization_id = validated_data.pop('organization', self.context['request'].user.profile.organization.id)
+        group_ids = validated_data.pop("groups")
+        job_title = validated_data.pop("job_title", None)
+        phone_number = validated_data.pop("phone_number", None)
 
-        validated_data.update({"username": validated_data['email']})
-        staged_user = StagedUser(
-            user_json=validated_data,
-            requester=self.context['request'].user,
-            country=connection.tenant,
-            organization_id=organization_id
-        )
-        staged_user.save()
-        return staged_user
+        email = validated_data.pop('email')
+        validated_data.update({"username": email})
+
+        instance, _ = get_user_model().objects.get_or_create(
+            email=email, defaults=validated_data)
+        if not instance.is_active:
+            instance.is_active = True
+            instance.save(update_fields=['is_active'])
+
+        if job_title:
+            instance.profile.job_title = job_title
+        if phone_number:
+            instance.profile.phone_number = phone_number
+
+        if not instance.profile.country or \
+                not instance.realms.filter(country=instance.profile.country, is_active=True).exists():
+            instance.profile.country = connection.tenant
+
+        if not instance.profile.organization and instance != self.context['request'].user:
+            instance.profile.organization_id = organization_id
+
+        instance.profile.save(update_fields=['country', 'organization_id', 'job_title', 'phone_number'])
+
+        self.create_realms(instance, organization_id, group_ids)
+        instance.update_active_state()
+        notify_user_on_realm_update.delay(instance.id)
+        return instance
 
 
 class UserRealmUpdateSerializer(UserRealmBaseSerializer):
@@ -296,7 +318,42 @@ class UserRealmUpdateSerializer(UserRealmBaseSerializer):
         return instance
 
 
-class StagedUserSerializer(serializers.ModelSerializer):
+class StagedUserCreateSerializer(UserRealmCreateSerializer):
+    organization = serializers.IntegerField(required=False, allow_null=False, write_only=True)
+    groups = serializers.ListField(child=serializers.IntegerField(), required=True, allow_null=False, write_only=True)
+    email = serializers.CharField(required=True, write_only=True)
+    first_name = serializers.CharField(required=False, allow_blank=True, write_only=True)
+    last_name = serializers.CharField(required=False, allow_blank=True, write_only=True)
+    job_title = serializers.CharField(required=False, allow_blank=True, write_only=True)
+    phone_number = serializers.CharField(required=False, allow_blank=True, write_only=True)
+
+    class Meta:
+        model = StagedUser
+        fields = (
+            'organization',
+            'groups',
+            'email',
+            'first_name',
+            'last_name',
+            'job_title',
+            'phone_number'
+        )
+
+    def create(self, validated_data):
+        organization_id = validated_data.pop('organization', self.context['request'].user.profile.organization.id)
+
+        validated_data.update({"username": validated_data['email']})
+        staged_user = StagedUser(
+            user_json=validated_data,
+            requester=self.context['request'].user,
+            country=connection.tenant,
+            organization_id=organization_id
+        )
+        staged_user.save()
+        return staged_user
+
+
+class StagedUserRetrieveSerializer(serializers.ModelSerializer):
     requester = serializers.SerializerMethodField()
 
     class Meta:
@@ -304,7 +361,13 @@ class StagedUserSerializer(serializers.ModelSerializer):
         fields = ("id", "user_json", "request_state", "requester", "organization")
 
     def get_requester(self, obj):
-        return obj.requester.full_name if obj.requester.full_name else  obj.requester.email
+        return obj.requester.full_name if obj.requester.full_name else obj.requester.email
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        groups = data['user_json']['groups']
+        data['user_json']['groups'] = SimpleGroupSerializer(Group.objects.filter(id__in=groups), many=True).data
+        return data
 
 
 class UserPreferencesSerializer(serializers.Serializer):

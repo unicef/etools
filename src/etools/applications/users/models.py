@@ -10,13 +10,11 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import connection, models, transaction
 from django.db.models.signals import post_save
 from django.urls import reverse
-from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 
 from django_tenants.models import TenantMixin
 from model_utils import FieldTracker
-from model_utils.fields import AutoCreatedField
 from model_utils.models import TimeStampedModel
 
 from etools.applications.organizations.models import Organization

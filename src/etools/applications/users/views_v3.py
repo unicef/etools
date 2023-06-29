@@ -52,7 +52,8 @@ from etools.applications.users.serializers_v3 import (
     MinimalUserDetailSerializer,
     MinimalUserSerializer,
     ProfileRetrieveUpdateSerializer,
-    StagedUserSerializer,
+    StagedUserCreateSerializer,
+    StagedUserRetrieveSerializer,
     UserRealmCreateSerializer,
     UserRealmRetrieveSerializer,
     UserRealmUpdateSerializer,
@@ -316,7 +317,7 @@ class UserRealmViewSet(
 
     def get_serializer_class(self):
         if self.request.method == "POST":
-            return UserRealmCreateSerializer
+            return StagedUserCreateSerializer
         if self.request.method == "PATCH":
             return UserRealmUpdateSerializer
         return super().get_serializer_class()
@@ -361,7 +362,7 @@ class UserRealmViewSet(
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
 
-        response_serializer = StagedUserSerializer(serializer.instance)
+        response_serializer = StagedUserRetrieveSerializer(serializer.instance)
         headers = self.get_success_headers(response_serializer.data)
         return Response(response_serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
@@ -384,7 +385,7 @@ class StagedUserViewSet(
     viewsets.GenericViewSet
 ):
     model = StagedUser
-    serializer_class = StagedUserSerializer
+    serializer_class = StagedUserRetrieveSerializer
     permission_classes = (IsAuthenticated, IsActiveInRealm)
 
     def get_queryset(self):
@@ -398,6 +399,7 @@ class StagedUserViewSet(
 
         return self.model.objects.filter(**qs_context)
 
+    @transaction.atomic
     @action(detail=True, methods=['post'],
             permission_classes=(IsAuthenticated, user_group_permission(UserReviewer.name)))
     def accept(self, request, *args, **kwargs):
@@ -405,7 +407,14 @@ class StagedUserViewSet(
         staged_user.request_state = StagedUser.ACCEPTED
         staged_user.reviewer = request.user
         staged_user.save()
-        return Response(status=200)
+        staged_user.user_json.update({"organization": staged_user.organization.id})
+
+        user_serializer = UserRealmCreateSerializer(data=staged_user.user_json, context={'request': request})
+        if user_serializer.is_valid(raise_exception=True):
+            user_serializer.save()
+            return Response(UserRealmRetrieveSerializer(instance=user_serializer.instance).data)
+
+        return Response(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=True, methods=['post'],
             permission_classes=(IsAuthenticated, user_group_permission(UserReviewer.name)))
@@ -414,7 +423,7 @@ class StagedUserViewSet(
         staged_user.request_state = StagedUser.DECLINED
         staged_user.reviewer = request.user
         staged_user.save()
-        return Response(status=200)
+        return Response(status=status.HTTP_200_OK)
 
 
 class ExternalUserViewSet(
