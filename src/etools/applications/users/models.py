@@ -10,6 +10,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import connection, models, transaction
 from django.db.models.signals import post_save
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 
@@ -637,7 +638,7 @@ class StagedUser(models.Model):
     country = models.ForeignKey(Country, on_delete=models.CASCADE)
 
     request_state = models.CharField(max_length=10, choices=REQUEST_STATE, default=PENDING)
-    state_timestamp = AutoCreatedField(_('state timestamp'))
+    state_timestamp = models.DateTimeField(_('state timestamp'), default=timezone.now)
 
     @transaction.atomic
     def save(self, *args, **kwargs):

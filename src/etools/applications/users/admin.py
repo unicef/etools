@@ -370,12 +370,16 @@ class RealmAdmin(SnapshotModelAdmin):
 
 
 class StagedUserAdmin(admin.ModelAdmin):
-    list_display = ('requester', 'reviewer', 'country', 'organization')
-    raw_id_fields = ('requester', 'reviewer', 'organization')
+    list_display = ('country', 'organization', 'requester', 'reviewer', 'request_state')
+    list_filter = ('request_state', 'country')
     search_fields = ('requester__email', 'requester__first_name', 'requester__last_name',
                      'reviewer__email', 'reviewer__first_name', 'reviewer__last_name',
                      'country__name', 'organization__name', 'organization__vendor_number')
-    autocomplete_fields = ('country',)
+
+    raw_id_fields = ('requester', 'reviewer', 'organization')
+
+    def has_change_permission(self, request, obj=None):
+        return False
 
 
 # Re-register UserAdmin
