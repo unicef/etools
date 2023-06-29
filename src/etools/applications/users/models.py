@@ -15,6 +15,7 @@ from django.utils.translation import gettext_lazy as _
 
 from django_tenants.models import TenantMixin
 from model_utils import FieldTracker
+from model_utils.fields import AutoCreatedField
 from model_utils.models import TimeStampedModel
 
 from etools.applications.organizations.models import Organization
@@ -612,9 +613,44 @@ class Realm(TimeStampedModel):
         self.user.update_active_state()
 
 
+class StagedUser(models.Model):
+    """
+    Represents the users awaiting review in AMP.
+    When a user is accepted by a User Reviewer, a new user will be created along with its realms.
+    """
+
+    PENDING = 'pending'
+    ACCEPTED = 'accepted'
+    DECLINED = 'declined'
+
+    REQUEST_STATE = (
+        (PENDING, _("Pending")),
+        (ACCEPTED, _('Accepted')),
+        (DECLINED, _('Declined')),
+    )
+
+    user_json = models.JSONField()
+
+    requester = models.ForeignKey(User, related_name="requested_users", on_delete=models.CASCADE)
+    reviewer = models.ForeignKey(User, related_name="reviewed_users", null=True, blank=True, on_delete=models.SET_NULL)
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
+    country = models.ForeignKey(Country, on_delete=models.CASCADE)
+
+    request_state = models.CharField(max_length=10, choices=REQUEST_STATE, default=PENDING)
+    state_timestamp = AutoCreatedField(_('state timestamp'))
+
+    @transaction.atomic
+    def save(self, *args, **kwargs):
+        if self.requester == self.reviewer:
+            raise ValidationError(_("The requester cannot review its own requests."))
+
+        super().save(*args, **kwargs)
+
+
 # TODO REALMS: clean up: drop the wrappers
 IPViewer = GroupWrapper(code='ip_viewer', name='IP Viewer')
 IPEditor = GroupWrapper(code='ip_editor', name='IP Editor')
 IPAdmin = GroupWrapper(code='ip_admin', name='IP Admin')
 IPAuthorizedOfficer = GroupWrapper(code='ip_authorized_officer', name='IP Authorized Officer')
 PartnershipManager = GroupWrapper(code='partnership_manager', name='Partnership Manager')
+UserReviewer = GroupWrapper(code='partnership_manager', name='User Reviewer')

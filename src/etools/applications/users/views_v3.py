@@ -34,7 +34,15 @@ from etools.applications.users.mixins import (
     ORGANIZATION_GROUP_MAP,
     TPM_ACTIVE_GROUPS,
 )
-from etools.applications.users.models import IPAdmin, IPAuthorizedOfficer, IPEditor, PartnershipManager, Realm
+from etools.applications.users.models import (
+    IPAdmin,
+    IPAuthorizedOfficer,
+    IPEditor,
+    PartnershipManager,
+    Realm,
+    StagedUser,
+    UserReviewer,
+)
 from etools.applications.users.permissions import IsActiveInRealm
 from etools.applications.users.serializers import SimpleGroupSerializer, SimpleOrganizationSerializer
 from etools.applications.users.serializers_v3 import (
@@ -43,6 +51,8 @@ from etools.applications.users.serializers_v3 import (
     MinimalUserDetailSerializer,
     MinimalUserSerializer,
     ProfileRetrieveUpdateSerializer,
+    StagedUserCreateSerializer,
+    StagedUserSerializer,
     UserRealmCreateSerializer,
     UserRealmRetrieveSerializer,
     UserRealmUpdateSerializer,
@@ -367,6 +377,46 @@ class UserRealmViewSet(
         if getattr(instance, '_prefetched_objects_cache', None):
             instance._prefetched_objects_cache = {}
         return Response(UserRealmRetrieveSerializer(instance=self.get_queryset().get(pk=serializer.instance.pk)).data)
+
+
+class StagedUserViewSet(
+    mixins.CreateModelMixin,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet
+):
+    model = StagedUser
+    serializer_class = StagedUserSerializer
+
+    def get_permissions(self):
+        if self.action == "list":
+            self.permission_classes = (
+                IsAuthenticated, IsActiveInRealm)
+        if self.action == 'create':
+            self.permission_classes = (
+                IsAuthenticated,
+                user_group_permission(UserReviewer.name)
+            )
+        return super().get_permissions()
+
+    def get_serializer_class(self):
+        if self.request.method == "POST":
+            return StagedUserCreateSerializer
+        return super().get_serializer_class()
+
+    def get_queryset(self):
+        organization_id = self.request.query_params.get('organization_id')
+
+        return self.model.objects.filter(organization_id=organization_id, country=connection.tenant)
+
+    @transaction.atomic
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(UserRealmRetrieveSerializer(instance=self.get_queryset().get(pk=serializer.instance.pk)).data,
+                        status=status.HTTP_201_CREATED, headers=headers)
 
 
 class ExternalUserViewSet(

@@ -11,7 +11,7 @@ from rest_framework.exceptions import PermissionDenied, ValidationError
 from etools.applications.audit.models import Auditor
 from etools.applications.organizations.models import Organization
 from etools.applications.users.mixins import AUDIT_ACTIVE_GROUPS, GroupEditPermissionMixin
-from etools.applications.users.models import Country, Realm, UserProfile
+from etools.applications.users.models import Country, Realm, StagedUser, UserProfile
 from etools.applications.users.serializers import (
     GroupSerializer,
     OrganizationSerializer,
@@ -160,8 +160,9 @@ class UserRealmBaseSerializer(GroupEditPermissionMixin, serializers.ModelSeriali
 
     def validate_organization(self, value):
         organization_id = value
+        auth_user = self.context['request'].user
         if organization_id:
-            if not self.context['request'].user.is_unicef_user():
+            if not auth_user.is_unicef_user() and organization_id != auth_user.profile.organization.id:
                 raise PermissionDenied(
                     _('You do not have permission to set roles for organization with id %(id)s.'
                       % {'id': organization_id}))
@@ -314,6 +315,16 @@ class UserRealmUpdateSerializer(UserRealmBaseSerializer):
 
         notify_user_on_realm_update.delay(instance.id)
         return instance
+
+
+class StagedUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StagedUser
+
+
+class StagedUserCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StagedUser
 
 
 class UserPreferencesSerializer(serializers.Serializer):
