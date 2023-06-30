@@ -36,6 +36,8 @@ class GroupEditPermissionMixin:
     CAN_ADD_USER = ["IP Admin", "IP Authorized Officer", "PME",
                     "Partnership Manager", "UNICEF Audit Focal Point"]
 
+    CAN_REVIEW_USER = ["User Reviewer"]
+
     def get_user_allowed_groups(self, organization_types, user=None):
         groups_allowed_editing = []
         if not user:
@@ -51,3 +53,6 @@ class GroupEditPermissionMixin:
 
     def can_add_user(self):
         return self.request.user.groups.filter(name__in=self.CAN_ADD_USER).exists()
+
+    def can_review_user(self):
+        return self.request.user.groups.filter(name__in=self.CAN_REVIEW_USER).exists()

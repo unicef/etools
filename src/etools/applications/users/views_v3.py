@@ -258,7 +258,8 @@ class GroupPermissionsViewSet(GroupEditPermissionMixin, APIView):
 
         response_data = {
             "groups": SimpleGroupSerializer(allowed_groups, many=True).data,
-            "can_add_user": False if not allowed_groups else self.can_add_user()
+            "can_add_user": False if not allowed_groups else self.can_add_user(),
+            "can_review_user": self.can_review_user()
         }
         return Response(response_data)
 
