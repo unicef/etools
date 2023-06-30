@@ -407,7 +407,11 @@ class StagedUserViewSet(
         staged_user = self.get_object()
         staged_user.request_state = StagedUser.ACCEPTED
         staged_user.reviewer = request.user
-        staged_user.save()
+        try:
+            staged_user.save()
+        except DjangoValidationError as ex:
+            raise ValidationError(ex.messages)
+
         staged_user.user_json.update({"organization": staged_user.organization.id})
 
         user_serializer = UserRealmCreateSerializer(data=staged_user.user_json, context={'request': request})
@@ -423,7 +427,11 @@ class StagedUserViewSet(
         staged_user = self.get_object()
         staged_user.request_state = StagedUser.DECLINED
         staged_user.reviewer = request.user
-        staged_user.save()
+        try:
+            staged_user.save()
+        except DjangoValidationError as ex:
+            raise ValidationError(ex.messages)
+
         return Response(status=status.HTTP_200_OK)
 
 
