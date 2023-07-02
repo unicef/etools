@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: et-partners2-bk\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-05-04 15:48+0000\n"
+"POT-Creation-Date: 2023-07-02 23:14+0000\n"
 "Language: es\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -1780,6 +1780,9 @@ msgstr "El número de proveedor debe pertenecer al grupo de cuentas PRG2"
 
 msgid "Unknown intervention."
 msgstr "Intervención desconocida."
+
+msgid "Results cannot be changed in this status"
+msgstr "Los resultados no se pueden cambiar en este estado"
 
 msgid "EZHACT Vision integration disabled"
 msgstr "Integración de EZHACT Vision desactivada"
