@@ -18,7 +18,7 @@ from unicef_snapshot.admin import ActivityInline, SnapshotModelAdmin
 
 from etools.applications.funds.tasks import sync_all_delegated_frs, sync_country_delegated_fr
 from etools.applications.hact.tasks import update_hact_for_country, update_hact_values
-from etools.applications.users.models import Country, Realm, UserProfile, WorkspaceCounter
+from etools.applications.users.models import Country, Realm, StagedUser, UserProfile, WorkspaceCounter
 from etools.applications.users.tasks import sync_realms_to_prp
 from etools.applications.vision.tasks import sync_handler, vision_sync_task
 from etools.libraries.azure_graph_api.tasks import sync_user
@@ -369,9 +369,23 @@ class RealmAdmin(SnapshotModelAdmin):
     inlines = (ActivityInline, )
 
 
+class StagedUserAdmin(admin.ModelAdmin):
+    list_display = ('country', 'organization', 'requester', 'reviewer', 'request_state')
+    list_filter = ('request_state', 'country')
+    search_fields = ('requester__email', 'requester__first_name', 'requester__last_name',
+                     'reviewer__email', 'reviewer__first_name', 'reviewer__last_name',
+                     'country__name', 'organization__name', 'organization__vendor_number')
+
+    raw_id_fields = ('requester', 'reviewer', 'organization')
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+
 # Re-register UserAdmin
 admin.site.register(get_user_model(), UserAdminPlus)
 admin.site.register(UserProfile, ProfileAdmin)
 admin.site.register(Country, CountryAdmin)
 admin.site.register(WorkspaceCounter)
 admin.site.register(Realm, RealmAdmin)
+admin.site.register(StagedUser, StagedUserAdmin)
