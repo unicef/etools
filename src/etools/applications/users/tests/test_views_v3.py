@@ -30,6 +30,7 @@ from etools.applications.users.models import (
     IPViewer,
     PartnershipManager,
     StagedUser,
+    User,
     UserProfile,
     UserReviewer,
 )
@@ -555,7 +556,7 @@ class TestGroupPermissionsViewSet(BaseTenantTestCase):
                 [UNICEFAuditFocalPoint, PartnershipManager],
                 ['audit', 'partner', 'tpm']):
             user = UserFactory(realms__data=[user_group.name], profile__organization=self.organization)
-            with self.assertNumQueries(3):
+            with self.assertNumQueries(4):
                 response = self.forced_auth_req(
                     "get",
                     self.url,
@@ -923,7 +924,7 @@ class TestStagedUserViewSet(BaseTenantTestCase):
 
     def test_get_list(self):
         StagedUserFactory(user_json={
-            "email": "tt@tt.com",
+            "email": "test@test.com",
             "groups": [GroupFactory(name=IPViewer.name).pk],
             "username": "test@test.com",
             "last_name": "First Name",
@@ -935,7 +936,7 @@ class TestStagedUserViewSet(BaseTenantTestCase):
 
     def test_accept_forbidden(self):
         staged_user = StagedUserFactory(user_json={
-            "email": "tt@tt.com",
+            "email": "test@test.com",
             "groups": [GroupFactory(name=IPViewer.name).pk],
             "username": "test@test.com",
             "last_name": "First Name",
@@ -943,19 +944,62 @@ class TestStagedUserViewSet(BaseTenantTestCase):
         })
         response = self.make_request_detail(self.ip_admin, staged_user.pk, action='accept')
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        staged_user.refresh_from_db()
+        self.assertEqual(staged_user.request_state, StagedUser.PENDING)
 
     def test_accept(self):
+        new_user_email = "test@test.com"
         staged_user = StagedUserFactory(
             user_json={
-                "email": "tt@tt.com",
+                "email": new_user_email,
+                "groups": [GroupFactory(name=IPViewer.name).pk],
+                "username": new_user_email,
+                "last_name": "First Name",
+                "first_name": "Last Name"
+            },
+            organization=self.organization,
+            requester=self.ip_admin
+        )
+        response = self.make_request_detail(self.user_reviewer, staged_user.pk, action='accept')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        staged_user.refresh_from_db()
+        self.assertEqual(staged_user.request_state, StagedUser.ACCEPTED)
+        self.assertEqual(staged_user.reviewer, self.user_reviewer)
+
+        self.assertTrue(User.objects.filter(email=new_user_email).exists())
+        created_user = User.objects.get(email=new_user_email)
+        self.assertEqual(created_user.realms.count(), 1)
+
+    def test_decline_forbidden(self):
+        staged_user = StagedUserFactory(
+            user_json={
+                "email": "test@test.com",
                 "groups": [GroupFactory(name=IPViewer.name).pk],
                 "username": "test@test.com",
                 "last_name": "First Name",
                 "first_name": "Last Name"
             },
             organization=self.organization)
-        response = self.make_request_detail(self.user_reviewer, staged_user.pk, action='accept')
+        response = self.make_request_detail(self.unicef_user, staged_user.pk, action='decline')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        staged_user.refresh_from_db()
+        self.assertEqual(staged_user.request_state, StagedUser.PENDING)
+
+    def test_decline(self):
+        staged_user = StagedUserFactory(
+            user_json={
+                "email": "test@test.com",
+                "groups": [GroupFactory(name=IPViewer.name).pk],
+                "username": "test@test.com",
+                "last_name": "First Name",
+                "first_name": "Last Name"
+            },
+            organization=self.organization)
+        response = self.make_request_detail(self.user_reviewer, staged_user.pk, action='decline')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        staged_user.refresh_from_db()
+        self.assertEqual(staged_user.request_state, StagedUser.DECLINED)
+        self.assertEqual(staged_user.reviewer, self.user_reviewer)
 
 
 class TestExternalUserAPIView(BaseTenantTestCase):
