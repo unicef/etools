@@ -42,6 +42,7 @@ from etools.applications.users.models import (
     PartnershipManager,
     Realm,
     StagedUser,
+    User,
     UserReviewer,
 )
 from etools.applications.users.permissions import IsActiveInRealm
@@ -363,7 +364,12 @@ class UserRealmViewSet(
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
 
-        response_serializer = StagedUserRetrieveSerializer(serializer.instance)
+        if isinstance(serializer.instance, StagedUser):
+            response_serializer = StagedUserRetrieveSerializer(serializer.instance)
+        elif isinstance(serializer.instance, User):
+            response_serializer = UserRealmRetrieveSerializer(
+                instance=self.get_queryset().get(pk=serializer.instance.pk)
+            )
         headers = self.get_success_headers(response_serializer.data)
         return Response(response_serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 

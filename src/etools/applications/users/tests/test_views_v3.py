@@ -808,9 +808,10 @@ class TestUserRealmView(BaseTenantTestCase):
             response = self.make_request_list(auth_user, data=data)
 
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-            staged_user = StagedUser.objects.get(user_json__email=existing_user.email)
-            self.assertEqual(staged_user.requester, auth_user)
-            self.assertEqual(staged_user.request_state, StagedUser.PENDING)
+            self.assertFalse(StagedUser.objects.filter(user_json__email=existing_user.email).exists(), False)
+            self.assertEqual(existing_user.realms.count(), 1)
+            self.assertEqual(group.name, response.data['realms'][0]['group_name'])
+            self.assertIn(group.as_group(), existing_user.groups)
 
     def test_post_partnership_manager_201(self):
         self.assertFalse(self.partnership_manager.is_superuser)

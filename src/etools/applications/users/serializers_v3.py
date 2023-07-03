@@ -11,7 +11,7 @@ from rest_framework.exceptions import PermissionDenied, ValidationError
 from etools.applications.audit.models import Auditor
 from etools.applications.organizations.models import Organization
 from etools.applications.users.mixins import AUDIT_ACTIVE_GROUPS, GroupEditPermissionMixin
-from etools.applications.users.models import Country, Realm, StagedUser, UserProfile
+from etools.applications.users.models import Country, Realm, StagedUser, User, UserProfile
 from etools.applications.users.serializers import (
     GroupSerializer,
     OrganizationSerializer,
@@ -340,17 +340,21 @@ class StagedUserCreateSerializer(UserRealmCreateSerializer):
         )
 
     def create(self, validated_data):
-        organization_id = validated_data.pop('organization', self.context['request'].user.profile.organization.id)
-
-        validated_data.update({"username": validated_data['email']})
-        staged_user = StagedUser(
-            user_json=validated_data,
-            requester=self.context['request'].user,
-            country=connection.tenant,
-            organization_id=organization_id
-        )
-        staged_user.save()
-        return staged_user
+        if User.objects.filter(email=validated_data['email']).exists():
+            user_obj = UserRealmCreateSerializer(
+                data=self.initial_data, context=self.context).create(validated_data)
+            return user_obj
+        else:
+            organization_id = validated_data.pop('organization', self.context['request'].user.profile.organization.id)
+            validated_data.update({"username": validated_data['email']})
+            staged_user = StagedUser(
+                user_json=validated_data,
+                requester=self.context['request'].user,
+                country=connection.tenant,
+                organization_id=organization_id
+            )
+            staged_user.save()
+            return staged_user
 
 
 class StagedUserRetrieveSerializer(serializers.ModelSerializer):
