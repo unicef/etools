@@ -265,6 +265,30 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         )
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_update_with_no_access_tpm_team_members(self):
+        tpm_partner = TPMPartnerFactory()
+        tpm_staff_1 = TPMUserFactory(
+            tpm_partner=tpm_partner, profile__organization=tpm_partner.organization
+        )
+        tpm_staff_1.realms.update(is_active=False)
+        tpm_staff_2 = TPMUserFactory(
+            tpm_partner=tpm_partner, profile__organization=tpm_partner.organization
+        )
+        tpm_staff_2.realms.update(is_active=False)
+        tpm_staff_3 = TPMUserFactory(
+            tpm_partner=tpm_partner, profile__organization=tpm_partner.organization
+        )
+        activity = MonitoringActivityFactory(
+            monitor_type='tpm', tpm_partner=tpm_partner, status='draft', team_members=[tpm_staff_3]
+        )
+        tpm_staff_1.realms.update(is_active=False)
+        self._test_update(
+            self.fm_user, activity,
+            data={'team_members': [tpm_staff_1.pk, tpm_staff_2.pk, tpm_staff_3.pk]},
+            expected_status=status.HTTP_200_OK
+        )
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_auto_accept_activity(self):
         activity = MonitoringActivityFactory(monitor_type='staff',
                                              status='pre_' + MonitoringActivity.STATUSES.assigned)
