@@ -22,5 +22,11 @@
     "fields": {
       "name": "IP Admin"
     }
+  },
+  {
+    "model": "auth.group",
+    "fields": {
+      "name": "User Reviewer"
+    }
   }
 ]

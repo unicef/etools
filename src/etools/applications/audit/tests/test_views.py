@@ -231,7 +231,7 @@ class TestMARisksViewSet(BaseTestCategoryRisksViewSet, BaseTenantTestCase):
             allowed_user=self.auditor
         )
         self._test_engagement_categories(
-            category_code='ma_subject_areas', field_name='test_subject_areas',
+            category_code='ma_subject_areas_v2', field_name='test_subject_areas',
             allowed_user=self.auditor
         )
 
@@ -253,7 +253,7 @@ class TestMARisksViewSet(BaseTestCategoryRisksViewSet, BaseTenantTestCase):
             allowed_user=self.auditor
         )
         self._update_unexisted_blueprint(
-            field_name='test_subject_areas', category_code='ma_subject_areas',
+            field_name='test_subject_areas', category_code='ma_subject_areas_v2',
             allowed_user=self.auditor
         )
 

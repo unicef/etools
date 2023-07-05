@@ -145,7 +145,8 @@ class MicroAssessmentPDFSerializer(EngagementPDFSerializer):
         required=False,
     )
     test_subject_areas = RiskRootSerializer(
-        code='ma_subject_areas', required=False, label=_('Tested Subject Areas')
+        lambda ma: MicroAssessment.get_subject_areas_code(ma.questionnaire_version),
+        required=False, label=_('Tested Subject Areas')
     )
     overall_risk_assessment = RiskRootSerializer(
         code='ma_global_assessment', required=False, label=_('Overall Risk Assessment')
@@ -312,6 +313,7 @@ class AuditDetailCSVSerializer(EngagementBaseDetailCSVSerializer):
 class MicroAssessmentDetailCSVSerializer(EngagementBaseDetailCSVSerializer):
     overall_risk_assessment = serializers.SerializerMethodField()
     subject_areas = serializers.SerializerMethodField()
+    subject_areas_v2 = serializers.SerializerMethodField()
     questionnaire = serializers.SerializerMethodField()
     questionnaire_v2 = serializers.SerializerMethodField()
 
@@ -324,6 +326,15 @@ class MicroAssessmentDetailCSVSerializer(EngagementBaseDetailCSVSerializer):
 
     def get_subject_areas(self, obj):
         serializer = RiskRootSerializer(code='ma_subject_areas')
+        subject_areas = serializer.to_representation(serializer.get_attribute(instance=obj))
+
+        return OrderedDict(
+            (b['id'], b['risk']['value_display'] if b['risk'] else 'N/A')
+            for b in itertools.chain(*map(lambda c: c['blueprints'], subject_areas['children']))
+        )
+
+    def get_subject_areas_v2(self, obj):
+        serializer = RiskRootSerializer(code='ma_subject_areas_v2')
         subject_areas = serializer.to_representation(serializer.get_attribute(instance=obj))
 
         return OrderedDict(

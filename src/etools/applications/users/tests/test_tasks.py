@@ -1,6 +1,8 @@
+from datetime import timedelta
 from unittest import skip
 
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 
 from django_tenants.utils import schema_context
 
@@ -8,6 +10,7 @@ from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.organizations.models import Organization
 from etools.applications.users import tasks
 from etools.applications.users.models import UserProfile
+from etools.applications.users.tasks import deactivate_stale_users
 from etools.applications.users.tests.factories import (
     CountryFactory,
     GroupFactory,
@@ -199,3 +202,24 @@ class TestUserMapper(BaseTenantTestCase):
         )
         profile = UserProfile.objects.get(user__email=email)
         self.assertEqual(profile.phone_number, phone)
+
+
+class TestDeactivateInactiveTask(BaseTenantTestCase):
+    def test_logic(self):
+        active_unicef_user = UserFactory()
+        inactive_unicef_user = UserFactory(last_login=timezone.now() - timedelta(days=150))
+        active_third_party_user = UserFactory(realms__data=['IP Viewer'])
+        inactive_third_party_user = UserFactory(realms__data=['IP Viewer'],
+                                                last_login=timezone.now() - timedelta(days=150))
+
+        deactivate_stale_users()
+
+        active_unicef_user.refresh_from_db()
+        inactive_unicef_user.refresh_from_db()
+        active_third_party_user.refresh_from_db()
+        inactive_third_party_user.refresh_from_db()
+
+        self.assertTrue(active_unicef_user.is_active)
+        self.assertTrue(inactive_unicef_user.is_active)
+        self.assertTrue(active_third_party_user.is_active)
+        self.assertFalse(inactive_third_party_user.is_active)

@@ -11,6 +11,7 @@ from django.shortcuts import get_object_or_404
 
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, status, viewsets
+from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.generics import ListAPIView, RetrieveAPIView
@@ -34,7 +35,16 @@ from etools.applications.users.mixins import (
     ORGANIZATION_GROUP_MAP,
     TPM_ACTIVE_GROUPS,
 )
-from etools.applications.users.models import IPAdmin, IPAuthorizedOfficer, IPEditor, PartnershipManager, Realm
+from etools.applications.users.models import (
+    IPAdmin,
+    IPAuthorizedOfficer,
+    IPEditor,
+    PartnershipManager,
+    Realm,
+    StagedUser,
+    User,
+    UserReviewer,
+)
 from etools.applications.users.permissions import IsActiveInRealm
 from etools.applications.users.serializers import SimpleGroupSerializer, SimpleOrganizationSerializer
 from etools.applications.users.serializers_v3 import (
@@ -43,6 +53,8 @@ from etools.applications.users.serializers_v3 import (
     MinimalUserDetailSerializer,
     MinimalUserSerializer,
     ProfileRetrieveUpdateSerializer,
+    StagedUserCreateSerializer,
+    StagedUserRetrieveSerializer,
     UserRealmCreateSerializer,
     UserRealmRetrieveSerializer,
     UserRealmUpdateSerializer,
@@ -247,7 +259,8 @@ class GroupPermissionsViewSet(GroupEditPermissionMixin, APIView):
 
         response_data = {
             "groups": SimpleGroupSerializer(allowed_groups, many=True).data,
-            "can_add_user": False if not allowed_groups else self.can_add_user()
+            "can_add_user": False if not allowed_groups else self.can_add_user(),
+            "can_review_user": self.can_review_user()
         }
         return Response(response_data)
 
@@ -306,7 +319,7 @@ class UserRealmViewSet(
 
     def get_serializer_class(self):
         if self.request.method == "POST":
-            return UserRealmCreateSerializer
+            return StagedUserCreateSerializer
         if self.request.method == "PATCH":
             return UserRealmUpdateSerializer
         return super().get_serializer_class()
@@ -351,9 +364,14 @@ class UserRealmViewSet(
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
 
-        headers = self.get_success_headers(serializer.data)
-        return Response(UserRealmRetrieveSerializer(instance=self.get_queryset().get(pk=serializer.instance.pk)).data,
-                        status=status.HTTP_201_CREATED, headers=headers)
+        if isinstance(serializer.instance, StagedUser):
+            response_serializer = StagedUserRetrieveSerializer(serializer.instance)
+        elif isinstance(serializer.instance, User):
+            response_serializer = UserRealmRetrieveSerializer(
+                instance=self.get_queryset().get(pk=serializer.instance.pk)
+            )
+        headers = self.get_success_headers(response_serializer.data)
+        return Response(response_serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     @transaction.atomic
     def partial_update(self, request, *args, **kwargs):
@@ -367,6 +385,60 @@ class UserRealmViewSet(
         if getattr(instance, '_prefetched_objects_cache', None):
             instance._prefetched_objects_cache = {}
         return Response(UserRealmRetrieveSerializer(instance=self.get_queryset().get(pk=serializer.instance.pk)).data)
+
+
+class StagedUserViewSet(
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet
+):
+    model = StagedUser
+    serializer_class = StagedUserRetrieveSerializer
+    permission_classes = (IsAuthenticated, IsActiveInRealm)
+
+    def get_queryset(self):
+        qs_context = {
+            'request_state': StagedUser.PENDING,
+            'country': connection.tenant
+        }
+        organization_id = self.request.query_params.get('organization_id')
+        if organization_id:
+            qs_context['organization_id'] = organization_id
+
+        return self.model.objects.filter(**qs_context)
+
+    @transaction.atomic
+    @action(detail=True, methods=['post'],
+            permission_classes=(IsAuthenticated, IsUNICEFUser, user_group_permission(UserReviewer.name)))
+    def accept(self, request, *args, **kwargs):
+        staged_user = self.get_object()
+        staged_user.request_state = StagedUser.ACCEPTED
+        staged_user.reviewer = request.user
+        try:
+            staged_user.save()
+        except DjangoValidationError as ex:
+            raise ValidationError(ex.messages)
+
+        staged_user.user_json.update({"organization": staged_user.organization.id})
+        request.user = staged_user.requester
+        user_serializer = UserRealmCreateSerializer(data=staged_user.user_json, context={'request': request})
+        if user_serializer.is_valid(raise_exception=True):
+            user_serializer.save()
+            return Response(UserRealmRetrieveSerializer(instance=user_serializer.instance).data)
+
+        return Response(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['post'],
+            permission_classes=(IsAuthenticated, IsUNICEFUser, user_group_permission(UserReviewer.name)))
+    def decline(self, request, *args, **kwargs):
+        staged_user = self.get_object()
+        staged_user.request_state = StagedUser.DECLINED
+        staged_user.reviewer = request.user
+        try:
+            staged_user.save()
+        except DjangoValidationError as ex:
+            raise ValidationError(ex.messages)
+
+        return Response(status=status.HTTP_200_OK)
 
 
 class ExternalUserViewSet(

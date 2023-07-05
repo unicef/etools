@@ -94,7 +94,13 @@ class MicroAssessmentDetailCSVRenderer(BaseCSVRenderer):
             lambda c: c.blueprints.all(),
             RiskCategory.objects.get(code='ma_subject_areas', parent__isnull=True).children.all()
         )):
-            labels['subject_areas.{}'.format(blueprint.id)] = 'Tested Subject Areas - {}'.format(blueprint.header)
+            labels['subject_areas.{}'.format(blueprint.id)] = 'Tested Subject Areas v1 - {}'.format(blueprint.header)
+
+        for blueprint in itertools.chain(*map(
+            lambda c: c.blueprints.all(),
+            RiskCategory.objects.get(code='ma_subject_areas_v2', parent__isnull=True).children.all()
+        )):
+            labels['subject_areas_v2.{}'.format(blueprint.id)] = 'Tested Subject Areas v2 - {}'.format(blueprint.header)
 
         for blueprint in itertools.chain(*map(
             lambda c: itertools.chain(

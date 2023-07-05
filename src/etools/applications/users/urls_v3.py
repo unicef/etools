@@ -12,6 +12,7 @@ from etools.applications.users.views_v3 import (
     GroupPermissionsViewSet,
     MyProfileAPIView,
     OrganizationListView,
+    StagedUserViewSet,
     UserRealmViewSet,
     UsersDetailAPIView,
     UsersListAPIView,
@@ -20,6 +21,7 @@ from etools.applications.users.views_v3 import (
 root_api = routers.SimpleRouter()
 root_api.register(r'external', ExternalUserViewSet, basename='external')
 root_api.register(r'amp', UserRealmViewSet, basename='realms')
+root_api.register(r'amp-staged', StagedUserViewSet, basename='amp-staged')
 
 app_name = 'users'
 urlpatterns = (
