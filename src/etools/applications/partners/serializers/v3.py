@@ -186,6 +186,12 @@ class UNICEFInterventionLowerResultSerializer(
             raise ValidationError(_('Unknown intervention.'))
         return super().save(**kwargs)
 
+    def validate(self, attrs):
+        # TODO: [e4] remove this whenever a better validation is decided on. This is out of place but needed as a hotfix
+        if self.intervention.status in [self.intervention.SIGNATURE]:
+            raise ValidationError(_("Results cannot be changed in this status"))
+        return super().validate(attrs)
+
     def create(self, validated_data):
         cp_output = validated_data.pop('result_link', {}).get('cp_output_id', None)
         result_link = InterventionResultLink.objects.get_or_create(

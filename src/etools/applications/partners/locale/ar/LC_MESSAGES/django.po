@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-05-04 15:48+0000\n"
+"POT-Creation-Date: 2023-07-02 23:14+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1745,6 +1745,9 @@ msgstr "يجب أن ينتمي رقم البائع إلى مجموعة حساب�
 
 msgid "Unknown intervention."
 msgstr "تدخل غير معروف."
+
+msgid "Results cannot be changed in this status"
+msgstr "لا يمكن تغيير النتائج في هذه الحالة"
 
 msgid "EZHACT Vision integration disabled"
 msgstr "تم تعطيل تكامل مع برنامج vision- EZHACT"
