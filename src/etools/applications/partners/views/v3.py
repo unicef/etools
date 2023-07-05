@@ -6,6 +6,7 @@ from django.http import Http404
 from django.utils.functional import cached_property
 
 from rest_framework import status
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -40,10 +41,16 @@ class PMPBaseViewMixin:
     permission_classes = [IsAuthenticated]
 
     def is_partner_staff(self):
-        """Flag indicator whether user is a partner
-        any active group out of IP... , """
-        return self.request.user.is_authenticated and \
+        """
+        Flag indicator shows whether authenticated user is a partner staff
+        based on profile organization relationship_type
+        """
+        is_staff = self.request.user.is_authenticated and self.request.user.profile.organization and \
             'partner' in self.request.user.profile.organization.relationship_types
+        if not is_staff and not self.request.user.is_unicef_user():
+            raise PermissionDenied()
+
+        return is_staff
 
     def current_partner(self):
         """List of partners the user is associated with"""

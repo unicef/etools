@@ -3088,7 +3088,7 @@ class TestInterventionSendToUNICEF(BaseInterventionActionTestCase):
             self.url,
             user=partner_user,
         )
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_not_focal_point_no_access(self):
         partner_user = UserFactory(is_staff=False, realms__data=[])
@@ -3098,7 +3098,7 @@ class TestInterventionSendToUNICEF(BaseInterventionActionTestCase):
             self.url,
             user=partner_user,
         )
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_unicef_no_access(self):
         user = UserFactory(is_staff=True)
