@@ -198,6 +198,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.13.1,reference_number_year,*,not_ssfa+unicef_not_accepted,Draft,Required,FALSE
 3.13.1,reporting_requirements,Unicef Focal Point,,Draft,Edit,TRUE
 3.13.1,reporting_requirements,Unicef Focal Point,contingency_on,Signed,Edit,TRUE
+3.13.1,reporting_requirements,PRC Secretary,,signature,Edit,TRUE
 3.13.1,reporting_requirements,Unicef Focal Point,not_ended,Terminated,Edit,TRUE
 3.13.1,reporting_requirements,Unicef Focal Point,termination_doc_attached,Active,Edit,TRUE
 3.13.1,reporting_requirements,Unicef Focal Point,termination_doc_attached,Signed,Edit,TRUE
