@@ -1301,8 +1301,8 @@ class InterventionReportingRequirementCreateSerializer(
         # TODO: [e4] remove this whenever a better validation is decided on. This is out of place but needed as a hotfix
         # take into consideration the reporting requirements edit rights on the intervention
         # move this into permissions when time allows
-        permissions = self.context["intervention_permissions"]
-        can_edit = permissions['edit'].get("reporting_requirements")
+        permissions = self.context.get("intervention_permissions")
+        can_edit = permissions['edit'].get("reporting_requirements") if permissions else True
 
         if self.intervention.status != Intervention.DRAFT:
             if self.intervention.status == Intervention.TERMINATED:
