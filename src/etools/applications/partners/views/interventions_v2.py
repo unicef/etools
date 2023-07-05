@@ -45,11 +45,12 @@ from etools.applications.partners.models import (
 from etools.applications.partners.permissions import (
     InterventionAmendmentIsNotCompleted,
     InterventionIsDraftPermission,
+    InterventionPermissions,
     IsInterventionBudgetOwnerPermission,
     PartnershipManagerPermission,
     PartnershipManagerRepPermission,
     UserIsNotPartnerStaffMemberPermission,
-    UserIsUnicefFocalPoint, InterventionPermissions,
+    UserIsUnicefFocalPoint,
 )
 from etools.applications.partners.serializers.exports.interventions import (
     InterventionAmendmentExportFlatSerializer,
