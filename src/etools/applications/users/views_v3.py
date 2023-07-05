@@ -408,7 +408,7 @@ class StagedUserViewSet(
 
     @transaction.atomic
     @action(detail=True, methods=['post'],
-            permission_classes=(IsAuthenticated, user_group_permission(UserReviewer.name)))
+            permission_classes=(IsAuthenticated, IsUNICEFUser, user_group_permission(UserReviewer.name)))
     def accept(self, request, *args, **kwargs):
         staged_user = self.get_object()
         staged_user.request_state = StagedUser.ACCEPTED
@@ -428,7 +428,7 @@ class StagedUserViewSet(
         return Response(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=True, methods=['post'],
-            permission_classes=(IsAuthenticated, user_group_permission(UserReviewer.name)))
+            permission_classes=(IsAuthenticated, IsUNICEFUser, user_group_permission(UserReviewer.name)))
     def decline(self, request, *args, **kwargs):
         staged_user = self.get_object()
         staged_user.request_state = StagedUser.DECLINED
