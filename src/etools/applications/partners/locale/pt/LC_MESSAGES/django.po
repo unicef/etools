@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-05-18 09:35+0000\n"
+"POT-Creation-Date: 2023-07-02 23:14+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1761,6 +1761,9 @@ msgstr "O número do fornecedor deve pertencer ao grupo de contas PRG2"
 
 msgid "Unknown intervention."
 msgstr "Intervenção desconhecida."
+
+msgid "Results cannot be changed in this status"
+msgstr "Os resultados não podem ser alterados neste estado"
 
 msgid "EZHACT Vision integration disabled"
 msgstr "Integração com o EZHACT Vision desativada"
