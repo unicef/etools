@@ -45,6 +45,7 @@ from etools.applications.partners.models import (
 from etools.applications.partners.permissions import (
     InterventionAmendmentIsNotCompleted,
     InterventionIsDraftPermission,
+    InterventionPermissions,
     IsInterventionBudgetOwnerPermission,
     PartnershipManagerPermission,
     PartnershipManagerRepPermission,
@@ -849,11 +850,21 @@ class InterventionReportingRequirementView(APIView):
         self.intervention = self.get_object(intervention_pk)
         self.report_type = report_type
         self.request.data["report_type"] = self.report_type
+        # TODO: [e4] remove this whenever a better validation is decided on. This is out of place but needed as a hotfix
+        # take into consideration the reporting requirements edit rights on the intervention
+        # move this into permissions when time allows
+
+        ps = Intervention.permission_structure()
+        intervention_permissions = InterventionPermissions(
+            user=request.user, instance=self.intervention, permission_structure=ps
+        ).get_permissions()
+
         serializer = self.serializer_create_class(
             data=self.request.data,
             context={
                 "user": request.user,
                 "intervention": self.intervention,
+                "intervention_permissions": intervention_permissions
             }
         )
         if serializer.is_valid():

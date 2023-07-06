@@ -1736,6 +1736,9 @@ msgstr "Номер поставщика должен принадлежать к
 msgid "Unknown intervention."
 msgstr "Неизвестное вмешательство."
 
+msgid "Results cannot be changed in this status"
+msgstr "Результаты не могут быть изменены в этом статусе"
+
 msgid "EZHACT Vision integration disabled"
 msgstr "Интеграция с EZHACT Vision отключена"
 
