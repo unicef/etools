@@ -22,6 +22,7 @@ from etools.applications.users.models import Country, Realm, StagedUser, UserPro
 from etools.applications.users.tasks import sync_realms_to_prp
 from etools.applications.vision.tasks import sync_handler, vision_sync_task
 from etools.libraries.azure_graph_api.tasks import sync_user
+from etools.libraries.djangolib.admin import RestrictedEditAdminMixin
 
 
 def get_office(obj):
@@ -199,7 +200,7 @@ class RealmInline(admin.StackedInline):
         return super().get_queryset(request).filter(country=connection.tenant)
 
 
-class UserAdminPlus(ExtraUrlMixin, UserAdmin):
+class UserAdminPlus(RestrictedEditAdminMixin, ExtraUrlMixin, UserAdmin):
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
         (_('Personal info'), {'fields': ('first_name', 'last_name', 'email')}),
@@ -360,7 +361,7 @@ class CountryAdmin(ExtraUrlMixin, TenantAdminMixin, admin.ModelAdmin):
         return HttpResponseRedirect(reverse('admin:users_country_change', args=[country.pk]))
 
 
-class RealmAdmin(SnapshotModelAdmin):
+class RealmAdmin(RestrictedEditAdminMixin, SnapshotModelAdmin):
     raw_id_fields = ('user', 'organization')
     search_fields = ('user__email', 'user__first_name', 'user__last_name', 'country__name',
                      'organization__name', 'organization__vendor_number', 'group__name')
