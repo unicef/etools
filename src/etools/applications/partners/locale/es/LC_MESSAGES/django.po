@@ -1745,6 +1745,9 @@ msgstr "El número de proveedor debe pertenecer al grupo de cuentas PRG2"
 msgid "Unknown intervention."
 msgstr "Intervención desconocida."
 
+msgid "Results cannot be changed in this status"
+msgstr "Los resultados no se pueden cambiar en este estado"
+
 msgid "EZHACT Vision integration disabled"
 msgstr "Integración de EZHACT Vision desactivada"
 

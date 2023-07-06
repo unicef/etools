@@ -93,6 +93,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.9.2,end,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
 3.9.2,end,Partner User,partner_court,Draft,Edit,TRUE
 3.9.3,end,Unicef Focal Point,contingency_on,Signed,Edit,TRUE
+3.9.3,end,PRC Secretary,,Signature,Edit,TRUE
 3.9.3,end,Unicef Focal Point,termination_doc_attached,Active,Edit,TRUE
 3.9.5,end,Unicef Focal Point,user_adds_amendment,*,Edit,TRUE
 3.9.4,end,*,unicef_not_accepted_contingency,Draft,Required,FALSE
@@ -170,6 +171,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.3.1,partner_focal_points,*,unicef_not_accepted,Draft,Required,FALSE
 3.3.2,pd_outputs,*,,*,View,TRUE
 3.3.3,pd_outputs,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
+3.3.3,pd_outputs,PRC Secretary,,Signature,Edit,TRUE
 3.3.2,pd_outputs,Partner User,partner_court,Draft,Edit,TRUE
 3.3.3,pd_outputs,Unicef Focal Point,user_adds_amendment,*,Edit,TRUE
 3.3.3,planned_budget,Unicef Focal Point,,Draft,Edit,TRUE
@@ -196,6 +198,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.13.1,reference_number_year,*,not_ssfa+unicef_not_accepted,Draft,Required,FALSE
 3.13.1,reporting_requirements,Unicef Focal Point,,Draft,Edit,TRUE
 3.13.1,reporting_requirements,Unicef Focal Point,contingency_on,Signed,Edit,TRUE
+3.13.1,reporting_requirements,PRC Secretary,,Signature,Edit,TRUE
 3.13.1,reporting_requirements,Unicef Focal Point,not_ended,Terminated,Edit,TRUE
 3.13.1,reporting_requirements,Unicef Focal Point,termination_doc_attached,Active,Edit,TRUE
 3.13.1,reporting_requirements,Unicef Focal Point,termination_doc_attached,Signed,Edit,TRUE
@@ -208,6 +211,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,result_links,Partner User,partner_court,Draft,Edit,TRUE
 3.13.1,result_links,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
 3.13.1,result_links,Unicef Focal Point,contingency_on,Signed,Edit,TRUE
+3.13.1,result_links,PRC Secretary,,Signature,Edit,TRUE
 3.13.1,result_links,Unicef Focal Point,user_adds_amendment,*,Edit,TRUE
 ,result_links,UNICEF User,prp_mode_on,*,View,TRUE
 ,review_date_prc,*,,*,View,TRUE
@@ -239,6 +243,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,start,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
 ,start,Partner User,partner_court,Draft,Edit,TRUE
 ,start,Unicef Focal Point,contingency_on,Signed,Edit,TRUE
+,start,PRC Secretary,,Signature,Edit,TRUE
 ,start,*,unicef_not_accepted_contingency,Draft,Required,FALSE
 ,start,*,contingency_on,Signed,Required,FALSE
 ,submission_date,*,,*,View,TRUE
