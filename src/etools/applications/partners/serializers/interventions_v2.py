@@ -1315,7 +1315,7 @@ class InterventionReportingRequirementCreateSerializer(
                 pass
             # TODO: [e4] remove this whenever a better validation is decided on.
             # This is out of place but needed as a hotfix, can edit should be checked at the view level consistently
-            elif can_edit:
+            elif self.intervention.status == Intervention.SIGNATURE and can_edit:
                 pass
             else:
                 if not self.intervention.in_amendment and not self.intervention.termination_doc_attachment.exists():
