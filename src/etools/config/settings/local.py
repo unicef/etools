@@ -8,9 +8,9 @@ DEBUG = True
 CELERY_TASK_ALWAYS_EAGER = True
 
 # python manage.py migrate_schemas --executor=multiprocessing
-TENANT_MULTIPROCESSING_MAX_PROCESSES = int(get_from_secrets_or_env('TENANT_MULTIPROCESSING_MAX_PROCESSES', 30))
+TENANT_MULTIPROCESSING_MAX_PROCESSES = int(get_from_secrets_or_env('TENANT_MULTIPROCESSING_MAX_PROCESSES', 30))  # noqa
 
-REST_FRAMEWORK['DEFAULT_AUTHENTICATION_CLASSES'] += (
+REST_FRAMEWORK['DEFAULT_AUTHENTICATION_CLASSES'] += (  # noqa
     'etools.applications.core.auth.DRFBasicAuthMixin',
 )
 
@@ -24,11 +24,11 @@ POST_OFFICE = {
 
 
 # change config to remove CSRF verification in localhost in order to enable testing from postman.
-REST_FRAMEWORK['DEFAULT_AUTHENTICATION_CLASSES'] = (
+REST_FRAMEWORK['DEFAULT_AUTHENTICATION_CLASSES'] = (  # noqa
     # this setting fixes the bug where user can be logged in as AnonymousUser
     'etools.applications.core.auth.CsrfExemptSessionAuthentication',
     'rest_framework.authentication.BasicAuthentication',
-) + REST_FRAMEWORK['DEFAULT_AUTHENTICATION_CLASSES']
+) + REST_FRAMEWORK['DEFAULT_AUTHENTICATION_CLASSES']  # noqa
 
 AUTHENTICATION_BACKENDS = (
     # 'social_core.backends.azuread_b2c.AzureADB2COAuth2',
@@ -57,7 +57,8 @@ if 'test' in sys.argv:
     if '--keepdb' not in sys.argv and any("--parallel" in arg for arg in sys.argv):
         from django.db import connection
         c = connection.cursor()
-        for i in range(0, TENANT_MULTIPROCESSING_MAX_PROCESSES):
+        c.execute('''DROP DATABASE IF EXISTS test_etools;''')
+        for i in range(0, TENANT_MULTIPROCESSING_MAX_PROCESSES + 1):
             c.execute('''DROP DATABASE IF EXISTS test_etools_{};'''.format(i))
         # you can delete manually by running the output of the following sql
         # select concat('drop database "', datname, '";' ) from pg_database where datname like 'test_etools%';
@@ -84,17 +85,23 @@ if 'test' in sys.argv:
 elif 'runserver' in sys.argv or 'shell_plus' in sys.argv:
     # Settings which should only be active when running a local server
 
-    # django-debug-toolbar: https://django-debug-toolbar.readthedocs.io/en/stable/configuration.html
-    INSTALLED_APPS += (  # noqa
-        'debug_toolbar',
-    )
-    INTERNAL_IPS = ('127.0.0.1',)
-    MIDDLEWARE += (  # noqa
-        'debug_toolbar.middleware.DebugToolbarMiddleware',
-    )
-    DEBUG_TOOLBAR_CONFIG = {
-        'SHOW_TEMPLATE_CONTEXT': True,
-    }
+    # Something to make this work with the docker-compose setup
+    if DEBUG:
+        # https://stackoverflow.com/questions/26898597/django-debug-toolbar-and-docker
+        INTERNAL_IPS = type(str('c'), (), {'__contains__': lambda *a: True})()
+        MIDDLEWARE += (  # noqa
+            'debug_toolbar.middleware.DebugToolbarMiddleware',
+        )
+        def show_toolbar(request): # noqa
+            return True
+
+        SHARED_APPS += ('debug_toolbar',)  # noqa
+        INSTALLED_APPS = ('django_tenants',) + SHARED_APPS + TENANT_APPS  # noqa
+        REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"] += ('rest_framework.renderers.BrowsableAPIRenderer',)  # noqa
+        DEBUG_TOOLBAR_CONFIG = {
+            'SHOW_TOOLBAR_CALLBACK': lambda request: True,
+            'SHOW_TEMPLATE_CONTEXT': True
+        }
 
 LOGGING = LOGGING  # noqa - just here for flake purposes. should be imported from etools.config.settings.base
 # log updates for more info in local environment
@@ -118,7 +125,7 @@ LOGGING['handlers']['console']['formatter'] = 'tenant_context'
 
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 10240
 
-if os.path.isfile(join(CONFIG_ROOT, 'keys/jwt/key.pem')):
+if os.path.isfile(join(CONFIG_ROOT, 'keys/jwt/key.pem')):  # noqa
     from cryptography.hazmat.backends import default_backend
     from cryptography.hazmat.primitives import serialization
     from cryptography.x509 import load_pem_x509_certificate
