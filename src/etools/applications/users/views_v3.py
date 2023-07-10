@@ -169,7 +169,7 @@ class UsersListAPIView(PMPBaseViewMixin, QueryStringFilterMixin, ListAPIView):
     Country is determined by the currently logged in user.
     """
     model = get_user_model()
-    queryset = get_user_model().objects.all().select_related('profile').prefetch_related('realms')
+    queryset = get_user_model().objects.all()
     serializer_class = MinimalUserSerializer
     permission_classes = (IsAuthenticated, )
     pagination_class = AppendablePageNumberPagination
@@ -201,14 +201,15 @@ class UsersListAPIView(PMPBaseViewMixin, QueryStringFilterMixin, ListAPIView):
         elif self.request.user.is_staff and self.request.user.is_unicef_user():
             qs = qs.filter(
                 profile__country=self.request.user.profile.country,
+                # TODO: eventually move to the following instead of profile__country:
+                # realms__country=self.request.user.profile.country,
+                # realms__is_active=True,
                 is_staff=True,
             )
         else:
             return []
 
-        return qs.prefetch_related(
-            'profile',
-        ).order_by("first_name")
+        return qs.order_by("first_name")
 
 
 class CountryView(v2.CountryView):
