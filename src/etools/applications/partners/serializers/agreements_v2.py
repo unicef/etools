@@ -8,10 +8,7 @@ from unicef_snapshot.serializers import SnapshotModelSerializer
 
 from etools.applications.partners.models import Agreement, AgreementAmendment
 from etools.applications.partners.permissions import AgreementPermissions
-from etools.applications.partners.serializers.partner_organization_v2 import (
-    PartnerManagerSerializer,
-    PartnerStaffMemberNestedSerializer,
-)
+from etools.applications.partners.serializers.partner_organization_v2 import PartnerManagerSerializer
 from etools.applications.partners.validation.agreements import AgreementValid
 from etools.applications.reports.models import CountryProgramme
 from etools.applications.users.serializers import SimpleUserSerializer
