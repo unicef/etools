@@ -15,6 +15,7 @@ from etools.applications.partners.serializers.partner_organization_v2 import (
 from etools.applications.partners.validation.agreements import AgreementValid
 from etools.applications.reports.models import CountryProgramme
 from etools.applications.users.serializers import SimpleUserSerializer
+from etools.applications.users.serializers_v3 import MinimalUserSerializer
 
 
 class AgreementAmendmentCreateUpdateSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
@@ -38,7 +39,7 @@ class AgreementAmendmentListSerializer(serializers.ModelSerializer):
 
 class AgreementListSerializer(serializers.ModelSerializer):
     partner_name = serializers.CharField(source='partner.name', read_only=True)
-    authorized_officers = PartnerStaffMemberNestedSerializer(many=True, read_only=True)
+    authorized_officers = MinimalUserSerializer(many=True, read_only=True)
     agreement_number_status = serializers.SerializerMethodField()
 
     class Meta:
@@ -67,7 +68,7 @@ class AgreementListSerializer(serializers.ModelSerializer):
 class AgreementDetailSerializer(serializers.ModelSerializer):
 
     partner_name = serializers.CharField(source='partner.name', read_only=True)
-    authorized_officers = PartnerStaffMemberNestedSerializer(many=True, read_only=True)
+    authorized_officers = MinimalUserSerializer(many=True, read_only=True)
     amendments = AgreementAmendmentCreateUpdateSerializer(many=True, read_only=True)
     unicef_signatory = SimpleUserSerializer(source='signed_by')
     partner_signatory = PartnerManagerSerializer(source='partner_manager')
