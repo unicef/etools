@@ -1,5 +1,4 @@
-from django.conf.urls import url
-from django.urls import include, path
+from django.urls import include, path, re_path
 
 from rest_framework_nested import routers
 from unicef_restlib.routers import NestedComplexRouter
@@ -59,7 +58,7 @@ urlpatterns = [
     path('', include(activity_api.urls)),
     path('', include(report_api.urls)),
     path('', include(report_attachments_api.urls)),
-    url(r'^static-data/$',
-        view=TravelStaticDropdownsListAPIView.as_view(http_method_names=['get']),
-        name='travel-static-data'),
+    re_path(r'^static-data/$',
+            view=TravelStaticDropdownsListAPIView.as_view(http_method_names=['get']),
+            name='travel-static-data'),
 ]
