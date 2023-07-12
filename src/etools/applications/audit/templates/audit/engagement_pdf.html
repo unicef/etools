@@ -235,6 +235,7 @@
             </div>
           </div>
         {% endif %}
+        <pdf:nextpage></pdf:nextpage>
         <div class="content-section">
           <div class="content-section__header">
             <div class="content-section__header__title">Partner Details</div>
@@ -272,7 +273,6 @@
             </tr>
           </table>
         </div>
-        <pdf:nextpage></pdf:nextpage>
         <div class="content-section">
           <div class="content-section__header">
             <div class="content-section__header__title">Audit Staff Team Members ({{ engagement.staff_members|length }})</div>
@@ -280,11 +280,11 @@
           <div class="content-section__wrapper">
             <table class="content-section__table">
               <tr class="content-section__table__header">
-                <td>{{ serializer.fields.staff_members.read_field.child.fields.user.fields.profile.fields.job_title.label }}</td>
-                <td>{{ serializer.fields.staff_members.read_field.child.fields.user.fields.first_name.label }}</td>
-                <td>{{ serializer.fields.staff_members.read_field.child.fields.user.fields.last_name.label }}</td>
-                <td>{{ serializer.fields.staff_members.read_field.child.fields.user.fields.profile.fields.phone_number.label }}</td>
-                <td colspan="2">{{ serializer.fields.staff_members.read_field.child.fields.user.fields.email.label }}</td>
+                <td>Job Title</td>
+                <td>First Name</td>
+                <td>Last Name</td>
+                <td>Phone Number</td>
+                <td colspan="2">Email</td>
               </tr>
               {% if engagement.staff_members %}
                 {% for staff_member in engagement.staff_members %}
@@ -298,8 +298,11 @@
                 {% endfor %}
               {% else %}
                 <tr>
-                  <td>-</td><td>-</td><td>-</td>
-                  <td>-</td><td>-</td><td colspan="2">-</td>
+                  <td>-</td>
+                  <td>-</td>
+                  <td>-</td>
+                  <td>-</td>
+                  <td colspan="2">-</td>
                 </tr>
               {% endif %}
             </table>
@@ -361,11 +364,11 @@
                 {% if engagement.action_points %}
                   {% for action_point in engagement.action_points %}
                     <tr>
-                      <td colspan="3">{{ action_point.reference_number }}</td>
-                      <td colspan="2">{{ action_point.status }}</td>
-                      <td>{{ action_point.high_priority|yesno:"Y,N" }}</td>
-                      <td colspan="3">{{ action_point.due_date }}</td>
-                      <td colspan="3">{{ action_point.assigned_to }}</td>
+                      <td colspan="3">{{ action_point.reference_number|default:"-" }}</td>
+                      <td colspan="2">{{ action_point.status|default:"-" }}</td>
+                      <td>{{ action_point.high_priority|yesno:"Y,N"}}</td>
+                      <td colspan="3">{{ action_point.due_date|default:"-" }}</td>
+                      <td colspan="3">{{ action_point.assigned_to|default:"-" }}</td>
                       <td colspan="2">{{ action_point.office|default:"-" }}</td>
                       <td colspan="3">{{ action_point.section|default:"-" }}</td>
                       <td colspan="5">{{ action_point.description|default:"-" }}</td>
@@ -373,10 +376,14 @@
                   {% endfor %}
                 {% else %}
                   <tr>
+                    <td colspan="3">-</td>
                     <td colspan="2">-</td>
                     <td>-</td>
-                    <td>-</td>
+                    <td colspan="3">-</td>
+                    <td colspan="3">-</td>
                     <td colspan="2">-</td>
+                    <td colspan="3">-</td>
+                    <td colspan="5">-</td>
                   </tr>
                 {% endif %}
               </table>
