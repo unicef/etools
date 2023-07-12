@@ -67,6 +67,8 @@ def agreements_illegal_transition_permissions(agreement, user):
 
 def amendments_valid(agreement):
     today = date.today()
+    if not agreement.pk:
+        return True
     for a in agreement.amendments.all():
         if not getattr(a.signed_amendment, 'name') and not a.signed_amendment_attachment.count():
             return False
@@ -223,3 +225,14 @@ class AgreementValid(CompleteValidation):
             else:
                 error_list.append(error)
         return error_list
+
+    def get_permissions(self, instance):
+        if self.PERMISSIONS_CLASS:
+            inbound_check = True if instance.pk else False
+            p = self.PERMISSIONS_CLASS(
+                user=self.user,
+                instance=instance,
+                permission_structure=self.new.permission_structure(),
+                inbound_check=inbound_check)
+            return p.get_permissions()
+        return None

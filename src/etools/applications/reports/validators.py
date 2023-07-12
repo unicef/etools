@@ -69,7 +69,7 @@ class SpecialReportingRequirementUniqueValidator:
             intervention=attrs.get("intervention", self.intervention),
             due_date=attrs["due_date"],
         )
-        if self.instance:
+        if hasattr(self, 'instance'):
             queryset = queryset.exclude(pk=self.instance.pk)
 
         if queryset.exists():
