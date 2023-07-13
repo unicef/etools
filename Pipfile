@@ -48,6 +48,7 @@ django-ordered-model = "==3.4.3"
 django-post-office = "==3.7.0"
 django-redis-cache = "==3.0"
 django-rest-swagger = "==2.2"
+django-storages = {version = "==1.13.2", extras = ["azure"]}
 django-tenants = "==3.5.0"
 django-timezone-field = "==5.1"
 django-waffle = "==2.1.0"
@@ -84,7 +85,6 @@ unicef-snapshot = "==1.3"
 unicef-rest-export = "==0.5.3"
 unicef-vision = "==0.6"
 xhtml2pdf = "==0.2.5"
-django-storages = {version = "==1.13.2", extras = ["azure"]}
 
 [requires]
 python_version = "3.9"
