@@ -65,7 +65,7 @@ jobs:
           name: Run Tests
           command: |
             pip install tox
-            tox -e d32,report
+            tox -e d42,report
           no_output_timeout: 30m
       - save_cache:
           key: deps2-{{ .Branch }}--{{ checksum "Pipfile.lock" }}-{{ checksum ".circleci/config.yml" }}
