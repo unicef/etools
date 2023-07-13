@@ -114,6 +114,8 @@ def partner_type_valid_cso(agreement):
 
 
 def ssfa_static(agreement):
+    if not agreement.pk:
+        return True
     if agreement.agreement_type == agreement.SSFA:
         if agreement.interventions.all().exists():
             # there should be only one.. there is a different validation that ensures this
