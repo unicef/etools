@@ -14,6 +14,11 @@ from etools.applications.core.middleware import (
 from etools.applications.users.tests.factories import CountryFactory, ProfileLightFactory, UserFactory
 
 
+# https://docs.djangoproject.com/en/4.2/topics/http/middleware/#init-get-response
+def dummy_get_response(request):  # pragma: no cover
+    return None
+
+
 class EToolsTenantMiddlewareTest(TestCase):
     request_factory = RequestFactory()
 
@@ -30,7 +35,7 @@ class EToolsTenantMiddlewareTest(TestCase):
     def test_no_user_return_none(self):
         "If no user, allow them to pass."
         self.request.user = None
-        self.assertEquals(EToolsTenantMiddleware().process_request(self.request), None)
+        self.assertEquals(EToolsTenantMiddleware(dummy_get_response).process_request(self.request), None)
 
     def test_inactive_workspace_return_none(self):
         "If trying to access an inactive workspace, middleware returns None."
@@ -38,7 +43,7 @@ class EToolsTenantMiddlewareTest(TestCase):
         # were to fail
         self.request.user = AnonymousUser()
         self.request.path = self.inactive_workspace_url
-        self.assertEquals(EToolsTenantMiddleware().process_request(self.request), None)
+        self.assertEquals(EToolsTenantMiddleware(dummy_get_response).process_request(self.request), None)
 
     def test_anonymous_user_allowed_urls(self):
         "If AnonymousUser tries to access these URLs, middleware returns None, allowing them to pass."
@@ -46,18 +51,18 @@ class EToolsTenantMiddlewareTest(TestCase):
         self.request.user = AnonymousUser()
         for path in allowed_url_paths:
             self.request.path = '/{}'.format(path)
-            self.assertEquals(EToolsTenantMiddleware().process_request(self.request), None)
+            self.assertEquals(EToolsTenantMiddleware(dummy_get_response).process_request(self.request), None)
 
     def test_anonymous_user_redirects_to_login(self):
         "If AnonymousUser tries to access any other URLs, middleware redirects them to login."
         self.request.user = AnonymousUser()
-        response = EToolsTenantMiddleware().process_request(self.request)
+        response = EToolsTenantMiddleware(dummy_get_response).process_request(self.request)
         self.assertRedirects(response, settings.LOGIN_URL, fetch_redirect_response=False)
 
     def test_user_without_country_redirects_to_inactive_workspace(self):
         "If user has no country, middleware redirects them to inactive workspace."
         self.request.user.profile.country = None
-        response = EToolsTenantMiddleware().process_request(self.request)
+        response = EToolsTenantMiddleware(dummy_get_response).process_request(self.request)
         self.assertRedirects(response, self.inactive_workspace_url, fetch_redirect_response=False)
 
     def test_superuser_without_country_return_none(self):
@@ -65,7 +70,7 @@ class EToolsTenantMiddlewareTest(TestCase):
         superuser = UserFactory(is_superuser=True, profile=None)
         ProfileLightFactory(country=None, user=superuser)
         self.request.user = superuser
-        self.assertEquals(EToolsTenantMiddleware().process_request(self.request), None)
+        self.assertEquals(EToolsTenantMiddleware(dummy_get_response).process_request(self.request), None)
 
     @skip('unused')
     @override_settings(INACTIVE_BUSINESS_AREAS=['ZZZ'])
@@ -80,7 +85,7 @@ class EToolsTenantMiddlewareTest(TestCase):
         superuser = UserFactory(is_superuser=True, profile=None)
         ProfileLightFactory(user=superuser)
         self.request.user = superuser
-        self.assertEquals(EToolsTenantMiddleware().process_request(self.request), None)
+        self.assertEquals(EToolsTenantMiddleware(dummy_get_response).process_request(self.request), None)
 
     @override_settings(PUBLIC_SCHEMA_URLCONF='foo')
     def test_public_schema_urlconf(self):
@@ -92,7 +97,7 @@ class EToolsTenantMiddlewareTest(TestCase):
         country = CountryFactory(schema_name='public')
         ProfileLightFactory(country=country, user=superuser)
         self.request.user = superuser
-        EToolsTenantMiddleware().process_request(self.request)
+        EToolsTenantMiddleware(dummy_get_response).process_request(self.request)
         self.assertEqual(self.request.urlconf, 'foo')
 
 
@@ -112,7 +117,7 @@ class EToolsLocaleMiddlewareTest(TestCase):
             {"language": "fr"}
         )
         with patch('etools.applications.core.middleware.translation.activate') as mock_method:
-            EToolsLocaleMiddleware().process_request(self.request)
+            EToolsLocaleMiddleware(dummy_get_response).process_request(self.request)
             mock_method.assert_called_once_with("fr")
 
     def test_translation_not_activated(self):
@@ -120,5 +125,5 @@ class EToolsLocaleMiddlewareTest(TestCase):
         self.user.save(update_fields=['preferences'])
 
         with patch('etools.applications.core.middleware.translation.activate') as mock_method:
-            EToolsLocaleMiddleware().process_request(self.request)
+            EToolsLocaleMiddleware(dummy_get_response).process_request(self.request)
             mock_method.not_called()
