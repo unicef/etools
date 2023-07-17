@@ -48,7 +48,7 @@ class IsParentAction(SimplePermission):
 
 class IsObjectAction(SimplePermission):
     def has_access(self, request, view, instance=None):
-        return view.detail
+        return (view.lookup_url_kwarg or view.lookup_field) in view.kwargs
 
 
 IsListAction = ~IsObjectAction
