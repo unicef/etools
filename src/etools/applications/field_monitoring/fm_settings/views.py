@@ -77,7 +77,7 @@ class FieldMonitoringGeneralAttachmentsViewSet(LinkedAttachmentsViewSet):
 
 
 class InterventionLocationsView(FMBaseViewSet, generics.ListAPIView):
-    queryset = Location.objects.all()
+    queryset = Location.objects.all_with_geom()
     serializer_class = LocationLightSerializer
 
     def get_queryset(self):
@@ -144,7 +144,7 @@ class LocationsCountryView(views.APIView):
 
 
 class FMLocationsViewSet(FMBaseViewSet, mixins.ListModelMixin, viewsets.GenericViewSet):
-    queryset = Location.objects.active()
+    queryset = Location.objects.all_with_geom().filter(is_active=True)
     serializer_class = LocationFullSerializer
     filter_backends = (DjangoFilterBackend, SearchFilter)
     filter_fields = ('level', 'parent')
