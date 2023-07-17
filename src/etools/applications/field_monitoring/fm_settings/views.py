@@ -77,7 +77,7 @@ class FieldMonitoringGeneralAttachmentsViewSet(LinkedAttachmentsViewSet):
 
 
 class InterventionLocationsView(FMBaseViewSet, generics.ListAPIView):
-    queryset = Location.objects.all_with_geom()
+    queryset = Location.objects.all()
     serializer_class = LocationLightSerializer
 
     def get_queryset(self):
