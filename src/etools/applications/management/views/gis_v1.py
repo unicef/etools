@@ -38,8 +38,9 @@ class GisLocationsInUseViewset(ListAPIView):
             return Response(status=400, data={'error': 'Country not found'})
         else:
             locs = Location.objects.all_with_geom().filter(Q(intervention_flat_locations__isnull=False) |
-                                           Q(applied_indicators__isnull=False) |
-                                           Q(actionpoint__isnull=False)).values_list("id", flat=True).distinct()
+                                                           Q(applied_indicators__isnull=False) |
+                                                           Q(actionpoint__isnull=False))\
+                .values_list("id", flat=True).distinct()
 
             t2f_locs = TravelActivity.objects.exclude(locations__isnull=True).values_list(
                 "locations", flat=True).distinct()
