@@ -32,7 +32,7 @@ RUN apk add --no-cache --virtual .build-deps --update \
 
 RUN pip install --no-cache-dir --upgrade \
     pip \
-    pipenv==2022.10.4
+    pipenv
 
 
 WORKDIR /etools/
