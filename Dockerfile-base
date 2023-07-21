@@ -31,7 +31,7 @@ RUN apk add --no-cache --virtual .build-deps --update \
     gettext
 
 RUN pip install --no-cache-dir --upgrade \
-    pip ==23.1.2 \
+    pip==23.1.2 \
     pipenv==2022.10.4
 
 
