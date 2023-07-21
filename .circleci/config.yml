@@ -49,7 +49,7 @@ jobs:
         environment:
           PGHOST: 127.0.0.1
           DATABASE_URL: "postgis://postgres:postgres@localhost:5432/circle_test"
-          DEPLOY_BRANCHES: "develop|staging|master|ci-updates2|epd-amp|32722-amp-changes-and-fixes"
+          DEPLOY_BRANCHES: "develop|staging|master|ci-updates2"
       - image: cimg/postgres:12.9-postgis
         environment:
           POSTGRES_USER: postgres
