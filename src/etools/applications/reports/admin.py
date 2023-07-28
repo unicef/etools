@@ -190,6 +190,7 @@ class AppliedIndicatorAdmin(RestrictedEditAdmin):
         'disaggregation',
         'locations'
     )
+    raw_id_fields = ('indicator', 'lower_result',)
 
 
 class DisaggregationAdmin(RestrictedEditAdmin):
