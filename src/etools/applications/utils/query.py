@@ -31,5 +31,5 @@ def has_related_records(queryset, model, avoid_self=True):
                     values_list(f'{related_field_name}__pk', flat=True)
 
     if all_impacted_records:
-        return True, all_impacted_records
+        return True, list(set(all_impacted_records))
     return False, []
