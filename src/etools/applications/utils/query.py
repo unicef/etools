@@ -32,4 +32,4 @@ def has_related_records(queryset, model, avoid_self=True):
 
     if all_impacted_records:
         return True, all_impacted_records
-    return False, None
+    return False, []
