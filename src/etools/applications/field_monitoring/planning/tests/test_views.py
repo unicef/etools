@@ -3,7 +3,6 @@ from unittest import skip
 
 from django.core import mail
 from django.core.management import call_command
-from django.db import connection
 from django.test.utils import override_settings
 from django.urls import reverse
 
@@ -46,7 +45,6 @@ from etools.applications.partners.tests.factories import (
 )
 from etools.applications.reports.models import ResultType
 from etools.applications.reports.tests.factories import OfficeFactory, ResultFactory, SectionFactory
-from etools.applications.tpm.models import PME
 from etools.applications.tpm.tests.factories import SimpleTPMPartnerFactory, TPMPartnerFactory, TPMUserFactory
 
 
@@ -379,12 +377,9 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         ActivityOverallFinding.objects.create(monitoring_activity=activity, narrative_finding='test')
         goto('data_collection', visit_lead)
         goto('report_finalization', visit_lead)
-        goto('submitted', visit_lead, mail_count=len(PME.as_group().user_set.filter(
-            profile__country=connection.tenant,
-        )))
+        goto('submitted', visit_lead, mail_count=activity.country_pmes.count())
         goto('report_finalization', self.pme, mail_count=1)
-        goto('submitted', visit_lead,
-             mail_count=len(PME.as_group().user_set.filter(profile__country=connection.tenant)))
+        goto('submitted', visit_lead, mail_count=activity.country_pmes.count())
         goto('completed', self.pme)
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
