@@ -144,7 +144,7 @@ class LocationsCountryView(views.APIView):
 
 
 class FMLocationsViewSet(FMBaseViewSet, mixins.ListModelMixin, viewsets.GenericViewSet):
-    queryset = Location.objects.active()
+    queryset = Location.objects.all_with_geom().filter(is_active=True)
     serializer_class = LocationFullSerializer
     filter_backends = (DjangoFilterBackend, SearchFilter)
     filter_fields = ('level', 'parent')
