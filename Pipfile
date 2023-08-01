@@ -83,7 +83,7 @@ xhtml2pdf = "==0.2.5"
 unicef-vision = "==0.6"
 etools-offline = "==0.1.0"
 openpyxl = "==3.0.5"
-pyyaml = "==5.4.1"
+pyyaml = "==5.3.1"
 reportlab = "==3.6.6"  # freeze: getStringIO from 'reportlab.lib.utils'
 
 [requires]
