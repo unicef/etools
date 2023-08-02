@@ -49,14 +49,9 @@ class InterventionSerializer(InterventionDetailSerializer):
 
     class Meta(InterventionDetailSerializer.Meta):
         fields = [
-            f for f in InterventionDetailSerializer.Meta.fields
-            if f in {
-
-            }
-        ] + [
             "number", "title", "partner_vendor", "business_area", "offices", "start", "end", "document_type",
-            "status", "planned_budget", "partner_authorized_officer_signatory", "partner_focal_points", "budget_owner",
-            "result_links"
+            "status", "planned_budget", "partner_authorized_officer_signatory", "partner_focal_points",
+            "unicef_focal_points", "budget_owner", "result_links"
         ]
 
     def get_user(self):
