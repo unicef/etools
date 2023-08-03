@@ -176,7 +176,7 @@ class eToolsLocationSynchronizer(LocationSynchronizer):
     def post_sync(self):
         # update sites
         for site in LocationSite.objects.all():
-            parent = site.get_parent_location()
+            parent = site.get_parent_location(site.point)
             if site.parent != parent:
                 site.parent = parent
                 site.save()
