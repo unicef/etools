@@ -6,7 +6,9 @@ ignore =
     F405,
     ; E501 maximum line length
     E501,
-    W504
+    W504,
+    ; E741 ambiguous variable name
+    E741
 
 exclude =
     */migrations,
