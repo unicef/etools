@@ -176,7 +176,7 @@ class eToolsLocationSynchronizer(LocationSynchronizer):
     def post_sync(self):
         # update sites
         for site in LocationSite.objects.all():
-            parent = site.get_parent_location()
+            parent = site.get_parent_location(site.point)
             if site.parent != parent:
                 site.parent = parent
                 site.save()
@@ -210,6 +210,12 @@ class eToolsLocationSynchronizer(LocationSynchronizer):
             logger.info('Deleting the rest')
         else:
             logger.info('Deleting all')
+        # won't be able to delete the ones with children if the children are somehow related. our check does not
+        # look for nested relations to self.
+        # update all child locations for the "obsolete locations", leave them orphan; - with the understanding that
+        # all previous parent relationships are stored in a separate db for reference or remapped adequately
+        # on subsequent children updates.
+        get_location_model().objects.filter(parent__in=loc_qs).update(parent=None)
         loc_qs.exclude(pk__in=affected).delete()
 
 
