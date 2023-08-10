@@ -1,4 +1,3 @@
-from django.contrib.auth import get_user_model
 from django.db import models
 from django.db.models.functions import TruncYear
 
@@ -6,6 +5,7 @@ from django_filters import rest_framework as filters
 from rest_framework.filters import BaseFilterBackend, OrderingFilter
 
 from etools.applications.audit.models import Engagement
+from etools.applications.users.models import Country
 
 
 class DisplayStatusFilter(BaseFilterBackend):
@@ -87,12 +87,20 @@ class EngagementFilter(filters.FilterSet):
         }
 
 
-class AuditorStaffMembersFilterSet(filters.FilterSet):
-    user__profile__countries_available__name = filters.CharFilter(field_name='realms__country__name', distinct=True)
+class StaffMembersCountriesAvailableFilter(BaseFilterBackend):
+    """
+    manual filtering on countries available without extra join
+    """
+    def filter_queryset(self, request, queryset, view):
+        country_name = request.query_params.get('user__profile__countries_available__name', '')
+        if not country_name:
+            return queryset
 
-    class Meta:
-        model = get_user_model()
-        fields = {}
+        country = Country.objects.filter(name=country_name).only('id').first()
+        if not country:
+            return queryset.none()
+
+        return queryset.filter(realms__country=country.id).distinct()
 
 
 class StaffMembersOrderingFilter(OrderingFilter):
