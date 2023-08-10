@@ -1,3 +1,5 @@
+from functools import cache
+
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.db import connection
@@ -40,9 +42,9 @@ from etools.applications.audit.exports import (
     SpotCheckDetailCSVRenderer,
 )
 from etools.applications.audit.filters import (
-    AuditorStaffMembersFilterSet,
     DisplayStatusFilter,
     EngagementFilter,
+    StaffMembersCountriesAvailableFilter,
     StaffMembersOrderingFilter,
     UniqueIDOrderingFilter,
 )
@@ -520,22 +522,24 @@ class AuditorStaffMembersViewSet(
     viewsets.GenericViewSet
 ):
     metadata_class = PermissionBasedMetadata
-    queryset = get_user_model().objects.all()
+    queryset = get_user_model().objects.all()\
+        .select_related(None)\
+        .select_related('profile')  # ignore existing prefetch to exclude extra information
     serializer_class = AuditorStaffMemberRealmSerializer
     permission_classes = BaseAuditViewSet.permission_classes + [
         get_permission_for_targets('purchase_order.auditorfirm.staff_members')
     ]
-    filter_backends = (StaffMembersOrderingFilter, SearchFilter, DjangoFilterBackend, )
+    filter_backends = (StaffMembersOrderingFilter, SearchFilter, StaffMembersCountriesAvailableFilter, )
     ordering_fields = ('user__email', 'user__first_name', 'id', )
     search_fields = ('first_name', 'email', 'last_name', )
-    filterset_class = AuditorStaffMembersFilterSet
 
     def get_parent_filter(self):
-        parent = self.get_parent_object()
-        if not parent:
-            return {}
+        # we're using filtering based on parent explicitly in get_queryset has_realm=True, so avoid extra query
+        return {}
 
-        return {'realms__organization': parent.organization}
+    @cache
+    def get_parent_object(self):
+        return super().get_parent_object()
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -545,11 +549,9 @@ class AuditorStaffMembersViewSet(
             country=connection.tenant,
             group__name__in=AUDIT_ACTIVE_GROUPS
         )
-        queryset = queryset.filter(
-            realms__organization=self.get_parent_object().organization,
-            realms__country=connection.tenant,
-            realms__group__name__in=AUDIT_ACTIVE_GROUPS) \
+        queryset = queryset.annotate(has_realm=Exists(context_realms_qs.filter(user=OuterRef('pk'))))\
             .annotate(has_active_realm=Exists(context_realms_qs.filter(user=OuterRef('pk'), is_active=True)))\
+            .filter(has_realm=True)\
             .distinct()
 
         return queryset
@@ -657,7 +659,7 @@ class AuditorStaffMembersViewSet(
     def get_obj_permission_context(self, obj):
         context = super().get_obj_permission_context(obj)
         context.extend([
-            AuditStaffMemberCondition(obj.profile.organization, self.request.user),
+            # AuditStaffMemberCondition(obj.profile.organization, self.request.user),
         ])
         return context
 
