@@ -1786,15 +1786,16 @@ class TestInterventionUpdate(BaseInterventionTestCase):
             realms__data=['IP Viewer'],
             profile__organization=intervention.agreement.partner.organization
         )
-        response = self.forced_auth_req(
-            "patch",
-            reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
-            user=self.unicef_user,
-            data={
-                "agreement": agreement.pk,
-                "partner_focal_points": [focal_1.pk, focal_2.pk],
-            },
-        )
+        with self.assertNumQueries(160):
+            response = self.forced_auth_req(
+                "patch",
+                reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+                user=self.unicef_user,
+                data={
+                    "agreement": agreement.pk,
+                    "partner_focal_points": [focal_1.pk, focal_2.pk],
+                },
+            )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         intervention.refresh_from_db()
         self.assertEqual(intervention.agreement, agreement)
@@ -1812,19 +1813,20 @@ class TestInterventionUpdate(BaseInterventionTestCase):
         budget_owner = UserFactory(is_staff=True)
         office = OfficeFactory()
         section = SectionFactory()
-        response = self.forced_auth_req(
-            "patch",
-            reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
-            user=self.unicef_user,
-            data={
-                "agreement": agreement.pk,
-                "document_type": Intervention.PD,
-                "unicef_focal_points": [focal_1.pk, focal_2.pk, self.unicef_user.pk],
-                "budget_owner": budget_owner.pk,
-                "offices": [office.pk],
-                "sections": [section.pk],
-            },
-        )
+        with self.assertNumQueries(187):
+            response = self.forced_auth_req(
+                "patch",
+                reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+                user=self.unicef_user,
+                data={
+                    "agreement": agreement.pk,
+                    "document_type": Intervention.PD,
+                    "unicef_focal_points": [focal_1.pk, focal_2.pk, self.unicef_user.pk],
+                    "budget_owner": budget_owner.pk,
+                    "offices": [office.pk],
+                    "sections": [section.pk],
+                },
+            )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         intervention.refresh_from_db()
         self.assertEqual(intervention.agreement, agreement)

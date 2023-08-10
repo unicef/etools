@@ -191,6 +191,11 @@ class PMPInterventionRetrieveUpdateView(PMPInterventionMixin, InterventionDetail
         'planned_budget',
     ]
 
+    def get_object(self):
+        if not hasattr(self, '_object'):
+            self._object = super().get_object()
+        return self._object
+
     def get_serializer_class(self):
         if self.request.method in ["PATCH", "PUT"]:
             return InterventionCreateUpdateSerializer
