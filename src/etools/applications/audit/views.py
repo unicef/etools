@@ -659,7 +659,7 @@ class AuditorStaffMembersViewSet(
     def get_obj_permission_context(self, obj):
         context = super().get_obj_permission_context(obj)
         context.extend([
-            # AuditStaffMemberCondition(obj.profile.organization, self.request.user),
+            AuditStaffMemberCondition(obj.profile.organization, self.request.user),
         ])
         return context
 
