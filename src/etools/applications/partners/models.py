@@ -236,8 +236,7 @@ class PartnerOrganizationManager(models.Manager.from_queryset(PartnerOrganizatio
             .annotate(name=F('organization__name')) \
             .annotate(vendor_number=F('organization__vendor_number')) \
             .annotate(partner_type=F('organization__organization_type')) \
-            .annotate(cso_type=F('organization__cso_type')) \
-            .order_by('organization__name')
+            .annotate(cso_type=F('organization__cso_type'))
 
 
 class PartnerOrganization(TimeStampedModel):

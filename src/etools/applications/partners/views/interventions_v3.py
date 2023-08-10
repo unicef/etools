@@ -1,4 +1,5 @@
 import functools
+import logging
 from copy import copy
 
 from django.conf import settings
@@ -191,11 +192,6 @@ class PMPInterventionRetrieveUpdateView(PMPInterventionMixin, InterventionDetail
         'planned_budget',
     ]
 
-    def get_object(self):
-        if not hasattr(self, '_object'):
-            self._object = super().get_object()
-        return self._object
-
     def get_serializer_class(self):
         if self.request.method in ["PATCH", "PUT"]:
             return InterventionCreateUpdateSerializer
@@ -203,11 +199,30 @@ class PMPInterventionRetrieveUpdateView(PMPInterventionMixin, InterventionDetail
 
     @transaction.atomic
     def update(self, request, *args, **kwargs):
-        super().update(request, *args, **kwargs)
+        self.instance, old_instance, serializer = self.my_update(
+            request,
+            self.related_fields,
+            nested_related_names=self.nested_related_names,
+            related_non_serialized_fields=self.related_non_serialized_fields,
+            **kwargs
+        )
+
+        validator = InterventionValid(self.instance, old=old_instance, user=request.user)
+        if not validator.is_valid:
+            logging.debug(validator.errors)
+            raise ValidationError(validator.errors)
+
+        if getattr(self.instance, '_prefetched_objects_cache', None):
+            # If 'prefetch_related' has been applied to a queryset, we need to
+            # refresh the instance from the database.
+            self.instance = self.get_object()
+
+        context = self.get_serializer_context()
+        context['permissions'] = validator.get_permissions(self.instance)
         return Response(
             InterventionDetailSerializer(
                 self.instance,
-                context=self.get_serializer_context(),
+                context=context,
             ).data,
         )
 

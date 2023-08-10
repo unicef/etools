@@ -272,7 +272,8 @@ def rigid_in_amendment_flag(i):
 
 
 def sections_valid(i):
-    ainds = AppliedIndicator.objects.filter(lower_result__result_link__intervention__pk=i.pk).all()
+    ainds = AppliedIndicator.objects.filter(
+        lower_result__result_link__intervention__pk=i.pk).select_related('section')
     ind_sections = set()
     for ind in ainds:
         ind_sections.add(ind.section)
@@ -286,7 +287,8 @@ def sections_valid(i):
 
 
 def locations_valid(i):
-    ainds = AppliedIndicator.objects.filter(lower_result__result_link__intervention__pk=i.pk).all()
+    ainds = AppliedIndicator.objects.filter(
+        lower_result__result_link__intervention__pk=i.pk).prefetch_related('locations')
     ind_locations = set()
     for ind in ainds:
         for loc in ind.locations.all():
