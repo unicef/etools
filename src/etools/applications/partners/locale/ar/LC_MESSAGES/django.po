@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-07-02 23:14+0000\n"
+"POT-Creation-Date: 2023-08-11 13:58+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1965,8 +1965,8 @@ msgstr "لا يمكن تنشيط وثيقة البرامج إذا كان الش�
 msgid "Agreement selected is not of type SSFA"
 msgstr "الاتفاقية المختارة ليست من نوع اتفاقية التمويل الصغير"
 
-msgid " without deleting the indicators first"
-msgstr "دون حذف المؤشرات أولا"
+msgid " without deleting the indicators first "
+msgstr " دون حذف المؤشرات أولا"
 
 #, python-format
 msgid ""
