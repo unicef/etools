@@ -12,8 +12,9 @@ from etools_validator.exceptions import (
 from etools_validator.utils import check_required_fields, check_rigid_fields
 from etools_validator.validation import CompleteValidation
 
+from etools.applications.locations.models import Location
 from etools.applications.partners.permissions import InterventionPermissions
-from etools.applications.reports.models import AppliedIndicator, InterventionActivity
+from etools.applications.reports.models import InterventionActivity, Section
 
 logger = logging.getLogger('partners.interventions.validation')
 
@@ -272,33 +273,26 @@ def rigid_in_amendment_flag(i):
 
 
 def sections_valid(i):
-    ainds = AppliedIndicator.objects.filter(
-        lower_result__result_link__intervention__pk=i.pk).select_related('section')
-    ind_sections = set()
-    for ind in ainds:
-        ind_sections.add(ind.section)
-    intervention_sections = set(s for s in i.sections.all())
-    if not ind_sections.issubset(intervention_sections):
-        draft_status_err = _(' without deleting the indicators first') if i.status == i.DRAFT else ''
+    ind_sections = Section.objects.filter(
+        appliedindicator__lower_result__result_link__intervention__pk=i.pk).distinct()
+    diff_sections = ind_sections.difference(i.sections.all())
+    if diff_sections:
+        draft_status_err = _(' without deleting the indicators first ') if i.status == i.DRAFT else ''
         raise BasicValidationError(
             _('The following sections have been selected on the PD/SPD indicators and cannot be removed '
-              '%(sections)s ') % {'sections': draft_status_err + ', '.join([s.name for s in ind_sections - intervention_sections])})
+              '%(sections)s ') % {'sections': draft_status_err + ', '.join([s.name for s in diff_sections])})
     return True
 
 
 def locations_valid(i):
-    ainds = AppliedIndicator.objects.filter(
-        lower_result__result_link__intervention__pk=i.pk).prefetch_related('locations')
-    ind_locations = set()
-    for ind in ainds:
-        for loc in ind.locations.all():
-            ind_locations.add(loc)
-    intervention_locations = set(i.flat_locations.all())
-    if not ind_locations.issubset(intervention_locations):
+    ind_locations = Location.objects.filter(
+        applied_indicators__lower_result__result_link__intervention__pk=i.pk).distinct()
+    diff_locations = ind_locations.difference(i.flat_locations.all())
+    if diff_locations:
         raise BasicValidationError(
             _('The following locations have been selected on the PD/SPD indicators and '
-              'cannot be removed without removing them from the indicators first: %(locations)s') %
-            {'locations': ', '.join([str(loc) for loc in ind_locations - intervention_locations])})
+              'cannot be removed without removing them from the indicators first: %(locations)s')
+            % {'locations': ', '.join([str(loc) for loc in diff_locations])})
     return True
 
 
