@@ -476,43 +476,6 @@ class UserProfile(models.Model):
         if not cls.objects.filter(user=instance).exists():
             cls.objects.create(user=instance)
 
-    @classmethod
-    def custom_update_user(cls, sender, attributes, user_modified, **kwargs):
-        # This signal is called on every login
-        mods_made = False
-
-        # make sure this setting is not already set.
-        if not sender.is_staff:
-            try:
-                g = Group.objects.get(name='UNICEF User')
-            except Group.DoesNotExist:
-                logger.exception('Cannot find main group UNICEF User')
-            else:
-                g.user_set.add(sender)
-
-            sender.is_staff = True
-            sender.save()
-            mods_made = True
-
-        new_country = None
-        adfs_country = attributes.get("businessAreaCode")
-        if sender.profile.country_override:
-            new_country = sender.profile.country_override
-        elif adfs_country:
-            try:
-                new_country = Country.objects.get(business_area_code=adfs_country[0])
-            except Country.DoesNotExist:
-                logger.exception("Login - Business Area: %s not found for user %s", adfs_country[0], sender.email)
-                return False
-
-        if new_country and new_country != sender.profile.country:
-            # sender.profile.countries_available.add(new_country)
-            sender.profile.country = new_country
-            sender.profile.save()
-            return True
-
-        return mods_made
-
     def save(self, **kwargs):
 
         if self.country_override and self.country != self.country_override:
