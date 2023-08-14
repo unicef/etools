@@ -404,7 +404,7 @@ class ProfileRetrieveUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserProfile
-        exclude = ('id', 'old_countries_available')  # TODO REALMS clean up
+        exclude = ('id',)
 
     # TODO remove once feature gating is in place.
     def get_show_ap(self, obj):

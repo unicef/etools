@@ -33,18 +33,6 @@ class PermissionsMixin(models.Model):
     Add the fields and methods necessary to support the Group and Permission
     models using the ModelBackend.
     """
-    # TODO REALMS clean up
-    old_groups = models.ManyToManyField(
-        Group,
-        verbose_name=_('Old Groups'),
-        blank=True,
-        help_text=_(
-            'The groups this user belongs to. A user will get all permissions '
-            'granted to each of their groups.'
-        ),
-        related_name="user_set",
-        related_query_name="user",
-    )
     user_permissions = models.ManyToManyField(
         Permission,
         verbose_name=_('user permissions'),
@@ -176,7 +164,6 @@ class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
 
     @cached_property
     def is_partnership_manager(self):
-        # TODO REALMS: clean up task: make sure it checks when the current organization is UNICEF
         return self.realms.filter(
             country=connection.tenant,
             organization=self.profile.organization,
@@ -225,15 +212,6 @@ class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
             except realm.organization._meta.get_field('partner').related_model.DoesNotExist:
                 return None
         return None
-
-    # TODO REALMS: clean up
-    # def get_staff_member_country(self):
-    #     from etools.applications.partners.models import PartnerStaffMember
-    #     for country in Country.objects.exclude(name__in=[get_public_schema_name(), 'Global']).all():
-    #         with tenant_context(country):
-    #             if PartnerStaffMember.objects.filter(user=self).exists():
-    #                 return country
-    #     return None
 
     def get_admin_url(self):
         info = (self._meta.app_label, self._meta.model_name)
@@ -396,8 +374,7 @@ class Office(models.Model):
 class UserProfileManager(models.Manager):
     def get_queryset(self):
         return super().get_queryset()\
-            .select_related('user', 'country', 'country_override', 'organization')\
-            .prefetch_related('old_countries_available')  # TODO REALMS clean up
+            .select_related('user', 'country', 'country_override', 'organization')
 
 
 class UserProfile(models.Model):
@@ -429,11 +406,6 @@ class UserProfile(models.Model):
     organization = models.ForeignKey(
         Organization, null=True, blank=True, verbose_name=_('Current Organization'),
         on_delete=models.CASCADE
-    )
-    # TODO REALMS clean up
-    old_countries_available = models.ManyToManyField(
-        Country, blank=True, related_name="accessible_by",
-        verbose_name=_('Old Countries Available')
     )
     office = models.ForeignKey(
         Office, null=True, blank=True, verbose_name=_('Office'),
@@ -646,7 +618,6 @@ class StagedUser(models.Model):
         super().save(*args, **kwargs)
 
 
-# TODO REALMS: clean up: drop the wrappers
 IPViewer = GroupWrapper(code='ip_viewer', name='IP Viewer')
 IPEditor = GroupWrapper(code='ip_editor', name='IP Editor')
 IPAdmin = GroupWrapper(code='ip_admin', name='IP Admin')

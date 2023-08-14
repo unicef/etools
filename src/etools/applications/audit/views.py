@@ -513,11 +513,7 @@ class SpecialAuditViewSet(EngagementManagementMixin, EngagementViewSet):
 class AuditorStaffMembersViewSet(
     BaseAuditViewSet,
     mixins.ListModelMixin,
-    # TODO: REALMS - cleanup. users management to be moved outside of auditor portal
-    # mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
-    # mixins.UpdateModelMixin,
-    # mixins.DestroyModelMixin,
     NestedViewSetMixin,
     viewsets.GenericViewSet
 ):
@@ -560,92 +556,6 @@ class AuditorStaffMembersViewSet(
         context = super().get_serializer_context()
         context['firm'] = self.get_parent_object()
         return context
-
-    # TODO: REALMS - do cleanup
-    # def perform_create(self, serializer, **kwargs):
-    #     self.check_serializer_permissions(serializer, edit=True)
-    #
-    #     instance = serializer.save(auditor_firm=self.get_parent_object(), **kwargs)
-    #     if not instance.user.profile.country:
-    #         instance.user.profile.country = self.request.user.profile.country
-    #     instance.user.profile.organization = instance.auditor_firm.organization
-    #     instance.user.profile.save(update_fields=['country', 'organization'])
-    #
-    #     Realm.objects.update_or_create(
-    #         user=self.request.user,
-    #         country=self.request.user.profile.country,
-    #         organization=instance.auditor_firm.organization,
-    #         group=Auditor.as_group()
-    #     )
-
-    # @transaction.atomic
-    # def perform_update(self, serializer):
-    #     self.check_serializer_permissions(serializer, edit=True)
-    #
-    #     if 'email' in serializer.validated_data['user']:
-    #         hidden_staff = AuditorStaffMember.objects.filter(
-    #             user__email=serializer.validated_data['user']['email'], hidden=True).first()
-    #         if hidden_staff:
-    #             if hidden_staff.auditor_firm != self.get_parent_object():
-    #                 raise ValidationError(f'User already associated with {hidden_staff.auditor_firm}')
-    #             else:
-    #                 hidden_staff.hidden = False
-    #                 timestamp = str(now())
-    #                 hidden_staff.history.append(
-    #                     f'requestor:{self.request.user.username},hidden:{hidden_staff.hidden},timestamp:{timestamp}'
-    #                 )
-    #                 hidden_staff.save(update_fields=['hidden', 'history'])
-    #                 deactivated_user = hidden_staff.user
-    #                 deactivated_user.is_active = True
-    #                 deactivated_user.save(update_fields=['is_active'])
-    #                 deleted_profile = hidden_staff.user.profile
-    #
-    #                 Realm.objects.update_or_create(
-    #                     user=deactivated_user,
-    #                     country=self.request.tenant,
-    #                     organization=hidden_staff.auditor_firm.organization,
-    #                     group=Auditor.as_group(),
-    #                     defaults={'is_active': deactivated_user.is_active}
-    #                 )
-    #                 if not deleted_profile.country:
-    #                     deleted_profile.country = self.request.tenant
-    #                 deleted_profile.organization = hidden_staff.auditor_firm.organization
-    #                 deleted_profile.save(update_fields=['country', 'organization'])
-    #             return
-    #
-    #     super().perform_update(serializer)
-    #     instance = serializer.save(auditor_firm=self.get_parent_object())
-    #     if not instance.user.profile.country:
-    #         instance.user.profile.country = self.request.user.profile.country
-    #     instance.user.profile.organization = instance.auditor_firm.organization
-    #     instance.user.profile.save(update_fields=['country', 'organization'])
-    #
-    #     Realm.objects.update_or_create(
-    #         user=self.request.user,
-    #         country=self.request.tenant,
-    #         organization=instance.auditor_firm.organization,
-    #         group=Auditor.as_group(),
-    #         defaults={'is_active': self.request.user.is_active}
-    #     )
-
-    # def perform_destroy(self, instance):
-    #     # deactivate staff member & user
-    #     # timestamp = str(now())
-    #     # no history for users model?
-    #     # instance.history.append(
-    #     #     f'requestor:{self.request.user.username},hidden:{instance.hidden},timestamp:{timestamp}'
-    #     # )
-    #     # instance.save(update_fields=['history'])
-    #
-    #     # todo: deactivate user only if no other realms available
-    #     if not instance.is_unicef_user():
-    #         instance.is_active = False
-    #         instance.save(update_fields=['is_active'])
-    #     instance.realms.filter(
-    #         country=self.request.tenant,
-    #         organization=self.get_parent_object().organization,
-    #         group=Auditor.as_group()
-    #     ).delete()
 
     def get_permission_context(self):
         context = super().get_permission_context()

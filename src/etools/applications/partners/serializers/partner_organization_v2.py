@@ -2,7 +2,6 @@ import datetime
 import itertools
 
 from django.contrib.auth import get_user_model
-from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
@@ -14,14 +13,12 @@ from unicef_snapshot.serializers import SnapshotModelSerializer
 
 from etools.applications.field_monitoring.planning.models import MonitoringActivity, MonitoringActivityGroup
 from etools.applications.partners.models import (
-    Agreement,
     Assessment,
     CoreValuesAssessment,
     Intervention,
     OrganizationType,
     PartnerOrganization,
     PartnerPlannedVisits,
-    PartnerStaffMember,
     PlannedEngagement,
 )
 from etools.applications.partners.serializers.interventions_v2 import (
@@ -40,39 +37,6 @@ class CoreValuesAssessmentSerializer(AttachmentSerializerMixin, serializers.Mode
         fields = "__all__"
 
 
-# TODO REALMS clean up
-class PartnerStaffMemberCreateSerializer(serializers.ModelSerializer):
-    # legacy serializer; not actually being used for creating
-
-    class Meta:
-        model = PartnerStaffMember
-        fields = "__all__"
-
-    def validate(self, data):
-        data = super().validate(data)
-        email = data.get('email', "")
-        active = data.get('active', "")
-        User = get_user_model()
-        existing_user = None
-
-        # user should be active first time it's created
-        if not active:
-            raise ValidationError({'active': 'New Staff Member needs to be active at the moment of creation'})
-        try:
-            existing_user = User.objects.filter(Q(username=email) | Q(email=email)).get()
-        except User.DoesNotExist:
-            pass
-        else:
-            if bool(existing_user.staff_member_country()):
-                raise ValidationError(
-                    "The email {} for the partner contact is used by another "
-                    "partner contact. Email has to be unique to "
-                    "proceed.".format(email)
-                )
-
-        return data
-
-
 class PartnerManagerSerializer(serializers.ModelSerializer):
     title = serializers.CharField(source='profile.job_title')
 
@@ -84,123 +48,6 @@ class PartnerManagerSerializer(serializers.ModelSerializer):
             "first_name",
             "last_name"
         )
-
-
-class PartnerStaffMemberNestedSerializer(PartnerStaffMemberCreateSerializer):
-    """
-    A serializer to be used for nested staff member handling. The 'partner' field
-    is removed in this case to avoid validation errors for e.g. when creating
-    the partner and the member at the same time.
-    """
-    class Meta:
-        model = PartnerStaffMember
-        fields = (
-            "id",
-            "title",
-            "first_name",
-            "last_name",
-            "email",
-            "phone",
-            "active",
-        )
-
-
-# TODO REALMS cleanup
-class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
-    email = serializers.EmailField(required=True)
-
-    class Meta:
-        model = PartnerStaffMember
-        fields = "__all__"
-        read_only_fields = ['user', ]
-
-    def validate(self, data):
-        data = super().validate(data)
-        email = data.get('email', "")
-        active = data.get('active')
-        User = get_user_model()
-
-        if not self.instance:
-            if email != email.lower():
-                raise ValidationError(
-                    {"email": "Email cannot have uppercase characters."},
-                )
-
-            try:
-                user = User.objects.get(email=email)
-            except User.DoesNotExist:
-                pass
-
-            else:
-                if user.is_unicef_user():
-                    raise ValidationError(_('Unable to associate staff member to UNICEF user'))
-
-                data['user'] = user
-        else:
-            # make sure email addresses are not editable after creation.. user must be removed and re-added
-            if email != self.instance.email:
-                raise ValidationError(
-                    {
-                        "email": _(
-                            "User emails cannot be changed, please remove"
-                            " the user and add another one: %s") % email
-                    }
-                )
-
-            # when adding the active tag to a previously untagged user
-            if active and not self.instance.active:
-                # make sure this user has not already been associated with another partnership.
-                try:
-                    user = User.objects.get(email=email)
-                except User.DoesNotExist:
-                    pass
-
-            # disabled is unavailable if user already synced to PRP to avoid data inconsistencies
-            if self.instance.active and not active:
-                if Intervention.objects.filter(
-                    Q(date_sent_to_partner__isnull=False, agreement__partner__staff_members=self.instance) |
-                    Q(
-                        ~Q(status=Intervention.DRAFT),
-                        Q(partner_focal_points=self.instance) | Q(partner_authorized_officer_signatory=self.instance),
-                    ),
-                ).exists():
-                    raise ValidationError({'active': _('User already synced to PRP and cannot be disabled. '
-                                                       'Please instruct the partner to disable from PRP')})
-
-        return data
-
-    def create(self, validated_data):
-        User = get_user_model()
-        if 'user' not in validated_data:
-            validated_data['user'] = User.objects.create(
-                first_name=validated_data.get('first_name'),
-                last_name=validated_data.get('last_name'),
-                username=validated_data['email'],
-                email=validated_data['email'],
-                is_staff=False,
-                is_active=True,
-            )
-
-        return super().create(validated_data)
-
-    def update(self, instance, validated_data):
-        instance = super().update(instance, validated_data)
-
-        # if inactive, remove from DRAFT Agreements and PDs
-        if not instance.active:
-            agreement_qs = instance.agreement_authorizations.filter(
-                status=Agreement.DRAFT,
-            )
-            for agreement in agreement_qs.all():
-                agreement.authorized_officers.remove(instance)
-            pd_qs = Intervention.objects.filter(
-                status=Intervention.DRAFT,
-                partner_focal_points=instance,
-            )
-            for pd in pd_qs.all():
-                pd.partner_focal_points.remove(instance)
-
-        return instance
 
 
 class PartnerStaffMemberDetailSerializer(serializers.ModelSerializer):
@@ -516,7 +363,6 @@ class PartnerOrganizationCreateUpdateSerializer(SnapshotModelSerializer):
     short_name = serializers.CharField(source='organization.short_name', read_only=True)
     partner_type = serializers.CharField(source='organization.organization_type', read_only=True)
     cso_type = serializers.CharField(source='organization.cso_type', read_only=True)
-    staff_members = PartnerStaffMemberNestedSerializer(many=True, read_only=True)
     planned_engagement = PlannedEngagementNestedSerializer(read_only=True)
     hidden = serializers.BooleanField(read_only=True)
     planned_visits = PartnerPlannedVisitsSerializer(many=True, read_only=True, required=False)
