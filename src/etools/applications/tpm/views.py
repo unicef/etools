@@ -1,3 +1,5 @@
+from functools import cache
+
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.db import connection
@@ -214,7 +216,7 @@ class TPMStaffMembersViewSet(
     viewsets.GenericViewSet
 ):
     metadata_class = PermissionBasedMetadata
-    queryset = get_user_model().objects.all()
+    queryset = get_user_model().objects.select_related(None).select_related('profile')
     serializer_class = TPMPartnerStaffMemberRealmSerializer
     permission_classes = BaseTPMViewSet.permission_classes + [
         get_permission_for_targets('tpmpartners.tpmpartner.staff_members')
@@ -233,8 +235,9 @@ class TPMStaffMembersViewSet(
             group__name__in=TPM_ACTIVE_GROUPS
         )
         queryset = queryset\
-            .filter(realms__in=context_realms_qs)\
+            .annotate(has_realm=Exists(context_realms_qs.filter(user=OuterRef('pk'))))\
             .annotate(has_active_realm=Exists(context_realms_qs.filter(user=OuterRef('pk'), is_active=True)))\
+            .filter(has_realm=True)\
             .distinct()
         return queryset
 
@@ -244,6 +247,10 @@ class TPMStaffMembersViewSet(
             return {}
 
         return {'realms__organization': parent.organization}
+
+    @cache
+    def get_parent_object(self):
+        return super().get_parent_object()
 
     def get_permission_context(self):
         context = super().get_permission_context()

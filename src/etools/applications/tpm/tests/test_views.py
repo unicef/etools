@@ -486,8 +486,7 @@ class TestTPMActionPointViewSet(TPMTestCaseMixin, BaseTenantTestCase):
 
 class TestTPMStaffMembersViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase):
     def test_list_view(self):
-        # TODO REALMS improve queries perf
-        with self.assertNumQueries(21):
+        with self.assertNumQueries(11):
             response = self.forced_auth_req(
                 'get',
                 reverse('tpm:tpmstaffmembers-list', args=(self.tpm_partner.id,)),
@@ -525,8 +524,7 @@ class TestTPMStaffMembersViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTe
             [staff['pk'] for staff in response.data['results'] if not staff['has_active_realm']])
 
     def test_detail_view(self):
-        # TODO REALMS improve queries perf
-        with self.assertNumQueries(28):
+        with self.assertNumQueries(16):
             response = self.forced_auth_req(
                 'get',
                 reverse('tpm:tpmstaffmembers-detail',
