@@ -1230,7 +1230,12 @@ class Assessment(TimeStampedModel):
 class AgreementManager(models.Manager):
 
     def get_queryset(self):
-        return super().get_queryset().select_related('partner', 'partner__organization')
+        return super().get_queryset().select_related(
+            'partner',
+            'partner__organization',
+        ).prefetch_related(
+            'authorized_officers',
+        )
 
 
 class MainAgreementManager(models.Manager):
