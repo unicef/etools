@@ -23,14 +23,14 @@ class CountryUsersAdminMixin:
 
         filters = {}
         if connection.tenant:
-            filters['profile__country'] = connection.tenant
+            filters['realms__country'] = connection.tenant
         if self.staff_only:
             filters['is_staff'] = True
 
         if filters:
             # preserve existing filters if any
-            queryset = kwargs.get("queryset", get_user_model().objects)
-            kwargs["queryset"] = queryset.filter(**filters)
+            queryset = kwargs.get("queryset", get_user_model().objects.select_related(None))
+            kwargs["queryset"] = queryset.filter(**filters).distinct()
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.remote_field.model is get_user_model():
