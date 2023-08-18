@@ -87,11 +87,7 @@ class TPMPartnerSynchronizer(VisionDataTenantSynchronizer):
 
     @staticmethod
     def deactivate_staff_members(partner):
-        # TODO: REALMS - do cleanup
-        # staff_members = partner.staff_members.all()
-        # # deactivate the users
-        # users_deactivate = User.objects.filter(tpmpartners_tpmpartnerstaffmember__in=staff_members)
-        # users_deactivate.update(is_active=False)
+
         Realm.objects.filter(
             organization=partner.organization,
             group__name__in=TPM_ACTIVE_GROUPS,

@@ -1265,46 +1265,6 @@ class TestPartnerOrganization(BaseTenantTestCase):
         self.assertIsNotNone(p.pk)
 
 
-class TestPartnerStaffMember(BaseTenantTestCase):
-    def test_str(self):
-        partner = models.PartnerOrganization(organization=OrganizationFactory(name="Partner"))
-        staff = models.PartnerStaffMember(
-            first_name="First",
-            last_name="Last",
-            partner=partner
-        )
-        self.assertEqual(str(staff), "First Last (Partner)")
-
-    # def test_save_update_deactivate(self):
-    #     partner = PartnerFactory()
-    #     staff = PartnerStaffFactory(
-    #         partner=partner,
-    #     )
-    #     self.assertTrue(staff.active)
-    #
-    #     staff.active = False
-    #     staff.save()
-    #
-    #     self.assertEqual(staff.user.is_active, False)
-    #     self.assertEqual(staff.user.profile.country, None)
-    #     self.assertEqual(staff.user.profile.countries_available.filter(id=connection.tenant.id).exists(), False)
-    #
-    # def test_save_update_reactivate(self):
-    #     partner = PartnerFactory()
-    #     staff = PartnerStaffFactory(
-    #         partner=partner,
-    #         active=False,
-    #     )
-    #     self.assertFalse(staff.active)
-    #
-    #     staff.active = True
-    #     staff.save()
-    #
-    #     self.assertEqual(staff.user.is_active, True)
-    #     self.assertEqual(staff.user.profile.country, connection.tenant)
-    #     self.assertEqual(staff.user.profile.countries_available.filter(id=connection.tenant.id).exists(), True)
-
-
 class TestAssessment(BaseTenantTestCase):
     def test_str_not_completed(self):
         partner = models.PartnerOrganization(organization=OrganizationFactory(name="Partner"))

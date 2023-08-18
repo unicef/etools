@@ -207,11 +207,7 @@ class TPMPartnerViewSet(
 class TPMStaffMembersViewSet(
     BaseTPMViewSet,
     mixins.ListModelMixin,
-    # TODO: REALMS - do cleanup. users management moved to separate moved
-    # mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
-    # mixins.UpdateModelMixin,
-    # mixins.DestroyModelMixin,
     NestedViewSetMixin,
     viewsets.GenericViewSet
 ):
@@ -269,21 +265,6 @@ class TPMStaffMembersViewSet(
             TPMStaffMemberCondition(obj.profile.organization, self.request.user),
         ])
         return context
-
-    # TODO: REALMS - do cleanup
-    # def perform_create(self, serializer, **kwargs):
-    #     self.check_serializer_permissions(serializer, edit=True)
-    #     instance = serializer.save(tpm_partner=self.get_parent_object(), **kwargs)
-    #     if not instance.user.profile.country:
-    #         instance.user.profile.country = self.request.user.profile.country
-    #     instance.user.profile.organization = instance.tpm_partner.organization
-    #     Realm.objects.update_or_create(
-    #         user=instance.user,
-    #         country=instance.user.profile.country,
-    #         organization=instance.tpm_partner.organization,
-    #         group=ThirdPartyMonitor.as_group()
-    #     )
-    #     instance.user.profile.save(update_fields=['country', 'organization'])
 
     @action(detail=False, methods=['get'], url_path='export', renderer_classes=(TPMPartnerContactsCSVRenderer,))
     def export(self, request, *args, **kwargs):

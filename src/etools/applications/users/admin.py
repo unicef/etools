@@ -41,16 +41,12 @@ class ProfileInline(admin.StackedInline):
         'country',
         'country_override',
         'organization',
-        'old_countries_available',
         'office',
         'job_title',
         'post_title',
         'phone_number',
         'staff_id',
     ]
-    filter_horizontal = (
-        'old_countries_available',
-    )
     search_fields = (
         'tenant_profile__office__name',
         'country__name',
@@ -74,18 +70,6 @@ class ProfileInline(admin.StackedInline):
             fields.remove('country_override')
         return fields
 
-    def formfield_for_manytomany(self, db_field, request=None, **kwargs):
-
-        if db_field.name == 'old_countries_available':
-            if request and request.user.is_superuser:
-                kwargs['queryset'] = Country.objects.all()
-            else:
-                kwargs['queryset'] = request.user.profile.old_countries_available.all()
-
-        return super().formfield_for_manytomany(
-            db_field, request, **kwargs
-        )
-
     def office(self, obj):
         return get_office(obj)
 
@@ -94,7 +78,6 @@ class ProfileAdmin(admin.ModelAdmin):
     fields = [
         'country',
         'country_override',
-        'old_countries_available',
         'office',
         'job_title',
         'phone_number',
@@ -120,9 +103,6 @@ class ProfileAdmin(admin.ModelAdmin):
     list_filter = (
         'country',
         'office',
-    )
-    filter_horizontal = (
-        'old_countries_available',
     )
     search_fields = (
         'tenant_profile__office__name',
@@ -151,7 +131,7 @@ class ProfileAdmin(admin.ModelAdmin):
         if not request.user.is_superuser:
             queryset = queryset.filter(
                 user__is_staff=True,
-                country__in=request.user.profile.old_countries_available.all()
+                country__in=request.user.realms__country.objects.distinct()
             )
         return queryset
 
@@ -161,18 +141,6 @@ class ProfileAdmin(admin.ModelAdmin):
         if not request.user.is_superuser and 'country_override' in fields:
             fields.remove('country_override')
         return fields
-
-    def formfield_for_manytomany(self, db_field, request=None, **kwargs):
-
-        if db_field.name == 'old_countries_available':
-            if request and request.user.is_superuser:
-                kwargs['queryset'] = Country.objects.all()
-            else:
-                kwargs['queryset'] = request.user.profile.old_countries_available.all()
-
-        return super().formfield_for_manytomany(
-            db_field, request, **kwargs
-        )
 
     def office(self, obj):
         return get_office(obj)

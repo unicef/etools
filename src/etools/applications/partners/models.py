@@ -2,7 +2,6 @@ import datetime
 import decimal
 
 from django.conf import settings
-from django.contrib.auth.models import Group
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import ArrayField
 from django.core.validators import MinValueValidator
@@ -14,7 +13,6 @@ from django.utils.functional import cached_property
 from django.utils.translation import gettext, gettext_lazy as _
 
 from django_fsm import FSMField, transition
-from django_tenants.utils import get_public_schema_name
 from model_utils import Choices, FieldTracker
 from model_utils.models import TimeStampedModel
 from unicef_attachments.models import Attachment, FileType as AttachmentFileType
@@ -50,7 +48,7 @@ from etools.applications.reports.models import CountryProgramme, Indicator, Offi
 from etools.applications.t2f.models import Travel, TravelActivity, TravelType
 from etools.applications.tpm.models import TPMActivity, TPMVisit
 from etools.applications.users.mixins import PARTNER_ACTIVE_GROUPS
-from etools.applications.users.models import Country, Realm, User
+from etools.applications.users.models import Realm, User
 from etools.libraries.djangolib.fields import CurrencyField
 from etools.libraries.djangolib.models import MaxDistinct, StringConcat
 from etools.libraries.djangolib.utils import get_environment
@@ -953,108 +951,6 @@ class PartnerStaffMemberManager(models.Manager):
         return super().get_queryset().select_related('partner')
 
 
-# TODO REALMS clean up
-class PartnerStaffMember(TimeStampedModel):
-    """
-    Represents a staff member at the partner organization.
-    A User is created for each staff member
-
-    Relates to :model:`partners.PartnerOrganization`
-
-    related models:
-        Agreement: "agreement_authorizations" (m2m - all agreements this user is authorized for)
-        Agreement: "agreements_signed" (refers to all the agreements this user signed)
-    """
-
-    partner = models.ForeignKey(
-        PartnerOrganization,
-        verbose_name=_("Partner"),
-        related_name='old_staff_members',
-        on_delete=models.CASCADE,
-    )
-    user = models.OneToOneField(
-        settings.AUTH_USER_MODEL,
-        verbose_name=_("User"),
-        related_name='old_partner_staff_member',
-        on_delete=models.PROTECT,
-        null=True,
-        blank=True,
-    )
-    title = models.CharField(
-        verbose_name=_("Title"),
-        max_length=100,
-        null=True,
-        blank=True,
-    )
-    first_name = models.CharField(verbose_name=_("First Name"), max_length=64)
-    last_name = models.CharField(verbose_name=_("Last Name"), max_length=64)
-    email = models.CharField(
-        verbose_name=_("Email Address"),
-        max_length=128,
-        unique=True,
-        blank=False,
-    )
-    phone = models.CharField(
-        verbose_name=_("Phone Number"),
-        max_length=64,
-        blank=True,
-        null=True,
-        default='',
-    )
-    active = models.BooleanField(
-        verbose_name=_("Active"),
-        default=True
-    )
-
-    tracker = FieldTracker()
-    objects = PartnerStaffMemberManager()
-
-    def get_full_name(self):
-        full_name = '%s %s' % (self.first_name, self.last_name)
-        return full_name.strip()
-
-    def __str__(self):
-        return '{} {} ({})'.format(
-            self.first_name,
-            self.last_name,
-            self.partner.name
-        )
-
-    @transaction.atomic
-    def save(self, **kwargs):
-        """
-        core ideas:
-        1. user with profile should exists on create if staff member activation status is being changed
-        2. only one user staff member can be active through all tenants
-        """
-
-        if self.user and self.tracker.has_changed('active'):
-
-            if self.active:
-                # staff is activated
-                self.user.profile.country = connection.tenant
-                self.user.profile.organization = self.partner.organization
-                self.user.profile.save(update_fields=['country', 'organization'])
-            else:
-                # staff is deactivated
-                # using first() here because public schema unavailable during testing
-                self.user.profile.country = Country.objects.filter(schema_name=get_public_schema_name()).first()
-                self.user.profile.organization = None
-                self.user.profile.save(update_fields=['country', 'organization'])
-            # create or update (activate/deactivate) corresponding Realm
-            Realm.objects.update_or_create(
-                user=self.user,
-                country=connection.tenant,
-                organization=self.partner.organization,
-                group=Group.objects.get_or_create(name='IP Viewer')[0],
-                defaults={'is_active': self.active}
-            )
-            self.user.is_active = self.active
-            self.user.save()
-
-        return super().save(**kwargs)
-
-
 class PlannedEngagement(TimeStampedModel):
     """ class to handle partner's engagement for current year """
     partner = models.OneToOneField(PartnerOrganization, verbose_name=_("Partner"), related_name='planned_engagement',
@@ -1298,13 +1194,6 @@ class Agreement(TimeStampedModel):
         null=True,
         on_delete=models.CASCADE,
     )
-    # TODO REALMS clean up
-    old_authorized_officers = models.ManyToManyField(
-        PartnerStaffMember,
-        verbose_name=_("(old)Partner Authorized Officer"),
-        blank=True,
-        related_name="agreement_authorizations"
-    )
     authorized_officers = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
         verbose_name=_("Partner Authorized Officer"),
@@ -1375,16 +1264,6 @@ class Agreement(TimeStampedModel):
         verbose_name=_("Signed By Partner Date"),
         null=True,
         blank=True,
-    )
-    # Signatory on behalf of the PartnerOrganization
-    # TODO REALMS clean up
-    old_partner_manager = models.ForeignKey(
-        PartnerStaffMember,
-        related_name='agreements_signed',
-        verbose_name=_('(old)Signed by partner'),
-        blank=True, null=True,
-        db_index=False,
-        on_delete=models.CASCADE,
     )
     partner_manager = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -2000,17 +1879,6 @@ class Intervention(TimeStampedModel):
         null=True,
         on_delete=models.CASCADE,
     )
-    # TODO REALMS clean up
-    # part of the Agreement authorized officers
-    old_partner_authorized_officer_signatory = models.ForeignKey(
-        PartnerStaffMember,
-        verbose_name=_("(old)Signed by Partner"),
-        related_name='signed_interventions',
-        blank=True,
-        null=True,
-        db_index=False,
-        on_delete=models.CASCADE,
-    )
     partner_authorized_officer_signatory = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         verbose_name=_("Signed by Partner"),
@@ -2025,14 +1893,6 @@ class Intervention(TimeStampedModel):
         verbose_name=_("UNICEF Focal Points"),
         blank=True,
         related_name='unicef_interventions_focal_points+'
-    )
-    # TODO REALMS clean up
-    # any PartnerStaffMember on the PartnerOrganization
-    old_partner_focal_points = models.ManyToManyField(
-        PartnerStaffMember,
-        verbose_name=_("(old)CSO Authorized Officials"),
-        related_name='interventions_focal_points+',
-        blank=True
     )
     partner_focal_points = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
@@ -2788,17 +2648,6 @@ class InterventionAmendment(TimeStampedModel):
         related_name='++',
         blank=True,
         null=True,
-        on_delete=models.CASCADE,
-    )
-    # TODO REALMS clean up
-    # part of the Agreement authorized officers
-    old_partner_authorized_officer_signatory = models.ForeignKey(
-        PartnerStaffMember,
-        verbose_name=_("(old)Signed by Partner"),
-        related_name='+',
-        blank=True,
-        null=True,
-        db_index=False,
         on_delete=models.CASCADE,
     )
     partner_authorized_officer_signatory = models.ForeignKey(
