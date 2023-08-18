@@ -32,13 +32,31 @@
                     left: 50pt; width: 512pt; top: 772pt; height: 20pt;
                 }
             }
+            /*https://github.com/xhtml2pdf/xhtml2pdf/issues/129*/
+            /*times new roman*/
+            @font-face {
+                font-family: "Times_New_Roman";
+                src: url("{{font_path}}times_new_roman/Times_New_Roman.ttf");
+            }
+            @font-face {
+                font-family: "Times_New_Roman_Italic";
+                src: url("{{font_path}}times_new_roman/Times_New_Roman_Italic.ttf");
+            }
+            @font-face {
+                font-family: "Times_New_Roman_Bold";
+                src: url("{{font_path}}times_new_roman/Times_New_Roman_Bold.ttf");
+            }
+            @font-face {
+                font-family: "Times_New_Roman_Bold_Italic";
+                src: url("{{font_path}}times_new_roman/Times_New_Roman_Bold_Italic.ttf");
+            }
         </style>
     {% endblock %}
     {% block extra_style %}
         <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
         <style type="text/css">
           body {
-            font-family: "Times New Roman", serif;
+            font-family: "Times_New_Roman";
           }
 
           #content {
