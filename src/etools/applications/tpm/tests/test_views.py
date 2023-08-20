@@ -1,5 +1,4 @@
 from datetime import datetime
-from unittest import skip
 from unittest.mock import Mock, patch
 
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -486,8 +485,7 @@ class TestTPMActionPointViewSet(TPMTestCaseMixin, BaseTenantTestCase):
 
 class TestTPMStaffMembersViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase):
     def test_list_view(self):
-        # TODO REALMS improve queries perf
-        with self.assertNumQueries(21):
+        with self.assertNumQueries(11):
             response = self.forced_auth_req(
                 'get',
                 reverse('tpm:tpmstaffmembers-list', args=(self.tpm_partner.id,)),
@@ -525,8 +523,7 @@ class TestTPMStaffMembersViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTe
             [staff['pk'] for staff in response.data['results'] if not staff['has_active_realm']])
 
     def test_detail_view(self):
-        # TODO REALMS improve queries perf
-        with self.assertNumQueries(28):
+        with self.assertNumQueries(16):
             response = self.forced_auth_req(
                 'get',
                 reverse('tpm:tpmstaffmembers-detail',
@@ -550,76 +547,6 @@ class TestTPMStaffMembersViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTe
             user=self.unicef_user
         )
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-
-    @skip('TODO: REALMS - users are not editable through tpm portal anymore')
-    def test_create_view(self):
-        user_data = {
-            "user": {
-                "email": "test_email_1@gmail.com",
-                "first_name": "John",
-                "last_name": "Doe"
-            }
-        }
-
-        response = self.forced_auth_req(
-            'post',
-            reverse('tpm:tpmstaffmembers-list', args=(self.tpm_partner.id,)),
-            data=user_data,
-            user=self.pme_user
-        )
-        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
-
-        response = self.forced_auth_req(
-            'post',
-            reverse('tpm:tpmstaffmembers-list', args=(self.tpm_partner.id,)),
-            data=user_data,
-            user=self.tpm_user
-        )
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
-
-        response = self.forced_auth_req(
-            'post',
-            reverse('tpm:tpmstaffmembers-list', args=(self.tpm_partner.id,)),
-            data=user_data,
-            user=self.unicef_user
-        )
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
-
-    @skip('TODO: REALMS - users are not editable through tpm portal anymore')
-    def test_update_view(self):
-        user_data = {
-            "user": {
-                "first_name": "John",
-                "last_name": "Doe"
-            }
-        }
-
-        response = self.forced_auth_req(
-            'patch',
-            reverse('tpm:tpmstaffmembers-detail',
-                    args=(self.tpm_partner.id, self.tpm_partner.staff_members.first().id)),
-            data=user_data,
-            user=self.pme_user
-        )
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-
-        response = self.forced_auth_req(
-            'patch',
-            reverse('tpm:tpmstaffmembers-detail',
-                    args=(self.tpm_partner.id, self.tpm_partner.staff_members.first().id)),
-            data=user_data,
-            user=self.tpm_user
-        )
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
-
-        response = self.forced_auth_req(
-            'patch',
-            reverse('tpm:tpmstaffmembers-detail',
-                    args=(self.tpm_partner.id, self.tpm_partner.staff_members.first().id)),
-            data=user_data,
-            user=self.unicef_user
-        )
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_staff_members_csv(self):
         self._test_export(self.pme_user, 'tpm:tpmstaffmembers-export', args=(self.tpm_partner.id,))

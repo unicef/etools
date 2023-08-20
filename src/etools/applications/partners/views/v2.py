@@ -7,7 +7,6 @@ from django.db.models.functions import Concat
 
 from model_utils import Choices
 from rest_framework import status
-from rest_framework.generics import RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -16,7 +15,6 @@ from unicef_attachments.models import FileType as AttachmentFileType
 from etools.applications.attachments.models import AttachmentFlat
 from etools.applications.funds.models import FundsReservationItem
 from etools.applications.locations.models import Location
-from etools.applications.partners.filters import PartnerScopeFilter
 from etools.applications.partners.models import (
     Agreement,
     AgreementAmendment,
@@ -27,28 +25,10 @@ from etools.applications.partners.models import (
     InterventionRisk,
     OrganizationType,
     PartnerOrganization,
-    PartnerStaffMember,
 )
-from etools.applications.partners.permissions import PartnershipManagerPermission, SENIOR_MANAGEMENT_GROUP
-from etools.applications.partners.serializers.partner_organization_v2 import \
-    PartnerStaffMemberCreateUpdateSerializer  # TODO REALMS cleanup
-from etools.applications.partners.serializers.partner_organization_v2 import PartnerStaffMemberDetailSerializer
+from etools.applications.partners.permissions import SENIOR_MANAGEMENT_GROUP
 from etools.applications.reports.models import CountryProgramme, Result, ResultType
 from etools.libraries.djangolib.fields import CURRENCIES
-
-
-# TODO REALMS clean up
-class PartnerStaffMemberDetailAPIView(RetrieveUpdateDestroyAPIView):
-    queryset = PartnerStaffMember.objects.all()
-    serializer_class = PartnerStaffMemberDetailSerializer
-    permission_classes = (PartnershipManagerPermission,)
-    filter_backends = (PartnerScopeFilter,)
-
-    # TODO REALMS cleanup
-    def get_serializer_class(self, format=None):
-        if self.request.method in ["PUT", "PATCH"]:
-            return PartnerStaffMemberCreateUpdateSerializer
-        return super().get_serializer_class()
 
 
 # TODO move in core (after utils package has been merged in core)

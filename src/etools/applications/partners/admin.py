@@ -19,10 +19,7 @@ from unicef_attachments.models import Attachment
 from unicef_snapshot.admin import ActivityInline, SnapshotModelAdmin
 
 from etools.applications.partners.exports import PartnerExport
-from etools.applications.partners.forms import (  # TODO intervention sector locations cleanup
-    InterventionAttachmentForm,
-    PartnerStaffMemberForm,
-)
+from etools.applications.partners.forms import InterventionAttachmentForm  # TODO intervention sector locations cleanup
 from etools.applications.partners.mixins import CountryUsersAdminMixin, HiddenPartnerMixin
 from etools.applications.partners.models import (  # TODO intervention sector locations cleanup
     Agreement,
@@ -41,7 +38,6 @@ from etools.applications.partners.models import (  # TODO intervention sector lo
     InterventionReview,
     InterventionSupplyItem,
     PartnerOrganization,
-    PartnerStaffMember,
     PlannedEngagement,
 )
 from etools.applications.partners.synchronizers import PDVisionUploader
@@ -289,12 +285,10 @@ class InterventionAdmin(
         'agreement',
         'flat_locations',
         'partner_authorized_officer_signatory',
-        'old_partner_authorized_officer_signatory',  # TODO REALMS clean up
         'unicef_signatory',
         'budget_owner',
         'unicef_focal_points',
         'partner_focal_points',
-        'old_partner_focal_points',  # TODO REALMS clean up
     ]
     list_filter = (
         'document_type',
@@ -314,7 +308,6 @@ class InterventionAdmin(
     filter_horizontal = (
         'sections',
         'unicef_focal_points',
-        'old_partner_focal_points',  # TODO REALMS clean up
         'partner_focal_points',
         'flat_locations'
     )
@@ -343,10 +336,8 @@ class InterventionAdmin(
                  'review_date_prc',
                  'prc_review_document',
                  'signed_pd_document',
-                 ('old_partner_authorized_officer_signatory', 'signed_by_partner_date',),  # TODO REALMS clean up
-                 'partner_authorized_officer_signatory',
+                 ('partner_authorized_officer_signatory', 'signed_by_partner_date',),
                  ('unicef_signatory', 'signed_by_unicef_date',),
-                 'old_partner_focal_points',  # TODO REALMS clean up
                  'partner_focal_points',
                  'unicef_focal_points',
                  ('start', 'end'),
@@ -490,65 +481,6 @@ class AssessmentAdmin(AttachmentInlineAdminMixin, RestrictedEditAdmin):
     ]
 
 
-# TODO REALMS clean up
-class PartnerStaffMemberAdmin(RestrictedEditAdminMixin, SnapshotModelAdmin):
-    model = PartnerStaffMember
-    form = PartnerStaffMemberForm
-    raw_id_fields = ("partner", "user",)
-
-    # display_staff_member_name() is used only in list_display. It could be replaced by this simple lambda --
-    #     lambda instance: str(instance)
-    # However, creating a function allows me to put a title on the column in the admin by populating the function's
-    # 'short_description' attribute.
-    # https://docs.djangoproject.com/en/1.11/ref/contrib/admin/#django.contrib.admin.ModelAdmin.list_display
-    def display_staff_member_name(instance):
-        return str(instance)
-    display_staff_member_name.short_description = 'Partner Staff Member'
-
-    list_display = (
-        display_staff_member_name,
-        'title',
-        'email',
-        'user',
-    )
-    search_fields = (
-        'first_name',
-        'last_name',
-        'email',
-        'user__first_name',
-        'user__last_name',
-        'partner__organization__name'
-    )
-    inlines = [
-        ActivityInline,
-    ]
-
-    def has_module_permission(self, request):
-        return request.user.is_superuser or request.user.groups.filter(name='Country Office Administrator').exists()
-
-
-class HiddenPartnerFilter(admin.SimpleListFilter):
-
-    title = 'Show Hidden'
-    parameter_name = 'hidden'
-
-    def lookups(self, request, model_admin):
-
-        return [
-            (True, 'Yes'),
-            (False, 'No')
-        ]
-
-    def queryset(self, request, queryset):
-
-        value = self.value()
-        if not value:
-            return queryset
-        if value == 'True':
-            return queryset.filter(hidden=True)
-        return queryset.filter(hidden=False)
-
-
 class CoreValueAssessmentInline(RestrictedEditAdminMixin, admin.StackedInline):
     model = CoreValuesAssessment
     extra = 0
@@ -566,7 +498,6 @@ class PartnerAdmin(ExtraUrlMixin, ExportMixin, RestrictedEditAdmin):
     list_filter = (
         'organization__organization_type',
         'rating',
-        HiddenPartnerFilter,
     )
     list_display = (
         'organization',
@@ -810,19 +741,16 @@ class AgreementAdmin(
                     'attached_agreement',
                     ('start', 'end',),
                     'signed_by_partner_date',
-                    'old_partner_manager',  # TODO REALMS clean up
                     'partner_manager',
                     'signed_by_unicef_date',
                     'signed_by',
                     'terms_acknowledged_by',
                     'authorized_officers',
-                    'old_authorized_officers',  # TODO REALMS clean up
                 )
         }),
     )
     filter_horizontal = (
         'authorized_officers',
-        'old_authorized_officers',  # TODO REALMS clean up
     )
     inlines = [
         ActivityInline,
@@ -898,7 +826,6 @@ class InterventionSupplyItemAdmin(RestrictedEditAdmin):
 
 admin.site.register(PartnerOrganization, PartnerAdmin)
 admin.site.register(Assessment, AssessmentAdmin)
-admin.site.register(PartnerStaffMember, PartnerStaffMemberAdmin)  # TODO REALMS clean up
 admin.site.register(PlannedEngagement, PlannedEngagementAdmin)
 
 admin.site.register(Agreement, AgreementAdmin)

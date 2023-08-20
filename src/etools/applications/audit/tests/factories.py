@@ -77,21 +77,6 @@ class AuditorUserFactory(UserFactory):
                         group=GroupFactory(name=group)
                     )
 
-# TODO: REALMS - do cleanup
-# class AuditorStaffMemberFactory(BaseStaffMemberFactory):
-#     class Meta:
-#         model = AuditorStaffMember
-#
-#     @factory.post_generation
-#     def realms(self, create, extracted, **kwargs):
-#         if create:
-#             RealmFactory(
-#                 user=self.user,
-#                 country=CountryFactory(),
-#                 organization=self.auditor_firm.organization,
-#                 group=Auditor.as_group()
-#             )
-
 
 class AuditPartnerFactory(BaseFirmFactory):
     class Meta:

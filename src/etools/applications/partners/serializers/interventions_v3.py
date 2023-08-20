@@ -334,6 +334,8 @@ class InterventionDetailSerializer(
         return grants
 
     def get_permissions(self, obj):
+        if 'permissions' in self.context:
+            return self.context['permissions']
         user = self.context['request'].user
         ps = Intervention.permission_structure()
         permissions = InterventionPermissions(

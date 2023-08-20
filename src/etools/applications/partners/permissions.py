@@ -27,7 +27,7 @@ PRC_SECRETARY = 'PRC Secretary'
 
 class PMPPermissions:
     # this property specifies an array of model properties in order to check against the permission matrix. The fields
-    # declared under this property need to be both property on the model and delcared in the permission matrix
+    # declared under this property need to be both property on the model and declared in the permission matrix
     EXTRA_FIELDS = []
     actions_default_permissions = {
         'edit': True,

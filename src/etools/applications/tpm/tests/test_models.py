@@ -39,23 +39,3 @@ class TestTPMActivity(BaseTenantTestCase):
 
         attachment = AttachmentFactory(content_object=activity)
         get_denormalize_func()(attachment)
-
-
-# TODO: REALMS - do cleanup
-# class TPMStaffMemberTestCase(BaseTenantTestCase):
-#
-#     @classmethod
-#     def setUpTestData(cls):
-#         cls.firm = TPMPartnerFactory()
-#         call_command('update_notifications')
-#
-#     def test_post_delete(self):
-#         staff_member = TPMPartnerStaffMemberFactory(
-#             tpm_partner=self.firm, user__profile__organization=self.firm.organization
-#         )
-#         staff_member.delete()
-#
-#         user = get_user_model().objects.filter(email=staff_member.user.email).first()
-#         self.assertIsNotNone(user)
-#         self.assertEqual(user.is_active, False)
-#         self.assertEqual(user.profile.organization, self.firm.organization)

@@ -64,23 +64,6 @@ class TestUserProfileModel(BaseTenantTestCase):
         p = models.UserProfile(user=self.user)
         self.assertEqual(p.last_name(), "Last")
 
-    def test_custom_update_user_is_staff_no_group(self):
-        profile = ProfileFactory()
-        self.assertFalse(profile.user.is_staff)
-        res = models.UserProfile.custom_update_user(profile.user, {}, None)
-        self.assertTrue(res)
-        profile_updated = models.UserProfile.objects.get(pk=profile.pk)
-        self.assertTrue(profile_updated.user.is_staff)
-
-    def test_custom_update_user_country_not_found(self):
-        profile = ProfileFactory()
-        res = models.UserProfile.custom_update_user(
-            profile.user,
-            {"businessAreaCode": "404"},
-            None
-        )
-        self.assertFalse(res)
-
     def test_save_staff_id(self):
         profile = ProfileFactory()
         profile.staff_id = ""

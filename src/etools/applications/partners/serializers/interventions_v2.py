@@ -108,8 +108,6 @@ class PartnerStaffMemberUserSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'email', 'first_name', 'last_name', 'created', 'modified',
             'active', 'phone', 'title',
-            # TODO REALMS check with frontend if partner id is used
-            # 'partner'
         )
 
 

@@ -7,6 +7,7 @@ from unittest.mock import patch
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.models import ContentType
+from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
 from django.db import connection
@@ -25,6 +26,7 @@ from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.core.tests.factories import EmailFactory
 from etools.applications.core.tests.mixins import URLAssertionMixin
+from etools.applications.field_monitoring.fm_settings.tests.factories import LocationSiteFactory
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory, FundsReservationItemFactory
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.models import (
@@ -1754,6 +1756,9 @@ class TestSupplyItem(BaseInterventionTestCase):
 
 
 class TestInterventionUpdate(BaseInterventionTestCase):
+    def tearDown(self):
+        cache.clear()
+
     def _test_patch(self, mapping, intervention=None):
         if intervention is None:
             intervention = InterventionFactory()
@@ -1786,15 +1791,16 @@ class TestInterventionUpdate(BaseInterventionTestCase):
             realms__data=['IP Viewer'],
             profile__organization=intervention.agreement.partner.organization
         )
-        response = self.forced_auth_req(
-            "patch",
-            reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
-            user=self.unicef_user,
-            data={
-                "agreement": agreement.pk,
-                "partner_focal_points": [focal_1.pk, focal_2.pk],
-            },
-        )
+        with self.assertNumQueries(192):
+            response = self.forced_auth_req(
+                "patch",
+                reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+                user=self.unicef_user,
+                data={
+                    "agreement": agreement.pk,
+                    "partner_focal_points": [focal_1.pk, focal_2.pk],
+                },
+            )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         intervention.refresh_from_db()
         self.assertEqual(intervention.agreement, agreement)
@@ -1812,19 +1818,20 @@ class TestInterventionUpdate(BaseInterventionTestCase):
         budget_owner = UserFactory(is_staff=True)
         office = OfficeFactory()
         section = SectionFactory()
-        response = self.forced_auth_req(
-            "patch",
-            reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
-            user=self.unicef_user,
-            data={
-                "agreement": agreement.pk,
-                "document_type": Intervention.PD,
-                "unicef_focal_points": [focal_1.pk, focal_2.pk, self.unicef_user.pk],
-                "budget_owner": budget_owner.pk,
-                "offices": [office.pk],
-                "sections": [section.pk],
-            },
-        )
+        with self.assertNumQueries(204):
+            response = self.forced_auth_req(
+                "patch",
+                reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+                user=self.unicef_user,
+                data={
+                    "agreement": agreement.pk,
+                    "document_type": Intervention.PD,
+                    "unicef_focal_points": [focal_1.pk, focal_2.pk, self.unicef_user.pk],
+                    "budget_owner": budget_owner.pk,
+                    "offices": [office.pk],
+                    "sections": [section.pk],
+                },
+            )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         intervention.refresh_from_db()
         self.assertEqual(intervention.agreement, agreement)
@@ -1836,6 +1843,73 @@ class TestInterventionUpdate(BaseInterventionTestCase):
             sorted([i.pk for i in intervention.unicef_focal_points.all()]),
             sorted([focal_1.pk, focal_2.pk, self.unicef_user.pk]),
         )
+
+    def test_unicef_extended_details(self):
+        intervention = InterventionFactory()
+        agreement = AgreementFactory()
+        focal1 = UserFactory(is_staff=True)
+        focal2 = UserFactory(is_staff=True)
+        partner_focal1 = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=intervention.agreement.partner.organization
+        )
+        partner_focal2 = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=intervention.agreement.partner.organization
+        )
+        budget_owner = UserFactory(is_staff=True)
+        office = OfficeFactory()
+        section = SectionFactory()
+        loc1 = LocationFactory()
+        loc2 = LocationFactory()
+        loc3 = LocationFactory()
+        site1 = LocationSiteFactory()
+        site2 = LocationSiteFactory()
+        site3 = LocationSiteFactory()
+
+        with self.assertNumQueries(254):
+            response = self.forced_auth_req(
+                "patch",
+                reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+                user=self.unicef_user,
+                data={
+                    "agreement": agreement.pk,
+                    "unicef_focal_points": [focal1.pk, focal2.pk, self.unicef_user.pk],
+                    "partner_focal_points": [partner_focal1.pk, partner_focal2.pk],
+                    "budget_owner": budget_owner.pk,
+                    "offices": [office.pk],
+                    "sections": [section.pk],
+                    "flat_locations": [loc1.pk, loc2.pk, loc3.pk],
+                    "sites": [site1.pk, site2.pk, site3.pk],
+                    'planned_visits': [{
+                        'year': datetime.date.today().year,
+                        'programmatic_q1': 1,
+                        'programmatic_q2': 2,
+                        'programmatic_q3': 3,
+                        'programmatic_q4': 4,
+                        "programmatic_q1_sites": [site1.pk],
+                        "programmatic_q2_sites": [site1.pk],
+                        "programmatic_q3_sites": [site1.pk, site2.pk],
+                        "programmatic_q4_sites": [site2.pk, site3.pk],
+                    }],
+                },
+            )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        intervention.refresh_from_db()
+        self.assertEqual(intervention.agreement, agreement)
+        self.assertListEqual(list(intervention.offices.all()), [office])
+        self.assertListEqual(list(intervention.sections.all()), [section])
+        self.assertEqual(intervention.budget_owner, budget_owner)
+        self.assertListEqual(
+            sorted([i.pk for i in intervention.unicef_focal_points.all()]),
+            sorted([focal1.pk, focal2.pk, self.unicef_user.pk]),
+        )
+        self.assertListEqual(
+            sorted([fp.pk for fp in intervention.partner_focal_points.all()]),
+            sorted([partner_focal1.pk, partner_focal2.pk]))
+        self.assertListEqual(
+            list(intervention.flat_locations.order_by('id')),
+            [loc1, loc2, loc3])
 
     def test_document(self):
         mapping = (
