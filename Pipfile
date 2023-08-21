@@ -16,6 +16,7 @@ tox = "*"
 factory-boy = ">=2.11"
 sphinx = "*"
 vcrpy = "*"
+django-silk = "*"
 
 [packages]
 azure-common = "==1.1.27"

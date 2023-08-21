@@ -87,21 +87,29 @@ elif 'runserver' in sys.argv or 'shell_plus' in sys.argv:
 
     # Something to make this work with the docker-compose setup
     if DEBUG:
-        # https://stackoverflow.com/questions/26898597/django-debug-toolbar-and-docker
-        INTERNAL_IPS = type(str('c'), (), {'__contains__': lambda *a: True})()
-        MIDDLEWARE += (  # noqa
-            'debug_toolbar.middleware.DebugToolbarMiddleware',
-        )
-        def show_toolbar(request): # noqa
-            return True
+        if ENABLE_SILK:
+            SILKY_PYTHON_PROFILER = True
+            SHARED_APPS = ('silk',) + SHARED_APPS
+            MIDDLEWARE += (  # noqa
+                'silk.middleware.SilkyMiddleware',
+            )
+        else:
+            # https://stackoverflow.com/questions/26898597/django-debug-toolbar-and-docker
+            INTERNAL_IPS = type(str('c'), (), {'__contains__': lambda *a: True})()
+            MIDDLEWARE += (  # noqa
+                'debug_toolbar.middleware.DebugToolbarMiddleware',
+            )
+            def show_toolbar(request): # noqa
+                return True
+            SHARED_APPS += ('debug_toolbar',)  # noqa
+            DEBUG_TOOLBAR_CONFIG = {
+                'SHOW_TOOLBAR_CALLBACK': lambda request: True,
+                'SHOW_TEMPLATE_CONTEXT': True
+            }
+            REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"] += ('rest_framework.renderers.BrowsableAPIRenderer',)  # noqa
 
-        SHARED_APPS += ('debug_toolbar',)  # noqa
         INSTALLED_APPS = ('django_tenants',) + SHARED_APPS + TENANT_APPS  # noqa
-        REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"] += ('rest_framework.renderers.BrowsableAPIRenderer',)  # noqa
-        DEBUG_TOOLBAR_CONFIG = {
-            'SHOW_TOOLBAR_CALLBACK': lambda request: True,
-            'SHOW_TEMPLATE_CONTEXT': True
-        }
+
 
 LOGGING = LOGGING  # noqa - just here for flake purposes. should be imported from etools.config.settings.base
 # log updates for more info in local environment

@@ -90,6 +90,7 @@ DATABASE_ROUTERS = (
 
 # DJANGO: DEBUGGING
 DEBUG = str2bool(get_from_secrets_or_env('DJANGO_DEBUG'))
+ENABLE_SILK = str2bool(get_from_secrets_or_env('DJANGO_SILK_ENABLE', 'True'))
 
 # user that can update other user credentials via api
 SERVICE_NOW_USER = get_from_secrets_or_env('SERVICE_NOW_USER', 'api_servicenow_etools@unicef.org')
