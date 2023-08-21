@@ -181,7 +181,7 @@ class FMUserSerializer(MinimalUserSerializer):
         )
 
     def get_user_type(self, obj):
-        if obj.tpm_partner:
+        if hasattr(obj, 'tpm_partner') and obj.tpm_partner:
             return 'tpm'
         return 'staff'
 
