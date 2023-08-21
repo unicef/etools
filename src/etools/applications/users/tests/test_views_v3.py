@@ -258,8 +258,8 @@ class TestUsersListAPIView(BaseTenantTestCase):
         self.assertEqual(len(response.data['results']), 5)
 
     def test_search(self):
-        UserFactory(is_staff=True, email='test_user_email@example.com', realms__data=[])
-        UserFactory(is_staff=True, email='test_user@example.com', realms__data=[])
+        UserFactory(is_staff=True, email='test_user_email@example.com', realms__data=['IP Viewer'])
+        UserFactory(is_staff=True, email='test_user@example.com', realms__data=['IP Admin'])
         response = self.forced_auth_req('get', self.url, user=self.unicef_staff, data={'search': 'test_user_email'})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
@@ -332,12 +332,13 @@ class TestUsersListAPIView(BaseTenantTestCase):
         self.assertEqual(response.data["show_ap"], True)
 
     def test_minimal_verbosity(self):
-        response = self.forced_auth_req(
-            'get',
-            self.url,
-            data={'verbosity': 'minimal'},
-            user=self.unicef_staff
-        )
+        with self.assertNumQueries(4):
+            response = self.forced_auth_req(
+                'get',
+                self.url,
+                data={'verbosity': 'minimal'},
+                user=self.unicef_staff
+            )
         response_json = json.loads(response.rendered_content)
         self.assertEqual(len(response_json), 2)
         self.assertEqual(
@@ -351,11 +352,12 @@ class TestUsersListAPIView(BaseTenantTestCase):
         )
         self.assertEqual(partner_user, partner.active_staff_members.all().first())
         self.assertTrue(get_user_model().objects.count() > 1)
-        response = self.forced_auth_req(
-            'get',
-            self.url,
-            user=partner_user
-        )
+        with self.assertNumQueries(3):
+            response = self.forced_auth_req(
+                'get',
+                self.url,
+                user=partner_user
+            )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]["id"], partner_user.pk)
