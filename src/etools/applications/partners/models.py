@@ -561,7 +561,10 @@ class PartnerOrganization(TimeStampedModel):
 
     @cached_property
     def all_staff_members(self):
-        user_qs = User.objects.filter(realms__in=self.context_realms)
+        user_qs = User.objects\
+            .select_related(None)\
+            .select_related('profile')\
+            .filter(realms__in=self.context_realms)
 
         return user_qs\
             .annotate(has_active_realm=Exists(self.context_realms.filter(user=OuterRef('pk'), is_active=True)))\

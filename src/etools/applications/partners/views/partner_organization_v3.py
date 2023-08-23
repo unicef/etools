@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 
 from rest_framework.generics import ListAPIView
@@ -14,7 +15,6 @@ from etools.applications.partners.serializers.exports.partner_organization impor
 from etools.applications.partners.serializers.partner_organization_v2 import PartnerStaffMemberRealmSerializer
 from etools.applications.partners.views.partner_organization_v2 import PartnerOrganizationListAPIView
 from etools.applications.partners.views.v3 import PMPBaseViewMixin
-from etools.applications.users.models import User
 from etools.libraries.djangolib.views import ExternalModuleFilterMixin
 
 
@@ -35,7 +35,7 @@ class PMPPartnerStaffMemberListAPIVIew(
     """
     Returns a list of all Partner staff members
     """
-    queryset = User.objects.all()
+    queryset = get_user_model().objects.select_related(None).select_related('profile').all()
     serializer_class = PartnerStaffMemberRealmSerializer
     permission_classes = (AllowSafeAuthenticated,)
     renderer_classes = (
