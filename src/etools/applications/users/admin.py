@@ -173,13 +173,13 @@ class UserAdminPlus(RestrictedEditAdminMixin, ExtraUrlMixin, UserAdmin):
         (None, {'fields': ('username', 'password')}),
         (_('Personal info'), {'fields': ('first_name', 'last_name', 'email')}),
         (_('Permissions'), {
-            'fields': ('is_active', 'is_staff', 'is_superuser', 'old_groups', 'user_permissions'),
+            'fields': ('is_active', 'is_staff', 'is_superuser', 'user_permissions'),
         }),
         (_('Important dates'), {'fields': ('last_login', 'date_joined')}),
         (_('User Preferences'), {'fields': ('preferences', )}),
     )
-    list_filter = ('is_staff', 'is_superuser', 'is_active', 'old_groups')
-    filter_horizontal = ('old_groups', 'user_permissions',)
+    list_filter = ('is_staff', 'is_superuser', 'is_active')
+    filter_horizontal = ('user_permissions',)
     inlines = [ProfileInline, RealmInline]
     readonly_fields = ('last_login', 'date_joined',)
 
