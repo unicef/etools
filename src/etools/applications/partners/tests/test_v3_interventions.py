@@ -1791,7 +1791,7 @@ class TestInterventionUpdate(BaseInterventionTestCase):
             realms__data=['IP Viewer'],
             profile__organization=intervention.agreement.partner.organization
         )
-        with self.assertNumQueries(192):
+        with self.assertNumQueries(174):
             response = self.forced_auth_req(
                 "patch",
                 reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
@@ -1818,7 +1818,7 @@ class TestInterventionUpdate(BaseInterventionTestCase):
         budget_owner = UserFactory(is_staff=True)
         office = OfficeFactory()
         section = SectionFactory()
-        with self.assertNumQueries(204):
+        with self.assertNumQueries(185):
             response = self.forced_auth_req(
                 "patch",
                 reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
@@ -1867,7 +1867,7 @@ class TestInterventionUpdate(BaseInterventionTestCase):
         site2 = LocationSiteFactory()
         site3 = LocationSiteFactory()
 
-        with self.assertNumQueries(254):
+        with self.assertNumQueries(234):
             response = self.forced_auth_req(
                 "patch",
                 reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
