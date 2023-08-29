@@ -41,6 +41,8 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,report_attachments,All Users,is_ma_related_user,report_finalization,edit,TRUE
 ,action_points,Field Monitor,,submitted,edit,TRUE
 ,action_points,UNICEF User,is_visit_lead,submitted,edit,TRUE
+,action_points,Field Monitor,,report_finalization,edit,TRUE
+,action_points,UNICEF User,is_visit_lead,report_finalization,edit,TRUE
 ,action_points,Field Monitor,,completed,edit,TRUE
 ,action_points,UNICEF User,is_visit_lead,completed,edit,TRUE
 ,cancel_reason,Field Monitor,,*,edit,TRUE
