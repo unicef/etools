@@ -1,8 +1,10 @@
+from django.conf import settings
 from django.conf.global_settings import LANGUAGES
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.db import connection
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
@@ -19,7 +21,7 @@ from etools.applications.users.serializers import (
     SimpleGroupSerializer,
     SimpleOrganizationSerializer,
 )
-from etools.applications.users.tasks import notify_user_on_realm_update
+from etools.applications.users.tasks import notify_user_on_realm_update, sync_realms_to_prp
 from etools.applications.users.validators import EmailValidator, ExternalUserValidator
 
 # temporary list of Countries that will use the Auditor Portal Module.
@@ -314,6 +316,10 @@ class UserRealmUpdateSerializer(UserRealmBaseSerializer):
             instance.profile.organization = None
         instance.profile.save(update_fields=['organization'])
 
+        sync_realms_to_prp.apply_async(
+            (instance.id, timezone.now().timestamp()),
+            countdown=settings.PRP_USER_SYNC_DELAY * 60
+        )
         notify_user_on_realm_update.delay(instance.id)
         return instance
 
