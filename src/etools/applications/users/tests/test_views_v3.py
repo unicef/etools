@@ -804,6 +804,7 @@ class TestUserRealmView(BaseTenantTestCase):
                 "email": existing_user.email,
                 "job_title": "Dev",
                 "groups": [GroupFactory(name=group.name).pk],
+                "organization": self.organization.pk
             }
             response = self.make_request_list(auth_user, data=data)
 
