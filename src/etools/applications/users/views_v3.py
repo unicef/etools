@@ -328,14 +328,18 @@ class UserRealmViewSet(
     def get_queryset(self):
         organization_id = self.request.query_params.get('organization_id') or self.request.data.get('organization')
         relationship_type = self.request.query_params.get('organization_type')
-        if organization_id and self.request.user.is_unicef_user():
-            organization = get_object_or_404(
-                Organization.objects.all().select_related('partner', 'auditorfirm', 'tpmpartner'),
-                pk=organization_id)
-            if (self.request.method == 'GET' and relationship_type is None) or \
-                    (relationship_type and relationship_type not in organization.relationship_types) or \
-                    not organization.relationship_types:
-                logger.error(f"The provided organization id {organization_id} and type {relationship_type} do not match.")
+
+        if self.request.user.is_unicef_user():
+            if organization_id:
+                organization = get_object_or_404(
+                    Organization.objects.all().select_related('partner', 'auditorfirm', 'tpmpartner'),
+                    pk=organization_id)
+                if (self.request.method == 'GET' and relationship_type is None) or \
+                        (relationship_type and relationship_type not in organization.relationship_types) or \
+                        not organization.relationship_types:
+                    logger.error(f"The provided organization id {organization_id} and type {relationship_type} do not match.")
+                    return self.model.objects.none()
+            else:
                 return self.model.objects.none()
         else:
             organization = self.request.user.profile.organization

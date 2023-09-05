@@ -841,7 +841,7 @@ class TestUserRealmView(BaseTenantTestCase):
         self.assertEqual(self.user.realms.count(), 0)
         # create IPViewer and IPEditor realms
         data = {
-            "user": self.user.id,
+            "organization": self.organization.pk,
             "groups": [
                 GroupFactory(name=IPViewer.name).pk,
                 GroupFactory(name=IPEditor.name).pk
