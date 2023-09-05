@@ -46,7 +46,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,action_points,Field Monitor,,completed,edit,TRUE
 ,action_points,UNICEF User,is_visit_lead,completed,edit,TRUE
 ,cancel_reason,Field Monitor,,*,edit,TRUE
-,report_reject_reason,Field Monitor,,*,edit,TRUE
+,report_reject_reason,Approvers,,*,edit,TRUE
 ,reject_reason,All Users,is_ma_related_user,*,edit,TRUE
 
 
