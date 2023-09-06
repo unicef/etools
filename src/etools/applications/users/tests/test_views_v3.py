@@ -698,6 +698,11 @@ class TestUserRealmView(BaseTenantTestCase):
         response = self.make_request_list(self.partnership_manager, method='get', data=data)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
+    def test_get_empty_list_no_organization_id_unicef_user(self):
+        response = self.make_request_list(self.unicef_user, method='get')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 0)
+
     def test_get_empty_list(self):
         # organization without a partner type
         data = {
