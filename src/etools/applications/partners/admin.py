@@ -18,6 +18,7 @@ from unicef_attachments.admin import AttachmentSingleInline
 from unicef_attachments.models import Attachment
 from unicef_snapshot.admin import ActivityInline, SnapshotModelAdmin
 
+from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.partners.exports import PartnerExport
 from etools.applications.partners.forms import InterventionAttachmentForm  # TODO intervention sector locations cleanup
 from etools.applications.partners.mixins import CountryUsersAdminMixin, HiddenPartnerMixin
@@ -388,6 +389,11 @@ class InterventionAdmin(
         if not PDVisionUploader(Intervention.objects.get(pk=pk)).is_valid():
             messages.error(request, _('PD is not ready for Vision synchronization.'))
             return
+
+        if tenant_switch_is_active('disable_pd_vision_sync'):
+            messages.error(request, _('PD Vision sync is disabled with `disable_pd_vision_sync` tenant switch.'))
+            return
+
         send_pd_to_vision.delay(connection.tenant.name, pk)
         messages.success(request, _('PD was sent to Vision.'))
 
