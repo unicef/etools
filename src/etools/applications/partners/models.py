@@ -1701,6 +1701,7 @@ class Intervention(TimeStampedModel):
         ENDED: [send_pd_to_vision_side_effect],
         CLOSED: [send_pd_to_vision_side_effect],
         TERMINATED: [send_pd_to_vision_side_effect],
+        CANCELLED: [send_pd_to_vision_side_effect],
     }
 
     INTERVENTION_STATUS = (
