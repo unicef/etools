@@ -5,6 +5,7 @@ from django.contrib.auth.forms import UserChangeForm
 from django.db import connection
 from django.http.response import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
+from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -330,12 +331,50 @@ class CountryAdmin(ExtraUrlMixin, TenantAdminMixin, admin.ModelAdmin):
 
 
 class RealmAdmin(RestrictedEditAdminMixin, SnapshotModelAdmin):
+    change_list_template = "admin/users/realm/change_list.html"
+
     raw_id_fields = ('user', 'organization')
     search_fields = ('user__email', 'user__first_name', 'user__last_name', 'country__name',
                      'organization__name', 'organization__vendor_number', 'group__name')
     autocomplete_fields = ('country', 'group')
 
     inlines = (ActivityInline, )
+
+    def get_urls(self):
+        urlpatterns = super().get_urls()
+        from django.urls import path
+        custom_urls = [
+            path('multiple-realms/',
+                 self.admin_site.admin_view(self.multiple_realms), name='multiple-realms'),
+        ]
+        return custom_urls + urlpatterns
+
+    def multiple_realms(self, request, form_url='', extra_context=None):
+        opts = self.model._meta
+        app_label = opts.app_label
+        if request.method == 'GET':
+            context = {
+                **self.admin_site.each_context(request),
+                'module_name': str(opts.verbose_name_plural),
+                'has_add_permission': self.has_add_permission(request),
+                'opts': opts,
+                'app_label': app_label,
+                'title': 'Multiple realms',
+                'media': self.media,
+                'form_url': reverse('admin:multiple-realms', current_app=self.admin_site.name),
+                **(extra_context or {}),
+            }
+
+            request.current_app = self.admin_site.name
+
+            return TemplateResponse(request, 'admin/users/realm/add_multiple.html', context)
+        if request.method == 'POST':
+            # TODO if "_save_realms" in request.POST:
+
+            redirect_url = reverse('admin:%s_%s_change' %
+                                   (opts.app_label, opts.model_name),
+                                   current_app=self.admin_site.name)
+            return HttpResponseRedirect(redirect_url)
 
 
 class StagedUserAdmin(admin.ModelAdmin):
