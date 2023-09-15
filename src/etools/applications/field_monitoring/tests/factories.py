@@ -1,7 +1,7 @@
 import factory
 
 from etools.applications.audit.models import UNICEFUser
-from etools.applications.field_monitoring.groups import FMUser
+from etools.applications.field_monitoring.groups import FMUser, MonitoringVisitApprover
 from etools.applications.firms.tests.factories import BaseUserFactory
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.tpm.models import PME
@@ -23,6 +23,10 @@ class UserFactory(BaseUserFactory):
 
         pme = factory.Trait(
             realms__data=[UNICEFUser.name, PME.name],
+        )
+
+        approver = factory.Trait(
+            realms__data=[UNICEFUser.name, MonitoringVisitApprover.name],
         )
 
     @factory.post_generation

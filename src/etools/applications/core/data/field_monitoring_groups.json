@@ -16,5 +16,11 @@
         "fields": {
             "name": "PME"
         }
+    },
+    {
+    "model": "auth.group",
+    "fields": {
+      "name": "Monitoring Visit Approver"
+        }
     }
 ]
