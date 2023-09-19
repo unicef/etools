@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import UserChangeForm
 from django.contrib.auth.models import Group
-from django.db import connection
+from django.db import connection, router, transaction
 from django.forms import Select
 from django.http.response import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
@@ -402,12 +402,13 @@ class RealmAdmin(RestrictedEditAdminMixin, SnapshotModelAdmin):
                 country_ids = request.POST.get('country').split(',')
                 organization_id = request.POST.get('organization')
                 group_ids = request.POST.get('group').split(',')
-                for user_id in user_ids:
-                    for country_id in country_ids:
-                        for group_id in group_ids:
-                            Realm.objects.update_or_create(
-                                user_id=user_id, country_id=country_id, organization_id=organization_id,
-                                group_id=group_id, defaults={'is_active': True})
+                with transaction.atomic(using=router.db_for_write(self.model)):
+                    for user_id in user_ids:
+                        for country_id in country_ids:
+                            for group_id in group_ids:
+                                Realm.objects.update_or_create(
+                                    user_id=user_id, country_id=country_id, organization_id=organization_id,
+                                    group_id=group_id, defaults={'is_active': True})
 
             redirect_url = reverse('admin:%s_%s_changelist' %
                                    (opts.app_label, opts.model_name),
