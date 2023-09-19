@@ -1,12 +1,17 @@
+from django import forms
 from django.contrib import admin, messages
+from django.contrib.admin import helpers, widgets
+from django.contrib.admin.options import csrf_protect_m, IS_POPUP_VAR, TO_FIELD_VAR
 from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import UserChangeForm
+from django.contrib.auth.models import Group
 from django.db import connection
+from django.forms import Select
 from django.http.response import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.template.response import TemplateResponse
-from django.urls import reverse
+from django.urls import path, reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
@@ -19,6 +24,7 @@ from unicef_snapshot.admin import ActivityInline, SnapshotModelAdmin
 
 from etools.applications.funds.tasks import sync_all_delegated_frs, sync_country_delegated_fr
 from etools.applications.hact.tasks import update_hact_for_country, update_hact_values
+from etools.applications.organizations.models import Organization
 from etools.applications.users.models import Country, Realm, StagedUser, UserProfile, WorkspaceCounter
 from etools.applications.users.tasks import sync_realms_to_prp
 from etools.applications.vision.tasks import sync_handler, vision_sync_task
@@ -330,6 +336,21 @@ class CountryAdmin(ExtraUrlMixin, TenantAdminMixin, admin.ModelAdmin):
         return HttpResponseRedirect(reverse('admin:users_country_change', args=[country.pk]))
 
 
+class MultipleRealmForm(forms.ModelForm):
+    user = forms.ModelMultipleChoiceField(
+        widget=widgets.ManyToManyRawIdWidget(Realm._meta.get_field("user").remote_field, admin.site), queryset=get_user_model().objects.all())
+    country = forms.ModelMultipleChoiceField(
+        widget=widgets.ManyToManyRawIdWidget(Realm._meta.get_field("country").remote_field, admin.site), queryset=Country.objects.all())
+    group = forms.ModelMultipleChoiceField(
+        widget=widgets.ManyToManyRawIdWidget(Realm._meta.get_field("group").remote_field, admin.site), queryset=Group.objects.all())
+    organization = forms.ModelChoiceField(
+        widget=Select(), queryset=Organization.objects.all())
+
+    class Meta:
+        model = Realm
+        fields = ['user', 'country', 'group', 'organization']
+
+
 class RealmAdmin(RestrictedEditAdminMixin, SnapshotModelAdmin):
     change_list_template = "admin/users/realm/change_list.html"
 
@@ -342,36 +363,53 @@ class RealmAdmin(RestrictedEditAdminMixin, SnapshotModelAdmin):
 
     def get_urls(self):
         urlpatterns = super().get_urls()
-        from django.urls import path
         custom_urls = [
             path('multiple-realms/',
                  self.admin_site.admin_view(self.multiple_realms), name='multiple-realms'),
         ]
         return custom_urls + urlpatterns
 
-    def multiple_realms(self, request, form_url='', extra_context=None):
+    @csrf_protect_m
+    def multiple_realms(self, request, obj=None, form_url='', extra_context=None):
         opts = self.model._meta
         app_label = opts.app_label
         if request.method == 'GET':
+            fieldsets = [(None, {'fields': ['user', 'country', 'organization', 'group']})]
+            initial = self.get_changeform_initial_data(request)
+            form = MultipleRealmForm(initial=initial)
+            admin_form = helpers.AdminForm(form, fieldsets, {}, model_admin=self)
             context = {
                 **self.admin_site.each_context(request),
                 'module_name': str(opts.verbose_name_plural),
                 'has_add_permission': self.has_add_permission(request),
                 'opts': opts,
                 'app_label': app_label,
-                'title': 'Multiple realms',
+                'title': 'Add Multiple Realms',
                 'media': self.media,
+                'adminform': admin_form,
+                'is_popup': IS_POPUP_VAR in request.POST or IS_POPUP_VAR in request.GET,
+                'to_field': request.POST.get(TO_FIELD_VAR, request.GET.get(TO_FIELD_VAR)),
                 'form_url': reverse('admin:multiple-realms', current_app=self.admin_site.name),
                 **(extra_context or {}),
             }
 
             request.current_app = self.admin_site.name
-
             return TemplateResponse(request, 'admin/users/realm/add_multiple.html', context)
-        if request.method == 'POST':
-            # TODO if "_save_realms" in request.POST:
 
-            redirect_url = reverse('admin:%s_%s_change' %
+        if request.method == 'POST':
+            if "_save_realms" in request.POST:
+                user_ids = request.POST.get('user').split(',')
+                country_ids = request.POST.get('country').split(',')
+                organization_id = request.POST.get('organization')
+                group_ids = request.POST.get('group').split(',')
+                for user_id in user_ids:
+                    for country_id in country_ids:
+                        for group_id in group_ids:
+                            Realm.objects.update_or_create(
+                                user_id=user_id, country_id=country_id, organization_id=organization_id,
+                                group_id=group_id, defaults={'is_active': True})
+
+            redirect_url = reverse('admin:%s_%s_changelist' %
                                    (opts.app_label, opts.model_name),
                                    current_app=self.admin_site.name)
             return HttpResponseRedirect(redirect_url)
