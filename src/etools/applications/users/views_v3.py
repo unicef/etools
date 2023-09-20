@@ -328,8 +328,9 @@ class UserRealmViewSet(
     def get_queryset(self):
         organization_id = self.request.query_params.get('organization_id') or self.request.data.get('organization')
         relationship_type = self.request.query_params.get('organization_type')
-        if organization_id:
-            if self.request.user.is_unicef_user():
+
+        if self.request.user.is_unicef_user():
+            if organization_id:
                 organization = get_object_or_404(
                     Organization.objects.all().select_related('partner', 'auditorfirm', 'tpmpartner'),
                     pk=organization_id)
