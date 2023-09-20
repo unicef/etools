@@ -1,5 +1,4 @@
 from datetime import date
-from unittest import skip
 
 from django.core import mail
 from django.core.management import call_command
@@ -347,6 +346,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         )
 
         visit_lead = UserFactory(unicef_user=True)
+        approver = UserFactory(approver=True)
 
         question = QuestionFactory(level=Question.LEVELS.partner, sections=activity.sections.all(), is_active=True)
         QuestionTemplateFactory(question=question)
@@ -381,6 +381,13 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         goto('report_finalization', self.pme, mail_count=1)
         goto('submitted', visit_lead, mail_count=activity.country_pmes.count())
         goto('completed', self.pme)
+        activity.status = "submitted"
+        activity.save(update_fields=["status"])
+        goto('completed', approver)
+
+        activity.status = "submitted"
+        activity.save(update_fields=["status"])
+        goto('report_finalization', approver, extra_data={"report_reject_reason": "some reason"})
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_sections_are_displayed_correctly(self):
@@ -408,16 +415,19 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
                           expected_status=status.HTTP_400_BAD_REQUEST)
         self._test_update(self.fm_user, activity, {'status': 'cancelled', 'cancel_reason': 'just because'})
 
-    @skip("TODO: fix this test")
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_report_reject_reason_required(self):
+        staff = UserFactory(unicef_user=True)
         activity = MonitoringActivityFactory(monitor_type='staff', status='submitted',
-                                             visit_lead=UserFactory(unicef_user=True),
-                                             team_members=[UserFactory(unicef_user=True)])
+                                             visit_lead=staff,
+                                             team_members=[staff])
+        StartedChecklistFactory(monitoring_activity=activity)
 
-        self._test_update(self.fm_user, activity, {'status': 'report_finalization'},
-                          expected_status=status.HTTP_400_BAD_REQUEST)
-        self._test_update(self.fm_user, activity, {'status': 'report_finalization',
-                                                   'report_reject_reason': 'just because'})
+        self._test_update(self.pme, activity, {'status': 'report_finalization',
+                                               'report_reject_reason': 'just because'})
+        activity.refresh_from_db()
+        self.assertEquals(activity.status, 'report_finalization')
+        self.assertEquals(activity.report_reject_reason, 'just because')
 
     def test_reject_as_tpm(self):
         tpm_partner = SimpleTPMPartnerFactory()
