@@ -3,7 +3,10 @@ from django.db import connection
 from rest_framework import serializers
 
 from etools.applications.partners.serializers.interventions_v2 import InterventionResultNestedSerializer
-from etools.applications.partners.serializers.interventions_v3 import InterventionDetailSerializer
+from etools.applications.partners.serializers.interventions_v3 import (
+    InterventionDetailSerializer,
+    InterventionManagementBudgetSerializer,
+)
 from etools.applications.reports.serializers.v2 import (
     InterventionActivitySerializer,
     LowerResultWithActivitiesSerializer,
@@ -30,6 +33,11 @@ class BAPInterventionResultNestedSerializer(InterventionResultNestedSerializer):
         fields = ['id', 'll_results']
 
 
+class BAPInterventionManagementBudgetSerializer(InterventionManagementBudgetSerializer):
+    class Meta(InterventionManagementBudgetSerializer.Meta):
+        fields = [f for f in InterventionManagementBudgetSerializer.Meta.fields if f not in ['items']]
+
+
 class InterventionSerializer(InterventionDetailSerializer):
     permissions = None
     available_actions = None
@@ -37,12 +45,13 @@ class InterventionSerializer(InterventionDetailSerializer):
     offices = serializers.SerializerMethodField()
     number = serializers.SerializerMethodField()
     result_links = BAPInterventionResultNestedSerializer(many=True, read_only=True, required=False)
+    management_budgets = BAPInterventionManagementBudgetSerializer(read_only=True)
 
     class Meta(InterventionDetailSerializer.Meta):
         fields = [
             "number", "title", "partner_vendor", "business_area", "offices", "start", "end", "document_type",
             "status", "planned_budget", "partner_authorized_officer_signatory", "partner_focal_points",
-            "unicef_focal_points", "budget_owner", "result_links"
+            "unicef_focal_points", "budget_owner", "result_links", "management_budgets",
         ]
 
     def get_user(self):
