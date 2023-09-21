@@ -27,7 +27,7 @@ PRC_SECRETARY = 'PRC Secretary'
 
 class PMPPermissions:
     # this property specifies an array of model properties in order to check against the permission matrix. The fields
-    # declared under this property need to be both property on the model and delcared in the permission matrix
+    # declared under this property need to be both property on the model and declared in the permission matrix
     EXTRA_FIELDS = []
     actions_default_permissions = {
         'edit': True,
@@ -167,7 +167,7 @@ class InterventionPermissions(PMPPermissions):
         def not_ssfa(instance):
             return not is_spd_non_hum(instance)
 
-        staff_member = self.user.get_partner_staff_member()
+        staff_member = self.user
 
         # focal points are prefetched, so just cast to array to collect ids
         partner_focal_points = [fp.id for fp in self.instance.partner_focal_points.all()]
@@ -443,7 +443,7 @@ class ListCreateAPIMixedPermission(permissions.BasePermission):
 
 
 class AllowSafeAuthenticated(permissions.BasePermission):
-    """"only read peremissions if authenticated, no write"""
+    """"only read permissions if authenticated, no write"""
     def has_permission(self, request, view):
         if request.method in permissions.SAFE_METHODS:
             if request.user.is_authenticated:
@@ -517,12 +517,12 @@ def user_group_permission(*groups):
 
 class UserIsPartnerStaffMemberPermission(BasePermission):
     def has_permission(self, request, view):
-        return request.user.get_partner_staff_member()
+        return request.user.get_partner()
 
 
 class UserIsNotPartnerStaffMemberPermission(BasePermission):
     def has_permission(self, request, view):
-        return not request.user.get_partner_staff_member()
+        return not request.user.get_partner()
 
 
 class UserIsObjectPartnerStaffMember(UserIsPartnerStaffMemberPermission):

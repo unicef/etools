@@ -1,4 +1,5 @@
 from etools.applications.permissions2.conditions import ModuleCondition, SimpleCondition
+from etools.applications.tpm.models import ThirdPartyMonitor
 
 
 class TPMModuleCondition(ModuleCondition):
@@ -8,12 +9,13 @@ class TPMModuleCondition(ModuleCondition):
 class TPMStaffMemberCondition(SimpleCondition):
     predicate = 'user in tpm_tpmpartner.staff_members'
 
-    def __init__(self, partner, user):
-        self.partner = partner
+    def __init__(self, organization, user):
+        self.organization = organization
         self.user = user
 
     def is_satisfied(self):
-        return self.user.pk in self.partner.staff_members.values_list('user', flat=True)
+        groups = self.user.get_groups_for_organization_id(self.organization.id, is_active=True)
+        return ThirdPartyMonitor.as_group() in groups
 
 
 class TPMVisitUNICEFFocalPointCondition(SimpleCondition):
@@ -35,4 +37,4 @@ class TPMVisitTPMFocalPointCondition(SimpleCondition):
         self.user = user
 
     def is_satisfied(self):
-        return self.user.pk in self.visit.tpm_partner_focal_points.values_list('user', flat=True)
+        return self.user in self.visit.tpm_partner_focal_points.all()

@@ -101,10 +101,10 @@ def notify_hact_update(partner_list, country_id):
         'environment': get_environment(),
     }
     recipients = get_user_model().objects.filter(
-        groups=UNICEFAuditFocalPoint.as_group(),
-        profile__countries_available__id=country_id,
+        realms__group=UNICEFAuditFocalPoint.as_group(),
+        realms__country__id=country_id,
         is_superuser=False,
-    ).values_list('email', flat=True)
+    ).values_list('email', flat=True).distinct()
     send_notification_with_template(
         recipients=list(recipients),
         template_name='partners/hact_updated',

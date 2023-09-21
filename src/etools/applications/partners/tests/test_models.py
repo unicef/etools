@@ -7,7 +7,7 @@ from unittest.mock import Mock, patch
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
 from django.db import connection
-from django.test import SimpleTestCase
+from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
@@ -17,6 +17,7 @@ from etools.applications.audit.models import Engagement
 from etools.applications.audit.tests.factories import AuditFactory, SpecialAuditFactory, SpotCheckFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
+from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners import models
 from etools.applications.partners.models import InterventionSupplyItem
 from etools.applications.partners.tests.factories import (
@@ -34,7 +35,6 @@ from etools.applications.partners.tests.factories import (
     InterventionSupplyItemFactory,
     PartnerFactory,
     PartnerPlannedVisitsFactory,
-    PartnerStaffFactory,
     PlannedEngagementFactory,
     WorkspaceFileTypeFactory,
 )
@@ -146,6 +146,7 @@ class TestAgreementNumberGeneration(BaseTenantTestCase):
 
         # Calling save should call update_reference_number(). Before calling save, I have to save the objects with
         # which this agreement has a FK relationship.
+        agreement.partner.organization.save()
         agreement.partner.save()
         agreement.partner_id = agreement.partner.id
         agreement.country_programme.save()
@@ -187,7 +188,7 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
     def setUp(self):
         super().setUp()
         self.partner_organization = PartnerFactory(
-            name="Partner Org 1",
+            organization=OrganizationFactory(name="Partner Org 1"),
             total_ct_ytd=models.PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL + 1,
             reported_cy=models.PartnerOrganization.CT_CP_AUDIT_TRIGGER_LEVEL + 1,
             last_assessment_date=datetime.date(2000, 5, 14),
@@ -369,7 +370,7 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
         self.assert_min_requirements(2, 1)
 
     def test_planned_visits_gov(self):
-        self.partner_organization.partner_type = models.PartnerType.GOVERNMENT
+        self.partner_organization.partner_type = models.OrganizationType.GOVERNMENT
         self.partner_organization.save()
         year = datetime.date.today().year
         PartnerPlannedVisitsFactory(
@@ -385,7 +386,7 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
         self.assertEqual(self.partner_organization.hact_values['programmatic_visits']['planned']['total'], 3)
 
     def test_planned_visits_non_gov(self):
-        self.partner_organization.partner_type = models.PartnerType.UN_AGENCY
+        self.partner_organization.partner_type = models.OrganizationType.UN_AGENCY
         self.partner_organization.save()
         year = datetime.date.today().year
         PartnerPlannedVisitsFactory(
@@ -416,7 +417,7 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
         )
 
     def test_planned_visits_non_gov_no_pv_intervention(self):
-        self.partner_organization.partner_type = models.PartnerType.UN_AGENCY
+        self.partner_organization.partner_type = models.OrganizationType.UN_AGENCY
         self.partner_organization.save()
         intervention1 = InterventionFactory(
             agreement=self.pca_signed1,
@@ -607,7 +608,7 @@ class TestAgreementModel(BaseTenantTestCase):
         super().setUp()
 
         self.partner_organization = PartnerFactory(
-            name="Partner Org 1",
+            organization=OrganizationFactory(name="Partner Org 1")
         )
         self.cp = CountryProgrammeFactory(
             name="CP 1",
@@ -645,7 +646,7 @@ class TestInterventionModel(BaseTenantTestCase):
     def setUp(self):
         super().setUp()
         call_command('update_notifications')
-        self.partner_organization = PartnerFactory(name="Partner Org 1")
+        self.partner_organization = PartnerFactory(organization=OrganizationFactory(name="Partner Org 1"))
         cp = CountryProgrammeFactory(
             name="CP 1",
             wbs="0001/A0/01",
@@ -1117,14 +1118,14 @@ class TestInterventionModel(BaseTenantTestCase):
 
     def test_hq_support_cost(self):
         partner = PartnerFactory(
-            cso_type=models.PartnerOrganization.CSO_TYPE_COMMUNITY,
+            organization=OrganizationFactory(cso_type=models.Organization.CSO_TYPE_COMMUNITY)
         )
         intervention = InterventionFactory(agreement__partner=partner)
         self.assertEqual(intervention.hq_support_cost, 0.0)
 
         # INGO type
         partner = PartnerFactory(
-            cso_type=models.PartnerOrganization.CSO_TYPE_INTERNATIONAL,
+            organization=OrganizationFactory(cso_type=models.Organization.CSO_TYPE_INTERNATIONAL)
         )
         intervention = InterventionFactory(agreement__partner=partner)
         self.assertEqual(intervention.hq_support_cost, 7.0)
@@ -1250,63 +1251,23 @@ class TestWorkspaceFileType(BaseTenantTestCase):
 
 class TestPartnerOrganization(BaseTenantTestCase):
     def test_str(self):
-        p = models.PartnerOrganization(name="Test Partner Org")
+        p = models.PartnerOrganization(
+            organization=OrganizationFactory(name="Test Partner Org")
+        )
         self.assertEqual(str(p), "Test Partner Org")
 
     def test_save(self):
         p = models.PartnerOrganization(
-            name="Test",
+            organization=OrganizationFactory(name="Test"),
             hact_values={'all': 'good'}
         )
         p.save()
         self.assertIsNotNone(p.pk)
 
 
-class TestPartnerStaffMember(BaseTenantTestCase):
-    def test_str(self):
-        partner = models.PartnerOrganization(name="Partner")
-        staff = models.PartnerStaffMember(
-            first_name="First",
-            last_name="Last",
-            partner=partner
-        )
-        self.assertEqual(str(staff), "First Last (Partner)")
-
-    def test_save_update_deactivate(self):
-        partner = PartnerFactory()
-        staff = PartnerStaffFactory(
-            partner=partner,
-        )
-        staff.user.profile.countries_available.add(connection.tenant)
-        self.assertTrue(staff.active)
-
-        staff.active = False
-        staff.save()
-
-        self.assertEqual(staff.user.is_active, False)
-        self.assertEqual(staff.user.profile.country, None)
-        self.assertEqual(staff.user.profile.countries_available.filter(id=connection.tenant.id).exists(), False)
-
-    def test_save_update_reactivate(self):
-        partner = PartnerFactory()
-        staff = PartnerStaffFactory(
-            partner=partner,
-            active=False,
-        )
-        staff.user.profile.countries_available.remove(connection.tenant)
-        self.assertFalse(staff.active)
-
-        staff.active = True
-        staff.save()
-
-        self.assertEqual(staff.user.is_active, True)
-        self.assertEqual(staff.user.profile.country, connection.tenant)
-        self.assertEqual(staff.user.profile.countries_available.filter(id=connection.tenant.id).exists(), True)
-
-
 class TestAssessment(BaseTenantTestCase):
     def test_str_not_completed(self):
-        partner = models.PartnerOrganization(name="Partner")
+        partner = models.PartnerOrganization(organization=OrganizationFactory(name="Partner"))
         a = models.Assessment(
             partner=partner,
             type="Type",
@@ -1315,7 +1276,7 @@ class TestAssessment(BaseTenantTestCase):
         self.assertEqual(str(a), "Type: Partner Rating NOT COMPLETED")
 
     def test_str_completed(self):
-        partner = models.PartnerOrganization(name="Partner")
+        partner = models.PartnerOrganization(organization=OrganizationFactory(name="Partner"))
         a = models.Assessment(
             partner=partner,
             type="Type",
@@ -1327,7 +1288,7 @@ class TestAssessment(BaseTenantTestCase):
 
 class TestAgreement(BaseTenantTestCase):
     def test_str(self):
-        partner = models.PartnerOrganization(name="Partner")
+        partner = models.PartnerOrganization(organization=OrganizationFactory(name="Partner"))
         agreement = models.Agreement(
             partner=partner,
             agreement_type=models.Agreement.DRAFT,
@@ -1335,7 +1296,7 @@ class TestAgreement(BaseTenantTestCase):
         self.assertEqual(str(agreement), "draft for Partner ( - )")
 
     def test_str_dates(self):
-        partner = models.PartnerOrganization(name="Partner")
+        partner = models.PartnerOrganization(organization=OrganizationFactory(name="Partner"))
         agreement = models.Agreement(
             partner=partner,
             agreement_type=models.Agreement.DRAFT,
@@ -1373,7 +1334,7 @@ class TestAgreement(BaseTenantTestCase):
         self.assertEqual(agreement.year, agreement.created.year)
 
     def test_year_not_saved(self):
-        partner = models.PartnerOrganization(name="Partner")
+        partner = models.PartnerOrganization(organization=OrganizationFactory(name="Partner"))
         agreement = models.Agreement(partner=partner)
         self.assertEqual(agreement.year, datetime.date.today().year)
 
@@ -1779,16 +1740,16 @@ class TestStrUnicodeSlow(BaseTenantTestCase):
     """
 
     def test_assessment(self):
-        partner = PartnerFactory(name='xyz')
+        partner = PartnerFactory(organization=OrganizationFactory(name='xyz'))
         instance = AssessmentFactory(partner=partner)
         self.assertIn('xyz', str(instance))
 
-        partner = PartnerFactory(name='R\xe4dda Barnen')
+        partner = PartnerFactory(organization=OrganizationFactory(name='R\xe4dda Barnen'))
         instance = AssessmentFactory(partner=partner)
         self.assertIn('R\xe4dda Barnen', str(instance))
 
     def test_agreement_amendment(self):
-        partner = PartnerFactory(name='xyz')
+        partner = PartnerFactory(organization=OrganizationFactory(name='xyz'))
         agreement = AgreementFactory(partner=partner)
         instance = AgreementAmendmentFactory(number='xyz', agreement=agreement)
         # This model's __str__() method operates on a limited range of text, so it's not possible to challenge it
@@ -1796,7 +1757,7 @@ class TestStrUnicodeSlow(BaseTenantTestCase):
         str(instance)
 
 
-class TestStrUnicode(SimpleTestCase):
+class TestStrUnicode(TestCase):
     """Ensure calling str() on model instances returns the right text."""
 
     def test_workspace_file_type(self):
@@ -1807,27 +1768,27 @@ class TestStrUnicode(SimpleTestCase):
         self.assertEqual(str(instance), 'R\xe4dda Barnen')
 
     def test_partner_organization(self):
-        instance = PartnerFactory.build(name='xyz')
+        instance = PartnerFactory.build(organization=OrganizationFactory(name='xyz'))
         self.assertEqual(str(instance), 'xyz')
 
-        instance = PartnerFactory.build(name='R\xe4dda Barnen')
+        instance = PartnerFactory.build(organization=OrganizationFactory(name='R\xe4dda Barnen'))
         self.assertEqual(str(instance), 'R\xe4dda Barnen')
 
     def test_partner_staff_member(self):
-        partner = PartnerFactory.build(name='partner')
+        partner = PartnerFactory.build(organization=OrganizationFactory(name='partner'))
 
-        instance = PartnerStaffFactory.build(first_name='xyz', partner=partner)
+        instance = UserFactory.build(first_name='xyz', profile__organization=partner.organization)
         self.assertTrue(str(instance).startswith('xyz'))
 
-        instance = PartnerStaffFactory.build(first_name='R\xe4dda Barnen', partner=partner)
+        instance = UserFactory.build(first_name='R\xe4dda Barnen', profile__organization=partner.organization)
         self.assertTrue(str(instance).startswith('R\xe4dda Barnen'))
 
     def test_agreement(self):
-        partner = PartnerFactory.build(name='xyz')
+        partner = PartnerFactory.build(organization=OrganizationFactory(name='xyz'))
         instance = AgreementFactory.build(partner=partner)
         self.assertIn('xyz', str(instance))
 
-        partner = PartnerFactory.build(name='R\xe4dda Barnen')
+        partner = PartnerFactory.build(organization=OrganizationFactory(name='R\xe4dda Barnen'))
         instance = AgreementFactory.build(partner=partner)
         self.assertIn('R\xe4dda Barnen', str(instance))
 
@@ -1913,7 +1874,7 @@ class TestPlannedEngagement(BaseTenantTestCase):
         self.assertEquals(self.engagement.spot_check_required, self.engagement.partner.min_req_spot_checks + 3)
 
     def test_spot_check_required_with_completed_audit(self):
-        partner = PartnerFactory(name="Partner")
+        partner = PartnerFactory(organization=OrganizationFactory(name="Partner"))
         partner.hact_values['audits']['completed'] = 1
         partner.save()
 
@@ -1934,7 +1895,7 @@ class TestPlannedEngagement(BaseTenantTestCase):
 class TestPartnerPlannedVisits(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.partner = PartnerFactory(name="Partner")
+        cls.partner = PartnerFactory(organization=OrganizationFactory(name="Partner"))
         cls.visit = PartnerPlannedVisitsFactory(
             partner=cls.partner,
             year=datetime.date.today().year,

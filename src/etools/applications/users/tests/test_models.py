@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
@@ -49,7 +50,7 @@ class TestUserProfileModel(BaseTenantTestCase):
 
     def test_email(self):
         p = models.UserProfile(user=self.user)
-        self.assertEqual(p.email(), "user@example.com")
+        self.assertEqual(p.email(), f"user{p.user.id}{settings.UNICEF_USER_EMAIL}")
 
     def test_first_name(self):
         p = models.UserProfile(user=self.user)
@@ -62,23 +63,6 @@ class TestUserProfileModel(BaseTenantTestCase):
     def test_last_name(self):
         p = models.UserProfile(user=self.user)
         self.assertEqual(p.last_name(), "Last")
-
-    def test_custom_update_user_is_staff_no_group(self):
-        profile = ProfileFactory()
-        self.assertFalse(profile.user.is_staff)
-        res = models.UserProfile.custom_update_user(profile.user, {}, None)
-        self.assertTrue(res)
-        profile_updated = models.UserProfile.objects.get(pk=profile.pk)
-        self.assertTrue(profile_updated.user.is_staff)
-
-    def test_custom_update_user_country_not_found(self):
-        profile = ProfileFactory()
-        res = models.UserProfile.custom_update_user(
-            profile.user,
-            {"businessAreaCode": "404"},
-            None
-        )
-        self.assertFalse(res)
 
     def test_save_staff_id(self):
         profile = ProfileFactory()
@@ -107,13 +91,13 @@ class TestUserModel(BaseTenantTestCase):
     def test_conversion_to_string(self):
         """Exercise converting instances to string."""
         user = UserFactory(first_name='Pel\xe9', last_name='Arantes do Nascimento')
-        self.assertEqual(str(user), 'Pel\xe9 Arantes do Nascimento')
+        self.assertEqual(str(user), 'Pel\xe9 Arantes do Nascimento (UNICEF)')
 
     def test_is_unicef_user(self):
         user = UserFactory(email='macioce@unicef.org')
         self.assertTrue(user.is_unicef_user())
 
-        user = UserFactory(email='unicef@macioce.org')
+        user = UserFactory(email='unicef@macioce.org', realms__data=[])
         self.assertFalse(user.is_unicef_user())
 
     def test_save(self):

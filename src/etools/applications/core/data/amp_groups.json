@@ -1,0 +1,32 @@
+[
+  {
+    "model": "auth.group",
+    "fields": {
+      "name": "IP Viewer"
+    }
+  },
+  {
+    "model": "auth.group",
+    "fields": {
+      "name": "IP Editor"
+    }
+  },
+  {
+    "model": "auth.group",
+    "fields": {
+      "name": "IP Authorized Officer"
+    }
+  },
+  {
+    "model": "auth.group",
+    "fields": {
+      "name": "IP Admin"
+    }
+  },
+  {
+    "model": "auth.group",
+    "fields": {
+      "name": "User Reviewer"
+    }
+  }
+]

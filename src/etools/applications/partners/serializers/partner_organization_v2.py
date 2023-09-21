@@ -2,8 +2,6 @@ import datetime
 import itertools
 
 from django.contrib.auth import get_user_model
-from django.db import connection
-from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
@@ -15,21 +13,18 @@ from unicef_snapshot.serializers import SnapshotModelSerializer
 
 from etools.applications.field_monitoring.planning.models import MonitoringActivity, MonitoringActivityGroup
 from etools.applications.partners.models import (
-    Agreement,
     Assessment,
     CoreValuesAssessment,
     Intervention,
+    OrganizationType,
     PartnerOrganization,
     PartnerPlannedVisits,
-    PartnerStaffMember,
-    PartnerType,
     PlannedEngagement,
 )
 from etools.applications.partners.serializers.interventions_v2 import (
     InterventionListSerializer,
     InterventionMonitorSerializer,
 )
-from etools.applications.users.serializers import MinimalUserSerializer
 
 
 class CoreValuesAssessmentSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
@@ -42,46 +37,11 @@ class CoreValuesAssessmentSerializer(AttachmentSerializerMixin, serializers.Mode
         fields = "__all__"
 
 
-class PartnerStaffMemberCreateSerializer(serializers.ModelSerializer):
-    # legacy serializer; not actually being used for creating
+class PartnerManagerSerializer(serializers.ModelSerializer):
+    title = serializers.CharField(source='profile.job_title')
 
     class Meta:
-        model = PartnerStaffMember
-        fields = "__all__"
-
-    def validate(self, data):
-        data = super().validate(data)
-        email = data.get('email', "")
-        active = data.get('active', "")
-        User = get_user_model()
-        existing_user = None
-
-        # user should be active first time it's created
-        if not active:
-            raise ValidationError({'active': 'New Staff Member needs to be active at the moment of creation'})
-        try:
-            existing_user = User.objects.filter(Q(username=email) | Q(email=email)).get()
-        except User.DoesNotExist:
-            pass
-        else:
-            if bool(existing_user.staff_member_country()):
-                raise ValidationError(
-                    "The email {} for the partner contact is used by another "
-                    "partner contact. Email has to be unique to "
-                    "proceed.".format(email)
-                )
-
-        return data
-
-
-class SimpleStaffMemberSerializer(PartnerStaffMemberCreateSerializer):
-    """
-    A serializer to be used for nested staff member handling. The 'partner' field
-    is removed in this case to avoid validation errors for e.g. when creating
-    the partner and the member at the same time.
-    """
-    class Meta:
-        model = PartnerStaffMember
+        model = get_user_model()
         fields = (
             "id",
             "title",
@@ -90,150 +50,29 @@ class SimpleStaffMemberSerializer(PartnerStaffMemberCreateSerializer):
         )
 
 
-class PartnerStaffMemberNestedSerializer(PartnerStaffMemberCreateSerializer):
-    """
-    A serializer to be used for nested staff member handling. The 'partner' field
-    is removed in this case to avoid validation errors for e.g. when creating
-    the partner and the member at the same time.
-    """
+class PartnerStaffMemberDetailSerializer(serializers.ModelSerializer):
+    active = serializers.BooleanField(source='is_active')
+    phone = serializers.CharField(source='profile.phone_number')
+    title = serializers.CharField(source='profile.job_title')
+
     class Meta:
-        model = PartnerStaffMember
+        model = get_user_model()
         fields = (
-            "id",
-            "title",
-            "first_name",
-            "last_name",
-            "email",
-            "phone",
-            "active",
+            'id', 'email', 'first_name', 'last_name', 'created', 'modified',
+            'active', 'phone', 'title'
         )
 
 
-class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
-    email = serializers.EmailField(required=True)
+class PartnerStaffMemberRealmSerializer(PartnerStaffMemberDetailSerializer):
+    has_active_realm = serializers.BooleanField()
 
-    class Meta:
-        model = PartnerStaffMember
-        fields = "__all__"
-        read_only_fields = ['user', ]
-
-    def validate(self, data):
-        data = super().validate(data)
-        email = data.get('email', "")
-        active = data.get('active')
-        User = get_user_model()
-
-        if not self.instance:
-            if email != email.lower():
-                raise ValidationError(
-                    {"email": "Email cannot have uppercase characters."},
-                )
-
-            try:
-                user = User.objects.get(email=email)
-            except User.DoesNotExist:
-                pass
-
-            else:
-                if user.is_unicef_user():
-                    raise ValidationError(_('Unable to associate staff member to UNICEF user'))
-
-                if bool(user.get_staff_member_country()):
-                    raise ValidationError(
-                        {
-                            'active': _(
-                                'The email for the partner contact is used by another partner contact. '
-                                'Email has to be unique to proceed %s') % email
-                        }
-                    )
-
-                data['user'] = user
-        else:
-            # make sure email addresses are not editable after creation.. user must be removed and re-added
-            if email != self.instance.email:
-                raise ValidationError(
-                    {
-                        "email": _(
-                            "User emails cannot be changed, please remove"
-                            " the user and add another one: %s") % email
-                    }
-                )
-
-            # when adding the active tag to a previously untagged user
-            if active and not self.instance.active:
-                # make sure this user has not already been associated with another partnership.
-                try:
-                    user = User.objects.get(email=email)
-                except User.DoesNotExist:
-                    pass
-                else:
-                    psm_country = user.get_staff_member_country()
-                    if psm_country and psm_country != connection.tenant:
-                        raise ValidationError({
-                            'active': _('The Partner Staff member you are trying to activate is associated '
-                                        'with a different Partner Organization')
-                        })
-
-            # disabled is unavailable if user already synced to PRP to avoid data inconsistencies
-            if self.instance.active and not active:
-                if Intervention.objects.filter(
-                    Q(date_sent_to_partner__isnull=False, agreement__partner__staff_members=self.instance) |
-                    Q(
-                        ~Q(status=Intervention.DRAFT),
-                        Q(partner_focal_points=self.instance) | Q(partner_authorized_officer_signatory=self.instance),
-                    ),
-                ).exists():
-                    raise ValidationError({'active': _('User already synced to PRP and cannot be disabled. '
-                                                       'Please instruct the partner to disable from PRP')})
-
-        return data
-
-    def create(self, validated_data):
-        User = get_user_model()
-        if 'user' not in validated_data:
-            validated_data['user'] = User.objects.create(
-                first_name=validated_data.get('first_name'),
-                last_name=validated_data.get('last_name'),
-                username=validated_data['email'],
-                email=validated_data['email'],
-                is_staff=False,
-                is_active=True,
-            )
-
-        return super().create(validated_data)
-
-    def update(self, instance, validated_data):
-        instance = super().update(instance, validated_data)
-
-        # if inactive, remove from DRAFT Agreements and PDs
-        if not instance.active:
-            agreement_qs = instance.agreement_authorizations.filter(
-                status=Agreement.DRAFT,
-            )
-            for agreement in agreement_qs.all():
-                agreement.authorized_officers.remove(instance)
-            pd_qs = Intervention.objects.filter(
-                status=Intervention.DRAFT,
-                partner_focal_points=instance,
-            )
-            for pd in pd_qs.all():
-                pd.partner_focal_points.remove(instance)
-
-        return instance
+    class Meta(PartnerStaffMemberDetailSerializer.Meta):
+        model = get_user_model()
+        fields = PartnerStaffMemberDetailSerializer.Meta.fields + ('has_active_realm',)
 
 
-class PartnerStaffMemberDetailSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = PartnerStaffMember
-        fields = "__all__"
-
-
-class PartnerStaffMemberUserSerializer(serializers.ModelSerializer):
-    user = MinimalUserSerializer()
-
-    class Meta:
-        model = PartnerStaffMember
-        fields = "__all__"
+class PartnerStaffMemberUserSerializer(PartnerStaffMemberDetailSerializer):
+    pass
 
 
 class AssessmentDetailSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
@@ -254,6 +93,11 @@ class AssessmentDetailSerializer(AttachmentSerializerMixin, serializers.ModelSer
 
 
 class PartnerOrganizationListSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(source='organization.name')
+    vendor_number = serializers.CharField(source='organization.vendor_number')
+    short_name = serializers.CharField(source='organization.short_name')
+    partner_type = serializers.CharField(source='organization.organization_type')
+    cso_type = serializers.CharField(source='organization.cso_type')
 
     class Meta:
         model = PartnerOrganization
@@ -290,9 +134,14 @@ class PartnerOrganizationListSerializer(serializers.ModelSerializer):
 
 class PartnerOrgPSEADetailsSerializer(serializers.ModelSerializer):
     staff_members = serializers.SerializerMethodField()
+    name = serializers.CharField(source='organization.name')
+    vendor_number = serializers.CharField(source='organization.vendor_number')
+    short_name = serializers.CharField(source='organization.short_name')
+    partner_type = serializers.CharField(source='organization.organization_type')
+    cso_type = serializers.CharField(source='organization.cso_type')
 
     def get_staff_members(self, obj):
-        return [s.get_full_name() for s in obj.staff_members.all()]
+        return [s.get_full_name() for s in obj.active_staff_members.all()]
 
     class Meta:
         model = PartnerOrganization
@@ -391,7 +240,7 @@ class PartnerPlannedVisitsSerializer(serializers.ModelSerializer):
                 partner=self.initial_data.get("partner"),
                 year=self.initial_data.get("year"),
             )
-            if self.instance.partner.partner_type != PartnerType.GOVERNMENT:
+            if self.instance.partner.partner_type != OrganizationType.GOVERNMENT:
                 raise ValidationError({'partner': _('Planned Visit can be set only for Government partners')})
 
         except self.Meta.model.DoesNotExist:
@@ -441,8 +290,13 @@ class MonitoringActivityGroupSerializer(serializers.Field):
 
 
 class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
-
-    staff_members = PartnerStaffMemberDetailSerializer(many=True, read_only=True)
+    organization_id = serializers.CharField(read_only=True)
+    name = serializers.CharField(source='organization.name', read_only=True)
+    vendor_number = serializers.CharField(source='organization.vendor_number', read_only=True)
+    short_name = serializers.CharField(source='organization.short_name', read_only=True)
+    partner_type = serializers.CharField(source='organization.organization_type', read_only=True)
+    cso_type = serializers.CharField(source='organization.cso_type', read_only=True)
+    staff_members = PartnerStaffMemberRealmSerializer(source='all_staff_members', many=True, read_only=True)
     assessments = AssessmentDetailSerializer(many=True, read_only=True)
     planned_engagement = PlannedEngagementSerializer(read_only=True)
     interventions = serializers.SerializerMethodField(read_only=True)
@@ -469,10 +323,13 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PartnerOrganization
-        fields = "__all__"
+        exclude = ('organization',)
 
 
 class PartnerOrganizationDashboardSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(source='organization.name')
+    vendor_number = serializers.CharField(source='organization.vendor_number')
+    partner_type = serializers.CharField(source='organization.organization_type')
     sections = serializers.ReadOnlyField(read_only=True)
     locations = serializers.ReadOnlyField(read_only=True)
     action_points = serializers.ReadOnlyField(read_only=True)
@@ -501,8 +358,11 @@ class PartnerOrganizationDashboardSerializer(serializers.ModelSerializer):
 
 
 class PartnerOrganizationCreateUpdateSerializer(SnapshotModelSerializer):
-
-    staff_members = PartnerStaffMemberNestedSerializer(many=True, read_only=True)
+    name = serializers.CharField(source='organization.name', read_only=True)
+    vendor_number = serializers.CharField(source='organization.vendor_number', read_only=True)
+    short_name = serializers.CharField(source='organization.short_name', read_only=True)
+    partner_type = serializers.CharField(source='organization.organization_type', read_only=True)
+    cso_type = serializers.CharField(source='organization.cso_type', read_only=True)
     planned_engagement = PlannedEngagementNestedSerializer(read_only=True)
     hidden = serializers.BooleanField(read_only=True)
     planned_visits = PartnerPlannedVisitsSerializer(many=True, read_only=True, required=False)
@@ -581,7 +441,11 @@ class PartnerOrganizationCreateUpdateSerializer(SnapshotModelSerializer):
 
 
 class PartnerOrganizationHactSerializer(serializers.ModelSerializer):
-
+    name = serializers.CharField(source='organization.name')
+    vendor_number = serializers.CharField(source='organization.vendor_number')
+    short_name = serializers.CharField(source='organization.short_name')
+    partner_type = serializers.CharField(source='organization.organization_type')
+    cso_type = serializers.CharField(source='organization.cso_type')
     planned_engagement = PlannedEngagementSerializer(read_only=True)
     hact_min_requirements = serializers.JSONField()
     rating = serializers.CharField(source='get_rating_display')

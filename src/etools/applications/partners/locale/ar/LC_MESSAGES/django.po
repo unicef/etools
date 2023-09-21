@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-07-02 23:14+0000\n"
+"POT-Creation-Date: 2023-08-14 11:43+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -676,46 +676,8 @@ msgstr "ميزانية خطة العمل التفصيلية"
 msgid "Supply Contribution (Planned)"
 msgstr "مساهمة التوريد (مخطط لها)"
 
-msgid "You must select a type for this CSO"
-msgstr "يجب عليك تحديد نوع CSO هذا"
-
-msgid ""
-"\"CSO Type\" does not apply to non-CSO organizations, please remove type"
-msgstr ""
-"لا ينطبق \"نوع CSO\" على المنظمات غير التابعة لمنظمات المجتمع المدني ، يرجى "
-"إزالة النوع"
-
-msgid "Unable to associate staff member to UNICEF user"
-msgstr "تعذر ربط الموظف بمستخدم اليونيسف"
-
-#, python-format
-msgid "This user already exists under a different partnership: %s"
-msgstr "هذا المستخدم موجود بالفعل ضمن شراكة مختلفة: %s"
-
-#, python-format
-msgid ""
-"User emails cannot be changed, please remove the user and add another one: %s"
-msgstr ""
-"لا يمكن تغيير عناوين البريد الإلكتروني للمستخدم ، يرجى إزالة المستخدم وإضافة "
-"مستخدم آخر: %s"
-
-msgid "User already synced to PRP and cannot be disabled."
-msgstr "قام المستخدم بالفعل بمزامنة PRP ولا يمكن تعطيله."
-
 msgid "Name"
 msgstr "اسم"
-
-msgid "Bilateral / Multilateral"
-msgstr "ثنائي / متعدد الأطراف"
-
-msgid "Civil Society Organization"
-msgstr "منظمة المجتمع المدني"
-
-msgid "Government"
-msgstr "الحكومي"
-
-msgid "UN Agency"
-msgstr "وكالة الأمم المتحدة"
 
 msgid "High"
 msgstr "عالٍ"
@@ -749,21 +711,6 @@ msgstr "عدم التواصل مع المستفيدين"
 
 msgid "Not Assessed"
 msgstr "لم يتم تقييمه"
-
-msgid "International"
-msgstr "دولي"
-
-msgid "National"
-msgstr "وطني"
-
-msgid "Community Based Organization"
-msgstr "منظمة مجتمعية"
-
-msgid "Academic Institution"
-msgstr "المؤسسة الأكاديمية"
-
-msgid "Red Cross/Red Crescent National Societies"
-msgstr "الجمعيات الوطنية للصليب الأحمر والهلال الأحمر"
 
 msgid "Description"
 msgstr "وصف"
@@ -845,21 +792,6 @@ msgstr "القسم الرئيسي"
 
 msgid "Core Values Assessment"
 msgstr "تقييم القيم الجوهرية"
-
-msgid "User"
-msgstr "مستخدم"
-
-msgid "Title"
-msgstr "عنوان"
-
-msgid "First Name"
-msgstr "الاسم الاول"
-
-msgid "Last Name"
-msgstr "اسم العائلة"
-
-msgid "Active"
-msgstr "نشيط"
 
 msgid "Spot Check Follow Up Required"
 msgstr "مطلوب متابعة للزيارة الرقابية المفاجئة"
@@ -998,6 +930,9 @@ msgstr "المراجعة"
 
 msgid "Signature"
 msgstr "التوقيع"
+
+msgid "Active"
+msgstr "نشيط"
 
 msgid "Cancelled"
 msgstr "ألغيت"
@@ -1342,8 +1277,11 @@ msgstr "الموافق العام"
 msgid "Sent Back by Secretary Comment"
 msgstr "تم الإرسال مرة أخرى بسبب تعليق السكرتير"
 
+msgid "User"
+msgstr "مستخدم"
+
 msgid "FACE"
-msgstr "إستمارة الموافقه على التمويل وشهادة الصرف"
+msgstr ""
 
 msgid "Progress Report"
 msgstr "تقرير التطور"
@@ -1458,6 +1396,9 @@ msgid ""
 msgstr ""
 "مساهمة الشريك في التخطيط والمراقبة والتقييم والاتصال ، مُتناسبة مع مساهمتهم "
 "في البرنامج (المكان ، والسفر ، وما إلى ذلك)"
+
+msgid "Title"
+msgstr "عنوان"
 
 msgid "Unit Number"
 msgstr "رقم الوحدة"
@@ -1606,13 +1547,8 @@ msgstr "لا يمكن إضافة تعديل جديد أثناء حظر الشر�
 msgid "Other description required, if type 'Other' selected."
 msgstr "مطلوب وصف آخر ، إذا تم تحديد نوع \"أخرى\"."
 
-#, fuzzy
-#| msgid "Active"
 msgid "Inactive"
-msgstr "نشيط"
-
-msgid "Planned Visit to be set only at Partner level"
-msgstr "سيتم تعيين الزيارة المخططة على مستوى الشريك فقط"
+msgstr "غير نشط"
 
 msgid "Planned Visit cannot be set for Terminated interventions"
 msgstr "لا يمكن تعيين الزيارة المخططة للتدخلات المنتهية"
@@ -1703,26 +1639,6 @@ msgid ""
 msgstr ""
 "بيانات الميزانية غير صالحة. يجب أن يكون إجمالي النقد مساويًا لرقم العناصر * "
 "السعر لكل عنصر."
-
-#, python-format
-msgid ""
-"The email for the partner contact is used by another partner contact. Email "
-"has to be unique to proceed %s"
-msgstr ""
-"يتم استخدام البريد الإلكتروني لجهة اتصال الشريك من قبل جهة اتصال شريك أخرى. "
-"يجب أن يكون البريد الإلكتروني فريدًا للمتابعة %s"
-
-msgid ""
-"The Partner Staff member you are trying to activate is associated with a "
-"different Partner Organization"
-msgstr "الموظف الشريك الذي تحاول تنشيطه مرتبط بمنظمة شريكة مختلفة"
-
-msgid ""
-"User already synced to PRP and cannot be disabled. Please instruct the "
-"partner to disable from PRP"
-msgstr ""
-"قام المستخدم بالفعل بمزامنة PRP ولا يمكن تعطيله. يرجى توجيه الشريك للتعطيل "
-"من PRP"
 
 msgid "The Date of Report cannot be in the future"
 msgstr "لا يمكن أن يكون تاريخ التقرير في المستقبل"
@@ -2007,8 +1923,8 @@ msgstr "لا يمكن تنشيط وثيقة البرامج إذا كان الش�
 msgid "Agreement selected is not of type SSFA"
 msgstr "الاتفاقية المختارة ليست من نوع اتفاقية التمويل الصغير"
 
-msgid " without deleting the indicators first"
-msgstr "دون حذف المؤشرات أولا"
+msgid " without deleting the indicators first "
+msgstr " دون حذف المؤشرات أولا"
 
 #, python-format
 msgid ""
@@ -2301,6 +2217,47 @@ msgstr "لا تحتوي الاستجابة التي أرجعها الخادم ع
 msgid "Partnership Manager role required for pca export."
 msgstr "دور مدير الشراكة المطلوب لتصدير pca."
 
+#~ msgid "Unable to associate staff member to UNICEF user"
+#~ msgstr "تعذر ربط الموظف بمستخدم اليونيسف"
+
+#~ msgid "This user already exists under a different partnership: %s"
+#~ msgstr "هذا المستخدم موجود بالفعل ضمن شراكة مختلفة: %s"
+
+#~ msgid ""
+#~ "User emails cannot be changed, please remove the user and add another "
+#~ "one: %s"
+#~ msgstr ""
+#~ "لا يمكن تغيير عناوين البريد الإلكتروني للمستخدم ، يرجى إزالة المستخدم "
+#~ "وإضافة مستخدم آخر: %s"
+
+#~ msgid "User already synced to PRP and cannot be disabled."
+#~ msgstr "قام المستخدم بالفعل بمزامنة PRP ولا يمكن تعطيله."
+
+#~ msgid "First Name"
+#~ msgstr "الاسم الاول"
+
+#~ msgid "Last Name"
+#~ msgstr "اسم العائلة"
+
+#~ msgid "(old)Partner Authorized Officer"
+#~ msgstr "موظف شريك معتمد"
+
+#~ msgid "(old)Signed by partner"
+#~ msgstr "وقعه الشريك"
+
+#~ msgid "(old)Signed by Partner"
+#~ msgstr "وقعه الشريك"
+
+#~ msgid "(old)CSO Authorized Officials"
+#~ msgstr "مسؤولو منظمات المجتمع المدني المعتمدون"
+
+#~ msgid ""
+#~ "User already synced to PRP and cannot be disabled. Please instruct the "
+#~ "partner to disable from PRP"
+#~ msgstr ""
+#~ "قام المستخدم بالفعل بمزامنة PRP ولا يمكن تعطيله. يرجى توجيه الشريك "
+#~ "للتعطيل من PRP"
+
 #~ msgid ""
 #~ "There was a PCA/SSFA signed with this partner or a transaction was "
 #~ "performed against this partner. The Partner record cannot be deleted"
@@ -2313,3 +2270,42 @@ msgstr "دور مدير الشراكة المطلوب لتصدير pca."
 
 #~ msgid "This partner has cash transactions associated to it"
 #~ msgstr "هذا الشريك لديه معاملات نقدية مرتبطة به"
+
+#~ msgid "You must select a type for this CSO"
+#~ msgstr "يجب عليك تحديد نوع CSO هذا"
+
+#~ msgid ""
+#~ "\"CSO Type\" does not apply to non-CSO organizations, please remove type"
+#~ msgstr ""
+#~ "لا ينطبق \"نوع CSO\" على المنظمات غير التابعة لمنظمات المجتمع المدني ، "
+#~ "يرجى إزالة النوع"
+
+#~ msgid "International"
+#~ msgstr "دولي"
+
+#~ msgid "National"
+#~ msgstr "وطني"
+
+#~ msgid "Community Based Organization"
+#~ msgstr "منظمة مجتمعية"
+
+#~ msgid "Academic Institution"
+#~ msgstr "المؤسسة الأكاديمية"
+
+#~ msgid "Red Cross/Red Crescent National Societies"
+#~ msgstr "الجمعيات الوطنية للصليب الأحمر والهلال الأحمر"
+
+#~ msgid "Planned Visit to be set only at Partner level"
+#~ msgstr "سيتم تعيين الزيارة المخططة على مستوى الشريك فقط"
+
+#~ msgid ""
+#~ "The email for the partner contact is used by another partner contact. "
+#~ "Email has to be unique to proceed %s"
+#~ msgstr ""
+#~ "يتم استخدام البريد الإلكتروني لجهة اتصال الشريك من قبل جهة اتصال شريك "
+#~ "أخرى. يجب أن يكون البريد الإلكتروني فريدًا للمتابعة %s"
+
+#~ msgid ""
+#~ "The Partner Staff member you are trying to activate is associated with a "
+#~ "different Partner Organization"
+#~ msgstr "الموظف الشريك الذي تحاول تنشيطه مرتبط بمنظمة شريكة مختلفة"

@@ -1,3 +1,5 @@
+from django.db.models import Q
+
 from rest_framework import mixins, viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import ListAPIView, RetrieveAPIView
@@ -41,7 +43,9 @@ class SectionViewSet(ExternalModuleFilterMixin,
     filters = (
         ('active', 'active'),
     )
-    module2filters = {'tpm': ['tpm_activities__tpm_visit__tpm_partner__staff_members__user', ]}
+    module2filters = {
+        'tpm': [lambda user: Q(tpm_activities__tpm_visit__tpm_partner__organization=user.profile.organization)]
+    }
 
 
 class ResultViewSet(viewsets.ModelViewSet):

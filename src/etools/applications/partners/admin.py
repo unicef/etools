@@ -12,17 +12,14 @@ from django.utils.translation import gettext_lazy as _
 
 from admin_extra_urls.decorators import button
 from admin_extra_urls.mixins import ExtraUrlMixin
+from django_tenants.postgresql_backend.base import FakeTenant
 from import_export.admin import ExportMixin
 from unicef_attachments.admin import AttachmentSingleInline
 from unicef_attachments.models import Attachment
 from unicef_snapshot.admin import ActivityInline, SnapshotModelAdmin
 
 from etools.applications.partners.exports import PartnerExport
-from etools.applications.partners.forms import (  # TODO intervention sector locations cleanup
-    InterventionAttachmentForm,
-    PartnersAdminForm,
-    PartnerStaffMemberForm,
-)
+from etools.applications.partners.forms import InterventionAttachmentForm  # TODO intervention sector locations cleanup
 from etools.applications.partners.mixins import CountryUsersAdminMixin, HiddenPartnerMixin
 from etools.applications.partners.models import (  # TODO intervention sector locations cleanup
     Agreement,
@@ -41,7 +38,6 @@ from etools.applications.partners.models import (  # TODO intervention sector lo
     InterventionReview,
     InterventionSupplyItem,
     PartnerOrganization,
-    PartnerStaffMember,
     PlannedEngagement,
 )
 from etools.applications.partners.synchronizers import PDVisionUploader
@@ -89,7 +85,8 @@ class InterventionAmendmentPRCReviewInline(AttachmentSingleInline):
     code = 'partners_intervention_amendment_internal_prc_review'
 
 
-class InterventionAmendmentsAdmin(AttachmentInlineAdminMixin, RestrictedEditAdmin):
+class InterventionAmendmentsAdmin(AttachmentInlineAdminMixin, CountryUsersAdminMixin, RestrictedEditAdmin):
+    staff_only = False
     model = InterventionAmendment
     readonly_fields = [
         'amendment_number',
@@ -420,6 +417,8 @@ class InterventionAdmin(
     attachments_link.short_description = 'attachments'
 
     def has_change_permission(self, request, obj=None):
+        if isinstance(connection.tenant, FakeTenant):
+            return False
         return super().has_change_permission(request, obj=None) or request.user.groups.filter(name='Country Office Administrator').exists()
 
     def changeform_view(self, request, *args, **kwargs):
@@ -482,83 +481,26 @@ class AssessmentAdmin(AttachmentInlineAdminMixin, RestrictedEditAdmin):
     ]
 
 
-class PartnerStaffMemberAdmin(RestrictedEditAdminMixin, SnapshotModelAdmin):
-    model = PartnerStaffMember
-    form = PartnerStaffMemberForm
-    raw_id_fields = ("partner", "user",)
-
-    # display_staff_member_name() is used only in list_display. It could be replaced by this simple lambda --
-    #     lambda instance: str(instance)
-    # However, creating a function allows me to put a title on the column in the admin by populating the function's
-    # 'short_description' attribute.
-    # https://docs.djangoproject.com/en/1.11/ref/contrib/admin/#django.contrib.admin.ModelAdmin.list_display
-    def display_staff_member_name(instance):
-        return str(instance)
-    display_staff_member_name.short_description = 'Partner Staff Member'
-
-    list_display = (
-        display_staff_member_name,
-        'title',
-        'email',
-        'user',
-    )
-    search_fields = (
-        'first_name',
-        'last_name',
-        'email',
-        'user__first_name',
-        'user__last_name',
-        'partner__name'
-    )
-    inlines = [
-        ActivityInline,
-    ]
-
-    def has_module_permission(self, request):
-        return request.user.is_superuser or request.user.groups.filter(name='Country Office Administrator').exists()
-
-
-class HiddenPartnerFilter(admin.SimpleListFilter):
-
-    title = 'Show Hidden'
-    parameter_name = 'hidden'
-
-    def lookups(self, request, model_admin):
-
-        return [
-            (True, 'Yes'),
-            (False, 'No')
-        ]
-
-    def queryset(self, request, queryset):
-
-        value = self.value()
-        if value == 'True':
-            return queryset.filter(hidden=True)
-        return queryset.filter(hidden=False)
-
-
 class CoreValueAssessmentInline(RestrictedEditAdminMixin, admin.StackedInline):
     model = CoreValuesAssessment
     extra = 0
 
 
 class PartnerAdmin(ExtraUrlMixin, ExportMixin, RestrictedEditAdmin):
-    form = PartnersAdminForm
     resource_class = PartnerExport
     search_fields = (
-        'name',
-        'vendor_number',
+        'alternate_name',
+        'organization__name',
+        'organization__vendor_number',
+        'organization__short_name'
     )
+    autocomplete_fields = ('lead_office', 'lead_section')
     list_filter = (
-        'partner_type',
+        'organization__organization_type',
         'rating',
-        HiddenPartnerFilter,
     )
     list_display = (
-        'name',
-        'vendor_number',
-        'partner_type',
+        'organization',
         'rating',
         'highest_risk_rating_name',
         'highest_risk_rating_type',
@@ -573,7 +515,7 @@ class PartnerAdmin(ExtraUrlMixin, ExportMixin, RestrictedEditAdmin):
     ]
     readonly_fields = (
         'vision_synced',
-        'vendor_number',
+        'organization',
         'rating',
         'type_of_assessment',
         'last_assessment_date',
@@ -582,7 +524,6 @@ class PartnerAdmin(ExtraUrlMixin, ExportMixin, RestrictedEditAdmin):
         'total_ct_cp',
         'deleted_flag',
         'blocked',
-        'name',
         'hact_values',
         'total_ct_cp',
         'total_ct_cy',
@@ -599,13 +540,10 @@ class PartnerAdmin(ExtraUrlMixin, ExportMixin, RestrictedEditAdmin):
     fieldsets = (
         (_('Partner Details'), {
             'fields':
-                (('name', 'vision_synced',),
-                 ('short_name', 'alternate_name',),
-                 ('partner_type', 'cso_type',),
+                (('organization', 'vision_synced',),
                  'lead_office',
                  'lead_section',
                  'shared_with',
-                 'vendor_number',
                  'rating',
                  'type_of_assessment',
                  'last_assessment_date',
@@ -684,7 +622,8 @@ class PartnerAdmin(ExtraUrlMixin, ExportMixin, RestrictedEditAdmin):
 class PlannedEngagementAdmin(RestrictedEditAdmin):
     model = PlannedEngagement
     search_fields = (
-        'partner__name',
+        'partner__organization__name',
+        'partner__organization__short_name',
     )
     fields = (
         'partner',
@@ -768,6 +707,7 @@ class AgreementAdmin(
         RestrictedEditAdminMixin,
         SnapshotModelAdmin,
 ):
+    staff_only = False
 
     list_filter = (
         'partner',
@@ -782,7 +722,7 @@ class AgreementAdmin(
     )
     search_fields = (
         'agreement_number',
-        'partner__name',
+        'partner__organization__name',
     )
     raw_id_fields = (
         'partner_manager',
@@ -886,7 +826,6 @@ class InterventionSupplyItemAdmin(RestrictedEditAdmin):
 
 admin.site.register(PartnerOrganization, PartnerAdmin)
 admin.site.register(Assessment, AssessmentAdmin)
-admin.site.register(PartnerStaffMember, PartnerStaffMemberAdmin)
 admin.site.register(PlannedEngagement, PlannedEngagementAdmin)
 
 admin.site.register(Agreement, AgreementAdmin)

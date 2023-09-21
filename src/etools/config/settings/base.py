@@ -210,6 +210,7 @@ SHARED_APPS = (
     'unicef_notification',
     'etools_offline',
     'etools.applications.offline',
+    'etools.applications.organizations',
 )
 
 TENANT_APPS = (
@@ -582,6 +583,30 @@ ATTACHMENT_FILEPATH_PREFIX_FUNC = "etools.applications.attachments.utils.get_fil
 ATTACHMENT_FLAT_MODEL = "etools.applications.attachments.models.AttachmentFlat"
 ATTACHMENT_DENORMALIZE_FUNC = "etools.applications.attachments.utils.denormalize_attachment"
 ATTACHMENT_PERMISSIONS = "etools.applications.attachments.permissions.IsInSchema"
+ATTACHMENT_INVALID_FILE_TYPES = [
+    "application/json",
+    "application/x-msdownload",
+    "applications/x-ms-installer",
+    "application/x-sh",
+    "text/x-perl",
+    "text/x-python",
+    "text/x-script.python",
+    "application/x-bytecode.python",
+    "text/javascript",
+    "application/x-typescript",
+    "text/x.typescript",
+    "text/prs.typescript",
+    # archive files
+    "application/x-bzip",
+    "application/x-bzip2",
+    "application/gzip",
+    "application/java-archive",
+    "application/x-httpd-php",
+    "application/vnd.rar",
+    "application/x-tar",
+    "application/zip",
+    "application/x-7z-compressed",
+]
 
 GEOS_LIBRARY_PATH = os.getenv('GEOS_LIBRARY_PATH', '/usr/lib/libgeos_c.so.1')  # default path
 GDAL_LIBRARY_PATH = os.getenv('GDAL_LIBRARY_PATH', '/usr/lib/libgdal.so.28')  # default path
@@ -610,7 +635,7 @@ UNICEF_LOCATIONS_MODEL = 'locations.Location'
 # https://github.com/unicef/etools-partner-reporting-portal
 PRP_API_ENDPOINT = get_from_secrets_or_env('PRP_API_ENDPOINT', '')  # example: http://172.18.0.1:8083/api
 PRP_API_USER = get_from_secrets_or_env('PRP_API_USER', '')
-PRP_API_PASSWORD = get_from_secrets_or_env('PRP_API_PASSWORD', '')
+PRP_USER_SYNC_DELAY = int(get_from_secrets_or_env('PRP_USER_SYNC_DELAY', 5))
 
 
 # EPD settings
@@ -624,3 +649,9 @@ ECN_API_ENDPOINT = get_from_secrets_or_env('ECN_API_ENDPOINT', '')  # example: h
 
 # Emails allowed to edit admin models in Partners and Reports apps
 ADMIN_EDIT_EMAILS = get_from_secrets_or_env('ADMIN_EDIT_EMAILS', '')
+
+
+# Stale non-UNICEF users deactivation threshold
+STALE_USERS_DEACTIVATION_THRESHOLD_DAYS = int(
+    get_from_secrets_or_env('STALE_USERS_DEACTIVATION_THRESHOLD_DAYS', 3 * 30)
+)

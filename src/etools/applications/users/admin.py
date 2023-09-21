@@ -1,22 +1,35 @@
+from django import forms
 from django.contrib import admin, messages
+from django.contrib.admin import helpers, widgets
+from django.contrib.admin.options import csrf_protect_m, IS_POPUP_VAR, TO_FIELD_VAR
 from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
-from django.db import connection
+from django.contrib.auth.forms import UserChangeForm
+from django.contrib.auth.models import Group
+from django.db import connection, router, transaction
+from django.forms import Select
 from django.http.response import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
-from django.urls import reverse
+from django.template.response import TemplateResponse
+from django.urls import path, reverse
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from admin_extra_urls.decorators import button
 from admin_extra_urls.mixins import ExtraUrlMixin
 from django_tenants.admin import TenantAdminMixin
+from django_tenants.postgresql_backend.base import FakeTenant
 from django_tenants.utils import get_public_schema_name
+from unicef_snapshot.admin import ActivityInline, SnapshotModelAdmin
 
 from etools.applications.funds.tasks import sync_all_delegated_frs, sync_country_delegated_fr
 from etools.applications.hact.tasks import update_hact_for_country, update_hact_values
-from etools.applications.users.models import Country, UserProfile, WorkspaceCounter
+from etools.applications.organizations.models import Organization
+from etools.applications.users.models import Country, Realm, StagedUser, UserProfile, WorkspaceCounter
+from etools.applications.users.tasks import sync_realms_to_prp
 from etools.applications.vision.tasks import sync_handler, vision_sync_task
 from etools.libraries.azure_graph_api.tasks import sync_user
+from etools.libraries.djangolib.admin import RestrictedEditAdminMixin
 
 
 def get_office(obj):
@@ -34,16 +47,13 @@ class ProfileInline(admin.StackedInline):
     fields = [
         'country',
         'country_override',
-        'countries_available',
+        'organization',
         'office',
         'job_title',
         'post_title',
         'phone_number',
         'staff_id',
     ]
-    filter_horizontal = (
-        'countries_available',
-    )
     search_fields = (
         'tenant_profile__office__name',
         'country__name',
@@ -52,6 +62,10 @@ class ProfileInline(admin.StackedInline):
     readonly_fields = (
         'user',
         'country',
+    )
+
+    autocomplete_fields = (
+        'organization',
     )
 
     fk_name = 'user'
@@ -63,18 +77,6 @@ class ProfileInline(admin.StackedInline):
             fields.remove('country_override')
         return fields
 
-    def formfield_for_manytomany(self, db_field, request=None, **kwargs):
-
-        if db_field.name == 'countries_available':
-            if request and request.user.is_superuser:
-                kwargs['queryset'] = Country.objects.all()
-            else:
-                kwargs['queryset'] = request.user.profile.countries_available.all()
-
-        return super().formfield_for_manytomany(
-            db_field, request, **kwargs
-        )
-
     def office(self, obj):
         return get_office(obj)
 
@@ -83,7 +85,6 @@ class ProfileAdmin(admin.ModelAdmin):
     fields = [
         'country',
         'country_override',
-        'countries_available',
         'office',
         'job_title',
         'phone_number',
@@ -109,9 +110,6 @@ class ProfileAdmin(admin.ModelAdmin):
     list_filter = (
         'country',
         'office',
-    )
-    filter_horizontal = (
-        'countries_available',
     )
     search_fields = (
         'tenant_profile__office__name',
@@ -140,7 +138,7 @@ class ProfileAdmin(admin.ModelAdmin):
         if not request.user.is_superuser:
             queryset = queryset.filter(
                 user__is_staff=True,
-                country__in=request.user.profile.countries_available.all()
+                country__in=request.user.realms__country.objects.distinct()
             )
         return queryset
 
@@ -150,18 +148,6 @@ class ProfileAdmin(admin.ModelAdmin):
         if not request.user.is_superuser and 'country_override' in fields:
             fields.remove('country_override')
         return fields
-
-    def formfield_for_manytomany(self, db_field, request=None, **kwargs):
-
-        if db_field.name == 'countries_available':
-            if request and request.user.is_superuser:
-                kwargs['queryset'] = Country.objects.all()
-            else:
-                kwargs['queryset'] = request.user.profile.countries_available.all()
-
-        return super().formfield_for_manytomany(
-            db_field, request, **kwargs
-        )
 
     def office(self, obj):
         return get_office(obj)
@@ -176,17 +162,33 @@ class ProfileAdmin(admin.ModelAdmin):
         obj.save()
 
 
-class UserAdminPlus(ExtraUrlMixin, UserAdmin):
-    fieldsets = UserAdmin.fieldsets + (
-        (_('User Preferences'), {
-            'fields':
-                (
-                    'preferences',
-                )
+class RealmInline(admin.StackedInline):
+    verbose_name_plural = "Realms in current country"
+
+    model = Realm
+    raw_id_fields = ('country', 'organization', 'group')
+    extra = 0
+
+    def get_queryset(self, request):
+        if isinstance(connection.tenant, FakeTenant):
+            return super().get_queryset(request)
+        return super().get_queryset(request).filter(country=connection.tenant)
+
+
+class UserAdminPlus(RestrictedEditAdminMixin, ExtraUrlMixin, UserAdmin):
+    fieldsets = (
+        (None, {'fields': ('username', 'password')}),
+        (_('Personal info'), {'fields': ('first_name', 'last_name', 'email')}),
+        (_('Permissions'), {
+            'fields': ('is_active', 'is_staff', 'is_superuser', 'user_permissions'),
         }),
+        (_('Important dates'), {'fields': ('last_login', 'date_joined')}),
+        (_('User Preferences'), {'fields': ('preferences', )}),
     )
-    inlines = [ProfileInline]
-    readonly_fields = ('date_joined',)
+    list_filter = ('is_staff', 'is_superuser', 'is_active', )
+
+    inlines = [ProfileInline, RealmInline]
+    readonly_fields = ('last_login', 'date_joined',)
 
     list_display = [
         'email',
@@ -199,11 +201,20 @@ class UserAdminPlus(ExtraUrlMixin, UserAdmin):
         'is_active',
         'country',
     ]
+    list_select_related = ('profile__country', 'profile__office')
+
+    UserChangeForm.Meta.exclude = ('groups',)
 
     @button()
     def sync_user(self, request, pk):
         user = get_object_or_404(get_user_model(), pk=pk)
         sync_user.delay(user.username)
+        return HttpResponseRedirect(reverse('admin:users_user_change', args=[user.pk]))
+
+    @button()
+    def sync_realms_to_prp(self, request, pk):
+        user = get_object_or_404(get_user_model(), pk=pk)
+        sync_realms_to_prp.delay(user.id, timezone.now().timestamp())
         return HttpResponseRedirect(reverse('admin:users_user_change', args=[user.pk]))
 
     @button()
@@ -271,6 +282,7 @@ class CountryAdmin(ExtraUrlMixin, TenantAdminMixin, admin.ModelAdmin):
     filter_horizontal = (
         'offices',
     )
+    search_fields = ('name', )
 
     @button()
     def sync_fund_reservation_delegated(self, request, pk):
@@ -324,8 +336,103 @@ class CountryAdmin(ExtraUrlMixin, TenantAdminMixin, admin.ModelAdmin):
         return HttpResponseRedirect(reverse('admin:users_country_change', args=[country.pk]))
 
 
+class MultipleRealmForm(forms.ModelForm):
+    user = forms.ModelMultipleChoiceField(
+        widget=widgets.ManyToManyRawIdWidget(Realm._meta.get_field("user").remote_field, admin.site), queryset=get_user_model().objects.all())
+    country = forms.ModelMultipleChoiceField(
+        widget=widgets.ManyToManyRawIdWidget(Realm._meta.get_field("country").remote_field, admin.site), queryset=Country.objects.all())
+    group = forms.ModelMultipleChoiceField(
+        widget=widgets.ManyToManyRawIdWidget(Realm._meta.get_field("group").remote_field, admin.site), queryset=Group.objects.all())
+    organization = forms.ModelChoiceField(
+        widget=Select(), queryset=Organization.objects.all())
+
+    class Meta:
+        model = Realm
+        fields = ['user', 'country', 'group', 'organization']
+
+
+class RealmAdmin(RestrictedEditAdminMixin, SnapshotModelAdmin):
+    change_list_template = "admin/users/realm/change_list.html"
+
+    raw_id_fields = ('user', 'organization')
+    search_fields = ('user__email', 'user__first_name', 'user__last_name', 'country__name',
+                     'organization__name', 'organization__vendor_number', 'group__name')
+    autocomplete_fields = ('country', 'group')
+
+    inlines = (ActivityInline, )
+
+    def get_urls(self):
+        urlpatterns = super().get_urls()
+        custom_urls = [
+            path('multiple-realms/',
+                 self.admin_site.admin_view(self.multiple_realms), name='multiple-realms'),
+        ]
+        return custom_urls + urlpatterns
+
+    @csrf_protect_m
+    def multiple_realms(self, request, obj=None, form_url='', extra_context=None):
+        opts = self.model._meta
+        app_label = opts.app_label
+        if request.method == 'GET':
+            fieldsets = [(None, {'fields': ['user', 'country', 'organization', 'group']})]
+            initial = self.get_changeform_initial_data(request)
+            form = MultipleRealmForm(initial=initial)
+            admin_form = helpers.AdminForm(form, fieldsets, {}, model_admin=self)
+            context = {
+                **self.admin_site.each_context(request),
+                'module_name': str(opts.verbose_name_plural),
+                'has_add_permission': self.has_add_permission(request),
+                'opts': opts,
+                'app_label': app_label,
+                'title': 'Add Multiple Realms',
+                'media': self.media,
+                'adminform': admin_form,
+                'is_popup': IS_POPUP_VAR in request.POST or IS_POPUP_VAR in request.GET,
+                'to_field': request.POST.get(TO_FIELD_VAR, request.GET.get(TO_FIELD_VAR)),
+                'form_url': reverse('admin:multiple-realms', current_app=self.admin_site.name),
+                **(extra_context or {}),
+            }
+
+            request.current_app = self.admin_site.name
+            return TemplateResponse(request, 'admin/users/realm/add_multiple.html', context)
+
+        if request.method == 'POST':
+            if "_save_realms" in request.POST:
+                user_ids = request.POST.get('user').split(',')
+                country_ids = request.POST.get('country').split(',')
+                organization_id = request.POST.get('organization')
+                group_ids = request.POST.get('group').split(',')
+                with transaction.atomic(using=router.db_for_write(self.model)):
+                    for user_id in user_ids:
+                        for country_id in country_ids:
+                            for group_id in group_ids:
+                                Realm.objects.update_or_create(
+                                    user_id=user_id, country_id=country_id, organization_id=organization_id,
+                                    group_id=group_id, defaults={'is_active': True})
+
+            redirect_url = reverse('admin:%s_%s_changelist' %
+                                   (opts.app_label, opts.model_name),
+                                   current_app=self.admin_site.name)
+            return HttpResponseRedirect(redirect_url)
+
+
+class StagedUserAdmin(admin.ModelAdmin):
+    list_display = ('country', 'organization', 'requester', 'reviewer', 'request_state')
+    list_filter = ('request_state', 'country')
+    search_fields = ('requester__email', 'requester__first_name', 'requester__last_name',
+                     'reviewer__email', 'reviewer__first_name', 'reviewer__last_name',
+                     'country__name', 'organization__name', 'organization__vendor_number')
+
+    raw_id_fields = ('requester', 'reviewer', 'organization')
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+
 # Re-register UserAdmin
 admin.site.register(get_user_model(), UserAdminPlus)
 admin.site.register(UserProfile, ProfileAdmin)
 admin.site.register(Country, CountryAdmin)
 admin.site.register(WorkspaceCounter)
+admin.site.register(Realm, RealmAdmin)
+admin.site.register(StagedUser, StagedUserAdmin)

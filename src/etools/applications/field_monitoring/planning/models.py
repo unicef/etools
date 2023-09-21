@@ -1,10 +1,12 @@
 import logging
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import connection, models, transaction
 from django.db.models import Count, Exists, OuterRef, Q
 from django.db.models.base import ModelBase
+from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 
 from django_fsm import FSMField, transition
@@ -24,7 +26,7 @@ from etools.applications.field_monitoring.fm_settings.models import LocationSite
 from etools.applications.field_monitoring.planning.mixins import ProtectUnknownTransitionsMeta
 from etools.applications.field_monitoring.planning.transitions.permissions import (
     user_is_field_monitor_permission,
-    user_is_pme_permission,
+    user_is_pme_or_approver_permission,
     user_is_visit_lead_permission,
 )
 from etools.applications.locations.models import Location
@@ -333,13 +335,19 @@ class MonitoringActivity(
     def destination_str(self):
         return str(self.location_site) if self.location_site else str(self.location)
 
+    @cached_property
+    def country_pmes(self):
+        return get_user_model().objects.filter(
+            realms__group__name=PME.name,
+            realms__country=connection.tenant,
+            realms__is_active=True
+        )
+
     def check_if_rejected(self, old_instance):
         # if rejected send notice
         if old_instance and old_instance.status == self.STATUSES.assigned:
             email_template = "fm/activity/reject"
-            recipients = PME.as_group().user_set.filter(
-                profile__country=connection.tenant,
-            )
+            recipients = self.country_pmes
             for recipient in recipients:
                 self._send_email(
                     recipient.email,
@@ -349,9 +357,7 @@ class MonitoringActivity(
                 )
 
     def send_submit_notice(self):
-        recipients = PME.as_group().user_set.filter(
-            profile__country=connection.tenant,
-        )
+        recipients = self.country_pmes
         if self.monitor_type == self.MONITOR_TYPE_CHOICES.staff:
             email_template = 'fm/activity/staff-submit'
         else:
@@ -557,12 +563,12 @@ class MonitoringActivity(
         pass
 
     @transition(field=status, source=STATUSES.submitted, target=STATUSES.completed,
-                permission=user_is_pme_permission)
+                permission=user_is_pme_or_approver_permission)
     def complete(self):
         pass
 
     @transition(field=status, source=STATUSES.submitted, target=STATUSES.report_finalization,
-                permission=user_is_pme_permission)
+                permission=user_is_pme_or_approver_permission)
     def reject_report(self):
         pass
 

@@ -1,7 +1,6 @@
-
 import random
 
-from django.contrib.auth.models import Group
+from django.db.models import signals
 
 import factory
 from factory import fuzzy
@@ -23,16 +22,11 @@ from etools.applications.audit.models import (
     UNICEFAuditFocalPoint,
     UNICEFUser,
 )
-from etools.applications.audit.purchase_order.models import (
-    AuditorFirm,
-    AuditorStaffMember,
-    PurchaseOrder,
-    PurchaseOrderItem,
-)
-from etools.applications.firms.tests.factories import BaseFirmFactory, BaseStaffMemberFactory
+from etools.applications.audit.purchase_order.models import AuditorFirm, PurchaseOrder, PurchaseOrderItem
+from etools.applications.firms.tests.factories import BaseFirmFactory
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.tests.factories import AgreementFactory, InterventionFactory, PartnerFactory
-from etools.applications.users.tests.factories import UserFactory
+from etools.applications.users.tests.factories import CountryFactory, GroupFactory, RealmFactory, UserFactory
 
 
 class FuzzyBooleanField(fuzzy.BaseFuzzyAttribute):
@@ -49,11 +43,11 @@ class PartnerWithAgreementsFactory(PartnerFactory):
 
 
 class AuditFocalPointUserFactory(UserFactory):
-    groups__data = [UNICEFUser.name, UNICEFAuditFocalPoint.name]
+    realms__data = [UNICEFUser.name, UNICEFAuditFocalPoint.name]
 
 
 class AuditorUserFactory(UserFactory):
-    groups__data = [Auditor.name]
+    realms__data = [Auditor.name]
 
     @factory.post_generation
     def partner_firm(self, create, extracted, **kwargs):
@@ -63,26 +57,32 @@ class AuditorUserFactory(UserFactory):
         if not extracted:
             extracted = AuditPartnerFactory()
 
-        AuditorStaffMemberFactory(auditor_firm=extracted, user=self)
-
-
-class AuditorStaffMemberFactory(BaseStaffMemberFactory):
-    class Meta:
-        model = AuditorStaffMember
+        self.profile.organization = extracted.organization
+        self.profile.save(update_fields=['organization'])
 
     @factory.post_generation
-    def user_groups(self, create, extracted, **kwargs):
-        if create:
-            self.user.groups.set([
-                Group.objects.get_or_create(name=Auditor.name)[0]
-            ])
+    def realms(self, create, extracted, data=None, **kwargs):
+        if not create:
+            return
+
+        extracted = (extracted or []) + (data or [])
+        if extracted:
+            organization = self.profile.organization
+            for group in extracted:
+                if isinstance(group, str):
+                    RealmFactory(
+                        user=self,
+                        country=CountryFactory(),
+                        organization=organization,
+                        group=GroupFactory(name=group)
+                    )
 
 
 class AuditPartnerFactory(BaseFirmFactory):
     class Meta:
         model = AuditorFirm
 
-    staff_members = factory.RelatedFactory(AuditorStaffMemberFactory, 'auditor_firm')
+    staff_members = factory.RelatedFactory(AuditorUserFactory, 'partner_firm')
 
 
 class PurchaseOrderItemFactory(factory.django.DjangoModelFactory):
@@ -101,6 +101,7 @@ class PurchaseOrderFactory(factory.django.DjangoModelFactory):
     order_number = fuzzy.FuzzyText(length=20)
 
 
+@factory.django.mute_signals(signals.m2m_changed)
 class EngagementFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Engagement
@@ -116,7 +117,13 @@ class EngagementFactory(factory.django.DjangoModelFactory):
 
     @factory.post_generation
     def staff_members(self, create, extracted, **kwargs):
-        if create:
+        if not create or extracted == []:
+            return
+
+        if extracted:
+            for member in extracted:
+                self.staff_members.add(member)
+        else:
             self.staff_members.add(*self.agreement.auditor_firm.staff_members.all())
 
 

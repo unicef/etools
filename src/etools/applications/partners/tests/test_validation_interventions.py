@@ -3,20 +3,25 @@ from unittest import skip
 from unittest.mock import Mock, patch
 
 from etools_validator.exceptions import BasicValidationError, StateValidationError, TransitionError
+from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
+from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.models import Agreement, Intervention, InterventionAmendment
+from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
     InterventionAmendmentFactory,
     InterventionFactory,
-    PartnerStaffFactory,
+    InterventionResultLinkFactory,
 )
 from etools.applications.partners.validation.interventions import (
     InterventionValid,
+    locations_valid,
     partnership_manager_only,
+    sections_valid,
     signed_date_valid,
     ssfa_agreement_has_no_other_intervention,
     start_date_related_agreement_valid,
@@ -28,7 +33,8 @@ from etools.applications.partners.validation.interventions import (
     transition_to_suspended,
     transition_to_terminated,
 )
-from etools.applications.users.tests.factories import GroupFactory, UserFactory
+from etools.applications.reports.tests.factories import AppliedIndicatorFactory, LowerResultFactory, SectionFactory
+from etools.applications.users.tests.factories import UserFactory
 
 
 class TestPartnershipManagerOnly(BaseTenantTestCase):
@@ -38,8 +44,9 @@ class TestPartnershipManagerOnly(BaseTenantTestCase):
             partnership_manager_only(None, user)
 
     def test_manager(self):
-        user = UserFactory()
-        user.groups.add(GroupFactory(name="Partnership Manager"))
+        user = UserFactory(
+            is_staff=True, realms__data=[PARTNERSHIP_MANAGER_GROUP]
+        )
         self.assertTrue(partnership_manager_only(None, user))
 
 
@@ -555,7 +562,10 @@ class TestSignedDateValid(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_user = UserFactory()
-        cls.partner_user = PartnerStaffFactory()
+        cls.partner_user = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=OrganizationFactory()
+        )
         cls.future_date = datetime.date.today() + datetime.timedelta(days=2)
 
     def test_valid(self):
@@ -780,6 +790,12 @@ class TestInterventionValid(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
         cls.intervention = InterventionFactory()
+        cls.result_link = InterventionResultLinkFactory(intervention=cls.intervention)
+        cls.lower_result = LowerResultFactory(result_link=cls.result_link)
+        cls.applied_indicator = AppliedIndicatorFactory(
+            lower_result=cls.lower_result,
+            target={"d": 3, "v": 4}
+        )
         cls.intervention.old_instance = cls.intervention
         cls.validator = InterventionValid(
             cls.intervention,
@@ -864,3 +880,35 @@ class TestInterventionValid(BaseTenantTestCase):
         """Invalid if end date is after today"""
         self.intervention.end = datetime.date(2001, 1, 1)
         self.assertTrue(self.validator.state_ended_valid(self.intervention))
+
+    def test_locations_valid(self):
+        with self.assertNumQueries(1):
+            self.assertTrue(locations_valid(self.intervention))
+
+    def test_locations_invalid(self):
+        loc = LocationFactory()
+        self.applied_indicator.locations.add(loc)
+
+        with self.assertRaisesRegexp(
+                BasicValidationError,
+                'The following locations have been selected on the PD/SPD indicators and '
+                'cannot be removed without removing them from the indicators first'
+        ):
+            locations_valid(self.intervention)
+
+    def test_sections_valid(self):
+        sec = SectionFactory()
+        self.intervention.sections.add(sec)
+        self.applied_indicator.section = sec
+        self.applied_indicator.save(update_fields=['section'])
+        with self.assertNumQueries(1):
+            self.assertTrue(sections_valid(self.intervention))
+
+    def test_sections_invalid(self):
+        self.applied_indicator.section = SectionFactory()
+        self.applied_indicator.save(update_fields=['section'])
+        with self.assertRaisesRegexp(
+                BasicValidationError,
+                'The following sections have been selected on the PD/SPD indicators and cannot be removed'
+        ):
+            sections_valid(self.intervention)

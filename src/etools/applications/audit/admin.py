@@ -25,12 +25,12 @@ from etools.libraries.djangolib.admin import RestrictedEditAdmin
 class EngagementAdmin(RestrictedEditAdmin):
     list_display = [
         '__str__', 'status', 'partner', 'date_of_field_visit',
-        'engagement_type', 'start_date', 'end_date',
+        'engagement_type', 'start_date', 'end_date', 'year_of_audit',
     ]
     list_filter = [
         'status', 'start_date', 'end_date', 'status', 'engagement_type',
     ]
-    search_fields = 'partner__name', 'agreement__auditor_firm__name',
+    search_fields = 'partner__organization__name', 'agreement__auditor_firm__name',
     filter_horizontal = ('authorized_officers', 'active_pd', 'staff_members', 'users_notified', 'sections', 'offices')
     raw_id_fields = ('po_item', 'partner', 'active_pd', 'staff_members', 'authorized_officers', 'users_notified', )
 

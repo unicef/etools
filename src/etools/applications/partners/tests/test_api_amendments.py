@@ -26,7 +26,6 @@ from etools.applications.partners.tests.factories import (
     InterventionReviewFactory,
     InterventionSupplyItemFactory,
     PartnerFactory,
-    PartnerStaffFactory,
 )
 from etools.applications.reports.tests.factories import (
     CountryProgrammeFactory,
@@ -47,10 +46,15 @@ class BaseTestInterventionAmendments:
     def setUp(self):
         super().setUp()
         today = timezone.now().date()
-        self.unicef_staff = UserFactory(is_staff=True, groups__data=[UNICEF_USER])
-        self.pme = UserFactory(is_staff=True, groups__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP])
+        self.unicef_staff = UserFactory(is_staff=True)
+        self.pme = UserFactory(is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP])
 
-        self.partner = PartnerFactory(name='Partner')
+        self.partner = PartnerFactory()
+        self.partner_staff = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=self.partner.organization
+        )
+
         year_ago = datetime.date.today() - datetime.timedelta(days=365)
         self.active_agreement = AgreementFactory(
             partner=self.partner,
@@ -71,11 +75,11 @@ class BaseTestInterventionAmendments:
             signed_by_unicef_date=today - datetime.timedelta(days=1),
             signed_by_partner_date=today - datetime.timedelta(days=1),
             unicef_signatory=self.unicef_staff,
-            partner_authorized_officer_signatory=self.partner.staff_members.all().first(),
+            partner_authorized_officer_signatory=self.partner.active_staff_members.all().first(),
             budget_owner=self.pme,
         )
         self.active_intervention.flat_locations.add(LocationFactory())
-        self.active_intervention.partner_focal_points.add(self.partner.staff_members.all().first())
+        self.active_intervention.partner_focal_points.add(self.partner_staff)
         self.active_intervention.unicef_focal_points.add(self.unicef_staff)
         self.active_intervention.offices.add(OfficeFactory())
         self.active_intervention.sections.add(SectionFactory())
@@ -115,7 +119,7 @@ class TestInterventionAmendments(BaseTestInterventionAmendments, BaseTenantTestC
         response = self.forced_auth_req(
             'post',
             reverse('partners_api:intervention-amendments-add', args=[self.active_intervention.pk]),
-            UserFactory(is_staff=True, groups__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
+            UserFactory(is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
             data={
                 'types': ['invalid_choice'],
                 'kind': InterventionAmendment.KIND_NORMAL,
@@ -131,7 +135,7 @@ class TestInterventionAmendments(BaseTestInterventionAmendments, BaseTenantTestC
         response = self.forced_auth_req(
             'post',
             reverse('partners_api:intervention-amendments-add', args=[self.active_intervention.pk]),
-            UserFactory(is_staff=True, groups__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
+            UserFactory(is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
             data={
                 'types': [InterventionAmendment.OTHER],
                 'kind': InterventionAmendment.KIND_NORMAL,
@@ -164,7 +168,7 @@ class TestInterventionAmendments(BaseTestInterventionAmendments, BaseTenantTestC
         response = self.forced_auth_req(
             'post',
             reverse('partners_api:intervention-amendments-add', args=[self.active_intervention.pk]),
-            UserFactory(is_staff=True, groups__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
+            UserFactory(is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
             data={
                 'types': [InterventionAmendment.TYPE_CHANGE],
                 'kind': InterventionAmendment.KIND_NORMAL,
@@ -200,7 +204,7 @@ class TestInterventionAmendments(BaseTestInterventionAmendments, BaseTenantTestC
         response = self.forced_auth_req(
             'post',
             reverse('partners_api:intervention-amendments-add', args=[self.active_intervention.pk]),
-            UserFactory(is_staff=True, groups__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
+            UserFactory(is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
             data={
                 'types': [InterventionAmendment.TYPE_CHANGE],
                 'kind': InterventionAmendment.KIND_NORMAL,
@@ -219,7 +223,7 @@ class TestInterventionAmendments(BaseTestInterventionAmendments, BaseTenantTestC
             response = self.forced_auth_req(
                 'post',
                 reverse('partners_api:intervention-amendments-add', args=[self.active_intervention.pk]),
-                UserFactory(is_staff=True, groups__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
+                UserFactory(is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
                 data={
                     'types': [InterventionAmendment.TYPE_CHANGE],
                     'kind': InterventionAmendment.KIND_NORMAL,
@@ -237,7 +241,7 @@ class TestInterventionAmendments(BaseTestInterventionAmendments, BaseTenantTestC
         response = self.forced_auth_req(
             'post',
             reverse('partners_api:intervention-amendments-add', args=[intervention.pk]),
-            UserFactory(is_staff=True, groups__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
+            UserFactory(is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
             data={
                 'types': [InterventionAmendment.TYPE_CHANGE],
                 'kind': InterventionAmendment.KIND_NORMAL,
@@ -249,7 +253,7 @@ class TestInterventionAmendments(BaseTestInterventionAmendments, BaseTenantTestC
         response = self.forced_auth_req(
             'post',
             reverse('partners_api:intervention-amendments-add', args=[intervention.pk]),
-            UserFactory(is_staff=True, groups__data=['UNICEF User', 'Partnership Manager']),
+            UserFactory(is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
             data={
                 'types': [InterventionAmendment.TYPE_CHANGE],
                 'kind': InterventionAmendment.KIND_CONTINGENCY,
@@ -261,7 +265,7 @@ class TestInterventionAmendments(BaseTestInterventionAmendments, BaseTenantTestC
         response = self.forced_auth_req(
             'post',
             reverse('partners_api:intervention-amendments-add', args=[intervention.pk]),
-            UserFactory(is_staff=True, groups__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
+            UserFactory(is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
             data={
                 'types': [InterventionAmendment.TYPE_CHANGE],
                 'kind': InterventionAmendment.KIND_CONTINGENCY,
@@ -443,7 +447,7 @@ class TestInterventionAmendmentDeleteView(BaseTenantTestCase):
         response = self.forced_auth_req(
             'delete',
             self.url,
-            user=UserFactory(is_staff=True, groups__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
+            user=UserFactory(is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
@@ -455,8 +459,9 @@ class TestInterventionAmendmentsMerge(BaseTestInterventionAmendments, BaseTenant
         country_programme = CountryProgrammeFactory()
         self.intervention = InterventionFactory(
             agreement__partner=self.partner,
-            partner_authorized_officer_signatory=PartnerStaffFactory(
-                partner=self.partner, user__is_staff=False, user__groups__data=[]
+            partner_authorized_officer_signatory=UserFactory(
+                profile__organization=self.partner.organization,
+                is_staff=False, realms__data=['IP Viewer']
             ),
             unicef_signatory=UserFactory(),
             country_programme=country_programme,
@@ -477,12 +482,13 @@ class TestInterventionAmendmentsMerge(BaseTestInterventionAmendments, BaseTenant
         self.intervention.planned_budget.save()
         # FundsReservationHeaderFactory(intervention=intervention, currency='USD') # frs code is unique
         ReportingRequirementFactory(intervention=self.intervention)
-        self.unicef_focal_point = UserFactory(is_staff=True, groups__data=[UNICEF_USER])
+        self.unicef_focal_point = UserFactory(is_staff=True)
         self.intervention.unicef_focal_points.add(self.unicef_focal_point)
         self.intervention.sections.add(SectionFactory())
         self.intervention.offices.add(OfficeFactory())
-        self.intervention.partner_focal_points.add(PartnerStaffFactory(
-            partner=self.partner, user__is_staff=False, user__groups__data=[]
+        self.intervention.partner_focal_points.add(UserFactory(
+            profile__organization=self.partner.organization,
+            is_staff=False, realms__data=['IP Viewer']
         ))
         ReportingRequirementFactory(intervention=self.intervention)
 
@@ -512,7 +518,7 @@ class TestInterventionAmendmentsMerge(BaseTestInterventionAmendments, BaseTenant
         self.amended_intervention.save()
         review = InterventionReviewFactory(
             intervention=self.amended_intervention, overall_approval=True,
-            overall_approver=UserFactory(is_staff=True, groups__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
+            overall_approver=UserFactory(is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
         )
 
         # sign amended intervention

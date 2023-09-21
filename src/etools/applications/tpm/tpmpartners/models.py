@@ -1,10 +1,14 @@
+import warnings
+
+from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import connection, models
 from django.utils.translation import gettext_lazy as _
 
 from unicef_attachments.models import Attachment
 
-from etools.applications.firms.models import BaseFirm, BaseStaffMember
+from etools.applications.firms.models import BaseFirm, BaseFirmManager, BaseStaffMember
+from etools.applications.users.mixins import TPM_ACTIVE_GROUPS
 
 
 class TPMPartnerQueryset(models.QuerySet):
@@ -20,7 +24,7 @@ class TPMPartner(BaseFirm):
 
     attachments = GenericRelation(Attachment, verbose_name=_('attachments'), blank=True)
 
-    objects = models.Manager.from_queryset(TPMPartnerQueryset)()
+    objects = BaseFirmManager.from_queryset(TPMPartnerQueryset)()
 
     def activate(self, country):
         self.countries.add(country)
@@ -29,10 +33,37 @@ class TPMPartner(BaseFirm):
             self.hidden = False
             self.save()
 
+    @property
+    def staff_members(self) -> models.QuerySet:
+        return get_user_model().objects.filter(
+            pk__in=self.organization.realms.filter(
+                is_active=True,
+                country=connection.tenant,
+                group__name__in=TPM_ACTIVE_GROUPS,
+            ).values_list('user_id', flat=True)
+        )
+
+    @property
+    def all_staff_members(self) -> models.QuerySet:
+        return get_user_model().objects.filter(
+            pk__in=self.organization.realms.filter(
+                country=connection.tenant,
+                group__name__in=TPM_ACTIVE_GROUPS,
+            ).values_list('user_id', flat=True)
+        )
+
 
 class TPMPartnerStaffMember(BaseStaffMember):
+    """
+    legacy tpm staff member model - shouldn't be used
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        warnings.warn('TPMPartnerStaffMember was deprecated in favor of Realms')
+
     tpm_partner = models.ForeignKey(
-        TPMPartner, verbose_name=_('TPM Vendor'), related_name='staff_members',
+        TPMPartner, verbose_name=_('TPM Vendor'), related_name='old_staff_members',
         on_delete=models.CASCADE,
     )
 

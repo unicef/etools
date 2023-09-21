@@ -15,6 +15,7 @@ from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.field_monitoring.fm_settings.tests.factories import QuestionFactory
 from etools.applications.field_monitoring.planning.tests.factories import MonitoringActivityFactory
 from etools.applications.partners.models import Intervention
+from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, UNICEF_USER
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
     InterventionFactory,
@@ -25,7 +26,7 @@ from etools.applications.reports.tests.factories import AppliedIndicatorFactory,
 from etools.applications.t2f.models import Travel, TravelType
 from etools.applications.t2f.tests.factories import TravelActivityFactory, TravelFactory
 from etools.applications.tpm.tests.factories import TPMActivityFactory, TPMVisitFactory
-from etools.applications.users.tests.factories import CountryFactory, GroupFactory, UserFactory
+from etools.applications.users.tests.factories import CountryFactory, UserFactory
 
 
 class InvalidateCacheTest(BaseTenantTestCase):
@@ -174,9 +175,9 @@ class TestGisLocationViews(BaseTenantTestCase):
     def setUp(self):
         super().setUp()
 
-        self.unicef_staff = UserFactory(is_superuser=True)
-        group = GroupFactory()
-        self.unicef_staff.groups.add(group)
+        self.unicef_staff = UserFactory(
+            is_superuser=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]
+        )
         self.country = CountryFactory()
         self.unicef_staff.profile.country = self.country
         self.unicef_staff.save()
@@ -327,6 +328,23 @@ class TestGisLocationViews(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
         self.assertEqual(sorted(response.data[0].keys()), ["id", "level", "name", "p_code", "parent_id"])
+
+    def test_monitoring_activities_in_use(self):
+        MonitoringActivityFactory(
+            location=self.location_with_geom
+        )
+
+        response = self.forced_auth_req(
+            "get",
+            reverse("management_gis:locations-gis-in-use"),
+            user=self.unicef_staff,
+            data={"country_id": self.country.id},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(sorted(response.data[0].keys()), ["id", "level", "name", "p_code", "parent_id"])
+        self.assertEqual(int(response.data[0]["id"]), self.location_with_geom.pk)
 
     def test_intervention_locations_geom_bad_request(self):
         url = reverse("management_gis:locations-gis-geom-list")

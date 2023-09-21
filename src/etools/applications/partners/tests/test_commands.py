@@ -43,8 +43,7 @@ class TestCopyAttachments(BaseTenantTestCase):
         cls.file_type_intervention_amendment = AttachmentFileTypeFactory()
         cls.intervention_attachment_code = "partners_intervention_attachment"
         cls.file_type_intervention_attachment = AttachmentFileTypeFactory()
-        cls.partner = PartnerFactory(
-        )
+        cls.partner = PartnerFactory()
         cls.core_values_assessment = CoreValuesAssessmentFactory(
             assessment="sample.pdf"
         )

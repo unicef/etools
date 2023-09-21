@@ -1,3 +1,4 @@
+from etools.applications.audit.models import Auditor
 from etools.applications.permissions2.conditions import ModuleCondition, SimpleCondition
 
 
@@ -8,13 +9,12 @@ class AuditModuleCondition(ModuleCondition):
 class AuditStaffMemberCondition(SimpleCondition):
     predicate = 'user in audit_auditorfirm.staff_members'
 
-    def __init__(self, partner, user):
-        self.partner = partner
+    def __init__(self, organization, user):
+        self.organization = organization
         self.user = user
 
     def is_satisfied(self):
-        return self.partner.staff_members.exists() and self.user.pk in self.partner.staff_members.values_list(
-            'user', flat=True)
+        return Auditor.as_group() in self.user.get_groups_for_organization_id(self.organization.id, is_active=True)
 
 
 class EngagementStaffMemberCondition(SimpleCondition):
@@ -25,15 +25,14 @@ class EngagementStaffMemberCondition(SimpleCondition):
         self.user = user
 
     def is_satisfied(self):
-        return hasattr(self.user, 'purchase_order_auditorstaffmember'
-                       ) and self.user.purchase_order_auditorstaffmember in self.engagement.staff_members.all()
+        return self.user in self.engagement.staff_members.all()
 
 
-class IsStaffMemberCondition(SimpleCondition):
-    predicate = 'user.is_staff'
+class IsUnicefUserCondition(SimpleCondition):
+    predicate = 'user.is_unicef_user'
 
     def __init__(self, user):
         self.user = user
 
     def is_satisfied(self):
-        return self.user.is_staff
+        return self.user.is_unicef_user()

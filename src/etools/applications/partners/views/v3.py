@@ -1,10 +1,12 @@
 from django.contrib.auth import get_user_model
+from django.db import connection
 from django.db.models import Value
 from django.db.models.functions import Concat
 from django.http import Http404
 from django.utils.functional import cached_property
 
 from rest_framework import status
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -13,6 +15,7 @@ from unicef_locations.models import GatewayType
 
 from etools.applications.attachments.models import AttachmentFlat
 from etools.applications.funds.models import FundsReservationItem
+from etools.applications.organizations.models import Organization
 from etools.applications.partners.models import (
     Agreement,
     AgreementAmendment,
@@ -23,8 +26,8 @@ from etools.applications.partners.models import (
     InterventionReview,
     InterventionRisk,
     InterventionSupplyItem,
+    OrganizationType,
     PartnerOrganization,
-    PartnerType,
 )
 from etools.applications.partners.permissions import UserIsPartnerStaffMemberPermission
 from etools.applications.partners.views.v2 import choices_to_json_ready
@@ -38,16 +41,26 @@ class PMPBaseViewMixin:
     permission_classes = [IsAuthenticated]
 
     def is_partner_staff(self):
-        """Flag indicator whether user is a partner"""
-        return self.request.user.is_authenticated and self.request.user.get_partner_staff_member()
+        """
+        Flag indicator shows whether authenticated user is a partner staff
+        based on profile organization relationship_type
+        """
+        is_staff = self.request.user.is_authenticated and self.request.user.profile.organization and \
+            'partner' in self.request.user.profile.organization.relationship_types
+        if not is_staff and not self.request.user.is_unicef_user():
+            raise PermissionDenied()
 
-    def partners(self):
-        """List of partners user associated with"""
+        return is_staff
+
+    def current_partner(self):
+        """List of partners the user is associated with"""
         if not self.is_partner_staff():
-            return []
+            return None
         return PartnerOrganization.objects.filter(
-            staff_members__email=self.request.user.email,
-        )
+            organization=self.request.user.profile.organization,
+            organization__realms__user=self.request.user,
+            organization__realms__is_active=True,
+        ).first()
 
     def get_pd(self, pd_pk):
         try:
@@ -85,11 +98,14 @@ class PMPDropdownsListApiView(APIView):
 
     @cached_property
     def partner(self):
-        return PartnerOrganization.objects.filter(staff_members__email=self.request.user.email).first()
+        return PartnerOrganization.objects.filter(
+            organization=self.request.user.profile.organization,
+            organization__realms__country=connection.tenant,
+            organization__realms__user=self.request.user).first()
 
     def get_signed_by_unicef_users(self, request) -> list:
         return list(get_user_model().objects.filter(
-            groups__name__in=['Senior Management Team'],
+            realms__group__name__in=['Senior Management Team'],
             profile__country=request.user.profile.country
         ).annotate(
             name=Concat('first_name', Value(' '), 'last_name')
@@ -134,7 +150,7 @@ class PMPDropdownsListApiView(APIView):
         )
 
     def get_cso_types(self):
-        cso_types = PartnerOrganization.objects.values_list(
+        cso_types = Organization.objects.values_list(
             'cso_type',
             flat=True,
         ).exclude(
@@ -142,7 +158,7 @@ class PMPDropdownsListApiView(APIView):
         ).exclude(
             cso_type__exact='',
         ).order_by('cso_type').distinct('cso_type')
-        return choices_to_json_ready([(ct, PartnerOrganization.CSO_TYPES[ct]) for ct in cso_types])
+        return choices_to_json_ready([(ct, Organization.CSO_TYPES[ct]) for ct in cso_types])
 
     def get_local_currency(self):
         local_workspace = self.request.user.profile.country
@@ -158,7 +174,7 @@ class PMPDropdownsListApiView(APIView):
             'cp_outputs': self.get_cp_outputs(request),
             'file_types': self.get_file_types(request),
             'cso_types': self.get_cso_types(),
-            'partner_types': choices_to_json_ready(PartnerType.CHOICES),
+            'partner_types': choices_to_json_ready(OrganizationType.CHOICES),
             'agency_choices': choices_to_json_ready(
                 PartnerOrganization.AGENCY_CHOICES,
             ),

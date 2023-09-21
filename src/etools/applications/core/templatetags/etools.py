@@ -21,18 +21,19 @@ def vision_url():
 
 
 @register.simple_tag(takes_context=True)
-def show_country_select(context, profile):
+def show_country_select(context, user):
 
-    if not profile:
+    if not user:
         return ''
-    countries = profile.countries_available.all().order_by('name')  # Country.objects.all()
+    # only countries from active realms are in the dropdown list
+    countries = user.profile.countries_available.order_by('name')
 
     if 'opts' in context and context['opts'].app_label in settings.TENANT_APPS:
         countries = countries.exclude(schema_name='public')
 
     html = ''
     for country in countries:
-        if country == profile.country:
+        if country == user.profile.country:
             html += '<option value="' + str(country.id) + '" selected>' + country.name + '</option>'
         else:
             html += '<option value="' + str(country.id) + '">' + country.name + '</option>'

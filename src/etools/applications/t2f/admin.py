@@ -44,6 +44,7 @@ class TravelActivityAdmin(admin.ModelAdmin):
         'primary_traveler__last_name',
         'partner__name',
         'travels__reference_number'
+        'partner__organization__name'
     )
     list_display = (
         'primary_traveler',

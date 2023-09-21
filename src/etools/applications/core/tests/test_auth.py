@@ -7,6 +7,7 @@ from django.urls import reverse
 
 from etools.applications.core import auth
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.organizations.models import Organization
 from etools.applications.users.tests.factories import UserFactory
 
 SOCIAL_AUTH_PATH = "etools.applications.core.auth.social_auth"
@@ -70,6 +71,8 @@ class TestGetUsername(BaseTenantTestCase):
 
 
 class TestUserDetails(BaseTenantTestCase):
+    fixtures = ('audit_groups', 'organizations')
+
     def setUp(self):
         self.details = {
             'username': 'social_username',
@@ -132,12 +135,16 @@ class TestUserDetails(BaseTenantTestCase):
 
     def test_is_staff_update(self):
         user = UserFactory(
+            realms__data=[],
             username=self.details["email"],
             email=self.details["email"],
         )
-        for g in user.groups.all():
-            user.groups.remove(g)
+
         country = user.profile.country
+        user.profile.organization = None
+        user.profile.save(update_fields=['organization'])
+        self.assertIsNone(user.profile.organization)
+
         self.details["business_area_code"] = country.business_area_code
         self.details["idp"] = "UNICEF Azure AD"
         self.assertFalse(user.is_staff)
@@ -152,6 +159,10 @@ class TestUserDetails(BaseTenantTestCase):
         )
         user_updated = get_user_model().objects.get(pk=user.pk)
         self.assertTrue(user_updated.is_staff)
+        self.assertEqual(
+            user_updated.profile.organization,
+            Organization.objects.get(name='UNICEF', vendor_number='000')
+        )
 
 
 class TestSocialLogoutView(BaseTenantTestCase):

@@ -5,13 +5,8 @@ from rest_framework import serializers
 from unicef_restlib.fields import SeparatedReadWriteField
 from unicef_restlib.serializers import WritableNestedSerializerMixin
 
-from etools.applications.audit.purchase_order.models import (
-    AuditorFirm,
-    AuditorStaffMember,
-    PurchaseOrder,
-    PurchaseOrderItem,
-)
-from etools.applications.firms.serializers import BaseStaffMemberSerializer, UserSerializer as BaseUserSerializer
+from etools.applications.audit.purchase_order.models import AuditorFirm, PurchaseOrder, PurchaseOrderItem
+from etools.applications.firms.serializers import UserSerializer as BaseUserSerializer
 from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin
 
 
@@ -29,53 +24,39 @@ class UserSerializer(BaseUserSerializer):
         return super().update(instance, validated_data)
 
 
-class AuditorStaffMemberSerializer(BaseStaffMemberSerializer):
-    user = UserSerializer(required=False)
-    user_pk = serializers.PrimaryKeyRelatedField(
-        write_only=True, required=False,
-        queryset=get_user_model().objects.all()
-    )
+class AuditorStaffMemberSerializer(UserSerializer):
+    user = UserSerializer(required=False, source='*')
+    hidden = serializers.SerializerMethodField()
 
-    # TODO: make sure email provided is lower_case
-    def validate(self, attrs):
-        validated_data = super().validate(attrs)
-        user_pk = validated_data.pop('user_pk', None)
+    def get_hidden(self, obj):
+        return False
 
-        if user_pk:
-            if hasattr(user_pk, 'purchase_order_auditorstaffmember'):
-                firm = user_pk.purchase_order_auditorstaffmember.auditor_firm
-                raise serializers.ValidationError({'user': _('User is already assigned to ') + str(firm)})
-            if not self.instance:
-                validated_data['user'] = user_pk
-        elif 'user' not in validated_data:
-            raise serializers.ValidationError({'user': _('This field is required.')})
-        elif 'user' in validated_data:
-            email = validated_data['user'].get('email', None)
-            if not AuditorStaffMember.objects.filter(user__email=email).exists():
-                try:
-                    validated_data['user'] = get_user_model().objects.get(email=email, email__isnull=False)
-                except get_user_model().DoesNotExist:
-                    pass
+    class Meta(UserSerializer.Meta):
+        model = get_user_model()
+        fields = ['id', 'user', 'hidden']
 
-        return validated_data
 
-    class Meta(BaseStaffMemberSerializer.Meta):
-        model = AuditorStaffMember
-        fields = BaseStaffMemberSerializer.Meta.fields + ['user_pk', 'hidden', ]
+class AuditorStaffMemberRealmSerializer(AuditorStaffMemberSerializer):
+    has_active_realm = serializers.BooleanField(read_only=True)
+
+    class Meta(AuditorStaffMemberSerializer.Meta):
+        fields = AuditorStaffMemberSerializer.Meta.fields + ['has_active_realm']
 
 
 class AuditorFirmLightSerializer(PermissionsBasedSerializerMixin, serializers.ModelSerializer):
+    organization_id = serializers.IntegerField(read_only=True, source='organization.id')
+
     class Meta:
         model = AuditorFirm
         fields = [
             'id', 'vendor_number', 'name',
             'street_address', 'city', 'postal_code', 'country',
-            'email', 'phone_number', 'unicef_users_allowed',
+            'email', 'phone_number', 'unicef_users_allowed', 'organization_id'
         ]
 
 
 class AuditorFirmSerializer(WritableNestedSerializerMixin, AuditorFirmLightSerializer):
-    staff_members = AuditorStaffMemberSerializer(many=True, required=False, read_only=True)
+    staff_members = AuditorStaffMemberSerializer(many=True, read_only=True)
 
     class Meta(WritableNestedSerializerMixin.Meta, AuditorFirmLightSerializer.Meta):
         fields = AuditorFirmLightSerializer.Meta.fields + [
@@ -84,12 +65,13 @@ class AuditorFirmSerializer(WritableNestedSerializerMixin, AuditorFirmLightSeria
 
 
 class AuditorFirmExportSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = AuditorFirm
         fields = [
             'id', 'vendor_number', 'name',
             'street_address', 'city', 'postal_code', 'country',
-            'email', 'phone_number',
+            'email', 'phone_number'
         ]
 
 
@@ -118,30 +100,28 @@ class PurchaseOrderSerializer(
         ]
 
 
+# TODO: REALMS. AuditorStaffMember deprecated. hidden and staff_member_id should be removed
 class AuditUserSerializer(UserSerializer):
     auditor_firm = serializers.SerializerMethodField()
     auditor_firm_description = serializers.SerializerMethodField()
     hidden = serializers.SerializerMethodField()
-    staff_member_id = serializers.ReadOnlyField(source='purchase_order_auditorstaffmember.id')
+    staff_member_id = serializers.ReadOnlyField(source='id')
 
     class Meta(UserSerializer.Meta):
         fields = UserSerializer.Meta.fields + ['id', 'auditor_firm', 'auditor_firm_description', 'hidden',
                                                'staff_member_id', ]
 
     def get_auditor_firm(self, obj):
-        if hasattr(obj, 'purchase_order_auditorstaffmember'):
-            return obj.purchase_order_auditorstaffmember.auditor_firm.id
-        return
+        firm = AuditorFirm.get_for_user(obj)
+        return firm.id if firm else None
 
     def get_auditor_firm_description(self, obj):
-        if hasattr(obj, 'purchase_order_auditorstaffmember'):
-            firm = obj.purchase_order_auditorstaffmember.auditor_firm
-            return f'{firm.name} [{firm.vendor_number}]'
-        return
+        firm = AuditorFirm.get_for_user(obj)
+        if not firm:
+            return
 
-    def get_hidden(self, obj):
-        hidden = not obj.is_active
-        if hasattr(obj, 'purchase_order_auditorstaffmember'):
-            hidden = hidden and obj.purchase_order_auditorstaffmember.hidden
+        return f'{firm.name} [{firm.vendor_number}]'
 
-        return hidden
+    # TODO: REALMS. AuditorStaffMember deprecated
+    def get_hidden(self, _obj):
+        return False

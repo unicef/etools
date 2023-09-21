@@ -1,4 +1,5 @@
 import functools
+import logging
 from copy import copy
 
 from django.conf import settings
@@ -91,16 +92,18 @@ from etools.libraries.djangolib.utils import get_current_site
 class PMPInterventionMixin(PMPBaseViewMixin):
     def get_partner_staff_qs(self, qs):
         return qs.filter(
-            agreement__partner__in=self.partners(),
+            agreement__partner=self.current_partner(),
             date_sent_to_partner__isnull=False,
         )
 
     def get_queryset(self, format=None):
         qs = super().get_queryset()
+        if self.request.user.is_unicef_user():
+            return qs
         # if partner, limit to interventions that they are associated with
         if self.is_partner_staff():
-            qs = self.get_partner_staff_qs(qs)
-        return qs
+            return self.get_partner_staff_qs(qs)
+        return qs.none()
 
 
 class DetailedInterventionResponseMixin:
@@ -131,7 +134,7 @@ class PMPInterventionListCreateView(PMPInterventionMixin, InterventionListAPIVie
     permission_classes = (IsAuthenticated, PMPInterventionPermission)
     search_terms = (
         'title__icontains',
-        'agreement__partner__name__icontains',
+        'agreement__partner__organization__name__icontains',
         'number__icontains',
         'cfei_number__icontains',
     )
@@ -196,11 +199,30 @@ class PMPInterventionRetrieveUpdateView(PMPInterventionMixin, InterventionDetail
 
     @transaction.atomic
     def update(self, request, *args, **kwargs):
-        super().update(request, *args, **kwargs)
+        self.instance, old_instance, serializer = self.my_update(
+            request,
+            self.related_fields,
+            nested_related_names=self.nested_related_names,
+            related_non_serialized_fields=self.related_non_serialized_fields,
+            **kwargs
+        )
+
+        validator = InterventionValid(self.instance, old=old_instance, user=request.user)
+        if not validator.is_valid:
+            logging.debug(validator.errors)
+            raise ValidationError(validator.errors)
+
+        if getattr(self.instance, '_prefetched_objects_cache', None):
+            # If 'prefetch_related' has been applied to a queryset, we need to
+            # refresh the instance from the database.
+            self.instance = self.get_object()
+
+        context = self.get_serializer_context()
+        context['permissions'] = validator.get_permissions(self.instance)
         return Response(
             InterventionDetailSerializer(
                 self.instance,
-                context=self.get_serializer_context(),
+                context=context,
             ).data,
         )
 
@@ -409,7 +431,7 @@ class PMPInterventionSupplyItemMixin(
 
     def get_partner_staff_qs(self, qs):
         return qs.filter(
-            intervention__agreement__partner__in=self.partners(),
+            intervention__agreement__partner=self.current_partner(),
             intervention__date_sent_to_partner__isnull=False,
         ).distinct()
 

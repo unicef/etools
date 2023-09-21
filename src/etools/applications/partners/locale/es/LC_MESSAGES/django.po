@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: et-partners2-bk\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-07-02 23:14+0000\n"
+"POT-Creation-Date: 2023-08-14 11:43+0000\n"
 "Language: es\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -673,46 +673,8 @@ msgstr "Plan de trabajo detallado Presupuesto"
 msgid "Supply Contribution (Planned)"
 msgstr "Contribución de la oferta (prevista)"
 
-msgid "You must select a type for this CSO"
-msgstr "Debe seleccionar un tipo para este CSO"
-
-msgid ""
-"\"CSO Type\" does not apply to non-CSO organizations, please remove type"
-msgstr ""
-"\"Tipo de OSC\" no se aplica a las organizaciones que no son OSC, por favor, "
-"elimine el tipo"
-
-msgid "Unable to associate staff member to UNICEF user"
-msgstr "No se puede asociar al miembro del personal con el usuario de UNICEF"
-
-#, python-format
-msgid "This user already exists under a different partnership: %s"
-msgstr "Este usuario ya existe bajo una asociación diferente: %s"
-
-#, python-format
-msgid ""
-"User emails cannot be changed, please remove the user and add another one: %s"
-msgstr ""
-"Los correos electrónicos de los usuarios no se pueden cambiar, elimine al "
-"usuario y agregue otro: %s"
-
-msgid "User already synced to PRP and cannot be disabled."
-msgstr "El usuario ya está sincronizado con PRP y no se puede deshabilitar."
-
 msgid "Name"
 msgstr "Nombre"
-
-msgid "Bilateral / Multilateral"
-msgstr "Bilateral / Multilateral"
-
-msgid "Civil Society Organization"
-msgstr "Organización de la Sociedad Civil"
-
-msgid "Government"
-msgstr "Gobierno"
-
-msgid "UN Agency"
-msgstr "Agencia de la ONU"
 
 msgid "High"
 msgstr "Alto"
@@ -746,21 +708,6 @@ msgstr "Ningún contacto con los beneficiarios"
 
 msgid "Not Assessed"
 msgstr "No evaluado"
-
-msgid "International"
-msgstr "Internacional"
-
-msgid "National"
-msgstr "Nacional"
-
-msgid "Community Based Organization"
-msgstr "Organización de base comunitaria"
-
-msgid "Academic Institution"
-msgstr "Institución académica"
-
-msgid "Red Cross/Red Crescent National Societies"
-msgstr "Sociedades Nacionales de la Cruz Roja y de la Media Luna Roja"
 
 msgid "Description"
 msgstr "Descripción"
@@ -842,21 +789,6 @@ msgstr "Sección principal"
 
 msgid "Core Values Assessment"
 msgstr "Evaluación de los valores fundamentales"
-
-msgid "User"
-msgstr "Usuario"
-
-msgid "Title"
-msgstr "Título"
-
-msgid "First Name"
-msgstr "Nombre"
-
-msgid "Last Name"
-msgstr "Apellido"
-
-msgid "Active"
-msgstr "Activo"
 
 msgid "Spot Check Follow Up Required"
 msgstr "Seguimiento de los controles aleatorios"
@@ -995,6 +927,9 @@ msgstr "Revise"
 
 msgid "Signature"
 msgstr "Firma"
+
+msgid "Active"
+msgstr "Activo"
 
 msgid "Cancelled"
 msgstr "Cancelado"
@@ -1341,8 +1276,11 @@ msgstr "Aprobador general"
 msgid "Sent Back by Secretary Comment"
 msgstr "Enviado por el Secretario Comentario"
 
+msgid "User"
+msgstr "Usuario"
+
 msgid "FACE"
-msgstr "Cara"
+msgstr ""
 
 msgid "Progress Report"
 msgstr "Informe de situación"
@@ -1462,6 +1400,9 @@ msgstr ""
 "Contribución de los socios a la planificación, seguimiento, evaluación y "
 "comunicación, prorrateada en función de su contribución al programa (lugar "
 "de celebración, viajes, etc.)"
+
+msgid "Title"
+msgstr "Título"
 
 msgid "Unit Number"
 msgstr "Número de unidad"
@@ -1615,13 +1556,8 @@ msgstr ""
 msgid "Other description required, if type 'Other' selected."
 msgstr "Se requiere otra descripción, si se selecciona el tipo 'Otro'."
 
-#, fuzzy
-#| msgid "Active"
 msgid "Inactive"
-msgstr "Activo"
-
-msgid "Planned Visit to be set only at Partner level"
-msgstr "Visita planificada que se establecerá solo a nivel de socio"
+msgstr "Inactivo"
 
 msgid "Planned Visit cannot be set for Terminated interventions"
 msgstr ""
@@ -1733,28 +1669,6 @@ msgid ""
 msgstr ""
 "Datos de presupuesto no válidos. El efectivo total debe ser igual al número "
 "de artículos * precio por artículo."
-
-#, python-format
-msgid ""
-"The email for the partner contact is used by another partner contact. Email "
-"has to be unique to proceed %s"
-msgstr ""
-"El correo electrónico del contacto del socio es utilizado por otro contacto "
-"del socio. El correo electrónico debe ser único para continuar %s"
-
-msgid ""
-"The Partner Staff member you are trying to activate is associated with a "
-"different Partner Organization"
-msgstr ""
-"El miembro del personal asociado que intenta activar está asociado con una "
-"organización asociada diferente"
-
-msgid ""
-"User already synced to PRP and cannot be disabled. Please instruct the "
-"partner to disable from PRP"
-msgstr ""
-"El usuario ya está sincronizado con PRP y no se puede deshabilitar. Indique "
-"al socio que desactive el PRP"
 
 msgid "The Date of Report cannot be in the future"
 msgstr "La fecha del informe no puede ser en el futuro"
@@ -2049,8 +1963,8 @@ msgstr "PD no puede activarse si el Socio está Bloqueado en Visión"
 msgid "Agreement selected is not of type SSFA"
 msgstr "El acuerdo seleccionado no es del tipo SSFA"
 
-msgid " without deleting the indicators first"
-msgstr "sin borrar primero los indicadores"
+msgid " without deleting the indicators first "
+msgstr "sin borrar primero los indicadores "
 
 #, python-format
 msgid ""
@@ -2370,6 +2284,56 @@ msgid "Partnership Manager role required for pca export."
 msgstr ""
 "Se requiere el rol de Gerente de asociación para la exportación de PCA."
 
+#~ msgid "Unable to associate staff member to UNICEF user"
+#~ msgstr ""
+#~ "No se puede asociar al miembro del personal con el usuario de UNICEF"
+
+#~ msgid "This user already exists under a different partnership: %s"
+#~ msgstr "Este usuario ya existe bajo una asociación diferente: %s"
+
+#~ msgid ""
+#~ "User emails cannot be changed, please remove the user and add another "
+#~ "one: %s"
+#~ msgstr ""
+#~ "Los correos electrónicos de los usuarios no se pueden cambiar, elimine al "
+#~ "usuario y agregue otro: %s"
+
+#~ msgid "User already synced to PRP and cannot be disabled."
+#~ msgstr "El usuario ya está sincronizado con PRP y no se puede deshabilitar."
+
+#~ msgid "First Name"
+#~ msgstr "Nombre"
+
+#~ msgid "Last Name"
+#~ msgstr "Apellido"
+
+#, fuzzy
+#~| msgid "Partner Authorized Officer"
+#~ msgid "(old)Partner Authorized Officer"
+#~ msgstr "Socio Funcionario autorizado"
+
+#, fuzzy
+#~| msgid "Signed by partner"
+#~ msgid "(old)Signed by partner"
+#~ msgstr "Firmado por el socio"
+
+#, fuzzy
+#~| msgid "Signed by Partner"
+#~ msgid "(old)Signed by Partner"
+#~ msgstr "Firmado por el socio"
+
+#, fuzzy
+#~| msgid "CSO Authorized Officials"
+#~ msgid "(old)CSO Authorized Officials"
+#~ msgstr "CSO Funcionarios autorizados"
+
+#~ msgid ""
+#~ "User already synced to PRP and cannot be disabled. Please instruct the "
+#~ "partner to disable from PRP"
+#~ msgstr ""
+#~ "El usuario ya está sincronizado con PRP y no se puede deshabilitar. "
+#~ "Indique al socio que desactive el PRP"
+
 #~ msgid ""
 #~ "There was a PCA/SSFA signed with this partner or a transaction was "
 #~ "performed against this partner. The Partner record cannot be deleted"
@@ -2382,3 +2346,44 @@ msgstr ""
 
 #~ msgid "This partner has cash transactions associated to it"
 #~ msgstr "Este socio tiene transacciones en efectivo asociadas"
+
+#~ msgid "You must select a type for this CSO"
+#~ msgstr "Debe seleccionar un tipo para este CSO"
+
+#~ msgid ""
+#~ "\"CSO Type\" does not apply to non-CSO organizations, please remove type"
+#~ msgstr ""
+#~ "\"Tipo de OSC\" no se aplica a las organizaciones que no son OSC, por "
+#~ "favor, elimine el tipo"
+
+#~ msgid "International"
+#~ msgstr "Internacional"
+
+#~ msgid "National"
+#~ msgstr "Nacional"
+
+#~ msgid "Community Based Organization"
+#~ msgstr "Organización de base comunitaria"
+
+#~ msgid "Academic Institution"
+#~ msgstr "Institución académica"
+
+#~ msgid "Red Cross/Red Crescent National Societies"
+#~ msgstr "Sociedades Nacionales de la Cruz Roja y de la Media Luna Roja"
+
+#~ msgid "Planned Visit to be set only at Partner level"
+#~ msgstr "Visita planificada que se establecerá solo a nivel de socio"
+
+#~ msgid ""
+#~ "The email for the partner contact is used by another partner contact. "
+#~ "Email has to be unique to proceed %s"
+#~ msgstr ""
+#~ "El correo electrónico del contacto del socio es utilizado por otro "
+#~ "contacto del socio. El correo electrónico debe ser único para continuar %s"
+
+#~ msgid ""
+#~ "The Partner Staff member you are trying to activate is associated with a "
+#~ "different Partner Organization"
+#~ msgstr ""
+#~ "El miembro del personal asociado que intenta activar está asociado con "
+#~ "una organización asociada diferente"
