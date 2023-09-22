@@ -344,7 +344,7 @@ class MultipleRealmForm(forms.ModelForm):
     group = forms.ModelMultipleChoiceField(
         widget=widgets.ManyToManyRawIdWidget(Realm._meta.get_field("group").remote_field, admin.site), queryset=Group.objects.all())
     organization = forms.ModelChoiceField(
-        widget=Select(), queryset=Organization.objects.all())
+        widget=widgets.ForeignKeyRawIdWidget(Realm._meta.get_field("organization").remote_field, admin.site), queryset=Organization.objects.all())
 
     class Meta:
         model = Realm
