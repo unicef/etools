@@ -297,7 +297,7 @@ class InterventionAdmin(
     search_fields = (
         'number',
         'title',
-        'agreement__partner__name'
+        'agreement__partner__organization__name'
     )
     readonly_fields = (
         'total_budget',
