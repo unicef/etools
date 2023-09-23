@@ -338,6 +338,8 @@ class MonitoringActivity(
     @cached_property
     def country_pmes(self):
         return get_user_model().objects.filter(
+            profile__country=connection.tenant
+        ).filter(
             realms__group__name=PME.name,
             realms__country=connection.tenant,
             realms__is_active=True

@@ -1,3 +1,4 @@
+from django.contrib.auth.models import AnonymousUser
 from django.urls import resolve, reverse
 
 from rest_framework import status
@@ -125,8 +126,9 @@ class TestAttachmentListView(BaseTenantTestCase):
         factory = APIRequestFactory()
         view_info = resolve(self.url)
         request = factory.get(self.url)
+        request.user = AnonymousUser()
         response = view_info.func(request)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
 
     def test_non_schema_user(self):
         user = UserFactory(profile=None, realms__data=[])

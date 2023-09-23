@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.contrib import admin
+from django.contrib.auth.decorators import login_required
 from django.urls import include, re_path
 from django.views.generic import TemplateView
 
@@ -7,6 +8,7 @@ from rest_framework_nested import routers
 from rest_framework_swagger.renderers import OpenAPIRenderer
 
 from etools.applications.core.schemas import get_schema_view, get_swagger_view
+from etools.applications.core.urlresolvers import decorator_include
 from etools.applications.core.views import IssueJWTRedirectView, logout_view, MainView, SocialLogoutView
 from etools.applications.locations.views import (
     CartoDBTablesView,
@@ -102,7 +104,7 @@ urlpatterns = [
     re_path(r'^api/v2/funds/', include('etools.applications.funds.urls')),
     re_path(r'^api/v2/activity/', include('unicef_snapshot.urls')),
     re_path(r'^api/v2/environment/', include('etools.applications.environment.urls_v2')),
-    re_path(r'^api/v2/attachments/', include('unicef_attachments.urls')),
+    re_path(r'^api/v2/attachments/', decorator_include(login_required, include('unicef_attachments.urls'))),
 
     # ***************  API version 3  ******************
     re_path(r'^api/v3/users/', include('etools.applications.users.urls_v3', namespace='users_v3')),

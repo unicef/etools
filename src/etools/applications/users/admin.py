@@ -7,7 +7,6 @@ from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import UserChangeForm
 from django.contrib.auth.models import Group
 from django.db import connection, router, transaction
-from django.forms import Select
 from django.http.response import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.template.response import TemplateResponse
@@ -338,13 +337,17 @@ class CountryAdmin(ExtraUrlMixin, TenantAdminMixin, admin.ModelAdmin):
 
 class MultipleRealmForm(forms.ModelForm):
     user = forms.ModelMultipleChoiceField(
-        widget=widgets.ManyToManyRawIdWidget(Realm._meta.get_field("user").remote_field, admin.site), queryset=get_user_model().objects.all())
+        widget=widgets.ManyToManyRawIdWidget(Realm._meta.get_field("user").remote_field, admin.site),
+        queryset=get_user_model().objects.all())
     country = forms.ModelMultipleChoiceField(
-        widget=widgets.ManyToManyRawIdWidget(Realm._meta.get_field("country").remote_field, admin.site), queryset=Country.objects.all())
+        widget=widgets.ManyToManyRawIdWidget(Realm._meta.get_field("country").remote_field, admin.site),
+        queryset=Country.objects.all())
     group = forms.ModelMultipleChoiceField(
-        widget=widgets.ManyToManyRawIdWidget(Realm._meta.get_field("group").remote_field, admin.site), queryset=Group.objects.all())
+        widget=widgets.ManyToManyRawIdWidget(Realm._meta.get_field("group").remote_field, admin.site),
+        queryset=Group.objects.all())
     organization = forms.ModelChoiceField(
-        widget=Select(), queryset=Organization.objects.all())
+        widget=widgets.ForeignKeyRawIdWidget(Realm._meta.get_field("organization").remote_field, admin.site),
+        queryset=Organization.objects.all())
 
     class Meta:
         model = Realm
