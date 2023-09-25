@@ -101,6 +101,15 @@ class UsersManager(UserManager):
         return super().get_queryset() \
             .select_related('profile', 'profile__country', 'profile__country_override',
                             'profile__organization', 'profile__office')
+    def base_qs(self):
+        return super().get_queryset().prefetch_related(None).only(
+            'id',
+            'first_name',
+            'last_name',
+            'middle_name',
+            'is_active',
+            'email'
+        )
 
 
 class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
@@ -122,6 +131,7 @@ class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
     preferences = models.JSONField(default=preferences_default_dict)
 
     objects = UsersManager()
+    base_manager = BaseUsersManager()
 
     class Meta:
         db_table = "auth_user"
