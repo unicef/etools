@@ -102,6 +102,16 @@ class UsersManager(UserManager):
             .select_related('profile', 'profile__country', 'profile__country_override',
                             'profile__organization', 'profile__office')
 
+    def base_qs(self):
+        return super().get_queryset().prefetch_related(None).only(
+            'id',
+            'first_name',
+            'last_name',
+            'middle_name',
+            'is_active',
+            'email'
+        )
+
 
 class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = "username"
