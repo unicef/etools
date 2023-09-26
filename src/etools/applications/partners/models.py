@@ -1559,6 +1559,8 @@ class InterventionManager(models.Manager):
             'frs',
             'frs__fr_items',
             'result_links__cp_output',
+            'partner_focal_points',
+            'unicef_focal_points',
             'result_links__ll_results',
             'result_links__ll_results__activities',
             'result_links__ll_results__activities__time_frames',
