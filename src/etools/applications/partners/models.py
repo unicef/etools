@@ -1555,12 +1555,18 @@ class InterventionManager(models.Manager):
         )
 
     def detail_qs(self):
-        qs = self.get_queryset().prefetch_related(
+        qs = super().get_queryset().prefetch_related(
+            'agreement__partner',
+            'agreement__partner__organization',
+            'partner_focal_points',
+            'unicef_focal_points',
+            'offices',
+            'planned_budget',
+            'sections',
+            'country_programmes',
             'frs',
             'frs__fr_items',
             'result_links__cp_output',
-            'partner_focal_points',
-            'unicef_focal_points',
             'result_links__ll_results',
             'result_links__ll_results__activities',
             'result_links__ll_results__activities__time_frames',
