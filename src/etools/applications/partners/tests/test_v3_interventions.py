@@ -134,9 +134,9 @@ class BaseInterventionTestCase(BaseTenantTestCase):
             "first_name": self.unicef_user.first_name,
             "middle_name": self.unicef_user.middle_name,
             "last_name": self.unicef_user.last_name,
-            "username": self.unicef_user.username,
+            "username": self.unicef_user.email,
             "email": self.unicef_user.email,
-            "phone": self.unicef_user.profile.phone_number,
+            "phone": '',
         }
 
 
