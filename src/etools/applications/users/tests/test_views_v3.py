@@ -38,7 +38,6 @@ from etools.applications.users.serializers_v3 import AP_ALLOWED_COUNTRIES
 from etools.applications.users.tests.factories import (
     GroupFactory,
     PMEUserFactory,
-    ProfileFactory,
     RealmFactory,
     StagedUserFactory,
     UserFactory,
