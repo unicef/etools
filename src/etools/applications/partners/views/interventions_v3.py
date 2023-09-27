@@ -212,11 +212,6 @@ class PMPInterventionRetrieveUpdateView(PMPInterventionMixin, InterventionDetail
             logging.debug(validator.errors)
             raise ValidationError(validator.errors)
 
-        if getattr(self.instance, '_prefetched_objects_cache', None):
-            # If 'prefetch_related' has been applied to a queryset, we need to
-            # refresh the instance from the database.
-            self.instance = self.get_object()
-
         context = self.get_serializer_context()
         context['permissions'] = validator.get_permissions(self.instance)
         return Response(
