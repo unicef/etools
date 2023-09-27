@@ -358,7 +358,7 @@ class TPMVisitViewSet(
     }
     filter_backends = (ReferenceNumberOrderingFilter, OrderingFilter, SearchFilter, DjangoFilterBackend, )
     search_fields = (
-        'tpm_partner__name', 'tpm_activities__partner__name',
+        'tpm_partner__organization__name', 'tpm_activities__partner__organization__name',
         'tpm_activities__locations__name', 'tpm_activities__locations__p_code',
     )
     ordering_fields = (
