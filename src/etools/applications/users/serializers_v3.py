@@ -22,7 +22,7 @@ from etools.applications.users.serializers import (
     SimpleOrganizationSerializer,
 )
 from etools.applications.users.tasks import notify_user_on_realm_update, sync_realms_to_prp
-from etools.applications.users.validators import EmailValidator, ExternalUserValidator
+from etools.applications.users.validators import EmailValidator, ExternalUserValidator, LowerCaseEmailValidator
 
 # temporary list of Countries that will use the Auditor Portal Module.
 # Logic be removed once feature gating is in place
@@ -212,7 +212,7 @@ class UserRealmBaseSerializer(GroupEditPermissionMixin, serializers.ModelSeriali
 
 
 class UserRealmCreateSerializer(UserRealmBaseSerializer):
-    email = serializers.CharField(required=True, write_only=True)
+    email = serializers.CharField(required=True, write_only=True, validators=[LowerCaseEmailValidator()])
     job_title = serializers.CharField(required=False, allow_blank=True, write_only=True)
     phone_number = serializers.CharField(required=False, allow_blank=True, write_only=True)
 
@@ -328,7 +328,7 @@ class UserRealmUpdateSerializer(UserRealmBaseSerializer):
 class StagedUserCreateSerializer(UserRealmCreateSerializer):
     organization = serializers.IntegerField(required=False, allow_null=False, write_only=True)
     groups = serializers.ListField(child=serializers.IntegerField(), required=True, allow_null=False, write_only=True)
-    email = serializers.CharField(required=True, write_only=True)
+    email = serializers.CharField(required=True, write_only=True, validators=[LowerCaseEmailValidator()])
     first_name = serializers.CharField(required=False, allow_blank=True, write_only=True)
     last_name = serializers.CharField(required=False, allow_blank=True, write_only=True)
     job_title = serializers.CharField(required=False, allow_blank=True, write_only=True)
