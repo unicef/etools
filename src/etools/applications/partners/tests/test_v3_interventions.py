@@ -600,7 +600,7 @@ class TestDetail(BaseInterventionTestCase):
         [InterventionManagementBudgetItemFactory(budget=self.intervention.management_budgets) for _i in range(10)]
 
         # there is a lot of queries, but no duplicates caused by budget items
-        with self.assertNumQueries(47):
+        with self.assertNumQueries(46):
             response = self.forced_auth_req(
                 "get",
                 reverse('pmp_v3:intervention-detail', args=[self.intervention.pk]),
@@ -1818,7 +1818,7 @@ class TestInterventionUpdate(BaseInterventionTestCase):
         budget_owner = UserFactory(is_staff=True)
         office = OfficeFactory()
         section = SectionFactory()
-        with self.assertNumQueries(204):
+        with self.assertNumQueries(203):
             response = self.forced_auth_req(
                 "patch",
                 reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
@@ -1867,7 +1867,7 @@ class TestInterventionUpdate(BaseInterventionTestCase):
         site2 = LocationSiteFactory()
         site3 = LocationSiteFactory()
 
-        with self.assertNumQueries(254):
+        with self.assertNumQueries(253):
             response = self.forced_auth_req(
                 "patch",
                 reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
