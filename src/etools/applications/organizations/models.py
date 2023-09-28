@@ -102,11 +102,11 @@ class Organization(TimeStampedModel, models.Model):
         if hasattr(self, 'partner') and \
                 not self.partner.hidden:
             _list.append('partner')
-        elif hasattr(self, 'auditorfirm') and \
+        if hasattr(self, 'auditorfirm') and \
                 self.auditorfirm.purchase_orders.filter(engagement__isnull=False).exists() and \
                 not self.auditorfirm.hidden:
             _list.append('audit')
-        elif hasattr(self, 'tpmpartner') and \
+        if hasattr(self, 'tpmpartner') and \
                 self.tpmpartner.countries.filter(id=connection.tenant.id).exists() and \
                 not self.tpmpartner.hidden:
             _list.append('tpm')
