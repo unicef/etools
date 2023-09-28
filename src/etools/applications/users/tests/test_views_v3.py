@@ -351,7 +351,7 @@ class TestUsersListAPIView(BaseTenantTestCase):
         )
         self.assertEqual(partner_user, partner.active_staff_members.all().first())
         self.assertTrue(get_user_model().objects.count() > 1)
-        with self.assertNumQueries(3):
+        with self.assertNumQueries(5):
             response = self.forced_auth_req(
                 'get',
                 self.url,

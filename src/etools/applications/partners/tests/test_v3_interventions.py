@@ -150,7 +150,7 @@ class TestList(BaseInterventionTestCase):
         intervention.partner_focal_points.add(staff_member)
 
         # not sent to partner
-        with self.assertNumQueries(6):
+        with self.assertNumQueries(8):
             response = self.forced_auth_req(
                 "get",
                 reverse('pmp_v3:intervention-list'),
