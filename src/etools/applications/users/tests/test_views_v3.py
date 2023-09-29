@@ -698,6 +698,11 @@ class TestUserRealmView(BaseTenantTestCase):
         response = self.make_request_list(self.partnership_manager, method='get', data=data)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
+    def test_get_empty_list_no_organization_id_unicef_user(self):
+        response = self.make_request_list(self.unicef_user, method='get')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 0)
+
     def test_get_empty_list(self):
         # organization without a partner type
         data = {
@@ -804,6 +809,7 @@ class TestUserRealmView(BaseTenantTestCase):
                 "email": existing_user.email,
                 "job_title": "Dev",
                 "groups": [GroupFactory(name=group.name).pk],
+                "organization": self.organization.pk
             }
             response = self.make_request_list(auth_user, data=data)
 
@@ -840,7 +846,7 @@ class TestUserRealmView(BaseTenantTestCase):
         self.assertEqual(self.user.realms.count(), 0)
         # create IPViewer and IPEditor realms
         data = {
-            "user": self.user.id,
+            "organization": self.organization.pk,
             "groups": [
                 GroupFactory(name=IPViewer.name).pk,
                 GroupFactory(name=IPEditor.name).pk

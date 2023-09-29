@@ -118,6 +118,10 @@
           li {
             padding-bottom: 10px;
           }
+
+          .alpha-list {
+            list-style-type: lower-alpha;
+          }
         </style>
       {% endblock %}
     {% endblock %}
@@ -187,15 +191,14 @@
         FACE, le cas échéant.
       </p>
       <p>
-        1.3 On entend par « <span class="underline">Formulário FACE</span> » le
+        1.3 On entend par « <span class="underline">formulaire FACE</span> » le
         formulaire standard d’autorisation de financement et de confirmation des
         dépenses du Groupe des Nations Unies pour le développement (United Nations
         Development Group, « UNDG »), dont une copie est disponible à l’adresse
 
         <a
-          href="https://unpartnerportalhelpcenter.zendesk.com/hc/article_attachments/7788906095639/7
-              282-REVISED_FACE_Form.xlsx"
-          >https://undg.org/document/harmonized-approach-to-cash-transfer-framework/</a
+          href="https://unpartnerportalhelpcenter.zendesk.com/hc/article_attachments/7788906095639/7282-REVISED_FACE_Form.xlsx "
+          >https://unpartnerportalhelpcenter.zendesk.com/hc/article_attachments/7788906095639/7282-REVISED_FACE_Form.xlsx </a
         >
         ou à toute autre URL définie par l’UNICEF.
       </p>
@@ -223,10 +226,10 @@
         ans.
       </p>
       <p>
-        1.7 On entend par « <span class="underline">programme</span> » le 
-        {{ country }} approuvé par le Conseil d’administration de l’UNICEF pour la
-        période {{ cp.from_date|date:"Y" }} to {{ cp.to_date|date:"Y" }}, y compris
-        ses éventuelles prorogations.
+        1.7 On entend par « <span class="underline">programme</span> » le plan stratégique 
+        ou programme de pays de l’UNICEF pour {{ country }} approuvé par le Conseil 
+        d’administration de l’UNICEF pour la période {{ cp.from_date|date:"Y" }} 
+        à {{ cp.to_date|date:"Y" }}, y compris ses éventuelles prorogations.
       </p>
       <p>
         1.8 On entend par « <span class="underline">document de programme</span> » le
@@ -266,7 +269,7 @@
       <p>
         1.11 On entend par «
         <span class="underline">Fonds des Nations Unies pour l’enfance</span> » ou «
-        <span class="underline">UNICEF</span> » a division des Nations Unies fondée
+        <span class="underline">UNICEF</span> » la division des Nations Unies fondée
         par son Assemblée générale conformément à la résolution 57 (I) du 11
         décembre 1946.
       </p>
@@ -314,7 +317,7 @@
         pertinentes en lien avec la mise en œuvre des documents de programme et se
         consulteront lorsque l’une d’entre elles le juge approprié, notamment dans
         toutes circonstances susceptibles d’avoir une incidence sur les résultats du
-        programme et des documents de programme
+        programme et des documents de programme.
       </p>
       <p>
         4.4 Les Parties honoreront leurs engagements en se conformant pleinement aux
@@ -642,7 +645,7 @@
       <p>
         8.9 a) Le Partenaire administre le transfert de fonds conformément à son
         propre règlement financier, ses propres règles et procédures, que l’UNICEF a
-        examinés, évalués et jugés appropriés
+        examinés, évalués et jugés appropriés.
       </p>
       <div class="indent">
         <p>
@@ -652,8 +655,8 @@
           règles, procédures et règlements financiers du Partenaire ne sont pas
           appropriés, l’UNICEF en informera le Partenaire par écrit et pourra alors
           exiger que le solde des fonds déjà transférés au Partenaire lui soit
-          restitué, et pourra décider de mettre en œuvre directement le descriptif
-          du programme ou l’une quelconque de ses composantes (dont les activités
+          restitué, et pourra décider de mettre en œuvre directement le document 
+          de programme ou l’une quelconque de ses composantes (dont les activités
           d’approvisionnement).
         </p>
       </div>
@@ -723,7 +726,7 @@
       <p>
         8.12 Les fournitures et les équipements transférés au Partenaire par
         l’UNICEF seront utilisés exclusivement aux fins de la mise en œuvre du
-        document de programme, sauf accord contraire conclu avec l’UNICEF
+        document de programme, sauf accord contraire conclu avec l’UNICEF.
       </p>
       <p>
         8.13 Le Partenaire deviendra propriétaire des fournitures et des équipements
@@ -748,7 +751,7 @@
         8.15 Le Partenaire s’engage à utiliser et à gérer les fournitures et
         équipements avec le plus grand soin et en consultation avec l’UNICEF, à
         apposer le marquage UNICEF sur tous les équipements et fournitures
-        transférés
+        transférés.
       </p>
       <p>
         8.16 Tous véhicules éventuellement mis à la disposition du Partenaire par
@@ -852,8 +855,8 @@
           </p>
           <p>
             iv) N’indiquera aucune dépense sans rapport avec les transferts de fonds
-            (ci-après les « <span class="underline">épenses exclues</span> », telles
-            que définies à l’alinéa e) du paragraphe 2 de l’article 10 ci-dessous);
+            (ci-après les « <span class="underline">dépenses exclues</span> », telles
+            que définies à l’alinéa e) du paragraphe 2 de l’article 10 ci-dessous) ;
           </p>
           <p>
             v) Indiquera le solde de tous fonds non dépensés provenant de tout
@@ -1021,8 +1024,8 @@
         </p>
         <p>
           c) De tels remboursements et restitutions doivent être réalisés au plus
-          tard quatre-vingt-dix (90) jours civils après la date de fin du descriptif
-          du programme, ou la date à laquelle les activités ont effectivement cessé,
+          tard quatre-vingt-dix (90) jours civils après la date de fin du document
+          de programme, ou la date à laquelle les activités ont effectivement cessé,
           la date la plus proche étant retenue.
         </p>
       </div>
@@ -1034,7 +1037,7 @@
         paiement direct, dans le cadre dudit document de programme. L’UNICEF est en
         droit de décider que ces biens durables seront transférés à d’autres fins.
         Dans ce cas, le Partenaire transférera la propriété desdits biens sur
-        instructions écrites de l’UNICEF et conformément à cellesci.
+        instructions écrites de l’UNICEF et conformément à celles-ci.
       </p>
       <p class="strong">12. PRIVILEGES ET IMMUNITES ; RESOLUTION DE LITIGES</p>
       <p>
@@ -1143,7 +1146,7 @@
       <p>
         1. <span class="strong">STATUT JURIDIQUE :</span> Le Partenaire sera
         considéré comme ayant le statut juridique de contractant indépendant
-        vis-à-vis de l’UNICEF. Les employés, le personnel et les soustraitants du
+        vis-à-vis de l’UNICEF. Les employés, le personnel et les sous-traitants du
         Partenaire ne seront en aucun cas considérés comme des employés ou des
         agents de l’UNICEF.
       </p>
@@ -1164,7 +1167,7 @@
         leurs propres sous-traitants, avant d’avoir reçu l’autorisation écrite de
         l’UNICEF, laquelle autorisation est délivrée au cas par cas. Le recours par
         le Partenaire à des sous-traitants, ou à des niveaux supplémentaires de
-        soustraitance, ne dégage pas le Partenaire de ses obligations en vertu du
+        sous-traitance, ne dégage pas le Partenaire de ses obligations en vertu du
         présent Accord. Les termes de tout contrat de sous-traitance, de
         sous-sous-traitance et ainsi de suite sont soumis aux dispositions du
         présent Accord, s’y conforment et leur donnent plein effet. En particulier,
@@ -1191,7 +1194,7 @@
         4.2
         <span class="strong"
           >Responsabilités du Partenaire à l’égard des employés, du personnel et des
-          soustraitants :
+          sous-traitants :
         </span>
         Le Partenaire sera garant de la compétence professionnelle et technique de
         ses employés, des membres de son personnel et de ses sous-traitants et
@@ -1223,7 +1226,7 @@
           recrutement du personnel de l’UNICEF ; conflits d’intérêts :
         </span>
       </p>
-      <ol type="a">
+      <ol class="alpha-list">
         <li>
           Le Partenaire déclare et garantit qu’aucun responsable de l’UNICEF ni
           d’aucun autre organisme du Système des Nations Unies n’a reçu ou ne se
@@ -1253,7 +1256,7 @@
         <li>
           En outre, en ce qui concerne tous les aspects de l’Accord (y compris
           l’octroi de l’Accord par l’UNICEF au Partenaire et la sélection et
-          l’octroi des contrats de soustraitance par le Partenaire), le Partenaire
+          l’octroi des contrats de sous-traitance par le Partenaire), le Partenaire
           déclare et garantit avoir informé l’UNICEF de toute situation pouvant
           constituer un conflit d’intérêts réel ou potentiel ou pouvant
           raisonnablement être perçue comme un conflit d’intérêts.
@@ -1267,17 +1270,17 @@
         >
       </p>
 
-      <ol type="a">
+      <ol style="list-style-type: none;">
         <li>
-          Le Partenaire : a) adoptera les normes déontologiques les plus élevées ;
+          a. Le Partenaire : a) adoptera les normes déontologiques les plus élevées ;
           b) fera tout son possible pour protéger l’UNICEF contre la fraude, dans le
           cadre de l’exécution de l’Accord ; et c) respectera les dispositions
           applicables de la politique de l’UNICEF relative à la lutte contre la
           fraude et la corruption, consultable à l’adresse
           <a
             href="https://www.unicef.org/supply/documents/unicefs-policy-prohibiting-and-combatting-fraud-and-corruption"
-            >https://www.unicef.org/supply/documents/unicefs-policy-prohibiting-and-combatting-fraud-and-corruption</a
-          >
+            >https://www.unicef.org/supply/documents/unicefs-policy-prohibiting-and-combatting-fraud-and-corruption
+          </a>
           ou à toute autre URL définie par l’UNICEF. En particulier, le Partenaire
           ne doit pas s’adonner à quelque pratique corrompue, frauduleuse,
           coercitive, collusoire ou obstructionniste que ce soit, selon les
@@ -1287,7 +1290,7 @@
           adonnent pas non plus.
         </li>
         <li>
-          Le Partenaire déclare et garantit également que ni lui, ni aucune de ses
+          b. Le Partenaire déclare et garantit également que ni lui, ni aucune de ses
           filiales, ni aucun des membres de son personnel ou de son conseil
           d’administration n’est soumis à une sanction ou à une suspension
           provisoire imposée par un organisme du système des Nations Unies ou par
@@ -1297,7 +1300,7 @@
           ou suspension provisoire pendant la durée de l’Accord.
         </li>
         <li>
-          Conformément aux résolutions du Conseil de sécurité des Nations unies
+          c. Conformément aux résolutions du Conseil de sécurité des Nations unies
           relatives au terrorisme et en particulier au financement du terrorisme,
           les Parties s’efforceront de veiller à ce que les ressources ou tout autre
           soutien reçu dans le cadre de l’Accord, que ce soit en espèces ou en
@@ -1312,20 +1315,20 @@
           récapitulative du Conseil de sécurité de l’ONU (disponible à l’adresse
           <a
             href="https://www.un.org/securitycouncil/content/un-sc-consolidated-list"
-            >https://www.un.org/securitycouncil/content/un-sc-consolidated-list</a
-          >
+            >https://www.un.org/securitycouncil/content/un-sc-consolidated-list
+          </a>
           ), ni ne sont transférés à de telles personnes ou entités figurant sur
           ladite liste ou sur toute autre liste pertinente qui lui serait notifiée
           par l’UNICEF ; et b) ne sont pas utilisés de toute autre manière interdite
           par une décision du Conseil de sécurité des Nations Unies prise en vertu
           du chapitre VII de la Charte des Nations Unies. Le Partenaire et ses
-          employés, les autres membres de son personnel et ses soustraitants
+          employés, les autres membres de son personnel et ses sous-traitants
           s’engagent à respecter les dispositions applicables de la politique de
           l’UNICEF relative à la lutte contre le blanchiment d’argent et le
           financement du terrorisme.
         </li>
         <li>
-          Le Partenaire s’engage à porter rapidement à l’attention du chef du bureau
+          d. Le Partenaire s’engage à porter rapidement à l’attention du chef du bureau
           de l’UNICEF ou au Directeur du Bureau de l’audit interne et des
           investigations (<a href="mailto:integrity1@unicef.org"
             >integrity1@unicef.org</a
@@ -1458,7 +1461,7 @@
         </div>
       </div>
       <p class="indent">
-        c. <span class="underline">Politiques :</span>Le Partenaire a lu : a) la
+        c. <span class="underline">Politiques :</span> Le Partenaire a lu : a) la
         circulaire ST/SGB/2003/13 intitulée « Dispositions spéciales visant à
         prévenir l’exploitation et les abus sexuels », disponible à l’adresse
         <a href="https://undocs.org/ST/SGB/2003/13"
@@ -1481,7 +1484,7 @@
         concernés par lesdites politiques.
       </p>
       <p class="indent">
-        d. <span class="underline">Prévention :</span>
+        d. <span class="underline">Prévention :</span> 
         Le Partenaire prendra toutes les mesures appropriées pour que ses employés
         et autres personnels et sous-traitants fassent preuve d’un comportement qui
         assure une sauvegarde proactive, y compris la protection contre
@@ -1508,10 +1511,10 @@
         à faciliter l’assistance aux victimes. Pour garantir cette compréhension, le
         Partenaire veillera, entre autres, à ce que ses employés, son personnel ou
         ses sous-traitants suivent les formations et effectuent les remises à niveau
-        nécessaires avec succès
+        nécessaires avec succès.
       </p>
       <p class="indent">
-        e. <span class="underline">Signalement d’allégations à l’UNICEF :</span>Le
+        e. <span class="underline">Signalement d’allégations à l’UNICEF :</span> Le
         Partenaire signalera rapidement et en toute confidentialité, en garantissant
         la sécurité de toutes les personnes concernées, toute allégation
         d’exploitation et d’atteintes sexuelles et de violation de la politique de
@@ -1528,7 +1531,7 @@
         pour les incidents survenant pendant la durée du présent Accord.
       </p>
       <p class="indent">
-        f. <span class="underline">Assistance :</span>. Les survivants présumés de
+        f. <span class="underline">Assistance :</span> Les survivants présumés de
         violations de la politique de sauvegarde, y compris d’exploitation et
         d’atteintes sexuelles, seront rapidement informés et orientés par le
         Partenaire vers l’aide professionnelle disponible, avec leur consentement.
@@ -1541,7 +1544,7 @@
         pendant la durée du présent Accord.
       </p>
       <p class="indent">
-        g. <span class="underline">Enquêtes :</span>
+        g. <span class="underline">Enquêtes :</span> 
         Le Partenaire mènera, en bonne et due forme et sans délai, des enquêtes sur
         toute allégation de violation de la politique de sauvegarde, y compris les
         cas d’exploitation ou d’atteintes sexuelles, par les employés, le personnel
@@ -1583,7 +1586,7 @@
         <span class="strong"
           >Normes déontologiques applicables à la production de données probantes
           :</span
-        >
+        > 
         Dans le cadre de toute recherche, évaluation, collecte de données et analyse
         incluant l’étude de sujets humains ou de données secondaires sensibles, le
         Partenaire se conforme à la version en vigueur de la
@@ -1602,7 +1605,7 @@
         <span class="strong"
           >Mesures de sauvegarde dans les communications et autres normes
           spécialisées :</span
-        >
+        > 
         Si les activités du programme au titre d’un document de programme prévoient
         la production d’images, la prise de contact avec les médias/la presse, la
         création de plateformes en ligne ou d’autres activités associées à des
@@ -1669,7 +1672,7 @@
         pourra prétendre à tous les droits de propriété intellectuelle et autres
         droits de propriété relatifs aux analyses, aux rapports, aux processus, aux
         logiciels, aux données, aux outils, aux documents et aux autres éléments, y
-        compris les réalisations attendues (ciaprès collectivement dénommés les «
+        compris les réalisations attendues (ci-après collectivement dénommés les «
         <span class="underline">ressources du programme</span> ») que le Partenaire
         élabore, produit, prépare ou rassemble dans le cadre de la mise en œuvre du
         programme. Le Partenaire prend toutes les mesures nécessaires, signe tous
@@ -1683,7 +1686,7 @@
         intellectuelle ou d’autres droits de propriété de l’autre Partie qui
         existaient avant la mise en œuvre du programme, ou qui ont été ou seront
         acquis indépendamment de la mise en œuvre du programme (ci-après la «
-        <span class="underline">été intellectuelle antérieure</span> »). Si la
+        <span class="underline">propriété intellectuelle antérieure</span> »). Si la
         propriété intellectuelle antérieure du Partenaire est intégrée aux
         ressources du programme, le Partenaire accorde à l’UNICEF une licence
         perpétuelle, mondiale, non exclusive, libre de redevances, transférable et
@@ -1828,7 +1831,20 @@
         >
       </p>
       <p>
-        12.1 Lorsque le Partenaire se trouve par cas de force majeure dans
+        12.1 Lorsque survient un cas de force majeure, tel que défini ci-après, 
+        qui empêche totalement ou partiellement le Partenaire d’honorer les obligations 
+        et les responsabilités qui lui incombent en vertu du présent Accord, le Partenaire 
+        est tenu d’en informer dès que possible l’UNICEF par écrit et en détail. 
+        Le Partenaire avisera également l’UNICEF de tout changement de circonstances 
+        ou de tout événement qui entrave ou peut entraver l’exécution de l’Accord.
+        Une fois dûment informé conformément au présent article, l’UNICEF a le droit, 
+        à sa seule discrétion, de prendre toutes mesures qu’il juge appropriées ou 
+        nécessaires au regard des circonstances, notamment d’accorder au Partenaire 
+        une prorogation raisonnable du délai qui lui est imparti pour s’acquitter 
+        des obligations découlant de l’Accord.
+      </p>
+      <p>
+        12.2 Lorsque le Partenaire se trouve par cas de force majeure dans
         l’incapacité permanente, totale ou partielle, d’honorer les obligations et
         les responsabilités qui lui incombent en vertu du présent Accord, l’UNICEF a
         le droit de suspendre ou de résilier celui-ci selon les conditions prévues à
@@ -1836,20 +1852,12 @@
         (7) jours et non de trente (30) jours.
       </p>
       <p>
-        12.2 On entend par « cas de force majeure » tout événement imprévisible et
+        12.3 On entend par « cas de force majeure » tout événement imprévisible et
         irrésistible dont les causes échappent au contrôle des Parties et qui ne
         découle pas d’une quelconque faute ou négligence de leur part. Il peut
         notamment s’agir d’un phénomène d’origine naturelle, d’un acte de guerre
         (déclaré ou non), d’une invasion, d’une révolution, d’une insurrection, d’un
         acte de terrorisme ou d’autres actes de nature ou de force similaire.
-      </p>
-      <p>
-        12.3 O termo “força maior”, tal como utilizado no presente Artigo, significa
-        qualquer ato de natureza imprevisível e irresistível, qualquer ato de guerra
-        (declarada ou não), invasão, revolução, insurreição, terrorismo ou quaisquer
-        outros atos de força ou natureza semelhante, desde que tais atos resultem de
-        causas fora do controlo e não decorrentes de culpa ou negligência da parte
-        em causa.
       </p>
       <p>
         12.4 Le Partenaire reconnaît et convient que, pour toutes les obligations
@@ -1865,7 +1873,7 @@
       </p>
       <p>13. <span class="strong">SUSPENSION ET RÉSILIATION :</span></p>
       <p>
-        13.1L’une ou l’autre des Parties peut résilier le présent Accord par préavis
+        13.1 L’une ou l’autre des Parties peut résilier le présent Accord par préavis
         écrit de trente (30) jours civils à l’autre Partie dans chacune des
         situations suivantes :
       </p>
@@ -1989,7 +1997,9 @@
         remboursement des dépenses engagées par le Partenaire conformément au
         présent Accord avant la date de l’avis de résiliation n’est pas exigé. Le
         Partenaire procédera au remboursement dans les plus brefs délais dès
-        réception de la demande de paiement émise par l’UNICEF. Si l’UNICEF exerce
+        réception de la demande de paiement émise par l’UNICEF.
+      </p>
+      <p>13.8 Si l’UNICEF exerce
         son droit de résilier le présent Accord et décide que le programme doit être
         mis en œuvre par une autre organisation ou selon une autre modalité
         d’exécution, le Partenaire s’engage à coopérer pleinement et dans les plus
@@ -1998,7 +2008,6 @@
         soit réalisé de manière ordonnée, auquel cas les dispositions du paragraphe
         6 de l’article 13 ci-dessus s’appliquent.
       </p>
-      <p>13.8</p>
       <p>
         13.9 La suspension ou la résiliation d’un document de programme dans les
         conditions énoncées au présent article 13 ne porte pas atteinte à l’accord
@@ -2041,7 +2050,7 @@
           auditeurs l’accès à ses locaux et/ou aux sites de mise en œuvre du
           programme, dans un délai et dans des conditions raisonnables. Le
           Partenaire exige de ses agents, notamment de ses avocats, comptables et
-          autres conseillers, ainsi que de ses soustraitants, qu’ils coopèrent de
+          autres conseillers, ainsi que de ses sous-traitants, qu’ils coopèrent de
           manière raisonnable dans le cadre de tout audit réalisé aux termes du
           présent Accord.
         </p>
@@ -2124,7 +2133,7 @@
         délai et dans des conditions raisonnables, et d’accorder à l’UNICEF l’accès
         à ses locaux, dans un délai et dans des conditions raisonnables. Le
         Partenaire exige de ses agents, notamment de ses avocats, comptables et
-        autres conseillers, ainsi que de ses soustraitants, qu’ils coopèrent de
+        autres conseillers, ainsi que de ses sous-traitants, qu’ils coopèrent de
         manière raisonnable dans le cadre de toute évaluation réalisée par l’UNICEF
         aux termes du présent Accord. Il est entendu que l’UNICEF peut, à sa seule
         discrétion, recourir aux services d’une personne physique ou morale pour
