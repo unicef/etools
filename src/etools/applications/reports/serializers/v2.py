@@ -533,10 +533,10 @@ class InterventionActivityItemSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         attrs = super().validate(attrs)
 
-        unit_price = attrs.get('unit_price', self.instance.unit_price if self.instance else None)
-        no_units = attrs.get('no_units', self.instance.no_units if self.instance else None)
-        unicef_cash = attrs.get('unicef_cash', self.instance.unicef_cash if self.instance else None)
-        cso_cash = attrs.get('cso_cash', self.instance.cso_cash if self.instance else None)
+        unit_price = attrs.get('unit_price', self.instance.unit_price if self.instance else 0)
+        no_units = attrs.get('no_units', self.instance.no_units if self.instance else 0)
+        unicef_cash = attrs.get('unicef_cash', self.instance.unicef_cash if self.instance else 0)
+        cso_cash = attrs.get('cso_cash', self.instance.cso_cash if self.instance else 0)
 
         # unit_price * no_units can contain more decimal places than we're able to save
         if abs((unit_price * no_units) - (unicef_cash + cso_cash)) > 0.01:

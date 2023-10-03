@@ -55,7 +55,7 @@ class TPMVisitAdmin(admin.ModelAdmin):
     inlines = [ActivityInline]
     raw_id_fields = ('author', 'tpm_partner', 'tpm_partner_focal_points')
     custom_fields = ['is_deleted', 'reference_number']
-    search_fields = ['tpm_partner__name', 'pk']
+    search_fields = ['tpm_partner__organization__name', 'pk']
 
     def reference_number(self, obj):
         return obj.reference_number
