@@ -1131,7 +1131,7 @@ class AgreementManager(models.Manager):
             'partner',
             'partner__organization',
         ).prefetch_related(
-            'authorized_officers',
+            Prefetch('authorized_officers', User.objects.base_qs()),
         )
 
 

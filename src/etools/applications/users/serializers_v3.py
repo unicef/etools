@@ -41,6 +41,8 @@ class MinimalUserSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='get_full_name', read_only=True)
     email = serializers.EmailField(validators=[EmailValidator()])
     phone = serializers.SerializerMethodField()
+    # TODO: get rid of username here
+    username = serializers.CharField(source='email')
 
     class Meta:
         model = get_user_model()
@@ -56,9 +58,8 @@ class MinimalUserSerializer(serializers.ModelSerializer):
         )
 
     def get_phone(self, obj):
-        if obj.profile:
-            return obj.profile.phone_number
-        return None
+        # TODO: figure out later if we need this here. Hotfix takes precedent over impact
+        return ''
 
 
 # used for user detail view
