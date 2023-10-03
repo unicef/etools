@@ -135,7 +135,6 @@ def _make_intervention_status_automatic_transitions(country_name):
             if validator.is_valid:
                 if intervention.status != old_status:
                     intervention.save()
-                    transaction.on_commit(lambda: send_pd_to_vision.delay(country_name, intervention.pk))
                     processed += 1
             else:
                 bad_interventions.append(intervention)
