@@ -1,5 +1,4 @@
 from django.contrib.auth import get_user_model
-from django.db import connection
 
 from etools.applications.partners.models import PartnerOrganization
 
@@ -22,8 +21,6 @@ class CountryUsersAdminMixin:
     def filter_users(self, kwargs):
 
         filters = {}
-        if connection.tenant:
-            filters['realms__country'] = connection.tenant
         if self.staff_only:
             filters['is_staff'] = True
 
