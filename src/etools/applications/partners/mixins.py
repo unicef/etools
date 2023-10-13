@@ -22,8 +22,6 @@ class CountryUsersAdminMixin:
     def filter_users(self, kwargs):
 
         filters = {}
-        if connection.tenant:
-            filters['realms__country'] = connection.tenant
         if self.staff_only:
             filters['is_staff'] = True
 
