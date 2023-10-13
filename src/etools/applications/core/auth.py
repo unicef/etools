@@ -2,7 +2,8 @@ import logging
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group
+from django.contrib.auth.backends import ModelBackend
+from django.contrib.auth.models import Group, Permission
 from django.http import HttpResponseRedirect
 
 from rest_framework.authentication import (
@@ -108,6 +109,12 @@ def user_details(strategy, details, backend, user=None, *args, **kwargs):
         #         user.profile.save()
 
     return social_core_user.user_details(strategy, details, backend, user, *args, **kwargs)
+
+
+class eToolsModelBackend(ModelBackend):
+
+    def _get_group_permissions(self, user_obj):
+        return Permission.objects.filter(group__in=user_obj.groups)
 
 
 class CustomAzureADBBCOAuth2(AzureADB2COAuth2):
