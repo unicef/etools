@@ -1,5 +1,4 @@
 from django.contrib.auth import get_user_model
-from django.db import connection
 
 from etools.applications.partners.models import PartnerOrganization
 
