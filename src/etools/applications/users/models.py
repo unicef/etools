@@ -73,7 +73,7 @@ class PermissionsMixin(models.Model):
         permissions for that object.
         """
         # Active superusers and staff have all permissions.
-        if self.is_active and (self.is_superuser or self.is_staff):
+        if self.is_active and self.is_superuser:
             return True
         return False
 
@@ -90,7 +90,7 @@ class PermissionsMixin(models.Model):
         Use similar logic as has_perm(), above.
         """
         # Active superusers and staff have all permissions.
-        if self.is_active and (self.is_superuser or self.is_staff):
+        if self.is_active and self.is_superuser:
             return True
         return False
 
