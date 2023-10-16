@@ -2,7 +2,15 @@ import logging
 from decimal import Decimal
 
 from django.conf import settings
-from django.contrib.auth.models import _user_get_permissions, AbstractBaseUser, Group, Permission, UserManager
+from django.contrib.auth.models import (
+    _user_get_permissions,
+    _user_has_module_perms,
+    _user_has_perm,
+    AbstractBaseUser,
+    Group,
+    Permission,
+    UserManager,
+)
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
@@ -72,10 +80,12 @@ class PermissionsMixin(models.Model):
         assumed to have permission in general. If an object is provided, check
         permissions for that object.
         """
-        # Active superusers and staff have all permissions.
-        if self.is_active and (self.is_superuser or self.is_staff):
+        # Active superusers have all permissions.
+        if self.is_active and self.is_superuser:
             return True
-        return False
+
+        # Otherwise we need to check the backends.
+        return _user_has_perm(self, perm, obj)
 
     def has_perms(self, perm_list, obj=None):
         """
@@ -89,10 +99,11 @@ class PermissionsMixin(models.Model):
         Return True if the user has any permissions in the given app label.
         Use similar logic as has_perm(), above.
         """
-        # Active superusers and staff have all permissions.
-        if self.is_active and (self.is_superuser or self.is_staff):
+        # Active superusers have all permissions.
+        if self.is_active and self.is_superuser:
             return True
-        return False
+
+        return _user_has_module_perms(self, app_label)
 
 
 class UsersManager(UserManager):

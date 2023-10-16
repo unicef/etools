@@ -297,7 +297,7 @@ ROOT_URLCONF = 'etools.config.urls'
 AUTHENTICATION_BACKENDS = (
     # 'social_core.backends.azuread_b2c.AzureADB2COAuth2',
     'etools.applications.core.auth.CustomAzureADBBCOAuth2',
-    'django.contrib.auth.backends.ModelBackend',
+    'etools.applications.core.auth.eToolsModelBackend',
 )
 AUTH_USER_MODEL = 'users.User'
 LOGIN_REDIRECT_URL = '/'
