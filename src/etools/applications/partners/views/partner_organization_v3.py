@@ -35,7 +35,7 @@ class PMPPartnerStaffMemberListAPIVIew(
     """
     Returns a list of all Partner staff members
     """
-    queryset = User.objects.all()
+    queryset = User.objects.base_qs().select_related('profile')
     serializer_class = PartnerStaffMemberRealmSerializer
     permission_classes = (AllowSafeAuthenticated,)
     renderer_classes = (

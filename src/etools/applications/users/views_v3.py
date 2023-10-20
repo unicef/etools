@@ -169,7 +169,7 @@ class UsersListAPIView(PMPBaseViewMixin, QueryStringFilterMixin, ListAPIView):
     Country is determined by the currently logged in user.
     """
     model = get_user_model()
-    queryset = get_user_model().objects.all()
+    queryset = get_user_model().objects.base_qs().all()
     serializer_class = MinimalUserSerializer
     permission_classes = (IsAuthenticated, )
     pagination_class = AppendablePageNumberPagination
@@ -446,7 +446,6 @@ class StagedUserViewSet(
 class ExternalUserViewSet(
         SafeTenantViewSetMixin,
         mixins.ListModelMixin,
-        mixins.CreateModelMixin,
         mixins.RetrieveModelMixin,
         viewsets.GenericViewSet,
 ):

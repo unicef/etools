@@ -137,7 +137,7 @@ class ProfileAdmin(admin.ModelAdmin):
         if not request.user.is_superuser:
             queryset = queryset.filter(
                 user__is_staff=True,
-                country__in=request.user.realms__country.objects.distinct()
+                country__in=request.user.profile.countries_available
             )
         return queryset
 
@@ -172,6 +172,9 @@ class RealmInline(admin.StackedInline):
         if isinstance(connection.tenant, FakeTenant):
             return super().get_queryset(request)
         return super().get_queryset(request).filter(country=connection.tenant)
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 class UserAdminPlus(RestrictedEditAdminMixin, ExtraUrlMixin, UserAdmin):
@@ -363,6 +366,9 @@ class RealmAdmin(RestrictedEditAdminMixin, SnapshotModelAdmin):
     autocomplete_fields = ('country', 'group')
 
     inlines = (ActivityInline, )
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
     def get_urls(self):
         urlpatterns = super().get_urls()

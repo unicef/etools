@@ -266,6 +266,8 @@ class InterventionAdmin(
 ):
     model = Intervention
 
+    staff_only = False
+
     date_hierarchy = 'start'
     list_display = (
         'number',
@@ -388,6 +390,7 @@ class InterventionAdmin(
         if not PDVisionUploader(Intervention.objects.get(pk=pk)).is_valid():
             messages.error(request, _('PD is not ready for Vision synchronization.'))
             return
+
         send_pd_to_vision.delay(connection.tenant.name, pk)
         messages.success(request, _('PD was sent to Vision.'))
 
