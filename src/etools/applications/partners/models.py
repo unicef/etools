@@ -20,6 +20,7 @@ from unicef_djangolib.fields import CodedGenericRelation
 from unicef_snapshot.models import Activity
 
 from etools.applications.core.permissions import import_permissions
+from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.environment.notifications import send_notification_with_template
 from etools.applications.funds.models import FundsReservationHeader
 from etools.applications.locations.models import Location
@@ -561,7 +562,10 @@ class PartnerOrganization(TimeStampedModel):
 
     @cached_property
     def all_staff_members(self):
-        user_qs = User.objects.filter(realms__in=self.context_realms)
+        user_qs = User.objects \
+            .base_qs() \
+            .select_related('profile') \
+            .filter(realms__in=self.context_realms)
 
         return user_qs\
             .annotate(has_active_realm=Exists(self.context_realms.filter(user=OuterRef('pk'), is_active=True)))\
@@ -1130,7 +1134,7 @@ class AgreementManager(models.Manager):
             'partner',
             'partner__organization',
         ).prefetch_related(
-            'authorized_officers',
+            Prefetch('authorized_officers', User.objects.base_qs()),
         )
 
 
@@ -1655,6 +1659,13 @@ def side_effect_two(i, old_instance=None, user=None):
     pass
 
 
+def send_pd_to_vision_side_effect(i, old_instance=None, user=None):
+    from etools.applications.partners.tasks import send_pd_to_vision
+
+    if not tenant_switch_is_active('disable_pd_vision_sync'):
+        transaction.on_commit(lambda: send_pd_to_vision.delay(connection.tenant.name, i.pk))
+
+
 def get_default_cash_transfer_modalities():
     return [Intervention.CASH_TRANSFER_DIRECT, Intervention.CASH_TRANSFER_REIMBURSEMENT]
 
@@ -1695,12 +1706,13 @@ class Intervention(TimeStampedModel):
         DRAFT: [],
         REVIEW: [],
         SIGNATURE: [],
-        SIGNED: [side_effect_one, side_effect_two],
-        ACTIVE: [],
-        SUSPENDED: [],
-        ENDED: [],
-        CLOSED: [],
-        TERMINATED: []
+        SIGNED: [send_pd_to_vision_side_effect, side_effect_one, side_effect_two],
+        ACTIVE: [send_pd_to_vision_side_effect],
+        SUSPENDED: [send_pd_to_vision_side_effect],
+        ENDED: [send_pd_to_vision_side_effect],
+        CLOSED: [send_pd_to_vision_side_effect],
+        TERMINATED: [send_pd_to_vision_side_effect],
+        CANCELLED: [send_pd_to_vision_side_effect],
     }
 
     INTERVENTION_STATUS = (

@@ -169,10 +169,10 @@ class InterventionManagementBudgetItemSerializer(serializers.ModelSerializer):
         if 'id' in attrs:
             instance = self.Meta.model.objects.filter(id=attrs['id']).first()
 
-        unit_price = attrs.get('unit_price', instance.unit_price if instance else None)
-        no_units = attrs.get('no_units', instance.no_units if instance else None)
-        unicef_cash = attrs.get('unicef_cash', instance.unicef_cash if instance else None)
-        cso_cash = attrs.get('cso_cash', instance.cso_cash if instance else None)
+        unit_price = attrs.get('unit_price', instance.unit_price if instance else 0)
+        no_units = attrs.get('no_units', instance.no_units if instance else 0)
+        unicef_cash = attrs.get('unicef_cash', instance.unicef_cash if instance else 0)
+        cso_cash = attrs.get('cso_cash', instance.cso_cash if instance else 0)
 
         # unit_price * no_units can contain more decimal places than we're able to save
         if abs((unit_price * no_units) - (unicef_cash + cso_cash)) > 0.01:
