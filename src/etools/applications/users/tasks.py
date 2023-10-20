@@ -14,6 +14,7 @@ from etools.applications.environment.notifications import send_notification_with
 from etools.applications.organizations.models import Organization
 from etools.applications.partners.prp_api import PRPAPI
 from etools.applications.partners.serializers.prp_v1 import PRPSyncUserSerializer
+from etools.applications.users.mixins import PARTNER_ACTIVE_GROUPS
 from etools.applications.users.models import Country, Realm, User, UserProfile
 from etools.config.celery import app
 
@@ -230,9 +231,14 @@ def sync_realms_to_prp(user_pk, last_modified_at_timestamp, retry_counter=0):
         # there were updates to user realms. skip
         return
 
+    _partner_realms = Realm.objects.filter(user_id=user_pk, group__name__in=PARTNER_ACTIVE_GROUPS)
+    if not _partner_realms.exists():
+        logger.info('No partner roles exist in user realms. Skipping..')
+        return
+
     user = User.objects.filter(pk=user_pk).prefetch_related(
-        Prefetch('realms', Realm.objects.filter(is_active=True).select_related('country', 'organization', 'group')),
-    ).get()
+        Prefetch('realms', _partner_realms.filter(is_active=True).select_related('country', 'organization', 'group'))).get()
+
     data = PRPSyncUserSerializer(instance=user).data
 
     try:
