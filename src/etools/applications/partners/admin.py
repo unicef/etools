@@ -266,6 +266,8 @@ class InterventionAdmin(
 ):
     model = Intervention
 
+    staff_only = False
+
     date_hierarchy = 'start'
     list_display = (
         'number',
