@@ -674,7 +674,7 @@ class PMPAmendedInterventionMerge(InterventionDetailAPIView):
             )
 
         if not tenant_switch_is_active('disable_pd_vision_sync'):
-            transaction.on_commit(lambda: send_pd_to_vision.delay(connection.tenant.name, pd.pk))
+            transaction.on_commit(lambda: send_pd_to_vision.delay(connection.tenant.name, amendment.intervention.pk))
 
         return Response(
             InterventionDetailSerializer(

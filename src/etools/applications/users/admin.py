@@ -173,6 +173,9 @@ class RealmInline(admin.StackedInline):
             return super().get_queryset(request)
         return super().get_queryset(request).filter(country=connection.tenant)
 
+    def has_delete_permission(self, request, obj=None):
+        return False
+
 
 class UserAdminPlus(RestrictedEditAdminMixin, ExtraUrlMixin, UserAdmin):
     fieldsets = (
@@ -363,6 +366,9 @@ class RealmAdmin(RestrictedEditAdminMixin, SnapshotModelAdmin):
     autocomplete_fields = ('country', 'group')
 
     inlines = (ActivityInline, )
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
     def get_urls(self):
         urlpatterns = super().get_urls()
