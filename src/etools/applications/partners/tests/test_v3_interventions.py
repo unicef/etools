@@ -2710,7 +2710,7 @@ class TestInterventionCancel(BaseInterventionActionTestCase):
         )
         # skip calling for now. We may need to bring it back at some point
         # send_to_vision_mock.assert_called()
-        # self.assertEqual(len(callbacks), 1)
+        self.assertEqual(len(callbacks), 0)
 
         # unicef attempt to cancel again
         mock_send = mock.Mock()
@@ -2792,6 +2792,7 @@ class TestInterventionTerminate(BaseInterventionActionTestCase):
         # skip calling for now. We may need to bring it back at some point
         # send_to_vision_mock.assert_called()
         # self.assertEqual(len(callbacks), 1)
+        self.assertEqual(len(callbacks), 0)
 
         # unicef attempt to terminate again
         mock_send = mock.Mock()
@@ -2863,6 +2864,7 @@ class TestInterventionSuspend(BaseInterventionActionTestCase):
         # skip calling for now. We may need to bring it back at some point
         # send_to_vision_mock.assert_called()
         # self.assertEqual(len(callbacks), 1)
+        self.assertEqual(len(callbacks), 0)
 
         # unicef attempt to suspend again
         mock_send = mock.Mock()
@@ -2938,6 +2940,7 @@ class TestInterventionUnsuspend(BaseInterventionActionTestCase):
         # skip calling for now. We may need to bring it back at some point
         # send_to_vision_mock.assert_called()
         # self.assertEqual(len(callbacks), 1)
+        self.assertEqual(len(callbacks), 0)
 
         # unicef attempt to unsuspend again
         mock_send = mock.Mock()
