@@ -736,7 +736,7 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
         self.assertEqual(active_intervention.status, Intervention.ACTIVE)
         # skip calling for now. We may need to bring it back at some point
         # send_to_vision_mock.assert_called()
-        # self.assertNotEqual(len(callbacks), 0)
+        self.assertEqual(len(callbacks), 0)
 
 
 @mock.patch('etools.applications.partners.tasks.logger', spec=['info'])
