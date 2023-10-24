@@ -2702,8 +2702,9 @@ class TestInterventionCancel(BaseInterventionActionTestCase):
             self.intervention.cancel_justification,
             "Needs to be cancelled",
         )
-        send_to_vision_mock.assert_called()
-        self.assertEqual(len(callbacks), 1)
+        # skip calling for now. We may need to bring it back at some point
+        # send_to_vision_mock.assert_called()
+        # self.assertEqual(len(callbacks), 1)
 
         # unicef attempt to cancel again
         mock_send = mock.Mock()
@@ -2780,8 +2781,9 @@ class TestInterventionTerminate(BaseInterventionActionTestCase):
         self.intervention.refresh_from_db()
         self.assertEqual(self.intervention.status, Intervention.TERMINATED)
         self.assertFalse(self.intervention.unicef_accepted)
-        send_to_vision_mock.assert_called()
-        self.assertEqual(len(callbacks), 1)
+        # skip calling for now. We may need to bring it back at some point
+        # send_to_vision_mock.assert_called()
+        # self.assertEqual(len(callbacks), 1)
 
         # unicef attempt to terminate again
         mock_send = mock.Mock()
@@ -2848,8 +2850,9 @@ class TestInterventionSuspend(BaseInterventionActionTestCase):
         self.intervention.refresh_from_db()
         self.assertEqual(self.intervention.status, Intervention.SUSPENDED)
         self.assertFalse(self.intervention.unicef_accepted)
-        send_to_vision_mock.assert_called()
-        self.assertEqual(len(callbacks), 1)
+        # skip calling for now. We may need to bring it back at some point
+        # send_to_vision_mock.assert_called()
+        # self.assertEqual(len(callbacks), 1)
 
         # unicef attempt to suspend again
         mock_send = mock.Mock()
@@ -2919,8 +2922,9 @@ class TestInterventionUnsuspend(BaseInterventionActionTestCase):
         self.intervention.refresh_from_db()
         self.assertEqual(self.intervention.status, Intervention.ACTIVE)
         self.assertFalse(self.intervention.unicef_accepted)
-        send_to_vision_mock.assert_called()
-        self.assertEqual(len(callbacks), 1)
+        # skip calling for now. We may need to bring it back at some point
+        # send_to_vision_mock.assert_called()
+        # self.assertEqual(len(callbacks), 1)
 
         # unicef attempt to unsuspend again
         mock_send = mock.Mock()

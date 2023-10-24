@@ -489,3 +489,9 @@ class InterventionValid(CompleteValidation):
             else:
                 error_list.append(error)
         return error_list
+
+    def _apply_current_side_effects(self):
+        # TODO: remove this after updating to etools-validator >= 0.5.1
+        if not self.old_status:
+            return
+        return super()._apply_current_side_effects()
