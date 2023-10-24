@@ -2685,14 +2685,20 @@ class TestInterventionCancel(BaseInterventionActionTestCase):
         self.assertFalse(self.intervention.unicef_accepted)
         self.assertIsNone(self.intervention.cancel_justification)
         mock_send = mock.Mock(return_value=self.mock_email)
-        with self.captureOnCommitCallbacks(execute=True) as callbacks:
-            with mock.patch(self.notify_path, mock_send):
-                response = self.forced_auth_req(
-                    "patch",
-                    self.url,
-                    data={"cancel_justification": "Needs to be cancelled"},
-                    user=self.unicef_user,
-                )
+        # with self.captureOnCommitCallbacks(execute=True) as callbacks:
+        #     with mock.patch(self.notify_path, mock_send):
+        #         response = self.forced_auth_req(
+        #             "patch",
+        #             self.url,
+        #             data={"cancel_justification": "Needs to be cancelled"},
+        #             user=self.unicef_user,
+        with mock.patch(self.notify_path, mock_send):
+            response = self.forced_auth_req(
+                "patch",
+                self.url,
+                data={"cancel_justification": "Needs to be cancelled"},
+                user=self.unicef_user,
+            )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         mock_send.assert_called()
         self.intervention.refresh_from_db()
@@ -2773,9 +2779,11 @@ class TestInterventionTerminate(BaseInterventionActionTestCase):
         self.assertFalse(self.intervention.unicef_accepted)
         self.intervention.unicef_focal_points.add(self.unicef_user)
         mock_send = mock.Mock(return_value=self.mock_email)
-        with self.captureOnCommitCallbacks(execute=True) as callbacks:
-            with mock.patch(self.notify_path, mock_send):
-                response = self.forced_auth_req("patch", self.url, user=self.unicef_user)
+        # with self.captureOnCommitCallbacks(execute=True) as callbacks:
+        #     with mock.patch(self.notify_path, mock_send):
+        #         response = self.forced_auth_req("patch", self.url, user=self.unicef_user)
+        with mock.patch(self.notify_path, mock_send):
+            response = self.forced_auth_req("patch", self.url, user=self.unicef_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         mock_send.assert_called()
         self.intervention.refresh_from_db()
@@ -2842,9 +2850,11 @@ class TestInterventionSuspend(BaseInterventionActionTestCase):
         self.intervention.unicef_focal_points.add(self.unicef_user)
         self.assertFalse(self.intervention.unicef_accepted)
         mock_send = mock.Mock(return_value=self.mock_email)
-        with self.captureOnCommitCallbacks(execute=True) as callbacks:
-            with mock.patch(self.notify_path, mock_send):
-                response = self.forced_auth_req("patch", self.url, user=self.unicef_user)
+        # with self.captureOnCommitCallbacks(execute=True) as callbacks:
+        #     with mock.patch(self.notify_path, mock_send):
+        #         response = self.forced_auth_req("patch", self.url, user=self.unicef_user)
+        with mock.patch(self.notify_path, mock_send):
+            response = self.forced_auth_req("patch", self.url, user=self.unicef_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         mock_send.assert_called()
         self.intervention.refresh_from_db()
@@ -2914,9 +2924,12 @@ class TestInterventionUnsuspend(BaseInterventionActionTestCase):
         self.intervention.unicef_focal_points.add(self.unicef_user)
         self.assertFalse(self.intervention.unicef_accepted)
         mock_send = mock.Mock(return_value=self.mock_email)
-        with self.captureOnCommitCallbacks(execute=True) as callbacks:
-            with mock.patch(self.notify_path, mock_send):
-                response = self.forced_auth_req("patch", self.url, user=self.unicef_user)
+        # with self.captureOnCommitCallbacks(execute=True) as callbacks:
+        #     with mock.patch(self.notify_path, mock_send):
+        #         response = self.forced_auth_req("patch", self.url, user=self.unicef_user)
+        with mock.patch(self.notify_path, mock_send):
+            response = self.forced_auth_req("patch", self.url, user=self.unicef_user)
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         mock_send.assert_called()
         self.intervention.refresh_from_db()
