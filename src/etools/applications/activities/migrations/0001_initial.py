@@ -9,6 +9,9 @@ class Migration(migrations.Migration):
 
     dependencies = [
     ]
+    run_before = [
+        ('tpm', '0001_initial'),
+    ]
 
     operations = [
         migrations.CreateModel(

@@ -58,7 +58,7 @@ class Migration(migrations.Migration):
                 ('cancel_comment', models.TextField(blank=True, verbose_name='Cancel Comment')),
                 ('reference_number', models.CharField(max_length=100, null=True, verbose_name='Reference Number')),
                 ('active_pd', models.ManyToManyField(blank=True, to='partners.Intervention', verbose_name='Active PDs')),
-                ('agreement', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='purchase_order.purchaseorder', verbose_name='Purchase Order')),
+                ('agreement', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='purchase_order.PurchaseOrder', verbose_name='Purchase Order')),
                 ('authorized_officers', models.ManyToManyField(blank=True, related_name='engagement_authorizations', to=settings.AUTH_USER_MODEL, verbose_name='Authorized Officers')),
                 ('offices', models.ManyToManyField(blank=True, related_name='engagements', to='reports.Office', verbose_name='Offices')),
                 ('partner', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='partners.partnerorganization', verbose_name='Partner')),

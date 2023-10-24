@@ -17,7 +17,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('tpmpartners', '0001_initial'),
-        # ('action_points', '0004_initial'),
+        ('action_points', '0004_initial'),
         # ('activities', '0002_initial'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         # ('reports', '0002_initial'),

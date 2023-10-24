@@ -17,6 +17,10 @@ class Migration(migrations.Migration):
         ('categories', '0001_initial'),
         # ('reports', '0002_initial'),
     ]
+    run_before = [
+        ('psea', '0001_initial'),
+        ('tpm', '0001_initial')
+    ]
 
     operations = [
         migrations.CreateModel(
