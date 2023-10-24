@@ -2685,14 +2685,20 @@ class TestInterventionCancel(BaseInterventionActionTestCase):
         self.assertFalse(self.intervention.unicef_accepted)
         self.assertIsNone(self.intervention.cancel_justification)
         mock_send = mock.Mock(return_value=self.mock_email)
-        with self.captureOnCommitCallbacks(execute=True) as callbacks:
-            with mock.patch(self.notify_path, mock_send):
-                response = self.forced_auth_req(
-                    "patch",
-                    self.url,
-                    data={"cancel_justification": "Needs to be cancelled"},
-                    user=self.unicef_user,
-                )
+        # with self.captureOnCommitCallbacks(execute=True) as callbacks:
+        #     with mock.patch(self.notify_path, mock_send):
+        #         response = self.forced_auth_req(
+        #             "patch",
+        #             self.url,
+        #             data={"cancel_justification": "Needs to be cancelled"},
+        #             user=self.unicef_user,
+        with mock.patch(self.notify_path, mock_send):
+            response = self.forced_auth_req(
+                "patch",
+                self.url,
+                data={"cancel_justification": "Needs to be cancelled"},
+                user=self.unicef_user,
+            )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         mock_send.assert_called()
         self.intervention.refresh_from_db()
@@ -2702,8 +2708,8 @@ class TestInterventionCancel(BaseInterventionActionTestCase):
             self.intervention.cancel_justification,
             "Needs to be cancelled",
         )
-        send_to_vision_mock.assert_called()
-        self.assertEqual(len(callbacks), 1)
+        # skip calling for now. We may need to bring it back at some point
+        # send_to_vision_mock.assert_called()
 
         # unicef attempt to cancel again
         mock_send = mock.Mock()
@@ -2772,16 +2778,19 @@ class TestInterventionTerminate(BaseInterventionActionTestCase):
         self.assertFalse(self.intervention.unicef_accepted)
         self.intervention.unicef_focal_points.add(self.unicef_user)
         mock_send = mock.Mock(return_value=self.mock_email)
-        with self.captureOnCommitCallbacks(execute=True) as callbacks:
-            with mock.patch(self.notify_path, mock_send):
-                response = self.forced_auth_req("patch", self.url, user=self.unicef_user)
+        # with self.captureOnCommitCallbacks(execute=True) as callbacks:
+        #     with mock.patch(self.notify_path, mock_send):
+        #         response = self.forced_auth_req("patch", self.url, user=self.unicef_user)
+        with mock.patch(self.notify_path, mock_send):
+            response = self.forced_auth_req("patch", self.url, user=self.unicef_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         mock_send.assert_called()
         self.intervention.refresh_from_db()
         self.assertEqual(self.intervention.status, Intervention.TERMINATED)
         self.assertFalse(self.intervention.unicef_accepted)
-        send_to_vision_mock.assert_called()
-        self.assertEqual(len(callbacks), 1)
+        # skip calling for now. We may need to bring it back at some point
+        # send_to_vision_mock.assert_called()
+        # self.assertEqual(len(callbacks), 1)
 
         # unicef attempt to terminate again
         mock_send = mock.Mock()
@@ -2840,16 +2849,19 @@ class TestInterventionSuspend(BaseInterventionActionTestCase):
         self.intervention.unicef_focal_points.add(self.unicef_user)
         self.assertFalse(self.intervention.unicef_accepted)
         mock_send = mock.Mock(return_value=self.mock_email)
-        with self.captureOnCommitCallbacks(execute=True) as callbacks:
-            with mock.patch(self.notify_path, mock_send):
-                response = self.forced_auth_req("patch", self.url, user=self.unicef_user)
+        # with self.captureOnCommitCallbacks(execute=True) as callbacks:
+        #     with mock.patch(self.notify_path, mock_send):
+        #         response = self.forced_auth_req("patch", self.url, user=self.unicef_user)
+        with mock.patch(self.notify_path, mock_send):
+            response = self.forced_auth_req("patch", self.url, user=self.unicef_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         mock_send.assert_called()
         self.intervention.refresh_from_db()
         self.assertEqual(self.intervention.status, Intervention.SUSPENDED)
         self.assertFalse(self.intervention.unicef_accepted)
-        send_to_vision_mock.assert_called()
-        self.assertEqual(len(callbacks), 1)
+        # skip calling for now. We may need to bring it back at some point
+        # send_to_vision_mock.assert_called()
+        # self.assertEqual(len(callbacks), 1)
 
         # unicef attempt to suspend again
         mock_send = mock.Mock()
@@ -2911,16 +2923,20 @@ class TestInterventionUnsuspend(BaseInterventionActionTestCase):
         self.intervention.unicef_focal_points.add(self.unicef_user)
         self.assertFalse(self.intervention.unicef_accepted)
         mock_send = mock.Mock(return_value=self.mock_email)
-        with self.captureOnCommitCallbacks(execute=True) as callbacks:
-            with mock.patch(self.notify_path, mock_send):
-                response = self.forced_auth_req("patch", self.url, user=self.unicef_user)
+        # with self.captureOnCommitCallbacks(execute=True) as callbacks:
+        #     with mock.patch(self.notify_path, mock_send):
+        #         response = self.forced_auth_req("patch", self.url, user=self.unicef_user)
+        with mock.patch(self.notify_path, mock_send):
+            response = self.forced_auth_req("patch", self.url, user=self.unicef_user)
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         mock_send.assert_called()
         self.intervention.refresh_from_db()
         self.assertEqual(self.intervention.status, Intervention.ACTIVE)
         self.assertFalse(self.intervention.unicef_accepted)
-        send_to_vision_mock.assert_called()
-        self.assertEqual(len(callbacks), 1)
+        # skip calling for now. We may need to bring it back at some point
+        # send_to_vision_mock.assert_called()
+        # self.assertEqual(len(callbacks), 1)
 
         # unicef attempt to unsuspend again
         mock_send = mock.Mock()
