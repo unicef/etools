@@ -13,7 +13,7 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        # ('purchase_order', '0002_initial'),
+        ('purchase_order', '0002_initial'),
         # ('action_points', '0003_initial'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         # ('partners', '0002_initial'),
