@@ -11,6 +11,11 @@ import etools.applications.users.models
 import model_utils.fields
 
 
+def add_secretary_group(apps, schema_editor):
+    Group = apps.get_model('auth', 'Group')
+    Group.objects.get_or_create(name='PRC Secretary')
+
+
 class Migration(migrations.Migration):
 
     initial = True
@@ -165,4 +170,5 @@ class Migration(migrations.Migration):
             model_name='realm',
             constraint=models.UniqueConstraint(fields=('user', 'country', 'organization', 'group'), name='unique_realm'),
         ),
+        migrations.RunPython(add_secretary_group, migrations.RunPython.noop)
     ]
