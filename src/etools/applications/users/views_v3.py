@@ -237,8 +237,7 @@ class OrganizationListView(ListAPIView):
         )
         organization_type_filter = {
             "partner": dict(partner__isnull=False, partner__hidden=False),
-            "audit": dict(auditorfirm__purchase_orders__engagement__isnull=False,
-                          auditorfirm__hidden=False),
+            "audit": dict(auditorfirm__hidden=False),
             "tpm": dict(tpmpartner__countries=connection.tenant, tpmpartner__hidden=False)
         }
         return queryset\
