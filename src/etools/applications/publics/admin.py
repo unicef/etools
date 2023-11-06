@@ -1,15 +1,15 @@
 from django.contrib import admin
 
 from etools.applications.publics import models
-from etools.libraries.djangolib.admin import AdminListMixin
+from etools.libraries.djangolib.admin import AdminListMixin, RestrictedEditAdmin
 
 
-class DSARateAdmin(admin.ModelAdmin):
+class DSARateAdmin(RestrictedEditAdmin):
     search_fields = ('region__area_name', 'region__country__name')
     list_filter = ('region__country__name',)
 
 
-class DSARateUploadAdmin(admin.ModelAdmin):
+class DSARateUploadAdmin(RestrictedEditAdmin):
     list_display = (
         'id',
         'dsa_file',
@@ -48,39 +48,39 @@ class DSARateUploadAdmin(admin.ModelAdmin):
         return super().change_view(extra_context=extra_context, *args, **kwargs)
 
 
-class TravelAgentAdmin(AdminListMixin, admin.ModelAdmin):
+class TravelAgentAdmin(AdminListMixin, RestrictedEditAdmin):
     pass
 
 
-class TravelExpenseTypeAdmin(AdminListMixin, admin.ModelAdmin):
+class TravelExpenseTypeAdmin(AdminListMixin, RestrictedEditAdmin):
     pass
 
 
-class CurrencyAdmin(AdminListMixin, admin.ModelAdmin):
+class CurrencyAdmin(AdminListMixin, RestrictedEditAdmin):
     pass
 
 
-class ExchangeRateAdmin(AdminListMixin, admin.ModelAdmin):
+class ExchangeRateAdmin(AdminListMixin, RestrictedEditAdmin):
     pass
 
 
-class AirlineCompanyAdmin(AdminListMixin, admin.ModelAdmin):
+class AirlineCompanyAdmin(AdminListMixin, RestrictedEditAdmin):
     pass
 
 
-class BusinessRegionAdmin(AdminListMixin, admin.ModelAdmin):
+class BusinessRegionAdmin(AdminListMixin, RestrictedEditAdmin):
     pass
 
 
-class BusinessAreaAdmin(AdminListMixin, admin.ModelAdmin):
+class BusinessAreaAdmin(AdminListMixin, RestrictedEditAdmin):
     pass
 
 
-class CountryAdmin(AdminListMixin, admin.ModelAdmin):
+class CountryAdmin(AdminListMixin, RestrictedEditAdmin):
     pass
 
 
-class DSARegionAdmin(AdminListMixin, admin.ModelAdmin):
+class DSARegionAdmin(AdminListMixin, RestrictedEditAdmin):
     pass
 
 

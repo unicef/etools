@@ -2,10 +2,11 @@ from django.contrib import admin
 
 from etools.applications.action_points.admin import ActionPointAdmin
 from etools.applications.tpm import forms, models
+from etools.libraries.djangolib.admin import RestrictedEditAdmin, RestrictedEditAdminMixin
 
 
 @admin.register(models.TPMActivity)
-class TPMActivityAdmin(admin.ModelAdmin):
+class TPMActivityAdmin(RestrictedEditAdmin):
     list_display = (
         'visit',
         '__str__',
@@ -32,7 +33,7 @@ class TPMActivityAdmin(admin.ModelAdmin):
     # )
 
 
-class ActivityInline(admin.StackedInline):
+class ActivityInline(RestrictedEditAdminMixin, admin.StackedInline):
     model = models.TPMActivity
     can_delete = False
     fields = [
@@ -48,7 +49,7 @@ class ActivityInline(admin.StackedInline):
 
 
 @admin.register(models.TPMVisit)
-class TPMVisitAdmin(admin.ModelAdmin):
+class TPMVisitAdmin(RestrictedEditAdmin):
     readonly_fields = ('status', 'reference_number')
     list_display = ('reference_number', 'tpm_partner', 'status', 'visit_information')
     list_filter = ('status', )

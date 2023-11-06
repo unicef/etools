@@ -11,24 +11,25 @@ from etools.applications.field_monitoring.fm_settings.models import (
     Option,
     Question,
 )
+from etools.libraries.djangolib.admin import RestrictedEditAdmin, RestrictedEditAdminMixin
 
 
 @admin.register(Method)
-class MethodAdmin(OrderedModelAdmin):
+class MethodAdmin(RestrictedEditAdminMixin, OrderedModelAdmin):
     list_display = ('name', 'move_up_down_links')
 
 
 @admin.register(Category)
-class CategoryAdmin(OrderedModelAdmin):
+class CategoryAdmin(RestrictedEditAdminMixin, OrderedModelAdmin):
     list_display = ('name', 'move_up_down_links')
 
 
-class QuestionOptionsInline(admin.StackedInline):
+class QuestionOptionsInline(RestrictedEditAdminMixin, admin.StackedInline):
     model = Option
 
 
 @admin.register(Question)
-class QuestionAdmin(admin.ModelAdmin):
+class QuestionAdmin(RestrictedEditAdmin):
     list_display = ('text', 'level', 'methods_list', 'is_hact')
     search_fields = ('text',)
     list_filter = ('level', 'methods', 'sections', 'is_hact')
@@ -40,14 +41,14 @@ class QuestionAdmin(admin.ModelAdmin):
 
 
 @admin.register(LocationSite)
-class LocationSiteAdmin(admin.ModelAdmin):
+class LocationSiteAdmin(RestrictedEditAdmin):
     list_display = ('parent', 'name', 'p_code', 'is_active',)
     list_filter = ('is_active',)
     search_fields = ('name', 'p_code')
 
 
 @admin.register(LogIssue)
-class LogIssueAdmin(admin.ModelAdmin):
+class LogIssueAdmin(RestrictedEditAdmin):
     list_display = ('get_related_to', 'issue', 'status')
     list_filter = ('status',)
 
