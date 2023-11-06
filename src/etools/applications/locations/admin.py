@@ -8,9 +8,10 @@ from unicef_locations.models import CartoDBTable
 
 from etools.applications.locations.models import Location
 from etools.applications.locations.tasks import import_locations, notify_import_site_completed
+from etools.libraries.djangolib.admin import RestrictedEditAdminMixin
 
 
-class EtoolsCartoDBTableAdmin(CartoDBTableAdmin):
+class EtoolsCartoDBTableAdmin(RestrictedEditAdminMixin, CartoDBTableAdmin):
 
     @button(css_class="btn-warning auto-disable")
     def import_sites(self, request, pk):
@@ -22,7 +23,7 @@ class EtoolsCartoDBTableAdmin(CartoDBTableAdmin):
         messages.info(request, 'Import Scheduled')
 
 
-class eToolsLocationAdmin(LocationAdmin):
+class eToolsLocationAdmin(RestrictedEditAdminMixin, LocationAdmin):
     list_filter = (
         ActiveLocationsFilter,
         "admin_level",

@@ -1,10 +1,11 @@
 from django.contrib import admin
 
 from etools.applications.tpm.tpmpartners.models import TPMPartner
+from etools.libraries.djangolib.admin import RestrictedEditAdmin
 
 
 @admin.register(TPMPartner)
-class TPMPartnerAdmin(admin.ModelAdmin):
+class TPMPartnerAdmin(RestrictedEditAdmin):
     list_display = [
         'vendor_number', 'name', 'email', 'phone_number', 'blocked', 'hidden',
         'country', 'countries_list',
@@ -12,9 +13,6 @@ class TPMPartnerAdmin(admin.ModelAdmin):
     list_filter = ['blocked', 'hidden', 'country']
     search_fields = ['vendor_number', 'name', ]
     autocomplete_fields = ['organization']
-    inlines = [
-        # TPMPartnerStaffMemberInlineAdmin,
-    ]
     filter_horizontal = ('countries', )
 
     def countries_list(self, obj):

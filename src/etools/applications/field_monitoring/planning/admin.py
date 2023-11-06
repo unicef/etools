@@ -8,10 +8,11 @@ from etools.applications.field_monitoring.planning.models import (
     QuestionTemplate,
     YearPlan,
 )
+from etools.libraries.djangolib.admin import RestrictedEditAdmin
 
 
 @admin.register(YearPlan)
-class YearPlanAdmin(admin.ModelAdmin):
+class YearPlanAdmin(RestrictedEditAdmin):
     list_display = ('year',)
 
     def has_add_permission(self, request):
@@ -19,14 +20,14 @@ class YearPlanAdmin(admin.ModelAdmin):
 
 
 @admin.register(QuestionTemplate)
-class QuestionTemplateAdmin(admin.ModelAdmin):
+class QuestionTemplateAdmin(RestrictedEditAdmin):
     list_display = ('question', 'related_to', 'is_active', 'specific_details')
     list_select_related = ('partner', 'cp_output', 'intervention', 'question')
     list_filter = ('is_active', 'question')
 
 
 @admin.register(MonitoringActivity)
-class MonitoringActivityAdmin(admin.ModelAdmin):
+class MonitoringActivityAdmin(RestrictedEditAdmin):
     list_display = (
         'reference_number', 'monitor_type', 'tpm_partner', 'visit_lead',
         'location', 'location_site', 'start_date', 'end_date', 'status'
@@ -56,7 +57,7 @@ class MonitoringActivityAdmin(admin.ModelAdmin):
 
 
 @admin.register(MonitoringActivityGroup)
-class MonitoringActivityGroupAdmin(admin.ModelAdmin):
+class MonitoringActivityGroupAdmin(RestrictedEditAdmin):
     list_display = ('partner', 'get_monitoring_activities')
     list_select_related = ('partner',)
 

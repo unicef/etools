@@ -5,13 +5,14 @@ from waffle.admin import FlagAdmin, SwitchAdmin
 from waffle.models import Flag, Switch
 
 from etools.applications.environment.models import TenantFlag, TenantSwitch
+from etools.libraries.djangolib.admin import RestrictedEditAdminMixin
 
 
-class TenantFlagAdmin(FlagAdmin):
+class TenantFlagAdmin(RestrictedEditAdminMixin, FlagAdmin):
     filter_horizontal = ['countries', 'groups']
 
 
-class TenantSwitchAdmin(SwitchAdmin):
+class TenantSwitchAdmin(RestrictedEditAdminMixin, SwitchAdmin):
     filter_horizontal = ['countries']
 
 

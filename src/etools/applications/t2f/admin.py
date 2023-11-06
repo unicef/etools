@@ -4,11 +4,11 @@ from etools.applications.action_points.admin import ActionPointAdmin
 from etools.applications.t2f import models
 from etools.applications.t2f.forms import T2FActionPointAdminForm
 from etools.applications.t2f.models import T2FActionPoint
-from etools.libraries.djangolib.admin import AdminListMixin
+from etools.libraries.djangolib.admin import AdminListMixin, RestrictedEditAdmin
 
 
 @admin.register(models.Travel)
-class TravelAdmin(admin.ModelAdmin):
+class TravelAdmin(RestrictedEditAdmin):
     list_filter = (
         'status',
         'section'
@@ -34,7 +34,7 @@ class TravelAdmin(admin.ModelAdmin):
 
 
 @admin.register(models.TravelActivity)
-class TravelActivityAdmin(admin.ModelAdmin):
+class TravelActivityAdmin(RestrictedEditAdmin):
     list_filter = (
         'travel_type',
         'travels'
@@ -65,7 +65,7 @@ class TravelActivityAdmin(admin.ModelAdmin):
 
 
 @admin.register(models.ItineraryItem)
-class ItineraryItemAdmin(admin.ModelAdmin):
+class ItineraryItemAdmin(RestrictedEditAdmin):
     list_filter = (
         'travel',
         'departure_date',
@@ -89,7 +89,7 @@ class ItineraryItemAdmin(admin.ModelAdmin):
 
 
 @admin.register(models.TravelAttachment)
-class TravelAttachmentAdmin(AdminListMixin, admin.ModelAdmin):
+class TravelAttachmentAdmin(AdminListMixin, RestrictedEditAdmin):
     pass
 
 

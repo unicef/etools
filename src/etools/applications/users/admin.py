@@ -28,7 +28,7 @@ from etools.applications.users.models import Country, Realm, StagedUser, UserPro
 from etools.applications.users.tasks import sync_realms_to_prp
 from etools.applications.vision.tasks import sync_handler, vision_sync_task
 from etools.libraries.azure_graph_api.tasks import sync_user
-from etools.libraries.djangolib.admin import RestrictedEditAdminMixin
+from etools.libraries.djangolib.admin import RestrictedEditAdmin, RestrictedEditAdminMixin
 
 
 def get_office(obj):
@@ -40,7 +40,7 @@ def get_office(obj):
         return None
 
 
-class ProfileInline(admin.StackedInline):
+class ProfileInline(RestrictedEditAdminMixin, admin.StackedInline):
     model = UserProfile
     can_delete = False
     fields = [
@@ -80,7 +80,7 @@ class ProfileInline(admin.StackedInline):
         return get_office(obj)
 
 
-class ProfileAdmin(admin.ModelAdmin):
+class ProfileAdmin(RestrictedEditAdmin):
     fields = [
         'country',
         'country_override',
@@ -121,7 +121,7 @@ class ProfileAdmin(admin.ModelAdmin):
         'country',
     )
 
-    def has_add_permission(self, request):
+    def has_add_permission(self, request, obj=None):
         return False
 
     def has_delete_permission(self, request, obj=None):
@@ -161,7 +161,7 @@ class ProfileAdmin(admin.ModelAdmin):
         obj.save()
 
 
-class RealmInline(admin.StackedInline):
+class RealmInline(RestrictedEditAdminMixin, admin.StackedInline):
     verbose_name_plural = "Realms in current country"
 
     model = Realm
@@ -232,7 +232,7 @@ class UserAdminPlus(RestrictedEditAdminMixin, ExtraUrlMixin, UserAdmin):
     def office(self, obj):
         return get_office(obj)
 
-    def has_add_permission(self, request):
+    def has_add_permission(self, request, obj=None):
         return False
 
     def has_delete_permission(self, request, obj=None):
@@ -265,9 +265,9 @@ class UserAdminPlus(RestrictedEditAdminMixin, ExtraUrlMixin, UserAdmin):
         return fields
 
 
-class CountryAdmin(ExtraUrlMixin, TenantAdminMixin, admin.ModelAdmin):
+class CountryAdmin(ExtraUrlMixin, TenantAdminMixin, RestrictedEditAdmin):
 
-    def has_add_permission(self, request):
+    def has_add_permission(self, request, obj=None):
         return False
 
     list_display = (
@@ -425,7 +425,7 @@ class RealmAdmin(RestrictedEditAdminMixin, SnapshotModelAdmin):
             return HttpResponseRedirect(redirect_url)
 
 
-class StagedUserAdmin(admin.ModelAdmin):
+class StagedUserAdmin(RestrictedEditAdmin):
     list_display = ('country', 'organization', 'requester', 'reviewer', 'request_state')
     list_filter = ('request_state', 'country')
     search_fields = ('requester__email', 'requester__first_name', 'requester__last_name',
@@ -442,6 +442,6 @@ class StagedUserAdmin(admin.ModelAdmin):
 admin.site.register(get_user_model(), UserAdminPlus)
 admin.site.register(UserProfile, ProfileAdmin)
 admin.site.register(Country, CountryAdmin)
-admin.site.register(WorkspaceCounter)
+admin.site.register(WorkspaceCounter, RestrictedEditAdmin)
 admin.site.register(Realm, RealmAdmin)
 admin.site.register(StagedUser, StagedUserAdmin)

@@ -18,7 +18,7 @@ from etools.applications.audit.models import (
     SpecificProcedure,
     SpotCheck,
 )
-from etools.libraries.djangolib.admin import RestrictedEditAdmin
+from etools.libraries.djangolib.admin import RestrictedEditAdmin, RestrictedEditAdminMixin
 
 
 @admin.register(Engagement)
@@ -36,7 +36,7 @@ class EngagementAdmin(RestrictedEditAdmin):
 
 
 @admin.register(RiskCategory)
-class RiskCategoryAdmin(OrderedModelAdmin):
+class RiskCategoryAdmin(RestrictedEditAdminMixin, OrderedModelAdmin):
     list_display = [
         '__str__', 'category_type', 'code', 'header', 'parent', 'move_up_down_links',
     ]
@@ -46,7 +46,7 @@ class RiskCategoryAdmin(OrderedModelAdmin):
 
 
 @admin.register(RiskBluePrint)
-class RiskBluePrintAdmin(OrderedModelAdmin):
+class RiskBluePrintAdmin(RestrictedEditAdminMixin, OrderedModelAdmin):
     list_display = [
         '__str__', 'weight', 'is_key', 'description', 'category', 'move_up_down_links',
     ]
@@ -54,7 +54,7 @@ class RiskBluePrintAdmin(OrderedModelAdmin):
 
 
 @admin.register(Risk)
-class RiskAdmin(admin.ModelAdmin):
+class RiskAdmin(RestrictedEditAdmin):
     list_display = [
         '__str__', 'value', 'blueprint', 'extra',
     ]
@@ -77,7 +77,7 @@ class AuditAdmin(EngagementAdmin):
 
 
 @admin.register(Finding)
-class FindingAdmin(admin.ModelAdmin):
+class FindingAdmin(RestrictedEditAdmin):
     list_display = [
         '__str__', 'priority', 'deadline_of_action',
         'category_of_observation',
@@ -88,7 +88,7 @@ class FindingAdmin(admin.ModelAdmin):
 
 
 @admin.register(FinancialFinding)
-class FinancialFindingAdmin(admin.ModelAdmin):
+class FinancialFindingAdmin(RestrictedEditAdmin):
     list_display = [
         'title', 'audit', 'description', 'amount', 'local_amount',
     ]
@@ -96,12 +96,12 @@ class FinancialFindingAdmin(admin.ModelAdmin):
 
 
 @admin.register(SpecificProcedure)
-class SpecificProcedureAdmin(admin.ModelAdmin):
+class SpecificProcedureAdmin(RestrictedEditAdmin):
     pass
 
 
 @admin.register(SpecialAuditRecommendation)
-class SpecialAuditRecommendationAdmin(admin.ModelAdmin):
+class SpecialAuditRecommendationAdmin(RestrictedEditAdmin):
     pass
 
 

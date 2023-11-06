@@ -1,10 +1,11 @@
 from django.contrib import admin
 
 from etools.applications.attachments.models import AttachmentFlat
+from etools.libraries.djangolib.admin import RestrictedEditAdmin
 
 
 @admin.register(AttachmentFlat)
-class AttachmentAdmin(admin.ModelAdmin):
+class AttachmentAdmin(RestrictedEditAdmin):
     list_display = [
         'partner',
         'partner_type',

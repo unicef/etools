@@ -6,6 +6,7 @@ from django_comments.models import Comment
 from unicef_snapshot.admin import ActivityInline, SnapshotModelAdmin
 
 from etools.applications.action_points.models import ActionPoint
+from etools.libraries.djangolib.admin import RestrictedEditAdmin
 
 
 class CommentInline(GenericStackedInline):
@@ -28,7 +29,7 @@ class CommentInline(GenericStackedInline):
         return False
 
 
-class ActionPointAdmin(SnapshotModelAdmin):
+class ActionPointAdmin(RestrictedEditAdmin, SnapshotModelAdmin):
     list_display = ('reference_number', 'author', 'assigned_to', 'status', 'date_of_completion')
     list_filter = ('status', )
     readonly_fields = ('status', )
