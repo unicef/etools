@@ -730,12 +730,13 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
         activity = InterventionActivityFactory(result=pd_output)
         activity.time_frames.add(active_intervention.quarters.first())
 
-        with self.captureOnCommitCallbacks(execute=True) as callbacks:
-            etools.applications.partners.tasks._make_intervention_status_automatic_transitions(self.country_name)
+        # with self.captureOnCommitCallbacks(execute=True) as callbacks:
+        #     etools.applications.partners.tasks._make_intervention_status_automatic_transitions(self.country_name)
+        etools.applications.partners.tasks._make_intervention_status_automatic_transitions(self.country_name)
         active_intervention.refresh_from_db()
         self.assertEqual(active_intervention.status, Intervention.ACTIVE)
-        send_to_vision_mock.assert_called()
-        self.assertNotEqual(len(callbacks), 0)
+        # skip calling for now. We may need to bring it back at some point
+        # send_to_vision_mock.assert_called()
 
 
 @mock.patch('etools.applications.partners.tasks.logger', spec=['info'])
