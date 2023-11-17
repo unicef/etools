@@ -1707,12 +1707,12 @@ class Intervention(TimeStampedModel):
         REVIEW: [],
         SIGNATURE: [],
         SIGNED: [send_pd_to_vision_side_effect, side_effect_one, side_effect_two],
-        ACTIVE: [send_pd_to_vision_side_effect],
-        SUSPENDED: [send_pd_to_vision_side_effect],
-        ENDED: [send_pd_to_vision_side_effect],
-        CLOSED: [send_pd_to_vision_side_effect],
-        TERMINATED: [send_pd_to_vision_side_effect],
-        CANCELLED: [send_pd_to_vision_side_effect],
+        ACTIVE: [],
+        SUSPENDED: [],
+        ENDED: [],
+        CLOSED: [],
+        TERMINATED: [],
+        CANCELLED: [],
     }
 
     INTERVENTION_STATUS = (
