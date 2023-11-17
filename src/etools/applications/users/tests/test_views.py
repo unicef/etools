@@ -63,7 +63,7 @@ class TestChangeUserRoleView(BaseTenantTestCase):
         cls.superuser = UserFactory(is_superuser=True)
         cls.unicef_organization = Organization.objects.get(name='UNICEF', vendor_number='000')
         cls.partnership_manager = UserFactory(
-            realms__data=["Partnership Manager"], email='test@unicef.org',
+            realms__data=["UNICEF User", "Partnership Manager"], email='test@unicef.org',
             profile__organization=cls.unicef_organization
         )
 
@@ -86,7 +86,7 @@ class TestChangeUserRoleView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response = json.loads(response.content)
         self.assertEqual(response['status'], 'success')
-        self.assertEqual(response['details']['previous_roles'], ["Partnership Manager"])
+        self.assertEqual(response['details']['previous_roles'], ["Partnership Manager", "UNICEF User"])
         self.assertEqual(response['details']['current_roles'], [])
 
     def test_post_grant_200(self):
@@ -105,10 +105,34 @@ class TestChangeUserRoleView(BaseTenantTestCase):
 
         response = json.loads(response.content)
         self.assertEqual(response['status'], 'success')
-        self.assertEqual(response['details']['previous_roles'], ["Partnership Manager"])
+        self.assertEqual(response['details']['previous_roles'], ["Partnership Manager", "UNICEF User"])
         self.assertEqual(
             response['details']['current_roles'],
             ['Partnership Manager', 'UNICEF Audit Focal Point', 'UNICEF User']
+        )
+
+    def test_post_grant_reactivate_200(self):
+        self.partnership_manager.realms.update(is_active=False)
+        for realm in self.partnership_manager.realms.all():
+            self.assertFalse(realm.is_active)
+        response = self.forced_auth_req(
+            "post",
+            self.url,
+            user=self.superuser,
+            data={
+                "user_email": self.partnership_manager.email,
+                "roles": ["UNICEF Audit Focal Point"],
+                "workspace": f"{self.tenant.business_area_code}",
+                "access_type": "grant"
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        response = json.loads(response.content)
+        self.assertEqual(response['status'], 'success')
+        self.assertEqual(response['details']['previous_roles'], [])
+        self.assertEqual(
+            response['details']['current_roles'], ['UNICEF Audit Focal Point', 'UNICEF User']
         )
 
     def test_post_set_200(self):
@@ -127,7 +151,7 @@ class TestChangeUserRoleView(BaseTenantTestCase):
 
         response = json.loads(response.content)
         self.assertEqual(response['status'], 'success')
-        self.assertEqual(response['details']['previous_roles'], ["Partnership Manager"])
+        self.assertEqual(response['details']['previous_roles'], ["Partnership Manager", "UNICEF User"])
         self.assertEqual(response['details']['current_roles'], ["UNICEF Audit Focal Point", "UNICEF User"])
 
     def test_invalid_uppercase_email(self):
