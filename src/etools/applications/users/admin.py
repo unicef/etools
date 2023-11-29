@@ -364,6 +364,7 @@ class RealmAdmin(RestrictedEditAdminMixin, SnapshotModelAdmin):
     search_fields = ('user__email', 'user__first_name', 'user__last_name', 'country__name',
                      'organization__name', 'organization__vendor_number', 'group__name')
     autocomplete_fields = ('country', 'group')
+    list_filter = ('country', 'group')
 
     inlines = (ActivityInline, )
 
