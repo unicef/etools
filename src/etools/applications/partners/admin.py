@@ -731,6 +731,7 @@ class AgreementAdmin(
         'partner_manager',
         'signed_by',
         'terms_acknowledged_by',
+        'authorized_officers',
     )
     fieldsets = (
         (_('Agreement Details'), {
