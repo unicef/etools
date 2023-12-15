@@ -1,6 +1,9 @@
 from django.db import models
 
+from django_filters import rest_framework as filters
 from rest_framework.filters import BaseFilterBackend
+
+from etools.applications.organizations.models import Organization
 
 
 class UserRoleFilter(BaseFilterBackend):
@@ -26,3 +29,12 @@ class UserStatusFilter(BaseFilterBackend):
                     filters |= models.Q(is_active=True, has_active_realm=False)
             return queryset.filter(filters)
         return queryset
+
+
+class OrganizationFilter(filters.FilterSet):
+    organization_id = filters.NumberFilter(field_name='id')
+    organization_type = filters.ChoiceFilter(choices=(('audit', 'audit'), ('partner', 'partner'), ('tpm', 'tpm')))
+
+    class Meta:
+        model = Organization
+        fields = ['organization_id', 'organization_type']

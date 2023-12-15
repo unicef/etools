@@ -28,7 +28,7 @@ from etools.applications.organizations.models import Organization
 from etools.applications.partners.permissions import user_group_permission
 from etools.applications.partners.views.v3 import PMPBaseViewMixin
 from etools.applications.users import views as v1, views_v2 as v2
-from etools.applications.users.filters import UserRoleFilter, UserStatusFilter
+from etools.applications.users.filters import OrganizationFilter, UserRoleFilter, UserStatusFilter
 from etools.applications.users.mixins import (
     AUDIT_ACTIVE_GROUPS,
     GroupEditPermissionMixin,
@@ -224,6 +224,8 @@ class OrganizationListView(ListAPIView):
     model = Organization
     serializer_class = SimpleOrganizationSerializer
     permission_classes = (IsAuthenticated, IsUNICEFUser)
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = OrganizationFilter
 
     def get_queryset(self):
         queryset = Organization.objects.all() \
@@ -237,11 +239,18 @@ class OrganizationListView(ListAPIView):
         )
         organization_type_filter = {
             "partner": dict(partner__isnull=False, partner__hidden=False),
-            "audit": dict(auditorfirm__hidden=False),
+            "audit": dict(auditorfirm__purchase_orders__engagement__isnull=False,
+                          auditorfirm__hidden=False),
             "tpm": dict(tpmpartner__countries=connection.tenant, tpmpartner__hidden=False)
         }
+        organization_type = self.request.query_params.get('organization_type', 'partner')
+        # Audit firms without audits are included when organization_id is present
+        # so that staff members can be added in AMP (ch35468)
+        if organization_type == 'audit' and 'organization_id' in self.request.query_params:
+            organization_type_filter['audit'] = dict(auditorfirm__hidden=False)
+
         return queryset\
-            .filter(**organization_type_filter[self.request.query_params.get('organization_type', 'partner')])\
+            .filter(**organization_type_filter[organization_type])\
             .distinct()
 
 
