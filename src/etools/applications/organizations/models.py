@@ -103,7 +103,6 @@ class Organization(TimeStampedModel, models.Model):
                 not self.partner.hidden:
             _list.append('partner')
         if hasattr(self, 'auditorfirm') and \
-                self.auditorfirm.purchase_orders.filter(engagement__isnull=False).exists() and \
                 not self.auditorfirm.hidden:
             _list.append('audit')
         if hasattr(self, 'tpmpartner') and \

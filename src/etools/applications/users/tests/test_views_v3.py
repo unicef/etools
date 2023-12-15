@@ -10,7 +10,12 @@ from rest_framework import status
 
 from etools.applications.action_points.models import PME
 from etools.applications.audit.models import Auditor, UNICEFAuditFocalPoint, UNICEFUser
-from etools.applications.audit.tests.factories import AuditFocalPointUserFactory, AuditorUserFactory, EngagementFactory
+from etools.applications.audit.tests.factories import (
+    AuditFocalPointUserFactory,
+    AuditorUserFactory,
+    AuditPartnerFactory,
+    EngagementFactory,
+)
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, UNICEF_USER
@@ -131,6 +136,22 @@ class TestOrganizationListView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]['id'], engagement.agreement.auditor_firm.organization.id)
+
+    def test_get_auditor_firms_with_org_id(self):
+        PartnerFactory(organization=OrganizationFactory())
+        EngagementFactory()
+        audit_firm = AuditPartnerFactory()
+
+        with self.assertNumQueries(3):
+            response = self.forced_auth_req(
+                "get",
+                self.url,
+                data={"organization_type": "audit", "organization_id": audit_firm.organization.pk},
+                user=self.partnership_manager,
+            )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['id'], audit_firm.organization.id)
 
     def test_get_tpm_firms(self):
         PartnerFactory(organization=OrganizationFactory())
