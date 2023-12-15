@@ -32,9 +32,12 @@ class UserStatusFilter(BaseFilterBackend):
 
 
 class OrganizationFilter(filters.FilterSet):
-    organization_id = filters.NumberFilter(field_name='id')
+    organization_id = filters.NumberFilter()
     organization_type = filters.ChoiceFilter(choices=(('audit', 'audit'), ('partner', 'partner'), ('tpm', 'tpm')))
 
     class Meta:
         model = Organization
         fields = ['organization_id', 'organization_type']
+
+    def filter_queryset(self, queryset):
+        return queryset

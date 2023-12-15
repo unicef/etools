@@ -247,7 +247,8 @@ class OrganizationListView(ListAPIView):
         # Audit firms without audits are included when organization_id is present
         # so that staff members can be added in AMP (ch35468)
         if organization_type == 'audit' and 'organization_id' in self.request.query_params:
-            organization_type_filter['audit'] = dict(auditorfirm__hidden=False)
+            organization_type_filter['audit'] = dict(auditorfirm__hidden=False,
+                                                     id__in=[int(self.request.query_params['organization_id'])])
 
         return queryset\
             .filter(**organization_type_filter[organization_type])\
