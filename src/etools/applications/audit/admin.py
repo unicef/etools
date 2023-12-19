@@ -18,11 +18,10 @@ from etools.applications.audit.models import (
     SpecificProcedure,
     SpotCheck,
 )
-from etools.libraries.djangolib.admin import RestrictedEditAdmin
 
 
 @admin.register(Engagement)
-class EngagementAdmin(RestrictedEditAdmin):
+class EngagementAdmin(admin.ModelAdmin):
     list_display = [
         '__str__', 'status', 'partner', 'date_of_field_visit',
         'engagement_type', 'start_date', 'end_date', 'year_of_audit',

@@ -99,7 +99,7 @@ class ChangeUserRoleView(CreateAPIView, GenericAPIView):
                     country=workspace,
                     organization=unicef_organization,
                     group=role,
-                    is_active=True
+                    defaults={"is_active": True}
                 )[0])
             if data["access_type"] == "set":
                 user.realms.exclude(id__in=[realm.id for realm in realms]).update(is_active=False)

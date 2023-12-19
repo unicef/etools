@@ -87,10 +87,11 @@ class AzureUserMapper:
                     logger.info('UNICEF User Group added to user {}'.format(obj.user))
 
                     # deactivate realms from previous user country
-                    Realm.objects.filter(
-                        user=obj.user,
-                        country=obj.country,
-                        organization=self.unicef_organization).update(is_active=False)
+                    # commenting out to support stretch assignments
+                    # Realm.objects.filter(
+                    #     user=obj.user,
+                    #     country=obj.country,
+                    #     organization=self.unicef_organization).update(is_active=False)
 
                     obj.country = self._get_country(cleaned_value)
                     logger.info("Country Updated for {}".format(obj))
