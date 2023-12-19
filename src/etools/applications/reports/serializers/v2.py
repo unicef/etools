@@ -425,6 +425,8 @@ class RAMIndicatorSerializer(serializers.ModelSerializer):
 
 class ReportingRequirementSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(required=False)
+    start_date = serializers.DateField(required=True, allow_null=False)
+    end_date = serializers.DateField(required=True, allow_null=False)
 
     class Meta:
         model = ReportingRequirement
