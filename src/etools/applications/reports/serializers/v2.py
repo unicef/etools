@@ -261,8 +261,14 @@ class AppliedIndicatorSerializer(serializers.ModelSerializer):
             instance_copy = instance.make_copy()
 
             intervention = instance.lower_result.result_link.intervention
-            was_active_before = intervention.was_active_before()
             in_amendment = intervention.in_amendment
+
+            if in_amendment and not self.instance.is_active:
+                raise ValidationError(_(
+                    'You cannot update inactive indicators when the PD is in amendment.'
+                ))
+
+            was_active_before = intervention.was_active_before()
             if was_active_before or in_amendment:
                 instance.is_active = False
                 instance.save()
