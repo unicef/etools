@@ -184,8 +184,8 @@ class eToolsLocationSynchronizer(LocationSynchronizer):
 
         # update monitoring activities
         for activity in MonitoringActivity.objects.filter(location_site__isnull=False):
-            if activity.site.parent != activity.location:
-                activity.location = activity.site.parent
+            if activity.location_site.parent != activity.location:
+                activity.location = activity.location_site.parent
                 activity.save()
 
     def handle_obsolete_locations(self, to_deactivate):
