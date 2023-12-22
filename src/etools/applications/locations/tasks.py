@@ -60,7 +60,8 @@ class eToolsLocationSynchronizer(LocationSynchronizer):
         new, updated, skipped, error = 0, 0, 0, 0
         logging.info(f'Total Rows {len(rows)}')
         logging.info(f'Batch size {batch_size}')
-        for idx, batch in enumerate(zip(*[iter(rows)] * batch_size)):
+        for idx in range(0, len(rows), batch_size):
+            batch = rows[idx:idx + batch_size]
             logging.info(f'processing batch {idx+1}')
             batch = list(batch)
             indexed_batch = {item[self.carto.pcode_col]: item for item in batch}
