@@ -435,7 +435,7 @@ class ListCreateAPIMixedPermission(permissions.BasePermission):
                     return True
             return False
         elif request.method == 'POST':
-            # user must have have admin access
+            # user must have admin access
             return request.user.is_authenticated and request.user.is_staff
         else:
             # This class shouldn't see methods other than GET and POST, but regardless the answer is 'no you may not'.
