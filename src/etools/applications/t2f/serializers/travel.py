@@ -384,7 +384,7 @@ class TravelDetailsSerializer(PermissionBasedModelSerializer):
                 else:
                     try:
                         self.create_related_models(model, [attrs], travel=self.instance)
-                    except TypeError:
+                    except (TypeError, AttributeError):
                         attrs.pop('travel', None)
                         new_models = self.create_related_models(model, [attrs])
                         for m in new_models:
