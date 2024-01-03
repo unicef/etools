@@ -28,7 +28,7 @@ from etools.applications.audit.transitions.conditions import (
     ValidateMARiskCategories,
     ValidateMARiskExtra,
 )
-from etools.applications.audit.transitions.serializers import EngagementCancelSerializer
+from etools.applications.audit.transitions.serializers import EngagementCancelSerializer, EngagementSendBackSerializer
 from etools.applications.audit.utils import generate_final_report
 from etools.applications.core.urlresolvers import build_frontend_url
 from etools.applications.environment.notifications import send_notification_with_template
@@ -174,6 +174,8 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
 
     cancel_comment = models.TextField(blank=True, verbose_name=_('Cancel Comment'))
 
+    send_back_comment = models.TextField(blank=True, verbose_name=_('Send Back Comment'))
+
     active_pd = models.ManyToManyField('partners.Intervention', verbose_name=_('Active PDs'), blank=True)
 
     authorized_officers = models.ManyToManyField(
@@ -279,6 +281,15 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
                 permission=has_action_permission(action='submit'))
     def submit(self):
         self.date_of_report_submit = timezone.now()
+
+        self._notify_focal_points('audit/engagement/reported_by_auditor')
+
+    @transition(status, source=STATUSES.report_submitted, target=STATUSES.partner_contacted,
+                permission=has_action_permission(action='send_back'),
+                custom={'serializer': EngagementSendBackSerializer})
+    def send_back(self, send_back_comment):
+        self.date_of_report_submit = None
+        self.send_back_comment = send_back_comment
 
         self._notify_focal_points('audit/engagement/reported_by_auditor')
 

@@ -350,12 +350,17 @@ class Command(BaseCommand):
             condition=partner_contacted_condition
         )
 
-        # report submitted. focal point can finalize. all can view
+        # report submitted. focal point can finalize or send back. all can view
         report_submitted_condition = self.engagement_status(Engagement.STATUSES.report_submitted)
         self.add_permissions(self.auditor, 'edit', self.report_attachments_block, condition=report_submitted_condition)
         self.add_permissions(
             self.focal_point, 'action',
             'audit.engagement.finalize',
+            condition=report_submitted_condition
+        )
+        self.add_permissions(
+            self.focal_point, 'send_back',
+            'audit.engagement.send_back',
             condition=report_submitted_condition
         )
         self.add_permissions(
