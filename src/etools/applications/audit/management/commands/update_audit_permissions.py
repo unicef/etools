@@ -359,7 +359,7 @@ class Command(BaseCommand):
             condition=report_submitted_condition
         )
         self.add_permissions(
-            self.focal_point, 'send_back',
+            self.focal_point, 'action',
             'audit.engagement.send_back',
             condition=report_submitted_condition
         )
