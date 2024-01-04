@@ -291,8 +291,6 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
         self.date_of_report_submit = None
         self.send_back_comment = send_back_comment
 
-        self._notify_focal_points('audit/engagement/reported_by_auditor')
-
     @transition(status, source=[STATUSES.partner_contacted, STATUSES.report_submitted], target=STATUSES.cancelled,
                 permission=has_action_permission(action='cancel'),
                 custom={'serializer': EngagementCancelSerializer})

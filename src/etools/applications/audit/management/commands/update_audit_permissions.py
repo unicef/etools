@@ -349,6 +349,11 @@ class Command(BaseCommand):
             'audit.engagement.cancel',
             condition=partner_contacted_condition
         )
+        self.add_permissions(
+            self.everybody, 'view',
+            'audit.engagement.send_back_comment',
+            condition=partner_contacted_condition
+        )
 
         # report submitted. focal point can finalize or send back. all can view
         report_submitted_condition = self.engagement_status(Engagement.STATUSES.report_submitted)
