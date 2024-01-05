@@ -91,6 +91,13 @@ class InterventionAmendmentsAdmin(AttachmentInlineAdminMixin, CountryUsersAdminM
     readonly_fields = [
         'amendment_number',
     ]
+    raw_id_fields = [
+        'intervention',
+        'amended_intervention',
+        'unicef_signatory',
+        'partner_authorized_officer_signatory',
+    ]
+
     list_display = (
         'intervention',
         'types',
