@@ -701,7 +701,7 @@ class InterventionXLSRenderer:
                     time_frames = activity.time_frames.all()
                     worksheet.append([
                         activity.code + ' ' + str(idx) + ' ' + str(len(activities)),
-                        activity.name,
+                        activity.name if activity.is_active else f"({_('Inactive')}) {activity.name}",
                         currency_format(activity.total),
                         currency_format(activity.cso_cash),
                         currency_format(activity.unicef_cash),
@@ -938,10 +938,11 @@ class InterventionXLSRenderer:
 
                 for activity in pd_output.activities.all():
                     time_frames = activity.time_frames.all()
+                    title = _("Activity") + ":" + activity.name
                     worksheet.append(
                         [
                             activity.code,
-                            _("Activity") + ":" + activity.name,
+                            title if activity.is_active else f"({_('Inactive')}) {title}",
                             '',
                             '',
                             '',
