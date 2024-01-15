@@ -39,6 +39,9 @@ class EngagementCheckTransitionsTestCaseMixin:
     def _test_submit(self, user, expected_response, errors=None, data=None):
         return self._test_transition(user, 'submit', expected_response, errors=errors, data=data)
 
+    def _test_send_back(self, user, expected_response, errors=None, data=None):
+        return self._test_transition(user, 'send_back', expected_response, errors=errors, data=data)
+
     def _test_finalize(self, user, expected_response, errors=None, data=None):
         return self._test_transition(user, 'finalize', expected_response, errors=errors, data=data)
 
@@ -282,7 +285,7 @@ class TestSCTransitionsMetadataTestCase(
 
     def test_submitted_focal_point(self):
         self._init_submitted_engagement()
-        self._test_allowed_actions(self.unicef_focal_point, ['finalize'])
+        self._test_allowed_actions(self.unicef_focal_point, ['finalize', 'send_back'])
 
     def test_finalized_auditor(self):
         self._init_finalized_engagement()
