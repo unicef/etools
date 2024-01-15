@@ -291,7 +291,7 @@
                     {%  if not forloop.first %}
                         <td><span> </span></td>
                     {% endif %}
-                      <td class="w-p30">{{ indicator.indicator.title }}</td>
+                      <td class="w-p30">{% if not indicator.is_active %} ({% translate 'Inactive' %}){% endif %} {{ indicator.indicator.title }}</td>
                       <td class="w-p20">
                         {% for location in indicator.locations.all %}
                           <span class="small-text">{{ location.name }}{%  if not forloop.last %}, {% endif %}
@@ -346,7 +346,7 @@
               {% for activity in ll_result.activities.all %}
                 <tr>
                   <td>Activity</td>
-                  <td>{{ activity.name }}</td>
+                  <td>{% if not activity.is_active %} ({% translate 'Inactive' %}) {% endif %}{{ activity.name }}</td>
                   <td>{{ activity.get_time_frames_display }}</td>
                   <td>{{ activity.cso_cash|add:activity.unicef_cash | currency }}</td>
                   <td>{{ activity.cso_cash | currency }}</td>
