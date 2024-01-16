@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-06-14 12:13+0000\n"
+"POT-Creation-Date: 2024-01-16 13:03+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -682,24 +682,6 @@ msgstr "Plan de travail détaillé Budget"
 msgid "Supply Contribution (Planned)"
 msgstr "Contribution à l'offre (prévue)"
 
-msgid "Unable to associate staff member to UNICEF user"
-msgstr "Impossible d'associer un membre du personnel à un utilisateur UNICEF"
-
-#, python-format
-msgid "This user already exists under a different partnership: %s"
-msgstr "Cet utilisateur existe déjà sous un autre partenariat: %s"
-
-#, python-format
-msgid ""
-"User emails cannot be changed, please remove the user and add another one: %s"
-msgstr ""
-"Les e-mails des utilisateurs ne peuvent pas être modifiés, veuillez "
-"supprimer l'utilisateur et en ajouter un autre: %s"
-
-msgid "User already synced to PRP and cannot be disabled."
-msgstr ""
-"L'utilisateur est déjà synchronisé avec PRP et ne peut pas être désactivé."
-
 msgid "Name"
 msgstr "Nom"
 
@@ -817,21 +799,6 @@ msgstr "Section principale"
 msgid "Core Values Assessment"
 msgstr "Évaluation des valeurs fondamentales"
 
-msgid "User"
-msgstr "Utilisateur"
-
-msgid "Title"
-msgstr "Titre"
-
-msgid "First Name"
-msgstr "Prénom"
-
-msgid "Last Name"
-msgstr "Nom de famille"
-
-msgid "Active"
-msgstr "Actif"
-
 msgid "Spot Check Follow Up Required"
 msgstr "Suivi des contrôles ponctuels requis"
 
@@ -925,17 +892,11 @@ msgstr "Suspendu"
 msgid "Terminated"
 msgstr "Terminé"
 
-msgid "(old)Partner Authorized Officer"
-msgstr "(old)Partenaire Agent autorisé"
-
 msgid "Attached Agreement"
 msgstr "Accord ci-joint"
 
 msgid "Termination document for PCAs"
 msgstr "Document de fin de contrat pour les APC"
-
-msgid "(old)Signed by partner"
-msgstr "(old)Signé par le partenaire"
 
 msgid "Signed by partner"
 msgstr "Signé par le partenaire"
@@ -975,6 +936,9 @@ msgstr "Consultez le site"
 
 msgid "Signature"
 msgstr "Signature"
+
+msgid "Active"
+msgstr "Actif"
 
 msgid "Cancelled"
 msgstr "Annulé"
@@ -1017,12 +981,6 @@ msgstr "Date de la révision finale du partenariat"
 
 msgid "Final Review Approved"
 msgstr "Révision finale approuvée"
-
-msgid "(old)Signed by Partner"
-msgstr "(old)Signé par le partenaire"
-
-msgid "(old)CSO Authorized Officials"
-msgstr "(old)Fonctionnaires autorisés de l'OSC"
 
 msgid "Contingency PD"
 msgstr "PD pour imprévus"
@@ -1337,6 +1295,9 @@ msgstr "Approbation générale"
 msgid "Sent Back by Secretary Comment"
 msgstr "Renvoyé par le secrétaire Commentaire"
 
+msgid "User"
+msgstr "Utilisateur"
+
 msgid "FACE"
 msgstr ""
 
@@ -1474,6 +1435,9 @@ msgid ""
 "Unfunded amount for Planning, monitoring, evaluation and communication, "
 "prorated to their contribution to the programme (venue, travels, etc.)"
 msgstr ""
+
+msgid "Title"
+msgstr "Titre"
 
 msgid "Unit Number"
 msgstr "Numéro d'unité"
@@ -1750,13 +1714,6 @@ msgstr ""
 "Données budgétaires non valides. Le total des liquidités doit être égal au "
 "nombre d'articles * prix par article."
 
-msgid ""
-"User already synced to PRP and cannot be disabled. Please instruct the "
-"partner to disable from PRP"
-msgstr ""
-"L'utilisateur est déjà synchronisé avec PRP et ne peut pas être désactivé. "
-"Veuillez demander au partenaire de désactiver le PRP"
-
 msgid "The Date of Report cannot be in the future"
 msgstr "La date du rapport ne peut pas être dans le futur"
 
@@ -1781,6 +1738,11 @@ msgstr "Le numéro de fournisseur doit appartenir au groupe de comptes PRG2"
 
 msgid "Unknown intervention."
 msgstr "Intervention inconnue."
+
+#, fuzzy
+#| msgid "Signatures cannot be dated in the future"
+msgid "Results cannot be changed in this status"
+msgstr "Les signatures ne peuvent pas être datées dans le futur"
 
 msgid "EZHACT Vision integration disabled"
 msgstr "Intégration d'EZHACT Vision désactivée"
@@ -2053,7 +2015,9 @@ msgstr "Le DP ne peut pas être activé si le partenaire est bloqué en vision."
 msgid "Agreement selected is not of type SSFA"
 msgstr "L'accord sélectionné n'est pas de type SSFA"
 
-msgid " without deleting the indicators first"
+#, fuzzy
+#| msgid " without deleting the indicators first"
+msgid " without deleting the indicators first "
 msgstr "sans supprimer les indicateurs au préalable"
 
 #, python-format
@@ -2375,6 +2339,49 @@ msgstr ""
 
 msgid "Partnership Manager role required for pca export."
 msgstr "Rôle de gestionnaire de partenariat requis pour l'exportation pca."
+
+#~ msgid "Unable to associate staff member to UNICEF user"
+#~ msgstr ""
+#~ "Impossible d'associer un membre du personnel à un utilisateur UNICEF"
+
+#~ msgid "This user already exists under a different partnership: %s"
+#~ msgstr "Cet utilisateur existe déjà sous un autre partenariat: %s"
+
+#~ msgid ""
+#~ "User emails cannot be changed, please remove the user and add another "
+#~ "one: %s"
+#~ msgstr ""
+#~ "Les e-mails des utilisateurs ne peuvent pas être modifiés, veuillez "
+#~ "supprimer l'utilisateur et en ajouter un autre: %s"
+
+#~ msgid "User already synced to PRP and cannot be disabled."
+#~ msgstr ""
+#~ "L'utilisateur est déjà synchronisé avec PRP et ne peut pas être désactivé."
+
+#~ msgid "First Name"
+#~ msgstr "Prénom"
+
+#~ msgid "Last Name"
+#~ msgstr "Nom de famille"
+
+#~ msgid "(old)Partner Authorized Officer"
+#~ msgstr "(old)Partenaire Agent autorisé"
+
+#~ msgid "(old)Signed by partner"
+#~ msgstr "(old)Signé par le partenaire"
+
+#~ msgid "(old)Signed by Partner"
+#~ msgstr "(old)Signé par le partenaire"
+
+#~ msgid "(old)CSO Authorized Officials"
+#~ msgstr "(old)Fonctionnaires autorisés de l'OSC"
+
+#~ msgid ""
+#~ "User already synced to PRP and cannot be disabled. Please instruct the "
+#~ "partner to disable from PRP"
+#~ msgstr ""
+#~ "L'utilisateur est déjà synchronisé avec PRP et ne peut pas être "
+#~ "désactivé. Veuillez demander au partenaire de désactiver le PRP"
 
 #~ msgid "International"
 #~ msgstr "International"

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-06-14 12:13+0000\n"
+"POT-Creation-Date: 2024-01-16 13:03+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -692,23 +692,6 @@ msgstr "Orçamento detalhado do plano de trabalho"
 msgid "Supply Contribution (Planned)"
 msgstr "Contribuição de supimentos (planejada)"
 
-msgid "Unable to associate staff member to UNICEF user"
-msgstr "Não é possível associar o funcionário ao usuário UNICEF"
-
-#, python-format
-msgid "This user already exists under a different partnership: %s"
-msgstr "Este usuário já existe em uma parceria diferente: %s"
-
-#, python-format
-msgid ""
-"User emails cannot be changed, please remove the user and add another one: %s"
-msgstr ""
-"Os e-mails do usuário não podem ser alterados, remova o usuário e adicione "
-"outro: %s"
-
-msgid "User already synced to PRP and cannot be disabled."
-msgstr "O usuário já está sincronizado com o PRP e não pode ser desabilitado."
-
 msgid "Name"
 msgstr "Nome"
 
@@ -826,21 +809,6 @@ msgstr "Seção principal"
 msgid "Core Values Assessment"
 msgstr "Core Values Assessment / Avaliação Core Values"
 
-msgid "User"
-msgstr "Usuário:"
-
-msgid "Title"
-msgstr "Título"
-
-msgid "First Name"
-msgstr "Primeiro nome"
-
-msgid "Last Name"
-msgstr "Sobrenome"
-
-msgid "Active"
-msgstr "Ativo"
-
 msgid "Spot Check Follow Up Required"
 msgstr "É necessário fazer o acompanhamento do Spot Check"
 
@@ -934,17 +902,11 @@ msgstr "Suspenso"
 msgid "Terminated"
 msgstr "Rescindido"
 
-msgid "(old)Partner Authorized Officer"
-msgstr "(old)Oficial autorizado do parceiro"
-
 msgid "Attached Agreement"
 msgstr "Acordo anexo"
 
 msgid "Termination document for PCAs"
 msgstr "Documento de rescisão para PCAs"
-
-msgid "(old)Signed by partner"
-msgstr "(old)Assinado pelo parceiro"
 
 msgid "Signed by partner"
 msgstr "Assinado pelo parceiro"
@@ -984,6 +946,9 @@ msgstr "Revisar"
 
 msgid "Signature"
 msgstr "Assinatura"
+
+msgid "Active"
+msgstr "Ativo"
 
 msgid "Cancelled"
 msgstr "Cancelado"
@@ -1026,13 +991,6 @@ msgstr "Data de realização da revisão final da parceria"
 
 msgid "Final Review Approved"
 msgstr "Revisão final aprovada"
-
-msgid "(old)Signed by Partner"
-msgstr "(old)Assinado pelo parceiro"
-
-msgid "(old)CSO Authorized Officials"
-msgstr ""
-"(old)Oficiais da OSC (organização da Sociedade Civil) Autorizados a assinar"
 
 msgid "Contingency PD"
 msgstr "PD de contingência"
@@ -1349,6 +1307,9 @@ msgstr "Aprovador geral"
 msgid "Sent Back by Secretary Comment"
 msgstr "Enviado para comentário do(a) secretário(a)"
 
+msgid "User"
+msgstr "Usuário:"
+
 msgid "FACE"
 msgstr ""
 
@@ -1486,6 +1447,9 @@ msgid ""
 "Unfunded amount for Planning, monitoring, evaluation and communication, "
 "prorated to their contribution to the programme (venue, travels, etc.)"
 msgstr ""
+
+msgid "Title"
+msgstr "Título"
 
 msgid "Unit Number"
 msgstr "Número da unidade"
@@ -1761,13 +1725,6 @@ msgstr ""
 "Dados de orçamento inválidos. O valor financeiro total deve ser igual ao "
 "número dos itens * preço por item."
 
-msgid ""
-"User already synced to PRP and cannot be disabled. Please instruct the "
-"partner to disable from PRP"
-msgstr ""
-"O usuário já está sincronizado com o PRP e não pode ser desabilitado. Por "
-"favor, instrua o parceiro a desabilitar do PRP"
-
 msgid "The Date of Report cannot be in the future"
 msgstr "A data do relatório não pode estar no futuro"
 
@@ -1792,6 +1749,11 @@ msgstr "O número do fornecedor deve pertencer ao grupo de contas PRG2"
 
 msgid "Unknown intervention."
 msgstr "Intervenção desconhecida."
+
+#, fuzzy
+#| msgid "Signatures cannot be dated in the future"
+msgid "Results cannot be changed in this status"
+msgstr "As assinaturas não podem ser datadas no futuro"
 
 msgid "EZHACT Vision integration disabled"
 msgstr "Integração com o EZHACT Vision desativada"
@@ -2062,7 +2024,9 @@ msgstr "O PD não pode ser ativado se o parceiro estiver bloqueado no VISION."
 msgid "Agreement selected is not of type SSFA"
 msgstr "O contrato selecionado não é do tipo SSFA"
 
-msgid " without deleting the indicators first"
+#, fuzzy
+#| msgid " without deleting the indicators first"
+msgid " without deleting the indicators first "
 msgstr "sem excluir os indicadores primeiro"
 
 #, python-format
@@ -2382,6 +2346,50 @@ msgstr ""
 
 msgid "Partnership Manager role required for pca export."
 msgstr "A função de gerente de parceria é necessária para a exportação de pca."
+
+#~ msgid "Unable to associate staff member to UNICEF user"
+#~ msgstr "Não é possível associar o funcionário ao usuário UNICEF"
+
+#~ msgid "This user already exists under a different partnership: %s"
+#~ msgstr "Este usuário já existe em uma parceria diferente: %s"
+
+#~ msgid ""
+#~ "User emails cannot be changed, please remove the user and add another "
+#~ "one: %s"
+#~ msgstr ""
+#~ "Os e-mails do usuário não podem ser alterados, remova o usuário e "
+#~ "adicione outro: %s"
+
+#~ msgid "User already synced to PRP and cannot be disabled."
+#~ msgstr ""
+#~ "O usuário já está sincronizado com o PRP e não pode ser desabilitado."
+
+#~ msgid "First Name"
+#~ msgstr "Primeiro nome"
+
+#~ msgid "Last Name"
+#~ msgstr "Sobrenome"
+
+#~ msgid "(old)Partner Authorized Officer"
+#~ msgstr "(old)Oficial autorizado do parceiro"
+
+#~ msgid "(old)Signed by partner"
+#~ msgstr "(old)Assinado pelo parceiro"
+
+#~ msgid "(old)Signed by Partner"
+#~ msgstr "(old)Assinado pelo parceiro"
+
+#~ msgid "(old)CSO Authorized Officials"
+#~ msgstr ""
+#~ "(old)Oficiais da OSC (organização da Sociedade Civil) Autorizados a "
+#~ "assinar"
+
+#~ msgid ""
+#~ "User already synced to PRP and cannot be disabled. Please instruct the "
+#~ "partner to disable from PRP"
+#~ msgstr ""
+#~ "O usuário já está sincronizado com o PRP e não pode ser desabilitado. Por "
+#~ "favor, instrua o parceiro a desabilitar do PRP"
 
 #~ msgid "Planned Visit to be set only at Partner level"
 #~ msgstr "Visita planejada a ser definida apenas no nível do parceiro"
