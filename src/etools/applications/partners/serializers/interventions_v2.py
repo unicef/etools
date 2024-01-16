@@ -125,8 +125,6 @@ class PartnerStaffMemberUserSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'email', 'first_name', 'last_name', 'created', 'modified',
             'active', 'phone', 'title',
-            # TODO REALMS check with frontend if partner id is used
-            # 'partner'
         )
 
 
@@ -1325,6 +1323,12 @@ class InterventionReportingRequirementCreateSerializer(
         """
         self.intervention = self.context["intervention"]
 
+        # TODO: [e4] remove this whenever a better validation is decided on. This is out of place but needed as a hotfix
+        # take into consideration the reporting requirements edit rights on the intervention
+        # move this into permissions when time allows
+        permissions = self.context.get("intervention_permissions")
+        can_edit = permissions['edit'].get("reporting_requirements") if permissions else True
+
         if self.intervention.status != Intervention.DRAFT:
             if self.intervention.status == Intervention.TERMINATED:
                 ended = self.intervention.end < datetime.now().date() if self.intervention.end else True
@@ -1333,6 +1337,10 @@ class InterventionReportingRequirementCreateSerializer(
                         _("Changes not allowed when PD is terminated.")
                     )
             elif self.intervention.contingency_pd and self.intervention.status == Intervention.SIGNED:
+                pass
+            # TODO: [e4] remove this whenever a better validation is decided on.
+            # This is out of place but needed as a hotfix, can edit should be checked at the view level consistently
+            elif self.intervention.status == Intervention.SIGNATURE and can_edit:
                 pass
             else:
                 if not self.intervention.in_amendment and not self.intervention.termination_doc_attachment.exists():

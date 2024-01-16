@@ -329,6 +329,23 @@ class TestGisLocationViews(BaseTenantTestCase):
         self.assertEqual(len(response.data), 1)
         self.assertEqual(sorted(response.data[0].keys()), ["id", "level", "name", "p_code", "parent_id"])
 
+    def test_monitoring_activities_in_use(self):
+        MonitoringActivityFactory(
+            location=self.location_with_geom
+        )
+
+        response = self.forced_auth_req(
+            "get",
+            reverse("management_gis:locations-gis-in-use"),
+            user=self.unicef_staff,
+            data={"country_id": self.country.id},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(sorted(response.data[0].keys()), ["id", "level", "name", "p_code", "parent_id"])
+        self.assertEqual(int(response.data[0]["id"]), self.location_with_geom.pk)
+
     def test_intervention_locations_geom_bad_request(self):
         url = reverse("management_gis:locations-gis-geom-list")
         # test with no country in the query string, expect error

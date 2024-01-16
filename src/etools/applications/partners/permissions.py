@@ -27,7 +27,7 @@ PRC_SECRETARY = 'PRC Secretary'
 
 class PMPPermissions:
     # this property specifies an array of model properties in order to check against the permission matrix. The fields
-    # declared under this property need to be both property on the model and delcared in the permission matrix
+    # declared under this property need to be both property on the model and declared in the permission matrix
     EXTRA_FIELDS = []
     actions_default_permissions = {
         'edit': True,
@@ -438,7 +438,7 @@ class ListCreateAPIMixedPermission(permissions.BasePermission):
                     return True
             return False
         elif request.method == 'POST':
-            # user must have have admin access
+            # user must have admin access
             return request.user.is_authenticated and request.user.is_staff
         else:
             # This class shouldn't see methods other than GET and POST, but regardless the answer is 'no you may not'.

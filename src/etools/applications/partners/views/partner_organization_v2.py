@@ -361,8 +361,8 @@ class PartnerOrganizationHactAPIView(ListAPIView):
     Returns a list of Partners.
     """
     permission_classes = (IsAdminUser,)
-    queryset = PartnerOrganization.objects.select_related('planned_engagement').prefetch_related(
-        'organization__realms__users', 'assessments').hact_active()
+    queryset = PartnerOrganization.objects.select_related('planned_engagement')\
+        .prefetch_related('assessments').hact_active()
     serializer_class = PartnerOrganizationHactSerializer
     renderer_classes = (r.JSONRenderer, PartnerOrganizationHactCsvRenderer)
     filename = 'detailed_hact_dashboard'

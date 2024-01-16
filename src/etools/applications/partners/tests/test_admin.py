@@ -5,8 +5,8 @@ from django.contrib.admin.sites import AdminSite
 from unicef_snapshot.models import Activity
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
-from etools.applications.partners.admin import AgreementAdmin, InterventionAdmin, PartnerStaffMemberAdmin
-from etools.applications.partners.models import Agreement, Intervention, PartnerStaffMember
+from etools.applications.partners.admin import AgreementAdmin, InterventionAdmin
+from etools.applications.partners.models import Agreement, Intervention
 from etools.applications.partners.tests.factories import AgreementFactory, InterventionFactory, PartnerFactory
 from etools.applications.reports.tests.factories import CountryProgrammeFactory
 from etools.applications.users.tests.factories import UserFactory
@@ -59,30 +59,6 @@ class TestInterventionAdmin(TestAdminCase):
                 "after": "Title Change"
             }
         })
-
-
-# TODO REALMS clean up
-class TestPartnerStaffMemberAdmin(TestAdminCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.partner = PartnerFactory()
-
-    def test_save_model_create(self):
-        self.assertFalse(Activity.objects.exists())
-        obj = PartnerStaffMember(
-            user=self.user,
-            email="test@example.com",
-            partner=self.partner,
-        )
-        sa = PartnerStaffMemberAdmin(PartnerStaffMember, self.site)
-        sa.save_model(self.request, obj, {}, False)
-        self.assertTrue(
-            Activity.objects.filter(action=Activity.CREATE).exists()
-        )
-        activity = Activity.objects.first()
-        self.assertEqual(activity.target, obj)
-        self.assertEqual(activity.by_user, self.user)
-        self.assertEqual(activity.change, {})
 
 
 class TestAgreementAdmin(TestAdminCase):

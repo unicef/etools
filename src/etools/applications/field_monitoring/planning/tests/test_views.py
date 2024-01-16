@@ -1,9 +1,7 @@
 from datetime import date
-from unittest import skip
 
 from django.core import mail
 from django.core.management import call_command
-from django.db import connection
 from django.test.utils import override_settings
 from django.urls import reverse
 
@@ -46,7 +44,6 @@ from etools.applications.partners.tests.factories import (
 )
 from etools.applications.reports.models import ResultType
 from etools.applications.reports.tests.factories import OfficeFactory, ResultFactory, SectionFactory
-from etools.applications.tpm.models import PME
 from etools.applications.tpm.tests.factories import SimpleTPMPartnerFactory, TPMPartnerFactory, TPMUserFactory
 
 
@@ -265,6 +262,30 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         )
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_update_with_no_access_tpm_team_members(self):
+        tpm_partner = TPMPartnerFactory()
+        tpm_staff_1 = TPMUserFactory(
+            tpm_partner=tpm_partner, profile__organization=tpm_partner.organization
+        )
+        tpm_staff_1.realms.update(is_active=False)
+        tpm_staff_2 = TPMUserFactory(
+            tpm_partner=tpm_partner, profile__organization=tpm_partner.organization
+        )
+        tpm_staff_2.realms.update(is_active=False)
+        tpm_staff_3 = TPMUserFactory(
+            tpm_partner=tpm_partner, profile__organization=tpm_partner.organization
+        )
+        activity = MonitoringActivityFactory(
+            monitor_type='tpm', tpm_partner=tpm_partner, status='draft', team_members=[tpm_staff_3]
+        )
+        tpm_staff_1.realms.update(is_active=False)
+        self._test_update(
+            self.fm_user, activity,
+            data={'team_members': [tpm_staff_1.pk, tpm_staff_2.pk, tpm_staff_3.pk]},
+            expected_status=status.HTTP_200_OK
+        )
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_auto_accept_activity(self):
         activity = MonitoringActivityFactory(monitor_type='staff',
                                              status='pre_' + MonitoringActivity.STATUSES.assigned)
@@ -325,6 +346,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         )
 
         visit_lead = UserFactory(unicef_user=True)
+        approver = UserFactory(approver=True)
 
         question = QuestionFactory(level=Question.LEVELS.partner, sections=activity.sections.all(), is_active=True)
         QuestionTemplateFactory(question=question)
@@ -355,13 +377,17 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         ActivityOverallFinding.objects.create(monitoring_activity=activity, narrative_finding='test')
         goto('data_collection', visit_lead)
         goto('report_finalization', visit_lead)
-        goto('submitted', visit_lead, mail_count=len(PME.as_group().user_set.filter(
-            profile__country=connection.tenant,
-        )))
+        goto('submitted', visit_lead, mail_count=activity.country_pmes.count())
         goto('report_finalization', self.pme, mail_count=1)
-        goto('submitted', visit_lead,
-             mail_count=len(PME.as_group().user_set.filter(profile__country=connection.tenant)))
+        goto('submitted', visit_lead, mail_count=activity.country_pmes.count())
         goto('completed', self.pme)
+        activity.status = "submitted"
+        activity.save(update_fields=["status"])
+        goto('completed', approver)
+
+        activity.status = "submitted"
+        activity.save(update_fields=["status"])
+        goto('report_finalization', approver, extra_data={"report_reject_reason": "some reason"})
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_sections_are_displayed_correctly(self):
@@ -389,16 +415,19 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
                           expected_status=status.HTTP_400_BAD_REQUEST)
         self._test_update(self.fm_user, activity, {'status': 'cancelled', 'cancel_reason': 'just because'})
 
-    @skip("TODO: fix this test")
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_report_reject_reason_required(self):
+        staff = UserFactory(unicef_user=True)
         activity = MonitoringActivityFactory(monitor_type='staff', status='submitted',
-                                             visit_lead=UserFactory(unicef_user=True),
-                                             team_members=[UserFactory(unicef_user=True)])
+                                             visit_lead=staff,
+                                             team_members=[staff])
+        StartedChecklistFactory(monitoring_activity=activity)
 
-        self._test_update(self.fm_user, activity, {'status': 'report_finalization'},
-                          expected_status=status.HTTP_400_BAD_REQUEST)
-        self._test_update(self.fm_user, activity, {'status': 'report_finalization',
-                                                   'report_reject_reason': 'just because'})
+        self._test_update(self.pme, activity, {'status': 'report_finalization',
+                                               'report_reject_reason': 'just because'})
+        activity.refresh_from_db()
+        self.assertEquals(activity.status, 'report_finalization')
+        self.assertEquals(activity.report_reject_reason, 'just because')
 
     def test_reject_as_tpm(self):
         tpm_partner = SimpleTPMPartnerFactory()

@@ -172,6 +172,10 @@ class AppliedIndicatorSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         lower_result = attrs.get('lower_result', getattr(self.instance, 'lower_result', None))
 
+        # TODO: [e4] remove this whenever a better validation is decided on. This is out of place but needed as a hotfix
+        if lower_result.result_link.intervention.status in [lower_result.result_link.intervention.SIGNATURE]:
+            raise ValidationError(_("Indicator changes are not allowed in this status"))
+
         # allowed to change target "v" denominator only if intervention is draft or signed
         # or active and in amendment mode
         # allowed to change target "d" denominator only if intervention is draft or signed
@@ -257,8 +261,14 @@ class AppliedIndicatorSerializer(serializers.ModelSerializer):
             instance_copy = instance.make_copy()
 
             intervention = instance.lower_result.result_link.intervention
-            was_active_before = intervention.was_active_before()
             in_amendment = intervention.in_amendment
+
+            if in_amendment and not self.instance.is_active:
+                raise ValidationError(_(
+                    'You cannot update inactive indicators when the PD is in amendment.'
+                ))
+
+            was_active_before = intervention.was_active_before()
             if was_active_before or in_amendment:
                 instance.is_active = False
                 instance.save()
@@ -421,6 +431,8 @@ class RAMIndicatorSerializer(serializers.ModelSerializer):
 
 class ReportingRequirementSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(required=False)
+    start_date = serializers.DateField(required=True, allow_null=False)
+    end_date = serializers.DateField(required=True, allow_null=False)
 
     class Meta:
         model = ReportingRequirement
@@ -687,6 +699,9 @@ class InterventionActivityDetailSerializer(
 
     @transaction.atomic
     def create(self, validated_data):
+        # TODO: [e4] remove this whenever a better validation is decided on. This is out of place but needed as a hotfix
+        if self.intervention.status in [self.intervention.SIGNATURE]:
+            raise ValidationError(_("New activities are not able to be added in this status"))
         options = validated_data.pop('items', None)
         time_frames = validated_data.pop('time_frames', None)
         self.instance = super().create(validated_data)
@@ -698,8 +713,13 @@ class InterventionActivityDetailSerializer(
     def update(self, instance, validated_data):
         options = validated_data.pop('items', None)
         time_frames = validated_data.pop('time_frames', None)
-        self.instance = super().update(instance, validated_data)
-        self.set_items(self.instance, options)
+        # TODO: [e4] remove this whenever a better validation is decided on. This is out of place but needed as a hotfix
+        if self.intervention.status not in [self.intervention.SIGNATURE]:
+            # if you're in status signature, ignore all other updates. This is horrible as the user can be confused
+            # however it's a very limited amount of people that are able to make changes here and FE will inform them
+            # otherwise would need to catch any intended changes as the FE currently re-submits existing fields
+            self.instance = super().update(instance, validated_data)
+            self.set_items(self.instance, options)
         self.set_time_frames(self.instance, time_frames)
         return self.instance
 

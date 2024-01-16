@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from django.db import connection
 from django.utils.decorators import method_decorator
 from django.utils.text import slugify
@@ -8,6 +9,7 @@ from rest_framework.request import Request
 from unicef_locations import views
 from unicef_locations.cache import etag_cached, get_cache_version
 
+from etools.applications.locations.models import Location
 from etools.libraries.tenant_support.utils import TenantSuffixedString
 
 
@@ -29,6 +31,20 @@ class LocationsLightViewSet(views.LocationsLightViewSet):
 
 
 class LocationsViewSet(views.LocationsViewSet):
+    queryset = Location.objects.all_with_geom()
+
+    def get_queryset(self):
+        queryset = Location.objects.all_with_geom()
+        if "values" in self.request.query_params.keys():
+            # Used for ghost data - filter in all(), and return straight away.
+            try:
+                ids = [int(x) for x in self.request.query_params.get("values").split(",")]
+            except ValueError:  # pragma: no-cover
+                raise ValidationError("ID values must be integers")
+            else:
+                queryset = queryset.filter(id__in=ids)
+        return queryset
+
     @method_decorator(cache_control(
         max_age=0,  # enable cache yet automatically treat all cached data as stale to request backend every time
         public=True,  # reset cache control header to allow etags work with cache_page

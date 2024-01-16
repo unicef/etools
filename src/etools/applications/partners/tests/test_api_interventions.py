@@ -1992,7 +1992,7 @@ class BaseInterventionReportingRequirementMixin:
             init_count + 2
         )
 
-    def test_post_invalid_no_report_type(self):
+    def test_post_invalid_no_start_date(self):
         """Missing report type value"""
         report_type = ReportingRequirement.TYPE_QPR
         requirement_qs = ReportingRequirement.objects.filter(
@@ -2017,6 +2017,35 @@ class BaseInterventionReportingRequirementMixin:
             response.data,
             {"reporting_requirements": [
                 {"start_date": ["This field is required."]}
+            ]}
+        )
+
+    def test_post_invalid_null_start_date(self):
+        """Missing report type value"""
+        report_type = ReportingRequirement.TYPE_QPR
+        requirement_qs = ReportingRequirement.objects.filter(
+            intervention=self.intervention,
+            report_type=report_type,
+        )
+        init_count = requirement_qs.count()
+        response = self.forced_auth_req(
+            "post",
+            self._get_url(report_type),
+            user=self.unicef_staff,
+            data={
+                "reporting_requirements": [{
+                    "start_date": None,
+                    "end_date": datetime.date(2001, 3, 31),
+                    "due_date": datetime.date(2001, 4, 15),
+                }]
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(requirement_qs.count(), init_count)
+        self.assertEqual(
+            response.data,
+            {"reporting_requirements": [
+                {"start_date": ["This field may not be null."]}
             ]}
         )
 

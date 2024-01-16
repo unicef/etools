@@ -69,7 +69,7 @@ def _save_values_to_checklist(value: dict, checklist: StartedChecklist) -> None:
                         **{f'activity_question__{relation_name}': target_id},
                         activity_question__question=question_id
                     )
-                except Finding.DoesNotExists:
+                except Finding.DoesNotExist:
                     raise BadValueError(
                         _('Unable to find finding for question %(question_id)s for %(level)s %(target_id)s') %
                         {'question_id': question_id,

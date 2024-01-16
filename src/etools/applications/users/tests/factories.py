@@ -12,7 +12,7 @@ from etools.applications.partners.permissions import UNICEF_USER
 from etools.applications.publics.tests.factories import PublicsCurrencyFactory
 from etools.applications.reports.tests.factories import OfficeFactory, UserTenantProfileFactory
 from etools.applications.users import models
-from etools.applications.users.models import Realm
+from etools.applications.users.models import Realm, StagedUser
 
 SCHEMA_NAME = 'test'
 
@@ -127,3 +127,14 @@ class SimpleUserFactory(UserFactory):
 
 class PMEUserFactory(UserFactory):
     realms__data = [UNICEF_USER, PME.name]
+
+
+class StagedUserFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = StagedUser
+
+    user_json = factory.DictFactory()
+    requester = factory.SubFactory('etools.applications.users.tests.factories.UserFactory')
+    reviewer = factory.SubFactory('etools.applications.users.tests.factories.UserFactory')
+    country = factory.SubFactory(CountryFactory)
+    organization = factory.SubFactory(OrganizationFactory)

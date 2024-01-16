@@ -1,8 +1,10 @@
+from django.conf import settings
 from django.conf.global_settings import LANGUAGES
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.db import connection
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
@@ -11,15 +13,16 @@ from rest_framework.exceptions import PermissionDenied, ValidationError
 from etools.applications.audit.models import Auditor
 from etools.applications.organizations.models import Organization
 from etools.applications.users.mixins import AUDIT_ACTIVE_GROUPS, GroupEditPermissionMixin
-from etools.applications.users.models import Country, Realm, UserProfile
+from etools.applications.users.models import Country, Realm, StagedUser, User, UserProfile
 from etools.applications.users.serializers import (
     GroupSerializer,
     OrganizationSerializer,
     SimpleCountrySerializer,
+    SimpleGroupSerializer,
     SimpleOrganizationSerializer,
 )
-from etools.applications.users.tasks import notify_user_on_realm_update
-from etools.applications.users.validators import EmailValidator, ExternalUserValidator
+from etools.applications.users.tasks import notify_user_on_realm_update, sync_realms_to_prp
+from etools.applications.users.validators import EmailValidator, ExternalUserValidator, LowerCaseEmailValidator
 
 # temporary list of Countries that will use the Auditor Portal Module.
 # Logic be removed once feature gating is in place
@@ -38,6 +41,8 @@ class MinimalUserSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='get_full_name', read_only=True)
     email = serializers.EmailField(validators=[EmailValidator()])
     phone = serializers.SerializerMethodField()
+    # TODO: get rid of username here
+    username = serializers.CharField(source='email')
 
     class Meta:
         model = get_user_model()
@@ -53,9 +58,8 @@ class MinimalUserSerializer(serializers.ModelSerializer):
         )
 
     def get_phone(self, obj):
-        if obj.profile:
-            return obj.profile.phone_number
-        return None
+        # TODO: figure out later if we need this here. Hotfix takes precedent over impact
+        return ''
 
 
 # used for user detail view
@@ -160,8 +164,9 @@ class UserRealmBaseSerializer(GroupEditPermissionMixin, serializers.ModelSeriali
 
     def validate_organization(self, value):
         organization_id = value
+        auth_user = self.context['request'].user
         if organization_id:
-            if not self.context['request'].user.is_unicef_user():
+            if not auth_user.is_unicef_user() and organization_id != auth_user.profile.organization.id:
                 raise PermissionDenied(
                     _('You do not have permission to set roles for organization with id %(id)s.'
                       % {'id': organization_id}))
@@ -207,7 +212,7 @@ class UserRealmBaseSerializer(GroupEditPermissionMixin, serializers.ModelSeriali
 
 
 class UserRealmCreateSerializer(UserRealmBaseSerializer):
-    email = serializers.CharField(required=True, write_only=True)
+    email = serializers.CharField(required=True, write_only=True, validators=[LowerCaseEmailValidator()])
     job_title = serializers.CharField(required=False, allow_blank=True, write_only=True)
     phone_number = serializers.CharField(required=False, allow_blank=True, write_only=True)
 
@@ -312,8 +317,68 @@ class UserRealmUpdateSerializer(UserRealmBaseSerializer):
             instance.profile.organization = None
         instance.profile.save(update_fields=['organization'])
 
+        sync_realms_to_prp.apply_async(
+            (instance.id, timezone.now().timestamp()),
+            countdown=settings.PRP_USER_SYNC_DELAY * 60
+        )
         notify_user_on_realm_update.delay(instance.id)
         return instance
+
+
+class StagedUserCreateSerializer(UserRealmCreateSerializer):
+    organization = serializers.IntegerField(required=False, allow_null=False, write_only=True)
+    groups = serializers.ListField(child=serializers.IntegerField(), required=True, allow_null=False, write_only=True)
+    email = serializers.CharField(required=True, write_only=True, validators=[LowerCaseEmailValidator()])
+    first_name = serializers.CharField(required=False, allow_blank=True, write_only=True)
+    last_name = serializers.CharField(required=False, allow_blank=True, write_only=True)
+    job_title = serializers.CharField(required=False, allow_blank=True, write_only=True)
+    phone_number = serializers.CharField(required=False, allow_blank=True, write_only=True)
+
+    class Meta:
+        model = StagedUser
+        fields = (
+            'organization',
+            'groups',
+            'email',
+            'first_name',
+            'last_name',
+            'job_title',
+            'phone_number'
+        )
+
+    def create(self, validated_data):
+        if User.objects.filter(email=validated_data['email']).exists():
+            user_obj = UserRealmCreateSerializer(
+                data=self.initial_data, context=self.context).create(validated_data)
+            return user_obj
+        else:
+            organization_id = validated_data.pop('organization', self.context['request'].user.profile.organization.id)
+            validated_data.update({"username": validated_data['email']})
+            staged_user = StagedUser(
+                user_json=validated_data,
+                requester=self.context['request'].user,
+                country=connection.tenant,
+                organization_id=organization_id
+            )
+            staged_user.save()
+            return staged_user
+
+
+class StagedUserRetrieveSerializer(serializers.ModelSerializer):
+    requester = serializers.SerializerMethodField()
+
+    class Meta:
+        model = StagedUser
+        fields = ("id", "user_json", "request_state", "requester", "organization")
+
+    def get_requester(self, obj):
+        return obj.requester.full_name if obj.requester.full_name else obj.requester.email
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        groups = data['user_json']['groups']
+        data['user_json']['groups'] = SimpleGroupSerializer(Group.objects.filter(id__in=groups), many=True).data
+        return data
 
 
 class UserPreferencesSerializer(serializers.Serializer):
@@ -346,7 +411,7 @@ class ProfileRetrieveUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserProfile
-        exclude = ('id', 'old_countries_available')  # TODO REALMS clean up
+        exclude = ('id',)
 
     # TODO remove once feature gating is in place.
     def get_show_ap(self, obj):

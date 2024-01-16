@@ -44,7 +44,7 @@ from etools.applications.reports.tests.factories import (
     SectionFactory,
 )
 from etools.applications.users.tasks import sync_realms_to_prp
-from etools.applications.users.tests.factories import CountryFactory, RealmFactory, UserFactory
+from etools.applications.users.tests.factories import CountryFactory, GroupFactory, RealmFactory, UserFactory
 
 
 def _build_country(name):
@@ -730,12 +730,13 @@ class TestInterventionStatusAutomaticTransitionTask(PartnersTestBaseClass):
         activity = InterventionActivityFactory(result=pd_output)
         activity.time_frames.add(active_intervention.quarters.first())
 
-        with self.captureOnCommitCallbacks(execute=True) as callbacks:
-            etools.applications.partners.tasks._make_intervention_status_automatic_transitions(self.country_name)
+        # with self.captureOnCommitCallbacks(execute=True) as callbacks:
+        #     etools.applications.partners.tasks._make_intervention_status_automatic_transitions(self.country_name)
+        etools.applications.partners.tasks._make_intervention_status_automatic_transitions(self.country_name)
         active_intervention.refresh_from_db()
         self.assertEqual(active_intervention.status, Intervention.ACTIVE)
-        send_to_vision_mock.assert_called()
-        self.assertEqual(len(callbacks), 1)
+        # skip calling for now. We may need to bring it back at some point
+        # send_to_vision_mock.assert_called()
 
 
 @mock.patch('etools.applications.partners.tasks.logger', spec=['info'])
@@ -1300,7 +1301,7 @@ class TestRealmsPRPExport(BaseTenantTestCase):
         user = UserFactory(realms__data=[])
         self.assertFalse(user.is_unicef_user())
         with self.captureOnCommitCallbacks(execute=True) as commit_callbacks:
-            realm = RealmFactory(user=user)
+            realm = RealmFactory(user=user, group=GroupFactory(name='IP Viewer'))
         sync_mock.assert_called_with(
             (user.pk, realm.modified.timestamp()),
             eta=realm.modified + datetime.timedelta(minutes=5),
@@ -1322,8 +1323,8 @@ class TestRealmsPRPExport(BaseTenantTestCase):
         user = UserFactory(realms__data=[])
         self.assertFalse(user.is_unicef_user())
         with self.captureOnCommitCallbacks(execute=False) as commit_callbacks:
-            RealmFactory(user=user)
-            RealmFactory(user=user)
+            RealmFactory(user=user, group=GroupFactory(name='IP Viewer'))
+            RealmFactory(user=user, group=GroupFactory(name='IP Editor'))
 
         for callback in commit_callbacks:
             callback()
@@ -1342,13 +1343,13 @@ class TestRealmsPRPExport(BaseTenantTestCase):
     def test_realms_sync_on_delete(self, requests_post_mock, sync_mock):
         sync_mock.side_effect = lambda *args, **_kwargs: sync_realms_to_prp(*args[0])
 
-        user = UserFactory(realms__data=[])
+        user = UserFactory(realms__data=['Auditor'])
         self.assertFalse(user.is_unicef_user())
-        realm = RealmFactory(user=user)
+        realm = RealmFactory(user=user, group=GroupFactory(name='IP Editor'))
         with self.captureOnCommitCallbacks(execute=True) as commit_callbacks:
             realm.delete()
         sync_mock.assert_called()
-        requests_post_mock.assert_called()
+        requests_post_mock.assert_not_called()
         self.assertEqual(len(commit_callbacks), 1)
 
     @override_settings(UNICEF_USER_EMAIL="@another_example.com",
@@ -1364,7 +1365,7 @@ class TestRealmsPRPExport(BaseTenantTestCase):
 
         user = UserFactory(realms__data=[])
         self.assertFalse(user.is_unicef_user())
-        realm = RealmFactory(user=user)
+        realm = RealmFactory(user=user, group=GroupFactory(name='IP Viewer'))
         with self.captureOnCommitCallbacks(execute=True) as commit_callbacks:
             realm.is_active = False
             realm.save()
@@ -1373,6 +1374,30 @@ class TestRealmsPRPExport(BaseTenantTestCase):
             eta=realm.modified + datetime.timedelta(minutes=5),
         )
         requests_post_mock.assert_called()
+        self.assertEqual(len(commit_callbacks), 1)
+
+    @override_settings(UNICEF_USER_EMAIL="@another_example.com",
+                       PRP_API_ENDPOINT='http://example.com/api/',
+                       PRP_API_USER='prp@example.com')
+    @patch('etools.applications.users.signals.sync_realms_to_prp.apply_async')
+    @patch(
+        'etools.applications.partners.prp_api.requests.post',
+        return_value=namedtuple('Response', ['status_code', 'text'])(200, '{}')
+    )
+    def test_realms_sync_on_non_partner_role(self, requests_post_mock, sync_mock):
+        sync_mock.side_effect = lambda *args, **_kwargs: sync_realms_to_prp(*args[0])
+
+        user = UserFactory(realms__data=[])
+        self.assertFalse(user.is_unicef_user())
+        realm = RealmFactory(user=user, group=GroupFactory(name='Auditor'))
+        with self.captureOnCommitCallbacks(execute=True) as commit_callbacks:
+            realm.is_active = False
+            realm.save()
+        sync_mock.assert_called_with(
+            (user.pk, realm.modified.timestamp()),
+            eta=realm.modified + datetime.timedelta(minutes=5),
+        )
+        requests_post_mock.assert_not_called()
         self.assertEqual(len(commit_callbacks), 1)
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")

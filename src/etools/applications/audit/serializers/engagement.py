@@ -292,7 +292,7 @@ class EngagementSerializer(
             'start_date', 'end_date', 'partner_contacted_at', 'date_of_field_visit', 'date_of_draft_report_to_ip',
             'date_of_comments_by_ip', 'date_of_draft_report_to_unicef', 'date_of_comments_by_unicef',
             'date_of_report_submit', 'date_of_final_report', 'date_of_cancel',
-            'cancel_comment', 'specific_procedures',
+            'cancel_comment', 'send_back_comment', 'specific_procedures',
             'engagement_attachments',
             'report_attachments',
             'final_report',

@@ -26,57 +26,13 @@ class UserSerializer(BaseUserSerializer):
 
 class AuditorStaffMemberSerializer(UserSerializer):
     user = UserSerializer(required=False, source='*')
-    # TODO: REALMS - do cleanup - we don't need this field since this serializer is not to be used for editing anymore
-    # user_pk = serializers.PrimaryKeyRelatedField(
-    #     write_only=True, required=False,
-    #     queryset=get_user_model().objects.all()
-    # )
     hidden = serializers.SerializerMethodField()
 
     def get_hidden(self, obj):
         return False
 
-    # TODO: REALMS - do cleanup
-    # # TODO: make sure email provided is lower_case
-    # def validate(self, attrs):
-    #     validated_data = super().validate(attrs)
-    #     user_pk = validated_data.pop('user_pk', None)
-    #
-    #     if user_pk:
-    #         if hasattr(user_pk, 'purchase_order_auditorstaffmember'):
-    #             firm = user_pk.purchase_order_auditorstaffmember.auditor_firm
-    #             raise serializers.ValidationError({'user': _('User is already assigned to ') + str(firm)})
-    #         if not self.instance:
-    #             validated_data['user'] = user_pk
-    #     elif 'user' not in validated_data:
-    #         raise serializers.ValidationError({'user': _('This field is required.')})
-    #     elif 'user' in validated_data:
-    #         email = validated_data['user'].get('email', None)
-    #         if not AuditorStaffMember.objects.filter(user__email=email).exists():
-    #             try:
-    #                 validated_data['user'] = get_user_model().objects.get(email=email, email__isnull=False)
-    #             except get_user_model().DoesNotExist:
-    #                 pass
-    #
-    #     return validated_data
-
-    # TODO: REALMS
-    # def update(self, instance, validated_data):
-    #     instance = super().update(instance, validated_data)
-    #     if 'hidden' in validated_data:
-    #         Realm.objects.update_or_create(
-    #             user=instance,
-    #             country=connection.tenant,
-    #             organization=self.context['firm'].organization,
-    #             group=Auditor.as_group(),
-    #             defaults={'is_active': not validated_data['hidden']}
-    #         )
-    #     return instance
-
     class Meta(UserSerializer.Meta):
         model = get_user_model()
-        # TODO: REALMS
-        # fields = ['id', 'user', 'user_pk', 'hidden']
         fields = ['id', 'user', 'hidden']
 
 

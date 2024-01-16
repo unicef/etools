@@ -10,6 +10,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.environment.notifications import send_notification_with_template
 from etools.applications.partners.amendment_utils import MergeError
 from etools.applications.partners.models import Intervention, InterventionAmendment, InterventionReview
@@ -672,7 +673,8 @@ class PMPAmendedInterventionMerge(InterventionDetailAPIView):
                   'Amendment should be re-created.') % {'field': ex.field, 'instance': ex.instance}
             )
 
-        transaction.on_commit(lambda: send_pd_to_vision.delay(connection.tenant.name, pd.pk))
+        if not tenant_switch_is_active('disable_pd_vision_sync'):
+            transaction.on_commit(lambda: send_pd_to_vision.delay(connection.tenant.name, amendment.intervention.pk))
 
         return Response(
             InterventionDetailSerializer(

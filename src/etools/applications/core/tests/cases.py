@@ -1,3 +1,4 @@
+from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.management import call_command
 from django.db import connection
@@ -122,6 +123,7 @@ class BaseTenantTestCase(TenantTestCase):
             request.tenant = user.profile.country
 
         user = user or self.user
+        request.user = user if user else AnonymousUser()
         force_authenticate(request, user=user)
 
         if "view" in kwargs:
