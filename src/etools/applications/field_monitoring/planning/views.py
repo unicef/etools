@@ -319,12 +319,12 @@ class InterventionsViewSet(
 ):
     filter_backends = (DjangoFilterBackend,)
     filter_class = InterventionsFilterSet
-    queryset = Intervention.objects.filter(
+    queryset = Intervention.objects.exclude(
         status__in=[
-            Intervention.SIGNED, Intervention.ACTIVE, Intervention.ENDED,
-            Intervention.IMPLEMENTED, Intervention.CLOSED,
+            Intervention.DRAFT, Intervention.SIGNATURE,
+            Intervention.SIGNED
         ]
-    ).select_related('agreement').prefetch_related('result_links').order_by('title')
+    ).select_related('agreement').prefetch_related('result_links').order_by('status', 'title')
     serializer_class = InterventionWithLinkedInstancesSerializer
 
 
