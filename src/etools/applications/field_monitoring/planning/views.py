@@ -322,7 +322,8 @@ class InterventionsViewSet(
     queryset = Intervention.objects.exclude(
         status__in=[
             Intervention.DRAFT, Intervention.SIGNATURE,
-            Intervention.SIGNED
+            Intervention.SIGNED, Intervention.REVIEW,
+            Intervention.EXPIRED, Intervention.CANCELLED
         ]
     ).select_related('agreement').prefetch_related('result_links').order_by('status', 'title')
     serializer_class = InterventionWithLinkedInstancesSerializer
