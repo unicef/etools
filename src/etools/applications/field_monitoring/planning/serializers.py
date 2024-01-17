@@ -214,7 +214,7 @@ class InterventionWithLinkedInstancesSerializer(FMInterventionListSerializer):
         return [link.cp_output_id for link in obj.result_links.all()]
 
     def get_title(self, obj):
-        return f'[{obj.status.upper()}] {obj.number} {obj.title}'
+        return f'[{_(obj.status).upper()}] {obj.number} {obj.title}'
 
 
 class MonitoringActivityActionPointSerializer(ActionPointBaseSerializer):
