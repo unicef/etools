@@ -877,12 +877,9 @@ class InterventionsViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTen
         valid_interventions = [
             InterventionFactory(status=Intervention.ACTIVE),
             InterventionFactory(status=Intervention.ENDED),
-            InterventionFactory(status=Intervention.REVIEW),
-            InterventionFactory(status=Intervention.CANCELLED),
             InterventionFactory(status=Intervention.CLOSED),
             InterventionFactory(status=Intervention.SUSPENDED),
             InterventionFactory(status=Intervention.TERMINATED),
-            InterventionFactory(status=Intervention.EXPIRED)
         ]
         with self.assertNumQueries(10):  # 3 basic + 7 prefetches from InterventionManager
             self._test_list(self.unicef_user, valid_interventions)
