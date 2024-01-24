@@ -570,6 +570,23 @@ class AmendmentTestCase(BaseTenantTestCase):
         self.assertIn('end', amendment.difference)
         self.assertIn('management_budgets', amendment.difference)
 
+    def test_update_difference_on_merge_unfunded_cash(self):
+        amendment = InterventionAmendmentFactory(
+            intervention=self.active_intervention,
+            kind=InterventionAmendment.KIND_NORMAL,
+        )
+
+        amendment.amended_intervention.management_budgets.act1_unfunded = Decimal("2.0")
+        amendment.amended_intervention.save()
+
+        self.assertDictEqual(amendment.difference, {})
+
+        amendment.difference = amendment.get_difference()
+        amendment.merge_amendment()
+
+        self.assertIn('management_budgets', amendment.difference)
+        self.assertEqual(amendment.difference['management_budgets']['diff']['act1_unfunded']['diff'], (0, '2.0'))
+
     def test_update_intervention_risk(self):
         original_risk = InterventionRiskFactory(intervention=self.active_intervention)
         amendment = InterventionAmendmentFactory(

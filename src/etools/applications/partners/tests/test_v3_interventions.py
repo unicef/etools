@@ -471,6 +471,37 @@ class TestDetail(BaseInterventionTestCase):
         self.assertTrue(response.data['permissions']['view']['cfei_number'])
         self.assertTrue(response.data['permissions']['edit']['cfei_number'])
 
+    def test_unfunded_cash_totals_in_result_links(self):
+        result_link = self.intervention.result_links.first()
+        ll_result = result_link.ll_results.first()
+        InterventionActivityFactory(result=ll_result, unicef_cash=10, cso_cash=20, unfunded_cash=30)
+        response = self.forced_auth_req(
+            "get",
+            reverse('pmp_v3:intervention-detail', args=[self.intervention.pk]),
+            user=self.unicef_user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        links = response.data["result_links"][0]
+        self.assertIn("total", links)
+        # test unfunded_cash is added to result_links total and ll_results total
+        self.assertEqual(links['total'], 90)
+        self.assertEqual(links['total'], links["ll_results"][0]['total'])
+
+    def test_has_unfunded_cash_permissions_partner_user(self):
+        staff_member = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=self.intervention.agreement.partner.organization,
+        )
+        self.intervention.partner_focal_points.add(staff_member)
+        response = self.forced_auth_req(
+            "get",
+            reverse('pmp_v3:intervention-detail', args=[self.intervention.pk]),
+            user=staff_member,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data['permissions']['view']['has_unfunded_cash'])
+        self.assertFalse(response.data['permissions']['edit']['has_unfunded_cash'])
+
     def test_pdf_partner_user(self):
         staff_member = UserFactory(
             realms__data=['IP Viewer'],
@@ -816,6 +847,116 @@ class TestUpdate(BaseInterventionTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         budget.refresh_from_db()
         self.assertEqual(budget.currency, "PEN")
+
+    def test_patch_activate_has_unfunded_cash_unicef_focal_point(self):
+        intervention = InterventionFactory()
+        intervention.unicef_focal_points.add(self.unicef_user)
+        budget = intervention.planned_budget
+        self.assertFalse(budget.has_unfunded_cash)
+
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+            user=self.unicef_user,
+            data={'planned_budget': {
+                "id": budget.pk,
+                "has_unfunded_cash": True,
+            }}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        budget.refresh_from_db()
+        self.assertTrue(budget.has_unfunded_cash)
+
+    def test_patch_activate_has_unfunded_cash_partner_user(self):
+        intervention = InterventionFactory(date_sent_to_partner=datetime.date.today())
+        staff_member = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=intervention.agreement.partner.organization,
+        )
+        intervention.partner_focal_points.add(staff_member)
+        budget = intervention.planned_budget
+        self.assertFalse(budget.has_unfunded_cash)
+
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+            user=staff_member,
+            data={'planned_budget': {
+                "id": budget.pk,
+                "has_unfunded_cash": True
+            }}
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data, ["Cannot change fields while in draft: planned_budget"])
+
+    def test_patch_deactivate_has_unfunded_cash(self):
+        intervention = InterventionFactory()
+        intervention.unicef_focal_points.add(self.unicef_user)
+        budget = intervention.planned_budget
+        budget.has_unfunded_cash = True
+        budget.save()
+        self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+            user=self.unicef_user,
+            data={'planned_budget': {
+                "id": budget.pk,
+                "unfunded_hq_cash": 1234,
+            }}
+        )
+        budget.refresh_from_db()
+        self.assertEqual(budget.unfunded_hq_cash, 1234)
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+            user=self.unicef_user,
+            data={'planned_budget': {
+                "id": budget.pk,
+                "has_unfunded_cash": False,
+            }}
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn(
+            'This programme document has unfunded amounts. '
+            'Please fix them before deactivating.',
+            response.data['planned_budget']['has_unfunded_cash']
+        )
+
+    def test_patch_unfunded_hq_cash_unicef_focal_point(self):
+        intervention = InterventionFactory()
+        intervention.unicef_focal_points.add(self.unicef_user)
+        budget = intervention.planned_budget
+        self.assertEqual(budget.unfunded_hq_cash, 0)
+
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+            user=self.unicef_user,
+            data={'planned_budget': {
+                "id": budget.pk,
+                "unfunded_hq_cash": 1234,
+            }}
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn(
+            'This programme document does not include unfunded amounts.',
+            response.data['planned_budget']['unfunded_hq_cash']
+        )
+        budget.has_unfunded_cash = True
+        budget.save(update_fields=['has_unfunded_cash'])
+
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+            user=self.unicef_user,
+            data={'planned_budget': {
+                "id": budget.pk,
+                "unfunded_hq_cash": 1234,
+            }}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        budget.refresh_from_db()
+        self.assertEqual(budget.unfunded_hq_cash, 1234)
 
     def test_patch_country_programme(self):
         intervention = InterventionFactory()
@@ -1181,6 +1322,98 @@ class TestManagementBudget(BaseInterventionTestCase):
         self.assertEqual(response.data['act3_unicef'], '0.00')
         self.assertEqual(response.data['act3_partner'], '2.00')
 
+    def test_set_cash_values_from_items_unfunded(self):
+        intervention = InterventionFactory()
+        intervention.planned_budget.has_unfunded_cash = True
+        intervention.planned_budget.save()
+
+        InterventionManagementBudgetItemFactory(budget=intervention.management_budgets, unicef_cash=8)
+        response = self.forced_auth_req(
+            'patch',
+            reverse(
+                "pmp_v3:intervention-budget",
+                args=[intervention.pk],
+            ),
+            user=self.unicef_user,
+            data={
+                'act1_unicef': 1,
+                'act1_partner': 2,
+                'act2_unicef': 3,
+                'act2_partner': 4,
+                'items': [
+                    {
+                        'name': 'first_item', 'kind': 'operational',
+                        'unit': 'item', 'no_units': '1.0', 'unit_price': '7.0',
+                        'unicef_cash': '3.0', 'cso_cash': '1.5', 'unfunded_cash': '2.5'
+                    },
+                    {
+                        'name': 'second_item', 'kind': 'planning',
+                        'unit': 'item', 'no_units': '1.0', 'unit_price': '2.0',
+                        'unicef_cash': '0.0', 'cso_cash': '2.0',
+                    },
+                    {
+                        'name': 'third_item', 'kind': 'operational',
+                        'unit': 'item', 'no_units': '1.0', 'unit_price': '0.2',
+                        'unicef_cash': '0.0', 'cso_cash': '0.2',
+                    }
+                ],
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.data['act1_unicef'], '1.00')
+        self.assertEqual(response.data['act1_partner'], '2.00')
+        self.assertEqual(response.data['act1_unfunded'], '0.00')
+        self.assertEqual(response.data['act2_unicef'], '3.00')
+        self.assertEqual(response.data['act2_partner'], '1.70')
+        self.assertEqual(response.data['act2_unfunded'], '2.50')
+        self.assertEqual(response.data['act3_unicef'], '0.00')
+        self.assertEqual(response.data['act3_partner'], '2.00')
+        self.assertEqual(response.data['act3_unfunded'], '0.00')
+
+    def test_update_items_unfunded_cash(self):
+        intervention = InterventionFactory()
+        item_to_update = InterventionManagementBudgetItemFactory(
+            budget=intervention.management_budgets,
+            kind='planning',
+            no_units=1, unit_price=42,
+            unicef_cash=20, cso_cash=20,
+            unfunded_cash=2
+        )
+        self.assertEqual(intervention.management_budgets.items.count(), 1)
+        intervention.planned_budget.has_unfunded_cash = True
+        intervention.planned_budget.save()
+        response = self.forced_auth_req(
+            'patch',
+            reverse(
+                "pmp_v3:intervention-budget",
+                args=[intervention.pk],
+            ),
+            user=self.unicef_user,
+            data={
+                'items': [
+                    {'id': item_to_update.id, 'unit_price': '44', 'unfunded_cash': '4'},
+                    {
+                        'name': 'first_item', 'kind': 'operational',
+                        'unit': 'test', 'no_units': '1.0', 'unit_price': '6.0',
+                        'unicef_cash': '1.0', 'cso_cash': '2.0', 'unfunded_cash': '3.0'
+                    }
+                ],
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(intervention.management_budgets.items.count(), 2)
+        self.assertEqual(len(response.data['items']), 2)
+        self.assertEqual(response.data['act1_unicef'], '0.00')
+        self.assertEqual(response.data['act1_partner'], '0.00')
+        self.assertEqual(response.data['act1_unfunded'], '0.00')
+        self.assertEqual(response.data['act2_unicef'], '1.00')
+        self.assertEqual(response.data['act2_partner'], '2.00')
+        self.assertEqual(response.data['act2_unfunded'], '3.00')
+        self.assertEqual(response.data['act3_unicef'], '20.00')
+        self.assertEqual(response.data['act3_partner'], '20.00')
+        self.assertEqual(response.data['act3_unfunded'], '4.00')
+
     def test_set_items(self):
         intervention = InterventionFactory()
         item_to_remove = InterventionManagementBudgetItemFactory(
@@ -1269,7 +1502,7 @@ class TestManagementBudget(BaseInterventionTestCase):
             response.data['items'][0]['non_field_errors'],
         )
 
-    def test_budget_item_validation_rouding_ok(self):
+    def test_budget_item_validation_rounding_ok(self):
         intervention = InterventionFactory()
         item_to_update = InterventionManagementBudgetItemFactory(budget=intervention.management_budgets)
 

@@ -149,7 +149,8 @@ class InterventionSupplyItemUploadSerializer(serializers.Serializer):
 
 class InterventionManagementBudgetItemSerializer(serializers.ModelSerializer):
     default_error_messages = {
-        'invalid_budget': _('Invalid budget data. Total cash should be equal to items number * price per item.')
+        'invalid_budget': _('Invalid budget data. Total cash should be equal to items number * price per item.'),
+        'pd_is_funded': _('This programme document does not include unfunded amounts.')
     }
 
     id = serializers.IntegerField(required=False)
@@ -159,7 +160,7 @@ class InterventionManagementBudgetItemSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'kind', 'name',
             'unit', 'unit_price', 'no_units',
-            'unicef_cash', 'cso_cash'
+            'unicef_cash', 'cso_cash', 'unfunded_cash'
         )
 
     def validate(self, attrs):
@@ -173,9 +174,13 @@ class InterventionManagementBudgetItemSerializer(serializers.ModelSerializer):
         no_units = attrs.get('no_units', instance.no_units if instance else 0)
         unicef_cash = attrs.get('unicef_cash', instance.unicef_cash if instance else 0)
         cso_cash = attrs.get('cso_cash', instance.cso_cash if instance else 0)
+        unfunded_cash = attrs.get('unfunded_cash', self.instance.unfunded_cash if self.instance else 0)
+
+        if unfunded_cash and not self.root.get_intervention().planned_budget.has_unfunded_cash:
+            self.fail('pd_is_funded')
 
         # unit_price * no_units can contain more decimal places than we're able to save
-        if abs((unit_price * no_units) - (unicef_cash + cso_cash)) > 0.01:
+        if abs((unit_price * no_units) - (unicef_cash + cso_cash + unfunded_cash)) > 0.01:
             self.fail('invalid_budget')
 
         return attrs
@@ -191,6 +196,7 @@ class InterventionManagementBudgetSerializer(
     act3_total = serializers.SerializerMethodField()
     partner_total = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True)
     unicef_total = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True)
+    unfunded_total = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True)
     total = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True)
 
     class Meta:
@@ -199,26 +205,30 @@ class InterventionManagementBudgetSerializer(
             "items",
             "act1_unicef",
             "act1_partner",
+            "act1_unfunded",
             "act1_total",
             "act2_unicef",
             "act2_partner",
+            "act2_unfunded",
             "act2_total",
             "act3_unicef",
             "act3_partner",
+            "act3_unfunded",
             "act3_total",
             "partner_total",
             "unicef_total",
+            "unfunded_total",
             "total",
         )
 
     def get_act1_total(self, obj):
-        return str(obj.act1_unicef + obj.act1_partner)
+        return str(obj.act1_unicef + obj.act1_partner + obj.act1_unfunded)
 
     def get_act2_total(self, obj):
-        return str(obj.act2_unicef + obj.act2_partner)
+        return str(obj.act2_unicef + obj.act2_partner + obj.act2_unfunded)
 
     def get_act3_total(self, obj):
-        return str(obj.act3_unicef + obj.act3_partner)
+        return str(obj.act3_unicef + obj.act3_partner + obj.act3_unfunded)
 
     @transaction.atomic
     def update(self, instance, validated_data):
@@ -240,6 +250,7 @@ class InterventionManagementBudgetSerializer(
                 )
             else:
                 serializer = InterventionManagementBudgetItemSerializer(data=item)
+            serializer.bind(field_name='root', parent=self)
             if not serializer.is_valid():
                 raise ValidationError({'items': {i: serializer.errors}})
 

@@ -415,7 +415,9 @@ class LowerResult(TimeStampedModel):
 
     def total(self):
         results = self.activities.aggregate(
-            total=Sum("unicef_cash", filter=Q(is_active=True)) + Sum("cso_cash", filter=Q(is_active=True)),
+            total=Sum("unicef_cash", filter=Q(is_active=True)) +
+            Sum("cso_cash", filter=Q(is_active=True)) +
+            Sum("unfunded_cash", filter=Q(is_active=True))
         )
         return results["total"] if results["total"] is not None else 0
 
@@ -428,6 +430,12 @@ class LowerResult(TimeStampedModel):
     def total_unicef(self):
         results = self.activities.aggregate(
             total=Sum("unicef_cash", filter=Q(is_active=True)),
+        )
+        return results["total"] if results["total"] is not None else 0
+
+    def total_unfunded(self):
+        results = self.activities.aggregate(
+            total=Sum("unfunded_cash", filter=Q(is_active=True)),
         )
         return results["total"] if results["total"] is not None else 0
 
@@ -1036,6 +1044,12 @@ class InterventionActivity(TimeStampedModel):
         max_digits=20,
         default=0,
     )
+    unfunded_cash = models.DecimalField(
+        verbose_name=_("Unfunded Cash"),
+        decimal_places=2,
+        max_digits=20,
+        default=0,
+    )
 
     time_frames = models.ManyToManyField(
         'InterventionTimeFrame',
@@ -1063,14 +1077,16 @@ class InterventionActivity(TimeStampedModel):
         aggregates = items.aggregate(
             unicef_cash=Sum('unicef_cash'),
             cso_cash=Sum('cso_cash'),
+            unfunded_cash=Sum('unfunded_cash'),
         )
         self.unicef_cash = aggregates['unicef_cash']
         self.cso_cash = aggregates['cso_cash']
+        self.unfunded_cash = aggregates['unfunded_cash']
         self.save()
 
     @property
     def total(self):
-        return self.unicef_cash + self.cso_cash
+        return self.unicef_cash + self.cso_cash + self.unfunded_cash
 
     @property
     def partner_percentage(self):
@@ -1099,7 +1115,8 @@ class InterventionActivity(TimeStampedModel):
         cls.objects.bulk_update(activities, fields=['code'])
 
     def get_amended_name(self):
-        return f'{self.result} {self.name} (Total: {self.total}, UNICEF: {self.unicef_cash}, Partner: {self.cso_cash})'
+        return f'{self.result} {self.name} (Total: {self.total}, ' \
+               f'UNICEF: {self.unicef_cash} | Unfunded: {self.unfunded_cash}, Partner: {self.cso_cash})'
 
     def get_time_frames_display(self):
         return ', '.join([f'{tf.start_date.year} Q{tf.quarter}' for tf in self.time_frames.all()])
@@ -1145,6 +1162,12 @@ class InterventionActivityItem(TimeStampedModel):
     )
     cso_cash = models.DecimalField(
         verbose_name=_("CSO Cash"),
+        decimal_places=2,
+        max_digits=20,
+        default=0,
+    )
+    unfunded_cash = models.DecimalField(
+        verbose_name=_("Unfunded Cash"),
         decimal_places=2,
         max_digits=20,
         default=0,

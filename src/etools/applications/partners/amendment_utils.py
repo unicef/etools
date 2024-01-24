@@ -677,6 +677,7 @@ INTERVENTION_AMENDMENT_IGNORED_FIELDS = {
         'in_kind_amount_local',
         'total',
         'total_local',
+        'total_unfunded',
         'programme_effectiveness',
     ],
     'partners.InterventionManagementBudget': ['modified'],

@@ -63,6 +63,8 @@ class InterventionBudgetCUSerializer(
     total_cash_local = serializers.DecimalField(max_digits=20, decimal_places=2)
     total_local = serializers.DecimalField(max_digits=20, decimal_places=2)
     total_supply = serializers.DecimalField(max_digits=20, decimal_places=2)
+    total_unfunded = serializers.DecimalField(max_digits=20, decimal_places=2)
+    unfunded_hq_cash = serializers.DecimalField(max_digits=20, decimal_places=2)
 
     class Meta:
         model = InterventionBudget
@@ -82,7 +84,10 @@ class InterventionBudgetCUSerializer(
             "total_cash_local",
             "total_unicef_cash_local_wo_hq",
             "total_hq_cash_local",
-            "total_supply"
+            "total_supply",
+            "total_unfunded",
+            "unfunded_hq_cash",
+            "has_unfunded_cash"
         )
         read_only_fields = (
             "total_local",
@@ -91,8 +96,20 @@ class InterventionBudgetCUSerializer(
             "total_unicef_cash_local_wo_hq",
             "partner_supply_local",
             "total_partner_contribution_local",
-            "total_supply"
+            "total_supply",
+            "total_unfunded"
         )
+
+    def validate_has_unfunded_cash(self, value):
+        if not value and self.instance.total_unfunded:
+            raise serializers.ValidationError(_('This programme document has unfunded amounts. '
+                                                'Please fix them before deactivating.'))
+        return value
+
+    def validate_unfunded_hq_cash(self, value):
+        if value and not self.instance.has_unfunded_cash:
+            raise serializers.ValidationError(_('This programme document does not include unfunded amounts.'))
+        return value
 
     def get_intervention(self):
         return self.validated_data['intervention']

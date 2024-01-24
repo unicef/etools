@@ -2911,7 +2911,8 @@ class InterventionResultLink(TimeStampedModel):
         results = self.ll_results.filter().aggregate(
             total=(
                 Sum("activities__unicef_cash", filter=Q(activities__is_active=True)) +
-                Sum("activities__cso_cash", filter=Q(activities__is_active=True))
+                Sum("activities__cso_cash", filter=Q(activities__is_active=True)) +
+                Sum("activities__unfunded_cash", filter=Q(activities__is_active=True))
             ),
         )
         return results["total"] if results["total"] is not None else 0
@@ -2955,6 +2956,7 @@ class InterventionBudget(TimeStampedModel):
         verbose_name=_('UNICEF Supplies')
     )
     total = models.DecimalField(max_digits=20, decimal_places=2, verbose_name=_('Total'))
+    total_unfunded = models.DecimalField(max_digits=20, decimal_places=2, default=0, verbose_name=_('Total Unfunded'))
 
     # sum of all activity/management budget cso/partner values
     partner_contribution_local = models.DecimalField(max_digits=20, decimal_places=2, default=0,
@@ -2977,6 +2979,10 @@ class InterventionBudget(TimeStampedModel):
         max_digits=20, decimal_places=2, default=0,
         verbose_name=_('Total HQ Cash Local')
     )
+    unfunded_hq_cash = models.DecimalField(
+        max_digits=20, decimal_places=2, default=0,
+        verbose_name=_('Unfunded Capacity Strengthening Cash Local')
+    )
     # unicef cash including headquarters contribution
     unicef_cash_local = models.DecimalField(max_digits=20, decimal_places=2, default=0,
                                             verbose_name=_('Unicef Cash Local'))
@@ -2985,6 +2991,8 @@ class InterventionBudget(TimeStampedModel):
         max_digits=20, decimal_places=2, default=0,
         verbose_name=_('UNICEF Supplies Local')
     )
+    has_unfunded_cash = models.BooleanField(verbose_name=_("Unfunded Cash"), default=False)
+
     currency = CurrencyField(verbose_name=_('Currency'), null=False, default='')
     total_local = models.DecimalField(max_digits=20, decimal_places=2, verbose_name=_('Total Local'))
     programme_effectiveness = models.DecimalField(
@@ -3016,7 +3024,7 @@ class InterventionBudget(TimeStampedModel):
         return self.unicef_cash_local + self.in_kind_amount_local
 
     def total_cash_local(self):
-        return self.partner_contribution_local + self.unicef_cash_local
+        return self.partner_contribution_local + self.unicef_cash_local + self.total_unfunded
 
     @transaction.atomic
     def save(self, **kwargs):
@@ -3049,6 +3057,7 @@ class InterventionBudget(TimeStampedModel):
         def init_totals():
             self.partner_contribution_local = 0
             self.total_unicef_cash_local_wo_hq = 0
+            self.total_unfunded = 0
 
         init = False
         for link in intervention.result_links.all():
@@ -3059,6 +3068,7 @@ class InterventionBudget(TimeStampedModel):
                         init = True
                     self.partner_contribution_local += activity.cso_cash
                     self.total_unicef_cash_local_wo_hq += activity.unicef_cash
+                    self.total_unfunded += activity.unfunded_cash
 
         programme_effectiveness = 0
         if not init:
@@ -3066,7 +3076,11 @@ class InterventionBudget(TimeStampedModel):
         programme_effectiveness += intervention.management_budgets.total
         self.partner_contribution_local += intervention.management_budgets.partner_total
         self.total_unicef_cash_local_wo_hq += intervention.management_budgets.unicef_total
+        self.total_unfunded += intervention.management_budgets.unfunded_total
         self.unicef_cash_local = self.total_unicef_cash_local_wo_hq + self.total_hq_cash_local
+
+        # add Capacity Strenghtening Unfunded to total_unfunded
+        self.total_unfunded += self.unfunded_hq_cash
 
         # in kind totals
         self.in_kind_amount_local = 0
@@ -3077,9 +3091,9 @@ class InterventionBudget(TimeStampedModel):
             else:
                 self.partner_supply_local += item.total_price
 
-        self.total = self.total_unicef_contribution() + self.partner_contribution
+        self.total = self.total_unicef_contribution() + self.partner_contribution + self.total_unfunded
         self.total_partner_contribution_local = self.partner_contribution_local + self.partner_supply_local
-        self.total_local = self.total_unicef_contribution_local() + self.total_partner_contribution_local
+        self.total_local = self.total_unicef_contribution_local() + self.total_partner_contribution_local + self.total_unfunded
         if self.total_local:
             self.programme_effectiveness = programme_effectiveness / self.total_local * 100
         else:
@@ -3518,6 +3532,12 @@ class InterventionManagementBudget(TimeStampedModel):
         max_digits=20,
         default=0,
     )
+    act1_unfunded = models.DecimalField(
+        verbose_name=_("Unfunded amount for In-country management and support staff prorated to their contribution to the programme (representation, planning, coordination, logistics, administration, finance)"),
+        decimal_places=2,
+        max_digits=20,
+        default=0,
+    )
     act2_unicef = models.DecimalField(
         verbose_name=_("UNICEF contribution for Operational costs prorated to their contribution to the programme (office space, equipment, office supplies, maintenance)"),
         decimal_places=2,
@@ -3526,6 +3546,12 @@ class InterventionManagementBudget(TimeStampedModel):
     )
     act2_partner = models.DecimalField(
         verbose_name=_("Partner contribution for Operational costs prorated to their contribution to the programme (office space, equipment, office supplies, maintenance)"),
+        decimal_places=2,
+        max_digits=20,
+        default=0,
+    )
+    act2_unfunded = models.DecimalField(
+        verbose_name=_("Unfunded amount for Operational costs prorated to their contribution to the programme (office space, equipment, office supplies, maintenance)"),
         decimal_places=2,
         max_digits=20,
         default=0,
@@ -3542,6 +3568,12 @@ class InterventionManagementBudget(TimeStampedModel):
         max_digits=20,
         default=0,
     )
+    act3_unfunded = models.DecimalField(
+        verbose_name=_("Unfunded amount for Planning, monitoring, evaluation and communication, prorated to their contribution to the programme (venue, travels, etc.)"),
+        decimal_places=2,
+        max_digits=20,
+        default=0,
+    )
 
     @property
     def partner_total(self):
@@ -3552,8 +3584,12 @@ class InterventionManagementBudget(TimeStampedModel):
         return self.act1_unicef + self.act2_unicef + self.act3_unicef
 
     @property
+    def unfunded_total(self):
+        return self.act1_unfunded + self.act2_unfunded + self.act3_unfunded
+
+    @property
     def total(self):
-        return self.partner_total + self.unicef_total
+        return self.partner_total + self.unicef_total + self.unfunded_total
 
     def save(self, *args, **kwargs):
         create = not self.pk
@@ -3565,17 +3601,22 @@ class InterventionManagementBudget(TimeStampedModel):
 
     def update_cash(self):
         aggregated_items = self.items.values('kind').order_by('kind')
-        aggregated_items = aggregated_items.annotate(unicef_cash=Sum('unicef_cash'), cso_cash=Sum('cso_cash'))
+        aggregated_items = aggregated_items.annotate(
+            unicef_cash=Sum('unicef_cash'), cso_cash=Sum('cso_cash'), unfunded_cash=Sum('unfunded_cash')
+        )
         for item in aggregated_items:
             if item['kind'] == InterventionManagementBudgetItem.KIND_CHOICES.in_country:
                 self.act1_unicef = item['unicef_cash']
                 self.act1_partner = item['cso_cash']
+                self.act1_unfunded = item['unfunded_cash']
             elif item['kind'] == InterventionManagementBudgetItem.KIND_CHOICES.operational:
                 self.act2_unicef = item['unicef_cash']
                 self.act2_partner = item['cso_cash']
+                self.act2_unfunded = item['unfunded_cash']
             elif item['kind'] == InterventionManagementBudgetItem.KIND_CHOICES.planning:
                 self.act3_unicef = item['unicef_cash']
                 self.act3_partner = item['cso_cash']
+                self.act3_unfunded = item['unfunded_cash']
         self.save()
 
 
@@ -3700,6 +3741,13 @@ class InterventionManagementBudgetItem(models.Model):
     )
     cso_cash = models.DecimalField(
         verbose_name=_("CSO Cash Local"),
+        decimal_places=2,
+        max_digits=20,
+        default=0,
+    )
+
+    unfunded_cash = models.DecimalField(
+        verbose_name=_("Unfunded Cash Local"),
         decimal_places=2,
         max_digits=20,
         default=0,

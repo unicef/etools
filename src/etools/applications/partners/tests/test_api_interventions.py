@@ -130,6 +130,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
             "has_data_processing_agreement",
             "has_activities_involving_children",
             "has_special_conditions_for_construction",
+            "has_unfunded_cash",
             "hq_support_cost",
             "humanitarian_flag",
             "id",

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-08-14 11:43+0000\n"
+"POT-Creation-Date: 2024-01-16 13:17+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1165,6 +1165,9 @@ msgstr "Valor de transferências financeiras (UNICEF)"
 msgid "UNICEF Supplies"
 msgstr "Suprimentos do UNICEF"
 
+msgid "Total Unfunded"
+msgstr ""
+
 msgid "Partner Contribution Local"
 msgstr "Contribuição local do parceiro"
 
@@ -1177,11 +1180,17 @@ msgstr "Contribuição total do parceiro"
 msgid "Total HQ Cash Local"
 msgstr "Total da contribuição financeira local para a sede"
 
+msgid "Unfunded Capacity Strengthening Cash Local"
+msgstr "Custos de Fortalecimento da Capacidade sem financiamento"
+
 msgid "Unicef Cash Local"
 msgstr "Unicef Valor financeiro local"
 
 msgid "UNICEF Supplies Local"
 msgstr "Suprimentos UNICEF local"
+
+msgid "Unfunded Cash"
+msgstr ""
 
 msgid "Currency"
 msgstr "Moeda"
@@ -1392,6 +1401,12 @@ msgstr ""
 "planejamento, coordenação, logística, administração, finanças)"
 
 msgid ""
+"Unfunded amount for In-country management and support staff prorated to "
+"their contribution to the programme (representation, planning, coordination, "
+"logistics, administration, finance)"
+msgstr ""
+
+msgid ""
 "UNICEF contribution for Operational costs prorated to their contribution to "
 "the programme (office space, equipment, office supplies, maintenance)"
 msgstr ""
@@ -1408,6 +1423,11 @@ msgstr ""
 "escritório, manutenção)"
 
 msgid ""
+"Unfunded amount for Operational costs prorated to their contribution to the "
+"programme (office space, equipment, office supplies, maintenance)"
+msgstr ""
+
+msgid ""
 "UNICEF contribution for Planning, monitoring, evaluation and communication, "
 "prorated to their contribution to the programme (venue, travels, etc.)"
 msgstr ""
@@ -1422,6 +1442,11 @@ msgstr ""
 "Contribuição do parceiro para planejamento, monitoramento, avaliação e "
 "comunicação, proporcional à sua contribuição ao programa (local, viagens, "
 "etc.)"
+
+msgid ""
+"Unfunded amount for Planning, monitoring, evaluation and communication, "
+"prorated to their contribution to the programme (venue, travels, etc.)"
+msgstr ""
 
 msgid "Title"
 msgstr "Título"
@@ -1474,6 +1499,9 @@ msgstr "Unicef Cash Local"
 
 msgid "CSO Cash Local"
 msgstr "OSC Valor contribuição"
+
+msgid "Unfunded Cash Local"
+msgstr ""
 
 msgid "Accessing this item is not allowed."
 msgstr "Não é permitido acessar este item."
@@ -1561,6 +1589,16 @@ msgstr "Classificação de risco SEA"
 
 msgid "HACT"
 msgstr "HACT"
+
+msgid ""
+"This programme document has unfunded amounts. Please fix them before "
+"deactivating."
+msgstr ""
+"Este documento do programa tem valores não financiados. Corrija-os antes de "
+"desativar."
+
+msgid "This programme document does not include unfunded amounts."
+msgstr "Este documento do programa não inclui valores não financiados."
 
 msgid ""
 "Cannot add a new amendment while another amendment of same kind is in "
@@ -1712,8 +1750,10 @@ msgstr "O número do fornecedor deve pertencer ao grupo de contas PRG2"
 msgid "Unknown intervention."
 msgstr "Intervenção desconhecida."
 
+#, fuzzy
+#| msgid "Signatures cannot be dated in the future"
 msgid "Results cannot be changed in this status"
-msgstr "Os resultados não podem ser alterados neste estado"
+msgstr "As assinaturas não podem ser datadas no futuro"
 
 msgid "EZHACT Vision integration disabled"
 msgstr "Integração com o EZHACT Vision desativada"
@@ -1984,8 +2024,10 @@ msgstr "O PD não pode ser ativado se o parceiro estiver bloqueado no VISION."
 msgid "Agreement selected is not of type SSFA"
 msgstr "O contrato selecionado não é do tipo SSFA"
 
+#, fuzzy
+#| msgid " without deleting the indicators first"
 msgid " without deleting the indicators first "
-msgstr "sem excluir os indicadores primeiro "
+msgstr "sem excluir os indicadores primeiro"
 
 #, python-format
 msgid ""
@@ -2328,26 +2370,19 @@ msgstr "A função de gerente de parceria é necessária para a exportação de 
 #~ msgid "Last Name"
 #~ msgstr "Sobrenome"
 
-#, fuzzy
-#~| msgid "Partner Authorized Officer"
 #~ msgid "(old)Partner Authorized Officer"
-#~ msgstr "Oficial autorizado do parceiro"
+#~ msgstr "(old)Oficial autorizado do parceiro"
 
-#, fuzzy
-#~| msgid "Signed by partner"
 #~ msgid "(old)Signed by partner"
-#~ msgstr "Assinado pelo parceiro"
+#~ msgstr "(old)Assinado pelo parceiro"
 
-#, fuzzy
-#~| msgid "Signed by Partner"
 #~ msgid "(old)Signed by Partner"
-#~ msgstr "Assinado pelo parceiro"
+#~ msgstr "(old)Assinado pelo parceiro"
 
-#, fuzzy
-#~| msgid "CSO Authorized Officials"
 #~ msgid "(old)CSO Authorized Officials"
 #~ msgstr ""
-#~ "Oficiais da OSC (organização da Sociedade Civil) Autorizados a assinar"
+#~ "(old)Oficiais da OSC (organização da Sociedade Civil) Autorizados a "
+#~ "assinar"
 
 #~ msgid ""
 #~ "User already synced to PRP and cannot be disabled. Please instruct the "
