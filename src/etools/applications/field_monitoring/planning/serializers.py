@@ -203,14 +203,18 @@ class CPOutputListSerializer(MinimalOutputListSerializer):
 class InterventionWithLinkedInstancesSerializer(FMInterventionListSerializer):
     partner = serializers.ReadOnlyField(source='agreement.partner_id')
     cp_outputs = serializers.SerializerMethodField()
+    title = serializers.SerializerMethodField()
 
     class Meta(FMInterventionListSerializer.Meta):
         fields = FMInterventionListSerializer.Meta.fields + (
-            'partner', 'cp_outputs'
+            'partner', 'cp_outputs', 'title'
         )
 
     def get_cp_outputs(self, obj):
         return [link.cp_output_id for link in obj.result_links.all()]
+
+    def get_title(self, obj):
+        return f'[{_(obj.status.capitalize()).upper()}] {obj.number} {obj.title}'
 
 
 class MonitoringActivityActionPointSerializer(ActionPointBaseSerializer):
