@@ -202,13 +202,13 @@ class CPOutputListSerializer(MinimalOutputListSerializer):
 
     def get_name(self, obj):
         if obj.result_type.name == ResultType.OUTPUT:
-            return '{}{}{}-[{}]'.format(
-                f'[{_("Expired")}] ' if obj.expired else '',
-                f'{_("Special")}- ' if obj.special else '',
-                obj.name,
-                obj.wbs)
-        else:
-            return obj.result_name
+            special_prefix = _("Special")
+            prefix = f'[{_("Expired")}] ' if obj.expired else ''
+            prefix += f'{special_prefix}- ' if obj.special else ''
+
+            return f'{prefix}{obj.name}-[{obj.wbs}]'
+
+        return obj.result_name
 
 
 class InterventionWithLinkedInstancesSerializer(FMInterventionListSerializer):
