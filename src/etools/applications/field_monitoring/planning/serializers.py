@@ -26,6 +26,7 @@ from etools.applications.field_monitoring.planning.models import (
 from etools.applications.field_monitoring.utils.fsm import get_available_transitions
 from etools.applications.partners.serializers.interventions_v2 import MinimalInterventionListSerializer
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
+from etools.applications.reports.models import ResultType
 from etools.applications.reports.serializers.v1 import SectionSerializer
 from etools.applications.reports.serializers.v2 import MinimalOutputListSerializer, OfficeSerializer
 from etools.applications.tpm.tpmpartners.models import TPMPartner
@@ -198,6 +199,16 @@ class FMUserSerializer(MinimalUserSerializer):
 class CPOutputListSerializer(MinimalOutputListSerializer):
     class Meta(MinimalOutputListSerializer.Meta):
         fields = MinimalOutputListSerializer.Meta.fields + ('parent',)
+
+    def get_name(self, obj):
+        if obj.result_type.name == ResultType.OUTPUT:
+            return '{}{}{}-[{}]'.format(
+                f'[{_("Expired")}] ' if obj.expired else '',
+                f'{_("Special")}- ' if obj.special else '',
+                obj.name,
+                obj.wbs)
+        else:
+            return obj.result_name
 
 
 class InterventionWithLinkedInstancesSerializer(FMInterventionListSerializer):
