@@ -65,7 +65,7 @@ class QuestionLightSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'answer_type', 'choices_size', 'level',
             'methods', 'category', 'sections', 'text',
-            'is_hact', 'is_active', 'is_custom'
+            'is_hact', 'is_active', 'is_custom', 'order'
         )
 
 
