@@ -108,7 +108,7 @@ class Question(models.Model):
     is_custom = models.BooleanField(default=False, verbose_name=_('Is Custom'))
     is_active = models.BooleanField(default=True, verbose_name=_('Is Active'))
 
-    order = models.PositiveIntegerField(db_index=True)
+    order = models.PositiveIntegerField(db_index=True, default=1)
 
     objects = models.Manager.from_queryset(QuestionsQuerySet)()
 
