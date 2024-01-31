@@ -1,0 +1,72 @@
+[
+  {
+    "model": "last_mile.pointofinteresttype",
+    "pk": 1,
+    "fields": {
+      "name": "Warehouse"
+    }
+  },
+  {
+    "model": "last_mile.pointofinteresttype",
+    "pk": 2,
+    "fields": {
+      "name": "Distribution Point"
+    }
+  },
+  {
+    "model": "last_mile.pointofinteresttype",
+    "pk": 3,
+    "fields": {
+      "name": "Hospital"
+    }
+  },
+  {
+    "model": "last_mile.pointofinteresttype",
+    "pk": 4,
+    "fields": {
+      "name": "School"
+    }
+  },
+  {
+    "model": "last_mile.pointofinteresttype",
+    "pk": 5,
+    "fields": {
+      "name": "Government Office"
+    }
+  },
+  {
+    "model": "last_mile.pointofinteresttype",
+    "pk": 6,
+    "fields": {
+      "name": "Refugee Camp"
+    }
+  },
+  {
+    "model": "last_mile.pointofinteresttype",
+    "pk": 7,
+    "fields": {
+      "name": "Installation Point"
+    }
+  },
+  {
+    "model": "last_mile.pointofinteresttype",
+    "pk": 8,
+    "fields": {
+      "name": "Medical Mission"
+    }
+  },
+  {
+    "model": "last_mile.pointofinteresttype",
+    "pk": 9,
+    "fields": {
+      "name": "Private House"
+    }
+  },
+  {
+    "model": "last_mile.pointofinteresttype",
+    "pk": 10,
+    "fields": {
+      "name": "Other"
+    }
+  }
+]

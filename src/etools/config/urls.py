@@ -77,6 +77,7 @@ urlpatterns = [
     re_path(r'^api/v1/field-monitoring/', include('etools.applications.field_monitoring.urls')),
     re_path(r'^api/comments/v1/', include('etools.applications.comments.urls')),
     re_path(r'^api/ecn/v1/', include('etools.applications.ecn.urls_v1', namespace='ecn_v1')),
+    re_path(r'^api/last-mile/', include('etools.applications.last_mile.urls', namespace='last_mile')),
 
     # GIS API urls
     re_path(r'^api/management/gis/', include('etools.applications.management.urls_gis')),
