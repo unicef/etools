@@ -1,9 +1,9 @@
 from django.contrib import admin
 
-from etools.applications.last_mile.models import PointOfInterest, PointOfInterestType
+from etools.applications.last_mile import models
 
 
-@admin.register(PointOfInterest)
+@admin.register(models.PointOfInterest)
 class PointOfInterestAdmin(admin.ModelAdmin):
     list_display = ('name', 'parent', 'poi_type')
     list_select_related = ('parent',)
@@ -12,4 +12,23 @@ class PointOfInterestAdmin(admin.ModelAdmin):
     raw_id_fields = ('partner_organization',)
 
 
-admin.site.register(PointOfInterestType)
+class ShipmentAdminInline(admin.StackedInline):
+    model = models.Shipment
+    can_delete = False
+
+
+@admin.register(models.Transfer)
+class TransferAdmin(admin.ModelAdmin):
+    list_display = ('sequence_number', 'partner_organization', 'status')
+    list_select_related = ('partner_organization',)
+    list_filter = ('status',)
+    search_fields = ('sequence_number', )
+    raw_id_fields = ('partner_organization', 'checked_in_by', 'checked_out_by')
+    inlines = [ShipmentAdminInline]
+
+
+admin.site.register(models.PointOfInterestType)
+admin.site.register(models.Shipment)
+admin.site.register(models.Material)
+admin.site.register(models.UnitOfMeasurement)
+admin.site.register(models.Item)

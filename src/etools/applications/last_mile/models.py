@@ -56,6 +56,26 @@ class PointOfInterest(models.Model):
     def __str__(self):
         return f'{self. name} - {self.poi_type}'
 
+    @staticmethod
+    def get_parent_location(point):
+        locations = Location.objects.all_with_geom().filter(geom__contains=point, is_active=True)
+        if locations:
+            matched_locations = list(filter(lambda l: l.is_leaf_node(), locations)) or locations
+            location = min(matched_locations, key=lambda l: l.geom.length)
+        else:
+            location = Location.objects.filter(admin_level=0, is_active=True).first()
+
+        return location
+
+    def save(self, **kwargs):
+        if not self.parent_id:
+            self.parent = self.get_parent_location(self.point)
+            assert self.parent_id, 'Unable to find location for {}'.format(self.point)
+        elif self.tracker.has_changed('point') and self.pk:
+            self.parent = self.get_parent_location(self.point)
+
+        super().save(**kwargs)
+
 
 class Transfer(TimeStampedModel, models.Model):
     PENDING = 'pending'
@@ -89,6 +109,7 @@ class Transfer(TimeStampedModel, models.Model):
     comment = models.TextField(null=True, blank=True)
     display_name = models.CharField(max_length=255, null=True, blank=True)
     filepath = models.CharField(max_length=255, null=True, blank=True)
+    # TODO ?
     # check_in_lat_lng = models.ForeignKey(LatLng, on_delete=models.SET_NULL, null=True, related_name='check_in_transfer_lat_lng')
     # check_out_lat_lng = models.ForeignKey(LatLng, on_delete=models.SET_NULL, null=True, related_name='check_out_transfer_lat_lng')
 
@@ -109,7 +130,9 @@ class Shipment(TimeStampedModel, models.Model):
 
     document_created_at = models.DateTimeField()
     transfer = models.OneToOneField(Transfer, on_delete=models.CASCADE, related_name='shipment')
-    e_tools_reference = models.CharField(max_length=255, null=True, blank=True)  #
+
+    # Agreement ref + PD ref IRQ/PCA2020299/PD2022798
+    e_tools_reference = models.CharField(max_length=255, null=True, blank=True)
 
 
 class Material(models.Model):
@@ -145,9 +168,9 @@ class Item(models.Model):
     material = models.ForeignKey(Material, on_delete=models.SET_NULL, null=True)
     item_status = models.CharField(max_length=255, choices=STATUS)
     quantity = models.IntegerField()
-    shipment = models.ForeignKey(Shipment, on_delete=models.SET_NULL, null=True)
+    shipment = models.ForeignKey(Shipment, on_delete=models.SET_NULL, null=True, related_name='items')
     shipment_item_id = models.CharField(max_length=255)
-    transfer = models.ForeignKey(Transfer, on_delete=models.SET_NULL, null=True, related_name='items')
+    # transfer = models.ForeignKey(Transfer, on_delete=models.SET_NULL, null=True, related_name='items')
     unit = models.ForeignKey(UnitOfMeasurement, on_delete=models.SET_NULL, null=True)
 
     location = models.ForeignKey(Location, on_delete=models.SET_NULL, null=True)
@@ -182,7 +205,7 @@ class TransferHistory(models.Model):
 
 
 class Reference(models.Model):
-    # Country = 'COUNTRY',
-    # LocationPrimaryType = 'LOCATION_PRIMARY_TYPE',
+    # Country = 'COUNTRY', -> tenants
+    # LocationPrimaryType = 'LOCATION_PRIMARY_TYPE', -> POI Type
     name = models.CharField(max_length=255, unique=True)
     type = models.CharField(max_length=255)
