@@ -93,22 +93,44 @@ class Transfer(TimeStampedModel, models.Model):
         (WAYBILL, _('WAYBILL')),
         (DELIVERY, _('Delivery'))
     )
-
+    display_name = models.CharField(max_length=255, null=True, blank=True)
     sequence_number = models.IntegerField()
     status = models.CharField(max_length=30, choices=STATUS)
     reason = models.CharField(max_length=255, null=True, blank=True)
 
-    checked_in_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='transfer_checked_in')
-    checked_out_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='transfer_checked_out')
-    partner_organization = models.ForeignKey(PartnerOrganization, on_delete=models.CASCADE)
+    comment = models.TextField(null=True, blank=True)
+    filepath = models.CharField(max_length=255, null=True, blank=True)
 
-    origin_point = models.ForeignKey(PointOfInterest, on_delete=models.SET_NULL, null=True, related_name='origin_transfers')
-    destination_point = models.ForeignKey(PointOfInterest, on_delete=models.SET_NULL, null=True, related_name='destination_transfers')
+    checked_in_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='transfer_checked_in'
+    )
+    checked_out_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='transfer_checked_out'
+    )
+    partner_organization = models.ForeignKey(
+        PartnerOrganization,
+        on_delete=models.CASCADE
+    )
+    origin_point = models.ForeignKey(
+        PointOfInterest,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='origin_transfers'
+    )
+    destination_point = models.ForeignKey(
+        PointOfInterest,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='destination_transfers'
+    )
     destination_check_in_at = models.DateTimeField(null=True, blank=True)
 
-    comment = models.TextField(null=True, blank=True)
-    display_name = models.CharField(max_length=255, null=True, blank=True)
-    filepath = models.CharField(max_length=255, null=True, blank=True)
     # TODO ?
     # check_in_lat_lng = models.ForeignKey(LatLng, on_delete=models.SET_NULL, null=True, related_name='check_in_transfer_lat_lng')
     # check_out_lat_lng = models.ForeignKey(LatLng, on_delete=models.SET_NULL, null=True, related_name='check_out_transfer_lat_lng')
@@ -129,8 +151,11 @@ class Shipment(TimeStampedModel, models.Model):
     waybill_id = models.CharField(max_length=255, null=True, blank=True)
 
     document_created_at = models.DateTimeField()
-    transfer = models.OneToOneField(Transfer, on_delete=models.CASCADE, related_name='shipment')
-
+    transfer = models.OneToOneField(
+        Transfer,
+        on_delete=models.CASCADE,
+        related_name='shipment'
+    )
     # Agreement ref + PD ref IRQ/PCA2020299/PD2022798
     e_tools_reference = models.CharField(max_length=255, null=True, blank=True)
 
@@ -164,16 +189,8 @@ class Item(models.Model):
         (STORED, _('Stored')),
         (REMOVED, _('Removed')),
     )
-
-    material = models.ForeignKey(Material, on_delete=models.SET_NULL, null=True)
-    item_status = models.CharField(max_length=255, choices=STATUS)
+    status = models.CharField(max_length=255, choices=STATUS)
     quantity = models.IntegerField()
-    shipment = models.ForeignKey(Shipment, on_delete=models.SET_NULL, null=True, related_name='items')
-    shipment_item_id = models.CharField(max_length=255)
-    # transfer = models.ForeignKey(Transfer, on_delete=models.SET_NULL, null=True, related_name='items')
-    unit = models.ForeignKey(UnitOfMeasurement, on_delete=models.SET_NULL, null=True)
-
-    location = models.ForeignKey(Location, on_delete=models.SET_NULL, null=True)
     batch_id = models.CharField(max_length=255, null=True, blank=True)
     expiry_date = models.DateTimeField(null=True, blank=True)
     comment = models.TextField(null=True, blank=True)
@@ -181,31 +198,58 @@ class Item(models.Model):
     preposition_qty = models.IntegerField(null=True, blank=True)
     amount_usd = models.FloatField(null=True, blank=True)
 
+    shipment_item_id = models.CharField(max_length=255)
 
-class MaterialDisplay(models.Model):
-    created_at = models.DateTimeField(default=timezone.now)
-    updated_at = models.DateTimeField(default=timezone.now)
-    # created_by = models.ForeignKey(User, on_delete=models.CASCADE)
-    # updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
-    partner_organization = models.ForeignKey(PartnerOrganization, on_delete=models.CASCADE)
-    material = models.ForeignKey(Material, on_delete=models.CASCADE)
-    display_desc = models.CharField(max_length=255)
+    material = models.ForeignKey(
+        Material,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='items'
+    )
+    transfer = models.ForeignKey(
+        Transfer,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='items'
+    )
+    unit = models.ForeignKey(
+        UnitOfMeasurement,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='items'
+    )
+    location = models.ForeignKey(
+        PointOfInterest,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='items'
+    )
 
-    class Meta:
-        unique_together = ('material', 'partner_organization')
 
-
-class TransferHistory(models.Model):
-    transfer = models.ForeignKey(Transfer, on_delete=models.CASCADE)
-    item = models.ForeignKey('Item', on_delete=models.CASCADE)
-    created_at = models.DateTimeField(default=timezone.now)
-
-    class Meta:
-        unique_together = ('transfer', 'item')
-
-
-class Reference(models.Model):
-    # Country = 'COUNTRY', -> tenants
-    # LocationPrimaryType = 'LOCATION_PRIMARY_TYPE', -> POI Type
-    name = models.CharField(max_length=255, unique=True)
-    type = models.CharField(max_length=255)
+# class MaterialDisplay(models.Model):
+#     created_at = models.DateTimeField(default=timezone.now)
+#     updated_at = models.DateTimeField(default=timezone.now)
+#     # created_by = models.ForeignKey(User, on_delete=models.CASCADE)
+#     # updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+#     partner_organization = models.ForeignKey(PartnerOrganization, on_delete=models.CASCADE)
+#     material = models.ForeignKey(Material, on_delete=models.CASCADE)
+#     display_desc = models.CharField(max_length=255)
+#
+#     class Meta:
+#         unique_together = ('material', 'partner_organization')
+#
+#
+# class TransferHistory(models.Model):
+#     transfer = models.ForeignKey(Transfer, on_delete=models.CASCADE)
+#     item = models.ForeignKey('Item', on_delete=models.CASCADE)
+#     created_at = models.DateTimeField(default=timezone.now)
+#
+#     class Meta:
+#         unique_together = ('transfer', 'item')
+#
+#
+# class Reference(models.Model):
+#     # Country = 'COUNTRY', -> tenants
+#     # LocationPrimaryType = 'LOCATION_PRIMARY_TYPE', -> POI Type
+#     name = models.CharField(max_length=255, unique=True)
+#     type = models.CharField(max_length=255)
