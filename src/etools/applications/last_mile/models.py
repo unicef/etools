@@ -1,6 +1,5 @@
 from django.contrib.gis.db.models import PointField
 from django.db import models
-from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from model_utils import FieldTracker
@@ -54,7 +53,7 @@ class PointOfInterest(models.Model):
         verbose_name_plural = _('Points of Interest')
 
     def __str__(self):
-        return f'{self. name} - {self.poi_type}'
+        return f'{self.name} - {self.poi_type}'
 
     @staticmethod
     def get_parent_location(point):
@@ -135,6 +134,9 @@ class Transfer(TimeStampedModel, models.Model):
     # check_in_lat_lng = models.ForeignKey(LatLng, on_delete=models.SET_NULL, null=True, related_name='check_in_transfer_lat_lng')
     # check_out_lat_lng = models.ForeignKey(LatLng, on_delete=models.SET_NULL, null=True, related_name='check_out_transfer_lat_lng')
 
+    def __str__(self):
+        return self.display_name
+
 
 class Shipment(TimeStampedModel, models.Model):
     RELEASE_ORDER = 'release_order'
@@ -159,6 +161,9 @@ class Shipment(TimeStampedModel, models.Model):
     # Agreement ref + PD ref IRQ/PCA2020299/PD2022798
     e_tools_reference = models.CharField(max_length=255, null=True, blank=True)
 
+    def __str__(self):
+        return f'{self.transfer.display_name} - {self.shipment_type}'
+
 
 class Material(models.Model):
     short_desc = models.CharField(max_length=255)
@@ -169,12 +174,18 @@ class Material(models.Model):
     purchase_group_desc = models.CharField(max_length=255)
     temperature_group = models.CharField(max_length=255, null=True, blank=True)
 
+    def __str__(self):
+        return self.short_desc
+
 
 class UnitOfMeasurement(TimeStampedModel, models.Model):
     # created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='unit_of_measurement_created')
     # updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='unit_of_measurement_updated')
     material = models.ForeignKey(Material, on_delete=models.CASCADE)
     conversion_factor = models.IntegerField()
+
+    def __str__(self):
+        return self.material.short_desc
 
 
 class Item(models.Model):
@@ -200,12 +211,6 @@ class Item(models.Model):
 
     shipment_item_id = models.CharField(max_length=255)
 
-    material = models.ForeignKey(
-        Material,
-        on_delete=models.SET_NULL,
-        null=True, blank=True,
-        related_name='items'
-    )
     transfer = models.ForeignKey(
         Transfer,
         on_delete=models.SET_NULL,
@@ -225,8 +230,10 @@ class Item(models.Model):
         related_name='items'
     )
 
+    def __str__(self):
+        return self.unit.material.short_desc
 
-# class MaterialDisplay(models.Model):
+    # class MaterialDisplay(models.Model):
 #     created_at = models.DateTimeField(default=timezone.now)
 #     updated_at = models.DateTimeField(default=timezone.now)
 #     # created_by = models.ForeignKey(User, on_delete=models.CASCADE)
