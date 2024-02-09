@@ -3,9 +3,11 @@ from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext_lazy as _
 
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.filters import SearchFilter
+from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
@@ -104,3 +106,18 @@ class TransferViewSet(ReadOnlyModelViewSet):
         if 'locationId' in kwargs and kwargs['locationId']:
             qs = qs.filter(origin_point=kwargs['locationId']).exclude(destination_point_id=kwargs['locationId'])
         return Response(self.serializer_class(qs, many=True).data)
+
+    @action(detail=True, methods=['patch'], url_path='upload-proof',
+            parser_classes=(FormParser, MultiPartParser,))
+    def upload_proof(self, request, pk=None):
+        transfer = get_object_or_404(models.Transfer, pk=pk)
+        proof_file = request.data.get('file')
+        transfer.proof_file.save(proof_file.name, proof_file)
+        return Response(serializers.TransferSerializer(transfer).data, status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=True, methods=['patch'], url_path='check-in',
+            serializer_class=serializers.TransferCheckinSerializer)
+    def check_in(self, request, pk=None):
+        transfer = get_object_or_404(models.Transfer, pk=pk)
+
+        return Response(serializers.TransferSerializer(transfer).data, status=status.HTTP_200_OK)

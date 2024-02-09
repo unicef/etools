@@ -81,3 +81,12 @@ class TransferSerializer(serializers.ModelSerializer):
         data['destinationCheckOutAt'] = data['destination_check_in_at']
         data['items'] = ItemSerializer(instance.items.all(), many=True).data
         return data
+
+
+class TransferCheckinSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(source='display_name')
+    locationId = serializers.IntegerField(source='checkin_at?')
+
+    class Meta:
+        model = models.Transfer
+        fields = ('display_name', 'comment', 'reason', 'locationId')

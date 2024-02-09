@@ -1,5 +1,5 @@
 from django.contrib.gis.db.models import PointField
-from django.db import models
+from django.db import connection, models
 from django.utils.translation import gettext_lazy as _
 
 from model_utils import FieldTracker
@@ -76,6 +76,17 @@ class PointOfInterest(models.Model):
         super().save(**kwargs)
 
 
+def get_transfers_path(instance, filename):
+    return '/'.join([
+        connection.schema_name,
+        'file_attachments',
+        'last_mile',
+        'transfers',
+        str(instance.id),
+        filename
+    ])
+
+
 class Transfer(TimeStampedModel, models.Model):
     PENDING = 'pending'
     CHECKED_IN = 'checked-in'
@@ -98,7 +109,22 @@ class Transfer(TimeStampedModel, models.Model):
     reason = models.CharField(max_length=255, null=True, blank=True)
 
     comment = models.TextField(null=True, blank=True)
-    filepath = models.CharField(max_length=255, null=True, blank=True)
+
+    proof_file = models.FileField(
+        upload_to=get_transfers_path,
+        max_length=255,
+        verbose_name=_('Proof File'),
+        blank=True,
+        null=True,
+    )
+    # TODO TBD swagger desc: upload for a transfer vs endpoint transfers/upload-waybill/<locationId>
+    # waybill_file = models.FileField(
+    #     upload_to=get_transfers_path,
+    #     max_length=255,
+    #     verbose_name=_('Waybill File'),
+    #     blank=True,
+    #     null=True,
+    # )
 
     checked_in_by = models.ForeignKey(
         User,
@@ -130,7 +156,7 @@ class Transfer(TimeStampedModel, models.Model):
     )
     destination_check_in_at = models.DateTimeField(null=True, blank=True)
 
-    # TODO ?
+    # TODO TBD what check-in /out points are for?
     # check_in_lat_lng = models.ForeignKey(LatLng, on_delete=models.SET_NULL, null=True, related_name='check_in_transfer_lat_lng')
     # check_out_lat_lng = models.ForeignKey(LatLng, on_delete=models.SET_NULL, null=True, related_name='check_out_transfer_lat_lng')
 
