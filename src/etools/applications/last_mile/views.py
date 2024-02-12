@@ -3,14 +3,14 @@ from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext_lazy as _
 
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import status
+from rest_framework import mixins, status
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.filters import SearchFilter
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
+from rest_framework.viewsets import GenericViewSet, ModelViewSet, ReadOnlyModelViewSet
 
 from etools.applications.last_mile import models, serializers
 
@@ -26,6 +26,21 @@ class PointOfInterestViewSet(ModelViewSet):
 
     filter_backends = (DjangoFilterBackend, SearchFilter)
     search_fields = ('name', 'p_code', 'parent__name', 'parent__p_code')
+
+    @action(detail=True, methods=['get'], url_path='items', serializer_class=serializers.ItemSerializer)
+    def items(self, request, *args, pk=None, **kwargs):
+        print(pk)
+        qs = models.Item.objects.filter(location_id=pk)
+        return Response(self.serializer_class(qs, many=True).data)
+
+
+class ShipmentUpdateView(mixins.UpdateModelMixin, GenericViewSet):
+    """
+    Updates only the waybill #
+    """
+    queryset = models.Shipment.objects.all()
+    serializer_class = serializers.ShipmentSerializer
+    permission_classes = [IsAuthenticated]
 
 
 class TransferViewSet(ReadOnlyModelViewSet):
@@ -119,5 +134,15 @@ class TransferViewSet(ReadOnlyModelViewSet):
             serializer_class=serializers.TransferCheckinSerializer)
     def check_in(self, request, pk=None):
         transfer = get_object_or_404(models.Transfer, pk=pk)
+
+        serializer = serializers.TransferCheckinSerializer(instance=transfer, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        transfer.status = models.Transfer.CHECKED_IN
+        transfer.checked_in_by = request.user
+        transfer.save(update_fields=['status', 'checked_in_by'])
+
+        transfer.items.update(location_id=serializer.validated_data['locationId'])
 
         return Response(serializers.TransferSerializer(transfer).data, status=status.HTTP_200_OK)

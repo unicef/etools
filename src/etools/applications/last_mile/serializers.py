@@ -35,6 +35,8 @@ class MaterialSerializer(serializers.ModelSerializer):
         data['purchaseGroup'] = data['purchase_group']
         data['purchaseGroupDesc'] = data['purchase_group_desc']
         data['temperatureGroup'] = data['temperature_group']
+        # data['units'] = [self.to_representation(instance).data]
+        # data['materialDisplays'] = [{"displayDesc": f"{data['short_desc']}"}]
         return data
 
 
@@ -57,8 +59,30 @@ class ItemSerializer(serializers.ModelSerializer):
         data['prepositionQty'] = data['preposition_qty']
         data['transferDisplayName'] = instance.transfer.display_name
         data['amountUsd'] = data['amount_usd']
-        data['material'] = MaterialSerializer(instance.unit.material).data
-        data['purchasingText'] = 'data[purchasing_text] not found in models'
+        # data['material'] = MaterialSerializer(instance.unit.material).data
+        data['materialId'] = instance.unit.material.id
+        data['materialDesc'] = instance.unit.material.short_desc
+
+        return data
+
+
+class ShipmentSerializer(serializers.ModelSerializer):
+    waybillId = serializers.CharField(source='waybill_id')
+
+    class Meta:
+        model = models.Shipment
+        fields = '__all__'
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['type'] = data['shipment_type'].upper()
+        data['poId'] = data['purchase_order_id']
+        data['deliveryId'] = data['delivery_id']
+        data['deliveryItemId'] = data['delivery_item_id']
+        data['createdAt'] = data['created']
+        data['documentCreatedAt'] = data['document_created_at']
+        data['transferId'] = instance.transfer.id
+        data['eToolsReference'] = data['e_tools_reference']
         return data
 
 
@@ -74,7 +98,7 @@ class TransferSerializer(serializers.ModelSerializer):
         data['status'] = data['status'].replace('-', '_').upper()
         data['createdAt'] = data['created']
         data['orgId'] = instance.partner_organization.id
-        # data['shipment'] = ShipmentSerializer(instance.shipment).data
+        data['shipment'] = ShipmentSerializer(instance.shipment).data
         data['originLocationId'] = data['origin_point']
         data['originCheckOutAt'] = 'data[originCheckOutAt] is missing from model'
         data['destinationLocationId'] = data['destination_point']
@@ -84,9 +108,10 @@ class TransferSerializer(serializers.ModelSerializer):
 
 
 class TransferCheckinSerializer(serializers.ModelSerializer):
-    name = serializers.CharField(source='display_name')
-    locationId = serializers.IntegerField(source='checkin_at?')
+    name = serializers.CharField(source='display_name', required=False)
+    date = serializers.DateTimeField(source='destination_check_in_at', required=True)
+    locationId = serializers.IntegerField()
 
     class Meta:
         model = models.Transfer
-        fields = ('display_name', 'comment', 'reason', 'locationId')
+        fields = ('name', 'date', 'comment', 'reason', 'locationId')
