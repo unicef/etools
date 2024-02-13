@@ -1,4 +1,5 @@
 from datetime import date
+from unittest.mock import Mock, patch
 
 from django.core.management import call_command
 from django.urls import reverse
@@ -7,10 +8,12 @@ from factory import fuzzy
 from rest_framework import status
 
 from etools.applications.action_points.categories.models import Category
+from etools.applications.action_points.models import OperationsGroup, PME
 from etools.applications.action_points.tests.base import ActionPointsTestCaseMixin
 from etools.applications.action_points.tests.factories import ActionPointCategoryFactory, ActionPointFactory
 from etools.applications.audit.tests.factories import MicroAssessmentFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.partners.permissions import UNICEF_USER
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.psea.tests.factories import AssessmentFactory
 from etools.applications.reports.tests.factories import SectionFactory
@@ -334,6 +337,7 @@ class TestActionPointsViewMetadata(ActionPointsTestCaseMixin):
         call_command('update_notifications')
 
         cls.pme_user = PMEUserFactory()
+        cls.operations = UserFactory(realms__data=[UNICEF_USER, OperationsGroup.name])
         cls.unicef_user = UserFactory()
         cls.common_user = SimpleUserFactory()
 
@@ -446,6 +450,16 @@ class TestOpenActionPointDetailViewMetadata(TestActionPointsDetailViewMetadata, 
         self._test_detail_options(self.assignee, writable_fields=self.editable_fields)
 
 
+class TestOpenHighPriorityActionPointDetailViewMetadata(TestOpenActionPointDetailViewMetadata):
+    def setUp(self):
+        super().setUp()
+        self.action_point.high_priority = True
+        self.action_point.save()
+
+    def test_author_editable_fields(self):
+        self._test_detail_options(self.author, writable_fields=self.editable_fields + ['potential_verifier'])
+
+
 class TestRelatedOpenActionPointDetailViewMetadata(TestOpenActionPointDetailViewMetadata):
     editable_fields = [
         'category',
@@ -468,8 +482,17 @@ class TestRelatedOpenActionPointDetailViewMetadata(TestOpenActionPointDetailView
 class TestClosedActionPointDetailViewMetadata(TestActionPointsDetailViewMetadata, BaseTenantTestCase):
     status = 'completed'
 
+    def setUp(self):
+        super().setUp()
+        self.action_point.is_adequate = True
+        self.action_point.verified_by = UserFactory()
+        self.action_point.save()
+
     def test_pme_editable_fields(self):
         self._test_detail_options(self.pme_user, can_update=False)
+
+    def test_operations_editable_fields(self):
+        self._test_detail_options(self.operations, can_update=False)
 
     def test_unicef_editable_fields(self):
         self._test_detail_options(self.unicef_user, can_update=False)
@@ -482,6 +505,140 @@ class TestClosedActionPointDetailViewMetadata(TestActionPointsDetailViewMetadata
 
     def test_assignee_editable_fields(self):
         self._test_detail_options(self.assignee, can_update=False)
+
+
+class TestClosedNotVerifiedActionPointDetailViewMetadata(TestActionPointsDetailViewMetadata, BaseTenantTestCase):
+    status = 'completed'
+
+    def test_pme_editable_fields(self):
+        self._test_detail_options(self.pme_user, can_update=False)
+
+    def test_operations_editable_fields(self):
+        self._test_detail_options(self.operations, can_update=False)
+
+    def test_unicef_editable_fields(self):
+        self._test_detail_options(self.unicef_user, can_update=False)
+
+    def test_author_editable_fields(self):
+        self._test_detail_options(self.author, can_update=False)
+
+    def test_assigned_by_editable_fields(self):
+        self._test_detail_options(self.assigned_by, can_update=False)
+
+    def test_assignee_editable_fields(self):
+        self._test_detail_options(self.assignee, can_update=False)
+
+
+class TestHighPriorityClosedNotVerifiedActionPointDetailViewMetadata(
+    TestClosedNotVerifiedActionPointDetailViewMetadata,
+):
+    def setUp(self):
+        super().setUp()
+        self.action_point.high_priority = True
+        self.action_point.save()
+
+    def test_pme_editable_fields(self):
+        self._test_detail_options(self.pme_user, writable_fields=['is_adequate'])
+
+    def test_operations_editable_fields(self):
+        self._test_detail_options(self.operations, writable_fields=['is_adequate'])
+
+
+class TestReviewClosedActionPoint(ActionPointsTestCaseMixin, BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        call_command('update_action_points_permissions', verbosity=0)
+        call_command('update_notifications')
+
+        cls.pme_user = PMEUserFactory()
+        cls.unicef_user = UserFactory()
+        cls.common_user = SimpleUserFactory()
+
+    def test_high_priority_author_completes(self):
+        # author has PME group though it shouldn't be able to transition without providing verifier
+        action_point = ActionPointFactory(
+            status='pre_completed',
+            high_priority=True,
+            author__realms__data=[UNICEF_USER, PME.name],
+        )
+        reviewer = UserFactory()
+
+        response = self.forced_auth_req(
+            'post',
+            reverse('action-points:action-points-transition', args=(action_point.id, 'complete')),
+            user=action_point.author,
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse('action-points:action-points-detail', args=(action_point.id,)),
+            user=action_point.author,
+            data={
+                'potential_verifier': reviewer.id
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        mock_email = Mock()
+        with patch("etools.applications.action_points.models.ActionPoint.send_email", mock_email):
+            response = self.forced_auth_req(
+                'post',
+                reverse('action-points:action-points-transition', args=(action_point.id, 'complete')),
+                user=action_point.author,
+            )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(mock_email.call_count, 2)
+
+    def test_high_priority_author_verifies(self):
+        # author has PME group though it shouldn't be able to verify
+        action_point = ActionPointFactory(
+            status='completed',
+            high_priority=True,
+            author__realms__data=[UNICEF_USER, PME.name],
+        )
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse('action-points:action-points-detail', args=(action_point.id,)),
+            user=action_point.author,
+            data={
+                'is_adequate': True
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_high_priority_pme_completes_without_verifier(self):
+        action_point = ActionPointFactory(status='pre_completed', high_priority=True)
+        response = self.forced_auth_req(
+            'post',
+            reverse('action-points:action-points-transition', args=(action_point.id, 'complete')),
+            user=self.pme_user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_high_priority_pme_verifies(self):
+        action_point = ActionPointFactory(status='completed', high_priority=True)
+        response = self.forced_auth_req(
+            'patch',
+            reverse('action-points:action-points-detail', args=(action_point.id,)),
+            user=self.pme_user,
+            data={
+                'is_adequate': True
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['is_adequate'], True)
+        self.assertEqual(response.data['verified_by']['id'], self.pme_user.id)
+
+    def test_low_priority_author_completes(self):
+        action_point = ActionPointFactory(status='pre_completed', high_priority=False)
+        response = self.forced_auth_req(
+            'post',
+            reverse('action-points:action-points-transition', args=(action_point.id, 'complete')),
+            user=action_point.author,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
 class TestCategoriesViewSet(BaseTenantTestCase):
