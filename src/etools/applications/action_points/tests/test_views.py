@@ -564,6 +564,17 @@ class TestReviewClosedActionPoint(ActionPointsTestCaseMixin, BaseTenantTestCase)
         reviewer = UserFactory()
 
         response = self.forced_auth_req(
+            'options',
+            reverse('action-points:action-points-detail', args=(action_point.id,)),
+            user=action_point.author,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.data['actions']['allowed_FSM_transitions'],
+            [{'code': 'complete', 'display_name': 'complete'}]
+        )
+
+        response = self.forced_auth_req(
             'post',
             reverse('action-points:action-points-transition', args=(action_point.id, 'complete')),
             user=action_point.author,
