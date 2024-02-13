@@ -172,8 +172,7 @@ class HistorySerializer(serializers.ModelSerializer):
 class ActionPointSerializer(WritableNestedSerializerMixin, ActionPointListSerializer):
     comments = CommentSerializer(many=True, label=_('Actions Taken'), required=False)
     history = HistorySerializer(many=True, label=_('History'), read_only=True, source='get_meaningful_history')
-    potential_verifier = SeparatedReadWriteField(required=True, label=_('Potential Verifier'),
-                                                 read_field=MinimalUserSerializer())
+    potential_verifier = MinimalUserSerializer(read_only=True, label=_('Potential Verifier'))
     verified_by = MinimalUserSerializer(read_only=True, label=_('Verified By'))
 
     related_object_str = serializers.ReadOnlyField(label=_('Related Document'))

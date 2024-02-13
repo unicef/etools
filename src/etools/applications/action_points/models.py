@@ -257,7 +257,9 @@ class ActionPoint(TimeStampedModel):
                     ActionPointCompleteActionsTakenCheck.as_condition()
                 ],
                 custom={'serializer': ActionPointCompleteSerializer})
-    def complete(self, completed_by=None):
+    def complete(self, completed_by=None, potential_verifier=None):
+        if potential_verifier:
+            self.potential_verifier = potential_verifier
         self._do_complete(completed_by=completed_by)
 
 

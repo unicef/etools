@@ -8,7 +8,7 @@ from factory import fuzzy
 from rest_framework import status
 
 from etools.applications.action_points.categories.models import Category
-from etools.applications.action_points.models import OperationsGroup, PME
+from etools.applications.action_points.models import ActionPoint, OperationsGroup, PME
 from etools.applications.action_points.tests.base import ActionPointsTestCaseMixin
 from etools.applications.action_points.tests.factories import ActionPointCategoryFactory, ActionPointFactory
 from etools.applications.audit.tests.factories import MicroAssessmentFactory
@@ -457,7 +457,7 @@ class TestOpenHighPriorityActionPointDetailViewMetadata(TestOpenActionPointDetai
         self.action_point.save()
 
     def test_author_editable_fields(self):
-        self._test_detail_options(self.author, writable_fields=self.editable_fields + ['potential_verifier'])
+        self._test_detail_options(self.author, writable_fields=self.editable_fields)
 
 
 class TestRelatedOpenActionPointDetailViewMetadata(TestOpenActionPointDetailViewMetadata):
@@ -568,17 +568,7 @@ class TestReviewClosedActionPoint(ActionPointsTestCaseMixin, BaseTenantTestCase)
             reverse('action-points:action-points-transition', args=(action_point.id, 'complete')),
             user=action_point.author,
         )
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
-        response = self.forced_auth_req(
-            'patch',
-            reverse('action-points:action-points-detail', args=(action_point.id,)),
-            user=action_point.author,
-            data={
-                'potential_verifier': reviewer.id
-            }
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         mock_email = Mock()
         with patch("etools.applications.action_points.models.ActionPoint.send_email", mock_email):
@@ -586,8 +576,13 @@ class TestReviewClosedActionPoint(ActionPointsTestCaseMixin, BaseTenantTestCase)
                 'post',
                 reverse('action-points:action-points-transition', args=(action_point.id, 'complete')),
                 user=action_point.author,
+                data={
+                    'potential_verifier': reviewer.id
+                }
             )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        action_point = ActionPoint.objects.get(pk=action_point.pk)
+        self.assertEqual(action_point.potential_verifier, reviewer)
         self.assertEqual(mock_email.call_count, 2)
 
     def test_high_priority_author_verifies(self):

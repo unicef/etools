@@ -62,9 +62,6 @@ class Command(BaseCommand):
     not_related_action_point_edit = action_point_base_edit + action_point_pmp_relations
 
     # verification
-    action_point_verification_request_edit = [
-        'action_points.actionpoint.potential_verifier',
-    ]
     action_point_verification_process_edit = [
         'action_points.actionpoint.is_adequate',
     ]
@@ -249,12 +246,6 @@ class Command(BaseCommand):
 
         # if high priority, unlock verification process
         self.add_permission(
-            [self.author],
-            'edit',
-            self.action_point_verification_request_edit,
-            condition=self.action_point_status(ActionPoint.STATUSES.open) + self.high_priority_action_point()
-        )
-        self.add_permission(
             [self.pme, self.operations, self.potential_verifier],
             'edit',
             self.action_point_verification_process_edit,
@@ -262,14 +253,8 @@ class Command(BaseCommand):
         )
         # require potential verifier to be provided if transition performs by author even if it has PME group
         self.add_permission(
-            [self.pme, self.assigned_by, self.assignee],
+            [self.pme, self.assigned_by, self.assignee, self.author],
             'action',
             'action_points.actionpoint.complete',
-            condition=self.action_point_status(ActionPoint.STATUSES.open) + self.high_priority_action_point() + self.not_author()
-        )
-        self.add_permission(
-            [self.author],
-            'action',
-            'action_points.actionpoint.complete',
-            condition=self.action_point_status(ActionPoint.STATUSES.open) + self.high_priority_action_point() + self.potential_verifier_provided()
+            condition=self.action_point_status(ActionPoint.STATUSES.open) + self.high_priority_action_point()
         )
