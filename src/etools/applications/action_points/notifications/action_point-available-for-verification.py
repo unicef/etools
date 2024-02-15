@@ -8,7 +8,7 @@ defaults = {
     'content': strip_text("""
     Dear {{ recipient }},
 
-    You was assigned as a verifier to an action point {% if action_point.partner %}related to:
+    You were assigned as a verifier to an action point {% if action_point.partner %}related to:
     Implementing Partner: {{ action_point.partner }}{% endif %}
     Description: {{ action_point.description }}
 
@@ -21,7 +21,7 @@ defaults = {
     {% block content %}
     Dear {{ recipient }},<br/><br/>
 
-    You was assigned as a verifier to an action point {% if action_point.partner %}related to:
+    You were assigned as a verifier to an action point {% if action_point.partner %}related to:
     <br/>
     Implementing Partner: {{ action_point.partner }}{% endif %}<br/>
     Description: {{ action_point.description }}<br/>
