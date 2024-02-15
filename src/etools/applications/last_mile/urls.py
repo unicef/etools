@@ -1,6 +1,7 @@
 from django.urls import include, path
 
 from rest_framework_nested import routers
+from unicef_restlib.routers import NestedComplexRouter
 
 from etools.applications.last_mile import views
 
@@ -8,9 +9,11 @@ app_name = 'last_mile'
 
 root_api = routers.SimpleRouter()
 root_api.register(r'points-of-interest', views.PointOfInterestViewSet, basename='pois')
-root_api.register(r'transfers', views.TransferViewSet, basename='transfers')
-root_api.register(r'shipments', views.ShipmentUpdateView, basename='shipment-update')
+
+transfer_api = NestedComplexRouter(root_api, r'points-of-interest', lookup='point_of_interest')
+transfer_api.register(r'transfers', views.TransferViewSet, basename='transfers')
 
 urlpatterns = [
     path('', include(root_api.urls)),
+    path('', include(transfer_api.urls)),
 ]

@@ -4,6 +4,8 @@ from django.utils.translation import gettext_lazy as _
 
 from model_utils import FieldTracker
 from model_utils.models import TimeStampedModel
+from unicef_attachments.models import Attachment
+from unicef_djangolib.fields import CodedGenericRelation
 
 from etools.applications.locations.models import Location
 from etools.applications.partners.models import PartnerOrganization
@@ -88,43 +90,32 @@ def get_transfers_path(instance, filename):
 
 
 class Transfer(TimeStampedModel, models.Model):
-    PENDING = 'pending'
+    PENDING = 'incoming'
     CHECKED_IN = 'checked-in'
-    DISTRIBUTION = 'distribution'
-    WASTAGE = 'wastage'
-    WAYBILL = 'waybill'
-    DELIVERY = 'delivery'
+    CHECKED_OUT = 'checked_out'
+    COMPLETED = 'completed'
+    # DISTRIBUTION = 'distribution'
+    # WASTAGE = 'wastage'
+    # WAYBILL = 'waybill'
+    # DELIVERY = 'delivery'
 
     STATUS = (
-        (PENDING, _('Pending')),
+        (PENDING, _('Incoming')),
         (CHECKED_IN, _('Checked-In')),
-        (DISTRIBUTION, _('Distribution')),
-        (WASTAGE, _('WASTAGE')),
-        (WAYBILL, _('WAYBILL')),
-        (DELIVERY, _('Delivery'))
+        (CHECKED_OUT, _('Checked-Out')),
+        (COMPLETED, _('Completed')),
+        # (DISTRIBUTION, _('Distribution')),
+        # (WASTAGE, _('WASTAGE')),
+        # (WAYBILL, _('WAYBILL')),
+        # (DELIVERY, _('Delivery'))
     )
-    display_name = models.CharField(max_length=255, null=True, blank=True)
+    name = models.CharField(max_length=255, null=True, blank=True)
     sequence_number = models.IntegerField()
-    status = models.CharField(max_length=30, choices=STATUS)
-    reason = models.CharField(max_length=255, null=True, blank=True)
-
-    comment = models.TextField(null=True, blank=True)
-
-    proof_file = models.FileField(
-        upload_to=get_transfers_path,
-        max_length=255,
-        verbose_name=_('Proof File'),
-        blank=True,
-        null=True,
+    partner_organization = models.ForeignKey(
+        PartnerOrganization,
+        on_delete=models.CASCADE
     )
-    # TODO TBD swagger desc: upload for a transfer vs endpoint transfers/upload-waybill/<locationId>
-    # waybill_file = models.FileField(
-    #     upload_to=get_transfers_path,
-    #     max_length=255,
-    #     verbose_name=_('Waybill File'),
-    #     blank=True,
-    #     null=True,
-    # )
+    status = models.CharField(max_length=30, choices=STATUS, default=PENDING)
 
     checked_in_by = models.ForeignKey(
         User,
@@ -137,10 +128,6 @@ class Transfer(TimeStampedModel, models.Model):
         on_delete=models.SET_NULL,
         null=True, blank=True,
         related_name='transfer_checked_out'
-    )
-    partner_organization = models.ForeignKey(
-        PartnerOrganization,
-        on_delete=models.CASCADE
     )
     origin_point = models.ForeignKey(
         PointOfInterest,
@@ -155,77 +142,77 @@ class Transfer(TimeStampedModel, models.Model):
         related_name='destination_transfers'
     )
     destination_check_in_at = models.DateTimeField(null=True, blank=True)
-
-    # TODO TBD what check-in /out points are for?
-    # check_in_lat_lng = models.ForeignKey(LatLng, on_delete=models.SET_NULL, null=True, related_name='check_in_transfer_lat_lng')
-    # check_out_lat_lng = models.ForeignKey(LatLng, on_delete=models.SET_NULL, null=True, related_name='check_out_transfer_lat_lng')
-
-    def __str__(self):
-        return self.display_name
-
-
-class Shipment(TimeStampedModel, models.Model):
-    RELEASE_ORDER = 'release_order'
-    DIRECT_HANDOVER = 'direct_handover'
-    TYPE = (
-        (RELEASE_ORDER, _('Release Order')),
-        (DIRECT_HANDOVER, _('Direct Handover'))
-    )
-
-    shipment_type = models.CharField(max_length=30, choices=TYPE)
+    # TODO TBD : what to keep from shipment model
     purchase_order_id = models.CharField(max_length=255, null=True, blank=True)
     delivery_id = models.CharField(max_length=255, null=True, blank=True)
     delivery_item_id = models.CharField(max_length=255, null=True, blank=True)
     waybill_id = models.CharField(max_length=255, null=True, blank=True)
-
-    document_created_at = models.DateTimeField()
-    transfer = models.OneToOneField(
-        Transfer,
-        on_delete=models.CASCADE,
-        related_name='shipment'
-    )
     # Agreement ref + PD ref IRQ/PCA2020299/PD2022798
     e_tools_reference = models.CharField(max_length=255, null=True, blank=True)
 
+    reason = models.CharField(max_length=255, null=True, blank=True)
+    comment = models.TextField(null=True, blank=True)
+
+    proof_file = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Transfer Proof File'),
+        code='proof_of_transfer',
+        blank=True,
+        null=True
+    )
+
+    # TODO TBD swagger desc: upload for a transfer vs endpoint transfers/upload-waybill/<locationId>
+    # waybill_file = models.FileField(
+    #     upload_to=get_transfers_path,
+    #     max_length=255,
+    #     verbose_name=_('Waybill File'),
+    #     blank=True,
+    #     null=True,
+    # )
+    # check_in_lat_lng = models.ForeignKey(LatLng, on_delete=models.SET_NULL, null=True, related_name='check_in_transfer_lat_lng')
+    # check_out_lat_lng = models.ForeignKey(LatLng, on_delete=models.SET_NULL, null=True, related_name='check_out_transfer_lat_lng')
+
     def __str__(self):
-        return f'{self.transfer.display_name} - {self.shipment_type}'
+        return f'{self.partner_organization.name}: {self.name}/{self.sequence_number}'
+
+
+# class Shipment(TimeStampedModel, models.Model):
+#     RELEASE_ORDER = 'release_order'
+#     DIRECT_HANDOVER = 'direct_handover'
+#     TYPE = (
+#         (RELEASE_ORDER, _('Release Order')),
+#         (DIRECT_HANDOVER, _('Direct Handover'))
+#     )
 
 
 class Material(models.Model):
-    short_desc = models.CharField(max_length=255)
-    original_uom = models.CharField(max_length=255)
-    material_group_desc = models.CharField(max_length=255)
-    material_basic_desc = models.TextField(null=True, blank=True)
-    purchase_group = models.CharField(max_length=255)
-    purchase_group_desc = models.CharField(max_length=255)
+    short_description = models.CharField(max_length=255)
+    basic_description = models.TextField(null=True, blank=True)
+    group_description = models.CharField(max_length=255)
+
+    original_uom = models.CharField(max_length=255)  # choices or FK
+
+    purchase_group = models.CharField(max_length=255, null=True, blank=True)
+    purchase_group_description = models.CharField(max_length=255, null=True, blank=True)
     temperature_group = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
-        return self.short_desc
+        return self.short_description
 
 
-class UnitOfMeasurement(TimeStampedModel, models.Model):
-    # created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='unit_of_measurement_created')
-    # updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='unit_of_measurement_updated')
-    material = models.ForeignKey(Material, on_delete=models.CASCADE)
-    conversion_factor = models.IntegerField()
-
-    def __str__(self):
-        return self.material.short_desc
-
-
-class Item(models.Model):
-    SHIPMENT = 'shipment'
+class Item(TimeStampedModel, models.Model):
     TRANSFER = 'transfer'
     STORED = 'stored'
     REMOVED = 'removed'
 
     STATUS = (
-        (SHIPMENT, _('Shipment')),
         (TRANSFER, _('Transfer')),
         (STORED, _('Stored')),
         (REMOVED, _('Removed')),
     )
+    alternative_description = models.CharField(max_length=255, null=True, blank=True)
+    conversion_factor = models.IntegerField(null=True)
+
     status = models.CharField(max_length=255, choices=STATUS)
     quantity = models.IntegerField()
     batch_id = models.CharField(max_length=255, null=True, blank=True)
@@ -235,7 +222,7 @@ class Item(models.Model):
     preposition_qty = models.IntegerField(null=True, blank=True)
     amount_usd = models.FloatField(null=True, blank=True)
 
-    shipment_item_id = models.CharField(max_length=255)
+    # shipment_item_id = models.CharField(max_length=255)
 
     transfer = models.ForeignKey(
         Transfer,
@@ -243,10 +230,9 @@ class Item(models.Model):
         null=True, blank=True,
         related_name='items'
     )
-    unit = models.ForeignKey(
-        UnitOfMeasurement,
-        on_delete=models.SET_NULL,
-        null=True, blank=True,
+    material = models.ForeignKey(
+        Material,
+        on_delete=models.CASCADE,
         related_name='items'
     )
     location = models.ForeignKey(
@@ -257,7 +243,7 @@ class Item(models.Model):
     )
 
     def __str__(self):
-        return self.unit.material.short_desc
+        return f'{self.transfer.name}: {self.material.short_description} / qty {self.quantity}'
 
     # class MaterialDisplay(models.Model):
 #     created_at = models.DateTimeField(default=timezone.now)
@@ -279,10 +265,3 @@ class Item(models.Model):
 #
 #     class Meta:
 #         unique_together = ('transfer', 'item')
-#
-#
-# class Reference(models.Model):
-#     # Country = 'COUNTRY', -> tenants
-#     # LocationPrimaryType = 'LOCATION_PRIMARY_TYPE', -> POI Type
-#     name = models.CharField(max_length=255, unique=True)
-#     type = models.CharField(max_length=255)
