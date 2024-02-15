@@ -4,11 +4,11 @@ from etools.applications.core.renderers import FriendlyCSVRenderer, ListSeperato
 
 
 class ActionPointCSVRenderer(ListSeperatorCSVRenderMixin, FriendlyCSVRenderer):
-
     header = [
         'ref', 'ref_link', 'cp_output', 'partner', 'office', 'section', 'category', 'assigned_to', 'due_date',
         'status', 'high_priority', 'description', 'intervention', 'pd_ssfa', 'location', 'related_module',
         'assigned_by', 'date_of_completion', 'related_ref', 'related_object_str', 'related_object_url', 'action_taken',
+        'date_of_verification', 'verified_by', 'is_adequate', 'potential_verifier',
     ]
     labels = {
         'ref': _('Ref. #'),
@@ -32,5 +32,9 @@ class ActionPointCSVRenderer(ListSeperatorCSVRenderMixin, FriendlyCSVRenderer):
         'related_ref': _('Related Document No.'),
         'related_object_str': _('Task/Trip Activity Reference No.'),
         'related_object_url': _('Related Document URL'),
-        'action_taken': _('Actions Taken')
+        'action_taken': _('Actions Taken'),
+        'date_of_verification': _('Date of Verification'),
+        'verified_by': _('Verified By'),
+        'is_adequate': _('Verification: Is Adequate'),
+        'potential_verifier': _('Potential Verifier'),
     }
