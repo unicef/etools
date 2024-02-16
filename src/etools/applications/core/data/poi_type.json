@@ -3,70 +3,80 @@
     "model": "last_mile.pointofinteresttype",
     "pk": 1,
     "fields": {
-      "name": "Warehouse"
+      "name": "Warehouse",
+      "category": "warehouse"
     }
   },
   {
     "model": "last_mile.pointofinteresttype",
     "pk": 2,
     "fields": {
-      "name": "Distribution Point"
+      "name": "Distribution Point",
+      "category": "distribution_point"
     }
   },
   {
     "model": "last_mile.pointofinteresttype",
     "pk": 3,
     "fields": {
-      "name": "Hospital"
+      "name": "Hospital",
+      "category": "hospital"
     }
   },
   {
     "model": "last_mile.pointofinteresttype",
     "pk": 4,
     "fields": {
-      "name": "School"
+      "name": "School",
+      "category": "school"
     }
   },
   {
     "model": "last_mile.pointofinteresttype",
     "pk": 5,
     "fields": {
-      "name": "Government Office"
+      "name": "Government Office",
+      "category": "government_office"
     }
   },
   {
     "model": "last_mile.pointofinteresttype",
     "pk": 6,
     "fields": {
-      "name": "Refugee Camp"
+      "name": "Refugee Camp",
+      "category": "refugee_camp"
     }
   },
   {
     "model": "last_mile.pointofinteresttype",
     "pk": 7,
     "fields": {
-      "name": "Installation Point"
+      "name": "Installation Point",
+      "category": "installation_point"
     }
   },
   {
     "model": "last_mile.pointofinteresttype",
     "pk": 8,
     "fields": {
-      "name": "Medical Mission"
+      "name": "Medical Mission",
+      "category": "medical_mission"
     }
   },
   {
     "model": "last_mile.pointofinteresttype",
     "pk": 9,
     "fields": {
-      "name": "Private House"
+      "name": "Private House",
+      "category": "private_house"
     }
   },
   {
     "model": "last_mile.pointofinteresttype",
     "pk": 10,
     "fields": {
-      "name": "Other"
+      "name": "Other",
+      "category": "other"
     }
   }
 ]

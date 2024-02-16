@@ -5,19 +5,24 @@ from rest_framework import serializers
 from etools.applications.last_mile import models
 
 
+class PointOfInterestTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.PointOfInterestType
+        fields = '__all__'
+
+
 class PointOfInterestSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.PointOfInterest
-        fields = '__all__'
+        exclude = ('point',)
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
         data['country'] = connection.tenant.name
         data['region'] = instance.parent.name
-        data['name'] = instance.poi_type.name
-        data['description'] = instance.description
-        data['lat'] = instance.point.y
-        data['long'] = instance.point.x
+        data['poi_type'] = instance.poi_type.name
+        data['latitude'] = instance.point.y
+        data['longitude'] = instance.point.x
         return data
 
 

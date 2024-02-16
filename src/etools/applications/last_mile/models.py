@@ -13,7 +13,8 @@ from etools.applications.users.models import User
 
 
 class PointOfInterestType(models.Model):
-    name = models.CharField(verbose_name=_("Type Name"), max_length=32)
+    name = models.CharField(verbose_name=_("Poi Type Name"), max_length=32)
+    category = models.CharField(verbose_name=_("Poi Category"), max_length=32)
 
     def __str__(self):
         return self.name
@@ -94,29 +95,33 @@ class Transfer(TimeStampedModel, models.Model):
     CHECKED_IN = 'checked-in'
     CHECKED_OUT = 'checked_out'
     COMPLETED = 'completed'
-    # DISTRIBUTION = 'distribution'
-    # WASTAGE = 'wastage'
-    # WAYBILL = 'waybill'
-    # DELIVERY = 'delivery'
+
+    DISTRIBUTION = 'distribution'
+    WASTAGE = 'wastage'
+    WAYBILL = 'waybill'
+    DELIVERY = 'delivery'
 
     STATUS = (
         (PENDING, _('Incoming')),
         (CHECKED_IN, _('Checked-In')),
         (CHECKED_OUT, _('Checked-Out')),
-        (COMPLETED, _('Completed')),
-        # (DISTRIBUTION, _('Distribution')),
-        # (WASTAGE, _('WASTAGE')),
-        # (WAYBILL, _('WAYBILL')),
-        # (DELIVERY, _('Delivery'))
+        (COMPLETED, _('Completed'))
+    )
+    TRANSFER_TYPE = (
+        (DISTRIBUTION, _('Distribution')),
+        (WASTAGE, _('Wastage')),
+        (WAYBILL, _('Waybill')),
+        (DELIVERY, _('Delivery'))
     )
     name = models.CharField(max_length=255, null=True, blank=True)
+    transfer_type = models.CharField(max_length=30, choices=TRANSFER_TYPE, null=True)
+    status = models.CharField(max_length=30, choices=STATUS, default=PENDING)
+
     sequence_number = models.IntegerField()
     partner_organization = models.ForeignKey(
         PartnerOrganization,
         on_delete=models.CASCADE
     )
-    status = models.CharField(max_length=30, choices=STATUS, default=PENDING)
-
     checked_in_by = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
@@ -220,7 +225,7 @@ class Item(TimeStampedModel, models.Model):
     comment = models.TextField(null=True, blank=True)
     is_prepositioned = models.BooleanField(null=True, blank=True)
     preposition_qty = models.IntegerField(null=True, blank=True)
-    amount_usd = models.FloatField(null=True, blank=True)
+    amount_usd = models.DecimalField(max_digits=20, decimal_places=4, null=True, blank=True)
 
     # shipment_item_id = models.CharField(max_length=255)
 

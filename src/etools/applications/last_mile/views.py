@@ -12,11 +12,16 @@ from rest_framework.filters import SearchFilter
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.viewsets import GenericViewSet, ModelViewSet
+from rest_framework.viewsets import GenericViewSet, ModelViewSet, ReadOnlyModelViewSet
 from unicef_restlib.pagination import DynamicPageNumberPagination
 from unicef_restlib.views import NestedViewSetMixin
 
 from etools.applications.last_mile import models, serializers
+
+
+class PointOfInterestTypeViewSet(ReadOnlyModelViewSet):
+    queryset = models.PointOfInterestType.objects.all()
+    serializer_class = serializers.PointOfInterestTypeSerializer
 
 
 class PointOfInterestViewSet(ModelViewSet):
