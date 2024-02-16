@@ -34,6 +34,7 @@ class PointOfInterestViewSet(ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     filter_backends = (DjangoFilterBackend, SearchFilter)
+    filter_fields = ('poi_type',)
     search_fields = ('name', 'p_code', 'parent__name', 'parent__p_code')
 
     @action(detail=True, methods=['get'], url_path='items', serializer_class=serializers.ItemSerializer)
