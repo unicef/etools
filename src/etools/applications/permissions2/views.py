@@ -60,7 +60,11 @@ class FSMTransitionActionMixin:
 
         transition_serializer = self.get_transition_serializer_class(instance_action)
         if transition_serializer:
-            serializer = transition_serializer(data=request.data, context=self.get_serializer_context())
+            serializer = transition_serializer(
+                instance=instance,
+                data=request.data,
+                context=self.get_serializer_context(),
+            )
             serializer.is_valid(raise_exception=True)
             instance_action(**serializer.validated_data)
         else:
