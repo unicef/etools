@@ -28,7 +28,7 @@ class PointOfInterestViewSet(ModelViewSet):
     serializer_class = serializers.PointOfInterestSerializer
     queryset = models.PointOfInterest.objects\
         .select_related('parent')\
-        .prefetch_related('partner_organization')\
+        .prefetch_related('partner_organizations')\
         .filter(is_active=True, private=True)  # TODO also filter by partner organization
     pagination_class = DynamicPageNumberPagination
     permission_classes = [IsAuthenticated]
@@ -36,6 +36,12 @@ class PointOfInterestViewSet(ModelViewSet):
     filter_backends = (DjangoFilterBackend, SearchFilter)
     filter_fields = ('poi_type',)
     search_fields = ('name', 'p_code', 'parent__name', 'parent__p_code')
+
+    def get_queryset(self):
+        partner_organization = getattr(self.request.user.profile.organization, 'partner', None)
+        if partner_organization:
+            return super().get_queryset().filter(partner_organizations=partner_organization)
+        return models.PointOfInterest.objects.none()
 
     @action(detail=True, methods=['get'], url_path='items', serializer_class=serializers.ItemSerializer)
     def items(self, request, *args, pk=None, **kwargs):

@@ -21,9 +21,10 @@ class PointOfInterestType(models.Model):
 
 
 class PointOfInterest(models.Model):
-    partner_organization = models.ManyToManyField(
+    partner_organizations = models.ManyToManyField(
         PartnerOrganization,
-        related_name='points_of_interest'
+        related_name='points_of_interest',
+        blank=True
     )
     parent = models.ForeignKey(
         Location,

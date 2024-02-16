@@ -14,7 +14,7 @@ class PointOfInterestTypeSerializer(serializers.ModelSerializer):
 class PointOfInterestSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.PointOfInterest
-        exclude = ('point',)
+        exclude = ('partner_organizations', 'point')
 
     def to_representation(self, instance):
         data = super().to_representation(instance)

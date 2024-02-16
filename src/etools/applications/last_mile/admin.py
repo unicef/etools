@@ -9,7 +9,7 @@ class PointOfInterestAdmin(admin.ModelAdmin):
     list_select_related = ('parent',)
     list_filter = ('private', 'is_active')
     search_fields = ('name', )
-    raw_id_fields = ('partner_organization',)
+    raw_id_fields = ('partner_organizations',)
 
 
 @admin.register(models.Transfer)
