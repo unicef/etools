@@ -524,23 +524,6 @@ class PMPInterventionSignatureView(PMPInterventionActionView):
             request.data["review_date_prc"] = timezone.now().date()
 
         response = super().update(request, *args, **kwargs)
-
-        if response.status_code == 200:
-            # send notification
-            recipients = set([
-                u.email for u in pd.unicef_users_involved
-            ])
-            context = {
-                "reference_number": pd.reference_number,
-                "partner_name": str(pd.agreement.partner)
-            }
-            self.send_notification(
-                pd,
-                recipients=recipients,
-                template_name='partners/intervention/unicef_signature',
-                context=context
-            )
-
         return response
 
 
