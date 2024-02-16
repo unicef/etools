@@ -1,6 +1,8 @@
 from django.db import connection
 
 from rest_framework import serializers
+from unicef_attachments.fields import AttachmentSingleFileField
+from unicef_attachments.serializers import AttachmentSerializerMixin
 
 from etools.applications.last_mile import models
 
@@ -92,31 +94,22 @@ class ItemSerializer(serializers.ModelSerializer):
 
 
 class TransferSerializer(serializers.ModelSerializer):
+    proof_file = AttachmentSingleFileField()
+
     class Meta:
         model = models.Transfer
         fields = '__all__'
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-    #     data['displayName'] = data['display_name']
-    #     data['sequenceNumber'] = data['sequence_number']
-    #     data['status'] = data['status'].replace('-', '_').upper()
-    #     data['createdAt'] = data['created']
-    #     data['orgId'] = instance.partner_organization.id
-    #     # data['shipment'] = ShipmentSerializer(instance.shipment).data
-    #     data['originLocationId'] = data['origin_point']
-    #     data['originCheckOutAt'] = 'data[originCheckOutAt] is missing from model'
-    #     data['destinationLocationId'] = data['destination_point']
-    #     data['destinationCheckOutAt'] = data['destination_check_in_at']
         data['items'] = ItemSerializer(instance.items.all(), many=True).data
         return data
 
 
-class TransferCheckinSerializer(serializers.ModelSerializer):
-    name = serializers.CharField(source='display_name', required=False)
-    date = serializers.DateTimeField(source='destination_check_in_at', required=True)
-    locationId = serializers.IntegerField()
+class TransferCheckinSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
+    name = serializers.CharField(required=False, allow_blank=False, allow_null=False,)
+    proof_file = AttachmentSingleFileField(required=True, allow_null=False)
 
     class Meta:
         model = models.Transfer
-        fields = ('name', 'date', 'comment', 'reason', 'locationId')
+        fields = ('name', 'comment', 'reason', 'proof_file')

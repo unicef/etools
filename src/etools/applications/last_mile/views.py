@@ -2,14 +2,11 @@ from functools import cache
 
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
-from django.utils.translation import gettext_lazy as _
 
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, status
 from rest_framework.decorators import action
-from rest_framework.exceptions import ValidationError
 from rest_framework.filters import SearchFilter
-from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ModelViewSet, ReadOnlyModelViewSet
@@ -29,7 +26,7 @@ class PointOfInterestViewSet(ModelViewSet):
     queryset = models.PointOfInterest.objects\
         .select_related('parent')\
         .prefetch_related('partner_organizations')\
-        .filter(is_active=True, private=True)  # TODO also filter by partner organization
+        .filter(is_active=True, private=True)
     pagination_class = DynamicPageNumberPagination
     permission_classes = [IsAuthenticated]
 
@@ -56,7 +53,7 @@ class TransferViewSet(
     GenericViewSet
 ):
     serializer_class = serializers.TransferSerializer
-    queryset = models.Transfer.objects.select_related('partner_organization')
+    queryset = models.Transfer.objects.select_related('partner_organization').prefetch_related('items')
 
     pagination_class = DynamicPageNumberPagination
     permission_classes = [IsAuthenticated]
@@ -68,6 +65,10 @@ class TransferViewSet(
     @cache
     def get_parent_object(self):
         return super().get_parent_object()
+
+    def get_object(self):
+        # validate against point_of_interest_pk
+        return get_object_or_404(models.Transfer, pk=self.kwargs['pk'])
 
     def paginate_response(self, qs):
         page = self.paginate_queryset(qs)
@@ -82,23 +83,17 @@ class TransferViewSet(
         location = self.get_parent_object()
         qs = super().get_queryset().filter(status=models.Transfer.PENDING, items__status='transfer')
 
-        qs_context = {'destination_point': location}
-
-        if location.poi_type.name.lower() == 'warehouse':
-            warehouse_context = {'destination_point__isnull': True}
-            qs = qs.filter(Q(**qs_context) | Q(**warehouse_context))
+        if location.poi_type.category.lower() == 'warehouse':
+            qs = qs.filter(Q(destination_point=location) | Q(destination_point__isnull=True))
         else:
-            qs = qs.filter(qs_context)
+            qs = qs.filter(destination_point=location)
 
         return self.paginate_response(qs)
 
     @action(detail=False, methods=['get'], url_path='checked-in')
     def checked_in(self, request, *args, **kwargs):
         location = self.get_parent_object()
-        qs = super().get_queryset().filter(
-            destination_point=location,
-            status=models.Transfer.CHECKED_IN
-        )
+        qs = super().get_queryset().filter(destination_point=location, status=models.Transfer.CHECKED_IN)
         # shipment_context = {'origin_point__isnull': True,
         # }
         # transfer_context = {
@@ -113,31 +108,34 @@ class TransferViewSet(
 
     @action(detail=False, methods=['get'], url_path='outgoing')
     def outgoing(self, request, *args, **kwargs):
-        qs = self.get_queryset().filter(status=models.Transfer.PENDING)
+        location = self.get_parent_object()
+        qs = self.get_queryset()\
+            .filter(status=models.Transfer.PENDING, origin_point=location)\
+            .exclude(destination_point=location)
 
-        if 'locationId' in kwargs and kwargs['locationId']:
-            qs = qs.filter(origin_point=kwargs['locationId']).exclude(destination_point_id=kwargs['locationId'])
         return self.paginate_response(qs)
 
     @action(detail=False, methods=['get'], url_path='completed')
     def completed(self, request, *args, **kwargs):
-        qs = self.get_queryset().filter(status=models.Transfer.COMPLETED)
+        location = self.get_parent_object()
+        qs = self.get_queryset()\
+            .filter(status=models.Transfer.COMPLETED, origin_point=location)\
+            .exclude(destination_point=location)
 
-        if 'locationId' in kwargs and kwargs['locationId']:
-            qs = qs.filter(origin_point=kwargs['locationId']).exclude(destination_point_id=kwargs['locationId'])
         return self.paginate_response(qs)
-
-    @action(detail=True, methods=['patch'], url_path='upload-proof',
-            parser_classes=(FormParser, MultiPartParser,))
-    def upload_proof(self, request, pk=None):
-        transfer = get_object_or_404(models.Transfer, pk=pk)
-        proof_file = request.data.get('file')
-        transfer.proof_file.save(proof_file.name, proof_file)
-        return Response(serializers.TransferSerializer(transfer).data, status=status.HTTP_204_NO_CONTENT)
+    #
+    # @action(detail=True, methods=['patch'], url_path='upload-proof',
+    #         parser_classes=(FormParser, MultiPartParser,))
+    # def upload_proof(self, request, pk=None):
+    #     transfer = get_object_or_404(models.Transfer, pk=pk)
+    #     proof_file = request.data.get('file')
+    #     transfer.proof_file.save(proof_file.name, proof_file)
+    #     return Response(serializers.TransferSerializer(transfer).data, status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=True, methods=['patch'], url_path='check-in',
             serializer_class=serializers.TransferCheckinSerializer)
-    def check_in(self, request, pk=None):
+    def check_in(self, request, pk=None, **kwargs):
+        location = self.get_parent_object()
         transfer = get_object_or_404(models.Transfer, pk=pk)
 
         serializer = serializers.TransferCheckinSerializer(instance=transfer, data=request.data, partial=True)
@@ -148,6 +146,6 @@ class TransferViewSet(
         transfer.checked_in_by = request.user
         transfer.save(update_fields=['status', 'checked_in_by'])
 
-        transfer.items.update(location_id=serializer.validated_data['locationId'])
+        transfer.items.update(location=location)
 
         return Response(serializers.TransferSerializer(transfer).data, status=status.HTTP_200_OK)
