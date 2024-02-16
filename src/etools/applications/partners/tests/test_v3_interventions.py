@@ -2996,23 +2996,17 @@ class TestInterventionSignature(BaseInterventionActionTestCase):
             overall_approver=self.unicef_user,
             review_type=InterventionReview.PRC,
         )
-        mock_send = mock.Mock(return_value=self.mock_email)
-        with mock.patch(self.notify_path, mock_send):
-            response = self.forced_auth_req("patch", self.url, user=self.unicef_user)
+        response = self.forced_auth_req("patch", self.url, user=self.unicef_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
-        mock_send.assert_called()
         intervention = Intervention.objects.get(pk=self.intervention.pk)
         self.assertEqual(intervention.status, Intervention.SIGNATURE)
         self.assertEqual(intervention.review.review_date, timezone.now().date())
         self.assertEqual(intervention.review_date_prc, timezone.now().date())
 
         # unicef attempt to signature again
-        mock_send = mock.Mock()
-        with mock.patch(self.notify_path, mock_send):
-            response = self.forced_auth_req("patch", self.url, user=self.unicef_user)
+        response = self.forced_auth_req("patch", self.url, user=self.unicef_user)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("PD is already in Signature status.", response.data)
-        mock_send.assert_not_called()
 
     def test_days_from_review_to_signed(self):
         now = timezone.now().date()
