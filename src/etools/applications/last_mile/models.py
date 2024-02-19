@@ -92,21 +92,21 @@ def get_transfers_path(instance, filename):
 
 
 class Transfer(TimeStampedModel, models.Model):
-    PENDING = 'incoming'
-    CHECKED_IN = 'checked-in'
-    CHECKED_OUT = 'checked_out'
-    COMPLETED = 'completed'
+    INCOMING = 'INCOMING'
+    CHECKED_IN = 'CHECKED_IN'
+    CHECKED_OUT = 'CHECKED_OUT'
+    COMPLETED = 'COMPLETED'
 
-    DISTRIBUTION = 'distribution'
-    WASTAGE = 'wastage'
-    WAYBILL = 'waybill'
-    DELIVERY = 'delivery'
+    DISTRIBUTION = 'DISTRIBUTION'
+    WASTAGE = 'WASTAGE'
+    WAYBILL = 'WAYBILL'
+    DELIVERY = 'WAYBILL'
 
-    RELEASE_ORDER = 'release_order'
-    DIRECT_HANDOVER = 'direct_handover'
+    RELEASE_ORDER = 'RELEASE_ORDER'
+    DIRECT_HANDOVER = 'DIRECT_HANDOVER'
 
     STATUS = (
-        (PENDING, _('Incoming')),
+        (INCOMING, _('Incoming')),
         (CHECKED_IN, _('Checked-In')),
         (CHECKED_OUT, _('Checked-Out')),
         (COMPLETED, _('Completed'))
@@ -126,7 +126,7 @@ class Transfer(TimeStampedModel, models.Model):
     name = models.CharField(max_length=255, null=True, blank=True)
     transfer_type = models.CharField(max_length=30, choices=TRANSFER_TYPE, null=True)
     shipment_type = models.CharField(max_length=30, choices=SHIPMENT_TYPE, null=True)
-    status = models.CharField(max_length=30, choices=STATUS, default=PENDING)
+    status = models.CharField(max_length=30, choices=STATUS, default=INCOMING)
 
     sequence_number = models.IntegerField()
     partner_organization = models.ForeignKey(
@@ -217,7 +217,9 @@ class Item(TimeStampedModel, models.Model):
         (STORED, _('Stored')),
         (REMOVED, _('Removed')),
     )
-    alternative_description = models.CharField(max_length=255, null=True, blank=True)
+    description = models.CharField(max_length=255, null=True, blank=True)
+    unit = models.CharField(max_length=30, null=True, blank=True)
+
     conversion_factor = models.IntegerField(null=True)
 
     status = models.CharField(max_length=255, choices=STATUS)

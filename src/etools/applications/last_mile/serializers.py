@@ -5,6 +5,7 @@ from unicef_attachments.fields import AttachmentSingleFileField
 from unicef_attachments.serializers import AttachmentSerializerMixin
 
 from etools.applications.last_mile import models
+from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.users.serializers import MinimalUserSerializer
 
 
@@ -46,43 +47,17 @@ class MaterialSerializer(serializers.ModelSerializer):
         model = models.Material
         fields = '__all__'
 
-    # def to_representation(self, instance):
-    #     data = super().to_representation(instance)
-    #     data['shortDesc'] = data['short_description']
-    #     data['originalUom'] = data['original_uom']
-    #     data['materialGroupDesc'] = data['material_group_desc']
-    #     data['materialBasicDesc'] = data['material_basic_desc']
-    #     data['purchaseGroup'] = data['purchase_group']
-    #     data['purchaseGroupDesc'] = data['purchase_group_desc']
-    #     data['temperatureGroup'] = data['temperature_group']
-    #     # data['units'] = [self.to_representation(instance).data]
-    #     # data['materialDisplays'] = [{"displayDesc": f"{data['short_desc']}"}]
-    #     return data
-
 
 class ItemSerializer(serializers.ModelSerializer):
+    location = PointOfInterestLightSerializer(read_only=True)
+
     class Meta:
         model = models.Item
         fields = '__all__'
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-    #     data['status'] = data['status'].upper()
-    #     data['expiryDate'] = data['expiry_date']
-    #     data['transferId'] = data['transfer']
-    #     data['unitId'] = data['unit']
-    #     data['locationId'] = data['location']
-    #     # data['shipmentId'] = instance.transfer.shipment.id
-    #     data['shipmentItemId'] = data['shipment_item_id']
-    #     data['batchId'] = data['batch_id']
-    #     data['isPrepositioned'] = data['is_prepositioned']
-    #     data['prepositionQty'] = data['preposition_qty']
-    #     data['transferDisplayName'] = instance.transfer.display_name
-    #     data['amountUsd'] = data['amount_usd']
         data['material'] = MaterialSerializer(instance.material).data
-    #     data['materialId'] = instance.unit.material.id
-    #     data['materialDesc'] = instance.unit.material.short_desc
-    #
         return data
 
 
@@ -112,6 +87,7 @@ class TransferSerializer(serializers.ModelSerializer):
     proof_file = AttachmentSingleFileField()
     checked_in_by = MinimalUserSerializer(read_only=True)
     checked_out_by = MinimalUserSerializer(read_only=True)
+    partner_organization = MinimalPartnerOrganizationListSerializer(read_only=True)
 
     class Meta:
         model = models.Transfer

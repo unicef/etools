@@ -81,7 +81,7 @@ class TransferViewSet(
     @action(detail=False, methods=['get'], url_path='incoming')
     def incoming(self, request, *args, **kwargs):
         location = self.get_parent_object()
-        qs = super().get_queryset().filter(status=models.Transfer.PENDING, items__status='transfer')
+        qs = super().get_queryset().filter(status=models.Transfer.INCOMING, items__status='transfer').distinct()
 
         if location.poi_type.category.lower() == 'warehouse':
             qs = qs.filter(Q(destination_point=location) | Q(destination_point__isnull=True))
@@ -110,7 +110,7 @@ class TransferViewSet(
     def outgoing(self, request, *args, **kwargs):
         location = self.get_parent_object()
         qs = self.get_queryset()\
-            .filter(status=models.Transfer.PENDING, origin_point=location)\
+            .filter(status=models.Transfer.INCOMING, origin_point=location)\
             .exclude(destination_point=location)
 
         return self.paginate_response(qs)
