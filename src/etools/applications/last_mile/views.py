@@ -124,9 +124,9 @@ class TransferViewSet(
 
         return self.paginate_response(qs)
 
-    @action(detail=True, methods=['patch'], url_path='check-in',
+    @action(detail=True, methods=['patch'], url_path='new-check-in',
             serializer_class=serializers.TransferCheckinSerializer)
-    def check_in(self, request, pk=None, **kwargs):
+    def new_check_in(self, request, pk=None, **kwargs):
         location = self.get_parent_object()
         transfer = get_object_or_404(models.Transfer, pk=pk)
 
