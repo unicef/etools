@@ -123,14 +123,6 @@ class TransferViewSet(
             .exclude(destination_point=location)
 
         return self.paginate_response(qs)
-    #
-    # @action(detail=True, methods=['patch'], url_path='upload-proof',
-    #         parser_classes=(FormParser, MultiPartParser,))
-    # def upload_proof(self, request, pk=None):
-    #     transfer = get_object_or_404(models.Transfer, pk=pk)
-    #     proof_file = request.data.get('file')
-    #     transfer.proof_file.save(proof_file.name, proof_file)
-    #     return Response(serializers.TransferSerializer(transfer).data, status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=True, methods=['patch'], url_path='check-in',
             serializer_class=serializers.TransferCheckinSerializer)

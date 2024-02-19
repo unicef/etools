@@ -14,6 +14,8 @@ class PointOfInterestTypeSerializer(serializers.ModelSerializer):
 
 
 class PointOfInterestSerializer(serializers.ModelSerializer):
+    poi_type = PointOfInterestTypeSerializer(read_only=True)
+
     class Meta:
         model = models.PointOfInterest
         exclude = ('partner_organizations', 'point')
@@ -22,7 +24,6 @@ class PointOfInterestSerializer(serializers.ModelSerializer):
         data = super().to_representation(instance)
         data['country'] = connection.tenant.name
         data['region'] = instance.parent.name
-        data['poi_type'] = instance.poi_type.name
         data['latitude'] = instance.point.y
         data['longitude'] = instance.point.x
         return data
