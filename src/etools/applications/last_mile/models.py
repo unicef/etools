@@ -102,6 +102,9 @@ class Transfer(TimeStampedModel, models.Model):
     WAYBILL = 'waybill'
     DELIVERY = 'delivery'
 
+    RELEASE_ORDER = 'release_order'
+    DIRECT_HANDOVER = 'direct_handover'
+
     STATUS = (
         (PENDING, _('Incoming')),
         (CHECKED_IN, _('Checked-In')),
@@ -114,8 +117,15 @@ class Transfer(TimeStampedModel, models.Model):
         (WAYBILL, _('Waybill')),
         (DELIVERY, _('Delivery'))
     )
+
+    SHIPMENT_TYPE = (
+        (RELEASE_ORDER, _('Release Order')),
+        (DIRECT_HANDOVER, _('Direct Handover'))
+    )
+
     name = models.CharField(max_length=255, null=True, blank=True)
     transfer_type = models.CharField(max_length=30, choices=TRANSFER_TYPE, null=True)
+    shipment_type = models.CharField(max_length=30, choices=SHIPMENT_TYPE, null=True)
     status = models.CharField(max_length=30, choices=STATUS, default=PENDING)
 
     sequence_number = models.IntegerField()
@@ -180,15 +190,6 @@ class Transfer(TimeStampedModel, models.Model):
 
     def __str__(self):
         return f'{self.partner_organization.name}: {self.name}/{self.sequence_number}'
-
-
-# class Shipment(TimeStampedModel, models.Model):
-#     RELEASE_ORDER = 'release_order'
-#     DIRECT_HANDOVER = 'direct_handover'
-#     TYPE = (
-#         (RELEASE_ORDER, _('Release Order')),
-#         (DIRECT_HANDOVER, _('Direct Handover'))
-#     )
 
 
 class Material(models.Model):

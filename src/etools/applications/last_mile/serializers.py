@@ -5,6 +5,7 @@ from unicef_attachments.fields import AttachmentSingleFileField
 from unicef_attachments.serializers import AttachmentSerializerMixin
 
 from etools.applications.last_mile import models
+from etools.applications.users.serializers import MinimalUserSerializer
 
 
 class PointOfInterestTypeSerializer(serializers.ModelSerializer):
@@ -26,6 +27,17 @@ class PointOfInterestSerializer(serializers.ModelSerializer):
         data['region'] = instance.parent.name
         data['latitude'] = instance.point.y
         data['longitude'] = instance.point.x
+        return data
+
+
+class PointOfInterestLightSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.PointOfInterest
+        fields = ('id', 'name', 'p_code', 'description')
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['region'] = instance.parent.name
         return data
 
 
@@ -95,7 +107,11 @@ class ItemSerializer(serializers.ModelSerializer):
 
 
 class TransferSerializer(serializers.ModelSerializer):
+    origin_point = PointOfInterestLightSerializer(read_only=True)
+    destination_point = PointOfInterestLightSerializer(read_only=True)
     proof_file = AttachmentSingleFileField()
+    checked_in_by = MinimalUserSerializer(read_only=True)
+    checked_out_by = MinimalUserSerializer(read_only=True)
 
     class Meta:
         model = models.Transfer
