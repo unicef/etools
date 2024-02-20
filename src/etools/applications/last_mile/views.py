@@ -152,3 +152,8 @@ class TransferViewSet(
         transfer.items.update(location=location)
 
         return Response(serializers.TransferSerializer(transfer).data, status=status.HTTP_200_OK)
+
+
+class ItemUpdateViewSet(mixins.UpdateModelMixin, GenericViewSet):
+    queryset = models.Item.objects.all()
+    serializer_class = serializers.ItemUpdateSerializer

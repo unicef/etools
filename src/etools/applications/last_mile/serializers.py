@@ -58,6 +58,10 @@ class ItemSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         data['material'] = MaterialSerializer(instance.material).data
+        if instance.description:
+            data['material']['short_description'] = instance.description
+        if instance.uom:
+            data['material']['original_uom'] = instance.uom
         return data
 
 
@@ -106,3 +110,9 @@ class TransferCheckinSerializer(AttachmentSerializerMixin, serializers.ModelSeri
     class Meta:
         model = models.Transfer
         fields = ('name', 'comment', 'reason', 'proof_file')
+
+
+class ItemUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Item
+        fields = ('description', 'uom', 'expiry_date', 'batch_id',  'quantity')

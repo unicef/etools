@@ -220,7 +220,7 @@ class Item(TimeStampedModel, models.Model):
         (REMOVED, _('Removed')),
     )
     description = models.CharField(max_length=255, null=True, blank=True)
-    unit = models.CharField(max_length=30, null=True, blank=True)
+    uom = models.CharField(max_length=30, null=True, blank=True)
 
     conversion_factor = models.IntegerField(null=True)
 
