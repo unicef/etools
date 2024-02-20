@@ -24,7 +24,7 @@ from etools.applications.partners.tests.factories import (
     InterventionSupplyItemFactory,
     PartnerFactory,
 )
-from etools.applications.reports.models import InterventionActivity, ResultType
+from etools.applications.reports.models import InterventionActivity, ResultType, SpecialReportingRequirement
 from etools.applications.reports.tests.factories import (
     AppliedIndicatorFactory,
     InterventionActivityFactory,
@@ -33,6 +33,7 @@ from etools.applications.reports.tests.factories import (
     ReportingRequirementFactory,
     ResultFactory,
     SectionFactory,
+    SpecialReportingRequirementFactory,
 )
 from etools.applications.users.tests.factories import UserFactory
 
@@ -632,7 +633,8 @@ class AmendmentTestCase(BaseTenantTestCase):
         self.assertIn('supply_items', amendment.difference)
         self.assertEqual(self.active_intervention.supply_items.count(), supply_items_count_original + 2)
         self.assertTrue(self.active_intervention.supply_items.filter(pk=original_supply_item.pk).exists())
-        self.assertEqual(self.active_intervention.supply_items.filter(result__cp_output=result_link.cp_output).count(), 2)
+        self.assertEqual(self.active_intervention.supply_items.filter(result__cp_output=result_link.cp_output).count(),
+                         2)
 
     def test_update_budget_items(self):
         item = InterventionManagementBudgetItemFactory(
@@ -747,7 +749,6 @@ class AmendmentTestCase(BaseTenantTestCase):
         ignored_fields = {
             'partners.Intervention': [
                 'frs',
-                'special_reporting_requirements',
                 'quarters',
                 'amendments',
                 'amendment',
@@ -772,6 +773,7 @@ class AmendmentTestCase(BaseTenantTestCase):
                 'history',
             ],
             'reports.ReportingRequirement': ['intervention'],
+            'reports.SpecialReportingRequirement': ['intervention'],
             'reports.AppliedIndicator': ['lower_result'],
             # time_frames are being copied separately as quarters
             'reports.InterventionActivity': ['result', 'time_frames'],
@@ -879,3 +881,38 @@ class AmendmentTestCase(BaseTenantTestCase):
         self.assertNotEqual(self.active_intervention.budget_owner, old_budget_owner)
         self.assertEqual(active_amendment.amended_intervention.budget_owner, self.active_intervention.budget_owner)
         self.assertEqual(completed_amendment.amended_intervention.budget_owner, old_budget_owner)
+
+    def test_sync_special_reporting_requirements(self):
+        amendment = InterventionAmendmentFactory(
+            intervention=self.active_intervention,
+            kind=InterventionAmendment.KIND_NORMAL,
+        )
+        self.active_intervention.budget_owner = UserFactory()
+        self.active_intervention.save()
+
+        self.assertEqual(SpecialReportingRequirement.objects.filter(intervention=self.active_intervention).count(), 0)
+
+        amendment = InterventionAmendment.objects.get(pk=amendment.pk)
+        requirement = SpecialReportingRequirementFactory(intervention=amendment.amended_intervention)
+
+        difference = amendment.get_difference()
+        self.assertDictEqual(
+            difference,
+            {
+                'special_reporting_requirements': {
+                    'type': 'one_to_many',
+                    'diff': {
+                        'create': [
+                            {'name': str(requirement), 'pk': requirement.pk}
+                        ],
+                        'remove': [],
+                        'update': [],
+                    },
+                }
+            }
+        )
+
+        amendment.merge_amendment()
+
+        self.active_intervention.refresh_from_db()
+        self.assertEqual(SpecialReportingRequirement.objects.filter(intervention=self.active_intervention).count(), 1)
