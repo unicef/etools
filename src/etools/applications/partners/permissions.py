@@ -23,6 +23,8 @@ SENIOR_MANAGEMENT_GROUP = 'Senior Management Team'
 PARTNERSHIP_MANAGER_GROUP = 'Partnership Manager'
 REPRESENTATIVE_OFFICE_GROUP = 'Representative Office'
 PRC_SECRETARY = 'PRC Secretary'
+COUNTRY_OFFICE_ADMINISTRATOR = 'Country Office Administrator'
+RSS = 'RSS'
 
 
 class PMPPermissions:

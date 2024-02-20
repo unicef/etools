@@ -29,7 +29,8 @@ class QuestionOptionsInline(admin.StackedInline):
 
 @admin.register(Question)
 class QuestionAdmin(admin.ModelAdmin):
-    list_display = ('text', 'level', 'methods_list', 'is_hact')
+    list_display = ('text', 'level', 'methods_list', 'is_hact', 'order')
+    list_editable = ('order',)
     search_fields = ('text',)
     list_filter = ('level', 'methods', 'sections', 'is_hact')
     inlines = (QuestionOptionsInline,)

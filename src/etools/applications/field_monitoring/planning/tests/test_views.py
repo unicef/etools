@@ -874,25 +874,21 @@ class InterventionsViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTen
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_list(self):
-        InterventionFactory(status=Intervention.DRAFT)
         valid_interventions = [
-            InterventionFactory(status=Intervention.SIGNED),
             InterventionFactory(status=Intervention.ACTIVE),
             InterventionFactory(status=Intervention.ENDED),
-            InterventionFactory(status=Intervention.IMPLEMENTED),
             InterventionFactory(status=Intervention.CLOSED),
+            InterventionFactory(status=Intervention.SUSPENDED),
+            InterventionFactory(status=Intervention.TERMINATED),
         ]
-        InterventionFactory(status=Intervention.SUSPENDED)
-        InterventionFactory(status=Intervention.TERMINATED)
-
         with self.assertNumQueries(10):  # 3 basic + 7 prefetches from InterventionManager
             self._test_list(self.unicef_user, valid_interventions)
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_filter_by_outputs(self):
-        InterventionFactory(status=Intervention.SIGNED)
+        InterventionFactory(status=Intervention.ACTIVE)
         result_link = InterventionResultLinkFactory(
-            intervention__status=Intervention.SIGNED,
+            intervention__status=Intervention.ACTIVE,
             cp_output__result_type__name=ResultType.OUTPUT
         )
 
@@ -903,8 +899,8 @@ class InterventionsViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTen
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_filter_by_partners(self):
-        InterventionFactory(status=Intervention.SIGNED)
-        result_link = InterventionResultLinkFactory(intervention__status=Intervention.SIGNED)
+        InterventionFactory(status=Intervention.ACTIVE)
+        result_link = InterventionResultLinkFactory(intervention__status=Intervention.ACTIVE)
 
         self._test_list(
             self.unicef_user, [result_link.intervention],
@@ -913,7 +909,7 @@ class InterventionsViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTen
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_linked_data(self):
-        result_link = InterventionResultLinkFactory(intervention__status=Intervention.SIGNED)
+        result_link = InterventionResultLinkFactory(intervention__status=Intervention.ACTIVE)
 
         response = self._test_list(self.unicef_user, [result_link.intervention])
 
