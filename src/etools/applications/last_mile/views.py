@@ -44,6 +44,11 @@ class PointOfInterestViewSet(ModelViewSet):
     @action(detail=True, methods=['get'], url_path='items', serializer_class=serializers.ItemSerializer)
     def items(self, request, *args, pk=None, **kwargs):
         qs = models.Item.objects.filter(location_id=pk)
+        page = self.paginate_queryset(qs)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
         return Response(self.serializer_class(qs, many=True).data)
 
 
