@@ -100,7 +100,7 @@ class Transfer(TimeStampedModel, models.Model):
     DISTRIBUTION = 'DISTRIBUTION'
     WASTAGE = 'WASTAGE'
     WAYBILL = 'WAYBILL'
-    DELIVERY = 'WAYBILL'
+    DELIVERY = 'DELIVERY'
 
     RELEASE_ORDER = 'RELEASE_ORDER'
     DIRECT_HANDOVER = 'DIRECT_HANDOVER'
@@ -124,8 +124,8 @@ class Transfer(TimeStampedModel, models.Model):
     )
 
     name = models.CharField(max_length=255, null=True, blank=True)
-    transfer_type = models.CharField(max_length=30, choices=TRANSFER_TYPE, null=True)
-    shipment_type = models.CharField(max_length=30, choices=SHIPMENT_TYPE, null=True)
+    transfer_type = models.CharField(max_length=30, choices=TRANSFER_TYPE, null=True, blank=True)
+    shipment_type = models.CharField(max_length=30, choices=SHIPMENT_TYPE, null=True, blank=True)
     status = models.CharField(max_length=30, choices=STATUS, default=INCOMING)
 
     sequence_number = models.IntegerField()
@@ -151,6 +151,8 @@ class Transfer(TimeStampedModel, models.Model):
         null=True, blank=True,
         related_name='origin_transfers'
     )
+    origin_check_out_at = models.DateTimeField(null=True, blank=True)
+
     destination_point = models.ForeignKey(
         PointOfInterest,
         on_delete=models.SET_NULL,

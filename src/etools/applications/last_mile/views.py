@@ -2,6 +2,7 @@ from functools import cache
 
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, status
@@ -59,8 +60,8 @@ class TransferViewSet(
     permission_classes = [IsAuthenticated]
 
     filter_backends = (DjangoFilterBackend, SearchFilter)
-    # TODO
-    # search_fields = ('name', 'p_code', 'parent__name', 'parent__p_code')
+    # TODO TBD
+    search_fields = ('status', 'name', 'sequence_number')
 
     @cache
     def get_parent_object(self):
@@ -81,7 +82,10 @@ class TransferViewSet(
     @action(detail=False, methods=['get'], url_path='incoming')
     def incoming(self, request, *args, **kwargs):
         location = self.get_parent_object()
-        qs = super().get_queryset().filter(status=models.Transfer.INCOMING, items__status='transfer').distinct()
+        qs = super().get_queryset()\
+            .exclude(origin_point=location)\
+            .filter(status=models.Transfer.INCOMING, items__status='transfer')\
+            .distinct()
 
         if location.poi_type.category.lower() == 'warehouse':
             qs = qs.filter(Q(destination_point=location) | Q(destination_point__isnull=True))
@@ -135,8 +139,10 @@ class TransferViewSet(
         serializer.save()
 
         transfer.status = models.Transfer.CHECKED_IN
+        transfer.destination_point = location
+        transfer.destination_check_in_at = timezone.now()
         transfer.checked_in_by = request.user
-        transfer.save(update_fields=['status', 'checked_in_by'])
+        transfer.save(update_fields=['status', 'checked_in_by', 'destination_point', 'destination_check_in_at'])
 
         transfer.items.update(location=location)
 
