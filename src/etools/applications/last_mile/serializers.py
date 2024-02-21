@@ -1,4 +1,5 @@
-from django.db import connection
+from django.db import connection, transaction
+from django.utils import timezone
 
 from rest_framework import serializers
 from unicef_attachments.fields import AttachmentSingleFileField
@@ -65,24 +66,19 @@ class ItemSerializer(serializers.ModelSerializer):
         return data
 
 
-# class ShipmentSerializer(serializers.ModelSerializer):
-#     waybillId = serializers.CharField(source='waybill_id')
-#
-#     class Meta:
-#         model = models.Shipment
-#         fields = '__all__'
-#
-#     def to_representation(self, instance):
-#         data = super().to_representation(instance)
-#         data['type'] = data['shipment_type'].upper()
-#         data['poId'] = data['purchase_order_id']
-#         data['deliveryId'] = data['delivery_id']
-#         data['deliveryItemId'] = data['delivery_item_id']
-#         data['createdAt'] = data['created']
-#         data['documentCreatedAt'] = data['document_created_at']
-#         data['transferId'] = instance.transfer.id
-#         data['eToolsReference'] = data['e_tools_reference']
-#         return data
+class ItemUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Item
+        fields = (
+            'description', 'uom', 'expiry_date', 'batch_id',
+            'quantity', 'is_prepositioned', 'preposition_qty', 'conversion_factor'
+        )
+
+
+class ItemCheckoutSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Item
+        fields = ('id', 'quantity')
 
 
 class TransferSerializer(serializers.ModelSerializer):
@@ -99,7 +95,7 @@ class TransferSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        data['items'] = ItemSerializer(instance.items.all(), many=True).data
+        data['items'] = ItemSerializer(instance.items.all().order_by('id'), many=True).data
         return data
 
 
@@ -111,8 +107,36 @@ class TransferCheckinSerializer(AttachmentSerializerMixin, serializers.ModelSeri
         model = models.Transfer
         fields = ('name', 'comment', 'reason', 'proof_file')
 
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        instance = super().update(instance, validated_data)
+        if self.partial:
+            if instance.transfer_type and instance.transfer_type == models.Transfer.DISTRIBUTION:
+                instance.status = models.Transfer.COMPLETED
+            instance.destination_point = self.context.get('location')
+            instance.destination_check_in_at = timezone.now()
+            instance.checked_in_by = self.context.get('request').user
+            instance.save(update_fields=['status', 'checked_in_by', 'destination_point', 'destination_check_in_at'])
 
-class ItemUpdateSerializer(serializers.ModelSerializer):
+        return instance
+
+
+class TransferCheckOutSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
+    name = serializers.CharField(required=False, allow_blank=False, allow_null=False)
+    proof_file = AttachmentSingleFileField(required=True, allow_null=False)
+    transfer_type = serializers.ChoiceField(choices=models.Transfer.TRANSFER_TYPE, required=True)
+    origin_check_out_at = serializers.DateTimeField(required=True)
+    items = ItemCheckoutSerializer(many=True)
+    destination_point = serializers.IntegerField(required=False)
+
     class Meta:
-        model = models.Item
-        fields = ('description', 'uom', 'expiry_date', 'batch_id',  'quantity')
+        model = models.Transfer
+        fields = (
+            'name', 'comment', 'transfer_type', 'proof_file', 'items',
+            'origin_check_out_at', 'destination_point'
+        )
+
+    @transaction.atomic
+    def create(self, validated_data):
+
+        return instance

@@ -1,3 +1,5 @@
+from functools import cached_property
+
 from django.contrib.gis.db.models import PointField
 from django.db import connection, models
 from django.utils.translation import gettext_lazy as _
@@ -92,9 +94,7 @@ def get_transfers_path(instance, filename):
 
 
 class Transfer(TimeStampedModel, models.Model):
-    INCOMING = 'INCOMING'
-    CHECKED_IN = 'CHECKED_IN'
-    CHECKED_OUT = 'CHECKED_OUT'
+    PENDING = 'PENDING'
     COMPLETED = 'COMPLETED'
 
     DISTRIBUTION = 'DISTRIBUTION'
@@ -106,9 +106,7 @@ class Transfer(TimeStampedModel, models.Model):
     DIRECT_HANDOVER = 'DIRECT_HANDOVER'
 
     STATUS = (
-        (INCOMING, _('Incoming')),
-        (CHECKED_IN, _('Checked-In')),
-        (CHECKED_OUT, _('Checked-Out')),
+        (PENDING, _('Pending')),
         (COMPLETED, _('Completed'))
     )
     TRANSFER_TYPE = (
@@ -125,8 +123,7 @@ class Transfer(TimeStampedModel, models.Model):
 
     name = models.CharField(max_length=255, null=True, blank=True)
     transfer_type = models.CharField(max_length=30, choices=TRANSFER_TYPE, null=True, blank=True)
-    shipment_type = models.CharField(max_length=30, choices=SHIPMENT_TYPE, null=True, blank=True)
-    status = models.CharField(max_length=30, choices=STATUS, default=INCOMING)
+    status = models.CharField(max_length=30, choices=STATUS, default=PENDING)
 
     sequence_number = models.IntegerField()
     partner_organization = models.ForeignKey(
@@ -160,17 +157,9 @@ class Transfer(TimeStampedModel, models.Model):
         related_name='destination_transfers'
     )
     destination_check_in_at = models.DateTimeField(null=True, blank=True)
-    # TODO TBD : what to keep from shipment model
-    purchase_order_id = models.CharField(max_length=255, null=True, blank=True)
-    delivery_id = models.CharField(max_length=255, null=True, blank=True)
-    delivery_item_id = models.CharField(max_length=255, null=True, blank=True)
-    waybill_id = models.CharField(max_length=255, null=True, blank=True)
-    # Agreement ref + PD ref IRQ/PCA2020299/PD2022798
-    e_tools_reference = models.CharField(max_length=255, null=True, blank=True)
 
     reason = models.CharField(max_length=255, null=True, blank=True)
     comment = models.TextField(null=True, blank=True)
-
     proof_file = CodedGenericRelation(
         Attachment,
         verbose_name=_('Transfer Proof File'),
@@ -178,15 +167,19 @@ class Transfer(TimeStampedModel, models.Model):
         blank=True,
         null=True
     )
+    is_shipment = models.BooleanField(default=False)
+    # Shipment related fields
+    shipment_type = models.CharField(max_length=30, choices=SHIPMENT_TYPE, null=True, blank=True)
+    purchase_order_id = models.CharField(max_length=255, null=True, blank=True)
+    delivery_id = models.CharField(max_length=255, null=True, blank=True)
+    delivery_item_id = models.CharField(max_length=255, null=True, blank=True)
+    waybill_id = models.CharField(max_length=255, null=True, blank=True)
+    # Agreement ref + PD ref IRQ/PCA2020299/PD2022798
+    e_tools_reference = models.CharField(max_length=255, null=True, blank=True)
 
     # TODO TBD swagger desc: upload for a transfer vs endpoint transfers/upload-waybill/<locationId>
     # waybill_file = models.FileField(
-    #     upload_to=get_transfers_path,
-    #     max_length=255,
-    #     verbose_name=_('Waybill File'),
-    #     blank=True,
-    #     null=True,
-    # )
+    #     upload_to=get_transfers_path, max_length=255, verbose_name=_('Waybill File'), blank=True, null=True)
     # check_in_lat_lng = models.ForeignKey(LatLng, on_delete=models.SET_NULL, null=True, related_name='check_in_transfer_lat_lng')
     # check_out_lat_lng = models.ForeignKey(LatLng, on_delete=models.SET_NULL, null=True, related_name='check_out_transfer_lat_lng')
 
@@ -210,30 +203,21 @@ class Material(models.Model):
 
 
 class Item(TimeStampedModel, models.Model):
-    TRANSFER = 'transfer'
-    STORED = 'stored'
-    REMOVED = 'removed'
 
-    STATUS = (
-        (TRANSFER, _('Transfer')),
-        (STORED, _('Stored')),
-        (REMOVED, _('Removed')),
-    )
     description = models.CharField(max_length=255, null=True, blank=True)
     uom = models.CharField(max_length=30, null=True, blank=True)
 
     conversion_factor = models.IntegerField(null=True)
 
-    status = models.CharField(max_length=255, choices=STATUS)
     quantity = models.IntegerField()
     batch_id = models.CharField(max_length=255, null=True, blank=True)
     expiry_date = models.DateTimeField(null=True, blank=True)
     comment = models.TextField(null=True, blank=True)
-    is_prepositioned = models.BooleanField(null=True, blank=True)
+    is_prepositioned = models.BooleanField(default=False)
     preposition_qty = models.IntegerField(null=True, blank=True)
     amount_usd = models.DecimalField(max_digits=20, decimal_places=4, null=True, blank=True)
 
-    # shipment_item_id = models.CharField(max_length=255)
+    shipment_item_id = models.CharField(max_length=255, null=True, blank=True)
 
     transfer = models.ForeignKey(
         Transfer,
@@ -246,15 +230,13 @@ class Item(TimeStampedModel, models.Model):
         on_delete=models.CASCADE,
         related_name='items'
     )
-    location = models.ForeignKey(
-        PointOfInterest,
-        on_delete=models.SET_NULL,
-        null=True, blank=True,
-        related_name='items'
-    )
 
     def __str__(self):
         return f'{self.transfer.name}: {self.material.short_description} / qty {self.quantity}'
+
+    @cached_property
+    def location(self):
+        return self.transfer.destination_point
 
     # class MaterialDisplay(models.Model):
 #     created_at = models.DateTimeField(default=timezone.now)
@@ -267,12 +249,11 @@ class Item(TimeStampedModel, models.Model):
 #
 #     class Meta:
 #         unique_together = ('material', 'partner_organization')
-#
-#
-# class TransferHistory(models.Model):
-#     transfer = models.ForeignKey(Transfer, on_delete=models.CASCADE)
-#     item = models.ForeignKey('Item', on_delete=models.CASCADE)
-#     created_at = models.DateTimeField(default=timezone.now)
-#
-#     class Meta:
-#         unique_together = ('transfer', 'item')
+
+
+class ItemTransferHistory(TimeStampedModel, models.Model):
+    transfer = models.ForeignKey(Transfer, on_delete=models.CASCADE)
+    item = models.ForeignKey(Item, on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ('transfer', 'item')

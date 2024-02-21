@@ -87,10 +87,7 @@ class TransferViewSet(
     @action(detail=False, methods=['get'], url_path='incoming')
     def incoming(self, request, *args, **kwargs):
         location = self.get_parent_object()
-        qs = super().get_queryset()\
-            .exclude(origin_point=location)\
-            .filter(status=models.Transfer.INCOMING, items__status='transfer')\
-            .distinct()
+        qs = super().get_queryset().filter(status=models.Transfer.PENDING).exclude(origin_point=location)
 
         if location.poi_type.category.lower() == 'warehouse':
             qs = qs.filter(Q(destination_point=location) | Q(destination_point__isnull=True))
@@ -102,15 +99,8 @@ class TransferViewSet(
     @action(detail=False, methods=['get'], url_path='checked-in')
     def checked_in(self, request, *args, **kwargs):
         location = self.get_parent_object()
-        qs = super().get_queryset().filter(destination_point=location, status=models.Transfer.CHECKED_IN)
-        # shipment_context = {'origin_point__isnull': True,
-        # }
-        # transfer_context = {
-        #     'status': models.Transfer.CHECKED_IN,
-        # }
-        # waybill_context = {
-        #     'status': models.Transfer.WAYBILL
-        # }
+        qs = super().get_queryset().filter(status=models.Transfer.PENDING, destination_point=location)
+
         qs = qs.filter(Q(origin_point__isnull=True) | ~Q(origin_point=location))
 
         return self.paginate_response(qs)
@@ -119,7 +109,7 @@ class TransferViewSet(
     def outgoing(self, request, *args, **kwargs):
         location = self.get_parent_object()
         qs = self.get_queryset()\
-            .filter(status=models.Transfer.INCOMING, origin_point=location)\
+            .filter(status=models.Transfer.PENDING, origin_point=location)\
             .exclude(destination_point=location)
 
         return self.paginate_response(qs)
@@ -136,20 +126,28 @@ class TransferViewSet(
     @action(detail=True, methods=['patch'], url_path='new-check-in',
             serializer_class=serializers.TransferCheckinSerializer)
     def new_check_in(self, request, pk=None, **kwargs):
-        location = self.get_parent_object()
         transfer = get_object_or_404(models.Transfer, pk=pk)
 
-        serializer = serializers.TransferCheckinSerializer(instance=transfer, data=request.data, partial=True)
+        serializer = self.serializer_class(
+            instance=transfer, data=request.data, partial=True,
+            context={
+                'request': request,
+                'location': self.get_parent_object()
+            })
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-        transfer.status = models.Transfer.CHECKED_IN
-        transfer.destination_point = location
-        transfer.destination_check_in_at = timezone.now()
-        transfer.checked_in_by = request.user
-        transfer.save(update_fields=['status', 'checked_in_by', 'destination_point', 'destination_check_in_at'])
+        return Response(serializers.TransferSerializer(transfer).data, status=status.HTTP_200_OK)
 
-        transfer.items.update(location=location)
+    @action(detail=True, methods=['post'], url_path='new-check-out',
+            serializer_class=serializers.TransferCheckOutSerializer)
+    def new_check_out(self, request, pk=None, **kwargs):
+        transfer = get_object_or_404(models.Transfer, pk=pk)
+
+        serializer = self.serializer_class(
+            instance=transfer, data=request.data, partial=True, context={'location': self.get_parent_object()})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
 
         return Response(serializers.TransferSerializer(transfer).data, status=status.HTTP_200_OK)
 
