@@ -85,6 +85,8 @@ class ActionPoint(TimeStampedModel):
                                             on_delete=models.CASCADE)
     date_of_completion = MonitorField(verbose_name=_('Date Action Point Completed'), null=True, blank=True,
                                       default=None, monitor='status', when=[STATUSES.completed])
+    date_of_verification = MonitorField(verbose_name=_('Date Action Point Verified'), null=True, blank=True,
+                                        default=None, monitor='verified_by')
     comments = GenericRelation('django_comments.Comment', object_id_field='object_pk')
     history = GenericRelation('unicef_snapshot.Activity', object_id_field='target_object_id',
                               content_type_field='target_content_type')
@@ -93,6 +95,15 @@ class ActionPoint(TimeStampedModel):
         max_length=100,
         null=True,
     )
+
+    # verification
+    verified_by = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='verified_action_points',
+                                    verbose_name=_('Verified By'), on_delete=models.CASCADE, blank=True, null=True)
+    is_adequate = models.BooleanField(default=False, verbose_name=_('Is Adequate'))
+    potential_verifier = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='action_points_to_verify',
+                                           verbose_name=_('Potential Verifier'), on_delete=models.CASCADE,
+                                           blank=True, null=True)
+
     tracker = FieldTracker(fields=['assigned_to', 'reference_number'])
 
     objects = ActionPointManager()
@@ -232,6 +243,11 @@ class ActionPoint(TimeStampedModel):
         )
 
     def _do_complete(self, completed_by=None):
+        if self.potential_verifier:
+            self.send_email(
+                self.potential_verifier,
+                'action_points/action_point/action_point-available-for-verification',
+            )
         self.send_email(self.assigned_by, 'action_points/action_point/completed', cc=[self.assigned_to.email],
                         additional_context={'completed_by': (completed_by or self.assigned_to).get_full_name()})
 
@@ -241,12 +257,17 @@ class ActionPoint(TimeStampedModel):
                     ActionPointCompleteActionsTakenCheck.as_condition()
                 ],
                 custom={'serializer': ActionPointCompleteSerializer})
-    def complete(self, completed_by=None):
+    def complete(self, completed_by=None, potential_verifier=None):
+        if potential_verifier:
+            self.potential_verifier = potential_verifier
         self._do_complete(completed_by=completed_by)
 
 
 PME = GroupWrapper(code='pme',
                    name='PME')
+
+OperationsGroup = GroupWrapper(code='operations',
+                               name='Operations')
 
 UNICEFUser = GroupWrapper(code='unicef_user',
                           name='UNICEF User')

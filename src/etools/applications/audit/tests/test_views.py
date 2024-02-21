@@ -977,6 +977,16 @@ class TestMetadataDetailViewSet(EngagementTransitionsTestCaseMixin):
             risk_fields['value']['choices']
         )
 
+    def _test_send_back_comment(self):
+        response = self.forced_auth_req(
+            'options',
+            '/api/audit/{}/{}/'.format(self.endpoint, self.engagement.id),
+            user=self.auditor
+        )
+        self.assertIn('GET', response.data['actions'])
+        get = response.data['actions']['GET']
+        self.assertIn('send_back_comment', get)
+
 
 class TestEngagementMetadataViewSet(AuditTestCaseMixin, BaseTenantTestCase):
     endpoint = "engagements"
@@ -1000,6 +1010,15 @@ class TestMicroAssessmentMetadataDetailViewSet(TestMetadataDetailViewSet, BaseTe
 
     def test_subject_areas_choices(self):
         self._test_risk_choices('test_subject_areas', Risk.VALUES)
+
+    def test_send_back_comment_ip_contacted(self):
+        self.assertEqual(self.engagement.status, Engagement.PARTNER_CONTACTED)
+        self._test_send_back_comment()
+
+    def test_send_back_comment_submitted(self):
+        self._init_submitted_engagement()
+        self.assertEqual(self.engagement.status, Engagement.REPORT_SUBMITTED)
+        self._test_send_back_comment()
 
 
 class TestAuditMetadataDetailViewSet(TestMetadataDetailViewSet, BaseTenantTestCase):

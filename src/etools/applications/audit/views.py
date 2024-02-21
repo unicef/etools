@@ -301,6 +301,7 @@ class EngagementViewSet(
         UniqueIDOrderingFilter, OrderingFilter,
     )
     search_fields = (
+        'reference_number',
         'partner__organization__name',
         'partner__organization__vendor_number',
         'partner__organization__short_name',

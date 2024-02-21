@@ -65,7 +65,7 @@ class QuestionLightSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'answer_type', 'choices_size', 'level',
             'methods', 'category', 'sections', 'text',
-            'is_hact', 'is_active', 'is_custom'
+            'is_hact', 'is_active', 'is_custom', 'order'
         )
 
 
@@ -96,8 +96,8 @@ class QuestionSerializer(QuestionLightSerializer):
         return instance
 
     def update(self, instance, validated_data):
-        # For non-custom questions the only option we have is to modify is_active
-        custom_changes_allowed = not validated_data or list(validated_data.keys()) == ["is_active"]
+        # For non-custom questions the only option we have is to modify is_active and order
+        custom_changes_allowed = not validated_data or all(i in ["is_active", "order"] for i in validated_data.keys())
         if not instance.is_custom and not custom_changes_allowed:
             raise ValidationError(_("The system provided questions cannot be edited."))
 

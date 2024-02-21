@@ -599,6 +599,18 @@ class TestAppliedIndicatorsUpdate(TestInterventionLowerResultsViewBase):
         response = self.forced_auth_req('patch', self.detail_url, self.staff_member, data={})
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
 
+    def test_update_inactive_indicator_in_amendment(self):
+        self.applied_indicator.is_active = False
+        self.applied_indicator.save()
+
+        self.intervention.in_amendment = True
+        self.intervention.save()
+
+        response = self.forced_auth_req('patch', self.detail_url, self.user,
+                                        data={'indicator': {'title': "Updated Title"}})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
+        self.assertIn('You cannot update inactive indicators when the PD is in amendment.', response.data)
+
     def test_destroy_unicef(self):
         response = self.forced_auth_req('delete', self.detail_url, self.user)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT, response.data)

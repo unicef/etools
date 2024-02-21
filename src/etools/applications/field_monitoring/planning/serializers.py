@@ -26,6 +26,7 @@ from etools.applications.field_monitoring.planning.models import (
 from etools.applications.field_monitoring.utils.fsm import get_available_transitions
 from etools.applications.partners.serializers.interventions_v2 import MinimalInterventionListSerializer
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
+from etools.applications.reports.models import ResultType
 from etools.applications.reports.serializers.v1 import SectionSerializer
 from etools.applications.reports.serializers.v2 import MinimalOutputListSerializer, OfficeSerializer
 from etools.applications.tpm.tpmpartners.models import TPMPartner
@@ -199,18 +200,32 @@ class CPOutputListSerializer(MinimalOutputListSerializer):
     class Meta(MinimalOutputListSerializer.Meta):
         fields = MinimalOutputListSerializer.Meta.fields + ('parent',)
 
+    def get_name(self, obj):
+        if obj.result_type.name == ResultType.OUTPUT:
+            special_prefix = _("Special")
+            prefix = f'[{_("Expired")}] ' if obj.expired else ''
+            prefix += f'{special_prefix}- ' if obj.special else ''
+
+            return f'{prefix}{obj.name}-[{obj.wbs}]'
+
+        return obj.result_name
+
 
 class InterventionWithLinkedInstancesSerializer(FMInterventionListSerializer):
     partner = serializers.ReadOnlyField(source='agreement.partner_id')
     cp_outputs = serializers.SerializerMethodField()
+    title = serializers.SerializerMethodField()
 
     class Meta(FMInterventionListSerializer.Meta):
         fields = FMInterventionListSerializer.Meta.fields + (
-            'partner', 'cp_outputs'
+            'partner', 'cp_outputs', 'title'
         )
 
     def get_cp_outputs(self, obj):
         return [link.cp_output_id for link in obj.result_links.all()]
+
+    def get_title(self, obj):
+        return f'[{_(obj.status.capitalize()).upper()}] {obj.number} {obj.title}'
 
 
 class MonitoringActivityActionPointSerializer(ActionPointBaseSerializer):

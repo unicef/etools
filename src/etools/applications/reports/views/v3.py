@@ -110,7 +110,7 @@ class PMPSpecialReportingRequirementRetrieveUpdateDestroyView(
 
 
 class PMPResultFrameworkView(PMPBaseViewMixin, ResultFrameworkView):
-    permission_classes = [UserIsStaffPermission | UserIsPartnerStaffMemberPermission]
+    permission_classes = [IsAuthenticated, UserIsStaffPermission | UserIsPartnerStaffMemberPermission]
 
     def get_queryset(self, format=None):
         qs = InterventionResultLink.objects.filter(

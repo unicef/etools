@@ -29,6 +29,7 @@ from etools.applications.core.tests.mixins import URLAssertionMixin
 from etools.applications.environment.models import TenantSwitch
 from etools.applications.environment.tests.factories import TenantSwitchFactory
 from etools.applications.field_monitoring.fm_settings.tests.factories import LocationSiteFactory
+from etools.applications.funds.models import FundsReservationHeader
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory, FundsReservationItemFactory
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.models import (
@@ -816,6 +817,23 @@ class TestUpdate(BaseInterventionTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         budget.refresh_from_db()
         self.assertEqual(budget.currency, "PEN")
+
+    def test_patch_frs_prc_secretary(self):
+        intervention = InterventionFactory()
+        prc_secratary = UserFactory(
+            is_staff=True, realms__data=[UNICEF_USER, PRC_SECRETARY]
+        )
+
+        fr = FundsReservationHeaderFactory(intervention=None, currency='USD')
+        self.assertEqual(FundsReservationHeader.objects.filter(intervention=intervention).count(), 0)
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+            user=prc_secratary,
+            data={'frs': [fr.id]}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(FundsReservationHeader.objects.filter(intervention=intervention).count(), 1)
 
     def test_patch_country_programme(self):
         intervention = InterventionFactory()
