@@ -1,8 +1,6 @@
 from functools import cache
 
-from django.db.models import Q
 from django.shortcuts import get_object_or_404
-from django.utils import timezone
 
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, status
@@ -87,21 +85,18 @@ class TransferViewSet(
     @action(detail=False, methods=['get'], url_path='incoming')
     def incoming(self, request, *args, **kwargs):
         location = self.get_parent_object()
-        qs = super().get_queryset().filter(status=models.Transfer.PENDING).exclude(origin_point=location)
-
-        if location.poi_type.category.lower() == 'warehouse':
-            qs = qs.filter(Q(destination_point=location) | Q(destination_point__isnull=True))
-        else:
-            qs = qs.filter(destination_point=location)
+        qs = super().get_queryset()\
+            .filter(destination_point=location, status=models.Transfer.PENDING)\
+            .exclude(origin_point=location)
 
         return self.paginate_response(qs)
 
     @action(detail=False, methods=['get'], url_path='checked-in')
     def checked_in(self, request, *args, **kwargs):
         location = self.get_parent_object()
-        qs = super().get_queryset().filter(status=models.Transfer.PENDING, destination_point=location)
-
-        qs = qs.filter(Q(origin_point__isnull=True) | ~Q(origin_point=location))
+        qs = super().get_queryset()\
+            .filter(status=models.Transfer.COMPLETED, destination_point=location)\
+            .exclude(origin_point=location)
 
         return self.paginate_response(qs)
 
@@ -145,7 +140,12 @@ class TransferViewSet(
         transfer = get_object_or_404(models.Transfer, pk=pk)
 
         serializer = self.serializer_class(
-            instance=transfer, data=request.data, partial=True, context={'location': self.get_parent_object()})
+            data=request.data,
+            context={
+                'request': request,
+                'transfer': transfer,
+                'location': self.get_parent_object()
+            })
         serializer.is_valid(raise_exception=True)
         serializer.save()
 

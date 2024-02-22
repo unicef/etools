@@ -1,7 +1,7 @@
 from functools import cached_property
 
 from django.contrib.gis.db.models import PointField
-from django.db import connection, models
+from django.db import connection, models, transaction
 from django.utils.translation import gettext_lazy as _
 
 from model_utils import FieldTracker
@@ -97,28 +97,20 @@ class Transfer(TimeStampedModel, models.Model):
     PENDING = 'PENDING'
     COMPLETED = 'COMPLETED'
 
+    DELIVERY = 'DELIVERY'
     DISTRIBUTION = 'DISTRIBUTION'
     WASTAGE = 'WASTAGE'
     WAYBILL = 'WAYBILL'
-    DELIVERY = 'DELIVERY'
-
-    RELEASE_ORDER = 'RELEASE_ORDER'
-    DIRECT_HANDOVER = 'DIRECT_HANDOVER'
 
     STATUS = (
         (PENDING, _('Pending')),
         (COMPLETED, _('Completed'))
     )
     TRANSFER_TYPE = (
+        (DELIVERY, _('Delivery')),
         (DISTRIBUTION, _('Distribution')),
         (WASTAGE, _('Wastage')),
-        (WAYBILL, _('Waybill')),
-        (DELIVERY, _('Delivery'))
-    )
-
-    SHIPMENT_TYPE = (
-        (RELEASE_ORDER, _('Release Order')),
-        (DIRECT_HANDOVER, _('Direct Handover'))
+        (WAYBILL, _('Waybill'))
     )
 
     name = models.CharField(max_length=255, null=True, blank=True)
@@ -169,7 +161,7 @@ class Transfer(TimeStampedModel, models.Model):
     )
     is_shipment = models.BooleanField(default=False)
     # Shipment related fields
-    shipment_type = models.CharField(max_length=30, choices=SHIPMENT_TYPE, null=True, blank=True)
+    # shipment_type = models.CharField(max_length=30, choices=SHIPMENT_TYPE, null=True, blank=True)
     purchase_order_id = models.CharField(max_length=255, null=True, blank=True)
     delivery_id = models.CharField(max_length=255, null=True, blank=True)
     delivery_item_id = models.CharField(max_length=255, null=True, blank=True)
@@ -185,6 +177,12 @@ class Transfer(TimeStampedModel, models.Model):
 
     def __str__(self):
         return f'{self.partner_organization.name}: {self.name}/{self.sequence_number}'
+
+    @transaction.atomic
+    def clone(self):
+        self.pk = None
+        self.save()
+        return self
 
 
 class Material(models.Model):
@@ -225,6 +223,11 @@ class Item(TimeStampedModel, models.Model):
         null=True, blank=True,
         related_name='items'
     )
+    parent = models.ForeignKey(
+        'self', verbose_name=_('Parent'), null=True, blank=True, related_name='children', db_index=True,
+        on_delete=models.CASCADE,
+    )
+    # history_transfers = models.ManyToManyField(Transfer)
     material = models.ForeignKey(
         Material,
         on_delete=models.CASCADE,
@@ -238,6 +241,12 @@ class Item(TimeStampedModel, models.Model):
     def location(self):
         return self.transfer.destination_point
 
+    @transaction.atomic
+    def clone(self):
+        self.pk = None
+        self.save()
+        return self
+
     # class MaterialDisplay(models.Model):
 #     created_at = models.DateTimeField(default=timezone.now)
 #     updated_at = models.DateTimeField(default=timezone.now)
@@ -249,11 +258,11 @@ class Item(TimeStampedModel, models.Model):
 #
 #     class Meta:
 #         unique_together = ('material', 'partner_organization')
-
-
-class ItemTransferHistory(TimeStampedModel, models.Model):
-    transfer = models.ForeignKey(Transfer, on_delete=models.CASCADE)
-    item = models.ForeignKey(Item, on_delete=models.CASCADE)
-
-    class Meta:
-        unique_together = ('transfer', 'item')
+#
+#
+# class ItemTransferHistory(TimeStampedModel, models.Model):
+#     transfer = models.ForeignKey(Transfer, on_delete=models.CASCADE)
+#     item = models.ForeignKey(Item, on_delete=models.CASCADE)
+#
+#     class Meta:
+#         unique_together = ('transfer', 'item')

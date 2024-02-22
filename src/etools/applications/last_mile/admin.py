@@ -22,10 +22,10 @@ class PointOfInterestAdmin(admin.ModelAdmin):
 
 @admin.register(models.Transfer)
 class TransferAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
-    list_display = ('sequence_number', 'partner_organization', 'status')
+    list_display = ('name', 'partner_organization', 'status', 'transfer_type', 'is_shipment')
     list_select_related = ('partner_organization',)
     list_filter = ('status',)
-    search_fields = ('sequence_number', )
+    search_fields = ('name', 'status')
     raw_id_fields = ('partner_organization', 'checked_in_by', 'checked_out_by')
     inlines = (ProofTransferAttachmentInline,)
 
