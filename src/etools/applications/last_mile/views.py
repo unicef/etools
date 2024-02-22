@@ -41,7 +41,7 @@ class PointOfInterestViewSet(ModelViewSet):
 
     @action(detail=True, methods=['get'], url_path='items', serializer_class=serializers.ItemSerializer)
     def items(self, request, *args, pk=None, **kwargs):
-        qs = models.Item.objects.filter(location_id=pk)
+        qs = models.Item.objects.filter(transfer__status=models.Transfer.COMPLETED, transfer__destination_point=pk)
         page = self.paginate_queryset(qs)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
@@ -52,7 +52,6 @@ class PointOfInterestViewSet(ModelViewSet):
 
 class TransferViewSet(
     mixins.ListModelMixin,
-    mixins.RetrieveModelMixin,
     NestedViewSetMixin,
     GenericViewSet
 ):
@@ -127,29 +126,25 @@ class TransferViewSet(
             instance=transfer, data=request.data, partial=True,
             context={
                 'request': request,
-                'location': self.get_parent_object()
             })
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
         return Response(serializers.TransferSerializer(transfer).data, status=status.HTTP_200_OK)
 
-    @action(detail=True, methods=['post'], url_path='new-check-out',
+    @action(detail=False, methods=['post'], url_path='new-check-out',
             serializer_class=serializers.TransferCheckOutSerializer)
-    def new_check_out(self, request, pk=None, **kwargs):
-        transfer = get_object_or_404(models.Transfer, pk=pk)
-
+    def new_check_out(self, request, **kwargs):
         serializer = self.serializer_class(
             data=request.data,
             context={
                 'request': request,
-                'transfer': transfer,
                 'location': self.get_parent_object()
             })
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-        return Response(serializers.TransferSerializer(transfer).data, status=status.HTTP_200_OK)
+        return Response(serializers.TransferSerializer(serializer.instance).data, status=status.HTTP_200_OK)
 
 
 class ItemUpdateViewSet(mixins.UpdateModelMixin, GenericViewSet):

@@ -117,7 +117,6 @@ class Transfer(TimeStampedModel, models.Model):
     transfer_type = models.CharField(max_length=30, choices=TRANSFER_TYPE, null=True, blank=True)
     status = models.CharField(max_length=30, choices=STATUS, default=PENDING)
 
-    sequence_number = models.IntegerField()
     partner_organization = models.ForeignKey(
         PartnerOrganization,
         on_delete=models.CASCADE
@@ -176,7 +175,7 @@ class Transfer(TimeStampedModel, models.Model):
     # check_out_lat_lng = models.ForeignKey(LatLng, on_delete=models.SET_NULL, null=True, related_name='check_out_transfer_lat_lng')
 
     def __str__(self):
-        return f'{self.partner_organization.name}: {self.name}/{self.sequence_number}'
+        return f'{self.partner_organization.name}: {self.name}'
 
     @transaction.atomic
     def clone(self):
@@ -223,11 +222,8 @@ class Item(TimeStampedModel, models.Model):
         null=True, blank=True,
         related_name='items'
     )
-    parent = models.ForeignKey(
-        'self', verbose_name=_('Parent'), null=True, blank=True, related_name='children', db_index=True,
-        on_delete=models.CASCADE,
-    )
-    # history_transfers = models.ManyToManyField(Transfer)
+    transfers_history = models.ManyToManyField(Transfer, through='ItemTransferHistory')
+
     material = models.ForeignKey(
         Material,
         on_delete=models.CASCADE,
@@ -258,11 +254,11 @@ class Item(TimeStampedModel, models.Model):
 #
 #     class Meta:
 #         unique_together = ('material', 'partner_organization')
-#
-#
-# class ItemTransferHistory(TimeStampedModel, models.Model):
-#     transfer = models.ForeignKey(Transfer, on_delete=models.CASCADE)
-#     item = models.ForeignKey(Item, on_delete=models.CASCADE)
-#
-#     class Meta:
-#         unique_together = ('transfer', 'item')
+
+
+class ItemTransferHistory(TimeStampedModel, models.Model):
+    transfer = models.ForeignKey(Transfer, on_delete=models.CASCADE)
+    item = models.ForeignKey(Item, on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ('transfer', 'item')
