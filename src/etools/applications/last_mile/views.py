@@ -132,8 +132,8 @@ class TransferViewSet(
 
         return Response(serializers.TransferSerializer(transfer).data, status=status.HTTP_200_OK)
 
-    @action(detail=True, methods=['post'], url_path='complete')
-    def complete(self, request, pk=None, **kwargs):
+    @action(detail=True, methods=['post'], url_path='mark-complete')
+    def mark_complete(self, request, pk=None, **kwargs):
         transfer = get_object_or_404(models.Transfer, pk=pk)
         if transfer.transfer_type == models.Transfer.DISTRIBUTION:
             transfer.status = models.Transfer.COMPLETED
