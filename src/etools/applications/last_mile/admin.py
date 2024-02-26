@@ -11,6 +11,11 @@ class ProofTransferAttachmentInline(AttachmentSingleInline):
     code = 'proof_of_transfer'
 
 
+class WaybillTransferAttachmentInline(AttachmentSingleInline):
+    verbose_name_plural = "Transfer Waybill File"
+    code = 'waybill_file'
+
+
 @admin.register(models.PointOfInterest)
 class PointOfInterestAdmin(admin.ModelAdmin):
     list_display = ('name', 'parent', 'poi_type')
@@ -27,7 +32,7 @@ class TransferAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
     list_filter = ('status',)
     search_fields = ('name', 'status')
     raw_id_fields = ('partner_organization', 'checked_in_by', 'checked_out_by')
-    inlines = (ProofTransferAttachmentInline,)
+    inlines = (ProofTransferAttachmentInline, WaybillTransferAttachmentInline)
 
 
 admin.site.register(models.PointOfInterestType)

@@ -158,6 +158,13 @@ class Transfer(TimeStampedModel, models.Model):
         blank=True,
         null=True
     )
+    waybill_file = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Transfer Waybill File'),
+        code='waybill_file',
+        blank=True,
+        null=True
+    )
     is_shipment = models.BooleanField(default=False)
     # Shipment related fields
     # shipment_type = models.CharField(max_length=30, choices=SHIPMENT_TYPE, null=True, blank=True)
@@ -169,8 +176,6 @@ class Transfer(TimeStampedModel, models.Model):
     e_tools_reference = models.CharField(max_length=255, null=True, blank=True)
 
     # TODO TBD swagger desc: upload for a transfer vs endpoint transfers/upload-waybill/<locationId>
-    # waybill_file = models.FileField(
-    #     upload_to=get_transfers_path, max_length=255, verbose_name=_('Waybill File'), blank=True, null=True)
     # check_in_lat_lng = models.ForeignKey(LatLng, on_delete=models.SET_NULL, null=True, related_name='check_in_transfer_lat_lng')
     # check_out_lat_lng = models.ForeignKey(LatLng, on_delete=models.SET_NULL, null=True, related_name='check_out_transfer_lat_lng')
 

@@ -50,6 +50,19 @@ class PointOfInterestViewSet(ModelViewSet):
 
         return Response(self.serializer_class(qs, many=True).data)
 
+    @action(detail=True, methods=['post'], url_path='upload-waybill',
+            serializer_class=serializers.WaybillTransferSerializer)
+    def upload_waybill(self, request, pk=None):
+        serializer = self.serializer_class(
+            data=request.data,
+            context={
+                'request': request,
+                'destination_point': get_object_or_404(models.PointOfInterest, pk=pk)
+            })
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializers.TransferSerializer(serializer.instance).data, status=status.HTTP_204_NO_CONTENT)
+
 
 class TransferViewSet(
     mixins.ListModelMixin,
@@ -131,7 +144,7 @@ class TransferViewSet(
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-        return Response(serializers.TransferSerializer(transfer).data, status=status.HTTP_200_OK)
+        return Response(serializers.TransferSerializer(serializer.instance).data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['post'], url_path='mark-complete')
     def mark_complete(self, request, pk=None, **kwargs):

@@ -101,6 +101,26 @@ class TransferSerializer(serializers.ModelSerializer):
         return data
 
 
+class WaybillTransferSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
+    waybill_file = AttachmentSingleFileField(required=True, allow_null=False)
+
+    class Meta:
+        model = models.Transfer
+        fields = ('waybill_file',)
+
+    @transaction.atomic
+    def create(self, validated_data):
+        validated_data['partner_organization'] = self.context['request'].user.profile.organization.partner
+        self.instance = super().create(validated_data)
+
+        self.instance.transfer_type = models.Transfer.WAYBILL
+        self.instance.destination_point = self.context['destination_point']
+        self.instance.destination_check_in_at = timezone.now()
+        self.instance.checked_in_by = self.context['request'].user
+        self.instance.save()
+        return self.instance
+
+
 class TransferBaseSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
     name = serializers.CharField(required=False, allow_blank=False, allow_null=False,)
     proof_file = AttachmentSingleFileField(required=True, allow_null=False)
