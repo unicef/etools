@@ -1,6 +1,7 @@
 from functools import cache
 
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, status
@@ -137,7 +138,10 @@ class TransferViewSet(
         transfer = get_object_or_404(models.Transfer, pk=pk)
         if transfer.transfer_type == models.Transfer.DISTRIBUTION:
             transfer.status = models.Transfer.COMPLETED
-            transfer.save(update_fields=['status'])
+
+        transfer.destination_check_in_at = timezone.now()
+        transfer.checked_in_by = request.user
+        transfer.save(update_fields=['status', 'destination_check_in_at', 'checked_in_by'])
         return Response(serializers.TransferSerializer(transfer).data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['post'], url_path='new-check-out',
