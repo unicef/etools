@@ -132,6 +132,14 @@ class TransferViewSet(
 
         return Response(serializers.TransferSerializer(transfer).data, status=status.HTTP_200_OK)
 
+    @action(detail=True, methods=['post'], url_path='complete')
+    def complete(self, request, pk=None, **kwargs):
+        transfer = get_object_or_404(models.Transfer, pk=pk)
+        if transfer.transfer_type == models.Transfer.DISTRIBUTION:
+            transfer.status = models.Transfer.COMPLETED
+            transfer.save(update_fields=['status'])
+        return Response(serializers.TransferSerializer(transfer).data, status=status.HTTP_200_OK)
+
     @action(detail=False, methods=['post'], url_path='new-check-out',
             serializer_class=serializers.TransferCheckOutSerializer)
     def new_check_out(self, request, **kwargs):

@@ -175,7 +175,7 @@ class Transfer(TimeStampedModel, models.Model):
     # check_out_lat_lng = models.ForeignKey(LatLng, on_delete=models.SET_NULL, null=True, related_name='check_out_transfer_lat_lng')
 
     def __str__(self):
-        return f'{self.partner_organization.name}: {self.name}'
+        return f'{self.id} {self.partner_organization.name}: {self.name}'
 
     @transaction.atomic
     def clone(self):
