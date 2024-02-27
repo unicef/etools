@@ -189,10 +189,10 @@ class TransferCheckinSerializer(TransferBaseSerializer):
 
 
 class TransferCheckOutSerializer(TransferBaseSerializer):
-    name = serializers.CharField(required=True, allow_blank=False, allow_null=False)
+    name = serializers.CharField(required=False)
     transfer_type = serializers.ChoiceField(choices=models.Transfer.TRANSFER_TYPE, required=True)
     origin_check_out_at = serializers.DateTimeField(required=True)
-    destination_point = serializers.IntegerField(required=True)
+    destination_point = serializers.IntegerField(required=False)
 
     class Meta(TransferBaseSerializer.Meta):
         model = models.Transfer
@@ -223,14 +223,19 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
     @transaction.atomic
     def create(self, validated_data):
         items = validated_data.pop('items')
-        validated_data['destination_point_id'] = validated_data['destination_point']
-        validated_data.pop('destination_point')
+        if 'destination_point' in validated_data:
+            validated_data['destination_point_id'] = validated_data['destination_point']
+            validated_data.pop('destination_point')
 
         self.instance = models.Transfer(
             partner_organization=self.context['request'].user.profile.organization.partner,
             origin_point=self.context['location'],
             checked_out_by=self.context['request'].user,
             **validated_data)
+
+        if self.instance.transfer_type == models.Transfer.WASTAGE:
+            self.instance.status = models.Transfer.COMPLETED
+
         self.instance.save()
 
         self.checkout_items(items)
