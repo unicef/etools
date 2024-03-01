@@ -1,5 +1,6 @@
 from functools import cache
 
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 
@@ -125,10 +126,12 @@ class TransferViewSet(
     @action(detail=False, methods=['get'], url_path='completed')
     def completed(self, request, *args, **kwargs):
         location = self.get_parent_object()
-        qs = self.get_queryset()\
-            .filter(status=models.Transfer.COMPLETED, origin_point=location)\
-            .exclude(destination_point=location)
 
+        completed_filters = Q()
+        completed_filters |= Q(Q(origin_point=location) & ~Q(destination_point=location))
+        completed_filters |= Q(destination_point=location, transfer_type=models.Transfer.LOSS)
+
+        qs = self.get_queryset().filter(status=models.Transfer.COMPLETED).filter(completed_filters)
         return self.paginate_response(qs)
 
     @action(detail=True, methods=['patch'], url_path='new-check-in',
