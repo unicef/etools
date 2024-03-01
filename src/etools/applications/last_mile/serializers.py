@@ -61,7 +61,7 @@ class TransferMinimalSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Transfer
         fields = (
-            'name', 'partner_organization', 'status', 'transfer_type',
+            'id', 'name', 'partner_organization', 'status', 'transfer_type',
             'origin_point', 'destination_point',
             'checked_in_by', 'checked_out_by'
         )
@@ -85,6 +85,7 @@ class ItemSerializer(serializers.ModelSerializer):
 
 class ItemListSerializer(serializers.ModelSerializer):
     transfer = TransferMinimalSerializer()
+    material = MaterialSerializer()
 
     class Meta:
         model = models.Item
