@@ -99,7 +99,7 @@ class Transfer(TimeStampedModel, models.Model):
 
     DELIVERY = 'DELIVERY'
     DISTRIBUTION = 'DISTRIBUTION'
-    WASTAGE = 'WASTAGE'
+    LOSS = 'Loss'
     WAYBILL = 'WAYBILL'
 
     STATUS = (
@@ -109,7 +109,7 @@ class Transfer(TimeStampedModel, models.Model):
     TRANSFER_TYPE = (
         (DELIVERY, _('Delivery')),
         (DISTRIBUTION, _('Distribution')),
-        (WASTAGE, _('Wastage')),
+        (LOSS, _('Loss')),
         (WAYBILL, _('Waybill'))
     )
 
@@ -148,7 +148,9 @@ class Transfer(TimeStampedModel, models.Model):
         related_name='destination_transfers'
     )
     destination_check_in_at = models.DateTimeField(null=True, blank=True)
-
+    origin_transfer = models.ForeignKey(
+        'self', null=True, blank=True, on_delete=models.CASCADE, related_name='following_transfers'
+    )
     reason = models.CharField(max_length=255, null=True, blank=True)
     comment = models.TextField(null=True, blank=True)
     proof_file = CodedGenericRelation(
@@ -181,12 +183,6 @@ class Transfer(TimeStampedModel, models.Model):
 
     def __str__(self):
         return f'{self.id} {self.partner_organization.name}: {self.name}'
-
-    @transaction.atomic
-    def clone(self):
-        self.pk = None
-        self.save()
-        return self
 
 
 class Material(models.Model):

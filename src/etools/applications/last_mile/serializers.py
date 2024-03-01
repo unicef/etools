@@ -51,7 +51,24 @@ class MaterialSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class TransferMinimalSerializer(serializers.ModelSerializer):
+    origin_point = PointOfInterestLightSerializer(read_only=True)
+    destination_point = PointOfInterestLightSerializer(read_only=True)
+    checked_in_by = MinimalUserSerializer(read_only=True)
+    checked_out_by = MinimalUserSerializer(read_only=True)
+    partner_organization = MinimalPartnerOrganizationListSerializer(read_only=True)
+
+    class Meta:
+        model = models.Transfer
+        fields = (
+            'name', 'partner_organization', 'status', 'transfer_type',
+            'origin_point', 'destination_point',
+            'checked_in_by', 'checked_out_by'
+        )
+
+
 class ItemSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = models.Item
         exclude = ('transfer',)
@@ -64,6 +81,14 @@ class ItemSerializer(serializers.ModelSerializer):
         if instance.uom:
             data['material']['original_uom'] = instance.uom
         return data
+
+
+class ItemListSerializer(serializers.ModelSerializer):
+    transfer = TransferMinimalSerializer()
+
+    class Meta:
+        model = models.Item
+        fields = '__all__'
 
 
 class ItemUpdateSerializer(serializers.ModelSerializer):
@@ -147,44 +172,56 @@ class TransferCheckinSerializer(TransferBaseSerializer):
         model = models.Transfer
         fields = TransferBaseSerializer.Meta.fields + ('destination_check_in_at',)
 
-    def checkin_items(self, parent_items, items):
-        items.sort(key=lambda x: x['id'])
-        parent_items = parent_items.filter(id__in=[item['id'] for item in items]).order_by('id')
+    def checkin_items(self, all_items, checkin_items, origin_transfer):
+        checkin_items.sort(key=lambda x: x['id'])
+        original_items = all_items.filter(id__in=[item['id'] for item in checkin_items]).order_by('id')
 
-        for parent_item, child_item in zip(parent_items, items):
-            if parent_item.quantity - child_item['quantity'] == 0:
-                parent_item.transfers_history.add(parent_item.transfer)
-                parent_item.transfer = self.instance
-            else:
-                parent_item.quantity = parent_item.quantity - child_item['quantity']
-                parent_item.save(update_fields=['quantity'])
+        for original_item, checkin_item in zip(original_items, checkin_items):
+            if original_item.quantity - checkin_item['quantity'] == 0:
+                continue
+            loss_item = original_item.clone()
+            loss_item.created = timezone.now()
+            loss_item.transfers_history.add(origin_transfer)
+            loss_item.transfer = self.instance
+            loss_item.quantity = original_item.quantity - checkin_item['quantity']
+            loss_item.save(update_fields=['created', 'transfer', 'quantity'])
 
-                new_item = parent_item.clone()
-                new_item.created = timezone.now()
-                new_item.transfers_history.add(parent_item.transfer)
-                new_item.transfer = self.instance
-                new_item.quantity = child_item['quantity']
-                new_item.save(update_fields=['created', 'transfer', 'quantity'])
+            original_item.quantity = checkin_item['quantity']
+            original_item.save(update_fields=['quantity'])
+
+        loss_items = all_items.exclude(pk__in=original_items)
+        for loss_item in loss_items:
+            loss_item.transfers_history.add(origin_transfer)
+            loss_item.transfer = self.instance
+        models.Item.objects.bulk_update(loss_items, ['transfer'])
 
     @transaction.atomic
     def update(self, instance, validated_data):
         items = validated_data.pop('items')
-
+        checkin_fields = dict(
+            status=models.Transfer.COMPLETED,
+            checked_in_by=self.context.get('request').user,
+            destination_check_in_at=timezone.now()
+        )
+        validated_data.update(checkin_fields)
         if self.partial:
-            parent_items = instance.items.order_by('id')
-            # if it is a partial checkin, create a new transfer
-            if list(parent_items.values('id', 'quantity')) != items:
-                instance = instance.clone()
-                instance.created = timezone.now()
-                self.checkin_items(parent_items, items)
-
-            instance.status = models.Transfer.COMPLETED
-            instance.destination_check_in_at = timezone.now()
-            instance.checked_in_by = self.context.get('request').user
+            original_items = instance.items.order_by('id')
+            # if it is a partial checkin, create a new loss transfer for the remaining items in the original transfer
+            if list(original_items.values('id', 'quantity')) != items:
+                self.instance = models.Transfer(
+                    name=f'{instance.name} - {models.Transfer.LOSS}',
+                    transfer_type=models.Transfer.LOSS,
+                    partner_organization=instance.partner_organization,
+                    origin_transfer=instance,
+                    origin_point=self.context.get('location'),
+                    destination_point=self.context.get('location'),
+                    **checkin_fields
+                )
+                self.instance.save()
+                self.checkin_items(original_items, items, instance)
 
             instance = super().update(instance, validated_data)
             instance.save()
-
             return instance
 
 

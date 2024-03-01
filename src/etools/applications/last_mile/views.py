@@ -40,7 +40,7 @@ class PointOfInterestViewSet(ModelViewSet):
             return super().get_queryset().filter(partner_organizations=partner_organization)
         return models.PointOfInterest.objects.none()
 
-    @action(detail=True, methods=['get'], url_path='items', serializer_class=serializers.ItemSerializer)
+    @action(detail=True, methods=['get'], url_path='items', serializer_class=serializers.ItemListSerializer)
     def items(self, request, *args, pk=None, **kwargs):
         qs = models.Item.objects.filter(transfer__status=models.Transfer.COMPLETED, transfer__destination_point=pk)
         page = self.paginate_queryset(qs)
@@ -99,7 +99,7 @@ class TransferViewSet(
     def incoming(self, request, *args, **kwargs):
         location = self.get_parent_object()
         qs = super().get_queryset()\
-            .filter(destination_point=location, status=models.Transfer.PENDING)\
+            .filter(status=models.Transfer.PENDING, destination_point=location)\
             .exclude(origin_point=location)
 
         return self.paginate_response(qs)
@@ -140,6 +140,7 @@ class TransferViewSet(
             instance=transfer, data=request.data, partial=True,
             context={
                 'request': request,
+                'location': self.get_parent_object()
             })
         serializer.is_valid(raise_exception=True)
         serializer.save()

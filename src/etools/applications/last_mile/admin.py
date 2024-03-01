@@ -4,6 +4,7 @@ from unicef_attachments.admin import AttachmentSingleInline
 
 from etools.applications.last_mile import models
 from etools.applications.partners.admin import AttachmentInlineAdminMixin
+from etools.libraries.djangolib.admin import RestrictedEditAdminMixin
 
 
 class ProofTransferAttachmentInline(AttachmentSingleInline):
@@ -25,14 +26,31 @@ class PointOfInterestAdmin(admin.ModelAdmin):
     raw_id_fields = ('partner_organizations',)
 
 
+class ItemInline(RestrictedEditAdminMixin, admin.StackedInline):
+    extra = 0
+    model = models.Item
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
 @admin.register(models.Transfer)
 class TransferAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
-    list_display = ('name', 'partner_organization', 'status', 'transfer_type', 'is_shipment')
+    list_display = (
+        'name', 'partner_organization', 'status', 'transfer_type',
+        'is_shipment', 'origin_point', 'destination_point'
+    )
     list_select_related = ('partner_organization',)
     list_filter = ('status',)
     search_fields = ('name', 'status')
     raw_id_fields = ('partner_organization', 'checked_in_by', 'checked_out_by')
-    inlines = (ProofTransferAttachmentInline, WaybillTransferAttachmentInline)
+    inlines = (ProofTransferAttachmentInline, WaybillTransferAttachmentInline, ItemInline)
 
 
 admin.site.register(models.PointOfInterestType)
