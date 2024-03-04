@@ -113,6 +113,7 @@ class TransferSerializer(serializers.ModelSerializer):
     origin_point = PointOfInterestLightSerializer(read_only=True)
     destination_point = PointOfInterestLightSerializer(read_only=True)
     proof_file = AttachmentSingleFileField()
+    waybill_file = AttachmentSingleFileField()
     checked_in_by = MinimalUserSerializer(read_only=True)
     checked_out_by = MinimalUserSerializer(read_only=True)
     partner_organization = MinimalPartnerOrganizationListSerializer(read_only=True)
@@ -271,7 +272,7 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
             checked_out_by=self.context['request'].user,
             **validated_data)
 
-        if self.instance.transfer_type == models.Transfer.WASTAGE:
+        if self.instance.transfer_type == models.Transfer.LOSS:
             self.instance.status = models.Transfer.COMPLETED
 
         self.instance.save()
