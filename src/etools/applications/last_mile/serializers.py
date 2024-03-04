@@ -1,4 +1,5 @@
 from django.db import connection, transaction
+from django.forms import model_to_dict
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
@@ -181,12 +182,17 @@ class TransferCheckinSerializer(TransferBaseSerializer):
         for original_item, checkin_item in zip(original_items, checkin_items):
             if original_item.quantity - checkin_item['quantity'] == 0:
                 continue
-            loss_item = original_item.clone()
-            loss_item.created = timezone.now()
-            loss_item.transfers_history.add(origin_transfer)
-            loss_item.transfer = self.instance
-            loss_item.quantity = original_item.quantity - checkin_item['quantity']
-            loss_item.save(update_fields=['created', 'transfer', 'quantity'])
+
+            loss_item = models.Item(
+                transfer=self.instance,
+                quantity=original_item.quantity - checkin_item['quantity'],
+                material=original_item.material,
+                **model_to_dict(
+                    original_item,
+                    exclude=['id', 'created', 'modified', 'transfer', 'transfers_history', 'quantity', 'material']
+                )
+            )
+            loss_item.save()
 
             original_item.quantity = checkin_item['quantity']
             original_item.save(update_fields=['quantity'])
@@ -203,13 +209,14 @@ class TransferCheckinSerializer(TransferBaseSerializer):
         checkin_fields = dict(
             status=models.Transfer.COMPLETED,
             checked_in_by=self.context.get('request').user,
-            destination_check_in_at=timezone.now()
+            # destination_check_in_at=timezone.now()   # TODO TBD if it remains custom
         )
         validated_data.update(checkin_fields)
         if self.partial:
             original_items = instance.items.order_by('id')
             # if it is a partial checkin, create a new loss transfer for the remaining items in the original transfer
             if list(original_items.values('id', 'quantity')) != items:
+
                 self.instance = models.Transfer(
                     name=f'{instance.name} - {models.Transfer.LOSS}',
                     transfer_type=models.Transfer.LOSS,

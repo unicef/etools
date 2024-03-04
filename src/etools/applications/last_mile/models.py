@@ -1,7 +1,7 @@
 from functools import cached_property
 
 from django.contrib.gis.db.models import PointField
-from django.db import connection, models, transaction
+from django.db import connection, models
 from django.utils.translation import gettext_lazy as _
 
 from model_utils import FieldTracker
@@ -237,24 +237,6 @@ class Item(TimeStampedModel, models.Model):
     @cached_property
     def location(self):
         return self.transfer.destination_point
-
-    @transaction.atomic
-    def clone(self):
-        self.pk = None
-        self.save()
-        return self
-
-    # class MaterialDisplay(models.Model):
-#     created_at = models.DateTimeField(default=timezone.now)
-#     updated_at = models.DateTimeField(default=timezone.now)
-#     # created_by = models.ForeignKey(User, on_delete=models.CASCADE)
-#     # updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
-#     partner_organization = models.ForeignKey(PartnerOrganization, on_delete=models.CASCADE)
-#     material = models.ForeignKey(Material, on_delete=models.CASCADE)
-#     display_desc = models.CharField(max_length=255)
-#
-#     class Meta:
-#         unique_together = ('material', 'partner_organization')
 
 
 class ItemTransferHistory(TimeStampedModel, models.Model):
