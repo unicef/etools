@@ -908,6 +908,27 @@ class TestQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
             [q.id for q in questions]
         )
 
+    def test_similar_order(self):
+        # since we're using text as secondary ordering, create elements with descendant text to check it does work
+        questions = [
+            QuestionFactory(text=str(chr(ord('z') - i)), order=1)
+            for i in range(10)
+        ]
+
+        response = self.forced_auth_req(
+            'get',
+            reverse('field_monitoring_settings:questions-list'),
+            user=self.usual_user,
+            data={
+                'page_size': 100
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertListEqual(
+            [r['id'] for r in response.data['results']],
+            [q.id for q in reversed(questions)]
+        )
+
     def test_filter_by_methods(self):
         first_method = MethodFactory()
         second_method = MethodFactory()
