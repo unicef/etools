@@ -964,9 +964,9 @@ class TestQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
         second_section = SectionFactory()
 
         valid_questions = [
-            QuestionFactory(methods=[first_method], sections=[first_section, second_section]),
-            QuestionFactory(methods=[first_method, second_method], sections=[first_section]),
-            QuestionFactory(methods=[second_method, MethodFactory()], sections=[second_section, SectionFactory()]),
+            QuestionFactory(text='a', methods=[first_method], sections=[first_section, second_section]),
+            QuestionFactory(text='b', methods=[first_method, second_method], sections=[first_section]),
+            QuestionFactory(text='c', methods=[second_method, MethodFactory()], sections=[second_section, SectionFactory()]),
         ]
 
         QuestionFactory()  # no methods
