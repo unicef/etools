@@ -7,10 +7,12 @@ from factory import fuzzy
 from rest_framework import status
 from unicef_attachments.models import Attachment
 
-from etools.applications.audit.models import SpecificProcedure
+from etools.applications.action_points.tests.factories import ActionPointFactory
+from etools.applications.audit.models import Finding, SpecificProcedure
 from etools.applications.audit.tests.base import EngagementTransitionsTestCaseMixin
 from etools.applications.audit.tests.factories import (
     AuditFactory,
+    FindingFactory,
     KeyInternalControlFactory,
     MicroAssessmentFactory,
     SpecialAuditFactory,
@@ -221,6 +223,11 @@ class TestSCTransitionsTestCase(
         self._init_submitted_engagement()
         self._test_finalize(self.auditor, status.HTTP_403_FORBIDDEN)
 
+    def test_finalize_focal_point_high_priority_findings(self):
+        self._init_submitted_engagement()
+        FindingFactory(spot_check=self.engagement, priority=Finding.PRIORITIES.high)
+        self._test_finalize(self.unicef_focal_point, status.HTTP_400_BAD_REQUEST)
+
     def test_finalize_focal_point(self):
         self._init_submitted_engagement()
         content_type = ContentType.objects.get_for_model(self.engagement)
@@ -230,6 +237,8 @@ class TestSCTransitionsTestCase(
             content_type=content_type,
             object_id=self.engagement.pk,
         )
+        FindingFactory(spot_check=self.engagement, priority=Finding.PRIORITIES.high)
+        ActionPointFactory(engagement=self.engagement, high_priority=True)
         with patch(self.filepath, self.mock_filepath):
             self._test_finalize(self.unicef_focal_point, status.HTTP_200_OK)
         self.assertTrue(attachment_qs.exists())

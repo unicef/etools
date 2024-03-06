@@ -20,6 +20,7 @@ from unicef_djangolib.fields import CodedGenericRelation
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.audit.purchase_order.models import PurchaseOrder, PurchaseOrderItem
 from etools.applications.audit.transitions.conditions import (
+    ActionPointsProvidedForHighPriorityFindingsCheck,
     AuditSubmitReportRequiredFieldsCheck,
     EngagementHasReportAttachmentsCheck,
     EngagementSubmitReportRequiredFieldsCheck,
@@ -468,6 +469,9 @@ class SpotCheck(Engagement):
         return super().submit(*args, **kwargs)
 
     @transition('status', source=Engagement.STATUSES.report_submitted, target=Engagement.STATUSES.final,
+                conditions=[
+                    ActionPointsProvidedForHighPriorityFindingsCheck.as_condition(),
+                ],
                 permission=has_action_permission(action='finalize'))
     def finalize(self, *args, **kwargs):
         return super().finalize(*args, **kwargs)
