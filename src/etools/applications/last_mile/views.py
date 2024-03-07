@@ -27,7 +27,8 @@ class PointOfInterestViewSet(ModelViewSet):
     queryset = models.PointOfInterest.objects\
         .select_related('parent')\
         .prefetch_related('partner_organizations')\
-        .filter(is_active=True, private=True)
+        .filter(is_active=True, private=True)\
+        .order_by('name')
     pagination_class = DynamicPageNumberPagination
     permission_classes = [IsAuthenticated]
 
@@ -43,7 +44,8 @@ class PointOfInterestViewSet(ModelViewSet):
 
     @action(detail=True, methods=['get'], url_path='items', serializer_class=serializers.ItemListSerializer)
     def items(self, request, *args, pk=None, **kwargs):
-        qs = models.Item.objects.filter(transfer__status=models.Transfer.COMPLETED, transfer__destination_point=pk)
+        qs = models.Item.objects.filter(
+            transfer__status=models.Transfer.COMPLETED, transfer__destination_point=pk).order_by('id')
         page = self.paginate_queryset(qs)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
@@ -62,7 +64,7 @@ class PointOfInterestViewSet(ModelViewSet):
             })
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response(serializers.TransferSerializer(serializer.instance).data, status=status.HTTP_204_NO_CONTENT)
+        return Response(serializers.TransferSerializer(serializer.instance).data, status=status.HTTP_201_CREATED)
 
 
 class TransferViewSet(
