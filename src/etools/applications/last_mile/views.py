@@ -73,7 +73,10 @@ class TransferViewSet(
     GenericViewSet
 ):
     serializer_class = serializers.TransferSerializer
-    queryset = models.Transfer.objects.select_related('partner_organization').prefetch_related('items')
+    queryset = models.Transfer.objects\
+        .select_related('partner_organization')\
+        .prefetch_related('items')\
+        .order_by('created')
 
     pagination_class = DynamicPageNumberPagination
     permission_classes = [IsAuthenticated]
