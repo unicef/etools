@@ -279,7 +279,7 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
             checked_out_by=self.context['request'].user,
             **validated_data)
 
-        if self.instance.transfer_type == models.Transfer.LOSS:
+        if self.instance.transfer_type == models.Transfer.WASTAGE:
             self.instance.status = models.Transfer.COMPLETED
 
         self.instance.save()

@@ -1,7 +1,7 @@
 from functools import cached_property
 
 from django.contrib.gis.db.models import PointField
-from django.db import connection, models
+from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from model_utils import FieldTracker
@@ -82,24 +82,14 @@ class PointOfInterest(models.Model):
         super().save(**kwargs)
 
 
-def get_transfers_path(instance, filename):
-    return '/'.join([
-        connection.schema_name,
-        'file_attachments',
-        'last_mile',
-        'transfers',
-        str(instance.id),
-        filename
-    ])
-
-
 class Transfer(TimeStampedModel, models.Model):
     PENDING = 'PENDING'
     COMPLETED = 'COMPLETED'
 
     DELIVERY = 'DELIVERY'
     DISTRIBUTION = 'DISTRIBUTION'
-    LOSS = 'Loss'
+    LOSS = 'LOSS'
+    WASTAGE = 'WASTAGE'
     WAYBILL = 'WAYBILL'
 
     STATUS = (
@@ -110,6 +100,7 @@ class Transfer(TimeStampedModel, models.Model):
         (DELIVERY, _('Delivery')),
         (DISTRIBUTION, _('Distribution')),
         (LOSS, _('Loss')),
+        (WASTAGE, _('Wastage')),
         (WAYBILL, _('Waybill'))
     )
 
