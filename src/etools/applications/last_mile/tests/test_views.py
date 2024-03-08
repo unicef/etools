@@ -91,17 +91,25 @@ class TestTransferView(BaseTenantTestCase):
         cls.poi_partner_2 = PointOfInterestFactory(partner_organizations=[cls.partner], private=True)
         cls.poi_partner_3 = PointOfInterestFactory(partner_organizations=[cls.partner], private=True)
         cls.incoming = TransferFactory(
-            partner_organization=cls.partner, destination_point=cls.poi_partner_1
+            partner_organization=cls.partner,
+            destination_point=cls.poi_partner_1
         )
         cls.checked_in = TransferFactory(
-            partner_organization=cls.partner, status=models.Transfer.COMPLETED, destination_point=cls.poi_partner_1
+            partner_organization=cls.partner,
+            status=models.Transfer.COMPLETED,
+            destination_point=cls.poi_partner_1
         )
         cls.outgoing = TransferFactory(
-            partner_organization=cls.partner, origin_point=cls.poi_partner_1
+            partner_organization=cls.partner,
+            origin_point=cls.poi_partner_1,
+            transfer_type=models.Transfer.DISTRIBUTION
         )
         cls.completed = TransferFactory(
-            partner_organization=cls.partner, status=models.Transfer.COMPLETED, origin_point=cls.poi_partner_1
+            partner_organization=cls.partner,
+            status=models.Transfer.COMPLETED,
+            origin_point=cls.poi_partner_1
         )
+        cls.attachment = AttachmentFactory(file=SimpleUploadedFile('proof_file.pdf', b'Proof File'))
 
     def test_incoming(self):
         url = reverse("last_mile:transfers-incoming", args=(self.poi_partner_1.pk,))
@@ -135,16 +143,45 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(len(response.data['results']), 1)
         self.assertEqual(self.completed.pk, response.data['results'][0]['id'])
 
-    def test_partial_checkin(self):
+    def test_full_checkin(self):
         item_1 = ItemFactory(quantity=11, transfer=self.incoming)
         item_2 = ItemFactory(quantity=22, transfer=self.incoming)
         item_3 = ItemFactory(quantity=33, transfer=self.incoming)
-        attachment = AttachmentFactory(file=SimpleUploadedFile('proof_file.pdf', b'Proof File'))
 
         checkin_data = {
             "name": "checked in transfer",
             "comment": "",
-            "proof_file": attachment.pk,
+            "proof_file": self.attachment.pk,
+            "items": [
+                {"id": item_1.pk, "quantity": item_1.quantity},
+                {"id": item_2.pk, "quantity": item_2.quantity},
+                {"id": item_3.pk, "quantity": item_3.quantity},
+            ],
+            "destination_check_in_at": timezone.now()
+        }
+        url = reverse('last_mile:transfers-new-check-in', args=(self.poi_partner_1.pk, self.incoming.pk))
+        response = self.forced_auth_req('patch', url, user=self.partner_staff, data=checkin_data)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.incoming.refresh_from_db()
+        self.assertEqual(self.incoming.status, models.Transfer.COMPLETED)
+        self.assertIn(self.attachment.filename, response.data['proof_file'])
+        self.assertEqual(self.incoming.name, checkin_data['name'])
+        self.assertEqual(self.incoming.items.count(), len(response.data['items']))
+        for existing, expected in zip(self.incoming.items.all(), checkin_data['items']):
+            self.assertEqual(existing.quantity, expected['quantity'])
+
+        self.assertFalse(models.Transfer.objects.filter(transfer_type=models.Transfer.LOSS).exists())
+
+    def test_partial_checkin(self):
+        item_1 = ItemFactory(quantity=11, transfer=self.incoming)
+        item_2 = ItemFactory(quantity=22, transfer=self.incoming)
+        item_3 = ItemFactory(quantity=33, transfer=self.incoming)
+
+        checkin_data = {
+            "name": "checked in transfer",
+            "comment": "",
+            "proof_file": self.attachment.pk,
             "items": [
                 {"id": item_1.pk, "quantity": 11},
                 {"id": item_3.pk, "quantity": 3},
@@ -156,16 +193,119 @@ class TestTransferView(BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.incoming.refresh_from_db()
-        self.assertIn(attachment.filename, response.data['proof_file'])
+        self.assertEqual(self.incoming.status, models.Transfer.COMPLETED)
+        self.assertIn(response.data['proof_file'], self.attachment.file.path)
         self.assertEqual(self.incoming.name, checkin_data['name'])
         self.assertEqual(self.incoming.items.count(), len(response.data['items']))
         self.assertEqual(self.incoming.items.get(pk=item_1.pk).quantity, 11)
         self.assertEqual(self.incoming.items.get(pk=item_3.pk).quantity, 3)
 
         loss_transfer = models.Transfer.objects.filter(transfer_type=models.Transfer.LOSS).first()
+        self.assertEqual(loss_transfer.status, models.Transfer.COMPLETED)
         self.assertEqual(loss_transfer.items.count(), 2)
         loss_item_2 = loss_transfer.items.get(pk=item_2.pk)
         self.assertEqual(loss_item_2.quantity, 22)
         self.assertIn(self.incoming, loss_item_2.transfers_history.all())
         self.assertEqual(loss_transfer.items.last().quantity, 30)
         self.assertEqual(loss_transfer.origin_transfer, self.incoming)
+
+    def test_checkin_validation(self):
+        item = ItemFactory(quantity=11, transfer=self.incoming)
+
+        checkin_data = {
+            "name": "checked in transfer",
+            "comment": "",
+            "proof_file": self.attachment.pk,
+            "items": [
+                {"id": item.pk, "quantity": 12},
+            ],
+            "destination_check_in_at": timezone.now()
+        }
+        url = reverse('last_mile:transfers-new-check-in', args=(self.poi_partner_1.pk, self.incoming.pk))
+        response = self.forced_auth_req('patch', url, user=self.partner_staff, data=checkin_data)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('The item quantity cannot be greater than the original value.', response.data['items'])
+
+    def test_checkout_distribution(self):
+        item_1 = ItemFactory(quantity=11, transfer=self.outgoing)
+        item_2 = ItemFactory(quantity=22, transfer=self.outgoing)
+        item_3 = ItemFactory(quantity=33, transfer=self.outgoing)
+        destination = PointOfInterestFactory()
+
+        checkout_data = {
+            "transfer_type": models.Transfer.DISTRIBUTION,
+            "destination_point": destination.pk,
+            "comment": "",
+            "proof_file": self.attachment.pk,
+            "items": [
+                {"id": item_1.pk, "quantity": 11},
+                {"id": item_3.pk, "quantity": 3},
+            ],
+            "origin_check_out_at": timezone.now()
+        }
+        url = reverse('last_mile:transfers-new-check-out', args=(self.poi_partner_1.pk,))
+        response = self.forced_auth_req('post', url, user=self.partner_staff, data=checkout_data)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['status'], models.Transfer.PENDING)
+        self.assertEqual(response.data['transfer_type'], models.Transfer.DISTRIBUTION)
+        self.assertIn(response.data['proof_file'], self.attachment.file.path)
+
+        checkout_transfer = models.Transfer.objects.get(pk=response.data['id'])
+        self.assertEqual(checkout_transfer.destination_point, destination)
+        self.assertEqual(checkout_transfer.items.count(), len(checkout_data['items']))
+        self.assertEqual(checkout_transfer.items.get(pk=item_1.pk).quantity, 11)
+        self.assertEqual(checkout_transfer.items.last().quantity, 3)
+        for item in checkout_transfer.items.all():
+            self.assertIn(self.outgoing, item.transfers_history.all())
+
+        self.assertEqual(self.outgoing.items.count(), 2)
+        self.assertEqual(self.outgoing.items.get(pk=item_2.pk).quantity, 22)
+        self.assertEqual(self.outgoing.items.get(pk=item_3.pk).quantity, 30)
+
+    def test_checkout_wastage(self):
+        item_1 = ItemFactory(quantity=11, transfer=self.outgoing)
+        item_2 = ItemFactory(quantity=22, transfer=self.outgoing)
+
+        destination = PointOfInterestFactory()
+        checkout_data = {
+            "transfer_type": models.Transfer.WASTAGE,
+            "destination_point": destination.pk,
+            "comment": "",
+            "proof_file": self.attachment.pk,
+            "items": [
+                {"id": item_1.pk, "quantity": 9},
+            ],
+            "origin_check_out_at": timezone.now()
+        }
+        url = reverse('last_mile:transfers-new-check-out', args=(self.poi_partner_1.pk,))
+        response = self.forced_auth_req('post', url, user=self.partner_staff, data=checkout_data)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['status'], models.Transfer.COMPLETED)
+        self.assertEqual(response.data['transfer_type'], models.Transfer.WASTAGE)
+        self.assertIn(response.data['proof_file'], self.attachment.file.path)
+
+        wastage_transfer = models.Transfer.objects.get(pk=response.data['id'])
+        self.assertEqual(wastage_transfer.destination_point, destination)
+        self.assertEqual(wastage_transfer.items.count(), len(checkout_data['items']))
+        self.assertEqual(wastage_transfer.items.first().quantity, 9)
+
+        self.assertEqual(self.outgoing.items.count(), 2)
+        self.assertEqual(self.outgoing.items.get(pk=item_1.pk).quantity, 2)
+        self.assertEqual(self.outgoing.items.get(pk=item_2.pk).quantity, 22)
+
+    def test_mark_completed(self):
+        self.assertEqual(self.outgoing.status, models.Transfer.PENDING)
+
+        self.assertEqual(self.outgoing.transfer_type, models.Transfer.DISTRIBUTION)
+
+        url = reverse('last_mile:transfers-mark-complete', args=(self.poi_partner_1.pk, self.outgoing.pk))
+        response = self.forced_auth_req('post', url, user=self.partner_staff)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.outgoing.refresh_from_db()
+        self.assertEqual(response.data['status'], models.Transfer.COMPLETED)
+        self.assertEqual(self.outgoing.status, models.Transfer.COMPLETED)
+        self.assertEqual(self.outgoing.checked_in_by, self.partner_staff)

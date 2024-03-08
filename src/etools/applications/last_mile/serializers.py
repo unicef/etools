@@ -163,7 +163,7 @@ class TransferBaseSerializer(AttachmentSerializerMixin, serializers.ModelSeriali
         parent_items = models.Item.objects.filter(id__in=[item['id'] for item in value])
         for parent_item, child_item in zip(parent_items.values('id', 'quantity'), value):
             if parent_item['quantity'] - child_item['quantity'] < 0:
-                raise ValidationError(_('The checkout quantity cannot be greater than the original value.'))
+                raise ValidationError(_('The item quantity cannot be greater than the original value.'))
         return value
 
 
@@ -216,7 +216,6 @@ class TransferCheckinSerializer(TransferBaseSerializer):
             original_items = instance.items.order_by('id')
             # if it is a partial checkin, create a new loss transfer for the remaining items in the original transfer
             if list(original_items.values('id', 'quantity')) != items:
-
                 self.instance = models.Transfer(
                     name=f'{instance.name} - {models.Transfer.LOSS}',
                     transfer_type=models.Transfer.LOSS,
@@ -259,12 +258,17 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
                 parent_item.quantity = parent_item.quantity - child_item['quantity']
                 parent_item.save(update_fields=['quantity'])
 
-                new_item = parent_item.clone()
-                new_item.created = timezone.now()
-                new_item.quantity = child_item['quantity']
+                new_item = models.Item(
+                    transfer=self.instance,
+                    quantity=child_item['quantity'],
+                    material=parent_item.material,
+                    **model_to_dict(
+                        parent_item,
+                        exclude=['id', 'created', 'modified', 'transfer', 'transfers_history', 'quantity', 'material']
+                    )
+                )
+                new_item.save()
                 new_item.transfers_history.add(parent_item.transfer)
-                new_item.transfer = self.instance
-                new_item.save(update_fields=['transfer', 'quantity'])
 
     @transaction.atomic
     def create(self, validated_data):
