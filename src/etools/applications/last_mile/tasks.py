@@ -17,7 +17,7 @@ def notify_upload_waybill(tenant_name, destination_pk, waybill_pk, waybill_url):
 
         email_context = {
             'user_name': attachment.uploaded_by.full_name,
-            'destination': destination.__str__(),
+            'destination': f'{destination.__str__()} / {tenant_name.capitalize()}',
             'waybill_url': waybill_url
         }
         send_notification_with_template(
