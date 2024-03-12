@@ -1,5 +1,6 @@
 from functools import cache
 
+from django.db import connection
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -8,6 +9,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, status
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
+from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ModelViewSet, ReadOnlyModelViewSet
@@ -15,6 +17,7 @@ from unicef_restlib.pagination import DynamicPageNumberPagination
 from unicef_restlib.views import NestedViewSetMixin
 
 from etools.applications.last_mile import models, serializers
+from etools.applications.last_mile.tasks import notify_upload_waybill
 
 
 class PointOfInterestTypeViewSet(ReadOnlyModelViewSet):
@@ -30,7 +33,6 @@ class PointOfInterestViewSet(ModelViewSet):
         .filter(is_active=True, private=True)\
         .order_by('name')
     pagination_class = DynamicPageNumberPagination
-    permission_classes = [IsAuthenticated]
 
     filter_backends = (DjangoFilterBackend, SearchFilter)
     filter_fields = ('poi_type',)
@@ -42,29 +44,43 @@ class PointOfInterestViewSet(ModelViewSet):
             return super().get_queryset().filter(partner_organizations=partner_organization)
         return models.PointOfInterest.objects.none()
 
-    @action(detail=True, methods=['get'], url_path='items', serializer_class=serializers.ItemListSerializer)
-    def items(self, request, *args, pk=None, **kwargs):
-        qs = models.Item.objects.filter(
-            transfer__status=models.Transfer.COMPLETED, transfer__destination_point=pk).order_by('id')
-        page = self.paginate_queryset(qs)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-
-        return Response(self.serializer_class(qs, many=True).data)
-
     @action(detail=True, methods=['post'], url_path='upload-waybill',
             serializer_class=serializers.WaybillTransferSerializer)
     def upload_waybill(self, request, pk=None):
-        serializer = self.serializer_class(
-            data=request.data,
-            context={
-                'request': request,
-                'destination_point': get_object_or_404(models.PointOfInterest, pk=pk)
-            })
+        destination_point = get_object_or_404(models.PointOfInterest, pk=pk)
+
+        serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializers.TransferSerializer(serializer.instance).data, status=status.HTTP_201_CREATED)
+        waybill_file = serializer.validated_data['waybill_file']
+        waybill_url = request.build_absolute_uri(waybill_file.url)
+        notify_upload_waybill.delay(
+            connection.schema_name, destination_point.pk, waybill_file.pk, waybill_url
+        )
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class InventoryItemListView(ListAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = serializers.ItemListSerializer
+    pagination_class = DynamicPageNumberPagination
+
+    filter_backends = (SearchFilter,)
+    search_fields = (
+        'description', 'uom', 'batch_id', 'transfer__name', 'shipment_item_id',
+        'material__short_description', 'material__basic_description',
+        'material__group_description', 'material__original_uom',
+        'material__purchase_group', 'material__purchase_group_description', 'material__temperature_group'
+    )
+
+    def get_queryset(self):
+        if self.request.parser_context['kwargs'] and 'poi_pk' in self.request.parser_context['kwargs']:
+            poi = get_object_or_404(models.PointOfInterest, pk=self.request.parser_context['kwargs']['poi_pk'])
+            qs = models.Item.objects\
+                .filter(transfer__status=models.Transfer.COMPLETED, transfer__destination_point=poi.pk)\
+                .exclude(transfer__transfer_type=models.Transfer.LOSS)\
+                .order_by('id')
+            return qs
+        return self.queryset.none()
 
 
 class TransferViewSet(

@@ -1,6 +1,5 @@
 from django.db import connection, transaction
 from django.forms import model_to_dict
-from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
@@ -136,18 +135,6 @@ class WaybillTransferSerializer(AttachmentSerializerMixin, serializers.ModelSeri
         model = models.Transfer
         fields = ('waybill_file',)
 
-    @transaction.atomic
-    def create(self, validated_data):
-        validated_data['partner_organization'] = self.context['request'].user.profile.organization.partner
-        self.instance = super().create(validated_data)
-
-        self.instance.transfer_type = models.Transfer.WAYBILL
-        self.instance.destination_point = self.context['destination_point']
-        self.instance.destination_check_in_at = timezone.now()
-        self.instance.checked_in_by = self.context['request'].user
-        self.instance.save()
-        return self.instance
-
 
 class TransferBaseSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
     name = serializers.CharField(required=False, allow_blank=False, allow_null=False,)
@@ -222,7 +209,6 @@ class TransferCheckinSerializer(TransferBaseSerializer):
                     partner_organization=instance.partner_organization,
                     origin_transfer=instance,
                     origin_point=self.context.get('location'),
-                    destination_point=self.context.get('location'),
                     **checkin_fields
                 )
                 self.instance.save()
