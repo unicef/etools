@@ -88,10 +88,11 @@ class CPOutputsFilterSet(filters.FilterSet):
 class InterventionsFilterSet(filters.FilterSet):
     partners__in = filters.BaseInFilter(field_name='agreement__partner')
     cp_outputs__in = filters.BaseInFilter(field_name='result_links__cp_output', distinct=True)
+    status__in = filters.BaseInFilter(field_name='status')
 
     class Meta:
         model = Intervention
-        fields = ['partners__in', 'cp_outputs__in']
+        fields = ['partners__in', 'cp_outputs__in', 'status']
 
 
 class HactForPartnerFilter(BaseFilterBackend):

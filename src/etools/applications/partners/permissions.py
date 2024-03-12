@@ -23,6 +23,8 @@ SENIOR_MANAGEMENT_GROUP = 'Senior Management Team'
 PARTNERSHIP_MANAGER_GROUP = 'Partnership Manager'
 REPRESENTATIVE_OFFICE_GROUP = 'Representative Office'
 PRC_SECRETARY = 'PRC Secretary'
+COUNTRY_OFFICE_ADMINISTRATOR = 'Country Office Administrator'
+RSS = 'RSS'
 
 
 class PMPPermissions:
@@ -435,7 +437,7 @@ class ListCreateAPIMixedPermission(permissions.BasePermission):
                     return True
             return False
         elif request.method == 'POST':
-            # user must have have admin access
+            # user must have admin access
             return request.user.is_authenticated and request.user.is_staff
         else:
             # This class shouldn't see methods other than GET and POST, but regardless the answer is 'no you may not'.

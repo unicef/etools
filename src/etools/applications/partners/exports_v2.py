@@ -499,19 +499,20 @@ class InterventionXLSRenderer:
         worksheet.append([
             _('Partner'),
             self.intervention.agreement.partner.name,
-            _('Start date'), self.intervention.start.strftime('%d-%b-%y'),
+            _('Start date'), self.intervention.start.strftime('%d-%b-%y') if self.intervention.start else '',
             _('Currency %(currency)s') % {"currency": self.intervention.planned_budget.currency}
         ])
         worksheet.append([
             '',
             _('Vendor #: ') + self.intervention.agreement.partner.vendor_number,
-            _('End date'), self.intervention.end.strftime('%d-%b-%y')
+            _('End date'), self.intervention.end.strftime('%d-%b-%y') if self.intervention.end else ''
         ])
         worksheet.append([
             _('PD Reference'),
             self.intervention.number,
             _('Duration'),
             self.td_format(self.intervention.end - self.intervention.start)
+            if self.intervention.start and self.intervention.end else ''
         ])
 
         self.apply_styles_to_cells(worksheet, 2, 1, worksheet.max_row, 1, [self.font_bold])
@@ -631,9 +632,11 @@ class InterventionXLSRenderer:
             _('PD Quarters')
         ])
         quarters = get_quarters_range(self.intervention.start, self.intervention.end)
-        total_columns = 5 + len(quarters)
+        start_column = 6
+        len_q = len(quarters) if quarters else 1
+        total_columns = start_column + len_q
         worksheet.merge_cells(
-            start_row=worksheet.max_row, start_column=6, end_row=worksheet.max_row, end_column=total_columns
+            start_row=worksheet.max_row, start_column=start_column, end_row=worksheet.max_row, end_column=total_columns
         )
         self.apply_styles_to_cells(
             worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns,
@@ -645,7 +648,7 @@ class InterventionXLSRenderer:
         )
         worksheet.append([
             _('Result Level'), '', '', '', ''
-        ] + [f'Q{q.quarter}' for q in quarters])
+        ] + [f'Q{q.quarter}' for q in quarters] if quarters else [''])
         self.apply_styles_to_cells(
             worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns,
             [self.fill_blue, self.font_white_bold, self.align_center, self.border_blue_top_right]
@@ -698,12 +701,12 @@ class InterventionXLSRenderer:
                     time_frames = activity.time_frames.all()
                     worksheet.append([
                         activity.code + ' ' + str(idx) + ' ' + str(len(activities)),
-                        activity.name,
+                        activity.name if activity.is_active else f"({_('Inactive')}) {activity.name}",
                         currency_format(activity.total),
                         currency_format(activity.cso_cash),
                         currency_format(activity.unicef_cash),
                     ] +
-                        ['x' if any(t.quarter == q.quarter for t in time_frames) else '' for q in quarters]
+                        ['x' if any(t.quarter == q.quarter for t in time_frames) else '' for q in quarters] if quarters else ['']
                     )
 
                     if idx < len(activities) - 1:
@@ -851,7 +854,7 @@ class InterventionXLSRenderer:
         self.apply_styles_to_cells(worksheet, 7, 3, worksheet.max_row, 5, [self.align_right])
         self.auto_format_cell_width(worksheet)
         worksheet.column_dimensions['A'].width = 15
-        self.apply_properties_to_columns(worksheet, 6, len(quarters), [['width', 5]])
+        self.apply_properties_to_columns(worksheet, 6, len_q, [['width', 5]])
 
     def render_detailed_workplan_budget(self, worksheet):
         quarters = get_quarters_range(self.intervention.start, self.intervention.end)
@@ -867,15 +870,16 @@ class InterventionXLSRenderer:
             _('PD Quarters'),
         ] + [''] * (len(quarters) - 1) + [_('Other Notes')])
 
-        total_columns = 9 + len(quarters)
+        start_column = 9
+        total_columns = start_column + len(quarters)
         worksheet.merge_cells(
-            start_row=worksheet.max_row, start_column=9, end_row=worksheet.max_row, end_column=total_columns - 1
+            start_row=worksheet.max_row, start_column=start_column, end_row=worksheet.max_row, end_column=total_columns
         )
         self.apply_styles_to_cells(
             worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns,
             [self.fill_blue, self.font_white_bold, self.align_center, self.border_blue_top_left_right]
         )
-        worksheet.append(['', '', '', '', '', '', '', ''] + [f'Q{q.quarter}' for q in quarters] + [''])
+        worksheet.append(['', '', '', '', '', '', '', ''] + [f'Q{q.quarter}' for q in quarters] if quarters else [''] + [''])
         self.apply_properties_to_columns(worksheet, total_columns, total_columns, [['width', 50]])
 
         for i in range(1, 9):
@@ -934,10 +938,11 @@ class InterventionXLSRenderer:
 
                 for activity in pd_output.activities.all():
                     time_frames = activity.time_frames.all()
+                    title = _("Activity") + ":" + activity.name
                     worksheet.append(
                         [
                             activity.code,
-                            _("Activity") + ":" + activity.name,
+                            title if activity.is_active else f"({_('Inactive')}) {title}",
                             '',
                             '',
                             '',
@@ -945,7 +950,7 @@ class InterventionXLSRenderer:
                             currency_format(activity.unicef_cash),
                             currency_format(activity.total)
                         ] +
-                        ['x' if any(t.quarter == q.quarter for t in time_frames) else '' for q in quarters] +
+                        ['x' if any(t.quarter == q.quarter for t in time_frames) else '' for q in quarters] if quarters else [''] +
                         [activity.context_details]
                     )
 
@@ -1091,7 +1096,7 @@ class InterventionXLSRenderer:
             [self.fill_blue, self.font_white_bold, self.border_blue_all]
         )
         worksheet.merge_cells(
-            start_row=worksheet.max_row, start_column=9, end_row=worksheet.max_row, end_column=total_columns - 1
+            start_row=worksheet.max_row, start_column=start_column, end_row=worksheet.max_row, end_column=total_columns
         )
         worksheet.merge_cells(
             start_row=worksheet.max_row, start_column=1, end_row=worksheet.max_row, end_column=5
@@ -1100,7 +1105,7 @@ class InterventionXLSRenderer:
         self.apply_styles_to_cells(worksheet, 7, 3, worksheet.max_row, 8, [self.align_right])
         self.auto_format_cell_width(worksheet)
         worksheet.column_dimensions['A'].width = 15
-        self.apply_properties_to_columns(worksheet, 9, len(quarters), [['width', 5]])
+        self.apply_properties_to_columns(worksheet, 9, len(quarters) if quarters else 1, [['width', 5]])
         self.apply_properties_to_columns(worksheet, total_columns, total_columns, [['width', 50]])
 
     def render_supply_plan(self, worksheet):

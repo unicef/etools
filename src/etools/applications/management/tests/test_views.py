@@ -15,7 +15,12 @@ from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.field_monitoring.fm_settings.tests.factories import QuestionFactory
 from etools.applications.field_monitoring.planning.tests.factories import MonitoringActivityFactory
 from etools.applications.partners.models import Intervention
-from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, UNICEF_USER
+from etools.applications.partners.permissions import (
+    COUNTRY_OFFICE_ADMINISTRATOR,
+    PARTNERSHIP_MANAGER_GROUP,
+    RSS,
+    UNICEF_USER,
+)
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
     InterventionFactory,
@@ -577,3 +582,48 @@ class SectionManagementViewTestCase(BaseTenantTestCase):
         self.assertEqual(fm_activities.sections.first().name, 'New Section')
         self.assertEqual(question.sections.first().name, 'New Section')
         self.assertEqual(partner.lead_section.name, 'New Section')
+
+    def test_merge_unicef_user(self):
+        old_section = SectionFactory(name='Old Section')
+        user = UserFactory(is_staff=True, realms__data=[UNICEF_USER])
+
+        response = self.forced_auth_req(
+            'post',
+            reverse('management:sections_management-merge'),
+            user=user,
+            data={
+                'new_section_name': 'New Section',
+                'sections_to_merge': [old_section.id],
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
+
+    def test_merge_country_office_admin(self):
+        old_section = SectionFactory(name='Old Section')
+        user = UserFactory(is_staff=True, realms__data=[UNICEF_USER, COUNTRY_OFFICE_ADMINISTRATOR])
+
+        response = self.forced_auth_req(
+            'post',
+            reverse('management:sections_management-merge'),
+            user=user,
+            data={
+                'new_section_name': 'New Section',
+                'sections_to_merge': [old_section.id],
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+
+    def test_merge_rss(self):
+        old_section = SectionFactory(name='Old Section')
+        user = UserFactory(is_staff=True, realms__data=[UNICEF_USER, RSS])
+
+        response = self.forced_auth_req(
+            'post',
+            reverse('management:sections_management-merge'),
+            user=user,
+            data={
+                'new_section_name': 'New Section',
+                'sections_to_merge': [old_section.id],
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
