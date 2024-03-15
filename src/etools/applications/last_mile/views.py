@@ -90,10 +90,10 @@ class InventoryMaterialsListView(ListAPIView):
 
     filter_backends = (SearchFilter,)
     search_fields = (
-        'description', 'uom', 'batch_id', 'transfer__name', 'shipment_item_id',
-        'material__short_description', 'material__basic_description',
-        'material__group_description', 'material__original_uom',
-        'material__purchase_group', 'material__purchase_group_description', 'material__temperature_group'
+        'items__description', 'items__uom', 'items__batch_id', 'items__shipment_item_id',
+        'short_description', 'basic_description',
+        'group_description', 'original_uom',
+        'purchase_group', 'purchase_group_description', 'temperature_group'
     )
 
     def get_queryset(self):
@@ -101,12 +101,14 @@ class InventoryMaterialsListView(ListAPIView):
             poi = get_object_or_404(models.PointOfInterest, pk=self.request.parser_context['kwargs']['poi_pk'])
 
             items_qs = models.Item.objects\
+                .select_related('transfer', 'transfer__destination_point')\
                 .filter(transfer__status=models.Transfer.COMPLETED, transfer__destination_point=poi.pk)\
                 .exclude(transfer__transfer_type=models.Transfer.LOSS)\
 
             qs = models.Material.objects\
                 .filter(items__in=items_qs)\
-                .prefetch_related(Prefetch('items', queryset=items_qs))
+                .prefetch_related(Prefetch('items', queryset=items_qs))\
+                .distinct()
 
             return qs
         return self.queryset.none()
