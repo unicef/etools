@@ -1,7 +1,7 @@
 from functools import cache
 
 from django.db import connection
-from django.db.models import Q
+from django.db.models import Prefetch, Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 
@@ -79,6 +79,35 @@ class InventoryItemListView(ListAPIView):
                 .filter(transfer__status=models.Transfer.COMPLETED, transfer__destination_point=poi.pk)\
                 .exclude(transfer__transfer_type=models.Transfer.LOSS)\
                 .order_by('id')
+            return qs
+        return self.queryset.none()
+
+
+class InventoryMaterialsListView(ListAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = serializers.MaterialListSerializer
+    pagination_class = DynamicPageNumberPagination
+
+    filter_backends = (SearchFilter,)
+    search_fields = (
+        'description', 'uom', 'batch_id', 'transfer__name', 'shipment_item_id',
+        'material__short_description', 'material__basic_description',
+        'material__group_description', 'material__original_uom',
+        'material__purchase_group', 'material__purchase_group_description', 'material__temperature_group'
+    )
+
+    def get_queryset(self):
+        if self.request.parser_context['kwargs'] and 'poi_pk' in self.request.parser_context['kwargs']:
+            poi = get_object_or_404(models.PointOfInterest, pk=self.request.parser_context['kwargs']['poi_pk'])
+
+            items_qs = models.Item.objects\
+                .filter(transfer__status=models.Transfer.COMPLETED, transfer__destination_point=poi.pk)\
+                .exclude(transfer__transfer_type=models.Transfer.LOSS)\
+
+            qs = models.Material.objects\
+                .filter(items__in=items_qs)\
+                .prefetch_related(Prefetch('items', queryset=items_qs))
+
             return qs
         return self.queryset.none()
 

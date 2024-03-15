@@ -23,4 +23,9 @@ urlpatterns = [
         view=views.InventoryItemListView.as_view(http_method_names=['get'],),
         name='inventory-item-list',
     ),
+    path(
+        'points-of-interest/<int:poi_pk>/materials/',
+        view=views.InventoryMaterialsListView.as_view(http_method_names=['get'], ),
+        name='inventory-materials-list',
+    ),
 ]

@@ -67,7 +67,24 @@ class TransferMinimalSerializer(serializers.ModelSerializer):
         )
 
 
+class MaterialItemsSerializer(serializers.ModelSerializer):
+    transfer = TransferMinimalSerializer()
+
+    class Meta:
+        model = models.Item
+        exclude = ('material',)
+
+
+class MaterialListSerializer(serializers.ModelSerializer):
+    items = MaterialItemsSerializer(many=True)
+
+    class Meta:
+        model = models.Material
+        fields = '__all__'
+
+
 class ItemSerializer(serializers.ModelSerializer):
+    material = MaterialSerializer()
 
     class Meta:
         model = models.Item
@@ -75,11 +92,10 @@ class ItemSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        data['material'] = MaterialSerializer(instance.material).data
-        if instance.description:
-            data['material']['short_description'] = instance.description
-        if instance.uom:
-            data['material']['original_uom'] = instance.uom
+        if not instance.description:
+            data['description'] = data['material']['short_description']
+        if not instance.uom:
+            data['uom'] = data['material']['original_uom']
         return data
 
 
