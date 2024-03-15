@@ -14,7 +14,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ModelViewSet, ReadOnlyModelViewSet
 from unicef_restlib.pagination import DynamicPageNumberPagination
-from unicef_restlib.views import NestedViewSetMixin
 
 from etools.applications.last_mile import models, serializers
 from etools.applications.last_mile.tasks import notify_upload_waybill
@@ -32,6 +31,7 @@ class PointOfInterestViewSet(ModelViewSet):
         .prefetch_related('partner_organizations')\
         .filter(is_active=True, private=True)\
         .order_by('name')
+    permission_classes = [IsAuthenticated]
     pagination_class = DynamicPageNumberPagination
 
     filter_backends = (DjangoFilterBackend, SearchFilter)
@@ -85,7 +85,6 @@ class InventoryItemListView(ListAPIView):
 
 class TransferViewSet(
     mixins.ListModelMixin,
-    NestedViewSetMixin,
     GenericViewSet
 ):
     serializer_class = serializers.TransferSerializer
@@ -98,19 +97,17 @@ class TransferViewSet(
     permission_classes = [IsAuthenticated]
 
     filter_backends = (DjangoFilterBackend, SearchFilter)
-    # TODO TBD
-    search_fields = ('status', 'name', 'sequence_number')
+    search_fields = ('name', 'partner_organization__organization__name', 'comment', 'e_tools_reference')
 
     @cache
     def get_parent_object(self):
-        return super().get_parent_object()
+        return get_object_or_404(models.PointOfInterest, pk=self.kwargs['point_of_interest_pk'])
 
     def get_object(self):
-        # validate against point_of_interest_pk
         return get_object_or_404(models.Transfer, pk=self.kwargs['pk'])
 
     def paginate_response(self, qs):
-        page = self.paginate_queryset(qs)
+        page = self.paginate_queryset(self.filter_queryset(qs))
         if page is not None:
             serializer = self.get_serializer(page, many=True)
             return self.get_paginated_response(serializer.data)
@@ -158,7 +155,7 @@ class TransferViewSet(
     @action(detail=True, methods=['patch'], url_path='new-check-in',
             serializer_class=serializers.TransferCheckinSerializer)
     def new_check_in(self, request, pk=None, **kwargs):
-        transfer = get_object_or_404(models.Transfer, pk=pk)
+        transfer = self.get_object()
 
         serializer = self.serializer_class(
             instance=transfer, data=request.data, partial=True,
@@ -173,7 +170,7 @@ class TransferViewSet(
 
     @action(detail=True, methods=['post'], url_path='mark-complete')
     def mark_complete(self, request, pk=None, **kwargs):
-        transfer = get_object_or_404(models.Transfer, pk=pk)
+        transfer = self.get_object()
         if transfer.transfer_type == models.Transfer.DISTRIBUTION:
             transfer.status = models.Transfer.COMPLETED
 
