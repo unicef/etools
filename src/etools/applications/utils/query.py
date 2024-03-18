@@ -1,6 +1,7 @@
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
+
 def has_related_records(queryset, model, avoid_self=True, model_relations_to_ignore=[]):
     '''
     Function that returns a tuple, whether the queryset has records that other models foreign key into (or m2m)
@@ -33,8 +34,9 @@ def has_related_records(queryset, model, avoid_self=True, model_relations_to_ign
         return True, list(set(all_impacted_records))
     return False, []
 
+
 def get_all_items_related(record):
-    results=[]
+    results = []
     model = record._meta.model
     related_content_types = ContentType.objects.filter(
         models.Q(model__in=[field.related_model._meta.object_name.lower() for field in model._meta.get_fields()
