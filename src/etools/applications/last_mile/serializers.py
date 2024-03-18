@@ -1,6 +1,5 @@
 from django.db import connection, transaction
 from django.forms import model_to_dict
-from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
@@ -68,7 +67,24 @@ class TransferMinimalSerializer(serializers.ModelSerializer):
         )
 
 
+class MaterialItemsSerializer(serializers.ModelSerializer):
+    transfer = TransferMinimalSerializer()
+
+    class Meta:
+        model = models.Item
+        exclude = ('material',)
+
+
+class MaterialListSerializer(serializers.ModelSerializer):
+    items = MaterialItemsSerializer(many=True)
+
+    class Meta:
+        model = models.Material
+        fields = '__all__'
+
+
 class ItemSerializer(serializers.ModelSerializer):
+    material = MaterialSerializer()
 
     class Meta:
         model = models.Item
@@ -76,11 +92,10 @@ class ItemSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        data['material'] = MaterialSerializer(instance.material).data
-        if instance.description:
-            data['material']['short_description'] = instance.description
-        if instance.uom:
-            data['material']['original_uom'] = instance.uom
+        if not instance.description:
+            data['description'] = data['material']['short_description']
+        if not instance.uom:
+            data['uom'] = data['material']['original_uom']
         return data
 
 
@@ -135,18 +150,6 @@ class WaybillTransferSerializer(AttachmentSerializerMixin, serializers.ModelSeri
     class Meta:
         model = models.Transfer
         fields = ('waybill_file',)
-
-    @transaction.atomic
-    def create(self, validated_data):
-        validated_data['partner_organization'] = self.context['request'].user.profile.organization.partner
-        self.instance = super().create(validated_data)
-
-        self.instance.transfer_type = models.Transfer.WAYBILL
-        self.instance.destination_point = self.context['destination_point']
-        self.instance.destination_check_in_at = timezone.now()
-        self.instance.checked_in_by = self.context['request'].user
-        self.instance.save()
-        return self.instance
 
 
 class TransferBaseSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
@@ -222,7 +225,6 @@ class TransferCheckinSerializer(TransferBaseSerializer):
                     partner_organization=instance.partner_organization,
                     origin_transfer=instance,
                     origin_point=self.context.get('location'),
-                    destination_point=self.context.get('location'),
                     **checkin_fields
                 )
                 self.instance.save()

@@ -1,4 +1,8 @@
+from unittest.mock import Mock, patch
+
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.management import call_command
+from django.test import override_settings
 from django.utils import timezone
 
 from rest_framework import status
@@ -35,6 +39,7 @@ class TestPointOfInterestTypeView(BaseTenantTestCase):
 class TestPointOfInterestView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
+        call_command("update_notifications")
         cls.partner = PartnerFactory(organization=OrganizationFactory(name='Partner'))
         cls.partner_staff = UserFactory(
             realms__data=['IP Viewer'],
@@ -53,7 +58,7 @@ class TestPointOfInterestView(BaseTenantTestCase):
         self.assertEqual(self.poi_partner.pk, response.data['results'][0]['id'])
 
     def test_api_item_list(self):
-        url = reverse('last_mile:pois-items', args=(self.poi_partner.pk,))
+        url = reverse('last_mile:inventory-item-list', args=(self.poi_partner.pk,))
         transfer = TransferFactory(status=models.Transfer.COMPLETED, destination_point=self.poi_partner)
         for i in range(5):
             ItemFactory(transfer=transfer)
@@ -63,20 +68,45 @@ class TestPointOfInterestView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 5)
 
+    @override_settings(WAYBILL_EMAILS='user1@example.com,user2@example.com')
     def test_upload_waybill(self):
         url = reverse('last_mile:pois-upload-waybill', args=(self.poi_partner.pk,))
         attachment = AttachmentFactory(file=SimpleUploadedFile('hello_world.txt', b'hello world!'))
 
         self.assertEqual(models.Transfer.objects.count(), 0)
+        mock_send = Mock()
+        with patch("etools.applications.last_mile.tasks.send_notification_with_template", mock_send):
+            response = self.forced_auth_req('post', url, user=self.partner_staff, data={'waybill_file': attachment.id})
 
-        response = self.forced_auth_req('post', url, user=self.partner_staff, data={'waybill_file': attachment.id})
+        self.assertEqual(mock_send.call_count, 1)
 
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(models.Transfer.objects.count(), 1)
-        self.assertEqual(response.data['destination_point']['id'], self.poi_partner.pk)
-        self.assertEqual(response.data['checked_in_by']['id'], self.partner_staff.pk)
-        self.assertEqual(response.data['transfer_type'], models.Transfer.WAYBILL)
-        self.assertIn(attachment.filename, response.data['waybill_file'])
+        self.assertEqual(mock_send.call_args.kwargs['recipients'], ['user1@example.com', 'user2@example.com'])
+        self.assertEqual(mock_send.call_args.kwargs['context']['waybill_url'], f'http://testserver{attachment.url}')
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(models.Transfer.objects.count(), 0)
+
+
+class TestInventoryItemListView(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.partner = PartnerFactory(organization=OrganizationFactory(name='Partner'))
+        cls.partner_staff = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=cls.partner.organization,
+        )
+        cls.poi_partner = PointOfInterestFactory(partner_organizations=[cls.partner], private=True)
+
+    def test_api_item_list(self):
+        url = reverse('last_mile:inventory-item-list', args=(self.poi_partner.pk,))
+        transfer = TransferFactory(status=models.Transfer.COMPLETED, destination_point=self.poi_partner)
+        for i in range(5):
+            ItemFactory(transfer=transfer)
+
+        response = self.forced_auth_req('get', url, user=self.partner_staff)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 5)
 
 
 class TestTransferView(BaseTenantTestCase):

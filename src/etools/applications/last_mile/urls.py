@@ -18,4 +18,14 @@ transfer_api.register(r'transfers', views.TransferViewSet, basename='transfers')
 urlpatterns = [
     path('', include(root_api.urls)),
     path('', include(transfer_api.urls)),
+    path(
+        'points-of-interest/<int:poi_pk>/items/',
+        view=views.InventoryItemListView.as_view(http_method_names=['get'],),
+        name='inventory-item-list',
+    ),
+    path(
+        'points-of-interest/<int:poi_pk>/materials/',
+        view=views.InventoryMaterialsListView.as_view(http_method_names=['get'], ),
+        name='inventory-materials-list',
+    ),
 ]

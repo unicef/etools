@@ -656,3 +656,5 @@ ADMIN_EDIT_EMAILS = get_from_secrets_or_env('ADMIN_EDIT_EMAILS', '')
 STALE_USERS_DEACTIVATION_THRESHOLD_DAYS = int(
     get_from_secrets_or_env('STALE_USERS_DEACTIVATION_THRESHOLD_DAYS', 3 * 30)
 )
+
+WAYBILL_EMAILS = get_from_secrets_or_env('WAYBILL_EMAILS', '')

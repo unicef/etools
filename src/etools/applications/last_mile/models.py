@@ -1,5 +1,3 @@
-from functools import cached_property
-
 from django.contrib.gis.db.models import PointField
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -224,10 +222,6 @@ class Item(TimeStampedModel, models.Model):
 
     def __str__(self):
         return f'{self.transfer.name}: {self.material.short_description} / qty {self.quantity}'
-
-    @cached_property
-    def location(self):
-        return self.transfer.destination_point
 
 
 class ItemTransferHistory(TimeStampedModel, models.Model):
