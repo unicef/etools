@@ -209,23 +209,19 @@ class TransferCheckinSerializer(TransferBaseSerializer):
     @transaction.atomic
     def update(self, instance, validated_data):
         items = validated_data.pop('items')
-        checkin_fields = dict(
-            status=models.Transfer.COMPLETED,
-            checked_in_by=self.context.get('request').user,
-            # destination_check_in_at=timezone.now()   # TODO TBD if it remains custom
-        )
-        validated_data.update(checkin_fields)
+        validated_data['status'] = models.Transfer.COMPLETED
+        validated_data['checked_in_by'] = self.context.get('request').user
+
         if self.partial:
             original_items = instance.items.order_by('id')
             # if it is a partial checkin, create a new loss transfer for the remaining items in the original transfer
             if list(original_items.values('id', 'quantity')) != items:
                 self.instance = models.Transfer(
-                    name=f'{instance.name} - {models.Transfer.LOSS}',
                     transfer_type=models.Transfer.LOSS,
                     partner_organization=instance.partner_organization,
                     origin_transfer=instance,
                     origin_point=self.context.get('location'),
-                    **checkin_fields
+                    **validated_data
                 )
                 self.instance.save()
                 self.checkin_items(original_items, items, instance)

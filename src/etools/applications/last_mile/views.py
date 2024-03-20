@@ -10,12 +10,12 @@ from rest_framework import mixins, status
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import ListAPIView
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ModelViewSet, ReadOnlyModelViewSet
 from unicef_restlib.pagination import DynamicPageNumberPagination
 
 from etools.applications.last_mile import models, serializers
+from etools.applications.last_mile.permissions import IsIPLMEditor
 from etools.applications.last_mile.tasks import notify_upload_waybill
 
 
@@ -31,7 +31,7 @@ class PointOfInterestViewSet(ModelViewSet):
         .prefetch_related('partner_organizations')\
         .filter(is_active=True, private=True)\
         .order_by('name')
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsIPLMEditor]
     pagination_class = DynamicPageNumberPagination
 
     filter_backends = (DjangoFilterBackend, SearchFilter)
@@ -60,7 +60,7 @@ class PointOfInterestViewSet(ModelViewSet):
 
 
 class InventoryItemListView(ListAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsIPLMEditor]
     serializer_class = serializers.ItemListSerializer
     pagination_class = DynamicPageNumberPagination
 
@@ -84,7 +84,7 @@ class InventoryItemListView(ListAPIView):
 
 
 class InventoryMaterialsListView(ListAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsIPLMEditor]
     serializer_class = serializers.MaterialListSerializer
     pagination_class = DynamicPageNumberPagination
 
@@ -125,7 +125,7 @@ class TransferViewSet(
         .order_by('created')
 
     pagination_class = DynamicPageNumberPagination
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsIPLMEditor]
 
     filter_backends = (DjangoFilterBackend, SearchFilter)
     search_fields = ('name', 'partner_organization__organization__name', 'comment', 'e_tools_reference')
@@ -226,5 +226,6 @@ class TransferViewSet(
 
 
 class ItemUpdateViewSet(mixins.UpdateModelMixin, GenericViewSet):
+    permission_classes = [IsIPLMEditor]
     queryset = models.Item.objects.all()
     serializer_class = serializers.ItemUpdateSerializer

@@ -2,7 +2,6 @@ from unittest.mock import Mock, patch
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
-from django.test import override_settings
 from django.utils import timezone
 
 from rest_framework import status
@@ -25,7 +24,7 @@ class TestPointOfInterestTypeView(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.partner = PartnerFactory(organization=OrganizationFactory(name='Partner'))
         cls.partner_staff = UserFactory(
-            realms__data=['IP Viewer'],
+            realms__data=['IP LM Editor'],
             profile__organization=cls.partner.organization,
         )
 
@@ -42,7 +41,7 @@ class TestPointOfInterestView(BaseTenantTestCase):
         call_command("update_notifications")
         cls.partner = PartnerFactory(organization=OrganizationFactory(name='Partner'))
         cls.partner_staff = UserFactory(
-            realms__data=['IP Viewer'],
+            realms__data=['IP LM Editor'],
             profile__organization=cls.partner.organization,
         )
         cls.poi_partner = PointOfInterestFactory(partner_organizations=[cls.partner], private=True)
@@ -68,10 +67,11 @@ class TestPointOfInterestView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 5)
 
-    @override_settings(WAYBILL_EMAILS='user1@example.com,user2@example.com')
     def test_upload_waybill(self):
         url = reverse('last_mile:pois-upload-waybill', args=(self.poi_partner.pk,))
         attachment = AttachmentFactory(file=SimpleUploadedFile('hello_world.txt', b'hello world!'))
+        recipient_1 = UserFactory(realms__data=['Waybill Recipient'])
+        recipient_2 = UserFactory(realms__data=['Waybill Recipient'])
 
         self.assertEqual(models.Transfer.objects.count(), 0)
         mock_send = Mock()
@@ -80,7 +80,9 @@ class TestPointOfInterestView(BaseTenantTestCase):
 
         self.assertEqual(mock_send.call_count, 1)
 
-        self.assertEqual(mock_send.call_args.kwargs['recipients'], ['user1@example.com', 'user2@example.com'])
+        self.assertEqual(
+            sorted(mock_send.call_args.kwargs['recipients']), sorted([recipient_1.email, recipient_2.email])
+        )
         self.assertEqual(mock_send.call_args.kwargs['context']['waybill_url'], f'http://testserver{attachment.url}')
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
@@ -92,7 +94,7 @@ class TestInventoryItemListView(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.partner = PartnerFactory(organization=OrganizationFactory(name='Partner'))
         cls.partner_staff = UserFactory(
-            realms__data=['IP Viewer'],
+            realms__data=['IP LM Editor'],
             profile__organization=cls.partner.organization,
         )
         cls.poi_partner = PointOfInterestFactory(partner_organizations=[cls.partner], private=True)
@@ -114,7 +116,7 @@ class TestTransferView(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.partner = PartnerFactory(organization=OrganizationFactory(name='Partner'))
         cls.partner_staff = UserFactory(
-            realms__data=['IP Viewer'],
+            realms__data=['IP LM Editor'],
             profile__organization=cls.partner.organization,
         )
         cls.poi_partner_1 = PointOfInterestFactory(partner_organizations=[cls.partner], private=True)
@@ -232,6 +234,7 @@ class TestTransferView(BaseTenantTestCase):
 
         loss_transfer = models.Transfer.objects.filter(transfer_type=models.Transfer.LOSS).first()
         self.assertEqual(loss_transfer.status, models.Transfer.COMPLETED)
+        self.assertEqual(loss_transfer.destination_check_in_at, checkin_data['destination_check_in_at'])
         self.assertEqual(loss_transfer.items.count(), 2)
         loss_item_2 = loss_transfer.items.get(pk=item_2.pk)
         self.assertEqual(loss_item_2.quantity, 22)
@@ -339,3 +342,27 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(response.data['status'], models.Transfer.COMPLETED)
         self.assertEqual(self.outgoing.status, models.Transfer.COMPLETED)
         self.assertEqual(self.outgoing.checked_in_by, self.partner_staff)
+
+
+class TestItemUpdateViewSet(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.partner = PartnerFactory(organization=OrganizationFactory(name='Partner'))
+        cls.partner_staff = UserFactory(
+            realms__data=['IP LM Editor'],
+            profile__organization=cls.partner.organization,
+        )
+        cls.poi_partner = PointOfInterestFactory(partner_organizations=[cls.partner], private=True)
+        cls.transfer = TransferFactory(destination_point=cls.poi_partner)
+
+    def test_path(self):
+        item = ItemFactory(transfer=self.transfer)
+        url = reverse('last_mile:item-update-detail', args=(item.pk,))
+        data = {
+            'description': 'updated description'
+        }
+        response = self.forced_auth_req('patch', url, user=self.partner_staff, data=data)
+
+        item.refresh_from_db()
+        self.assertEqual(item.description, 'updated description')
+        self.assertEqual(response.data['description'], 'updated description')

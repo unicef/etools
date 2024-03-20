@@ -40,5 +40,19 @@
       "name": "Country Office Administrator",
       "permissions": []
     }
+  },
+  {
+    "model": "auth.group",
+    "fields": {
+      "name": "IP LM Editor",
+      "permissions": []
+    }
+  },
+  {
+    "model": "auth.group",
+    "fields": {
+      "name": "Waybill Recipient",
+      "permissions": []
+    }
   }
 ]

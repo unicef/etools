@@ -1,10 +1,9 @@
-from django.conf import settings
-
 from django_tenants.utils import schema_context
 from unicef_attachments.models import Attachment
 
 from etools.applications.environment.notifications import send_notification_with_template
 from etools.applications.last_mile import models
+from etools.applications.users.models import User
 from etools.config.celery import app
 
 
@@ -20,8 +19,13 @@ def notify_upload_waybill(tenant_name, destination_pk, waybill_pk, waybill_url):
             'destination': f'{destination.__str__()} / {tenant_name.capitalize()}',
             'waybill_url': waybill_url
         }
+        recipients = User.objects\
+            .filter(realms__country__schema_name=tenant_name, realms__group__name='Waybill Recipient')\
+            .values_list('email', flat=True)\
+            .distinct()
+
         send_notification_with_template(
-            recipients=settings.WAYBILL_EMAILS.split(','),
+            recipients=list(recipients),
             template_name='last_mile/upload_waybill',
             context=email_context
         )

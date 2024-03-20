@@ -166,10 +166,6 @@ class Transfer(TimeStampedModel, models.Model):
     # Agreement ref + PD ref IRQ/PCA2020299/PD2022798
     e_tools_reference = models.CharField(max_length=255, null=True, blank=True)
 
-    # TODO TBD swagger desc: upload for a transfer vs endpoint transfers/upload-waybill/<locationId>
-    # check_in_lat_lng = models.ForeignKey(LatLng, on_delete=models.SET_NULL, null=True, related_name='check_in_transfer_lat_lng')
-    # check_out_lat_lng = models.ForeignKey(LatLng, on_delete=models.SET_NULL, null=True, related_name='check_out_transfer_lat_lng')
-
     def __str__(self):
         return f'{self.id} {self.partner_organization.name}: {self.name}'
 
