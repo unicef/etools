@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.contrib.gis import forms
 
 from unicef_attachments.admin import AttachmentSingleInline
 
@@ -24,6 +25,9 @@ class PointOfInterestAdmin(admin.ModelAdmin):
     list_filter = ('private', 'is_active')
     search_fields = ('name', )
     raw_id_fields = ('partner_organizations',)
+    formfield_overrides = {
+        models.PointField: {'widget': forms.OSMWidget(attrs={'display_raw': True})},
+    }
 
 
 class ItemInline(RestrictedEditAdminMixin, admin.StackedInline):
