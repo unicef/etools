@@ -879,3 +879,24 @@ class AmendmentTestCase(BaseTenantTestCase):
         self.assertNotEqual(self.active_intervention.budget_owner, old_budget_owner)
         self.assertEqual(active_amendment.amended_intervention.budget_owner, self.active_intervention.budget_owner)
         self.assertEqual(completed_amendment.amended_intervention.budget_owner, old_budget_owner)
+
+    def test_update_title(self):
+        amendment = InterventionAmendmentFactory(
+            intervention=self.active_intervention,
+            kind=InterventionAmendment.KIND_NORMAL,
+        )
+
+        amendment.amended_intervention.title = '[Amended] New Title'
+        amendment.amended_intervention.save()
+
+        amendment.difference = amendment.get_difference()
+        amendment.merge_amendment()
+
+        self.assertDictEqual(
+            amendment.difference,
+            {
+                'title': {'diff': ('Active Intervention', 'New Title'), 'type': 'simple'}
+            },
+        )
+        self.active_intervention.refresh_from_db()
+        self.assertEqual(self.active_intervention.title, 'New Title')
