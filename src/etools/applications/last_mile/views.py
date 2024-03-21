@@ -41,7 +41,9 @@ class PointOfInterestViewSet(ModelViewSet):
     def get_queryset(self):
         partner_organization = getattr(self.request.user.profile.organization, 'partner', None)
         if partner_organization:
-            return super().get_queryset().filter(partner_organizations=partner_organization)
+            return super().get_queryset().filter(
+                Q(partner_organizations=partner_organization) | Q(partner_organizations__isnull=True)
+            )
         return models.PointOfInterest.objects.none()
 
     @action(detail=True, methods=['post'], url_path='upload-waybill',
