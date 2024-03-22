@@ -418,6 +418,30 @@ class PMPOfficerReviewDetailView(PMPOfficerReviewBaseView, UpdateAPIView):
     lookup_url_kwarg = 'user_pk'
 
 
+class PMPOfficerReviewDetailPDFView(PMPOfficerReviewBaseView, RetrieveAPIView):
+    permission_classes = [
+        IsAuthenticated,
+        UserIsStaffPermission,
+        # intervention_field_is_editable_permission('prc_reviews'),
+        # UserBelongsToObjectPermission,
+    ]
+
+    def get(self, request, *args, **kwargs):
+        pd = self.get_root_object()
+        prc_review = self.get_queryset().get(pk=self.kwargs.get('prc_review_pk'))
+
+        font_path = settings.PACKAGE_ROOT + '/assets/fonts/'
+
+        data = {
+            "domain": 'https://{}'.format(get_current_site().domain),
+            "pd": pd,
+            "prc_review": prc_review,
+            "font_path": font_path,
+        }
+
+        return render_to_pdf_response(request, "pd/prc_review_pdf.html", data, filename=f'PRC_Review_{str(pd)}.pdf')
+
+
 class PMPInterventionSupplyItemMixin(
         DetailedInterventionResponseMixin,
         PMPInterventionMixin,

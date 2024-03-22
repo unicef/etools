@@ -1,0 +1,220 @@
+{% extends "easy_pdf/base.html" %}
+{% load i18n humanize etools %}
+
+{% block style_base %}
+  {% comment %}
+        See DEFAULT_CSS in https://github.com/chrisglass/xhtml2pdf/blob/master/xhtml2pdf/default.py
+        for base style.
+    {% endcomment %}
+
+  {% block layout_style %}
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="UTF-8">
+    <style type="text/css">
+        body {
+            font-size:9pt;
+            font-family: "Times_New_Roman";
+        }
+        @page {
+            size: "landscape";
+            margin-left: 2.0cm;
+            margin-right: 2.0cm;
+            margin-top: 2.4cm;
+            margin-bottom: 1.8cm;
+            @frame header {
+                -pdf-frame-content: header_content;
+                margin-top: 1cm;
+                margin-right: 2.0cm;
+                margin-bottom: 0.3cm;
+                padding-bottom: 3cm;
+                margin-left: 0cm;
+                background-color: #0099ff;
+                height: 2cm;
+            }
+            @frame footer_frame {
+                /* Static frame */
+                -pdf-frame-content:footer_content;
+                right: 50pt; width: 50pt; bottom: 10pt; height: 20pt;
+            }
+        }
+
+        /*https://github.com/xhtml2pdf/xhtml2pdf/issues/129*/
+        /*times new roman*/
+        @font-face {
+            font-family: "Times_New_Roman";
+            src: url("{{font_path}}times_new_roman/Times_New_Roman.ttf");
+        }
+        @font-face {
+            font-family: "Times_New_Roman_Italic";
+            src: url("{{font_path}}times_new_roman/Times_New_Roman_Italic.ttf");
+        }
+        @font-face {
+            font-family: "Times_New_Roman_Bold";
+            src: url("{{font_path}}times_new_roman/Times_New_Roman_Bold.ttf");
+        }
+        @font-face {
+            font-family: "Times_New_Roman_Bold_Italic";
+            src: url("{{font_path}}times_new_roman/Times_New_Roman_Bold_Italic.ttf");
+        }
+    </style>
+  {% endblock %}
+  {% block extra_style %}
+    <style type="text/css">
+        <!--
+          {#body {padding: 40pt}#}
+          table { width: 100%; border-spacing: 0;line-height: 140%;}
+          .just-border, .bordered { border: 2pt solid #A0A0A0; }
+          table.bordered td { border-bottom: 2pt solid #A0A0A0; }
+          table.bordered {border-bottom: none;}
+          .no-border {border: none !important;}
+          table.no-border td {border: none;}
+          table.all-cells-border {
+            border-top: 2pt solid #A0A0A0;
+            border-left: 2pt solid #A0A0A0;
+          }
+          .all-cells-border td {
+            border-bottom: 2pt solid #A0A0A0;
+            border-right: 2pt solid #A0A0A0;
+          }
+          .small-text {
+              font-size:7pt;
+          }
+          td {
+            word-break: break-all;
+            {#weird paddings fix#}
+            margin-left: 5pt;
+            padding-top: 2pt;
+          }
+          tr.bordered td { border-bottom: 2pt solid #A0A0A0;}
+          .p-0 {padding: 0 !important}
+          .mt-20 {margin-top: 20pt}
+          .mb-5 {margin-bottom: 5pt}
+          .w-p4 {width: 4%;}
+          .w-p5 {width: 5%;}
+          .w-p8 {width: 8%;}
+          .w-p10 {width: 10%;}
+          .w-p12 {width: 12.5%;}
+          .w-p13 {width: 13%;}
+          .w-p15 {width: 15%;}
+          .w-p20 {width: 20%}
+          .w-p22 {width: 22%}
+          .w-p25 {width: 25%}
+          .w-p30 {width: 30%}
+          .w-p39 {width: 39%}
+          .w-p40 {width: 40%}
+          .w-p50 {width: 50%;}
+          .w-p62 {width: 62.5%;}
+          .w-100 {width: 100%;}
+          .bold {font-weight: bold;}
+          .b-gray {background-color: #E8E8E8;}
+          .b-navy {background-color: #002060; color: #ffffff}
+          .b-yellow {background-color: #FFE599;}
+          .b-blue {background-color: #BDD6EE;}
+          .p-b-20 {padding-bottom:20pt;}
+          table.padded-bottom td{padding-bottom:20pt;}
+          {#table.padded-top td{padding-top:20pt;}#}
+          {#table.padded-left td{padding-left:20pt;}#}
+          {#table.padded-right td{padding-right:20pt;}#}
+          {#.risk-title {margin-block-start: 0.2rem; font-weight: bold;}#}
+        -->
+    </style>
+  {% endblock %}
+{% endblock %}
+
+{% block content %}
+  {% if error %}
+    {% translate "PDF could not be generated properly" %}: <br> {{ error }}
+  {% else %}
+    <div id="content">
+      <h1>PRC Review</h1>
+      <table class="all-cells-border">
+        <tbody>
+        <tr>
+          <td class="b-gray w-p20">{% translate "eTools ref no" %}</td>
+          <td>{{ pd.number }}</td>
+        </tr>
+        <tr>
+          <td class="b-gray w-p20">{% translate "Organization Name" %}</td>
+          <td>{{ pd.agreement.partner.name }}</td>
+        </tr>
+        <tr>
+          <td class="b-gray w-p20">{% translate "Programme Title" %}</td>
+          <td>{{ pd.title }}</td>
+        </tr>
+        <tr>
+          <td class="b-gray w-p20">{% translate "Submitted By" %}</td>
+          <td>{{ prc_review.overall_review.submitted_by.full_name }}</td>
+        </tr>
+        <tr>
+          <td class="b-gray w-p20">{% translate "Date of submission for review" %}</td>
+          <td>{{ prc_review.overall_review.created }}</td>
+        </tr>
+        <tr>
+          <td class="b-gray w-p20">{% translate "PRC Member Reviewer" %}</td>
+          <td>{{ prc_review.user.full_name }}</td>
+        </tr>
+        <tr>
+          <td class="b-gray w-p20">{% translate "Review Date" %}</td>
+          <td>{{ prc_review.review_date }}</td>
+        </tr>
+        <tr>
+          <td class="b-gray w-p20">{% translate "Overall Approver" %}</td>
+          <td>{{ prc_review.overall_review.overall_approver.full_name }}</td>
+        </tr>
+        <tr>
+          <td class="b-gray w-p20">{% translate "Overall Comment" %}</td>
+          <td>{{ prc_review.overall_review.overall_comment }}</td>
+        </tr>
+        <tr>
+          <td class="b-gray w-p20">{% translate "Overall Approval" %}</td>
+          <td>{{ prc_review.overall_review.overall_approval }}</td>
+        </tr>
+        <tr>
+          <td class="b-gray w-p20">{% translate "Actions List" %}</td>
+          <td>{{ prc_review.overall_review.actions_list }}</td>
+        </tr>
+        <tbody>
+      </table>
+
+      <table class="all-cells-border mt-20">
+        <tbody>
+
+          <tr>
+            <td class="b-gray" colspan="3">Q1: {% get_verbose_name prc_review.overall_review "relationship_is_represented" %}</td>
+            <td colspan="1">{{ prc_review.overall_review.get_relationship_is_represented_display }}</td>
+          </tr>
+          <tr>
+            <td class="b-gray" colspan="3">Q2: {% get_verbose_name prc_review.overall_review "partner_comparative_advantage" %}</td>
+            <td colspan="1">{{ prc_review.overall_review.get_partner_comparative_advantage_display }}</td>
+          </tr>
+          <tr>
+            <td class="b-gray" colspan="3">Q3: {% get_verbose_name prc_review.overall_review "relationships_are_positive" %}</td>
+            <td colspan="1">{{ prc_review.overall_review.get_relationships_are_positive_display }}</td>
+          </tr>
+          <tr>
+            <td class="b-gray" colspan="3">Q4: {% get_verbose_name prc_review.overall_review "pd_is_relevant" %}</td>
+            <td colspan="1">{{ prc_review.overall_review.get_pd_is_relevant_display }}</td>
+          </tr>
+          <tr>
+            <td class="b-gray" colspan="3">Q5: {% get_verbose_name prc_review.overall_review "pd_is_guided" %}</td>
+            <td colspan="1">{{ prc_review.overall_review.get_pd_is_guided_display }}</td>
+          </tr>
+          <tr>
+            <td class="b-gray" colspan="3">Q6: {% get_verbose_name prc_review.overall_review "ges_considered" %}</td>
+            <td colspan="1">{{ prc_review.overall_review.get_ges_considered_display }}</td>
+          </tr>
+          <tr>
+            <td class="b-gray" colspan="3">Q7: {% get_verbose_name prc_review.overall_review "budget_is_aligned" %}</td>
+            <td colspan="1">{{ prc_review.overall_review.get_budget_is_aligned_display }}</td>
+          </tr>
+          <tr>
+            <td class="b-gray" colspan="3">Q8: {% get_verbose_name prc_review.overall_review "supply_issues_considered" %}</td>
+            <td colspan="1">{{ prc_review.overall_review.get_supply_issues_considered_display }}</td>
+          </tr>
+        <tbody>
+      </table>
+
+    </div>
+
+  {% endif %}
+{% endblock %}
