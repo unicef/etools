@@ -126,7 +126,6 @@
     {% translate "PDF could not be generated properly" %}: <br> {{ error }}
   {% else %}
     <div id="content">
-      <h1>PRC Review</h1>
       <table class="all-cells-border">
         <tbody>
         <tr>
@@ -143,35 +142,35 @@
         </tr>
         <tr>
           <td class="b-gray w-p20">{% translate "Submitted By" %}</td>
-          <td>{{ prc_review.overall_review.submitted_by.full_name }}</td>
+          <td>{{ review.submitted_by.full_name }}</td>
         </tr>
         <tr>
           <td class="b-gray w-p20">{% translate "Date of submission for review" %}</td>
-          <td>{{ prc_review.overall_review.created }}</td>
+          <td>{{ review.created }}</td>
         </tr>
-        <tr>
-          <td class="b-gray w-p20">{% translate "PRC Member Reviewer" %}</td>
-          <td>{{ prc_review.user.full_name }}</td>
-        </tr>
-        <tr>
-          <td class="b-gray w-p20">{% translate "Review Date" %}</td>
-          <td>{{ prc_review.review_date }}</td>
-        </tr>
+<!--        <tr>-->
+<!--          <td class="b-gray w-p20">{% translate "PRC Member Reviewer" %}</td>-->
+<!--          <td>{{ prc_review.user.full_name }}</td>-->
+<!--        </tr>-->
+<!--        <tr>-->
+<!--          <td class="b-gray w-p20">{% translate "Review Date" %}</td>-->
+<!--          <td>{{ prc_review.review_date }}</td>-->
+<!--        </tr>-->
         <tr>
           <td class="b-gray w-p20">{% translate "Overall Approver" %}</td>
-          <td>{{ prc_review.overall_review.overall_approver.full_name }}</td>
+          <td>{{ review.overall_approver.full_name }}</td>
         </tr>
         <tr>
           <td class="b-gray w-p20">{% translate "Overall Comment" %}</td>
-          <td>{{ prc_review.overall_review.overall_comment }}</td>
+          <td>{{ review.overall_comment }}</td>
         </tr>
         <tr>
           <td class="b-gray w-p20">{% translate "Overall Approval" %}</td>
-          <td>{{ prc_review.overall_review.overall_approval }}</td>
+          <td>{{ review.overall_approval }}</td>
         </tr>
         <tr>
           <td class="b-gray w-p20">{% translate "Actions List" %}</td>
-          <td>{{ prc_review.overall_review.actions_list }}</td>
+          <td>{{ review.actions_list }}</td>
         </tr>
         <tbody>
       </table>
@@ -180,36 +179,36 @@
         <tbody>
 
           <tr>
-            <td class="b-gray" colspan="3">Q1: {% get_verbose_name prc_review.overall_review "relationship_is_represented" %}</td>
-            <td colspan="1">{{ prc_review.overall_review.get_relationship_is_represented_display }}</td>
+            <td class="b-gray" colspan="3">Q1: {% get_verbose_name review "relationship_is_represented" %}</td>
+            <td colspan="1">{{ review.get_relationship_is_represented_display }}</td>
           </tr>
           <tr>
-            <td class="b-gray" colspan="3">Q2: {% get_verbose_name prc_review.overall_review "partner_comparative_advantage" %}</td>
-            <td colspan="1">{{ prc_review.overall_review.get_partner_comparative_advantage_display }}</td>
+            <td class="b-gray" colspan="3">Q2: {% get_verbose_name review "partner_comparative_advantage" %}</td>
+            <td colspan="1">{{ review.get_partner_comparative_advantage_display }}</td>
           </tr>
           <tr>
-            <td class="b-gray" colspan="3">Q3: {% get_verbose_name prc_review.overall_review "relationships_are_positive" %}</td>
-            <td colspan="1">{{ prc_review.overall_review.get_relationships_are_positive_display }}</td>
+            <td class="b-gray" colspan="3">Q3: {% get_verbose_name review "relationships_are_positive" %}</td>
+            <td colspan="1">{{ review.get_relationships_are_positive_display }}</td>
           </tr>
           <tr>
-            <td class="b-gray" colspan="3">Q4: {% get_verbose_name prc_review.overall_review "pd_is_relevant" %}</td>
-            <td colspan="1">{{ prc_review.overall_review.get_pd_is_relevant_display }}</td>
+            <td class="b-gray" colspan="3">Q4: {% get_verbose_name review "pd_is_relevant" %}</td>
+            <td colspan="1">{{ review.get_pd_is_relevant_display }}</td>
           </tr>
           <tr>
-            <td class="b-gray" colspan="3">Q5: {% get_verbose_name prc_review.overall_review "pd_is_guided" %}</td>
-            <td colspan="1">{{ prc_review.overall_review.get_pd_is_guided_display }}</td>
+            <td class="b-gray" colspan="3">Q5: {% get_verbose_name review "pd_is_guided" %}</td>
+            <td colspan="1">{{ review.get_pd_is_guided_display }}</td>
           </tr>
           <tr>
-            <td class="b-gray" colspan="3">Q6: {% get_verbose_name prc_review.overall_review "ges_considered" %}</td>
-            <td colspan="1">{{ prc_review.overall_review.get_ges_considered_display }}</td>
+            <td class="b-gray" colspan="3">Q6: {% get_verbose_name review "ges_considered" %}</td>
+            <td colspan="1">{{ review.get_ges_considered_display }}</td>
           </tr>
           <tr>
-            <td class="b-gray" colspan="3">Q7: {% get_verbose_name prc_review.overall_review "budget_is_aligned" %}</td>
-            <td colspan="1">{{ prc_review.overall_review.get_budget_is_aligned_display }}</td>
+            <td class="b-gray" colspan="3">Q7: {% get_verbose_name review "budget_is_aligned" %}</td>
+            <td colspan="1">{{ review.get_budget_is_aligned_display }}</td>
           </tr>
           <tr>
-            <td class="b-gray" colspan="3">Q8: {% get_verbose_name prc_review.overall_review "supply_issues_considered" %}</td>
-            <td colspan="1">{{ prc_review.overall_review.get_supply_issues_considered_display }}</td>
+            <td class="b-gray" colspan="3">Q8: {% get_verbose_name review "supply_issues_considered" %}</td>
+            <td colspan="1">{{ review.get_supply_issues_considered_display }}</td>
           </tr>
         <tbody>
       </table>

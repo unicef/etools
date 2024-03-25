@@ -25,9 +25,9 @@ from etools.applications.partners.views.interventions_v3 import (
     PMPInterventionSupplyItemRetrieveUpdateView,
     PMPInterventionSupplyItemUploadView,
     PMPInterventionXLSView,
-    PMPOfficerReviewDetailPDFView,
     PMPOfficerReviewDetailView,
     PMPOfficerReviewListView,
+    PMPReviewDetailPDFView,
     PMPReviewDetailView,
     PMPReviewNotifyView,
     PMPReviewView,
@@ -235,6 +235,11 @@ urlpatterns = [
         name='intervention-reviews-detail',
     ),
     path(
+        'interventions/<int:intervention_pk>/reviews/<int:review_pk>/pdf/',
+        view=PMPReviewDetailPDFView.as_view(),
+        name='intervention-review-pdf',
+    ),
+    path(
         'interventions/<int:intervention_pk>/reviews/<int:pk>/notify/',
         view=PMPReviewNotifyView.as_view(),
         name='intervention-reviews-notify',
@@ -247,11 +252,6 @@ urlpatterns = [
     path(
         'interventions/<int:intervention_pk>/reviews/<int:review_pk>/officers-reviews/<int:user_pk>/',
         view=PMPOfficerReviewDetailView.as_view(),
-        name='intervention-officers-review-detail',
-    ),
-    path(
-        'interventions/<int:intervention_pk>/reviews/<int:review_pk>/officers-reviews/<int:prc_review_pk>/pdf/',
-        view=PMPOfficerReviewDetailPDFView.as_view(),
         name='intervention-officers-review-detail',
     ),
     path(
