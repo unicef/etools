@@ -42,6 +42,7 @@ from etools.applications.partners.models import (
 )
 from etools.applications.partners.permissions import (
     AmendmentSessionOnlyDeletePermission,
+    intervention_field_has_view_permission,
     intervention_field_is_editable_permission,
     PMPInterventionPermission,
     UserBelongsToObjectPermission,
@@ -375,6 +376,10 @@ class PMPReviewDetailView(PMPReviewMixin, RetrieveUpdateAPIView):
 
 
 class PMPReviewDetailPDFView(PMPReviewMixin, RetrieveAPIView):
+    permission_classes = [
+        IsAuthenticated,
+        IsReadAction & intervention_field_has_view_permission('reviews')
+    ]
 
     def get(self, request, *args, **kwargs):
         pd = self.get_root_object()
