@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-03-24 08:39+0000\n"
+"POT-Creation-Date: 2024-03-26 09:08+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -22,11 +22,20 @@ msgstr ""
 msgid "Activity"
 msgstr "نشاط"
 
-msgid "Activity Overall Finding"
-msgstr "إجمالي نتيجة النشاط"
+msgid "Question"
+msgstr "سؤال"
 
-msgid "Activity Overall Findings"
-msgstr "إجمالي نتيجة النشاط"
+msgid "Question Text"
+msgstr "نص السؤال"
+
+msgid "Count as HACT"
+msgstr "HACT تحسب نحو"
+
+msgid "Specific Details To Probe"
+msgstr "تفاصيل محددة للتحقق"
+
+msgid "Enabled"
+msgstr "مُمَكَّن"
 
 msgid "Activity Question"
 msgstr "سؤال النشاط"
@@ -34,74 +43,14 @@ msgstr "سؤال النشاط"
 msgid "Activity Questions"
 msgstr "أسئلة النشاط"
 
-msgid "Attachments"
-msgstr "مرفقات"
-
-msgid "Author"
-msgstr "المؤلف"
-
-msgid "Checklist"
-msgstr "قائمة التحقق"
-
-msgid "Checklist Finding"
-msgstr "نتيجة البحث في قائمة التحقق"
-
-msgid "Checklist Findings"
-msgstr "نتائج البحث في قائمة التحقق"
-
-msgid "Checklist Overall Finding"
-msgstr "إجمالي نتيجة البحث في قائمة التحقق"
-
-msgid "Checklist Overall Findings"
-msgstr "النتائج العامة لقائمة التحقق"
-
-msgid "Count as HACT"
-msgstr "HACT تحسب نحو"
-
-msgid "Document Type"
-msgstr "نوع المستند"
-
-msgid "Enabled"
-msgstr "مُمَكَّن"
-
-msgid "Ensure this field has no more than 100 characters."
-msgstr "تأكد من أن هذا الحقل لا يحتوي على أكثر من 100 حرف."
+msgid "Methods"
+msgstr "طرق"
 
 msgid "Information Source"
 msgstr "مصدر المعلومات"
 
-msgid "Information source is required"
-msgstr "مصدر المعلومات مطلوب"
-
-msgid "Methods"
-msgstr "طرق"
-
-msgid "Narrative Finding"
-msgstr "النتائج الوصفية"
-
-msgid "Overall Activity Question Finding"
-msgstr "إجمالي نتيجة سؤال النشاط"
-
-msgid "Overall Activity Question Findings"
-msgstr "إجمالي أنشطة البحث عن الأسئلة"
-
-msgid "Overall Finding"
-msgstr "النتيجة الإجمالية"
-
-msgid "Question"
-msgstr "سؤال"
-
-msgid "Question Text"
-msgstr "نص السؤال"
-
-msgid "Report Attachments"
-msgstr "مرفقات التقرير"
-
-msgid "Source of Information"
-msgstr "مصدر المعلومات"
-
-msgid "Specific Details To Probe"
-msgstr "تفاصيل محددة للتحقق"
+msgid "Author"
+msgstr "المؤلف"
 
 msgid "Started Checklist"
 msgstr "قائمة التحقق التي تم البدء فيها"
@@ -109,23 +58,81 @@ msgstr "قائمة التحقق التي تم البدء فيها"
 msgid "Started Checklists"
 msgstr "قوائم التحقق التي تم البدء بها"
 
-msgid "Unable to fill checklists for current activity"
-msgstr "غير قادر على ملء قوائم التحقق للنشاط الحالي"
+msgid "Checklist"
+msgstr "قائمة التحقق"
+
+msgid "Value"
+msgstr "القيمة"
+
+msgid "Checklist Finding"
+msgstr "نتيجة البحث في قائمة التحقق"
+
+msgid "Checklist Findings"
+msgstr "نتائج البحث في قائمة التحقق"
+
+msgid "Overall Activity Question Finding"
+msgstr "إجمالي نتيجة سؤال النشاط"
+
+msgid "Overall Activity Question Findings"
+msgstr "إجمالي أنشطة البحث عن الأسئلة"
+
+msgid "Narrative Finding"
+msgstr "النتائج الوصفية"
+
+msgid "Attachments"
+msgstr "مرفقات"
+
+msgid "Checklist Overall Finding"
+msgstr "إجمالي نتيجة البحث في قائمة التحقق"
+
+msgid "Checklist Overall Findings"
+msgstr "النتائج العامة لقائمة التحقق"
+
+msgid "Activity Overall Finding"
+msgstr "إجمالي نتيجة النشاط"
+
+msgid "Activity Overall Findings"
+msgstr "إجمالي نتيجة النشاط"
+
+msgid "Source of Information"
+msgstr "مصدر المعلومات"
+
+msgid "Overall Finding"
+msgstr "النتيجة الإجمالية"
 
 #, python-format
 msgid "Unable to find %(level)s with id %(target_id)s"
 msgstr "غير قادر على البحث %(level)s باستخدام المعرف %(target_id)s"
 
 #, python-format
-msgid "Unable to find finding for question %(question_id)s for %(level)s %(target_id)s"
-msgstr "غير قادر على العثور على نتيجة ل سؤال %(question_id)s لـ %(level)s %(target_id)s"
+msgid ""
+"Unable to find finding for question %(question_id)s for %(level)s "
+"%(target_id)s"
+msgstr ""
+"غير قادر على العثور على نتيجة ل سؤال %(question_id)s لـ %(level)s "
+"%(target_id)s"
 
-msgid "User is required"
-msgstr "مراقب الميدان الأساسي مطلوب"
+msgid "Ensure this field has no more than 100 characters."
+msgstr "تأكد من أن هذا الحقل لا يحتوي على أكثر من 100 حرف."
 
-msgid "Value"
-msgstr "القيمة"
+msgid "Document Type"
+msgstr "نوع المستند"
+
+msgid "Information source is required"
+msgstr "مصدر المعلومات مطلوب"
 
 #, python-format
 msgid "Workspace code provided is not a valid business_area_code: %s"
 msgstr "رمز مساحة العمل المقدم ليس رمز business_area_code صالحًا: %s"
+
+msgid "Workspace is required"
+msgstr "مساحة العمل مطلوبة"
+
+msgid "User is required"
+msgstr "مراقب الميدان الأساسي مطلوب"
+
+msgid "Unable to fill checklists for current activity"
+msgstr "غير قادر على ملء قوائم التحقق للنشاط الحالي"
+
+msgid "Report Attachments"
+msgstr "مرفقات التقرير"

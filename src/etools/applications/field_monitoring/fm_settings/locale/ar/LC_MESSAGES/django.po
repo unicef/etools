@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-03-24 08:39+0000\n"
+"POT-Creation-Date: 2024-03-26 09:09+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -19,44 +19,50 @@ msgstr ""
 "Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 "
 "&& n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
 
-msgid "Active"
-msgstr "فعال"
+msgid "Methods"
+msgstr "طرق"
+
+msgid "Site ID"
+msgstr "معرف المكان"
 
 #, python-format
 msgid "Admin %s - Name"
 msgstr "مدير النظام %s - الاسم"
 
 #, python-format
-msgid "Admin %s - Pcode"
-msgstr "المشرف %s - Pcode"
-
-#, python-format
 msgid "Admin %s - Type"
 msgstr "مدير النظام %s - النوع"
 
-msgid "Answer Type"
-msgstr "نوع الإجابة"
+#, python-format
+msgid "Admin %s - Pcode"
+msgstr "المشرف %s - Pcode"
 
-msgid "Ask for information source in checklist?"
-msgstr "اسأل عن مصدر المعلومات في قائمة التحقق؟"
+msgid "Site"
+msgstr "المكان"
+
+msgid "Lat"
+msgstr "لات"
+
+msgid "Long"
+msgstr "طويل"
+
+msgid "Active"
+msgstr "فعال"
+
+msgid "Related To"
+msgstr "ذو الصلة بـ"
+
+msgid "Name"
+msgstr "الاسم"
+
+msgid "Issue for Attention"
+msgstr "مسألة تستدعي الانتباه"
+
+msgid "Status"
+msgstr "الحالة"
 
 msgid "Attachments"
 msgstr "المرفقات"
-
-msgid "Boolean"
-msgstr "المتغيرات المنطقية"
-
-msgid "CP Output"
-msgstr "CP مخرجات"
-
-msgid "Category"
-msgstr "الفئة"
-
-msgid "Choices Size"
-msgstr "حجم الاختيارات"
-
-msgid "Count as HACT"
-msgstr "HACTتحسب نحو"
 
 msgid "Global Attachments"
 msgstr "المرفقات العالمية"
@@ -67,86 +73,35 @@ msgstr "الإعداد العالمي"
 msgid "Global Configs"
 msgstr "الإعدادات العالمية"
 
-msgid "HACT questions can only be related at the Partner Organization Level"
-msgstr "يمكن أن تكون أسئلة HACT ذات صلة فقط على مستوى المنظمة الشريكة"
+msgid "Short Name"
+msgstr "الاسم المختصر"
 
-msgid "Inactive"
-msgstr "غير فعال"
-
-msgid "Is Active"
-msgstr "فعال"
-
-msgid "Is Custom"
-msgstr "مخصص"
-
-msgid "Issue Closed By"
-msgstr "تم إغلاق المسألة من قبل"
-
-msgid "Issue For Attention/Probing"
-msgstr "مسألة للتنبيه/ للفحص"
-
-msgid "Issue Raised By"
-msgstr "طرحت المسألة من قبل"
-
-msgid "Issue Related To"
-msgstr "مسألة تتصل بـ"
-
-msgid "Issue for Attention"
-msgstr "مسألة تستدعي الانتباه"
-
-msgid "Label"
-msgstr "بطاقة"
-
-msgid "Lat"
-msgstr "لات"
-
-msgid "Level"
-msgstr "المستوى"
-
-msgid "Likert Scale"
-msgstr "مقياس ليكرت"
-
-msgid "Location"
-msgstr "الموقع"
-
-msgid "Location/Site"
-msgstr "الموقع /مكان"
-
-msgid "Location Site"
-msgstr "مكان الموقع"
-
-msgid "Location Sites"
-msgstr "أماكن المواقع"
-
-msgid "Log Issue"
-msgstr "سجل المشكلة"
-
-msgid "Log Issues"
-msgstr "سجل المشكلات"
-
-msgid "Long"
-msgstr "طويل"
-
-msgid "Maximum one related object should be provided"
-msgstr "ينبغي توفير كائن واحد ذو صلة كحد أقصى"
+msgid "Ask for information source in checklist?"
+msgstr "اسأل عن مصدر المعلومات في قائمة التحقق؟"
 
 msgid "Method"
 msgstr "طريقة"
 
-msgid "Methods"
-msgstr "طرق"
+msgid "Question Category"
+msgstr "فئة السؤال"
 
-msgid "Name"
-msgstr "الاسم"
+msgid "Questions Categories"
+msgstr "فئات الأسئلة"
+
+msgid "Text"
+msgstr "النص"
 
 msgid "Number"
 msgstr "الرقم"
 
-msgid "Only one hact question can be active at any time."
-msgstr "يمكن تفعيل سؤال HACT واحد فقط في أي وقت."
+msgid "Boolean"
+msgstr "المتغيرات المنطقية"
 
-msgid "Option"
-msgstr "الخيار"
+msgid "Likert Scale"
+msgstr "مقياس ليكرت"
+
+msgid "Partner"
+msgstr "الشريك"
 
 msgid "Output"
 msgstr "المخرجات"
@@ -154,62 +109,107 @@ msgstr "المخرجات"
 msgid "PD/SPD"
 msgstr "PD/SPD"
 
-msgid "P Code"
-msgstr "كود P"
+msgid "Answer Type"
+msgstr "نوع الإجابة"
 
-msgid "Parent Location"
-msgstr "الموقع الرئيسي"
+msgid "Choices Size"
+msgstr "حجم الاختيارات"
 
-msgid "Partner"
-msgstr "الشريك"
+msgid "Level"
+msgstr "المستوى"
 
-msgid "Point"
-msgstr "النقطة"
-
-msgid "Question"
-msgstr "السؤال"
-
-msgid "Question Category"
-msgstr "فئة السؤال"
-
-msgid "Question Text"
-msgstr "نص السؤال"
-
-msgid "Questions"
-msgstr "الأسئلة"
-
-msgid "Questions Categories"
-msgstr "فئات الأسئلة"
-
-msgid "Related To"
-msgstr "ذو الصلة بـ"
-
-msgid "Related object not provided"
-msgstr "لم يتم توفير الكائن ذي الصلة"
+msgid "Category"
+msgstr "الفئة"
 
 msgid "Sections"
 msgstr "الأقسام"
 
-msgid "Short Name"
-msgstr "الاسم المختصر"
+msgid "Question Text"
+msgstr "نص السؤال"
 
-msgid "Site"
-msgstr "المكان"
+msgid "Count as HACT"
+msgstr "HACTتحسب نحو"
 
-msgid "Site ID"
-msgstr "معرف المكان"
+msgid "Is Custom"
+msgstr "مخصص"
 
-msgid "Site Specific Locations"
-msgstr "مكان المواقع المحددة"
+msgid "Is Active"
+msgstr "فعال"
 
-msgid "Status"
-msgstr "الحالة"
+msgid "Question"
+msgstr "السؤال"
 
-msgid "Text"
-msgstr "النص"
+msgid "Questions"
+msgstr "الأسئلة"
+
+msgid "Label"
+msgstr "بطاقة"
+
+msgid "Value"
+msgstr "القيمة"
+
+msgid "Option"
+msgstr "الخيار"
+
+msgid "Parent Location"
+msgstr "الموقع الرئيسي"
+
+msgid "P Code"
+msgstr "كود P"
+
+msgid "Point"
+msgstr "النقطة"
+
+msgid "Location Site"
+msgstr "مكان الموقع"
+
+msgid "Location Sites"
+msgstr "أماكن المواقع"
+
+msgid "CP Output"
+msgstr "CP مخرجات"
+
+msgid "Location/Site"
+msgstr "الموقع /مكان"
+
+msgid "Issue Raised By"
+msgstr "طرحت المسألة من قبل"
+
+msgid "Location"
+msgstr "الموقع"
+
+msgid "Issue For Attention/Probing"
+msgstr "مسألة للتنبيه/ للفحص"
+
+msgid "Log Issue"
+msgstr "سجل المشكلة"
+
+msgid "Log Issues"
+msgstr "سجل المشكلات"
+
+msgid "Related object not provided"
+msgstr "لم يتم توفير الكائن ذي الصلة"
+
+msgid "Maximum one related object should be provided"
+msgstr "ينبغي توفير كائن واحد ذو صلة كحد أقصى"
+
+msgid "HACT questions can only be related at the Partner Organization Level"
+msgstr "يمكن أن تكون أسئلة HACT ذات صلة فقط على مستوى المنظمة الشريكة"
+
+msgid "Only one hact question can be active at any time."
+msgstr "يمكن تفعيل سؤال HACT واحد فقط في أي وقت."
 
 msgid "The system provided questions cannot be edited."
 msgstr "لا يمكن تحرير الأسئلة التي يوفرها النظام."
 
-msgid "Value"
-msgstr "القيمة"
+msgid "Inactive"
+msgstr "غير فعال"
+
+msgid "Issue Closed By"
+msgstr "تم إغلاق المسألة من قبل"
+
+msgid "Issue Related To"
+msgstr "مسألة تتصل بـ"
+
+msgid "Site Specific Locations"
+msgstr "مكان المواقع المحددة"
