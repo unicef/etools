@@ -18,258 +18,246 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-msgid "TPM Partner selected for staff activity"
-msgstr "Socio de TPM seleccionado para la actividad del personal"
+msgid "Action Point Category"
+msgstr "Categoría de Punto de Acción"
 
-msgid "Staff members do not belong to the selected partner"
-msgstr "Los miembros del personal no pertenecen al socio seleccionado"
+msgid "Activity Attachments"
+msgstr "Anexos de actividad"
 
-#, python-format
-msgid ""
-"You've selected a PD/SPD and unselected some of it's corresponding partners, "
-"please either remove the PD or add the partners back before saving: %s"
-msgstr ""
-"Seleccionó un PD/SPD y anuló la selección de algunos de sus socios "
-"correspondientes, elimine el PD o vuelva a agregar los socios antes de "
-"guardar: %s"
-
-#, python-format
-msgid ""
-"You've selected a PD/SPD and unselected some of it's corresponding outputs, "
-"please either remove the PD or add the outputs back before saving: %s"
-msgstr ""
-"Seleccionó un PD/SPD y deseleccionó algunas de sus salidas correspondientes, "
-"elimine el PD o vuelva a agregar las salidas antes de guardar: %s"
-
-msgid "Partner is not defined for TPM activity"
-msgstr "El socio no está definido para la actividad de TPM"
-
-msgid "At least one Partner, CP Output or PD/SPD should be added"
-msgstr "Se debe agregar al menos un socio, salida de CP o PD/SPD"
-
-msgid "Rejection reason should be provided."
-msgstr "Debe indicarse el motivo del rechazo."
-
-msgid "Cancellation reason should be provided."
-msgstr "Debe indicarse el motivo de la cancelación."
-
-msgid "Report reject reason should be provided."
-msgstr "Debe indicarse el motivo del rechazo del informe."
-
-msgid "At least one question should be enabled."
-msgstr "Al menos una pregunta debe estar habilitada."
-
-msgid "At least one checklist should be completed."
-msgstr "Se debe completar al menos una lista de verificación."
-
-msgid "At least one summary finding should be completed."
-msgstr "Debe completarse al menos un resultado resumido."
-
-#, python-format
-msgid "Required fields not completed in %(status)s: %(fields)s"
-msgstr "Campos obligatorios no completados en %(status)s: %(fields)s"
-
-#, python-format
-msgid "Cannot change fields while in %(status)s: %(field)s"
-msgstr "No se pueden cambiar los campos mientras está en %(status)s: %(field)s"
-
-msgid "Prioritization Criteria"
-msgstr "Criterios de Priorización"
-
-msgid "Methodology Notes & Standards"
-msgstr "Notas de metodología"
-
-msgid "Target Visits For The Year"
-msgstr "Visitas objetivo para el año"
-
-msgid "Modalities"
-msgstr "Modalidades"
-
-msgid "Partner Engagement"
-msgstr "Compromiso de socios"
-
-msgid "Other Aspects of the Field Monitoring Plan"
-msgstr "Otros Aspectos del Plan de Monitoreo de Campo"
-
-msgid "Year Plan"
-msgstr "Plan anual"
-
-msgid "Year Plans"
-msgstr "planes anuales"
-
-msgid "Partner"
-msgstr "pareja"
-
-msgid "CP Output"
-msgstr "Salida CP"
-
-msgid "Intervention"
-msgstr "Intervención"
-
-msgid "Question"
-msgstr "Pregunta"
-
-msgid "Is Active"
-msgstr "Está activo"
-
-msgid "Specific Details To Probe"
-msgstr "Detalles específicos para sondear"
-
-msgid "Question Template"
-msgstr "Plantilla de preguntas"
-
-msgid "Question Templates"
-msgstr "Plantillas de preguntas"
-
-msgid "Staff"
-msgstr "Personal"
-
-msgid "TPM"
-msgstr ""
-
-msgid "Draft"
-msgstr ""
-
-msgid "Checklist"
-msgstr "Lista de verificación"
-
-msgid "Review"
-msgstr "Revisión"
+msgid "Annual Field Monitoring Rationale"
+msgstr "Lógica anual del monitoreo de terreno"
 
 msgid "Assigned"
 msgstr "Asignado"
 
-msgid "Data Collection"
-msgstr "Recopilación de datos"
+msgid "At least one Partner, CP Output or PD/SPD should be added"
+msgstr "Debe Añadirse al Menos un Socio, Producto de CP o PD/SPD"
 
-msgid "Report Finalization"
-msgstr "Finalización del informe"
+msgid "At least one checklist should be completed."
+msgstr "Debe completarse al menos una lista de verificación."
 
-msgid "Submitted"
-msgstr "Enviado"
+msgid "At least one question should be enabled."
+msgstr "Debe estar habilitada al menos una pregunta."
 
-msgid "Completed"
-msgstr "Completado"
-
-msgid "Cancelled"
-msgstr "Cancelado"
-
-msgid "Reference Number"
-msgstr "Número de referencia"
-
-msgid "TPM Partner"
-msgstr "Socio TPM"
-
-msgid "Team Members"
-msgstr "Miembros del equipo"
-
-msgid "Person Responsible"
-msgstr "Persona Responsable"
-
-msgid "Field Office"
-msgstr "Oficina de campo"
-
-msgid "Field Offices"
-msgstr "Oficinas de campo"
-
-msgid "Sections"
-msgstr "Secciones"
-
-msgid "Location"
-msgstr "Ubicación"
-
-msgid "Site"
-msgstr "Sitio"
-
-msgid "PD/SPD"
-msgstr ""
-
-msgid "Outputs"
-msgstr "Salidas"
-
-msgid "Start Date"
-msgstr "Fecha de inicio"
-
-msgid "End Date"
-msgstr "Fecha de finalización"
-
-msgid "Status"
-msgstr "Estado"
-
-msgid "Activity Attachments"
-msgstr "Archivos adjuntos de actividad"
-
-msgid "Rejection reason"
-msgstr "Motivo de rechazo"
-
-msgid "Report rejection reason"
-msgstr "Informar motivo de rechazo"
-
-msgid "Cancellation reason"
-msgstr "Motivo de cancelación"
-
-msgid "Monitoring Activity"
-msgstr "Actividad de seguimiento"
-
-msgid "Monitoring Activities"
-msgstr "Actividades de seguimiento"
-
-msgid "Monitoring Activity Action Point"
-msgstr "Actividad de supervisión Punto de acción"
-
-msgid "Monitoring Activity Action Points"
-msgstr "Puntos de acción de la actividad de supervisión"
-
-msgid "History"
-msgstr "Historia"
-
-msgid "Document Type"
-msgstr "Tipo de documento"
-
-msgid "No Access"
-msgstr "Sin acceso"
-
-msgid "Inactive"
-msgstr "Inactivo"
-
-msgid "Special"
-msgstr "Especial"
-
-msgid "Reference No."
-msgstr "Número de referencia"
-
-msgid "Related Partner"
-msgstr "Socio relacionado"
-
-msgid "Related PD/SPD"
-msgstr "PD/SPD relacionados"
-
-msgid "Related CP Output"
-msgstr "Salida de CP relacionada"
-
-msgid "Section of Assignee"
-msgstr "Sección del cesionario"
-
-msgid "Office of Assignee"
-msgstr "Oficina del cesionario"
-
-msgid "Action Point Category"
-msgstr "Categoría de punto de acción"
-
-msgid "Link"
-msgstr "Enlace"
-
-msgid "Priority"
-msgstr "Prioridad"
-
-msgid "Annual Field Monitoring Rationale"
-msgstr "Justificación del monitoreo anual de campo"
-
-msgid "Templates"
-msgstr "Plantillas"
+msgid "At least one summary finding should be completed."
+msgstr "Debe completarse al menos una conclusión."
 
 msgid "Attachments"
 msgstr "Archivos adjuntos"
 
-#~ msgid "Invited"
-#~ msgstr "Invitado"
+msgid "CP Output"
+msgstr "Producto del CP"
+
+msgid "Cancellation reason"
+msgstr "Motivo de Cancelación"
+
+msgid "Cancellation reason should be provided."
+msgstr "Debe indicarse el motivo de cancelación."
+
+msgid "Cancelled"
+msgstr "Cancelado"
+
+#, python-format
+msgid "Cannot change fields while in %(status)s: %(field)s"
+msgstr "No se pueden cambiar los campos mientras se encuentra en%(status)s: %(field)s"
+
+msgid "Checklist"
+msgstr "Lista de Verificación"
+
+msgid "Completed"
+msgstr "Completado"
+
+msgid "Data Collection"
+msgstr "Recolección de Datos"
+
+msgid "Document Type"
+msgstr "Tipo de Documento"
+
+msgid "Draft"
+msgstr "Borrador"
+
+msgid "End Date"
+msgstr "Fecha de Finalización"
+
+msgid "Field Office"
+msgstr "Oficina de Terreno"
+
+msgid "Field Offices"
+msgstr "Oficinas de Terreno"
+
+msgid "History"
+msgstr "Historia"
+
+msgid "Inactive"
+msgstr "Inactivo"
+
+msgid "Intervention"
+msgstr "Intervención"
+
+msgid "Is Active"
+msgstr "Está Activo"
+
+msgid "Link"
+msgstr "Enlace"
+
+msgid "Location"
+msgstr "Ubicación"
+
+msgid "Methodology Notes & Standards"
+msgstr "Notas metodológicas y estándares"
+
+msgid "Modalities"
+msgstr "Modalidades"
+
+msgid "Monitoring Activities"
+msgstr "Actividades de Monitoreo"
+
+msgid "Monitoring Activity"
+msgstr "Actividad de Monitoreo "
+
+msgid "Monitoring Activity Action Point"
+msgstr "Punto de Acción de Monitoreo de Actividad"
+
+msgid "Monitoring Activity Action Points"
+msgstr "Puntos de Acción de Monitoreo de Actividad"
+
+msgid "No Access"
+msgstr "Sin Acceso"
+
+msgid "Office of Assignee"
+msgstr "Oficina del Asignatario"
+
+msgid "Other Aspects of the Field Monitoring Plan"
+msgstr "Otros aspectos del plan de monitoreo de campo"
+
+msgid "Outputs"
+msgstr "Productos"
+
+msgid "PD/SPD"
+msgstr "PD/SPD"
+
+msgid "Partner"
+msgstr "Socio"
+
+msgid "Partner Engagement"
+msgstr "Participación del Socio"
+
+msgid "Partner is not defined for TPM activity"
+msgstr "Socio no está definido para actividad de TPM"
+
+msgid "Person Responsible"
+msgstr "Persona Responsable"
+
+msgid "Prioritization Criteria"
+msgstr "Criterios de Priorización"
+
+msgid "Priority"
+msgstr "Prioridad"
+
+msgid "Question"
+msgstr "Pregunta"
+
+msgid "Question Template"
+msgstr "Plantilla de Preguntas"
+
+msgid "Question Templates"
+msgstr "Plantillas de Preguntas"
+
+msgid "Reference No."
+msgstr "No de referencia"
+
+msgid "Reference Number"
+msgstr "N.° de referencia"
+
+msgid "Rejection reason"
+msgstr "Motivo de Rechazo"
+
+msgid "Rejection reason should be provided."
+msgstr "Debe indicarse el motivo del rechazo."
+
+msgid "Related CP Output"
+msgstr "Producto del CP relacionado"
+
+msgid "Related PD/SPD"
+msgstr "PD/SPD Relacionado"
+
+msgid "Related Partner"
+msgstr "Socio Relacionado"
+
+msgid "Report Finalization"
+msgstr "Finalización del Informe"
+
+msgid "Report reject reason should be provided."
+msgstr "Debe indicarse el motivo del rechazo del informe."
+
+msgid "Report rejection reason"
+msgstr "Motivo de rechazo de informe"
+
+#, python-format
+msgid "Required fields not completed in %(status)s: %(fields)s"
+msgstr "Los campos obligatorios no se han rellenado en%(status)s: %(fields)s"
+
+msgid "Review"
+msgstr "Revisar"
+
+msgid "Section of Assignee"
+msgstr "Sección del Asignatario"
+
+msgid "Sections"
+msgstr "Secciones"
+
+msgid "Site"
+msgstr "Sitio"
+
+msgid "Special"
+msgstr "Especial"
+
+msgid "Specific Details To Probe"
+msgstr "Detalles Específicos a Sondear"
+
+msgid "Staff"
+msgstr "Personal"
+
+msgid "Staff members do not belong to the selected partner"
+msgstr "Miembros del personal no pertenecen al socio seleccionado"
+
+msgid "Start Date"
+msgstr "Fecha de Inicio"
+
+msgid "Status"
+msgstr "Estado"
+
+msgid "Submitted"
+msgstr "Enviado"
+
+msgid "TPM"
+msgstr "TPM"
+
+msgid "TPM Partner"
+msgstr "Socio de TPM"
+
+msgid "TPM Partner selected for staff activity"
+msgstr "Socio de TPM seleccionado para la actividad del personal"
+
+msgid "Target Visits For The Year"
+msgstr "Meta para Visitas para el Año"
+
+msgid "Team Members"
+msgstr "Miembros del Equipo"
+
+msgid "Templates"
+msgstr "Plantillas"
+
+msgid "Year Plan"
+msgstr "Plan Anual"
+
+msgid "Year Plans"
+msgstr "Planes Anuales"
+
+#, python-format
+msgid "You've selected a PD/SPD and unselected some of it's corresponding outputs, please either remove the PD or add the outputs back before saving: %s"
+msgstr "Has seleccionado un PD/SPD y has desmarcado algunas de los productos del CP correspondientes. Elimine el PD o vuelva a añadir los productos del CP antes de guardar: %s"
+
+#, python-format
+msgid "You've selected a PD/SPD and unselected some of it's corresponding partners, please either remove the PD or add the partners back before saving: %s"
+msgstr "Has seleccionado un PD/SPD y has desmarcado algunos de sus socios correspondientes. Elimine el PD o añada los socios de nuevo antes de guardar: %s"
