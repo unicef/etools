@@ -128,48 +128,47 @@
     <div id="content">
       <table class="all-cells-border">
         <tbody>
-        <tr>
-          <td class="b-navy w-p40">{% translate "eTools ref no" %}</td>
-          <td>{{ pd.number }}</td>
+        <tr class="bold">
+          <td class="b-navy w-p40" colspan="4">{% translate "Review for eTools reference number: " %} {{ pd.number }}</td>
         </tr>
         <tr>
-          <td class="b-gray w-p20">{% translate "Organization Name" %}</td>
-          <td>{{ pd.agreement.partner.name }}</td>
+          <td class="b-gray w-p20" colspan="1">{% translate "Organization Name" %}</td>
+          <td colspan="3">{{ pd.agreement.partner.name }}</td>
         </tr>
         <tr>
-          <td class="b-gray w-p20">{% translate "Programme Title" %}</td>
-          <td>{{ pd.title }}</td>
+          <td class="b-gray w-p20" colspan="1">{% translate "Programme Title" %}</td>
+          <td colspan="3">{{ pd.title }}</td>
         </tr>
         <tr>
-          <td class="b-gray w-p20">{% translate "Submitted By" %}</td>
-          <td>{{ review.submitted_by.full_name }}</td>
+          <td class="b-gray w-p20" colspan="1">{% translate "Submitted By" %}</td>
+          <td colspan="3">{{ review.submitted_by.full_name }}</td>
         </tr>
         <tr>
-          <td class="b-gray w-p20">{% translate "Date of submission for review" %}</td>
-          <td>{{ review.created }}</td>
+          <td class="b-gray w-p20" colspan="1">{% translate "Date of submission for review" %}</td>
+          <td colspan="3">{{ review.created }}</td>
         </tr>
         <tr>
-          <td class="b-gray w-p20">{% translate "Overall Approver" %}</td>
-          <td>{{ review.overall_approver.full_name }}</td>
+          <td class="b-gray w-p20" colspan="1">{% translate "Overall Approver" %}</td>
+          <td colspan="3">{{ review.overall_approver.full_name }}</td>
         </tr>
         <tr>
-          <td class="b-gray w-p20">{% translate "Overall Comment" %}</td>
-          <td>{{ review.overall_comment }}</td>
+          <td class="b-gray w-p20" colspan="1">{% translate "Overall Comment" %}</td>
+          <td colspan="3">{{ review.overall_comment }}</td>
         </tr>
         <tr>
-          <td class="b-gray w-p20">{% translate "Overall Approval" %}</td>
-          <td>{{ review.overall_approval }}</td>
+          <td class="b-gray w-p20" colspan="1">{% translate "Overall Approval" %}</td>
+          <td colspan="3">{{ review.overall_approval|yesno }}</td>
         </tr>
         <tr>
-          <td class="b-gray w-p20">{% translate "Actions List" %}</td>
-          <td>{{ review.actions_list }}</td>
+          <td class="b-gray w-p20" colspan="1">{% translate "Actions List" %}</td>
+          <td colspan="3">{{ review.actions_list }}</td>
         </tr>
         <tbody>
       </table>
 
       <table class="all-cells-border mt-20">
         <tbody>
-          <tr>
+          <tr class="bold">
             <td class="b-navy w-p40" colspan="4">{% translate "Overall Review" %}</td>
           </tr>
           <tr>
@@ -207,48 +206,29 @@
         <tbody>
       </table>
 
+      {% if prc_reviews %}
       <table class="all-cells-border mt-20">
         <tbody>
-          <tr>
-            <td class="b-navy w-p40" colspan="4">{% translate "PCR Member Reviews" %}</td>
+          <tr class="bold">
+            <td class="b-navy w-p40 bold" colspan="4">{% translate "PRC Member Reviews" %}</td>
           </tr>
-          {% for prc_review in review.prc_reviews %}
-            <tr>
-              <td class="b-gray" colspan="3">Q1: {% get_verbose_name review "relationship_is_represented" %}</td>
-              <td colspan="1">{{ review.get_relationship_is_represented_display }}</td>
-            </tr>
-            <tr>
-              <td class="b-gray" colspan="3">Q2: {% get_verbose_name review "partner_comparative_advantage" %}</td>
-              <td colspan="1">{{ review.get_partner_comparative_advantage_display }}</td>
-            </tr>
-            <tr>
-              <td class="b-gray" colspan="3">Q3: {% get_verbose_name review "relationships_are_positive" %}</td>
-              <td colspan="1">{{ review.get_relationships_are_positive_display }}</td>
-            </tr>
-            <tr>
-              <td class="b-gray" colspan="3">Q4: {% get_verbose_name review "pd_is_relevant" %}</td>
-              <td colspan="1">{{ review.get_pd_is_relevant_display }}</td>
-            </tr>
-            <tr>
-              <td class="b-gray" colspan="3">Q5: {% get_verbose_name review "pd_is_guided" %}</td>
-              <td colspan="1">{{ review.get_pd_is_guided_display }}</td>
-            </tr>
-            <tr>
-              <td class="b-gray" colspan="3">Q6: {% get_verbose_name review "ges_considered" %}</td>
-              <td colspan="1">{{ review.get_ges_considered_display }}</td>
-            </tr>
-            <tr>
-              <td class="b-gray" colspan="3">Q7: {% get_verbose_name review "budget_is_aligned" %}</td>
-              <td colspan="1">{{ review.get_budget_is_aligned_display }}</td>
-            </tr>
-            <tr>
-              <td class="b-gray" colspan="3">Q8: {% get_verbose_name review "supply_issues_considered" %}</td>
-              <td colspan="1">{{ review.get_supply_issues_considered_display }}</td>
-            </tr>
+          <tr>
+            <td class="b-gray" colspan="1">{% translate "PRC Member Name" %}</td>
+            <td class="b-gray" colspan="1">{% translate "Approved" %}</td>
+            <td class="b-gray" colspan="1">{% translate "Approval comment" %}</td>
+            <td class="b-gray" colspan="1">{% translate "Review date" %}</td>
+          </tr>
+          {% for prc_review in prc_reviews %}
+          <tr>
+            <td colspan="1">{{ prc_review.user.full_name }}</td>
+            <td colspan="1">{{ prc_review.overall_review.overall_approval|yesno }}</td>
+            <td colspan="1">{{ prc_review.overall_review.overall_comment }}</td>
+            <td colspan="1">{{ prc_review.review_date }}</td>
+          </tr>
           {% endfor %}
         <tbody>
       </table>
-
+      {% endif %}
     </div>
 
   {% endif %}

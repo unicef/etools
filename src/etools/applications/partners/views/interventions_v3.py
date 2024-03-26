@@ -391,6 +391,7 @@ class PMPReviewDetailPDFView(PMPReviewMixin, RetrieveAPIView):
             "domain": 'https://{}'.format(get_current_site().domain),
             "pd": pd,
             "review": review,
+            "prc_reviews": review.prc_reviews.filter(review_date__isnull=False),
             "font_path": font_path,
         }
 
