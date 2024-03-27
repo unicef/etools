@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-01-25 10:45+0000\n"
+"POT-Creation-Date: 2024-03-26 09:10+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -20,145 +20,145 @@ msgstr ""
 "&& n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
 
 msgid "TPM Partner selected for staff activity"
-msgstr "اختيار شريك TPM لنشاط الموظفين"
+msgstr "تم اختيار شريك المراقب المستقل لنشاط الموظفين"
 
 msgid "Staff members do not belong to the selected partner"
-msgstr "لا ينتمي الموظفون إلى الشريك المختار"
+msgstr "أعضاء فريق العمل لا ينتمون إلى الشريك المحدد"
 
 #, python-format
 msgid ""
 "You've selected a PD/SPD and unselected some of it's corresponding partners, "
 "please either remove the PD or add the partners back before saving: %s"
 msgstr ""
-"لقد حددت PD / SPD وألغيت تحديد بعض الشركاء المطابقين لها ، يرجى إما إزالة PD "
-"أو إضافة الشركاء مرة أخرى قبل الحفظ:%s"
+"لقد حددت PD/SPD وألغيت تحديد بعض الشركاء المناظرين لها، يرجى إما إزالة PD أو "
+"إضافة الشركاء مرة أخرى قبل الحفظ: %s"
 
 #, python-format
 msgid ""
 "You've selected a PD/SPD and unselected some of it's corresponding outputs, "
 "please either remove the PD or add the outputs back before saving: %s"
 msgstr ""
-"لقد حددت PD / SPD وألغيت تحديد بعض النواتج المقابلة لها ، يرجى إما إزالة PD "
-"أو إضافة النواتج مرة أخرى قبل الحفظ:%s"
+"لقد حددت PD/SPD وألغيت تحديد بعض المخرجات المقابلة لها، يرجى إما إزالة PD أو "
+"إضافة المخرجات مرة أخرى قبل الحفظ: %s"
 
 msgid "Partner is not defined for TPM activity"
-msgstr "لم يتم تعريف الشريك لنشاط TPM"
+msgstr "لم يتم تحديد الشريك لنشاط المُراقب المستقل"
 
 msgid "At least one Partner, CP Output or PD/SPD should be added"
-msgstr "يجب إضافة شريك واحد على الأقل أو إخراج CP أو PD / SPD"
+msgstr "يجب إضافة شريك واحد على الأقل أو مُخرج CP أو PD / SPD"
 
 msgid "Rejection reason should be provided."
-msgstr "يجب تقديم سبب الرفض."
+msgstr "يجب تقديم سبب الرفض"
 
 msgid "Cancellation reason should be provided."
-msgstr "يجب تقديم سبب الإلغاء."
+msgstr "يجب تقديم سبب الرفض"
 
 msgid "Report reject reason should be provided."
-msgstr "يجب تقديم سبب رفض التقرير."
+msgstr "يجب تقديم سبب رفض التقرير"
 
 msgid "At least one question should be enabled."
-msgstr "يجب تمكين سؤال واحد على الأقل."
+msgstr "يجب تمكين سؤال واحد على الأقل"
 
 msgid "At least one checklist should be completed."
-msgstr "يجب إكمال قائمة تحقق واحدة على الأقل."
+msgstr "يجب إكمال قائمة تحقق واحدة على الأقل"
 
 msgid "At least one summary finding should be completed."
-msgstr "يجب إكمال نتيجة موجزة واحدة على الأقل."
+msgstr "يجب إكمال على الأقل تقرير واحد لموجز النتائج"
 
 #, python-format
 msgid "Required fields not completed in %(status)s: %(fields)s"
-msgstr "الحقول المطلوبة غير مكتملة في %(status)s: %(fields)s "
+msgstr "الحقول المطلوبة لم يتم إكمالها في %(status)s: %(fields)s"
 
 #, python-format
 msgid "Cannot change fields while in %(status)s: %(field)s"
-msgstr "لا يمكن تغيير الحقول أثناء وجودك في %(status)s: %(field)s"
+msgstr "لا يمكن تغيير الحقول أثناء تواجد %(status)s %(field): s"
 
 msgid "Prioritization Criteria"
-msgstr "معايير ترتيب الأولويات"
+msgstr "معايير تحديد الأولويات"
 
 msgid "Methodology Notes & Standards"
-msgstr "ملاحظات المنهجية"
+msgstr "مذكرات ومعايير المنهجية"
 
 msgid "Target Visits For The Year"
-msgstr "الزيارات المستهدفة للعام"
+msgstr "الزيارات المستهدفة في العام"
 
 msgid "Modalities"
-msgstr "الطرائق"
+msgstr "الطرق"
 
 msgid "Partner Engagement"
-msgstr "مشاركة الشريك"
+msgstr "مساهمة الشريك"
 
 msgid "Other Aspects of the Field Monitoring Plan"
 msgstr "جوانب أخرى لخطة الرصد الميداني"
 
 msgid "Year Plan"
-msgstr "الخطة السنوية"
+msgstr "خطة العام"
 
 msgid "Year Plans"
-msgstr "الخطط السنوية"
+msgstr "خطط العام"
 
 msgid "Partner"
-msgstr "شريك"
+msgstr "الشريك"
 
 msgid "CP Output"
-msgstr "إخراج CP"
+msgstr "CP مخرجات"
 
 msgid "Intervention"
-msgstr "التدخل"
+msgstr "تدخل"
 
 msgid "Question"
 msgstr "سؤال"
 
 msgid "Is Active"
-msgstr "نشط"
+msgstr "فعال"
 
 msgid "Specific Details To Probe"
 msgstr "تفاصيل محددة للتحقيق"
 
 msgid "Question Template"
-msgstr "نموذج السؤال"
+msgstr "نماذج السؤال"
 
 msgid "Question Templates"
-msgstr "قوالب الأسئلة"
+msgstr "نماذج السؤال"
 
 msgid "Staff"
-msgstr "الطاقم"
+msgstr "الموظفين"
 
 msgid "TPM"
-msgstr ""
+msgstr "المُراقب المستقل"
 
 msgid "Draft"
-msgstr ""
+msgstr "الصياغة التمهيدية"
 
 msgid "Checklist"
 msgstr "قائمة التحقق"
 
 msgid "Review"
-msgstr "مراجعة"
+msgstr "المعاينة"
 
 msgid "Assigned"
-msgstr "معين"
+msgstr "مُعَيَّن"
 
 msgid "Data Collection"
 msgstr "جمع البيانات"
 
 msgid "Report Finalization"
-msgstr "إنهاء التقرير"
+msgstr "وضع الصيغة النهائية للتقرير"
 
 msgid "Submitted"
-msgstr "مقدم"
+msgstr "معاينة التقارير"
 
 msgid "Completed"
-msgstr "اكتمل"
+msgstr "مكتمل"
 
 msgid "Cancelled"
-msgstr "ملغاة"
+msgstr "مُلغى"
 
 msgid "Reference Number"
 msgstr "الرقم المرجعي"
 
 msgid "TPM Partner"
-msgstr "شريك TPM"
+msgstr "المُراقب المستقل الشريك"
 
 msgid "Team Members"
 msgstr "أعضاء الفريق"
@@ -179,13 +179,13 @@ msgid "Location"
 msgstr "الموقع"
 
 msgid "Site"
-msgstr "موقع"
+msgstr "مكان"
 
 msgid "PD/SPD"
-msgstr "PD / SPD"
+msgstr "PD/SPD"
 
 msgid "Outputs"
-msgstr "النواتج"
+msgstr "المخرجات"
 
 msgid "Start Date"
 msgstr "تاريخ البدء"
@@ -203,7 +203,7 @@ msgid "Rejection reason"
 msgstr "سبب الرفض"
 
 msgid "Report rejection reason"
-msgstr "الإبلاغ عن سبب الرفض"
+msgstr "سبب رفض التقرير"
 
 msgid "Cancellation reason"
 msgstr "سبب الإلغاء"
@@ -215,43 +215,43 @@ msgid "Monitoring Activities"
 msgstr "أنشطة المراقبة"
 
 msgid "Monitoring Activity Action Point"
-msgstr "مراقبة نشاط نقطة العمل"
+msgstr "نقطة إجراء مراقب النشاط"
 
 msgid "Monitoring Activity Action Points"
-msgstr "مراقبة نقاط عمل النشاط"
+msgstr "نقاط إجراء مراقب النشاط"
 
 msgid "History"
-msgstr "التاريخ"
+msgstr "السجل التاريخي"
 
 msgid "Document Type"
 msgstr "نوع الوثيقة"
 
 msgid "No Access"
-msgstr "ممنوع الدخول"
+msgstr "لا يمكن الوصول"
 
 msgid "Inactive"
-msgstr "غير نشط"
+msgstr "غير فعال"
 
 msgid "Special"
-msgstr "خاص"
+msgstr "مميز"
 
 msgid "Reference No."
-msgstr "رقم المرجع."
+msgstr "الرقم المرجعي"
 
 msgid "Related Partner"
-msgstr "الشريك المرتبط"
+msgstr "الشريك المعني"
 
 msgid "Related PD/SPD"
-msgstr "PD / SPD ذات الصلة"
+msgstr "المعني PD/SPD"
 
 msgid "Related CP Output"
-msgstr "مخرجات CP ذات الصلة"
+msgstr "المعنيةCP مخرجات ال"
 
 msgid "Section of Assignee"
-msgstr "قسم الوكيل"
+msgstr "قسم المعين له العمل"
 
 msgid "Office of Assignee"
-msgstr "مكتب الوكيل"
+msgstr "مكتب المعين له العمل"
 
 msgid "Action Point Category"
 msgstr "فئة نقطة العمل"
@@ -263,13 +263,10 @@ msgid "Priority"
 msgstr "الأولوية"
 
 msgid "Annual Field Monitoring Rationale"
-msgstr "مسوغات المراقبة الميدانية السنوية"
+msgstr "الأساس المنطقي السنوي للرصد الميداني"
 
 msgid "Templates"
-msgstr "القوالب"
+msgstr "النماذج"
 
 msgid "Attachments"
 msgstr "المرفقات"
-
-#~ msgid "Invited"
-#~ msgstr "مدعو"
