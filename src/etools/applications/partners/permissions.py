@@ -498,6 +498,36 @@ def intervention_field_is_editable_permission(field):
     return FieldPermission
 
 
+def intervention_field_has_view_permission(field):
+    """
+    Check the user is able to view selected field.
+    View should either implement get_root_object to return instance of Intervention (if view is nested),
+    or return Intervention instance via get_object (can be used for detail actions).
+    """
+
+    from etools.applications.partners.models import Intervention
+
+    class FieldPermission(BasePermission):
+        def has_permission(self, request, view):
+            if not view.kwargs:
+                # This is needed for swagger to be able to build the correct structure
+                # https://github.com/unicef/etools/pull/2540/files#r356446025
+                return True
+
+            if hasattr(view, 'get_root_object'):
+                instance = view.get_root_object()
+            else:
+                instance = view.get_object()
+
+            ps = Intervention.permission_structure()
+            permissions = InterventionPermissions(
+                user=request.user, instance=instance, permission_structure=ps
+            )
+            return permissions.get_permissions()['view'].get(field)
+
+    return FieldPermission
+
+
 def view_action_permission(*actions):
     class ViewActionPermission(BasePermission):
         def has_permission(self, request, view):
