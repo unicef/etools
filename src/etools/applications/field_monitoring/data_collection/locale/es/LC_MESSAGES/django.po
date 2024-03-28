@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-03-24 08:39+0000\n"
+"POT-Creation-Date: 2024-03-26 08:52+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -28,34 +28,34 @@ msgid "Question Text"
 msgstr "Texto de la pregunta"
 
 msgid "Count as HACT"
-msgstr "Contar como HACT"
+msgstr "Cuenta como HACT"
 
 msgid "Specific Details To Probe"
-msgstr "Detalles específicos para sondear"
+msgstr "Detalles Específicos para Sondear"
 
 msgid "Enabled"
-msgstr "Activado"
+msgstr "Habilitado"
 
 msgid "Activity Question"
-msgstr "Pregunta de actividad"
+msgstr "Pregunta de Actividad"
 
 msgid "Activity Questions"
-msgstr "Preguntas de actividad"
+msgstr "Preguntas de Actividades"
 
 msgid "Methods"
 msgstr "Métodos"
 
 msgid "Information Source"
-msgstr "Fuente de información"
+msgstr "Fuente de Información"
 
 msgid "Author"
 msgstr "Autor"
 
 msgid "Started Checklist"
-msgstr "Lista de verificación iniciada"
+msgstr "Lista de Verificación Iniciada"
 
 msgid "Started Checklists"
-msgstr "Listas de verificación iniciadas"
+msgstr "Listas de Verificación Iniciadas"
 
 msgid "Checklist"
 msgstr "Lista de Verificación"
@@ -64,77 +64,79 @@ msgid "Value"
 msgstr "Valor"
 
 msgid "Checklist Finding"
-msgstr "Hallazgo de lista de verificación"
+msgstr "Resultado de la Lista de Verificación"
 
 msgid "Checklist Findings"
-msgstr "Hallazgos de la lista de verificación"
+msgstr "Resultados de la Lista de Verificación"
 
 msgid "Overall Activity Question Finding"
-msgstr "Resultado general de la pregunta de actividad"
+msgstr "Conclusión de Pregunta sobre la Actividad General"
 
 msgid "Overall Activity Question Findings"
-msgstr "Resultados generales de la pregunta de actividad"
+msgstr "Conclusiones de Preguntas sobre la Actividad General"
 
 msgid "Narrative Finding"
-msgstr "Hallazgo narrativo"
+msgstr "Conclusiones narrativas"
 
 msgid "Attachments"
 msgstr "Archivos adjuntos"
 
 msgid "Checklist Overall Finding"
-msgstr "Lista de verificación Hallazgo general"
+msgstr "Conclusión General de la Lista de Verificación"
 
 msgid "Checklist Overall Findings"
-msgstr "Hallazgos generales de la lista de verificación"
+msgstr "Conclusiones Generales de la Lista de Verificación"
 
 msgid "Activity Overall Finding"
-msgstr "Hallazgo general de la actividad"
+msgstr "Conclusión General de la Actividad"
 
 msgid "Activity Overall Findings"
-msgstr "Actividad Hallazgos generales"
+msgstr "Conclusión General de las Actividades"
 
 msgid "Source of Information"
-msgstr "Fuente de información"
+msgstr "Fuente de Información"
 
 msgid "Overall Finding"
-msgstr "Hallazgo general"
+msgstr "Conclusiones Generales"
 
 #, python-format
 msgid "Unable to find %(level)s with id %(target_id)s"
-msgstr "No se puede encontrar %(level)s con id %(target_id)s"
+msgstr "No se encuentra %(level)s con id %(target_id)s"
 
 #, python-format
 msgid ""
 "Unable to find finding for question %(question_id)s for %(level)s "
 "%(target_id)s"
 msgstr ""
-"No se pudo encontrar el resultado de la pregunta %(question_id)s para "
+"No se encuentra la conclusión para la pregunta %(question_id)s para "
 "%(level)s %(target_id)s"
 
 msgid "Ensure this field has no more than 100 characters."
-msgstr "Asegúrese de que este campo no tenga más de 100 caracteres."
+msgstr "Asegúrate de que este campo no tenga más de 100 caracteres"
 
 msgid "Document Type"
 msgstr "Tipo de Documento"
 
 msgid "Information source is required"
-msgstr "Se requiere fuente de información"
+msgstr "Se Requiere una Fuente de Información"
 
 #, python-format
 msgid "Workspace code provided is not a valid business_area_code: %s"
 msgstr ""
-"El código de espacio de trabajo proporcionado no es un "
-"código_de_área_de_negocio válido: %s"
+"El código de espacio de trabajo proporcionado no es un código de área de "
+"negocio válido: %s"
 
+#, fuzzy
+#| msgid "User is required"
 msgid "Workspace is required"
-msgstr "Se requiere espacio de trabajo"
+msgstr "Se requiere usuario"
 
 msgid "User is required"
 msgstr "Se requiere usuario"
 
 msgid "Unable to fill checklists for current activity"
 msgstr ""
-"No se pueden completar las listas de verificación para la actividad actual"
+"No se pueden rellenar las listas de verificación de la actividad actual"
 
 msgid "Report Attachments"
-msgstr "Adjuntos del informe"
+msgstr "Anexos del informe"
