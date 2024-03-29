@@ -1511,7 +1511,8 @@ class TestInterventionBudget(BaseTenantTestCase):
         self.assertEqual(budget.partner_contribution_local, 10)
         self.assertEqual(budget.unicef_cash_local, 20)
         self.assertEqual(budget.in_kind_amount_local, 30)
-        self.assertEqual(budget.programme_effectiveness, 50)  # = mgmt_budget.total
+        # = mgmt_budget.unicef_total / total_unicef_contrib_local * 100
+        self.assertEqual(budget.programme_effectiveness, 40)
         self.assertEqual(
             "{:0.2f}".format(budget.partner_contribution_percent),
             "{:0.2f}".format(10 / (10 + 20 + 30) * 100),
