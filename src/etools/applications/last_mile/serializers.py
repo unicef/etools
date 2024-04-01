@@ -8,6 +8,7 @@ from unicef_attachments.fields import AttachmentSingleFileField
 from unicef_attachments.serializers import AttachmentSerializerMixin
 
 from etools.applications.last_mile import models
+from etools.applications.last_mile.models import PartnerMaterial
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.users.serializers import MinimalUserSerializer
 
@@ -92,8 +93,7 @@ class ItemSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        if not instance.description:
-            data['description'] = data['material']['short_description']
+        data['description'] = instance.description
         if not instance.uom:
             data['uom'] = data['material']['original_uom']
         return data
@@ -109,12 +109,24 @@ class ItemListSerializer(serializers.ModelSerializer):
 
 
 class ItemUpdateSerializer(serializers.ModelSerializer):
+    description = serializers.CharField(required=False, allow_null=False, allow_blank=False)
+
     class Meta:
         model = models.Item
         fields = (
             'description', 'uom', 'expiry_date', 'batch_id',
             'quantity', 'is_prepositioned', 'preposition_qty', 'conversion_factor'
         )
+
+    def save(self, **kwargs):
+        if 'description' in self.validated_data:
+            description = self.validated_data.pop('description')
+            PartnerMaterial.objects.update_or_create(
+                partner_organization=self.instance.partner_organization,
+                material=self.instance.material,
+                defaults={'description': description}
+            )
+        super().save(**kwargs)
 
 
 class ItemCheckoutSerializer(serializers.ModelSerializer):

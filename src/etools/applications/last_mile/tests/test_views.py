@@ -355,14 +355,17 @@ class TestItemUpdateViewSet(BaseTenantTestCase):
         cls.poi_partner = PointOfInterestFactory(partner_organizations=[cls.partner], private=True)
         cls.transfer = TransferFactory(destination_point=cls.poi_partner)
 
-    def test_path(self):
+    def test_patch(self):
         item = ItemFactory(transfer=self.transfer)
         url = reverse('last_mile:item-update-detail', args=(item.pk,))
         data = {
-            'description': 'updated description'
+            'description': 'updated description',
+            'uom': 'KG'
         }
         response = self.forced_auth_req('patch', url, user=self.partner_staff, data=data)
 
         item.refresh_from_db()
         self.assertEqual(item.description, 'updated description')
         self.assertEqual(response.data['description'], 'updated description')
+        self.assertEqual(item.uom, 'KG')
+        self.assertEqual(response.data['uom'], 'KG')

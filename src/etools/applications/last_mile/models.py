@@ -181,13 +181,30 @@ class Material(models.Model):
     purchase_group_description = models.CharField(max_length=255, null=True, blank=True)
     temperature_group = models.CharField(max_length=255, null=True, blank=True)
 
+    partner_materials = models.ManyToManyField(PartnerOrganization, through='PartnerMaterial')
+
     def __str__(self):
         return self.short_description
 
 
-class Item(TimeStampedModel, models.Model):
+class PartnerMaterial(models.Model):
+    partner_organization = models.ForeignKey(
+        PartnerOrganization,
+        on_delete=models.CASCADE,
+        related_name='partner_material'
+    )
+    material = models.ForeignKey(
+        Material,
+        on_delete=models.CASCADE,
+        related_name='partner_material'
+    )
+    description = models.CharField(max_length=255)
 
-    description = models.CharField(max_length=255, null=True, blank=True)
+    class Meta:
+        unique_together = ('partner_organization', 'material')
+
+
+class Item(TimeStampedModel, models.Model):
     uom = models.CharField(max_length=30, null=True, blank=True)
 
     conversion_factor = models.IntegerField(null=True)
@@ -216,8 +233,21 @@ class Item(TimeStampedModel, models.Model):
         related_name='items'
     )
 
+    @property
+    def partner_organization(self):
+        return self.transfer.partner_organization
+
+    @property
+    def description(self):
+        try:
+            partner_material = PartnerMaterial.objects.get(
+                partner_organization=self.transfer.partner_organization, material=self.material)
+            return partner_material.description
+        except PartnerMaterial.DoesNotExist:
+            return self.material.short_description
+
     def __str__(self):
-        return f'{self.transfer.name}: {self.material.short_description} / qty {self.quantity}'
+        return f'{self.transfer.name}: {self.description} / qty {self.quantity}'
 
 
 class ItemTransferHistory(TimeStampedModel, models.Model):

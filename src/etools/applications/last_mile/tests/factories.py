@@ -36,6 +36,8 @@ class PointOfInterestFactory(factory.django.DjangoModelFactory):
 
 
 class MaterialFactory(factory.django.DjangoModelFactory):
+    short_description = factory.Sequence(lambda n: 'Material short description {}'.format(n))
+
     class Meta:
         model = models.Material
 

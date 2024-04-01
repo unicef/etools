@@ -20,6 +20,7 @@ from etools.applications.last_mile.tasks import notify_upload_waybill
 
 
 class PointOfInterestTypeViewSet(ReadOnlyModelViewSet):
+    permission_classes = [IsIPLMEditor]
     queryset = models.PointOfInterestType.objects.all()
     serializer_class = serializers.PointOfInterestTypeSerializer
 
