@@ -29,3 +29,20 @@ def notify_upload_waybill(tenant_name, destination_pk, waybill_pk, waybill_url):
             template_name='last_mile/upload_waybill',
             context=email_context
         )
+
+
+@app.task
+def notify_loss_transfer(transfer_pk):
+    transfer = models.Transfer.objects.get(pk=transfer_pk)
+
+    email_context = {
+        'transfer': transfer
+    }
+    # TODO send to Rob for now
+    recipients = User.objects.get(id=1).values_list('email', flat=True)
+
+    send_notification_with_template(
+        recipients=list(recipients),
+        template_name='last_mile/loss_transfer',
+        context=email_context
+    )

@@ -16,11 +16,13 @@ transfer_api = NestedComplexRouter(root_api, r'points-of-interest', lookup='poin
 transfer_api.register(r'transfers', views.TransferViewSet, basename='transfers')
 
 urlpatterns = [
-    path(
-        'update-transfers/', view=views_ext.VisionIngestApiView.as_view(http_method_names=['post'],), name="vision-ingest"
-    ),
     path('', include(root_api.urls)),
     path('', include(transfer_api.urls)),
+    path(
+        'update-transfers/',
+        view=views_ext.VisionIngestApiView.as_view(http_method_names=['post'],),
+        name="vision-ingest"
+    ),
     path(
         'points-of-interest/<int:poi_pk>/items/',
         view=views.InventoryItemListView.as_view(http_method_names=['get'],),
@@ -31,5 +33,4 @@ urlpatterns = [
         view=views.InventoryMaterialsListView.as_view(http_method_names=['get'], ),
         name='inventory-materials-list',
     ),
-
 ]

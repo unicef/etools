@@ -9,6 +9,7 @@ from unicef_attachments.serializers import AttachmentSerializerMixin
 
 from etools.applications.last_mile import models
 from etools.applications.last_mile.models import PartnerMaterial
+from etools.applications.last_mile.tasks import notify_loss_transfer
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.users.serializers import MinimalUserSerializer
 
@@ -236,6 +237,7 @@ class TransferCheckinSerializer(TransferBaseSerializer):
                     **validated_data
                 )
                 self.instance.save()
+                notify_loss_transfer.delay(self.instance.pk)
                 self.checkin_items(original_items, items, instance)
 
             instance = super().update(instance, validated_data)
