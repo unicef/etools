@@ -57,7 +57,6 @@
     "fields": {
         "created": "2024-02-15T07:49:24.346Z",
         "modified": "2024-02-15T07:49:24.346Z",
-        "description": null,
         "conversion_factor": 1,
         "quantity": 11,
         "batch_id": "b111",
@@ -76,7 +75,6 @@
     "fields": {
         "created": "2024-02-15T07:49:24.346Z",
         "modified": "2024-02-15T07:49:24.346Z",
-        "description": "an alternative description",
         "conversion_factor": null,
         "quantity": 22,
         "batch_id": "222",
@@ -95,7 +93,6 @@
     "fields": {
         "created": "2024-02-15T07:49:24.346Z",
         "modified": "2024-02-15T07:49:24.346Z",
-        "description": "an alternative description",
         "conversion_factor": null,
         "quantity": 33,
         "batch_id": "b333",
@@ -114,7 +111,6 @@
     "fields": {
         "created": "2024-02-15T07:49:24.346Z",
         "modified": "2024-02-15T07:49:24.346Z",
-        "description": null,
         "conversion_factor": null,
         "quantity": 4,
         "batch_id": "b44",
@@ -133,7 +129,6 @@
     "fields": {
         "created": "2024-02-15T07:49:24.346Z",
         "modified": "2024-02-15T07:49:24.346Z",
-        "description": null,
         "conversion_factor": null,
         "quantity": 123,
         "batch_id": "b123",
