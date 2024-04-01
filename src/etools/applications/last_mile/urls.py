@@ -3,7 +3,7 @@ from django.urls import include, path
 from rest_framework_nested import routers
 from unicef_restlib.routers import NestedComplexRouter
 
-from etools.applications.last_mile import views
+from etools.applications.last_mile import views, views_ext
 
 app_name = 'last_mile'
 
@@ -16,6 +16,9 @@ transfer_api = NestedComplexRouter(root_api, r'points-of-interest', lookup='poin
 transfer_api.register(r'transfers', views.TransferViewSet, basename='transfers')
 
 urlpatterns = [
+    path(
+        'update-transfers/', view=views_ext.VisionIngestApiView.as_view(http_method_names=['post'],), name="vision-ingest"
+    ),
     path('', include(root_api.urls)),
     path('', include(transfer_api.urls)),
     path(
@@ -28,4 +31,5 @@ urlpatterns = [
         view=views.InventoryMaterialsListView.as_view(http_method_names=['get'], ),
         name='inventory-materials-list',
     ),
+
 ]
