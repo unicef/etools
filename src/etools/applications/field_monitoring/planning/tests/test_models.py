@@ -1,6 +1,8 @@
 from datetime import date, timedelta
 from unittest import skip
 
+from django.core.management import call_command
+
 from dateutil.utils import today
 from factory import fuzzy
 
@@ -40,6 +42,7 @@ from etools.libraries.pythonlib.datetime import get_quarter
 class TestMonitoringActivityValidations(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
+        call_command('update_notifications')
         cls.user = UserFactory(fm_user=True)
 
     def test_activity_location_required_in_draft(self):
