@@ -103,6 +103,7 @@ class ItemSerializer(serializers.ModelSerializer):
 class ItemListSerializer(serializers.ModelSerializer):
     transfer = TransferMinimalSerializer()
     material = MaterialSerializer()
+    description = serializers.CharField(read_only=True)
 
     class Meta:
         model = models.Item

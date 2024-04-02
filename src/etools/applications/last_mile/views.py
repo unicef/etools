@@ -31,7 +31,7 @@ class PointOfInterestViewSet(ModelViewSet):
         .select_related('parent')\
         .prefetch_related('partner_organizations')\
         .filter(is_active=True, private=True)\
-        .order_by('name')
+        .order_by('name', 'id')
     permission_classes = [IsIPLMEditor]
     pagination_class = DynamicPageNumberPagination
 
@@ -81,7 +81,7 @@ class InventoryItemListView(ListAPIView):
             qs = models.Item.objects\
                 .filter(transfer__status=models.Transfer.COMPLETED, transfer__destination_point=poi.pk)\
                 .exclude(transfer__transfer_type=models.Transfer.LOSS)\
-                .order_by('id')
+                .order_by('created', '-id')
             return qs
         return self.queryset.none()
 
@@ -111,7 +111,8 @@ class InventoryMaterialsListView(ListAPIView):
             qs = models.Material.objects\
                 .filter(items__in=items_qs)\
                 .prefetch_related(Prefetch('items', queryset=items_qs))\
-                .distinct()
+                .distinct()\
+                .order_by('id', 'short_description')
 
             return qs
         return self.queryset.none()
@@ -125,7 +126,7 @@ class TransferViewSet(
     queryset = models.Transfer.objects\
         .select_related('partner_organization')\
         .prefetch_related('items')\
-        .order_by('created')
+        .order_by('created', '-id')
 
     pagination_class = DynamicPageNumberPagination
     permission_classes = [IsIPLMEditor]
