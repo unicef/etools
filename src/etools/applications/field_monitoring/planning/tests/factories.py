@@ -106,6 +106,7 @@ class ReviewActivityFactory(ChecklistActivityFactory):
 
 class PreAssignedActivityFactory(ReviewActivityFactory):
     visit_lead = factory.SubFactory(UserFactory, unicef_user=True)
+    report_reviewer = factory.SubFactory(UserFactory, unicef_user=True)
     team_members__count = 2
 
 
