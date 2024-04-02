@@ -312,6 +312,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             status=MonitoringActivity.STATUSES.review,
             team_members=team_members,
             visit_lead=UserFactory(unicef_user=True),
+            report_reviewer=UserFactory(unicef_user=True),
         )
 
         response = self._test_update(self.fm_user, activity, data={'status': 'assigned'})

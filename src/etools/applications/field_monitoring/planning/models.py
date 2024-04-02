@@ -367,7 +367,7 @@ class MonitoringActivity(
                 )
 
     def send_submit_notice(self):
-        recipients = self.country_pmes
+        recipients = [self.report_reviewer]
         if self.monitor_type == self.MONITOR_TYPE_CHOICES.staff:
             email_template = 'fm/activity/staff-submit'
         else:
