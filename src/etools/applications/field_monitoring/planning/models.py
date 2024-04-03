@@ -202,6 +202,7 @@ class MonitoringActivity(
             lambda i, old_instance=None, user=None: i.port_findings_to_summary(old_instance),
             lambda i, old_instance=None, user=None: i.send_rejection_note(old_instance),
             lambda i, old_instance=None, user=None: i.remember_reviewed_by(old_instance, user),
+            lambda i, old_instance=None, user=None: i.sync_report_reviewer_back(old_instance),
         ],
         STATUSES.submitted: [
             lambda i, old_instance=None, user=None: i.send_submit_notice(),
@@ -242,6 +243,11 @@ class MonitoringActivity(
                                    verbose_name=_('Person Responsible'), related_name='+',
                                    on_delete=models.SET_NULL)
 
+    # report reviewer is being set in two steps. first we store the preliminary value to be used as initial for submit
+    report_reviewer_preliminary = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True,
+                                                    verbose_name=_('Preliminary Report Reviewer'), related_name='+',
+                                                    on_delete=models.SET_NULL)
+    # on submit report or visit assign preliminary is being used as initial data
     report_reviewer = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True,
                                         verbose_name=_('Report Reviewer'), related_name='activities_to_review',
                                         on_delete=models.SET_NULL)
@@ -669,6 +675,12 @@ class MonitoringActivity(
         if old_instance and user and (old_instance.status == self.STATUSES.submitted and
                                       self.status in [self.STATUSES.completed, self.STATUSES.report_finalization]):
             self.reviewed_by = user
+            self.save()
+
+    def sync_report_reviewer_back(self, old_instance):
+        if (old_instance and old_instance.status == self.STATUSES.submitted and
+                self.status == self.STATUSES.report_finalization):
+            self.report_reviewer_preliminary = self.report_reviewer
             self.save()
 
     def activity_overall_findings(self):

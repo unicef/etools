@@ -123,6 +123,7 @@ class ReportFinalizationActivityFactory(DataCollectionActivityFactory):
 
 
 class SubmittedActivityFactory(ReportFinalizationActivityFactory):
+    report_reviewer = factory.SubFactory(UserFactory, unicef_user=True)
     status = MonitoringActivity.STATUSES.submitted
 
 

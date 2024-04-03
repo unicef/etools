@@ -48,10 +48,14 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,cancel_reason,Field Monitor,,*,edit,TRUE
 ,report_reject_reason,Approvers,,*,edit,TRUE
 ,reject_reason,All Users,is_ma_related_user,*,edit,TRUE
-,report_reviewer,Field Monitor,,draft,edit,TRUE
-,report_reviewer,Field Monitor,,checklist,edit,TRUE
-,report_reviewer,Field Monitor,,review,edit,TRUE
-,report_reviewer,Field Monitor,,assigned,edit,TRUE
+,report_reviewer_preliminary,Field Monitor,,draft,edit,TRUE
+,report_reviewer_preliminary,Field Monitor,,checklist,edit,TRUE
+,report_reviewer_preliminary,Field Monitor,,review,edit,TRUE
+,report_reviewer_preliminary,Field Monitor,staff_visit,assigned,edit,TRUE
+,report_reviewer_preliminary,Field Monitor,staff_visit,data_collection,edit,TRUE
+,report_reviewer_preliminary,Field Monitor,staff_visit,report_finalization,edit,TRUE
+,report_reviewer,Field Monitor,tpm_visit,assigned,edit,TRUE
+,report_reviewer,UNICEF User,staff_visit+is_visit_lead,submitted,edit,TRUE
 
 
 ,location,All Users,,*,required,TRUE
@@ -62,10 +66,23 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,visit_lead,All Users,,data_collection,required,TRUE
 ,team_members,All Users,,assigned,required,TRUE
 ,team_members,All Users,,data_collection,required,TRUE
-,report_reviewer,All Users,,assigned,required,TRUE
+,report_reviewer,All Users,tpm_visit,assigned,required,TRUE
+,report_reviewer,All Users,staff_visit,submitted,required,TRUE
 
 
-,report_reviewer,UNICEF User,,*,view,TRUE
+,report_reviewer_preliminary,UNICEF User,,draft,view,TRUE
+,report_reviewer_preliminary,UNICEF User,,checklist,view,TRUE
+,report_reviewer_preliminary,UNICEF User,,review,view,TRUE
+,report_reviewer_preliminary,UNICEF User,staff_visit,assigned,view,TRUE
+,report_reviewer_preliminary,UNICEF User,staff_visit,data_collection,view,TRUE
+,report_reviewer_preliminary,UNICEF User,staff_visit,report_finalization,view,TRUE
+,report_reviewer_preliminary,UNICEF User,staff_visit,submitted,view,TRUE
+,report_reviewer,UNICEF User,tpm_visit,assigned,view,TRUE
+,report_reviewer,UNICEF User,tpm_visit,data_collection,view,TRUE
+,report_reviewer,UNICEF User,tpm_visit,report_finalization,view,TRUE
+,report_reviewer,UNICEF User,tpm_visit,submitted,view,TRUE
+,report_reviewer,UNICEF User,,completed,view,TRUE
+,report_reviewer,UNICEF User,,cancelled,view,TRUE
 ,reviewed_by,UNICEF User,,report_finalization,view,TRUE
 ,reviewed_by,UNICEF User,,submitted,view,TRUE
 ,reviewed_by,UNICEF User,,completed,view,TRUE
