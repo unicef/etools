@@ -12,8 +12,6 @@ from etools.applications.organizations.models import Organization
 
 
 class VisionIngestMaterialsApiView(APIView):
-    permission_classes = (permissions.AllowAny,)
-
     mapping = {
         'MaterialNumber': 'number',
         'ShortDescription': 'short_description',
@@ -55,7 +53,6 @@ class VisionIngestMaterialsApiView(APIView):
 
 
 class VisionIngestTransfersApiView(APIView):
-    permission_classes = (permissions.AllowAny,)
     transfer_mapping = {
         "ReleaseOrder": "unicef_release_order",
         "PONumber": "purchase_order_id",
