@@ -86,9 +86,10 @@ class Transfer(TimeStampedModel, models.Model):
 
     DELIVERY = 'DELIVERY'
     DISTRIBUTION = 'DISTRIBUTION'
-    LOSS = 'LOSS'
     WASTAGE = 'WASTAGE'
-    WAYBILL = 'WAYBILL'
+
+    SHORT = 'SHORT'
+    SURPLUS = 'SURPLUS'
 
     STATUS = (
         (PENDING, _('Pending')),
@@ -97,13 +98,17 @@ class Transfer(TimeStampedModel, models.Model):
     TRANSFER_TYPE = (
         (DELIVERY, _('Delivery')),
         (DISTRIBUTION, _('Distribution')),
-        (LOSS, _('Loss')),
-        (WASTAGE, _('Wastage')),
-        (WAYBILL, _('Waybill'))
+        (WASTAGE, _('Wastage'))
+    )
+    TRANSFER_SUBTYPE = (
+        (SURPLUS, _()),
+        (SHORT, _()),
     )
 
+    unicef_release_order = models.CharField(max_length=30, unique=True, null=True)
     name = models.CharField(max_length=255, null=True, blank=True)
     transfer_type = models.CharField(max_length=30, choices=TRANSFER_TYPE, null=True, blank=True)
+    transfer_subtype = models.CharField(max_length=30, choices=TRANSFER_SUBTYPE, null=True, blank=True)
     status = models.CharField(max_length=30, choices=STATUS, default=PENDING)
 
     partner_organization = models.ForeignKey(
@@ -157,29 +162,53 @@ class Transfer(TimeStampedModel, models.Model):
         null=True
     )
     is_shipment = models.BooleanField(default=False)
-    # Shipment related fields
-    # shipment_type = models.CharField(max_length=30, choices=SHIPMENT_TYPE, null=True, blank=True)
+
     purchase_order_id = models.CharField(max_length=255, null=True, blank=True)
-    delivery_id = models.CharField(max_length=255, null=True, blank=True)
-    delivery_item_id = models.CharField(max_length=255, null=True, blank=True)
     waybill_id = models.CharField(max_length=255, null=True, blank=True)
-    # Agreement ref + PD ref IRQ/PCA2020299/PD2022798
-    e_tools_reference = models.CharField(max_length=255, null=True, blank=True)
+
+    pd_number = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
-        return f'{self.id} {self.partner_organization.name}: {self.name}'
+        return f'{self.id} {self.partner_organization.name}: {self.name if self.name else self.unicef_release_order}'
 
 
 class Material(models.Model):
-    short_description = models.CharField(max_length=255)
-    basic_description = models.TextField(null=True, blank=True)
-    group_description = models.CharField(max_length=255)
+    UOM = (
+        ("BAG", _("BAG")),
+        ("BOT", _("BOT")),
+        ("BOX", _("BOX")),
+        ("CAR", _("CAR")),
+        ("DRM", _("DRM")),
+        ("DZ", _("DZ")),
+        ("EA", _("EA")),
+        ("KG", _("KG")),
+        ("L", _("L")),
+        ("M", _("M")),
+        ("PAA", _("PAA")),
+        ("PAC", _("PAC")),
+        ("RM", _("RM")),
+        ("ROL", _("ROL")),
+        ("SET", _("SET")),
+        ("TBE", _("TBE")),
+        ("TO", _("TO")),
+        ("VL", _("VL"))
+    )
 
-    original_uom = models.CharField(max_length=255)  # choices or FK
+    number = models.CharField(max_length=30, unique=True)
+    short_description = models.CharField(max_length=100)
+    original_uom = models.CharField(max_length=30, choices=UOM)
 
-    purchase_group = models.CharField(max_length=255, null=True, blank=True)
-    purchase_group_description = models.CharField(max_length=255, null=True, blank=True)
-    temperature_group = models.CharField(max_length=255, null=True, blank=True)
+    material_type = models.CharField(max_length=100, null=True, blank=True)
+    material_type_description = models.CharField(max_length=100, null=True, blank=True)
+    group = models.CharField(max_length=100)
+    group_description = models.CharField(max_length=100)
+    purchase_group = models.CharField(max_length=100, null=True, blank=True)
+    purchase_group_description = models.CharField(max_length=100, null=True, blank=True)
+    hazardous_goods = models.CharField(max_length=100, null=True, blank=True)
+    hazardous_goods_description = models.CharField(max_length=100, null=True, blank=True)
+    temperature_conditions = models.CharField(max_length=100, null=True, blank=True)
+    temperature_group = models.CharField(max_length=100, null=True, blank=True)
+    purchasing_text = models.TextField(null=True, blank=True)
 
     partner_materials = models.ManyToManyField(PartnerOrganization, through='PartnerMaterial')
 
@@ -205,6 +234,19 @@ class PartnerMaterial(models.Model):
 
 
 class Item(TimeStampedModel, models.Model):
+    DAMAGED = 'DAMAGED'
+    STOLEN = 'STOLEN'
+    EXPIRED = 'EXPIRED'
+    LOSS = 'LOSS'
+    SHORT = 'SHORT'
+
+    WASTAGE_TYPE = (
+        (DAMAGED, _()),
+        (STOLEN, _()),
+        (EXPIRED, _()),
+        (LOSS, _('Loss'))
+    )
+
     uom = models.CharField(max_length=30, null=True, blank=True)
 
     conversion_factor = models.IntegerField(null=True)
@@ -217,7 +259,15 @@ class Item(TimeStampedModel, models.Model):
     preposition_qty = models.IntegerField(null=True, blank=True)
     amount_usd = models.DecimalField(max_digits=20, decimal_places=4, null=True, blank=True)
 
-    shipment_item_id = models.CharField(max_length=255, null=True, blank=True)
+    purchase_order_item = models.CharField(max_length=255, null=True, blank=True)
+
+    unicef_ro_item = models.CharField(max_length=30, null=True, blank=True)
+
+    other = models.JSONField(
+        verbose_name=_("Other Details"),
+        null=True,
+        blank=True
+    )
 
     transfer = models.ForeignKey(
         Transfer,

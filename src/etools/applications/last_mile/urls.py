@@ -19,9 +19,14 @@ urlpatterns = [
     path('', include(root_api.urls)),
     path('', include(transfer_api.urls)),
     path(
-        'update-transfers/',
-        view=views_ext.VisionIngestApiView.as_view(http_method_names=['post'],),
-        name="vision-ingest"
+        'import-materials/',
+        view=views_ext.VisionIngestMaterialsApiView.as_view(http_method_names=['post'], ),
+        name="vision-ingest-materials"
+    ),
+    path(
+        'import-transfers/',
+        view=views_ext.VisionIngestTransfersApiView.as_view(http_method_names=['post'],),
+        name="vision-ingest-transfers"
     ),
     path(
         'points-of-interest/<int:poi_pk>/items/',

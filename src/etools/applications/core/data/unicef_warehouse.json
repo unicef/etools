@@ -1,0 +1,18 @@
+[
+{
+    "model": "last_mile.pointofinterest",
+    "pk": 1,
+    "fields": {
+        "parent": 37,
+        "name": "UNICEF Warehouse",
+        "p_code": "",
+        "description": "UNICEF Warehouse",
+        "poi_type": 1,
+        "other": null,
+        "point": null,
+        "private": true,
+        "is_active": true,
+        "partner_organizations": []
+    }
+}
+]

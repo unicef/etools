@@ -132,7 +132,7 @@ class TransferViewSet(
     permission_classes = [IsIPLMEditor]
 
     filter_backends = (DjangoFilterBackend, SearchFilter)
-    search_fields = ('name', 'partner_organization__organization__name', 'comment', 'e_tools_reference')
+    search_fields = ('name', 'partner_organization__organization__name', 'comment', 'pd_number')
 
     @cache
     def get_parent_object(self):
