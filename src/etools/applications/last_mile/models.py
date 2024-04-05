@@ -101,12 +101,13 @@ class Transfer(TimeStampedModel, models.Model):
         (WASTAGE, _('Wastage'))
     )
     TRANSFER_SUBTYPE = (
-        (SURPLUS, _()),
-        (SHORT, _()),
+        (SHORT, _('Short')),
+        (SURPLUS, _('Surplus')),
     )
 
     unicef_release_order = models.CharField(max_length=30, unique=True, null=True)
     name = models.CharField(max_length=255, null=True, blank=True)
+
     transfer_type = models.CharField(max_length=30, choices=TRANSFER_TYPE, null=True, blank=True)
     transfer_subtype = models.CharField(max_length=30, choices=TRANSFER_SUBTYPE, null=True, blank=True)
     status = models.CharField(max_length=30, choices=STATUS, default=PENDING)
@@ -237,15 +238,15 @@ class Item(TimeStampedModel, models.Model):
     DAMAGED = 'DAMAGED'
     STOLEN = 'STOLEN'
     EXPIRED = 'EXPIRED'
-    LOSS = 'LOSS'
-    SHORT = 'SHORT'
+    LOST = 'LOST'
 
     WASTAGE_TYPE = (
-        (DAMAGED, _()),
-        (STOLEN, _()),
-        (EXPIRED, _()),
-        (LOSS, _('Loss'))
+        (DAMAGED, _('Damaged')),
+        (STOLEN, _('Stolen')),
+        (EXPIRED, _('Expired')),
+        (LOST, _('Lost'))
     )
+    wastage_type = models.CharField(max_length=30, choices=WASTAGE_TYPE, null=True)
 
     uom = models.CharField(max_length=30, null=True, blank=True)
 
