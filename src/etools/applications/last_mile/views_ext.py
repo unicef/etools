@@ -30,7 +30,7 @@ class VisionIngestMaterialsApiView(APIView):
     }
 
     def post(self, request):
-        set_country('rwanda')
+        set_country('somalia')
         materials_to_create = []
         materials_to_update = []
         for material in request.data:
@@ -106,7 +106,7 @@ class VisionIngestTransfersApiView(APIView):
                 setattr(transfer_obj, field, value)
             return for_create, transfer_obj
         except models.Transfer.DoesNotExist:
-            return for_create, transfer_dict
+            return for_create, models.Transfer(**transfer_dict)
 
     @staticmethod
     def import_items(transfer_items):
@@ -123,10 +123,10 @@ class VisionIngestTransfersApiView(APIView):
                     material = models.Material.objects.get(number=item_dict['material'])
                     item_dict['material'] = material
                     if item_dict['description'] != material.short_description:
-                        models.PartnerMaterial.objects.create(
+                        models.PartnerMaterial.objects.update_or_create(
                             partner_organization=transfer.partner_organization,
                             material=material,
-                            descritpion=item_dict['description']
+                            defaults={'description': item_dict['description']}
                         )
                     item_dict.pop('description')
                     if item_dict['uom'] == material.original_uom:
@@ -152,16 +152,16 @@ class VisionIngestTransfersApiView(APIView):
         )
 
     def post(self, request):
-        set_country('rwanda')
+        set_country('somalia')
         transfers_to_create, transfers_to_update = [], []
         transfer_items = {}
-        for transfer in request.data:
+        for row in request.data:
             # only consider LD events
-            if transfer['Event'] != 'LD':
+            if row['Event'] != 'LD':
                 continue
 
             transfer_dict, item_dict = {}, {'other': {}}
-            for k, v in transfer.items():
+            for k, v in row.items():
                 if k in self.transfer_mapping:
                     transfer_dict[self.transfer_mapping[k]] = strip_tags(v)  # strip text that has html tags
                 elif k in self.item_mapping:
@@ -175,9 +175,12 @@ class VisionIngestTransfersApiView(APIView):
             created, transfer_obj = self.get_transfer(transfer_dict)
             if not transfer_obj:
                 continue
-            if created:
+
+            if created and transfer_obj.unicef_release_order not in \
+                    [o.unicef_release_order for o in transfers_to_create]:
                 transfers_to_create.append(transfer_obj)
-            else:
+            elif not created and transfer_obj.unicef_release_order not in \
+                    [o.unicef_release_order for o in transfers_to_update]:
                 transfers_to_update.append(transfer_obj)
 
             if transfer_dict['unicef_release_order'] in transfer_items:
@@ -185,8 +188,7 @@ class VisionIngestTransfersApiView(APIView):
             else:
                 transfer_items[transfer_dict['unicef_release_order']] = [item_dict]
 
-        unique_transfers = [dict(t) for t in {tuple(sorted(d.items())) for d in transfers_to_create}]
-        models.Transfer.objects.bulk_create([models.Transfer(**t) for t in unique_transfers])
+        models.Transfer.objects.bulk_create(transfers_to_create)
         models.Transfer.objects.bulk_update(
             transfers_to_update,
             fields=['purchase_order_id', 'pd_number', 'waybill_id', 'origin_check_out_at']

@@ -3,7 +3,7 @@
     "model": "last_mile.pointofinterest",
     "pk": 1,
     "fields": {
-        "parent": 37,
+        "parent": null,
         "name": "UNICEF Warehouse",
         "p_code": "",
         "description": "UNICEF Warehouse",
