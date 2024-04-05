@@ -30,7 +30,7 @@ class PointOfInterestViewSet(ModelViewSet):
     queryset = models.PointOfInterest.objects\
         .select_related('parent')\
         .prefetch_related('partner_organizations')\
-        .filter(is_active=True, private=True)\
+        .filter(is_active=True)\
         .order_by('name', 'id')
     permission_classes = [IsIPLMEditor]
     pagination_class = DynamicPageNumberPagination

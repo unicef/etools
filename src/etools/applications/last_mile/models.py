@@ -248,7 +248,7 @@ class Item(TimeStampedModel, models.Model):
     )
     wastage_type = models.CharField(max_length=30, choices=WASTAGE_TYPE, null=True)
 
-    uom = models.CharField(max_length=30, null=True, blank=True)
+    uom = models.CharField(max_length=30, choices=Material.UOM, null=True)
 
     conversion_factor = models.IntegerField(null=True)
 
@@ -298,7 +298,7 @@ class Item(TimeStampedModel, models.Model):
             return self.material.short_description
 
     def __str__(self):
-        return f'{self.transfer.name}: {self.description} / qty {self.quantity}'
+        return f'{self.material.number}: {self.description} / qty {self.quantity}'
 
 
 class ItemTransferHistory(TimeStampedModel, models.Model):

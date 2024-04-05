@@ -47,16 +47,34 @@ class ItemInline(RestrictedEditAdminMixin, admin.StackedInline):
 @admin.register(models.Transfer)
 class TransferAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
     list_display = (
-        'name', 'partner_organization', 'status', 'transfer_type',
-        'is_shipment', 'origin_point', 'destination_point'
+        'display_name', 'partner_organization', 'status', 'transfer_type',
+        'transfer_subtype', 'origin_point', 'destination_point'
     )
     list_select_related = ('partner_organization',)
-    list_filter = ('status',)
+    list_filter = ('status', 'transfer_type', 'transfer_subtype')
     search_fields = ('name', 'status')
     raw_id_fields = ('partner_organization', 'checked_in_by', 'checked_out_by')
     inlines = (ProofTransferAttachmentInline, WaybillTransferAttachmentInline, ItemInline)
 
+    def display_name(self, obj):
+        if obj.name:
+            return obj.name
+        elif obj.unicef_release_order:
+            return obj.unicef_release_order
+        return self.id
+
+
+@admin.register(models.Material)
+class MaterialAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
+    list_display = (
+        'number', 'short_description', 'original_uom'
+    )
+    list_filter = ('original_uom',)
+    search_fields = (
+        'number', 'short_description', 'original_uom', 'material_type',
+        'material_type_description', 'group', 'group_description'
+    )
+
 
 admin.site.register(models.PointOfInterestType)
-admin.site.register(models.Material)
 admin.site.register(models.Item)
