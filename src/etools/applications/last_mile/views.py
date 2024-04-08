@@ -1,7 +1,7 @@
 from functools import cache
 
 from django.db import connection
-from django.db.models import Prefetch, Q
+from django.db.models import CharField, OuterRef, Prefetch, Q, Subquery
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 
@@ -80,7 +80,7 @@ class InventoryItemListView(ListAPIView):
             poi = get_object_or_404(models.PointOfInterest, pk=self.request.parser_context['kwargs']['poi_pk'])
             qs = models.Item.objects\
                 .filter(transfer__status=models.Transfer.COMPLETED, transfer__destination_point=poi.pk)\
-                .exclude(transfer__transfer_type=models.Transfer.LOSS)\
+                .exclude(transfer__transfer_type=models.Transfer.WASTAGE)\
                 .order_by('created', '-id')
             return qs
         return self.queryset.none()
@@ -106,7 +106,7 @@ class InventoryMaterialsListView(ListAPIView):
             items_qs = models.Item.objects\
                 .select_related('transfer', 'transfer__destination_point')\
                 .filter(transfer__status=models.Transfer.COMPLETED, transfer__destination_point=poi.pk)\
-                .exclude(transfer__transfer_type=models.Transfer.LOSS)\
+                .exclude(transfer__transfer_type=models.Transfer.WASTAGE)\
 
             qs = models.Material.objects\
                 .filter(items__in=items_qs)\
@@ -123,16 +123,31 @@ class TransferViewSet(
     GenericViewSet
 ):
     serializer_class = serializers.TransferSerializer
-    queryset = models.Transfer.objects\
-        .select_related('partner_organization')\
-        .prefetch_related('items')\
-        .order_by('created', '-id')
+    queryset = models.Transfer.objects.all().order_by('created', '-id')
 
     pagination_class = DynamicPageNumberPagination
     permission_classes = [IsIPLMEditor]
 
     filter_backends = (DjangoFilterBackend, SearchFilter)
     search_fields = ('name', 'partner_organization__organization__name', 'comment', 'pd_number')
+
+    def get_queryset(self):
+        partner = self.request.user.partner
+        if not partner:
+            return models.Transfer.objects.none()
+        qs = super(TransferViewSet, self).get_queryset()\
+            .select_related('partner_organization',
+                            'destination_point', 'origin_point',
+                            'checked_in_by', 'checked_out_by', 'origin_transfer')\
+            .prefetch_related(
+            Prefetch(
+                'items', models.Item.objects
+                .select_related('material')
+                .prefetch_related('transfers_history')
+                .annotate(description=Subquery(models.PartnerMaterial.objects.filter(
+                    partner_organization=partner, material=OuterRef('material')).values('description'), output_field=CharField())))
+        ).filter(partner_organization=partner)
+        return qs
 
     @cache
     def get_parent_object(self):
@@ -182,7 +197,7 @@ class TransferViewSet(
 
         completed_filters = Q()
         completed_filters |= Q(Q(origin_point=location) & ~Q(destination_point=location))
-        completed_filters |= Q(destination_point=location, transfer_type=models.Transfer.LOSS)
+        completed_filters |= Q(destination_point=location, transfer_type=models.Transfer.WASTAGE)
 
         qs = self.get_queryset().filter(status=models.Transfer.COMPLETED).filter(completed_filters)
         return self.paginate_response(qs)

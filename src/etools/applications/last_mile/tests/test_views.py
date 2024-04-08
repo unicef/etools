@@ -203,7 +203,7 @@ class TestTransferView(BaseTenantTestCase):
         for existing, expected in zip(self.incoming.items.all(), checkin_data['items']):
             self.assertEqual(existing.quantity, expected['quantity'])
 
-        self.assertFalse(models.Transfer.objects.filter(transfer_type=models.Transfer.LOSS).exists())
+        self.assertFalse(models.Transfer.objects.filter(transfer_type=models.Transfer.WASTAGE).exists())
 
     def test_partial_checkin(self):
         item_1 = ItemFactory(quantity=11, transfer=self.incoming)
@@ -232,7 +232,7 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(self.incoming.items.get(pk=item_1.pk).quantity, 11)
         self.assertEqual(self.incoming.items.get(pk=item_3.pk).quantity, 3)
 
-        loss_transfer = models.Transfer.objects.filter(transfer_type=models.Transfer.LOSS).first()
+        loss_transfer = models.Transfer.objects.filter(transfer_type=models.Transfer.WASTAGE).first()
         self.assertEqual(loss_transfer.status, models.Transfer.COMPLETED)
         self.assertEqual(loss_transfer.destination_check_in_at, checkin_data['destination_check_in_at'])
         self.assertEqual(loss_transfer.items.count(), 2)
@@ -242,20 +242,22 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(loss_transfer.items.last().quantity, 30)
         self.assertEqual(loss_transfer.origin_transfer, self.incoming)
 
-    def test_checkin_validation(self):
-        item = ItemFactory(quantity=11, transfer=self.incoming)
+    def test_checkout_validation(self):
+        destination = PointOfInterestFactory()
+        item = ItemFactory(quantity=11, transfer=self.outgoing)
 
-        checkin_data = {
-            "name": "checked in transfer",
+        checkout_data = {
+            "transfer_type": models.Transfer.DISTRIBUTION,
+            "destination_point": destination.pk,
             "comment": "",
             "proof_file": self.attachment.pk,
             "items": [
-                {"id": item.pk, "quantity": 12},
+                {"id": item.pk, "quantity": 12}
             ],
-            "destination_check_in_at": timezone.now()
+            "origin_check_out_at": timezone.now()
         }
-        url = reverse('last_mile:transfers-new-check-in', args=(self.poi_partner_1.pk, self.incoming.pk))
-        response = self.forced_auth_req('patch', url, user=self.partner_staff, data=checkin_data)
+        url = reverse('last_mile:transfers-new-check-out', args=(self.poi_partner_1.pk,))
+        response = self.forced_auth_req('post', url, user=self.partner_staff, data=checkout_data)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('The item quantity cannot be greater than the original value.', response.data['items'])

@@ -1,3 +1,5 @@
+from functools import cached_property
+
 from django.contrib.gis.db.models import PointField
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -32,7 +34,7 @@ class PointOfInterest(models.Model):
         related_name='points_of_interest',
         db_index=True,
         on_delete=models.SET_NULL,
-        null=True
+        null=True, blank=True
     )
     name = models.CharField(verbose_name=_("Name"), max_length=254)
     p_code = models.CharField(verbose_name=_("P Code"), max_length=32, blank=True, default='')
@@ -284,11 +286,11 @@ class Item(TimeStampedModel, models.Model):
         related_name='items'
     )
 
-    @property
+    @cached_property
     def partner_organization(self):
         return self.transfer.partner_organization
 
-    @property
+    @cached_property
     def description(self):
         try:
             partner_material = PartnerMaterial.objects.get(

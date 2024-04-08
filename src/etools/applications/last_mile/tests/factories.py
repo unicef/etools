@@ -36,6 +36,7 @@ class PointOfInterestFactory(factory.django.DjangoModelFactory):
 
 
 class MaterialFactory(factory.django.DjangoModelFactory):
+    number = factory.Sequence(lambda n: n + 1)
     short_description = factory.Sequence(lambda n: 'Material short description {}'.format(n))
 
     class Meta:
@@ -43,6 +44,7 @@ class MaterialFactory(factory.django.DjangoModelFactory):
 
 
 class TransferFactory(factory.django.DjangoModelFactory):
+    unicef_release_order = factory.Sequence(lambda n: n + 1)
     destination_point = factory.SubFactory(PointOfInterestFactory)
     origin_point = factory.SubFactory(PointOfInterestFactory)
     partner_organization = factory.SubFactory(PartnerFactory)

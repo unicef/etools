@@ -30,7 +30,7 @@ class PointOfInterestSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         data['country'] = connection.tenant.name
-        data['region'] = instance.parent.name
+        data['region'] = instance.parent.name if instance.parent else None
         data['latitude'] = instance.point.y
         data['longitude'] = instance.point.x
         return data
@@ -43,14 +43,14 @@ class PointOfInterestLightSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        data['region'] = instance.parent.name
+        data['region'] = instance.parent.name if instance.parent else None
         return data
 
 
 class MaterialSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Material
-        fields = '__all__'
+        exclude = ('partner_materials', 'purchasing_text')
 
 
 class TransferMinimalSerializer(serializers.ModelSerializer):
@@ -63,7 +63,7 @@ class TransferMinimalSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Transfer
         fields = (
-            'id', 'name', 'partner_organization', 'status', 'transfer_type',
+            'id', 'name', 'partner_organization', 'status', 'transfer_type', 'transfer_subtype',
             'origin_point', 'destination_point',
             'checked_in_by', 'checked_out_by'
         )
@@ -131,12 +131,20 @@ class ItemUpdateSerializer(serializers.ModelSerializer):
         super().save(**kwargs)
 
 
-class ItemCheckoutSerializer(serializers.ModelSerializer):
+class ItemBaseSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField()
 
     class Meta:
         model = models.Item
         fields = ('id', 'quantity')
+
+
+class ItemCheckoutSerializer(ItemBaseSerializer):
+    wastage_type = serializers.CharField(required=False, allow_null=True, allow_blank=False)
+
+    class Meta(ItemBaseSerializer.Meta):
+        model = models.Item
+        fields = ItemBaseSerializer.Meta.fields + ('wastage_type',)
 
 
 class TransferSerializer(serializers.ModelSerializer):
@@ -175,17 +183,9 @@ class TransferBaseSerializer(AttachmentSerializerMixin, serializers.ModelSeriali
         model = models.Transfer
         fields = ('name', 'comment', 'proof_file', 'items')
 
-    def validate_items(self, value):
-        value.sort(key=lambda x: x['id'])
-        parent_items = models.Item.objects.filter(id__in=[item['id'] for item in value])
-        for parent_item, child_item in zip(parent_items.values('id', 'quantity'), value):
-            if parent_item['quantity'] - child_item['quantity'] < 0:
-                raise ValidationError(_('The item quantity cannot be greater than the original value.'))
-        return value
-
 
 class TransferCheckinSerializer(TransferBaseSerializer):
-    items = ItemCheckoutSerializer(many=True, required=False, allow_null=True)
+    items = ItemBaseSerializer(many=True, required=False, allow_null=True)
     destination_check_in_at = serializers.DateTimeField(required=True)
 
     class Meta(TransferBaseSerializer.Meta):
@@ -231,7 +231,7 @@ class TransferCheckinSerializer(TransferBaseSerializer):
             # if it is a partial checkin, create a new loss transfer for the remaining items in the original transfer
             if list(original_items.values('id', 'quantity')) != items:
                 self.instance = models.Transfer(
-                    transfer_type=models.Transfer.LOSS,
+                    transfer_type=models.Transfer.WASTAGE,
                     partner_organization=instance.partner_organization,
                     origin_transfer=instance,
                     origin_point=self.context.get('location'),
@@ -257,6 +257,14 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
         fields = TransferBaseSerializer.Meta.fields + (
             'transfer_type', 'items', 'origin_check_out_at', 'destination_point'
         )
+
+    def validate_items(self, value):
+        value.sort(key=lambda x: x['id'])
+        parent_items = models.Item.objects.filter(id__in=[item['id'] for item in value])
+        for parent_item, child_item in zip(parent_items.values('id', 'quantity'), value):
+            if parent_item['quantity'] - child_item['quantity'] < 0:
+                raise ValidationError(_('The item quantity cannot be greater than the original value.'))
+        return value
 
     def checkout_items(self, items):
         items.sort(key=lambda x: x['id'])
