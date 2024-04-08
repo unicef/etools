@@ -93,10 +93,10 @@ class InventoryMaterialsListView(ListAPIView):
 
     filter_backends = (SearchFilter,)
     search_fields = (
-        'items__description', 'items__uom', 'items__batch_id', 'items__shipment_item_id',
-        'short_description', 'basic_description',
-        'group_description', 'original_uom',
-        'purchase_group', 'purchase_group_description', 'temperature_group'
+        'items__uom', 'items__batch_id', 'items__shipment_item_id',
+        'short_description', 'basic_description', 'hazardous_goods', 'hazardous_goods_description',
+        'group', 'group_description', 'original_uom', 'material_type', 'material_type_description',
+        'purchase_group', 'purchase_group_description', 'temperature_group', 'temperature_conditions'
     )
 
     def get_queryset(self):

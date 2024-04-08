@@ -30,9 +30,13 @@ class PointOfInterestAdmin(admin.ModelAdmin):
     }
 
 
-class ItemInline(RestrictedEditAdminMixin, admin.StackedInline):
+class ItemInline(RestrictedEditAdminMixin, admin.TabularInline):
     extra = 0
     model = models.Item
+    list_select_related = ('material',)
+    fields = ('batch_id', 'material', 'description', 'expiry_date', 'wastage_type',
+              'amount_usd', 'unicef_ro_item', 'purchase_order_item')
+    readonly_fields = ('description',)
 
     def has_add_permission(self, request, obj=None):
         return False
@@ -50,11 +54,18 @@ class TransferAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
         'display_name', 'partner_organization', 'status', 'transfer_type',
         'transfer_subtype', 'origin_point', 'destination_point'
     )
-    list_select_related = ('partner_organization',)
     list_filter = ('status', 'transfer_type', 'transfer_subtype')
     search_fields = ('name', 'status')
-    raw_id_fields = ('partner_organization', 'checked_in_by', 'checked_out_by')
+    raw_id_fields = ('partner_organization', 'checked_in_by', 'checked_out_by',
+                     'origin_point', 'destination_point', 'origin_transfer')
     inlines = (ProofTransferAttachmentInline, WaybillTransferAttachmentInline, ItemInline)
+
+    def get_queryset(self, request):
+        qs = super(TransferAdmin, self).get_queryset(request)\
+            .select_related('partner_organization', 'partner_organization__organization',
+                            'origin_point', 'destination_point')\
+            .prefetch_related('items')
+        return qs
 
     def display_name(self, obj):
         if obj.name:

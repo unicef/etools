@@ -59,7 +59,7 @@ class PointOfInterest(models.Model):
         verbose_name_plural = _('Points of Interest')
 
     def __str__(self):
-        return f'{self.name} - {self.poi_type}'
+        return self.name
 
     @staticmethod
     def get_parent_location(point):
