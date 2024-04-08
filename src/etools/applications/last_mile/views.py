@@ -150,7 +150,7 @@ class TransferViewSet(
         return qs
 
     @cache
-    def get_parent_object(self):
+    def get_parent_poi(self):
         return get_object_or_404(models.PointOfInterest, pk=self.kwargs['point_of_interest_pk'])
 
     def get_object(self):
@@ -166,16 +166,17 @@ class TransferViewSet(
 
     @action(detail=False, methods=['get'], url_path='incoming')
     def incoming(self, request, *args, **kwargs):
-        location = self.get_parent_object()
+        location = self.get_parent_poi()
         qs = super().get_queryset()\
-            .filter(status=models.Transfer.PENDING, destination_point=location)\
+            .filter(status=models.Transfer.PENDING)\
+            .filter(Q(destination_point=location) | Q(destination_point__isnull=True))\
             .exclude(origin_point=location)
 
         return self.paginate_response(qs)
 
     @action(detail=False, methods=['get'], url_path='checked-in')
     def checked_in(self, request, *args, **kwargs):
-        location = self.get_parent_object()
+        location = self.get_parent_poi()
         qs = super().get_queryset()\
             .filter(status=models.Transfer.COMPLETED, destination_point=location)\
             .exclude(origin_point=location)
@@ -184,7 +185,7 @@ class TransferViewSet(
 
     @action(detail=False, methods=['get'], url_path='outgoing')
     def outgoing(self, request, *args, **kwargs):
-        location = self.get_parent_object()
+        location = self.get_parent_poi()
         qs = self.get_queryset()\
             .filter(status=models.Transfer.PENDING, origin_point=location)\
             .exclude(destination_point=location)
@@ -193,7 +194,7 @@ class TransferViewSet(
 
     @action(detail=False, methods=['get'], url_path='completed')
     def completed(self, request, *args, **kwargs):
-        location = self.get_parent_object()
+        location = self.get_parent_poi()
 
         completed_filters = Q()
         completed_filters |= Q(Q(origin_point=location) & ~Q(destination_point=location))
@@ -211,7 +212,7 @@ class TransferViewSet(
             instance=transfer, data=request.data, partial=True,
             context={
                 'request': request,
-                'location': self.get_parent_object()
+                'location': self.get_parent_poi()
             })
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -236,7 +237,7 @@ class TransferViewSet(
             data=request.data,
             context={
                 'request': request,
-                'location': self.get_parent_object()
+                'location': self.get_parent_poi()
             })
         serializer.is_valid(raise_exception=True)
         serializer.save()
