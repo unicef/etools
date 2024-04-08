@@ -31,8 +31,8 @@ class PointOfInterestSerializer(serializers.ModelSerializer):
         data = super().to_representation(instance)
         data['country'] = connection.tenant.name
         data['region'] = instance.parent.name if instance.parent else None
-        data['latitude'] = instance.point.y
-        data['longitude'] = instance.point.x
+        data['latitude'] = instance.point.y if instance.point else None
+        data['longitude'] = instance.point.x if instance.point else None
         return data
 
 
