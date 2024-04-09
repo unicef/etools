@@ -4,6 +4,7 @@ from django.contrib.gis.db.models import PointField
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
+from model_utils import FieldTracker
 from model_utils.models import TimeStampedModel
 from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CodedGenericRelation
@@ -56,6 +57,8 @@ class PointOfInterest(models.Model):
     private = models.BooleanField(default=False)
     is_active = models.BooleanField(verbose_name=_("Active"), default=True)
 
+    tracker = FieldTracker(['point'])
+
     objects = PointOfInterestManager()
 
     class Meta:
@@ -80,6 +83,9 @@ class PointOfInterest(models.Model):
         if not self.parent_id:
             self.parent = self.get_parent_location(self.point)
             assert self.parent_id, 'Unable to find location for {}'.format(self.point)
+        elif self.tracker.has_changed('point') and self.pk:
+            self.parent = self.get_parent_location(self.point)
+
         super().save(**kwargs)
 
 
