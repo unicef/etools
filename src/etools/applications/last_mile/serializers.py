@@ -259,7 +259,7 @@ class TransferCheckinSerializer(TransferBaseSerializer):
 
             if surplus_items:
                 surplus_transfer = models.Transfer(
-                    transfer_type=models.Transfer.WASTAGE,
+                    transfer_type=instance.transfer_type,
                     transfer_subtype=models.Transfer.SURPLUS,
                     partner_organization=instance.partner_organization,
                     origin_transfer=instance,

@@ -282,7 +282,7 @@ class TestTransferView(BaseTenantTestCase):
         self.assertIn(self.incoming, short_item_3.transfers_history.all())
 
         surplus_transfer = models.Transfer.objects.filter(
-            transfer_type=models.Transfer.WASTAGE, transfer_subtype=models.Transfer.SURPLUS).last()
+            transfer_type=self.incoming.transfer_type, transfer_subtype=models.Transfer.SURPLUS).last()
         self.assertEqual(short_transfer.status, models.Transfer.COMPLETED)
         self.assertEqual(short_transfer.destination_check_in_at, checkin_data['destination_check_in_at'])
         self.assertEqual(short_transfer.items.count(), 1)
