@@ -198,7 +198,9 @@ class TransferCheckinSerializer(TransferBaseSerializer):
         for original_item, checkin_item in zip(original_items, checkin_items):
             if new_transfer.transfer_subtype == models.Transfer.SHORT:
                 quantity = original_item.quantity - checkin_item['quantity']
-            else:
+                original_item.quantity = checkin_item['quantity']
+                original_item.save(update_fields=['quantity'])
+            else:  # is surplus
                 quantity = checkin_item['quantity'] - original_item.quantity
 
             _item = models.Item(
@@ -211,9 +213,7 @@ class TransferCheckinSerializer(TransferBaseSerializer):
                 )
             )
             _item.save()
-
-            original_item.quantity = checkin_item['quantity']
-            original_item.save(update_fields=['quantity'])
+            _item.transfers_history.add(self.instance)
 
     @staticmethod
     def get_short_surplus_items(original_items, checkin_items):
@@ -223,7 +223,6 @@ class TransferCheckinSerializer(TransferBaseSerializer):
                 short.append(checkin_item)
             elif checkin_item['quantity'] > original_item['quantity']:
                 surplus.append(checkin_item)
-
         return short, surplus
 
     @transaction.atomic
