@@ -182,7 +182,7 @@ class TransferViewSet(
         location = self.get_parent_poi()
 
         self.serializer_class = serializers.TransferListSerializer
-        qs = super(TransferViewSet, self).get_queryset()
+        qs = self.get_queryset()
         qs = (qs.filter(status=models.Transfer.PENDING)
               .filter(Q(destination_point=location) | Q(destination_point__isnull=True))
               .exclude(origin_point=location).select_related("destination_point__parent", "origin_point__parent"))
@@ -197,7 +197,7 @@ class TransferViewSet(
     @action(detail=False, methods=['get'], url_path='checked-in')
     def checked_in(self, request, *args, **kwargs):
         location = self.get_parent_poi()
-        qs = super().get_queryset()\
+        qs = self.get_queryset()\
             .filter(status=models.Transfer.COMPLETED, destination_point=location)\
             .exclude(origin_point=location)
 
