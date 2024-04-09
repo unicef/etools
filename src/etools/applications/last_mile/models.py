@@ -80,9 +80,6 @@ class PointOfInterest(models.Model):
         if not self.parent_id:
             self.parent = self.get_parent_location(self.point)
             assert self.parent_id, 'Unable to find location for {}'.format(self.point)
-        elif self.tracker.has_changed('point') and self.pk:
-            self.parent = self.get_parent_location(self.point)
-
         super().save(**kwargs)
 
 
