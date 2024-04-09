@@ -25,13 +25,21 @@ class PointOfInterestTypeViewSet(ReadOnlyModelViewSet):
     serializer_class = serializers.PointOfInterestTypeSerializer
 
 
-class PointOfInterestViewSet(ModelViewSet):
+class POIQuerysetMixin():
+    def get_poi_queryset(self):
+        partner_organization = getattr(self.request.user.profile.organization, 'partner', None)
+        if partner_organization:
+            return (models.PointOfInterest.objects
+                    .filter(Q(partner_organizations=partner_organization) | Q(partner_organizations__isnull=True))
+                    .filter(is_active=True)
+                    .select_related('parent')
+                    .prefetch_related('partner_organizations')
+                    .order_by('name', 'id'))
+        return models.PointOfInterest.objects.none()
+
+
+class PointOfInterestViewSet(POIQuerysetMixin, ModelViewSet):
     serializer_class = serializers.PointOfInterestSerializer
-    queryset = models.PointOfInterest.objects\
-        .select_related('parent')\
-        .prefetch_related('partner_organizations')\
-        .filter(is_active=True)\
-        .order_by('name', 'id')
     permission_classes = [IsIPLMEditor]
     pagination_class = DynamicPageNumberPagination
 
@@ -40,12 +48,7 @@ class PointOfInterestViewSet(ModelViewSet):
     search_fields = ('name', 'p_code', 'parent__name', 'parent__p_code')
 
     def get_queryset(self):
-        partner_organization = getattr(self.request.user.profile.organization, 'partner', None)
-        if partner_organization:
-            return super().get_queryset().filter(
-                Q(partner_organizations=partner_organization) | Q(partner_organizations__isnull=True)
-            )
-        return models.PointOfInterest.objects.none()
+        return self.get_poi_queryset()
 
     @action(detail=True, methods=['post'], url_path='upload-waybill',
             serializer_class=serializers.WaybillTransferSerializer)
@@ -119,6 +122,7 @@ class InventoryMaterialsListView(ListAPIView):
 
 
 class TransferViewSet(
+    POIQuerysetMixin,
     mixins.ListModelMixin,
     GenericViewSet
 ):
@@ -155,7 +159,7 @@ class TransferViewSet(
 
     @cache
     def get_parent_poi(self):
-        return get_object_or_404(models.PointOfInterest, pk=self.kwargs['point_of_interest_pk'])
+        return get_object_or_404(self.get_poi_queryset(), pk=self.kwargs['point_of_interest_pk'])
 
     def get_object(self):
         return get_object_or_404(self.detail_qs(), pk=self.kwargs['pk'])
