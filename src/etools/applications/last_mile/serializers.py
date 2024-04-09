@@ -192,54 +192,84 @@ class TransferCheckinSerializer(TransferBaseSerializer):
         model = models.Transfer
         fields = TransferBaseSerializer.Meta.fields + ('destination_check_in_at',)
 
-    def checkin_items(self, all_items, checkin_items, origin_transfer):
-        checkin_items.sort(key=lambda x: x['id'])
+    def checkin_items(self, all_items, checkin_items, new_transfer):
         original_items = all_items.filter(id__in=[item['id'] for item in checkin_items]).order_by('id')
 
         for original_item, checkin_item in zip(original_items, checkin_items):
-            if original_item.quantity - checkin_item['quantity'] == 0:
-                continue
+            if new_transfer.transfer_subtype == models.Transfer.SHORT:
+                quantity = original_item.quantity - checkin_item['quantity']
+            else:
+                quantity = checkin_item['quantity'] - original_item.quantity
 
-            loss_item = models.Item(
-                transfer=self.instance,
-                quantity=original_item.quantity - checkin_item['quantity'],
+            _item = models.Item(
+                transfer=new_transfer,
+                quantity=quantity,
                 material=original_item.material,
                 **model_to_dict(
                     original_item,
                     exclude=['id', 'created', 'modified', 'transfer', 'transfers_history', 'quantity', 'material']
                 )
             )
-            loss_item.save()
+            _item.save()
 
             original_item.quantity = checkin_item['quantity']
             original_item.save(update_fields=['quantity'])
 
-        loss_items = all_items.exclude(pk__in=original_items)
-        for loss_item in loss_items:
-            loss_item.transfers_history.add(origin_transfer)
-            loss_item.transfer = self.instance
-        models.Item.objects.bulk_update(loss_items, ['transfer'])
+    @staticmethod
+    def get_short_surplus_items(original_items, checkin_items):
+        short, surplus = [], []
+        for original_item, checkin_item in zip(original_items.values('id', 'quantity'), checkin_items):
+            if checkin_item['quantity'] < original_item['quantity']:
+                short.append(checkin_item)
+            elif checkin_item['quantity'] > original_item['quantity']:
+                surplus.append(checkin_item)
+
+        return short, surplus
 
     @transaction.atomic
     def update(self, instance, validated_data):
         items = validated_data.pop('items')
+        items.sort(key=lambda x: x['id'])
+
         validated_data['status'] = models.Transfer.COMPLETED
         validated_data['checked_in_by'] = self.context.get('request').user
 
         if self.partial:
+
             original_items = instance.items.order_by('id')
-            # if it is a partial checkin, create a new loss transfer for the remaining items in the original transfer
-            if list(original_items.values('id', 'quantity')) != items:
-                self.instance = models.Transfer(
+            # if it is a partial checkin, create a new wastage transfer with short or surplus subtype
+            short_items, surplus_items = self.get_short_surplus_items(original_items, items)
+            if short_items:
+                short_transfer = models.Transfer(
                     transfer_type=models.Transfer.WASTAGE,
+                    transfer_subtype=models.Transfer.SHORT,
                     partner_organization=instance.partner_organization,
                     origin_transfer=instance,
                     origin_point=self.context.get('location'),
                     **validated_data
                 )
-                self.instance.save()
-                notify_loss_transfer.delay(self.instance.pk)
-                self.checkin_items(original_items, items, instance)
+                short_transfer.save()
+                notify_loss_transfer.delay(short_transfer.pk)
+                self.checkin_items(original_items, short_items, short_transfer)
+
+                # also include the loss items that were not checked-in on short transfer
+                loss_items = original_items.exclude(pk__in=[item['id'] for item in items])
+                for loss_item in loss_items:
+                    loss_item.transfers_history.add(self.instance)
+                    loss_item.transfer = short_transfer
+                models.Item.objects.bulk_update(loss_items, ['transfer'])
+
+            if surplus_items:
+                surplus_transfer = models.Transfer(
+                    transfer_type=models.Transfer.WASTAGE,
+                    transfer_subtype=models.Transfer.SURPLUS,
+                    partner_organization=instance.partner_organization,
+                    origin_transfer=instance,
+                    origin_point=self.context.get('location'),
+                    **validated_data
+                )
+                surplus_transfer.save()
+                self.checkin_items(original_items, surplus_items, surplus_transfer)
 
             instance = super().update(instance, validated_data)
             instance.save()

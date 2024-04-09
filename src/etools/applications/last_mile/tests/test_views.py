@@ -205,7 +205,7 @@ class TestTransferView(BaseTenantTestCase):
 
         self.assertFalse(models.Transfer.objects.filter(transfer_type=models.Transfer.WASTAGE).exists())
 
-    def test_partial_checkin(self):
+    def test_partial_checkin_with_short(self):
         item_1 = ItemFactory(quantity=11, transfer=self.incoming)
         item_2 = ItemFactory(quantity=22, transfer=self.incoming)
         item_3 = ItemFactory(quantity=33, transfer=self.incoming)
@@ -232,15 +232,16 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(self.incoming.items.get(pk=item_1.pk).quantity, 11)
         self.assertEqual(self.incoming.items.get(pk=item_3.pk).quantity, 3)
 
-        loss_transfer = models.Transfer.objects.filter(transfer_type=models.Transfer.WASTAGE).first()
-        self.assertEqual(loss_transfer.status, models.Transfer.COMPLETED)
-        self.assertEqual(loss_transfer.destination_check_in_at, checkin_data['destination_check_in_at'])
-        self.assertEqual(loss_transfer.items.count(), 2)
-        loss_item_2 = loss_transfer.items.get(pk=item_2.pk)
+        short_transfer = models.Transfer.objects.filter(transfer_type=models.Transfer.WASTAGE).first()
+        self.assertEqual(short_transfer.status, models.Transfer.COMPLETED)
+        self.assertEqual(short_transfer.transfer_subtype, models.Transfer.SHORT)
+        self.assertEqual(short_transfer.destination_check_in_at, checkin_data['destination_check_in_at'])
+        self.assertEqual(short_transfer.items.count(), 2)
+        loss_item_2 = short_transfer.items.get(pk=item_2.pk)
         self.assertEqual(loss_item_2.quantity, 22)
         self.assertIn(self.incoming, loss_item_2.transfers_history.all())
-        self.assertEqual(loss_transfer.items.last().quantity, 30)
-        self.assertEqual(loss_transfer.origin_transfer, self.incoming)
+        self.assertEqual(short_transfer.items.last().quantity, 30)
+        self.assertEqual(short_transfer.origin_transfer, self.incoming)
 
     def test_checkout_validation(self):
         destination = PointOfInterestFactory()
