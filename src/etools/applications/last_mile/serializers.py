@@ -247,7 +247,6 @@ class TransferCheckinSerializer(TransferBaseSerializer):
                     **validated_data
                 )
                 short_transfer.save()
-                notify_loss_transfer.delay(short_transfer.pk)
                 self.checkin_items(original_items, short_items, short_transfer)
 
                 # also include the loss items that were not checked-in on short transfer
@@ -256,6 +255,7 @@ class TransferCheckinSerializer(TransferBaseSerializer):
                     loss_item.transfers_history.add(self.instance)
                     loss_item.transfer = short_transfer
                 models.Item.objects.bulk_update(loss_items, ['transfer'])
+                notify_loss_transfer.delay(short_transfer.pk)
 
             if surplus_items:
                 surplus_transfer = models.Transfer(
