@@ -177,11 +177,10 @@ class WaybillTransferSerializer(AttachmentSerializerMixin, serializers.ModelSeri
 class TransferBaseSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
     name = serializers.CharField(required=False, allow_blank=False, allow_null=False,)
     proof_file = AttachmentSingleFileField(required=True, allow_null=False)
-    items = ItemCheckoutSerializer(many=True, required=True)
 
     class Meta:
         model = models.Transfer
-        fields = ('name', 'comment', 'proof_file', 'items')
+        fields = ('name', 'comment', 'proof_file')
 
 
 class TransferCheckinSerializer(TransferBaseSerializer):
@@ -190,7 +189,7 @@ class TransferCheckinSerializer(TransferBaseSerializer):
 
     class Meta(TransferBaseSerializer.Meta):
         model = models.Transfer
-        fields = TransferBaseSerializer.Meta.fields + ('destination_check_in_at',)
+        fields = TransferBaseSerializer.Meta.fields + ('items', 'destination_check_in_at',)
 
     def checkin_items(self, all_items, checkin_items, new_transfer):
         original_items = all_items.filter(id__in=[item['id'] for item in checkin_items]).order_by('id')
@@ -278,6 +277,8 @@ class TransferCheckinSerializer(TransferBaseSerializer):
 class TransferCheckOutSerializer(TransferBaseSerializer):
     name = serializers.CharField(required=False)
     transfer_type = serializers.ChoiceField(choices=models.Transfer.TRANSFER_TYPE, required=True)
+    items = ItemCheckoutSerializer(many=True, required=True)
+
     origin_check_out_at = serializers.DateTimeField(required=True)
     destination_point = serializers.IntegerField(required=False)
 
@@ -300,9 +301,13 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
         parent_items = models.Item.objects.filter(id__in=[item['id'] for item in items]).order_by('id')
 
         for parent_item, child_item in zip(parent_items, items):
+            wastage_type = child_item.get('wastage_type')
+            if self.instance.transfer_type == models.Transfer.WASTAGE and not wastage_type:
+                raise ValidationError(_('The wastage type for item is required.'))
             if parent_item.quantity - child_item['quantity'] == 0:
                 parent_item.transfers_history.add(parent_item.transfer)
                 parent_item.transfer = self.instance
+                parent_item.wastage_type = wastage_type
                 parent_item.save(update_fields=['transfer'])
             else:
                 parent_item.quantity = parent_item.quantity - child_item['quantity']
@@ -310,11 +315,13 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
 
                 new_item = models.Item(
                     transfer=self.instance,
+                    wastage_type=wastage_type,
                     quantity=child_item['quantity'],
                     material=parent_item.material,
                     **model_to_dict(
                         parent_item,
-                        exclude=['id', 'created', 'modified', 'transfer', 'transfers_history', 'quantity', 'material']
+                        exclude=['id', 'created', 'modified', 'transfer', 'wastage_type',
+                                 'transfers_history', 'quantity', 'material']
                     )
                 )
                 new_item.save()

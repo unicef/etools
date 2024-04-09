@@ -358,7 +358,7 @@ class TestTransferView(BaseTenantTestCase):
             "comment": "",
             "proof_file": self.attachment.pk,
             "items": [
-                {"id": item_1.pk, "quantity": 9},
+                {"id": item_1.pk, "quantity": 9, "wastage_type": models.Item.EXPIRED},
             ],
             "origin_check_out_at": timezone.now()
         }
@@ -374,6 +374,7 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(wastage_transfer.destination_point, destination)
         self.assertEqual(wastage_transfer.items.count(), len(checkout_data['items']))
         self.assertEqual(wastage_transfer.items.first().quantity, 9)
+        self.assertEqual(wastage_transfer.items.first().wastage_type, models.Item.EXPIRED)
 
         self.assertEqual(self.outgoing.items.count(), 2)
         self.assertEqual(self.outgoing.items.get(pk=item_1.pk).quantity, 2)
