@@ -4,7 +4,6 @@ from django.contrib.gis.db.models import PointField
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-from model_utils import FieldTracker
 from model_utils.models import TimeStampedModel
 from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CodedGenericRelation
@@ -20,6 +19,11 @@ class PointOfInterestType(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class PointOfInterestManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().defer("point").select_related("parent")
 
 
 class PointOfInterest(models.Model):
@@ -52,7 +56,7 @@ class PointOfInterest(models.Model):
     private = models.BooleanField(default=False)
     is_active = models.BooleanField(verbose_name=_("Active"), default=True)
 
-    tracker = FieldTracker(['point'])
+    objects = PointOfInterestManager()
 
     class Meta:
         verbose_name = _('Point of Interest')

@@ -37,20 +37,35 @@ class PointOfInterestSerializer(serializers.ModelSerializer):
 
 
 class PointOfInterestLightSerializer(serializers.ModelSerializer):
+    region = serializers.SerializerMethodField()
+
+    def get_region(self, obj):
+        return obj.parent.name if obj.parent else ''
+
     class Meta:
         model = models.PointOfInterest
-        fields = ('id', 'name', 'p_code', 'description')
-
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        data['region'] = instance.parent.name if instance.parent else None
-        return data
+        fields = ('id', 'name', 'p_code', 'description', 'region')
 
 
 class MaterialSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Material
         exclude = ('partner_materials', 'purchasing_text')
+
+
+class TransferListSerializer(serializers.ModelSerializer):
+    origin_point = PointOfInterestLightSerializer(read_only=True)
+    destination_point = PointOfInterestLightSerializer(read_only=True)
+
+    class Meta:
+        model = models.Transfer
+        fields = (
+            'id', 'name', 'status', 'transfer_type', 'transfer_subtype',
+            'origin_point', 'destination_point', 'waybill_id',
+            'checked_in_by', 'checked_out_by', 'unicef_release_order',
+            "purchase_order_id", "origin_check_out_at", "is_shipment",
+            "destination_check_in_at"
+        )
 
 
 class TransferMinimalSerializer(serializers.ModelSerializer):

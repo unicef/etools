@@ -139,22 +139,26 @@ class TransferViewSet(
             .select_related('partner_organization',
                             'destination_point', 'origin_point',
                             'checked_in_by', 'checked_out_by', 'origin_transfer')\
-            .prefetch_related(
+            .filter(partner_organization=partner)
+        return qs
+
+    def detail_qs(self):
+        return self.get_queryset().prefetch_related(
             Prefetch(
                 'items', models.Item.objects
                 .select_related('material')
                 .prefetch_related('transfers_history')
                 .annotate(description=Subquery(models.PartnerMaterial.objects.filter(
-                    partner_organization=partner, material=OuterRef('material')).values('description'), output_field=CharField())))
-        ).filter(partner_organization=partner)
-        return qs
+                    partner_organization=self.request.user.partner,
+                    material=OuterRef('material')).values('description'), output_field=CharField())))
+        )
 
     @cache
     def get_parent_poi(self):
         return get_object_or_404(models.PointOfInterest, pk=self.kwargs['point_of_interest_pk'])
 
     def get_object(self):
-        return get_object_or_404(models.Transfer, pk=self.kwargs['pk'])
+        return get_object_or_404(self.detail_qs(), pk=self.kwargs['pk'])
 
     def paginate_response(self, qs):
         page = self.paginate_queryset(self.filter_queryset(qs))
@@ -167,12 +171,19 @@ class TransferViewSet(
     @action(detail=False, methods=['get'], url_path='incoming')
     def incoming(self, request, *args, **kwargs):
         location = self.get_parent_poi()
-        qs = super().get_queryset()\
-            .filter(status=models.Transfer.PENDING)\
-            .filter(Q(destination_point=location) | Q(destination_point__isnull=True))\
-            .exclude(origin_point=location)
+
+        self.serializer_class = serializers.TransferListSerializer
+        qs = super(TransferViewSet, self).get_queryset()
+        qs = (qs.filter(status=models.Transfer.PENDING)
+              .filter(Q(destination_point=location) | Q(destination_point__isnull=True))
+              .exclude(origin_point=location).select_related("destination_point__parent", "origin_point__parent"))
 
         return self.paginate_response(qs)
+
+    @action(detail=True, methods=['get'], url_path='details')
+    def details(self, request, *args, **kwargs):
+        transfer = self.get_object()
+        return Response(serializers.TransferSerializer(transfer).data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['get'], url_path='checked-in')
     def checked_in(self, request, *args, **kwargs):
