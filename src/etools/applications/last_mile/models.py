@@ -1,5 +1,6 @@
 from functools import cached_property
 
+from django.conf import settings
 from django.contrib.gis.db.models import PointField
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -243,6 +244,12 @@ class PartnerMaterial(models.Model):
         unique_together = ('partner_organization', 'material')
 
 
+class ItemManager(models.Manager):
+
+    def get_queryset(self):
+        return super().get_queryset().filter(hidden=False)
+
+
 class Item(TimeStampedModel, models.Model):
     DAMAGED = 'DAMAGED'
     STOLEN = 'STOLEN'
@@ -273,6 +280,11 @@ class Item(TimeStampedModel, models.Model):
 
     unicef_ro_item = models.CharField(max_length=30, null=True, blank=True)
 
+    hidden = models.BooleanField(default=False)
+
+    objects = ItemManager()
+    all_objects = models.Manager()
+
     other = models.JSONField(
         verbose_name=_("Other Details"),
         null=True,
@@ -293,6 +305,9 @@ class Item(TimeStampedModel, models.Model):
         related_name='items'
     )
 
+    class Meta:
+        base_manager_name = 'objects'
+
     @cached_property
     def partner_organization(self):
         return self.transfer.partner_organization
@@ -305,6 +320,9 @@ class Item(TimeStampedModel, models.Model):
             return partner_material.description
         except PartnerMaterial.DoesNotExist:
             return self.material.short_description
+
+    def should_be_hidden(self):
+        return self.material.number in settings.NON_RUTF_MATERIALS
 
     def __str__(self):
         return f'{self.material.number}: {self.description} / qty {self.quantity}'

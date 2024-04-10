@@ -658,3 +658,6 @@ STALE_USERS_DEACTIVATION_THRESHOLD_DAYS = int(
 )
 
 WAYBILL_EMAILS = get_from_secrets_or_env('WAYBILL_EMAILS', '')
+
+
+NON_RUTF_MATERIALS = get_from_secrets_or_env('NON_RUTF_MATERIALS', '').split(',')

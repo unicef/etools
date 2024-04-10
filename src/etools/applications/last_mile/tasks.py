@@ -33,6 +33,7 @@ def notify_upload_waybill(tenant_name, destination_pk, waybill_pk, waybill_url):
 
 @app.task
 def notify_loss_transfer(transfer_pk):
+    # TODO: make sure the schema is properly set??
     transfer = models.Transfer.objects.get(pk=transfer_pk)
 
     email_context = {

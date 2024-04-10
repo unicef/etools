@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import connection, transaction
 from django.forms import model_to_dict
 from django.utils.translation import gettext_lazy as _
@@ -206,10 +207,19 @@ class TransferCheckinSerializer(TransferBaseSerializer):
         model = models.Transfer
         fields = TransferBaseSerializer.Meta.fields + ('items', 'destination_check_in_at',)
 
-    def checkin_items(self, all_items, checkin_items, new_transfer):
-        original_items = all_items.filter(id__in=[item['id'] for item in checkin_items]).order_by('id')
+    def checkin_newtransfer_items(self, orig_items_dict: dict, checkin_items: list, new_transfer):
+        '''
+        This function gets called to address all the items in the transfers that are newly created either via
+        "short" or "surplus"
+        input:
+        all_items: all items in the original transfer
+        checkin_items: all items that are in the new transfer (short or surplus)
+        new_transfer: a transfer object
+        '''
 
-        for original_item, checkin_item in zip(original_items, checkin_items):
+        for checkin_item in checkin_items:
+            # this get should never fail, if it does Sentry should explode
+            original_item = orig_items_dict['id']
             if new_transfer.transfer_subtype == models.Transfer.SHORT:
                 quantity = original_item.quantity - checkin_item['quantity']
                 original_item.quantity = checkin_item['quantity']
@@ -221,6 +231,7 @@ class TransferCheckinSerializer(TransferBaseSerializer):
                 transfer=new_transfer,
                 quantity=quantity,
                 material=original_item.material,
+                hidden=original_item.should_be_hidden(),
                 **model_to_dict(
                     original_item,
                     exclude=['id', 'created', 'modified', 'transfer', 'transfers_history', 'quantity', 'material']
@@ -230,28 +241,38 @@ class TransferCheckinSerializer(TransferBaseSerializer):
             _item.transfers_history.add(self.instance)
 
     @staticmethod
-    def get_short_surplus_items(original_items, checkin_items):
+    def get_short_surplus_items(orig_items_dict, checkin_items):
         short, surplus = [], []
-        for original_item, checkin_item in zip(original_items.values('id', 'quantity'), checkin_items):
-            if checkin_item['quantity'] < original_item['quantity']:
+        for checkin_item in checkin_items:
+            original_item = orig_items_dict[checkin_item['id']]
+            if checkin_item['quantity'] < original_item.quantity:
                 short.append(checkin_item)
-            elif checkin_item['quantity'] > original_item['quantity']:
+            elif checkin_item['quantity'] > original_item.quantity:
                 surplus.append(checkin_item)
         return short, surplus
 
     @transaction.atomic
     def update(self, instance, validated_data):
-        items = validated_data.pop('items')
-        items.sort(key=lambda x: x['id'])
+        checkin_items = validated_data.pop('items')
 
         validated_data['status'] = models.Transfer.COMPLETED
         validated_data['checked_in_by'] = self.context.get('request').user
 
         if self.partial:
 
-            original_items = instance.items.order_by('id')
+            # TODO: separate validate items
+            if instance.items.exclude(pk__in=[item['id'] for item in checkin_items]).exists():
+                raise ValidationError(_("SYS ERROR:"
+                                        "Some items currently existing in the transfer are not included in checkin"))
+            if instance.items.count() != len(checkin_items):
+                raise ValidationError(_("SYS ERROR:"
+                                        "Some items with ids not belonging to the transfer were found"))
+
+            orig_items_dict = {obj.id: obj for obj in
+                               instance.items.all()}
+
             # if it is a partial checkin, create a new wastage transfer with short or surplus subtype
-            short_items, surplus_items = self.get_short_surplus_items(original_items, items)
+            short_items, surplus_items = self.get_short_surplus_items(orig_items_dict, checkin_items)
             if short_items:
                 short_transfer = models.Transfer(
                     transfer_type=models.Transfer.WASTAGE,
@@ -262,14 +283,7 @@ class TransferCheckinSerializer(TransferBaseSerializer):
                     **validated_data
                 )
                 short_transfer.save()
-                self.checkin_items(original_items, short_items, short_transfer)
-
-                # also include the loss items that were not checked-in on short transfer
-                loss_items = original_items.exclude(pk__in=[item['id'] for item in items])
-                for loss_item in loss_items:
-                    loss_item.transfers_history.add(self.instance)
-                    loss_item.transfer = short_transfer
-                models.Item.objects.bulk_update(loss_items, ['transfer'])
+                self.checkin_newtransfer_items(orig_items_dict, short_items, short_transfer)
                 notify_loss_transfer.delay(short_transfer.pk)
 
             if surplus_items:
@@ -282,10 +296,11 @@ class TransferCheckinSerializer(TransferBaseSerializer):
                     **validated_data
                 )
                 surplus_transfer.save()
-                self.checkin_items(original_items, surplus_items, surplus_transfer)
+                self.checkin_newtransfer_items(orig_items_dict, surplus_items, surplus_transfer)
 
             instance = super().update(instance, validated_data)
             instance.save()
+            instance.items.filter(material__number__in=settings.NON_RUTF_MATERIALS).update(hidden=True)
             return instance
 
 
