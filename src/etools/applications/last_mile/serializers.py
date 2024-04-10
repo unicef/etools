@@ -10,7 +10,7 @@ from unicef_attachments.serializers import AttachmentSerializerMixin
 
 from etools.applications.last_mile import models
 from etools.applications.last_mile.models import PartnerMaterial
-from etools.applications.last_mile.tasks import notify_loss_transfer
+from etools.applications.last_mile.tasks import notify_short_transfer
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.users.serializers import MinimalUserSerializer
 
@@ -207,6 +207,15 @@ class TransferCheckinSerializer(TransferBaseSerializer):
         model = models.Transfer
         fields = TransferBaseSerializer.Meta.fields + ('items', 'destination_check_in_at',)
 
+    def validate_items(self, value):
+        if self.instance.items.exclude(pk__in=[item['id'] for item in value]).exists():
+            raise ValidationError(_("SYS ERROR:"
+                                    "Some items currently existing in the transfer are not included in checkin"))
+        if self.instance.items.count() != len(value):
+            raise ValidationError(_("SYS ERROR:"
+                                    "Some items with ids not belonging to the transfer were found"))
+        return value
+
     def checkin_newtransfer_items(self, orig_items_dict: dict, checkin_items: list, new_transfer):
         """
         This function gets called to address all the items in the transfers that are newly created either via
@@ -262,17 +271,7 @@ class TransferCheckinSerializer(TransferBaseSerializer):
         validated_data['checked_in_by'] = self.context.get('request').user
 
         if self.partial:
-
-            # TODO: separate validate items
-            if instance.items.exclude(pk__in=[item['id'] for item in checkin_items]).exists():
-                raise ValidationError(_("SYS ERROR:"
-                                        "Some items currently existing in the transfer are not included in checkin"))
-            if instance.items.count() != len(checkin_items):
-                raise ValidationError(_("SYS ERROR:"
-                                        "Some items with ids not belonging to the transfer were found"))
-
-            orig_items_dict = {obj.id: obj for obj in
-                               instance.items.all()}
+            orig_items_dict = {obj.id: obj for obj in instance.items.all()}
 
             # if it is a partial checkin, create a new wastage transfer with short or surplus subtype
             short_items, surplus_items = self.get_short_surplus_items(orig_items_dict, checkin_items)
@@ -287,7 +286,7 @@ class TransferCheckinSerializer(TransferBaseSerializer):
                 )
                 short_transfer.save()
                 self.checkin_newtransfer_items(orig_items_dict, short_items, short_transfer)
-                notify_loss_transfer.delay(short_transfer.pk)
+                notify_short_transfer.delay(connection.schema_name, short_transfer.pk)
 
             if surplus_items:
                 surplus_transfer = models.Transfer(
@@ -322,47 +321,50 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
         )
 
     def validate_items(self, value):
-        value.sort(key=lambda x: x['id'])
-        parent_items = models.Item.objects.filter(id__in=[item['id'] for item in value])
-        for parent_item, child_item in zip(parent_items.values('id', 'quantity'), value):
-            if parent_item['quantity'] - child_item['quantity'] < 0:
+        orig_items_dict = {obj.id: obj for obj in models.Item.objects.filter(id__in=[item['id'] for item in value])}
+
+        for checkout_item in value:
+            original_item = orig_items_dict[checkout_item['id']]
+            if original_item.quantity - checkout_item['quantity'] < 0:
                 raise ValidationError(_('The item quantity cannot be greater than the original value.'))
         return value
 
-    def checkout_items(self, items):
-        items.sort(key=lambda x: x['id'])
-        parent_items = models.Item.objects.filter(id__in=[item['id'] for item in items]).order_by('id')
+    def checkout_newtransfer_items(self, checkout_items):
+        orig_items_dict = {obj.id: obj for obj in models.Item.objects.filter(
+            id__in=[item['id'] for item in checkout_items])}
 
-        for parent_item, child_item in zip(parent_items, items):
-            wastage_type = child_item.get('wastage_type')
+        for checkout_item in checkout_items:
+            wastage_type = checkout_item.get('wastage_type')
             if self.instance.transfer_type == models.Transfer.WASTAGE and not wastage_type:
                 raise ValidationError(_('The wastage type for item is required.'))
-            if parent_item.quantity - child_item['quantity'] == 0:
-                parent_item.transfers_history.add(parent_item.transfer)
-                parent_item.transfer = self.instance
-                parent_item.wastage_type = wastage_type
-                parent_item.save(update_fields=['transfer'])
+
+            original_item = orig_items_dict[checkout_item['id']]
+            if original_item.quantity - checkout_item['quantity'] == 0:
+                original_item.transfers_history.add(original_item.transfer)
+                original_item.transfer = self.instance
+                original_item.wastage_type = wastage_type
+                original_item.save(update_fields=['transfer'])
             else:
-                parent_item.quantity = parent_item.quantity - child_item['quantity']
-                parent_item.save(update_fields=['quantity'])
+                original_item.quantity = original_item.quantity - checkout_item['quantity']
+                original_item.save(update_fields=['quantity'])
 
                 new_item = models.Item(
                     transfer=self.instance,
                     wastage_type=wastage_type,
-                    quantity=child_item['quantity'],
-                    material=parent_item.material,
+                    quantity=checkout_item['quantity'],
+                    material=original_item.material,
                     **model_to_dict(
-                        parent_item,
+                        original_item,
                         exclude=['id', 'created', 'modified', 'transfer', 'wastage_type',
                                  'transfers_history', 'quantity', 'material']
                     )
                 )
                 new_item.save()
-                new_item.transfers_history.add(parent_item.transfer)
+                new_item.transfers_history.add(original_item.transfer)
 
     @transaction.atomic
     def create(self, validated_data):
-        items = validated_data.pop('items')
+        checkout_items = validated_data.pop('items')
         if 'destination_point' in validated_data:
             validated_data['destination_point_id'] = validated_data['destination_point']
             validated_data.pop('destination_point')
@@ -378,5 +380,5 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
 
         self.instance.save()
 
-        self.checkout_items(items)
+        self.checkout_newtransfer_items(checkout_items)
         return self.instance

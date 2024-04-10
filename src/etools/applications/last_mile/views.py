@@ -65,7 +65,7 @@ class PointOfInterestViewSet(POIQuerysetMixin, ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class InventoryItemListView(ListAPIView):
+class InventoryItemListView(POIQuerysetMixin, ListAPIView):
     permission_classes = [IsIPLMEditor]
     serializer_class = serializers.ItemListSerializer
     pagination_class = DynamicPageNumberPagination
@@ -80,7 +80,11 @@ class InventoryItemListView(ListAPIView):
 
     def get_queryset(self):
         if self.request.parser_context['kwargs'] and 'poi_pk' in self.request.parser_context['kwargs']:
-            poi = get_object_or_404(models.PointOfInterest, pk=self.request.parser_context['kwargs']['poi_pk'])
+            poi = get_object_or_404(self.get_poi_queryset(), pk=self.request.parser_context['kwargs']['poi_pk'])
+            partner = self.request.user.partner
+            if not partner:
+                return self.queryset.none()
+
             qs = models.Item.objects\
                 .filter(transfer__status=models.Transfer.COMPLETED, transfer__destination_point=poi.pk)\
                 .exclude(transfer__transfer_type=models.Transfer.WASTAGE)\
@@ -96,7 +100,7 @@ class InventoryMaterialsListView(POIQuerysetMixin, ListAPIView):
 
     filter_backends = (SearchFilter,)
     search_fields = (
-        'items__uom', 'items__batch_id', 'items__shipment_item_id',
+        'items__uom', 'items__batch_id', 'items__shipment_item_id', 'number',
         'short_description', 'basic_description', 'hazardous_goods', 'hazardous_goods_description',
         'group', 'group_description', 'original_uom', 'material_type', 'material_type_description',
         'purchase_group', 'purchase_group_description', 'temperature_group', 'temperature_conditions'

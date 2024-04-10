@@ -1,11 +1,11 @@
-name = 'last_mile/loss_transfer'
+name = 'last_mile/short_transfer'
 defaults = {
-    'description': 'New Loss Transfer Recorded',
+    'description': 'New Short Transfer Recorded',
     'subject': 'eTools Last Mile: New Loss Transfer Recorded',
     'content': """
     Dear Colleague,
 
-    Please note that a new loss transfer was recorded id {{ transfer.pk }}.
+    Please note that a new short transfer was recorded id {{ transfer.pk }}.
     Details:
         Origin: {{ transfer.origin_point.name }}
         Destination: {{ transfer.destination_point.name }}
