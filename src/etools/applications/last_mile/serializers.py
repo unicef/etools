@@ -208,18 +208,18 @@ class TransferCheckinSerializer(TransferBaseSerializer):
         fields = TransferBaseSerializer.Meta.fields + ('items', 'destination_check_in_at',)
 
     def checkin_newtransfer_items(self, orig_items_dict: dict, checkin_items: list, new_transfer):
-        '''
+        """
         This function gets called to address all the items in the transfers that are newly created either via
         "short" or "surplus"
         input:
         all_items: all items in the original transfer
         checkin_items: all items that are in the new transfer (short or surplus)
         new_transfer: a transfer object
-        '''
+        """
 
         for checkin_item in checkin_items:
             # this get should never fail, if it does Sentry should explode
-            original_item = orig_items_dict['id']
+            original_item = orig_items_dict[checkin_item['id']]
             if new_transfer.transfer_subtype == models.Transfer.SHORT:
                 quantity = original_item.quantity - checkin_item['quantity']
                 original_item.quantity = checkin_item['quantity']
@@ -234,11 +234,14 @@ class TransferCheckinSerializer(TransferBaseSerializer):
                 hidden=original_item.should_be_hidden(),
                 **model_to_dict(
                     original_item,
-                    exclude=['id', 'created', 'modified', 'transfer', 'transfers_history', 'quantity', 'material']
+                    exclude=['id', 'created', 'modified', 'transfer', 'transfers_history', 'quantity',
+                             'material', 'hidden']
                 )
             )
             _item.save()
             _item.transfers_history.add(self.instance)
+            if original_item.quantity == 0:
+                original_item.delete()
 
     @staticmethod
     def get_short_surplus_items(orig_items_dict, checkin_items):

@@ -216,6 +216,7 @@ class TestTransferView(BaseTenantTestCase):
             "proof_file": self.attachment.pk,
             "items": [
                 {"id": item_1.pk, "quantity": 11},
+                {"id": item_2.pk, "quantity": 0},
                 {"id": item_3.pk, "quantity": 3},
             ],
             "destination_check_in_at": timezone.now()
@@ -237,7 +238,7 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(short_transfer.transfer_subtype, models.Transfer.SHORT)
         self.assertEqual(short_transfer.destination_check_in_at, checkin_data['destination_check_in_at'])
         self.assertEqual(short_transfer.items.count(), 2)
-        loss_item_2 = short_transfer.items.get(pk=item_2.pk)
+        loss_item_2 = short_transfer.items.first()
         self.assertEqual(loss_item_2.quantity, 22)
         self.assertIn(self.incoming, loss_item_2.transfers_history.all())
         self.assertEqual(short_transfer.items.last().quantity, 30)
