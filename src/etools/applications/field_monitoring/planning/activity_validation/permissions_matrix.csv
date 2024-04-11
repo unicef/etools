@@ -70,19 +70,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,report_reviewer,All Users,staff_visit,submitted,required,TRUE
 
 
-,report_reviewer,UNICEF User,,draft,view,TRUE
-,report_reviewer,UNICEF User,,checklist,view,TRUE
-,report_reviewer,UNICEF User,,review,view,TRUE
-,report_reviewer,UNICEF User,staff_visit,assigned,view,TRUE
-,report_reviewer,UNICEF User,staff_visit,data_collection,view,TRUE
-,report_reviewer,UNICEF User,staff_visit,report_finalization,view,TRUE
-,report_reviewer,UNICEF User,staff_visit,submitted,view,TRUE
-,report_reviewer,UNICEF User,tpm_visit,assigned,view,TRUE
-,report_reviewer,UNICEF User,tpm_visit,data_collection,view,TRUE
-,report_reviewer,UNICEF User,tpm_visit,report_finalization,view,TRUE
-,report_reviewer,UNICEF User,tpm_visit,submitted,view,TRUE
-,report_reviewer,UNICEF User,,completed,view,TRUE
-,report_reviewer,UNICEF User,,cancelled,view,TRUE
+,report_reviewer,UNICEF User,,*,view,TRUE
 ,reviewed_by,UNICEF User,,report_finalization,view,TRUE
 ,reviewed_by,UNICEF User,,submitted,view,TRUE
 ,reviewed_by,UNICEF User,,completed,view,TRUE
