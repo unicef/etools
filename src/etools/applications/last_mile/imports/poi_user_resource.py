@@ -2,6 +2,7 @@ from import_export import fields, resources, widgets
 
 from etools.applications.last_mile.models import PointOfInterest, PointOfInterestType
 from etools.applications.partners.models import PartnerOrganization
+
 # from etools.applications.users.models import User
 
 

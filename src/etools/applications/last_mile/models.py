@@ -15,7 +15,7 @@ from etools.applications.partners.models import PartnerOrganization
 from etools.applications.users.models import User
 
 
-class PointOfInterestType(models.Model):
+class PointOfInterestType(TimeStampedModel, models.Model):
     name = models.CharField(verbose_name=_("Poi Type Name"), max_length=32)
     category = models.CharField(verbose_name=_("Poi Category"), max_length=32)
 
@@ -28,7 +28,7 @@ class PointOfInterestManager(models.Manager):
         return super().get_queryset().defer("point").select_related("parent")
 
 
-class PointOfInterest(models.Model):
+class PointOfInterest(TimeStampedModel, models.Model):
     partner_organizations = models.ManyToManyField(
         PartnerOrganization,
         related_name='points_of_interest',
@@ -183,7 +183,7 @@ class Transfer(TimeStampedModel, models.Model):
         return f'{self.id} {self.partner_organization.name}: {self.name if self.name else self.unicef_release_order}'
 
 
-class Material(models.Model):
+class Material(TimeStampedModel, models.Model):
     UOM = (
         ("BAG", _("BAG")),
         ("BOT", _("BOT")),
@@ -227,7 +227,7 @@ class Material(models.Model):
         return self.short_description
 
 
-class PartnerMaterial(models.Model):
+class PartnerMaterial(TimeStampedModel, models.Model):
     partner_organization = models.ForeignKey(
         PartnerOrganization,
         on_delete=models.CASCADE,
