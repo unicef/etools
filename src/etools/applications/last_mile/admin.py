@@ -1,9 +1,12 @@
 from django.contrib import admin
 from django.contrib.gis import forms
 
+from import_export.admin import ImportMixin
+from import_export.formats.base_formats import XLSX
 from unicef_attachments.admin import AttachmentSingleInline
 
 from etools.applications.last_mile import models
+from etools.applications.last_mile.imports.poi_user_resource import PoiUserResource
 from etools.applications.partners.admin import AttachmentInlineAdminMixin
 from etools.libraries.djangolib.admin import RestrictedEditAdminMixin
 
@@ -19,7 +22,7 @@ class WaybillTransferAttachmentInline(AttachmentSingleInline):
 
 
 @admin.register(models.PointOfInterest)
-class PointOfInterestAdmin(admin.ModelAdmin):
+class PointOfInterestAdmin(ImportMixin, admin.ModelAdmin):
     list_display = ('name', 'parent', 'poi_type')
     list_select_related = ('parent',)
     list_filter = ('private', 'is_active')
@@ -28,6 +31,9 @@ class PointOfInterestAdmin(admin.ModelAdmin):
     formfield_overrides = {
         models.PointField: {'widget': forms.OSMWidget(attrs={'display_raw': True})},
     }
+    # xlsx import
+    resource_class = PoiUserResource
+    formats = [XLSX]
 
 
 class ItemInline(RestrictedEditAdminMixin, admin.TabularInline):
