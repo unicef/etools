@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-04-03 09:15+0000\n"
+"POT-Creation-Date: 2024-04-11 05:18+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -165,9 +165,6 @@ msgstr "أعضاء الفريق"
 
 msgid "Person Responsible"
 msgstr "الشخص المسؤول"
-
-msgid "Preliminary Report Reviewer"
-msgstr ""
 
 msgid "Report Reviewer"
 msgstr ""
