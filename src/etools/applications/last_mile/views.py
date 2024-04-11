@@ -93,40 +93,46 @@ class InventoryItemListView(POIQuerysetMixin, ListAPIView):
         return self.queryset.none()
 
 
-class InventoryMaterialsListView(POIQuerysetMixin, ListAPIView):
+class InventoryMaterialsViewSet(POIQuerysetMixin, mixins.ListModelMixin, GenericViewSet):
     permission_classes = [IsIPLMEditor]
     serializer_class = serializers.MaterialListSerializer
     pagination_class = DynamicPageNumberPagination
 
     filter_backends = (SearchFilter,)
     search_fields = (
-        'items__uom', 'items__batch_id', 'items__shipment_item_id', 'number',
-        'short_description', 'basic_description', 'hazardous_goods', 'hazardous_goods_description',
-        'group', 'group_description', 'original_uom', 'material_type', 'material_type_description',
+        'items__batch_id', 'number',
+        'short_description', 'hazardous_goods', 'hazardous_goods_description',
+        'group', 'group_description', 'material_type', 'material_type_description',
         'purchase_group', 'purchase_group_description', 'temperature_group', 'temperature_conditions'
     )
 
     def get_queryset(self):
-        if self.request.parser_context['kwargs'] and 'poi_pk' in self.request.parser_context['kwargs']:
-            poi = get_object_or_404(self.get_poi_queryset(), pk=self.request.parser_context['kwargs']['poi_pk'])
-            partner = self.request.user.partner
-            if not partner:
-                return self.queryset.none()
-            items_qs = models.Item.objects\
-                .select_related('transfer', 'transfer__partner_organization', 'transfer__destination_point')\
-                .filter(transfer__status=models.Transfer.COMPLETED,
-                        transfer__destination_point=poi.pk,
-                        transfer__partner_organization=partner)\
-                .exclude(transfer__transfer_type=models.Transfer.WASTAGE)\
+        poi = get_object_or_404(self.get_poi_queryset(), pk=self.kwargs['point_of_interest_pk'])
+        partner = self.request.user.partner
+        if not partner:
+            return self.queryset.none()
+        items_qs = models.Item.objects\
+            .select_related('transfer', 'transfer__partner_organization', 'transfer__destination_point')\
+            .filter(transfer__status=models.Transfer.COMPLETED,
+                    transfer__destination_point=poi.pk,
+                    transfer__partner_organization=partner)\
+            .exclude(transfer__transfer_type=models.Transfer.WASTAGE)\
 
-            qs = models.Material.objects\
-                .filter(items__in=items_qs)\
-                .prefetch_related(Prefetch('items', queryset=items_qs))\
-                .distinct()\
-                .order_by('id', 'short_description')
+        qs = models.Material.objects\
+            .filter(items__in=items_qs)\
+            .prefetch_related(Prefetch('items', queryset=items_qs))\
+            .distinct()\
+            .order_by('id', 'short_description')
 
-            return qs
-        return self.queryset.none()
+        return qs
+
+    def get_object(self):
+        return get_object_or_404(self.get_queryset(), pk=self.kwargs['pk'])
+
+    @action(detail=True, methods=['get'], url_path='details')
+    def details(self, request, *args, **kwargs):
+        material = self.get_object()
+        return Response(serializers.MaterialDetailSerializer(material).data, status=status.HTTP_200_OK)
 
 
 class TransferViewSet(

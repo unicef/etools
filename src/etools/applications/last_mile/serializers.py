@@ -93,12 +93,19 @@ class MaterialItemsSerializer(serializers.ModelSerializer):
         exclude = ('material',)
 
 
-class MaterialListSerializer(serializers.ModelSerializer):
+class MaterialDetailSerializer(serializers.ModelSerializer):
     items = MaterialItemsSerializer(many=True)
 
     class Meta:
         model = models.Material
         fields = '__all__'
+
+
+class MaterialListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Material
+        fields = "__all__"
+
 
 
 class ItemSerializer(serializers.ModelSerializer):
@@ -209,10 +216,7 @@ class TransferCheckinSerializer(TransferBaseSerializer):
         fields = TransferBaseSerializer.Meta.fields + ('items', 'destination_check_in_at',)
 
     def validate_items(self, value):
-        if self.instance.items.exclude(pk__in=[item['id'] for item in value]).exists():
-            raise ValidationError(_("SYS ERROR:"
-                                    "Some items currently existing in the transfer are not included in checkin"))
-        if self.instance.items.count() != len(value):
+        if self.instance.items.count() < len(value):
             raise ValidationError(_("SYS ERROR:"
                                     "Some items with ids not belonging to the transfer were found"))
         return value
@@ -274,6 +278,9 @@ class TransferCheckinSerializer(TransferBaseSerializer):
 
         if self.partial:
             orig_items_dict = {obj.id: obj for obj in instance.items.all()}
+            checkedin_items_ids = [r["id"] for r in checkin_items]
+            original_items_missing = [key for key in orig_items_dict.keys() if key not in checkedin_items_ids]
+            checkin_items += [{"id": r, "quantity": 0} for r in original_items_missing]
 
             # if it is a partial checkin, create a new wastage transfer with short or surplus subtype
             short_items, surplus_items = self.get_short_surplus_items(orig_items_dict, checkin_items)
