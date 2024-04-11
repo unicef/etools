@@ -307,6 +307,7 @@ class Item(TimeStampedModel, models.Model):
 
     class Meta:
         base_manager_name = 'objects'
+        ordering = ("-id",)
 
     @cached_property
     def partner_organization(self):
@@ -322,7 +323,7 @@ class Item(TimeStampedModel, models.Model):
             return self.material.short_description
 
     def should_be_hidden(self):
-        return self.material.number in settings.NON_RUTF_MATERIALS
+        return self.material.number not in settings.RUTF_MATERIALS
 
     def __str__(self):
         return f'{self.material.number}: {self.description} / qty {self.quantity}'

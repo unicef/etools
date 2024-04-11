@@ -171,15 +171,16 @@ class TransferSerializer(serializers.ModelSerializer):
     checked_in_by = MinimalUserSerializer(read_only=True)
     checked_out_by = MinimalUserSerializer(read_only=True)
     partner_organization = MinimalPartnerOrganizationListSerializer(read_only=True)
+    items = ItemSerializer(many=True)
 
     class Meta:
         model = models.Transfer
         fields = '__all__'
 
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        data['items'] = ItemSerializer(instance.items.all().order_by('id'), many=True).data
-        return data
+    # def to_representation(self, instance):
+    #     data = super().to_representation(instance)
+    #     data['items'] = ItemSerializer(instance.items.all().order_by('id'), many=True).data
+    #     return data
 
 
 class WaybillTransferSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
@@ -269,6 +270,7 @@ class TransferCheckinSerializer(TransferBaseSerializer):
 
         validated_data['status'] = models.Transfer.COMPLETED
         validated_data['checked_in_by'] = self.context.get('request').user
+        validated_data["destination_point"] = self.context["location"]
 
         if self.partial:
             orig_items_dict = {obj.id: obj for obj in instance.items.all()}
@@ -302,7 +304,7 @@ class TransferCheckinSerializer(TransferBaseSerializer):
 
             instance = super().update(instance, validated_data)
             instance.save()
-            instance.items.filter(material__number__in=settings.NON_RUTF_MATERIALS).update(hidden=True)
+            instance.items.exclude(material__number__in=settings.RUTF_MATERIALS).update(hidden=True)
             return instance
 
 
