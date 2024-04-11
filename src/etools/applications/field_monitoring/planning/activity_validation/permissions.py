@@ -46,3 +46,14 @@ class ActivityPermissions(PMPPermissions):
             'staff_visit+is_visit_lead': self.instance.monitor_type == monitor_types.staff and is_visit_lead(),
             'tpm_visit+tpm_ma_related': self.instance.monitor_type == monitor_types.tpm and is_ma_user(),
         }
+
+        if getattr(self.instance, 'old', None) is not None:
+            self.condition_map.update({
+                f'old_status_{status}': self.instance.old.status == status
+                for status, _ in self.instance.STATUSES
+            })
+
+        self.condition_map.update({
+            'tpm_visit+old_status_review': self.condition_map['tpm_visit'] and self.condition_map.get('old_status_review', False),
+            'staff_visit+is_visit_lead+old_status_report_finalization': self.condition_map['staff_visit+is_visit_lead'] and self.condition_map.get('old_status_report_finalization', False),
+        })

@@ -23,9 +23,4 @@ class Migration(migrations.Migration):
             name='reviewed_by',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='activities_reviewed', to=settings.AUTH_USER_MODEL, verbose_name='Reviewed By'),
         ),
-        migrations.AddField(
-            model_name='monitoringactivity',
-            name='report_reviewer_preliminary',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='+', to=settings.AUTH_USER_MODEL, verbose_name='Preliminary Report Reviewer'),
-        ),
     ]

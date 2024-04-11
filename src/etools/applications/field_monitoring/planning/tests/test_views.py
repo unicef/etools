@@ -456,6 +456,18 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         )
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_assigned_tpm_report_reviewer_not_editable(self):
+        activity = MonitoringActivityFactory(monitor_type='tpm', status='assigned')
+
+        self._test_update(
+            self.fm_user,
+            activity,
+            {'report_reviewer': UserFactory(unicef_user=True).id},
+            expected_status=status.HTTP_400_BAD_REQUEST,
+            basic_errors=['Cannot change fields while in assigned: report_reviewer'],
+        )
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_submit_staff_report_reviewer_required(self):
         activity = MonitoringActivityFactory(monitor_type='staff', report_reviewer=None, status='report_finalization')
 
@@ -465,6 +477,18 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             {'status': 'submitted'},
             expected_status=status.HTTP_400_BAD_REQUEST,
             basic_errors=['Required fields not completed in submitted: report_reviewer'],
+        )
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_submitted_staff_report_reviewer_not_editable(self):
+        activity = MonitoringActivityFactory(monitor_type='staff', status='submitted')
+
+        self._test_update(
+            activity.visit_lead,
+            activity,
+            {'report_reviewer': UserFactory(unicef_user=True).id},
+            expected_status=status.HTTP_400_BAD_REQUEST,
+            basic_errors=['Cannot change fields while in submitted: report_reviewer'],
         )
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")

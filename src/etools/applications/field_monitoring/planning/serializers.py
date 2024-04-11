@@ -140,13 +140,12 @@ class MonitoringActivitySerializer(UserContextSerializerMixin, MonitoringActivit
     permissions = serializers.SerializerMethodField(read_only=True)
     transitions = serializers.SerializerMethodField(read_only=True)
     offices = SeparatedReadWriteField(read_field=OfficeSerializer(many=True), required=False)
-    report_reviewer_preliminary = SeparatedReadWriteField(read_field=MinimalUserSerializer(), required=False)
     report_reviewer = SeparatedReadWriteField(read_field=MinimalUserSerializer(), required=False)
     reviewed_by = SeparatedReadWriteField(read_field=MinimalUserSerializer(), required=False)
 
     class Meta(MonitoringActivityLightSerializer.Meta):
         fields = MonitoringActivityLightSerializer.Meta.fields + (
-            'offices', 'permissions', 'transitions', 'report_reviewer_preliminary', 'report_reviewer', 'reviewed_by',
+            'offices', 'permissions', 'transitions', 'report_reviewer', 'reviewed_by',
         )
 
     def get_permissions(self, obj):
