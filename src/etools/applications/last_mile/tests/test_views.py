@@ -2,6 +2,7 @@ from unittest.mock import Mock, patch
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
+from django.test import override_settings
 from django.utils import timezone
 
 from rest_framework import status
@@ -10,7 +11,12 @@ from rest_framework.reverse import reverse
 from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.last_mile import models
-from etools.applications.last_mile.tests.factories import ItemFactory, PointOfInterestFactory, TransferFactory
+from etools.applications.last_mile.tests.factories import (
+    ItemFactory,
+    MaterialFactory,
+    PointOfInterestFactory,
+    TransferFactory,
+)
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.users.tests.factories import UserFactory
@@ -142,6 +148,7 @@ class TestTransferView(BaseTenantTestCase):
             origin_point=cls.poi_partner_1
         )
         cls.attachment = AttachmentFactory(file=SimpleUploadedFile('proof_file.pdf', b'Proof File'))
+        cls.material = MaterialFactory(number='1234')
 
     def test_incoming(self):
         url = reverse("last_mile:transfers-incoming", args=(self.poi_partner_1.pk,))
@@ -175,10 +182,11 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(len(response.data['results']), 1)
         self.assertEqual(self.completed.pk, response.data['results'][0]['id'])
 
+    @override_settings(RUTF_MATERIALS=['1234'])
     def test_full_checkin(self):
-        item_1 = ItemFactory(quantity=11, transfer=self.incoming)
-        item_2 = ItemFactory(quantity=22, transfer=self.incoming)
-        item_3 = ItemFactory(quantity=33, transfer=self.incoming)
+        item_1 = ItemFactory(quantity=11, transfer=self.incoming, material=self.material)
+        item_2 = ItemFactory(quantity=22, transfer=self.incoming, material=self.material)
+        item_3 = ItemFactory(quantity=33, transfer=self.incoming, material=self.material)
 
         checkin_data = {
             "name": "checked in transfer",
@@ -200,15 +208,17 @@ class TestTransferView(BaseTenantTestCase):
         self.assertIn(self.attachment.filename, response.data['proof_file'])
         self.assertEqual(self.incoming.name, checkin_data['name'])
         self.assertEqual(self.incoming.items.count(), len(response.data['items']))
-        for existing, expected in zip(self.incoming.items.all(), checkin_data['items']):
+        for existing, expected in zip(self.incoming.items.all().order_by('id'),
+                                      sorted(checkin_data['items'], key=lambda x: x['id'])):
             self.assertEqual(existing.quantity, expected['quantity'])
 
         self.assertFalse(models.Transfer.objects.filter(transfer_type=models.Transfer.WASTAGE).exists())
 
+    @override_settings(RUTF_MATERIALS=['1234'])
     def test_partial_checkin_with_short(self):
-        item_1 = ItemFactory(quantity=11, transfer=self.incoming)
-        item_2 = ItemFactory(quantity=22, transfer=self.incoming)
-        item_3 = ItemFactory(quantity=33, transfer=self.incoming)
+        item_1 = ItemFactory(quantity=11, transfer=self.incoming, material=self.material)
+        ItemFactory(quantity=22, transfer=self.incoming, material=self.material)
+        item_3 = ItemFactory(quantity=33, transfer=self.incoming, material=self.material)
 
         checkin_data = {
             "name": "checked in transfer",
@@ -216,7 +226,6 @@ class TestTransferView(BaseTenantTestCase):
             "proof_file": self.attachment.pk,
             "items": [
                 {"id": item_1.pk, "quantity": 11},
-                {"id": item_2.pk, "quantity": 0},
                 {"id": item_3.pk, "quantity": 3},
             ],
             "destination_check_in_at": timezone.now()
@@ -244,10 +253,11 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(short_transfer.items.last().quantity, 30)
         self.assertEqual(short_transfer.origin_transfer, self.incoming)
 
+    @override_settings(RUTF_MATERIALS=['1234'])
     def test_partial_checkin_with_short_surplus(self):
-        item_1 = ItemFactory(quantity=11, transfer=self.incoming)
-        item_2 = ItemFactory(quantity=22, transfer=self.incoming)
-        item_3 = ItemFactory(quantity=33, transfer=self.incoming)
+        item_1 = ItemFactory(quantity=11, transfer=self.incoming, material=self.material)
+        item_2 = ItemFactory(quantity=22, transfer=self.incoming, material=self.material)
+        item_3 = ItemFactory(quantity=33, transfer=self.incoming, material=self.material)
 
         checkin_data = {
             "name": "checked in transfer",
@@ -290,6 +300,51 @@ class TestTransferView(BaseTenantTestCase):
         surplus_item_2 = surplus_transfer.items.last()
         self.assertEqual(surplus_item_2.quantity, 1)
         self.assertIn(self.incoming, surplus_item_2.transfers_history.all())
+
+    @override_settings(RUTF_MATERIALS=['1234'])
+    def test_partial_checkin_RUFT_material(self):
+        item_1 = ItemFactory(quantity=11, transfer=self.incoming, material=self.material)
+        item_2 = ItemFactory(quantity=22, transfer=self.incoming)
+        item_3 = ItemFactory(quantity=33, transfer=self.incoming)
+
+        checkin_data = {
+            "name": "checked in transfer",
+            "comment": "",
+            "proof_file": self.attachment.pk,
+
+            "items": [
+                {"id": item_1.pk, "quantity": 5},  # 1 RUFT
+                {"id": item_3.pk, "quantity": 3},  # 1 non-RUFT item
+            ],
+            "destination_check_in_at": timezone.now()
+        }
+        url = reverse('last_mile:transfers-new-check-in', args=(self.poi_partner_1.pk, self.incoming.pk))
+        response = self.forced_auth_req('patch', url, user=self.partner_staff, data=checkin_data)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.incoming.refresh_from_db()
+        self.assertEqual(self.incoming.status, models.Transfer.COMPLETED)
+        self.assertIn(response.data['proof_file'], self.attachment.file.path)
+        self.assertEqual(self.incoming.name, checkin_data['name'])
+        self.assertEqual(self.incoming.items.count(), len(response.data['items']))
+        self.assertEqual(self.incoming.items.count(), 1)  # only 1 checked-in item is visible, non RUFT
+        self.assertEqual(self.incoming.items.first().id, item_1.pk)
+        item_1.refresh_from_db()
+        self.assertEqual(self.incoming.items.first().quantity, item_1.quantity)
+
+        hidden_item = models.Item.all_objects.get(pk=item_3.pk)
+        self.assertEqual(hidden_item.hidden, True)
+        self.assertEqual(hidden_item.quantity, 3)
+
+        self.assertEqual(self.incoming.items.get(pk=item_1.pk).quantity, 5)
+
+        short_transfer = models.Transfer.objects.filter(transfer_type=models.Transfer.WASTAGE).first()
+        self.assertEqual(models.Item.all_objects.filter(transfer=short_transfer).count(), 3)  # 3 items on transfer
+        self.assertEqual(short_transfer.items.count(), 1)  # only 1 visible item
+
+        loss_item_2 = short_transfer.items.first()
+        self.assertEqual(loss_item_2.quantity, 6)
+        self.assertIn(self.incoming, loss_item_2.transfers_history.all())
 
     def test_checkout_validation(self):
         destination = PointOfInterestFactory()
@@ -340,7 +395,8 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(checkout_transfer.destination_point, destination)
         self.assertEqual(checkout_transfer.items.count(), len(checkout_data['items']))
         self.assertEqual(checkout_transfer.items.get(pk=item_1.pk).quantity, 11)
-        self.assertEqual(checkout_transfer.items.last().quantity, 3)
+        new_item_pk = [item['id'] for item in response.data['items'] if item['id'] != item_1.pk].pop()
+        self.assertEqual(checkout_transfer.items.get(pk=new_item_pk).quantity, 3)
         for item in checkout_transfer.items.all():
             self.assertIn(self.outgoing, item.transfers_history.all())
 
