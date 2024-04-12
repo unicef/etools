@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.db import connection, transaction
 from django.forms import model_to_dict
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
@@ -142,7 +143,7 @@ class ItemSimpleListSerializer(serializers.ModelSerializer):
 
 
 class ItemUpdateSerializer(serializers.ModelSerializer):
-    description = serializers.CharField(required=False, allow_null=False, allow_blank=False)
+    description = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
     class Meta:
         model = models.Item
@@ -154,11 +155,13 @@ class ItemUpdateSerializer(serializers.ModelSerializer):
     def save(self, **kwargs):
         if 'description' in self.validated_data:
             description = self.validated_data.pop('description')
-            PartnerMaterial.objects.update_or_create(
-                partner_organization=self.instance.partner_organization,
-                material=self.instance.material,
-                defaults={'description': description}
-            )
+            # If no text is sent (like an update for another field) skip
+            if description:
+                PartnerMaterial.objects.update_or_create(
+                    partner_organization=self.instance.partner_organization,
+                    material=self.instance.material,
+                    defaults={'description': description}
+                )
         super().save(**kwargs)
 
 
@@ -353,14 +356,18 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
         for checkout_item in checkout_items:
             wastage_type = checkout_item.get('wastage_type')
             if self.instance.transfer_type == models.Transfer.WASTAGE and not wastage_type:
-                raise ValidationError(_('The wastage type for item is required.'))
+                # TODO: when the feature and validation is enforced on the frontend revert to raising
+                # raise ValidationError(_('The wastage type for item is required.'))
+                checkout_item['wastage_type'] = models.Item.LOST
 
             original_item = orig_items_dict[checkout_item['id']]
             if original_item.quantity - checkout_item['quantity'] == 0:
                 original_item.transfers_history.add(original_item.transfer)
                 original_item.transfer = self.instance
                 original_item.wastage_type = wastage_type
-                original_item.save(update_fields=['transfer'])
+                original_item.save(update_fields=['transfer', 'wastage_type'])
+            elif original_item.quantity - checkout_item['quantity'] < 0:
+                raise ValidationError(_('Attempting to checkout more items than available'))
             else:
                 original_item.quantity = original_item.quantity - checkout_item['quantity']
                 original_item.save(update_fields=['quantity'])
@@ -377,14 +384,13 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
                     )
                 )
                 new_item.save()
-                new_item.transfers_history.add(original_item.transfer)
+                new_item.add_transfer_history(original_item.transfer)
 
     @transaction.atomic
     def create(self, validated_data):
         checkout_items = validated_data.pop('items')
         if 'destination_point' in validated_data:
-            validated_data['destination_point_id'] = validated_data['destination_point']
-            validated_data.pop('destination_point')
+            validated_data['destination_point_id'] = validated_data.pop('destination_point')
 
         self.instance = models.Transfer(
             partner_organization=self.context['request'].user.profile.organization.partner,
@@ -394,6 +400,8 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
 
         if self.instance.transfer_type == models.Transfer.WASTAGE:
             self.instance.status = models.Transfer.COMPLETED
+            checkout_datetime = validated_data['origin_check_out_at'] or timezone.now()
+            self.instance.name = f'W @ {checkout_datetime.strftime("%y-%m-%d")}'
 
         self.instance.save()
 

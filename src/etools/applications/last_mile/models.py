@@ -263,7 +263,7 @@ class Item(TimeStampedModel, models.Model):
         (DAMAGED, _('Damaged')),
         (STOLEN, _('Stolen')),
         (EXPIRED, _('Expired')),
-        (LOST, _('Lost'))
+        (LOST, _('Lost')),
     )
     wastage_type = models.CharField(max_length=30, choices=WASTAGE_TYPE, null=True)
 
@@ -326,7 +326,13 @@ class Item(TimeStampedModel, models.Model):
             return self.material.short_description
 
     def should_be_hidden(self):
-        return self.material.number in settings.RUTF_MATERIALS
+        return self.material.number not in settings.RUTF_MATERIALS
+
+    def add_transfer_history(self, transfer):
+        ItemTransferHistory.objects.create(
+            item=self,
+            transfer=transfer
+        )
 
     def __str__(self):
         return f'{self.material.number}: {self.description} / qty {self.quantity}'
