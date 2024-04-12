@@ -275,7 +275,14 @@ class TransferViewSet(
         return Response(serializers.TransferSerializer(serializer.instance).data, status=status.HTTP_200_OK)
 
 
-class ItemUpdateViewSet(mixins.UpdateModelMixin, GenericViewSet):
+class ItemUpdateViewSet(mixins.UpdateModelMixin, mixins.RetrieveModelMixin, GenericViewSet):
     permission_classes = [IsIPLMEditor]
     queryset = models.Item.objects.all()
     serializer_class = serializers.ItemUpdateSerializer
+
+    def get_queryset(self):
+        # item must be associated to a transfer that belongs to the partner of the requesting user
+        partner = self.request.user.partner
+        if not partner:
+            return super().get_queryset().none()
+        return super().get_queryset().filter(transfer__partner_organization=partner)

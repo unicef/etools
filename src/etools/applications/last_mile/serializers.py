@@ -309,7 +309,7 @@ class TransferCheckinSerializer(TransferBaseSerializer):
                 self.checkin_newtransfer_items(orig_items_dict, surplus_items, surplus_transfer)
 
             instance = super().update(instance, validated_data)
-            instance.items.filter(material__number__in=settings.RUTF_MATERIALS).update(hidden=True)
+            instance.items.exclude(material__number__in=settings.RUTF_MATERIALS).update(hidden=True)
             instance.refresh_from_db()
             return instance
 
