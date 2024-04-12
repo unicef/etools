@@ -68,14 +68,13 @@ class PointOfInterestViewSet(POIQuerysetMixin, ModelViewSet):
 
 class InventoryItemListView(POIQuerysetMixin, ListAPIView):
     permission_classes = [IsIPLMEditor]
-    serializer_class = serializers.ItemListSerializer
+    serializer_class = serializers.ItemSimpleListSerializer
     pagination_class = DynamicPageNumberPagination
 
     filter_backends = (SearchFilter,)
     search_fields = (
-        'description', 'uom', 'batch_id', 'transfer__name', 'shipment_item_id',
-        'material__short_description', 'material__basic_description',
-        'material__group_description', 'material__original_uom',
+        'description', 'batch_id', 'transfer__name',
+        'material__short_description', 'material__group_description',
         'material__purchase_group', 'material__purchase_group_description', 'material__temperature_group'
     )
 
@@ -90,6 +89,18 @@ class InventoryItemListView(POIQuerysetMixin, ListAPIView):
                 .filter(transfer__status=models.Transfer.COMPLETED, transfer__destination_point=poi.pk)\
                 .exclude(transfer__transfer_type=models.Transfer.WASTAGE)\
                 .order_by('created', '-id')
+
+            qs = qs.select_related('transfer',
+                                   'material',
+                                   'transfer__partner_organization',
+                                   'transfer__destination_point',
+                                   'transfer__origin_point',
+                                   'transfer__checked_in_by',
+                                   'transfer__checked_out_by')
+
+            qs = qs.annotate(description=Subquery(models.PartnerMaterial.objects.filter(
+                partner_organization=self.request.user.partner,
+                material=OuterRef('material')).values('description'), output_field=CharField()))
             return qs
         return self.queryset.none()
 

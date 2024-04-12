@@ -179,6 +179,9 @@ class Transfer(TimeStampedModel, models.Model):
 
     pd_number = models.CharField(max_length=255, null=True, blank=True)
 
+    class Meta:
+        ordering = ("-id",)
+
     def __str__(self):
         return f'{self.id} {self.partner_organization.name}: {self.name if self.name else self.unicef_release_order}'
 

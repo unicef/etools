@@ -132,6 +132,15 @@ class ItemListSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class ItemSimpleListSerializer(serializers.ModelSerializer):
+    material = MaterialSerializer()
+    description = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = models.Item
+        exclude = ('transfers_history',)
+
+
 class ItemUpdateSerializer(serializers.ModelSerializer):
     description = serializers.CharField(required=False, allow_null=False, allow_blank=False)
 
