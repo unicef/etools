@@ -8,10 +8,13 @@ from rest_framework.views import APIView
 
 from etools.applications.core.util_scripts import set_country
 from etools.applications.last_mile import models
+from etools.applications.last_mile.permissions import LMSMAPIPermission
 from etools.applications.organizations.models import Organization
 
 
 class VisionIngestMaterialsApiView(APIView):
+    permission_classes = (LMSMAPIPermission,)
+
     mapping = {
         'MaterialNumber': 'number',
         'ShortDescription': 'short_description',
@@ -53,6 +56,7 @@ class VisionIngestMaterialsApiView(APIView):
 
 
 class VisionIngestTransfersApiView(APIView):
+    permission_classes = (LMSMAPIPermission,)
     transfer_mapping = {
         "ReleaseOrder": "unicef_release_order",
         "PONumber": "purchase_order_id",
