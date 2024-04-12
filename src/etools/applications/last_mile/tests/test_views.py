@@ -304,7 +304,7 @@ class TestTransferView(BaseTenantTestCase):
     @override_settings(RUTF_MATERIALS=['1234'])
     def test_partial_checkin_RUFT_material(self):
         item_1 = ItemFactory(quantity=11, transfer=self.incoming, material=self.material)
-        item_2 = ItemFactory(quantity=22, transfer=self.incoming)
+        ItemFactory(quantity=22, transfer=self.incoming)
         item_3 = ItemFactory(quantity=33, transfer=self.incoming)
 
         checkin_data = {
