@@ -158,7 +158,8 @@ class TransferViewSet(
     pagination_class = DynamicPageNumberPagination
     permission_classes = [IsIPLMEditor]
 
-    filter_backends = (DjangoFilterBackend, SearchFilter)
+    # filter_backends = (DjangoFilterBackend, SearchFilter)
+    filter_backends = (SearchFilter,)
     filterset_class = TransferFilter
     search_fields = ('name', 'partner_organization__organization__name',
                      'comment', 'pd_number', 'unicef_release_order', 'waybill_id')
