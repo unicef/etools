@@ -15,4 +15,4 @@ class LMSMAPIPermission(IsAuthenticated):
         """
         Return `True` if permission is granted, `False` otherwise.
         """
-        return request.user.is_staff or is_user_in_groups(request.user, ['LMSM_API'])
+        return request.user.is_staff or is_user_in_groups(request.user, ['LMSMApi'])
