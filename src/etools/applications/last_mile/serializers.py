@@ -107,7 +107,6 @@ class MaterialListSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-
 class ItemSerializer(serializers.ModelSerializer):
     material = MaterialSerializer()
 
