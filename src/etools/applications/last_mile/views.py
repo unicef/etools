@@ -15,6 +15,7 @@ from rest_framework.viewsets import GenericViewSet, ModelViewSet, ReadOnlyModelV
 from unicef_restlib.pagination import DynamicPageNumberPagination
 
 from etools.applications.last_mile import models, serializers
+from etools.applications.last_mile.filters import TransferFilter
 from etools.applications.last_mile.permissions import IsIPLMEditor
 from etools.applications.last_mile.tasks import notify_upload_waybill
 
@@ -140,13 +141,14 @@ class TransferViewSet(
     mixins.ListModelMixin,
     GenericViewSet
 ):
-    serializer_class = serializers.TransferSerializer
+    serializer_class = serializers.TransferListSerializer
     queryset = models.Transfer.objects.all().order_by('created', '-id')
 
     pagination_class = DynamicPageNumberPagination
     permission_classes = [IsIPLMEditor]
 
     filter_backends = (DjangoFilterBackend, SearchFilter)
+    filterset_class = TransferFilter
     search_fields = ('name', 'partner_organization__organization__name',
                      'comment', 'pd_number', 'unicef_release_order', 'waybill_id')
 
@@ -191,7 +193,6 @@ class TransferViewSet(
     def incoming(self, request, *args, **kwargs):
         location = self.get_parent_poi()
 
-        self.serializer_class = serializers.TransferListSerializer
         qs = self.get_queryset()
         qs = (qs.filter(status=models.Transfer.PENDING)
               .filter(Q(destination_point=location) | Q(destination_point__isnull=True))
@@ -199,7 +200,8 @@ class TransferViewSet(
 
         return self.paginate_response(qs)
 
-    @action(detail=True, methods=['get'], url_path='details')
+    @action(detail=True, methods=['get'], url_path='details',
+            serializer_class=serializers.TransferSerializer)
     def details(self, request, *args, **kwargs):
         transfer = self.get_object()
         return Response(serializers.TransferSerializer(transfer).data, status=status.HTTP_200_OK)
