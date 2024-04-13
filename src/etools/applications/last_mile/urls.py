@@ -33,6 +33,11 @@ urlpatterns = [
         name="vision-ingest-transfers"
     ),
     path(
+        'export-data/',
+        view=views_ext.VisionLMSMExport.as_view(http_method_names=['get'],),
+        name="vision-export-data"
+    ),
+    path(
         'points-of-interest/<int:poi_pk>/items/',
         view=views.InventoryItemListView.as_view(http_method_names=['get'],),
         name='inventory-item-list',
