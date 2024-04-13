@@ -1,5 +1,8 @@
+import json
 import logging
+from datetime import datetime
 
+from django.http import StreamingHttpResponse
 from django.utils.html import strip_tags
 
 from rest_framework import status
@@ -10,6 +13,7 @@ from etools.applications.core.util_scripts import set_country
 from etools.applications.last_mile import models
 from etools.applications.last_mile.permissions import LMSMAPIPermission
 from etools.applications.organizations.models import Organization
+from etools.libraries.pythonlib.encoders import CustomJSONEncoder
 
 
 class VisionIngestMaterialsApiView(APIView):
@@ -53,6 +57,48 @@ class VisionIngestMaterialsApiView(APIView):
         models.Material.objects.bulk_update(materials_to_update, fields=list(self.mapping.values()))
 
         return Response(status=status.HTTP_200_OK)
+
+
+class VisionLMSMExport(APIView):
+    permission_classes = (LMSMAPIPermission,)
+
+    def get(self, request, *args, **kwargs):
+        set_country('somalia')
+        model_param = request.query_params.get('type')
+        model_map = {
+            "transfer": models.Transfer,
+            "poi": models.PointOfInterest,
+            "item": models.Item,
+            "item_history": models.ItemTransferHistory,
+        }
+        Model = model_map.get(model_param)
+        if not Model:
+            return Response({"type": "invalid data model"}, status=status.HTTP_400_BAD_REQUEST)
+
+        queryset = Model.objects
+        timestamp_filter_param = request.query_params.get('last_modified', None)
+        if timestamp_filter_param:
+            try:
+                gte_dt = datetime.fromisoformat(timestamp_filter_param)
+            except ValueError:
+                return Response({"last_modified": "invalid format"}, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                queryset = queryset.filter(modified__gte=gte_dt)
+
+        def data_stream(qs):
+            yield '['  # Start of JSON array
+            qs = qs.values()
+            first = True
+            for obj in qs.iterator():
+                if not first:
+                    yield ','
+                else:
+                    first = False
+                yield json.dumps(obj, cls=CustomJSONEncoder)
+            yield ']'  # End of JSON array
+
+        response = StreamingHttpResponse(data_stream(queryset), content_type='application/json')
+        return response
 
 
 class VisionIngestTransfersApiView(APIView):
