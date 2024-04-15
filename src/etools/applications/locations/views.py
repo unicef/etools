@@ -20,6 +20,7 @@ def cache_key(request: Request):
 
 
 class LocationsLightViewSet(views.LocationsLightViewSet):
+    # TODO: check user filter?
     @method_decorator(cache_control(
         max_age=0,  # enable cache yet automatically treat all cached data as stale to request backend every time
         public=True,  # reset cache control header to allow etags work with cache_page
@@ -31,8 +32,10 @@ class LocationsLightViewSet(views.LocationsLightViewSet):
 
 
 class LocationsViewSet(views.LocationsViewSet):
+    # TODO: permissions check
     queryset = Location.objects.all_with_geom()
 
+    # TODO: override and nullify create and update methods
     def get_queryset(self):
         queryset = Location.objects.all_with_geom()
         if "values" in self.request.query_params.keys():
