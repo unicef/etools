@@ -6,7 +6,7 @@ from import_export.formats.base_formats import XLSX
 from unicef_attachments.admin import AttachmentSingleInline
 
 from etools.applications.last_mile import models
-from etools.applications.last_mile.imports.poi_user_resource import PoiUserResource
+from etools.applications.last_mile.imports.poi_resource import PoiUserResource
 from etools.applications.partners.admin import AttachmentInlineAdminMixin
 from etools.libraries.djangolib.admin import RestrictedEditAdminMixin
 
