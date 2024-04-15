@@ -2655,6 +2655,41 @@ class TestInterventionReviews(BaseInterventionTestCase):
         review.refresh_from_db()
         self.assertEqual(review.overall_comment, "second")
 
+    def test_pdf_prc_secretary(self):
+        review = InterventionReviewFactory(
+            intervention=self.intervention,
+            overall_comment='comment',
+        )
+        response = self.forced_auth_req(
+            "get",
+            reverse(
+                "pmp_v3:intervention-review-pdf",
+                args=[self.intervention.pk, review.pk],
+            ),
+            user=self.unicef_prc_secretary
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.headers['Content-Type'], 'application/pdf')
+        self.assertIn('Content-Disposition', response.headers)
+
+    def test_pdf_partner_user(self):
+        review = InterventionReviewFactory(
+            intervention=self.intervention,
+        )
+        partner_user = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=self.intervention.agreement.partner.organization,
+        )
+        response = self.forced_auth_req(
+            "get",
+            reverse(
+                "pmp_v3:intervention-review-pdf",
+                args=[self.intervention.pk, review.pk],
+            ),
+            user=partner_user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
 
 class TestInterventionCancel(BaseInterventionActionTestCase):
     def setUp(self):
