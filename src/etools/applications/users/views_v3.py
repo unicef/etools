@@ -407,6 +407,7 @@ class StagedUserViewSet(
     permission_classes = (IsAuthenticated, IsActiveInRealm)
 
     def get_queryset(self):
+        # TODO: limit to either unicef for entire qs or partner their own org only
         qs_context = {
             'request_state': StagedUser.PENDING,
             'country': connection.tenant

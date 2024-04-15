@@ -48,6 +48,14 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,cancel_reason,Field Monitor,,*,edit,TRUE
 ,report_reject_reason,Approvers,,*,edit,TRUE
 ,reject_reason,All Users,is_ma_related_user,*,edit,TRUE
+,report_reviewer,Field Monitor,,draft,edit,TRUE
+,report_reviewer,Field Monitor,,checklist,edit,TRUE
+,report_reviewer,Field Monitor,,review,edit,TRUE
+,report_reviewer,Field Monitor,staff_visit,assigned,edit,TRUE
+,report_reviewer,Field Monitor,staff_visit,data_collection,edit,TRUE
+,report_reviewer,Field Monitor,staff_visit,report_finalization,edit,TRUE
+,report_reviewer,Field Monitor,tpm_visit+old_status_review,assigned,edit,TRUE
+,report_reviewer,UNICEF User,staff_visit+is_visit_lead+old_status_report_finalization,submitted,edit,TRUE
 
 
 ,location,All Users,,*,required,TRUE
@@ -58,8 +66,15 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,visit_lead,All Users,,data_collection,required,TRUE
 ,team_members,All Users,,assigned,required,TRUE
 ,team_members,All Users,,data_collection,required,TRUE
+,report_reviewer,All Users,tpm_visit,assigned,required,TRUE
+,report_reviewer,All Users,staff_visit,submitted,required,TRUE
 
 
+,report_reviewer,UNICEF User,,*,view,TRUE
+,reviewed_by,UNICEF User,,report_finalization,view,TRUE
+,reviewed_by,UNICEF User,,submitted,view,TRUE
+,reviewed_by,UNICEF User,,completed,view,TRUE
+,reviewed_by,UNICEF User,,cancelled,view,TRUE
 ,location,All Users,,*,view,TRUE
 ,location_site,All Users,,*,view,TRUE
 ,start_date,All Users,,*,view,TRUE

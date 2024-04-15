@@ -183,7 +183,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(fwd_migrate_to_user_realms, migrations.RunPython.noop),
+        # migrations.RunPython(fwd_migrate_to_user_realms, migrations.RunPython.noop),
 
         migrations.RenameField(
             model_name='user',
