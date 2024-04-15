@@ -86,7 +86,9 @@ class InventoryItemListView(POIQuerysetMixin, ListAPIView):
                 return self.queryset.none()
 
             qs = models.Item.objects\
-                .filter(transfer__status=models.Transfer.COMPLETED, transfer__destination_point=poi.pk)\
+                .filter(transfer__partner_organization=partner,
+                        transfer__status=models.Transfer.COMPLETED,
+                        transfer__destination_point=poi.pk)\
                 .exclude(transfer__transfer_type=models.Transfer.WASTAGE)\
                 .order_by('created', '-id')
 
@@ -99,7 +101,7 @@ class InventoryItemListView(POIQuerysetMixin, ListAPIView):
                                    'transfer__checked_out_by')
 
             qs = qs.annotate(description=Subquery(models.PartnerMaterial.objects.filter(
-                partner_organization=self.request.user.partner,
+                partner_organization=partner,
                 material=OuterRef('material')).values('description'), output_field=CharField()))
             return qs
         return self.queryset.none()
