@@ -1,9 +1,10 @@
-from datetime import date
+from datetime import date, timedelta
 
 from django.core import mail
 from django.core.management import call_command
 from django.test.utils import override_settings
 from django.urls import reverse
+from django.utils import timezone
 
 from rest_framework import status
 from unicef_attachments.models import Attachment, AttachmentLink, FileType
@@ -924,6 +925,23 @@ class CPOutputsViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenantT
             data={
                 'partners__in': str(result_link.intervention.agreement.partner.id)
             }
+        )
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_filter_by_active(self):
+        active_result = ResultFactory(
+            result_type__name=ResultType.OUTPUT, to_date=timezone.now().date())
+        expired_result = ResultFactory(
+            result_type__name=ResultType.OUTPUT, to_date=timezone.now().date() - timedelta(days=1))
+
+        active_link = InterventionResultLinkFactory(
+            cp_output=active_result, cp_output__result_type__name=ResultType.OUTPUT)
+        InterventionResultLinkFactory(
+            cp_output=expired_result, cp_output__result_type__name=ResultType.OUTPUT)
+
+        self._test_list(
+            self.unicef_user, [active_link.cp_output],
+            data={'active': True}
         )
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
