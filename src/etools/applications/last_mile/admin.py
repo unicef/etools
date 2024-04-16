@@ -93,5 +93,21 @@ class MaterialAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
     )
 
 
+@admin.register(models.Item)
+class ItemAdmin(admin.ModelAdmin):
+    list_display = ('batch_id', 'material', 'wastage_type', 'transfer')
+    raw_id_fields = ('transfer', 'transfers_history', 'material')
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)\
+            .select_related('transfer', 'material')\
+            .prefetch_related('transfers_history', 'material__partner_material')
+        return qs
+
+    search_fields = (
+        'batch_id', 'material__short_description', 'transfer__unicef_release_order',
+        'transfer__name'
+    )
+
+
 admin.site.register(models.PointOfInterestType)
-admin.site.register(models.Item)
