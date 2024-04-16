@@ -265,7 +265,7 @@ class TransferViewSet(
 
         return Response(serializers.TransferSerializer(serializer.instance).data, status=status.HTTP_200_OK)
 
-    @action(detail=True, methods=['post'], url_path='mark-complete')
+    @action(detail=True, methods=['patch'], url_path='mark-complete')
     def mark_complete(self, request, pk=None, **kwargs):
         transfer = self.get_object()
         if transfer.transfer_type == models.Transfer.DISTRIBUTION:
