@@ -1,8 +1,9 @@
+from django.contrib.gis.geos import Point
+
 from import_export import fields, resources, widgets
 
 from etools.applications.last_mile.models import PointOfInterest, PointOfInterestType
 from etools.applications.partners.models import PartnerOrganization
-from django.contrib.gis.geos import Point
 
 
 class PoiUserResource(resources.ModelResource):
@@ -10,7 +11,6 @@ class PoiUserResource(resources.ModelResource):
     class Meta:
         model = PointOfInterest
 
-        batch_size = 500
         use_transactions = True
         use_bulk = False
 

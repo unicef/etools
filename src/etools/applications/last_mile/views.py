@@ -136,8 +136,7 @@ class InventoryMaterialsViewSet(POIQuerysetMixin, mixins.ListModelMixin, Generic
             .filter(items__in=items_qs)\
             .prefetch_related(Prefetch('items', queryset=items_qs)) \
             .annotate(description=Subquery(models.PartnerMaterial.objects.filter(
-                partner_organization=partner, material=OuterRef('id')).values('description'),
-                                           output_field=CharField()))\
+                partner_organization=partner, material=OuterRef('id')).values('description'), output_field=CharField()))\
             .distinct()\
             .order_by('id', 'short_description')
 
