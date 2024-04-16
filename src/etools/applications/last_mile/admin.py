@@ -6,7 +6,7 @@ from import_export.formats.base_formats import XLSX
 from unicef_attachments.admin import AttachmentSingleInline
 
 from etools.applications.last_mile import models
-from etools.applications.last_mile.imports.poi_user_resource import PoiUserResource
+from etools.applications.last_mile.imports.poi_resource import PoiUserResource
 from etools.applications.partners.admin import AttachmentInlineAdminMixin
 from etools.libraries.djangolib.admin import RestrictedEditAdminMixin
 
@@ -81,6 +81,13 @@ class TransferAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
         return self.id
 
 
+class PartnerMaterialInline(admin.TabularInline):
+    extra = 0
+    model = models.PartnerMaterial
+    list_select_related = ('material', 'partner_organization')
+    fields = ('material', 'partner_organization', 'description')
+
+
 @admin.register(models.Material)
 class MaterialAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
     list_display = (
@@ -91,7 +98,24 @@ class MaterialAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
         'number', 'short_description', 'original_uom', 'material_type',
         'material_type_description', 'group', 'group_description'
     )
+    inlines = (PartnerMaterialInline,)
+
+
+@admin.register(models.Item)
+class ItemAdmin(admin.ModelAdmin):
+    list_display = ('batch_id', 'material', 'wastage_type', 'transfer')
+    raw_id_fields = ('transfer', 'transfers_history', 'material')
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)\
+            .select_related('transfer', 'material')\
+            .prefetch_related('transfers_history', 'material__partner_material')
+        return qs
+
+    search_fields = (
+        'batch_id', 'material__short_description', 'transfer__unicef_release_order',
+        'transfer__name'
+    )
 
 
 admin.site.register(models.PointOfInterestType)
-admin.site.register(models.Item)

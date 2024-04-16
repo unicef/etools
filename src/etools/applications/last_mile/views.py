@@ -86,7 +86,9 @@ class InventoryItemListView(POIQuerysetMixin, ListAPIView):
                 return self.queryset.none()
 
             qs = models.Item.objects\
-                .filter(transfer__status=models.Transfer.COMPLETED, transfer__destination_point=poi.pk)\
+                .filter(transfer__partner_organization=partner,
+                        transfer__status=models.Transfer.COMPLETED,
+                        transfer__destination_point=poi.pk)\
                 .exclude(transfer__transfer_type=models.Transfer.WASTAGE)\
                 .order_by('created', '-id')
 
@@ -99,7 +101,7 @@ class InventoryItemListView(POIQuerysetMixin, ListAPIView):
                                    'transfer__checked_out_by')
 
             qs = qs.annotate(description=Subquery(models.PartnerMaterial.objects.filter(
-                partner_organization=self.request.user.partner,
+                partner_organization=partner,
                 material=OuterRef('material')).values('description'), output_field=CharField()))
             return qs
         return self.queryset.none()
@@ -132,7 +134,9 @@ class InventoryMaterialsViewSet(POIQuerysetMixin, mixins.ListModelMixin, Generic
 
         qs = models.Material.objects\
             .filter(items__in=items_qs)\
-            .prefetch_related(Prefetch('items', queryset=items_qs))\
+            .prefetch_related(Prefetch('items', queryset=items_qs)) \
+            .annotate(description=Subquery(models.PartnerMaterial.objects.filter(
+                partner_organization=partner, material=OuterRef('id')).values('description'), output_field=CharField()))\
             .distinct()\
             .order_by('id', 'short_description')
 
@@ -158,8 +162,7 @@ class TransferViewSet(
     pagination_class = DynamicPageNumberPagination
     permission_classes = [IsIPLMEditor]
 
-    # filter_backends = (DjangoFilterBackend, SearchFilter)
-    filter_backends = (SearchFilter,)
+    filter_backends = (DjangoFilterBackend, SearchFilter)
     filterset_class = TransferFilter
     search_fields = ('name', 'partner_organization__organization__name',
                      'comment', 'pd_number', 'unicef_release_order', 'waybill_id')
@@ -263,7 +266,7 @@ class TransferViewSet(
 
         return Response(serializers.TransferSerializer(serializer.instance).data, status=status.HTTP_200_OK)
 
-    @action(detail=True, methods=['post'], url_path='mark-complete')
+    @action(detail=True, methods=['patch'], url_path='mark-complete')
     def mark_complete(self, request, pk=None, **kwargs):
         transfer = self.get_object()
         if transfer.transfer_type == models.Transfer.DISTRIBUTION:

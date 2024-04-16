@@ -96,6 +96,7 @@ class MaterialItemsSerializer(serializers.ModelSerializer):
 
 class MaterialDetailSerializer(serializers.ModelSerializer):
     items = MaterialItemsSerializer(many=True)
+    description = serializers.CharField(read_only=True)
 
     class Meta:
         model = models.Material
@@ -103,6 +104,8 @@ class MaterialDetailSerializer(serializers.ModelSerializer):
 
 
 class MaterialListSerializer(serializers.ModelSerializer):
+    description = serializers.CharField(read_only=True)
+
     class Meta:
         model = models.Material
         fields = "__all__"
@@ -301,7 +304,7 @@ class TransferCheckinSerializer(TransferBaseSerializer):
                     transfer_subtype=models.Transfer.SHORT,
                     partner_organization=instance.partner_organization,
                     origin_transfer=instance,
-                    origin_point=self.context.get('location'),
+                    origin_point=instance.origin_point,
                     **validated_data
                 )
                 short_transfer.save()
@@ -314,7 +317,7 @@ class TransferCheckinSerializer(TransferBaseSerializer):
                     transfer_subtype=models.Transfer.SURPLUS,
                     partner_organization=instance.partner_organization,
                     origin_transfer=instance,
-                    origin_point=self.context.get('location'),
+                    origin_point=instance.origin_point,
                     **validated_data
                 )
                 surplus_transfer.save()

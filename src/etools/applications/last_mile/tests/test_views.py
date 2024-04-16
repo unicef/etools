@@ -1,4 +1,3 @@
-from unittest import skip
 from unittest.mock import Mock, patch
 
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -65,7 +64,8 @@ class TestPointOfInterestView(BaseTenantTestCase):
 
     def test_api_item_list(self):
         url = reverse('last_mile:inventory-item-list', args=(self.poi_partner.pk,))
-        transfer = TransferFactory(status=models.Transfer.COMPLETED, destination_point=self.poi_partner)
+        transfer = TransferFactory(
+            status=models.Transfer.COMPLETED, destination_point=self.poi_partner, partner_organization=self.partner)
         for i in range(5):
             ItemFactory(transfer=transfer)
 
@@ -108,7 +108,9 @@ class TestInventoryItemListView(BaseTenantTestCase):
 
     def test_api_item_list(self):
         url = reverse('last_mile:inventory-item-list', args=(self.poi_partner.pk,))
-        transfer = TransferFactory(status=models.Transfer.COMPLETED, destination_point=self.poi_partner)
+        transfer = TransferFactory(
+            status=models.Transfer.COMPLETED, destination_point=self.poi_partner, partner_organization=self.partner
+        )
         for i in range(5):
             ItemFactory(transfer=transfer)
 
@@ -444,7 +446,7 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(self.outgoing.transfer_type, models.Transfer.DISTRIBUTION)
 
         url = reverse('last_mile:transfers-mark-complete', args=(self.poi_partner_1.pk, self.outgoing.pk))
-        response = self.forced_auth_req('post', url, user=self.partner_staff)
+        response = self.forced_auth_req('patch', url, user=self.partner_staff)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.outgoing.refresh_from_db()
@@ -462,9 +464,8 @@ class TestItemUpdateViewSet(BaseTenantTestCase):
             profile__organization=cls.partner.organization,
         )
         cls.poi_partner = PointOfInterestFactory(partner_organizations=[cls.partner], private=True)
-        cls.transfer = TransferFactory(destination_point=cls.poi_partner)
+        cls.transfer = TransferFactory(destination_point=cls.poi_partner, partner_organization=cls.partner)
 
-    @skip("Fix this")
     def test_patch(self):
         item = ItemFactory(transfer=self.transfer)
         url = reverse('last_mile:item-update-detail', args=(item.pk,))
