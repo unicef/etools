@@ -1,4 +1,5 @@
 from django import forms
+from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.admin import helpers, widgets
 from django.contrib.admin.options import csrf_protect_m, IS_POPUP_VAR, TO_FIELD_VAR
@@ -7,6 +8,7 @@ from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import UserChangeForm
 from django.contrib.auth.models import Group
 from django.db import connection, router, transaction
+from django.db.models.signals import post_save
 from django.http.response import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.template.response import TemplateResponse
@@ -24,11 +26,13 @@ from unicef_snapshot.admin import ActivityInline, SnapshotModelAdmin
 from etools.applications.funds.tasks import sync_all_delegated_frs, sync_country_delegated_fr
 from etools.applications.hact.tasks import update_hact_for_country, update_hact_values
 from etools.applications.organizations.models import Organization
-from etools.applications.users.models import Country, Realm, StagedUser, UserProfile, WorkspaceCounter
+from etools.applications.users.models import Country, Realm, StagedUser, User, UserProfile, WorkspaceCounter
+from etools.applications.users.signals import sync_realms_to_prp_on_update
 from etools.applications.users.tasks import sync_realms_to_prp
 from etools.applications.vision.tasks import sync_handler, vision_sync_task
 from etools.libraries.azure_graph_api.tasks import sync_user
-from etools.libraries.djangolib.admin import RestrictedEditAdminMixin
+from etools.libraries.djangolib.admin import RestrictedEditAdminMixin, XLSXImportMixin
+from etools.libraries.djangolib.utils import temporary_disconnect_signal
 
 
 def get_office(obj):
@@ -177,7 +181,7 @@ class RealmInline(admin.StackedInline):
         return False
 
 
-class UserAdminPlus(RestrictedEditAdminMixin, ExtraUrlMixin, UserAdmin):
+class UserAdminPlus(XLSXImportMixin, RestrictedEditAdminMixin, ExtraUrlMixin, UserAdmin):
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
         (_('Personal info'), {'fields': ('first_name', 'last_name', 'email')}),
@@ -206,6 +210,62 @@ class UserAdminPlus(RestrictedEditAdminMixin, ExtraUrlMixin, UserAdmin):
     list_select_related = ('profile__country', 'profile__office')
 
     UserChangeForm.Meta.exclude = ('groups',)
+
+    title = _("Import LastMile users")
+    import_field_mapping = {
+        'Email address': 'email',
+        'First Name': 'first_name',
+        'Last Name': 'last_name',
+        'IP Number': 'vendor_number',
+        'Designation': 'job_title'
+    }
+
+    def has_import_permission(self, request):
+        return request.user.email in settings.ADMIN_EDIT_EMAILS
+
+    def get_import_columns(self):
+        return self.import_field_mapping.keys()
+
+    def import_data(self, workbook):
+        sheet = workbook.active
+        user_list = []
+        for row in range(1, sheet.max_row):
+            user_dict = {}
+            for col in sheet.iter_cols(1, sheet.max_column):
+                if col[0].value not in self.get_import_columns() or not col[row].value:
+                    continue
+
+                value = str(col[row].value).strip()
+                if col[0].value == 'Email address':
+                    value = value.replace('mailto:', '').lower()
+
+                user_dict[self.import_field_mapping[col[0].value]] = value
+            if 'email' in user_dict and user_dict not in user_list:
+                user_list.append(user_dict)
+
+        for user_dict in user_list:
+            user_dict['username'] = user_dict['email']
+            user_obj, created = User.objects.base_qs().update_or_create(
+                email=user_dict['email'],
+                username=user_dict['username'],
+                defaults={'first_name': user_dict.get('first_name', ''),
+                          'last_name': user_dict.get('last_name', '')})
+
+            organization = Organization.objects.get(vendor_number=user_dict.pop('vendor_number'))
+            job_title = user_dict.pop('job_title')
+            user_obj.profile.organization = organization
+            user_obj.profile.job_title = job_title
+            user_obj.profile.country_override = connection.tenant
+            user_obj.profile.save(update_fields=['organization', 'job_title', 'country_override'])
+
+            with temporary_disconnect_signal(post_save, sync_realms_to_prp_on_update, Realm):
+                Realm.objects.update_or_create(
+                    user=user_obj,
+                    country=connection.tenant,
+                    organization=organization,
+                    group=Group.objects.get(name='IP LM Editor'),
+                    defaults={'is_active': True}
+                )
 
     @button()
     def sync_user(self, request, pk):
