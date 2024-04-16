@@ -96,6 +96,7 @@ class MaterialItemsSerializer(serializers.ModelSerializer):
 
 class MaterialDetailSerializer(serializers.ModelSerializer):
     items = MaterialItemsSerializer(many=True)
+    description = serializers.CharField(read_only=True)
 
     class Meta:
         model = models.Material
@@ -103,6 +104,8 @@ class MaterialDetailSerializer(serializers.ModelSerializer):
 
 
 class MaterialListSerializer(serializers.ModelSerializer):
+    description = serializers.CharField(read_only=True)
+
     class Meta:
         model = models.Material
         fields = "__all__"
