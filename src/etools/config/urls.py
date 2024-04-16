@@ -56,9 +56,10 @@ api.register(r'sections', SectionViewSet, basename='sections')
 api.register(r'reports/result-types', ResultTypeViewSet, basename='resulttypes')
 api.register(r'reports/indicators', IndicatorViewSet, basename='indicators')
 api.register(r'reports/results', ResultViewSet, basename='results')
+
+# TODO: User filters
 api.register(r'reports/units', UnitViewSet, basename='units')
 api.register(r'reports/sectors', SectionViewSet, basename='sectors')  # TODO remove me (keeping this for trips...)
-
 api.register(r'locations', LocationsViewSet, basename='locations')
 api.register(r'locations-light', LocationsLightViewSet, basename='locations-light')
 
@@ -71,18 +72,26 @@ urlpatterns = [
     re_path(r'^api/static_data/$', StaticDataView.as_view({'get': 'list'}), name='public_static'),
 
     # ***************  API version 1  ********************
+    # todo: check if able to remove the next 3 lines
     re_path(r'^locations/', include('unicef_locations.urls')),
     re_path(r'^locations/cartodbtables/$', CartoDBTablesView.as_view(), name='cartodbtables'),
     re_path(r'^locations/autocomplete/$', LocationQuerySetView.as_view(), name='locations_autocomplete'),
+
+    # todo: user filters
     re_path(r'^api/v1/field-monitoring/', include('etools.applications.field_monitoring.urls')),
     re_path(r'^api/comments/v1/', include('etools.applications.comments.urls')),
     re_path(r'^api/ecn/v1/', include('etools.applications.ecn.urls_v1', namespace='ecn_v1')),
+    re_path(r'^api/last-mile/', include('etools.applications.last_mile.urls', namespace='last_mile')),
 
     # GIS API urls
     re_path(r'^api/management/gis/', include('etools.applications.management.urls_gis')),
+
     re_path(r'^users/', include('etools.applications.users.urls')),
+
     re_path(r'^api/management/', include(management_urls)),
     re_path(r'^api/', include(api.urls)),
+
+    # TODO: remove or restrict
     re_path(r'^api/', include(publics_patterns)),
 
     # ***************  API version 2  ******************
@@ -108,6 +117,8 @@ urlpatterns = [
 
     # ***************  API version 3  ******************
     re_path(r'^api/v3/users/', include('etools.applications.users.urls_v3', namespace='users_v3')),
+
+    # Todo: check the following
     re_path(
         r'^api/pmp/v3/',
         include('etools.applications.partners.urls_v3', namespace='pmp_v3'),
