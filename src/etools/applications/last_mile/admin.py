@@ -81,6 +81,13 @@ class TransferAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
         return self.id
 
 
+class PartnerMaterialInline(admin.TabularInline):
+    extra = 0
+    model = models.PartnerMaterial
+    list_select_related = ('material', 'partner_organization')
+    fields = ('material', 'partner_organization', 'description')
+
+
 @admin.register(models.Material)
 class MaterialAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
     list_display = (
@@ -91,6 +98,7 @@ class MaterialAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
         'number', 'short_description', 'original_uom', 'material_type',
         'material_type_description', 'group', 'group_description'
     )
+    inlines = (PartnerMaterialInline,)
 
 
 @admin.register(models.Item)
