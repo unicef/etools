@@ -468,6 +468,25 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         )
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_edge_case_submit_tpm_sent_before_report_reviewer(self):
+        tpm_partner = SimpleTPMPartnerFactory()
+        visit_lead = TPMUserFactory(tpm_partner=tpm_partner)
+        activity = MonitoringActivityFactory(
+            monitor_type='tpm', report_reviewer=None, status='report_finalization',
+            visit_lead=visit_lead, team_members=[visit_lead], tpm_partner=tpm_partner,
+        )
+        ActivityOverallFinding.objects.create(monitoring_activity=activity, narrative_finding='test')
+
+        self._test_update(
+            activity.visit_lead,
+            activity,
+            {'status': 'submitted'},
+            expected_status=status.HTTP_200_OK,
+        )
+        activity.refresh_from_db()
+        self.assertIsNone(activity.report_reviewer)
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_submit_staff_report_reviewer_required(self):
         activity = MonitoringActivityFactory(monitor_type='staff', report_reviewer=None, status='report_finalization')
 
