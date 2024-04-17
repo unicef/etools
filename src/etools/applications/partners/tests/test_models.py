@@ -1542,7 +1542,7 @@ class TestInterventionBudget(BaseTenantTestCase):
         self.assertEqual(budget.partner_contribution_local, 202 * 3 + 10)  # 616
         self.assertEqual(budget.unicef_cash_local, 101 * 3 + 20)  # 323
         self.assertEqual(budget.in_kind_amount_local, 30)
-        self.assertEqual(budget.programme_effectiveness, Decimal(30) / (616 + 323 + 30) * 100)
+        self.assertEqual(budget.programme_effectiveness, Decimal(20) / (303 + 20 + 30) * 100)
         self.assertEqual(
             "{:0.2f}".format(budget.partner_contribution_percent),
             "{:0.2f}".format((616 / (616 + 323 + 30) * 100)),
@@ -1616,7 +1616,7 @@ class TestInterventionBudget(BaseTenantTestCase):
         self.assertEqual(budget.total_local, 1200 + 900 + 60 + 40 + 30)
         self.assertEqual(
             budget.programme_effectiveness,
-            ((1200 + 900) / budget.total_local * 100),
+            900 / budget.total_unicef_contribution_local() * 100,
         )
         self.assertEqual(
             "{:0.2f}".format(budget.partner_contribution_percent),
@@ -1646,8 +1646,8 @@ class TestInterventionBudget(BaseTenantTestCase):
         self.assertEqual(budget.partner_contribution_local, 10)
         self.assertEqual(budget.unicef_cash_local, 20)
         self.assertEqual(budget.in_kind_amount_local, 6)
-        # programme_effectiveness (mgmt_budget.total = 30) / total_local (unicef_contrib + cso_contrib = 36.00) * 100
-        self.assertEqual(budget.programme_effectiveness, Decimal('83.33333333333333333333333333'))
+        # programme_effectiveness = budget.unicef_total / total_unicef_contrib_local * 100
+        self.assertEqual(budget.programme_effectiveness, Decimal('76.92307692307692307692307692'))
         self.assertEqual(
             "{:0.2f}".format(budget.partner_contribution_percent),
             "{:0.2f}".format(10 / (10 + 20 + 6) * 100),
