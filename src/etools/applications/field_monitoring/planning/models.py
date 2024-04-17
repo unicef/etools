@@ -201,12 +201,14 @@ class MonitoringActivity(
             lambda i, old_instance=None, user=None: i.close_offline_blueprints(old_instance),
             lambda i, old_instance=None, user=None: i.port_findings_to_summary(old_instance),
             lambda i, old_instance=None, user=None: i.send_rejection_note(old_instance),
+            lambda i, old_instance=None, user=None: i.remember_reviewed_by(old_instance, user),
         ],
         STATUSES.submitted: [
             lambda i, old_instance=None, user=None: i.send_submit_notice(),
         ],
         STATUSES.completed: [
             lambda i, old_instance=None, user=None: i.update_one_hact_value(),
+            lambda i, old_instance=None, user=None: i.remember_reviewed_by(old_instance, user),
         ],
         STATUSES.cancelled: [
             lambda i, old_instance=None, user=None: i.close_offline_blueprints(old_instance),
@@ -239,6 +241,12 @@ class MonitoringActivity(
     visit_lead = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True,
                                    verbose_name=_('Person Responsible'), related_name='+',
                                    on_delete=models.SET_NULL)
+
+    report_reviewer = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True,
+                                        verbose_name=_('Report Reviewer'), related_name='activities_to_review',
+                                        on_delete=models.SET_NULL)
+    reviewed_by = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, verbose_name=_('Reviewed By'),
+                                    related_name='activities_reviewed', on_delete=models.SET_NULL)
 
     field_office = models.ForeignKey('reports.Office', blank=True, null=True, verbose_name=_('Field Office'),
                                      on_delete=models.CASCADE)
@@ -359,7 +367,12 @@ class MonitoringActivity(
                 )
 
     def send_submit_notice(self):
-        recipients = self.country_pmes
+        if self.report_reviewer:
+            recipients = [self.report_reviewer]
+        else:
+            # edge case: if visit was already sent to tpm before report reviewer has become mandatory, apply old logic
+            recipients = self.country_pmes
+
         if self.monitor_type == self.MONITOR_TYPE_CHOICES.staff:
             email_template = 'fm/activity/staff-submit'
         else:
@@ -656,6 +669,12 @@ class MonitoringActivity(
                 context={'recipient': old_instance.visit_lead.get_full_name()},
                 user=old_instance.visit_lead
             )
+
+    def remember_reviewed_by(self, old_instance, user):
+        if old_instance and user and (old_instance.status == self.STATUSES.submitted and
+                                      self.status in [self.STATUSES.completed, self.STATUSES.report_finalization]):
+            self.reviewed_by = user
+            self.save()
 
     def activity_overall_findings(self):
         return self.overall_findings.annotate_for_activity_export()
