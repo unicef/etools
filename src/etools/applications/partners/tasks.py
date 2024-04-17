@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.aggregates import ArrayAgg
 from django.db import connection, transaction
-from django.db.models import DurationField, ExpressionWrapper, F, OuterRef, Subquery
+from django.db.models import DurationField, ExpressionWrapper, F, OuterRef, Q, Subquery
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
@@ -28,7 +28,7 @@ from etools.applications.partners.utils import (
 from etools.applications.partners.validation.agreements import AgreementValid
 from etools.applications.partners.validation.interventions import InterventionValid
 from etools.applications.reports.models import CountryProgramme
-from etools.applications.users.models import Country
+from etools.applications.users.models import Country, User
 from etools.config.celery import app
 from etools.libraries.djangolib.utils import get_environment
 from etools.libraries.tenant_support.utils import run_on_all_tenants
@@ -278,14 +278,15 @@ def notify_partner_hidden(partner_pk, tenant_name):
             )
 
 
-# @app.task
+@app.task
 def notify_partner_expires():
-    """Send notifications to UNICEF Focal Points for partners that will have their Core Value Assessment expire within
-    30/60/90 days.
+    """Send notifications to UNICEF Focal Points for partners that will have their
+    Core Value Assessment or HACT Assessment expire within 30/60/90 days.
     Task will run every 24 hours.
     """
-    today = datetime.date.today()
+    today = timezone.now()
     notify_end_dates = [datetime.timedelta(days=-delta) for delta in _PARTNER_ASSESSMENT_EXPIRING_SOON_DELTAS]
+    delta = datetime.timedelta(days=PartnerOrganization.EXPIRING_ASSESSMENT_LIMIT_YEAR * 365)
 
     for country in Country.objects.exclude(name='Global').all():
         connection.set_tenant(country)
@@ -293,27 +294,37 @@ def notify_partner_expires():
 
         core_value_assessment_expiring = PartnerOrganization.objects\
             .filter(pk=OuterRef("pk"))\
-            .annotate(notifs_to_expire=ExpressionWrapper(
-                today - (F('core_values_assessment_date') +
-                         datetime.timedelta(days=PartnerOrganization.EXPIRING_ASSESSMENT_LIMIT_YEAR * 365)
-                         ),
-                output_field=DurationField())).values('notifs_to_expire')
+            .annotate(core_assessments_to_expire=ExpressionWrapper(
+                today - (F('core_values_assessment_date') + delta),
+                output_field=DurationField())).values('core_assessments_to_expire')
+        last_assessment_expiring = PartnerOrganization.objects\
+            .filter(pk=OuterRef("pk"))\
+            .annotate(assessments_to_expire=ExpressionWrapper(
+                today - (F('last_assessment_date') + delta),
+                output_field=DurationField())).values('assessments_to_expire')
         partner_qs = PartnerOrganization.objects\
             .active()\
-            .annotate(core_value_assessment_expiring=Subquery(core_value_assessment_expiring))\
-            .filter(core_value_assessment_expiring__in=notify_end_dates)\
+            .annotate(core_value_assessment_expiring=Subquery(core_value_assessment_expiring)) \
+            .annotate(assessments_expiring=Subquery(last_assessment_expiring)) \
+            .filter(Q(core_value_assessment_expiring__in=notify_end_dates) |
+                    Q(assessments_expiring__in=notify_end_dates))\
             .distinct()
 
         for partner in partner_qs:
             pds = Intervention.objects\
                 .prefetch_related('unicef_focal_points')\
                 .filter(agreement__partner=partner)\
+                .exclude(Q(status__in=[Intervention.CLOSED, Intervention.ENDED]) |
+                         Q(status=Intervention.DRAFT, modified__gt=timezone.now() - datetime.timedelta(days=365)))\
                 .annotate(unicef_focal_point_emails=ArrayAgg('unicef_focal_points__email'))
+
             focal_points_emails = set()
             for pd in pds:
                 focal_points_emails.update(pd.unicef_focal_point_emails)
+            filtered_emails = User.objects.base_qs().filter(
+                email__in=focal_points_emails, profile__country_override=country).values_list('email', flat=True)
 
-            if focal_points_emails:
+            if filtered_emails:
                 email_context = {
                     'country': country.name,
                     'partner_name': partner.name,
@@ -321,7 +332,7 @@ def notify_partner_expires():
                     'days': partner.core_value_assessment_expiring.days.__abs__(),
                 }
                 send_notification_with_template(
-                    recipients=list(focal_points_emails),
+                    recipients=list(filtered_emails),
                     template_name='partners/expiring_partner',
                     context=email_context
                 )
