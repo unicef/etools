@@ -1818,8 +1818,6 @@ msgstr "تاريخ التقديم للمراجعة"
 msgid "Overall Comment"
 msgstr "التعليق العام"
 
-#, fuzzy
-#| msgid "Overall Approver"
 msgid "Overall Approval"
 msgstr "الموافقة الشاملة"
 
