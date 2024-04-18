@@ -1,5 +1,8 @@
+from django.conf import settings
+
 from django_tenants.utils import schema_context
 from unicef_attachments.models import Attachment
+from unicef_notification.utils import send_notification
 
 from etools.applications.environment.notifications import send_notification_with_template
 from etools.applications.last_mile import models
@@ -50,14 +53,14 @@ def notify_short_transfer(tenant_name, transfer_pk):
 @app.task
 def notify_wastage_transfer(tenant_name, transfer_pk):
     with schema_context(tenant_name):
-        email_context = {
-            'transfer': models.Transfer.objects.get(pk=transfer_pk)
-        }
+        transfer = models.Transfer.objects.get(pk=transfer_pk)
+
         # TODO send to Rob for now
         recipients = User.objects.filter(id=1).values_list('email', flat=True)
-
-        send_notification_with_template(
+        send_notification(
             recipients=list(recipients),
-            template_name='last_mile/wastage_transfer',
-            context=email_context
+            from_address=settings.DEFAULT_FROM_EMAIL,
+            subject=f'LMSM app: New items checked out as wastage by {transfer.partner_organization.name}',
+            html_content_filename='emails/wastage_transfer.html',
+            context={'transfer': transfer}
         )
