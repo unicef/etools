@@ -34,16 +34,30 @@ def notify_upload_waybill(tenant_name, destination_pk, waybill_pk, waybill_url):
 @app.task
 def notify_short_transfer(tenant_name, transfer_pk):
     with schema_context(tenant_name):
-        transfer = models.Transfer.objects.get(pk=transfer_pk)
-
         email_context = {
-            'transfer': transfer
+            'transfer': models.Transfer.objects.get(pk=transfer_pk)
         }
         # TODO send to Rob for now
-        recipients = User.objects.get(id=1).values_list('email', flat=True)
+        recipients = User.objects.filter(id=1).values_list('email', flat=True)
 
         send_notification_with_template(
             recipients=list(recipients),
             template_name='last_mile/short_transfer',
+            context=email_context
+        )
+
+
+@app.task
+def notify_wastage_transfer(tenant_name, transfer_pk):
+    with schema_context(tenant_name):
+        email_context = {
+            'transfer': models.Transfer.objects.get(pk=transfer_pk)
+        }
+        # TODO send to Rob for now
+        recipients = User.objects.filter(id=1).values_list('email', flat=True)
+
+        send_notification_with_template(
+            recipients=list(recipients),
+            template_name='last_mile/wastage_transfer',
             context=email_context
         )

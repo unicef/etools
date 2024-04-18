@@ -11,7 +11,7 @@ from unicef_attachments.serializers import AttachmentSerializerMixin
 
 from etools.applications.last_mile import models
 from etools.applications.last_mile.models import PartnerMaterial
-from etools.applications.last_mile.tasks import notify_short_transfer
+from etools.applications.last_mile.tasks import notify_short_transfer, notify_wastage_transfer
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.users.serializers import MinimalUserSerializer
 
@@ -52,7 +52,7 @@ class PointOfInterestLightSerializer(serializers.ModelSerializer):
 class MaterialSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Material
-        exclude = ('partner_materials', 'purchasing_text')
+        exclude = ('partner_materials',)
 
 
 class TransferListSerializer(serializers.ModelSerializer):
@@ -197,11 +197,6 @@ class TransferSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Transfer
         fields = '__all__'
-
-    # def to_representation(self, instance):
-    #     data = super().to_representation(instance)
-    #     data['items'] = ItemSerializer(instance.items.all().order_by('id'), many=True).data
-    #     return data
 
 
 class WaybillTransferSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
@@ -409,4 +404,7 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
         self.instance.save()
 
         self.checkout_newtransfer_items(checkout_items)
+        if self.instance.transfer_type == models.Transfer.WASTAGE:
+            notify_wastage_transfer.delay(connection.schema_name, self.instance.pk)
+
         return self.instance
