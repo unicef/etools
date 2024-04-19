@@ -41,7 +41,7 @@ def notify_short_transfer(tenant_name, transfer_pk):
             'transfer': models.Transfer.objects.get(pk=transfer_pk)
         }
         # TODO send to Rob for now
-        recipients = User.objects.filter(id=1).values_list('email', flat=True)
+        recipients = User.objects.filter(id=2).values_list('email', flat=True)
 
         send_notification_with_template(
             recipients=list(recipients),
@@ -56,7 +56,7 @@ def notify_wastage_transfer(tenant_name, transfer_pk):
         transfer = models.Transfer.objects.get(pk=transfer_pk)
 
         # TODO send to Rob for now
-        recipients = User.objects.filter(id=1).values_list('email', flat=True)
+        recipients = User.objects.filter(id=2).values_list('email', flat=True)
         send_notification(
             recipients=list(recipients),
             from_address=settings.DEFAULT_FROM_EMAIL,

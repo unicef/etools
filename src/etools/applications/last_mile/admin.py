@@ -40,9 +40,10 @@ class ItemInline(RestrictedEditAdminMixin, admin.TabularInline):
     extra = 0
     model = models.Item
     list_select_related = ('material',)
-    fields = ('batch_id', 'material', 'description', 'expiry_date', 'wastage_type',
+    fields = ('id', 'batch_id', 'material', 'description', 'expiry_date', 'wastage_type',
               'amount_usd', 'unicef_ro_item', 'purchase_order_item')
     readonly_fields = ('description',)
+    show_change_link = True
 
     def has_add_permission(self, request, obj=None):
         return False
