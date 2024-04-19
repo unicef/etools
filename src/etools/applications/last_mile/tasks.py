@@ -35,23 +35,11 @@ def notify_upload_waybill(tenant_name, destination_pk, waybill_pk, waybill_url):
 
 
 @app.task
-def notify_short_transfer(tenant_name, transfer_pk):
-    with schema_context(tenant_name):
-        email_context = {
-            'transfer': models.Transfer.objects.get(pk=transfer_pk)
-        }
-        # TODO send to Rob for now
-        recipients = User.objects.filter(id=2).values_list('email', flat=True)
-
-        send_notification_with_template(
-            recipients=list(recipients),
-            template_name='last_mile/short_transfer',
-            context=email_context
-        )
-
-
-@app.task
-def notify_wastage_transfer(tenant_name, transfer_pk):
+def notify_wastage_transfer(tenant_name, transfer_pk, action='wastage_checkout'):
+    action_map = {
+        'wastage_checkout': 'checked-out as wastage',
+        'short_checkin': 'checked-in as short'
+    }
     with schema_context(tenant_name):
         transfer = models.Transfer.objects.get(pk=transfer_pk)
 
@@ -60,7 +48,7 @@ def notify_wastage_transfer(tenant_name, transfer_pk):
         send_notification(
             recipients=list(recipients),
             from_address=settings.DEFAULT_FROM_EMAIL,
-            subject=f'LMSM app: New items checked out as wastage by {transfer.partner_organization.name}',
+            subject=f'LMSM app: New items {action_map[action]} by {transfer.partner_organization.name}',
             html_content_filename='emails/wastage_transfer.html',
-            context={'transfer': transfer}
+            context={'transfer': transfer, 'action': action, 'header': action_map[action]}
         )

@@ -11,7 +11,7 @@ from unicef_attachments.serializers import AttachmentSerializerMixin
 
 from etools.applications.last_mile import models
 from etools.applications.last_mile.models import PartnerMaterial
-from etools.applications.last_mile.tasks import notify_short_transfer, notify_wastage_transfer
+from etools.applications.last_mile.tasks import notify_wastage_transfer
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.users.serializers import MinimalUserSerializer
 
@@ -304,7 +304,7 @@ class TransferCheckinSerializer(TransferBaseSerializer):
                 )
                 short_transfer.save()
                 self.checkin_newtransfer_items(orig_items_dict, short_items, short_transfer)
-                notify_short_transfer.delay(connection.schema_name, short_transfer.pk)
+                notify_wastage_transfer.delay(connection.schema_name, short_transfer.pk, action='short_checkin')
 
             if surplus_items:
                 surplus_transfer = models.Transfer(

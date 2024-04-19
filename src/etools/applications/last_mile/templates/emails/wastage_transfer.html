@@ -258,49 +258,42 @@
                               </tr>
                           </table><br/>
 
-                            <h3>Items checked out as wastage</h3>
+                            <h3>Items {{ header }}</h3>
                             <table border="1">
                               <tr>
                                 <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                                           box-sizing:border-box;max-height:56px;margin:0;
-                                                          padding:10px;overflow:hidden;
-                                                          background-color:#0099FF;border-radius:3px 3px 0 0;">
+                                                          padding:10px;overflow:hidden;background-color:#0099FF;">
                                     <span style="color: white;font-weight: bold;">Material Number</span>
                                 </td>
                                 <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                                           box-sizing:border-box;width:100%;max-height:56px;margin:0;
-                                                          padding:16px 20px 12px;overflow:hidden;
-                                                          background-color:#0099FF;border-radius:3px 3px 0 0;">
+                                                          padding:10px;overflow:hidden;background-color:#0099FF;">
                                     <span style="color: white;font-weight: bold;">Material Description</span>
                                 </td>
                                 <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                                           box-sizing:border-box;max-height:56px;margin:0;
-                                                          padding:16px 20px 12px;overflow:hidden;
-                                                          background-color:#0099FF;border-radius:3px 3px 0 0;">
+                                                          padding:10px;overflow:hidden;background-color:#0099FF;">
                                     <span style="color: white;font-weight: bold;">Quantity</span>
                                 </td>
                                 <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                                           box-sizing:border-box;max-height:56px;margin:0;
-                                                          padding:16px 20px 12px;overflow:hidden;
-                                                          background-color:#0099FF;border-radius:3px 3px 0 0;">
+                                                          padding:10px;overflow:hidden;background-color:#0099FF;">
                                     <span style="color: white;font-weight: bold;">Unit</span>
                                 </td>
                                 <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                                           box-sizing:border-box;width:100%;max-height:56px;margin:0;
-                                                          padding:16px 20px 12px;overflow:hidden;
-                                                          background-color:#0099FF;border-radius:3px 3px 0 0;">
+                                                          padding:10px;overflow:hidden;background-color:#0099FF;">
                                     <span style="color: white;font-weight: bold;">Batch Id</span>
                                 </td>
                                 <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                                           box-sizing:border-box;width:100%;max-height:56px;margin:0;
-                                                          padding:16px 20px 12px;overflow:hidden;
-                                                          background-color:#0099FF;border-radius:3px 3px 0 0;">
+                                                          padding:10px;overflow:hidden;background-color:#0099FF;">
                                     <span style="color: white;font-weight: bold;">Expiry Date</span>
                                 </td>
                                 <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                                           box-sizing:border-box;width:100%;max-height:56px;margin:0;
-                                                          padding:16px 20px 12px;overflow:hidden;
-                                                          background-color:#0099FF;border-radius:3px 3px 0 0;">
+                                                          padding:10px;overflow:hidden;background-color:#0099FF;">
                                     <span style="color: red;font-weight: bold;">Wastage type</span>
                                 </td>
                               </tr>
@@ -333,7 +326,7 @@
                                      </td>
                                      <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                                box-sizing:border-box;padding:10px;color:red;font-weight:bold;">
-                                         {{ item.get_wastage_type_display }}
+                                         {% if action == 'short_checkin' %}{{ transfer.get_transfer_subtype_display }}{% else %}{{ item.get_wastage_type_display }}{% endif %}
                                      </td>
                                   </tr>
                               {% endfor %}
