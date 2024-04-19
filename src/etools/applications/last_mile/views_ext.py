@@ -2,6 +2,7 @@ import json
 import logging
 from datetime import datetime
 
+from django.db.models import F, FloatField, Func
 from django.http import StreamingHttpResponse
 from django.utils.html import strip_tags
 
@@ -59,35 +60,75 @@ class VisionIngestMaterialsApiView(APIView):
         return Response(status=status.HTTP_200_OK)
 
 
+class GeometryPointFunc(Func):
+    template = "%(function)s(%(expressions)s::geometry)"
+
+    def __init__(self, expression):
+        super().__init__(expression, output_field=FloatField())
+
+
+class Latitude(GeometryPointFunc):
+    function = 'ST_Y'
+
+
+class Longitude(GeometryPointFunc):
+    function = 'ST_X'
+
+
+def get_annotated_qs(qs):
+    if qs.model == models.Transfer:
+        return qs.annotate(vendor_number=F('partner_organization__organization__vendor_number'),
+                           checked_out_by_email=F('checked_out_by__email'),
+                           checked_in_by_email=F('checked_in_by__email'),
+                           origin_name=F('origin_point__name'),
+                           destination_name=F('destination_point__name'),
+                           ).values()
+
+    if qs.model == models.PointOfInterest:
+        return qs.annotate(
+            latitude=Latitude('point'),
+            longitude=Longitude('point')
+        ).values('id', 'created', 'modified', 'parent_id', 'name', 'description', 'poi_type_id',
+                 'other', 'private', 'is_active', 'latitude', 'longitude')
+
+    if qs.model == models.Item:
+        return qs.annotate(material_number=F('material__number'),
+                           material_description=F('material__short_description'),
+                           ).values()
+    return qs
+
+
 class VisionLMSMExport(APIView):
     permission_classes = (LMSMAPIPermission,)
 
     def get(self, request, *args, **kwargs):
         set_country('somalia')
         model_param = request.query_params.get('type')
-        model_map = {
-            "transfer": models.Transfer,
-            "poi": models.PointOfInterest,
-            "item": models.Item,
-            "item_history": models.ItemTransferHistory,
+        model_manager_map = {
+            "transfer": models.Transfer.objects,
+            "poi": models.PointOfInterest.all_objects,
+            "item": models.Item.objects,
+            "item_history": models.ItemTransferHistory.objects,
         }
-        Model = model_map.get(model_param)
+        Model = model_manager_map.get(model_param)
         if not Model:
             return Response({"type": "invalid data model"}, status=status.HTTP_400_BAD_REQUEST)
 
-        queryset = Model.objects
-        timestamp_filter_param = request.query_params.get('last_modified', None)
-        if timestamp_filter_param:
+        queryset = Model
+        last_modified_param = request.query_params.get('last_modified', None)
+
+        if last_modified_param:
             try:
-                gte_dt = datetime.fromisoformat(timestamp_filter_param)
+                gte_dt = datetime.fromisoformat(last_modified_param)
             except ValueError:
                 return Response({"last_modified": "invalid format"}, status=status.HTTP_400_BAD_REQUEST)
             else:
                 queryset = queryset.filter(modified__gte=gte_dt)
 
+        queryset = get_annotated_qs(queryset)
+
         def data_stream(qs):
             yield '['  # Start of JSON array
-            qs = qs.values()
             first = True
             for obj in qs.iterator():
                 if not first:
