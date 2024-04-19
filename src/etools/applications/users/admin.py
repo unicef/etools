@@ -1,3 +1,5 @@
+import logging
+
 from django import forms
 from django.conf import settings
 from django.contrib import admin, messages
@@ -221,6 +223,7 @@ class UserAdminPlus(XLSXImportMixin, RestrictedEditAdminMixin, ExtraUrlMixin, Us
     }
 
     def has_import_permission(self, request):
+        # TODO: add a group like "LMSM Admin User" and check for the realm
         return request.user.email in settings.ADMIN_EDIT_EMAILS
 
     @transaction.atomic
@@ -243,18 +246,25 @@ class UserAdminPlus(XLSXImportMixin, RestrictedEditAdminMixin, ExtraUrlMixin, Us
 
         for user_dict in user_list:
             user_dict['username'] = user_dict['email']
+            try:
+                vendor_number = user_dict.pop('vendor_number')
+                organization = Organization.objects.get(vendor_number=vendor_number)
+            except Organization.DoesNotExist:
+                logging.error(f'Organization not found: {vendor_number}, skipping row.. ')
+                continue
+
             user_obj, created = User.objects.base_qs().update_or_create(
                 email=user_dict['email'],
                 username=user_dict['username'],
-                defaults={'first_name': user_dict.get('first_name', ''),
-                          'last_name': user_dict.get('last_name', '')})
+                defaults={'first_name': user_dict.get('first_name', 'Invalid First Name'),
+                          'last_name': user_dict.get('last_name', 'Invalid Last Name')})
 
-            organization = Organization.objects.get(vendor_number=user_dict.pop('vendor_number'))
-            job_title = user_dict.pop('job_title')
-            user_obj.profile.organization = organization
-            user_obj.profile.job_title = job_title
-            user_obj.profile.country_override = connection.tenant
-            user_obj.profile.save(update_fields=['organization', 'job_title', 'country_override'])
+            if created:
+                job_title = user_dict.pop('job_title')
+                user_obj.profile.organization = organization
+                user_obj.profile.job_title = job_title
+                user_obj.profile.country = connection.tenant
+                user_obj.profile.save(update_fields=['organization', 'job_title', 'country_override'])
 
             with temporary_disconnect_signal(post_save, sync_realms_to_prp_on_update, Realm):
                 Realm.objects.update_or_create(

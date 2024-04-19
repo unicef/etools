@@ -13,6 +13,8 @@ from etools.applications.last_mile import models
 from etools.applications.last_mile.models import PointOfInterestType
 from etools.applications.organizations.models import Organization
 from etools.applications.partners.admin import AttachmentInlineAdminMixin
+from etools.applications.partners.models import PartnerOrganization
+from etools.applications.utils.helpers import generate_hash
 from etools.libraries.djangolib.admin import RestrictedEditAdminMixin, XLSXImportMixin
 
 
@@ -39,7 +41,7 @@ class PointOfInterestAdmin(XLSXImportMixin, admin.ModelAdmin):
     title = _("Import LastMile Points of interest")
     import_field_mapping = {
         'LOCATION NAME': 'name',
-        'IP Number': 'partner_org',
+        'IP Number': 'partner_org_vendor_no',
         'PRIMARY TYPE *': 'poi_type',
         'IS PRIVATE***': 'private',
         'LATITUDE': 'latitude',
@@ -57,9 +59,10 @@ class PointOfInterestAdmin(XLSXImportMixin, admin.ModelAdmin):
             for col in sheet.iter_cols(1, sheet.max_column):
                 if col[0].value not in self.get_import_columns():
                     continue
-
                 poi_dict[self.import_field_mapping[col[0].value]] = str(col[row].value).strip()
 
+            # add a pcode as it doesn't exist:
+            poi_dict['p_code'] = generate_hash(poi_dict['partner_org_vendor_no'] + poi_dict['name'], 12)
             long = poi_dict.pop('longitude')
             lat = poi_dict.pop('latitude')
             try:
@@ -76,18 +79,22 @@ class PointOfInterestAdmin(XLSXImportMixin, admin.ModelAdmin):
             else:
                 poi_dict.pop('poi_type')
 
-            partner_vendor_number = str(poi_dict.pop('partner_org'))
+            partner_vendor_number = str(poi_dict.pop('partner_org_vendor_no'))
+            try:
+                org = Organization.objects.select_related('partner').filter(vendor_number=partner_vendor_number).get()
+                partner_org_obj = org.partner
+            except (Organization.DoesNotExist, PartnerOrganization.DoesNotExist):
+                logging.error(f"The Organization with vendor number '{partner_vendor_number}' does not exist.")
+                continue
+
             poi_obj, _ = models.PointOfInterest.all_objects.update_or_create(
                 point=poi_dict['point'],
                 name=poi_dict['name'],
+                p_code=poi_dict['p_code'],
                 poi_type=poi_dict.get('poi_type'),
                 defaults={'private': poi_dict['private']}
             )
-            try:
-                partner_org_obj = Organization.objects.select_related('partner').filter(vendor_number=partner_vendor_number).get().partner
-                poi_obj.partner_organizations.add(partner_org_obj)
-            except Organization.DoesNotExist:
-                logging.error(f"The Organization with vendor number '{partner_vendor_number}' does not exist.")
+            poi_obj.partner_organizations.add(partner_org_obj)
 
 
 class ItemInline(RestrictedEditAdminMixin, admin.TabularInline):
