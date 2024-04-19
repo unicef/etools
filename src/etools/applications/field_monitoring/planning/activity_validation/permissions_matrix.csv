@@ -39,6 +39,8 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,attachments,Field Monitor,,review,edit,TRUE
 ,report_attachments,All Users,is_ma_related_user,data_collection,edit,TRUE
 ,report_attachments,All Users,is_ma_related_user,report_finalization,edit,TRUE
+,action_points,Field Monitor,,data_collection,edit,TRUE
+,action_points,UNICEF User,is_visit_lead,data_collection,edit,TRUE
 ,action_points,Field Monitor,,submitted,edit,TRUE
 ,action_points,UNICEF User,is_visit_lead,submitted,edit,TRUE
 ,action_points,Field Monitor,,report_finalization,edit,TRUE
@@ -101,6 +103,8 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,report_reject_reason,All Users,,data_collection,view,TRUE
 ,report_reject_reason,All Users,,submitted,view,TRUE
 ,report_reject_reason,All Users,,report_finalization,view,TRUE
+,action_points,Field Monitor,,data_collection,view,TRUE
+,action_points,UNICEF User,is_visit_lead,data_collection,view,TRUE
 ,action_points,Field Monitor,,submitted,view,TRUE
 ,action_points,UNICEF User,is_visit_lead,submitted,view,TRUE
 ,action_points,Field Monitor,,report_finalization,view,TRUE

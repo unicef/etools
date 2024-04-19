@@ -1088,6 +1088,24 @@ class MonitoringActivityActionPointsViewTestCase(FMBaseTestCaseMixin, APIViewSet
         self.activity = MonitoringActivityFactory(status='draft')
         self._test_create(self.fm_user, data={}, expected_status=status.HTTP_403_FORBIDDEN)
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_data_collection_status_permissions(self):
+        activity = MonitoringActivityFactory(status='data_collection')
+        action_points = MonitoringActivityActionPointFactory.create_batch(size=5, monitoring_activity=activity)
+
+        response = self.forced_auth_req(
+            'get',
+            reverse('field_monitoring_planning:activity_action_points-list',
+                    kwargs={'monitoring_activity_pk': activity.pk}),
+            user=self.fm_user
+        )
+
+        self.assertEqual(len(response.data['results']), 5)
+        self.assertEqual(
+            sorted([ap['id'] for ap in response.data['results']]),
+            sorted([ap.id for ap in action_points])
+        )
+
 
 class PartnersViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenantTestCase):
     base_view = 'field_monitoring_planning:partners'
