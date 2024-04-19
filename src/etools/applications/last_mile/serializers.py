@@ -19,23 +19,26 @@ from etools.applications.users.serializers import MinimalUserSerializer
 class PointOfInterestTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.PointOfInterestType
-        fields = '__all__'
+        exclude = ['created','modified']
 
 
 class PointOfInterestSerializer(serializers.ModelSerializer):
     poi_type = PointOfInterestTypeSerializer(read_only=True)
+    country = serializers.SerializerMethodField(read_only=True)
+    region = serializers.SerializerMethodField(read_only=True)
+
+    def get_country(self, obj):
+        # TODO: this will not work on multi country tenants . Not sure we need it at all
+        return connection.tenant.name
+
+    def get_region(self, obj):
+        # TODO: this will not work on multi country tenants . Not sure we need it at all
+        return obj.parent.name if obj.parent else ''
+
 
     class Meta:
         model = models.PointOfInterest
         exclude = ('partner_organizations', 'point')
-
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        data['country'] = connection.tenant.name
-        data['region'] = instance.parent.name if instance.parent else None
-        data['latitude'] = instance.point.y if instance.point else None
-        data['longitude'] = instance.point.x if instance.point else None
-        return data
 
 
 class PointOfInterestLightSerializer(serializers.ModelSerializer):
@@ -339,6 +342,18 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
         )
 
     def validate_items(self, value):
+        # Make sure that all the items belong to this partner and are in the inventory of this location
+        total_items_count = len(value)
+        partner = self.context['request'].user.partner
+        location = self.context['location']
+        total_db_items_count = (models.Item.objects.filter(id__in=[item['id'] for item in value])
+                                .filter(transfer__destination_point=location,
+                                        transfer__status=models.Transfer.COMPLETED,
+                                        transfer__partner_organization=partner,
+                                        quantity__gt=0).count())
+        if total_db_items_count != total_items_count:
+            raise ValidationError(_('Some of the items to be checked are no longer valid'))
+
         orig_items_dict = {obj.id: obj for obj in models.Item.objects.filter(id__in=[item['id'] for item in value])}
 
         for checkout_item in value:
