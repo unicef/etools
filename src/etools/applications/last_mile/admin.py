@@ -1,14 +1,21 @@
+import logging
+
+from django.conf import settings
 from django.contrib import admin
 from django.contrib.gis import forms
+from django.contrib.gis.geos import Point
+from django.db import transaction
+from django.utils.translation import gettext_lazy as _
 
-from import_export.admin import ImportMixin
-from import_export.formats.base_formats import XLSX
 from unicef_attachments.admin import AttachmentSingleInline
 
 from etools.applications.last_mile import models
-from etools.applications.last_mile.imports.poi_resource import PoiUserResource
+from etools.applications.last_mile.models import PointOfInterestType
+from etools.applications.organizations.models import Organization
 from etools.applications.partners.admin import AttachmentInlineAdminMixin
-from etools.libraries.djangolib.admin import RestrictedEditAdminMixin
+from etools.applications.partners.models import PartnerOrganization
+from etools.applications.utils.helpers import generate_hash
+from etools.libraries.djangolib.admin import RestrictedEditAdminMixin, XLSXImportMixin
 
 
 class ProofTransferAttachmentInline(AttachmentSingleInline):
@@ -22,7 +29,7 @@ class WaybillTransferAttachmentInline(AttachmentSingleInline):
 
 
 @admin.register(models.PointOfInterest)
-class PointOfInterestAdmin(ImportMixin, admin.ModelAdmin):
+class PointOfInterestAdmin(XLSXImportMixin, admin.ModelAdmin):
     list_display = ('name', 'parent', 'poi_type')
     list_select_related = ('parent',)
     list_filter = ('private', 'is_active')
@@ -31,18 +38,73 @@ class PointOfInterestAdmin(ImportMixin, admin.ModelAdmin):
     formfield_overrides = {
         models.PointField: {'widget': forms.OSMWidget(attrs={'display_raw': True})},
     }
-    # xlsx import
-    resource_class = PoiUserResource
-    formats = [XLSX]
+    title = _("Import LastMile Points of interest")
+    import_field_mapping = {
+        'LOCATION NAME': 'name',
+        'IP Number': 'partner_org_vendor_no',
+        'PRIMARY TYPE *': 'poi_type',
+        'IS PRIVATE***': 'private',
+        'LATITUDE': 'latitude',
+        'LONGITUDE': 'longitude'
+    }
+
+    def has_import_permission(self, request):
+        return request.user.email in settings.ADMIN_EDIT_EMAILS
+
+    @transaction.atomic
+    def import_data(self, workbook):
+        sheet = workbook.active
+        for row in range(1, sheet.max_row):
+            poi_dict = {}
+            for col in sheet.iter_cols(1, sheet.max_column):
+                if col[0].value not in self.get_import_columns():
+                    continue
+                poi_dict[self.import_field_mapping[col[0].value]] = str(col[row].value).strip()
+
+            # add a pcode as it doesn't exist:
+            poi_dict['p_code'] = generate_hash(poi_dict['partner_org_vendor_no'] + poi_dict['name'], 12)
+            long = poi_dict.pop('longitude')
+            lat = poi_dict.pop('latitude')
+            try:
+                poi_dict['point'] = Point(float(long), float(lat))
+            except (TypeError, ValueError):
+                logging.error(f'row# {row}  Long/Lat Format error: {long}, {lat}. skipping row.. ')
+                continue
+
+            poi_dict['private'] = True if poi_dict['private'] and poi_dict['private'].lower().strip() == 'yes' else False
+
+            if poi_dict['poi_type']:
+                poi_type = poi_dict.pop('poi_type')
+                poi_dict['poi_type'], _ = PointOfInterestType.objects.get_or_create(name=poi_type, category=poi_type.lower().replace(' ', '_'))
+            else:
+                poi_dict.pop('poi_type')
+
+            partner_vendor_number = str(poi_dict.pop('partner_org_vendor_no'))
+            try:
+                org = Organization.objects.select_related('partner').filter(vendor_number=partner_vendor_number).get()
+                partner_org_obj = org.partner
+            except (Organization.DoesNotExist, PartnerOrganization.DoesNotExist):
+                logging.error(f"The Organization with vendor number '{partner_vendor_number}' does not exist.")
+                continue
+
+            poi_obj, _ = models.PointOfInterest.all_objects.update_or_create(
+                point=poi_dict['point'],
+                name=poi_dict['name'],
+                p_code=poi_dict['p_code'],
+                poi_type=poi_dict.get('poi_type'),
+                defaults={'private': poi_dict['private']}
+            )
+            poi_obj.partner_organizations.add(partner_org_obj)
 
 
 class ItemInline(RestrictedEditAdminMixin, admin.TabularInline):
     extra = 0
     model = models.Item
     list_select_related = ('material',)
-    fields = ('batch_id', 'material', 'description', 'expiry_date', 'wastage_type',
+    fields = ('id', 'batch_id', 'material', 'description', 'expiry_date', 'wastage_type',
               'amount_usd', 'unicef_ro_item', 'purchase_order_item')
     readonly_fields = ('description',)
+    show_change_link = True
 
     def has_add_permission(self, request, obj=None):
         return False
