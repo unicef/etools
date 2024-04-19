@@ -1,3 +1,5 @@
+import traceback
+
 from django import forms
 from django.conf import settings
 from django.contrib import admin
@@ -65,6 +67,7 @@ class XLSXImportMixin:
     """
     change_list_template = 'admin/import/change_list_import.html'
     import_template_name = 'admin/import/import.html'
+    import_field_mapping = {}
 
     def get_model_info(self):
         app_label = self.model._meta.app_label
@@ -76,11 +79,13 @@ class XLSXImportMixin:
         """
         raise NotImplementedError
 
-    def get_import_columns(self, request):
+    def get_import_columns(self):
         """
         Returns which columns will be imported.
         """
-        raise NotImplementedError
+        if not self.import_field_mapping:
+            raise NotImplementedError('"import_field_mapping" dict structure was not defined')
+        return self.import_field_mapping.keys()
 
     def get_urls(self):
         urls = super().get_urls()
@@ -139,7 +144,9 @@ class XLSXImportMixin:
                 wb.close()
             except Exception:
                 form._errors.update(
-                    {'Import': _(" Error encountered while trying to import data from: %s" % import_file.name)})
+                    {'Import': _(" Error encountered while trying to import data from: %s " % import_file.name),
+                     '|': traceback.format_exc()
+                     })
                 return TemplateResponse(request, [self.import_template_name], self.get_context(request, form))
 
             redirect_url = reverse('admin:%s_%s_changelist' % self.get_model_info(),

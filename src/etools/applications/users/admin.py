@@ -223,9 +223,7 @@ class UserAdminPlus(XLSXImportMixin, RestrictedEditAdminMixin, ExtraUrlMixin, Us
     def has_import_permission(self, request):
         return request.user.email in settings.ADMIN_EDIT_EMAILS
 
-    def get_import_columns(self):
-        return self.import_field_mapping.keys()
-
+    @transaction.atomic
     def import_data(self, workbook):
         sheet = workbook.active
         user_list = []
