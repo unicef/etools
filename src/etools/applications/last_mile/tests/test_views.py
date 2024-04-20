@@ -367,12 +367,12 @@ class TestTransferView(BaseTenantTestCase):
         response = self.forced_auth_req('post', url, user=self.partner_staff, data=checkout_data)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('The item quantity cannot be greater than the original value.', response.data['items'])
+        self.assertIn('Some of the items to be checked are no longer valid', response.data['items'])
 
     def test_checkout_distribution(self):
-        item_1 = ItemFactory(quantity=11, transfer=self.outgoing)
-        item_2 = ItemFactory(quantity=22, transfer=self.outgoing)
-        item_3 = ItemFactory(quantity=33, transfer=self.outgoing)
+        item_1 = ItemFactory(quantity=11, transfer=self.checked_in)
+        item_2 = ItemFactory(quantity=22, transfer=self.checked_in)
+        item_3 = ItemFactory(quantity=33, transfer=self.checked_in)
         destination = PointOfInterestFactory()
 
         checkout_data = {
@@ -389,6 +389,7 @@ class TestTransferView(BaseTenantTestCase):
         url = reverse('last_mile:transfers-new-check-out', args=(self.poi_partner_1.pk,))
         response = self.forced_auth_req('post', url, user=self.partner_staff, data=checkout_data)
 
+        print(response.data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['status'], models.Transfer.PENDING)
         self.assertEqual(response.data['transfer_type'], models.Transfer.DISTRIBUTION)
@@ -398,18 +399,19 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(checkout_transfer.destination_point, destination)
         self.assertEqual(checkout_transfer.items.count(), len(checkout_data['items']))
         self.assertEqual(checkout_transfer.items.get(pk=item_1.pk).quantity, 11)
+
         new_item_pk = [item['id'] for item in response.data['items'] if item['id'] != item_1.pk].pop()
         self.assertEqual(checkout_transfer.items.get(pk=new_item_pk).quantity, 3)
         for item in checkout_transfer.items.all():
-            self.assertIn(self.outgoing, item.transfers_history.all())
+            self.assertIn(self.checked_in, item.transfers_history.all())
 
-        self.assertEqual(self.outgoing.items.count(), 2)
-        self.assertEqual(self.outgoing.items.get(pk=item_2.pk).quantity, 22)
-        self.assertEqual(self.outgoing.items.get(pk=item_3.pk).quantity, 30)
+        self.assertEqual(self.checked_in.items.count(), 2)
+        self.assertEqual(self.checked_in.items.get(pk=item_2.pk).quantity, 22)
+        self.assertEqual(self.checked_in.items.get(pk=item_3.pk).quantity, 30)
 
     def test_checkout_wastage(self):
-        item_1 = ItemFactory(quantity=11, transfer=self.outgoing)
-        item_2 = ItemFactory(quantity=22, transfer=self.outgoing)
+        item_1 = ItemFactory(quantity=11, transfer=self.checked_in)
+        item_2 = ItemFactory(quantity=22, transfer=self.checked_in)
 
         destination = PointOfInterestFactory()
         checkout_data = {
@@ -436,9 +438,9 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(wastage_transfer.items.first().quantity, 9)
         self.assertEqual(wastage_transfer.items.first().wastage_type, models.Item.EXPIRED)
 
-        self.assertEqual(self.outgoing.items.count(), 2)
-        self.assertEqual(self.outgoing.items.get(pk=item_1.pk).quantity, 2)
-        self.assertEqual(self.outgoing.items.get(pk=item_2.pk).quantity, 22)
+        self.assertEqual(self.checked_in.items.count(), 2)
+        self.assertEqual(self.checked_in.items.get(pk=item_1.pk).quantity, 2)
+        self.assertEqual(self.checked_in.items.get(pk=item_2.pk).quantity, 22)
 
     def test_mark_completed(self):
         self.assertEqual(self.outgoing.status, models.Transfer.PENDING)

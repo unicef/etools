@@ -33,7 +33,9 @@ class POIQuerysetMixin:
             return (models.PointOfInterest.objects
                     .filter(Q(partner_organizations=partner) | Q(partner_organizations__isnull=True))
                     .filter(is_active=True)
+                    .exclude(name="UNICEF Warehouse")  # exclude UNICEF Warehouse
                     .select_related('parent')
+                    .select_related('poi_type')
                     .prefetch_related('partner_organizations')
                     .order_by('name', 'id'))
         return models.PointOfInterest.objects.none()

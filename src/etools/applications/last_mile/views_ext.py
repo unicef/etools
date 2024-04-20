@@ -95,7 +95,7 @@ def get_annotated_qs(qs):
         return qs.annotate(material_number=F('material__number'),
                            material_description=F('material__short_description'),
                            ).values()
-    return qs
+    return qs.values()
 
 
 class VisionLMSMExport(APIView):
@@ -110,11 +110,10 @@ class VisionLMSMExport(APIView):
             "item": models.Item.objects,
             "item_history": models.ItemTransferHistory.objects,
         }
-        Model = model_manager_map.get(model_param)
-        if not Model:
+        queryset = model_manager_map.get(model_param)
+        if not queryset:
             return Response({"type": "invalid data model"}, status=status.HTTP_400_BAD_REQUEST)
 
-        queryset = Model
         last_modified_param = request.query_params.get('last_modified', None)
 
         if last_modified_param:
