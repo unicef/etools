@@ -19,7 +19,7 @@ from etools.applications.users.serializers import MinimalUserSerializer
 class PointOfInterestTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.PointOfInterestType
-        exclude = ['created','modified']
+        exclude = ['created', 'modified']
 
 
 class PointOfInterestSerializer(serializers.ModelSerializer):
@@ -34,7 +34,6 @@ class PointOfInterestSerializer(serializers.ModelSerializer):
     def get_region(self, obj):
         # TODO: this will not work on multi country tenants . Not sure we need it at all
         return obj.parent.name if obj.parent else ''
-
 
     class Meta:
         model = models.PointOfInterest
