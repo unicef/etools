@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-08-14 11:43+0000\n"
+"POT-Creation-Date: 2024-03-26 12:56+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1805,6 +1805,39 @@ msgstr "وثيقة"
 
 msgid "Invalid"
 msgstr "غير صالح"
+
+msgid "Review for eTools reference number: "
+msgstr ""
+
+msgid "Submitted By"
+msgstr "مقدم بواسطة"
+
+msgid "Date of submission for review"
+msgstr "تاريخ التقديم للمراجعة"
+
+msgid "Overall Comment"
+msgstr "التعليق العام"
+
+msgid "Overall Approval"
+msgstr "الموافقة الشاملة"
+
+msgid "Overall Review"
+msgstr "نظرة شاملة"
+
+msgid "PRC Member Reviews"
+msgstr "تقييمات الأعضاء"
+
+msgid "PRC Member Name"
+msgstr "اسم عضو"
+
+msgid "Approved"
+msgstr "موافقة"
+
+msgid "Approval comment"
+msgstr "تعليق الموافقة"
+
+msgid "Review date"
+msgstr "تاريخ المراجعة"
 
 msgid ""
 "Agreement cannot transition to signed until the start date is less than or "

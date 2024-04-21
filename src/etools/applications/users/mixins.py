@@ -1,6 +1,7 @@
 from django.contrib.auth.models import Group
 
-PARTNER_ACTIVE_GROUPS = ["IP Viewer", "IP Editor", "IP Authorized Officer", "IP Admin"]
+AMP_ACTIVE_GROUPS = ["IP Viewer", "IP Editor", "IP Authorized Officer", "IP Admin"]
+PARTNER_ACTIVE_GROUPS = AMP_ACTIVE_GROUPS + ["IP LM Editor"]
 # todo: create single source of truth here and for wrappers like tpm.models.ThirdPartyMonitor. GroupWrapper for caching
 AUDIT_ACTIVE_GROUPS = ["UNICEF Audit Focal Point", "Auditor"]
 TPM_ACTIVE_GROUPS = ["Third Party Monitor"]
@@ -8,7 +9,7 @@ TPM_ACTIVE_GROUPS = ["Third Party Monitor"]
 
 ORGANIZATION_GROUP_MAP = {
     "audit": ['Auditor'],
-    "partner": PARTNER_ACTIVE_GROUPS,
+    "partner": AMP_ACTIVE_GROUPS,
     "tpm": TPM_ACTIVE_GROUPS,
 }
 
@@ -29,7 +30,7 @@ class GroupEditPermissionMixin:
         "IP Authorized Officer": {"partner": ["IP Viewer", "IP Editor", "IP Authorized Officer"]},
         "UNICEF User": {},
         "PME": {"tpm": TPM_ACTIVE_GROUPS},
-        "Partnership Manager": {"partner": PARTNER_ACTIVE_GROUPS},
+        "Partnership Manager": {"partner": AMP_ACTIVE_GROUPS},
         "UNICEF Audit Focal Point": {"audit": ["Auditor"]},
     }
 

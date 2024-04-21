@@ -38,8 +38,11 @@ urlpatterns = (
     re_path(r'^amp-filters/$',
             GroupFilterViewSet.as_view(http_method_names=['get']),
             name="amp-group-filters"),
+    # TODO: Check if still needed and if needs to be restricted
     re_path(r'^(?P<pk>[0-9]+)/$', UsersDetailAPIView.as_view(http_method_names=['get']), name="user-detail"),
+    # TODO: restrict:
     re_path(r'^AD/(?P<username>.*)$', ADUserAPIView.as_view(http_method_names=['get', ]), name="ad-user-api-view"),
+
     re_path(r'^', include(root_api.urls)),
     re_path(r'^$', UsersListAPIView.as_view(), name="users-list"),
 )
