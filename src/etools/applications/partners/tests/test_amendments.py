@@ -297,7 +297,7 @@ class AmendmentTestCase(BaseTenantTestCase):
         self.assertEqual(budget.total_local, 1203 + 902 + 60 + 30)
         self.assertEqual(
             budget.programme_effectiveness,
-            ((1200 + 900) / budget.total_local * 100),
+            (self.active_intervention.management_budgets.unicef_total / budget.total_unicef_contribution_local() * 100),
         )
         self.assertEqual(
             "{:0.2f}".format(budget.partner_contribution_percent),
