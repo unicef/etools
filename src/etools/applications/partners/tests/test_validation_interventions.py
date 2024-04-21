@@ -58,7 +58,10 @@ class TestTransitionOk(BaseTenantTestCase):
 class TestTransitionToClosed(BaseTenantTestCase):
     def setUp(self):
         super().setUp()
-        self.intervention = InterventionFactory(end=datetime.date(2001, 1, 1))
+        self.intervention = InterventionFactory(
+            end=datetime.date(2001, 1, 1),
+            final_review_approved=True,
+        )
         self.expected = {
             'total_frs_amt': 0,
             'total_frs_amt_usd': 0,
@@ -189,7 +192,7 @@ class TestTransitionToClosed(BaseTenantTestCase):
         self.assertFundamentals(self.intervention.total_frs)
 
     def test_final_review_flag_invalid(self):
-        """If Total actual amount > 100,000 need final_review_approved=True
+        """need final_review_approved=True
         """
         frs = FundsReservationHeaderFactory(
             intervention=self.intervention,
@@ -201,10 +204,12 @@ class TestTransitionToClosed(BaseTenantTestCase):
             outstanding_amt=0.00,
             intervention_amt=0.00,
         )
+        self.intervention.final_review_approved = False
+        self.intervention.save()
 
         with self.assertRaisesRegexp(
                 TransitionError,
-                'Final Review must be approved for documents having amount transferred greater than 100,000'
+                'Final Review must be approved'
         ):
             transition_to_closed(self.intervention)
         self.expected["total_actual_amt"] = 120000.00
