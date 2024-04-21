@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-04-21 23:36+0000\n"
+"POT-Creation-Date: 2024-03-26 12:56+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1855,6 +1855,39 @@ msgstr "Documento"
 
 msgid "Invalid"
 msgstr "Inválido"
+
+msgid "Review for eTools reference number: "
+msgstr "Revisão do número de referência do eTools:"
+
+msgid "Submitted By"
+msgstr "Submetido por"
+
+msgid "Date of submission for review"
+msgstr "Data de envio para revisão"
+
+msgid "Overall Comment"
+msgstr "Comentário geral"
+
+msgid "Overall Approval"
+msgstr "Aprovação geral"
+
+msgid "Overall Review"
+msgstr "Revisão geral"
+
+msgid "PRC Member Reviews"
+msgstr "Avaliações de membros da PRC"
+
+msgid "PRC Member Name"
+msgstr "Nome do membro da PRC"
+
+msgid "Approved"
+msgstr "Aprovada"
+
+msgid "Approval comment"
+msgstr "Comentário de aprovação"
+
+msgid "Review date"
+msgstr "Data da revisão"
 
 msgid ""
 "Agreement cannot transition to signed until the start date is less than or "
