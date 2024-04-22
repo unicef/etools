@@ -115,17 +115,11 @@ class MaterialListSerializer(serializers.ModelSerializer):
 
 class ItemSerializer(serializers.ModelSerializer):
     material = MaterialSerializer()
+    description = serializers.CharField(read_only=True)
 
     class Meta:
         model = models.Item
         exclude = ('transfer',)
-
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        data['description'] = instance.description
-        if not instance.uom:
-            data['uom'] = data['material']['original_uom']
-        return data
 
 
 class ItemListSerializer(serializers.ModelSerializer):
