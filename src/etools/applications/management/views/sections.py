@@ -9,13 +9,14 @@ from rest_framework.response import Response
 from unicef_restlib.permissions import IsSuperUser
 
 from etools.applications.management.handlers.sections import MigrationException, SectionHandler
+from etools.applications.partners.permissions import COUNTRY_OFFICE_ADMINISTRATOR, RSS, user_group_permission
 
 logger = logging.getLogger(__name__)
 
 
 class SectionsManagementView(viewsets.ViewSet):
     """Class for handling session creation, merging and closing"""
-    permission_classes = [IsSuperUser]
+    permission_classes = [IsSuperUser | user_group_permission(COUNTRY_OFFICE_ADMINISTRATOR, RSS)]
 
     @action(detail=False, methods=['post'])
     def new(self, request):

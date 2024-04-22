@@ -180,3 +180,20 @@ class ValidateMARiskExtra(ValidateRiskExtra):
         categories = self.VALIDATE_CATEGORIES_BEFORE_SUBMIT
         categories[MicroAssessment.get_subject_areas_code(instance.questionnaire_version)] = 'test_subject_areas'
         return categories
+
+
+class ActionPointsProvidedForHighPriorityFindingsCheck(BaseTransitionCheck):
+    def get_errors(self, instance, *args, **kwargs):
+        from etools.applications.audit.models import EngagementActionPoint, Finding
+
+        errors = super().get_errors(instance, *args, **kwargs)
+
+        if (
+                instance.findings.filter(priority=Finding.PRIORITIES.high).exists() and
+                not EngagementActionPoint.objects.filter(engagement=instance, high_priority=True).exists()
+        ):
+            errors['action_points'] = _(
+                'Action Points with High Priority to be opened if High Priority findings provided.'
+            )
+
+        return errors

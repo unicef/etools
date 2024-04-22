@@ -29,6 +29,7 @@ from etools.applications.core.tests.mixins import URLAssertionMixin
 from etools.applications.environment.models import TenantSwitch
 from etools.applications.environment.tests.factories import TenantSwitchFactory
 from etools.applications.field_monitoring.fm_settings.tests.factories import LocationSiteFactory
+from etools.applications.funds.models import FundsReservationHeader
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory, FundsReservationItemFactory
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.models import (
@@ -816,6 +817,23 @@ class TestUpdate(BaseInterventionTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         budget.refresh_from_db()
         self.assertEqual(budget.currency, "PEN")
+
+    def test_patch_frs_prc_secretary(self):
+        intervention = InterventionFactory()
+        prc_secratary = UserFactory(
+            is_staff=True, realms__data=[UNICEF_USER, PRC_SECRETARY]
+        )
+
+        fr = FundsReservationHeaderFactory(intervention=None, currency='USD')
+        self.assertEqual(FundsReservationHeader.objects.filter(intervention=intervention).count(), 0)
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+            user=prc_secratary,
+            data={'frs': [fr.id]}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(FundsReservationHeader.objects.filter(intervention=intervention).count(), 1)
 
     def test_patch_country_programme(self):
         intervention = InterventionFactory()
@@ -2637,6 +2655,41 @@ class TestInterventionReviews(BaseInterventionTestCase):
         review.refresh_from_db()
         self.assertEqual(review.overall_comment, "second")
 
+    def test_pdf_prc_secretary(self):
+        review = InterventionReviewFactory(
+            intervention=self.intervention,
+            overall_comment='comment',
+        )
+        response = self.forced_auth_req(
+            "get",
+            reverse(
+                "pmp_v3:intervention-review-pdf",
+                args=[self.intervention.pk, review.pk],
+            ),
+            user=self.unicef_prc_secretary
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.headers['Content-Type'], 'application/pdf')
+        self.assertIn('Content-Disposition', response.headers)
+
+    def test_pdf_partner_user(self):
+        review = InterventionReviewFactory(
+            intervention=self.intervention,
+        )
+        partner_user = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=self.intervention.agreement.partner.organization,
+        )
+        response = self.forced_auth_req(
+            "get",
+            reverse(
+                "pmp_v3:intervention-review-pdf",
+                args=[self.intervention.pk, review.pk],
+            ),
+            user=partner_user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
 
 class TestInterventionCancel(BaseInterventionActionTestCase):
     def setUp(self):
@@ -2685,14 +2738,20 @@ class TestInterventionCancel(BaseInterventionActionTestCase):
         self.assertFalse(self.intervention.unicef_accepted)
         self.assertIsNone(self.intervention.cancel_justification)
         mock_send = mock.Mock(return_value=self.mock_email)
-        with self.captureOnCommitCallbacks(execute=True) as callbacks:
-            with mock.patch(self.notify_path, mock_send):
-                response = self.forced_auth_req(
-                    "patch",
-                    self.url,
-                    data={"cancel_justification": "Needs to be cancelled"},
-                    user=self.unicef_user,
-                )
+        # with self.captureOnCommitCallbacks(execute=True) as callbacks:
+        #     with mock.patch(self.notify_path, mock_send):
+        #         response = self.forced_auth_req(
+        #             "patch",
+        #             self.url,
+        #             data={"cancel_justification": "Needs to be cancelled"},
+        #             user=self.unicef_user,
+        with mock.patch(self.notify_path, mock_send):
+            response = self.forced_auth_req(
+                "patch",
+                self.url,
+                data={"cancel_justification": "Needs to be cancelled"},
+                user=self.unicef_user,
+            )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         mock_send.assert_called()
         self.intervention.refresh_from_db()
@@ -2702,8 +2761,8 @@ class TestInterventionCancel(BaseInterventionActionTestCase):
             self.intervention.cancel_justification,
             "Needs to be cancelled",
         )
-        send_to_vision_mock.assert_called()
-        self.assertEqual(len(callbacks), 1)
+        # skip calling for now. We may need to bring it back at some point
+        # send_to_vision_mock.assert_called()
 
         # unicef attempt to cancel again
         mock_send = mock.Mock()
@@ -2772,16 +2831,19 @@ class TestInterventionTerminate(BaseInterventionActionTestCase):
         self.assertFalse(self.intervention.unicef_accepted)
         self.intervention.unicef_focal_points.add(self.unicef_user)
         mock_send = mock.Mock(return_value=self.mock_email)
-        with self.captureOnCommitCallbacks(execute=True) as callbacks:
-            with mock.patch(self.notify_path, mock_send):
-                response = self.forced_auth_req("patch", self.url, user=self.unicef_user)
+        # with self.captureOnCommitCallbacks(execute=True) as callbacks:
+        #     with mock.patch(self.notify_path, mock_send):
+        #         response = self.forced_auth_req("patch", self.url, user=self.unicef_user)
+        with mock.patch(self.notify_path, mock_send):
+            response = self.forced_auth_req("patch", self.url, user=self.unicef_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         mock_send.assert_called()
         self.intervention.refresh_from_db()
         self.assertEqual(self.intervention.status, Intervention.TERMINATED)
         self.assertFalse(self.intervention.unicef_accepted)
-        send_to_vision_mock.assert_called()
-        self.assertEqual(len(callbacks), 1)
+        # skip calling for now. We may need to bring it back at some point
+        # send_to_vision_mock.assert_called()
+        # self.assertEqual(len(callbacks), 1)
 
         # unicef attempt to terminate again
         mock_send = mock.Mock()
@@ -2840,16 +2902,19 @@ class TestInterventionSuspend(BaseInterventionActionTestCase):
         self.intervention.unicef_focal_points.add(self.unicef_user)
         self.assertFalse(self.intervention.unicef_accepted)
         mock_send = mock.Mock(return_value=self.mock_email)
-        with self.captureOnCommitCallbacks(execute=True) as callbacks:
-            with mock.patch(self.notify_path, mock_send):
-                response = self.forced_auth_req("patch", self.url, user=self.unicef_user)
+        # with self.captureOnCommitCallbacks(execute=True) as callbacks:
+        #     with mock.patch(self.notify_path, mock_send):
+        #         response = self.forced_auth_req("patch", self.url, user=self.unicef_user)
+        with mock.patch(self.notify_path, mock_send):
+            response = self.forced_auth_req("patch", self.url, user=self.unicef_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         mock_send.assert_called()
         self.intervention.refresh_from_db()
         self.assertEqual(self.intervention.status, Intervention.SUSPENDED)
         self.assertFalse(self.intervention.unicef_accepted)
-        send_to_vision_mock.assert_called()
-        self.assertEqual(len(callbacks), 1)
+        # skip calling for now. We may need to bring it back at some point
+        # send_to_vision_mock.assert_called()
+        # self.assertEqual(len(callbacks), 1)
 
         # unicef attempt to suspend again
         mock_send = mock.Mock()
@@ -2911,16 +2976,20 @@ class TestInterventionUnsuspend(BaseInterventionActionTestCase):
         self.intervention.unicef_focal_points.add(self.unicef_user)
         self.assertFalse(self.intervention.unicef_accepted)
         mock_send = mock.Mock(return_value=self.mock_email)
-        with self.captureOnCommitCallbacks(execute=True) as callbacks:
-            with mock.patch(self.notify_path, mock_send):
-                response = self.forced_auth_req("patch", self.url, user=self.unicef_user)
+        # with self.captureOnCommitCallbacks(execute=True) as callbacks:
+        #     with mock.patch(self.notify_path, mock_send):
+        #         response = self.forced_auth_req("patch", self.url, user=self.unicef_user)
+        with mock.patch(self.notify_path, mock_send):
+            response = self.forced_auth_req("patch", self.url, user=self.unicef_user)
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         mock_send.assert_called()
         self.intervention.refresh_from_db()
         self.assertEqual(self.intervention.status, Intervention.ACTIVE)
         self.assertFalse(self.intervention.unicef_accepted)
-        send_to_vision_mock.assert_called()
-        self.assertEqual(len(callbacks), 1)
+        # skip calling for now. We may need to bring it back at some point
+        # send_to_vision_mock.assert_called()
+        # self.assertEqual(len(callbacks), 1)
 
         # unicef attempt to unsuspend again
         mock_send = mock.Mock()

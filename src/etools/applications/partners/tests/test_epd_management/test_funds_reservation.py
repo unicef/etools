@@ -30,6 +30,16 @@ class TestFundsReservationManagement(BaseTestCase):
         self.assertEqual(response.data['permissions']['view']['frs'], True)
         self.assertEqual(response.data['permissions']['edit']['frs'], True)
 
+    def test_prc_secretary_permissions(self):
+        response = self.forced_auth_req(
+            'get',
+            reverse('pmp_v3:intervention-detail', args=[self.draft_intervention.pk]),
+            user=self.prc_secretary,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.data['permissions']['view']['frs'], True)
+        self.assertEqual(response.data['permissions']['edit']['frs'], True)
+
     def test_partner_permissions(self):
         response = self.forced_auth_req(
             'get',

@@ -1707,12 +1707,12 @@ class Intervention(TimeStampedModel):
         REVIEW: [],
         SIGNATURE: [],
         SIGNED: [send_pd_to_vision_side_effect, side_effect_one, side_effect_two],
-        ACTIVE: [send_pd_to_vision_side_effect],
-        SUSPENDED: [send_pd_to_vision_side_effect],
-        ENDED: [send_pd_to_vision_side_effect],
-        CLOSED: [send_pd_to_vision_side_effect],
-        TERMINATED: [send_pd_to_vision_side_effect],
-        CANCELLED: [send_pd_to_vision_side_effect],
+        ACTIVE: [],
+        SUSPENDED: [],
+        ENDED: [],
+        CLOSED: [],
+        TERMINATED: [],
+        CANCELLED: [],
     }
 
     INTERVENTION_STATUS = (
@@ -3063,7 +3063,7 @@ class InterventionBudget(TimeStampedModel):
         programme_effectiveness = 0
         if not init:
             init_totals()
-        programme_effectiveness += intervention.management_budgets.total
+        programme_effectiveness += intervention.management_budgets.unicef_total
         self.partner_contribution_local += intervention.management_budgets.partner_total
         self.total_unicef_cash_local_wo_hq += intervention.management_budgets.unicef_total
         self.unicef_cash_local = self.total_unicef_cash_local_wo_hq + self.total_hq_cash_local
@@ -3079,9 +3079,11 @@ class InterventionBudget(TimeStampedModel):
 
         self.total = self.total_unicef_contribution() + self.partner_contribution
         self.total_partner_contribution_local = self.partner_contribution_local + self.partner_supply_local
-        self.total_local = self.total_unicef_contribution_local() + self.total_partner_contribution_local
-        if self.total_local:
-            self.programme_effectiveness = programme_effectiveness / self.total_local * 100
+        total_unicef_contrib_local = self.total_unicef_contribution_local()
+        self.total_local = total_unicef_contrib_local + self.total_partner_contribution_local
+
+        if total_unicef_contrib_local:
+            self.programme_effectiveness = programme_effectiveness / total_unicef_contrib_local * 100
         else:
             self.programme_effectiveness = 0
 

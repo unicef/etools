@@ -33,7 +33,6 @@ class SectionViewSet(ExternalModuleFilterMixin,
                      QueryStringFilterMixin,
                      mixins.RetrieveModelMixin,
                      mixins.ListModelMixin,
-                     mixins.CreateModelMixin,
                      viewsets.GenericViewSet):
     """
     Returns a list of all Sections

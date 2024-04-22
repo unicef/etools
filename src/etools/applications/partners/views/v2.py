@@ -119,7 +119,7 @@ class PMPStaticDropdownsListAPIView(APIView):
 
 
 class PMPDropdownsListApiView(APIView):
-    permission_classes = (IsAdminUser,)
+    permission_classes = (IsAuthenticated, IsAdminUser)
 
     def get(self, request):
         """
@@ -158,7 +158,7 @@ class PMPDropdownsListApiView(APIView):
 
 
 class PartnershipDashboardAPIView(APIView):
-    permission_classes = (IsAdminUser,)
+    permission_classes = (IsAuthenticated, IsAdminUser)
 
     def get(self, request, ct_pk=None, office_pk=None):
         """

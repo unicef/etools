@@ -1,3 +1,5 @@
+from datetime import date
+
 from django.db import connection
 from django.db.models.functions import TruncYear
 
@@ -79,19 +81,26 @@ class CPOutputsFilterSet(filters.FilterSet):
     partners__in = filters.BaseInFilter(
         field_name='intervention_links__intervention__agreement__partner', distinct=True
     )
+    active = filters.BooleanFilter(method='active_filter')
 
     class Meta:
         model = Result
-        fields = ['partners__in']
+        fields = ['partners__in', 'active']
+
+    def active_filter(self, queryset, name, value):
+        if value:
+            return queryset.filter(to_date__gte=date.today())
+        return queryset
 
 
 class InterventionsFilterSet(filters.FilterSet):
     partners__in = filters.BaseInFilter(field_name='agreement__partner')
     cp_outputs__in = filters.BaseInFilter(field_name='result_links__cp_output', distinct=True)
+    status__in = filters.BaseInFilter(field_name='status')
 
     class Meta:
         model = Intervention
-        fields = ['partners__in', 'cp_outputs__in']
+        fields = ['partners__in', 'cp_outputs__in', 'status']
 
 
 class HactForPartnerFilter(BaseFilterBackend):

@@ -113,6 +113,12 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.10.1,frs,Unicef Focal Point,not_in_amendment_mode,Review,Edit,TRUE
 3.10.1,frs,Unicef Focal Point,not_in_amendment_mode,Signature,Edit,TRUE
 3.10.1,frs,Unicef Focal Point,not_in_amendment_mode,Signed,Edit,TRUE
+3.10.1,frs,PRC Secretary,not_in_amendment_mode,Draft,Edit,TRUE
+3.10.1,frs,PRC Secretary,not_in_amendment_mode,Review,Edit,TRUE
+3.10.1,frs,PRC Secretary,not_in_amendment_mode,Signature,Edit,TRUE
+3.10.1,frs,PRC Secretary,not_in_amendment_mode,Signed,Edit,TRUE
+3.10.1,frs,PRC Secretary,not_in_amendment_mode,Active,Edit,TRUE
+3.10.1,frs,PRC Secretary,not_in_amendment_mode,Ended,Edit,TRUE
 3.10.1,frs,*,not_in_amendment_mode,Active,Required,TRUE
 3.10.1,frs,*,not_in_amendment_mode,Ended,Required,TRUE
 3.10.1,frs,*,,Implemented,Required,TRUE

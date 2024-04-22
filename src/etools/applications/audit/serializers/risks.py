@@ -361,21 +361,42 @@ class AggregatedRiskRootSerializer(BaseAggregatedRiskRootSerializer):
         if category.applicable_questions:
             category.risk_score = category.risk_points / category.applicable_questions
 
-            lowest_score_possible = category.applicable_questions
-            highest_score_possible = 4 * lowest_score_possible
-            banding_width = highest_score_possible - lowest_score_possible
-            low_points_below = lowest_score_possible + banding_width * 0.15
-            moderate_points_below = lowest_score_possible + banding_width * 0.3
-            significant_points_below = lowest_score_possible + banding_width * 0.5
+            if category.code in ['ma_questionnaire', 'ma_subject_areas']:
+                # v1 calculations
+                lowest_score_possible = 1
+                highest_score_possible = (4 * category.applicable_questions + 4 * category.applicable_key_questions)
+                highest_score_possible = highest_score_possible / category.applicable_questions
+                banding_width = (highest_score_possible - lowest_score_possible) / 4
+                low_scores_below = lowest_score_possible + banding_width
+                moderate_scores_below = low_scores_below + banding_width
+                significant_score_below = moderate_scores_below + banding_width
 
-            if category.risk_points < low_points_below:
-                category.risk_rating = 'low'
-            elif category.risk_points < moderate_points_below:
-                category.risk_rating = 'medium'
-            elif category.risk_points < significant_points_below:
-                category.risk_rating = 'significant'
+                category.risk_rating = 0
+                if category.risk_score < low_scores_below:
+                    category.risk_rating = 'low'
+                elif category.risk_score < moderate_scores_below:
+                    category.risk_rating = 'medium'
+                elif category.risk_score < significant_score_below:
+                    category.risk_rating = 'significant'
+                else:
+                    category.risk_rating = 'high'
             else:
-                category.risk_rating = 'high'
+                # v2 calculations
+                lowest_score_possible = category.applicable_questions
+                highest_score_possible = 4 * lowest_score_possible
+                banding_width = highest_score_possible - lowest_score_possible
+                low_points_below = lowest_score_possible + banding_width * 0.15
+                moderate_points_below = lowest_score_possible + banding_width * 0.3
+                significant_points_below = lowest_score_possible + banding_width * 0.5
+
+                if category.risk_points < low_points_below:
+                    category.risk_rating = 'low'
+                elif category.risk_points < moderate_points_below:
+                    category.risk_rating = 'medium'
+                elif category.risk_points < significant_points_below:
+                    category.risk_rating = 'significant'
+                else:
+                    category.risk_rating = 'high'
         else:
             category.risk_score = None
             category.risk_rating = 0
