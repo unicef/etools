@@ -21,6 +21,12 @@ from etools.applications.action_points.conditions import (
     ActionPointAssigneeCondition,
     ActionPointAuthorCondition,
     ActionPointModuleCondition,
+    ActionPointNotAuthorCondition,
+    ActionPointPotentialVerifierCondition,
+    HighPriorityActionPointCondition,
+    LowPriorityActionPointCondition,
+    NotVerifiedActionPointCondition,
+    PotentialVerifierProvidedCondition,
     RelatedActionPointCondition,
     UnRelatedActionPointCondition,
 )
@@ -104,10 +110,16 @@ class ActionPointViewSet(
         context.extend([
             ObjectStatusCondition(obj),
             ActionPointAuthorCondition(obj, self.request.user),
+            ActionPointNotAuthorCondition(obj, self.request.user),
             ActionPointAssignedByCondition(obj, self.request.user),
             ActionPointAssigneeCondition(obj, self.request.user),
+            ActionPointPotentialVerifierCondition(obj, self.request.user),
             RelatedActionPointCondition(obj),
             UnRelatedActionPointCondition(obj),
+            LowPriorityActionPointCondition(obj),
+            HighPriorityActionPointCondition(obj),
+            NotVerifiedActionPointCondition(obj),
+            PotentialVerifierProvidedCondition(obj),
         ])
         return context
 

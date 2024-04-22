@@ -7,10 +7,12 @@ from factory import fuzzy
 from rest_framework import status
 from unicef_attachments.models import Attachment
 
-from etools.applications.audit.models import SpecificProcedure
+from etools.applications.action_points.tests.factories import ActionPointFactory
+from etools.applications.audit.models import Finding, SpecificProcedure
 from etools.applications.audit.tests.base import EngagementTransitionsTestCaseMixin
 from etools.applications.audit.tests.factories import (
     AuditFactory,
+    FindingFactory,
     KeyInternalControlFactory,
     MicroAssessmentFactory,
     SpecialAuditFactory,
@@ -39,6 +41,9 @@ class EngagementCheckTransitionsTestCaseMixin:
     def _test_submit(self, user, expected_response, errors=None, data=None):
         return self._test_transition(user, 'submit', expected_response, errors=errors, data=data)
 
+    def _test_send_back(self, user, expected_response, errors=None, data=None):
+        return self._test_transition(user, 'send_back', expected_response, errors=errors, data=data)
+
     def _test_finalize(self, user, expected_response, errors=None, data=None):
         return self._test_transition(user, 'finalize', expected_response, errors=errors, data=data)
 
@@ -52,9 +57,8 @@ class MATransitionsTestCaseMixin(EngagementTransitionsTestCaseMixin):
 
     def _init_filled_engagement(self):
         super()._init_filled_engagement()
-        self._fill_category('ma_questionnaire')
         self._fill_category('ma_questionnaire_v2')
-        self._fill_category('ma_subject_areas', extra={"comments": "some info"})
+        self._fill_category('ma_subject_areas_v2', extra={"comments": "some info"})
         self._fill_category('ma_global_assessment', extra={"comments": "some info"})
 
 
@@ -125,22 +129,20 @@ class TestMATransitionsTestCase(
     def test_filled_questionnaire(self):
         self._fill_date_fields()
         self._test_submit(self.auditor, status.HTTP_400_BAD_REQUEST,
-                          errors=['test_subject_areas', 'overall_risk_assessment', 'questionnaire'])
+                          errors=['overall_risk_assessment', 'questionnaire', 'test_subject_areas'])
 
     def test_missing_comments_subject_areas(self):
         self._fill_date_fields()
-        self._fill_category('ma_questionnaire')
         self._fill_category('ma_questionnaire_v2')
-        self._fill_category('ma_subject_areas')
+        self._fill_category('ma_subject_areas_v2')
         self._fill_category('ma_global_assessment')
         self._test_submit(self.auditor, status.HTTP_400_BAD_REQUEST,
-                          errors=['test_subject_areas', 'overall_risk_assessment'])
+                          errors=['overall_risk_assessment', 'test_subject_areas'])
 
     def test_attachments_required(self):
         self._fill_date_fields()
-        self._fill_category('ma_questionnaire')
         self._fill_category('ma_questionnaire_v2')
-        self._fill_category('ma_subject_areas', extra={"comments": "some info"})
+        self._fill_category('ma_subject_areas_v2', extra={"comments": "some info"})
         self._fill_category('ma_global_assessment', extra={"comments": "some info"})
         self._test_submit(self.auditor, status.HTTP_400_BAD_REQUEST, errors=['report_attachments'])
 
@@ -221,6 +223,11 @@ class TestSCTransitionsTestCase(
         self._init_submitted_engagement()
         self._test_finalize(self.auditor, status.HTTP_403_FORBIDDEN)
 
+    def test_finalize_focal_point_high_priority_findings(self):
+        self._init_submitted_engagement()
+        FindingFactory(spot_check=self.engagement, priority=Finding.PRIORITIES.high)
+        self._test_finalize(self.unicef_focal_point, status.HTTP_400_BAD_REQUEST)
+
     def test_finalize_focal_point(self):
         self._init_submitted_engagement()
         content_type = ContentType.objects.get_for_model(self.engagement)
@@ -230,6 +237,8 @@ class TestSCTransitionsTestCase(
             content_type=content_type,
             object_id=self.engagement.pk,
         )
+        FindingFactory(spot_check=self.engagement, priority=Finding.PRIORITIES.high)
+        ActionPointFactory(engagement=self.engagement, high_priority=True)
         with patch(self.filepath, self.mock_filepath):
             self._test_finalize(self.unicef_focal_point, status.HTTP_200_OK)
         self.assertTrue(attachment_qs.exists())
@@ -285,7 +294,7 @@ class TestSCTransitionsMetadataTestCase(
 
     def test_submitted_focal_point(self):
         self._init_submitted_engagement()
-        self._test_allowed_actions(self.unicef_focal_point, ['finalize'])
+        self._test_allowed_actions(self.unicef_focal_point, ['finalize', 'send_back'])
 
     def test_finalized_auditor(self):
         self._init_finalized_engagement()

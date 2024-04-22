@@ -1,5 +1,6 @@
 import datetime
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.db import connection, IntegrityError, transaction
@@ -13,6 +14,7 @@ from etools.applications.environment.notifications import send_notification_with
 from etools.applications.organizations.models import Organization
 from etools.applications.partners.prp_api import PRPAPI
 from etools.applications.partners.serializers.prp_v1 import PRPSyncUserSerializer
+from etools.applications.users.mixins import PARTNER_ACTIVE_GROUPS
 from etools.applications.users.models import Country, Realm, User, UserProfile
 from etools.config.celery import app
 
@@ -85,10 +87,11 @@ class AzureUserMapper:
                     logger.info('UNICEF User Group added to user {}'.format(obj.user))
 
                     # deactivate realms from previous user country
-                    Realm.objects.filter(
-                        user=obj.user,
-                        country=obj.country,
-                        organization=self.unicef_organization).update(is_active=False)
+                    # commenting out to support stretch assignments
+                    # Realm.objects.filter(
+                    #     user=obj.user,
+                    #     country=obj.country,
+                    #     organization=self.unicef_organization).update(is_active=False)
 
                     obj.country = self._get_country(cleaned_value)
                     logger.info("Country Updated for {}".format(obj))
@@ -229,9 +232,14 @@ def sync_realms_to_prp(user_pk, last_modified_at_timestamp, retry_counter=0):
         # there were updates to user realms. skip
         return
 
+    _partner_realms = Realm.objects.filter(user_id=user_pk, group__name__in=PARTNER_ACTIVE_GROUPS)
+    if not _partner_realms.exists():
+        logger.info('No partner roles exist in user realms. Skipping..')
+        return
+
     user = User.objects.filter(pk=user_pk).prefetch_related(
-        Prefetch('realms', Realm.objects.filter(is_active=True).select_related('country', 'organization', 'group')),
-    ).get()
+        Prefetch('realms', _partner_realms.filter(is_active=True).select_related('country', 'organization', 'group'))).get()
+
     data = PRPSyncUserSerializer(instance=user).data
 
     try:
@@ -247,3 +255,17 @@ def sync_realms_to_prp(user_pk, last_modified_at_timestamp, retry_counter=0):
         else:
             logger.exception(f'Received {ex} from prp api while trying to send realms after 3 attempts. '
                              f'User pk: {user_pk}.')
+
+
+@app.task
+def deactivate_stale_users():
+    active_users = User.objects.filter(is_active=True)
+    non_unicef_users = active_users.exclude(email__endswith=settings.UNICEF_USER_EMAIL)
+    users_to_deactivate = non_unicef_users.filter(
+        last_login__lt=timezone.now() - datetime.timedelta(days=settings.STALE_USERS_DEACTIVATION_THRESHOLD_DAYS),
+    )
+    for user in users_to_deactivate:
+        logger.info(f'Deactivated user as it was inactive for more than 3 months: {user.email}')
+        # save one by one instead of .update(is_active=True) to enable signals/save events
+        user.is_active = False
+        user.save()

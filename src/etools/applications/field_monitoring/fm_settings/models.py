@@ -113,12 +113,14 @@ class Question(models.Model):
     is_custom = models.BooleanField(default=False, verbose_name=_('Is Custom'))
     is_active = models.BooleanField(default=True, verbose_name=_('Is Active'))
 
+    order = models.PositiveIntegerField(db_index=True, default=1)
+
     objects = models.Manager.from_queryset(QuestionsQuerySet)()
 
     class Meta:
         verbose_name = _('Question')
         verbose_name_plural = _('Questions')
-        ordering = ('id',)
+        ordering = ('order',)
 
     @classmethod
     def get_target_relation_name(cls, level):
@@ -208,7 +210,7 @@ class LocationSite(TimeStampedModel):
 
     @staticmethod
     def get_parent_location(point):
-        locations = Location.objects.filter(geom__contains=point, is_active=True)
+        locations = Location.objects.all_with_geom().filter(geom__contains=point, is_active=True)
         if locations:
             matched_locations = list(filter(lambda l: l.is_leaf_node(), locations)) or locations
             location = min(matched_locations, key=lambda l: l.geom.length)

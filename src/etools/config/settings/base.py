@@ -97,9 +97,9 @@ SERVICE_NOW_USER = get_from_secrets_or_env('SERVICE_NOW_USER', 'api_servicenow_e
 # DJANGO: EMAIL
 DEFAULT_FROM_EMAIL = get_from_secrets_or_env('DEFAULT_FROM_EMAIL', "no-reply@unicef.org")
 EMAIL_BACKEND = 'unicef_notification.backends.EmailBackend'
-EMAIL_HOST = get_from_secrets_or_env('EMAIL_HOST', 'smtp.mailtrap.io')
-EMAIL_HOST_USER = get_from_secrets_or_env('EMAIL_HOST_USER', 'd2c74c97ef4173')
-EMAIL_HOST_PASSWORD = get_from_secrets_or_env('EMAIL_HOST_PASSWORD', '32fd3b3a7073cd')
+EMAIL_HOST = get_from_secrets_or_env('EMAIL_HOST', '')
+EMAIL_HOST_USER = get_from_secrets_or_env('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = get_from_secrets_or_env('EMAIL_HOST_PASSWORD', '')
 EMAIL_PORT = get_from_secrets_or_env('EMAIL_HOST_PORT', 587)
 EMAIL_USE_TLS = str2bool(get_from_secrets_or_env('EMAIL_USE_TLS'))  # set True if using TLS
 
@@ -242,6 +242,7 @@ TENANT_APPS = (
     'unicef_snapshot',
     'unicef_attachments',
     'unicef_vision',
+    'etools.applications.last_mile'
 )
 INSTALLED_APPS = ('django_tenants',) + SHARED_APPS + TENANT_APPS
 
@@ -297,7 +298,7 @@ ROOT_URLCONF = 'etools.config.urls'
 AUTHENTICATION_BACKENDS = (
     # 'social_core.backends.azuread_b2c.AzureADB2COAuth2',
     'etools.applications.core.auth.CustomAzureADBBCOAuth2',
-    'django.contrib.auth.backends.ModelBackend',
+    'etools.applications.core.auth.eToolsModelBackend',
 )
 AUTH_USER_MODEL = 'users.User'
 LOGIN_REDIRECT_URL = '/'
@@ -583,6 +584,30 @@ ATTACHMENT_FILEPATH_PREFIX_FUNC = "etools.applications.attachments.utils.get_fil
 ATTACHMENT_FLAT_MODEL = "etools.applications.attachments.models.AttachmentFlat"
 ATTACHMENT_DENORMALIZE_FUNC = "etools.applications.attachments.utils.denormalize_attachment"
 ATTACHMENT_PERMISSIONS = "etools.applications.attachments.permissions.UNICEFAttachmentsPermission"
+ATTACHMENT_INVALID_FILE_TYPES = [
+    "application/json",
+    "application/x-msdownload",
+    "applications/x-ms-installer",
+    "application/x-sh",
+    "text/x-perl",
+    "text/x-python",
+    "text/x-script.python",
+    "application/x-bytecode.python",
+    "text/javascript",
+    "application/x-typescript",
+    "text/x.typescript",
+    "text/prs.typescript",
+    # archive files
+    "application/x-bzip",
+    "application/x-bzip2",
+    "application/gzip",
+    "application/java-archive",
+    "application/x-httpd-php",
+    "application/vnd.rar",
+    "application/x-tar",
+    "application/zip",
+    "application/x-7z-compressed",
+]
 
 GEOS_LIBRARY_PATH = os.getenv('GEOS_LIBRARY_PATH', '/usr/lib/libgeos_c.so.1')  # default path
 GDAL_LIBRARY_PATH = os.getenv('GDAL_LIBRARY_PATH', '/usr/lib/libgdal.so.28')  # default path
@@ -611,6 +636,7 @@ UNICEF_LOCATIONS_MODEL = 'locations.Location'
 # https://github.com/unicef/etools-partner-reporting-portal
 PRP_API_ENDPOINT = get_from_secrets_or_env('PRP_API_ENDPOINT', '')  # example: http://172.18.0.1:8083/api
 PRP_API_USER = get_from_secrets_or_env('PRP_API_USER', '')
+PRP_USER_SYNC_DELAY = int(get_from_secrets_or_env('PRP_USER_SYNC_DELAY', 5))
 
 
 # EPD settings
@@ -622,5 +648,20 @@ PMP_V2_RELEASE_DATE = datetime.datetime.strptime(PMP_V2_RELEASE_DATE, '%Y-%m-%d'
 # https://github.com/unicef/etools-ecn
 ECN_API_ENDPOINT = get_from_secrets_or_env('ECN_API_ENDPOINT', '')  # example: http://172.18.0.1:8086/api
 
-# Emails allowed to edit admin models in Partners and Reports apps
+# This variable prevents certain admin sections from being edited by superusers unless
+# their user emails are in the ADMIN_EDIT_EMAILS variable below
+RESTRICTED_ADMIN = get_from_secrets_or_env('RESTRICTED_ADMIN', True)
+
+# Emails allowed to edit admin models in Partners and Reports apps if RESTRICTED_ADMIN is enabled
 ADMIN_EDIT_EMAILS = get_from_secrets_or_env('ADMIN_EDIT_EMAILS', '')
+
+
+# Stale non-UNICEF users deactivation threshold
+STALE_USERS_DEACTIVATION_THRESHOLD_DAYS = int(
+    get_from_secrets_or_env('STALE_USERS_DEACTIVATION_THRESHOLD_DAYS', 3 * 30)
+)
+
+WAYBILL_EMAILS = get_from_secrets_or_env('WAYBILL_EMAILS', '')
+
+
+RUTF_MATERIALS = get_from_secrets_or_env('RUTF_MATERIALS', '').split(',')

@@ -594,7 +594,7 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
             date_of_draft_report_to_ip=datetime.datetime(datetime.datetime.today().year, 8, 1)
         )
         self.partner_organization.update_audits_completed()
-        self.assertEqual(self.partner_organization.hact_values['audits']['completed'], 3)
+        self.assertEqual(self.partner_organization.hact_values['audits']['completed'], 2)
 
     def test_partner_organization_get_admin_url(self):
         "Test that get_admin_url produces the URL we expect."
@@ -1265,46 +1265,6 @@ class TestPartnerOrganization(BaseTenantTestCase):
         self.assertIsNotNone(p.pk)
 
 
-class TestPartnerStaffMember(BaseTenantTestCase):
-    def test_str(self):
-        partner = models.PartnerOrganization(organization=OrganizationFactory(name="Partner"))
-        staff = models.PartnerStaffMember(
-            first_name="First",
-            last_name="Last",
-            partner=partner
-        )
-        self.assertEqual(str(staff), "First Last (Partner)")
-
-    # def test_save_update_deactivate(self):
-    #     partner = PartnerFactory()
-    #     staff = PartnerStaffFactory(
-    #         partner=partner,
-    #     )
-    #     self.assertTrue(staff.active)
-    #
-    #     staff.active = False
-    #     staff.save()
-    #
-    #     self.assertEqual(staff.user.is_active, False)
-    #     self.assertEqual(staff.user.profile.country, None)
-    #     self.assertEqual(staff.user.profile.countries_available.filter(id=connection.tenant.id).exists(), False)
-    #
-    # def test_save_update_reactivate(self):
-    #     partner = PartnerFactory()
-    #     staff = PartnerStaffFactory(
-    #         partner=partner,
-    #         active=False,
-    #     )
-    #     self.assertFalse(staff.active)
-    #
-    #     staff.active = True
-    #     staff.save()
-    #
-    #     self.assertEqual(staff.user.is_active, True)
-    #     self.assertEqual(staff.user.profile.country, connection.tenant)
-    #     self.assertEqual(staff.user.profile.countries_available.filter(id=connection.tenant.id).exists(), True)
-
-
 class TestAssessment(BaseTenantTestCase):
     def test_str_not_completed(self):
         partner = models.PartnerOrganization(organization=OrganizationFactory(name="Partner"))
@@ -1551,7 +1511,8 @@ class TestInterventionBudget(BaseTenantTestCase):
         self.assertEqual(budget.partner_contribution_local, 10)
         self.assertEqual(budget.unicef_cash_local, 20)
         self.assertEqual(budget.in_kind_amount_local, 30)
-        self.assertEqual(budget.programme_effectiveness, 50)  # = mgmt_budget.total
+        # = mgmt_budget.unicef_total / total_unicef_contrib_local * 100
+        self.assertEqual(budget.programme_effectiveness, 40)
         self.assertEqual(
             "{:0.2f}".format(budget.partner_contribution_percent),
             "{:0.2f}".format(10 / (10 + 20 + 30) * 100),
@@ -1581,7 +1542,7 @@ class TestInterventionBudget(BaseTenantTestCase):
         self.assertEqual(budget.partner_contribution_local, 202 * 3 + 10)  # 616
         self.assertEqual(budget.unicef_cash_local, 101 * 3 + 20)  # 323
         self.assertEqual(budget.in_kind_amount_local, 30)
-        self.assertEqual(budget.programme_effectiveness, Decimal(30) / (616 + 323 + 30) * 100)
+        self.assertEqual(budget.programme_effectiveness, Decimal(20) / (303 + 20 + 30) * 100)
         self.assertEqual(
             "{:0.2f}".format(budget.partner_contribution_percent),
             "{:0.2f}".format((616 / (616 + 323 + 30) * 100)),
@@ -1655,7 +1616,7 @@ class TestInterventionBudget(BaseTenantTestCase):
         self.assertEqual(budget.total_local, 1200 + 900 + 60 + 40 + 30)
         self.assertEqual(
             budget.programme_effectiveness,
-            ((1200 + 900) / budget.total_local * 100),
+            900 / budget.total_unicef_contribution_local() * 100,
         )
         self.assertEqual(
             "{:0.2f}".format(budget.partner_contribution_percent),
@@ -1685,8 +1646,8 @@ class TestInterventionBudget(BaseTenantTestCase):
         self.assertEqual(budget.partner_contribution_local, 10)
         self.assertEqual(budget.unicef_cash_local, 20)
         self.assertEqual(budget.in_kind_amount_local, 6)
-        # programme_effectiveness (mgmt_budget.total = 30) / total_local (unicef_contrib + cso_contrib = 36.00) * 100
-        self.assertEqual(budget.programme_effectiveness, Decimal('83.33333333333333333333333333'))
+        # programme_effectiveness = budget.unicef_total / total_unicef_contrib_local * 100
+        self.assertEqual(budget.programme_effectiveness, Decimal('76.92307692307692307692307692'))
         self.assertEqual(
             "{:0.2f}".format(budget.partner_contribution_percent),
             "{:0.2f}".format(10 / (10 + 20 + 6) * 100),

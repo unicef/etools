@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from unicef_restlib.permissions import IsSuperUser
 
 from etools.applications.activities.models import Activity
+from etools.applications.field_monitoring.planning.models import MonitoringActivity
 from etools.applications.locations.models import Location
 from etools.applications.management.serializers import (
     GisLocationGeojsonSerializer,
@@ -37,9 +38,10 @@ class GisLocationsInUseViewset(ListAPIView):
         except Country.DoesNotExist:
             return Response(status=400, data={'error': 'Country not found'})
         else:
-            locs = Location.objects.filter(Q(intervention_flat_locations__isnull=False) |
-                                           Q(applied_indicators__isnull=False) |
-                                           Q(actionpoint__isnull=False)).values_list("id", flat=True).distinct()
+            locs = Location.objects.all_with_geom().filter(Q(intervention_flat_locations__isnull=False) |
+                                                           Q(applied_indicators__isnull=False) |
+                                                           Q(actionpoint__isnull=False))\
+                .values_list("id", flat=True).distinct()
 
             t2f_locs = TravelActivity.objects.exclude(locations__isnull=True).values_list(
                 "locations", flat=True).distinct()
@@ -47,9 +49,12 @@ class GisLocationsInUseViewset(ListAPIView):
             tpm_activity_locs = Activity.objects.exclude(locations__isnull=True).values_list(
                 "locations", flat=True).distinct()
 
-            all_locs = set(locs) | set(t2f_locs) | set(tpm_activity_locs)
+            monitoring_activity_locs = MonitoringActivity.objects.exclude(location__isnull=True).values_list(
+                "location_id", flat=True)
 
-            locations = Location.objects.filter(
+            all_locs = set(locs) | set(t2f_locs) | set(tpm_activity_locs) | set(monitoring_activity_locs)
+
+            locations = Location.objects.all_with_geom().filter(
                 pk__in=list(all_locs),
             )
 
@@ -103,11 +108,11 @@ class GisLocationsGeomListViewset(ListAPIView):
         country_id = request.query_params.get('country_id')
 
         if loc_status == 'active':
-            location_queryset = Location.objects.filter(is_active=True)
+            location_queryset = Location.objects.all_with_geom().filter(is_active=True)
         elif loc_status == 'archived':
-            location_queryset = Location.objects.filter(is_active=False)
+            location_queryset = Location.objects.all_with_geom().filter(is_active=False)
         else:
-            location_queryset = Location.objects.all()
+            location_queryset = Location.objects.all_with_geom().all()
 
         if not country_id:
             return Response(status=400, data={'error': 'Country id is required'})
@@ -201,7 +206,7 @@ class GisLocationsGeomDetailsViewset(RetrieveAPIView):
         if pcode is not None or id is not None:
             try:
                 lookup = {'p_code': pcode} if id is None else {'pk': id}
-                location = Location.objects.get(**lookup)
+                location = Location.objects.all_with_geom().get(**lookup)
             except Location.DoesNotExist:
                 return Response(status=400, data={'error': 'Location not found'})
             else:

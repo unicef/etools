@@ -1,9 +1,11 @@
 import functools
+import logging
 from copy import copy
 
 from django.conf import settings
 from django.db import transaction, utils
 from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext as _
 
 from easy_pdf.rendering import render_to_pdf_response
@@ -40,6 +42,7 @@ from etools.applications.partners.models import (
 )
 from etools.applications.partners.permissions import (
     AmendmentSessionOnlyDeletePermission,
+    intervention_field_has_view_permission,
     intervention_field_is_editable_permission,
     PMPInterventionPermission,
     UserBelongsToObjectPermission,
@@ -198,11 +201,30 @@ class PMPInterventionRetrieveUpdateView(PMPInterventionMixin, InterventionDetail
 
     @transaction.atomic
     def update(self, request, *args, **kwargs):
-        super().update(request, *args, **kwargs)
+        self.instance, old_instance, serializer = self.my_update(
+            request,
+            self.related_fields,
+            nested_related_names=self.nested_related_names,
+            related_non_serialized_fields=self.related_non_serialized_fields,
+            **kwargs
+        )
+
+        validator = InterventionValid(self.instance, old=old_instance, user=request.user)
+        if not validator.is_valid:
+            logging.debug(validator.errors)
+            raise ValidationError(validator.errors)
+
+        if getattr(self.instance, '_prefetched_objects_cache', None):
+            # If 'prefetch_related' has been applied to a queryset, we need to
+            # refresh the instance from the database.
+            self.instance = self.get_object()
+
+        context = self.get_serializer_context()
+        context['permissions'] = validator.get_permissions(self.instance)
         return Response(
             InterventionDetailSerializer(
                 self.instance,
-                context=self.get_serializer_context(),
+                context=context,
             ).data,
         )
 
@@ -351,6 +373,29 @@ class PMPReviewView(PMPReviewMixin, ListAPIView):
 
 class PMPReviewDetailView(PMPReviewMixin, RetrieveUpdateAPIView):
     pass
+
+
+class PMPReviewDetailPDFView(PMPReviewMixin, RetrieveAPIView):
+    permission_classes = [
+        IsAuthenticated,
+        IsReadAction & intervention_field_has_view_permission('reviews')
+    ]
+
+    def get(self, request, *args, **kwargs):
+        pd = self.get_root_object()
+        review = get_object_or_404(self.get_queryset(), pk=self.kwargs.get('review_pk'))
+
+        font_path = settings.PACKAGE_ROOT + '/assets/fonts/'
+
+        data = {
+            "domain": 'https://{}'.format(get_current_site().domain),
+            "pd": pd,
+            "review": review,
+            "prc_reviews": review.prc_reviews.filter(review_date__isnull=False),
+            "font_path": font_path,
+        }
+
+        return render_to_pdf_response(request, "pd/prc_review_pdf.html", data, filename=f'PRC_Review_{str(pd)}.pdf')
 
 
 class PMPReviewNotifyView(PMPReviewMixin, GenericAPIView):

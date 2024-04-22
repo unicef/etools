@@ -12,6 +12,7 @@ from etools.applications.users.views_v3 import (
     GroupPermissionsViewSet,
     MyProfileAPIView,
     OrganizationListView,
+    StagedUserViewSet,
     UserRealmViewSet,
     UsersDetailAPIView,
     UsersListAPIView,
@@ -20,6 +21,7 @@ from etools.applications.users.views_v3 import (
 root_api = routers.SimpleRouter()
 root_api.register(r'external', ExternalUserViewSet, basename='external')
 root_api.register(r'amp', UserRealmViewSet, basename='realms')
+root_api.register(r'amp-staged', StagedUserViewSet, basename='amp-staged')
 
 app_name = 'users'
 urlpatterns = (
@@ -36,8 +38,11 @@ urlpatterns = (
     re_path(r'^amp-filters/$',
             GroupFilterViewSet.as_view(http_method_names=['get']),
             name="amp-group-filters"),
+    # TODO: Check if still needed and if needs to be restricted
     re_path(r'^(?P<pk>[0-9]+)/$', UsersDetailAPIView.as_view(http_method_names=['get']), name="user-detail"),
+    # TODO: restrict:
     re_path(r'^AD/(?P<username>.*)$', ADUserAPIView.as_view(http_method_names=['get', ]), name="ad-user-api-view"),
+
     re_path(r'^', include(root_api.urls)),
     re_path(r'^$', UsersListAPIView.as_view(), name="users-list"),
 )

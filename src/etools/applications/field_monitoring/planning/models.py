@@ -6,6 +6,7 @@ from django.contrib.contenttypes.fields import GenericRelation
 from django.db import connection, models, transaction
 from django.db.models import Count, Exists, OuterRef, Q
 from django.db.models.base import ModelBase
+from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 
 from django_fsm import FSMField, transition
@@ -25,7 +26,7 @@ from etools.applications.field_monitoring.fm_settings.models import LocationSite
 from etools.applications.field_monitoring.planning.mixins import ProtectUnknownTransitionsMeta
 from etools.applications.field_monitoring.planning.transitions.permissions import (
     user_is_field_monitor_permission,
-    user_is_pme_permission,
+    user_is_pme_or_approver_permission,
     user_is_visit_lead_permission,
 )
 from etools.applications.locations.models import Location
@@ -33,7 +34,6 @@ from etools.applications.partners.models import Intervention, PartnerOrganizatio
 from etools.applications.reports.models import Result, Section
 from etools.applications.tpm.models import PME
 from etools.applications.tpm.tpmpartners.models import TPMPartner
-from etools.applications.users.models import User
 from etools.libraries.djangolib.models import SoftDeleteMixin
 from etools.libraries.djangolib.utils import get_environment
 
@@ -201,12 +201,14 @@ class MonitoringActivity(
             lambda i, old_instance=None, user=None: i.close_offline_blueprints(old_instance),
             lambda i, old_instance=None, user=None: i.port_findings_to_summary(old_instance),
             lambda i, old_instance=None, user=None: i.send_rejection_note(old_instance),
+            lambda i, old_instance=None, user=None: i.remember_reviewed_by(old_instance, user),
         ],
         STATUSES.submitted: [
             lambda i, old_instance=None, user=None: i.send_submit_notice(),
         ],
         STATUSES.completed: [
             lambda i, old_instance=None, user=None: i.update_one_hact_value(),
+            lambda i, old_instance=None, user=None: i.remember_reviewed_by(old_instance, user),
         ],
         STATUSES.cancelled: [
             lambda i, old_instance=None, user=None: i.close_offline_blueprints(old_instance),
@@ -239,6 +241,12 @@ class MonitoringActivity(
     visit_lead = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True,
                                    verbose_name=_('Person Responsible'), related_name='+',
                                    on_delete=models.SET_NULL)
+
+    report_reviewer = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True,
+                                        verbose_name=_('Report Reviewer'), related_name='activities_to_review',
+                                        on_delete=models.SET_NULL)
+    reviewed_by = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, verbose_name=_('Reviewed By'),
+                                    related_name='activities_reviewed', on_delete=models.SET_NULL)
 
     field_office = models.ForeignKey('reports.Office', blank=True, null=True, verbose_name=_('Field Office'),
                                      on_delete=models.CASCADE)
@@ -335,15 +343,21 @@ class MonitoringActivity(
     def destination_str(self):
         return str(self.location_site) if self.location_site else str(self.location)
 
+    @cached_property
+    def country_pmes(self):
+        return get_user_model().objects.filter(
+            profile__country=connection.tenant
+        ).filter(
+            realms__group__name=PME.name,
+            realms__country=connection.tenant,
+            realms__is_active=True
+        )
+
     def check_if_rejected(self, old_instance):
         # if rejected send notice
         if old_instance and old_instance.status == self.STATUSES.assigned:
             email_template = "fm/activity/reject"
-            recipients = User.objects\
-                .prefetch_related('realms')\
-                .filter(realms__group=PME.as_group(),
-                        realms__country=connection.tenant,
-                        )
+            recipients = self.country_pmes
             for recipient in recipients:
                 self._send_email(
                     recipient.email,
@@ -353,9 +367,12 @@ class MonitoringActivity(
                 )
 
     def send_submit_notice(self):
-        recipients = PME.as_group().user_set.filter(
-            profile__country=connection.tenant,
-        )
+        if self.report_reviewer:
+            recipients = [self.report_reviewer]
+        else:
+            # edge case: if visit was already sent to tpm before report reviewer has become mandatory, apply old logic
+            recipients = self.country_pmes
+
         if self.monitor_type == self.MONITOR_TYPE_CHOICES.staff:
             email_template = 'fm/activity/staff-submit'
         else:
@@ -561,12 +578,12 @@ class MonitoringActivity(
         pass
 
     @transition(field=status, source=STATUSES.submitted, target=STATUSES.completed,
-                permission=user_is_pme_permission)
+                permission=user_is_pme_or_approver_permission)
     def complete(self):
         pass
 
     @transition(field=status, source=STATUSES.submitted, target=STATUSES.report_finalization,
-                permission=user_is_pme_permission)
+                permission=user_is_pme_or_approver_permission)
     def reject_report(self):
         pass
 
@@ -652,6 +669,12 @@ class MonitoringActivity(
                 context={'recipient': old_instance.visit_lead.get_full_name()},
                 user=old_instance.visit_lead
             )
+
+    def remember_reviewed_by(self, old_instance, user):
+        if old_instance and user and (old_instance.status == self.STATUSES.submitted and
+                                      self.status in [self.STATUSES.completed, self.STATUSES.report_finalization]):
+            self.reviewed_by = user
+            self.save()
 
     def activity_overall_findings(self):
         return self.overall_findings.annotate_for_activity_export()

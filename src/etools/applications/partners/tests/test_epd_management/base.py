@@ -12,7 +12,7 @@ from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.models import Intervention
-from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, UNICEF_USER
+from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, PRC_SECRETARY, UNICEF_USER
 from etools.applications.partners.tests.factories import InterventionFactory, InterventionReviewFactory, PartnerFactory
 from etools.applications.reports.tests.factories import (
     CountryProgrammeFactory,
@@ -30,6 +30,9 @@ class BaseTestCase(BaseTenantTestCase):
         self.unicef_user = UserFactory(is_staff=True)
         self.partnership_manager = UserFactory(
             is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]
+        )
+        self.prc_secretary = UserFactory(
+            is_staff=True, realms__data=[UNICEF_USER, PRC_SECRETARY]
         )
         self.partner = PartnerFactory(
             organization=OrganizationFactory(vendor_number=fuzzy.FuzzyText(length=20).fuzz())

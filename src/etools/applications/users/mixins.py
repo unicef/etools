@@ -1,6 +1,7 @@
 from django.contrib.auth.models import Group
 
-PARTNER_ACTIVE_GROUPS = ["IP Viewer", "IP Editor", "IP Authorized Officer", "IP Admin"]
+AMP_ACTIVE_GROUPS = ["IP Viewer", "IP Editor", "IP Authorized Officer", "IP Admin"]
+PARTNER_ACTIVE_GROUPS = AMP_ACTIVE_GROUPS + ["IP LM Editor"]
 # todo: create single source of truth here and for wrappers like tpm.models.ThirdPartyMonitor. GroupWrapper for caching
 AUDIT_ACTIVE_GROUPS = ["UNICEF Audit Focal Point", "Auditor"]
 TPM_ACTIVE_GROUPS = ["Third Party Monitor"]
@@ -8,7 +9,7 @@ TPM_ACTIVE_GROUPS = ["Third Party Monitor"]
 
 ORGANIZATION_GROUP_MAP = {
     "audit": ['Auditor'],
-    "partner": PARTNER_ACTIVE_GROUPS,
+    "partner": AMP_ACTIVE_GROUPS,
     "tpm": TPM_ACTIVE_GROUPS,
 }
 
@@ -29,12 +30,14 @@ class GroupEditPermissionMixin:
         "IP Authorized Officer": {"partner": ["IP Viewer", "IP Editor", "IP Authorized Officer"]},
         "UNICEF User": {},
         "PME": {"tpm": TPM_ACTIVE_GROUPS},
-        "Partnership Manager": {"partner": PARTNER_ACTIVE_GROUPS},
+        "Partnership Manager": {"partner": AMP_ACTIVE_GROUPS},
         "UNICEF Audit Focal Point": {"audit": ["Auditor"]},
     }
 
     CAN_ADD_USER = ["IP Admin", "IP Authorized Officer", "PME",
                     "Partnership Manager", "UNICEF Audit Focal Point"]
+
+    CAN_REVIEW_USER = ["User Reviewer"]
 
     def get_user_allowed_groups(self, organization_types, user=None):
         groups_allowed_editing = []
@@ -51,3 +54,6 @@ class GroupEditPermissionMixin:
 
     def can_add_user(self):
         return self.request.user.groups.filter(name__in=self.CAN_ADD_USER).exists()
+
+    def can_review_user(self):
+        return self.request.user.groups.filter(name__in=self.CAN_REVIEW_USER).exists()

@@ -144,7 +144,7 @@ class LocationsCountryView(views.APIView):
 
 
 class FMLocationsViewSet(FMBaseViewSet, mixins.ListModelMixin, viewsets.GenericViewSet):
-    queryset = Location.objects.active()
+    queryset = Location.objects.all_with_geom().filter(is_active=True)
     serializer_class = LocationFullSerializer
     filter_backends = (DjangoFilterBackend, SearchFilter)
     filter_fields = ('level', 'parent')
@@ -222,7 +222,7 @@ class QuestionsViewSet(
     permission_classes = FMBaseViewSet.permission_classes + [
         IsReadAction | (IsEditAction & IsPME)
     ]
-    queryset = Question.objects.prefetch_related('options').order_by('-id')
+    queryset = Question.objects.prefetch_related('options').order_by('order', 'text')
     serializer_class = QuestionSerializer
     filter_backends = (DjangoFilterBackend, OrderingFilter)
     filter_class = QuestionsFilterSet

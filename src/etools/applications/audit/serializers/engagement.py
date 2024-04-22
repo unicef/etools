@@ -289,7 +289,7 @@ class EngagementSerializer(
             'start_date', 'end_date', 'partner_contacted_at', 'date_of_field_visit', 'date_of_draft_report_to_ip',
             'date_of_comments_by_ip', 'date_of_draft_report_to_unicef', 'date_of_comments_by_unicef',
             'date_of_report_submit', 'date_of_final_report', 'date_of_cancel',
-            'cancel_comment', 'specific_procedures',
+            'cancel_comment', 'send_back_comment', 'specific_procedures',
             'engagement_attachments',
             'report_attachments',
             'final_report',
@@ -472,7 +472,8 @@ class MicroAssessmentSerializer(ActivePDValidationMixin, RiskCategoriesUpdateMix
         required=False,
     )
     test_subject_areas = RiskRootSerializer(
-        code='ma_subject_areas', required=False, label=_('Tested Subject Areas')
+        lambda ma: MicroAssessment.get_subject_areas_code(ma.questionnaire_version),
+        required=False, label=_('Tested Subject Areas')
     )
     overall_risk_assessment = RiskRootSerializer(
         code='ma_global_assessment', required=False, label=_('Overall Risk Assessment'),

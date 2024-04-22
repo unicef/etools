@@ -1,5 +1,4 @@
 from datetime import datetime
-from unittest import skip
 from unittest.mock import Mock, patch
 
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -10,6 +9,7 @@ from django.utils.translation import gettext as _
 
 from factory import fuzzy
 from rest_framework import status
+from tablib import Dataset
 from unicef_attachments.models import AttachmentLink
 
 from etools.applications.action_points.tests.factories import ActionPointFactory
@@ -485,8 +485,7 @@ class TestTPMActionPointViewSet(TPMTestCaseMixin, BaseTenantTestCase):
 
 class TestTPMStaffMembersViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase):
     def test_list_view(self):
-        # TODO REALMS improve queries perf
-        with self.assertNumQueries(21):
+        with self.assertNumQueries(11):
             response = self.forced_auth_req(
                 'get',
                 reverse('tpm:tpmstaffmembers-list', args=(self.tpm_partner.id,)),
@@ -524,8 +523,7 @@ class TestTPMStaffMembersViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTe
             [staff['pk'] for staff in response.data['results'] if not staff['has_active_realm']])
 
     def test_detail_view(self):
-        # TODO REALMS improve queries perf
-        with self.assertNumQueries(28):
+        with self.assertNumQueries(16):
             response = self.forced_auth_req(
                 'get',
                 reverse('tpm:tpmstaffmembers-detail',
@@ -549,76 +547,6 @@ class TestTPMStaffMembersViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTe
             user=self.unicef_user
         )
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-
-    @skip('TODO: REALMS - users are not editable through tpm portal anymore')
-    def test_create_view(self):
-        user_data = {
-            "user": {
-                "email": "test_email_1@gmail.com",
-                "first_name": "John",
-                "last_name": "Doe"
-            }
-        }
-
-        response = self.forced_auth_req(
-            'post',
-            reverse('tpm:tpmstaffmembers-list', args=(self.tpm_partner.id,)),
-            data=user_data,
-            user=self.pme_user
-        )
-        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
-
-        response = self.forced_auth_req(
-            'post',
-            reverse('tpm:tpmstaffmembers-list', args=(self.tpm_partner.id,)),
-            data=user_data,
-            user=self.tpm_user
-        )
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
-
-        response = self.forced_auth_req(
-            'post',
-            reverse('tpm:tpmstaffmembers-list', args=(self.tpm_partner.id,)),
-            data=user_data,
-            user=self.unicef_user
-        )
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
-
-    @skip('TODO: REALMS - users are not editable through tpm portal anymore')
-    def test_update_view(self):
-        user_data = {
-            "user": {
-                "first_name": "John",
-                "last_name": "Doe"
-            }
-        }
-
-        response = self.forced_auth_req(
-            'patch',
-            reverse('tpm:tpmstaffmembers-detail',
-                    args=(self.tpm_partner.id, self.tpm_partner.staff_members.first().id)),
-            data=user_data,
-            user=self.pme_user
-        )
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-
-        response = self.forced_auth_req(
-            'patch',
-            reverse('tpm:tpmstaffmembers-detail',
-                    args=(self.tpm_partner.id, self.tpm_partner.staff_members.first().id)),
-            data=user_data,
-            user=self.tpm_user
-        )
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
-
-        response = self.forced_auth_req(
-            'patch',
-            reverse('tpm:tpmstaffmembers-detail',
-                    args=(self.tpm_partner.id, self.tpm_partner.staff_members.first().id)),
-            data=user_data,
-            user=self.unicef_user
-        )
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_staff_members_csv(self):
         self._test_export(self.pme_user, 'tpm:tpmstaffmembers-export', args=(self.tpm_partner.id,))
@@ -754,8 +682,24 @@ class TestTPMPartnerViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCas
     def test_tpm_partner_detail_options(self):
         self._test_detail_options(self.tpm_user, can_update=False)
 
-    def test_partners_csv(self):
-        self._test_export(self.pme_user, 'tpm:partners-export')
+    def test_partners_csv_pme_user(self):
+        response = self._test_export(self.pme_user, 'tpm:partners-export')
+
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
+        self.assertEqual(dataset.height, 2)
+        self.assertEqual(dataset[0][1], self.tpm_partner.name)
+        self.assertEqual(dataset[1][1], self.second_tpm_partner.name)
+
+    def test_partners_csv_empty_list_external_user(self):
+        external_user = UserFactory(realms__data=['IP Admin'])
+        response = self._test_export(external_user, 'tpm:partners-export')
+
+        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
+        self.assertEqual(dataset.height, 0)
+        self.assertEqual(
+            dataset._get_headers(),
+            ['Vendor Number', 'TPM Name', 'Address', 'Postal Code', 'City', 'Phone Number', 'Email Address']
+        )
 
 
 class TestPartnerAttachmentsView(TPMTestCaseMixin, BaseTenantTestCase):

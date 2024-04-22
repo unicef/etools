@@ -5,10 +5,16 @@ from etools.applications.action_points.conditions import (
     ActionPointAssigneeCondition,
     ActionPointAuthorCondition,
     ActionPointModuleCondition,
+    ActionPointNotAuthorCondition,
+    ActionPointPotentialVerifierCondition,
+    HighPriorityActionPointCondition,
+    LowPriorityActionPointCondition,
+    NotVerifiedActionPointCondition,
+    PotentialVerifierProvidedCondition,
     RelatedActionPointCondition,
     UnRelatedActionPointCondition,
 )
-from etools.applications.action_points.models import ActionPoint, PME, UNICEFUser
+from etools.applications.action_points.models import ActionPoint, OperationsGroup, PME, UNICEFUser
 from etools.applications.permissions2.conditions import GroupCondition, NewObjectCondition, ObjectStatusCondition
 from etools.applications.permissions2.models import Permission
 from etools.applications.permissions2.utils import get_model_target
@@ -55,6 +61,11 @@ class Command(BaseCommand):
     related_action_point_edit = action_point_base_edit
     not_related_action_point_edit = action_point_base_edit + action_point_pmp_relations
 
+    # verification
+    action_point_verification_process_edit = [
+        'action_points.actionpoint.is_adequate',
+    ]
+
     # common fields, should be visible always
     action_point_list = [
         'action_points.actionpoint.reference_number',
@@ -80,6 +91,10 @@ class Command(BaseCommand):
 
         'action_points.actionpoint.created',
         'action_points.actionpoint.date_of_completion',
+        'action_points.actionpoint.date_of_verification',
+        'action_points.actionpoint.verified_by',
+        'action_points.actionpoint.is_adequate',
+        'action_points.actionpoint.potential_verifier',
 
         'action_points.actionpoint.comments',
         'action_points.actionpoint.history',
@@ -87,12 +102,16 @@ class Command(BaseCommand):
 
     unicef_user = 'unicef_user'
     pme = 'pme'
+    operations = 'operations'
     author = 'author'
     assigned_by = 'assigned_by'
     assignee = 'assignee'
+    potential_verifier = 'potential_verifier'
 
     user_roles = {
         pme: [GroupCondition.predicate_template.format(group=PME.name)],
+        operations: [GroupCondition.predicate_template.format(group=OperationsGroup.name)],
+        potential_verifier: [ActionPointPotentialVerifierCondition.predicate],
         unicef_user: [GroupCondition.predicate_template.format(group=UNICEFUser.name)],
         author: [ActionPointAuthorCondition.predicate],
         assigned_by: [ActionPointAssignedByCondition.predicate],
@@ -148,6 +167,21 @@ class Command(BaseCommand):
     def not_related_action_point(self):
         return [UnRelatedActionPointCondition.predicate]
 
+    def not_verified_action_point(self):
+        return [NotVerifiedActionPointCondition.predicate]
+
+    def potential_verifier_provided(self):
+        return [PotentialVerifierProvidedCondition.predicate]
+
+    def high_priority_action_point(self):
+        return [HighPriorityActionPointCondition.predicate]
+
+    def low_priority_action_point(self):
+        return [LowPriorityActionPointCondition.predicate]
+
+    def not_author(self):
+        return [ActionPointNotAuthorCondition.predicate]
+
     def handle(self, *args, **options):
         self.verbosity = options.get('verbosity', 1)
 
@@ -202,9 +236,25 @@ class Command(BaseCommand):
             condition=self.action_point_status(ActionPoint.STATUSES.open) + self.not_related_action_point()
         )
 
+        # completion is different for high & low priority action points
         self.add_permission(
-            [self.pme, self.author, self.assigned_by, self.assignee],
+            [self.pme, self.assigned_by, self.assignee, self.author],
             'action',
             'action_points.actionpoint.complete',
-            condition=self.action_point_status(ActionPoint.STATUSES.open)
+            condition=self.action_point_status(ActionPoint.STATUSES.open) + self.low_priority_action_point()
+        )
+
+        # if high priority, unlock verification process
+        self.add_permission(
+            [self.pme, self.operations, self.potential_verifier],
+            'edit',
+            self.action_point_verification_process_edit,
+            condition=self.action_point_status(ActionPoint.STATUSES.completed) + self.high_priority_action_point() + self.not_author() + self.not_verified_action_point()
+        )
+        # require potential verifier to be provided if transition performs by author even if it has PME group
+        self.add_permission(
+            [self.pme, self.assigned_by, self.assignee, self.author],
+            'action',
+            'action_points.actionpoint.complete',
+            condition=self.action_point_status(ActionPoint.STATUSES.open) + self.high_priority_action_point()
         )

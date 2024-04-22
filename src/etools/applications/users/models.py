@@ -2,7 +2,15 @@ import logging
 from decimal import Decimal
 
 from django.conf import settings
-from django.contrib.auth.models import _user_get_permissions, AbstractBaseUser, Group, Permission, UserManager
+from django.contrib.auth.models import (
+    _user_get_permissions,
+    _user_has_module_perms,
+    _user_has_perm,
+    AbstractBaseUser,
+    Group,
+    Permission,
+    UserManager,
+)
 from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
@@ -33,18 +41,6 @@ class PermissionsMixin(models.Model):
     Add the fields and methods necessary to support the Group and Permission
     models using the ModelBackend.
     """
-    # TODO REALMS clean up
-    old_groups = models.ManyToManyField(
-        Group,
-        verbose_name=_('Old Groups'),
-        blank=True,
-        help_text=_(
-            'The groups this user belongs to. A user will get all permissions '
-            'granted to each of their groups.'
-        ),
-        related_name="user_set",
-        related_query_name="user",
-    )
     user_permissions = models.ManyToManyField(
         Permission,
         verbose_name=_('user permissions'),
@@ -84,10 +80,12 @@ class PermissionsMixin(models.Model):
         assumed to have permission in general. If an object is provided, check
         permissions for that object.
         """
-        # Active superusers and staff have all permissions.
-        if self.is_active and (self.is_superuser or self.is_staff):
+        # Active superusers have all permissions.
+        if self.is_active and self.is_superuser:
             return True
-        return False
+
+        # Otherwise we need to check the backends.
+        return _user_has_perm(self, perm, obj)
 
     def has_perms(self, perm_list, obj=None):
         """
@@ -101,10 +99,11 @@ class PermissionsMixin(models.Model):
         Return True if the user has any permissions in the given app label.
         Use similar logic as has_perm(), above.
         """
-        # Active superusers and staff have all permissions.
-        if self.is_active and (self.is_superuser or self.is_staff):
+        # Active superusers have all permissions.
+        if self.is_active and self.is_superuser:
             return True
-        return False
+
+        return _user_has_module_perms(self, app_label)
 
 
 class UsersManager(UserManager):
@@ -113,6 +112,16 @@ class UsersManager(UserManager):
         return super().get_queryset() \
             .select_related('profile', 'profile__country', 'profile__country_override',
                             'profile__organization', 'profile__office')
+
+    def base_qs(self):
+        return super().get_queryset().prefetch_related(None).only(
+            'id',
+            'first_name',
+            'last_name',
+            'middle_name',
+            'is_active',
+            'email'
+        )
 
 
 class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
@@ -176,7 +185,6 @@ class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
 
     @cached_property
     def is_partnership_manager(self):
-        # TODO REALMS: clean up task: make sure it checks when the current organization is UNICEF
         return self.realms.filter(
             country=connection.tenant,
             organization=self.profile.organization,
@@ -225,15 +233,6 @@ class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
             except realm.organization._meta.get_field('partner').related_model.DoesNotExist:
                 return None
         return None
-
-    # TODO REALMS: clean up
-    # def get_staff_member_country(self):
-    #     from etools.applications.partners.models import PartnerStaffMember
-    #     for country in Country.objects.exclude(name__in=[get_public_schema_name(), 'Global']).all():
-    #         with tenant_context(country):
-    #             if PartnerStaffMember.objects.filter(user=self).exists():
-    #                 return country
-    #     return None
 
     def get_admin_url(self):
         info = (self._meta.app_label, self._meta.model_name)
@@ -396,8 +395,7 @@ class Office(models.Model):
 class UserProfileManager(models.Manager):
     def get_queryset(self):
         return super().get_queryset()\
-            .select_related('user', 'country', 'country_override', 'organization')\
-            .prefetch_related('old_countries_available')  # TODO REALMS clean up
+            .select_related('user', 'country', 'country_override', 'organization')
 
 
 class UserProfile(models.Model):
@@ -429,11 +427,6 @@ class UserProfile(models.Model):
     organization = models.ForeignKey(
         Organization, null=True, blank=True, verbose_name=_('Current Organization'),
         on_delete=models.CASCADE
-    )
-    # TODO REALMS clean up
-    old_countries_available = models.ManyToManyField(
-        Country, blank=True, related_name="accessible_by",
-        verbose_name=_('Old Countries Available')
     )
     office = models.ForeignKey(
         Office, null=True, blank=True, verbose_name=_('Office'),
@@ -503,43 +496,6 @@ class UserProfile(models.Model):
         """
         if not cls.objects.filter(user=instance).exists():
             cls.objects.create(user=instance)
-
-    @classmethod
-    def custom_update_user(cls, sender, attributes, user_modified, **kwargs):
-        # This signal is called on every login
-        mods_made = False
-
-        # make sure this setting is not already set.
-        if not sender.is_staff:
-            try:
-                g = Group.objects.get(name='UNICEF User')
-            except Group.DoesNotExist:
-                logger.exception('Cannot find main group UNICEF User')
-            else:
-                g.user_set.add(sender)
-
-            sender.is_staff = True
-            sender.save()
-            mods_made = True
-
-        new_country = None
-        adfs_country = attributes.get("businessAreaCode")
-        if sender.profile.country_override:
-            new_country = sender.profile.country_override
-        elif adfs_country:
-            try:
-                new_country = Country.objects.get(business_area_code=adfs_country[0])
-            except Country.DoesNotExist:
-                logger.exception("Login - Business Area: %s not found for user %s", adfs_country[0], sender.email)
-                return False
-
-        if new_country and new_country != sender.profile.country:
-            # sender.profile.countries_available.add(new_country)
-            sender.profile.country = new_country
-            sender.profile.save()
-            return True
-
-        return mods_made
 
     def save(self, **kwargs):
 
@@ -612,9 +568,43 @@ class Realm(TimeStampedModel):
         self.user.update_active_state()
 
 
-# TODO REALMS: clean up: drop the wrappers
+class StagedUser(models.Model):
+    """
+    Represents the users awaiting review in AMP.
+    When a user is accepted by a User Reviewer, a new user will be created along with its realms.
+    """
+
+    PENDING = 'pending'
+    ACCEPTED = 'accepted'
+    DECLINED = 'declined'
+
+    REQUEST_STATE = (
+        (PENDING, _("Pending")),
+        (ACCEPTED, _('Accepted')),
+        (DECLINED, _('Declined')),
+    )
+
+    user_json = models.JSONField()
+
+    requester = models.ForeignKey(User, related_name="requested_users", on_delete=models.CASCADE)
+    reviewer = models.ForeignKey(User, related_name="reviewed_users", null=True, blank=True, on_delete=models.SET_NULL)
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
+    country = models.ForeignKey(Country, on_delete=models.CASCADE)
+
+    request_state = models.CharField(max_length=10, choices=REQUEST_STATE, default=PENDING)
+    state_timestamp = models.DateTimeField(_('state timestamp'), auto_now=True)
+
+    @transaction.atomic
+    def save(self, *args, **kwargs):
+        if self.requester == self.reviewer:
+            raise ValidationError(_("The requester cannot review its own requests."))
+
+        super().save(*args, **kwargs)
+
+
 IPViewer = GroupWrapper(code='ip_viewer', name='IP Viewer')
 IPEditor = GroupWrapper(code='ip_editor', name='IP Editor')
 IPAdmin = GroupWrapper(code='ip_admin', name='IP Admin')
 IPAuthorizedOfficer = GroupWrapper(code='ip_authorized_officer', name='IP Authorized Officer')
 PartnershipManager = GroupWrapper(code='partnership_manager', name='Partnership Manager')
+UserReviewer = GroupWrapper(code='partnership_manager', name='User Reviewer')

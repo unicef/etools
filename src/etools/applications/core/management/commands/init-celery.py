@@ -73,4 +73,9 @@ class Command(BaseCommand):
             'enabled': False,
             'crontab': first_day_of_the_month})
 
+        PeriodicTask.objects.get_or_create(name='Deactivate inactive users', defaults={
+            'task': 'users.tasks.deactivate_stale_users',
+            'enabled': False,
+            'interval': every_two_weeks})
+
         logger.info('Init Celery command finished')

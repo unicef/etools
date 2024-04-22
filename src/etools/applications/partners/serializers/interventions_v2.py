@@ -108,8 +108,6 @@ class PartnerStaffMemberUserSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'email', 'first_name', 'last_name', 'created', 'modified',
             'active', 'phone', 'title',
-            # TODO REALMS check with frontend if partner id is used
-            # 'partner'
         )
 
 
@@ -209,19 +207,19 @@ class PlannedVisitSitesQuarterSerializer(fields.ListField):
         return self.child_serializer(data, many=True).data
 
     def save(self, planned_visits: InterventionPlannedVisits, sites: list[LocationSite]):
-        sites = set(sites)
+        sites = set(site.id for site in sites)
         planned_sites = set(InterventionPlannedVisitSite.objects.filter(
             planned_visits=planned_visits,
             quarter=self.quarter,
-        ))
+        ).values_list('site_id', flat=True))
         sites_to_create = sites - planned_sites
         sites_to_delete = planned_sites - sites
         InterventionPlannedVisitSite.objects.bulk_create((
-            InterventionPlannedVisitSite(planned_visits=planned_visits, quarter=self.quarter, site=site)
-            for site in sites_to_create
+            InterventionPlannedVisitSite(planned_visits=planned_visits, quarter=self.quarter, site_id=site_id)
+            for site_id in sites_to_create
         ))
         InterventionPlannedVisitSite.objects.filter(
-            planned_visits=planned_visits, quarter=self.quarter, site__in=sites_to_delete,
+            planned_visits=planned_visits, quarter=self.quarter, site_id__in=sites_to_delete,
         ).delete()
 
 
@@ -1308,6 +1306,12 @@ class InterventionReportingRequirementCreateSerializer(
         """
         self.intervention = self.context["intervention"]
 
+        # TODO: [e4] remove this whenever a better validation is decided on. This is out of place but needed as a hotfix
+        # take into consideration the reporting requirements edit rights on the intervention
+        # move this into permissions when time allows
+        permissions = self.context.get("intervention_permissions")
+        can_edit = permissions['edit'].get("reporting_requirements") if permissions else True
+
         if self.intervention.status != Intervention.DRAFT:
             if self.intervention.status == Intervention.TERMINATED:
                 ended = self.intervention.end < datetime.now().date() if self.intervention.end else True
@@ -1316,6 +1320,10 @@ class InterventionReportingRequirementCreateSerializer(
                         _("Changes not allowed when PD is terminated.")
                     )
             elif self.intervention.contingency_pd and self.intervention.status == Intervention.SIGNED:
+                pass
+            # TODO: [e4] remove this whenever a better validation is decided on.
+            # This is out of place but needed as a hotfix, can edit should be checked at the view level consistently
+            elif self.intervention.status == Intervention.SIGNATURE and can_edit:
                 pass
             else:
                 if not self.intervention.in_amendment and not self.intervention.termination_doc_attachment.exists():

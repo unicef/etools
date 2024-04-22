@@ -1,7 +1,6 @@
 import datetime
 import json
 import random
-from unittest import skip
 from unittest.mock import Mock, patch
 
 from django.contrib.contenttypes.models import ContentType
@@ -231,7 +230,7 @@ class TestMARisksViewSet(BaseTestCategoryRisksViewSet, BaseTenantTestCase):
             allowed_user=self.auditor
         )
         self._test_engagement_categories(
-            category_code='ma_subject_areas', field_name='test_subject_areas',
+            category_code='ma_subject_areas_v2', field_name='test_subject_areas',
             allowed_user=self.auditor
         )
 
@@ -253,7 +252,7 @@ class TestMARisksViewSet(BaseTestCategoryRisksViewSet, BaseTenantTestCase):
             allowed_user=self.auditor
         )
         self._update_unexisted_blueprint(
-            field_name='test_subject_areas', category_code='ma_subject_areas',
+            field_name='test_subject_areas', category_code='ma_subject_areas_v2',
             allowed_user=self.auditor
         )
 
@@ -978,6 +977,16 @@ class TestMetadataDetailViewSet(EngagementTransitionsTestCaseMixin):
             risk_fields['value']['choices']
         )
 
+    def _test_send_back_comment(self):
+        response = self.forced_auth_req(
+            'options',
+            '/api/audit/{}/{}/'.format(self.endpoint, self.engagement.id),
+            user=self.auditor
+        )
+        self.assertIn('GET', response.data['actions'])
+        get = response.data['actions']['GET']
+        self.assertIn('send_back_comment', get)
+
 
 class TestEngagementMetadataViewSet(AuditTestCaseMixin, BaseTenantTestCase):
     endpoint = "engagements"
@@ -1001,6 +1010,15 @@ class TestMicroAssessmentMetadataDetailViewSet(TestMetadataDetailViewSet, BaseTe
 
     def test_subject_areas_choices(self):
         self._test_risk_choices('test_subject_areas', Risk.VALUES)
+
+    def test_send_back_comment_ip_contacted(self):
+        self.assertEqual(self.engagement.status, Engagement.PARTNER_CONTACTED)
+        self._test_send_back_comment()
+
+    def test_send_back_comment_submitted(self):
+        self._init_submitted_engagement()
+        self.assertEqual(self.engagement.status, Engagement.REPORT_SUBMITTED)
+        self._test_send_back_comment()
 
 
 class TestAuditMetadataDetailViewSet(TestMetadataDetailViewSet, BaseTenantTestCase):
@@ -1231,180 +1249,6 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, BaseTenantTestCase):
                 self.auditor_firm.id,
                 self.auditor_firm.staff_members.first().id
             ),
-            user=self.usual_user
-        )
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-
-    @skip('TODO: REALMS - users are not editable through auditor portal anymore')
-    def test_unicef_create_view(self):
-        response = self.forced_auth_req(
-            'post',
-            '/api/audit/audit-firms/{0}/staff-members/'.format(self.auditor_firm.id),
-            data={
-                "user": {
-                    "email": "test_email_1@gmail.com",
-                    "first_name": "John",
-                    "last_name": "Doe"
-                }
-            },
-            user=self.unicef_focal_point
-        )
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
-    @skip('TODO: REALMS - users are not editable through auditor portal anymore')
-    def test_assign_existing_user(self):
-        user = UserFactory()
-
-        response = self.forced_auth_req(
-            'post',
-            '/api/audit/audit-firms/{0}/staff-members/'.format(self.auditor_firm.id),
-            data={
-                "user_pk": user.pk
-            },
-            user=self.unicef_focal_point
-        )
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['user']['email'], user.email)
-
-    @skip('TODO: REALMS - users are not editable through auditor portal anymore')
-    def test_assign_existing_auditor(self):
-        user = AuditorUserFactory()
-
-        response = self.forced_auth_req(
-            'post',
-            '/api/audit/audit-firms/{0}/staff-members/'.format(self.auditor_firm.id),
-            data={
-                "user_pk": user.pk
-            },
-            user=self.unicef_focal_point
-        )
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('user', response.data)
-        self.assertIn('User is already assigned to', response.data['user'][0])
-
-    @skip('TODO: REALMS - users are not editable through auditor portal anymore')
-    def test_deactivate_auditor_flow(self):
-        user = AuditorUserFactory(partner_firm=self.auditor_firm, is_active=True)
-
-        list_response = self.forced_auth_req(
-            'get',
-            '/api/audit/audit-firms/{}/staff-members/'.format(self.auditor_firm.id),
-            user=self.unicef_focal_point
-        )
-
-        self.assertEqual(list_response.status_code, status.HTTP_200_OK)
-        self.assertIn(
-            user.id,
-            [r['id'] for r in list_response.data['results']]
-        )
-
-        del_response = self.forced_auth_req(
-            'delete',
-            '/api/audit/audit-firms/{}/staff-members/{}/'.format(self.auditor_firm.id,
-                                                                 user.id),
-            user=self.unicef_focal_point
-        )
-        self.assertEqual(del_response.status_code, status.HTTP_204_NO_CONTENT)
-
-        deleted_list_response = self.forced_auth_req(
-            'get',
-            '/api/audit/audit-firms/{}/staff-members/'.format(self.auditor_firm.id),
-            user=self.unicef_focal_point
-        )
-
-        self.assertEqual(deleted_list_response.status_code, status.HTTP_200_OK)
-        self.assertNotIn(
-            user.id,
-            [r['id'] for r in deleted_list_response.data['results']]
-        )
-
-        activate_response = self.forced_auth_req(
-            'patch',
-            '/api/audit/audit-firms/{}/staff-members/{}/'.format(self.auditor_firm.id,
-                                                                 user.id),
-            user=self.unicef_focal_point,
-            data={
-                'hidden': False,
-                'user': {
-                    'is_active': True
-                }
-            }
-        )
-        self.assertEqual(activate_response.status_code, status.HTTP_200_OK, activate_response.data)
-
-        updated_list_response = self.forced_auth_req(
-            'get',
-            '/api/audit/audit-firms/{}/staff-members/'.format(self.auditor_firm.id),
-            user=self.unicef_focal_point
-        )
-
-        self.assertEqual(updated_list_response.status_code, status.HTTP_200_OK)
-        self.assertIn(
-            user.id,
-            [r['id'] for r in list_response.data['results']]
-        )
-
-    @skip('TODO: REALMS - users are not editable through auditor portal anymore')
-    def test_assign_none_provided(self):
-        response = self.forced_auth_req(
-            'post',
-            '/api/audit/audit-firms/{0}/staff-members/'.format(self.auditor_firm.id),
-            data={},
-            user=self.unicef_focal_point
-        )
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('user', response.data)
-        self.assertEqual(response.data['user'][0], 'This field is required.')
-
-    @skip('TODO: REALMS - users are not editable through auditor portal anymore')
-    def test_usual_user_create_view(self):
-        response = self.forced_auth_req(
-            'post',
-            '/api/audit/audit-firms/{0}/staff-members/'.format(self.auditor_firm.id),
-            data={
-                "user": {
-                    "email": "test_email_2@gmail.com",
-                    "first_name": "John",
-                    "last_name": "Doe"
-                }
-            },
-            user=self.usual_user
-        )
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-
-    @skip('TODO: REALMS - users are not editable through auditor portal anymore')
-    def test_unicef_update_view(self):
-        response = self.forced_auth_req(
-            'patch',
-            '/api/audit/audit-firms/{0}/staff-members/{1}/'.format(
-                self.auditor_firm.id,
-                self.auditor_firm.staff_members.first().id
-            ),
-            data={
-                "user": {
-                    "first_name": "John",
-                    "last_name": "Doe"
-                }
-            },
-            user=self.unicef_focal_point
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-    @skip('TODO: REALMS - users are not editable through auditor portal anymore')
-    def test_usual_user_update_view(self):
-        response = self.forced_auth_req(
-            'patch',
-            '/api/audit/audit-firms/{0}/staff-members/{1}/'.format(
-                self.auditor_firm.id,
-                self.auditor_firm.staff_members.first().id
-            ),
-            data={
-                "user": {
-                    "first_name": "John",
-                    "last_name": "Doe"
-                }
-            },
             user=self.usual_user
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)

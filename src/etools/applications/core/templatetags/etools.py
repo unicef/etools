@@ -66,6 +66,11 @@ def currency(value):
     return currency_format(value)
 
 
+@register.simple_tag
+def get_verbose_name(instance, field_name):
+    return instance._meta.get_field(field_name).verbose_name
+
+
 @register.filter
 def text_wrap(text, width=70):
     """
@@ -74,4 +79,4 @@ def text_wrap(text, width=70):
     https://github.com/nigma/django-easy-pdf/issues/65
     https://github.com/xhtml2pdf/xhtml2pdf/issues/379
     """
-    return ' '.join(wrap(text, width))
+    return ' '.join(wrap(text, width, break_on_hyphens=False))

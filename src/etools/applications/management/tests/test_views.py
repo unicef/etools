@@ -15,7 +15,12 @@ from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.field_monitoring.fm_settings.tests.factories import QuestionFactory
 from etools.applications.field_monitoring.planning.tests.factories import MonitoringActivityFactory
 from etools.applications.partners.models import Intervention
-from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, UNICEF_USER
+from etools.applications.partners.permissions import (
+    COUNTRY_OFFICE_ADMINISTRATOR,
+    PARTNERSHIP_MANAGER_GROUP,
+    RSS,
+    UNICEF_USER,
+)
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
     InterventionFactory,
@@ -329,6 +334,23 @@ class TestGisLocationViews(BaseTenantTestCase):
         self.assertEqual(len(response.data), 1)
         self.assertEqual(sorted(response.data[0].keys()), ["id", "level", "name", "p_code", "parent_id"])
 
+    def test_monitoring_activities_in_use(self):
+        MonitoringActivityFactory(
+            location=self.location_with_geom
+        )
+
+        response = self.forced_auth_req(
+            "get",
+            reverse("management_gis:locations-gis-in-use"),
+            user=self.unicef_staff,
+            data={"country_id": self.country.id},
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(sorted(response.data[0].keys()), ["id", "level", "name", "p_code", "parent_id"])
+        self.assertEqual(int(response.data[0]["id"]), self.location_with_geom.pk)
+
     def test_intervention_locations_geom_bad_request(self):
         url = reverse("management_gis:locations-gis-geom-list")
         # test with no country in the query string, expect error
@@ -560,3 +582,48 @@ class SectionManagementViewTestCase(BaseTenantTestCase):
         self.assertEqual(fm_activities.sections.first().name, 'New Section')
         self.assertEqual(question.sections.first().name, 'New Section')
         self.assertEqual(partner.lead_section.name, 'New Section')
+
+    def test_merge_unicef_user(self):
+        old_section = SectionFactory(name='Old Section')
+        user = UserFactory(is_staff=True, realms__data=[UNICEF_USER])
+
+        response = self.forced_auth_req(
+            'post',
+            reverse('management:sections_management-merge'),
+            user=user,
+            data={
+                'new_section_name': 'New Section',
+                'sections_to_merge': [old_section.id],
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
+
+    def test_merge_country_office_admin(self):
+        old_section = SectionFactory(name='Old Section')
+        user = UserFactory(is_staff=True, realms__data=[UNICEF_USER, COUNTRY_OFFICE_ADMINISTRATOR])
+
+        response = self.forced_auth_req(
+            'post',
+            reverse('management:sections_management-merge'),
+            user=user,
+            data={
+                'new_section_name': 'New Section',
+                'sections_to_merge': [old_section.id],
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+
+    def test_merge_rss(self):
+        old_section = SectionFactory(name='Old Section')
+        user = UserFactory(is_staff=True, realms__data=[UNICEF_USER, RSS])
+
+        response = self.forced_auth_req(
+            'post',
+            reverse('management:sections_management-merge'),
+            user=user,
+            data={
+                'new_section_name': 'New Section',
+                'sections_to_merge': [old_section.id],
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)

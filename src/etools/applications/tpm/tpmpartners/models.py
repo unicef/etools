@@ -43,6 +43,15 @@ class TPMPartner(BaseFirm):
             ).values_list('user_id', flat=True)
         )
 
+    @property
+    def all_staff_members(self) -> models.QuerySet:
+        return get_user_model().objects.filter(
+            pk__in=self.organization.realms.filter(
+                country=connection.tenant,
+                group__name__in=TPM_ACTIVE_GROUPS,
+            ).values_list('user_id', flat=True)
+        )
+
     def get_related_third_party_users(self):
         return self.staff_members.all()
 

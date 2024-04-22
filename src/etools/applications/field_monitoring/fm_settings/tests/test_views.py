@@ -875,7 +875,7 @@ class TestQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(len(response.data['results']), 5)
 
     def test_default_ordering(self):
-        questions = list(QuestionFactory.create_batch(2))
+        questions = [QuestionFactory(order=2), QuestionFactory(order=3)]
 
         response = self.forced_auth_req(
             'get',
@@ -885,13 +885,13 @@ class TestQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertListEqual(
             [r['id'] for r in response.data['results']],
-            [q.id for q in reversed(questions)]
+            [q.id for q in questions]
         )
 
-    def test_ordering_by_text(self):
+    def test_ordering(self):
         questions = [
-            QuestionFactory(text='a'),
-            QuestionFactory(text='b'),
+            QuestionFactory(text='a', order=1),
+            QuestionFactory(text='b', order=2),
         ]
 
         response = self.forced_auth_req(
@@ -908,14 +908,35 @@ class TestQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
             [q.id for q in questions]
         )
 
+    def test_similar_order(self):
+        # since we're using text as secondary ordering, create elements with descendant text to check it does work
+        questions = [
+            QuestionFactory(text=str(chr(ord('z') - i)), order=1)
+            for i in range(10)
+        ]
+
+        response = self.forced_auth_req(
+            'get',
+            reverse('field_monitoring_settings:questions-list'),
+            user=self.usual_user,
+            data={
+                'page_size': 100
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertListEqual(
+            [r['id'] for r in response.data['results']],
+            [q.id for q in reversed(questions)]
+        )
+
     def test_filter_by_methods(self):
         first_method = MethodFactory()
         second_method = MethodFactory()
 
         valid_questions = [
-            QuestionFactory(methods=[first_method]),
-            QuestionFactory(methods=[first_method, second_method]),
-            QuestionFactory(methods=[second_method, MethodFactory()]),
+            QuestionFactory(methods=[first_method], order=1),
+            QuestionFactory(methods=[first_method, second_method], order=2),
+            QuestionFactory(methods=[second_method, MethodFactory()], order=3),
         ]
 
         QuestionFactory()  # no methods
@@ -931,7 +952,7 @@ class TestQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.data['count'], len(valid_questions))
         self.assertListEqual(
             [r['id'] for r in response.data['results']],
-            [q.id for q in reversed(valid_questions)]
+            [q.id for q in valid_questions]
         )
 
     def test_combine_filter_by_methods_and_sections(self):
@@ -943,15 +964,15 @@ class TestQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
         second_section = SectionFactory()
 
         valid_questions = [
-            QuestionFactory(methods=[first_method], sections=[first_section, second_section]),
-            QuestionFactory(methods=[first_method, second_method], sections=[first_section]),
-            QuestionFactory(methods=[second_method, MethodFactory()], sections=[second_section, SectionFactory()]),
+            QuestionFactory(text='a', methods=[first_method], sections=[first_section, second_section]),
+            QuestionFactory(text='b', methods=[first_method, second_method], sections=[first_section]),
+            QuestionFactory(text='c', methods=[second_method, MethodFactory()], sections=[second_section, SectionFactory()]),
         ]
 
         QuestionFactory()  # no methods
-        QuestionFactory(methods=[MethodFactory()])  # another method
-        QuestionFactory(methods=[first_method])  # matches method, but not section
-        QuestionFactory(methods=[first_method], sections=[SectionFactory()])  # matches method, wrong section
+        QuestionFactory(methods=[MethodFactory()], order=2)  # another method
+        QuestionFactory(methods=[first_method], order=3)  # matches method, but not section
+        QuestionFactory(methods=[first_method], sections=[SectionFactory()], order=3)  # matches method, wrong section
 
         response = self.forced_auth_req(
             'get',
@@ -966,7 +987,7 @@ class TestQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.data['count'], len(valid_questions))
         self.assertListEqual(
             [r['id'] for r in response.data['results']],
-            [q.id for q in reversed(valid_questions)]
+            [q.id for q in valid_questions]
         )
 
     def test_create(self):
