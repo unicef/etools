@@ -44,12 +44,18 @@ class AdminListMixin:
 
 class RestrictedEditAdminMixin:
     def has_add_permission(self, request, obj=None):
+        if not settings.RESTRICTED_ADMIN:
+            return True
         return request.user.email in settings.ADMIN_EDIT_EMAILS
 
     def has_change_permission(self, request, obj=None):
+        if not settings.RESTRICTED_ADMIN:
+            return True
         return request.user.email in settings.ADMIN_EDIT_EMAILS
 
     def has_delete_permission(self, request, obj=None):
+        if not settings.RESTRICTED_ADMIN:
+            return True
         return request.user.email in settings.ADMIN_EDIT_EMAILS
 
 
