@@ -647,6 +647,8 @@ PMP_V2_RELEASE_DATE = datetime.datetime.strptime(PMP_V2_RELEASE_DATE, '%Y-%m-%d'
 # https://github.com/unicef/etools-ecn
 ECN_API_ENDPOINT = get_from_secrets_or_env('ECN_API_ENDPOINT', '')  # example: http://172.18.0.1:8086/api
 
+# This variable prevents certain admin sections from being edited by superusers unless  
+# their user emails are in the ADMIN_EDIT_EMAILS variable below
 RESTRICTED_ADMIN = get_from_secrets_or_env('RESTRICTED_ADMIN', True)
 
 # Emails allowed to edit admin models in Partners and Reports apps if RESTRICTED_ADMIN is enabled
