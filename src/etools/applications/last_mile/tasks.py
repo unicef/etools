@@ -38,7 +38,8 @@ def notify_upload_waybill(tenant_name, destination_pk, waybill_pk, waybill_url):
 def notify_wastage_transfer(tenant_name, transfer_pk, action='wastage_checkout'):
     action_map = {
         'wastage_checkout': 'checked-out as wastage',
-        'short_checkin': 'checked-in as short'
+        'short_checkin': 'checked-in as short',
+        'surplus_checkin': 'checked-in as surplus'
     }
     with schema_context(tenant_name):
         transfer = models.Transfer.objects.get(pk=transfer_pk)
