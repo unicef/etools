@@ -227,6 +227,8 @@ class Material(TimeStampedModel, models.Model):
 
     partner_materials = models.ManyToManyField(PartnerOrganization, through='PartnerMaterial')
 
+    other = models.JSONField(verbose_name=_("Other Details"), null=True, blank=True)
+
     def __str__(self):
         return self.short_description
 
@@ -266,13 +268,13 @@ class Item(TimeStampedModel, models.Model):
         (EXPIRED, _('Expired')),
         (LOST, _('Lost')),
     )
-    wastage_type = models.CharField(max_length=30, choices=WASTAGE_TYPE, null=True)
+    wastage_type = models.CharField(max_length=30, choices=WASTAGE_TYPE, null=True, blank=True)
 
-    uom = models.CharField(max_length=30, choices=Material.UOM, null=True)
+    uom = models.CharField(max_length=30, choices=Material.UOM, null=True, blank=True)
 
-    conversion_factor = models.IntegerField(null=True)
+    conversion_factor = models.DecimalField(max_digits=20, decimal_places=2, null=True, blank=True, )
 
-    quantity = models.IntegerField()
+    quantity = models.DecimalField(max_digits=20, decimal_places=2)
     batch_id = models.CharField(max_length=255, null=True, blank=True)
     expiry_date = models.DateTimeField(null=True, blank=True)
     comment = models.TextField(null=True, blank=True)
