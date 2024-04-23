@@ -10,7 +10,6 @@ from django.utils.translation import gettext_lazy as _
 from unicef_attachments.admin import AttachmentSingleInline
 
 from etools.applications.last_mile import models
-from etools.applications.last_mile.models import PointOfInterestType
 from etools.applications.organizations.models import Organization
 from etools.applications.partners.admin import AttachmentInlineAdminMixin
 from etools.applications.partners.models import PartnerOrganization
@@ -75,7 +74,8 @@ class PointOfInterestAdmin(XLSXImportMixin, admin.ModelAdmin):
 
             if poi_dict['poi_type']:
                 poi_type = poi_dict.pop('poi_type')
-                poi_dict['poi_type'], _ = PointOfInterestType.objects.get_or_create(name=poi_type, category=poi_type.lower().replace(' ', '_'))
+                poi_dict['poi_type'], _ = models.PointOfInterestType.objects\
+                    .get_or_create(name=poi_type, category=poi_type.lower().replace(' ', '_'))
             else:
                 poi_dict.pop('poi_type')
 
@@ -164,12 +164,13 @@ class MaterialAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
 
 
 @admin.register(models.Item)
-class ItemAdmin(admin.ModelAdmin):
+class ItemAdmin(XLSXImportMixin, admin.ModelAdmin):
     list_display = ('batch_id', 'material', 'wastage_type', 'transfer')
     raw_id_fields = ('transfer', 'transfers_history', 'material')
+    list_filter = ('wastage_type', 'hidden')
 
     def get_queryset(self, request):
-        qs = super().get_queryset(request)\
+        qs = models.Item.all_objects\
             .select_related('transfer', 'material')\
             .prefetch_related('transfers_history', 'material__partner_material')
         return qs
@@ -178,6 +179,72 @@ class ItemAdmin(admin.ModelAdmin):
         'batch_id', 'material__short_description', 'transfer__unicef_release_order',
         'transfer__name'
     )
+    title = _("Import LastMile Items")
+    import_field_mapping = {
+        'Partner Vendor Number': 'transfer__partner_organization__vendor_number',
+        'Warehouse Name': 'transfer__destination_point__name',
+        'Waybill Number': 'transfer__waybill_id',
+        'PD Number': 'transfer__pd_number',
+        'Material Number': 'material__number',
+        'UOM': 'uom',
+        'Quantity': 'quantity',
+        'Is Prepositioned': 'is_prepositioned',
+        'Prepositioned QTY': 'preposition_qty',
+        'Expiry Date': 'expiry_date',
+        'Batch Number': 'batch_id',
+        'Partner Custom Description': 'partner_material__description',
+    }
+
+    def has_import_permission(self, request):
+        return request.user.email in settings.ADMIN_EDIT_EMAILS
+
+    @transaction.atomic
+    def import_data(self, workbook):
+        sheet = workbook.active
+        for row in range(1, sheet.max_row):
+            import_dict = {}
+            for col in sheet.iter_cols(1, sheet.max_column):
+                if col[0].value not in self.get_import_columns():
+                    continue
+                import_dict[self.import_field_mapping[col[0].value]] = str(col[row].value).strip()
+
+            partner_vendor_number = str(import_dict.pop('transfer__partner_organization__vendor_number'))
+            try:
+                org = Organization.objects.select_related('partner').filter(vendor_number=partner_vendor_number).get()
+                partner_org_obj = org.partner
+            except (Organization.DoesNotExist, PartnerOrganization.DoesNotExist):
+                logging.error(f"The Organization with vendor number '{partner_vendor_number}' does not exist.")
+                continue
+
+            try:
+                mat_nr = import_dict.pop('material__number')
+                material = models.Material.objects.get(number=mat_nr)
+                if import_dict['partner_material__description']:
+                    models.PartnerMaterial.objects.update_or_create(
+                        material=material,
+                        partner_organization=partner_org_obj,
+                        defaults={'description': import_dict.pop('partner_material__description')}
+                    )
+            except models.Material.DoesNotExist:
+                logging.error(f"The material number '{mat_nr}' does not exist.")
+                continue
+
+            destination = None
+            if import_dict['transfer__destination_point__name']:
+                poi_name = import_dict.pop('transfer__destination_point__name')
+                destination, _ = models.PointOfInterest.objects\
+                    .get_or_create(name=poi_name, category=poi_name.lower().replace(' ', '_'))
+
+            transfer, _ = models.Transfer.objects.get_or_create(
+                partner_organization=partner_org_obj,
+                destination_point=destination,
+                waybill_id=import_dict.pop('transfer__waybill_id'),
+                pd_number=import_dict.pop('transfer__pd_number')
+            )
+            import_dict['transfer'] = transfer
+            models.Item.objects.update_or_create(
+                **import_dict
+            )
 
 
 admin.site.register(models.PointOfInterestType)
