@@ -245,7 +245,7 @@ class ItemAdmin(XLSXImportMixin, admin.ModelAdmin):
                 pd_number=import_dict.pop('transfer__pd_number')
             )
             import_dict['transfer_id'] = transfer.pk
-            import_dict['is_prepositioned'] = True if import_dict['is_prepositioned'] else False
+            import_dict['is_prepositioned'] = True if import_dict['preposition_qty'] else False
 
             models.Item.objects.update_or_create(
                 **import_dict
