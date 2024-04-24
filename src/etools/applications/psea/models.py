@@ -426,10 +426,16 @@ class Assessment(TimeStampedModel):
         """Allowed to move to cancelled status, except from submitted/final"""
 
     def get_related_third_party_users(self):
-        return get_user_model().objects.filter(
-            models.Q(pk=self.assessor.user_id) |
-            models.Q(pk__in=self.assessor.auditor_firm_staff.values_list('id', flat=True))
-        )
+        if self.assessor.assessor_type == Assessor.TYPE_EXTERNAL:
+            return get_user_model().objects.filter(pk=self.assessor.user_id)
+        elif self.assessor.assessor_type == Assessor.TYPE_VENDOR:
+            if self.assessor.auditor_firm:
+                return self.assessor.auditor_firm_staff.filter(
+                    realms__organization=self.assessor.auditor_firm.organization,
+                    realms__is_active=True,
+                )
+
+        return get_user_model().objects.none()
 
 
 class AssessmentStatusHistory(TimeStampedModel):

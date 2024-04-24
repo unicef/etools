@@ -2569,7 +2569,10 @@ class Intervention(TimeStampedModel):
         qs_filter = Q(pk__in=self.partner_focal_points.values_list('user_id'))
         if self.partner_authorized_officer_signatory:
             qs_filter = qs_filter | Q(pk=self.partner_authorized_officer_signatory.user_id)
-        return get_user_model().objects.filter(qs_filter)
+        return get_user_model().objects.filter(qs_filter).filter(
+            realms__organization=self.agreement.partner,
+            realms__is_active=True,
+        )
 
 
 class InterventionAmendment(TimeStampedModel):

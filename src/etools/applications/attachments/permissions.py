@@ -13,6 +13,17 @@ class IsInSchema(IsAuthenticated):
         return self.has_permission(request, view)
 
 
+class IsActiveInCurrentSchema(IsInSchema):
+    def has_permission(self, request, view):
+        return super().has_permission(request, view) and request.user.realms.filter(
+            country=request.tenant,
+            is_active=True,
+        ).exists()
+
+    def has_object_permission(self, request, view, obj):
+        return self.has_permission(request, view)
+
+
 class IsRelatedThirdPartyUser(BasePermission):
     def has_permission(self, request, view):
         return True
@@ -28,4 +39,4 @@ class IsRelatedThirdPartyUser(BasePermission):
         return False
 
 
-UNICEFAttachmentsPermission = IsInSchema & (IsUNICEFUser | IsRelatedThirdPartyUser)
+UNICEFAttachmentsPermission = IsActiveInCurrentSchema & (IsUNICEFUser | IsRelatedThirdPartyUser)

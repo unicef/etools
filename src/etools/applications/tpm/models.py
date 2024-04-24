@@ -360,6 +360,9 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
         return get_user_model().objects.filter(
             models.Q(pk__in=self.tpm_partner.staff_members.values_list('id')) |
             models.Q(pk__in=self.tpm_partner_focal_points.values_list('id'))
+        ).filter(
+            realms__organization=self.tpm_partner.organization,
+            realms__is_active=True,
         )
 
 

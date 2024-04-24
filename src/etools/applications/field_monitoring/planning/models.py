@@ -730,10 +730,16 @@ class MonitoringActivity(
             yield checklist_dict
 
     def get_related_third_party_users(self):
+        if not self.tpm_partner:
+            return get_user_model().objects.none()
+
         return get_user_model().objects.filter(
             Q(pk=self.visit_lead_id) |
             Q(pk__in=self.team_members.through.objects
               .filter(monitoringactivity_id=self.pk).values_list('user_id', flat=True))
+        ).filter(
+            realms__organization=self.tpm_partner.organization,
+            realms__is_active=True,
         )
 
 

@@ -1,9 +1,11 @@
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.db import connection
 from django.urls import reverse
 
 from rest_framework import status
 
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentLinkFactory
+from etools.applications.audit.models import Auditor
 from etools.applications.audit.tests.factories import AuditorUserFactory, AuditPartnerFactory, SpecialAuditFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.field_monitoring.data_collection.tests.factories import (
@@ -15,6 +17,7 @@ from etools.applications.field_monitoring.fm_settings.tests.factories import Log
 from etools.applications.field_monitoring.groups import FMUser
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
 from etools.applications.field_monitoring.planning.tests.factories import MonitoringActivityFactory
+from etools.applications.partners.permissions import UNICEF_USER
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.psea.models import Assessor
 from etools.applications.psea.tests.factories import AnswerFactory, AssessmentFactory, AssessorFactory
@@ -24,7 +27,7 @@ from etools.applications.tpm.tests.factories import (
     TPMUserFactory,
     TPMVisitFactory,
 )
-from etools.applications.users.tests.factories import UserFactory
+from etools.applications.users.tests.factories import DummyCountryFactory, GroupFactory, RealmFactory, UserFactory
 from etools.libraries.djangolib.models import GroupWrapper
 
 
@@ -53,6 +56,14 @@ class DownloadUnlinkedAttachmentTestCase(DownloadAttachmentsBaseTestCase):
         another_schema_user = UserFactory(is_staff=True, realms__data=[], profile__country=None)
         self._test_download(self.attachment, another_schema_user, status.HTTP_403_FORBIDDEN)
 
+    def test_attachment_user_in_different_schema(self):
+        other_country = DummyCountryFactory()
+        self.assertNotEquals(other_country.pk, connection.tenant.pk)
+        another_schema_user = UserFactory(is_staff=True)
+        another_schema_user.realms.update(is_active=False)
+        RealmFactory(user=another_schema_user, country=other_country, group=GroupFactory(name=UNICEF_USER))
+        self._test_download(self.attachment, another_schema_user, status.HTTP_403_FORBIDDEN)
+
     def test_attachment_unicef(self):
         self._test_download(self.attachment, self.unicef_user, status.HTTP_302_FOUND)
 
@@ -65,8 +76,8 @@ class DownloadAPAttachmentTestCase(DownloadAttachmentsBaseTestCase):
     def setUp(self):
         super().setUp()
         self.auditor_firm = AuditPartnerFactory()
+        self.specialaudit = SpecialAuditFactory(agreement__auditor_firm=self.auditor_firm)
         self.auditor = AuditorUserFactory(partner_firm=self.auditor_firm, is_staff=False)
-        self.specialaudit = SpecialAuditFactory()
         self.attachment.content_object = self.specialaudit
         self.attachment.save()
 
@@ -83,6 +94,22 @@ class DownloadAPAttachmentTestCase(DownloadAttachmentsBaseTestCase):
 
     def test_attachment_unrelated_auditor(self):
         self._test_download(self.attachment, self.auditor, status.HTTP_403_FORBIDDEN)
+
+    def test_attachment_deactivated_auditor(self):
+        # user should have no access if he is not active in the organization
+        #   even if it's listed in the audit and has active realm with Auditor group
+        auditor_firm = AuditPartnerFactory()
+        auditor = AuditorUserFactory(partner_firm=auditor_firm, is_staff=False)
+        self.specialaudit.staff_members.add(auditor)
+        realm = RealmFactory(
+            user=auditor,
+            country=self.tenant,
+            organization=self.auditor_firm.organization,
+            group=Auditor.as_group()
+        )
+        realm.is_active = False
+        realm.save()
+        self._test_download(self.attachment, auditor, status.HTTP_403_FORBIDDEN)
 
 
 class DownloadTPMVisitAttachmentTestCase(DownloadAttachmentsBaseTestCase):
@@ -165,7 +192,8 @@ class DownloadFMGlobalConfigAttachmentTestCase(DownloadAttachmentsBaseTestCase):
 
     def setUp(self):
         super().setUp()
-        self.fm_user = UserFactory(is_staff=False, realms__data=[FMUser.name])
+        # FM user is always UNICEF user
+        self.fm_user = UserFactory(is_staff=False, realms__data=[UNICEF_USER, FMUser.name])
         self.attachment.content_object = self.config
         self.attachment.save()
 
@@ -188,7 +216,8 @@ class DownloadFMLogIssueAttachmentTestCase(DownloadAttachmentsBaseTestCase):
     def setUp(self):
         super().setUp()
         self.tpm_organization = TPMPartnerFactory()
-        self.fm_user = UserFactory(is_staff=False, realms__data=[FMUser.name])
+        # FM user is always UNICEF user
+        self.fm_user = UserFactory(is_staff=False, realms__data=[UNICEF_USER, FMUser.name])
         self.log_issue = LogIssueFactory(partner=PartnerFactory())
         self.attachment.content_object = self.log_issue
         self.attachment.save()
@@ -295,7 +324,7 @@ class DownloadPSEAAssessmentAttachmentTestCase(DownloadAttachmentsBaseTestCase):
 
     def test_attachment_external_accessor(self):
         external_user = UserFactory(
-            is_staff=False, realms__data=[]
+            is_staff=False, realms__data=[Auditor.name]
         )
         AssessorFactory(
             assessment=self.assessment,
@@ -307,7 +336,7 @@ class DownloadPSEAAssessmentAttachmentTestCase(DownloadAttachmentsBaseTestCase):
     def test_attachment_unrelated_staff(self):
         AssessorFactory(
             assessment=self.assessment,
-            assessor_type=Assessor.TYPE_EXTERNAL,
+            assessor_type=Assessor.TYPE_VENDOR,
             auditor_firm=self.auditor_firm,
             user=None,
         )
@@ -316,7 +345,7 @@ class DownloadPSEAAssessmentAttachmentTestCase(DownloadAttachmentsBaseTestCase):
     def test_attachment_staff(self):
         assessor = AssessorFactory(
             assessment=self.assessment,
-            assessor_type=Assessor.TYPE_EXTERNAL,
+            assessor_type=Assessor.TYPE_VENDOR,
             auditor_firm=self.auditor_firm,
             user=None,
         )
@@ -339,10 +368,21 @@ class DownloadPSEAAnswerAttachmentTestCase(DownloadAttachmentsBaseTestCase):
         self._test_download(self.attachment, another_schema_user, status.HTTP_403_FORBIDDEN)
 
     def test_attachment_unicef(self):
+        AssessorFactory(
+            assessment=self.assessment,
+            assessor_type=Assessor.TYPE_UNICEF,
+        )
         self._test_download(self.attachment, self.unicef_user, status.HTTP_302_FOUND)
 
+    def test_attachment_unicef_auditor(self):
+        AssessorFactory(
+            assessment=self.assessment,
+            assessor_type=Assessor.TYPE_UNICEF,
+        )
+        self._test_download(self.attachment, self.auditor, status.HTTP_403_FORBIDDEN)
+
     def test_attachment_external_accessor(self):
-        external_user = UserFactory(is_staff=False, realms__data=[])
+        external_user = UserFactory(is_staff=False, realms__data=[Auditor.name])
         AssessorFactory(
             assessment=self.assessment,
             assessor_type=Assessor.TYPE_EXTERNAL,
@@ -350,19 +390,27 @@ class DownloadPSEAAnswerAttachmentTestCase(DownloadAttachmentsBaseTestCase):
         )
         self._test_download(self.attachment, external_user, status.HTTP_302_FOUND)
 
-    def test_attachment_unrelated_staff(self):
+    def test_attachment_external_not_accessor(self):
+        external_user = UserFactory(is_staff=False, realms__data=[Auditor.name])
         AssessorFactory(
             assessment=self.assessment,
             assessor_type=Assessor.TYPE_EXTERNAL,
+        )
+        self._test_download(self.attachment, external_user, status.HTTP_403_FORBIDDEN)
+
+    def test_attachment_auditor_unrelated_staff(self):
+        AssessorFactory(
+            assessment=self.assessment,
+            assessor_type=Assessor.TYPE_VENDOR,
             auditor_firm=self.auditor_firm,
             user=None,
         )
         self._test_download(self.attachment, self.auditor, status.HTTP_403_FORBIDDEN)
 
-    def test_attachment_staff(self):
+    def test_attachment_auditor_related_staff(self):
         assessor = AssessorFactory(
             assessment=self.assessment,
-            assessor_type=Assessor.TYPE_EXTERNAL,
+            assessor_type=Assessor.TYPE_VENDOR,
             auditor_firm=self.auditor_firm,
             user=None,
         )

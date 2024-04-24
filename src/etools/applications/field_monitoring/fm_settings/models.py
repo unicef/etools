@@ -1,5 +1,4 @@
 from django.conf import settings
-from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.gis.db.models import PointField
 from django.core.exceptions import ValidationError
@@ -14,7 +13,6 @@ from ordered_model.models import OrderedModel
 from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CodedGenericRelation
 
-from etools.applications.field_monitoring.groups import FMUser
 from etools.applications.locations.models import Location
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.reports.models import Result, Section
@@ -35,9 +33,6 @@ class GlobalConfig(models.Model):
             cls._config = cls.objects.get_or_create()[0]
 
         return cls._config
-
-    def get_related_third_party_users(self):
-        return get_user_model().objects.filter(realms__group=FMUser.as_group())
 
 
 class Method(models.Model):
@@ -293,6 +288,3 @@ class LogIssue(TimeStampedModel):
             return self.RELATED_TO_TYPE_CHOICES.partner
         elif self.location:
             return self.RELATED_TO_TYPE_CHOICES.location
-
-    def get_related_third_party_users(self):
-        return get_user_model().objects.filter(realms__group=FMUser.as_group())
