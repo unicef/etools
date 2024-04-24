@@ -140,7 +140,7 @@ class TransferAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
             return obj.name
         elif obj.unicef_release_order:
             return obj.unicef_release_order
-        return self.id
+        return obj.id
 
 
 class PartnerMaterialInline(admin.TabularInline):
@@ -206,7 +206,7 @@ class ItemAdmin(XLSXImportMixin, admin.ModelAdmin):
             for col in sheet.iter_cols(1, sheet.max_column):
                 if col[0].value not in self.get_import_columns():
                     continue
-                import_dict[self.import_field_mapping[col[0].value]] = str(col[row].value).strip()
+                import_dict[self.import_field_mapping[col[0].value]] = str(col[row].value).strip() if col[row].value else None
 
             partner_vendor_number = str(import_dict.pop('transfer__partner_organization__vendor_number'))
             try:
@@ -219,6 +219,7 @@ class ItemAdmin(XLSXImportMixin, admin.ModelAdmin):
             try:
                 mat_nr = import_dict.pop('material__number')
                 material = models.Material.objects.get(number=mat_nr)
+                import_dict['material_id'] = material.pk
                 if import_dict['partner_material__description']:
                     models.PartnerMaterial.objects.update_or_create(
                         material=material,
@@ -232,8 +233,10 @@ class ItemAdmin(XLSXImportMixin, admin.ModelAdmin):
             destination = None
             if import_dict['transfer__destination_point__name']:
                 poi_name = import_dict.pop('transfer__destination_point__name')
-                destination, _ = models.PointOfInterest.objects\
-                    .get_or_create(name=poi_name, category=poi_name.lower().replace(' ', '_'))
+                destination = models.PointOfInterest.objects.filter(name=poi_name).last()
+                if not destination:
+                    logging.error(f"The Point of Interest with name '{poi_name}' does not exist.")
+                    continue
 
             transfer, _ = models.Transfer.objects.get_or_create(
                 partner_organization=partner_org_obj,
@@ -241,7 +244,9 @@ class ItemAdmin(XLSXImportMixin, admin.ModelAdmin):
                 waybill_id=import_dict.pop('transfer__waybill_id'),
                 pd_number=import_dict.pop('transfer__pd_number')
             )
-            import_dict['transfer'] = transfer
+            import_dict['transfer_id'] = transfer.pk
+            import_dict['is_prepositioned'] = True if import_dict['is_prepositioned'] else False
+
             models.Item.objects.update_or_create(
                 **import_dict
             )
