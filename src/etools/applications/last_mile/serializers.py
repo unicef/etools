@@ -157,6 +157,27 @@ class ItemUpdateSerializer(serializers.ModelSerializer):
             'quantity', 'is_prepositioned', 'preposition_qty', 'conversion_factor'
         )
 
+    def validate_conversion_factor(self, value):
+        if value <= 0:
+            raise ValidationError(_('The value for the conversion factor must be greater than 0.'))
+        return value
+
+    def validate(self, attrs):
+        validated_data = super().validate(attrs)
+        material = self.instance.material
+        if 'uom_map' in material.other and material.other['uom_map']:
+            uom_map = material.other['uom_map']
+            new_uom = validated_data.get('uom', None)
+            if new_uom not in uom_map:
+                raise ValidationError(_('The provided uom is not available in the material mapping.'))
+
+            conversion_factor = validated_data.get('conversion_factor', None)
+            current_uom = getattr(self.instance, 'uom', material.original_uom)
+
+            expected_conversion = (self.instance.quantity * uom_map[current_uom]) / uom_map[new_uom]
+            if expected_conversion != conversion_factor:
+                raise ValidationError(_('The conversion_factor is incorrect.'))
+
     def save(self, **kwargs):
         if 'description' in self.validated_data:
             description = self.validated_data.pop('description')

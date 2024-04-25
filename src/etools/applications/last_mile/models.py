@@ -257,13 +257,13 @@ item_other_schema = {
     "additionalProperties": True,
     "properties": {
         "uom_map": {
-          "type": "object",
-          "propertyNames": {
-              "enum": [t[0] for t in Material.UOM]
-          },
-          "additionalProperties": {
-             "type": "number"
-          }
+            "type": "object",
+            "propertyNames": {
+                "enum": [t[0] for t in Material.UOM]
+            },
+            "additionalProperties": {
+                "type": "number"
+            }
         }
     }
 }
