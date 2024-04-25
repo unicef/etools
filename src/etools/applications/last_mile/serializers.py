@@ -152,10 +152,7 @@ class ItemUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Item
-        fields = (
-            'description', 'uom', 'expiry_date', 'batch_id',
-            'quantity', 'is_prepositioned', 'preposition_qty', 'conversion_factor'
-        )
+        fields = ('description', 'uom', 'quantity', 'conversion_factor')
 
     def save(self, **kwargs):
         if 'description' in self.validated_data:
