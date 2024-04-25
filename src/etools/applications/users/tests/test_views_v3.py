@@ -561,7 +561,7 @@ class TestGroupFiltersViewSet(BaseTenantTestCase):
 
 
 class TestGroupPermissionsViewSet(BaseTenantTestCase):
-    fixtures = ['amp_groups', 'audit_groups']
+    fixtures = ['amp_groups', 'audit_groups', 'groups']
 
     @classmethod
     def setUpTestData(cls):
@@ -575,7 +575,7 @@ class TestGroupPermissionsViewSet(BaseTenantTestCase):
 
     def test_get_allowed_amp_groups_unicef(self):
         for user_group, org_type in zip(
-                [UNICEFAuditFocalPoint, PartnershipManager],
+                [UNICEFAuditFocalPoint, PartnershipManager, PME],
                 ['audit', 'partner', 'tpm']):
             user = UserFactory(realms__data=[user_group.name], profile__organization=self.organization)
             with self.assertNumQueries(4):
