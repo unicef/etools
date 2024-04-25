@@ -210,11 +210,14 @@ class TransferViewSet(
     def incoming(self, request, *args, **kwargs):
         location = self.get_parent_poi()
 
-        qs = self.get_queryset()
-        qs = (qs.filter(status=models.Transfer.PENDING)
-              .filter(Q(destination_point=location) | Q(destination_point__isnull=True))
-              .exclude(origin_point=location).select_related("destination_point__parent", "origin_point__parent"))
+        qs = self.get_queryset().filter(status=models.Transfer.PENDING)
 
+        if location.poi_type.category == 'warehouse':
+            qs = qs.filter(Q(destination_point=location) | Q(destination_point__isnull=True))
+        else:
+            qs = qs.filter(destination_point=location)
+
+        qs = qs.exclude(origin_point=location).select_related("destination_point__parent", "origin_point__parent")
         return self.paginate_response(qs)
 
     @action(detail=True, methods=['get'], url_path='details',
