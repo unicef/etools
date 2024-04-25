@@ -165,7 +165,7 @@ class ItemUpdateSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         validated_data = super().validate(attrs)
         material = self.instance.material
-        if 'uom_map' in material.other and material.other['uom_map']:
+        if material.other and 'uom_map' in material.other and material.other['uom_map']:
             uom_map = material.other['uom_map']
             new_uom = validated_data.get('uom', None)
             if new_uom not in uom_map:
@@ -177,6 +177,7 @@ class ItemUpdateSerializer(serializers.ModelSerializer):
             expected_conversion = (self.instance.quantity * uom_map[current_uom]) / uom_map[new_uom]
             if expected_conversion != conversion_factor:
                 raise ValidationError(_('The conversion_factor is incorrect.'))
+        return validated_data
 
     def save(self, **kwargs):
         if 'description' in self.validated_data:
