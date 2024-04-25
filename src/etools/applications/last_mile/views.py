@@ -253,6 +253,10 @@ class TransferViewSet(
         completed_filters |= Q(destination_point=location, transfer_type=models.Transfer.WASTAGE)
 
         qs = self.get_queryset().filter(status=models.Transfer.COMPLETED).filter(completed_filters)
+
+        if not self.request.query_params.get('transfer_type', None):
+            qs = qs.exclude(transfer_type=models.Transfer.WASTAGE)
+
         return self.paginate_response(qs)
 
     @action(detail=True, methods=['patch'], url_path='new-check-in',
