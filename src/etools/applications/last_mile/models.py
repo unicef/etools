@@ -10,6 +10,7 @@ from model_utils.models import TimeStampedModel
 from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CodedGenericRelation
 
+from etools.applications.core.validators import JSONSchemaValidator
 from etools.applications.locations.models import Location
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.users.models import User
@@ -250,6 +251,24 @@ class PartnerMaterial(TimeStampedModel, models.Model):
         unique_together = ('partner_organization', 'material')
 
 
+item_other_schema = {
+    "title": "Json schema for item 'other' field",
+    "type": "object",
+    "additionalProperties": True,
+    "properties": {
+        "uom_map": {
+          "type": "object",
+          "propertyNames": {
+              "enum": [t[0] for t in Material.UOM]
+          },
+          "additionalProperties": {
+             "type": "number"
+          }
+        }
+    }
+}
+
+
 class ItemManager(models.Manager):
 
     def get_queryset(self):
@@ -268,13 +287,13 @@ class Item(TimeStampedModel, models.Model):
         (EXPIRED, _('Expired')),
         (LOST, _('Lost')),
     )
-    wastage_type = models.CharField(max_length=30, choices=WASTAGE_TYPE, null=True, blank=True)
+    wastage_type = models.CharField(max_length=30, choices=WASTAGE_TYPE, null=True)
 
-    uom = models.CharField(max_length=30, choices=Material.UOM, null=True, blank=True)
+    uom = models.CharField(max_length=30, choices=Material.UOM, null=True)
 
-    conversion_factor = models.DecimalField(max_digits=20, decimal_places=2, null=True, blank=True, )
+    conversion_factor = models.DecimalField(max_digits=10, decimal_places=2, null=True)
 
-    quantity = models.DecimalField(max_digits=20, decimal_places=2)
+    quantity = models.IntegerField()
     batch_id = models.CharField(max_length=255, null=True, blank=True)
     expiry_date = models.DateTimeField(null=True, blank=True)
     comment = models.TextField(null=True, blank=True)
@@ -294,7 +313,8 @@ class Item(TimeStampedModel, models.Model):
     other = models.JSONField(
         verbose_name=_("Other Details"),
         null=True,
-        blank=True
+        blank=True,
+        validators=[JSONSchemaValidator(json_schema=item_other_schema)]
     )
 
     transfer = models.ForeignKey(
