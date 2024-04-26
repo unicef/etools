@@ -13,6 +13,7 @@ from unicef_djangolib.fields import CodedGenericRelation
 from etools.applications.locations.models import Location
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.users.models import User
+from etools.applications.utils.validators import JSONSchemaValidator
 
 
 class PointOfInterestType(TimeStampedModel, models.Model):
@@ -227,6 +228,27 @@ class Material(TimeStampedModel, models.Model):
 
     partner_materials = models.ManyToManyField(PartnerOrganization, through='PartnerMaterial')
 
+    other_json_schema = {
+        "title": "Json schema for item 'other' field",
+        "type": "object",
+        "additionalProperties": True,
+        "properties": {
+            "uom_map": {
+                "type": "object",
+                "propertyNames": {
+                    "enum": [t[0] for t in UOM]
+                },
+                "additionalProperties": {
+                    "type": "number"
+                }
+            }
+        }
+    }
+    other = models.JSONField(
+        verbose_name=_("Other Details"),
+        null=True, blank=True,
+        validators=[JSONSchemaValidator(json_schema=other_json_schema)])
+
     def __str__(self):
         return self.short_description
 
@@ -270,7 +292,7 @@ class Item(TimeStampedModel, models.Model):
 
     uom = models.CharField(max_length=30, choices=Material.UOM, null=True)
 
-    conversion_factor = models.IntegerField(null=True)
+    conversion_factor = models.DecimalField(max_digits=10, decimal_places=2, null=True)
 
     quantity = models.IntegerField()
     batch_id = models.CharField(max_length=255, null=True, blank=True)
