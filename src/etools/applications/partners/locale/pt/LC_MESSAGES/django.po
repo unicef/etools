@@ -1964,12 +1964,8 @@ msgstr ""
 "O valor total do FR precisa ser igual ao valor total real, e o total de DCTs "
 "pendentes precisa ser igual a 0"
 
-msgid ""
-"Final Review must be approved for documents having amount transferred "
-"greater than 100,000"
-msgstr ""
-"Documentos com montante  superior a 100.000 USD devem ter a revisão final "
-"aprovada."
+msgid "Final Review must be approved"
+msgstr "A revisão final deve ser aprovada"
 
 msgid "Cannot Transition status while adding an amendment"
 msgstr "Não é possível fazer a transição do status ao inserir o aditivo."
@@ -2337,6 +2333,13 @@ msgstr ""
 
 msgid "Partnership Manager role required for pca export."
 msgstr "A função de gerente de parceria é necessária para a exportação de pca."
+
+#~ msgid ""
+#~ "Final Review must be approved for documents having amount transferred "
+#~ "greater than 100,000"
+#~ msgstr ""
+#~ "Documentos com montante  superior a 100.000 USD devem ter a revisão final "
+#~ "aprovada."
 
 #~ msgid "Unable to associate staff member to UNICEF user"
 #~ msgstr "Não é possível associar o funcionário ao usuário UNICEF"

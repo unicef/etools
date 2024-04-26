@@ -1956,12 +1956,8 @@ msgstr ""
 "Le montant total du FR doit être égal au montant réel total, et le total des "
 "DCT en suspens doit être égal à 0."
 
-msgid ""
-"Final Review must be approved for documents having amount transferred "
-"greater than 100,000"
-msgstr ""
-"L'examen final doit être approuvé pour les documents dont le montant "
-"transféré est supérieur à 100 000 euros."
+msgid "Final Review must be approved"
+msgstr "L'examen final doit être approuvé"
 
 msgid "Cannot Transition status while adding an amendment"
 msgstr "Impossible de changer de statut en ajoutant un amendement"
@@ -2330,6 +2326,13 @@ msgstr ""
 
 msgid "Partnership Manager role required for pca export."
 msgstr "Rôle de gestionnaire de partenariat requis pour l'exportation pca."
+
+#~ msgid ""
+#~ "Final Review must be approved for documents having amount transferred "
+#~ "greater than 100,000"
+#~ msgstr ""
+#~ "L'examen final doit être approuvé pour les documents dont le montant "
+#~ "transféré est supérieur à 100 000 euros."
 
 #~ msgid "Unable to associate staff member to UNICEF user"
 #~ msgstr ""

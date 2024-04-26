@@ -93,10 +93,10 @@ def transition_to_closed(i):
                        ', and Total Outstanding DCTs need to equal to 0')]
                 )
 
-    # If total_actual_amt_usd >100,000 then PD final review should be approved
-    if i.total_frs['total_actual_amt_usd'] >= 100000 and not i.final_review_approved:
+    # PD final review should be approved
+    if not i.final_review_approved:
         raise TransitionError([
-            _('Final Review must be approved for documents having amount transferred greater than 100,000')
+            _('Final Review must be approved')
         ])
 
     # TODO: figure out Action Point Validation once the spec is completed
