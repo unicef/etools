@@ -389,7 +389,6 @@ class TestTransferView(BaseTenantTestCase):
         url = reverse('last_mile:transfers-new-check-out', args=(self.poi_partner_1.pk,))
         response = self.forced_auth_req('post', url, user=self.partner_staff, data=checkout_data)
 
-        print(response.data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['status'], models.Transfer.PENDING)
         self.assertEqual(response.data['transfer_type'], models.Transfer.DISTRIBUTION)

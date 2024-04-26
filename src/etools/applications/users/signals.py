@@ -15,7 +15,9 @@ def sync_realms_to_prp_on_update(instance: Realm, created: bool, **kwargs):
     if instance.user.is_unicef_user():
         # only external users are allowed to be synced to prp
         return
-
+    # Lastmile realms not synced to prp
+    if instance.group.name in ["IP LM Editor", "LMSMApi"]:
+        return
     transaction.on_commit(
         lambda:
             sync_realms_to_prp.apply_async(
@@ -29,6 +31,10 @@ def sync_realms_to_prp_on_update(instance: Realm, created: bool, **kwargs):
 def sync_realms_to_prp_on_delete(instance: Realm, **kwargs):
     if instance.user.is_unicef_user():
         # only external users are allowed to be synced to prp
+        return
+
+    # Lastmile realms not synced to prp
+    if instance.group.name in ["IP LM Editor", "LMSMApi"]:
         return
 
     now = timezone.now()

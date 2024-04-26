@@ -115,17 +115,11 @@ class MaterialListSerializer(serializers.ModelSerializer):
 
 class ItemSerializer(serializers.ModelSerializer):
     material = MaterialSerializer()
+    description = serializers.CharField(read_only=True)
 
     class Meta:
         model = models.Item
         exclude = ('transfer',)
-
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        data['description'] = instance.description
-        if not instance.uom:
-            data['uom'] = data['material']['original_uom']
-        return data
 
 
 class ItemListSerializer(serializers.ModelSerializer):
@@ -152,10 +146,7 @@ class ItemUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Item
-        fields = (
-            'description', 'uom', 'expiry_date', 'batch_id',
-            'quantity', 'is_prepositioned', 'preposition_qty', 'conversion_factor'
-        )
+        fields = ('description', 'uom', 'quantity', 'conversion_factor')
 
     def validate_conversion_factor(self, value):
         if value <= 0:
