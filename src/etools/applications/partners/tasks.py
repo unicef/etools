@@ -279,12 +279,12 @@ def notify_partner_hidden(partner_pk, tenant_name):
 
 
 @app.task
-def notify_partner_expires():
+def notify_partner_assessment_expires():
     """Send notifications to UNICEF Focal Points for partners that will have their
     Core Value Assessment or HACT Assessment expire within 30/60/90 days.
     Task will run every 24 hours.
     """
-    today = timezone.now()
+    today = timezone.now().date()
     notify_end_dates = [datetime.timedelta(days=-delta) for delta in _PARTNER_ASSESSMENT_EXPIRING_SOON_DELTAS]
     delta = datetime.timedelta(days=PartnerOrganization.EXPIRING_ASSESSMENT_LIMIT_YEAR * 365)
 
@@ -325,11 +325,13 @@ def notify_partner_expires():
                 email__in=focal_points_emails, profile__country_override=country).values_list('email', flat=True)
 
             if filtered_emails:
+                days = partner.core_value_assessment_expiring.days.__abs__() \
+                    if partner.core_value_assessment_expiring else partner.assessments_expiring.days.__abs__()
                 email_context = {
                     'country': country.name,
                     'partner_name': partner.name,
                     'partner_number': partner.vendor_number,
-                    'days': partner.core_value_assessment_expiring.days.__abs__(),
+                    'days': days,
                 }
                 send_notification_with_template(
                     recipients=list(filtered_emails),

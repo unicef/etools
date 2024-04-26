@@ -29,7 +29,7 @@ class Command(BaseCommand):
             'interval': every_day})
 
         PeriodicTask.objects.get_or_create(name='Notification Partner Assessment expires', defaults={
-            'task': 'partners.tasks.notify_partner_expires',
+            'task': 'partners.tasks.notify_partner_assessment_expires',
             'enabled': False,
             'interval': every_day})
 

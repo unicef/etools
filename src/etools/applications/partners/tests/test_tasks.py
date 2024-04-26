@@ -23,8 +23,9 @@ import etools.applications.partners.tasks
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
+from etools.applications.organizations.models import OrganizationType
 from etools.applications.organizations.tests.factories import OrganizationFactory
-from etools.applications.partners.models import Agreement, Intervention
+from etools.applications.partners.models import Agreement, Intervention, PartnerOrganization
 from etools.applications.partners.synchronizers import PDVisionUploader
 from etools.applications.partners.tasks import transfer_active_pds_to_new_cp
 from etools.applications.partners.tests.factories import (
@@ -1409,3 +1410,75 @@ class TestRealmsPRPExport(BaseTenantTestCase):
             RealmFactory(user=user)
         sync_mock.assert_not_called()
         self.assertEqual(len(commit_callbacks), 0)
+
+
+class TestPartnerAssessmentExpires(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        call_command("update_notifications")
+        cls.today = timezone.now().date()
+        cls.partner_1 = PartnerFactory(
+            organization=OrganizationFactory(organization_type=OrganizationType.CIVIL_SOCIETY_ORGANIZATION)
+        )
+        cls.intervention_1 = InterventionFactory(
+            agreement=AgreementFactory(partner=cls.partner_1),
+            status=Intervention.ACTIVE,
+            start=cls.today - datetime.timedelta(days=2),
+        )
+        cls.focal_point = UserFactory()
+        cls.focal_point.profile.country_override = connection.tenant
+        cls.focal_point.profile.save()
+        cls.intervention_1.unicef_focal_points.add(cls.focal_point)
+
+    def test_task_last_assessment_date_expiring(self):
+        last_assessment_date = self.today - datetime.timedelta(days=PartnerOrganization.EXPIRING_ASSESSMENT_LIMIT_YEAR * 365 - 30)
+        self.partner_1.last_assessment_date = last_assessment_date
+        self.partner_1.save()
+
+        send_path = "etools.applications.partners.tasks.send_notification_with_template"
+        mock_send = mock.Mock()
+        with mock.patch(send_path, mock_send):
+            etools.applications.partners.tasks.notify_partner_assessment_expires()
+        self.assertEqual(mock_send.call_count, 1)
+        self.assertEqual(mock_send.call_args.kwargs['recipients'], [self.focal_point.email])
+
+    def test_task_core_assessment_date_expiring(self):
+        core_values_assessment_date = self.today - datetime.timedelta(days=PartnerOrganization.EXPIRING_ASSESSMENT_LIMIT_YEAR * 365 - 60)
+
+        self.partner_1.core_values_assessment_date = core_values_assessment_date
+        self.partner_1.save()
+
+        send_path = "etools.applications.partners.tasks.send_notification_with_template"
+        mock_send = mock.Mock()
+        with mock.patch(send_path, mock_send):
+            etools.applications.partners.tasks.notify_partner_assessment_expires()
+        self.assertEqual(mock_send.call_count, 1)
+        self.assertEqual(mock_send.call_args.kwargs['recipients'], [self.focal_point.email])
+
+    def test_task_focal_point_without_country(self):
+        core_values_assessment_date = self.today - datetime.timedelta(days=PartnerOrganization.EXPIRING_ASSESSMENT_LIMIT_YEAR * 365 - 60)
+
+        self.partner_1.core_values_assessment_date = core_values_assessment_date
+        self.partner_1.save()
+        self.focal_point.profile.country_override = None
+        self.focal_point.profile.save()
+
+        send_path = "etools.applications.partners.tasks.send_notification_with_template"
+        mock_send = mock.Mock()
+        with mock.patch(send_path, mock_send):
+            etools.applications.partners.tasks.notify_partner_assessment_expires()
+        self.assertEqual(mock_send.call_count, 0)
+
+    def test_task_excluded_pd_status(self):
+        core_values_assessment_date = self.today - datetime.timedelta(days=PartnerOrganization.EXPIRING_ASSESSMENT_LIMIT_YEAR * 365 - 60)
+
+        self.partner_1.core_values_assessment_date = core_values_assessment_date
+        self.partner_1.save()
+        self.intervention_1.status = Intervention.CLOSED
+        self.intervention_1.save()
+
+        send_path = "etools.applications.partners.tasks.send_notification_with_template"
+        mock_send = mock.Mock()
+        with mock.patch(send_path, mock_send):
+            etools.applications.partners.tasks.notify_partner_assessment_expires()
+        self.assertEqual(mock_send.call_count, 0)
