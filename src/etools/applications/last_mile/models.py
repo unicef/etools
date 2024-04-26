@@ -228,7 +228,26 @@ class Material(TimeStampedModel, models.Model):
 
     partner_materials = models.ManyToManyField(PartnerOrganization, through='PartnerMaterial')
 
-    other = models.JSONField(verbose_name=_("Other Details"), null=True, blank=True)
+    other_json_schema = {
+        "title": "Json schema for item 'other' field",
+        "type": "object",
+        "additionalProperties": True,
+        "properties": {
+            "uom_map": {
+                "type": "object",
+                "propertyNames": {
+                    "enum": [t[0] for t in UOM]
+                },
+                "additionalProperties": {
+                    "type": "number"
+                }
+            }
+        }
+    }
+    other = models.JSONField(
+        verbose_name=_("Other Details"),
+        null=True, blank=True,
+        validators=[JSONSchemaValidator(json_schema=other_json_schema)])
 
     def __str__(self):
         return self.short_description
@@ -249,24 +268,6 @@ class PartnerMaterial(TimeStampedModel, models.Model):
 
     class Meta:
         unique_together = ('partner_organization', 'material')
-
-
-item_other_schema = {
-    "title": "Json schema for item 'other' field",
-    "type": "object",
-    "additionalProperties": True,
-    "properties": {
-        "uom_map": {
-            "type": "object",
-            "propertyNames": {
-                "enum": [t[0] for t in Material.UOM]
-            },
-            "additionalProperties": {
-                "type": "number"
-            }
-        }
-    }
-}
 
 
 class ItemManager(models.Manager):
@@ -313,8 +314,7 @@ class Item(TimeStampedModel, models.Model):
     other = models.JSONField(
         verbose_name=_("Other Details"),
         null=True,
-        blank=True,
-        validators=[JSONSchemaValidator(json_schema=item_other_schema)]
+        blank=True
     )
 
     transfer = models.ForeignKey(

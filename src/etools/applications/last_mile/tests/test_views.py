@@ -467,6 +467,14 @@ class TestItemUpdateViewSet(BaseTenantTestCase):
         )
         cls.poi_partner = PointOfInterestFactory(partner_organizations=[cls.partner], private=True)
         cls.transfer = TransferFactory(destination_point=cls.poi_partner, partner_organization=cls.partner)
+        cls.other = {
+            'uom_map': {
+                'EA': 1,
+                'PAC': 10,
+                'CAR': 50
+            }
+        }
+        cls.material = MaterialFactory(original_uom='PAC', other=cls.other)
 
     def test_patch(self):
         item = ItemFactory(transfer=self.transfer)
@@ -476,9 +484,68 @@ class TestItemUpdateViewSet(BaseTenantTestCase):
             'uom': 'KG'
         }
         response = self.forced_auth_req('patch', url, user=self.partner_staff, data=data)
-
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         item.refresh_from_db()
         self.assertEqual(item.description, 'updated description')
         self.assertEqual(response.data['description'], 'updated description')
         self.assertEqual(item.uom, 'KG')
         self.assertEqual(response.data['uom'], 'KG')
+
+    def test_patch_uom_mappings(self):
+        item = ItemFactory(transfer=self.transfer, material=self.material, quantity=100)
+
+        url = reverse('last_mile:item-update-detail', args=(item.pk,))
+        data = {
+            'uom': 'CAR',
+            'conversion_factor': 10 / 50,
+            'quantity': 20
+        }
+        response = self.forced_auth_req('patch', url, user=self.partner_staff, data=data)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        item.refresh_from_db()
+        self.assertEqual(float(item.conversion_factor), 10 / 50)
+        self.assertEqual(item.quantity, 20)
+        self.assertEqual(item.uom, 'CAR')
+
+    def test_patch_no_uom_map(self):
+        item = ItemFactory(transfer=self.transfer, material=self.material, quantity=100)
+
+        url = reverse('last_mile:item-update-detail', args=(item.pk,))
+        data = {
+            'uom': 'BAG',
+            'conversion_factor': 10 / 50,
+            'quantity': 20
+        }
+        response = self.forced_auth_req('patch', url, user=self.partner_staff, data=data)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('The provided uom is not available in the material mapping.', response.data['non_field_errors'][0])
+
+    def test_patch_wrong_factor(self):
+        item = ItemFactory(transfer=self.transfer, material=self.material, quantity=100)
+
+        url = reverse('last_mile:item-update-detail', args=(item.pk,))
+        data = {
+            'uom': 'CAR',
+            'conversion_factor': 0.25,
+            'quantity': 20
+        }
+        response = self.forced_auth_req('patch', url, user=self.partner_staff, data=data)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('The conversion_factor is incorrect.', response.data['non_field_errors'][0])
+
+    def test_patch_wrong_qty(self):
+        item = ItemFactory(transfer=self.transfer, material=self.material, quantity=100)
+
+        url = reverse('last_mile:item-update-detail', args=(item.pk,))
+        data = {
+            'uom': 'CAR',
+            'conversion_factor': 0.2,
+            'quantity': 24
+        }
+        response = self.forced_auth_req('patch', url, user=self.partner_staff, data=data)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('The calculated quantity is incorrect.', response.data['non_field_errors'][0])
