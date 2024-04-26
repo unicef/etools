@@ -148,6 +148,38 @@ class ItemUpdateSerializer(serializers.ModelSerializer):
         model = models.Item
         fields = ('description', 'uom', 'quantity', 'conversion_factor')
 
+    def validate_conversion_factor(self, value):
+        if value <= 0:
+            raise ValidationError(_('The value for the conversion factor must be greater than 0.'))
+        return value
+
+    def validate_uom_map(self, validated_data):
+        material = self.instance.material
+        if material.other and 'uom_map' in material.other and material.other['uom_map']:
+            uom_map = material.other['uom_map']
+            new_uom = validated_data.get('uom', None)
+            if new_uom not in uom_map:
+                raise ValidationError(_('The provided uom is not available in the material mapping.'))
+
+            conversion_factor = validated_data.get('conversion_factor', None)
+            current_uom = self.instance.uom if self.instance.uom else material.original_uom
+
+            expected_conversion_factor = round(uom_map[current_uom] / uom_map[new_uom], 2)
+            if expected_conversion_factor != float(conversion_factor):
+                raise ValidationError(_('The conversion_factor is incorrect.'))
+
+            expected_qty = int(self.instance.quantity * conversion_factor)
+            if expected_qty != validated_data.get('quantity'):
+                raise ValidationError(_('The calculated quantity is incorrect.'))
+
+    def validate(self, attrs):
+        validated_data = super().validate(attrs)
+
+        if any(key in ['uom', 'quantity', 'conversion_factor'] for key in validated_data):
+            self.validate_uom_map(validated_data)
+
+        return validated_data
+
     def save(self, **kwargs):
         if 'description' in self.validated_data:
             description = self.validated_data.pop('description')
