@@ -21,6 +21,7 @@ from etools.applications.partners.permissions import UNICEF_USER
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.psea.models import Assessor
 from etools.applications.psea.tests.factories import AnswerFactory, AssessmentFactory, AssessorFactory
+from etools.applications.tpm.models import ThirdPartyMonitor
 from etools.applications.tpm.tests.factories import (
     TPMActivityFactory,
     TPMPartnerFactory,
@@ -52,6 +53,8 @@ class DownloadAttachmentsBaseTestCase(BaseTenantTestCase):
 
 
 class DownloadUnlinkedAttachmentTestCase(DownloadAttachmentsBaseTestCase):
+    # anyone has access to attachment when it's not linked to any object
+
     def test_attachment_user_not_in_schema(self):
         another_schema_user = UserFactory(is_staff=True, realms__data=[], profile__country=None)
         self._test_download(self.attachment, another_schema_user, status.HTTP_403_FORBIDDEN)
@@ -96,7 +99,13 @@ class DownloadAPAttachmentTestCase(DownloadAttachmentsBaseTestCase):
         self._test_download(self.attachment, self.auditor, status.HTTP_403_FORBIDDEN)
 
     def test_attachment_deactivated_auditor(self):
-        # user should have no access if he is not active in the organization
+        auditor = AuditorUserFactory(partner_firm=self.auditor_firm, is_staff=False)
+        self.specialaudit.staff_members.add(auditor)
+        auditor.realms.update(is_active=False)
+        self._test_download(self.attachment, auditor, status.HTTP_403_FORBIDDEN)
+
+    def test_attachment_moved_auditor(self):
+        # user should have no access if not active in the organization
         #   even if it's listed in the audit and has active realm with Auditor group
         auditor_firm = AuditPartnerFactory()
         auditor = AuditorUserFactory(partner_firm=auditor_firm, is_staff=False)
@@ -116,8 +125,8 @@ class DownloadTPMVisitAttachmentTestCase(DownloadAttachmentsBaseTestCase):
     def setUp(self):
         super().setUp()
         self.tpm_organization = TPMPartnerFactory()
-        self.tpm_staff = TPMUserFactory(tpm_partner=self.tpm_organization, is_staff=False)
         self.visit = TPMVisitFactory(tpm_partner=self.tpm_organization)
+        self.tpm_staff = TPMUserFactory(tpm_partner=self.tpm_organization, is_staff=False)
         self.attachment.content_object = self.visit
         self.attachment.save()
 
@@ -135,13 +144,35 @@ class DownloadTPMVisitAttachmentTestCase(DownloadAttachmentsBaseTestCase):
         another_tpm_staff = TPMUserFactory(is_staff=False)
         self._test_download(self.attachment, another_tpm_staff, status.HTTP_403_FORBIDDEN)
 
+    def test_attachment_deactivated_staff(self):
+        staff = TPMUserFactory(tpm_partner=self.tpm_organization, is_staff=False)
+        self.visit.tpm_partner_focal_points.add(staff)
+        staff.realms.update(is_active=False)
+        self._test_download(self.attachment, staff, status.HTTP_403_FORBIDDEN)
+
+    def test_attachment_moved_staff(self):
+        # user should have no access if not active in the organization
+        #   even if it's listed in the visit and has active realm with TPM group
+        tpm_organization = TPMPartnerFactory()
+        staff = TPMUserFactory(tpm_partner=tpm_organization, is_staff=False)
+        self.visit.tpm_partner_focal_points.add(staff)
+        realm = RealmFactory(
+            user=staff,
+            country=self.tenant,
+            organization=self.tpm_organization.organization,
+            group=ThirdPartyMonitor.as_group()
+        )
+        realm.is_active = False
+        realm.save()
+        self._test_download(self.attachment, staff, status.HTTP_403_FORBIDDEN)
+
 
 class DownloadTPMVisitActivityAttachmentTestCase(DownloadAttachmentsBaseTestCase):
     def setUp(self):
         super().setUp()
         self.tpm_organization = TPMPartnerFactory()
-        self.tpm_staff = TPMUserFactory(tpm_partner=self.tpm_organization, is_staff=False)
         self.visit = TPMVisitFactory(tpm_partner=self.tpm_organization)
+        self.tpm_staff = TPMUserFactory(tpm_partner=self.tpm_organization, is_staff=False)
         self.activity = TPMActivityFactory(tpm_visit=self.visit)
         self.attachment.content_object = self.activity
         self.attachment.save()
@@ -159,6 +190,28 @@ class DownloadTPMVisitActivityAttachmentTestCase(DownloadAttachmentsBaseTestCase
     def test_attachment_unrelated_staff(self):
         another_tpm_staff = TPMUserFactory(is_staff=False)
         self._test_download(self.attachment, another_tpm_staff, status.HTTP_403_FORBIDDEN)
+
+    def test_attachment_deactivated_staff(self):
+        staff = TPMUserFactory(tpm_partner=self.tpm_organization, is_staff=False)
+        self.visit.tpm_partner_focal_points.add(staff)
+        staff.realms.update(is_active=False)
+        self._test_download(self.attachment, staff, status.HTTP_403_FORBIDDEN)
+
+    def test_attachment_moved_staff(self):
+        # user should have no access if not active in the organization
+        #   even if it's listed in the visit and has active realm with TPM group
+        tpm_organization = TPMPartnerFactory()
+        staff = TPMUserFactory(tpm_partner=tpm_organization, is_staff=False)
+        self.visit.tpm_partner_focal_points.add(staff)
+        realm = RealmFactory(
+            user=staff,
+            country=self.tenant,
+            organization=self.tpm_organization.organization,
+            group=ThirdPartyMonitor.as_group()
+        )
+        realm.is_active = False
+        realm.save()
+        self._test_download(self.attachment, staff, status.HTTP_403_FORBIDDEN)
 
 
 class DownloadTPMPartnerAttachmentTestCase(DownloadAttachmentsBaseTestCase):
@@ -182,6 +235,26 @@ class DownloadTPMPartnerAttachmentTestCase(DownloadAttachmentsBaseTestCase):
     def test_attachment_unrelated_staff(self):
         another_tpm_staff = TPMUserFactory(is_staff=False)
         self._test_download(self.attachment, another_tpm_staff, status.HTTP_403_FORBIDDEN)
+
+    def test_attachment_deactivated_staff(self):
+        staff = TPMUserFactory(tpm_partner=self.tpm_organization, is_staff=False)
+        staff.realms.update(is_active=False)
+        self._test_download(self.attachment, staff, status.HTTP_403_FORBIDDEN)
+
+    def test_attachment_moved_staff(self):
+        # user should have no access if not active in the organization
+        #   even if it's listed in the visit and has active realm with TPM group
+        tpm_organization = TPMPartnerFactory()
+        staff = TPMUserFactory(tpm_partner=tpm_organization, is_staff=False)
+        realm = RealmFactory(
+            user=staff,
+            country=self.tenant,
+            organization=self.tpm_organization.organization,
+            group=ThirdPartyMonitor.as_group()
+        )
+        realm.is_active = False
+        realm.save()
+        self._test_download(self.attachment, staff, status.HTTP_403_FORBIDDEN)
 
 
 class DownloadFMGlobalConfigAttachmentTestCase(DownloadAttachmentsBaseTestCase):
@@ -464,3 +537,25 @@ class TPMVisitAttachmentLinkTestCase(AttachmentLinkBaseTestCase):
     def test_attachment_unrelated_staff(self):
         another_tpm_staff = TPMUserFactory(is_staff=False)
         self._test_delete(self.attachment_link, another_tpm_staff, status.HTTP_403_FORBIDDEN)
+
+    def test_attachment_deactivated_staff(self):
+        staff = TPMUserFactory(tpm_partner=self.tpm_organization, is_staff=False)
+        self.visit.tpm_partner_focal_points.add(staff)
+        staff.realms.update(is_active=False)
+        self._test_delete(self.attachment_link, staff, status.HTTP_403_FORBIDDEN)
+
+    def test_attachment_moved_staff(self):
+        # user should have no access if not active in the organization
+        #   even if it's listed in the visit and has active realm with TPM group
+        tpm_organization = TPMPartnerFactory()
+        staff = TPMUserFactory(tpm_partner=tpm_organization, is_staff=False)
+        self.visit.tpm_partner_focal_points.add(staff)
+        realm = RealmFactory(
+            user=staff,
+            country=self.tenant,
+            organization=self.tpm_organization.organization,
+            group=ThirdPartyMonitor.as_group()
+        )
+        realm.is_active = False
+        realm.save()
+        self._test_delete(self.attachment_link, staff, status.HTTP_403_FORBIDDEN)
