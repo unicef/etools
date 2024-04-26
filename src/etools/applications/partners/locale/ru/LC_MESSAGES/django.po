@@ -1937,12 +1937,8 @@ msgstr ""
 "Общая сумма РФ должна быть равна общей фактической сумме, а общая сумма "
 "непогашенных ПДП должна быть равна 0"
 
-msgid ""
-"Final Review must be approved for documents having amount transferred "
-"greater than 100,000"
-msgstr ""
-"Окончательное рассмотрение должно быть утверждено для документов, сумма "
-"перевода которых превышает 100 000 долл. США"
+msgid "Final Review must be approved"
+msgstr "Окончательный обзор должен быть одобрен"
 
 msgid "Cannot Transition status while adding an amendment"
 msgstr "Невозможно изменить статус при добавлении поправки"
@@ -2301,6 +2297,13 @@ msgstr ""
 
 msgid "Partnership Manager role required for pca export."
 msgstr "Для экспорта PCA требуется роль менеджера по партнерству."
+
+#~ msgid ""
+#~ "Final Review must be approved for documents having amount transferred "
+#~ "greater than 100,000"
+#~ msgstr ""
+#~ "Окончательное рассмотрение должно быть утверждено для документов, сумма "
+#~ "перевода которых превышает 100 000 долл. США"
 
 #~ msgid "Unable to associate staff member to UNICEF user"
 #~ msgstr "Не удалось связать сотрудника с пользователем ЮНИСЕФ"

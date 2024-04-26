@@ -1,5 +1,8 @@
+from django.conf import settings
+
 from django_tenants.utils import schema_context
 from unicef_attachments.models import Attachment
+from unicef_notification.utils import send_notification
 
 from etools.applications.environment.notifications import send_notification_with_template
 from etools.applications.last_mile import models
@@ -32,18 +35,21 @@ def notify_upload_waybill(tenant_name, destination_pk, waybill_pk, waybill_url):
 
 
 @app.task
-def notify_short_transfer(tenant_name, transfer_pk):
+def notify_wastage_transfer(tenant_name, transfer_pk, action='wastage_checkout'):
+    action_map = {
+        'wastage_checkout': 'checked-out as wastage',
+        'short_checkin': 'checked-in as short',
+        'surplus_checkin': 'checked-in as surplus'
+    }
     with schema_context(tenant_name):
         transfer = models.Transfer.objects.get(pk=transfer_pk)
 
-        email_context = {
-            'transfer': transfer
-        }
         # TODO send to Rob for now
-        recipients = User.objects.get(id=1).values_list('email', flat=True)
-
-        send_notification_with_template(
+        recipients = User.objects.filter(id=2).values_list('email', flat=True)
+        send_notification(
             recipients=list(recipients),
-            template_name='last_mile/short_transfer',
-            context=email_context
+            from_address=settings.DEFAULT_FROM_EMAIL,
+            subject=f'LMSM app: New items {action_map[action]} by {transfer.partner_organization.name}',
+            html_content_filename='emails/wastage_transfer.html',
+            context={'transfer': transfer, 'action': action, 'header': action_map[action]}
         )

@@ -71,7 +71,7 @@ msgstr "الحقول المطلوبة لم يتم إكمالها في %(status)s
 
 #, python-format
 msgid "Cannot change fields while in %(status)s: %(field)s"
-msgstr "لا يمكن تغيير الحقول أثناء تواجد %(status)s %(field): s"
+msgstr "لا يمكن تغيير الحقول أثناء تواجد %(status)s: %(field)s"
 
 msgid "Prioritization Criteria"
 msgstr "معايير تحديد الأولويات"

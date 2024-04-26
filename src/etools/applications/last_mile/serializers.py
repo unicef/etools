@@ -11,7 +11,7 @@ from unicef_attachments.serializers import AttachmentSerializerMixin
 
 from etools.applications.last_mile import models
 from etools.applications.last_mile.models import PartnerMaterial
-from etools.applications.last_mile.tasks import notify_short_transfer
+from etools.applications.last_mile.tasks import notify_wastage_transfer
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.users.serializers import MinimalUserSerializer
 
@@ -19,23 +19,25 @@ from etools.applications.users.serializers import MinimalUserSerializer
 class PointOfInterestTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.PointOfInterestType
-        fields = '__all__'
+        exclude = ['created', 'modified']
 
 
 class PointOfInterestSerializer(serializers.ModelSerializer):
     poi_type = PointOfInterestTypeSerializer(read_only=True)
+    country = serializers.SerializerMethodField(read_only=True)
+    region = serializers.SerializerMethodField(read_only=True)
+
+    def get_country(self, obj):
+        # TODO: this will not work on multi country tenants . Not sure we need it at all
+        return connection.tenant.name
+
+    def get_region(self, obj):
+        # TODO: this will not work on multi country tenants . Not sure we need it at all
+        return obj.parent.name if obj.parent else ''
 
     class Meta:
         model = models.PointOfInterest
         exclude = ('partner_organizations', 'point')
-
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        data['country'] = connection.tenant.name
-        data['region'] = instance.parent.name if instance.parent else None
-        data['latitude'] = instance.point.y if instance.point else None
-        data['longitude'] = instance.point.x if instance.point else None
-        return data
 
 
 class PointOfInterestLightSerializer(serializers.ModelSerializer):
@@ -52,7 +54,7 @@ class PointOfInterestLightSerializer(serializers.ModelSerializer):
 class MaterialSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Material
-        exclude = ('partner_materials', 'purchasing_text')
+        exclude = ('partner_materials',)
 
 
 class TransferListSerializer(serializers.ModelSerializer):
@@ -113,17 +115,11 @@ class MaterialListSerializer(serializers.ModelSerializer):
 
 class ItemSerializer(serializers.ModelSerializer):
     material = MaterialSerializer()
+    description = serializers.CharField(read_only=True)
 
     class Meta:
         model = models.Item
         exclude = ('transfer',)
-
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        data['description'] = instance.description
-        if not instance.uom:
-            data['uom'] = data['material']['original_uom']
-        return data
 
 
 class ItemListSerializer(serializers.ModelSerializer):
@@ -150,10 +146,7 @@ class ItemUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Item
-        fields = (
-            'description', 'uom', 'expiry_date', 'batch_id',
-            'quantity', 'is_prepositioned', 'preposition_qty', 'conversion_factor'
-        )
+        fields = ('description', 'uom', 'quantity', 'conversion_factor')
 
     def save(self, **kwargs):
         if 'description' in self.validated_data:
@@ -197,11 +190,6 @@ class TransferSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Transfer
         fields = '__all__'
-
-    # def to_representation(self, instance):
-    #     data = super().to_representation(instance)
-    #     data['items'] = ItemSerializer(instance.items.all().order_by('id'), many=True).data
-    #     return data
 
 
 class WaybillTransferSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
@@ -309,7 +297,7 @@ class TransferCheckinSerializer(TransferBaseSerializer):
                 )
                 short_transfer.save()
                 self.checkin_newtransfer_items(orig_items_dict, short_items, short_transfer)
-                notify_short_transfer.delay(connection.schema_name, short_transfer.pk)
+                notify_wastage_transfer.delay(connection.schema_name, short_transfer.pk, action='short_checkin')
 
             if surplus_items:
                 surplus_transfer = models.Transfer(
@@ -322,6 +310,7 @@ class TransferCheckinSerializer(TransferBaseSerializer):
                 )
                 surplus_transfer.save()
                 self.checkin_newtransfer_items(orig_items_dict, surplus_items, surplus_transfer)
+                notify_wastage_transfer.delay(connection.schema_name, surplus_transfer.pk, action='surplus_checkin')
 
             instance = super().update(instance, validated_data)
             instance.items.exclude(material__number__in=settings.RUTF_MATERIALS).update(hidden=True)
@@ -344,6 +333,18 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
         )
 
     def validate_items(self, value):
+        # Make sure that all the items belong to this partner and are in the inventory of this location
+        total_items_count = len(value)
+        partner = self.context['request'].user.partner
+        location = self.context['location']
+        total_db_items_count = (models.Item.objects.filter(id__in=[item['id'] for item in value])
+                                .filter(transfer__destination_point=location,
+                                        transfer__status=models.Transfer.COMPLETED,
+                                        transfer__partner_organization=partner,
+                                        quantity__gt=0).count())
+        if total_db_items_count != total_items_count:
+            raise ValidationError(_('Some of the items to be checked are no longer valid'))
+
         orig_items_dict = {obj.id: obj for obj in models.Item.objects.filter(id__in=[item['id'] for item in value])}
 
         for checkout_item in value:
@@ -409,4 +410,7 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
         self.instance.save()
 
         self.checkout_newtransfer_items(checkout_items)
+        if self.instance.transfer_type == models.Transfer.WASTAGE:
+            notify_wastage_transfer.delay(connection.schema_name, self.instance.pk)
+
         return self.instance

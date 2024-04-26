@@ -61,6 +61,7 @@ class PointOfInterest(TimeStampedModel, models.Model):
     tracker = FieldTracker(['point'])
 
     objects = PointOfInterestManager()
+    all_objects = models.Manager()
 
     class Meta:
         verbose_name = _('Point of Interest')
