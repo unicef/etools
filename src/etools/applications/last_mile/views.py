@@ -3,11 +3,11 @@ from functools import cache
 from django.db import connection
 from django.db.models import CharField, OuterRef, Prefetch, Q, Subquery
 from django.shortcuts import get_object_or_404
-from django.utils import timezone
 
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, status
 from rest_framework.decorators import action
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
@@ -277,14 +277,15 @@ class TransferViewSet(
 
     @action(detail=True, methods=['patch'], url_path='mark-complete')
     def mark_complete(self, request, pk=None, **kwargs):
-        transfer = self.get_object()
-        if transfer.transfer_type == models.Transfer.DISTRIBUTION:
-            transfer.status = models.Transfer.COMPLETED
-
-        transfer.destination_check_in_at = timezone.now()
-        transfer.checked_in_by = request.user
-        transfer.save(update_fields=['status', 'destination_check_in_at', 'checked_in_by'])
-        return Response(serializers.TransferSerializer(transfer).data, status=status.HTTP_200_OK)
+        raise PermissionDenied()
+        # transfer = self.get_object()
+        # if transfer.transfer_type == models.Transfer.DISTRIBUTION:
+        #     transfer.status = models.Transfer.COMPLETED
+        #
+        # transfer.destination_check_in_at = timezone.now()
+        # transfer.checked_in_by = request.user
+        # transfer.save(update_fields=['status', 'destination_check_in_at', 'checked_in_by'])
+        # return Response(serializers.TransferSerializer(transfer).data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['post'], url_path='new-check-out',
             serializer_class=serializers.TransferCheckOutSerializer)
