@@ -15,6 +15,7 @@ from etools.applications.partners.admin import AttachmentInlineAdminMixin
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.utils.helpers import generate_hash
 from etools.libraries.djangolib.admin import RestrictedEditAdminMixin, XLSXImportMixin
+from etools.libraries.djangolib.utils import is_user_in_groups
 
 
 class ProofTransferAttachmentInline(AttachmentSingleInline):
@@ -48,7 +49,7 @@ class PointOfInterestAdmin(XLSXImportMixin, admin.ModelAdmin):
     }
 
     def has_import_permission(self, request):
-        return request.user.email in settings.ADMIN_EDIT_EMAILS
+        return is_user_in_groups(request.user, ['Country Office Administrator'])
 
     @transaction.atomic
     def import_data(self, workbook):

@@ -85,11 +85,12 @@ def get_annotated_qs(qs):
                            ).values()
 
     if qs.model == models.PointOfInterest:
-        return qs.annotate(
+        return qs.prefetch_related('parent', 'poi_type').annotate(
             latitude=Latitude('point'),
-            longitude=Longitude('point')
+            longitude=Longitude('point'),
+            parent_pcode=F('parent__p_code'),
         ).values('id', 'created', 'modified', 'parent_id', 'name', 'description', 'poi_type_id',
-                 'other', 'private', 'is_active', 'latitude', 'longitude')
+                 'other', 'private', 'is_active', 'latitude', 'longitude', 'parent_pcode')
 
     if qs.model == models.Item:
         return qs.annotate(material_number=F('material__number'),
@@ -109,6 +110,7 @@ class VisionLMSMExport(APIView):
             "poi": models.PointOfInterest.all_objects,
             "item": models.Item.objects,
             "item_history": models.ItemTransferHistory.objects,
+            "poi_type": models.PointOfInterestType.objects,
         }
         queryset = model_manager_map.get(model_param)
         if not queryset:
