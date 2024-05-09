@@ -3,7 +3,7 @@ import logging
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.db import connection
-from django.http.response import HttpResponseRedirect
+from django.http.response import HttpResponseRedirect, HttpResponseForbidden
 from django.template.response import SimpleTemplateResponse
 from django.urls import reverse
 from django.utils import translation
@@ -124,3 +124,23 @@ class EToolsLocaleMiddleware(MiddlewareMixin):
             language_code = preferences['language']
             if language_code in get_languages() or language_code == settings.LANGUAGE_CODE:
                 translation.activate(language_code)
+
+
+class CheckReadOnlyMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        # Check if the request method is not GET
+        if request.method != 'GET':
+            print(request.user.groups)
+            if not any(request.path.startswith(path) for path in settings.READ_ONLY_EXCLUDED_PATHS):
+                # Check if the user is authenticated and belongs to the "Read Only" group
+                user_group_names = [g.name for g in request.user.groups]
+                if request.user.is_authenticated and 'Read Only' in user_group_names:
+                    # Return a 403 Forbidden response
+                    return HttpResponseForbidden("You don't have permission to perform this action.")
+
+        # Pass the request to the next middleware or view
+        response = self.get_response(request)
+        return response
