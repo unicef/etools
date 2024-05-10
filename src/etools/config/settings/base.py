@@ -138,6 +138,8 @@ MIDDLEWARE = (
     'etools.applications.core.middleware.EToolsTenantMiddleware',
     'waffle.middleware.WaffleMiddleware',  # needs request.tenant from EToolsTenantMiddleware
     'etools.applications.core.middleware.EToolsLocaleMiddleware',
+    'etools.applications.core.middleware.CheckReadOnlyMiddleware',
+    'etools.applications.core.middleware.ExternalAccessControlMiddleware',
 )
 WSGI_APPLICATION = 'etools.config.wsgi.application'
 
@@ -242,6 +244,7 @@ TENANT_APPS = (
     'unicef_snapshot',
     'unicef_attachments',
     'unicef_vision',
+    'etools.applications.last_mile'
 )
 INSTALLED_APPS = ('django_tenants',) + SHARED_APPS + TENANT_APPS
 
@@ -647,7 +650,11 @@ PMP_V2_RELEASE_DATE = datetime.datetime.strptime(PMP_V2_RELEASE_DATE, '%Y-%m-%d'
 # https://github.com/unicef/etools-ecn
 ECN_API_ENDPOINT = get_from_secrets_or_env('ECN_API_ENDPOINT', '')  # example: http://172.18.0.1:8086/api
 
-# Emails allowed to edit admin models in Partners and Reports apps
+# This variable prevents certain admin sections from being edited by superusers unless
+# their user emails are in the ADMIN_EDIT_EMAILS variable below
+RESTRICTED_ADMIN = get_from_secrets_or_env('RESTRICTED_ADMIN', True)
+
+# Emails allowed to edit admin models in Partners and Reports apps if RESTRICTED_ADMIN is enabled
 ADMIN_EDIT_EMAILS = get_from_secrets_or_env('ADMIN_EDIT_EMAILS', '')
 
 
@@ -655,3 +662,23 @@ ADMIN_EDIT_EMAILS = get_from_secrets_or_env('ADMIN_EDIT_EMAILS', '')
 STALE_USERS_DEACTIVATION_THRESHOLD_DAYS = int(
     get_from_secrets_or_env('STALE_USERS_DEACTIVATION_THRESHOLD_DAYS', 3 * 30)
 )
+
+WAYBILL_EMAILS = get_from_secrets_or_env('WAYBILL_EMAILS', '')
+
+
+RUTF_MATERIALS = get_from_secrets_or_env('RUTF_MATERIALS', '').split(',')
+
+READ_ONLY_EXCLUDED_PATHS = [
+    "/login",
+    "/admin/login",
+    "/logout",
+    "/social/unicef-logout",
+    "/api/v3/users/changecountry",
+]
+PARTNER_PROTECTED_URLS = [
+    "/api/v2/agreements",
+    "/api/v2/partners",
+    "/api/v2/interventions",
+    "/api/pmp/v3",
+    "/api/v2/funds",
+]
