@@ -237,6 +237,7 @@ TENANT_APPS = (
     'etools.applications.field_monitoring.data_collection',
     'etools.applications.field_monitoring.analyze',
     'etools.applications.comments',
+    'etools.applications.eface',
     'etools.applications.travel',
     'etools.applications.ecn',
     'unicef_snapshot',
