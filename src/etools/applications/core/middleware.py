@@ -3,7 +3,7 @@ import logging
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.db import connection
-from django.http.response import HttpResponseRedirect, HttpResponseForbidden
+from django.http.response import HttpResponseForbidden, HttpResponseRedirect
 from django.template.response import SimpleTemplateResponse
 from django.urls import reverse
 from django.utils import translation
@@ -13,6 +13,7 @@ from django.utils.translation.trans_real import get_languages
 from django_tenants.middleware import TenantMainMiddleware
 from django_tenants.utils import get_public_schema_name
 
+from etools.applications.users.mixins import PARTNER_PD_ACTIVE_GROUPS
 from etools.libraries.tenant_support.utils import set_country
 
 logger = logging.getLogger(__name__)
@@ -133,7 +134,6 @@ class CheckReadOnlyMiddleware:
     def __call__(self, request):
         # Check if the request method is not GET
         if request.method != 'GET':
-            print(request.user.groups)
             if not any(request.path.startswith(path) for path in settings.READ_ONLY_EXCLUDED_PATHS):
                 # Check if the user is authenticated and belongs to the "Read Only" group
                 user_group_names = [g.name for g in request.user.groups]
@@ -144,3 +144,21 @@ class CheckReadOnlyMiddleware:
         # Pass the request to the next middleware or view
         response = self.get_response(request)
         return response
+
+
+class ExternalAccessControlMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        # Check if the request method is not GET
+        if request.user.is_authenticated and request.user.is_unicef_user():
+            return self.get_response(request)
+
+        if request.user.is_authenticated:
+            # check where they're trying to access:
+            if any(request.path.startswith(path) for path in settings.PARTNER_PROTECTED_URLS):
+                user_group_names = [g.name for g in request.user.groups]
+                if not any([g in PARTNER_PD_ACTIVE_GROUPS for g in user_group_names]):
+                    return HttpResponseForbidden("You don't have permission to perform this action.")
+        return self.get_response(request)
