@@ -134,12 +134,13 @@ class CheckReadOnlyMiddleware:
     def __call__(self, request):
         # Check if the request method is not GET
         if request.method != 'GET':
-            if not any(request.path.startswith(path) for path in settings.READ_ONLY_EXCLUDED_PATHS):
-                # Check if the user is authenticated and belongs to the "Read Only" group
-                user_group_names = [g.name for g in request.user.groups]
-                if request.user.is_authenticated and 'Read Only' in user_group_names:
-                    # Return a 403 Forbidden response
-                    return HttpResponseForbidden("You don't have permission to perform this action.")
+            if request.user.is_authenticated:
+                if not any(request.path.startswith(path) for path in settings.READ_ONLY_EXCLUDED_PATHS):
+                    # Check if the user is authenticated and belongs to the "Read Only" group
+                    user_group_names = [g.name for g in request.user.groups]
+                    if 'Read Only' in user_group_names:
+                        # Return a 403 Forbidden response
+                        return HttpResponseForbidden("You don't have permission to perform this action.")
 
         # Pass the request to the next middleware or view
         response = self.get_response(request)
