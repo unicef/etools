@@ -323,6 +323,8 @@ class TransferCheckinSerializer(TransferBaseSerializer):
                     transfer_type=models.Transfer.WASTAGE,
                     transfer_subtype=models.Transfer.SHORT,
                     partner_organization=instance.partner_organization,
+                    waybill_id=instance.waybill_id,
+                    unicef_release_order=f'sh-{instance.unicef_release_order}',
                     origin_transfer=instance,
                     origin_point=instance.origin_point,
                     **validated_data
@@ -338,6 +340,8 @@ class TransferCheckinSerializer(TransferBaseSerializer):
                     partner_organization=instance.partner_organization,
                     origin_transfer=instance,
                     origin_point=instance.origin_point,
+                    waybill_id=instance.waybill_id,
+                    unicef_release_order=f'su-{instance.unicef_release_order}',
                     **validated_data
                 )
                 surplus_transfer.save()

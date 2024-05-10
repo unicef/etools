@@ -138,6 +138,8 @@ MIDDLEWARE = (
     'etools.applications.core.middleware.EToolsTenantMiddleware',
     'waffle.middleware.WaffleMiddleware',  # needs request.tenant from EToolsTenantMiddleware
     'etools.applications.core.middleware.EToolsLocaleMiddleware',
+    'etools.applications.core.middleware.CheckReadOnlyMiddleware',
+    'etools.applications.core.middleware.ExternalAccessControlMiddleware',
 )
 WSGI_APPLICATION = 'etools.config.wsgi.application'
 
@@ -665,3 +667,18 @@ WAYBILL_EMAILS = get_from_secrets_or_env('WAYBILL_EMAILS', '')
 
 
 RUTF_MATERIALS = get_from_secrets_or_env('RUTF_MATERIALS', '').split(',')
+
+READ_ONLY_EXCLUDED_PATHS = [
+    "/login",
+    "/admin/login",
+    "/logout",
+    "/social/unicef-logout",
+    "/api/v3/users/changecountry",
+]
+PARTNER_PROTECTED_URLS = [
+    "/api/v2/agreements",
+    "/api/v2/partners",
+    "/api/v2/interventions",
+    "/api/pmp/v3",
+    "/api/v2/funds",
+]
