@@ -987,10 +987,11 @@ class InterventionsViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTen
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_list(self):
+        InterventionFactory(status=Intervention.ENDED)
+        InterventionFactory(status=Intervention.CLOSED)
+
         valid_interventions = [
             InterventionFactory(status=Intervention.ACTIVE),
-            InterventionFactory(status=Intervention.ENDED),
-            InterventionFactory(status=Intervention.CLOSED),
             InterventionFactory(status=Intervention.SUSPENDED),
             InterventionFactory(status=Intervention.TERMINATED),
         ]
@@ -1018,6 +1019,24 @@ class InterventionsViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTen
         self._test_list(
             self.unicef_user, [result_link.intervention],
             data={'partners__in': str(result_link.intervention.agreement.partner.id)}
+        )
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_toggle_closed_ended(self):
+        ended = InterventionFactory(status=Intervention.ENDED)
+        closed = InterventionFactory(status=Intervention.CLOSED)
+        active = InterventionFactory(status=Intervention.ACTIVE)
+        suspended = InterventionFactory(status=Intervention.SUSPENDED)
+        terminated = InterventionFactory(status=Intervention.TERMINATED)
+
+        self._test_list(
+            self.unicef_user, [active, suspended, terminated],
+            data={'closed_ended': False}
+        )
+
+        self._test_list(
+            self.unicef_user, [ended, closed, active, suspended, terminated],
+            data={'closed_ended': True}
         )
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")

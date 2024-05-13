@@ -96,11 +96,20 @@ class CPOutputsFilterSet(filters.FilterSet):
 class InterventionsFilterSet(filters.FilterSet):
     partners__in = filters.BaseInFilter(field_name='agreement__partner')
     cp_outputs__in = filters.BaseInFilter(field_name='result_links__cp_output', distinct=True)
-    status__in = filters.BaseInFilter(field_name='status')
+    closed_ended = filters.BooleanFilter(method='filter_closed_ended')
 
     class Meta:
         model = Intervention
-        fields = ['partners__in', 'cp_outputs__in', 'status']
+        fields = ['partners__in', 'cp_outputs__in', 'status', 'closed_ended']
+
+    def filter_closed_ended(self, queryset, name, value):
+        if value:
+            return Intervention.objects.exclude(status__in=[
+                Intervention.DRAFT, Intervention.SIGNATURE,
+                Intervention.SIGNED, Intervention.REVIEW,
+                Intervention.EXPIRED, Intervention.CANCELLED
+            ]).select_related('agreement').prefetch_related('result_links').order_by('status', 'title')
+        return queryset
 
 
 class HactForPartnerFilter(BaseFilterBackend):
