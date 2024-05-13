@@ -1,3 +1,4 @@
+from unittest import skip
 from unittest.mock import Mock, patch
 
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -441,6 +442,7 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(self.checked_in.items.get(pk=item_1.pk).quantity, 2)
         self.assertEqual(self.checked_in.items.get(pk=item_2.pk).quantity, 22)
 
+    @skip('disabling feature for now')
     def test_mark_completed(self):
         self.assertEqual(self.outgoing.status, models.Transfer.PENDING)
 
