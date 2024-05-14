@@ -191,10 +191,11 @@ class MonitoringActivityOfflineBlueprintsSyncTestCase(APIViewSetTestCase, BaseTe
         ActivityQuestionFactory(monitoring_activity=activity, is_enabled=True, question__methods=[MethodFactory()])
 
         add_mock.reset_mock()
-        self._test_update(
-            activity.visit_lead, activity,
-            {'status': 'data_collection'}
-        )
+        with self.captureOnCommitCallbacks(execute=True):
+            self._test_update(
+                activity.visit_lead, activity,
+                {'status': 'data_collection'}
+            )
         add_mock.assert_called()
 
     @override_settings(ETOOLS_OFFLINE_API='http://example.com/b/api/remote/blueprint/',
@@ -397,27 +398,28 @@ class MonitoringActivityOfflineValuesTestCase(APIViewSetTestCase, BaseTenantTest
 
         connection.set_schema_to_public()
 
-        response = self.make_detail_request(
-            None, self.activity, method='post', action='offline',
-            QUERY_STRING='user={}&workspace={}'.format(self.user.email, schema_name),
-            data={
-                'information_source': {'name': 'Doctors'},
-                'partner': {
-                    self.partner.id: {
-                        'overall': 'overall',
-                        'attachments': [
-                            {
-                                'attachment': 'http://example.com',
-                                'file_type': file_type
+        with self.captureOnCommitCallbacks(execute=True):
+            response = self.make_detail_request(
+                None, self.activity, method='post', action='offline',
+                QUERY_STRING='user={}&workspace={}'.format(self.user.email, schema_name),
+                data={
+                    'information_source': {'name': 'Doctors'},
+                    'partner': {
+                        self.partner.id: {
+                            'overall': 'overall',
+                            'attachments': [
+                                {
+                                    'attachment': 'http://example.com',
+                                    'file_type': file_type
+                                }
+                            ],
+                            'questions': {
+                                str(self.activity_question.question_id): 'Question answer'
                             }
-                        ],
-                        'questions': {
-                            str(self.activity_question.question_id): 'Question answer'
                         }
                     }
                 }
-            }
-        )
+            )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
