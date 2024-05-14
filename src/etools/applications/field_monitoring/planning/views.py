@@ -324,7 +324,6 @@ class InterventionsViewSet(
             Intervention.DRAFT, Intervention.SIGNATURE,
             Intervention.SIGNED, Intervention.REVIEW,
             Intervention.EXPIRED, Intervention.CANCELLED,
-            Intervention.CLOSED, Intervention.ENDED
         ]
     ).select_related('agreement').prefetch_related('result_links').order_by('status', 'title')
     serializer_class = InterventionWithLinkedInstancesSerializer

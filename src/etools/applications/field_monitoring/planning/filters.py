@@ -104,11 +104,13 @@ class InterventionsFilterSet(filters.FilterSet):
 
     def filter_closed_ended(self, queryset, name, value):
         if value:
-            return Intervention.objects.exclude(status__in=[
-                Intervention.DRAFT, Intervention.SIGNATURE,
-                Intervention.SIGNED, Intervention.REVIEW,
-                Intervention.EXPIRED, Intervention.CANCELLED
-            ]).select_related('agreement').prefetch_related('result_links').order_by('status', 'title')
+            return queryset
+        return queryset.exclude(status__in=[Intervention.CLOSED, Intervention.ENDED])
+
+    def filter_queryset(self, queryset):
+        queryset = super().filter_queryset(queryset)
+        if 'closed_ended' not in self.request.query_params:
+            return queryset.exclude(status__in=[Intervention.CLOSED, Intervention.ENDED])
         return queryset
 
 
