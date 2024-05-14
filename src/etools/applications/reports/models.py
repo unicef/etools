@@ -585,7 +585,7 @@ class Disaggregation(TimeStampedModel):
         return self.name
 
     def save(self, *args, **kwargs):
-        if Disaggregation.objects.filter(name__iexact=self.name).first():
+        if not self.pk and Disaggregation.objects.filter(name__iexact=self.name).first():
             raise ValidationError("A disaggregation with this name already exists.")
         super().save(*args, **kwargs)
 
