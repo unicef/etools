@@ -1,4 +1,4 @@
-FROM python:3.9.6-alpine3.14
+FROM python:3.12-alpine3.19
 
 RUN apk update
 
@@ -31,12 +31,22 @@ RUN apk add --no-cache --virtual .build-deps --update \
     gettext
 
 RUN pip install --no-cache-dir --upgrade \
-    pip==23.1.2 \
-    pipenv==2022.10.4
+    pip \
+    pipenv
 
 
 WORKDIR /etools/
-ENV PIP_NO_CACHE_DIR false
-ADD Pipfile .
-ADD Pipfile.lock .
-RUN pipenv install --system  --ignore-pipfile --deploy
+#ENV PIP_NO_CACHE_DIR false
+#ADD Pipfile .
+#ADD Pipfile.lock .
+#RUN apk add bash
+# RUN #pipenv install --system  --ignore-pipfile --deploy
+RUN pip install pdm
+#RUN pdm init
+#RUN pipenv install --system --deploy
+#RUN pipenv install --system --deploy
+#RUN pipenv install --system --deploy
+ADD .pdm-python .
+ADD pdm.lock .
+ADD pyproject.toml .
+RUN pdm install

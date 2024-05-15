@@ -1,13 +1,13 @@
-FROM unicef/etools-base:latest
+FROM bb2
 
-WORKDIR /etools/
-ADD Pipfile .
-ADD Pipfile.lock .
-RUN pipenv install --dev --system  --ignore-pipfile
+#WORKDIR /etools/
+#ADD Pipfile .
+#ADD Pipfile.lock .
+#RUN pipenv install --dev --system  --ignore-pipfile
 RUN apk add bash
 
 ENV PYTHONUNBUFFERED 1
-ENV PYTHONPATH /code
+ENV PYTHONPATH /code:/code/__pypackages__
 ENV DJANGO_SETTINGS_MODULE etools.config.settings.local
 
 WORKDIR /code/
