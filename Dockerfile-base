@@ -31,22 +31,14 @@ RUN apk add --no-cache --virtual .build-deps --update \
     gettext
 
 RUN pip install --no-cache-dir --upgrade \
-    pip \
-    pipenv
+    pip
 
 
 WORKDIR /etools/
-#ENV PIP_NO_CACHE_DIR false
-#ADD Pipfile .
-#ADD Pipfile.lock .
-#RUN apk add bash
-# RUN #pipenv install --system  --ignore-pipfile --deploy
 RUN pip install pdm
-#RUN pdm init
-#RUN pipenv install --system --deploy
-#RUN pipenv install --system --deploy
-#RUN pipenv install --system --deploy
 ADD .pdm-python .
 ADD pdm.lock .
 ADD pyproject.toml .
 RUN pdm install
+
+ENV PYTHONPATH=/etools/__pypackages__/3.12/lib

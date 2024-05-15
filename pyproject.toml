@@ -2,9 +2,12 @@
 name = "etools"
 version = "12"
 description = "Default template for PDM package"
+
 authors = [
-    {name = "Rob", email = "r@example.com"},
+    {name = "Robert Avram", email = "robert@ravdev.com"},
+    {name = "Nikola Trncic", email = "ntrncic@unicef.org"},
 ]
+
 dependencies = [
     "azure-common",
     "azure-storage-blob",
@@ -72,6 +75,8 @@ dependencies = [
     "unicef-rest-export",
     "unicef-vision",
     "msal",
+    "gdal==3.8.5",
+    "jsonschema>=4.22.0",
 ]
 requires-python = ">=3.12"
 readme = "README.md"

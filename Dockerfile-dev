@@ -1,13 +1,11 @@
 FROM bb2
 
-#WORKDIR /etools/
-#ADD Pipfile .
-#ADD Pipfile.lock .
-#RUN pipenv install --dev --system  --ignore-pipfile
+WORKDIR /etools/
 RUN apk add bash
 
 ENV PYTHONUNBUFFERED 1
-ENV PYTHONPATH /code:/code/__pypackages__
+ENV PYTHONPATH /code:/etools/__pypackages__/3.12/lib
 ENV DJANGO_SETTINGS_MODULE etools.config.settings.local
 
 WORKDIR /code/
+
