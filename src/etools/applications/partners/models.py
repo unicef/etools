@@ -2,7 +2,6 @@ import datetime
 import decimal
 
 from django.conf import settings
-from django.contrib.auth.models import Group
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import ArrayField
 from django.core.validators import MinValueValidator
@@ -14,7 +13,6 @@ from django.utils.functional import cached_property
 from django.utils.translation import gettext, gettext_lazy as _
 
 from django_fsm import FSMField, transition
-from django_tenants.utils import get_public_schema_name
 from model_utils import Choices, FieldTracker
 from model_utils.models import TimeStampedModel
 from unicef_attachments.models import Attachment, FileType as AttachmentFileType
@@ -22,6 +20,7 @@ from unicef_djangolib.fields import CodedGenericRelation
 from unicef_snapshot.models import Activity
 
 from etools.applications.core.permissions import import_permissions
+from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.environment.notifications import send_notification_with_template
 from etools.applications.funds.models import FundsReservationHeader
 from etools.applications.locations.models import Location
@@ -50,7 +49,7 @@ from etools.applications.reports.models import CountryProgramme, Indicator, Offi
 from etools.applications.t2f.models import Travel, TravelActivity, TravelType
 from etools.applications.tpm.models import TPMActivity, TPMVisit
 from etools.applications.users.mixins import PARTNER_ACTIVE_GROUPS
-from etools.applications.users.models import Country, Realm, User
+from etools.applications.users.models import Realm, User
 from etools.libraries.djangolib.fields import CurrencyField
 from etools.libraries.djangolib.models import MaxDistinct, StringConcat
 from etools.libraries.djangolib.utils import get_environment
@@ -563,7 +562,10 @@ class PartnerOrganization(TimeStampedModel):
 
     @cached_property
     def all_staff_members(self):
-        user_qs = User.objects.filter(realms__in=self.context_realms)
+        user_qs = User.objects \
+            .base_qs() \
+            .select_related('profile') \
+            .filter(realms__in=self.context_realms)
 
         return user_qs\
             .annotate(has_active_realm=Exists(self.context_realms.filter(user=OuterRef('pk'), is_active=True)))\
@@ -953,108 +955,6 @@ class PartnerStaffMemberManager(models.Manager):
         return super().get_queryset().select_related('partner')
 
 
-# TODO REALMS clean up
-class PartnerStaffMember(TimeStampedModel):
-    """
-    Represents a staff member at the partner organization.
-    A User is created for each staff member
-
-    Relates to :model:`partners.PartnerOrganization`
-
-    related models:
-        Agreement: "agreement_authorizations" (m2m - all agreements this user is authorized for)
-        Agreement: "agreements_signed" (refers to all the agreements this user signed)
-    """
-
-    partner = models.ForeignKey(
-        PartnerOrganization,
-        verbose_name=_("Partner"),
-        related_name='old_staff_members',
-        on_delete=models.CASCADE,
-    )
-    user = models.OneToOneField(
-        settings.AUTH_USER_MODEL,
-        verbose_name=_("User"),
-        related_name='old_partner_staff_member',
-        on_delete=models.PROTECT,
-        null=True,
-        blank=True,
-    )
-    title = models.CharField(
-        verbose_name=_("Title"),
-        max_length=100,
-        null=True,
-        blank=True,
-    )
-    first_name = models.CharField(verbose_name=_("First Name"), max_length=64)
-    last_name = models.CharField(verbose_name=_("Last Name"), max_length=64)
-    email = models.CharField(
-        verbose_name=_("Email Address"),
-        max_length=128,
-        unique=True,
-        blank=False,
-    )
-    phone = models.CharField(
-        verbose_name=_("Phone Number"),
-        max_length=64,
-        blank=True,
-        null=True,
-        default='',
-    )
-    active = models.BooleanField(
-        verbose_name=_("Active"),
-        default=True
-    )
-
-    tracker = FieldTracker()
-    objects = PartnerStaffMemberManager()
-
-    def get_full_name(self):
-        full_name = '%s %s' % (self.first_name, self.last_name)
-        return full_name.strip()
-
-    def __str__(self):
-        return '{} {} ({})'.format(
-            self.first_name,
-            self.last_name,
-            self.partner.name
-        )
-
-    @transaction.atomic
-    def save(self, **kwargs):
-        """
-        core ideas:
-        1. user with profile should exists on create if staff member activation status is being changed
-        2. only one user staff member can be active through all tenants
-        """
-
-        if self.user and self.tracker.has_changed('active'):
-
-            if self.active:
-                # staff is activated
-                self.user.profile.country = connection.tenant
-                self.user.profile.organization = self.partner.organization
-                self.user.profile.save(update_fields=['country', 'organization'])
-            else:
-                # staff is deactivated
-                # using first() here because public schema unavailable during testing
-                self.user.profile.country = Country.objects.filter(schema_name=get_public_schema_name()).first()
-                self.user.profile.organization = None
-                self.user.profile.save(update_fields=['country', 'organization'])
-            # create or update (activate/deactivate) corresponding Realm
-            Realm.objects.update_or_create(
-                user=self.user,
-                country=connection.tenant,
-                organization=self.partner.organization,
-                group=Group.objects.get_or_create(name='IP Viewer')[0],
-                defaults={'is_active': self.active}
-            )
-            self.user.is_active = self.active
-            self.user.save()
-
-        return super().save(**kwargs)
-
-
 class PlannedEngagement(TimeStampedModel):
     """ class to handle partner's engagement for current year """
     partner = models.OneToOneField(PartnerOrganization, verbose_name=_("Partner"), related_name='planned_engagement',
@@ -1230,7 +1130,12 @@ class Assessment(TimeStampedModel):
 class AgreementManager(models.Manager):
 
     def get_queryset(self):
-        return super().get_queryset().select_related('partner', 'partner__organization')
+        return super().get_queryset().select_related(
+            'partner',
+            'partner__organization',
+        ).prefetch_related(
+            Prefetch('authorized_officers', User.objects.base_qs()),
+        )
 
 
 class MainAgreementManager(models.Manager):
@@ -1292,13 +1197,6 @@ class Agreement(TimeStampedModel):
         blank=True,
         null=True,
         on_delete=models.CASCADE,
-    )
-    # TODO REALMS clean up
-    old_authorized_officers = models.ManyToManyField(
-        PartnerStaffMember,
-        verbose_name=_("(old)Partner Authorized Officer"),
-        blank=True,
-        related_name="agreement_authorizations"
     )
     authorized_officers = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
@@ -1370,16 +1268,6 @@ class Agreement(TimeStampedModel):
         verbose_name=_("Signed By Partner Date"),
         null=True,
         blank=True,
-    )
-    # Signatory on behalf of the PartnerOrganization
-    # TODO REALMS clean up
-    old_partner_manager = models.ForeignKey(
-        PartnerStaffMember,
-        related_name='agreements_signed',
-        verbose_name=_('(old)Signed by partner'),
-        blank=True, null=True,
-        db_index=False,
-        on_delete=models.CASCADE,
     )
     partner_manager = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -1662,8 +1550,8 @@ class InterventionManager(models.Manager):
         return super().get_queryset().prefetch_related(
             'agreement__partner',
             'agreement__partner__organization',
-            'partner_focal_points',
-            'unicef_focal_points',
+            Prefetch('partner_focal_points', queryset=User.objects.base_qs()),
+            Prefetch('unicef_focal_points', queryset=User.objects.base_qs()),
             'offices',
             'planned_budget',
             'sections',
@@ -1671,7 +1559,15 @@ class InterventionManager(models.Manager):
         )
 
     def detail_qs(self):
-        qs = self.get_queryset().prefetch_related(
+        qs = super().get_queryset().prefetch_related(
+            'agreement__partner',
+            'agreement__partner__organization',
+            'partner_focal_points',
+            'unicef_focal_points',
+            'offices',
+            'planned_budget',
+            'sections',
+            'country_programmes',
             'frs',
             'frs__fr_items',
             'result_links__cp_output',
@@ -1763,6 +1659,13 @@ def side_effect_two(i, old_instance=None, user=None):
     pass
 
 
+def send_pd_to_vision_side_effect(i, old_instance=None, user=None):
+    from etools.applications.partners.tasks import send_pd_to_vision
+
+    if not tenant_switch_is_active('disable_pd_vision_sync'):
+        transaction.on_commit(lambda: send_pd_to_vision.delay(connection.tenant.name, i.pk))
+
+
 def get_default_cash_transfer_modalities():
     return [Intervention.CASH_TRANSFER_DIRECT, Intervention.CASH_TRANSFER_REIMBURSEMENT]
 
@@ -1803,12 +1706,13 @@ class Intervention(TimeStampedModel):
         DRAFT: [],
         REVIEW: [],
         SIGNATURE: [],
-        SIGNED: [side_effect_one, side_effect_two],
+        SIGNED: [send_pd_to_vision_side_effect, side_effect_one, side_effect_two],
         ACTIVE: [],
         SUSPENDED: [],
         ENDED: [],
         CLOSED: [],
-        TERMINATED: []
+        TERMINATED: [],
+        CANCELLED: [],
     }
 
     INTERVENTION_STATUS = (
@@ -1995,17 +1899,6 @@ class Intervention(TimeStampedModel):
         null=True,
         on_delete=models.CASCADE,
     )
-    # TODO REALMS clean up
-    # part of the Agreement authorized officers
-    old_partner_authorized_officer_signatory = models.ForeignKey(
-        PartnerStaffMember,
-        verbose_name=_("(old)Signed by Partner"),
-        related_name='signed_interventions',
-        blank=True,
-        null=True,
-        db_index=False,
-        on_delete=models.CASCADE,
-    )
     partner_authorized_officer_signatory = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         verbose_name=_("Signed by Partner"),
@@ -2020,14 +1913,6 @@ class Intervention(TimeStampedModel):
         verbose_name=_("UNICEF Focal Points"),
         blank=True,
         related_name='unicef_interventions_focal_points+'
-    )
-    # TODO REALMS clean up
-    # any PartnerStaffMember on the PartnerOrganization
-    old_partner_focal_points = models.ManyToManyField(
-        PartnerStaffMember,
-        verbose_name=_("(old)CSO Authorized Officials"),
-        related_name='interventions_focal_points+',
-        blank=True
     )
     partner_focal_points = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
@@ -2785,17 +2670,6 @@ class InterventionAmendment(TimeStampedModel):
         null=True,
         on_delete=models.CASCADE,
     )
-    # TODO REALMS clean up
-    # part of the Agreement authorized officers
-    old_partner_authorized_officer_signatory = models.ForeignKey(
-        PartnerStaffMember,
-        verbose_name=_("(old)Signed by Partner"),
-        related_name='+',
-        blank=True,
-        null=True,
-        db_index=False,
-        on_delete=models.CASCADE,
-    )
     partner_authorized_officer_signatory = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         verbose_name=_("Signed by Partner"),
@@ -3189,7 +3063,7 @@ class InterventionBudget(TimeStampedModel):
         programme_effectiveness = 0
         if not init:
             init_totals()
-        programme_effectiveness += intervention.management_budgets.total
+        programme_effectiveness += intervention.management_budgets.unicef_total
         self.partner_contribution_local += intervention.management_budgets.partner_total
         self.total_unicef_cash_local_wo_hq += intervention.management_budgets.unicef_total
         self.unicef_cash_local = self.total_unicef_cash_local_wo_hq + self.total_hq_cash_local
@@ -3205,9 +3079,11 @@ class InterventionBudget(TimeStampedModel):
 
         self.total = self.total_unicef_contribution() + self.partner_contribution
         self.total_partner_contribution_local = self.partner_contribution_local + self.partner_supply_local
-        self.total_local = self.total_unicef_contribution_local() + self.total_partner_contribution_local
-        if self.total_local:
-            self.programme_effectiveness = programme_effectiveness / self.total_local * 100
+        total_unicef_contrib_local = self.total_unicef_contribution_local()
+        self.total_local = total_unicef_contrib_local + self.total_partner_contribution_local
+
+        if total_unicef_contrib_local:
+            self.programme_effectiveness = programme_effectiveness / total_unicef_contrib_local * 100
         else:
             self.programme_effectiveness = 0
 

@@ -1,8 +1,10 @@
+from django.conf import settings
 from django.conf.global_settings import LANGUAGES
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.db import connection
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
@@ -19,8 +21,8 @@ from etools.applications.users.serializers import (
     SimpleGroupSerializer,
     SimpleOrganizationSerializer,
 )
-from etools.applications.users.tasks import notify_user_on_realm_update
-from etools.applications.users.validators import EmailValidator, ExternalUserValidator
+from etools.applications.users.tasks import notify_user_on_realm_update, sync_realms_to_prp
+from etools.applications.users.validators import EmailValidator, ExternalUserValidator, LowerCaseEmailValidator
 
 # temporary list of Countries that will use the Auditor Portal Module.
 # Logic be removed once feature gating is in place
@@ -39,6 +41,8 @@ class MinimalUserSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='get_full_name', read_only=True)
     email = serializers.EmailField(validators=[EmailValidator()])
     phone = serializers.SerializerMethodField()
+    # TODO: get rid of username here
+    username = serializers.CharField(source='email')
 
     class Meta:
         model = get_user_model()
@@ -54,9 +58,8 @@ class MinimalUserSerializer(serializers.ModelSerializer):
         )
 
     def get_phone(self, obj):
-        if obj.profile:
-            return obj.profile.phone_number
-        return None
+        # TODO: figure out later if we need this here. Hotfix takes precedent over impact
+        return ''
 
 
 # used for user detail view
@@ -209,7 +212,7 @@ class UserRealmBaseSerializer(GroupEditPermissionMixin, serializers.ModelSeriali
 
 
 class UserRealmCreateSerializer(UserRealmBaseSerializer):
-    email = serializers.CharField(required=True, write_only=True)
+    email = serializers.CharField(required=True, write_only=True, validators=[LowerCaseEmailValidator()])
     job_title = serializers.CharField(required=False, allow_blank=True, write_only=True)
     phone_number = serializers.CharField(required=False, allow_blank=True, write_only=True)
 
@@ -314,6 +317,10 @@ class UserRealmUpdateSerializer(UserRealmBaseSerializer):
             instance.profile.organization = None
         instance.profile.save(update_fields=['organization'])
 
+        sync_realms_to_prp.apply_async(
+            (instance.id, timezone.now().timestamp()),
+            countdown=settings.PRP_USER_SYNC_DELAY * 60
+        )
         notify_user_on_realm_update.delay(instance.id)
         return instance
 
@@ -321,7 +328,7 @@ class UserRealmUpdateSerializer(UserRealmBaseSerializer):
 class StagedUserCreateSerializer(UserRealmCreateSerializer):
     organization = serializers.IntegerField(required=False, allow_null=False, write_only=True)
     groups = serializers.ListField(child=serializers.IntegerField(), required=True, allow_null=False, write_only=True)
-    email = serializers.CharField(required=True, write_only=True)
+    email = serializers.CharField(required=True, write_only=True, validators=[LowerCaseEmailValidator()])
     first_name = serializers.CharField(required=False, allow_blank=True, write_only=True)
     last_name = serializers.CharField(required=False, allow_blank=True, write_only=True)
     job_title = serializers.CharField(required=False, allow_blank=True, write_only=True)
@@ -404,7 +411,7 @@ class ProfileRetrieveUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserProfile
-        exclude = ('id', 'old_countries_available')  # TODO REALMS clean up
+        exclude = ('id',)
 
     # TODO remove once feature gating is in place.
     def get_show_ap(self, obj):

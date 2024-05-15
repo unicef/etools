@@ -99,7 +99,7 @@ class ChangeUserRoleView(CreateAPIView, GenericAPIView):
                     country=workspace,
                     organization=unicef_organization,
                     group=role,
-                    is_active=True
+                    defaults={"is_active": True}
                 )[0])
             if data["access_type"] == "set":
                 user.realms.exclude(id__in=[realm.id for realm in realms]).update(is_active=False)
@@ -108,8 +108,9 @@ class ChangeUserRoleView(CreateAPIView, GenericAPIView):
             user.profile.country_override = None
             details["country_override"] = "The user's country override has been removed"
         if user.profile.country != workspace:
-            details["country"] = "The user has been moved from {} to {}".format(user.profile.country.name,
-                                                                                workspace.name)
+            details["country"] = "The user has been moved from {} to {}"\
+                .format(user.profile.country.name if user.profile.country else 'N/A',
+                        workspace.name)
         user.profile.country = workspace
         user.profile.save()
         details["current_roles"] = list(user.groups.filter().values_list("name", flat=True))

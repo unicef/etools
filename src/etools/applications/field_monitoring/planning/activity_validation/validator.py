@@ -35,6 +35,10 @@ class ActivityValid(CompleteValidation):
 
     PERMISSIONS_CLASS = ActivityPermissions
 
+    def get_permissions(self, instance):
+        instance.old = self.old
+        return super().get_permissions(instance)
+
     def check_required_fields(self, intervention):
         required_fields = [f for f in self.permissions['required'] if self.permissions['required'][f]]
         required_valid, fields = check_required_fields(intervention, required_fields)

@@ -99,6 +99,7 @@ class ActionPointListSerializer(PermissionsBasedSerializerMixin, ActionPointBase
         fields = ActionPointBaseSerializer.Meta.fields + [
             'related_module', 'cp_output', 'partner', 'intervention', 'location',
             'engagement', 'psea_assessment', 'tpm_activity', 'travel_activity',
+            'date_of_verification',
         ]
 
 
@@ -171,6 +172,8 @@ class HistorySerializer(serializers.ModelSerializer):
 class ActionPointSerializer(WritableNestedSerializerMixin, ActionPointListSerializer):
     comments = CommentSerializer(many=True, label=_('Actions Taken'), required=False)
     history = HistorySerializer(many=True, label=_('History'), read_only=True, source='get_meaningful_history')
+    potential_verifier = MinimalUserSerializer(read_only=True, label=_('Potential Verifier'))
+    verified_by = MinimalUserSerializer(read_only=True, label=_('Verified By'))
 
     related_object_str = serializers.ReadOnlyField(label=_('Related Document'))
     related_object_url = serializers.ReadOnlyField()
@@ -178,9 +181,23 @@ class ActionPointSerializer(WritableNestedSerializerMixin, ActionPointListSerial
     class Meta(WritableNestedSerializerMixin.Meta, ActionPointListSerializer.Meta):
         fields = ActionPointListSerializer.Meta.fields + [
             'comments', 'history', 'related_object_str', 'related_object_url',
+            'potential_verifier', 'verified_by', 'is_adequate',
         ]
 
     def validate_category(self, value):
         if value and value.module != self.instance.related_module:
             raise serializers.ValidationError(_('Category doesn\'t belong to selected module.'))
         return value
+
+    def validate(self, attrs):
+        validated_data = super().validate(attrs)
+        if 'potential_verifier' in validated_data:
+            if self.instance.author == validated_data['potential_verifier']:
+                raise serializers.ValidationError(_("Author cannot verify own action point."))
+
+        return validated_data
+
+    def update(self, instance, validated_data):
+        if 'is_adequate' in validated_data:
+            validated_data['verified_by'] = self.get_user()
+        return super().update(instance, validated_data)

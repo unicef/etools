@@ -28,7 +28,7 @@ from etools.applications.organizations.models import Organization
 from etools.applications.partners.permissions import user_group_permission
 from etools.applications.partners.views.v3 import PMPBaseViewMixin
 from etools.applications.users import views as v1, views_v2 as v2
-from etools.applications.users.filters import UserRoleFilter, UserStatusFilter
+from etools.applications.users.filters import OrganizationFilter, UserRoleFilter, UserStatusFilter
 from etools.applications.users.mixins import (
     AUDIT_ACTIVE_GROUPS,
     GroupEditPermissionMixin,
@@ -169,7 +169,7 @@ class UsersListAPIView(PMPBaseViewMixin, QueryStringFilterMixin, ListAPIView):
     Country is determined by the currently logged in user.
     """
     model = get_user_model()
-    queryset = get_user_model().objects.all()
+    queryset = get_user_model().objects.base_qs().all()
     serializer_class = MinimalUserSerializer
     permission_classes = (IsAuthenticated, )
     pagination_class = AppendablePageNumberPagination
@@ -224,6 +224,8 @@ class OrganizationListView(ListAPIView):
     model = Organization
     serializer_class = SimpleOrganizationSerializer
     permission_classes = (IsAuthenticated, IsUNICEFUser)
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = OrganizationFilter
 
     def get_queryset(self):
         queryset = Organization.objects.all() \
@@ -241,8 +243,15 @@ class OrganizationListView(ListAPIView):
                           auditorfirm__hidden=False),
             "tpm": dict(tpmpartner__countries=connection.tenant, tpmpartner__hidden=False)
         }
+        organization_type = self.request.query_params.get('organization_type', 'partner')
+        # Audit firms without audits are included when organization_id is present
+        # so that staff members can be added in AMP (ch35468)
+        if organization_type == 'audit' and 'organization_id' in self.request.query_params:
+            organization_type_filter['audit'] = dict(auditorfirm__hidden=False,
+                                                     id__in=[int(self.request.query_params['organization_id'])])
+
         return queryset\
-            .filter(**organization_type_filter[self.request.query_params.get('organization_type', 'partner')])\
+            .filter(**organization_type_filter[organization_type])\
             .distinct()
 
 
@@ -328,8 +337,9 @@ class UserRealmViewSet(
     def get_queryset(self):
         organization_id = self.request.query_params.get('organization_id') or self.request.data.get('organization')
         relationship_type = self.request.query_params.get('organization_type')
-        if organization_id:
-            if self.request.user.is_unicef_user():
+
+        if self.request.user.is_unicef_user():
+            if organization_id:
                 organization = get_object_or_404(
                     Organization.objects.all().select_related('partner', 'auditorfirm', 'tpmpartner'),
                     pk=organization_id)
@@ -397,6 +407,7 @@ class StagedUserViewSet(
     permission_classes = (IsAuthenticated, IsActiveInRealm)
 
     def get_queryset(self):
+        # TODO: limit to either unicef for entire qs or partner their own org only
         qs_context = {
             'request_state': StagedUser.PENDING,
             'country': connection.tenant
@@ -445,7 +456,6 @@ class StagedUserViewSet(
 class ExternalUserViewSet(
         SafeTenantViewSetMixin,
         mixins.ListModelMixin,
-        mixins.CreateModelMixin,
         mixins.RetrieveModelMixin,
         viewsets.GenericViewSet,
 ):

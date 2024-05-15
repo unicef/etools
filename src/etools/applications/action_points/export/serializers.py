@@ -27,6 +27,10 @@ class ActionPointExportSerializer(serializers.Serializer):
     related_object_url = serializers.SerializerMethodField()
     related_object_str = serializers.SerializerMethodField()
     action_taken = serializers.SerializerMethodField()
+    date_of_verification = serializers.DateTimeField(format='%d/%m/%Y')
+    verified_by = serializers.CharField(source='verified_by.get_full_name', allow_null=True)
+    is_adequate = serializers.BooleanField()
+    potential_verifier = serializers.CharField(source='potential_verifier.get_full_name', allow_null=True)
 
     def get_action_taken(self, obj):
         return ";\n\n".join(["{} ({}): {}".format(c.user if c.user else '-', c.submit_date.strftime(

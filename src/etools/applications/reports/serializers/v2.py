@@ -261,8 +261,14 @@ class AppliedIndicatorSerializer(serializers.ModelSerializer):
             instance_copy = instance.make_copy()
 
             intervention = instance.lower_result.result_link.intervention
-            was_active_before = intervention.was_active_before()
             in_amendment = intervention.in_amendment
+
+            if in_amendment and not self.instance.is_active:
+                raise ValidationError(_(
+                    'You cannot update inactive indicators when the PD is in amendment.'
+                ))
+
+            was_active_before = intervention.was_active_before()
             if was_active_before or in_amendment:
                 instance.is_active = False
                 instance.save()
@@ -425,6 +431,8 @@ class RAMIndicatorSerializer(serializers.ModelSerializer):
 
 class ReportingRequirementSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(required=False)
+    start_date = serializers.DateField(required=True, allow_null=False)
+    end_date = serializers.DateField(required=True, allow_null=False)
 
     class Meta:
         model = ReportingRequirement
@@ -533,10 +541,10 @@ class InterventionActivityItemSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         attrs = super().validate(attrs)
 
-        unit_price = attrs.get('unit_price', self.instance.unit_price if self.instance else None)
-        no_units = attrs.get('no_units', self.instance.no_units if self.instance else None)
-        unicef_cash = attrs.get('unicef_cash', self.instance.unicef_cash if self.instance else None)
-        cso_cash = attrs.get('cso_cash', self.instance.cso_cash if self.instance else None)
+        unit_price = attrs.get('unit_price', self.instance.unit_price if self.instance else 0)
+        no_units = attrs.get('no_units', self.instance.no_units if self.instance else 0)
+        unicef_cash = attrs.get('unicef_cash', self.instance.unicef_cash if self.instance else 0)
+        cso_cash = attrs.get('cso_cash', self.instance.cso_cash if self.instance else 0)
 
         # unit_price * no_units can contain more decimal places than we're able to save
         if abs((unit_price * no_units) - (unicef_cash + cso_cash)) > 0.01:

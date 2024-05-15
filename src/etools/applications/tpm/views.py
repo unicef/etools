@@ -1,3 +1,5 @@
+from functools import cache
+
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.db import connection
@@ -205,16 +207,12 @@ class TPMPartnerViewSet(
 class TPMStaffMembersViewSet(
     BaseTPMViewSet,
     mixins.ListModelMixin,
-    # TODO: REALMS - do cleanup. users management moved to separate moved
-    # mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,
-    # mixins.UpdateModelMixin,
-    # mixins.DestroyModelMixin,
     NestedViewSetMixin,
     viewsets.GenericViewSet
 ):
     metadata_class = PermissionBasedMetadata
-    queryset = get_user_model().objects.all()
+    queryset = get_user_model().objects.select_related(None).select_related('profile')
     serializer_class = TPMPartnerStaffMemberRealmSerializer
     permission_classes = BaseTPMViewSet.permission_classes + [
         get_permission_for_targets('tpmpartners.tpmpartner.staff_members')
@@ -233,8 +231,9 @@ class TPMStaffMembersViewSet(
             group__name__in=TPM_ACTIVE_GROUPS
         )
         queryset = queryset\
-            .filter(realms__in=context_realms_qs)\
+            .annotate(has_realm=Exists(context_realms_qs.filter(user=OuterRef('pk'))))\
             .annotate(has_active_realm=Exists(context_realms_qs.filter(user=OuterRef('pk'), is_active=True)))\
+            .filter(has_realm=True)\
             .distinct()
         return queryset
 
@@ -244,6 +243,10 @@ class TPMStaffMembersViewSet(
             return {}
 
         return {'realms__organization': parent.organization}
+
+    @cache
+    def get_parent_object(self):
+        return super().get_parent_object()
 
     def get_permission_context(self):
         context = super().get_permission_context()
@@ -262,21 +265,6 @@ class TPMStaffMembersViewSet(
             TPMStaffMemberCondition(obj.profile.organization, self.request.user),
         ])
         return context
-
-    # TODO: REALMS - do cleanup
-    # def perform_create(self, serializer, **kwargs):
-    #     self.check_serializer_permissions(serializer, edit=True)
-    #     instance = serializer.save(tpm_partner=self.get_parent_object(), **kwargs)
-    #     if not instance.user.profile.country:
-    #         instance.user.profile.country = self.request.user.profile.country
-    #     instance.user.profile.organization = instance.tpm_partner.organization
-    #     Realm.objects.update_or_create(
-    #         user=instance.user,
-    #         country=instance.user.profile.country,
-    #         organization=instance.tpm_partner.organization,
-    #         group=ThirdPartyMonitor.as_group()
-    #     )
-    #     instance.user.profile.save(update_fields=['country', 'organization'])
 
     @action(detail=False, methods=['get'], url_path='export', renderer_classes=(TPMPartnerContactsCSVRenderer,))
     def export(self, request, *args, **kwargs):
@@ -370,7 +358,7 @@ class TPMVisitViewSet(
     }
     filter_backends = (ReferenceNumberOrderingFilter, OrderingFilter, SearchFilter, DjangoFilterBackend, )
     search_fields = (
-        'tpm_partner__name', 'tpm_activities__partner__name',
+        'tpm_partner__organization__name', 'tpm_activities__partner__organization__name',
         'tpm_activities__locations__name', 'tpm_activities__locations__p_code',
     )
     ordering_fields = (

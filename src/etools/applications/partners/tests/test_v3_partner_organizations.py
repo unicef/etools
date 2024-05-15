@@ -71,7 +71,7 @@ class TestPartnerOrganizationList(BasePartnerOrganizationTestCase):
             realms__data=['IP Viewer'],
             profile__organization=partner.organization
         )
-        with self.assertNumQueries(3):
+        with self.assertNumQueries(5):
             response = self.forced_auth_req(
                 "get",
                 reverse('pmp_v3:partner-list'),

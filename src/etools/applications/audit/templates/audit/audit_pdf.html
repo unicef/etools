@@ -19,7 +19,7 @@
           <td colspan="2">{{ serializer.fields.financial_findings_local.label }}</td>
           {% endif %}
           <td>{{ serializer.fields.percent_of_audited_expenditure.label }}</td>
-          <td>{{ serializer.fields.audit_opinion.label }}</td>
+          <td colspan="2">{{ serializer.fields.audit_opinion.label }}</td>
           <td>No. of Financial Findings</td>
           <td colspan="3" style="padding: 0">
             <table>
@@ -45,7 +45,7 @@
           <td colspan="2">{{ engagement.financial_findings_local|default_if_none:"0.00"|currency }}</td>
           {% endif %}
           <td>{{ engagement.percent_of_audited_expenditure|default_if_none:"0.00"|currency }}</td>
-          <td>{{ engagement.audit_opinion|default:"-"|title }}</td>
+          <td colspan="2">{{ engagement.audit_opinion|default:"-"|title }}</td>
           <td>{{ engagement.financial_finding_set|length }}</td>
           <td>{{ engagement.key_internal_weakness.high_risk_count }}</td>
           <td>{{ engagement.key_internal_weakness.medium_risk_count }}</td>

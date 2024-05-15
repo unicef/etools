@@ -2,6 +2,8 @@ from django.db import connection, transaction
 
 from rest_framework import serializers
 
+from etools.applications.environment.helpers import tenant_switch_is_active
+
 
 class InterventionVisionSynchronizerMixin(serializers.ModelSerializer):
 
@@ -13,5 +15,8 @@ class InterventionVisionSynchronizerMixin(serializers.ModelSerializer):
 
         instance = super().save(**kwargs)
         intervention = self.get_intervention()
-        transaction.on_commit(lambda: send_pd_to_vision.delay(connection.tenant.name, intervention.pk))
+
+        if not tenant_switch_is_active('disable_pd_vision_sync'):
+            transaction.on_commit(lambda: send_pd_to_vision.delay(connection.tenant.name, intervention.pk))
+
         return instance

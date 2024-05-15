@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-07-02 23:14+0000\n"
+"POT-Creation-Date: 2024-03-26 12:56+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -676,23 +676,6 @@ msgstr "ميزانية خطة العمل التفصيلية"
 msgid "Supply Contribution (Planned)"
 msgstr "مساهمة التوريد (مخطط لها)"
 
-msgid "Unable to associate staff member to UNICEF user"
-msgstr "تعذر ربط الموظف بمستخدم اليونيسف"
-
-#, python-format
-msgid "This user already exists under a different partnership: %s"
-msgstr "هذا المستخدم موجود بالفعل ضمن شراكة مختلفة: %s"
-
-#, python-format
-msgid ""
-"User emails cannot be changed, please remove the user and add another one: %s"
-msgstr ""
-"لا يمكن تغيير عناوين البريد الإلكتروني للمستخدم ، يرجى إزالة المستخدم وإضافة "
-"مستخدم آخر: %s"
-
-msgid "User already synced to PRP and cannot be disabled."
-msgstr "قام المستخدم بالفعل بمزامنة PRP ولا يمكن تعطيله."
-
 msgid "Name"
 msgstr "اسم"
 
@@ -810,21 +793,6 @@ msgstr "القسم الرئيسي"
 msgid "Core Values Assessment"
 msgstr "تقييم القيم الجوهرية"
 
-msgid "User"
-msgstr "مستخدم"
-
-msgid "Title"
-msgstr "عنوان"
-
-msgid "First Name"
-msgstr "الاسم الاول"
-
-msgid "Last Name"
-msgstr "اسم العائلة"
-
-msgid "Active"
-msgstr "نشيط"
-
 msgid "Spot Check Follow Up Required"
 msgstr "مطلوب متابعة للزيارة الرقابية المفاجئة"
 
@@ -918,17 +886,11 @@ msgstr "معلق"
 msgid "Terminated"
 msgstr "تم إنهاؤه"
 
-msgid "(old)Partner Authorized Officer"
-msgstr "موظف شريك معتمد"
-
 msgid "Attached Agreement"
 msgstr "الاتفاقية المرفقة"
 
 msgid "Termination document for PCAs"
 msgstr "وثيقة إنهاء اتفاقية التعاون في البرنامج"
-
-msgid "(old)Signed by partner"
-msgstr "وقعه الشريك"
 
 msgid "Signed by partner"
 msgstr "وقعه الشريك"
@@ -968,6 +930,9 @@ msgstr "المراجعة"
 
 msgid "Signature"
 msgstr "التوقيع"
+
+msgid "Active"
+msgstr "نشيط"
 
 msgid "Cancelled"
 msgstr "ألغيت"
@@ -1010,12 +975,6 @@ msgstr "تاريخ إجراء مراجعة الشراكة النهائية"
 
 msgid "Final Review Approved"
 msgstr "تمت الموافقة على المراجعة النهائية"
-
-msgid "(old)Signed by Partner"
-msgstr "وقعه الشريك"
-
-msgid "(old)CSO Authorized Officials"
-msgstr "مسؤولو منظمات المجتمع المدني المعتمدون"
 
 msgid "Contingency PD"
 msgstr "وثيقة برامج الطوارئ "
@@ -1318,6 +1277,9 @@ msgstr "الموافق العام"
 msgid "Sent Back by Secretary Comment"
 msgstr "تم الإرسال مرة أخرى بسبب تعليق السكرتير"
 
+msgid "User"
+msgstr "مستخدم"
+
 msgid "FACE"
 msgstr ""
 
@@ -1434,6 +1396,9 @@ msgid ""
 msgstr ""
 "مساهمة الشريك في التخطيط والمراقبة والتقييم والاتصال ، مُتناسبة مع مساهمتهم "
 "في البرنامج (المكان ، والسفر ، وما إلى ذلك)"
+
+msgid "Title"
+msgstr "عنوان"
 
 msgid "Unit Number"
 msgstr "رقم الوحدة"
@@ -1675,13 +1640,6 @@ msgstr ""
 "بيانات الميزانية غير صالحة. يجب أن يكون إجمالي النقد مساويًا لرقم العناصر * "
 "السعر لكل عنصر."
 
-msgid ""
-"User already synced to PRP and cannot be disabled. Please instruct the "
-"partner to disable from PRP"
-msgstr ""
-"قام المستخدم بالفعل بمزامنة PRP ولا يمكن تعطيله. يرجى توجيه الشريك للتعطيل "
-"من PRP"
-
 msgid "The Date of Report cannot be in the future"
 msgstr "لا يمكن أن يكون تاريخ التقرير في المستقبل"
 
@@ -1848,6 +1806,39 @@ msgstr "وثيقة"
 msgid "Invalid"
 msgstr "غير صالح"
 
+msgid "Review for eTools reference number: "
+msgstr ""
+
+msgid "Submitted By"
+msgstr "مقدم بواسطة"
+
+msgid "Date of submission for review"
+msgstr "تاريخ التقديم للمراجعة"
+
+msgid "Overall Comment"
+msgstr "التعليق العام"
+
+msgid "Overall Approval"
+msgstr "الموافقة الشاملة"
+
+msgid "Overall Review"
+msgstr "نظرة شاملة"
+
+msgid "PRC Member Reviews"
+msgstr "تقييمات الأعضاء"
+
+msgid "PRC Member Name"
+msgstr "اسم عضو"
+
+msgid "Approved"
+msgstr "موافقة"
+
+msgid "Approval comment"
+msgstr "تعليق الموافقة"
+
+msgid "Review date"
+msgstr "تاريخ المراجعة"
+
 msgid ""
 "Agreement cannot transition to signed until the start date is less than or "
 "equal to today"
@@ -1915,12 +1906,8 @@ msgstr ""
 "يجب ان يساوي إجمالي الحجز النقدي المبلغ الإجمالي الفعلي، و يكون قيمة المبالغ "
 "المعلقة 0"
 
-msgid ""
-"Final Review must be approved for documents having amount transferred "
-"greater than 100,000"
-msgstr ""
-"يجب الموافقة على المراجعة النهائية للوثائق التي يزيد المبلغ المحول عنها عن "
-"100،000"
+msgid "Final Review must be approved"
+msgstr "يجب الموافقة على المراجعة النهائية"
 
 msgid "Cannot Transition status while adding an amendment"
 msgstr "لا يمكن نقل الحالة أثناء إضافة تعديل"
@@ -1965,8 +1952,8 @@ msgstr "لا يمكن تنشيط وثيقة البرامج إذا كان الش�
 msgid "Agreement selected is not of type SSFA"
 msgstr "الاتفاقية المختارة ليست من نوع اتفاقية التمويل الصغير"
 
-msgid " without deleting the indicators first"
-msgstr "دون حذف المؤشرات أولا"
+msgid " without deleting the indicators first "
+msgstr " دون حذف المؤشرات أولا"
 
 #, python-format
 msgid ""
@@ -2258,6 +2245,54 @@ msgstr "لا تحتوي الاستجابة التي أرجعها الخادم ع
 
 msgid "Partnership Manager role required for pca export."
 msgstr "دور مدير الشراكة المطلوب لتصدير pca."
+
+#~ msgid ""
+#~ "Final Review must be approved for documents having amount transferred "
+#~ "greater than 100,000"
+#~ msgstr ""
+#~ "يجب الموافقة على المراجعة النهائية للوثائق التي يزيد المبلغ المحول عنها "
+#~ "عن 100،000"
+
+#~ msgid "Unable to associate staff member to UNICEF user"
+#~ msgstr "تعذر ربط الموظف بمستخدم اليونيسف"
+
+#~ msgid "This user already exists under a different partnership: %s"
+#~ msgstr "هذا المستخدم موجود بالفعل ضمن شراكة مختلفة: %s"
+
+#~ msgid ""
+#~ "User emails cannot be changed, please remove the user and add another "
+#~ "one: %s"
+#~ msgstr ""
+#~ "لا يمكن تغيير عناوين البريد الإلكتروني للمستخدم ، يرجى إزالة المستخدم "
+#~ "وإضافة مستخدم آخر: %s"
+
+#~ msgid "User already synced to PRP and cannot be disabled."
+#~ msgstr "قام المستخدم بالفعل بمزامنة PRP ولا يمكن تعطيله."
+
+#~ msgid "First Name"
+#~ msgstr "الاسم الاول"
+
+#~ msgid "Last Name"
+#~ msgstr "اسم العائلة"
+
+#~ msgid "(old)Partner Authorized Officer"
+#~ msgstr "موظف شريك معتمد"
+
+#~ msgid "(old)Signed by partner"
+#~ msgstr "وقعه الشريك"
+
+#~ msgid "(old)Signed by Partner"
+#~ msgstr "وقعه الشريك"
+
+#~ msgid "(old)CSO Authorized Officials"
+#~ msgstr "مسؤولو منظمات المجتمع المدني المعتمدون"
+
+#~ msgid ""
+#~ "User already synced to PRP and cannot be disabled. Please instruct the "
+#~ "partner to disable from PRP"
+#~ msgstr ""
+#~ "قام المستخدم بالفعل بمزامنة PRP ولا يمكن تعطيله. يرجى توجيه الشريك "
+#~ "للتعطيل من PRP"
 
 #~ msgid ""
 #~ "There was a PCA/SSFA signed with this partner or a transaction was "

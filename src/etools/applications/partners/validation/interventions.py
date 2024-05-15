@@ -12,8 +12,9 @@ from etools_validator.exceptions import (
 from etools_validator.utils import check_required_fields, check_rigid_fields
 from etools_validator.validation import CompleteValidation
 
+from etools.applications.locations.models import Location
 from etools.applications.partners.permissions import InterventionPermissions
-from etools.applications.reports.models import AppliedIndicator, InterventionActivity
+from etools.applications.reports.models import InterventionActivity, Section
 
 logger = logging.getLogger('partners.interventions.validation')
 
@@ -92,10 +93,10 @@ def transition_to_closed(i):
                        ', and Total Outstanding DCTs need to equal to 0')]
                 )
 
-    # If total_actual_amt_usd >100,000 then PD final review should be approved
-    if i.total_frs['total_actual_amt_usd'] >= 100000 and not i.final_review_approved:
+    # PD final review should be approved
+    if not i.final_review_approved:
         raise TransitionError([
-            _('Final Review must be approved for documents having amount transferred greater than 100,000')
+            _('Final Review must be approved')
         ])
 
     # TODO: figure out Action Point Validation once the spec is completed
@@ -228,8 +229,23 @@ def start_date_related_agreement_valid(i):
     # i = intervention
     if i.in_amendment:
         return True
-    if i.document_type in [i.PD, i.SPD] and not i.contingency_pd and i.start and i.agreement.start and \
-            (i.signed_pd_document or i.signed_pd_attachment) and i.start < i.agreement.start:
+    # Check if the document type is PD or SPD
+    is_pd_or_spd = i.document_type in [i.PD, i.SPD]
+
+    # Ensure it is not a contingency PD
+    not_contingency_pd = not i.contingency_pd
+
+    # Check if the required dates are present and valid
+    # if it's been amended previously, we no longer check for this as the amendment likely changed the agreement
+    if i.number.find("-") > -1:
+        has_valid_dates = i.start and i.agreement.start
+    else:
+        has_valid_dates = i.start and i.agreement.start and i.start < i.agreement.start
+
+    # Check if there is a signed document or attachment
+    has_signed_document = i.signed_pd_document or i.signed_pd_attachment
+
+    if is_pd_or_spd and not_contingency_pd and has_valid_dates and has_signed_document:
         return False
     return True
 
@@ -272,40 +288,32 @@ def rigid_in_amendment_flag(i):
 
 
 def sections_valid(i):
-    ainds = AppliedIndicator.objects.filter(lower_result__result_link__intervention__pk=i.pk).all()
-    ind_sections = set()
-    for ind in ainds:
-        ind_sections.add(ind.section)
-    intervention_sections = set(s for s in i.sections.all())
-    if not ind_sections.issubset(intervention_sections):
-        draft_status_err = _(' without deleting the indicators first') if i.status == i.DRAFT else ''
+    ind_sections = Section.objects.filter(
+        appliedindicator__lower_result__result_link__intervention__pk=i.pk).distinct()
+    diff_sections = ind_sections.difference(i.sections.all())
+    if diff_sections:
+        draft_status_err = _(' without deleting the indicators first ') if i.status == i.DRAFT else ''
         raise BasicValidationError(
             _('The following sections have been selected on the PD/SPD indicators and cannot be removed '
-              '%(sections)s ') % {'sections': draft_status_err + ', '.join([s.name for s in ind_sections - intervention_sections])})
+              '%(sections)s ') % {'sections': draft_status_err + ', '.join([s.name for s in diff_sections])})
     return True
 
 
 def locations_valid(i):
-    ainds = AppliedIndicator.objects.filter(lower_result__result_link__intervention__pk=i.pk).all()
-    ind_locations = set()
-    for ind in ainds:
-        for loc in ind.locations.all():
-            ind_locations.add(loc)
-    intervention_locations = set(i.flat_locations.all())
-    if not ind_locations.issubset(intervention_locations):
+    ind_locations = Location.objects.filter(
+        applied_indicators__lower_result__result_link__intervention__pk=i.pk).distinct()
+    diff_locations = ind_locations.difference(i.flat_locations.all())
+    if diff_locations:
         raise BasicValidationError(
             _('The following locations have been selected on the PD/SPD indicators and '
-              'cannot be removed without removing them from the indicators first: %(locations)s') %
-            {'locations': ', '.join([str(loc) for loc in ind_locations - intervention_locations])})
+              'cannot be removed without removing them from the indicators first: %(locations)s')
+            % {'locations': ', '.join([str(loc) for loc in diff_locations])})
     return True
 
 
 def cp_structure_valid(i):
     if i.agreement.agreement_type == i.agreement.PCA:
         invalid = False
-        if i.country_programme:
-            if i.country_programme != i.agreement.country_programme:
-                invalid = True
         if i.country_programmes.count():
             if i.agreement.country_programme not in i.country_programmes.all():
                 invalid = True
@@ -493,3 +501,9 @@ class InterventionValid(CompleteValidation):
             else:
                 error_list.append(error)
         return error_list
+
+    def _apply_current_side_effects(self):
+        # TODO: remove this after updating to etools-validator >= 0.5.1
+        if not self.old_status:
+            return
+        return super()._apply_current_side_effects()
