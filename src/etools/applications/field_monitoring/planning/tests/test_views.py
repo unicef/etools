@@ -429,8 +429,8 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         self._test_update(self.pme, activity, {'status': 'report_finalization',
                                                'report_reject_reason': 'just because'})
         activity.refresh_from_db()
-        self.assertEquals(activity.status, 'report_finalization')
-        self.assertEquals(activity.report_reject_reason, 'just because')
+        self.assertEqual(activity.status, 'report_finalization')
+        self.assertEqual(activity.report_reject_reason, 'just because')
 
     def test_reject_as_tpm(self):
         tpm_partner = SimpleTPMPartnerFactory()

@@ -39,6 +39,6 @@ RUN pip install pdm
 ADD .pdm-python .
 ADD pdm.lock .
 ADD pyproject.toml .
-RUN pdm install
+RUN pdm sync
 
 ENV PYTHONPATH=/etools/__pypackages__/3.12/lib

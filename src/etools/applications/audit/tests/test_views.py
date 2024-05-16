@@ -553,7 +553,7 @@ class TestEngagementCreateActivePDViewSet:
 
         response = self._do_create(self.unicef_focal_point, self.create_data)
 
-        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['active_pd'], [])
 
     def test_partner_with_active_pd(self):
@@ -562,7 +562,7 @@ class TestEngagementCreateActivePDViewSet:
 
         response = self._do_create(self.unicef_focal_point, self.create_data)
 
-        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_government_partner_without_active_pd(self):
         self.engagement.partner.partner_type = OrganizationType.GOVERNMENT
@@ -571,7 +571,7 @@ class TestEngagementCreateActivePDViewSet:
 
         response = self._do_create(self.unicef_focal_point, self.create_data)
 
-        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_attachments(self):
         file_type_engagement = AttachmentFileTypeFactory(
@@ -586,7 +586,7 @@ class TestEngagementCreateActivePDViewSet:
 
         response = self._do_create(self.unicef_focal_point, self.create_data)
 
-        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         data = json.loads(response.content)
         engagement_val = data["engagement_attachments"]
@@ -649,7 +649,7 @@ class TestSpotCheckCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEn
         self.create_data["sections"] = [section_1.pk, section_2.pk]
         response = self._do_create(self.unicef_focal_point, self.create_data)
 
-        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(
             sorted(response.data['sections'], key=lambda x: x["id"]),
             sorted(
@@ -673,8 +673,8 @@ class TestSpotCheckCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEn
         self.create_data["offices"] = [office_1.pk, office_2.pk]
         response = self._do_create(self.unicef_focal_point, self.create_data)
 
-        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
-        self.assertEquals(
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(
             sorted(response.data['offices'], key=lambda x: x["id"]),
             sorted(
                 [
@@ -685,7 +685,7 @@ class TestSpotCheckCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEn
             ),
         )
         spot_check = SpotCheck.objects.get(pk=response.data["id"])
-        self.assertEquals(
+        self.assertEqual(
             sorted([o.pk for o in spot_check.offices.all()]),
             sorted([office_1.pk, office_2.pk]),
         )
@@ -706,14 +706,14 @@ class SpecialAuditCreateViewSet(BaseTestEngagementsCreateViewSet, BaseTenantTest
     def test_engagement_with_active_pd(self):
         response = self._do_create(self.unicef_focal_point, self.create_data)
 
-        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_engagement_without_active_pd(self):
         del self.create_data['active_pd']
 
         response = self._do_create(self.unicef_focal_point, self.create_data)
 
-        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
 
 class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenantTestCase):

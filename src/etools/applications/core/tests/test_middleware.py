@@ -35,7 +35,7 @@ class EToolsTenantMiddlewareTest(TestCase):
     def test_no_user_return_none(self):
         "If no user, allow them to pass."
         self.request.user = None
-        self.assertEquals(EToolsTenantMiddleware(dummy_get_response).process_request(self.request), None)
+        self.assertEqual(EToolsTenantMiddleware(dummy_get_response).process_request(self.request), None)
 
     def test_inactive_workspace_return_none(self):
         "If trying to access an inactive workspace, middleware returns None."
@@ -43,7 +43,7 @@ class EToolsTenantMiddlewareTest(TestCase):
         # were to fail
         self.request.user = AnonymousUser()
         self.request.path = self.inactive_workspace_url
-        self.assertEquals(EToolsTenantMiddleware(dummy_get_response).process_request(self.request), None)
+        self.assertEqual(EToolsTenantMiddleware(dummy_get_response).process_request(self.request), None)
 
     def test_anonymous_user_allowed_urls(self):
         "If AnonymousUser tries to access these URLs, middleware returns None, allowing them to pass."
@@ -51,7 +51,7 @@ class EToolsTenantMiddlewareTest(TestCase):
         self.request.user = AnonymousUser()
         for path in allowed_url_paths:
             self.request.path = '/{}'.format(path)
-            self.assertEquals(EToolsTenantMiddleware(dummy_get_response).process_request(self.request), None)
+            self.assertEqual(EToolsTenantMiddleware(dummy_get_response).process_request(self.request), None)
 
     def test_anonymous_user_redirects_to_login(self):
         "If AnonymousUser tries to access any other URLs, middleware redirects them to login."
@@ -70,7 +70,7 @@ class EToolsTenantMiddlewareTest(TestCase):
         superuser = UserFactory(is_superuser=True, profile=None)
         ProfileLightFactory(country=None, user=superuser)
         self.request.user = superuser
-        self.assertEquals(EToolsTenantMiddleware(dummy_get_response).process_request(self.request), None)
+        self.assertEqual(EToolsTenantMiddleware(dummy_get_response).process_request(self.request), None)
 
     @skip('unused')
     @override_settings(INACTIVE_BUSINESS_AREAS=['ZZZ'])
@@ -85,7 +85,7 @@ class EToolsTenantMiddlewareTest(TestCase):
         superuser = UserFactory(is_superuser=True, profile=None)
         ProfileLightFactory(user=superuser)
         self.request.user = superuser
-        self.assertEquals(EToolsTenantMiddleware(dummy_get_response).process_request(self.request), None)
+        self.assertEqual(EToolsTenantMiddleware(dummy_get_response).process_request(self.request), None)
 
     @override_settings(PUBLIC_SCHEMA_URLCONF='foo')
     def test_public_schema_urlconf(self):
@@ -126,4 +126,4 @@ class EToolsLocaleMiddlewareTest(TestCase):
 
         with patch('etools.applications.core.middleware.translation.activate') as mock_method:
             EToolsLocaleMiddleware(dummy_get_response).process_request(self.request)
-            mock_method.not_called()
+            mock_method.assert_not_called()
