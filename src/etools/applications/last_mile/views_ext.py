@@ -79,7 +79,11 @@ def get_annotated_qs(qs):
     if qs.model == models.Transfer:
         return qs.annotate(vendor_number=F('partner_organization__organization__vendor_number'),
                            checked_out_by_email=F('checked_out_by__email'),
+                           checked_out_by_first_name=F('checked_out_by__first_name'),
+                           checked_out_by_last_name=F('checked_out_by__last_name'),
                            checked_in_by_email=F('checked_in_by__email'),
+                           checked_in_by_last_name=F('checked_in_by__last_name'),
+                           checked_in_by_first_name=F('checked_in_by__first_name'),
                            origin_name=F('origin_point__name'),
                            destination_name=F('destination_point__name'),
                            ).values()
