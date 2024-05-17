@@ -618,7 +618,7 @@ class TestActivityOverallFindingsView(ChecklistDataCollectionTestMixin, APIViewS
 
         AttachmentFactory(content_object=checklist.overall_findings.first())
 
-        with self.assertNumQueries(9):
+        with self.assertNumQueries(8):
             response = self._test_list(self.unicef_user, [self.overall_finding])
         self.assertIn('attachments', response.data['results'][0])
         self.assertNotEqual(response.data['results'][0]['attachments'], [])

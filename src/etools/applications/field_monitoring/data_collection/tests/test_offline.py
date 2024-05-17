@@ -311,7 +311,7 @@ class MonitoringActivityOfflineBlueprintsSyncTestCase(APIViewSetTestCase, BaseTe
     @override_settings(ETOOLS_OFFLINE_API='http://example.com/b/api/remote/blueprint/',
                        SENTRY_DSN='https://test.dns',
                        UNICEF_USER_EMAIL="@example.com")
-    @patch('sentry_sdk.api.Hub.current.capture_exception')
+    @patch('sentry_sdk.Scope.capture_exception')
     @patch('etools.applications.field_monitoring.data_collection.offline.synchronizer.OfflineCollect.add')
     def test_add_offline_backend_unavailable(self, add_mock, capture_event_mock):
         def communication_failure(*args, **kwargs):
@@ -331,7 +331,7 @@ class MonitoringActivityOfflineBlueprintsSyncTestCase(APIViewSetTestCase, BaseTe
     @override_settings(ETOOLS_OFFLINE_API='http://example.com/b/api/remote/blueprint/',
                        SENTRY_DSN='https://test.dns',
                        UNICEF_USER_EMAIL="@example.com")
-    @patch('sentry_sdk.api.Hub.current.capture_exception')
+    @patch('sentry_sdk.Scope.capture_exception')
     @patch('etools.applications.field_monitoring.data_collection.offline.synchronizer.OfflineCollect.update')
     def test_update_offline_backend_unavailable(self, update_mock, capture_event_mock):
         def communication_failure(*args, **kwargs):
@@ -351,7 +351,7 @@ class MonitoringActivityOfflineBlueprintsSyncTestCase(APIViewSetTestCase, BaseTe
     @override_settings(ETOOLS_OFFLINE_API='http://example.com/b/api/remote/blueprint/',
                        SENTRY_DSN='https://test.dns',
                        UNICEF_USER_EMAIL="@example.com")
-    @patch('sentry_sdk.api.Hub.current.capture_exception')
+    @patch('sentry_sdk.Scope.capture_exception')
     @patch('etools.applications.field_monitoring.data_collection.offline.synchronizer.OfflineCollect.delete')
     def test_delete_offline_backend_unavailable(self, delete_mock, capture_event_mock):
         def communication_failure(*args, **kwargs):
