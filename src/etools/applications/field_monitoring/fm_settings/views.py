@@ -225,7 +225,7 @@ class QuestionsViewSet(
     queryset = Question.objects.prefetch_related('options').order_by('order', 'text')
     serializer_class = QuestionSerializer
     filter_backends = (DjangoFilterBackend, OrderingFilter)
-    filter_class = QuestionsFilterSet
+    filterset_class = QuestionsFilterSet
     ordering_fields = (
         'text', 'level', 'answer_type', 'category__name', 'is_active', 'is_hact'
     )

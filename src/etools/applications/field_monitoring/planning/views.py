@@ -164,7 +164,7 @@ class MonitoringActivitiesViewSet(
         DjangoFilterBackend, ReferenceNumberOrderingFilter,
         OrderingFilter, SearchFilter, HactForPartnerFilter,
     )
-    filter_class = MonitoringActivitiesFilterSet
+    filterset_class = MonitoringActivitiesFilterSet
     ordering_fields = (
         'start_date', 'end_date', 'location', 'location_site', 'monitor_type', 'checklists_count', 'status'
     )
@@ -306,7 +306,7 @@ class CPOutputsViewSet(
     viewsets.GenericViewSet,
 ):
     filter_backends = (DjangoFilterBackend,)
-    filter_class = CPOutputsFilterSet
+    filterset_class = CPOutputsFilterSet
     queryset = Result.objects.filter(result_type__name=ResultType.OUTPUT).select_related('result_type').order_by('name')
     serializer_class = CPOutputListSerializer
 
@@ -318,7 +318,7 @@ class InterventionsViewSet(
     viewsets.GenericViewSet,
 ):
     filter_backends = (DjangoFilterBackend,)
-    filter_class = InterventionsFilterSet
+    filterset_class = InterventionsFilterSet
     queryset = Intervention.objects.exclude(
         status__in=[
             Intervention.DRAFT, Intervention.SIGNATURE,

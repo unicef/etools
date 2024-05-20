@@ -584,7 +584,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         response = self._test_update(self.fm_user, activity, {'offices': [OfficeFactory().id, ]})
         self.assertIsNotNone(response.data['offices'])
         activity.refresh_from_db()
-        self.assertNotEquals(activity.offices.count(), 0)
+        self.assertNotEqual(activity.offices.count(), 0)
 
         permissions = response.data['permissions']
         self.assertTrue(permissions['view']['offices'])
