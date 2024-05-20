@@ -243,10 +243,12 @@ def start_date_related_agreement_valid(i):
         has_valid_dates = i.start and i.agreement.start and i.start < i.agreement.start
 
     # Check if there is a signed document or attachment
-    has_signed_document = i.signed_pd_document or i.signed_pd_attachment
+    has_signed_document = i.signed_pd_document or i.signed_pd_attachment.exists()
 
-    if is_pd_or_spd and not_contingency_pd and has_valid_dates and has_signed_document:
-        return False
+    if is_pd_or_spd and not_contingency_pd and has_signed_document:
+        if not has_valid_dates:
+            print(is_pd_or_spd, not_contingency_pd, has_signed_document, i.signed_pd_document)
+            return False
     return True
 
 
