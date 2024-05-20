@@ -58,7 +58,7 @@ class SerializersTestCase(TestCase):
                 'field1': 5,
             }]
         }
-        self.assertEqual(expected_dict, serializer.data | expected_dict)
+        self.assertEqual(serializer.data, serializer.data | expected_dict)
 
     def test_creation(self):
         serializer = ParentSerializer(data={

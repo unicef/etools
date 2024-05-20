@@ -129,7 +129,7 @@ class TestInterventionAmendments(BaseTestInterventionAmendments, BaseTenantTestC
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data['types'],
-                          {0: [ErrorDetail(string='"invalid_choice" is not a valid choice.', code='invalid_choice')]})
+                         {0: [ErrorDetail(string='"invalid_choice" is not a valid choice.', code='invalid_choice')]})
 
     def test_create_amendment_other_type_no_description(self):
         response = self.forced_auth_req(
