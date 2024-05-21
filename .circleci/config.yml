@@ -78,7 +78,7 @@ jobs:
           paths:
             - "env1"
             - /root/.cache/pip
-            - - ".tox/d42/"
+            - ".tox/d42/"
       - store_artifacts:
           path: build/coverage
           destination: coverage
