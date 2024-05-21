@@ -9,13 +9,14 @@ parameters:
 jobs:
   setup:
     machine: true
+    docker_layer_caching: true
     steps:
       - checkout
       - run:
           name: Make sure base is up to date and remote
           command: |
             docker login -u $DOCKER_USER -p $DOCKER_PASS
-            BASE_TAG="$(md5sum Pipfile.lock | cut -c1-6)$(md5sum Dockerfile-base | cut -c1-6)"
+            BASE_TAG="$(md5sum pdm.lock | cut -c1-6)$(md5sum Dockerfile-base | cut -c1-6)"
             TAG=${CIRCLE_BRANCH}
             if (curl --silent -f -lSL https://index.docker.io/v1/repositories/unicef/etools-base/tags/$BASE_TAG > /dev/null); then
               echo "Up to date!"
@@ -35,7 +36,7 @@ jobs:
       - run:
           name: Triggering test workflow
           command: |
-            BASE_TAG="$(md5sum Pipfile.lock | cut -c1-6)$(md5sum Dockerfile-base | cut -c1-6)"
+            BASE_TAG="$(md5sum pdm.lock | cut -c1-6)$(md5sum Dockerfile-base | cut -c1-6)"
             curl --user ${CIRCLE_TOKEN}: \
                 --data build_parameters[CIRCLE_JOB]=test \
                 --data build_parameters[BASE_TAG]=$BASE_TAG \
@@ -60,7 +61,12 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: deps2-{{ .Branch }}--{{ checksum "Pipfile.lock" }}-{{ checksum ".circleci/config.yml" }}
+          key: deps2-{{ .Branch }}--{{ checksum "pdm.lock" }}-{{ checksum ".circleci/config.yml" }}
+      - run:
+          name: Update PATH Environment Variable
+          command: |
+            echo 'export PATH="$PATH":/etools/__pypackages__/3.12/bin' >> "$BASH_ENV"
+            source "$BASH_ENV"
       - run:
           name: Run Tests
           command: |
@@ -68,10 +74,11 @@ jobs:
             tox -e d42,report
           no_output_timeout: 30m
       - save_cache:
-          key: deps2-{{ .Branch }}--{{ checksum "Pipfile.lock" }}-{{ checksum ".circleci/config.yml" }}
+          key: deps2-{{ .Branch }}--{{ checksum "pdm.lock" }}-{{ checksum ".circleci/config.yml" }}
           paths:
             - "env1"
             - /root/.cache/pip
+            - - ".tox/d42/"
       - store_artifacts:
           path: build/coverage
           destination: coverage
@@ -95,7 +102,7 @@ jobs:
           name: Building the image
           command: |
             docker login -u $DOCKER_USER -p $DOCKER_PASS
-            BASE_TAG="$(md5sum Pipfile.lock | cut -c1-6)$(md5sum Dockerfile-base | cut -c1-6)"
+            BASE_TAG="$(md5sum pdm.lock | cut -c1-6)$(md5sum Dockerfile-base | cut -c1-6)"
             TAG=${CIRCLE_BRANCH}
             (docker pull unicef/etools-base:$BASE_TAG) ||
             (docker build -t unicef/etools-base:$BASE_TAG -f Dockerfile-base . && docker push unicef/etools-base:$BASE_TAG)
@@ -104,7 +111,7 @@ jobs:
           name: Pushing to Docker Hub
           command: |
             TAG=${CIRCLE_BRANCH}
-            BASE_TAG="$(md5sum Pipfile.lock | cut -c1-6)$(md5sum Dockerfile-base | cut -c1-6)"
+            BASE_TAG="$(md5sum pdm.lock | cut -c1-6)$(md5sum Dockerfile-base | cut -c1-6)"
             docker login -u $DOCKER_USER -p $DOCKER_PASS
             docker push unicef/etools:$TAG
             if (echo "develop" | grep -q "$CIRCLE_BRANCH"); then

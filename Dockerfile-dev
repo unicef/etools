@@ -4,7 +4,7 @@ WORKDIR /etools/
 RUN apk add bash
 
 ENV PYTHONUNBUFFERED 1
-ENV PYTHONPATH /code:/etools/__pypackages__/3.12/lib
+ENV PYTHONPATH="$PYTHONPATH:/code"
 ENV DJANGO_SETTINGS_MODULE etools.config.settings.local
 
 WORKDIR /code/
