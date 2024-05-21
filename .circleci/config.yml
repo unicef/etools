@@ -51,7 +51,7 @@ jobs:
           PGHOST: 127.0.0.1
           DATABASE_URL: "postgis://postgres:postgres@localhost:5432/circle_test"
           DEPLOY_BRANCHES: "develop|staging|master|ci-updates2"
-          PATH: $PATH:/etools/__pypackages__/3.12/bin
+          PATH: /etools/__pypackages__/3.12/bin:$PATH
       - image: cimg/postgres:12.9-postgis
         environment:
           POSTGRES_USER: postgres
