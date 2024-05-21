@@ -51,6 +51,7 @@ jobs:
           PGHOST: 127.0.0.1
           DATABASE_URL: "postgis://postgres:postgres@localhost:5432/circle_test"
           DEPLOY_BRANCHES: "develop|staging|master|ci-updates2"
+          PATH: $PATH:/etools/__pypackages__/3.12/bin
       - image: cimg/postgres:12.9-postgis
         environment:
           POSTGRES_USER: postgres
@@ -62,11 +63,6 @@ jobs:
       - checkout
       - restore_cache:
           key: deps2-{{ .Branch }}--{{ checksum "pdm.lock" }}-{{ checksum ".circleci/config.yml" }}
-      - run:
-          name: Update PATH Environment Variable
-          command: |
-            echo 'export PATH=$PATH:/etools/__pypackages__/3.12/bin' >> ~/.bashrc
-            source ~/.bashrc
       - run:
           name: Run Tests
           command: |
