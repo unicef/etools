@@ -65,8 +65,8 @@ jobs:
       - run:
           name: Update PATH Environment Variable
           command: |
-            echo 'export PATH=${PATH}:/etools/__pypackages__/3.12/bin' >> $BASH_ENV
-            source $BASH_ENV
+            echo 'export PATH=$PATH:/etools/__pypackages__/3.12/bin' >> ~/.bashrc
+            source ~/.bashrc
       - run:
           name: Run Tests
           command: |
