@@ -42,4 +42,3 @@ ADD pyproject.toml .
 RUN pdm sync
 
 ENV PYTHONPATH=/etools/__pypackages__/3.12/lib
-ENV PATH="$PATH:/etools/__pypackages__/3.12/bin"
