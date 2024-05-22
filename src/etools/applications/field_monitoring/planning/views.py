@@ -26,6 +26,7 @@ from etools.applications.field_monitoring.permissions import (
     IsEditAction,
     IsFieldMonitor,
     IsListAction,
+    IsMonitoringVisitApprover,
     IsObjectAction,
     IsReadAction,
     IsVisitLead,
@@ -158,7 +159,7 @@ class MonitoringActivitiesViewSet(
     permission_classes = FMBaseViewSet.permission_classes + [
         IsReadAction |
         (IsEditAction & IsListAction & IsFieldMonitor) |
-        (IsEditAction & (IsObjectAction & (IsFieldMonitor | IsVisitLead)))
+        (IsEditAction & (IsObjectAction & (IsFieldMonitor | IsVisitLead | IsMonitoringVisitApprover)))
     ]
     filter_backends = (
         DjangoFilterBackend, ReferenceNumberOrderingFilter,
