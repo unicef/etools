@@ -71,8 +71,6 @@ jobs:
       - save_cache:
           key: deps2-{{ .Branch }}--{{ checksum "pdm.lock" }}-{{ checksum ".circleci/config.yml" }}
           paths:
-            - "env1"
-            - /root/.cache/pip
             - ".tox/d42/"
       - store_artifacts:
           path: build/coverage
