@@ -31,7 +31,7 @@ class WaybillTransferAttachmentInline(AttachmentSingleInline):
 class PointOfInterestAdmin(XLSXImportMixin, admin.ModelAdmin):
     list_display = ('name', 'parent', 'poi_type')
     list_select_related = ('parent',)
-    list_filter = ('private', 'is_active')
+    list_filter = ('private', 'is_active', 'poi_type')
     search_fields = ('name', )
     raw_id_fields = ('partner_organizations',)
     formfield_overrides = {
@@ -44,7 +44,8 @@ class PointOfInterestAdmin(XLSXImportMixin, admin.ModelAdmin):
         'PRIMARY TYPE *': 'poi_type',
         'IS PRIVATE***': 'private',
         'LATITUDE': 'latitude',
-        'LONGITUDE': 'longitude'
+        'LONGITUDE': 'longitude',
+        'P CODE': 'p_code'
     }
 
     def has_import_permission(self, request):
@@ -61,7 +62,9 @@ class PointOfInterestAdmin(XLSXImportMixin, admin.ModelAdmin):
                 poi_dict[self.import_field_mapping[col[0].value]] = str(col[row].value).strip()
 
             # add a pcode as it doesn't exist:
-            poi_dict['p_code'] = generate_hash(poi_dict['partner_org_vendor_no'] + poi_dict['name'], 12)
+            p_code = poi_dict.get('p_code', None)
+            if not p_code or p_code == "None":
+                poi_dict['p_code'] = generate_hash(poi_dict['partner_org_vendor_no'] + poi_dict['name'], 12)
             long = poi_dict.pop('longitude')
             lat = poi_dict.pop('latitude')
             try:
@@ -88,11 +91,12 @@ class PointOfInterestAdmin(XLSXImportMixin, admin.ModelAdmin):
                 continue
 
             poi_obj, _ = models.PointOfInterest.all_objects.update_or_create(
-                point=poi_dict['point'],
-                name=poi_dict['name'],
                 p_code=poi_dict['p_code'],
-                poi_type=poi_dict.get('poi_type'),
-                defaults={'private': poi_dict['private']}
+                defaults={'private': poi_dict['private'],
+                          "point": poi_dict['point'],
+                          "name": poi_dict['name'],
+                          "poi_type": poi_dict.get('poi_type'),
+                }
             )
             poi_obj.partner_organizations.add(partner_org_obj)
 
