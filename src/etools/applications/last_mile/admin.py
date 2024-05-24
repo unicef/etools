@@ -95,8 +95,7 @@ class PointOfInterestAdmin(XLSXImportMixin, admin.ModelAdmin):
                 defaults={'private': poi_dict['private'],
                           "point": poi_dict['point'],
                           "name": poi_dict['name'],
-                          "poi_type": poi_dict.get('poi_type'),
-                }
+                          "poi_type": poi_dict.get('poi_type')}
             )
             poi_obj.partner_organizations.add(partner_org_obj)
 
