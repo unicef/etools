@@ -1,10 +1,8 @@
-import json
-
-import requests
 from django.conf import settings
 from django.core.cache import cache
 
 import msal
+import requests
 
 
 class TokenRetrieveException(BaseException):
@@ -15,7 +13,6 @@ pbi_config = settings.PBI_CONFIG
 
 
 def get_access_token():
-    response = None
     # try to get it from cache:
     cache_key = 'lmsm_pbi_access_token'
     access_token = cache.get(cache_key, None)
