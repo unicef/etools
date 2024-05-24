@@ -1,4 +1,5 @@
 import logging
+import time
 
 from django.conf import settings
 
@@ -50,22 +51,33 @@ def get_access_token():
         raise TokenRetrieveException('Error retrieving Access token\n' + str(ex))
 
 
-@cache_result(timeout=300, key='lmsm_pbi_embed_url')
+@cache_result(timeout=1800, key='lmsm_pbi_embed_url')
 def get_embed_url(pbi_headers):
     print('Embed url not found in cache, Getting Embed Url')
     workspace_id = pbi_config['WORKSPACE_ID']
     report_id = pbi_config['REPORT_ID']
 
     url_to_call = f'https://api.powerbi.com/v1.0/myorg/groups/{workspace_id}/reports/{report_id}'
-    api_response = requests.get(url_to_call, headers=pbi_headers)
-    if api_response.status_code == 200:
-        r = api_response.json()
-        return r["embedUrl"], r["datasetId"]
-    else:
-        raise TokenRetrieveException('Error retrieving Embed URL')
+
+    retry_times = 9
+    while retry_times > 0:
+        try:
+            api_response = requests.get(url_to_call, headers=pbi_headers)
+        except requests.exceptions.ConnectionError:
+            retry_times -= 1
+            time.sleep(0.3)
+            continue
+        else:
+            if api_response.status_code == 200:
+                r = api_response.json()
+                return r["embedUrl"], r["datasetId"]
+            else:
+                print(api_response.text)
+                raise TokenRetrieveException('Error retrieving Embed URL')
+    raise TokenRetrieveException('Connection error when retrieving Embed url\n')
 
 
-@cache_result(timeout=300, key='lmsm_pbi_embed_token')
+@cache_result(timeout=1800, key='lmsm_pbi_embed_token')
 def get_embed_token(dataset_id, pbi_headers):
     print('Token not found in cache, Getting Embed Token')
     workspace_id = pbi_config['WORKSPACE_ID']
@@ -77,8 +89,18 @@ def get_embed_token(dataset_id, pbi_headers):
         "reports": [{'id': report_id}],
         "targetWorkspaces": [{'id': workspace_id}]
     }
-    api_response = requests.post(embed_token_api, json=request_body, headers=pbi_headers)
-    if api_response.status_code == 200:
-        return api_response.json()["token"]
-    else:
-        raise TokenRetrieveException('Error retrieving Embed Token')
+    retry_times = 3
+    while retry_times > 0:
+        try:
+            api_response = requests.post(embed_token_api, json=request_body, headers=pbi_headers)
+        except requests.exceptions.ConnectionError:
+            retry_times -= 1
+            time.sleep(0.3)
+            continue
+        else:
+            if api_response.status_code == 200:
+                return api_response.json()["token"]
+            else:
+                raise TokenRetrieveException('Error retrieving Embed Token')
+
+    raise TokenRetrieveException('Connection error when retrieving Embed Token\n')
