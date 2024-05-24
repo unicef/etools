@@ -356,9 +356,7 @@ class PowerBIDataView(APIView):
     def get(self, request, *args, **kwargs):
         try:
             embed_url, dataset_id = get_embed_url(self.pbi_headers)
-            print(embed_url, 'embedurl')
             embed_token = get_embed_token(dataset_id, self.pbi_headers)
-            print(embed_token)
         except TokenRetrieveException:
             raise PermissionDenied('Token cannot be retrieved')
         resp_data = {
