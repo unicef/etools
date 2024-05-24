@@ -16,6 +16,7 @@ class TokenRetrieveException(BaseException):
 
 pbi_config = settings.PBI_CONFIG
 
+
 @cache_result(timeout=1800, key='lmsm_pbi_access_token')
 def get_access_token():
     print('Token not found in cache, Getting Access Token')
