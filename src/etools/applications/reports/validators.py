@@ -48,31 +48,24 @@ def value_none_or_numbers(data):
 
 class SpecialReportingRequirementUniqueValidator:
     message = _("There is already a special report with this due date.")
+    requires_context = True
 
     def __init__(self, queryset, message=None):
         self.queryset = queryset
         self.message = message or self.message
         self.intervention = None
 
-    def set_context(self, serializer):
-        """
-        This hook is called by the serializer instance,
-        prior to the validation call being made.
-        """
-        # Determine the existing instance, if this is an update operation.
-        self.instance = getattr(serializer, 'instance', None)
-        if self.instance:
-            self.intervention = self.instance.intervention
+    def __call__(self, attrs, serializer):
 
-    def __call__(self, attrs):
-        queryset = self.queryset.filter(
-            intervention=attrs.get("intervention", self.intervention),
+        instance = getattr(serializer, 'instance', None)
+        qs = self.queryset
+        if instance:
+            qs = qs.exclude(pk=instance.pk)
+        qs = qs.filter(
+            intervention=attrs.get("intervention",  getattr(instance, 'intervention', None)),
             due_date=attrs["due_date"],
         )
-        if hasattr(self, 'instance'):
-            queryset = queryset.exclude(pk=self.instance.pk)
-
-        if queryset.exists():
+        if qs.exists():
             raise ValidationError({"due_date": self.message}, code='unique')
 
     def __repr__(self):
