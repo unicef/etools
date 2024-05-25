@@ -20,7 +20,7 @@ pbi_config = settings.PBI_CONFIG
 
 @cache_result(timeout=1800, key='lmsm_pbi_access_token')
 def get_access_token():
-    print('Token not found in cache, Getting Access Token')
+    logger.debug('Token not found in cache, Getting Access Token')
     required_keys = ['AUTHENTICATION_MODE', 'WORKSPACE_ID',
                      'REPORT_ID', 'TENANT_ID',
                      'CLIENT_ID', 'CLIENT_SECRET', 'SCOPE_BASE', 'AUTHORITY_URL']
@@ -53,7 +53,7 @@ def get_access_token():
 
 @cache_result(timeout=1800, key='lmsm_pbi_embed_url')
 def get_embed_url(pbi_headers):
-    print('Embed url not found in cache, Getting Embed Url')
+    logger.debug('Embed url not found in cache, Getting Embed Url')
     workspace_id = pbi_config['WORKSPACE_ID']
     report_id = pbi_config['REPORT_ID']
 
@@ -72,14 +72,14 @@ def get_embed_url(pbi_headers):
                 r = api_response.json()
                 return r["embedUrl"], r["datasetId"]
             else:
-                print(api_response.text)
+                logger.debug(api_response.text)
                 raise TokenRetrieveException('Error retrieving Embed URL')
     raise TokenRetrieveException('Connection error when retrieving Embed url\n')
 
 
 @cache_result(timeout=1800, key='lmsm_pbi_embed_token')
 def get_embed_token(dataset_id, pbi_headers):
-    print('Token not found in cache, Getting Embed Token')
+    logger.debug('Token not found in cache, Getting Embed Token')
     workspace_id = pbi_config['WORKSPACE_ID']
     report_id = pbi_config['REPORT_ID']
 

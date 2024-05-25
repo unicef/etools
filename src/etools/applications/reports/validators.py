@@ -62,7 +62,7 @@ class SpecialReportingRequirementUniqueValidator:
         if instance:
             qs = qs.exclude(pk=instance.pk)
         qs = qs.filter(
-            intervention=attrs.get("intervention",  getattr(instance, 'intervention', None)),
+            intervention=attrs.get("intervention", getattr(instance, 'intervention', None)),
             due_date=attrs["due_date"],
         )
         if qs.exists():
