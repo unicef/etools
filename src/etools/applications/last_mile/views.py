@@ -1,9 +1,12 @@
 from functools import cache
 
+from django.conf import settings
 from django.db import connection
 from django.db.models import CharField, OuterRef, Prefetch, Q, Subquery
 from django.shortcuts import get_object_or_404
+from django.utils.functional import cached_property
 
+import requests
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, status
 from rest_framework.decorators import action
@@ -11,6 +14,7 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet, ModelViewSet, ReadOnlyModelViewSet
 from unicef_restlib.pagination import DynamicPageNumberPagination
 
@@ -18,6 +22,7 @@ from etools.applications.last_mile import models, serializers
 from etools.applications.last_mile.filters import TransferFilter
 from etools.applications.last_mile.permissions import IsIPLMEditor
 from etools.applications.last_mile.tasks import notify_upload_waybill
+from etools.applications.utils.pbi_auth import get_access_token, get_embed_token, get_embed_url, TokenRetrieveException
 
 
 class PointOfInterestTypeViewSet(ReadOnlyModelViewSet):
@@ -313,3 +318,52 @@ class ItemUpdateViewSet(mixins.UpdateModelMixin, mixins.RetrieveModelMixin, Gene
         if not partner:
             return super().get_queryset().none()
         return super().get_queryset().filter(transfer__partner_organization=partner)
+
+
+class PowerBIDataView(APIView):
+    permission_classes = [IsIPLMEditor]
+
+    @staticmethod
+    def get_pbi_access_token():
+        try:
+            return get_access_token()
+        except TokenRetrieveException:
+            raise PermissionDenied('Token cannot be retrieved')
+
+    @cached_property
+    def pbi_headers(self):
+        return {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + self.get_pbi_access_token()}
+
+    def get_embed_url(self, workspace_id, report_id):
+        url_to_call = f'https://api.powerbi.com/v1.0/myorg/groups/{workspace_id}/reports/{report_id}'
+        api_response = requests.get(url_to_call, headers=self.pbi_headers)
+        if api_response.status_code == 200:
+            r = api_response.json()
+            return r["embedUrl"], r["datasetId"]
+
+    def get_embed_token(self, dataset_id, workspace_id, report_id):
+        embed_token_api = 'https://api.powerbi.com/v1.0/myorg/GenerateToken'
+        request_body = {
+            "datasets": [{'id': dataset_id}],
+            "reports": [{'id': report_id}],
+            "targetWorkspaces": [{'id': workspace_id}]
+        }
+        api_response = requests.post(embed_token_api, data=request_body, headers=self.pbi_headers)
+        if api_response.status_code == 200:
+            return api_response.json()["token"]
+        return None
+
+    def get(self, request, *args, **kwargs):
+        try:
+            embed_url, dataset_id = get_embed_url(self.pbi_headers)
+            print(embed_url, 'embedurl')
+            embed_token = get_embed_token(dataset_id, self.pbi_headers)
+            print(embed_token)
+        except TokenRetrieveException:
+            raise PermissionDenied('Token cannot be retrieved')
+        resp_data = {
+            "report_id": settings.PBI_CONFIG["REPORT_ID"],
+            "embed_url": embed_url,
+            "access_token": embed_token
+        }
+        return Response(resp_data, status=status.HTTP_200_OK)
