@@ -26,6 +26,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.status import is_success
 from rest_framework.views import APIView
+from unicef_restlib.pagination import DynamicPageNumberPagination
 
 from etools.applications.field_monitoring.permissions import IsEditAction, IsReadAction
 from etools.applications.partners.exports_v2 import InterventionXLSRenderer
@@ -133,6 +134,7 @@ class InterventionAutoTransitionsMixin:
 
 
 class PMPInterventionListCreateView(PMPInterventionMixin, InterventionListAPIView):
+    pagination_class = DynamicPageNumberPagination
     permission_classes = (IsAuthenticated, PMPInterventionPermission)
     search_terms = (
         'title__icontains',
