@@ -468,7 +468,7 @@ class TestProgrammeSynchronizer(BaseTenantTestCase):
     def test_clean_records_outputs(self):
         """Need all output map values set, otherwise ignore"""
         self.data["OUTPUT_WBS"] = "OP_WBS"
-        self.data["OUTPUT_DESCRIPTION"] = "OP_NAME"
+        self.data["OUTPUT_NAME"] = "OP_NAME"
         self.data["OUTPUT_START_DATE"] = "OP_START"
         self.data["OUTPUT_END_DATE"] = "OP_END"
         self.data["HUMANITARIAN_MARKER_CODE"] = "HUMANITARIAN_MARKER_CODE"
