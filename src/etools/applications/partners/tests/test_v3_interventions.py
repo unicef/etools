@@ -2328,6 +2328,8 @@ class TestInterventionAcceptBehalfOfPartner(BaseInterventionActionTestCase):
 
 
 class TestInterventionReview(BaseInterventionActionTestCase):
+    fixtures = ('groups',)
+
     def setUp(self):
         super().setUp()
         self.url = reverse(
