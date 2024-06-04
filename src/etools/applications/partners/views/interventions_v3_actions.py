@@ -29,6 +29,7 @@ from etools.applications.partners.serializers.interventions_v3 import (
 )
 from etools.applications.partners.tasks import send_pd_to_vision
 from etools.applications.partners.views.interventions_v3 import InterventionDetailAPIView, PMPInterventionMixin
+from etools.applications.utils.helpers import lock_request
 
 
 class PMPInterventionActionView(PMPInterventionMixin, InterventionDetailAPIView):
@@ -653,6 +654,7 @@ class PMPAmendedInterventionMerge(InterventionDetailAPIView):
     )
 
     @transaction.atomic
+    @lock_request
     def update(self, request, *args, **kwargs):
         pd = self.get_object()
         if not pd.in_amendment:

@@ -1,6 +1,5 @@
 import logging
 
-from django.conf import settings
 from django.contrib import admin
 from django.contrib.gis import forms
 from django.contrib.gis.geos import Point
@@ -15,6 +14,7 @@ from etools.applications.partners.admin import AttachmentInlineAdminMixin
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.utils.helpers import generate_hash
 from etools.libraries.djangolib.admin import RestrictedEditAdminMixin, XLSXImportMixin
+from etools.libraries.djangolib.utils import is_user_in_groups
 
 
 class ProofTransferAttachmentInline(AttachmentSingleInline):
@@ -48,7 +48,7 @@ class PointOfInterestAdmin(XLSXImportMixin, admin.ModelAdmin):
     }
 
     def has_import_permission(self, request):
-        return request.user.email in settings.ADMIN_EDIT_EMAILS
+        return is_user_in_groups(request.user, ['Country Office Administrator'])
 
     @transaction.atomic
     def import_data(self, workbook):
@@ -184,71 +184,120 @@ class ItemAdmin(XLSXImportMixin, admin.ModelAdmin):
         'Partner Vendor Number': 'transfer__partner_organization__vendor_number',
         'Warehouse Name': 'transfer__destination_point__name',
         'Waybill Number': 'transfer__waybill_id',
-        'PD Number': 'transfer__pd_number',
         'Material Number': 'material__number',
-        'UOM': 'uom',
         'Quantity': 'quantity',
-        'Is Prepositioned': 'is_prepositioned',
-        'Prepositioned QTY': 'preposition_qty',
         'Expiry Date': 'expiry_date',
         'Batch Number': 'batch_id',
         'Partner Custom Description': 'partner_material__description',
+        'PO Number': 'other__imported_po_number',
     }
 
     def has_import_permission(self, request):
-        return request.user.email in settings.ADMIN_EDIT_EMAILS
+        return is_user_in_groups(request.user, ['Country Office Administrator'])
 
     @transaction.atomic
     def import_data(self, workbook):
         sheet = workbook.active
+        # first create a list of objects in memory from the file
+        imported_vendor_numbers = set()
+        imported_material_numbers = set()
+        imported_destination_names = set()
+        imported_records = []
         for row in range(1, sheet.max_row):
             import_dict = {}
             for col in sheet.iter_cols(1, sheet.max_column):
                 if col[0].value not in self.get_import_columns():
                     continue
                 import_dict[self.import_field_mapping[col[0].value]] = str(col[row].value).strip() if col[row].value else None
+            imported_records.append(import_dict)
 
-            partner_vendor_number = str(import_dict.pop('transfer__partner_organization__vendor_number'))
-            try:
-                org = Organization.objects.select_related('partner').filter(vendor_number=partner_vendor_number).get()
-                partner_org_obj = org.partner
-            except (Organization.DoesNotExist, PartnerOrganization.DoesNotExist):
-                logging.error(f"The Organization with vendor number '{partner_vendor_number}' does not exist.")
+        print("imported records =", imported_records)
+        for imp_record in imported_records:
+            imported_vendor_numbers.add(imp_record['transfer__partner_organization__vendor_number'])
+            imported_material_numbers.add(imp_record['material__number'])
+            imported_destination_names.add(imp_record['transfer__destination_point__name'])
+
+        def filter_records(dict_key, model, filter_name, imported_set, recs):
+            # print("###############", imported_set, dict_key, model.__name__, filter_name, recs)
+            qs = model.objects.filter(**{filter_name + "__in": imported_set})
+            available_items = qs.values_list(filter_name, flat=True)
+            dropped_recs = [d[dict_key] for d in recs if d[dict_key] not in available_items]
+            if dropped_recs:
+                logging.error(f"Dropping following lines as records not available in the workspace for type {model.__name__}"
+                              f" '{dropped_recs}' Please add the related records if needed")
+
+            return qs, [d for d in recs if d[dict_key] in available_items]
+
+        partner_org_qs, imported_records = filter_records(
+            dict_key="transfer__partner_organization__vendor_number",
+            model=PartnerOrganization,
+            filter_name="organization__vendor_number",
+            imported_set=imported_vendor_numbers,
+            recs=imported_records
+        )
+        partner_dict = {p.organization.vendor_number: p for p in partner_org_qs}
+
+        material_qs, imported_records = filter_records(
+            dict_key="material__number",
+            model=models.Material,
+            filter_name="number",
+            imported_set=imported_material_numbers,
+            recs=imported_records
+        )
+        material_dict = {m.number: m for m in material_qs}
+
+        poi_qs, imported_records = filter_records(
+            dict_key="transfer__destination_point__name",
+            model=models.PointOfInterest,
+            filter_name="name",
+            imported_set=imported_destination_names,
+            recs=imported_records
+        )
+        poi_dict = {poi.name: poi for poi in poi_qs.prefetch_related("partner_organizations")}
+
+        transfers = {}
+
+        def get_or_create_transfer(filter_dict):
+            frozen_dict = frozenset(sorted(filter_dict.items()))
+            hash_value = hash(frozen_dict)
+            t = transfers.get(hash_value)
+            if not t:
+                t, _ = models.Transfer.objects.get_or_create(**filter_dict)
+                transfers[hash_value] = t
+            return t
+
+        for imp_r in imported_records:
+            material = material_dict[imp_r.pop("material__number")]
+            partner = partner_dict[imp_r.pop("transfer__partner_organization__vendor_number")]
+            poi = poi_dict[imp_r.pop("transfer__destination_point__name")]
+            # ensure the POI belongs to the partner else skip:
+            if partner not in poi.partner_organizations.all():
+                logging.error(f"skipping record as POI {poi} does not belong to the Partner Org: {partner}")
                 continue
 
-            try:
-                mat_nr = import_dict.pop('material__number')
-                material = models.Material.objects.get(number=mat_nr)
-                import_dict['material_id'] = material.pk
-                if import_dict['partner_material__description']:
-                    models.PartnerMaterial.objects.update_or_create(
-                        material=material,
-                        partner_organization=partner_org_obj,
-                        defaults={'description': import_dict.pop('partner_material__description')}
-                    )
-            except models.Material.DoesNotExist:
-                logging.error(f"The material number '{mat_nr}' does not exist.")
-                continue
+            mat_desc = imp_r.pop('partner_material__description')
+            if mat_desc:
+                models.PartnerMaterial.objects.update_or_create(
+                    material=material,
+                    partner_organization=partner,
+                    defaults={'description': mat_desc}
+                )
 
-            destination = None
-            if import_dict['transfer__destination_point__name']:
-                poi_name = import_dict.pop('transfer__destination_point__name')
-                destination = models.PointOfInterest.objects.filter(name=poi_name).last()
-                if not destination:
-                    logging.error(f"The Point of Interest with name '{poi_name}' does not exist.")
-                    continue
+            transfer = get_or_create_transfer(dict(
+                name="Initial Imports",
+                partner_organization=partner,
+                destination_point=poi,
+                waybill_id=imp_r.pop('transfer__waybill_id'),
+            ))
 
-            transfer, _ = models.Transfer.objects.get_or_create(
-                partner_organization=partner_org_obj,
-                destination_point=destination,
-                waybill_id=import_dict.pop('transfer__waybill_id'),
-                pd_number=import_dict.pop('transfer__pd_number')
-            )
-            import_dict['transfer_id'] = transfer.pk
-            import_dict['is_prepositioned'] = True if import_dict['preposition_qty'] else False
+            imp_r['transfer_id'] = transfer.pk
+            imp_r["material_id"] = material.pk
+            imp_r["other"] = {"item_was_imported": True}
+            if imp_r["other__imported_po_number"]:
+                imp_r["other"]["imported_po_number"] = imp_r["other__imported_po_number"]
 
             models.Item.objects.update_or_create(
-                **import_dict
+                **imp_r
             )
 
 
