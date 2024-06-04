@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-03-26 12:56+0000\n"
+"POT-Creation-Date: 2024-05-21 04:41+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -2174,6 +2174,9 @@ msgstr "PD a déjà été envoyé au partenaire."
 
 msgid "Meeting date is not available."
 msgstr "La date de la réunion n'est pas disponible."
+
+msgid "No valid data found in the file."
+msgstr ""
 
 msgid "Action is not allowed"
 msgstr "L'action n'est pas autorisée"
