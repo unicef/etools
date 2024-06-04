@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: et-partners2-bk\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-03-26 12:56+0000\n"
+"POT-Creation-Date: 2024-05-21 04:41+0000\n"
 "Language: es\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -2159,6 +2159,9 @@ msgstr "El PD ya se ha enviado al socio."
 
 msgid "Meeting date is not available."
 msgstr "La fecha de la reunión no está disponible."
+
+msgid "No valid data found in the file."
+msgstr ""
 
 msgid "Action is not allowed"
 msgstr "No se permite la acción"
