@@ -322,7 +322,7 @@ def notify_partner_assessment_expires():
             for pd in pds:
                 focal_points_emails.update(pd.unicef_focal_point_emails)
             filtered_emails = User.objects.base_qs().filter(
-                email__in=focal_points_emails, profile__country_override=country).values_list('email', flat=True)
+                email__in=focal_points_emails, profile__country=country).values_list('email', flat=True)
 
             if filtered_emails:
                 days = partner.core_value_assessment_expiring.days.__abs__() \
