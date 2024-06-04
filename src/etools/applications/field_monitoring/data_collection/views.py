@@ -9,6 +9,7 @@ from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from sentry_sdk import capture_exception
 from unicef_attachments.models import Attachment
 from unicef_restlib.views import NestedViewSetMixin
 
@@ -120,6 +121,12 @@ class ActivityDataCollectionViewSet(
             create_checklist(activity, method, user, request.data)
         except ValidationError as ex:
             return Response(status=status.HTTP_400_BAD_REQUEST, data=ex.detail)
+        except Exception as ex:  # noqa
+            capture_exception(ex)
+            return Response(
+                status=status.HTTP_400_BAD_REQUEST,
+                data={'non_field_errors': [_('Unable to submit data. Please report to admins.')]}
+            )
 
         return Response(status=status.HTTP_201_CREATED)
 

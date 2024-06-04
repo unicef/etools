@@ -682,3 +682,14 @@ PARTNER_PROTECTED_URLS = [
     "/api/pmp/v3",
     "/api/v2/funds",
 ]
+
+PBI_CONFIG = {
+    "AUTHENTICATION_MODE": 'ServicePrincipal',
+    "WORKSPACE_ID": get_from_secrets_or_env('PBI_LMSM_WORKSPACE_ID', ''),
+    "REPORT_ID": get_from_secrets_or_env('PBI_LMSM_REPORT_ID', ''),
+    "TENANT_ID": get_from_secrets_or_env('PBI_LMSM_TENANT_ID', ''),
+    "CLIENT_ID": get_from_secrets_or_env('PBI_LMSM_CLIENT_ID', ''),
+    "CLIENT_SECRET": get_from_secrets_or_env('PBI_LMSM_CLIENT_SECRET', ''),
+    "SCOPE_BASE": ['https://analysis.windows.net/powerbi/api/.default'],
+    "AUTHORITY_URL": f"https://login.microsoftonline.com/{get_from_secrets_or_env('PBI_LMSM_TENANT_ID', '')}"
+}

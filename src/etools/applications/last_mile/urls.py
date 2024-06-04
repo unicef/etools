@@ -38,6 +38,11 @@ urlpatterns = [
         name="vision-export-data"
     ),
     path(
+        'pbi-data/',
+        view=views.PowerBIDataView.as_view(http_method_names=['get'],),
+        name="vision-export-data"
+    ),
+    path(
         'points-of-interest/<int:poi_pk>/items/',
         view=views.InventoryItemListView.as_view(http_method_names=['get'],),
         name='inventory-item-list',
