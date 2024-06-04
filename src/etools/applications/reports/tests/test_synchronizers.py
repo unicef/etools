@@ -357,19 +357,18 @@ class TestProgrammeSynchronizer(BaseTenantTestCase):
             "COUNTRY_PROGRAMME_WBS": "",
             "CP_START_DATE": "",
             "CP_END_DATE": "",
-            "OUTCOME_AREA_CODE": "",
-            "OUTCOME_AREA_NAME": "",
-            "OUTCOME_AREA_NAME_LONG": "",
+            "GOAL_AREA_CODE": "",
+            "GOAL_AREA_NAME": "",
             "OUTCOME_WBS": "",
-            "OUTCOME_DESCRIPTION": "",
+            "OUTCOME_NAME": "",
             "OUTCOME_START_DATE": "",
             "OUTCOME_END_DATE": "",
             "OUTPUT_WBS": "",
-            "OUTPUT_DESCRIPTION": "",
+            "OUTPUT_NAME": "",
             "OUTPUT_START_DATE": "",
             "OUTPUT_END_DATE": "",
             "ACTIVITY_WBS": "",
-            "ACTIVITY_DESCRIPTION": "",
+            "ACTIVITY_NAME": "",
             "ACTIVITY_START_DATE": "",
             "ACTIVITY_END_DATE": "",
             "SIC_CODE": "",
@@ -383,8 +382,8 @@ class TestProgrammeSynchronizer(BaseTenantTestCase):
             "HUMANITARIAN_TAG": "",
             "HUMANITARIAN_MARKER_CODE": "",
             "HUMANITARIAN_MARKER_NAME": "",
-            "PROGRAMME_AREA_CODE": "",
-            "PROGRAMME_AREA_NAME": "",
+            "RESULT_AREA_CODE": "",
+            "RESULT_AREA_NAME": "",
         }
         self.adapter = ProgrammeSynchronizer(business_area_code=self.country.business_area_code)
 
@@ -442,8 +441,8 @@ class TestProgrammeSynchronizer(BaseTenantTestCase):
     def test_clean_records_outcomes(self):
         """Need all outcome map values set, otherwise ignore"""
         self.data["OUTCOME_WBS"] = "OC_WBS"
-        self.data["OUTCOME_AREA_CODE"] = "OC_CODE"
-        self.data["OUTCOME_DESCRIPTION"] = "OC_NAME"
+        self.data["GOAL_AREA_CODE"] = "OC_CODE"
+        self.data["OUTCOME_NAME"] = "OC_NAME"
         self.data["OUTCOME_START_DATE"] = datetime.date.today()
         self.data["OUTCOME_END_DATE"] = datetime.date.today()
         records = [self.data]
@@ -469,13 +468,13 @@ class TestProgrammeSynchronizer(BaseTenantTestCase):
     def test_clean_records_outputs(self):
         """Need all output map values set, otherwise ignore"""
         self.data["OUTPUT_WBS"] = "OP_WBS"
-        self.data["OUTPUT_DESCRIPTION"] = "OP_NAME"
+        self.data["OUTPUT_NAME"] = "OP_NAME"
         self.data["OUTPUT_START_DATE"] = "OP_START"
         self.data["OUTPUT_END_DATE"] = "OP_END"
         self.data["HUMANITARIAN_MARKER_CODE"] = "HUMANITARIAN_MARKER_CODE"
         self.data["HUMANITARIAN_MARKER_NAME"] = "HUMANITARIAN_MARKER_NAME"
-        self.data["PROGRAMME_AREA_CODE"] = "PROGRAMME_AREA_CODE"
-        self.data["PROGRAMME_AREA_NAME"] = "PROGRAMME_AREA_NAME"
+        self.data["RESULT_AREA_CODE"] = "RESULT_AREA_CODE"
+        self.data["RESULT_AREA_NAME"] = "RESULT_AREA_NAME"
         records = [self.data]
         result = self.adapter._clean_records(records)
         self.assertEqual(result, {
@@ -492,8 +491,8 @@ class TestProgrammeSynchronizer(BaseTenantTestCase):
                 "from_date": "OP_START",
                 'humanitarian_marker_code': 'HUMANITARIAN_MARKER_CODE',
                 'humanitarian_marker_name': 'HUMANITARIAN_MARKER_NAME',
-                'programme_area_code': 'PROGRAMME_AREA_CODE',
-                'programme_area_name': 'PROGRAMME_AREA_NAME',
+                'programme_area_code': 'RESULT_AREA_CODE',
+                'programme_area_name': 'RESULT_AREA_NAME',
                 "to_date": "OP_END",
             }},
             "activities": {}
@@ -502,7 +501,7 @@ class TestProgrammeSynchronizer(BaseTenantTestCase):
     def test_clean_records_activities(self):
         """Need all activity map values set, otherwise ignore"""
         self.data["ACTIVITY_WBS"] = "A_WBS"
-        self.data["ACTIVITY_DESCRIPTION"] = "A_NAME"
+        self.data["ACTIVITY_NAME"] = "A_NAME"
         self.data["ACTIVITY_START_DATE"] = "A_START"
         self.data["ACTIVITY_END_DATE"] = "A_END"
         self.data["SIC_CODE"] = "S_CODE"
@@ -542,8 +541,8 @@ class TestProgrammeSynchronizer(BaseTenantTestCase):
         self.data["CP_START_DATE"] = "14-May-00"
         self.data["CP_END_DATE"] = "26-May-13"
         self.data["OUTCOME_WBS"] = "OC_WBS"
-        self.data["OUTCOME_AREA_CODE"] = "OC_CODE"
-        self.data["OUTCOME_DESCRIPTION"] = "OC_NAME"
+        self.data["GOAL_AREA_CODE"] = "OC_CODE"
+        self.data["OUTCOME_NAME"] = "OC_NAME"
         self.data["OUTCOME_START_DATE"] = "20-Feb-13"
         self.data["OUTCOME_END_DATE"] = "20-Feb-{}".format(str(datetime.date.today().year)[-2:])
         self.data["OUTPUT_START_DATE"] = "29-Oct-44"
