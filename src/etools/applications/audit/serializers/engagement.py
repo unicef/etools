@@ -573,6 +573,7 @@ class AuditSerializer(ActivePDValidationMixin, RiskCategoriesUpdateMixin, Engage
             raise serializers.ValidationError({'financial_findings': _('Cannot exceed Audited Expenditure')})
 
     def validate(self, validated_data):
+        validated_data = super().validate(validated_data)
         self._validate_financial_findings(validated_data)
         return validated_data
 
