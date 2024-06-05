@@ -6,6 +6,7 @@ from django.db import connection, models
 from django.forms import SelectMultiple
 from django.http.response import HttpResponseRedirect
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
@@ -17,6 +18,7 @@ from import_export.admin import ExportMixin
 from unicef_attachments.admin import AttachmentSingleInline
 from unicef_attachments.models import Attachment
 from unicef_snapshot.admin import ActivityInline, SnapshotModelAdmin
+from unicef_snapshot.models import Activity
 
 from etools.applications.partners.exports import PartnerExport
 from etools.applications.partners.forms import InterventionAttachmentForm  # TODO intervention sector locations cleanup
@@ -715,6 +717,7 @@ class AgreementAdmin(
         HiddenPartnerMixin,
         CountryUsersAdminMixin,
         RestrictedEditAdminMixin,
+        ExtraUrlMixin,
         SnapshotModelAdmin,
 ):
     staff_only = False
@@ -810,6 +813,29 @@ class AgreementAdmin(
             )
             urls.append(formatted_url)
         return urls
+
+    @button(permission=lambda request, obj: request.user.groups.filter(name='RSS').exists() and
+            obj.status == Agreement.TERMINATED and obj.end > timezone.now().date())
+    def revert_termination(self, request, pk):
+        agreement = Agreement.objects.get(pk=pk)
+        agreement.status = Agreement.SIGNED
+        agreement.save(update_fields=['status'])
+        terminated_interventions = agreement.interventions.filter(status=Intervention.TERMINATED)
+        for i in terminated_interventions:
+            intervention_activities = Activity.objects.filter(
+                target_content_type=ContentType.objects.get_for_model(Intervention),
+                target_object_id=i.id,
+                action=Activity.UPDATE,
+                change__status__after=Intervention.TERMINATED,
+            )
+            if not intervention_activities.exists():
+                continue
+            previous_status = intervention_activities.last().change['status']['before']
+            i.status = previous_status
+
+        Intervention.objects.bulk_update(terminated_interventions, fields=['status'])
+
+        return HttpResponseRedirect(reverse('admin:partners_agreement_change', args=[pk]))
 
 
 class FileTypeAdmin(RestrictedEditAdmin):
