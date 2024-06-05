@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-03-26 12:56+0000\n"
+"POT-Creation-Date: 2024-05-21 04:41+0000\n"
 "Language: ru\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -2154,6 +2154,9 @@ msgstr "PD уже отправлен партнеру."
 
 msgid "Meeting date is not available."
 msgstr "Дата встречи неизвестна."
+
+msgid "No valid data found in the file."
+msgstr ""
 
 msgid "Action is not allowed"
 msgstr "Действие не разрешено"

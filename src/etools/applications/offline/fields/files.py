@@ -1,6 +1,6 @@
 from typing import Any
 
-from django.db import connection
+from django.db import connection, transaction
 from django.utils.translation import gettext_lazy as _
 
 from unicef_attachments.models import Attachment
@@ -35,7 +35,9 @@ class UploadedFileField(FileField):
 
 def _get_remote_attachment(value: str) -> Attachment:
     attachment = Attachment.objects.create(hyperlink=value)
-    download_remote_attachment.delay(connection.tenant.schema_name, attachment.id, value)
+    transaction.on_commit(
+        lambda: download_remote_attachment.delay(connection.tenant.schema_name, attachment.id, value)
+    )
     return attachment
 
 
