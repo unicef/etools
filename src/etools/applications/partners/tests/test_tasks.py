@@ -1460,8 +1460,11 @@ class TestPartnerAssessmentExpires(BaseTenantTestCase):
 
         self.partner_1.core_values_assessment_date = core_values_assessment_date
         self.partner_1.save()
-        self.focal_point.profile.country_override = None
-        self.focal_point.profile.save()
+
+        focal_point = UserFactory(profile__country=None)
+        self.intervention_1.unicef_focal_points.remove(self.focal_point)
+        self.intervention_1.unicef_focal_points.add(focal_point)
+        self.assertIsNone(focal_point.profile.country)
 
         send_path = "etools.applications.partners.tasks.send_notification_with_template"
         mock_send = mock.Mock()
