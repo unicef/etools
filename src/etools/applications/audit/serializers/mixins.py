@@ -77,7 +77,6 @@ class EngagementDatesValidation:
         if date_of_draft_report_to_unicef and date_of_comments_by_unicef and date_of_comments_by_unicef < date_of_draft_report_to_unicef:
             errors['date_of_comments_by_unicef'] = _('This date should be after Date Draft Report Issued to UNICEF.')
 
-
         if errors:
             raise serializers.ValidationError(errors)
         return validated_data
