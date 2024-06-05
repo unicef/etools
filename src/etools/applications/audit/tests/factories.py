@@ -1,4 +1,5 @@
 import random
+from datetime import datetime, timedelta
 
 from django.db.models import signals
 
@@ -133,16 +134,25 @@ class MicroAssessmentFactory(EngagementFactory):
 
 
 class AuditFactory(EngagementFactory):
+    start_date = datetime.today() - timedelta(days=30)
+    end_date = datetime.today() - timedelta(days=10)
+
     class Meta:
         model = Audit
 
 
 class SpecialAuditFactory(EngagementFactory):
+    start_date = datetime.today() - timedelta(days=30)
+    end_date = datetime.today() - timedelta(days=10)
+
     class Meta:
         model = SpecialAudit
 
 
 class SpotCheckFactory(EngagementFactory):
+    start_date = datetime.today() - timedelta(days=30)
+    end_date = datetime.today() - timedelta(days=10)
+
     class Meta:
         model = SpotCheck
 
