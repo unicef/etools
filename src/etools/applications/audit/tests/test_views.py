@@ -737,6 +737,15 @@ class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenan
         self.assertEqual(len(response.data), 1)
         self.assertIn('financial_findings', response.data)
 
+    def test_percent_of_audited_expenditure_local_invalid(self):
+        response = self._do_update(self.auditor, {
+            'audited_expenditure_local': 1,
+            'financial_findings_local': 2
+        })
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(len(response.data), 1)
+        self.assertIn('financial_findings_local', response.data)
+
     def test_percent_of_audited_expenditure_valid(self):
         response = self._do_update(self.auditor, {
             'audited_expenditure': 2,
