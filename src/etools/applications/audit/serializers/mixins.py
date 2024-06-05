@@ -68,7 +68,8 @@ class EngagementDatesValidation:
             errors['date_of_field_visit'] = _('This date should be after Date IP was contacted.')
 
         if date_of_field_visit and date_of_draft_report_to_ip and date_of_draft_report_to_ip < date_of_field_visit:
-            errors['date_of_draft_report_to_ip'] = _('This date should be after Date of Field Visit.')
+            # date of field visit is editable even if date of draft report is readonly, map error to field visit date
+            errors['date_of_field_visit'] = _('This date should be before Date Draft Report Issued to IP.')
         if date_of_draft_report_to_ip and date_of_comments_by_ip and date_of_comments_by_ip < date_of_draft_report_to_ip:
             errors['date_of_comments_by_ip'] = _('This date should be after Date Draft Report Issued to UNICEF.')
         if date_of_comments_by_ip and date_of_draft_report_to_unicef and date_of_draft_report_to_unicef < date_of_comments_by_ip:
