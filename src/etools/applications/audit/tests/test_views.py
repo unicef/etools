@@ -547,7 +547,9 @@ class BaseTestEngagementsCreateViewSet(EngagementTransitionsTestCaseMixin):
             'date_of_comments_by_unicef'
         ]:
             if data.get(date_field):
-                data[date_field] = data[date_field].date().isoformat()
+                if isinstance(data[date_field], datetime.datetime):
+                    data[date_field] = data[date_field].date()
+                data[date_field] = data[date_field].isoformat()
         response = self.forced_auth_req(
             'post',
             self.engagements_url(),
@@ -787,7 +789,9 @@ class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenan
             'date_of_comments_by_unicef'
         ]:
             if data.get(date_field):
-                data[date_field] = data[date_field].date().isoformat()
+                if isinstance(data[date_field], datetime.datetime):
+                    data[date_field] = data[date_field].date()
+                data[date_field] = data[date_field].isoformat()
         response = self.forced_auth_req(
             'patch',
             '/api/audit/audits/{}/'.format(self.engagement.id),

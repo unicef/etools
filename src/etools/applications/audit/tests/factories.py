@@ -1,7 +1,8 @@
 import random
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from django.db.models import signals
+from django.utils import timezone
 
 import factory
 from factory import fuzzy
@@ -134,24 +135,24 @@ class MicroAssessmentFactory(EngagementFactory):
 
 
 class AuditFactory(EngagementFactory):
-    start_date = datetime.today() - timedelta(days=30)
-    end_date = datetime.today() - timedelta(days=10)
+    start_date = timezone.now().date() - timedelta(days=30)
+    end_date = timezone.now().date() - timedelta(days=10)
 
     class Meta:
         model = Audit
 
 
 class SpecialAuditFactory(EngagementFactory):
-    start_date = datetime.today() - timedelta(days=30)
-    end_date = datetime.today() - timedelta(days=10)
+    start_date = timezone.now().date() - timedelta(days=30)
+    end_date = timezone.now().date() - timedelta(days=10)
 
     class Meta:
         model = SpecialAudit
 
 
 class SpotCheckFactory(EngagementFactory):
-    start_date = datetime.today() - timedelta(days=30)
-    end_date = datetime.today() - timedelta(days=10)
+    start_date = timezone.now().date() - timedelta(days=30)
+    end_date = timezone.now().date() - timedelta(days=10)
 
     class Meta:
         model = SpotCheck
