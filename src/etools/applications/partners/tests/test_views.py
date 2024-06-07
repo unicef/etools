@@ -79,7 +79,6 @@ class URLsTestCase(URLAssertionMixin, SimpleTestCase):
         """Verify URL pattern names generate the URLs we expect them to."""
         names_and_paths = (
             ('partner-list', '', {}),
-            ('partner-hact', 'hact/', {}),
             ('partner-engagements', 'engagements/', {}),
             ('partner-detail', '1/', {'pk': 1}),
             ('partner-delete', 'delete/1/', {'pk': 1}),

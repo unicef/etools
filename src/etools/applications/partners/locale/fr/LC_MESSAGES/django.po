@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-05-21 04:41+0000\n"
+"POT-Creation-Date: 2024-06-04 15:42+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -143,66 +143,6 @@ msgstr "Visites programmées"
 msgid "Implementing Partner"
 msgstr "Partenaire de mise en œuvre"
 
-msgid "Shared IP"
-msgstr "IP partagée"
-
-msgid "Cash Transfer 1 OCT - 30 SEP"
-msgstr "Transfert d'argent liquide 1 OCT - 30 SEP"
-
-msgid "Liquidations 1 OCT - 30 SEP"
-msgstr "Liquidations 1 OCT - 30 SEP"
-
-msgid "Cash Transfers Jan - Dec"
-msgstr "Transferts de fonds Jan - Déc"
-
-msgid "Risk Rating"
-msgstr "Évaluation du risque"
-
-msgid "Expiring Threshold"
-msgstr "Seuil d'expiration"
-
-msgid "Approach Threshold"
-msgstr "Seuil d'approche"
-
-msgid "Programmatic Visits Planned Q1"
-msgstr "Visites programmées Q1"
-
-msgid "Q2"
-msgstr "Q2"
-
-msgid "Q3"
-msgstr "Q3"
-
-msgid "Q4"
-msgstr "Q4"
-
-msgid "Programmatic Visits M.R"
-msgstr "Visites programmées M.R"
-
-msgid "Programmatic Visits Completed Q1"
-msgstr "Visites programmatiques achevées Q1"
-
-msgid "Spot Checks Planned Q1"
-msgstr "Contrôles ponctuels prévus Q1"
-
-msgid "Spot Checks M.R"
-msgstr "Contrôles ponctuels M.R"
-
-msgid "Follow Up"
-msgstr "Suivi"
-
-msgid "Spot Checks Completed Q1"
-msgstr "Contrôles ponctuels achevés Q1"
-
-msgid "Audits M.R"
-msgstr "Audits M.R"
-
-msgid "Audit Completed"
-msgstr "Audit terminé"
-
-msgid "Audits Outstanding Findings"
-msgstr "Audits Constatations en suspens"
-
 msgid "Sections"
 msgstr "Sections"
 
@@ -232,18 +172,6 @@ msgstr "Montant du DCT impayé entre 6 et 9 mois"
 
 msgid "Outstanding DCT Amount more than 9 months"
 msgstr "Montant DCT impayé plus de 9 mois"
-
-msgid "Programmatic Visits Planned"
-msgstr "Visites programmées"
-
-msgid "Programmatic Visits Completed"
-msgstr "Visites programmatiques achevées"
-
-msgid "Spot Check Required"
-msgstr "Vérification ponctuelle requise"
-
-msgid "Spot Checks Completed"
-msgstr "Contrôles ponctuels effectués"
 
 msgid "Reference Number"
 msgstr "Numéro de référence"
@@ -736,6 +664,9 @@ msgstr "Pays"
 msgid "Alternate ID"
 msgstr "ID alternatif"
 
+msgid "Risk Rating"
+msgstr "Évaluation du risque"
+
 msgid "Last Assessment Date"
 msgstr "Date de la dernière évaluation"
 
@@ -1119,6 +1050,15 @@ msgstr "Modifications de l'intervention"
 
 msgid "Q1"
 msgstr ""
+
+msgid "Q2"
+msgstr "Q2"
+
+msgid "Q3"
+msgstr "Q3"
+
+msgid "Q4"
+msgstr "Q4"
 
 msgid "Intervention"
 msgstr "Intervention"
@@ -2329,6 +2269,66 @@ msgstr ""
 
 msgid "Partnership Manager role required for pca export."
 msgstr "Rôle de gestionnaire de partenariat requis pour l'exportation pca."
+
+#~ msgid "Shared IP"
+#~ msgstr "IP partagée"
+
+#~ msgid "Cash Transfer 1 OCT - 30 SEP"
+#~ msgstr "Transfert d'argent liquide 1 OCT - 30 SEP"
+
+#~ msgid "Liquidations 1 OCT - 30 SEP"
+#~ msgstr "Liquidations 1 OCT - 30 SEP"
+
+#~ msgid "Cash Transfers Jan - Dec"
+#~ msgstr "Transferts de fonds Jan - Déc"
+
+#~ msgid "Expiring Threshold"
+#~ msgstr "Seuil d'expiration"
+
+#~ msgid "Approach Threshold"
+#~ msgstr "Seuil d'approche"
+
+#~ msgid "Programmatic Visits Planned Q1"
+#~ msgstr "Visites programmées Q1"
+
+#~ msgid "Programmatic Visits M.R"
+#~ msgstr "Visites programmées M.R"
+
+#~ msgid "Programmatic Visits Completed Q1"
+#~ msgstr "Visites programmatiques achevées Q1"
+
+#~ msgid "Spot Checks Planned Q1"
+#~ msgstr "Contrôles ponctuels prévus Q1"
+
+#~ msgid "Spot Checks M.R"
+#~ msgstr "Contrôles ponctuels M.R"
+
+#~ msgid "Follow Up"
+#~ msgstr "Suivi"
+
+#~ msgid "Spot Checks Completed Q1"
+#~ msgstr "Contrôles ponctuels achevés Q1"
+
+#~ msgid "Audits M.R"
+#~ msgstr "Audits M.R"
+
+#~ msgid "Audit Completed"
+#~ msgstr "Audit terminé"
+
+#~ msgid "Audits Outstanding Findings"
+#~ msgstr "Audits Constatations en suspens"
+
+#~ msgid "Programmatic Visits Planned"
+#~ msgstr "Visites programmées"
+
+#~ msgid "Programmatic Visits Completed"
+#~ msgstr "Visites programmatiques achevées"
+
+#~ msgid "Spot Check Required"
+#~ msgstr "Vérification ponctuelle requise"
+
+#~ msgid "Spot Checks Completed"
+#~ msgstr "Contrôles ponctuels effectués"
 
 #~ msgid ""
 #~ "Final Review must be approved for documents having amount transferred "
