@@ -55,6 +55,9 @@ msgstr "Hact"
 msgid "Signed Amendment"
 msgstr "Enmienda firmada"
 
+msgid "Termination Doc Attachment"
+msgstr ""
+
 msgid "Agreement Details"
 msgstr "Detalles del acuerdo"
 

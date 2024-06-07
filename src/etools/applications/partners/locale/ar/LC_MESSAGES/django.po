@@ -64,6 +64,9 @@ msgstr "إطار النهج المنسق للتحويلات النقدية"
 msgid "Signed Amendment"
 msgstr "التعديل الموقع"
 
+msgid "Termination Doc Attachment"
+msgstr ""
+
 msgid "Agreement Details"
 msgstr "تفاصيل الاتفاقية"
 
