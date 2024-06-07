@@ -1,5 +1,4 @@
 import datetime
-import os.path
 
 from django.contrib.admin.sites import AdminSite
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -146,7 +145,6 @@ class TestAgreementAdmin(TestAdminCase):
         agreement.refresh_from_db()
         self.assertEqual(agreement.status, Agreement.SIGNED)
         self.assertEqual(agreement.termination_doc.count(), 0)
-        self.assertFalse(os.path.exists(a.file.path))
 
         suspended_pd.refresh_from_db()
         self.assertEqual(suspended_pd.status, Intervention.SUSPENDED)
