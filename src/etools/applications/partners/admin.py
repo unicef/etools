@@ -1,3 +1,5 @@
+import os
+
 from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.admin.utils import quote
@@ -711,6 +713,11 @@ class AgreementAttachmentInline(AttachmentSingleInline):
     code = 'partners_agreement'
 
 
+class AgreementTerminationDocAttachmentInline(AttachmentSingleInline):
+    verbose_name_plural = _('Termination Doc Attachment')
+    code = 'partners_agreement_termination_doc'
+
+
 class AgreementAdmin(
         AttachmentInlineAdminMixin,
         ExportMixin,
@@ -769,6 +776,7 @@ class AgreementAdmin(
     inlines = [
         ActivityInline,
         AgreementAttachmentInline,
+        AgreementTerminationDocAttachmentInline
     ]
 
     def has_module_permission(self, request):
@@ -819,8 +827,19 @@ class AgreementAdmin(
     def revert_termination(self, request, pk):
         agreement = Agreement.objects.get(pk=pk)
         agreement.status = Agreement.SIGNED
+        termination_doc = Attachment.objects.get(
+            code='partners_agreement_termination_doc',
+            content_type=ContentType.objects.get_for_model(Agreement),
+            object_id=agreement.pk
+        )
+        if os.path.isfile(termination_doc.file.path):
+            os.remove(termination_doc.file.path)
+        agreement.termination_doc.remove(termination_doc)
+
         agreement.save(update_fields=['status'])
+
         terminated_interventions = agreement.interventions.filter(status=Intervention.TERMINATED)
+        interventions_to_update = []
         for i in terminated_interventions:
             intervention_activities = Activity.objects.filter(
                 target_content_type=ContentType.objects.get_for_model(Intervention),
@@ -830,10 +849,13 @@ class AgreementAdmin(
             )
             if not intervention_activities.exists():
                 continue
-            previous_status = intervention_activities.last().change['status']['before']
-            i.status = previous_status
 
-        Intervention.objects.bulk_update(terminated_interventions, fields=['status'])
+            previous_status = intervention_activities.last().change['status']['before']
+            if previous_status in [Intervention.SIGNED, Intervention.ACTIVE, Intervention.SUSPENDED]:
+                i.status = previous_status
+                interventions_to_update.append(i)
+
+        Intervention.objects.bulk_update(interventions_to_update, fields=['status'])
 
         return HttpResponseRedirect(reverse('admin:partners_agreement_change', args=[pk]))
 
