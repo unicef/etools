@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import transaction
 from django.utils.translation import gettext as _
 
@@ -108,7 +109,11 @@ class DisaggregationSerializer(serializers.ModelSerializer):
         values_data = validated_data.pop('disaggregation_values')
         if not values_data or len(values_data) == 1:
             raise ValidationError('At least 2 Disaggregation Groups must be set.')
-        disaggregation = Disaggregation.objects.create(**validated_data)
+        try:
+            disaggregation = Disaggregation.objects.create(**validated_data)
+        except DjangoValidationError as exc:
+            raise ValidationError(exc.messages)
+
         for value_data in values_data:
             if 'id' in value_data:
                 raise ValidationError(
