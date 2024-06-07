@@ -47,81 +47,6 @@ class PartnerOrganizationCSVRenderer(r.CSVRenderer):
     }
 
 
-class PartnerOrganizationHactCsvRenderer(FriendlyCSVRenderer):
-
-    header = [
-        'name',
-        'vendor_number',
-        'partner_type',
-        'shared_with',
-        'type_of_assessment',
-        'net_ct_cy',
-        'reported_cy',
-        'total_ct_ytd',
-        'rating',
-        'flags.expiring_assessment_flag',
-        'flags.approaching_threshold_flag',
-        'hact_values.programmatic_visits.planned.q1',
-        'hact_values.programmatic_visits.planned.q2',
-        'hact_values.programmatic_visits.planned.q3',
-        'hact_values.programmatic_visits.planned.q4',
-        'hact_min_requirements.programmatic_visits',
-        'hact_values.programmatic_visits.completed.q1',
-        'hact_values.programmatic_visits.completed.q2',
-        'hact_values.programmatic_visits.completed.q3',
-        'hact_values.programmatic_visits.completed.q4',
-        'planned_engagement.spot_check_planned_q1',
-        'planned_engagement.spot_check_planned_q2',
-        'planned_engagement.spot_check_planned_q3',
-        'planned_engagement.spot_check_planned_q4',
-        'hact_min_requirements.spot_checks',
-        'planned_engagement.spot_check_follow_up',
-        'hact_values.spot_checks.completed.q1',
-        'hact_values.spot_checks.completed.q2',
-        'hact_values.spot_checks.completed.q3',
-        'hact_values.spot_checks.completed.q4',
-        'hact_min_requirements.audits',
-        'hact_values.audits.completed',
-        'hact_values.outstanding_findings',
-    ]
-
-    labels = {
-        'name': _('Implementing Partner'),
-        'vendor_number': _('Vendor Number'),
-        'partner_type': _('Partner Type'),
-        'shared_with': _('Shared IP'),
-        'type_of_assessment': _('Assessment Type'),
-        'net_ct_cy': _('Cash Transfer 1 OCT - 30 SEP'),
-        'reported_cy': _('Liquidations 1 OCT - 30 SEP'),
-        'total_ct_ytd': _('Cash Transfers Jan - Dec'),
-        'rating': _('Risk Rating'),
-        'flags.expiring_assessment_flag': _('Expiring Threshold'),
-        'flags.approaching_threshold_flag': _('Approach Threshold'),
-        'hact_values.programmatic_visits.planned.q1': _('Programmatic Visits Planned Q1'),
-        'hact_values.programmatic_visits.planned.q2': _('Q2'),
-        'hact_values.programmatic_visits.planned.q3': _('Q3'),
-        'hact_values.programmatic_visits.planned.q4': _('Q4'),
-        'hact_min_requirements.programmatic_visits': _('Programmatic Visits M.R'),
-        'hact_values.programmatic_visits.completed.q1': _('Programmatic Visits Completed Q1'),
-        'hact_values.programmatic_visits.completed.q2': _('Q2'),
-        'hact_values.programmatic_visits.completed.q3': _('Q3'),
-        'hact_values.programmatic_visits.completed.q4': _('Q4'),
-        'planned_engagement.spot_check_planned_q1': _('Spot Checks Planned Q1'),
-        'planned_engagement.spot_check_planned_q2': _('Q2'),
-        'planned_engagement.spot_check_planned_q3': _('Q3'),
-        'planned_engagement.spot_check_planned_q4': _('Q4'),
-        'hact_min_requirements.spot_checks': _('Spot Checks M.R'),
-        'planned_engagement.spot_check_follow_up': _('Follow Up'),
-        'hact_values.spot_checks.completed.q1': _('Spot Checks Completed Q1'),
-        'hact_values.spot_checks.completed.q2': _('Q2'),
-        'hact_values.spot_checks.completed.q3': _('Q3'),
-        'hact_values.spot_checks.completed.q4': _('Q4'),
-        'hact_min_requirements.audits': _('Audits M.R'),
-        'hact_values.audits.completed': _('Audit Completed'),
-        'hact_values.outstanding_findings': _('Audits Outstanding Findings'),
-    }
-
-
 class PartnerOrganizationDashboardCsvRenderer(FriendlyCSVRenderer):
     header = [
         'name',
@@ -149,49 +74,6 @@ class PartnerOrganizationDashboardCsvRenderer(FriendlyCSVRenderer):
         'alert_no_pv': _('Alert: No PV'),
         'outstanding_dct_amount_6_to_9_months_usd': _('Outstanding DCT Amount between 6 and 9 months'),
         'outstanding_dct_amount_more_than_9_months_usd': _('Outstanding DCT Amount more than 9 months'),
-    }
-
-
-class PartnerOrganizationSimpleHactCsvRenderer(FriendlyCSVRenderer):
-
-    header = [
-        'name',
-        'vendor_number',
-        'partner_type',
-        'shared_with',
-        'type_of_assessment',
-        'total_ct_ytd',
-        'rating',
-        'flags.expiring_assessment_flag',
-        'flags.approaching_threshold_flag',
-        'hact_values.programmatic_visits.planned.total',
-        'hact_min_requirements.programmatic_visits',
-        'hact_values.programmatic_visits.completed.total',
-        'planned_engagement.spot_check_required',
-        'hact_values.spot_checks.completed.total',
-        'hact_min_requirements.audits',
-        'hact_values.audits.completed',
-        'hact_values.outstanding_findings',
-    ]
-
-    labels = {
-        'name': _('Implementing Partner'),
-        'vendor_number': _('Vendor Number'),
-        'partner_type': _('Partner Type'),
-        'shared_with': _('Shared IP'),
-        'total_ct_ytd': _('Cash Transfers Jan - Dec'),
-        'type_of_assessment': _('Assessment Type'),
-        'rating': _('Risk Rating'),
-        'flags.expiring_assessment_flag': _('Expiring Threshold'),
-        'flags.approaching_threshold_flag': _('Approach Threshold'),
-        'hact_values.programmatic_visits.planned.total': _('Programmatic Visits Planned'),
-        'hact_min_requirements.programmatic_visits': _('Programmatic Visits M.R'),
-        'hact_values.programmatic_visits.completed.total': _('Programmatic Visits Completed'),
-        'planned_engagement.spot_check_required': _('Spot Check Required'),
-        'hact_values.spot_checks.completed.total': _('Spot Checks Completed'),
-        'hact_min_requirements.audits': _('Audits M.R'),
-        'hact_values.audits.completed': _('Audit Completed'),
-        'hact_values.outstanding_findings': _('Audits Outstanding Findings'),
     }
 
 

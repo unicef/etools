@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: et-partners2-bk\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-05-21 04:41+0000\n"
+"POT-Creation-Date: 2024-06-04 15:42+0000\n"
 "Language: es\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -54,6 +54,9 @@ msgstr "Hact"
 
 msgid "Signed Amendment"
 msgstr "Enmienda firmada"
+
+msgid "Termination Doc Attachment"
+msgstr ""
 
 msgid "Agreement Details"
 msgstr "Detalles del acuerdo"
@@ -135,66 +138,6 @@ msgstr "Visitas programáticas previstas"
 msgid "Implementing Partner"
 msgstr "Socio ejecutor"
 
-msgid "Shared IP"
-msgstr "IP compartida"
-
-msgid "Cash Transfer 1 OCT - 30 SEP"
-msgstr "Transferencia de efectivo 1 OCT - 30 SEP"
-
-msgid "Liquidations 1 OCT - 30 SEP"
-msgstr "Liquidaciones 1 OCT - 30 SEP"
-
-msgid "Cash Transfers Jan - Dec"
-msgstr "Transferencias enero - diciembre"
-
-msgid "Risk Rating"
-msgstr "Calificación del riesgo"
-
-msgid "Expiring Threshold"
-msgstr "Umbral de expiración"
-
-msgid "Approach Threshold"
-msgstr "Umbral de aproximación"
-
-msgid "Programmatic Visits Planned Q1"
-msgstr "Visitas programáticas previstas Q1"
-
-msgid "Q2"
-msgstr "Q2"
-
-msgid "Q3"
-msgstr "Q3"
-
-msgid "Q4"
-msgstr "Q4"
-
-msgid "Programmatic Visits M.R"
-msgstr "Visitas programáticas M.R"
-
-msgid "Programmatic Visits Completed Q1"
-msgstr "Visitas programáticas realizadas 1er trimestre"
-
-msgid "Spot Checks Planned Q1"
-msgstr "Controles aleatorios previstos Q1"
-
-msgid "Spot Checks M.R"
-msgstr "Controles aleatorios M.R"
-
-msgid "Follow Up"
-msgstr "Seguimiento"
-
-msgid "Spot Checks Completed Q1"
-msgstr "Controles aleatorios completados Q1"
-
-msgid "Audits M.R"
-msgstr "Auditorías M.R"
-
-msgid "Audit Completed"
-msgstr "Auditoría finalizada"
-
-msgid "Audits Outstanding Findings"
-msgstr "Auditorías Conclusiones pendientes"
-
 msgid "Sections"
 msgstr "Secciones"
 
@@ -224,18 +167,6 @@ msgstr "Importe pendiente del SES entre 6 y 9 meses"
 
 msgid "Outstanding DCT Amount more than 9 months"
 msgstr "Importe del SES pendiente más de 9 meses"
-
-msgid "Programmatic Visits Planned"
-msgstr "Visitas programáticas previstas"
-
-msgid "Programmatic Visits Completed"
-msgstr "Visitas programáticas realizadas"
-
-msgid "Spot Check Required"
-msgstr "Comprobación aleatoria obligatoria"
-
-msgid "Spot Checks Completed"
-msgstr "Controles aleatorios realizados"
 
 msgid "Reference Number"
 msgstr "Número de referencia"
@@ -727,6 +658,9 @@ msgstr "País"
 msgid "Alternate ID"
 msgstr "ID alternativo"
 
+msgid "Risk Rating"
+msgstr "Calificación del riesgo"
+
 msgid "Last Assessment Date"
 msgstr "Fecha de la última evaluación"
 
@@ -1110,6 +1044,15 @@ msgstr "Enmiendas de intervención"
 
 msgid "Q1"
 msgstr ""
+
+msgid "Q2"
+msgstr "Q2"
+
+msgid "Q3"
+msgstr "Q3"
+
+msgid "Q4"
+msgstr "Q4"
 
 msgid "Intervention"
 msgstr "Intervención"
@@ -2315,6 +2258,66 @@ msgstr ""
 msgid "Partnership Manager role required for pca export."
 msgstr ""
 "Se requiere el rol de Gerente de asociación para la exportación de PCA."
+
+#~ msgid "Shared IP"
+#~ msgstr "IP compartida"
+
+#~ msgid "Cash Transfer 1 OCT - 30 SEP"
+#~ msgstr "Transferencia de efectivo 1 OCT - 30 SEP"
+
+#~ msgid "Liquidations 1 OCT - 30 SEP"
+#~ msgstr "Liquidaciones 1 OCT - 30 SEP"
+
+#~ msgid "Cash Transfers Jan - Dec"
+#~ msgstr "Transferencias enero - diciembre"
+
+#~ msgid "Expiring Threshold"
+#~ msgstr "Umbral de expiración"
+
+#~ msgid "Approach Threshold"
+#~ msgstr "Umbral de aproximación"
+
+#~ msgid "Programmatic Visits Planned Q1"
+#~ msgstr "Visitas programáticas previstas Q1"
+
+#~ msgid "Programmatic Visits M.R"
+#~ msgstr "Visitas programáticas M.R"
+
+#~ msgid "Programmatic Visits Completed Q1"
+#~ msgstr "Visitas programáticas realizadas 1er trimestre"
+
+#~ msgid "Spot Checks Planned Q1"
+#~ msgstr "Controles aleatorios previstos Q1"
+
+#~ msgid "Spot Checks M.R"
+#~ msgstr "Controles aleatorios M.R"
+
+#~ msgid "Follow Up"
+#~ msgstr "Seguimiento"
+
+#~ msgid "Spot Checks Completed Q1"
+#~ msgstr "Controles aleatorios completados Q1"
+
+#~ msgid "Audits M.R"
+#~ msgstr "Auditorías M.R"
+
+#~ msgid "Audit Completed"
+#~ msgstr "Auditoría finalizada"
+
+#~ msgid "Audits Outstanding Findings"
+#~ msgstr "Auditorías Conclusiones pendientes"
+
+#~ msgid "Programmatic Visits Planned"
+#~ msgstr "Visitas programáticas previstas"
+
+#~ msgid "Programmatic Visits Completed"
+#~ msgstr "Visitas programáticas realizadas"
+
+#~ msgid "Spot Check Required"
+#~ msgstr "Comprobación aleatoria obligatoria"
+
+#~ msgid "Spot Checks Completed"
+#~ msgstr "Controles aleatorios realizados"
 
 #~ msgid ""
 #~ "Final Review must be approved for documents having amount transferred "
