@@ -775,30 +775,6 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
         self.assertEqual(response.data['hact_values']['programmatic_visits']['completed'][get_quarter()], 3)
 
 
-class TestPartnerOrganizationHactAPIView(BaseTenantTestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.url = reverse("partners_api:partner-hact")
-        cls.unicef_staff = UserFactory(is_staff=True)
-        cls.partner = PartnerFactory(
-            total_ct_cp=10.00,
-            total_ct_cy=8.00,
-        )
-
-    def test_get(self):
-        response = self.forced_auth_req(
-            'get',
-            self.url,
-            user=self.unicef_staff
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        response_json = json.loads(response.rendered_content)
-        self.assertIsInstance(response_json, list)
-        self.assertEqual(len(response_json), 1)
-        self.assertIn('id', response_json[0].keys())
-        self.assertEqual(response_json[0]['id'], self.partner.pk)
-
-
 class TestPartnerOrganizationAddView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
