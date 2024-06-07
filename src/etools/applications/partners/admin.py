@@ -827,14 +827,15 @@ class AgreementAdmin(
     def revert_termination(self, request, pk):
         agreement = Agreement.objects.get(pk=pk)
         agreement.status = Agreement.SIGNED
-        termination_doc = Attachment.objects.get(
-            code='partners_agreement_termination_doc',
-            content_type=ContentType.objects.get_for_model(Agreement),
-            object_id=agreement.pk
-        )
-        if os.path.isfile(termination_doc.file.path):
-            os.remove(termination_doc.file.path)
-        agreement.termination_doc.remove(termination_doc)
+        try:
+            termination_doc = Attachment.objects.get(
+                code='partners_agreement_termination_doc',
+                content_type=ContentType.objects.get_for_model(Agreement),
+                object_id=agreement.pk
+            )
+            agreement.termination_doc.remove(termination_doc)
+        except Attachment.DoesNotExist:
+            pass
 
         agreement.save(update_fields=['status'])
 
