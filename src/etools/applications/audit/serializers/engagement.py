@@ -571,7 +571,7 @@ class AuditSerializer(ActivePDValidationMixin, RiskCategoriesUpdateMixin, Engage
         if not audited_expenditure:
             audited_expenditure = self.instance.audited_expenditure if self.instance else None
 
-        if audited_expenditure and financial_findings and financial_findings > audited_expenditure:
+        if audited_expenditure and financial_findings and financial_findings >= audited_expenditure:
             raise serializers.ValidationError({'financial_findings': _('Cannot exceed Audited Expenditure')})
 
         if not financial_findings_local:
@@ -579,7 +579,7 @@ class AuditSerializer(ActivePDValidationMixin, RiskCategoriesUpdateMixin, Engage
         if not audited_expenditure_local:
             audited_expenditure_local = self.instance.audited_expenditure_local if self.instance else None
 
-        if audited_expenditure_local and financial_findings_local and financial_findings_local > audited_expenditure_local:
+        if audited_expenditure_local and financial_findings_local and financial_findings_local >= audited_expenditure_local:
             raise serializers.ValidationError({'financial_findings_local': _('Cannot exceed Audited Expenditure Local')})
 
     def validate(self, validated_data):
