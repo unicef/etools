@@ -44,7 +44,7 @@ class PointOfInterest(TimeStampedModel, models.Model):
         null=True, blank=True
     )
     name = models.CharField(verbose_name=_("Name"), max_length=254)
-    p_code = models.CharField(verbose_name=_("P Code"), max_length=32, blank=True, default='')
+    p_code = models.CharField(verbose_name=_("P Code"), max_length=32, unique=True)
     description = models.CharField(verbose_name=_("Description"), max_length=254)
     poi_type = models.ForeignKey(
         PointOfInterestType,
