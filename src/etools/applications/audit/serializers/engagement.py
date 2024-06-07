@@ -257,6 +257,9 @@ class EngagementSerializer(
         WritableNestedParentSerializerMixin,
         EngagementListSerializer
 ):
+    face_form_start_date = serializers.DateField(label='FACE Form(s) Start Date', read_only=True, source='start_date')
+    face_form_end_date = serializers.DateField(label='FACE Form(s) End Date', read_only=True, source='end_date')
+
     staff_members = SeparatedReadWriteField(
         read_field=serializers.SerializerMethodField(),
         label=_('Audit Staff Team Members')
@@ -287,6 +290,7 @@ class EngagementSerializer(
 
     class Meta(EngagementListSerializer.Meta):
         fields = EngagementListSerializer.Meta.fields + [
+            'face_form_start_date', 'face_form_end_date',
             'total_value', 'staff_members', 'active_pd', 'authorized_officers', 'users_notified',
             'joint_audit', 'year_of_audit', 'shared_ip_with', 'exchange_rate', 'currency_of_report',
             'start_date', 'end_date', 'partner_contacted_at', 'date_of_field_visit', 'date_of_draft_report_to_ip',
@@ -399,16 +403,13 @@ class FindingSerializer(WritableNestedSerializerMixin, serializers.ModelSerializ
 class SpotCheckSerializer(ActivePDValidationMixin, EngagementSerializer):
     findings = FindingSerializer(many=True, required=False)
 
-    face_form_start_date = serializers.DateField(label='FACE Form(s) Start Date', read_only=True, source='start_date')
-    face_form_end_date = serializers.DateField(label='FACE Form(s) End Date', read_only=True, source='end_date')
-
     pending_unsupported_amount = serializers.DecimalField(20, 2, label=_('Pending Unsupported Amount'), read_only=True)
 
     class Meta(EngagementSerializer.Meta):
         model = SpotCheck
         fields = EngagementSerializer.Meta.fields + [
             'total_amount_tested', 'total_amount_of_ineligible_expenditure',
-            'internal_controls', 'findings', 'face_form_start_date', 'face_form_end_date',
+            'internal_controls', 'findings',
             'amount_refunded', 'additional_supporting_documentation_provided',
             'justification_provided_and_accepted', 'write_off_required', 'pending_unsupported_amount',
             'explanation_for_additional_information'
