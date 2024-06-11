@@ -62,9 +62,6 @@ class Command(BaseCommand):
         'audit.engagement.status',
         'audit.engagement.status_date',
 
-        'audit.spotcheck.face_form_start_date',
-        'audit.spotcheck.face_form_end_date',
-
         'purchase_order.purchaseorder.*',
         'purchase_order.auditorfirm.*',
     ]
@@ -393,7 +390,7 @@ class Command(BaseCommand):
         self.add_permissions(
             self.all_unicef_users, 'view',
             self.follow_up_page,
-            condition=final_engagement_condition
+            condition=self.engagement_comments_received_by_unicef()
         )
         self.add_permissions(
             self.all_unicef_users, 'view',
@@ -403,7 +400,7 @@ class Command(BaseCommand):
         self.add_permissions(
             self.focal_point, 'edit',
             self.follow_up_editable_page,
-            condition=final_engagement_condition
+            condition=self.engagement_comments_received_by_unicef()
         )
 
         # action points related permissions. editable by focal point, author, assignee and assigner

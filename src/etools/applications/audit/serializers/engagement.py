@@ -254,6 +254,9 @@ class EngagementSerializer(
         WritableNestedParentSerializerMixin,
         EngagementListSerializer
 ):
+    face_form_start_date = serializers.DateField(label='FACE Form(s) Start Date', read_only=True, source='start_date')
+    face_form_end_date = serializers.DateField(label='FACE Form(s) End Date', read_only=True, source='end_date')
+
     staff_members = SeparatedReadWriteField(
         read_field=serializers.SerializerMethodField(),
         label=_('Audit Staff Team Members')
@@ -284,6 +287,7 @@ class EngagementSerializer(
 
     class Meta(EngagementListSerializer.Meta):
         fields = EngagementListSerializer.Meta.fields + [
+            'face_form_start_date', 'face_form_end_date',
             'total_value', 'staff_members', 'active_pd', 'authorized_officers', 'users_notified',
             'joint_audit', 'year_of_audit', 'shared_ip_with', 'exchange_rate', 'currency_of_report',
             'start_date', 'end_date', 'partner_contacted_at', 'date_of_field_visit', 'date_of_draft_report_to_ip',
@@ -396,16 +400,13 @@ class FindingSerializer(WritableNestedSerializerMixin, serializers.ModelSerializ
 class SpotCheckSerializer(ActivePDValidationMixin, EngagementSerializer):
     findings = FindingSerializer(many=True, required=False)
 
-    face_form_start_date = serializers.DateField(label='FACE Form(s) Start Date', read_only=True, source='start_date')
-    face_form_end_date = serializers.DateField(label='FACE Form(s) End Date', read_only=True, source='end_date')
-
     pending_unsupported_amount = serializers.DecimalField(20, 2, label=_('Pending Unsupported Amount'), read_only=True)
 
     class Meta(EngagementSerializer.Meta):
         model = SpotCheck
         fields = EngagementSerializer.Meta.fields + [
             'total_amount_tested', 'total_amount_of_ineligible_expenditure',
-            'internal_controls', 'findings', 'face_form_start_date', 'face_form_end_date',
+            'internal_controls', 'findings',
             'amount_refunded', 'additional_supporting_documentation_provided',
             'justification_provided_and_accepted', 'write_off_required', 'pending_unsupported_amount',
             'explanation_for_additional_information'
@@ -558,7 +559,9 @@ class AuditSerializer(ActivePDValidationMixin, RiskCategoriesUpdateMixin, Engage
     def _validate_financial_findings(self, validated_data):
         financial_findings = validated_data.get('financial_findings')
         audited_expenditure = validated_data.get('audited_expenditure')
-        if not (financial_findings or audited_expenditure):
+        financial_findings_local = validated_data.get('financial_findings_local')
+        audited_expenditure_local = validated_data.get('audited_expenditure_local')
+        if not (financial_findings or audited_expenditure) and not (financial_findings_local or audited_expenditure_local):
             return
 
         if not financial_findings:
@@ -566,10 +569,19 @@ class AuditSerializer(ActivePDValidationMixin, RiskCategoriesUpdateMixin, Engage
         if not audited_expenditure:
             audited_expenditure = self.instance.audited_expenditure if self.instance else None
 
-        if audited_expenditure and financial_findings and financial_findings > audited_expenditure:
+        if audited_expenditure and financial_findings and financial_findings >= audited_expenditure:
             raise serializers.ValidationError({'financial_findings': _('Cannot exceed Audited Expenditure')})
 
+        if not financial_findings_local:
+            financial_findings_local = self.instance.financial_findings_local if self.instance else None
+        if not audited_expenditure_local:
+            audited_expenditure_local = self.instance.audited_expenditure_local if self.instance else None
+
+        if audited_expenditure_local and financial_findings_local and financial_findings_local >= audited_expenditure_local:
+            raise serializers.ValidationError({'financial_findings_local': _('Cannot exceed Audited Expenditure Local')})
+
     def validate(self, validated_data):
+        validated_data = super().validate(validated_data)
         self._validate_financial_findings(validated_data)
         return validated_data
 

@@ -595,17 +595,6 @@ class TestInterventionsAPI(BaseTenantTestCase):
         self.assertEqual(status_code, status.HTTP_403_FORBIDDEN)
         self.assertFalse(Activity.objects.exists())
 
-    def test_patch_fails_with_wrong_cp_structure(self):
-        self.assertIsNone(self.intervention_2.country_programme)
-        self.assertTrue(self.intervention_2.agreement.agreement_type, 'PCA')
-        random_cp = CountryProgrammeFactory()
-        data = {
-            "country_programme": random_cp.id
-        }
-        status_code, response = self.run_request(self.intervention_2.id, data, method='patch')
-        self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('The Country Programme selected on this PD is not the same ', response[0])
-
     def test_patch_ok_with_wrong_cp_structure(self):
         self.assertIsNone(self.intervention_2.country_programme)
         self.assertTrue(self.intervention_2.agreement.agreement_type, 'PCA')

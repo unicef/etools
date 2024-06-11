@@ -6,6 +6,7 @@ from django.db import connection, models
 from django.forms import SelectMultiple
 from django.http.response import HttpResponseRedirect
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
@@ -17,6 +18,7 @@ from import_export.admin import ExportMixin
 from unicef_attachments.admin import AttachmentSingleInline
 from unicef_attachments.models import Attachment
 from unicef_snapshot.admin import ActivityInline, SnapshotModelAdmin
+from unicef_snapshot.models import Activity
 
 from etools.applications.partners.exports import PartnerExport
 from etools.applications.partners.forms import InterventionAttachmentForm  # TODO intervention sector locations cleanup
@@ -709,12 +711,18 @@ class AgreementAttachmentInline(AttachmentSingleInline):
     code = 'partners_agreement'
 
 
+class AgreementTerminationDocAttachmentInline(AttachmentSingleInline):
+    verbose_name_plural = _('Termination Doc Attachment')
+    code = 'partners_agreement_termination_doc'
+
+
 class AgreementAdmin(
         AttachmentInlineAdminMixin,
         ExportMixin,
         HiddenPartnerMixin,
         CountryUsersAdminMixin,
         RestrictedEditAdminMixin,
+        ExtraUrlMixin,
         SnapshotModelAdmin,
 ):
     staff_only = False
@@ -766,6 +774,7 @@ class AgreementAdmin(
     inlines = [
         ActivityInline,
         AgreementAttachmentInline,
+        AgreementTerminationDocAttachmentInline
     ]
 
     def has_module_permission(self, request):
@@ -810,6 +819,44 @@ class AgreementAdmin(
             )
             urls.append(formatted_url)
         return urls
+
+    @button(permission=lambda request, obj: request.user.groups.filter(name='RSS').exists() and
+            obj.status == Agreement.TERMINATED and obj.end > timezone.now().date())
+    def revert_termination(self, request, pk):
+        agreement = Agreement.objects.get(pk=pk)
+        agreement.status = Agreement.SIGNED
+        try:
+            termination_doc = Attachment.objects.get(
+                code='partners_agreement_termination_doc',
+                content_type=ContentType.objects.get_for_model(Agreement),
+                object_id=agreement.pk
+            )
+            agreement.termination_doc.remove(termination_doc)
+        except Attachment.DoesNotExist:
+            pass
+
+        agreement.save(update_fields=['status'])
+
+        terminated_interventions = agreement.interventions.filter(status=Intervention.TERMINATED)
+        interventions_to_update = []
+        for i in terminated_interventions:
+            intervention_activities = Activity.objects.filter(
+                target_content_type=ContentType.objects.get_for_model(Intervention),
+                target_object_id=i.id,
+                action=Activity.UPDATE,
+                change__status__after=Intervention.TERMINATED,
+            )
+            if not intervention_activities.exists():
+                continue
+
+            previous_status = intervention_activities.last().change['status']['before']
+            if previous_status in [Intervention.SIGNED, Intervention.ACTIVE, Intervention.SUSPENDED]:
+                i.status = previous_status
+                interventions_to_update.append(i)
+
+        Intervention.objects.bulk_update(interventions_to_update, fields=['status'])
+
+        return HttpResponseRedirect(reverse('admin:partners_agreement_change', args=[pk]))
 
 
 class FileTypeAdmin(RestrictedEditAdmin):

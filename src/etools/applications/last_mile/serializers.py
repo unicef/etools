@@ -115,17 +115,11 @@ class MaterialListSerializer(serializers.ModelSerializer):
 
 class ItemSerializer(serializers.ModelSerializer):
     material = MaterialSerializer()
+    description = serializers.CharField(read_only=True)
 
     class Meta:
         model = models.Item
         exclude = ('transfer',)
-
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        data['description'] = instance.description
-        if not instance.uom:
-            data['uom'] = data['material']['original_uom']
-        return data
 
 
 class ItemListSerializer(serializers.ModelSerializer):
@@ -152,10 +146,39 @@ class ItemUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Item
-        fields = (
-            'description', 'uom', 'expiry_date', 'batch_id',
-            'quantity', 'is_prepositioned', 'preposition_qty', 'conversion_factor'
-        )
+        fields = ('description', 'uom', 'quantity', 'conversion_factor')
+
+    def validate_conversion_factor(self, value):
+        if value <= 0:
+            raise ValidationError(_('The value for the conversion factor must be greater than 0.'))
+        return value
+
+    def validate_uom_map(self, validated_data):
+        material = self.instance.material
+        if material.other and 'uom_map' in material.other and material.other['uom_map']:
+            uom_map = material.other['uom_map']
+            new_uom = validated_data.get('uom', None)
+            if new_uom not in uom_map:
+                raise ValidationError(_('The provided uom is not available in the material mapping.'))
+
+            conversion_factor = validated_data.get('conversion_factor', None)
+            current_uom = self.instance.uom if self.instance.uom else material.original_uom
+
+            expected_conversion_factor = round(uom_map[current_uom] / uom_map[new_uom], 2)
+            if expected_conversion_factor != float(conversion_factor):
+                raise ValidationError(_('The conversion_factor is incorrect.'))
+
+            expected_qty = int(self.instance.quantity * conversion_factor)
+            if expected_qty != validated_data.get('quantity'):
+                raise ValidationError(_('The calculated quantity is incorrect.'))
+
+    def validate(self, attrs):
+        validated_data = super().validate(attrs)
+
+        if any(key in ['uom', 'quantity', 'conversion_factor'] for key in validated_data):
+            self.validate_uom_map(validated_data)
+
+        return validated_data
 
     def save(self, **kwargs):
         if 'description' in self.validated_data:
@@ -300,6 +323,8 @@ class TransferCheckinSerializer(TransferBaseSerializer):
                     transfer_type=models.Transfer.WASTAGE,
                     transfer_subtype=models.Transfer.SHORT,
                     partner_organization=instance.partner_organization,
+                    waybill_id=instance.waybill_id,
+                    unicef_release_order=f'sh-{instance.unicef_release_order if instance.unicef_release_order else instance.pk}',
                     origin_transfer=instance,
                     origin_point=instance.origin_point,
                     **validated_data
@@ -315,6 +340,8 @@ class TransferCheckinSerializer(TransferBaseSerializer):
                     partner_organization=instance.partner_organization,
                     origin_transfer=instance,
                     origin_point=instance.origin_point,
+                    waybill_id=instance.waybill_id,
+                    unicef_release_order=f'su-{instance.unicef_release_order if instance.unicef_release_order else instance.pk}',
                     **validated_data
                 )
                 surplus_transfer.save()
