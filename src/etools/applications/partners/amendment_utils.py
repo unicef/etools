@@ -593,6 +593,7 @@ INTERVENTION_AMENDMENT_RELATED_FIELDS = {
         'supply_items',
         'risks',
         'reporting_requirements',
+        'special_reporting_requirements',
 
         # 1 to 1
         'planned_budget',
@@ -682,6 +683,7 @@ INTERVENTION_AMENDMENT_IGNORED_FIELDS = {
     'partners.InterventionManagementBudget': ['modified'],
     'partners.InterventionResultLink': ['modified'],
     'reports.ReportingRequirement': ['modified'],
+    'reports.SpecialReportingRequirement': ['modified'],
     'reports.InterventionActivity': ['modified'],
     'reports.AppliedIndicator': ['modified'],
     'reports.LowerResult': ['modified'],
