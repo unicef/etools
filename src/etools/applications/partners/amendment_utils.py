@@ -647,7 +647,6 @@ INTERVENTION_AMENDMENT_IGNORED_FIELDS = {
     'partners.Intervention': [
         'modified',
         'number', 'status', 'in_amendment',
-        'title',
         'sites',
 
         # submission
