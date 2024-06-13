@@ -332,7 +332,7 @@ class InterventionsViewSet(
 ):
     filter_backends = (DjangoFilterBackend,)
     filter_class = InterventionsFilterSet
-    queryset = Intervention.objects.exclude(
+    queryset = Intervention.objects.base_qs().exclude(
         status__in=[
             Intervention.DRAFT, Intervention.SIGNATURE,
             Intervention.SIGNED, Intervention.REVIEW,
