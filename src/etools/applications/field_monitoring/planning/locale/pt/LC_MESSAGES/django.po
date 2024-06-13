@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-04-11 05:18+0000\n"
+"POT-Creation-Date: 2024-06-13 13:27+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -233,12 +233,6 @@ msgstr "História"
 msgid "Document Type"
 msgstr "Tipo de Documento"
 
-msgid "No Access"
-msgstr "Sem acesso"
-
-msgid "Inactive"
-msgstr "Inativo"
-
 msgid "Special"
 msgstr "Especial"
 
@@ -274,6 +268,12 @@ msgstr "Justificativa do Monitoramento de Campo Anual"
 
 msgid "Templates"
 msgstr "Modelos"
+
+msgid "No Access"
+msgstr "Sem acesso"
+
+msgid "Inactive"
+msgstr "Inativo"
 
 msgid "Attachments"
 msgstr "Anexos"
