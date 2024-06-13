@@ -3,7 +3,8 @@ from datetime import date
 
 from django.contrib.auth import get_user_model
 from django.db import connection, transaction
-from django.db.models import Count, F, Prefetch, Q
+from django.db.models import Case, CharField, Count, F, Prefetch, Q, Value, When
+from django.db.models.functions import Concat
 from django.http import Http404
 from django.utils.translation import gettext as _
 
@@ -293,7 +294,19 @@ class FMUsersViewSet(
             .filter(realms__in=context_realms_qs) \
             .prefetch_related(Prefetch('realms', queryset=context_realms_qs)) \
             .annotate(tpm_partner=F('realms__organization__tpmpartner'),
-                      has_active_realm=F('realms__is_active')) \
+                      user_type=Case(
+                          When(tpm_partner__isnull=False, then=Value('tpm')),
+                          When(tpm_partner__isnull=True, then=Value('staff')),
+                          output_field=CharField()),
+                      has_active_realm=F('realms__is_active'),
+                      name=Case(
+                          When(Q(is_active=True) & Q(has_active_realm=True), then=Concat(
+                              'first_name', Value(' '), 'last_name')),
+                          When(Q(is_active=True) & Q(has_active_realm=False), then=Concat(
+                              Value('['), Value(_('No Access')), Value('] '), 'first_name', Value(' '), 'last_name')),
+                          When(is_active=False, then=Concat(
+                              Value('['), Value(_('Inactive')), Value('] '), 'first_name', Value(' '), 'last_name')),
+                          output_field=CharField())) \
             .distinct()
 
         return qs
