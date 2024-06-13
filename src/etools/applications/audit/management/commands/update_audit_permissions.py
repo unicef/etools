@@ -11,6 +11,7 @@ from etools.applications.audit.conditions import (
     AuditModuleCondition,
     AuditStaffMemberCondition,
     EngagementStaffMemberCondition,
+    EngagementUnicefCommentsReceivedCondition,
     IsUnicefUserCondition,
 )
 from etools.applications.audit.models import (
@@ -60,9 +61,6 @@ class Command(BaseCommand):
 
         'audit.engagement.status',
         'audit.engagement.status_date',
-
-        'audit.spotcheck.face_form_start_date',
-        'audit.spotcheck.face_form_end_date',
 
         'purchase_order.purchaseorder.*',
         'purchase_order.auditorfirm.*',
@@ -133,7 +131,7 @@ class Command(BaseCommand):
     follow_up_page = follow_up_editable_page + [
         'audit.spotcheck.total_amount_tested',
         'audit.spotcheck.total_amount_of_ineligible_expenditure',
-    ] + action_points_block
+    ]
 
     engagement_overview_editable_page = (engagement_overview_editable_block + special_audit_block +
                                          partner_block + staff_members_block + users_notified_block)
@@ -230,6 +228,9 @@ class Command(BaseCommand):
     def engagement_status(self, status):
         obj = get_model_target(Engagement)
         return [ObjectStatusCondition.predicate_template.format(obj=obj, status=status)]
+
+    def engagement_comments_received_by_unicef(self):
+        return [EngagementUnicefCommentsReceivedCondition.predicate]
 
     def new_engagement(self):
         model = get_model_target(Engagement)
@@ -389,12 +390,17 @@ class Command(BaseCommand):
         self.add_permissions(
             self.all_unicef_users, 'view',
             self.follow_up_page,
-            condition=final_engagement_condition
+            condition=self.engagement_comments_received_by_unicef()
+        )
+        self.add_permissions(
+            self.all_unicef_users, 'view',
+            self.action_points_block,
+            condition=self.engagement_comments_received_by_unicef()
         )
         self.add_permissions(
             self.focal_point, 'edit',
             self.follow_up_editable_page,
-            condition=final_engagement_condition
+            condition=self.engagement_comments_received_by_unicef()
         )
 
         # action points related permissions. editable by focal point, author, assignee and assigner
@@ -404,13 +410,13 @@ class Command(BaseCommand):
             self.all_unicef_users,
             'edit',
             'audit.engagement.action_points',
-            condition=final_engagement_condition
+            condition=self.engagement_comments_received_by_unicef()
         )
         self.add_permissions(
             self.all_unicef_users,
             'edit',
             'audit.engagementactionpoint.*',
-            condition=final_engagement_condition + self.new_action_point(),
+            condition=self.engagement_comments_received_by_unicef() + self.new_action_point(),
         )
         self.add_permissions(
             self.action_points_editors, 'edit',

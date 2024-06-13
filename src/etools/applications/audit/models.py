@@ -20,6 +20,7 @@ from unicef_djangolib.fields import CodedGenericRelation
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.audit.purchase_order.models import PurchaseOrder, PurchaseOrderItem
 from etools.applications.audit.transitions.conditions import (
+    ActionPointsProvidedForHighPriorityFindingsCheck,
     AuditSubmitReportRequiredFieldsCheck,
     EngagementHasReportAttachmentsCheck,
     EngagementSubmitReportRequiredFieldsCheck,
@@ -110,8 +111,8 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
     )
     partner_contacted_at = models.DateField(verbose_name=_('Date IP was contacted'), blank=True, null=True)
     engagement_type = models.CharField(verbose_name=_('Engagement Type'), max_length=10, choices=TYPES)
-    start_date = models.DateField(verbose_name=_('Period Start Date'), blank=True, null=True)
-    end_date = models.DateField(verbose_name=_('Period End Date'), blank=True, null=True)
+    start_date = models.DateField(verbose_name=_('Start date of first reporting FACE'), blank=True, null=True)
+    end_date = models.DateField(verbose_name=_('End date of last reporting FACE'), blank=True, null=True)
     total_value = models.DecimalField(
         verbose_name=_('Total value of selected FACE form(s)'), default=0, decimal_places=2, max_digits=20
     )
@@ -468,6 +469,9 @@ class SpotCheck(Engagement):
         return super().submit(*args, **kwargs)
 
     @transition('status', source=Engagement.STATUSES.report_submitted, target=Engagement.STATUSES.final,
+                conditions=[
+                    ActionPointsProvidedForHighPriorityFindingsCheck.as_condition(),
+                ],
                 permission=has_action_permission(action='finalize'))
     def finalize(self, *args, **kwargs):
         return super().finalize(*args, **kwargs)

@@ -1,6 +1,7 @@
 import datetime
 import json
 import random
+from copy import copy
 from unittest.mock import Mock, patch
 
 from django.contrib.contenttypes.models import ContentType
@@ -539,6 +540,16 @@ class BaseTestEngagementsCreateViewSet(EngagementTransitionsTestCaseMixin):
 
     def _do_create(self, user, data):
         data = data or {}
+        for date_field in [
+            'start_date', 'end_date', 'partner_contacted_at',
+            'date_of_field_visit', 'date_of_draft_report_to_ip',
+            'date_of_comments_by_ip', 'date_of_draft_report_to_unicef',
+            'date_of_comments_by_unicef'
+        ]:
+            if data.get(date_field):
+                if isinstance(data[date_field], datetime.datetime):
+                    data[date_field] = data[date_field].date()
+                data[date_field] = data[date_field].isoformat()
         response = self.forced_auth_req(
             'post',
             self.engagements_url(),
@@ -602,6 +613,14 @@ class TestMicroAssessmentCreateViewSet(TestEngagementCreateActivePDViewSet, Base
                                        BaseTenantTestCase):
     engagement_factory = MicroAssessmentFactory
 
+    def test_partner_contacted_at_validation(self):
+        # date should be in past
+        data = copy(self.create_data)
+        data['partner_contacted_at'] = datetime.datetime.now() + datetime.timedelta(days=1)
+        response = self._do_create(self.unicef_focal_point, data)
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('partner_contacted_at', response.data)
+
 
 class TestAuditCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEngagementsCreateViewSet, BaseTenantTestCase):
     engagement_factory = AuditFactory
@@ -609,6 +628,20 @@ class TestAuditCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEngage
     def setUp(self):
         super().setUp()
         self.create_data['year_of_audit'] = timezone.now().year
+
+    def test_end_date_validation(self):
+        data = copy(self.create_data)
+        data['end_date'] = data['start_date'] - datetime.timedelta(days=1)
+        response = self._do_create(self.unicef_focal_point, data)
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('end_date', response.data)
+
+    def test_partner_contacted_at_validation(self):
+        data = copy(self.create_data)
+        data['partner_contacted_at'] = data['end_date'] - datetime.timedelta(days=1)
+        response = self._do_create(self.unicef_focal_point, data)
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('partner_contacted_at', response.data)
 
 
 class TestSpotCheckCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEngagementsCreateViewSet,
@@ -690,6 +723,20 @@ class TestSpotCheckCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEn
             sorted([office_1.pk, office_2.pk]),
         )
 
+    def test_end_date_validation(self):
+        data = copy(self.create_data)
+        data['end_date'] = data['start_date'] - datetime.timedelta(days=1)
+        response = self._do_create(self.unicef_focal_point, data)
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('end_date', response.data)
+
+    def test_partner_contacted_at_validation(self):
+        data = copy(self.create_data)
+        data['partner_contacted_at'] = data['end_date'] - datetime.timedelta(days=1)
+        response = self._do_create(self.unicef_focal_point, data)
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('partner_contacted_at', response.data)
+
 
 class SpecialAuditCreateViewSet(BaseTestEngagementsCreateViewSet, BaseTenantTestCase):
     engagement_factory = SpecialAuditFactory
@@ -715,12 +762,36 @@ class SpecialAuditCreateViewSet(BaseTestEngagementsCreateViewSet, BaseTenantTest
 
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
 
+    def test_end_date_validation(self):
+        data = copy(self.create_data)
+        data['end_date'] = data['start_date'] - datetime.timedelta(days=1)
+        response = self._do_create(self.unicef_focal_point, data)
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('end_date', response.data)
+
+    def test_partner_contacted_at_validation(self):
+        data = copy(self.create_data)
+        data['partner_contacted_at'] = data['end_date'] - datetime.timedelta(days=1)
+        response = self._do_create(self.unicef_focal_point, data)
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('partner_contacted_at', response.data)
+
 
 class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenantTestCase):
     engagement_factory = AuditFactory
 
     def _do_update(self, user, data):
         data = data or {}
+        for date_field in [
+            'start_date', 'end_date', 'partner_contacted_at',
+            'date_of_field_visit', 'date_of_draft_report_to_ip',
+            'date_of_comments_by_ip', 'date_of_draft_report_to_unicef',
+            'date_of_comments_by_unicef'
+        ]:
+            if data.get(date_field):
+                if isinstance(data[date_field], datetime.datetime):
+                    data[date_field] = data[date_field].date()
+                data[date_field] = data[date_field].isoformat()
         response = self.forced_auth_req(
             'patch',
             '/api/audit/audits/{}/'.format(self.engagement.id),
@@ -737,12 +808,98 @@ class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenan
         self.assertEqual(len(response.data), 1)
         self.assertIn('financial_findings', response.data)
 
+    def test_percent_of_audited_expenditure_local_invalid(self):
+        response = self._do_update(self.auditor, {
+            'audited_expenditure_local': 1,
+            'financial_findings_local': 2
+        })
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(len(response.data), 1)
+        self.assertIn('financial_findings_local', response.data)
+
     def test_percent_of_audited_expenditure_valid(self):
         response = self._do_update(self.auditor, {
             'audited_expenditure': 2,
             'financial_findings': 1
         })
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_date_of_field_visit_after_partner_contacted_at_validation(self):
+        self.engagement.partner_contacted_at = self.engagement.end_date + datetime.timedelta(days=1)
+        self.engagement.save()
+        response = self._do_update(self.auditor, {
+            'date_of_field_visit': self.engagement.end_date,
+            'date_of_draft_report_to_ip': None,
+            'date_of_comments_by_ip': None,
+            'date_of_draft_report_to_unicef': None,
+            'date_of_comments_by_unicef': None,
+        })
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('date_of_field_visit', response.data)
+
+    def test_date_of_draft_report_to_ip_after_date_of_field_visit_validation(self):
+        self.engagement.partner_contacted_at = self.engagement.end_date + datetime.timedelta(days=1)
+        self.engagement.save()
+        response = self._do_update(self.auditor, {
+            'date_of_field_visit': self.engagement.end_date + datetime.timedelta(days=2),
+            'date_of_draft_report_to_ip': self.engagement.end_date,
+            'date_of_comments_by_ip': None,
+            'date_of_draft_report_to_unicef': None,
+            'date_of_comments_by_unicef': None,
+        })
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('date_of_field_visit', response.data)
+
+    def test_date_of_comments_by_ip_after_date_of_draft_report_to_ip_validation(self):
+        self.engagement.partner_contacted_at = self.engagement.end_date + datetime.timedelta(days=1)
+        self.engagement.save()
+        response = self._do_update(self.auditor, {
+            'date_of_field_visit': self.engagement.end_date + datetime.timedelta(days=2),
+            'date_of_draft_report_to_ip': self.engagement.end_date + datetime.timedelta(days=3),
+            'date_of_comments_by_ip': self.engagement.end_date,
+            'date_of_draft_report_to_unicef': None,
+            'date_of_comments_by_unicef': None,
+        })
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('date_of_comments_by_ip', response.data)
+
+    def test_date_of_draft_report_to_unicef_after_date_of_comments_by_ip_validation(self):
+        self.engagement.partner_contacted_at = self.engagement.end_date + datetime.timedelta(days=1)
+        self.engagement.save()
+        response = self._do_update(self.auditor, {
+            'date_of_field_visit': self.engagement.end_date + datetime.timedelta(days=2),
+            'date_of_draft_report_to_ip': self.engagement.end_date + datetime.timedelta(days=3),
+            'date_of_comments_by_ip': self.engagement.end_date + datetime.timedelta(days=4),
+            'date_of_draft_report_to_unicef': self.engagement.end_date,
+            'date_of_comments_by_unicef': None,
+        })
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('date_of_draft_report_to_unicef', response.data)
+
+    def test_date_of_comments_by_unicef_after_date_of_draft_report_to_unicef_validation(self):
+        self.engagement.partner_contacted_at = self.engagement.end_date + datetime.timedelta(days=1)
+        self.engagement.save()
+        response = self._do_update(self.auditor, {
+            'date_of_field_visit': self.engagement.end_date + datetime.timedelta(days=2),
+            'date_of_draft_report_to_ip': self.engagement.end_date + datetime.timedelta(days=3),
+            'date_of_comments_by_ip': self.engagement.end_date + datetime.timedelta(days=4),
+            'date_of_draft_report_to_unicef': self.engagement.end_date + datetime.timedelta(days=5),
+            'date_of_comments_by_unicef': self.engagement.end_date,
+        })
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('date_of_comments_by_unicef', response.data)
+
+    def test_dates_update_ok(self):
+        self.engagement.partner_contacted_at = self.engagement.end_date + datetime.timedelta(days=1)
+        self.engagement.save()
+        response = self._do_update(self.auditor, {
+            'date_of_field_visit': self.engagement.end_date + datetime.timedelta(days=2),
+            'date_of_draft_report_to_ip': self.engagement.end_date + datetime.timedelta(days=3),
+            'date_of_comments_by_ip': self.engagement.end_date + datetime.timedelta(days=4),
+            'date_of_draft_report_to_unicef': self.engagement.end_date + datetime.timedelta(days=5),
+            'date_of_comments_by_unicef': self.engagement.end_date + datetime.timedelta(days=6),
+        })
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
 
 
 class TestEngagementActionPointViewSet(EngagementTransitionsTestCaseMixin, BaseTenantTestCase):

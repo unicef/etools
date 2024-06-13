@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-08-14 11:43+0000\n"
+"POT-Creation-Date: 2024-06-04 15:42+0000\n"
 "Language: ru\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -60,6 +60,9 @@ msgstr "ГПДП"
 
 msgid "Signed Amendment"
 msgstr "Подписанная поправка"
+
+msgid "Termination Doc Attachment"
+msgstr ""
 
 msgid "Agreement Details"
 msgstr "Детали соглашения"
@@ -140,66 +143,6 @@ msgstr "Запланированные программные визиты"
 msgid "Implementing Partner"
 msgstr "Исполнительный Партнер"
 
-msgid "Shared IP"
-msgstr "Совместный ИП"
-
-msgid "Cash Transfer 1 OCT - 30 SEP"
-msgstr "Денежные переводы за 1 окт.-30 сен."
-
-msgid "Liquidations 1 OCT - 30 SEP"
-msgstr "Ликвидации 1 окт. - 30 сен."
-
-msgid "Cash Transfers Jan - Dec"
-msgstr "Денежные переводы янв - дек"
-
-msgid "Risk Rating"
-msgstr "Рейтинг риска"
-
-msgid "Expiring Threshold"
-msgstr "Порог просрочки"
-
-msgid "Approach Threshold"
-msgstr "Приближается к порогу"
-
-msgid "Programmatic Visits Planned Q1"
-msgstr "Запланированные программные визиты в I кв-ле"
-
-msgid "Q2"
-msgstr "кв-л II"
-
-msgid "Q3"
-msgstr "кв-л III"
-
-msgid "Q4"
-msgstr "кв-л IV"
-
-msgid "Programmatic Visits M.R"
-msgstr "М.Т. программные визиты"
-
-msgid "Programmatic Visits Completed Q1"
-msgstr "Завершенные программные визиты в I кв-ле"
-
-msgid "Spot Checks Planned Q1"
-msgstr "Запланированные выборочные проверки в I кв-ле"
-
-msgid "Spot Checks M.R"
-msgstr "М.Т. выборочные проверки"
-
-msgid "Follow Up"
-msgstr "Последующие действия"
-
-msgid "Spot Checks Completed Q1"
-msgstr "Завершенные выборочные проверки в I кв-ле"
-
-msgid "Audits M.R"
-msgstr "Аудиты М.Т."
-
-msgid "Audit Completed"
-msgstr "Аудит завершен"
-
-msgid "Audits Outstanding Findings"
-msgstr "Неразрешенные выводы аудитов"
-
 msgid "Sections"
 msgstr "Секции"
 
@@ -229,18 +172,6 @@ msgstr "Непогашенная сумма ПДП от 6 до 9 месяцев"
 
 msgid "Outstanding DCT Amount more than 9 months"
 msgstr "Непогашенная сумма ПДП более 9 месяцев"
-
-msgid "Programmatic Visits Planned"
-msgstr "Планируемые программные визиты"
-
-msgid "Programmatic Visits Completed"
-msgstr "Завершенные программные визиты"
-
-msgid "Spot Check Required"
-msgstr "Требуется выборочная проверка"
-
-msgid "Spot Checks Completed"
-msgstr "Завершенные выборочные проверки"
 
 msgid "Reference Number"
 msgstr "Номер"
@@ -729,6 +660,9 @@ msgstr "Страна"
 msgid "Alternate ID"
 msgstr "Альтернативный идентификатор"
 
+msgid "Risk Rating"
+msgstr "Рейтинг риска"
+
 msgid "Last Assessment Date"
 msgstr "Дата последней оценки"
 
@@ -1112,6 +1046,15 @@ msgstr "Поправки к программе"
 
 msgid "Q1"
 msgstr ""
+
+msgid "Q2"
+msgstr "кв-л II"
+
+msgid "Q3"
+msgstr "кв-л III"
+
+msgid "Q4"
+msgstr "кв-л IV"
 
 msgid "Intervention"
 msgstr "Программа"
@@ -1831,6 +1774,39 @@ msgstr "Документ"
 msgid "Invalid"
 msgstr "Неверно"
 
+msgid "Review for eTools reference number: "
+msgstr "Обзор ссылочного номера eTools: "
+
+msgid "Submitted By"
+msgstr "Представленный"
+
+msgid "Date of submission for review"
+msgstr "Дата подачи на рассмотрение"
+
+msgid "Overall Comment"
+msgstr "Общий комментарий"
+
+msgid "Overall Approval"
+msgstr "Общее одобрение"
+
+msgid "Overall Review"
+msgstr "Общий обзор"
+
+msgid "PRC Member Reviews"
+msgstr "Отзывы участников"
+
+msgid "PRC Member Name"
+msgstr "Имя участника"
+
+msgid "Approved"
+msgstr "Одобренный"
+
+msgid "Approval comment"
+msgstr "Комментарий к утверждению"
+
+msgid "Review date"
+msgstr "Дата рассмотрения"
+
 msgid ""
 "Agreement cannot transition to signed until the start date is less than or "
 "equal to today"
@@ -1904,12 +1880,8 @@ msgstr ""
 "Общая сумма РФ должна быть равна общей фактической сумме, а общая сумма "
 "непогашенных ПДП должна быть равна 0"
 
-msgid ""
-"Final Review must be approved for documents having amount transferred "
-"greater than 100,000"
-msgstr ""
-"Окончательное рассмотрение должно быть утверждено для документов, сумма "
-"перевода которых превышает 100 000 долл. США"
+msgid "Final Review must be approved"
+msgstr "Окончательный обзор должен быть одобрен"
 
 msgid "Cannot Transition status while adding an amendment"
 msgstr "Невозможно изменить статус при добавлении поправки"
@@ -2126,6 +2098,9 @@ msgstr "PD уже отправлен партнеру."
 msgid "Meeting date is not available."
 msgstr "Дата встречи неизвестна."
 
+msgid "No valid data found in the file."
+msgstr ""
+
 msgid "Action is not allowed"
 msgstr "Действие не разрешено"
 
@@ -2268,6 +2243,73 @@ msgstr ""
 
 msgid "Partnership Manager role required for pca export."
 msgstr "Для экспорта PCA требуется роль менеджера по партнерству."
+
+#~ msgid "Shared IP"
+#~ msgstr "Совместный ИП"
+
+#~ msgid "Cash Transfer 1 OCT - 30 SEP"
+#~ msgstr "Денежные переводы за 1 окт.-30 сен."
+
+#~ msgid "Liquidations 1 OCT - 30 SEP"
+#~ msgstr "Ликвидации 1 окт. - 30 сен."
+
+#~ msgid "Cash Transfers Jan - Dec"
+#~ msgstr "Денежные переводы янв - дек"
+
+#~ msgid "Expiring Threshold"
+#~ msgstr "Порог просрочки"
+
+#~ msgid "Approach Threshold"
+#~ msgstr "Приближается к порогу"
+
+#~ msgid "Programmatic Visits Planned Q1"
+#~ msgstr "Запланированные программные визиты в I кв-ле"
+
+#~ msgid "Programmatic Visits M.R"
+#~ msgstr "М.Т. программные визиты"
+
+#~ msgid "Programmatic Visits Completed Q1"
+#~ msgstr "Завершенные программные визиты в I кв-ле"
+
+#~ msgid "Spot Checks Planned Q1"
+#~ msgstr "Запланированные выборочные проверки в I кв-ле"
+
+#~ msgid "Spot Checks M.R"
+#~ msgstr "М.Т. выборочные проверки"
+
+#~ msgid "Follow Up"
+#~ msgstr "Последующие действия"
+
+#~ msgid "Spot Checks Completed Q1"
+#~ msgstr "Завершенные выборочные проверки в I кв-ле"
+
+#~ msgid "Audits M.R"
+#~ msgstr "Аудиты М.Т."
+
+#~ msgid "Audit Completed"
+#~ msgstr "Аудит завершен"
+
+#~ msgid "Audits Outstanding Findings"
+#~ msgstr "Неразрешенные выводы аудитов"
+
+#~ msgid "Programmatic Visits Planned"
+#~ msgstr "Планируемые программные визиты"
+
+#~ msgid "Programmatic Visits Completed"
+#~ msgstr "Завершенные программные визиты"
+
+#~ msgid "Spot Check Required"
+#~ msgstr "Требуется выборочная проверка"
+
+#~ msgid "Spot Checks Completed"
+#~ msgstr "Завершенные выборочные проверки"
+
+#~ msgid ""
+#~ "Final Review must be approved for documents having amount transferred "
+#~ "greater than 100,000"
+#~ msgstr ""
+#~ "Окончательное рассмотрение должно быть утверждено для документов, сумма "
+#~ "перевода которых превышает 100 000 долл. США"
 
 #~ msgid "Unable to associate staff member to UNICEF user"
 #~ msgstr "Не удалось связать сотрудника с пользователем ЮНИСЕФ"

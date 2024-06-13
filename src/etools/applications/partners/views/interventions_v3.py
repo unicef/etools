@@ -5,6 +5,7 @@ from copy import copy
 from django.conf import settings
 from django.db import transaction, utils
 from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext as _
 
 from easy_pdf.rendering import render_to_pdf_response
@@ -41,6 +42,7 @@ from etools.applications.partners.models import (
 )
 from etools.applications.partners.permissions import (
     AmendmentSessionOnlyDeletePermission,
+    intervention_field_has_view_permission,
     intervention_field_is_editable_permission,
     PMPInterventionPermission,
     UserBelongsToObjectPermission,
@@ -373,6 +375,29 @@ class PMPReviewDetailView(PMPReviewMixin, RetrieveUpdateAPIView):
     pass
 
 
+class PMPReviewDetailPDFView(PMPReviewMixin, RetrieveAPIView):
+    permission_classes = [
+        IsAuthenticated,
+        IsReadAction & intervention_field_has_view_permission('reviews')
+    ]
+
+    def get(self, request, *args, **kwargs):
+        pd = self.get_root_object()
+        review = get_object_or_404(self.get_queryset(), pk=self.kwargs.get('review_pk'))
+
+        font_path = settings.PACKAGE_ROOT + '/assets/fonts/'
+
+        data = {
+            "domain": 'https://{}'.format(get_current_site().domain),
+            "pd": pd,
+            "review": review,
+            "prc_reviews": review.prc_reviews.filter(review_date__isnull=False),
+            "font_path": font_path,
+        }
+
+        return render_to_pdf_response(request, "pd/prc_review_pdf.html", data, filename=f'PRC_Review_{str(pd)}.pdf')
+
+
 class PMPReviewNotifyView(PMPReviewMixin, GenericAPIView):
     def post(self, request, *args, **kwargs):
         review = self.get_object()
@@ -492,6 +517,11 @@ class PMPInterventionSupplyItemUploadView(
         except ValidationError as err:
             return Response(
                 {"supply_items_file": err.detail},
+                status.HTTP_400_BAD_REQUEST,
+            )
+        if not file_data:
+            return Response(
+                {"supply_items_file": _("No valid data found in the file.")},
                 status.HTTP_400_BAD_REQUEST,
             )
 

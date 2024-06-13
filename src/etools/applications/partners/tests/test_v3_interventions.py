@@ -1671,6 +1671,30 @@ class TestSupplyItem(BaseInterventionTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("supply_items_file", response.data)
 
+    def test_upload_no_valid_data(self):
+        response = self.forced_auth_req(
+            "post",
+            reverse(
+                "pmp_v3:intervention-supply-item-upload",
+                args=[self.intervention.pk],
+            ),
+            data={
+                "supply_items_file": SimpleUploadedFile(
+                    'my_list.csv',
+                    u'''"unknown column","column2"\n
+                    42,"qwert"\n
+                    43,"asdf"\n
+                    '''.encode('utf-8'),
+                    content_type="multipart/form-data",
+                ),
+            },
+            user=self.unicef_user,
+            request_format=None,
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("supply_items_file", response.data)
+        self.assertEqual(response.data["supply_items_file"], "No valid data found in the file.")
+
     def test_upload_invalid_file_row(self):
         supply_items_file = SimpleUploadedFile(
             'my_list.csv',
@@ -1811,7 +1835,7 @@ class TestInterventionUpdate(BaseInterventionTestCase):
             realms__data=['IP Viewer'],
             profile__organization=intervention.agreement.partner.organization
         )
-        with self.assertNumQueries(192):
+        with self.assertNumQueries(193):
             response = self.forced_auth_req(
                 "patch",
                 reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
@@ -1838,7 +1862,7 @@ class TestInterventionUpdate(BaseInterventionTestCase):
         budget_owner = UserFactory(is_staff=True)
         office = OfficeFactory()
         section = SectionFactory()
-        with self.assertNumQueries(203):
+        with self.assertNumQueries(204):
             response = self.forced_auth_req(
                 "patch",
                 reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
@@ -1887,7 +1911,7 @@ class TestInterventionUpdate(BaseInterventionTestCase):
         site2 = LocationSiteFactory()
         site3 = LocationSiteFactory()
 
-        with self.assertNumQueries(253):
+        with self.assertNumQueries(254):
             response = self.forced_auth_req(
                 "patch",
                 reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
@@ -2654,6 +2678,41 @@ class TestInterventionReviews(BaseInterventionTestCase):
         self.assertEqual(response.data["overall_comment"], "second")
         review.refresh_from_db()
         self.assertEqual(review.overall_comment, "second")
+
+    def test_pdf_prc_secretary(self):
+        review = InterventionReviewFactory(
+            intervention=self.intervention,
+            overall_comment='comment',
+        )
+        response = self.forced_auth_req(
+            "get",
+            reverse(
+                "pmp_v3:intervention-review-pdf",
+                args=[self.intervention.pk, review.pk],
+            ),
+            user=self.unicef_prc_secretary
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.headers['Content-Type'], 'application/pdf')
+        self.assertIn('Content-Disposition', response.headers)
+
+    def test_pdf_partner_user(self):
+        review = InterventionReviewFactory(
+            intervention=self.intervention,
+        )
+        partner_user = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=self.intervention.agreement.partner.organization,
+        )
+        response = self.forced_auth_req(
+            "get",
+            reverse(
+                "pmp_v3:intervention-review-pdf",
+                args=[self.intervention.pk, review.pk],
+            ),
+            user=partner_user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
 class TestInterventionCancel(BaseInterventionActionTestCase):
