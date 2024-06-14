@@ -331,7 +331,7 @@ class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, BaseTenantT
         )
 
     def test_focal_point_list(self):
-        with self.assertNumQueries(14):
+        with self.assertNumQueries(13):
             self._test_list(self.unicef_focal_point, [self.engagement, self.second_engagement])
 
     def test_engagement_staff_list(self):

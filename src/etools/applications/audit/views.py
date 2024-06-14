@@ -3,7 +3,7 @@ from functools import cache
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.db import connection
-from django.db.models import Exists, OuterRef, Prefetch
+from django.db.models import Exists, OuterRef
 from django.http import Http404
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -368,7 +368,7 @@ class EngagementViewSet(
         return queryset\
             .select_related('agreement', 'agreement__auditor_firm', 'agreement__auditor_firm__organization',
                             'po_item', 'partner', )\
-            .prefetch_related('staff_members', 'sections', 'offices')
+            .prefetch_related('sections', 'offices')
 
     def get_permission_context(self):
         context = super().get_permission_context()
