@@ -352,7 +352,7 @@ class EngagementViewSet(
 
         user_groups = self.request.user.groups.all()
 
-        if UNICEFUser.as_group() in user_groups or UNICEFAuditFocalPoint.as_group() in user_groups:
+        if user_groups.filter(name__in=[UNICEFUser.name, UNICEFAuditFocalPoint.name]).exists():
             # no need to filter queryset
             pass
         elif Auditor.as_group() in user_groups:
@@ -362,15 +362,13 @@ class EngagementViewSet(
         else:
             queryset = queryset.none()
 
-        queryset = queryset.prefetch_related(
-            'partner', Prefetch('agreement', PurchaseOrder.objects.prefetch_related(
-                'auditor_firm', 'auditor_firm__organization'))
-        )
-
         if self.action in ['list', 'export_list_csv']:
             queryset = queryset.filter(agreement__auditor_firm__unicef_users_allowed=self.unicef_engagements)
 
-        return queryset
+        return queryset\
+            .select_related('agreement', 'agreement__auditor_firm', 'agreement__auditor_firm__organization',
+                            'po_item', 'partner', )\
+            .prefetch_related('staff_members', 'sections', 'offices')
 
     def get_permission_context(self):
         context = super().get_permission_context()
