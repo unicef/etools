@@ -443,7 +443,10 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
     @transaction.atomic
     def create(self, validated_data):
         checkout_items = validated_data.pop('items')
-        if 'destination_point' in validated_data:
+
+        if self.validated_data['transfer_type'] != models.Transfer.WASTAGE and not validated_data.get('destination_point'):
+            raise ValidationError(_('Destination location is mandatory at checkout.'))
+        elif 'destination_point' in validated_data:
             validated_data['destination_point_id'] = validated_data.pop('destination_point')
 
         self.instance = models.Transfer(
