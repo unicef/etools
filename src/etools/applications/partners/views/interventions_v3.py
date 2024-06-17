@@ -11,6 +11,7 @@ from django.utils.translation import gettext as _
 from easy_pdf.rendering import render_to_pdf_response
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
+from rest_framework.filters import OrderingFilter
 from rest_framework.generics import (
     CreateAPIView,
     DestroyAPIView,
@@ -26,10 +27,11 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.status import is_success
 from rest_framework.views import APIView
+from unicef_restlib.pagination import DynamicPageNumberPagination
 
 from etools.applications.field_monitoring.permissions import IsEditAction, IsReadAction
 from etools.applications.partners.exports_v2 import InterventionXLSRenderer
-from etools.applications.partners.filters import InterventionEditableByFilter
+from etools.applications.partners.filters import InterventionEditableByFilter, PartnerNameOrderingFilter
 from etools.applications.partners.models import (
     Intervention,
     InterventionAttachment,
@@ -133,6 +135,7 @@ class InterventionAutoTransitionsMixin:
 
 
 class PMPInterventionListCreateView(PMPInterventionMixin, InterventionListAPIView):
+    pagination_class = DynamicPageNumberPagination
     permission_classes = (IsAuthenticated, PMPInterventionPermission)
     search_terms = (
         'title__icontains',
@@ -142,7 +145,10 @@ class PMPInterventionListCreateView(PMPInterventionMixin, InterventionListAPIVie
     )
     filter_backends = InterventionListAPIView.filter_backends + (
         InterventionEditableByFilter,
+        OrderingFilter,
+        PartnerNameOrderingFilter
     )
+    ordering_fields = ('number', 'document_type', 'status', 'title', 'start', 'end')
 
     def get_serializer_class(self):
         if self.request.method == "GET":

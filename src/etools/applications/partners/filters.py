@@ -57,3 +57,13 @@ class InterventionEditableByFilter(BaseFilterBackend):
             'unicef': {'unicef_court': True},
             'partner': {'unicef_court': False, 'date_sent_to_partner__isnull': False},
         }.get(editable_by, {}))
+
+
+class PartnerNameOrderingFilter(BaseFilterBackend):
+    def filter_queryset(self, request, queryset, view):
+        ordering = request.query_params.get('ordering', '')
+        if 'partner_name' in ordering:
+            if '-' in ordering:
+                return queryset.order_by('-agreement__partner__organization__name')
+            return queryset.order_by('agreement__partner__organization__name')
+        return queryset

@@ -66,7 +66,7 @@ class UniqueIDOrderingFilter(BaseFilterBackend):
 class EngagementFilter(filters.FilterSet):
     sections__in = filters.BaseInFilter(field_name="sections")
     offices__in = filters.BaseInFilter(field_name="offices")
-    # TODO: REALMS - test updated filters
+
     staff_members__user__exact = filters.CharFilter(field_name="staff_members__id")
     staff_members__user__in = filters.BaseInFilter(field_name="staff_members")
 

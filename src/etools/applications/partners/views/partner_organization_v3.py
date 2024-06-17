@@ -1,5 +1,6 @@
 from django.shortcuts import get_object_or_404
 
+from rest_framework.filters import OrderingFilter
 from rest_framework.generics import ListAPIView
 from rest_framework_csv import renderers as r
 
@@ -22,6 +23,10 @@ class PMPPartnerOrganizationListAPIView(
         PMPBaseViewMixin,
         PartnerOrganizationListAPIView,
 ):
+
+    filter_backends = PartnerOrganizationListAPIView.filter_backends + (OrderingFilter,)
+    ordering_fields = ('name', 'vendor_number')
+
     def get_queryset(self, format=None):
         qs = super().get_queryset(format=format)
 

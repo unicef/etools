@@ -160,7 +160,7 @@ class TestList(BaseInterventionTestCase):
                 user=staff_member,
             )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 0)
+        self.assertEqual(len(response.data['results']), 0)
 
         # sent to partner
         intervention.date_sent_to_partner = datetime.date.today()
@@ -172,12 +172,12 @@ class TestList(BaseInterventionTestCase):
             user=staff_member,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
-        self.assertEqual(response.data[0]["id"], intervention.pk)
+        self.assertEqual(len(response.data['results']), 1)
+        self.assertEqual(response.data['results'][0]["id"], intervention.pk)
 
     def test_intervention_list_without_show_amendments_flag(self):
         InterventionAmendmentFactory()
-        with self.assertNumQueries(10):
+        with self.assertNumQueries(11):
             response = self.forced_auth_req(
                 'get',
                 reverse('pmp_v3:intervention-list'),
@@ -185,13 +185,13 @@ class TestList(BaseInterventionTestCase):
             )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
+        self.assertEqual(len(response.data['results']), 1)
 
     def test_intervention_list_with_show_amendments_flag(self):
         for i in range(20):
             InterventionAmendmentFactory()
 
-        with self.assertNumQueries(10):
+        with self.assertNumQueries(11):
             response = self.forced_auth_req(
                 'get',
                 reverse('pmp_v3:intervention-list'),
@@ -200,7 +200,7 @@ class TestList(BaseInterventionTestCase):
             )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 40)
+        self.assertEqual(len(response.data['results']), 10)
 
     def test_not_authenticated(self):
         response = self.forced_auth_req(
@@ -237,7 +237,7 @@ class TestList(BaseInterventionTestCase):
             user=self.unicef_user,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 4)
+        self.assertEqual(len(response.data['results']), 4)
 
         # set cfei_number value
         cfei_number = "9723495790932423"
@@ -257,7 +257,7 @@ class TestList(BaseInterventionTestCase):
             data={"search": cfei_number[:-5]}
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
+        self.assertEqual(len(response.data['results']), 1)
 
     def test_filter_editable_by_partner(self):
         InterventionFactory(unicef_court=True)
@@ -272,7 +272,7 @@ class TestList(BaseInterventionTestCase):
             data={'editable_by': 'partner'},
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 3)
+        self.assertEqual(len(response.data['results']), 3)
 
     def test_filter_editable_by_unicef(self):
         InterventionFactory(unicef_court=True, date_sent_to_partner=None)
@@ -287,22 +287,22 @@ class TestList(BaseInterventionTestCase):
             data={'editable_by': 'unicef'},
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 4)
+        self.assertEqual(len(response.data['results']), 4)
 
     def test_updated_country_programmes_field_in_use(self):
         intervention = InterventionFactory()
         country_programme = CountryProgrammeFactory()
         intervention.country_programmes.add(country_programme)
         InterventionFactory()
-        with self.assertNumQueries(10):
+        with self.assertNumQueries(11):
             response = self.forced_auth_req(
                 "get",
                 reverse('pmp_v3:intervention-list'),
                 user=self.unicef_user,
             )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 2)
-        intervention_data = sorted(response.data, key=lambda i: i['id'])[0]
+        self.assertEqual(len(response.data['results']), 2)
+        intervention_data = sorted(response.data['results'], key=lambda i: i['id'])[0]
         self.assertNotIn('country_programme', intervention_data)
         self.assertEqual([country_programme.id], intervention_data['country_programmes'])
 
@@ -323,9 +323,9 @@ class TestList(BaseInterventionTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 2)
+        self.assertEqual(len(response.data['results']), 2)
         self.assertCountEqual(
-            [i['id'] for i in response.data],
+            [i['id'] for i in response.data['results']],
             interventions,
         )
 
