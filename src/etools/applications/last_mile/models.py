@@ -333,7 +333,7 @@ class Item(TimeStampedModel, models.Model):
 
     class Meta:
         base_manager_name = 'objects'
-        ordering = ("-id",)
+        ordering = ("expiry_date",)
 
     @cached_property
     def partner_organization(self):
