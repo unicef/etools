@@ -252,10 +252,10 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(short_transfer.transfer_subtype, models.Transfer.SHORT)
         self.assertEqual(short_transfer.destination_check_in_at, checkin_data['destination_check_in_at'])
         self.assertEqual(short_transfer.items.count(), 2)
-        loss_item_2 = short_transfer.items.first()
+        loss_item_2 = short_transfer.items.order_by('id').last()
         self.assertEqual(loss_item_2.quantity, 22)
         self.assertIn(self.incoming, loss_item_2.transfers_history.all())
-        self.assertEqual(short_transfer.items.last().quantity, 30)
+        self.assertEqual(short_transfer.items.order_by('id').first().quantity, 30)
         self.assertEqual(short_transfer.origin_transfer, self.incoming)
 
     @override_settings(RUTF_MATERIALS=['1234'])
