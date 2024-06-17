@@ -525,6 +525,11 @@ class PMPInterventionSupplyItemUploadView(
                 {"supply_items_file": err.detail},
                 status.HTTP_400_BAD_REQUEST,
             )
+        if not file_data:
+            return Response(
+                {"supply_items_file": _("No valid data found in the file.")},
+                status.HTTP_400_BAD_REQUEST,
+            )
 
         # update all supply items related to intervention
         for title, unit_number, unit_price, product_number in file_data:

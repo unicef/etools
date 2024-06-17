@@ -28,8 +28,6 @@ from etools.applications.core.renderers import CSVFlatRenderer
 from etools.applications.partners.exports_v2 import (
     PartnerOrganizationCSVRenderer,
     PartnerOrganizationDashboardCsvRenderer,
-    PartnerOrganizationHactCsvRenderer,
-    PartnerOrganizationSimpleHactCsvRenderer,
 )
 from etools.applications.partners.filters import PartnerScopeFilter
 from etools.applications.partners.models import (
@@ -59,7 +57,6 @@ from etools.applications.partners.serializers.partner_organization_v2 import (
     PartnerOrganizationCreateUpdateSerializer,
     PartnerOrganizationDashboardSerializer,
     PartnerOrganizationDetailSerializer,
-    PartnerOrganizationHactSerializer,
     PartnerOrganizationListSerializer,
     PartnerPlannedVisitsSerializer,
     PlannedEngagementNestedSerializer,
@@ -352,37 +349,6 @@ class PartnerOrganizationDashboardAPIView(ExportModelMixin, QueryStringFilterMix
             agreements__status=Agreement.SIGNED).distinct().values_list('pk', flat=True)
         for item in serializer.data:
             item['alert_active_pd_for_ended_pca'] = True if item['id'] in qs else False
-
-
-class PartnerOrganizationHactAPIView(ListAPIView):
-
-    """
-    Create new Partners.
-    Returns a list of Partners.
-    """
-    permission_classes = (IsAdminUser,)
-    queryset = PartnerOrganization.objects.select_related('planned_engagement')\
-        .prefetch_related('assessments').hact_active()
-    serializer_class = PartnerOrganizationHactSerializer
-    renderer_classes = (r.JSONRenderer, PartnerOrganizationHactCsvRenderer)
-    filename = 'detailed_hact_dashboard'
-
-    def list(self, request, format=None):
-        """
-        Checks for format query parameter
-        :returns: JSON or CSV file
-        """
-        query_params = self.request.query_params
-        response = super().list(request)
-        if "format" in query_params.keys():
-            if query_params.get("format") == 'csv':
-                response['Content-Disposition'] = f"attachment;filename={self.filename}.csv"
-        return response
-
-
-class PartnerOrganizationSimpleHactAPIView(PartnerOrganizationHactAPIView):
-    renderer_classes = (r.JSONRenderer, PartnerOrganizationSimpleHactCsvRenderer)
-    filename = 'hact_dashboard'
 
 
 class PlannedEngagementAPIView(ListAPIView):

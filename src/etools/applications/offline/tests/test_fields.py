@@ -162,7 +162,8 @@ class TestUploadedFileField(BaseTenantTestCase):
 class TestRemoteFileField(BaseTenantTestCase):
     @patch('etools.applications.offline.fields.files.download_remote_attachment.delay')
     def test_process(self, download_mock):
-        attachment = RemoteFileField('test').validate('some-url', Metadata())
+        with self.captureOnCommitCallbacks(execute=True):
+            attachment = RemoteFileField('test').validate('some-url', Metadata())
         self.assertIsInstance(attachment, Attachment)
         download_mock.assert_called()
 
@@ -178,6 +179,7 @@ class TestMixedUploadedRemoteFileField(BaseTenantTestCase):
 
     @patch('etools.applications.offline.fields.files.download_remote_attachment.delay')
     def test_process(self, download_mock):
-        attachment = MixedUploadedRemoteFileField('test').validate('http://some-url', Metadata())
+        with self.captureOnCommitCallbacks(execute=True):
+            attachment = MixedUploadedRemoteFileField('test').validate('http://some-url', Metadata())
         self.assertIsInstance(attachment, Attachment)
         download_mock.assert_called()
