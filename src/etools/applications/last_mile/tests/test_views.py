@@ -371,6 +371,24 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('Some of the items to be checked are no longer valid', response.data['items'])
 
+    def test_checkout_location_validation(self):
+        item = ItemFactory(quantity=11, transfer=self.checked_in)
+
+        checkout_data = {
+            "transfer_type": models.Transfer.DISTRIBUTION,
+            "comment": "",
+            "proof_file": self.attachment.pk,
+            "items": [
+                {"id": item.pk, "quantity": 10}
+            ],
+            "origin_check_out_at": timezone.now()
+        }
+        url = reverse('last_mile:transfers-new-check-out', args=(self.poi_partner_1.pk,))
+        response = self.forced_auth_req('post', url, user=self.partner_staff, data=checkout_data)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('Destination location is mandatory at checkout.', response.data)
+
     def test_checkout_distribution(self):
         item_1 = ItemFactory(quantity=11, transfer=self.checked_in)
         item_2 = ItemFactory(quantity=22, transfer=self.checked_in)
@@ -442,6 +460,29 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(self.checked_in.items.count(), 2)
         self.assertEqual(self.checked_in.items.get(pk=item_1.pk).quantity, 2)
         self.assertEqual(self.checked_in.items.get(pk=item_2.pk).quantity, 22)
+
+    def test_checkout_wastage_without_location(self):
+        item_1 = ItemFactory(quantity=11, transfer=self.checked_in)
+
+        checkout_data = {
+            "transfer_type": models.Transfer.WASTAGE,
+            "comment": "",
+            "proof_file": self.attachment.pk,
+            "items": [
+                {"id": item_1.pk, "quantity": 9, "wastage_type": models.Item.EXPIRED},
+            ],
+            "origin_check_out_at": timezone.now()
+        }
+        url = reverse('last_mile:transfers-new-check-out', args=(self.poi_partner_1.pk,))
+        response = self.forced_auth_req('post', url, user=self.partner_staff, data=checkout_data)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['status'], models.Transfer.COMPLETED)
+        self.assertEqual(response.data['transfer_type'], models.Transfer.WASTAGE)
+        self.assertIn(response.data['proof_file'], self.attachment.file.path)
+
+        wastage_transfer = models.Transfer.objects.get(pk=response.data['id'])
+        self.assertEqual(wastage_transfer.destination_point, None)
 
     @skip('disabling feature for now')
     def test_mark_completed(self):
