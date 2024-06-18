@@ -150,5 +150,7 @@ class TestStrUnicode(SimpleTestCase):
 
 
 class TestGroups(BaseTenantTestCase):
+    fixtures = ('groups',)
+
     def test_prc_secretary_available(self):
         self.assertTrue(Group.objects.filter(name=PRC_SECRETARY).exists())

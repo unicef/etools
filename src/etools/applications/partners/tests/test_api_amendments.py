@@ -87,6 +87,8 @@ class BaseTestInterventionAmendments:
 
 
 class TestInterventionAmendments(BaseTestInterventionAmendments, BaseTenantTestCase):
+    fixtures = ('groups',)
+
     def test_no_permission_user_forbidden(self):
         '''Ensure a non-staff user gets the 403 smackdown'''
         response = self.forced_auth_req(

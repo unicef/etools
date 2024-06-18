@@ -44,6 +44,13 @@
   {
     "model": "auth.group",
     "fields": {
+      "name": "PRC Secretary",
+      "permissions": []
+    }
+  },
+  {
+    "model": "auth.group",
+    "fields": {
       "name": "IP LM Editor",
       "permissions": []
     }
