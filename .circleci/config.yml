@@ -3,7 +3,7 @@ version: 2
 parameters:
   base-tag:
     type: string
-    default: "latest"
+    default: "latestet"
 
 
 jobs:
@@ -24,11 +24,11 @@ jobs:
               docker build -t unicef/etools-base:${BASE_TAG}et -f Dockerfile-base .
               docker push unicef/etools-base:${BASE_TAG}et
               if (echo "develop" | grep -q "$CIRCLE_BRANCH"); then
-                docker tag unicef/etools-base:${BASE_TAG}et unicef/etools-base:latest
-                docker push unicef/etools-base:latest
+                docker tag unicef/etools-base:${BASE_TAG}et unicef/etools-base:latestet
+                docker push unicef/etools-base:latestet
               elif (echo "master" | grep -q "$CIRCLE_BRANCH"); then
-                docker tag unicef/etools-base:${BASE_TAG}et unicef/etools-base:latest_prod
-                docker push unicef/etools-base:latest_prod
+                docker tag unicef/etools-base:${BASE_TAG}et unicef/etools-base:latest_prodet
+                docker push unicef/etools-base:latest_prodet
               else
                 echo "Not a followed branch not pushing latest"
               fi
@@ -108,11 +108,11 @@ jobs:
             docker login -u $DOCKER_USER -p $DOCKER_PASS
             docker push unicef/etools:$TAG
             if (echo "develop" | grep -q "$CIRCLE_BRANCH"); then
-              docker tag unicef/etools-base:${BASE_TAG}et unicef/etools-base:latest
-              docker push unicef/etools-base:latest
+              docker tag unicef/etools-base:${BASE_TAG}et unicef/etools-base:latestet
+              docker push unicef/etools-base:latestet
             elif (echo "master" | grep -q "$CIRCLE_BRANCH"); then
-              docker tag unicef/etools-base:${BASE_TAG}et unicef/etools-base:latest_prod
-              docker push unicef/etools-base:latest_prod
+              docker tag unicef/etools-base:${BASE_TAG}et unicef/etools-base:latest_prodet
+              docker push unicef/etools-base:latest_prodet
             else
               echo "Not a followed branch not pushing latest"
             fi
