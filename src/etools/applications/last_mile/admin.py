@@ -65,7 +65,7 @@ class PointOfInterestAdmin(XLSXImportMixin, admin.ModelAdmin):
                 # add a pcode if it doesn't exist:
                 p_code = poi_dict.get('p_code', None)
             if not p_code or p_code == "None":
-                poi_dict['p_code'] = generate_hash(poi_dict['partner_org_vendor_no'] + poi_dict['name']+ poi_dict['poi_type'], 12)
+                poi_dict['p_code'] = generate_hash(poi_dict['partner_org_vendor_no'] + poi_dict['name'] + poi_dict['poi_type'], 12)
             long = poi_dict.pop('longitude')
             lat = poi_dict.pop('latitude')
             try:
