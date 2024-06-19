@@ -567,6 +567,25 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual([item_3.pk, item_2.pk, item_1.pk], [i['id'] for i in response.data['items']])
 
+    def test_upload_evidence(self):
+        url = reverse('last_mile:transfers-upload-evidence', args=(self.warehouse.pk, self.completed.pk))
+        attachment = AttachmentFactory(file=SimpleUploadedFile('hello_world.txt', b'hello world!'))
+        data = {'evidence_file': attachment.id, 'comment': 'some comment'}
+        self.assertNotEqual(self.completed.transfer_type, self.completed.WASTAGE)
+
+        response = self.forced_auth_req('post', url, user=self.partner_staff, data=data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('Evidence files are only for wastage transfers.', response.data)
+
+        self.completed.transfer_type = self.completed.WASTAGE
+        self.completed.save(update_fields=['transfer_type'])
+        self.assertEqual(self.completed.transfer_type, self.completed.WASTAGE)
+        self.assertEqual(self.completed.transfer_evidences.count(), 0)
+
+        response = self.forced_auth_req('post', url, user=self.partner_staff, data=data)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(self.completed.transfer_evidences.count(), 1)
+
 
 class TestItemUpdateViewSet(BaseTenantTestCase):
     @classmethod

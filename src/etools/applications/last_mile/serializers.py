@@ -498,7 +498,7 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
 
 
 class TransferEvidenceSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
-    comment = serializers.CharField(required=False, allow_blank=False, allow_null=False)
+    comment = serializers.CharField(required=True, allow_blank=False, allow_null=False)
     evidence_file = AttachmentSingleFileField(required=True, allow_null=False)
 
     class Meta:
