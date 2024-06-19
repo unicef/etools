@@ -504,3 +504,14 @@ class TransferEvidenceSerializer(AttachmentSerializerMixin, serializers.ModelSer
     class Meta:
         model = models.TransferEvidence
         fields = ('comment', 'evidence_file')
+
+
+class TransferEvidenceListSerializer(TransferEvidenceSerializer):
+    user = serializers.SerializerMethodField()
+
+    class Meta(TransferEvidenceSerializer.Meta):
+        model = models.TransferEvidence
+        fields = TransferEvidenceSerializer.Meta.fields + ('user', 'created')
+
+    def get_user(self, obj):
+        return MinimalUserSerializer(obj.evidence_file.first().uploaded_by).data

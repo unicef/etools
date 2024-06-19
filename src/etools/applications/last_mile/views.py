@@ -320,6 +320,19 @@ class TransferViewSet(
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    @action(detail=True, methods=['get'], serializer_class=serializers.TransferEvidenceListSerializer)
+    def evidence(self, request, **kwargs):
+        transfer = self.get_object()
+        if transfer.transfer_type != models.Transfer.WASTAGE:
+            raise ValidationError(_('Evidence files are only for wastage transfers.'))
+        qs = transfer.transfer_evidences.all()
+        page = self.paginate_queryset(qs)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        return Response(self.serializer_class(qs, many=True).data)
+
 
 class ItemUpdateViewSet(mixins.UpdateModelMixin, mixins.RetrieveModelMixin, GenericViewSet):
     permission_classes = [IsIPLMEditor]
