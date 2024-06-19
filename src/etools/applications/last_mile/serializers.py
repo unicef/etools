@@ -495,3 +495,12 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
             notify_wastage_transfer.delay(connection.schema_name, self.instance.pk)
 
         return self.instance
+
+
+class TransferEvidenceSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
+    comment = serializers.CharField(required=False, allow_blank=False, allow_null=False)
+    evidence_file = AttachmentSingleFileField(required=True, allow_null=False)
+
+    class Meta:
+        model = models.TransferEvidence
+        fields = ('comment', 'evidence_file')

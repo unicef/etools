@@ -188,6 +188,24 @@ class Transfer(TimeStampedModel, models.Model):
         return f'{self.id} {self.partner_organization.name}: {self.name if self.name else self.unicef_release_order}'
 
 
+class TransferEvidence(TimeStampedModel, models.Model):
+    comment = models.TextField(null=True, blank=True)
+
+    evidence_file = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Transfer Evidence File'),
+        code='transfer_evidence',
+    )
+    transfer = models.ForeignKey(
+        Transfer,
+        on_delete=models.CASCADE,
+        related_name='transfer_evidences'
+    )
+
+    def __str__(self):
+        return f'{self.transfer.id} {self.transfer.transfer_type} / {self.transfer.partner_organization.name}'
+
+
 class Material(TimeStampedModel, models.Model):
     UOM = (
         ("BAG", _("BAG")),
