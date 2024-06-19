@@ -39,7 +39,7 @@ def get_access_token():
             # Make a client call if Access token is not available in cache
             response = clientapp.acquire_token_for_client(scopes=pbi_config['SCOPE_BASE'])
         else:
-            raise TokenRetrieveException(f'Not supported authentication mode: {pbi_config['AUTHENTICATION_MODE']}')
+            raise TokenRetrieveException(f'Not supported authentication mode: {pbi_config["AUTHENTICATION_MODE"]}')
 
         try:
             token_return = response['access_token']

@@ -67,6 +67,8 @@ class PointOfInterestAdmin(XLSXImportMixin, admin.ModelAdmin):
                 poi_dict['p_code'] = generate_hash(poi_dict['partner_org_vendor_no'] + poi_dict['name'], 12)
             if not poi_dict.get('p_code'):
                 # add a pcode if it doesn't exist:
+                p_code = poi_dict.get('p_code', None)
+            if not p_code or p_code == "None":
                 poi_dict['p_code'] = generate_hash(poi_dict['partner_org_vendor_no'] + poi_dict['name'] + poi_dict['poi_type'], 12)
             long = poi_dict.pop('longitude')
             lat = poi_dict.pop('latitude')
@@ -96,9 +98,9 @@ class PointOfInterestAdmin(XLSXImportMixin, admin.ModelAdmin):
             poi_obj, _ = models.PointOfInterest.all_objects.update_or_create(
                 p_code=poi_dict['p_code'],
                 defaults={'private': poi_dict['private'],
-                          'point': poi_dict['point'],
-                          'name': poi_dict['name'],
-                          'poi_type': poi_dict.get('poi_type')}
+                          "point": poi_dict['point'],
+                          "name": poi_dict['name'],
+                          "poi_type": poi_dict.get('poi_type')}
             )
             poi_obj.partner_organizations.add(partner_org_obj)
 

@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.db import connection, models
 from django.db.models import Sum
 from django.urls import reverse
@@ -425,6 +426,18 @@ class Assessment(TimeStampedModel):
     def transition_to_cancelled_invalid(self):
         """Allowed to move to cancelled status, except from submitted/final"""
 
+    def get_related_third_party_users(self):
+        if self.assessor.assessor_type == Assessor.TYPE_EXTERNAL:
+            return get_user_model().objects.filter(pk=self.assessor.user_id)
+        elif self.assessor.assessor_type == Assessor.TYPE_VENDOR:
+            if self.assessor.auditor_firm:
+                return self.assessor.auditor_firm_staff.filter(
+                    realms__organization=self.assessor.auditor_firm.organization,
+                    realms__is_active=True,
+                )
+
+        return get_user_model().objects.none()
+
 
 class AssessmentStatusHistory(TimeStampedModel):
     assessment = models.ForeignKey(
@@ -512,6 +525,9 @@ class Answer(TimeStampedModel):
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
         self.assessment.update_rating()
+
+    def get_related_third_party_users(self):
+        return self.assessment.get_related_third_party_users()
 
 
 class AnswerEvidence(TimeStampedModel):

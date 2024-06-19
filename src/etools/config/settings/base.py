@@ -585,7 +585,7 @@ UNICEF_LOCATIONS_GET_CACHE_KEY = 'etools.applications.locations.views.cache_key'
 ATTACHMENT_FILEPATH_PREFIX_FUNC = "etools.applications.attachments.utils.get_filepath_prefix"
 ATTACHMENT_FLAT_MODEL = "etools.applications.attachments.models.AttachmentFlat"
 ATTACHMENT_DENORMALIZE_FUNC = "etools.applications.attachments.utils.denormalize_attachment"
-ATTACHMENT_PERMISSIONS = "etools.applications.attachments.permissions.IsInSchema"
+ATTACHMENT_PERMISSIONS = "etools.applications.attachments.permissions.UNICEFAttachmentsPermission"
 ATTACHMENT_INVALID_FILE_TYPES = [
     "application/json",
     "application/x-msdownload",

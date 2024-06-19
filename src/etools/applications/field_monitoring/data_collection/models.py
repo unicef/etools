@@ -168,6 +168,9 @@ class ChecklistOverallFinding(QuestionTargetMixin, models.Model):
     def __str__(self):
         return '{} - {}'.format(self.started_checklist, self.narrative_finding)
 
+    def get_related_third_party_users(self):
+        return self.started_checklist.monitoring_activity.get_related_third_party_users()
+
 
 class ActivityOverallFindingQuerySet(models.QuerySet):
     def annotate_for_activity_export(self):
