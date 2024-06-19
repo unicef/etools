@@ -111,8 +111,8 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
     )
     partner_contacted_at = models.DateField(verbose_name=_('Date IP was contacted'), blank=True, null=True)
     engagement_type = models.CharField(verbose_name=_('Engagement Type'), max_length=10, choices=TYPES)
-    start_date = models.DateField(verbose_name=_('Period Start Date'), blank=True, null=True)
-    end_date = models.DateField(verbose_name=_('Period End Date'), blank=True, null=True)
+    start_date = models.DateField(verbose_name=_('Start date of first reporting FACE'), blank=True, null=True)
+    end_date = models.DateField(verbose_name=_('End date of last reporting FACE'), blank=True, null=True)
     total_value = models.DecimalField(
         verbose_name=_('Total value of selected FACE form(s)'), default=0, decimal_places=2, max_digits=20
     )
@@ -313,6 +313,15 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
         if not self.reference_number:
             self.reference_number = self.get_reference_number()
             self.save()
+
+    def get_related_third_party_users(self):
+        return get_user_model().objects.filter(
+            models.Q(pk__in=self.authorized_officers.values_list('id')) |
+            models.Q(pk__in=self.staff_members.values_list('id'))
+        ).filter(
+            realms__organization=self.agreement.auditor_firm.organization,
+            realms__is_active=True,
+        )
 
 
 class RiskCategory(OrderedModel, models.Model):

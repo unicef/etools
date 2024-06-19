@@ -365,6 +365,41 @@ class TestDisaggregationListCreateViews(BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+    def test_create_duplicate_disaggregation(self):
+        """
+        Test creating disaggregations with duplicated name
+        """
+        data = {
+            "name": "name",
+            "disaggregation_values": [
+                {
+                    "value": "first group",
+                    "active": False
+                },
+                {
+                    "value": "second group",
+                    "active": False
+                }
+            ]
+        }
+        response = self.forced_auth_req(
+            'post',
+            self.url,
+            user=self.pme_user,
+            data=data
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data['name'] = 'NAME'
+        response = self.forced_auth_req(
+            'post',
+            self.url,
+            user=self.pme_user,
+            data=data
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("A disaggregation with this name already exists.", response.data)
+
 
 class TestDisaggregationRetrieveUpdateViews(BaseTenantTestCase):
     """

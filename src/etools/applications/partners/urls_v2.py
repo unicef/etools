@@ -46,9 +46,7 @@ from etools.applications.partners.views.partner_organization_v2 import (
     PartnerOrganizationDashboardAPIView,
     PartnerOrganizationDeleteView,
     PartnerOrganizationDetailAPIView,
-    PartnerOrganizationHactAPIView,
     PartnerOrganizationListAPIView,
-    PartnerOrganizationSimpleHactAPIView,
     PartnerPlannedVisitsDeleteView,
     PartnerWithScheduledAuditCompleted,
     PartnerWithSpecialAuditCompleted,
@@ -101,12 +99,6 @@ urlpatterns = (
         name='partner-planned-visits-del'
     ),
 
-    re_path(r'^partners/hact/$',
-            view=PartnerOrganizationHactAPIView.as_view(http_method_names=['get', ]),
-            name='partner-hact'),
-    re_path(r'^partners/hact/simple/$',
-            view=PartnerOrganizationSimpleHactAPIView.as_view(http_method_names=['get', ]),
-            name='partner-hact-simple'),
     re_path(r'^partners/dashboard/$',
             view=PartnerOrganizationDashboardAPIView.as_view(http_method_names=['get', ]),
             name='partner-dashboard'),

@@ -2,6 +2,7 @@ import datetime
 import decimal
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import ArrayField
 from django.core.validators import MinValueValidator
@@ -2563,6 +2564,15 @@ class Intervention(TimeStampedModel):
             action=Activity.UPDATE,
             change__status__after__in=[self.SIGNED, self.ACTIVE],
         ).exists()
+
+    def get_related_third_party_users(self):
+        qs_filter = Q(pk__in=self.partner_focal_points.values_list('user_id'))
+        if self.partner_authorized_officer_signatory:
+            qs_filter = qs_filter | Q(pk=self.partner_authorized_officer_signatory.user_id)
+        return get_user_model().objects.filter(qs_filter).filter(
+            realms__organization=self.agreement.partner,
+            realms__is_active=True,
+        )
 
 
 class InterventionAmendment(TimeStampedModel):

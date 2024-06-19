@@ -2,6 +2,7 @@ import random
 from datetime import date
 from string import ascii_lowercase
 
+from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models, transaction
 from django.db.models import Q, Sum
@@ -582,6 +583,11 @@ class Disaggregation(TimeStampedModel):
 
     def __str__(self):
         return self.name
+
+    def save(self, *args, **kwargs):
+        if not self.pk and Disaggregation.objects.filter(name__iexact=self.name).first():
+            raise ValidationError("A disaggregation with this name already exists.")
+        super().save(*args, **kwargs)
 
 
 class DisaggregationValue(TimeStampedModel):

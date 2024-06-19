@@ -1,6 +1,7 @@
 import itertools
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.db import connection, models
 from django.utils import timezone
 from django.utils.encoding import force_str
@@ -355,6 +356,15 @@ class TPMVisit(SoftDeleteMixin, TimeStampedModel, models.Model):
     def get_object_url(self, **kwargs):
         return build_frontend_url('tpm', 'visits', self.id, 'details', **kwargs)
 
+    def get_related_third_party_users(self):
+        return get_user_model().objects.filter(
+            models.Q(pk__in=self.tpm_partner.staff_members.values_list('id')) |
+            models.Q(pk__in=self.tpm_partner_focal_points.values_list('id'))
+        ).filter(
+            realms__organization=self.tpm_partner.organization,
+            realms__is_active=True,
+        )
+
 
 class TPMVisitReportRejectComment(models.Model):
     rejected_at = models.DateTimeField(auto_now_add=True, verbose_name=_('Rejected At'))
@@ -456,6 +466,9 @@ class TPMActivity(Activity):
             context['tpm_visit'] = self.tpm_visit.get_mail_context(user=user, include_activities=False)
 
         return context
+
+    def get_related_third_party_users(self):
+        return self.tpm_visit.get_related_third_party_users()
 
 
 class TPMActionPointManager(models.Manager):

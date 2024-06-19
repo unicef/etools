@@ -1,9 +1,11 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
+from django.db import connection
 from django.db.models import signals
 
 import factory
+from django_tenants.utils import get_public_schema_name
 from factory.fuzzy import FuzzyText
 
 from etools.applications.action_points.models import PME
@@ -33,6 +35,29 @@ class CountryFactory(factory.django.DjangoModelFactory):
     name = "Test Country"
     schema_name = SCHEMA_NAME
     local_currency = factory.SubFactory(PublicsCurrencyFactory)
+
+
+class DummyCountryFactory(CountryFactory):
+    class Meta:
+        model = models.Country
+        django_get_or_create = ('schema_name',)
+
+    name = "Dummy Country"
+    schema_name = "dummy"
+
+    @classmethod
+    def _create(cls, model_class, *args, **kwargs):
+        tenant = connection.tenant
+        try:
+            if tenant.schema_name != get_public_schema_name():
+                tenant.deactivate()
+            cls._meta.model.auto_create_schema = False
+            country = super()._create(model_class, *args, **kwargs)
+        finally:
+            cls._meta.model.auto_create_schema = True
+            if tenant.schema_name != get_public_schema_name():
+                tenant.activate()
+        return country
 
 
 @factory.django.mute_signals(signals.pre_save, signals.post_save)
