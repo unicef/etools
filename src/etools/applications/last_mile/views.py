@@ -319,6 +319,16 @@ class ItemUpdateViewSet(mixins.UpdateModelMixin, mixins.RetrieveModelMixin, Gene
             return super().get_queryset().none()
         return super().get_queryset().filter(transfer__partner_organization=partner)
 
+    @action(detail=True, methods=['post'], serializer_class=serializers.ItemSplitSerializer)
+    def split(self, request, **kwargs):
+        item = self.get_object()
+
+        serializer = self.serializer_class(instance=item, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(status=status.HTTP_200_OK)
+
 
 class PowerBIDataView(APIView):
     permission_classes = [IsIPLMEditor]

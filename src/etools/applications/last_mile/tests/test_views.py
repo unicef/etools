@@ -603,3 +603,36 @@ class TestItemUpdateViewSet(BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('The calculated quantity is incorrect.', response.data['non_field_errors'][0])
+
+    def test_post_split(self):
+        item = ItemFactory(transfer=self.transfer, material=self.material, quantity=100)
+        self.assertEqual(self.transfer.items.count(), 1)
+        url = reverse('last_mile:item-update-split', args=(item.pk,))
+        data = {
+            'quantities': [76, 24]
+        }
+        response = self.forced_auth_req('post', url, user=self.partner_staff, data=data)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(self.transfer.items.count(), 2)
+        item.refresh_from_db()
+        self.assertEqual(item.quantity, 76)
+        self.assertEqual(self.transfer.items.exclude(pk=item.pk).first().quantity, 24)
+
+    def test_post_split_validation(self):
+        item = ItemFactory(transfer=self.transfer, material=self.material, quantity=100)
+        self.assertEqual(self.transfer.items.count(), 1)
+        url = reverse('last_mile:item-update-split', args=(item.pk,))
+        data = {
+            'quantities': [76, 25]
+        }
+        response = self.forced_auth_req('post', url, user=self.partner_staff, data=data)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('Incorrect split values.', response.data['quantities'][0])
+
+        data['quantities'] = [1, 2, 97]
+        response = self.forced_auth_req('post', url, user=self.partner_staff, data=data)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('Incorrect split values.', response.data['quantities'][0])
