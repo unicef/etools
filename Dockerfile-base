@@ -12,7 +12,8 @@ RUN apk add --upgrade apk-tools \
     libxslt \
     geos \
     gdal \
-    postgresql-client
+    postgresql-client \
+    bash
 
 
 # Build-deps

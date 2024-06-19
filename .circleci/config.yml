@@ -3,7 +3,7 @@ version: 2
 parameters:
   base-tag:
     type: string
-    default: "latest"
+    default: "latestet"
 
 
 jobs:
@@ -18,17 +18,17 @@ jobs:
             docker login -u $DOCKER_USER -p $DOCKER_PASS
             BASE_TAG="$(md5sum pdm.lock | cut -c1-6)$(md5sum Dockerfile-base | cut -c1-6)"
             TAG=${CIRCLE_BRANCH}
-            if (curl --silent -f -lSL https://index.docker.io/v1/repositories/unicef/etools-base/tags/$BASE_TAG > /dev/null); then
+            if (curl --silent -f -lSL https://index.docker.io/v1/repositories/unicef/etools-base/tags/${BASE_TAG} > /dev/null); then
               echo "Up to date!"
             else
-              docker build -t unicef/etools-base:$BASE_TAG -f Dockerfile-base .
-              docker push unicef/etools-base:$BASE_TAG
+              docker build -t unicef/etools-base:${BASE_TAG} -f Dockerfile-base .
+              docker push unicef/etools-base:${BASE_TAG}
               if (echo "develop" | grep -q "$CIRCLE_BRANCH"); then
-                docker tag unicef/etools-base:$BASE_TAG unicef/etools-base:latest
-                docker push unicef/etools-base:latest
+                docker tag unicef/etools-base:${BASE_TAG} unicef/etools-base:latestet
+                docker push unicef/etools-base:latestet
               elif (echo "master" | grep -q "$CIRCLE_BRANCH"); then
-                docker tag unicef/etools-base:$BASE_TAG unicef/etools-base:latest_prod
-                docker push unicef/etools-base:latest_prod
+                docker tag unicef/etools-base:${BASE_TAG} unicef/etools-base:latest_prodet
+                docker push unicef/etools-base:latest_prodet
               else
                 echo "Not a followed branch not pushing latest"
               fi
@@ -39,14 +39,14 @@ jobs:
             BASE_TAG="$(md5sum pdm.lock | cut -c1-6)$(md5sum Dockerfile-base | cut -c1-6)"
             curl --user ${CIRCLE_TOKEN}: \
                 --data build_parameters[CIRCLE_JOB]=test \
-                --data build_parameters[BASE_TAG]=$BASE_TAG \
+                --data build_parameters[BASE_TAG]=${BASE_TAG} \
                 --data revision=$CIRCLE_SHA1 \
                 https://circleci.com/api/v1.1/project/github/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/tree/$CIRCLE_BRANCH
   test:
     working_directory: ~/code
     # The primary container is an instance of the first list image listed. Your build commands run in this container.
     docker:
-      - image: unicef/etools-base:$BASE_TAG
+      - image: unicef/etools-base:${BASE_TAG}
         environment:
           PGHOST: 127.0.0.1
           DATABASE_URL: "postgis://postgres:postgres@localhost:5432/circle_test"
@@ -97,9 +97,9 @@ jobs:
             docker login -u $DOCKER_USER -p $DOCKER_PASS
             BASE_TAG="$(md5sum pdm.lock | cut -c1-6)$(md5sum Dockerfile-base | cut -c1-6)"
             TAG=${CIRCLE_BRANCH}
-            (docker pull unicef/etools-base:$BASE_TAG) ||
-            (docker build -t unicef/etools-base:$BASE_TAG -f Dockerfile-base . && docker push unicef/etools-base:$BASE_TAG)
-            docker build --build-arg BASE_TAG=$BASE_TAG -t unicef/etools:$TAG .
+            (docker pull unicef/etools-base:${BASE_TAG}) ||
+            (docker build -t unicef/etools-base:${BASE_TAG} -f Dockerfile-base . && docker push unicef/etools-base:${BASE_TAG})
+            docker build --build-arg BASE_TAG=${BASE_TAG} -t unicef/etools:$TAG .
       - run:
           name: Pushing to Docker Hub
           command: |
@@ -108,11 +108,11 @@ jobs:
             docker login -u $DOCKER_USER -p $DOCKER_PASS
             docker push unicef/etools:$TAG
             if (echo "develop" | grep -q "$CIRCLE_BRANCH"); then
-              docker tag unicef/etools-base:$BASE_TAG unicef/etools-base:latest
-              docker push unicef/etools-base:latest
+              docker tag unicef/etools-base:${BASE_TAG} unicef/etools-base:latestet
+              docker push unicef/etools-base:latestet
             elif (echo "master" | grep -q "$CIRCLE_BRANCH"); then
-              docker tag unicef/etools-base:$BASE_TAG unicef/etools-base:latest_prod
-              docker push unicef/etools-base:latest_prod
+              docker tag unicef/etools-base:${BASE_TAG} unicef/etools-base:latest_prodet
+              docker push unicef/etools-base:latest_prodet
             else
               echo "Not a followed branch not pushing latest"
             fi

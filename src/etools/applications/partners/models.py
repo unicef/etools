@@ -2767,7 +2767,13 @@ class InterventionAmendment(TimeStampedModel):
         self.amended_intervention.submission_date = timezone.now().date()
         self.amended_intervention.save()
 
+    def clean_amended_intervention(self):
+        # strip amended prefix from title in case of modifications
+        self.amended_intervention.title = self.amended_intervention.title.replace('[Amended]', '').lstrip(' ')
+
     def merge_amendment(self):
+        self.clean_amended_intervention()
+
         merge_instance(
             self.intervention,
             self.amended_intervention,
@@ -2808,6 +2814,7 @@ class InterventionAmendment(TimeStampedModel):
         amended_intervention.delete()
 
     def get_difference(self):
+        self.clean_amended_intervention()
         return calculate_difference(
             self.intervention,
             self.amended_intervention,
