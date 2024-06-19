@@ -6,6 +6,7 @@ from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
+from rest_framework.generics import get_object_or_404
 from unicef_attachments.fields import AttachmentSingleFileField
 from unicef_attachments.serializers import AttachmentSerializerMixin
 
@@ -395,6 +396,19 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
         fields = TransferBaseSerializer.Meta.fields + (
             'transfer_type', 'items', 'origin_check_out_at', 'destination_point'
         )
+
+    def validate_destination_point(self, value):
+        transfer_type = self.initial_data['transfer_type']
+        destination_point = get_object_or_404(models.PointOfInterest, pk=value)
+        warehouse_type_id = get_object_or_404(models.PointOfInterestType, category='warehouse').pk
+
+        if destination_point.poi_type_id == warehouse_type_id:
+            if transfer_type == models.Transfer.DISTRIBUTION:
+                raise ValidationError(_('The distribution destination cannot be a warehouse.'))
+        elif transfer_type == models.Transfer.DELIVERY:
+            raise ValidationError(_('The delivery destination must be a warehouse.'))
+
+        return value
 
     def validate_items(self, value):
         # Make sure that all the items belong to this partner and are in the inventory of this location
