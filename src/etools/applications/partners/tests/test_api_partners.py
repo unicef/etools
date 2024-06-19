@@ -198,7 +198,7 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
         self.assertEqual(len(data["core_values_assessments"]), 1)
         self.assertEqual(
             data["core_values_assessments"][0]["attachment"],
-            attachment.file.url
+            attachment.file_link
         )
 
     def test_patch_with_assessment_attachment(self):
@@ -234,7 +234,7 @@ class TestPartnerOrganizationDetailAPIView(BaseTenantTestCase):
         self.assertEqual(len(data["assessments"]), 1)
         self.assertEqual(
             data["assessments"][0]["report_attachment"],
-            attachment.file.url
+            attachment.file_link
         )
 
     def test_add_planned_visits(self):

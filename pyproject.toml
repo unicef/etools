@@ -66,7 +66,7 @@ dependencies = [
     "social-auth-app-django",
     "social-auth-core[azuread]==4.1",
     "tenant-schemas-celery",
-    "unicef-attachments @ git+https://github.com/unicef/unicef-attachments.git@0.14",
+    "unicef-attachments @ git+https://github.com/unicef/unicef-attachments.git@dj4.2-ch32786",
     "unicef-djangolib",
     "unicef-locations",
     "unicef-notification",

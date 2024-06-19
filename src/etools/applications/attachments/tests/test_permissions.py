@@ -61,7 +61,7 @@ class DownloadUnlinkedAttachmentTestCase(DownloadAttachmentsBaseTestCase):
 
     def test_attachment_user_in_different_schema(self):
         other_country = DummyCountryFactory()
-        self.assertNotEquals(other_country.pk, connection.tenant.pk)
+        self.assertNotEqual(other_country.pk, connection.tenant.pk)
         another_schema_user = UserFactory(is_staff=True)
         another_schema_user.realms.update(is_active=False)
         RealmFactory(user=another_schema_user, country=other_country, group=GroupFactory(name=UNICEF_USER))
