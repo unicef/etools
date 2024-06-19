@@ -202,6 +202,9 @@ class TransferEvidence(TimeStampedModel, models.Model):
         related_name='transfer_evidences'
     )
 
+    class Meta:
+        ordering = ("-created",)
+
     def __str__(self):
         return f'{self.transfer.id} {self.transfer.transfer_type} / {self.transfer.partner_organization.name}'
 
