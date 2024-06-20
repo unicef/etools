@@ -82,14 +82,10 @@ class HandoverPartnerListViewSet(mixins.ListModelMixin, GenericViewSet):
     pagination_class = DynamicPageNumberPagination
 
     filter_backends = (SearchFilter,)
-    search_fields = ('organization__name',)
+    search_fields = ('name',)
 
     def get_queryset(self):
-        return PartnerOrganization.objects\
-            .prefetch_related(
-                Prefetch('agreements', queryset=Agreement.objects.filter(status=Agreement.SIGNED))) \
-            .filter(agreements__status=Agreement.SIGNED)\
-            .distinct()
+        return PartnerOrganization.objects.filter(agreements__status=Agreement.SIGNED).values('id', 'name')
 
 
 class InventoryItemListView(POIQuerysetMixin, ListAPIView):

@@ -402,11 +402,7 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
 
     def validate_partner_id(self, value):
         if value:
-            eligible_partner_qs = PartnerOrganization.objects \
-                .prefetch_related(Prefetch('agreements', queryset=Agreement.objects.filter(status=Agreement.SIGNED))) \
-                .filter(agreements__status=Agreement.SIGNED) \
-                .distinct()
-            if not eligible_partner_qs.filter(pk=value).exists():
+            if PartnerOrganization.objects.filter(agreements__status=Agreement.SIGNED, pk=value).exists():
                 raise ValidationError(_('The provided partner is not eligible for a handover.'))
         return value
 
