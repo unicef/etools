@@ -233,7 +233,7 @@ class WaybillTransferSerializer(AttachmentSerializerMixin, serializers.ModelSeri
 
 
 class TransferBaseSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
-    name = serializers.CharField(required=False, allow_blank=False, allow_null=False,)
+    name = serializers.CharField(required=False, allow_blank=False, allow_null=False)
     proof_file = AttachmentSingleFileField(required=True, allow_null=False)
 
     class Meta:
@@ -430,7 +430,10 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
     def create(self, validated_data):
         checkout_items = validated_data.pop('items')
 
-        if self.validated_data['transfer_type'] != models.Transfer.WASTAGE and not validated_data.get('destination_point'):
+        if not self.initial_data.get('proof_file'):
+            raise ValidationError(_('The proof file is required.'))
+
+        if validated_data['transfer_type'] != models.Transfer.WASTAGE and not validated_data.get('destination_point'):
             raise ValidationError(_('Destination location is mandatory at checkout.'))
         elif 'destination_point' in validated_data:
             validated_data['destination_point_id'] = validated_data.pop('destination_point')

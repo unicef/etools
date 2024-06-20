@@ -152,7 +152,8 @@ class TestTransferView(BaseTenantTestCase):
             status=models.Transfer.COMPLETED,
             origin_point=cls.poi_partner_1
         )
-        cls.attachment = AttachmentFactory(file=SimpleUploadedFile('proof_file.pdf', b'Proof File'))
+        cls.attachment = AttachmentFactory(
+            file=SimpleUploadedFile('proof_file.pdf', b'Proof File'), code='proof_of_transfer')
         cls.material = MaterialFactory(number='1234')
 
     def test_incoming(self):
@@ -483,6 +484,23 @@ class TestTransferView(BaseTenantTestCase):
 
         wastage_transfer = models.Transfer.objects.get(pk=response.data['id'])
         self.assertEqual(wastage_transfer.destination_point, None)
+
+    def test_checkout_without_proof_file(self):
+        item_1 = ItemFactory(quantity=11, transfer=self.checked_in)
+
+        checkout_data = {
+            "transfer_type": models.Transfer.WASTAGE,
+            "comment": "",
+            "items": [
+                {"id": item_1.pk, "quantity": 9, "wastage_type": models.Item.EXPIRED},
+            ],
+            "origin_check_out_at": timezone.now()
+        }
+        url = reverse('last_mile:transfers-new-check-out', args=(self.poi_partner_1.pk,))
+        response = self.forced_auth_req('post', url, user=self.partner_staff, data=checkout_data)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('The proof file is required.', response.data)
 
     @skip('disabling feature for now')
     def test_mark_completed(self):
