@@ -1,3 +1,4 @@
+import datetime
 from unittest import skip
 from unittest.mock import Mock, patch
 
@@ -251,10 +252,10 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(short_transfer.transfer_subtype, models.Transfer.SHORT)
         self.assertEqual(short_transfer.destination_check_in_at, checkin_data['destination_check_in_at'])
         self.assertEqual(short_transfer.items.count(), 2)
-        loss_item_2 = short_transfer.items.first()
+        loss_item_2 = short_transfer.items.order_by('id').last()
         self.assertEqual(loss_item_2.quantity, 22)
         self.assertIn(self.incoming, loss_item_2.transfers_history.all())
-        self.assertEqual(short_transfer.items.last().quantity, 30)
+        self.assertEqual(short_transfer.items.order_by('id').first().quantity, 30)
         self.assertEqual(short_transfer.origin_transfer, self.incoming)
 
     @override_settings(RUTF_MATERIALS=['1234'])
@@ -370,6 +371,24 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('Some of the items to be checked are no longer valid', response.data['items'])
 
+    def test_checkout_location_validation(self):
+        item = ItemFactory(quantity=11, transfer=self.checked_in)
+
+        checkout_data = {
+            "transfer_type": models.Transfer.DISTRIBUTION,
+            "comment": "",
+            "proof_file": self.attachment.pk,
+            "items": [
+                {"id": item.pk, "quantity": 10}
+            ],
+            "origin_check_out_at": timezone.now()
+        }
+        url = reverse('last_mile:transfers-new-check-out', args=(self.poi_partner_1.pk,))
+        response = self.forced_auth_req('post', url, user=self.partner_staff, data=checkout_data)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('Destination location is mandatory at checkout.', response.data)
+
     def test_checkout_distribution(self):
         item_1 = ItemFactory(quantity=11, transfer=self.checked_in)
         item_2 = ItemFactory(quantity=22, transfer=self.checked_in)
@@ -442,6 +461,29 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(self.checked_in.items.get(pk=item_1.pk).quantity, 2)
         self.assertEqual(self.checked_in.items.get(pk=item_2.pk).quantity, 22)
 
+    def test_checkout_wastage_without_location(self):
+        item_1 = ItemFactory(quantity=11, transfer=self.checked_in)
+
+        checkout_data = {
+            "transfer_type": models.Transfer.WASTAGE,
+            "comment": "",
+            "proof_file": self.attachment.pk,
+            "items": [
+                {"id": item_1.pk, "quantity": 9, "wastage_type": models.Item.EXPIRED},
+            ],
+            "origin_check_out_at": timezone.now()
+        }
+        url = reverse('last_mile:transfers-new-check-out', args=(self.poi_partner_1.pk,))
+        response = self.forced_auth_req('post', url, user=self.partner_staff, data=checkout_data)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['status'], models.Transfer.COMPLETED)
+        self.assertEqual(response.data['transfer_type'], models.Transfer.WASTAGE)
+        self.assertIn(response.data['proof_file'], self.attachment.file.path)
+
+        wastage_transfer = models.Transfer.objects.get(pk=response.data['id'])
+        self.assertEqual(wastage_transfer.destination_point, None)
+
     @skip('disabling feature for now')
     def test_mark_completed(self):
         self.assertEqual(self.outgoing.status, models.Transfer.PENDING)
@@ -456,6 +498,17 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(response.data['status'], models.Transfer.COMPLETED)
         self.assertEqual(self.outgoing.status, models.Transfer.COMPLETED)
         self.assertEqual(self.outgoing.checked_in_by, self.partner_staff)
+
+    def test_item_expiry_ordering(self):
+        item_1 = ItemFactory(transfer=self.outgoing, expiry_date=timezone.now() + datetime.timedelta(days=30))
+        item_2 = ItemFactory(transfer=self.outgoing, expiry_date=timezone.now() + datetime.timedelta(days=20))
+        item_3 = ItemFactory(transfer=self.outgoing, expiry_date=timezone.now() + datetime.timedelta(days=10))
+
+        url = reverse('last_mile:transfers-details', args=(self.poi_partner_1.pk, self.outgoing.pk,))
+        response = self.forced_auth_req('get', url, user=self.partner_staff)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual([item_3.pk, item_2.pk, item_1.pk], [i['id'] for i in response.data['items']])
 
 
 class TestItemUpdateViewSet(BaseTenantTestCase):
