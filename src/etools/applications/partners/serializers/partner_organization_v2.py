@@ -438,38 +438,3 @@ class PartnerOrganizationCreateUpdateSerializer(SnapshotModelSerializer):
                 }
             }
         }
-
-
-class PartnerOrganizationHactSerializer(serializers.ModelSerializer):
-    name = serializers.CharField(source='organization.name')
-    vendor_number = serializers.CharField(source='organization.vendor_number')
-    short_name = serializers.CharField(source='organization.short_name')
-    partner_type = serializers.CharField(source='organization.organization_type')
-    cso_type = serializers.CharField(source='organization.cso_type')
-    planned_engagement = PlannedEngagementSerializer(read_only=True)
-    hact_min_requirements = serializers.JSONField()
-    rating = serializers.CharField(source='get_rating_display')
-
-    class Meta:
-        model = PartnerOrganization
-        fields = (
-            "id",
-            "name",
-            "vendor_number",
-            "short_name",
-            "type_of_assessment",
-            "partner_type",
-            "partner_type_slug",
-            "cso_type",
-            "rating",
-            "shared_with",
-            "total_ct_cp",
-            "total_ct_cy",
-            "net_ct_cy",
-            "reported_cy",
-            "total_ct_ytd",
-            "hact_values",
-            "hact_min_requirements",
-            "flags",
-            "planned_engagement"
-        )
