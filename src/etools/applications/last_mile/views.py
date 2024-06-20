@@ -23,6 +23,8 @@ from etools.applications.last_mile import models, serializers
 from etools.applications.last_mile.filters import TransferFilter
 from etools.applications.last_mile.permissions import IsIPLMEditor
 from etools.applications.last_mile.tasks import notify_upload_waybill
+from etools.applications.partners.models import Agreement, PartnerOrganization
+from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.utils.pbi_auth import get_access_token, get_embed_token, get_embed_url, TokenRetrieveException
 
 
@@ -45,6 +47,14 @@ class POIQuerysetMixin:
                     .prefetch_related('partner_organizations')
                     .order_by('name', 'id'))
         return models.PointOfInterest.objects.none()
+
+    def get_handover_partners_queryset(self, poi):
+        return PartnerOrganization.objects\
+            .prefetch_related(
+                'points_of_interest',
+                Prefetch('agreements', queryset=Agreement.objects.filter(status=Agreement.SIGNED))) \
+            .filter(agreements__status=Agreement.SIGNED, points_of_interest=poi)\
+            .distinct()
 
 
 class PointOfInterestViewSet(POIQuerysetMixin, ModelViewSet):
@@ -72,6 +82,19 @@ class PointOfInterestViewSet(POIQuerysetMixin, ModelViewSet):
             connection.schema_name, destination_point.pk, waybill_file.pk, waybill_url
         )
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=True, methods=['get'], serializer_class=MinimalPartnerOrganizationListSerializer)
+    def partners(self, request, pk=None):
+        poi = get_object_or_404(self.get_queryset().select_related(None).prefetch_related(None).only('id'), pk=pk)
+
+        qs = self.get_handover_partners_queryset(poi)
+
+        page = self.paginate_queryset(qs)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        return Response(self.serializer_class(qs, many=True).data)
 
 
 class InventoryItemListView(POIQuerysetMixin, ListAPIView):
@@ -296,6 +319,9 @@ class TransferViewSet(
     @action(detail=False, methods=['post'], url_path='new-check-out',
             serializer_class=serializers.TransferCheckOutSerializer)
     def new_check_out(self, request, **kwargs):
+        if 'partner_id' in request.data and not self.get_handover_partners_queryset(self.get_parent_poi()).exists():
+            raise ValidationError(_('The provided partner is not eligible for a handover.'))
+
         serializer = self.serializer_class(
             data=request.data,
             context={

@@ -390,11 +390,12 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
 
     origin_check_out_at = serializers.DateTimeField(required=True)
     destination_point = serializers.IntegerField(required=False)
+    partner_id = serializers.IntegerField(required=False, allow_null=False)
 
     class Meta(TransferBaseSerializer.Meta):
         model = models.Transfer
         fields = TransferBaseSerializer.Meta.fields + (
-            'transfer_type', 'items', 'origin_check_out_at', 'destination_point'
+            'transfer_type', 'items', 'origin_check_out_at', 'destination_point', 'partner_id'
         )
 
     def validate_destination_point(self, value):
@@ -472,13 +473,21 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
     def create(self, validated_data):
         checkout_items = validated_data.pop('items')
 
-        if self.validated_data['transfer_type'] != models.Transfer.WASTAGE and not validated_data.get('destination_point'):
+        if self.validated_data['transfer_type'] not in [models.Transfer.WASTAGE, models.Transfer.HANDOVER] \
+                and not validated_data.get('destination_point'):
             raise ValidationError(_('Destination location is mandatory at checkout.'))
         elif 'destination_point' in validated_data:
             validated_data['destination_point_id'] = validated_data.pop('destination_point')
 
+        if self.validated_data['transfer_type'] == models.Transfer.HANDOVER:
+            partner_id = validated_data.get('partner_id')
+            if not partner_id:
+                raise ValidationError(_('A Handover to a partner requires a partner id.'))
+        else:
+            partner_id = self.context['request'].user.profile.organization.partner.pk
+
         self.instance = models.Transfer(
-            partner_organization=self.context['request'].user.profile.organization.partner,
+            partner_organization_id=partner_id,
             origin_point=self.context['location'],
             checked_out_by=self.context['request'].user,
             **validated_data)
