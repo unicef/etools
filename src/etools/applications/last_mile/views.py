@@ -48,14 +48,6 @@ class POIQuerysetMixin:
                     .order_by('name', 'id'))
         return models.PointOfInterest.objects.none()
 
-    def get_handover_partners_queryset(self, poi):
-        return PartnerOrganization.objects\
-            .prefetch_related(
-                'points_of_interest',
-                Prefetch('agreements', queryset=Agreement.objects.filter(status=Agreement.SIGNED))) \
-            .filter(agreements__status=Agreement.SIGNED, points_of_interest=poi)\
-            .distinct()
-
 
 class PointOfInterestViewSet(POIQuerysetMixin, ModelViewSet):
     serializer_class = serializers.PointOfInterestSerializer
@@ -83,18 +75,21 @@ class PointOfInterestViewSet(POIQuerysetMixin, ModelViewSet):
         )
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @action(detail=True, methods=['get'], serializer_class=MinimalPartnerOrganizationListSerializer)
-    def partners(self, request, pk=None):
-        poi = get_object_or_404(self.get_queryset().select_related(None).prefetch_related(None).only('id'), pk=pk)
 
-        qs = self.get_handover_partners_queryset(poi)
+class HandoverPartnerListViewSet(mixins.ListModelMixin, GenericViewSet):
+    serializer_class = MinimalPartnerOrganizationListSerializer
+    permission_classes = [IsIPLMEditor]
+    pagination_class = DynamicPageNumberPagination
 
-        page = self.paginate_queryset(qs)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
+    filter_backends = (SearchFilter,)
+    search_fields = ('organization__name',)
 
-        return Response(self.serializer_class(qs, many=True).data)
+    def get_queryset(self):
+        return PartnerOrganization.objects\
+            .prefetch_related(
+                Prefetch('agreements', queryset=Agreement.objects.filter(status=Agreement.SIGNED))) \
+            .filter(agreements__status=Agreement.SIGNED)\
+            .distinct()
 
 
 class InventoryItemListView(POIQuerysetMixin, ListAPIView):
@@ -319,9 +314,6 @@ class TransferViewSet(
     @action(detail=False, methods=['post'], url_path='new-check-out',
             serializer_class=serializers.TransferCheckOutSerializer)
     def new_check_out(self, request, **kwargs):
-        if 'partner_id' in request.data and not self.get_handover_partners_queryset(self.get_parent_poi()).exists():
-            raise ValidationError(_('The provided partner is not eligible for a handover.'))
-
         serializer = self.serializer_class(
             data=request.data,
             context={

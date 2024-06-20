@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import connection, transaction
+from django.db.models import Prefetch
 from django.forms import model_to_dict
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -13,6 +14,7 @@ from unicef_attachments.serializers import AttachmentSerializerMixin
 from etools.applications.last_mile import models
 from etools.applications.last_mile.models import PartnerMaterial
 from etools.applications.last_mile.tasks import notify_wastage_transfer
+from etools.applications.partners.models import Agreement, PartnerOrganization
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.users.serializers import MinimalUserSerializer
 
@@ -398,6 +400,16 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
             'transfer_type', 'items', 'origin_check_out_at', 'destination_point', 'partner_id'
         )
 
+    def validate_partner_id(self, value):
+        if value:
+            eligible_partner_qs = PartnerOrganization.objects \
+                .prefetch_related(Prefetch('agreements', queryset=Agreement.objects.filter(status=Agreement.SIGNED))) \
+                .filter(agreements__status=Agreement.SIGNED) \
+                .distinct()
+            if not eligible_partner_qs.filter(pk=value).exists():
+                raise ValidationError(_('The provided partner is not eligible for a handover.'))
+        return value
+
     def validate_destination_point(self, value):
         transfer_type = self.initial_data['transfer_type']
         destination_point = get_object_or_404(models.PointOfInterest, pk=value)
@@ -480,7 +492,7 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
             validated_data['destination_point_id'] = validated_data.pop('destination_point')
 
         if self.validated_data['transfer_type'] == models.Transfer.HANDOVER:
-            partner_id = validated_data.get('partner_id')
+            partner_id = validated_data.pop('partner_id', None)
             if not partner_id:
                 raise ValidationError(_('A Handover to a partner requires a partner id.'))
         else:
