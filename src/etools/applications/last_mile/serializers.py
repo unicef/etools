@@ -511,7 +511,7 @@ class TransferEvidenceListSerializer(TransferEvidenceSerializer):
 
     class Meta(TransferEvidenceSerializer.Meta):
         model = models.TransferEvidence
-        fields = TransferEvidenceSerializer.Meta.fields + ('user', 'created')
+        fields = TransferEvidenceSerializer.Meta.fields + ('id', 'user', 'created')
 
     def get_user(self, obj):
         return MinimalUserSerializer(obj.evidence_file.first().uploaded_by).data
