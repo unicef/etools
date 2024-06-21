@@ -20,7 +20,8 @@ from etools.applications.last_mile.tests.factories import (
     TransferFactory,
 )
 from etools.applications.organizations.tests.factories import OrganizationFactory
-from etools.applications.partners.tests.factories import PartnerFactory
+from etools.applications.partners.models import Agreement
+from etools.applications.partners.tests.factories import AgreementFactory, PartnerFactory
 from etools.applications.users.tests.factories import UserFactory
 
 
@@ -44,6 +45,8 @@ class TestPointOfInterestTypeView(BaseTenantTestCase):
 
 
 class TestPointOfInterestView(BaseTenantTestCase):
+    fixtures = ('poi_type.json',)
+
     @classmethod
     def setUpTestData(cls):
         call_command("update_notifications")
@@ -52,9 +55,10 @@ class TestPointOfInterestView(BaseTenantTestCase):
             realms__data=['IP LM Editor'],
             profile__organization=cls.partner.organization,
         )
-        cls.poi_partner = PointOfInterestFactory(partner_organizations=[cls.partner], private=True)
+        # poi_type_id=4 -> school
+        cls.poi_partner = PointOfInterestFactory(partner_organizations=[cls.partner], private=True, poi_type_id=4)
 
-    def test_api_poi_list(self):
+    def test_poi_list(self):
         url = reverse("last_mile:pois-list")
         PointOfInterestFactory(private=True)
 
@@ -64,7 +68,25 @@ class TestPointOfInterestView(BaseTenantTestCase):
         self.assertEqual(len(response.data['results']), 1)
         self.assertEqual(self.poi_partner.pk, response.data['results'][0]['id'])
 
-    def test_api_item_list(self):
+    def test_poi_list_type_filter(self):
+        url = reverse("last_mile:pois-list")
+
+        warehouse = PointOfInterestFactory(partner_organizations=[self.partner], private=True, poi_type_id=1)  # warehouse
+        PointOfInterestFactory(partner_organizations=[self.partner], private=True, poi_type_id=2)  # distribution_point
+        PointOfInterestFactory(partner_organizations=[self.partner], private=True, poi_type_id=3)  # hospital
+
+        response = self.forced_auth_req('get', url, user=self.partner_staff)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 4)
+
+        response = self.forced_auth_req('get', url, user=self.partner_staff, data={"poi_type": 1})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 1)
+        self.assertEqual(warehouse.pk, response.data['results'][0]['id'])
+
+    def test_item_list(self):
         url = reverse('last_mile:inventory-item-list', args=(self.poi_partner.pk,))
         transfer = TransferFactory(
             status=models.Transfer.COMPLETED, destination_point=self.poi_partner, partner_organization=self.partner)
@@ -123,6 +145,8 @@ class TestInventoryItemListView(BaseTenantTestCase):
 
 
 class TestTransferView(BaseTenantTestCase):
+    fixtures = ('poi_type.json',)
+
     @classmethod
     def setUpTestData(cls):
         cls.partner = PartnerFactory(organization=OrganizationFactory(name='Partner'))
@@ -130,34 +154,34 @@ class TestTransferView(BaseTenantTestCase):
             realms__data=['IP LM Editor'],
             profile__organization=cls.partner.organization,
         )
-        cls.poi_partner_1 = PointOfInterestFactory(partner_organizations=[cls.partner], private=True)
-        cls.poi_partner_2 = PointOfInterestFactory(partner_organizations=[cls.partner], private=True)
-        cls.poi_partner_3 = PointOfInterestFactory(partner_organizations=[cls.partner], private=True)
+        cls.warehouse = PointOfInterestFactory(partner_organizations=[cls.partner], private=True, poi_type_id=1)
+        cls.distribution_point = PointOfInterestFactory(partner_organizations=[cls.partner], private=True, poi_type_id=2)
+        cls.hospital = PointOfInterestFactory(partner_organizations=[cls.partner], private=True, poi_type_id=3)
         cls.incoming = TransferFactory(
             partner_organization=cls.partner,
-            destination_point=cls.poi_partner_1
+            destination_point=cls.warehouse
         )
         cls.checked_in = TransferFactory(
             partner_organization=cls.partner,
             status=models.Transfer.COMPLETED,
-            destination_point=cls.poi_partner_1
+            destination_point=cls.warehouse
         )
         cls.outgoing = TransferFactory(
             partner_organization=cls.partner,
-            origin_point=cls.poi_partner_1,
+            origin_point=cls.warehouse,
             transfer_type=models.Transfer.DISTRIBUTION
         )
         cls.completed = TransferFactory(
             partner_organization=cls.partner,
             status=models.Transfer.COMPLETED,
-            origin_point=cls.poi_partner_1
+            origin_point=cls.warehouse
         )
         cls.attachment = AttachmentFactory(
             file=SimpleUploadedFile('proof_file.pdf', b'Proof File'), code='proof_of_transfer')
         cls.material = MaterialFactory(number='1234')
 
     def test_incoming(self):
-        url = reverse("last_mile:transfers-incoming", args=(self.poi_partner_1.pk,))
+        url = reverse("last_mile:transfers-incoming", args=(self.warehouse.pk,))
         response = self.forced_auth_req('get', url, user=self.partner_staff)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -165,7 +189,7 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(self.incoming.pk, response.data['results'][0]['id'])
 
     def test_checked_in(self):
-        url = reverse('last_mile:transfers-checked-in', args=(self.poi_partner_1.pk,))
+        url = reverse('last_mile:transfers-checked-in', args=(self.warehouse.pk,))
         response = self.forced_auth_req('get', url, user=self.partner_staff)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -173,7 +197,7 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(self.checked_in.pk, response.data['results'][0]['id'])
 
     def test_outgoing(self):
-        url = reverse('last_mile:transfers-outgoing', args=(self.poi_partner_1.pk,))
+        url = reverse('last_mile:transfers-outgoing', args=(self.warehouse.pk,))
         response = self.forced_auth_req('get', url, user=self.partner_staff)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -181,7 +205,7 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(self.outgoing.pk, response.data['results'][0]['id'])
 
     def test_completed(self):
-        url = reverse('last_mile:transfers-completed', args=(self.poi_partner_1.pk,))
+        url = reverse('last_mile:transfers-completed', args=(self.warehouse.pk,))
         response = self.forced_auth_req('get', url, user=self.partner_staff)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -205,7 +229,7 @@ class TestTransferView(BaseTenantTestCase):
             ],
             "destination_check_in_at": timezone.now()
         }
-        url = reverse('last_mile:transfers-new-check-in', args=(self.poi_partner_1.pk, self.incoming.pk))
+        url = reverse('last_mile:transfers-new-check-in', args=(self.warehouse.pk, self.incoming.pk))
         response = self.forced_auth_req('patch', url, user=self.partner_staff, data=checkin_data)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -236,7 +260,7 @@ class TestTransferView(BaseTenantTestCase):
             ],
             "destination_check_in_at": timezone.now()
         }
-        url = reverse('last_mile:transfers-new-check-in', args=(self.poi_partner_1.pk, self.incoming.pk))
+        url = reverse('last_mile:transfers-new-check-in', args=(self.warehouse.pk, self.incoming.pk))
         response = self.forced_auth_req('patch', url, user=self.partner_staff, data=checkin_data)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -276,7 +300,7 @@ class TestTransferView(BaseTenantTestCase):
             ],
             "destination_check_in_at": timezone.now()
         }
-        url = reverse('last_mile:transfers-new-check-in', args=(self.poi_partner_1.pk, self.incoming.pk))
+        url = reverse('last_mile:transfers-new-check-in', args=(self.warehouse.pk, self.incoming.pk))
         response = self.forced_auth_req('patch', url, user=self.partner_staff, data=checkin_data)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -324,7 +348,7 @@ class TestTransferView(BaseTenantTestCase):
             ],
             "destination_check_in_at": timezone.now()
         }
-        url = reverse('last_mile:transfers-new-check-in', args=(self.poi_partner_1.pk, self.incoming.pk))
+        url = reverse('last_mile:transfers-new-check-in', args=(self.warehouse.pk, self.incoming.pk))
         response = self.forced_auth_req('patch', url, user=self.partner_staff, data=checkin_data)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -366,13 +390,13 @@ class TestTransferView(BaseTenantTestCase):
             ],
             "origin_check_out_at": timezone.now()
         }
-        url = reverse('last_mile:transfers-new-check-out', args=(self.poi_partner_1.pk,))
+        url = reverse('last_mile:transfers-new-check-out', args=(self.warehouse.pk,))
         response = self.forced_auth_req('post', url, user=self.partner_staff, data=checkout_data)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('Some of the items to be checked are no longer valid', response.data['items'])
 
-    def test_checkout_location_validation(self):
+    def test_checkout_distribution_location_validation(self):
         item = ItemFactory(quantity=11, transfer=self.checked_in)
 
         checkout_data = {
@@ -384,7 +408,25 @@ class TestTransferView(BaseTenantTestCase):
             ],
             "origin_check_out_at": timezone.now()
         }
-        url = reverse('last_mile:transfers-new-check-out', args=(self.poi_partner_1.pk,))
+        url = reverse('last_mile:transfers-new-check-out', args=(self.warehouse.pk,))
+        response = self.forced_auth_req('post', url, user=self.partner_staff, data=checkout_data)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('Destination location is mandatory at checkout.', response.data)
+
+    def test_checkout_delivery_location_validation(self):
+        item = ItemFactory(quantity=11, transfer=self.checked_in)
+
+        checkout_data = {
+            "transfer_type": models.Transfer.DELIVERY,
+            "comment": "",
+            "proof_file": self.attachment.pk,
+            "items": [
+                {"id": item.pk, "quantity": 10}
+            ],
+            "origin_check_out_at": timezone.now()
+        }
+        url = reverse('last_mile:transfers-new-check-out', args=(self.warehouse.pk,))
         response = self.forced_auth_req('post', url, user=self.partner_staff, data=checkout_data)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -394,11 +436,10 @@ class TestTransferView(BaseTenantTestCase):
         item_1 = ItemFactory(quantity=11, transfer=self.checked_in)
         item_2 = ItemFactory(quantity=22, transfer=self.checked_in)
         item_3 = ItemFactory(quantity=33, transfer=self.checked_in)
-        destination = PointOfInterestFactory()
 
         checkout_data = {
             "transfer_type": models.Transfer.DISTRIBUTION,
-            "destination_point": destination.pk,
+            "destination_point": self.hospital.pk,
             "comment": "",
             "proof_file": self.attachment.pk,
             "items": [
@@ -407,7 +448,7 @@ class TestTransferView(BaseTenantTestCase):
             ],
             "origin_check_out_at": timezone.now()
         }
-        url = reverse('last_mile:transfers-new-check-out', args=(self.poi_partner_1.pk,))
+        url = reverse('last_mile:transfers-new-check-out', args=(self.warehouse.pk,))
         response = self.forced_auth_req('post', url, user=self.partner_staff, data=checkout_data)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -416,7 +457,7 @@ class TestTransferView(BaseTenantTestCase):
         self.assertIn(response.data['proof_file'], self.attachment.file.path)
 
         checkout_transfer = models.Transfer.objects.get(pk=response.data['id'])
-        self.assertEqual(checkout_transfer.destination_point, destination)
+        self.assertEqual(checkout_transfer.destination_point, self.hospital)
         self.assertEqual(checkout_transfer.items.count(), len(checkout_data['items']))
         self.assertEqual(checkout_transfer.items.get(pk=item_1.pk).quantity, 11)
 
@@ -444,7 +485,7 @@ class TestTransferView(BaseTenantTestCase):
             ],
             "origin_check_out_at": timezone.now()
         }
-        url = reverse('last_mile:transfers-new-check-out', args=(self.poi_partner_1.pk,))
+        url = reverse('last_mile:transfers-new-check-out', args=(self.warehouse.pk,))
         response = self.forced_auth_req('post', url, user=self.partner_staff, data=checkout_data)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -462,6 +503,68 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(self.checked_in.items.get(pk=item_1.pk).quantity, 2)
         self.assertEqual(self.checked_in.items.get(pk=item_2.pk).quantity, 22)
 
+    def test_checkout_handover(self):
+        item_1 = ItemFactory(quantity=11, transfer=self.checked_in)
+        item_2 = ItemFactory(quantity=22, transfer=self.checked_in)
+        destination = PointOfInterestFactory()
+        agreement = AgreementFactory()
+        checkout_data = {
+            "transfer_type": models.Transfer.HANDOVER,
+            "destination_point": destination.pk,
+            "comment": "",
+            "proof_file": self.attachment.pk,
+            "partner_id": agreement.partner.id,
+            "items": [
+                {"id": item_1.pk, "quantity": 9},
+            ],
+            "origin_check_out_at": timezone.now()
+        }
+        url = reverse('last_mile:transfers-new-check-out', args=(self.warehouse.pk,))
+        response = self.forced_auth_req('post', url, user=self.partner_staff, data=checkout_data)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['status'], models.Transfer.PENDING)
+        self.assertEqual(response.data['transfer_type'], models.Transfer.HANDOVER)
+        self.assertIn(response.data['proof_file'], self.attachment.file.path)
+
+        handover_transfer = models.Transfer.objects.get(pk=response.data['id'])
+        self.assertEqual(handover_transfer.partner_organization, agreement.partner)
+        self.assertEqual(handover_transfer.destination_point, destination)
+        self.assertEqual(handover_transfer.items.count(), len(checkout_data['items']))
+        self.assertEqual(handover_transfer.items.first().quantity, 9)
+
+        self.assertEqual(self.checked_in.items.count(), 2)
+        self.assertEqual(self.checked_in.items.get(pk=item_1.pk).quantity, 2)
+        self.assertEqual(self.checked_in.items.get(pk=item_2.pk).quantity, 22)
+
+    def test_checkout_handover_partner_validation(self):
+        item_1 = ItemFactory(quantity=11, transfer=self.checked_in)
+        destination = PointOfInterestFactory()
+        agreement = AgreementFactory(status=Agreement.DRAFT)
+        checkout_data = {
+            "transfer_type": models.Transfer.HANDOVER,
+            "destination_point": destination.pk,
+            "comment": "",
+            "proof_file": self.attachment.pk,
+            "partner_id": agreement.partner.id,
+            "items": [
+                {"id": item_1.pk, "quantity": 9},
+            ],
+            "origin_check_out_at": timezone.now()
+        }
+        url = reverse('last_mile:transfers-new-check-out', args=(self.warehouse.pk,))
+        response = self.forced_auth_req('post', url, user=self.partner_staff, data=checkout_data)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('The provided partner is not eligible for a handover.', response.data['partner_id'][0])
+
+        checkout_data['partner_id'] = self.partner_staff.partner.id
+        url = reverse('last_mile:transfers-new-check-out', args=(self.warehouse.pk,))
+        response = self.forced_auth_req('post', url, user=self.partner_staff, data=checkout_data)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('The provided partner is not eligible for a handover.', response.data['partner_id'][0])
+
     def test_checkout_wastage_without_location(self):
         item_1 = ItemFactory(quantity=11, transfer=self.checked_in)
 
@@ -474,7 +577,7 @@ class TestTransferView(BaseTenantTestCase):
             ],
             "origin_check_out_at": timezone.now()
         }
-        url = reverse('last_mile:transfers-new-check-out', args=(self.poi_partner_1.pk,))
+        url = reverse('last_mile:transfers-new-check-out', args=(self.warehouse.pk,))
         response = self.forced_auth_req('post', url, user=self.partner_staff, data=checkout_data)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -496,7 +599,7 @@ class TestTransferView(BaseTenantTestCase):
             ],
             "origin_check_out_at": timezone.now()
         }
-        url = reverse('last_mile:transfers-new-check-out', args=(self.poi_partner_1.pk,))
+        url = reverse('last_mile:transfers-new-check-out', args=(self.warehouse.pk,))
         response = self.forced_auth_req('post', url, user=self.partner_staff, data=checkout_data)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -508,7 +611,7 @@ class TestTransferView(BaseTenantTestCase):
 
         self.assertEqual(self.outgoing.transfer_type, models.Transfer.DISTRIBUTION)
 
-        url = reverse('last_mile:transfers-mark-complete', args=(self.poi_partner_1.pk, self.outgoing.pk))
+        url = reverse('last_mile:transfers-mark-complete', args=(self.warehouse.pk, self.outgoing.pk))
         response = self.forced_auth_req('patch', url, user=self.partner_staff)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -522,11 +625,30 @@ class TestTransferView(BaseTenantTestCase):
         item_2 = ItemFactory(transfer=self.outgoing, expiry_date=timezone.now() + datetime.timedelta(days=20))
         item_3 = ItemFactory(transfer=self.outgoing, expiry_date=timezone.now() + datetime.timedelta(days=10))
 
-        url = reverse('last_mile:transfers-details', args=(self.poi_partner_1.pk, self.outgoing.pk,))
+        url = reverse('last_mile:transfers-details', args=(self.warehouse.pk, self.outgoing.pk,))
         response = self.forced_auth_req('get', url, user=self.partner_staff)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual([item_3.pk, item_2.pk, item_1.pk], [i['id'] for i in response.data['items']])
+
+    def test_upload_evidence(self):
+        url = reverse('last_mile:transfers-upload-evidence', args=(self.warehouse.pk, self.completed.pk))
+        attachment = AttachmentFactory(file=SimpleUploadedFile('hello_world.txt', b'hello world!'))
+        data = {'evidence_file': attachment.id, 'comment': 'some comment'}
+        self.assertNotEqual(self.completed.transfer_type, self.completed.WASTAGE)
+
+        response = self.forced_auth_req('post', url, user=self.partner_staff, data=data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('Evidence files are only for wastage transfers.', response.data)
+
+        self.completed.transfer_type = self.completed.WASTAGE
+        self.completed.save(update_fields=['transfer_type'])
+        self.assertEqual(self.completed.transfer_type, self.completed.WASTAGE)
+        self.assertEqual(self.completed.transfer_evidences.count(), 0)
+
+        response = self.forced_auth_req('post', url, user=self.partner_staff, data=data)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(self.completed.transfer_evidences.count(), 1)
 
 
 class TestItemUpdateViewSet(BaseTenantTestCase):
@@ -621,3 +743,36 @@ class TestItemUpdateViewSet(BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('The calculated quantity is incorrect.', response.data['non_field_errors'][0])
+
+    def test_post_split(self):
+        item = ItemFactory(transfer=self.transfer, material=self.material, quantity=100)
+        self.assertEqual(self.transfer.items.count(), 1)
+        url = reverse('last_mile:item-update-split', args=(item.pk,))
+        data = {
+            'quantities': [76, 24]
+        }
+        response = self.forced_auth_req('post', url, user=self.partner_staff, data=data)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(self.transfer.items.count(), 2)
+        item.refresh_from_db()
+        self.assertEqual(item.quantity, 76)
+        self.assertEqual(self.transfer.items.exclude(pk=item.pk).first().quantity, 24)
+
+    def test_post_split_validation(self):
+        item = ItemFactory(transfer=self.transfer, material=self.material, quantity=100)
+        self.assertEqual(self.transfer.items.count(), 1)
+        url = reverse('last_mile:item-update-split', args=(item.pk,))
+        data = {
+            'quantities': [76, 25]
+        }
+        response = self.forced_auth_req('post', url, user=self.partner_staff, data=data)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('Incorrect split values.', response.data['quantities'][0])
+
+        data['quantities'] = [1, 2, 97]
+        response = self.forced_auth_req('post', url, user=self.partner_staff, data=data)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('Incorrect split values.', response.data['quantities'][0])
