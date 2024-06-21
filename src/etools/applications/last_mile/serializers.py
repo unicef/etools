@@ -209,6 +209,34 @@ class ItemCheckoutSerializer(ItemBaseSerializer):
         fields = ItemBaseSerializer.Meta.fields + ('wastage_type',)
 
 
+class ItemSplitSerializer(serializers.ModelSerializer):
+    quantities = serializers.ListSerializer(child=serializers.IntegerField(allow_null=False, required=True))
+
+    class Meta:
+        model = models.Item
+        fields = ('quantities',)
+
+    def validate_quantities(self, value):
+        if len(value) != 2 or self.instance.quantity != sum(value):
+            raise ValidationError(_('Incorrect split values.'))
+        return value
+
+    def save(self, **kwargs):
+        _item = models.Item(
+            transfer=self.instance.transfer,
+            material=self.instance.material,
+            quantity=self.validated_data['quantities'].pop(),
+            **model_to_dict(
+                self.instance,
+                exclude=['id', 'created', 'modified', 'transfer', 'material', 'transfers_history', 'quantity'])
+        )
+        _item.save()
+        _item.transfers_history.add(self.instance.transfer)
+
+        self.instance.quantity = self.validated_data['quantities'].pop()
+        self.instance.save(update_fields=['quantity'])
+
+
 class TransferSerializer(serializers.ModelSerializer):
     origin_point = PointOfInterestLightSerializer(read_only=True)
     destination_point = PointOfInterestLightSerializer(read_only=True)
