@@ -1,6 +1,5 @@
 from django.conf import settings
 from django.db import connection, transaction
-from django.db.models import Prefetch
 from django.forms import model_to_dict
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
