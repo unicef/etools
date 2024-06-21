@@ -12,6 +12,7 @@ from unicef_attachments.serializers import AttachmentSerializerMixin
 from etools.applications.last_mile import models
 from etools.applications.last_mile.models import PartnerMaterial
 from etools.applications.last_mile.tasks import notify_wastage_transfer
+from etools.applications.partners.models import Agreement, PartnerOrganization
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.users.serializers import MinimalUserSerializer
 
@@ -389,12 +390,20 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
 
     origin_check_out_at = serializers.DateTimeField(required=True)
     destination_point = serializers.IntegerField(required=False)
+    partner_id = serializers.IntegerField(required=False, allow_null=False)
 
     class Meta(TransferBaseSerializer.Meta):
         model = models.Transfer
         fields = TransferBaseSerializer.Meta.fields + (
-            'transfer_type', 'items', 'origin_check_out_at', 'destination_point'
+            'transfer_type', 'items', 'origin_check_out_at', 'destination_point', 'partner_id'
         )
+
+    def validate_partner_id(self, value):
+        if value:
+            if not PartnerOrganization.objects.filter(agreements__status=Agreement.SIGNED, pk=value).exists() or \
+                    self.context['request'].user.partner.pk == value:
+                raise ValidationError(_('The provided partner is not eligible for a handover.'))
+        return value
 
     def validate_items(self, value):
         # Make sure that all the items belong to this partner and are in the inventory of this location
@@ -461,13 +470,21 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
         if not self.initial_data.get('proof_file'):
             raise ValidationError(_('The proof file is required.'))
 
-        if validated_data['transfer_type'] != models.Transfer.WASTAGE and not validated_data.get('destination_point'):
+        if validated_data['transfer_type'] not in [models.Transfer.WASTAGE, models.Transfer.HANDOVER] \
+                and not validated_data.get('destination_point'):
             raise ValidationError(_('Destination location is mandatory at checkout.'))
         elif 'destination_point' in validated_data:
             validated_data['destination_point_id'] = validated_data.pop('destination_point')
 
+        if self.validated_data['transfer_type'] == models.Transfer.HANDOVER:
+            partner_id = validated_data.pop('partner_id', None)
+            if not partner_id:
+                raise ValidationError(_('A Handover to a partner requires a partner id.'))
+        else:
+            partner_id = self.context['request'].user.profile.organization.partner.pk
+
         self.instance = models.Transfer(
-            partner_organization=self.context['request'].user.profile.organization.partner,
+            partner_organization_id=partner_id,
             origin_point=self.context['location'],
             checked_out_by=self.context['request'].user,
             **validated_data)

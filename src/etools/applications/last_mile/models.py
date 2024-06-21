@@ -98,6 +98,7 @@ class Transfer(TimeStampedModel, models.Model):
 
     DELIVERY = 'DELIVERY'
     DISTRIBUTION = 'DISTRIBUTION'
+    HANDOVER = 'HANDOVER'
     WASTAGE = 'WASTAGE'
 
     SHORT = 'SHORT'
@@ -110,6 +111,7 @@ class Transfer(TimeStampedModel, models.Model):
     TRANSFER_TYPE = (
         (DELIVERY, _('Delivery')),
         (DISTRIBUTION, _('Distribution')),
+        (HANDOVER, _('Handover')),
         (WASTAGE, _('Wastage'))
     )
     TRANSFER_SUBTYPE = (

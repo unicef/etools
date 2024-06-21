@@ -23,6 +23,8 @@ from etools.applications.last_mile import models, serializers
 from etools.applications.last_mile.filters import TransferFilter
 from etools.applications.last_mile.permissions import IsIPLMEditor
 from etools.applications.last_mile.tasks import notify_upload_waybill
+from etools.applications.partners.models import Agreement, PartnerOrganization
+from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.utils.pbi_auth import get_access_token, get_embed_token, get_embed_url, TokenRetrieveException
 
 
@@ -72,6 +74,18 @@ class PointOfInterestViewSet(POIQuerysetMixin, ModelViewSet):
             connection.schema_name, destination_point.pk, waybill_file.pk, waybill_url
         )
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class HandoverPartnerListViewSet(mixins.ListModelMixin, GenericViewSet):
+    serializer_class = MinimalPartnerOrganizationListSerializer
+    permission_classes = [IsIPLMEditor]
+    pagination_class = DynamicPageNumberPagination
+
+    filter_backends = (SearchFilter,)
+    search_fields = ('name',)
+
+    def get_queryset(self):
+        return PartnerOrganization.objects.filter(agreements__status=Agreement.SIGNED).values('id', 'name')
 
 
 class InventoryItemListView(POIQuerysetMixin, ListAPIView):
