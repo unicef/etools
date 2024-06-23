@@ -12,6 +12,7 @@ from unicef_attachments.serializers import AttachmentSerializerMixin
 from etools.applications.last_mile import models
 from etools.applications.last_mile.models import PartnerMaterial
 from etools.applications.last_mile.tasks import notify_wastage_transfer
+from etools.applications.partners.models import Agreement, PartnerOrganization
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.users.serializers import MinimalUserSerializer
 
@@ -209,6 +210,34 @@ class ItemCheckoutSerializer(ItemBaseSerializer):
         fields = ItemBaseSerializer.Meta.fields + ('wastage_type',)
 
 
+class ItemSplitSerializer(serializers.ModelSerializer):
+    quantities = serializers.ListSerializer(child=serializers.IntegerField(allow_null=False, required=True))
+
+    class Meta:
+        model = models.Item
+        fields = ('quantities',)
+
+    def validate_quantities(self, value):
+        if len(value) != 2 or self.instance.quantity != sum(value):
+            raise ValidationError(_('Incorrect split values.'))
+        return value
+
+    def save(self, **kwargs):
+        _item = models.Item(
+            transfer=self.instance.transfer,
+            material=self.instance.material,
+            quantity=self.validated_data['quantities'].pop(),
+            **model_to_dict(
+                self.instance,
+                exclude=['id', 'created', 'modified', 'transfer', 'material', 'transfers_history', 'quantity'])
+        )
+        _item.save()
+        _item.transfers_history.add(self.instance.transfer)
+
+        self.instance.quantity = self.validated_data['quantities'].pop()
+        self.instance.save(update_fields=['quantity'])
+
+
 class TransferSerializer(serializers.ModelSerializer):
     origin_point = PointOfInterestLightSerializer(read_only=True)
     destination_point = PointOfInterestLightSerializer(read_only=True)
@@ -233,7 +262,7 @@ class WaybillTransferSerializer(AttachmentSerializerMixin, serializers.ModelSeri
 
 
 class TransferBaseSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
-    name = serializers.CharField(required=False, allow_blank=False, allow_null=False,)
+    name = serializers.CharField(required=False, allow_blank=False, allow_null=False)
     proof_file = AttachmentSingleFileField(required=True, allow_null=False)
 
     class Meta:
@@ -361,12 +390,20 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
 
     origin_check_out_at = serializers.DateTimeField(required=True)
     destination_point = serializers.IntegerField(required=False)
+    partner_id = serializers.IntegerField(required=False, allow_null=False)
 
     class Meta(TransferBaseSerializer.Meta):
         model = models.Transfer
         fields = TransferBaseSerializer.Meta.fields + (
-            'transfer_type', 'items', 'origin_check_out_at', 'destination_point'
+            'transfer_type', 'items', 'origin_check_out_at', 'destination_point', 'partner_id'
         )
+
+    def validate_partner_id(self, value):
+        if value:
+            if not PartnerOrganization.objects.filter(agreements__status=Agreement.SIGNED, pk=value).exists() or \
+                    self.context['request'].user.partner.pk == value:
+                raise ValidationError(_('The provided partner is not eligible for a handover.'))
+        return value
 
     def validate_items(self, value):
         # Make sure that all the items belong to this partner and are in the inventory of this location
@@ -429,11 +466,25 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
     @transaction.atomic
     def create(self, validated_data):
         checkout_items = validated_data.pop('items')
-        if 'destination_point' in validated_data:
+
+        if not self.initial_data.get('proof_file'):
+            raise ValidationError(_('The proof file is required.'))
+
+        if validated_data['transfer_type'] not in [models.Transfer.WASTAGE, models.Transfer.HANDOVER] \
+                and not validated_data.get('destination_point'):
+            raise ValidationError(_('Destination location is mandatory at checkout.'))
+        elif 'destination_point' in validated_data:
             validated_data['destination_point_id'] = validated_data.pop('destination_point')
 
+        if self.validated_data['transfer_type'] == models.Transfer.HANDOVER:
+            partner_id = validated_data.pop('partner_id', None)
+            if not partner_id:
+                raise ValidationError(_('A Handover to a partner requires a partner id.'))
+        else:
+            partner_id = self.context['request'].user.profile.organization.partner.pk
+
         self.instance = models.Transfer(
-            partner_organization=self.context['request'].user.profile.organization.partner,
+            partner_organization_id=partner_id,
             origin_point=self.context['location'],
             checked_out_by=self.context['request'].user,
             **validated_data)
@@ -450,3 +501,20 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
             notify_wastage_transfer.delay(connection.schema_name, self.instance.pk)
 
         return self.instance
+
+
+class TransferEvidenceSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
+    comment = serializers.CharField(required=True, allow_blank=False, allow_null=False)
+    evidence_file = AttachmentSingleFileField(required=True, allow_null=False)
+
+    class Meta:
+        model = models.TransferEvidence
+        fields = ('comment', 'evidence_file')
+
+
+class TransferEvidenceListSerializer(TransferEvidenceSerializer):
+    user = MinimalUserSerializer()
+
+    class Meta(TransferEvidenceSerializer.Meta):
+        model = models.TransferEvidence
+        fields = TransferEvidenceSerializer.Meta.fields + ('id', 'user', 'created')
