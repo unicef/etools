@@ -218,7 +218,7 @@ class ItemSplitSerializer(serializers.ModelSerializer):
         fields = ('quantities',)
 
     def validate_quantities(self, value):
-        if len(value) != 2 or self.instance.quantity != sum(value):
+        if len(value) != 2 or self.instance.quantity != sum(value) or not all(value):
             raise ValidationError(_('Incorrect split values.'))
         return value
 
@@ -334,6 +334,9 @@ class TransferCheckinSerializer(TransferBaseSerializer):
     @transaction.atomic
     def update(self, instance, validated_data):
         checkin_items = validated_data.pop('items')
+
+        if instance.status == models.Transfer.COMPLETED:
+            raise ValidationError(_('The transfer was already checked-in.'))
 
         validated_data['status'] = models.Transfer.COMPLETED
         validated_data['checked_in_by'] = self.context.get('request').user
@@ -476,7 +479,7 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
         elif 'destination_point' in validated_data:
             validated_data['destination_point_id'] = validated_data.pop('destination_point')
 
-        if self.validated_data['transfer_type'] == models.Transfer.HANDOVER:
+        if validated_data['transfer_type'] == models.Transfer.HANDOVER:
             partner_id = validated_data.pop('partner_id', None)
             if not partner_id:
                 raise ValidationError(_('A Handover to a partner requires a partner id.'))

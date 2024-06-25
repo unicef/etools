@@ -244,6 +244,11 @@ class TestTransferView(BaseTenantTestCase):
 
         self.assertFalse(models.Transfer.objects.filter(transfer_type=models.Transfer.WASTAGE).exists())
 
+        # test new checkin of an already checked-in transfer
+        response = self.forced_auth_req('patch', url, user=self.partner_staff, data=checkin_data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('The transfer was already checked-in.', response.data)
+
     @override_settings(RUTF_MATERIALS=['1234'])
     def test_partial_checkin_with_short(self):
         item_1 = ItemFactory(quantity=11, transfer=self.incoming, material=self.material)
