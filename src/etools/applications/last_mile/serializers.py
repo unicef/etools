@@ -218,7 +218,7 @@ class ItemSplitSerializer(serializers.ModelSerializer):
         fields = ('quantities',)
 
     def validate_quantities(self, value):
-        if len(value) != 2 or self.instance.quantity != sum(value):
+        if len(value) != 2 or self.instance.quantity != sum(value) or not all(value):
             raise ValidationError(_('Incorrect split values.'))
         return value
 
@@ -268,6 +268,19 @@ class TransferBaseSerializer(AttachmentSerializerMixin, serializers.ModelSeriali
     class Meta:
         model = models.Transfer
         fields = ('name', 'comment', 'proof_file')
+
+    @staticmethod
+    def get_transfer_name(validated_data, transfer_type=None):
+        prefix_mapping = {
+            "HANDOVER": "HO",
+            "WASTAGE": "W",
+            "DELIVERY": "DW",
+            "DISTRIBUTION": "DD"
+
+        }
+        date = validated_data.get('origin_check_out_at') or validated_data.get('destination_check_in_at') or timezone.now()
+        transfer_type = validated_data.get("transfer_type") or transfer_type
+        return f'{prefix_mapping[transfer_type]} @ {date.strftime("%y-%m-%d")}-{int(date.timestamp()) % 100000}'
 
 
 class TransferCheckinSerializer(TransferBaseSerializer):
@@ -335,9 +348,14 @@ class TransferCheckinSerializer(TransferBaseSerializer):
     def update(self, instance, validated_data):
         checkin_items = validated_data.pop('items')
 
+        if instance.status == models.Transfer.COMPLETED:
+            raise ValidationError(_('The transfer was already checked-in.'))
+
         validated_data['status'] = models.Transfer.COMPLETED
         validated_data['checked_in_by'] = self.context.get('request').user
         validated_data["destination_point"] = self.context["location"]
+        if 'name' not in validated_data:
+            validated_data['name'] = self.get_transfer_name(validated_data, instance.transfer_type)
 
         if self.partial:
             orig_items_dict = {obj.id: obj for obj in instance.items.all()}
@@ -476,12 +494,15 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
         elif 'destination_point' in validated_data:
             validated_data['destination_point_id'] = validated_data.pop('destination_point')
 
-        if self.validated_data['transfer_type'] == models.Transfer.HANDOVER:
+        if validated_data['transfer_type'] == models.Transfer.HANDOVER:
             partner_id = validated_data.pop('partner_id', None)
             if not partner_id:
                 raise ValidationError(_('A Handover to a partner requires a partner id.'))
         else:
             partner_id = self.context['request'].user.profile.organization.partner.pk
+
+        if 'name' not in validated_data:
+            validated_data['name'] = self.get_transfer_name(validated_data)
 
         self.instance = models.Transfer(
             partner_organization_id=partner_id,
@@ -491,8 +512,6 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
 
         if self.instance.transfer_type == models.Transfer.WASTAGE:
             self.instance.status = models.Transfer.COMPLETED
-            checkout_datetime = validated_data['origin_check_out_at'] or timezone.now()
-            self.instance.name = f'W @ {checkout_datetime.strftime("%y-%m-%d")}'
 
         self.instance.save()
 
