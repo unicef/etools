@@ -159,7 +159,8 @@ class TestTransferView(BaseTenantTestCase):
         cls.hospital = PointOfInterestFactory(partner_organizations=[cls.partner], private=True, poi_type_id=3)
         cls.incoming = TransferFactory(
             partner_organization=cls.partner,
-            destination_point=cls.warehouse
+            destination_point=cls.warehouse,
+            transfer_type=models.Transfer.DELIVERY
         )
         cls.checked_in = TransferFactory(
             partner_organization=cls.partner,
@@ -244,6 +245,11 @@ class TestTransferView(BaseTenantTestCase):
 
         self.assertFalse(models.Transfer.objects.filter(transfer_type=models.Transfer.WASTAGE).exists())
 
+        # test new checkin of an already checked-in transfer
+        response = self.forced_auth_req('patch', url, user=self.partner_staff, data=checkin_data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('The transfer was already checked-in.', response.data)
+
     @override_settings(RUTF_MATERIALS=['1234'])
     def test_partial_checkin_with_short(self):
         item_1 = ItemFactory(quantity=11, transfer=self.incoming, material=self.material)
@@ -251,7 +257,6 @@ class TestTransferView(BaseTenantTestCase):
         item_3 = ItemFactory(quantity=33, transfer=self.incoming, material=self.material)
 
         checkin_data = {
-            "name": "checked in transfer",
             "comment": "",
             "proof_file": self.attachment.pk,
             "items": [
@@ -267,7 +272,8 @@ class TestTransferView(BaseTenantTestCase):
         self.incoming.refresh_from_db()
         self.assertEqual(self.incoming.status, models.Transfer.COMPLETED)
         self.assertIn(response.data['proof_file'], self.attachment.file.path)
-        self.assertEqual(self.incoming.name, checkin_data['name'])
+
+        self.assertIn(f'DW @ {checkin_data["destination_check_in_at"].strftime("%y-%m-%d")}', self.incoming.name)
         self.assertEqual(self.incoming.items.count(), len(response.data['items']))
         self.assertEqual(self.incoming.items.get(pk=item_1.pk).quantity, 11)
         self.assertEqual(self.incoming.items.get(pk=item_3.pk).quantity, 3)
@@ -502,6 +508,7 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(self.checked_in.items.count(), 2)
         self.assertEqual(self.checked_in.items.get(pk=item_1.pk).quantity, 2)
         self.assertEqual(self.checked_in.items.get(pk=item_2.pk).quantity, 22)
+        self.assertIn(f'W @ {checkout_data["origin_check_out_at"].strftime("%y-%m-%d")}', wastage_transfer.name)
 
     def test_checkout_handover(self):
         item_1 = ItemFactory(quantity=11, transfer=self.checked_in)
@@ -536,6 +543,7 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(self.checked_in.items.count(), 2)
         self.assertEqual(self.checked_in.items.get(pk=item_1.pk).quantity, 2)
         self.assertEqual(self.checked_in.items.get(pk=item_2.pk).quantity, 22)
+        self.assertIn(f'HO @ {checkout_data["origin_check_out_at"].strftime("%y-%m-%d")}', handover_transfer.name)
 
     def test_checkout_handover_partner_validation(self):
         item_1 = ItemFactory(quantity=11, transfer=self.checked_in)
