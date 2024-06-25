@@ -262,7 +262,7 @@ class WaybillTransferSerializer(AttachmentSerializerMixin, serializers.ModelSeri
 
 
 class TransferBaseSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
-    name = serializers.CharField(required=False, allow_blank=False, allow_null=False)
+    name = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     proof_file = AttachmentSingleFileField(required=True, allow_null=False)
 
     class Meta:
@@ -354,7 +354,7 @@ class TransferCheckinSerializer(TransferBaseSerializer):
         validated_data['status'] = models.Transfer.COMPLETED
         validated_data['checked_in_by'] = self.context.get('request').user
         validated_data["destination_point"] = self.context["location"]
-        if 'name' not in validated_data:
+        if not instance.name and 'name' not in validated_data:
             validated_data['name'] = self.get_transfer_name(validated_data, instance.transfer_type)
 
         if self.partial:
