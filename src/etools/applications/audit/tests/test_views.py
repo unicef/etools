@@ -331,7 +331,8 @@ class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, BaseTenantT
         )
 
     def test_focal_point_list(self):
-        self._test_list(self.unicef_focal_point, [self.engagement, self.second_engagement])
+        with self.assertNumQueries(13):
+            self._test_list(self.unicef_focal_point, [self.engagement, self.second_engagement])
 
     def test_engagement_staff_list(self):
         self._test_list(self.auditor, [self.engagement])
@@ -1047,12 +1048,12 @@ class TestStaffSpotCheck(AuditTestCaseMixin, BaseTenantTestCase):
         inactive_unicef_focal_point.realms.update(is_active=False)
 
         spot_check = SpotCheckFactory(staff_members=active_staff_list + [inactive_unicef_focal_point])
-
-        response = self.forced_auth_req(
-            'get',
-            reverse('audit:staff-spot-checks-detail', args=[spot_check.pk]),
-            user=self.unicef_focal_point,
-        )
+        with self.assertNumQueries(28):
+            response = self.forced_auth_req(
+                'get',
+                reverse('audit:staff-spot-checks-detail', args=[spot_check.pk]),
+                user=self.unicef_focal_point,
+            )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['staff_members']), spot_check.staff_members.count())
         self.assertEqual(
@@ -1067,12 +1068,12 @@ class TestStaffSpotCheck(AuditTestCaseMixin, BaseTenantTestCase):
     def test_list(self):
         SpotCheckFactory()
         staff_spot_check = StaffSpotCheckFactory()
-
-        response = self.forced_auth_req(
-            'get',
-            reverse('audit:staff-spot-checks-list'),
-            user=self.unicef_focal_point
-        )
+        with self.assertNumQueries(11):
+            response = self.forced_auth_req(
+                'get',
+                reverse('audit:staff-spot-checks-list'),
+                user=self.unicef_focal_point
+            )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 1)
