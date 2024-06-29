@@ -5,11 +5,12 @@ from django.db import connection
 from django.db.models import CharField, OuterRef, Prefetch, Q, Subquery
 from django.shortcuts import get_object_or_404
 from django.utils.functional import cached_property
+from django.utils.translation import gettext as _
 
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, status
 from rest_framework.decorators import action
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
@@ -21,6 +22,8 @@ from etools.applications.last_mile import models, serializers
 from etools.applications.last_mile.filters import TransferFilter
 from etools.applications.last_mile.permissions import IsIPLMEditor
 from etools.applications.last_mile.tasks import notify_upload_waybill
+from etools.applications.partners.models import Agreement, PartnerOrganization
+from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.utils.pbi_auth import get_access_token, get_embed_token, get_embed_url, TokenRetrieveException
 
 
@@ -70,6 +73,18 @@ class PointOfInterestViewSet(POIQuerysetMixin, ModelViewSet):
             connection.schema_name, destination_point.pk, waybill_file.pk, waybill_url
         )
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class HandoverPartnerListViewSet(mixins.ListModelMixin, GenericViewSet):
+    serializer_class = MinimalPartnerOrganizationListSerializer
+    permission_classes = [IsIPLMEditor]
+    pagination_class = DynamicPageNumberPagination
+
+    filter_backends = (SearchFilter,)
+    search_fields = ('name',)
+
+    def get_queryset(self):
+        return PartnerOrganization.objects.filter(agreements__status=Agreement.SIGNED).values('id', 'name')
 
 
 class InventoryItemListView(POIQuerysetMixin, ListAPIView):
@@ -305,6 +320,32 @@ class TransferViewSet(
 
         return Response(serializers.TransferSerializer(serializer.instance).data, status=status.HTTP_200_OK)
 
+    @action(detail=True, methods=['post'], url_path='upload-evidence',
+            serializer_class=serializers.TransferEvidenceSerializer)
+    def upload_evidence(self, request, **kwargs):
+        transfer = self.get_object()
+        if transfer.transfer_type != models.Transfer.WASTAGE:
+            raise ValidationError(_('Evidence files are only for wastage transfers.'))
+
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(transfer=transfer, user=request.user)
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=True, methods=['get'], serializer_class=serializers.TransferEvidenceListSerializer)
+    def evidence(self, request, **kwargs):
+        transfer = self.get_object()
+        if transfer.transfer_type != models.Transfer.WASTAGE:
+            raise ValidationError(_('Evidence files are only for wastage transfers.'))
+        qs = transfer.transfer_evidences.all()
+        page = self.paginate_queryset(qs)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        return Response(self.serializer_class(qs, many=True).data)
+
 
 class ItemUpdateViewSet(mixins.UpdateModelMixin, mixins.RetrieveModelMixin, GenericViewSet):
     permission_classes = [IsIPLMEditor]
@@ -317,6 +358,16 @@ class ItemUpdateViewSet(mixins.UpdateModelMixin, mixins.RetrieveModelMixin, Gene
         if not partner:
             return super().get_queryset().none()
         return super().get_queryset().filter(transfer__partner_organization=partner)
+
+    @action(detail=True, methods=['post'], serializer_class=serializers.ItemSplitSerializer)
+    def split(self, request, **kwargs):
+        item = self.get_object()
+
+        serializer = self.serializer_class(instance=item, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(status=status.HTTP_200_OK)
 
 
 class PowerBIDataView(APIView):

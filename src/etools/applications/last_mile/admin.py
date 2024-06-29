@@ -27,6 +27,11 @@ class WaybillTransferAttachmentInline(AttachmentSingleInline):
     code = 'waybill_file'
 
 
+class TransferEvidenceAttachmentInline(AttachmentSingleInline):
+    verbose_name_plural = "Transfer Evidence File"
+    code = 'transfer_evidence'
+
+
 @admin.register(models.PointOfInterest)
 class PointOfInterestAdmin(XLSXImportMixin, admin.ModelAdmin):
     list_display = ('name', 'parent', 'poi_type', 'p_code')
@@ -132,7 +137,7 @@ class TransferAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
     search_fields = ('name', 'status')
     raw_id_fields = ('partner_organization', 'checked_in_by', 'checked_out_by',
                      'origin_point', 'destination_point', 'origin_transfer')
-    inlines = (ProofTransferAttachmentInline, WaybillTransferAttachmentInline, ItemInline)
+    inlines = (ProofTransferAttachmentInline, ItemInline)
 
     def get_queryset(self, request):
         qs = super(TransferAdmin, self).get_queryset(request)\
@@ -305,6 +310,12 @@ class ItemAdmin(XLSXImportMixin, admin.ModelAdmin):
             models.Item.objects.update_or_create(
                 **imp_r
             )
+
+
+@admin.register(models.TransferEvidence)
+class TransferEvidenceAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
+    raw_id_fields = ('transfer', 'user')
+    inlines = [TransferEvidenceAttachmentInline]
 
 
 admin.site.register(models.PointOfInterestType)

@@ -8,6 +8,7 @@ from etools.applications.last_mile import views, views_ext
 app_name = 'last_mile'
 
 root_api = routers.SimpleRouter()
+root_api.register(r'partners', views.HandoverPartnerListViewSet, basename='partners')
 root_api.register(r'points-of-interest', views.PointOfInterestViewSet, basename='pois')
 root_api.register(r'poi-types', views.PointOfInterestTypeViewSet, basename='poi-types')
 root_api.register(r'items', views.ItemUpdateViewSet, basename='item-update')
