@@ -111,8 +111,7 @@ class InventoryItemListView(POIQuerysetMixin, ListAPIView):
                 .filter(transfer__partner_organization=partner,
                         transfer__status=models.Transfer.COMPLETED,
                         transfer__destination_point=poi.pk)\
-                .exclude(transfer__transfer_type=models.Transfer.WASTAGE)\
-                .order_by('created', '-id')
+                .exclude(transfer__transfer_type=models.Transfer.WASTAGE)
 
             qs = qs.select_related('transfer',
                                    'material',
