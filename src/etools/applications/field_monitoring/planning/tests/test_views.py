@@ -429,8 +429,8 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         self._test_update(self.pme, activity, {'status': 'report_finalization',
                                                'report_reject_reason': 'just because'})
         activity.refresh_from_db()
-        self.assertEquals(activity.status, 'report_finalization')
-        self.assertEquals(activity.report_reject_reason, 'just because')
+        self.assertEqual(activity.status, 'report_finalization')
+        self.assertEqual(activity.report_reject_reason, 'just because')
 
     def test_reject_as_tpm(self):
         tpm_partner = SimpleTPMPartnerFactory()
@@ -584,7 +584,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         response = self._test_update(self.fm_user, activity, {'offices': [OfficeFactory().id, ]})
         self.assertIsNotNone(response.data['offices'])
         activity.refresh_from_db()
-        self.assertNotEquals(activity.offices.count(), 0)
+        self.assertNotEqual(activity.offices.count(), 0)
 
         permissions = response.data['permissions']
         self.assertTrue(permissions['view']['offices'])

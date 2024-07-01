@@ -99,7 +99,7 @@ class LocationSitesViewSet(FMBaseViewSet, viewsets.ModelViewSet):
     queryset = LocationSite.objects.prefetch_related('parent').order_by('name')
     serializer_class = LocationSiteSerializer
     filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
-    filter_fields = ('is_active',)
+    filterset_fields = ('is_active',)
     ordering_fields = (
         'parent__admin_level', 'parent__name',
         'is_active', 'name',
@@ -147,7 +147,7 @@ class FMLocationsViewSet(FMBaseViewSet, mixins.ListModelMixin, viewsets.GenericV
     queryset = Location.objects.all_with_geom().filter(is_active=True)
     serializer_class = LocationFullSerializer
     filter_backends = (DjangoFilterBackend, SearchFilter)
-    filter_fields = ('level', 'parent')
+    filterset_fields = ('level', 'parent')
     search_fields = ('name', 'admin_level_name')
 
     @action(methods=['get'], detail=True)
@@ -168,7 +168,7 @@ class LogIssuesViewSet(FMBaseViewSet, viewsets.ModelViewSet):
         DjangoFilterBackend, LogIssueNameOrderingFilter, LogIssueRelatedToTypeFilter,
         LogIssueMonitoringActivityFilter, OrderingFilter
     )
-    filter_fields = ({
+    filterset_fields = ({
         field: ['exact', 'in'] for field in [
             'cp_output', 'partner', 'location', 'location_site', 'status'
         ]
@@ -225,7 +225,7 @@ class QuestionsViewSet(
     queryset = Question.objects.prefetch_related('options').order_by('order', 'text')
     serializer_class = QuestionSerializer
     filter_backends = (DjangoFilterBackend, OrderingFilter)
-    filter_class = QuestionsFilterSet
+    filterset_class = QuestionsFilterSet
     ordering_fields = (
         'text', 'level', 'answer_type', 'category__name', 'is_active', 'is_hact'
     )

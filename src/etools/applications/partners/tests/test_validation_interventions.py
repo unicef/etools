@@ -85,7 +85,7 @@ class TestTransitionToClosed(BaseTenantTestCase):
         intervention = InterventionFactory(
             end=datetime.date.today() + datetime.timedelta(days=2)
         )
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
                 TransitionError,
                 "End date is in the future"
         ):
@@ -105,7 +105,7 @@ class TestTransitionToClosed(BaseTenantTestCase):
             outstanding_amt_local=5.00,
             outstanding_amt=0.00
         )
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
                 TransitionError,
                 'Total FR amount needs to equal total actual amount, and '
                 'Total Outstanding DCTs need to equal to 0'
@@ -131,7 +131,7 @@ class TestTransitionToClosed(BaseTenantTestCase):
             outstanding_amt_local=0.00,
             outstanding_amt=0.00,
         )
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
                 TransitionError,
                 'Total FR amount needs to equal total actual amount, and '
                 'Total Outstanding DCTs need to equal to 0'
@@ -157,7 +157,7 @@ class TestTransitionToClosed(BaseTenantTestCase):
             outstanding_amt=20.00,
             completed_flag=True,
         )
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
                 TransitionError,
                 'Total Outstanding DCTs need to equal to 0'
         ):
@@ -207,7 +207,7 @@ class TestTransitionToClosed(BaseTenantTestCase):
         self.intervention.final_review_approved = False
         self.intervention.save()
 
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
                 TransitionError,
                 'Final Review must be approved'
         ):
@@ -324,7 +324,7 @@ class TestTransitionToSigned(BaseTenantTestCase):
                     document_type=d,
                     agreement=agreement,
                 )
-                with self.assertRaisesRegexp(
+                with self.assertRaisesRegex(
                         TransitionError,
                         "The PCA related to this record is Draft, Suspended or Terminated."
                 ):
@@ -363,7 +363,7 @@ class TestTransitionToActive(BaseTenantTestCase):
                 document_type=d,
                 agreement=agreement,
             )
-            with self.assertRaisesRegexp(
+            with self.assertRaisesRegex(
                     TransitionError,
                     "PD cannot be activated if"
             ):
@@ -783,7 +783,7 @@ class TestSSFAgreementHasNoOtherIntervention(BaseTenantTestCase):
     def test_agreement_not_ssfa(self):
         """If document type SSFA, and agreement is not then invalid"""
         self.agreement.agreement_type = Agreement.MOU
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
                 BasicValidationError,
                 "Agreement selected is not of type SSFA"
         ):
@@ -827,7 +827,7 @@ class TestInterventionValid(BaseTenantTestCase):
                 "etools.applications.partners.validation.interventions.check_rigid_fields",
                 mock_check
         ):
-            with self.assertRaisesRegexp(
+            with self.assertRaisesRegex(
                     StateValidationError,
                     "Cannot change fields while"
             ):
@@ -836,7 +836,7 @@ class TestInterventionValid(BaseTenantTestCase):
     def test_state_signed_valid_invalid(self):
         """Invalid if unicef budget is 0"""
         self.intervention.total_unicef_budget = 0
-        with self.assertRaisesRegexp(StateValidationError, "UNICEF Cash"):
+        with self.assertRaisesRegex(StateValidationError, "UNICEF Cash"):
             self.validator.state_signed_valid(self.intervention)
 
     def test_state_signed_valid(self):
@@ -851,7 +851,7 @@ class TestInterventionValid(BaseTenantTestCase):
         """Invalid if start is after today"""
         self.intervention.total_unicef_budget = 10
         self.intervention.start = self.future_date
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
                 StateValidationError,
                 "Today is not after the start date"
         ):
@@ -861,7 +861,7 @@ class TestInterventionValid(BaseTenantTestCase):
         """Invalid if unicef budget is 0"""
         self.intervention.total_unicef_budget = 0
         self.intervention.start = datetime.date(2001, 1, 1)
-        with self.assertRaisesRegexp(StateValidationError, "UNICEF Cash"):
+        with self.assertRaisesRegex(StateValidationError, "UNICEF Cash"):
             self.validator.state_active_valid(self.intervention)
 
     def test_state_active_valid(self):
@@ -875,7 +875,7 @@ class TestInterventionValid(BaseTenantTestCase):
     def test_state_ended_valid_invalid(self):
         """Invalid if end date is after today"""
         self.intervention.end = self.future_date
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
                 StateValidationError,
                 "Today is not after the end date"
         ):
@@ -894,7 +894,7 @@ class TestInterventionValid(BaseTenantTestCase):
         loc = LocationFactory()
         self.applied_indicator.locations.add(loc)
 
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
                 BasicValidationError,
                 'The following locations have been selected on the PD/SPD indicators and '
                 'cannot be removed without removing them from the indicators first'
@@ -912,7 +912,7 @@ class TestInterventionValid(BaseTenantTestCase):
     def test_sections_invalid(self):
         self.applied_indicator.section = SectionFactory()
         self.applied_indicator.save(update_fields=['section'])
-        with self.assertRaisesRegexp(
+        with self.assertRaisesRegex(
                 BasicValidationError,
                 'The following sections have been selected on the PD/SPD indicators and cannot be removed'
         ):

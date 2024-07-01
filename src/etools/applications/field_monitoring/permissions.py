@@ -1,6 +1,6 @@
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 
-from etools.applications.field_monitoring.groups import FMUser
+from etools.applications.field_monitoring.groups import FMUser, MonitoringVisitApprover
 from etools.applications.field_monitoring.planning.activity_validation.permissions import ActivityPermissions
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
 from etools.applications.tpm.models import PME
@@ -48,7 +48,7 @@ class IsParentAction(SimplePermission):
 
 class IsObjectAction(SimplePermission):
     def has_access(self, request, view, instance=None):
-        return view.detail
+        return (view.lookup_url_kwarg or view.lookup_field) in view.kwargs
 
 
 IsListAction = ~IsObjectAction
@@ -60,6 +60,10 @@ class IsFMUser(UserInGroup):
 
 class IsPME(UserInGroup):
     group = PME.name
+
+
+class IsMonitoringVisitApprover(UserInGroup):
+    group = MonitoringVisitApprover.name
 
 
 IsFieldMonitor = IsFMUser | IsPME

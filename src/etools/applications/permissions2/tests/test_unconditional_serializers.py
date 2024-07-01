@@ -48,7 +48,7 @@ class SerializersTestCase(TestCase):
 
     def test_representation(self):
         serializer = ParentSerializer(self.parent)
-        self.assertDictContainsSubset({
+        expected_dict = {
             'field1': 1,
             'children1': [{
                 'id': self.children1[0].id,
@@ -57,7 +57,8 @@ class SerializersTestCase(TestCase):
                 'id': self.children1[1].id,
                 'field1': 5,
             }]
-        }, serializer.data)
+        }
+        self.assertEqual(serializer.data, serializer.data | expected_dict)
 
     def test_creation(self):
         serializer = ParentSerializer(data={

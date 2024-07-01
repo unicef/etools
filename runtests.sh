@@ -1,6 +1,8 @@
 #!/usr/bin/env sh
 set -ex
 
+export PATH=/etools/__pypackages__/3.12/bin/:$PATH
+
 # If set, use DJANGO_SETTINGS_MODULE from environment, except that we never want to use production settings
 # for tests. In that case, fall back to local settings.
 if [[ $DJANGO_SETTINGS_MODULE = '' || $DJANGO_SETTINGS_MODULE = etools.config.settings.production ]] ; then

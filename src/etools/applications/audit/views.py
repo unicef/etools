@@ -137,7 +137,7 @@ class AuditUsersViewSet(generics.ListAPIView):
 
     permission_classes = (IsAuthenticated, )
     filter_backends = (SearchFilter, DjangoFilterBackend)
-    filter_fields = ('email',)
+    filterset_fields = ('email',)
     search_fields = ('email',)
     queryset = get_user_model().objects.all().select_related('profile', 'profile__organization')
     serializer_class = AuditUserSerializer
@@ -180,7 +180,7 @@ class AuditorFirmViewSet(
     filter_backends = (SearchFilter, OrderingFilter, DjangoFilterBackend)
     search_fields = ('name', 'email')
     ordering_fields = ('name', )
-    filter_fields = ('country', 'unicef_users_allowed')
+    filterset_fields = ('country', 'unicef_users_allowed')
 
     def get_queryset(self):
         queryset = super().get_queryset().select_related('organization')
@@ -236,7 +236,7 @@ class PurchaseOrderViewSet(
     serializer_class = PurchaseOrderSerializer
     permission_classes = (IsAuthenticated, )
     filter_backends = (DjangoFilterBackend, )
-    filter_fields = ('auditor_firm__unicef_users_allowed', )
+    filterset_fields = ('auditor_firm__unicef_users_allowed', )
 
     @action(detail=False, methods=['get'], url_path='sync/(?P<order_number>[^/]+)')
     def sync(self, request, *args, **kwargs):

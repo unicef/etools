@@ -444,9 +444,9 @@ class TestModelExport(BaseTenantTestCase):
         deleted_flag = "Yes" if self.partner.deleted_flag else "No"
         blocked = "Yes" if self.partner.blocked else "No"
 
-        test_option = [e for e in dataset if e[0] == f'\ufeff{self.partner.vendor_number}'][0]
+        test_option = [e for e in dataset if e[0] == f'{self.partner.vendor_number}'][0]
         self.assertEqual(test_option, (
-            f'\ufeff{self.partner.vendor_number}',
+            f'{self.partner.vendor_number}',
             str(self.partner.name),
             self.partner.short_name,
             self.partner.alternate_name,

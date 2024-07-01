@@ -101,7 +101,7 @@ class BaseRequiredFieldsCheck(BaseTransitionCheck):
                 if isinstance(value, models.Manager):
                     value = value.all()
 
-                if isinstance(value, collections.Iterable) and len(value) == 0:
+                if isinstance(value, collections.abc.Iterable) and len(value) == 0:
                     errors[field] = _('This field is required.')
                     continue
 

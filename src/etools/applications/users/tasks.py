@@ -105,7 +105,7 @@ class AzureUserMapper:
         """
 
         field = obj._meta.get_field(attr)
-        if type(value) == list:
+        if isinstance(value, list):
             value = '- '.join([str(val) for val in value])
         if field.get_internal_type() == "CharField" and value and len(value) > field.max_length:
             cleaned_value = value[:field.max_length]

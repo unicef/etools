@@ -42,3 +42,29 @@ def lock_request(view_func):
         return response
 
     return wrapper
+
+
+# Helper decorator to cache the api keys
+def cache_result(timeout, key=None):
+    def decorator_cache(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            nonlocal key
+            if key is None:
+                # Generate a default key if no key is provided
+                key = f"{func.__name__}_" + "_".join(str(arg) for arg in args) + "_"
+                key += "_".join(f"{k}_{v}" for k, v in kwargs.items())
+
+            # Try to get cached result
+            result = cache.get(key)
+            if result is not None:
+                return result
+
+            # Execute the function and cache its result
+            result = func(*args, **kwargs)
+            cache.set(key, result, timeout=timeout)
+            return result
+
+        return wrapper
+
+    return decorator_cache

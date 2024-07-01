@@ -62,7 +62,7 @@ class eToolsLocationSynchronizer(LocationSynchronizer):
         logging.info(f'Batch size {batch_size}')
         for idx in range(0, len(rows), batch_size):
             batch = rows[idx:idx + batch_size]
-            logging.info(f'processing batch {idx+1}')
+            logging.info(f'processing batch {idx + 1}')
             batch = list(batch)
             indexed_batch = {item[self.carto.pcode_col]: item for item in batch}
             # first get all the pcodes intended to be updated from the rows

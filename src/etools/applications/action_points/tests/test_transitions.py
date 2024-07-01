@@ -42,20 +42,20 @@ class TestActionPointsTransitionConditions(ActionPointTransitionTestCase):
         action_point = ActionPointFactory(status='open')
 
         response = self._do_transition(action_point, 'complete', self.pme_user)
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('comments', response.data)
 
         action_point = self._refresh_instance(action_point)
-        self.assertEquals(action_point.status, 'open')
+        self.assertEqual(action_point.status, 'open')
 
     def test_complete_success(self):
         action_point = ActionPointFactory(status='pre_completed')
 
         response = self._do_transition(action_point, 'complete', self.pme_user)
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         action_point = self._refresh_instance(action_point)
-        self.assertEquals(action_point.status, 'completed')
+        self.assertEqual(action_point.status, 'completed')
 
 
 class ActionPointTransitionPermissionsTestCase(TransitionPermissionsTestCaseMixin, ActionPointTransitionTestCase):

@@ -202,7 +202,7 @@ class TestGisLocationViews(BaseTenantTestCase):
         """
         Assert common fundamentals about the response.
         """
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         if not expected_keys:
             expected_keys = ["features", "type"]
@@ -218,10 +218,10 @@ class TestGisLocationViews(BaseTenantTestCase):
 
     def test_no_permission(self):
         response = self.forced_auth_req('get', reverse("management_gis:locations-gis-geom-list"), user=UserFactory())
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
         response = self.forced_auth_req('get', reverse("management_gis:locations-gis-in-use"), user=UserFactory())
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_invalid_geoformat(self):
         url = reverse("management_gis:locations-gis-geom-list")

@@ -264,7 +264,7 @@ class UserAdminPlus(XLSXImportMixin, RestrictedEditAdminMixin, ExtraUrlMixin, Us
                 user_obj.profile.organization = organization
                 user_obj.profile.job_title = job_title
                 user_obj.profile.country = connection.tenant
-                user_obj.profile.save(update_fields=['organization', 'job_title', 'country_override'])
+                user_obj.profile.save(update_fields=['organization', 'job_title', 'country'])
 
             with temporary_disconnect_signal(post_save, sync_realms_to_prp_on_update, Realm):
                 Realm.objects.update_or_create(

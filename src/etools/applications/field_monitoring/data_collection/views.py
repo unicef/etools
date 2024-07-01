@@ -166,7 +166,7 @@ class ActivityQuestionsViewSet(
     )
     serializer_class = ActivityQuestionSerializer
     filter_backends = (DjangoFilterBackend,)
-    filter_fields = ('is_enabled',)
+    filterset_fields = ('is_enabled',)
 
 
 class ActivityMethodsViewSet(
@@ -196,7 +196,7 @@ class ChecklistsViewSet(
     queryset = StartedChecklist.objects.prefetch_related('author')
     serializer_class = ChecklistSerializer
     filter_backend = (DjangoFilterBackend,)
-    filter_fields = ('author',)
+    filterset_fields = ('author',)
 
     def perform_create(self, serializer):
         serializer.save(monitoring_activity=self.get_parent_object())

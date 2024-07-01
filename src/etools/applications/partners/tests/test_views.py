@@ -217,7 +217,7 @@ class TestAPIPartnerOrganizationListView(BaseTenantTestCase):
         view_info = resolve(self.url)
         request = factory.get(self.url)
         response = view_info.func(request)
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_group_permission(self):
         """Ensure a non-staff user in the correct group has access"""
@@ -2300,8 +2300,8 @@ class TestPartnerOrganizationDashboardAPIView(BaseTenantTestCase):
         self.assertEqual(self.record['action_points'], 6)
 
     def test_no_recent_programmatic_visit(self):
-        self.assertEquals(self.record['last_pv_date'], datetime.date.today() - datetime.timedelta(200))
-        self.assertEquals(self.record['days_last_pv'], 200)
+        self.assertEqual(self.record['last_pv_date'], datetime.date.today() - datetime.timedelta(200))
+        self.assertEqual(self.record['days_last_pv'], 200)
         self.assertTrue(self.record['alert_no_recent_pv'])
         self.assertFalse(self.record['alert_no_pv'])
         self.assertTrue(self.record['vendor_number'])

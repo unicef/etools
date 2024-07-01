@@ -218,7 +218,7 @@ class TestHactGraphAPIView(TestHactBaseAPIView):
         view_info = resolve(self.url)
         request = factory.get(self.url)
         response = view_info.func(request)
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_get(self):
         response = self.forced_auth_req("get", self.url, user=self.unicef_user)

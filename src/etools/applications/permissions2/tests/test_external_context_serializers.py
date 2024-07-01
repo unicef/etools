@@ -47,7 +47,7 @@ class SerializersTestCase(TestCase):
 
     def test_representation(self):
         serializer = ParentSerializer(self.parent)
-        self.assertDictContainsSubset({
+        subset_dict = {
             'field1': 1,
             'children1': [{
                 'id': self.children1[0].id,
@@ -56,10 +56,12 @@ class SerializersTestCase(TestCase):
                 'id': self.children1[1].id,
                 'field1': 5,
             }]
-        }, serializer.data)
+        }
+        self.assertTrue(all(item in serializer.data.items() for item in subset_dict.items()))
 
         serializer = ParentSerializer(self.parent, context={'permission_context': ['user.group="PME"']})
-        self.assertDictContainsSubset({
+
+        subset_dict2 = {
             'field1': 1,
             'field2': 2,
             'children1': [{
@@ -71,7 +73,8 @@ class SerializersTestCase(TestCase):
                 'field1': 5,
                 'field2': 6,
             }]
-        }, serializer.data)
+        }
+        self.assertTrue(all(item in serializer.data.items() for item in subset_dict2.items()))
 
     def test_creation(self):
         serializer = ParentSerializer(data={

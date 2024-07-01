@@ -758,7 +758,7 @@ class TestPartnerOrganizationDetailSerializer(BaseTenantTestCase):
         ])
         self.assertNotEqual(data['planned_engagement']['spot_check_planned_q1'], '')
         # active & inactive partner staff members
-        self.assertEquals(len(data['staff_members']), 2)
+        self.assertEqual(len(data['staff_members']), 2)
         self.assertCountEqual(data['staff_members'][0].keys(), [
             'active', 'created', 'email', 'first_name', 'id',
             'last_name', 'modified', 'phone', 'title', 'has_active_realm'
