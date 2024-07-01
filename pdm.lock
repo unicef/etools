@@ -5,7 +5,7 @@
 groups = ["default", "dev"]
 strategy = ["cross_platform", "inherit_metadata"]
 lock_version = "4.4.1"
-content_hash = "sha256:eb5f01be412e61ff9512605fcf2ca5b4581a5efa79cbfe86ed2c72728a82cc09"
+content_hash = "sha256:e207b6303f53ecb8480812790e62669b0cf71d4603e24638d88eca1e5763da1b"
 
 [[package]]
 name = "alabaster"
@@ -2379,26 +2379,27 @@ files = [
 
 [[package]]
 name = "social-auth-app-django"
-version = "5.1.0"
-requires_python = ">=3.7"
+version = "5.4.1"
+requires_python = ">=3.8"
 summary = "Python Social Authentication, Django integration."
 groups = ["default"]
 dependencies = [
-    "social-auth-core>=4.1.0",
+    "Django>=3.2",
+    "social-auth-core>=4.4.1",
 ]
 files = [
-    {file = "social-auth-app-django-5.1.0.tar.gz", hash = "sha256:fdf1dc6bcb8b457001d88d2279f637bc9955f1aedf750c627784bb5104601b1c"},
-    {file = "social_auth_app_django-5.1.0-py3-none-any.whl", hash = "sha256:e4e9eb2c8c1258f443d4f1c04cb6693c0303e8ee2fa0981ba1b371546195a939"},
+    {file = "social-auth-app-django-5.4.1.tar.gz", hash = "sha256:2a43cde559dd34fdc7132417b6c52c780fa99ec2332dee9f405b4763f371c367"},
+    {file = "social_auth_app_django-5.4.1-py3-none-any.whl", hash = "sha256:7519f186c63c50f2d364457b236f051338d194bcface55e318a6a705c5213477"},
 ]
 
 [[package]]
 name = "social-auth-core"
-version = "4.1.0"
-requires_python = ">=3.6"
+version = "4.5.4"
+requires_python = ">=3.8"
 summary = "Python social authentication made simple."
 groups = ["default"]
 dependencies = [
-    "PyJWT>=2.0.0",
+    "PyJWT>=2.7.0",
     "cryptography>=1.4",
     "defusedxml>=0.5.0rc1",
     "oauthlib>=1.0.3",
@@ -2407,24 +2408,24 @@ dependencies = [
     "requests>=2.9.1",
 ]
 files = [
-    {file = "social-auth-core-4.1.0.tar.gz", hash = "sha256:5ab43b3b15dce5f059db69cc3082c216574739f0edbc98629c8c6e8769c67eb4"},
-    {file = "social_auth_core-4.1.0-py3-none-any.whl", hash = "sha256:983b53167ac56e7ba4909db555602a6e7a98c97ca47183bb222eb85ba627bf2b"},
+    {file = "social-auth-core-4.5.4.tar.gz", hash = "sha256:d3dbeb0999ffd0e68aa4bd73f2ac698a18133fd11b3fc890e1366f18c8889fac"},
+    {file = "social_auth_core-4.5.4-py3-none-any.whl", hash = "sha256:33cf970a623c442376f9d4a86fb187579e4438649daa5b5be993d05e74d7b2db"},
 ]
 
 [[package]]
 name = "social-auth-core"
-version = "4.1.0"
+version = "4.5.4"
 extras = ["azuread"]
-requires_python = ">=3.6"
+requires_python = ">=3.8"
 summary = "Python social authentication made simple."
 groups = ["default"]
 dependencies = [
     "cryptography>=2.1.1",
-    "social-auth-core==4.1",
+    "social-auth-core==4.5.4",
 ]
 files = [
-    {file = "social-auth-core-4.1.0.tar.gz", hash = "sha256:5ab43b3b15dce5f059db69cc3082c216574739f0edbc98629c8c6e8769c67eb4"},
-    {file = "social_auth_core-4.1.0-py3-none-any.whl", hash = "sha256:983b53167ac56e7ba4909db555602a6e7a98c97ca47183bb222eb85ba627bf2b"},
+    {file = "social-auth-core-4.5.4.tar.gz", hash = "sha256:d3dbeb0999ffd0e68aa4bd73f2ac698a18133fd11b3fc890e1366f18c8889fac"},
+    {file = "social_auth_core-4.5.4-py3-none-any.whl", hash = "sha256:33cf970a623c442376f9d4a86fb187579e4438649daa5b5be993d05e74d7b2db"},
 ]
 
 [[package]]

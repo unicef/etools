@@ -12,7 +12,7 @@ fi
 
 # Ensure there are no errors.
 python -W ignore manage.py check
-#python -W ignore manage.py makemigrations --dry-run --check
+python -W ignore manage.py makemigrations --dry-run --check
 
 # Ensure translations are up-to-date.
 cwd=$(pwd)
