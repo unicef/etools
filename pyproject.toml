@@ -77,6 +77,7 @@ dependencies = [
     "msal",
     "gdal==3.8.5",
     "jsonschema>=4.22.0",
+    "setuptools>=70.1.1",
 ]
 requires-python = ">=3.12"
 readme = "README.md"
