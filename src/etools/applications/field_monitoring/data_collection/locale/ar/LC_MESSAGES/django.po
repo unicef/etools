@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-03-26 09:08+0000\n"
+"POT-Creation-Date: 2024-05-14 08:38+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -133,6 +133,9 @@ msgstr "مراقب الميدان الأساسي مطلوب"
 
 msgid "Unable to fill checklists for current activity"
 msgstr "غير قادر على ملء قوائم التحقق للنشاط الحالي"
+
+msgid "Unable to submit data. Please report to admins."
+msgstr ""
 
 msgid "Report Attachments"
 msgstr "مرفقات التقرير"

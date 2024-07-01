@@ -44,7 +44,7 @@ class PointOfInterest(TimeStampedModel, models.Model):
         null=True, blank=True
     )
     name = models.CharField(verbose_name=_("Name"), max_length=254)
-    p_code = models.CharField(verbose_name=_("P Code"), max_length=32, blank=True, default='')
+    p_code = models.CharField(verbose_name=_("P Code"), max_length=32, unique=True)
     description = models.CharField(verbose_name=_("Description"), max_length=254)
     poi_type = models.ForeignKey(
         PointOfInterestType,
@@ -98,6 +98,7 @@ class Transfer(TimeStampedModel, models.Model):
 
     DELIVERY = 'DELIVERY'
     DISTRIBUTION = 'DISTRIBUTION'
+    HANDOVER = 'HANDOVER'
     WASTAGE = 'WASTAGE'
 
     SHORT = 'SHORT'
@@ -110,6 +111,7 @@ class Transfer(TimeStampedModel, models.Model):
     TRANSFER_TYPE = (
         (DELIVERY, _('Delivery')),
         (DISTRIBUTION, _('Distribution')),
+        (HANDOVER, _('Handover')),
         (WASTAGE, _('Wastage'))
     )
     TRANSFER_SUBTYPE = (
@@ -186,6 +188,32 @@ class Transfer(TimeStampedModel, models.Model):
 
     def __str__(self):
         return f'{self.id} {self.partner_organization.name}: {self.name if self.name else self.unicef_release_order}'
+
+
+class TransferEvidence(TimeStampedModel, models.Model):
+    comment = models.TextField(null=True, blank=True)
+
+    evidence_file = CodedGenericRelation(
+        Attachment,
+        verbose_name=_('Transfer Evidence File'),
+        code='transfer_evidence',
+    )
+    transfer = models.ForeignKey(
+        Transfer,
+        on_delete=models.CASCADE,
+        related_name='transfer_evidences'
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='transfer_evidences'
+    )
+
+    class Meta:
+        ordering = ("-created",)
+
+    def __str__(self):
+        return f'{self.transfer.id} {self.transfer.transfer_type} / {self.transfer.partner_organization.name}'
 
 
 class Material(TimeStampedModel, models.Model):
@@ -333,7 +361,7 @@ class Item(TimeStampedModel, models.Model):
 
     class Meta:
         base_manager_name = 'objects'
-        ordering = ("-id",)
+        ordering = ("expiry_date",)
 
     @cached_property
     def partner_organization(self):

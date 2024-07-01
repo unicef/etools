@@ -191,10 +191,11 @@ class MonitoringActivityOfflineBlueprintsSyncTestCase(APIViewSetTestCase, BaseTe
         ActivityQuestionFactory(monitoring_activity=activity, is_enabled=True, question__methods=[MethodFactory()])
 
         add_mock.reset_mock()
-        self._test_update(
-            activity.visit_lead, activity,
-            {'status': 'data_collection'}
-        )
+        with self.captureOnCommitCallbacks(execute=True):
+            self._test_update(
+                activity.visit_lead, activity,
+                {'status': 'data_collection'}
+            )
         add_mock.assert_called()
 
     @override_settings(ETOOLS_OFFLINE_API='http://example.com/b/api/remote/blueprint/',
@@ -397,27 +398,28 @@ class MonitoringActivityOfflineValuesTestCase(APIViewSetTestCase, BaseTenantTest
 
         connection.set_schema_to_public()
 
-        response = self.make_detail_request(
-            None, self.activity, method='post', action='offline',
-            QUERY_STRING='user={}&workspace={}'.format(self.user.email, schema_name),
-            data={
-                'information_source': {'name': 'Doctors'},
-                'partner': {
-                    self.partner.id: {
-                        'overall': 'overall',
-                        'attachments': [
-                            {
-                                'attachment': 'http://example.com',
-                                'file_type': file_type
+        with self.captureOnCommitCallbacks(execute=True):
+            response = self.make_detail_request(
+                None, self.activity, method='post', action='offline',
+                QUERY_STRING='user={}&workspace={}'.format(self.user.email, schema_name),
+                data={
+                    'information_source': {'name': 'Doctors'},
+                    'partner': {
+                        self.partner.id: {
+                            'overall': 'overall',
+                            'attachments': [
+                                {
+                                    'attachment': 'http://example.com',
+                                    'file_type': file_type
+                                }
+                            ],
+                            'questions': {
+                                str(self.activity_question.question_id): 'Question answer'
                             }
-                        ],
-                        'questions': {
-                            str(self.activity_question.question_id): 'Question answer'
                         }
                     }
                 }
-            }
-        )
+            )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
@@ -450,6 +452,49 @@ class MonitoringActivityOfflineValuesTestCase(APIViewSetTestCase, BaseTenantTest
                 'information_source': {'name': ['This field is required']},
             }
         )
+
+    @override_settings(ETOOLS_OFFLINE_API='http://example.com/b/api/remote/blueprint/')
+    @patch('etools.applications.field_monitoring.data_collection.offline.helpers.get_blueprint_for_activity_and_method')
+    @patch('etools.applications.field_monitoring.data_collection.views.capture_exception')
+    @patch('etools.applications.offline.fields.files.download_remote_attachment.delay')
+    def test_checklist_form_internal_error(self, download_mock, capture_exception_mock, internal_method_mock):
+        def bad_function(*args, **kwargs):
+            raise Exception('Test exception')
+        internal_method_mock.side_effect = bad_function
+
+        file_type = AttachmentFileTypeFactory(code='fm_common').id
+        schema_name = connection.tenant.schema_name
+
+        connection.set_schema_to_public()
+
+        response = self.make_detail_request(
+            None, self.activity, method='post', action='offline',
+            QUERY_STRING='user={}&workspace={}'.format(self.user.email, schema_name),
+            data={
+                'information_source': {'name': 'Doctors'},
+                'partner': {
+                    self.partner.id: {
+                        'overall': 'overall',
+                        'attachments': [
+                            {
+                                'attachment': 'http://example.com',
+                                'file_type': file_type
+                            }
+                        ],
+                        'questions': {
+                            str(self.activity_question.question_id): 'Question answer'
+                        }
+                    }
+                }
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertDictEqual(
+            response.data,
+            {'non_field_errors': ['Unable to submit data. Please report to admins.']},
+        )
+        download_mock.assert_not_called()
+        capture_exception_mock.assert_called()
 
     def test_transaction(self):
         response = self.make_detail_request(

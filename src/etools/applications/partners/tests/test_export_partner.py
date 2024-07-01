@@ -317,37 +317,3 @@ class TestPartnerOrganizationAssessmentModelExport(PartnerModelExportTestCase):
         self.assertEqual(len(headers), 15)
         self.assertIn("Country", headers)
         self.assertEqual(len(dataset[0]), 15)
-
-
-class TestPartnerOrganizationHactExport(BaseTenantTestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.url = reverse("partners_api:partner-hact")
-        cls.unicef_staff = UserFactory(is_staff=True)
-        cls.partner = PartnerFactory(
-            total_ct_cp=10.00,
-            total_ct_cy=8.00,
-        )
-
-    def test_csv_export(self):
-        response = self.forced_auth_req(
-            'get',
-            self.url,
-            user=self.unicef_staff,
-            data={"format": "csv"}
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
-        self.assertEqual(dataset.height, 1)
-        self.assertEqual(len(dataset._get_headers()), 33)
-        self.assertEqual(len(dataset[0]), 33)
-
-    def test_invalid_format_export_api(self):
-        response = self.forced_auth_req(
-            'get',
-            self.url,
-            user=self.unicef_staff,
-            data={"format": "unknown"},
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
