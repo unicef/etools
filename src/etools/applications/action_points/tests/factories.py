@@ -3,11 +3,10 @@ from datetime import timedelta
 from django.utils import timezone
 
 import factory.fuzzy
-from django_comments.models import Comment
 from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.action_points.categories.models import Category
-from etools.applications.action_points.models import ActionPoint
+from etools.applications.action_points.models import ActionPoint, ActionPointComment
 from etools.applications.partners.tests.factories import InterventionFactory, ResultFactory
 from etools.applications.reports.tests.factories import SectionFactory
 from etools.applications.users.tests.factories import UserFactory
@@ -17,7 +16,7 @@ from etools.libraries.tests.factories import StatusFactoryMetaClass
 
 class ActionPointCommentFactory(factory.django.DjangoModelFactory):
     class Meta:
-        model = Comment
+        model = ActionPointComment
 
     user = factory.SubFactory(UserFactory)
     comment = factory.fuzzy.FuzzyText()

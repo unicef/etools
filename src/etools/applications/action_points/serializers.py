@@ -1,8 +1,10 @@
+from copy import copy
+
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
-from django_comments.models import Comment
 from rest_framework import serializers
+from unicef_attachments.serializers import BaseAttachmentSerializer
 from unicef_locations.serializers import LocationLightSerializer
 from unicef_restlib.fields import SeparatedReadWriteField
 from unicef_restlib.serializers import UserContextSerializerMixin, WritableNestedSerializerMixin
@@ -11,7 +13,7 @@ from unicef_snapshot.serializers import SnapshotModelSerializer
 
 from etools.applications.action_points.categories.models import Category
 from etools.applications.action_points.categories.serializers import CategorySerializer
-from etools.applications.action_points.models import ActionPoint
+from etools.applications.action_points.models import ActionPoint, ActionPointComment
 from etools.applications.partners.serializers.interventions_v2 import MinimalInterventionListSerializer
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin
@@ -132,13 +134,28 @@ class ActionPointCreateSerializer(ActionPointListSerializer):
         return super().create(validated_data)
 
 
+class CommentSupportingDocumentSerializer(BaseAttachmentSerializer):
+    class Meta(BaseAttachmentSerializer.Meta):
+        extra_kwargs = copy(BaseAttachmentSerializer.Meta.extra_kwargs)
+        extra_kwargs.update({
+            'id': {'read_only': False},
+            'file': {'read_only': True},
+            'hyperlink': {'read_only': True},
+        })
+
+    def _validate_attachment(self, validated_data, instance=None):
+        """file shouldn't be editable"""
+        return
+
+
 class CommentSerializer(UserContextSerializerMixin, WritableNestedSerializerMixin, serializers.ModelSerializer):
     user = MinimalUserSerializer(read_only=True, label=_('Author'))
+    supporting_document = serializers.SerializerMethodField()
 
     class Meta(WritableNestedSerializerMixin.Meta):
-        model = Comment
+        model = ActionPointComment
         fields = (
-            'id', 'user', 'comment', 'submit_date'
+            'id', 'user', 'comment', 'submit_date', 'supporting_document',
         )
         extra_kwargs = {
             'user': {'read_only': True},
@@ -152,6 +169,21 @@ class CommentSerializer(UserContextSerializerMixin, WritableNestedSerializerMixi
             'site': get_current_site(),
         })
         return super().create(validated_data)
+
+    def get_supporting_document(self, obj):
+        if hasattr(obj, 'supporting_document_prefetched'):
+            if not obj.supporting_document_prefetched:
+                return None
+
+            supporting_document = obj.supporting_document_prefetched[0]
+        else:
+            supporting_documents = list(obj.supporting_document.all())
+            if not supporting_documents:
+                return None
+
+            supporting_document = supporting_documents[0]
+
+        return CommentSupportingDocumentSerializer(instance=supporting_document).data
 
 
 class HistorySerializer(serializers.ModelSerializer):

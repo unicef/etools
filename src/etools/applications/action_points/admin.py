@@ -2,14 +2,13 @@ from django.contrib import admin
 from django.contrib.contenttypes.admin import GenericStackedInline
 from django.urls import reverse
 
-from django_comments.models import Comment
 from unicef_snapshot.admin import ActivityInline, SnapshotModelAdmin
 
-from etools.applications.action_points.models import ActionPoint
+from etools.applications.action_points.models import ActionPoint, ActionPointComment
 
 
 class CommentInline(GenericStackedInline):
-    model = Comment
+    model = ActionPointComment
     ct_field = "content_type"
     ct_fk_field = "object_pk"
     fields = ["user", "comment", "submit_date"]
@@ -20,7 +19,7 @@ class CommentInline(GenericStackedInline):
 
     def view_on_site(self, obj):
         return reverse('admin:%s_%s_change' %
-                       (self.opts.app_label, self.opts.model_name),
+                       ('django_comments', 'comment'),
                        args=(obj.pk,),
                        current_app=self.admin_site.name)
 

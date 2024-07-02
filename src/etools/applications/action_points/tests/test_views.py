@@ -11,6 +11,7 @@ from etools.applications.action_points.categories.models import Category
 from etools.applications.action_points.models import ActionPoint, OperationsGroup, PME
 from etools.applications.action_points.tests.base import ActionPointsTestCaseMixin
 from etools.applications.action_points.tests.factories import ActionPointCategoryFactory, ActionPointFactory
+from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.audit.tests.factories import MicroAssessmentFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.permissions import UNICEF_USER
@@ -220,6 +221,53 @@ class TestActionPointViewSet(TestExportMixin, ActionPointsTestCaseMixin, BaseTen
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['comments']), 1)
         self.assertEqual(len(response.data['history']), 1)
+
+    def test_add_supporting_document(self):
+        action_point = ActionPointFactory(status='open', comments__count=1)
+        comment = action_point.comments.first()
+        attachment = AttachmentFactory()
+
+        response = self.forced_auth_req(
+            'post',
+            reverse('action-points:supporting-documents-list', args=(action_point.id, comment.id)),
+            user=action_point.author,
+            data={
+                'id': attachment.id,
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        document = comment.supporting_document.first()
+        self.assertIsNotNone(document)
+        self.assertEqual(document.id, attachment.id)
+        self.assertEqual(document.code, 'action_points_supporting_document')
+
+    def test_remove_supporting_document(self):
+        action_point = ActionPointFactory(status='open', comments__count=1)
+        comment = action_point.comments.first()
+        attachment = AttachmentFactory(code='action_points_supporting_document', content_object=comment)
+
+        response = self.forced_auth_req(
+            'delete',
+            reverse('action-points:supporting-documents-detail', args=(action_point.id, comment.id, attachment.id)),
+            user=action_point.author,
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(comment.supporting_document.count(), 0)
+
+    def test_add_supporting_document_permission_denied(self):
+        action_point = ActionPointFactory(status='completed', comments__count=1)
+        comment = action_point.comments.first()
+        attachment = AttachmentFactory()
+
+        response = self.forced_auth_req(
+            'post',
+            reverse('action-points:supporting-documents-list', args=(action_point.id, comment.id)),
+            user=action_point.author,
+            data={
+                'id': attachment.id,
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_complete(self):
         action_point = ActionPointFactory(status='pre_completed')
