@@ -277,20 +277,6 @@ class ActionPoint(TimeStampedModel):
         self._do_complete(completed_by=completed_by)
 
 
-# class ActionPointCommentExtra(models.Model):
-#     comment = models.OneToOneField('django_comments.Comment', on_delete=models.CASCADE, related_name='ap_extra')
-#     supporting_document = CodedGenericRelation(
-#         Attachment, verbose_name=_('Related Documents'), code='ap_supporting_document', blank=True
-#     )
-#
-#     class Meta:
-#         verbose_name = _('Action Point Extra')
-#         verbose_name_plural = _('Action Points Extra')
-#
-#     def __str__(self):
-#         return str(self.comment)
-
-
 PME = GroupWrapper(code='pme',
                    name='PME')
 
