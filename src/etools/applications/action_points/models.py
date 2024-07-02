@@ -4,10 +4,13 @@ from django.contrib.contenttypes.fields import GenericRelation
 from django.db import connection, models
 from django.utils.translation import gettext_lazy as _
 
+from django_comments.models import Comment
 from django_fsm import FSMField, transition
 from model_utils import Choices, FieldTracker
 from model_utils.fields import MonitorField
 from model_utils.models import TimeStampedModel
+from unicef_attachments.models import Attachment
+from unicef_djangolib.fields import CodedGenericRelation
 from unicef_snapshot.models import Activity
 
 from etools.applications.action_points.categories.models import Category
@@ -18,6 +21,17 @@ from etools.applications.environment.notifications import send_notification_with
 from etools.libraries.djangolib.models import GroupWrapper
 from etools.libraries.djangolib.utils import get_environment
 from etools.libraries.fsm.views import has_action_permission
+
+
+class ActionPointComment(Comment):
+    supporting_document = CodedGenericRelation(
+        Attachment, verbose_name=_('Related Documents'), code='action_points_supporting_document', blank=True
+    )
+
+    class Meta:
+        proxy = True
+        verbose_name = _('Action Point Comment')
+        verbose_name_plural = _('Action Point Comments')
 
 
 class ActionPointManager(models.Manager):
@@ -87,7 +101,7 @@ class ActionPoint(TimeStampedModel):
                                       default=None, monitor='status', when=[STATUSES.completed])
     date_of_verification = MonitorField(verbose_name=_('Date Action Point Verified'), null=True, blank=True,
                                         default=None, monitor='verified_by')
-    comments = GenericRelation('django_comments.Comment', object_id_field='object_pk')
+    comments = GenericRelation(ActionPointComment, object_id_field='object_pk')
     history = GenericRelation('unicef_snapshot.Activity', object_id_field='target_object_id',
                               content_type_field='target_content_type')
     reference_number = models.CharField(
@@ -261,6 +275,20 @@ class ActionPoint(TimeStampedModel):
         if potential_verifier:
             self.potential_verifier = potential_verifier
         self._do_complete(completed_by=completed_by)
+
+
+# class ActionPointCommentExtra(models.Model):
+#     comment = models.OneToOneField('django_comments.Comment', on_delete=models.CASCADE, related_name='ap_extra')
+#     supporting_document = CodedGenericRelation(
+#         Attachment, verbose_name=_('Related Documents'), code='ap_supporting_document', blank=True
+#     )
+#
+#     class Meta:
+#         verbose_name = _('Action Point Extra')
+#         verbose_name_plural = _('Action Points Extra')
+#
+#     def __str__(self):
+#         return str(self.comment)
 
 
 PME = GroupWrapper(code='pme',

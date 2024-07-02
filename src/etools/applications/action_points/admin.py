@@ -2,14 +2,13 @@ from django.contrib import admin
 from django.contrib.contenttypes.admin import GenericStackedInline
 from django.urls import reverse
 
-from django_comments.models import Comment
 from unicef_snapshot.admin import ActivityInline, SnapshotModelAdmin
 
-from etools.applications.action_points.models import ActionPoint
+from etools.applications.action_points.models import ActionPoint, ActionPointComment
 
 
 class CommentInline(GenericStackedInline):
-    model = Comment
+    model = ActionPointComment
     ct_field = "content_type"
     ct_fk_field = "object_pk"
     fields = ["user", "comment", "submit_date"]
