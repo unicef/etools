@@ -189,14 +189,14 @@ class ItemAdmin(XLSXImportMixin, admin.ModelAdmin):
     title = _("Import LastMile Items")
     import_field_mapping = {
         'Partner Vendor Number': 'transfer__partner_organization__vendor_number',
-        'Warehouse Name': 'transfer__destination_point__name',
-        'Waybill Number': 'transfer__waybill_id',
         'Material Number': 'material__number',
-        'Quantity': 'quantity',
-        'Expiry Date': 'expiry_date',
+        'Warehouse Name': 'transfer__destination_point__name',
+        'Material Description': 'partner_material__description',
         'Batch Number': 'batch_id',
-        'Partner Custom Description': 'partner_material__description',
-        'PO Number': 'other__imported_po_number',
+        'Expiry Date': 'expiry_date',
+        'Quantity': 'quantity',
+        'UOM': 'uom'
+
     }
 
     def has_import_permission(self, request):
@@ -283,7 +283,7 @@ class ItemAdmin(XLSXImportMixin, admin.ModelAdmin):
                 continue
 
             mat_desc = imp_r.pop('partner_material__description')
-            if mat_desc:
+            if mat_desc and mat_desc != material.short_description:
                 models.PartnerMaterial.objects.update_or_create(
                     material=material,
                     partner_organization=partner,
@@ -294,14 +294,11 @@ class ItemAdmin(XLSXImportMixin, admin.ModelAdmin):
                 name="Initial Imports",
                 partner_organization=partner,
                 destination_point=poi,
-                waybill_id=imp_r.pop('transfer__waybill_id'),
             ))
 
             imp_r['transfer_id'] = transfer.pk
             imp_r["material_id"] = material.pk
             imp_r["other"] = {"item_was_imported": True}
-            if imp_r["other__imported_po_number"]:
-                imp_r["other"]["imported_po_number"] = imp_r["other__imported_po_number"]
 
             models.Item.objects.update_or_create(
                 **imp_r
