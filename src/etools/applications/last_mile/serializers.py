@@ -262,7 +262,7 @@ class WaybillTransferSerializer(AttachmentSerializerMixin, serializers.ModelSeri
 
 
 class TransferBaseSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
-    name = serializers.CharField(required=False, allow_blank=False, allow_null=False)
+    name = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     proof_file = AttachmentSingleFileField(required=True, allow_null=False)
 
     class Meta:
@@ -354,7 +354,8 @@ class TransferCheckinSerializer(TransferBaseSerializer):
         validated_data['status'] = models.Transfer.COMPLETED
         validated_data['checked_in_by'] = self.context.get('request').user
         validated_data["destination_point"] = self.context["location"]
-        if 'name' not in validated_data:
+
+        if not instance.name and not validated_data.get('name'):
             validated_data['name'] = self.get_transfer_name(validated_data, instance.transfer_type)
 
         if self.partial:
@@ -402,7 +403,7 @@ class TransferCheckinSerializer(TransferBaseSerializer):
 
 
 class TransferCheckOutSerializer(TransferBaseSerializer):
-    name = serializers.CharField(required=False)
+    name = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     transfer_type = serializers.ChoiceField(choices=models.Transfer.TRANSFER_TYPE, required=True)
     items = ItemCheckoutSerializer(many=True, required=True)
 
@@ -491,7 +492,7 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
         if validated_data['transfer_type'] not in [models.Transfer.WASTAGE, models.Transfer.HANDOVER] \
                 and not validated_data.get('destination_point'):
             raise ValidationError(_('Destination location is mandatory at checkout.'))
-        elif 'destination_point' in validated_data:
+        elif validated_data.get('destination_point'):
             validated_data['destination_point_id'] = validated_data.pop('destination_point')
 
         if validated_data['transfer_type'] == models.Transfer.HANDOVER:
@@ -501,7 +502,7 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
         else:
             partner_id = self.context['request'].user.profile.organization.partner.pk
 
-        if 'name' not in validated_data:
+        if not validated_data.get("name"):
             validated_data['name'] = self.get_transfer_name(validated_data)
 
         self.instance = models.Transfer(
