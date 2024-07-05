@@ -5,7 +5,6 @@ parameters:
     type: string
     default: "latestet"
 
-
 jobs:
   setup:
     machine: true
@@ -13,115 +12,70 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Make sure base is up to date and remote
+          name: Docker Login
+          command: docker login -u $DOCKER_USER -p $DOCKER_PASS
+      - run:
+          name: Prepare Base Image
           command: |
-            docker login -u $DOCKER_USER -p $DOCKER_PASS
-            BASE_TAG="$(md5sum pdm.lock | cut -c1-6)$(md5sum Dockerfile-base | cut -c1-6)"
-            TAG=${CIRCLE_BRANCH}
-            if (curl --silent -f -lSL https://index.docker.io/v1/repositories/unicef/etools-base/tags/${BASE_TAG} > /dev/null); then
-              echo "Up to date!"
-            else
+            BASE_TAG="$(md5sum pdm.lock Dockerfile-base | awk '{print substr($1, 1, 6)}' | tr -d '\n')"
+            TAG="${CIRCLE_BRANCH}"
+            IMAGE_EXISTS=$(curl --silent -f -lSL https://index.docker.io/v1/repositories/unicef/etools-base/tags/${BASE_TAG})
+            if [ -z "${IMAGE_EXISTS}" ]; then
               docker build -t unicef/etools-base:${BASE_TAG} -f Dockerfile-base .
               docker push unicef/etools-base:${BASE_TAG}
-              if (echo "develop" | grep -q "$CIRCLE_BRANCH"); then
+              if [[ "${CIRCLE_BRANCH}" == "develop" ]]; then
                 docker tag unicef/etools-base:${BASE_TAG} unicef/etools-base:latestet
                 docker push unicef/etools-base:latestet
-              elif (echo "master" | grep -q "$CIRCLE_BRANCH"); then
+              elif [[ "${CIRCLE_BRANCH}" == "master" ]]; then
                 docker tag unicef/etools-base:${BASE_TAG} unicef/etools-base:latest_prodet
                 docker push unicef/etools-base:latest_prodet
-              else
-                echo "Not a followed branch not pushing latest"
               fi
             fi
-#      - run:
-#          name: Triggering test workflow
-#          command: |
-#            BASE_TAG="$(md5sum pdm.lock | cut -c1-6)$(md5sum Dockerfile-base | cut -c1-6)"
-#            curl --user ${CIRCLE_TOKEN}: \
-#                --data build_parameters[CIRCLE_JOB]=test \
-#                --data build_parameters[BASE_TAG]=${BASE_TAG} \
-#                --data revision=$CIRCLE_SHA1 \
-#                https://circleci.com/api/v1.1/project/github/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/tree/$CIRCLE_BRANCH
+      - persist_to_workspace:
+          root: workspace
+          paths:
+            - .
+      - run:
+          name: Save Base Tag
+          command: echo "${BASE_TAG}" > workspace/BASE_TAG.txt
+          when: always
 
   test:
-    parallelism: 4  # Number of containers to spread the tests across
+    parallelism: 4
     working_directory: ~/code
     docker:
-      - image: unicef/etools-base:${BASE_TAG}
+      - image: unicef/etools-base:<< pipeline.parameters.base_image_tag >>
         environment:
-          PGHOST: 127.0.0.1
           DATABASE_URL: "postgis://postgres:postgres@localhost:5432/circle_test"
-          DEPLOY_BRANCHES: "develop|staging|master|robdj4.2"
       - image: cimg/postgres:12.9-postgis
         environment:
-          POSTGRES_USER: postgres
-          PGUSER: postgres
-          POSTGRES_DB: circle_test
           POSTGRES_PASSWORD: postgres
       - image: redis
     steps:
       - checkout
+      - attach_workspace:
+          at: workspace
+      - run:
+          name: Load Base Tag
+          command: |
+            BASE_TAG=$(cat workspace/BASE_TAG.txt)
+            echo "export BASE_TAG=${BASE_TAG}" >> $BASH_ENV
+            source $BASH_ENV
       - restore_cache:
-          key: deps2-{{ .Branch }}--{{ checksum "pdm.lock" }}-{{ checksum ".circleci/config.yml" }}
+          key: deps-{{ .Branch }}-{{ checksum "pdm.lock" }}
       - run:
           name: Run Tests in Parallel
           command: |
             pip install tox
-            RUNNING_UNDER_TOX=1 /etools/__pypackages__/3.12/bin/tox -e d42
+            RUNNING_UNDER_TOX=1 tox -e d42
           no_output_timeout: 30m
       - save_cache:
-          key: deps2-{{ .Branch }}--{{ checksum "pdm.lock" }}-{{ checksum ".circleci/config.yml" }}
           paths:
-            - ".tox/d42/"
+            - ".tox"
+          key: deps-{{ .Branch }}-{{ checksum "pdm.lock" }}
       - store_artifacts:
           path: build/coverage
           destination: coverage
-#      - run:
-#          name: Triggering build_and_deploy job
-#          command: |
-#            if (echo "$DEPLOY_BRANCHES" | grep -q "$CIRCLE_BRANCH"); then
-#              curl --user ${CIRCLE_TOKEN}: \
-#                --data build_parameters[CIRCLE_JOB]=build_and_upload \
-#                --data revision=$CIRCLE_SHA1 \
-#                https://circleci.com/api/v1.1/project/github/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/tree/$CIRCLE_BRANCH
-#            else
-#              echo "not triggered - '$CIRCLE_BRANCH' is not a deployable branch: '$DEPLOY_BRANCHES'"
-#            fi
-
-#  build_and_upload:
-#    machine: true
-#    steps:
-#      - checkout
-#      - run:
-#          name: Building the image
-#          command: |
-#            docker login -u $DOCKER_USER -p $DOCKER_PASS
-#            BASE_TAG="$(md5sum pdm.lock | cut -c1-6)$(md5sum Dockerfile-base | cut -c1-6)"
-#            TAG=${CIRCLE_BRANCH}
-#            (docker pull unicef/etools-base:${BASE_TAG}) ||
-#            (docker build -t unicef/etools-base:${BASE_TAG} -f Dockerfile-base . && docker push unicef/etools-base:${BASE_TAG})
-#            docker build --build-arg BASE_TAG=${BASE_TAG} -t unicef/etools:$TAG .
-#      - run:
-#          name: Pushing to Docker Hub
-#          command: |
-#            TAG=${CIRCLE_BRANCH}
-#            BASE_TAG="$(md5sum pdm.lock | cut -c1-6)$(md5sum Dockerfile-base | cut -c1-6)"
-#            docker login -u $DOCKER_USER -p $DOCKER_PASS
-#            docker push unicef/etools:$TAG
-#            if (echo "develop" | grep -q "$CIRCLE_BRANCH"); then
-#              docker tag unicef/etools-base:${BASE_TAG} unicef/etools-base:latestet
-#              docker push unicef/etools-base:latestet
-#            elif (echo "master" | grep -q "$CIRCLE_BRANCH"); then
-#              docker tag unicef/etools-base:${BASE_TAG} unicef/etools-base:latest_prodet
-#              docker push unicef/etools-base:latest_prodet
-#            else
-#              echo "Not a followed branch not pushing latest"
-#            fi
-#      - run:
-#          name: trigger redeploy?
-#          command: |
-#            pip install requests
-#            python utils/trigger_redeploy.py --loglevel=INFO
 
   code_checks:
     docker:
@@ -145,17 +99,13 @@ jobs:
             tox -e translations
 
 workflows:
-  version: 2
-#  tests_start:
-#    jobs:
-#      - setup
-  test_and_deploy:
+  version: 2.1
+  build_and_test:
     jobs:
       - setup
-      - code_checks
-      - test:
+      - code_checks:
           requires:
             - setup
-#      - build_and_upload:
-#          requires:
-#            - test
+      - test:
+          requires:
+            - code_checks
