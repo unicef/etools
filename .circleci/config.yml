@@ -33,15 +33,16 @@ jobs:
                 echo "Not a followed branch not pushing latest"
               fi
             fi
-      - run:
-          name: Triggering test workflow
-          command: |
-            BASE_TAG="$(md5sum pdm.lock | cut -c1-6)$(md5sum Dockerfile-base | cut -c1-6)"
-            curl --user ${CIRCLE_TOKEN}: \
-                --data build_parameters[CIRCLE_JOB]=test \
-                --data build_parameters[BASE_TAG]=${BASE_TAG} \
-                --data revision=$CIRCLE_SHA1 \
-                https://circleci.com/api/v1.1/project/github/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/tree/$CIRCLE_BRANCH
+#      - run:
+#          name: Triggering test workflow
+#          command: |
+#            BASE_TAG="$(md5sum pdm.lock | cut -c1-6)$(md5sum Dockerfile-base | cut -c1-6)"
+#            curl --user ${CIRCLE_TOKEN}: \
+#                --data build_parameters[CIRCLE_JOB]=test \
+#                --data build_parameters[BASE_TAG]=${BASE_TAG} \
+#                --data revision=$CIRCLE_SHA1 \
+#                https://circleci.com/api/v1.1/project/github/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/tree/$CIRCLE_BRANCH
+
   test:
     parallelism: 4  # Number of containers to spread the tests across
     working_directory: ~/code
@@ -66,7 +67,7 @@ jobs:
           name: Run Tests in Parallel
           command: |
             pip install tox
-            /etools/__pypackages__/3.12/bin/tox -e d42 -- --tests-per-worker auto
+            RUNNING_UNDER_TOX=1 /etools/__pypackages__/3.12/bin/tox -e d42
           no_output_timeout: 30m
       - save_cache:
           key: deps2-{{ .Branch }}--{{ checksum "pdm.lock" }}-{{ checksum ".circleci/config.yml" }}
@@ -75,56 +76,85 @@ jobs:
       - store_artifacts:
           path: build/coverage
           destination: coverage
-      - run:
-          name: Triggering build_and_deploy job
-          command: |
-            if (echo "$DEPLOY_BRANCHES" | grep -q "$CIRCLE_BRANCH"); then
-              curl --user ${CIRCLE_TOKEN}: \
-                --data build_parameters[CIRCLE_JOB]=build_and_upload \
-                --data revision=$CIRCLE_SHA1 \
-                https://circleci.com/api/v1.1/project/github/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/tree/$CIRCLE_BRANCH
-            else
-              echo "not triggered - '$CIRCLE_BRANCH' is not a deployable branch: '$DEPLOY_BRANCHES'"
-            fi
+#      - run:
+#          name: Triggering build_and_deploy job
+#          command: |
+#            if (echo "$DEPLOY_BRANCHES" | grep -q "$CIRCLE_BRANCH"); then
+#              curl --user ${CIRCLE_TOKEN}: \
+#                --data build_parameters[CIRCLE_JOB]=build_and_upload \
+#                --data revision=$CIRCLE_SHA1 \
+#                https://circleci.com/api/v1.1/project/github/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/tree/$CIRCLE_BRANCH
+#            else
+#              echo "not triggered - '$CIRCLE_BRANCH' is not a deployable branch: '$DEPLOY_BRANCHES'"
+#            fi
 
-  build_and_upload:
-    machine: true
+#  build_and_upload:
+#    machine: true
+#    steps:
+#      - checkout
+#      - run:
+#          name: Building the image
+#          command: |
+#            docker login -u $DOCKER_USER -p $DOCKER_PASS
+#            BASE_TAG="$(md5sum pdm.lock | cut -c1-6)$(md5sum Dockerfile-base | cut -c1-6)"
+#            TAG=${CIRCLE_BRANCH}
+#            (docker pull unicef/etools-base:${BASE_TAG}) ||
+#            (docker build -t unicef/etools-base:${BASE_TAG} -f Dockerfile-base . && docker push unicef/etools-base:${BASE_TAG})
+#            docker build --build-arg BASE_TAG=${BASE_TAG} -t unicef/etools:$TAG .
+#      - run:
+#          name: Pushing to Docker Hub
+#          command: |
+#            TAG=${CIRCLE_BRANCH}
+#            BASE_TAG="$(md5sum pdm.lock | cut -c1-6)$(md5sum Dockerfile-base | cut -c1-6)"
+#            docker login -u $DOCKER_USER -p $DOCKER_PASS
+#            docker push unicef/etools:$TAG
+#            if (echo "develop" | grep -q "$CIRCLE_BRANCH"); then
+#              docker tag unicef/etools-base:${BASE_TAG} unicef/etools-base:latestet
+#              docker push unicef/etools-base:latestet
+#            elif (echo "master" | grep -q "$CIRCLE_BRANCH"); then
+#              docker tag unicef/etools-base:${BASE_TAG} unicef/etools-base:latest_prodet
+#              docker push unicef/etools-base:latest_prodet
+#            else
+#              echo "Not a followed branch not pushing latest"
+#            fi
+#      - run:
+#          name: trigger redeploy?
+#          command: |
+#            pip install requests
+#            python utils/trigger_redeploy.py --loglevel=INFO
+
+  code_checks:
+    docker:
+      - image: unicef/etools-base:<< parameters.base-tag >>
     steps:
       - checkout
       - run:
-          name: Building the image
+          name: Run Flake8
           command: |
-            docker login -u $DOCKER_USER -p $DOCKER_PASS
-            BASE_TAG="$(md5sum pdm.lock | cut -c1-6)$(md5sum Dockerfile-base | cut -c1-6)"
-            TAG=${CIRCLE_BRANCH}
-            (docker pull unicef/etools-base:${BASE_TAG}) ||
-            (docker build -t unicef/etools-base:${BASE_TAG} -f Dockerfile-base . && docker push unicef/etools-base:${BASE_TAG})
-            docker build --build-arg BASE_TAG=${BASE_TAG} -t unicef/etools:$TAG .
+            pip install tox
+            tox -e flake8
       - run:
-          name: Pushing to Docker Hub
+          name: Run Isort
           command: |
-            TAG=${CIRCLE_BRANCH}
-            BASE_TAG="$(md5sum pdm.lock | cut -c1-6)$(md5sum Dockerfile-base | cut -c1-6)"
-            docker login -u $DOCKER_USER -p $DOCKER_PASS
-            docker push unicef/etools:$TAG
-            if (echo "develop" | grep -q "$CIRCLE_BRANCH"); then
-              docker tag unicef/etools-base:${BASE_TAG} unicef/etools-base:latestet
-              docker push unicef/etools-base:latestet
-            elif (echo "master" | grep -q "$CIRCLE_BRANCH"); then
-              docker tag unicef/etools-base:${BASE_TAG} unicef/etools-base:latest_prodet
-              docker push unicef/etools-base:latest_prodet
-            else
-              echo "Not a followed branch not pushing latest"
-            fi
+            pip install tox
+            tox -e isort
       - run:
-          name: trigger redeploy?
+          name: Check Translations
           command: |
-            pip install requests
-            python utils/trigger_redeploy.py --loglevel=INFO
-
+            pip install tox
+            tox -e translations
 
 workflows:
   version: 2
   tests_start:
     jobs:
       - setup
+  test_and_deploy:
+    jobs:
+      - code_checks
+      - test:
+          requires:
+            - setup
+#      - build_and_upload:
+#          requires:
+#            - test
