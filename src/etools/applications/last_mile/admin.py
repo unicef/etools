@@ -4,6 +4,8 @@ from django.contrib import admin
 from django.contrib.gis import forms
 from django.contrib.gis.geos import Point
 from django.db import transaction
+from django.urls import reverse
+from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 
 from unicef_attachments.admin import AttachmentSingleInline
@@ -34,6 +36,7 @@ class TransferEvidenceAttachmentInline(AttachmentSingleInline):
 
 @admin.register(models.PointOfInterest)
 class PointOfInterestAdmin(XLSXImportMixin, admin.ModelAdmin):
+    readonly_fields = ('partner_names',)
     list_display = ('name', 'parent', 'poi_type', 'p_code')
     list_select_related = ('parent',)
     list_filter = ('private', 'is_active', 'poi_type')
@@ -52,6 +55,17 @@ class PointOfInterestAdmin(XLSXImportMixin, admin.ModelAdmin):
         'LONGITUDE': 'longitude',
         'P CODE': 'p_code'
     }
+
+    def partner_names(self, obj):
+        p_names = []
+        for p in obj.partner_organizations.all():
+            print(p)
+            url = reverse('admin:partners_partnerorganization_change', args=[p.id])
+            html = format_html('<a href="{}">{}</a>', url, p.name)
+            p_names.append(html)
+        return format_html('<br>'.join(p_names))
+    partner_names.short_description = 'Partner Names'
+    partner_names.admin_order_field = 'name'
 
     def has_import_permission(self, request):
         return is_user_in_groups(request.user, ['Country Office Administrator'])
@@ -179,6 +193,16 @@ class ItemAdmin(XLSXImportMixin, admin.ModelAdmin):
     list_display = ('batch_id', 'material', 'wastage_type', 'transfer')
     raw_id_fields = ('transfer', 'transfers_history', 'material')
     list_filter = ('wastage_type', 'hidden')
+    readonly_fields = ('destination_point_name',)
+
+    def destination_point_name(self, obj):
+        if obj.transfer and obj.transfer.destination_point:
+            url = reverse('admin:last_mile_pointofinterest_change', args=[obj.transfer.destination_point.id])
+            return format_html('<a href="{}">{}</a>', url, obj.transfer.destination_point.name)
+        return '-'
+    destination_point_name.short_description = 'Destination Point Name'
+    destination_point_name.short_description = 'Destination Point Name'
+    destination_point_name.admin_order_field = 'transfer__destination_point__name'
 
     def get_queryset(self, request):
         qs = models.Item.all_objects\
@@ -212,7 +236,8 @@ class ItemAdmin(XLSXImportMixin, admin.ModelAdmin):
         # first create a list of objects in memory from the file
         imported_vendor_numbers = set()
         imported_material_numbers = set()
-        imported_destination_names = set()
+        # imported_destination_names = set()
+        imported_partner_destination_name_pair = set()
         imported_records = []
         for row in range(1, sheet.max_row):
             import_dict = {}
@@ -226,7 +251,11 @@ class ItemAdmin(XLSXImportMixin, admin.ModelAdmin):
         for imp_record in imported_records:
             imported_vendor_numbers.add(imp_record['transfer__partner_organization__vendor_number'])
             imported_material_numbers.add(imp_record['material__number'])
-            imported_destination_names.add(imp_record['transfer__destination_point__name'])
+            # imported_destination_names.add(imp_record['transfer__destination_point__name'])
+            imported_partner_destination_name_pair.add(
+                (imp_record['transfer__partner_organization__vendor_number'],
+                 imp_record['transfer__destination_point__name'])
+            )
 
         def filter_records(dict_key, model, filter_name, imported_set, recs):
             # print("###############", imported_set, dict_key, model.__name__, filter_name, recs)
@@ -238,6 +267,24 @@ class ItemAdmin(XLSXImportMixin, admin.ModelAdmin):
                               f" '{dropped_recs}' Please add the related records if needed")
 
             return qs, [d for d in recs if d[dict_key] in available_items]
+
+        def filter_complex_records(dict_keys, model, filter_names, imported_set, recs):
+            # Initialize the query set
+            qs = model.objects.none()
+            for tuple_pair in imported_set:
+                filter_kwargs = {filter_names[i]: tuple_pair[i] for i in range(len(tuple_pair))}
+                qs = qs | model.objects.filter(**filter_kwargs)
+
+            available_items = qs.values_list(*filter_names)
+            available_set = set(available_items)
+
+            dropped_recs = [d for d in recs if (d[dict_keys[0]], d[dict_keys[1]]) not in available_set]
+            if dropped_recs:
+                logging.error(
+                    f"Dropping the following lines as records not available in the workspace for type {model.__name__}"
+                    f" '{dropped_recs}' Please add the related records if needed")
+
+            return qs, [d for d in recs if (d[dict_keys[0]], d[dict_keys[1]]) in available_set]
 
         partner_org_qs, imported_records = filter_records(
             dict_key="transfer__partner_organization__vendor_number",
@@ -257,14 +304,27 @@ class ItemAdmin(XLSXImportMixin, admin.ModelAdmin):
         )
         material_dict = {m.number: m for m in material_qs}
 
-        poi_qs, imported_records = filter_records(
-            dict_key="transfer__destination_point__name",
+        # poi_qs, imported_records = filter_records(
+        #     dict_key="transfer__destination_point__name",
+        #     model=models.PointOfInterest,
+        #     filter_name="name",
+        #     imported_set=imported_partner_destination_name_pair,
+        #     recs=imported_records
+        # )
+
+        poi_qs, imported_records = filter_complex_records(
+            dict_keys=["transfer__partner_organization__vendor_number", "transfer__destination_point__name"],
             model=models.PointOfInterest,
-            filter_name="name",
-            imported_set=imported_destination_names,
+            filter_names=["partner_organizations__organization__vendor_number", "name"],
+            imported_set=imported_partner_destination_name_pair,
             recs=imported_records
         )
-        poi_dict = {poi.name: poi for poi in poi_qs.prefetch_related("partner_organizations")}
+
+        poi_dict = {}
+        for poi in poi_qs.prefetch_related("partner_organizations"):
+            for partner_org in poi.partner_organizations.all():
+                dict_key = partner_org.vendor_number + poi.name
+                poi_dict[dict_key] = poi
 
         transfers = {}
 
@@ -280,7 +340,7 @@ class ItemAdmin(XLSXImportMixin, admin.ModelAdmin):
         for imp_r in imported_records:
             material = material_dict[imp_r.pop("material__number")]
             partner = partner_dict[imp_r.pop("transfer__partner_organization__vendor_number")]
-            poi = poi_dict[imp_r.pop("transfer__destination_point__name")]
+            poi = poi_dict[partner.vendor_number + imp_r.pop("transfer__destination_point__name")]
             # ensure the POI belongs to the partner else skip:
             if partner not in poi.partner_organizations.all():
                 logging.error(f"skipping record as POI {poi} does not belong to the Partner Org: {partner}")
