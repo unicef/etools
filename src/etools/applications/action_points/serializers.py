@@ -1,9 +1,11 @@
 from copy import copy
 
+from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
 from rest_framework import serializers
+from unicef_attachments.models import Attachment, AttachmentLink
 from unicef_attachments.serializers import BaseAttachmentSerializer
 from unicef_locations.serializers import LocationLightSerializer
 from unicef_restlib.fields import SeparatedReadWriteField
@@ -150,7 +152,14 @@ class CommentSupportingDocumentSerializer(BaseAttachmentSerializer):
 
 class CommentSerializer(UserContextSerializerMixin, WritableNestedSerializerMixin, serializers.ModelSerializer):
     user = MinimalUserSerializer(read_only=True, label=_('Author'))
-    supporting_document = serializers.SerializerMethodField()
+    supporting_document = SeparatedReadWriteField(
+        read_field=serializers.SerializerMethodField(),
+        write_field=serializers.PrimaryKeyRelatedField(
+            queryset=Attachment.objects.filter(object_id__isnull=True),
+            allow_null=True,
+        ),
+        required=False
+    )
 
     class Meta(WritableNestedSerializerMixin.Meta):
         model = ActionPointComment
@@ -163,27 +172,55 @@ class CommentSerializer(UserContextSerializerMixin, WritableNestedSerializerMixi
         }
 
     def create(self, validated_data):
+        has_supporting_document = 'supporting_document' in validated_data
+        supporting_document = validated_data.pop('supporting_document', None)
         validated_data.update({
             'user': self.get_user(),
             'submit_date': timezone.now(),
             'site': get_current_site(),
         })
-        return super().create(validated_data)
+        instance = super().create(validated_data)
+        if has_supporting_document:
+            self.save_supporting_document(instance, supporting_document)
+        return instance
 
-    def get_supporting_document(self, obj):
-        if hasattr(obj, 'supporting_document_prefetched'):
-            if not obj.supporting_document_prefetched:
-                return None
+    def update(self, instance, validated_data):
+        has_supporting_document = 'supporting_document' in validated_data
+        supporting_document = validated_data.pop('supporting_document', None)
+        instance = super().update(instance, validated_data)
+        if has_supporting_document:
+            self.save_supporting_document(instance, supporting_document)
+        return instance
 
-            supporting_document = obj.supporting_document_prefetched[0]
-        else:
-            supporting_documents = list(obj.supporting_document.all())
-            if not supporting_documents:
-                return None
+    def get_supporting_document(self, rel):
+        supporting_documents = list(rel.all())
+        if not supporting_documents:
+            return None
 
-            supporting_document = supporting_documents[0]
+        return CommentSupportingDocumentSerializer(instance=supporting_documents[0]).data
 
-        return CommentSupportingDocumentSerializer(instance=supporting_document).data
+    def save_supporting_document(self, obj, supporting_document):
+        comment_ct = ContentType.objects.get_for_model(ActionPointComment)
+
+        existing_document = list(obj.supporting_document.all())
+        if existing_document:
+            # unlink existing docs if there are any
+            obj.supporting_document.update(object_id=None)
+            AttachmentLink.objects.filter(object_id=obj.pk, content_type=comment_ct).update(object_id=None)
+
+        if supporting_document is None:
+            return
+
+        supporting_document.content_object = obj
+        supporting_document.code = 'action_points_supporting_document'
+        supporting_document.uploaded_by = self.get_user()
+        supporting_document.save()
+        # keep attachment link in sync
+        AttachmentLink.objects.get_or_create(
+            attachment_id=supporting_document.pk,
+            object_id=obj.pk,
+            content_type=comment_ct,
+        )
 
 
 class HistorySerializer(serializers.ModelSerializer):

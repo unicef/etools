@@ -1,22 +1,18 @@
-from copy import copy
-
-from django.contrib.contenttypes.models import ContentType
 from django.db.models import Prefetch
 from django.utils import timezone
 
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import mixins, status, viewsets
+from rest_framework import mixins, viewsets
 from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter, SearchFilter
-from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from unicef_attachments.models import Attachment, AttachmentLink
+from unicef_attachments.models import Attachment
 from unicef_rest_export.renderers import ExportOpenXMLRenderer
 from unicef_rest_export.serializers import ExportSerializer
 from unicef_rest_export.views import ExportMixin
 from unicef_restlib.pagination import DynamicPageNumberPagination
-from unicef_restlib.views import MultiSerializerViewSetMixin, NestedViewSetMixin, SafeTenantViewSetMixin
+from unicef_restlib.views import MultiSerializerViewSetMixin, SafeTenantViewSetMixin
 from unicef_snapshot.views import FSMSnapshotViewMixin
 
 from etools.applications.action_points.categories.models import Category
@@ -43,11 +39,8 @@ from etools.applications.action_points.serializers import (
     ActionPointCreateSerializer,
     ActionPointListSerializer,
     ActionPointSerializer,
-    CommentSerializer,
-    CommentSupportingDocumentSerializer,
 )
 from etools.applications.permissions2.conditions import ObjectStatusCondition
-from etools.applications.permissions2.drf_permissions import get_permission_for_targets
 from etools.applications.permissions2.metadata import PermissionBasedMetadata
 from etools.applications.permissions2.views import PermittedFSMActionMixin, PermittedSerializerMixin
 from etools.applications.t2f.models import TravelActivity
@@ -84,7 +77,6 @@ class ActionPointViewSet(
                 Prefetch(
                     'supporting_document',
                     Attachment.objects.select_related('uploaded_by'),
-                    to_attr='supporting_document_prefetched'
                 ),
             )
         )
@@ -196,93 +188,3 @@ class ActionPointViewSet(
                 self.get_object().reference_number, timezone.now().date()
             )
         })
-
-
-class ActionPointCommentsViewSet(
-    SafeTenantViewSetMixin,
-    PermittedSerializerMixin,
-    NestedViewSetMixin,
-    mixins.RetrieveModelMixin,
-    viewsets.GenericViewSet,
-):
-    serializer_class = CommentSerializer
-    queryset = ActionPointComment.objects.all()
-
-    def get_parent_filter(self):
-        parent = self.get_parent_object()
-        if not parent:
-            return {}
-
-        return {
-            'content_type': ContentType.objects.get_for_model(ActionPoint),
-            'object_pk': parent.pk,
-        }
-
-
-class CommentSupportingDocumentsViewSet(
-        SafeTenantViewSetMixin,
-        NestedViewSetMixin,
-        PermittedSerializerMixin,
-        mixins.ListModelMixin,
-        mixins.CreateModelMixin,
-        mixins.RetrieveModelMixin,
-        mixins.DestroyModelMixin,
-        viewsets.GenericViewSet
-):
-    metadata_class = PermissionBasedMetadata
-    serializer_class = CommentSupportingDocumentSerializer
-    queryset = Attachment.objects.all()
-    related_model = ActionPointComment
-    attachment_code = 'action_points_supporting_document'
-    permission_classes = [
-        IsAuthenticated,
-        get_permission_for_targets('action_points.actionpoint.comments')
-    ]
-
-    def update_attachment(self, pk, object_id, content_type, **kwargs):
-        generic_kwargs = {
-            'object_id': object_id,
-            'content_type': content_type,
-        }
-        attachment_kwargs = copy(generic_kwargs)
-        attachment_kwargs.update(kwargs)
-        Attachment.objects.filter(pk=pk, object_id__isnull=True).update(**attachment_kwargs)
-        # keep attachment link in sync
-        AttachmentLink.objects.get_or_create(attachment_id=pk, **generic_kwargs)
-
-    def perform_create(self, serializer):
-        attachment_data = serializer.validated_data
-        pk = attachment_data['id']
-
-        self.update_attachment(
-            pk, self.get_parent_object().pk,
-            ContentType.objects.get_for_model(self.related_model),
-            file_type=attachment_data.get("file_type", None),
-            code=self.attachment_code,
-            uploaded_by=self.request.user,
-        )
-
-    def create(self, request, *args, **kwargs):
-        """
-        instead of standard create we have an instance, so we should link existing one.
-        the easiest way is to handle similar to update
-        """
-        instance = get_object_or_404(Attachment.objects, pk=request.data.get('id'))
-        serializer = self.get_serializer(data=request.data, instance=instance, partial=False)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-    def get_parent_filter(self):
-        parent = self.get_parent_object()
-        if not parent:
-            return {}
-
-        return {
-            'content_type': ContentType.objects.get_for_model(self.related_model).id,
-            'object_id': parent.pk
-        }
-
-    def _get_parent_filters(self):
-        # too deep inheritance is not supported in case of generic relations, so just use parent (content object)
-        return self.get_parent_filter()
