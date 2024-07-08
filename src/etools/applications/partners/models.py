@@ -1558,6 +1558,9 @@ class InterventionManager(models.Manager):
             'country_programmes',
         )
 
+    def base_qs(self):
+        return super().get_queryset().prefetch_related(None).select_related(None)
+
     def detail_qs(self):
         qs = super().get_queryset().prefetch_related(
             'agreement__partner',

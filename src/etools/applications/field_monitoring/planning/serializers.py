@@ -174,28 +174,14 @@ class ActivityAttachmentSerializer(BaseAttachmentSerializer):
 
 
 class FMUserSerializer(MinimalUserSerializer):
-    name = serializers.SerializerMethodField()
-    user_type = serializers.SerializerMethodField()
+    name = serializers.CharField()
+    user_type = serializers.CharField()
     tpm_partner = serializers.ReadOnlyField(allow_null=True)
 
     class Meta(MinimalUserSerializer.Meta):
         fields = MinimalUserSerializer.Meta.fields + (
             'user_type', 'tpm_partner'
         )
-
-    def get_user_type(self, obj):
-        if obj.tpm_partner:
-            return 'tpm'
-        return 'staff'
-
-    def get_name(self, obj):
-        if obj.is_active:
-            if hasattr(obj, 'has_active_realm') and obj.has_active_realm:
-                return obj.get_full_name()
-            status = _('No Access')
-        else:
-            status = _('Inactive')
-        return f"[{status}] {obj.get_full_name()}"
 
 
 class CPOutputListSerializer(MinimalOutputListSerializer):

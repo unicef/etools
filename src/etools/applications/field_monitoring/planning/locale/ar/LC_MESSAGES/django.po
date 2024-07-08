@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-04-11 05:18+0000\n"
+"POT-Creation-Date: 2024-06-13 13:27+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -234,12 +234,6 @@ msgstr "السجل التاريخي"
 msgid "Document Type"
 msgstr "نوع الوثيقة"
 
-msgid "No Access"
-msgstr "لا يمكن الوصول"
-
-msgid "Inactive"
-msgstr "غير فعال"
-
 msgid "Special"
 msgstr "مميز"
 
@@ -275,6 +269,12 @@ msgstr "الأساس المنطقي السنوي للرصد الميداني"
 
 msgid "Templates"
 msgstr "النماذج"
+
+msgid "No Access"
+msgstr "لا يمكن الوصول"
+
+msgid "Inactive"
+msgstr "غير فعال"
 
 msgid "Attachments"
 msgstr "المرفقات"

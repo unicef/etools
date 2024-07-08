@@ -994,7 +994,7 @@ class InterventionsViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTen
             InterventionFactory(status=Intervention.SUSPENDED),
             InterventionFactory(status=Intervention.TERMINATED),
         ]
-        with self.assertNumQueries(10):  # 3 basic + 7 prefetches from InterventionManager
+        with self.assertNumQueries(3):
             self._test_list(self.unicef_user, valid_interventions)
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
