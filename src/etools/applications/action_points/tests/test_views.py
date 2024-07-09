@@ -222,6 +222,20 @@ class TestActionPointViewSet(TestExportMixin, ActionPointsTestCaseMixin, BaseTen
         self.assertEqual(len(response.data['comments']), 1)
         self.assertEqual(len(response.data['history']), 1)
 
+    def test_supporting_document_optional(self):
+        action_point = ActionPointFactory(status='open', comments__count=0)
+
+        response = self.forced_auth_req(
+            'options',
+            reverse('action-points:action-points-detail', args=(action_point.id,)),
+            user=action_point.author
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(
+            response.data['actions']['PUT']['comments']['child']['children']['supporting_document']['required']
+        )
+
     def test_add_supporting_document(self):
         action_point = ActionPointFactory(status='open', comments__count=1)
         comment = action_point.comments.first()

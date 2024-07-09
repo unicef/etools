@@ -156,6 +156,7 @@ class CommentSerializer(UserContextSerializerMixin, WritableNestedSerializerMixi
         read_field=serializers.SerializerMethodField(),
         write_field=serializers.PrimaryKeyRelatedField(
             queryset=Attachment.objects.filter(object_id__isnull=True),
+            required=False,
             allow_null=True,
         ),
         required=False
