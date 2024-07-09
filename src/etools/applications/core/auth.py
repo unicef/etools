@@ -4,8 +4,10 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.models import Group, Permission
+from django.db import connection
 from django.http import HttpResponseRedirect
 
+from django_tenants.utils import get_tenant_model
 from rest_framework.authentication import (
     BasicAuthentication,
     get_authorization_header,
@@ -229,3 +231,27 @@ class CsrfExemptSessionAuthentication(SessionAuthentication):
 
     def enforce_csrf(self, request):
         return
+
+
+class eToolsEZHactTokenAuth(TokenAuthentication):
+    def authenticate(self, request):
+        key = get_authorization_header(request)
+        try:
+            token = key.decode()
+        except UnicodeError:
+            # 'Invalid token header. '
+            # 'Token string should not contain invalid characters.'
+            return None
+        if bool(token == f"Token {settings.ETOOLS_EZHACT_TOKEN}"):
+            try:
+                user = get_user_model().objects.get(email=settings.ETOOLS_EZHACT_EMAIL)
+            except get_user_model().DoesNotExist:
+                return None
+            else:
+                try:
+                    country = get_tenant_model().objects.get(business_area_code=request.data.get("business_area_code"))
+                except get_tenant_model().DoesNotExist:
+                    return None
+                connection.set_tenant(country)
+                return user, token
+        return None
