@@ -507,6 +507,10 @@ EZHACT_INTEGRATION_DISABLED = bool(get_from_secrets_or_env('EZHACT_INTEGRATION_D
 EZHACT_CERT_PATH = os.path.join(CONFIG_ROOT, 'keys/vision/ezhact_cert.pem')
 EZHACT_KEY_PATH = os.path.join(CONFIG_ROOT, 'keys/vision/ezhact_key.pem')
 
+# Funds reservation API
+ETOOLS_EZHACT_TOKEN = get_from_secrets_or_env('ETOOLS_EZHACT_TOKEN', '')
+ETOOLS_EZHACT_EMAIL = get_from_secrets_or_env('ETOOLS_EZHACT_EMAIL', '')
+
 # ALLOW BASIC AUTH FOR DEMO SITE
 ALLOW_BASIC_AUTH = get_from_secrets_or_env('ALLOW_BASIC_AUTH', False)
 if ALLOW_BASIC_AUTH:
