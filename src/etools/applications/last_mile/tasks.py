@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.db.models import Prefetch
 
 from django_tenants.utils import schema_context
 from unicef_attachments.models import Attachment
@@ -42,7 +43,10 @@ def notify_wastage_transfer(tenant_name, transfer_pk, action='wastage_checkout')
         'surplus_checkin': 'checked-in as surplus'
     }
     with schema_context(tenant_name):
-        transfer = models.Transfer.objects.get(pk=transfer_pk)
+        transfer = models.Transfer.objects\
+            .select_related('partner_organization', 'destination_point', 'checked_in_by') \
+            .prefetch_related(Prefetch('items', models.Item.objects.select_related('material')))\
+            .get(pk=transfer_pk)
 
         # TODO send to Rob for now
         recipients = User.objects.filter(id=2).values_list('email', flat=True)
