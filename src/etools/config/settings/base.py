@@ -396,6 +396,7 @@ REST_FRAMEWORK = {
         'etools.applications.core.auth.EToolsTenantJWTAuthentication',
         'etools.applications.core.auth.eToolsOLCTokenAuth',
         'etools.applications.core.auth.EtoolsTokenAuthentication',
+        'etools.applications.core.auth.eToolsEZHactTokenAuth',
     ),
     'TEST_REQUEST_RENDERER_CLASSES': (
         'rest_framework.renderers.JSONRenderer',

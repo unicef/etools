@@ -1,11 +1,15 @@
 import json
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
+from decimal import Decimal
 from pathlib import Path
 
+from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
 
 from rest_framework import status
+from rest_framework.authtoken.models import Token
+from rest_framework.test import APIClient
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import (
@@ -321,3 +325,105 @@ class TestFRHeaderView(BaseTenantTestCase):
         self.assertEqual(status_code, status.HTTP_200_OK)
         self.assertEqual(result['currencies_match'], False)
         self.assertEqual(result['total_intervention_amt'], 0)
+
+
+class TestExternalReservationAPIView(BaseTenantTestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = UserFactory(email='test@example.com', realms__data=[])
+        cls.token = Token(user=cls.user, key='testkey')
+        cls.token.save()
+        cls.client = APIClient()
+
+        cls.partner = PartnerFactory(organization=OrganizationFactory())
+        agreement = AgreementFactory(partner=cls.partner)
+        cls.intervention = InterventionFactory(agreement=agreement)
+
+    @override_settings(ETOOLS_EZHACT_EMAIL='test@example.com', ETOOLS_EZHACT_TOKEN='testkey')
+    def test_post_201(self):
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token.key)
+        data = {
+            "fr_items": [
+                {
+                    "fr_ref_number": "ref1",
+                    "line_item": 111,
+                    "wbs": "3750/A0/04/110/002/001",
+                    "donor": "UNDP USA",
+                    "donor_code": "U99905",
+                    "grant_number": "SC080517",
+                    "fund": "SC",
+                    "overall_amount": "84437.72",
+                    "overall_amount_dc": "84437.72",
+                    "due_date": "2012-02-23",
+                    "line_item_text": "LEGAL AID TO CHILDREN IN CONFLICT WITH LAW"
+                },
+                {
+                    "fr_ref_number": "ref2",
+                    "line_item": 222,
+                    "wbs": "3750/A0/04/110/002/001",
+                    "donor": "N/A",
+                    "donor_code": "N/A",
+                    "grant_number": "NON-GRANT",
+                    "fund": "GC",
+                    "overall_amount": "25417.00",
+                    "overall_amount_dc": "25417.00",
+                    "due_date": "2012-12-17",
+                    "line_item_text": "LEGAL AID TO CHILDREN IN CONFLICT WITH LAW"
+                }
+            ],
+            "business_area_code": self.tenant.business_area_code,
+            "pd_reference_number": self.intervention.number,
+            "vendor_code": self.partner.vendor_number,
+            "fr_number": "040000056770",
+            "document_date": "2024-07-08",
+            "fr_type": "Programme Document Against PCA",
+            "currency": "USD",
+            "document_text": "PCA FOR CHILD RIGHTS PROJECT OF AJPRODHO",
+            "intervention_amt": "110487.20",
+            "total_amt": "108597.42",
+            "total_amt_local": "109854.72",
+            "actual_amt": "110487.20",
+            "actual_amt_local": "0.00",
+            "outstanding_amt": "12.98",
+            "outstanding_amt_local": "0.00",
+            "start_date": "2012-01-26",
+            "end_date": "2024-07-08",
+            "multi_curr_flag": True,
+            "completed_flag": False,
+            "delegated": False
+        }
+        response = self.client.post(reverse('funds:external-funds-reservation'), data, format='json')
+        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+        self.assertEqual(self.intervention.frs.count(), 1)
+        funds_reservation = self.intervention.frs.first()
+
+        def get_instance_str(value):
+            if isinstance(value, date):
+                return value.strftime('%Y-%m-%d')
+            if isinstance(value, Decimal):
+                return str(value)
+            return value
+
+        for field in ['vendor_code', 'fr_number', 'document_date', 'fr_type', 'currency', 'document_text',
+                      'intervention_amt', 'total_amt', 'total_amt_local', 'actual_amt', 'actual_amt_local',
+                      'outstanding_amt', 'outstanding_amt_local', 'start_date', 'end_date', 'multi_curr_flag',
+                      'completed_flag', 'delegated']:
+            actual_value = getattr(funds_reservation, field)
+            self.assertEqual(get_instance_str(actual_value), data[field])
+
+        self.assertEqual(funds_reservation.fr_items.count(), len(data['fr_items']))
+        for actual_item, expected_item in zip(funds_reservation.fr_items.all(), data['fr_items']):
+            for field in data['fr_items'][0].keys():
+                actual_value = getattr(actual_item, field)
+                self.assertEqual(get_instance_str(actual_value), expected_item[field])
+
+    def test_post_unauthorized_401(self):
+        with override_settings(ETOOLS_EZHACT_EMAIL='test@example.com', ETOOLS_EZHACT_TOKEN='wrongkey'):
+            response = self.client.post(reverse('funds:external-funds-reservation'), data={}, format='json')
+
+            self.assertEqual(status.HTTP_401_UNAUTHORIZED, response.status_code)
+
+        with override_settings(ETOOLS_EZHACT_EMAIL='wrong@example.com', ETOOLS_EZHACT_TOKEN='testkey'):
+            response = self.client.post(reverse('funds:external-funds-reservation'), data={}, format='json')
+            self.assertEqual(status.HTTP_401_UNAUTHORIZED, response.status_code)
