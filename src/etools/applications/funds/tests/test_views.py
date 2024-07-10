@@ -1,4 +1,6 @@
 import json
+from unittest.mock import patch
+
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -18,6 +20,36 @@ from etools.applications.organizations.tests.factories import OrganizationFactor
 from etools.applications.partners.tests.factories import AgreementFactory, InterventionFactory, PartnerFactory
 from etools.applications.users.tests.factories import UserFactory
 from etools.libraries.tests.vcrpy import VCR
+
+
+
+class SyncViewTestCase(BaseTenantTestCase):
+    @patch('etools.applications.ecn.api.ECNAPI.get_intervention')
+    def test_sync(self, request_intervention_mock):
+        request_intervention_mock.return_value = get_example_ecn()
+
+        agreement = AgreementFactory()
+        section = SectionFactory()
+        office = OfficeFactory()
+        user = UserFactory(realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP])
+        response = self.forced_auth_req(
+            'post',
+            reverse('ecn_v1:intervention-import-ecn'),
+            user=user,
+            data={
+                'cfei_number': 'test_cfei',
+                'agreement': agreement.pk,
+                'number': 'test',
+                'sections': [section.pk],
+                'locations': [LocationFactory().pk for _i in range(10)],
+                'offices': [office.pk],
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
+
+
+def fr_post_return_example():
+    return None
 
 
 class TestFRHeaderView(BaseTenantTestCase):
@@ -42,6 +74,24 @@ class TestFRHeaderView(BaseTenantTestCase):
             data=data
         )
         return response.status_code, json.loads(response.rendered_content)
+
+    def run_post_request(self, data):
+        response = self.forced_auth_req(
+            'post',
+            reverse('funds:frs'),
+            user=self.unicef_staff,
+            data=data
+        )
+        return response.status_code, json.loads(response.rendered_content)
+
+    @patch('etools.applications.funds.api.FRAPI.post')
+    def test_post_fr(self, fr_post_mock):
+        fr_post_mock.return_value = fr_post_return_example()
+        #TODO: Set the payload to contain FR 
+        data= None
+        status_code, result = self.run_post_request(data)
+        self.assertEqual(status_code, status.HTTP_201_CREATED)
+
 
     def test_get_one_fr(self):
 
