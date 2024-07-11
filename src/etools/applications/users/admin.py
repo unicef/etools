@@ -223,7 +223,6 @@ class UserAdminPlus(XLSXImportMixin, RestrictedEditAdminMixin, ExtraUrlMixin, Us
     }
 
     def has_import_permission(self, request):
-        # TODO: add a group like "LMSM Admin User" and check for the realm
         return request.user.email in settings.ADMIN_EDIT_EMAILS
 
     @transaction.atomic
@@ -275,19 +274,19 @@ class UserAdminPlus(XLSXImportMixin, RestrictedEditAdminMixin, ExtraUrlMixin, Us
                     defaults={'is_active': True}
                 )
 
-    @button()
+    @button(label="Sync User", permission='auth.change_user', details=False)
     def sync_user(self, request, pk):
         user = get_object_or_404(get_user_model(), pk=pk)
         sync_user.delay(user.username)
         return HttpResponseRedirect(reverse('admin:users_user_change', args=[user.pk]))
 
-    @button()
+    @button(label="Sync Realms to PRP", permission='auth.change_user', details=False)
     def sync_realms_to_prp(self, request, pk):
         user = get_object_or_404(get_user_model(), pk=pk)
         sync_realms_to_prp.delay(user.id, timezone.now().timestamp())
         return HttpResponseRedirect(reverse('admin:users_user_change', args=[user.pk]))
 
-    @button()
+    @button(label="Ad", permission='auth.change_user', details=False)
     def ad(self, request, pk):
         user = get_object_or_404(get_user_model(), pk=pk)
         return HttpResponseRedirect(reverse('users_v3:ad-user-api-view', args=[user.email]))
@@ -307,11 +306,6 @@ class UserAdminPlus(XLSXImportMixin, RestrictedEditAdminMixin, ExtraUrlMixin, Us
         return False
 
     def get_queryset(self, request):
-        """
-        You should only be able to manage users in your country
-        :param request:
-        :return:
-        """
         queryset = super().get_queryset(request)
         if not request.user.is_superuser:
             queryset = queryset.filter(
@@ -321,12 +315,6 @@ class UserAdminPlus(XLSXImportMixin, RestrictedEditAdminMixin, ExtraUrlMixin, Us
         return queryset
 
     def get_readonly_fields(self, request, obj=None):
-        """
-        You shouldnt be able grant superuser access if you are not a superuser
-        :param request:
-        :param obj:
-        :return:
-        """
         fields = list(super().get_readonly_fields(request, obj))
         if not request.user.is_superuser:
             fields.append('is_superuser')
