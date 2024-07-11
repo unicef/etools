@@ -215,12 +215,16 @@ class VisionIngestTransfersApiView(APIView):
                 except models.Material.DoesNotExist:
                     logging.error(f"No Material found in etools with # {item_dict['material']}")
                     continue
+
                 try:
-                    models.Item.objects.get(
-                        transfer__unicef_release_order=unicef_ro, unicef_ro_item=item_dict['unicef_ro_item'])
+                    models.Item.objects.get(other__itemid=f"{unicef_ro}-{item_dict['unicef_ro_item']}")
                 except models.Item.DoesNotExist:
-                    item_dict['transfer'] = transfer
-                    items_to_create.append(models.Item(**item_dict))
+                    try:
+                        models.Item.objects.get(
+                            transfer__unicef_release_order=unicef_ro, unicef_ro_item=item_dict['unicef_ro_item'])
+                    except models.Item.DoesNotExist:
+                        item_dict['transfer'] = transfer
+                        items_to_create.append(models.Item(**item_dict))
 
         models.Item.objects.bulk_create(items_to_create)
 
@@ -244,6 +248,7 @@ class VisionIngestTransfersApiView(APIView):
                         item_dict[self.item_mapping[k]] = v if v else None
                     else:
                         item_dict[self.item_mapping[k]] = strip_tags(v)
+            item_dict['other']['itemid'] = f"{transfer_dict['unicef_release_order']}-{item_dict['unicef_ro_item']}"
 
             transfer_obj = self.get_transfer(transfer_dict)
             if not transfer_obj:
