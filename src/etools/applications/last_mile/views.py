@@ -61,7 +61,9 @@ class PointOfInterestViewSet(POIQuerysetMixin, ModelViewSet):
     search_fields = ('name', 'p_code', 'parent__name', 'parent__p_code')
 
     def get_queryset(self):
-        return self.get_poi_queryset(exclude_partner_prefetch=True).defer('partner_organizations')
+        return self.get_poi_queryset(exclude_partner_prefetch=True).only(
+            'parent__name', 'p_code', 'name', 'is_active', 'description', 'poi_type'
+        )
 
     @action(detail=True, methods=['post'], url_path='upload-waybill',
             serializer_class=serializers.WaybillTransferSerializer)
@@ -211,7 +213,8 @@ class TransferViewSet(
             return models.Transfer.objects.none()
         qs = (super(TransferViewSet, self).get_queryset()
               .select_related('destination_point', 'origin_point',
-                              'checked_in_by', 'checked_out_by', 'origin_transfer')
+                              'destination_point__parent', 'origin_point__parent',
+                              'checked_in_by', 'checked_out_by', 'origin_transfer',)
               .filter(partner_organization=partner)
               .defer("partner_organization",
                      "destination_point__point",
