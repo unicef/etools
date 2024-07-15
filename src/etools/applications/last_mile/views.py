@@ -216,8 +216,7 @@ class TransferViewSet(
                               'destination_point__parent', 'origin_point__parent',
                               'checked_in_by', 'checked_out_by', 'origin_transfer',)
               .filter(partner_organization=partner)
-              .defer("partner_organization",
-                     "destination_point__point",
+              .defer("destination_point__point",
                      "destination_point__parent__parent",
                      "destination_point__parent__geom",
                      "destination_point__parent__point",
