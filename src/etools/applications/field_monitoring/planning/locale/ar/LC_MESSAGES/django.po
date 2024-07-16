@@ -231,9 +231,6 @@ msgstr "نقاط إجراء مراقب النشاط"
 msgid "History"
 msgstr "السجل التاريخي"
 
-msgid "You can not assign yourself as a report reviewer."
-msgstr ""
-
 msgid "Report reviewer must be a PME or Report Reviewer."
 msgstr ""
 

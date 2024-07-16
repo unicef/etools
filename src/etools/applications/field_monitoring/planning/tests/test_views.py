@@ -543,19 +543,6 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         )
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
-    def test_submit_report_reviewer_self(self):
-        visit_lead = UserFactory(pme=True)
-        activity = MonitoringActivityFactory(monitor_type='staff', visit_lead=visit_lead, report_reviewer=None, status='report_finalization')
-
-        self._test_update(
-            visit_lead,
-            activity,
-            {'status': 'submitted', 'report_reviewer': visit_lead.id},
-            expected_status=status.HTTP_400_BAD_REQUEST,
-            field_errors=['report_reviewer'],
-        )
-
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_submitted_staff_report_reviewer_not_editable(self):
         activity = MonitoringActivityFactory(monitor_type='staff', status='submitted')
 

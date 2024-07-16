@@ -233,9 +233,6 @@ msgstr "Мониторинг действий по действиям"
 msgid "History"
 msgstr "История"
 
-msgid "You can not assign yourself as a report reviewer."
-msgstr ""
-
 msgid "Report reviewer must be a PME or Report Reviewer."
 msgstr ""
 

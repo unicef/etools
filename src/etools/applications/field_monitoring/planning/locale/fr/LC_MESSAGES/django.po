@@ -233,9 +233,6 @@ msgstr "Points d'action de l'activité de suivi"
 msgid "History"
 msgstr "Historique"
 
-msgid "You can not assign yourself as a report reviewer."
-msgstr ""
-
 msgid "Report reviewer must be a PME or Report Reviewer."
 msgstr ""
 
