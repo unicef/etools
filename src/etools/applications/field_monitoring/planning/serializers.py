@@ -162,7 +162,6 @@ class MonitoringActivitySerializer(UserContextSerializerMixin, MonitoringActivit
         ]
 
     def validate_report_reviewer(self, value):
-        user = self.get_user()
         if not value.groups.filter(name__in=[PME.name, ReportReviewer.name]).exists():
             raise serializers.ValidationError(_('Report reviewer must be a PME or Report Reviewer.'))
 
