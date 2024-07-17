@@ -26,7 +26,7 @@ class POIFilter(filters.FilterSet):
 
     class Meta:
         model = models.PointOfInterest
-        fields = ('selected_reason',)
+        fields = ('selected_reason', 'poi_type')
 
     def selected_reason_filter(self, queryset, name, value):
         if value == models.Transfer.DELIVERY:
