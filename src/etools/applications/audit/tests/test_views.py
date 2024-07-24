@@ -7,6 +7,7 @@ from unittest.mock import Mock, patch
 from django.contrib.contenttypes.models import ContentType
 from django.core.management import call_command
 from django.db import connection
+from django.test.utils import override_settings
 from django.urls import reverse
 from django.utils import timezone
 
@@ -40,6 +41,8 @@ from etools.applications.organizations.models import OrganizationType
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.reports.tests.factories import SectionFactory
 from etools.applications.users.tests.factories import CountryFactory, GroupFactory, OfficeFactory, RealmFactory
+
+SKIP_VALIDATION_BEFORE = (datetime.datetime.now().date() - datetime.timedelta(days=1)).strftime('%Y-%m-%d')
 
 
 class BaseTestCategoryRisksViewSet(EngagementTransitionsTestCaseMixin):
@@ -613,6 +616,7 @@ class TestMicroAssessmentCreateViewSet(TestEngagementCreateActivePDViewSet, Base
                                        BaseTenantTestCase):
     engagement_factory = MicroAssessmentFactory
 
+    @override_settings(SKIP_VALIDATION_BEFORE=SKIP_VALIDATION_BEFORE)
     def test_partner_contacted_at_validation(self):
         # date should be in past
         data = copy(self.create_data)
@@ -629,6 +633,7 @@ class TestAuditCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEngage
         super().setUp()
         self.create_data['year_of_audit'] = timezone.now().year
 
+    @override_settings(SKIP_VALIDATION_BEFORE=SKIP_VALIDATION_BEFORE)
     def test_end_date_validation(self):
         data = copy(self.create_data)
         data['end_date'] = data['start_date'] - datetime.timedelta(days=1)
@@ -636,6 +641,7 @@ class TestAuditCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEngage
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('end_date', response.data)
 
+    @override_settings(SKIP_VALIDATION_BEFORE=SKIP_VALIDATION_BEFORE)
     def test_partner_contacted_at_validation(self):
         data = copy(self.create_data)
         data['partner_contacted_at'] = data['end_date'] - datetime.timedelta(days=1)
@@ -723,6 +729,7 @@ class TestSpotCheckCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEn
             sorted([office_1.pk, office_2.pk]),
         )
 
+    @override_settings(SKIP_VALIDATION_BEFORE=SKIP_VALIDATION_BEFORE)
     def test_end_date_validation(self):
         data = copy(self.create_data)
         data['end_date'] = data['start_date'] - datetime.timedelta(days=1)
@@ -730,6 +737,7 @@ class TestSpotCheckCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEn
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('end_date', response.data)
 
+    @override_settings(SKIP_VALIDATION_BEFORE=SKIP_VALIDATION_BEFORE)
     def test_partner_contacted_at_validation(self):
         data = copy(self.create_data)
         data['partner_contacted_at'] = data['end_date'] - datetime.timedelta(days=1)
@@ -762,6 +770,7 @@ class SpecialAuditCreateViewSet(BaseTestEngagementsCreateViewSet, BaseTenantTest
 
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
 
+    @override_settings(SKIP_VALIDATION_BEFORE=SKIP_VALIDATION_BEFORE)
     def test_end_date_validation(self):
         data = copy(self.create_data)
         data['end_date'] = data['start_date'] - datetime.timedelta(days=1)
@@ -769,6 +778,7 @@ class SpecialAuditCreateViewSet(BaseTestEngagementsCreateViewSet, BaseTenantTest
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('end_date', response.data)
 
+    @override_settings(SKIP_VALIDATION_BEFORE=SKIP_VALIDATION_BEFORE)
     def test_partner_contacted_at_validation(self):
         data = copy(self.create_data)
         data['partner_contacted_at'] = data['end_date'] - datetime.timedelta(days=1)
@@ -824,6 +834,7 @@ class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenan
         })
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
+    @override_settings(SKIP_VALIDATION_BEFORE=SKIP_VALIDATION_BEFORE)
     def test_date_of_field_visit_after_partner_contacted_at_validation(self):
         self.engagement.partner_contacted_at = self.engagement.end_date + datetime.timedelta(days=1)
         self.engagement.save()
@@ -837,6 +848,7 @@ class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenan
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('date_of_field_visit', response.data)
 
+    @override_settings(SKIP_VALIDATION_BEFORE=SKIP_VALIDATION_BEFORE)
     def test_date_of_draft_report_to_ip_after_date_of_field_visit_validation(self):
         self.engagement.partner_contacted_at = self.engagement.end_date + datetime.timedelta(days=1)
         self.engagement.save()
@@ -850,6 +862,7 @@ class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenan
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('date_of_field_visit', response.data)
 
+    @override_settings(SKIP_VALIDATION_BEFORE=SKIP_VALIDATION_BEFORE)
     def test_date_of_comments_by_ip_after_date_of_draft_report_to_ip_validation(self):
         self.engagement.partner_contacted_at = self.engagement.end_date + datetime.timedelta(days=1)
         self.engagement.save()
@@ -863,6 +876,7 @@ class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenan
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('date_of_comments_by_ip', response.data)
 
+    @override_settings(SKIP_VALIDATION_BEFORE=SKIP_VALIDATION_BEFORE)
     def test_date_of_draft_report_to_unicef_after_date_of_comments_by_ip_validation(self):
         self.engagement.partner_contacted_at = self.engagement.end_date + datetime.timedelta(days=1)
         self.engagement.save()
@@ -876,6 +890,7 @@ class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenan
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('date_of_draft_report_to_unicef', response.data)
 
+    @override_settings(SKIP_VALIDATION_BEFORE=SKIP_VALIDATION_BEFORE)
     def test_date_of_comments_by_unicef_after_date_of_draft_report_to_unicef_validation(self):
         self.engagement.partner_contacted_at = self.engagement.end_date + datetime.timedelta(days=1)
         self.engagement.save()
