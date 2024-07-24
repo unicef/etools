@@ -693,3 +693,6 @@ PBI_CONFIG = {
     "SCOPE_BASE": ['https://analysis.windows.net/powerbi/api/.default'],
     "AUTHORITY_URL": f"https://login.microsoftonline.com/{get_from_secrets_or_env('PBI_LMSM_TENANT_ID', '')}"
 }
+
+# FAM documents skip dates validation on created/update prior the date
+SKIP_VALIDATION_BEFORE = get_from_secrets_or_env('SKIP_VALIDATION_BEFORE', '2024-08-01')
