@@ -86,6 +86,28 @@ class TestPointOfInterestView(BaseTenantTestCase):
         self.assertEqual(len(response.data['results']), 1)
         self.assertEqual(warehouse.pk, response.data['results'][0]['id'])
 
+    def test_poi_list_selected_reason_filter(self):
+        url = reverse("last_mile:pois-list")
+
+        warehouse = PointOfInterestFactory(partner_organizations=[self.partner], private=True, poi_type_id=1)  # warehouse
+        PointOfInterestFactory(partner_organizations=[self.partner], private=True, poi_type_id=2)  # distribution_point
+        PointOfInterestFactory(partner_organizations=[self.partner], private=True, poi_type_id=3)  # hospital
+
+        with self.assertNumQueries(3):
+            response = self.forced_auth_req('get', url, user=self.partner_staff, data={"selected_reason": "DELIVERY"})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 1)
+        self.assertEqual(warehouse.pk, response.data['results'][0]['id'])
+
+        response = self.forced_auth_req('get', url, user=self.partner_staff, data={"selected_reason": "DISTRIBUTION"})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 3)
+        self.assertEqual(
+            ['distribution_point', 'hospital', 'school'],
+            sorted([poi['poi_type']['category'] for poi in response.data['results']]))
+
     def test_item_list(self):
         url = reverse('last_mile:inventory-item-list', args=(self.poi_partner.pk,))
         transfer = TransferFactory(

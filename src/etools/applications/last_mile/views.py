@@ -19,7 +19,7 @@ from rest_framework.viewsets import GenericViewSet, ModelViewSet, ReadOnlyModelV
 from unicef_restlib.pagination import DynamicPageNumberPagination
 
 from etools.applications.last_mile import models, serializers
-from etools.applications.last_mile.filters import TransferFilter
+from etools.applications.last_mile.filters import POIFilter, TransferFilter
 from etools.applications.last_mile.permissions import IsIPLMEditor
 from etools.applications.last_mile.tasks import notify_upload_waybill
 from etools.applications.partners.models import Agreement, PartnerOrganization
@@ -56,11 +56,13 @@ class PointOfInterestViewSet(POIQuerysetMixin, ModelViewSet):
     pagination_class = DynamicPageNumberPagination
 
     filter_backends = (DjangoFilterBackend, SearchFilter)
-    filterset_fields = ('poi_type',)
+    filter_class = POIFilter
     search_fields = ('name', 'p_code', 'parent__name', 'parent__p_code')
 
     def get_queryset(self):
-        return self.get_poi_queryset(exclude_partner_prefetch=True).defer('partner_organizations')
+        return self.get_poi_queryset(exclude_partner_prefetch=True).only(
+            'parent__name', 'p_code', 'name', 'is_active', 'description', 'poi_type'
+        )
 
     @action(detail=True, methods=['post'], url_path='upload-waybill',
             serializer_class=serializers.WaybillTransferSerializer)
@@ -210,7 +212,8 @@ class TransferViewSet(
             return models.Transfer.objects.none()
         qs = (super(TransferViewSet, self).get_queryset()
               .select_related('destination_point', 'origin_point',
-                              'checked_in_by', 'checked_out_by', 'origin_transfer')
+                              'destination_point__parent', 'origin_point__parent',
+                              'checked_in_by', 'checked_out_by', 'origin_transfer',)
               .filter(partner_organization=partner)
               .defer("partner_organization",
                      "destination_point__point",
