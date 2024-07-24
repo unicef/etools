@@ -7,7 +7,7 @@ from unicef_locations.models import AbstractLocation
 class LocationsManager(TreeManager):
 
     def get_queryset(self):
-        return super().get_queryset().defer("geom", "point").select_related('parent')
+        return super().get_queryset().defer("geom", "point", "parent__geom", "parent__point").select_related('parent')
 
     def active(self):
         return self.get_queryset().filter(is_active=True)

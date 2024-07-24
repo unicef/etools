@@ -20,7 +20,7 @@ from rest_framework.viewsets import GenericViewSet, ModelViewSet, ReadOnlyModelV
 from unicef_restlib.pagination import DynamicPageNumberPagination
 
 from etools.applications.last_mile import models, serializers
-from etools.applications.last_mile.filters import TransferFilter
+from etools.applications.last_mile.filters import POIFilter, TransferFilter
 from etools.applications.last_mile.permissions import IsIPLMEditor
 from etools.applications.last_mile.tasks import notify_upload_waybill
 from etools.applications.partners.models import Agreement, PartnerOrganization
@@ -35,17 +35,19 @@ class PointOfInterestTypeViewSet(ReadOnlyModelViewSet):
 
 
 class POIQuerysetMixin:
-    def get_poi_queryset(self):
+    def get_poi_queryset(self, exclude_partner_prefetch=False):
         partner = self.request.user.partner
         if partner:
-            return (models.PointOfInterest.objects
-                    .filter(Q(partner_organizations=partner) | Q(partner_organizations__isnull=True))
-                    .filter(is_active=True)
-                    .exclude(name="UNICEF Warehouse")  # exclude UNICEF Warehouse
-                    .select_related('parent')
-                    .select_related('poi_type')
-                    .prefetch_related('partner_organizations')
-                    .order_by('name', 'id'))
+            qs = (models.PointOfInterest.objects
+                  .filter(Q(partner_organizations=partner) | Q(partner_organizations__isnull=True))
+                  .filter(is_active=True)
+                  .exclude(name="UNICEF Warehouse")  # exclude UNICEF Warehouse
+                  .select_related('parent').defer('parent__point', 'parent__geom', 'point')
+                  .select_related('poi_type')
+                  .order_by('name', 'id'))
+            if not exclude_partner_prefetch:
+                qs.prefetch_related('partner_organizations')
+            return qs
         return models.PointOfInterest.objects.none()
 
 
@@ -55,11 +57,13 @@ class PointOfInterestViewSet(POIQuerysetMixin, ModelViewSet):
     pagination_class = DynamicPageNumberPagination
 
     filter_backends = (DjangoFilterBackend, SearchFilter)
-    filter_fields = ('poi_type',)
+    filter_class = POIFilter
     search_fields = ('name', 'p_code', 'parent__name', 'parent__p_code')
 
     def get_queryset(self):
-        return self.get_poi_queryset()
+        return self.get_poi_queryset(exclude_partner_prefetch=True).only(
+            'parent__name', 'p_code', 'name', 'is_active', 'description', 'poi_type'
+        )
 
     @action(detail=True, methods=['post'], url_path='upload-waybill',
             serializer_class=serializers.WaybillTransferSerializer)
@@ -147,17 +151,32 @@ class InventoryMaterialsViewSet(POIQuerysetMixin, mixins.ListModelMixin, Generic
         if not partner:
             return self.queryset.none()
         items_qs = models.Item.objects\
-            .select_related('transfer', 'transfer__partner_organization', 'transfer__destination_point')\
+            .select_related('transfer',
+                            'transfer__partner_organization',
+                            'transfer__partner_organization__organization',
+                            'transfer__origin_point',
+                            'transfer__origin_point__parent',
+                            'transfer__checked_in_by',
+                            'transfer__destination_point__parent',
+                            'transfer__destination_point')\
             .filter(transfer__status=models.Transfer.COMPLETED,
                     transfer__destination_point=poi.pk,
                     transfer__partner_organization=partner)\
             .exclude(transfer__transfer_type=models.Transfer.WASTAGE)\
+            .defer('transfer__origin_point__point',
+                   'transfer__destination_point__point',
+                   'transfer__origin_point__parent__geom',
+                   'transfer__origin_point__parent__point',
+                   'transfer__origin_point__parent__parent',
+                   'transfer__destination_point__parent__geom',
+                   'transfer__destination_point__parent__point',
+                   'transfer__destination_point__parent__parent')
 
         qs = models.Material.objects\
             .filter(items__in=items_qs)\
             .prefetch_related(Prefetch('items', queryset=items_qs)) \
             .annotate(description=Subquery(models.PartnerMaterial.objects.filter(
-                partner_organization=partner, material=OuterRef('id')).values('description'), output_field=CharField()))\
+                partner_organization=partner, material=OuterRef('id')).values('description')[:1], output_field=CharField()))\
             .distinct()\
             .order_by('id', 'short_description')
 
@@ -192,11 +211,20 @@ class TransferViewSet(
         partner = self.request.user.partner
         if not partner:
             return models.Transfer.objects.none()
-        qs = super(TransferViewSet, self).get_queryset()\
-            .select_related('partner_organization',
-                            'destination_point', 'origin_point',
-                            'checked_in_by', 'checked_out_by', 'origin_transfer')\
-            .filter(partner_organization=partner)
+        qs = (super(TransferViewSet, self).get_queryset()
+              .select_related('destination_point', 'origin_point',
+                              'destination_point__parent', 'origin_point__parent',
+                              'checked_in_by', 'checked_out_by', 'origin_transfer',)
+              .filter(partner_organization=partner)
+              .defer("partner_organization",
+                     "destination_point__point",
+                     "destination_point__parent__parent",
+                     "destination_point__parent__geom",
+                     "destination_point__parent__point",
+                     "origin_point__point",
+                     "origin_point__parent__parent",
+                     "origin_point__parent__geom",
+                     "origin_point__parent__point"))
         return qs
 
     def detail_qs(self):
