@@ -20,7 +20,7 @@ from rest_framework.viewsets import GenericViewSet, ModelViewSet, ReadOnlyModelV
 from unicef_restlib.pagination import DynamicPageNumberPagination
 
 from etools.applications.last_mile import models, serializers
-from etools.applications.last_mile.filters import TransferFilter
+from etools.applications.last_mile.filters import POIFilter, TransferFilter
 from etools.applications.last_mile.permissions import IsIPLMEditor
 from etools.applications.last_mile.tasks import notify_upload_waybill
 from etools.applications.partners.models import Agreement, PartnerOrganization
@@ -57,7 +57,7 @@ class PointOfInterestViewSet(POIQuerysetMixin, ModelViewSet):
     pagination_class = DynamicPageNumberPagination
 
     filter_backends = (DjangoFilterBackend, SearchFilter)
-    filter_fields = ('poi_type',)
+    filter_class = POIFilter
     search_fields = ('name', 'p_code', 'parent__name', 'parent__p_code')
 
     def get_queryset(self):
