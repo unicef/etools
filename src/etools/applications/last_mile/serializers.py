@@ -37,7 +37,7 @@ class PointOfInterestSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.PointOfInterest
-        exclude = ('partner_organizations', 'point', 'created', 'modified')
+        exclude = ('partner_organizations', 'point', 'created', 'modified', 'parent', 'other', 'private')
 
 
 class PointOfInterestLightSerializer(serializers.ModelSerializer):
