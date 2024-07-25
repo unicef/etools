@@ -36,7 +36,7 @@ class ActionPointAdmin(SnapshotModelAdmin):
     inlines = (CommentInline, ActivityInline, )
     raw_id_fields = ('section', 'office', 'location', 'cp_output', 'partner', 'intervention', 'tpm_activity',
                      'psea_assessment', 'travel_activity', 'engagement', 'author', 'assigned_by', 'assigned_to',
-                     'monitoring_activity')
+                     'monitoring_activity', 'verified_by', 'potential_verifier')
 
 
 admin.site.register(ActionPoint, ActionPointAdmin)
