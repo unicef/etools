@@ -56,7 +56,7 @@ class PointOfInterestViewSet(POIQuerysetMixin, ModelViewSet):
     pagination_class = DynamicPageNumberPagination
 
     filter_backends = (DjangoFilterBackend, SearchFilter)
-    filter_class = POIFilter
+    filterset_class = POIFilter
     search_fields = ('name', 'p_code', 'parent__name', 'parent__p_code')
 
     def get_queryset(self):
