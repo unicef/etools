@@ -15,7 +15,7 @@ from etools.libraries.tenant_support.utils import TenantSuffixedString
 
 def cache_key(request: Request):
     schema_name = connection.schema_name
-    url = str(request._request.get_raw_uri())
+    url = str(request.build_absolute_uri())
     return 'locations-etag-%s-%s-%s' % (schema_name, get_cache_version(), slugify(url))
 
 

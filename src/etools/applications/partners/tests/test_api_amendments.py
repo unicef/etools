@@ -96,7 +96,7 @@ class TestInterventionAmendments(BaseTestInterventionAmendments, BaseTenantTestC
             reverse('partners_api:intervention-amendments-add', args=[self.active_intervention.pk]),
             UserFactory(), data={}, request_format='multipart',
         )
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_unauthenticated_user_forbidden(self):
         '''Ensure an unauthenticated user gets the 403 smackdown'''
@@ -106,7 +106,7 @@ class TestInterventionAmendments(BaseTestInterventionAmendments, BaseTenantTestC
             reverse('partners_api:intervention-amendments-add', args=[self.active_intervention.pk]),
             None, data={}, request_format='multipart',
         )
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_group_permission_partnership_member(self):
         '''Ensure group membership is sufficient for create;'''
@@ -115,7 +115,7 @@ class TestInterventionAmendments(BaseTestInterventionAmendments, BaseTenantTestC
             reverse('partners_api:intervention-amendments-add', args=[self.active_intervention.pk]),
             UserFactory(is_staff=True), data={}, request_format='multipart',
         )
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_create_amendment_invalid_type(self):
         response = self.forced_auth_req(
@@ -129,9 +129,9 @@ class TestInterventionAmendments(BaseTestInterventionAmendments, BaseTenantTestC
             request_format='multipart',
         )
 
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(response.data['types'],
-                          {0: [ErrorDetail(string='"invalid_choice" is not a valid choice.', code='invalid_choice')]})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data['types'],
+                         {0: [ErrorDetail(string='"invalid_choice" is not a valid choice.', code='invalid_choice')]})
 
     def test_create_amendment_other_type_no_description(self):
         response = self.forced_auth_req(
@@ -145,8 +145,8 @@ class TestInterventionAmendments(BaseTestInterventionAmendments, BaseTenantTestC
             request_format='multipart',
         )
 
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(
             response.data['non_field_errors'], [ErrorDetail(
                 string="Other description required, if type 'Other' selected.",
                 code='invalid'
@@ -179,8 +179,8 @@ class TestInterventionAmendments(BaseTestInterventionAmendments, BaseTenantTestC
             request_format='multipart',
         )
 
-        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
-        self.assertEquals(response.data['intervention'], self.active_intervention.pk)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['intervention'], self.active_intervention.pk)
         attachment.refresh_from_db()
         self.assertEqual(
             attachment.file_type.code,
@@ -214,8 +214,8 @@ class TestInterventionAmendments(BaseTestInterventionAmendments, BaseTenantTestC
             request_format='multipart',
         )
         self.assertEqual(mock_send.call_count, 1)
-        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
-        self.assertEquals(response.data['intervention'], self.active_intervention.pk)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['intervention'], self.active_intervention.pk)
 
     def test_create_amendment_not_unique_error_translated(self):
         InterventionAmendmentFactory(
@@ -232,7 +232,7 @@ class TestInterventionAmendments(BaseTestInterventionAmendments, BaseTenantTestC
                 },
                 request_format='multipart',
             )
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
             response.data['non_field_errors'][0],
             "On ne peut pas ajouter un nouvel amendement alors qu'un autre amendement du même type est en cours."

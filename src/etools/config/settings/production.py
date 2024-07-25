@@ -39,7 +39,7 @@ AZURE_ACCESS_POLICY_EXPIRY = 10800  # length of time before signature expires in
 AZURE_ACCESS_POLICY_PERMISSION = 'r'  # read permission
 
 if AZURE_ACCOUNT_NAME and AZURE_ACCOUNT_KEY and AZURE_CONTAINER:
-    DEFAULT_FILE_STORAGE = 'etools.libraries.azure_storage_backend.EToolsAzureStorage'
+    STORAGES["default"] = {"BACKEND": 'etools.libraries.azure_storage_backend.EToolsAzureStorage'}
     from storages.backends.azure_storage import AzureStorage
     storage = AzureStorage()
     with storage.open('keys/jwt/key.pem') as jwt_key, \
