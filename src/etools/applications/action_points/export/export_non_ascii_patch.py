@@ -41,9 +41,11 @@ def dset_sheet(cls, dataset, ws, freeze_panes=True, escape=False):
 
             try:
                 cell.value = col
-            except (ValueError, IllegalCharacterError):
+            except ValueError:
+                cell.value = str(col)
+            except IllegalCharacterError:
                 from openpyxl.cell.cell import ILLEGAL_CHARACTERS_RE
-                cell.value = str(ILLEGAL_CHARACTERS_RE.sub(r'', col))
+                cell.value = ILLEGAL_CHARACTERS_RE.sub(r'', col)
 
             if escape and cell.data_type == 'f' and cell.value.startswith('='):
                 cell.value = cell.value.replace("=", "")
