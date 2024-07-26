@@ -44,8 +44,12 @@ def notify_wastage_transfer(tenant_name, transfer_pk, action='wastage_checkout')
     with schema_context(tenant_name):
         transfer = models.Transfer.objects.get(pk=transfer_pk)
 
-        # TODO send to Rob for now
-        recipients = User.objects.filter(id=2).values_list('email', flat=True)
+        recipients = User.objects \
+            .filter(realms__country__schema_name=tenant_name,
+                    realms__is_active=True,
+                    realms__group__name='LMSM Focal Point') \
+            .values_list('email', flat=True) \
+            .distinct()
         send_notification(
             recipients=list(recipients),
             from_address=settings.DEFAULT_FROM_EMAIL,

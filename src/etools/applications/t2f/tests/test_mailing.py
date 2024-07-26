@@ -1,3 +1,4 @@
+from unittest.mock import Mock, patch
 
 from django.core import mail
 
@@ -31,12 +32,14 @@ class MailingTest(BaseTenantTestCase):
         tenant_country.save()
         PublicsBusinessAreaFactory(code=self.travel.traveler.profile.country.business_area_code)
 
-        self.travel.submit_for_approval()
-        self.travel.approve()
-        self.travel.report_note = 'Note'
-        self.travel.mark_as_completed()
+        mock_send = Mock()
+        with patch("etools.applications.t2f.models.send_notification", mock_send):
+            self.travel.submit_for_approval()
+            self.travel.approve()
+            self.travel.report_note = 'Note'
+            self.travel.mark_as_completed()
 
-        self.assertEqual(len(mail.outbox), 3)
+        self.assertEqual(mock_send.call_count, 3)
 
         for email in mail.outbox:
             self.assertIn(self.travel.reference_number, email.subject, email.subject)

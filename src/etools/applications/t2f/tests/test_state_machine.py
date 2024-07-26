@@ -226,14 +226,16 @@ class StateMachineTest(BaseTenantTestCase):
                 'report': 'something',
                 'end_date': datetime.date.today() + datetime.timedelta(days=1),
                 'supervisor': self.unicef_staff.id}
-        response = self.forced_auth_req('post', reverse('t2f:travels:list:state_change',
-                                                        kwargs={'transition_name': Travel.COMPLETE}),
-                                        data=data, user=self.unicef_staff)
+        mock_send = Mock()
+        with patch("etools.applications.t2f.models.send_notification", mock_send):
+            response = self.forced_auth_req('post', reverse('t2f:travels:list:state_change',
+                                                            kwargs={'transition_name': Travel.COMPLETE}),
+                                            data=data, user=self.unicef_staff)
         self.assertEqual(response.status_code, 201)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json['status'], Travel.COMPLETED)
 
-        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mock_send.call_count, 1)
 
     def test_ta_not_required_flow_send_for_approval(self):
         data = {'traveler': self.traveler.id,

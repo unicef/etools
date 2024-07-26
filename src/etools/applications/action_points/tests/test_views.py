@@ -48,7 +48,7 @@ class TestActionPointViewSet(TestExportMixin, ActionPointsTestCaseMixin, BaseTen
             user=user
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertCountEqual(
             map(lambda x: x['id'], response.data['results']),
             map(lambda x: x.id, expected_visits)
@@ -79,7 +79,7 @@ class TestActionPointViewSet(TestExportMixin, ActionPointsTestCaseMixin, BaseTen
             reverse('action-points:action-points-detail', args=[action_point.id]),
             user=self.pme_user
         )
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_unicef_detail_view(self):
         action_point = ActionPointFactory(status='open')
@@ -89,7 +89,7 @@ class TestActionPointViewSet(TestExportMixin, ActionPointsTestCaseMixin, BaseTen
             reverse('action-points:action-points-detail', args=[action_point.id]),
             user=self.unicef_user
         )
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_unknown_user_detail_view(self):
         action_point = ActionPointFactory(status='open')
@@ -99,7 +99,7 @@ class TestActionPointViewSet(TestExportMixin, ActionPointsTestCaseMixin, BaseTen
             reverse('action-points:action-points-detail', args=[action_point.id]),
             user=self.common_user
         )
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_create_author(self):
         response = self.forced_auth_req(
@@ -350,7 +350,7 @@ class TestActionPointsListViewMetadada(TestActionPointsViewMetadata, BaseTenantT
             user=user
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         if can_create:
             self.assertIn('POST', response.data['actions'])
@@ -405,7 +405,7 @@ class TestActionPointsDetailViewMetadata(TestActionPointsViewMetadata):
             user=user
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         if can_update:
             self.assertIn('PUT', response.data['actions'])

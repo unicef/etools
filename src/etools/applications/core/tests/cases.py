@@ -1,3 +1,6 @@
+import os
+
+from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.management import call_command
@@ -65,7 +68,7 @@ class BaseTenantTestCase(TenantTestCase):
         })
         cls.domain = get_tenant_domain_model().objects.get_or_create(domain=TENANT_DOMAIN, tenant=cls.tenant)
         # cls.public = TenantModel.objects.get_or_create(schema_name='public', business_area_code='ABC', name='UNICEF')
-
+        settings.STATIC_ROOT = os.path.join(settings.PACKAGE_ROOT, 'assets')
         try:
             cls.tenant.counters
         except ObjectDoesNotExist:

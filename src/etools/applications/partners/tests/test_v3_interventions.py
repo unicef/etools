@@ -2352,6 +2352,8 @@ class TestInterventionAcceptBehalfOfPartner(BaseInterventionActionTestCase):
 
 
 class TestInterventionReview(BaseInterventionActionTestCase):
+    fixtures = ('groups',)
+
     def setUp(self):
         super().setUp()
         self.url = reverse(
@@ -3754,7 +3756,7 @@ class TestPMPInterventionIndicatorsUpdateView(BaseTenantTestCase):
             user=self.unicef_user,
             data={},
         )
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_patch(self):
         data = {
@@ -3770,7 +3772,7 @@ class TestPMPInterventionIndicatorsUpdateView(BaseTenantTestCase):
             user=self.partnership_manager,
             data=data,
         )
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         # The id of the newly-created indicator should be associated with
         # lower result, and it should be the only one associated with that
         # result.
@@ -3795,7 +3797,7 @@ class TestPMPInterventionIndicatorsUpdateView(BaseTenantTestCase):
             user=self.partnership_manager,
             data={'indicator': {'title': f'new_{old_title}', 'code': 'new_code'}},
         )
-        self.assertEquals(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertNotEqual(response.data['id'], self.indicator.id)
         self.assertNotEqual(response.data['indicator']['id'], self.indicator.indicator.id)
         self.assertEqual(response.data['indicator']['title'], f'new_{old_title}')
@@ -3821,7 +3823,7 @@ class TestPMPInterventionIndicatorsUpdateView(BaseTenantTestCase):
             user=self.partnership_manager,
             data={'indicator': {'title': 'new title'}},
         )
-        self.assertEquals(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertNotEqual(response.data['id'], self.indicator.id)
         self.assertNotEqual(response.data['indicator']['id'], self.indicator.indicator.id)
         self.assertEqual(response.data['indicator']['title'], 'new title')
@@ -3903,7 +3905,7 @@ class TestPMPInterventionIndicatorsCreateView(
                 'baseline': {'v': value, 'd': 1}
             })
             response = self._make_request(user, data)
-            self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
             response_json = json.loads(response.rendered_content)
             self.assertEqual(response_json['target'], [response_error])
             self.assertEqual(response_json['baseline'], [response_error])

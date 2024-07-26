@@ -700,7 +700,7 @@ class PMPInterventionIndicatorsUpdateView(
 
     def get_root_object(self):
         if not hasattr(self, '_intervention'):
-            self._intervention = self.get_object().lower_result.result_link.intervention
+            self._intervention = self.get_queryset().get(pk=self.kwargs['pk']).lower_result.result_link.intervention
         return self._intervention
 
     def get_intervention(self):
