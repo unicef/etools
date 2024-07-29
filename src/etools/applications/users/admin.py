@@ -33,7 +33,7 @@ from etools.applications.users.signals import sync_realms_to_prp_on_update
 from etools.applications.users.tasks import sync_realms_to_prp
 from etools.applications.vision.tasks import sync_handler, vision_sync_task
 from etools.libraries.azure_graph_api.tasks import sync_user
-from etools.libraries.djangolib.admin import RestrictedEditAdminMixin, XLSXImportMixin
+from etools.libraries.djangolib.admin import RestrictedEditAdminMixin, RssRealmEditAdminMixin, XLSXImportMixin
 from etools.libraries.djangolib.utils import temporary_disconnect_signal
 
 
@@ -183,7 +183,7 @@ class RealmInline(admin.StackedInline):
         return False
 
 
-class UserAdminPlus(XLSXImportMixin, RestrictedEditAdminMixin, ExtraUrlMixin, UserAdmin):
+class UserAdminPlus(XLSXImportMixin, RssRealmEditAdminMixin, ExtraUrlMixin, UserAdmin):
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
         (_('Personal info'), {'fields': ('first_name', 'last_name', 'email')}),
@@ -413,7 +413,7 @@ class MultipleRealmForm(forms.ModelForm):
         fields = ['user', 'country', 'group', 'organization']
 
 
-class RealmAdmin(RestrictedEditAdminMixin, SnapshotModelAdmin):
+class RealmAdmin(RssRealmEditAdminMixin, SnapshotModelAdmin):
     change_list_template = "admin/users/realm/change_list.html"
 
     raw_id_fields = ('user', 'organization')
