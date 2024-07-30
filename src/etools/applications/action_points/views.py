@@ -49,7 +49,7 @@ class CategoryViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     serializer_class = CategorySerializer
     queryset = Category.objects.all()
     filter_backends = (DjangoFilterBackend,)
-    filter_fields = ('module',)
+    filterset_fields = ('module',)
 
 
 class ActionPointViewSet(
@@ -89,12 +89,12 @@ class ActionPointViewSet(
         'cp_output__name', 'partner__organization__name', 'section__name', 'office__name', 'assigned_to__first_name',
         'assigned_to__last_name', 'due_date', 'status', 'pk'
     )
-    filter_fields = {field: ['exact'] for field in (
+    filterset_fields = {field: ['exact'] for field in (
         'assigned_by', 'assigned_to', 'high_priority', 'author', 'section', 'location',
         'office', 'partner', 'intervention', 'cp_output',
         'engagement', 'psea_assessment', 'tpm_activity', 'travel_activity',
     )}
-    filter_fields.update({
+    filterset_fields.update({
         'status': ['exact', 'in'],
         'section': ['exact', 'in'],
         'due_date': ['exact', 'lte', 'gte']
