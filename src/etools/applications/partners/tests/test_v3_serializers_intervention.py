@@ -4,7 +4,7 @@ from django.db import connection
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import Intervention
-from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP
+from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, PRC_SECRETARY, UNICEF_USER
 from etools.applications.partners.serializers import interventions_v3 as serializers
 from etools.applications.partners.tests.factories import InterventionFactory, PartnerFactory
 from etools.applications.users.tests.factories import GroupFactory, RealmFactory, UserFactory
@@ -14,15 +14,23 @@ class TestInterventionDetailSerializer(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_user = UserFactory()
+        cls.prc_secretary = UserFactory(
+            is_staff=True,
+            realms__data=[UNICEF_USER, PRC_SECRETARY],
+        )
         cls.partner = PartnerFactory()
         cls.partner_user = UserFactory(
             realms__data=['IP Viewer'],
             profile__organization=cls.partner.organization
         )
         cls.mock_unicef_request = Mock(user=cls.unicef_user)
+        cls.mock_prc_secretary_request = Mock(user=cls.prc_secretary)
         cls.mock_partner_request = Mock(user=cls.partner_user)
         cls.unicef_serializer = serializers.InterventionDetailSerializer(
             context={"request": cls.mock_unicef_request},
+        )
+        cls.prc_secretary_serializer = serializers.InterventionDetailSerializer(
+            context={"request": cls.mock_prc_secretary_request},
         )
         cls.partner_serializer = serializers.InterventionDetailSerializer(
             context={"request": cls.mock_partner_request},
@@ -93,7 +101,16 @@ class TestInterventionDetailSerializer(BaseTenantTestCase):
         pd = InterventionFactory(budget_owner=self.unicef_user)
         self.assertEqual(pd.status, pd.DRAFT)
         available_actions = self.unicef_serializer.get_available_actions(pd)
-        expected_actions = self.default_actions + ["accept", "send_to_partner", "accept_on_behalf_of_partner", "cancel"]
+        expected_actions = self.default_actions + ["accept", "send_to_partner", "accept_on_behalf_of_partner"]
+        self.assertEqual(sorted(available_actions), sorted(expected_actions))
+
+    def test_available_actions_budget_owner_prc_secretary(self):
+        pd = InterventionFactory(budget_owner=self.prc_secretary)
+        self.assertEqual(pd.status, pd.DRAFT)
+        available_actions = self.prc_secretary_serializer.get_available_actions(pd)
+        expected_actions = self.default_actions + [
+            "accept", "send_to_partner", "accept_on_behalf_of_partner", "cancel",
+        ]
         self.assertEqual(sorted(available_actions), sorted(expected_actions))
 
     def test_available_actions_management(self):
@@ -114,6 +131,14 @@ class TestInterventionDetailSerializer(BaseTenantTestCase):
         pd.unicef_focal_points.add(self.unicef_user)
         self.assertEqual(pd.status, pd.DRAFT)
         available_actions = self.unicef_serializer.get_available_actions(pd)
+        expected_actions = self.default_actions + ['accept_on_behalf_of_partner', 'send_to_partner']
+        self.assertEqual(sorted(available_actions), sorted(expected_actions))
+
+    def test_available_actions_focal_point_prc_secretary_cancel(self):
+        pd = InterventionFactory()
+        pd.unicef_focal_points.add(self.prc_secretary)
+        self.assertEqual(pd.status, pd.DRAFT)
+        available_actions = self.prc_secretary_serializer.get_available_actions(pd)
         expected_actions = self.default_actions + ['accept_on_behalf_of_partner', 'send_to_partner', 'cancel']
         self.assertEqual(sorted(available_actions), sorted(expected_actions))
 
@@ -161,7 +186,6 @@ class TestInterventionDetailSerializer(BaseTenantTestCase):
         available_actions = self.unicef_serializer.get_available_actions(pd)
         expected_actions = self.default_actions + [
             "accept_on_behalf_of_partner",
-            "cancel",
             "send_to_partner",
         ]
         self.assertEqual(sorted(available_actions), sorted(expected_actions))
@@ -170,7 +194,6 @@ class TestInterventionDetailSerializer(BaseTenantTestCase):
         pd.save()
         available_actions = self.unicef_serializer.get_available_actions(pd)
         expected_actions = self.default_actions + [
-            "cancel",
             "unlock",
         ]
         self.assertEqual(
