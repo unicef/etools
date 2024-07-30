@@ -445,7 +445,7 @@ class InterventionDetailSerializer(
 
         status_is_cancellable = obj.status in [obj.DRAFT, obj.REVIEW, obj.SIGNATURE]
         budget_owner_or_focal_point = obj.budget_owner == user or self._is_unicef_focal_point(obj, user)
-        if not obj.in_amendment and status_is_cancellable and budget_owner_or_focal_point:
+        if not obj.in_amendment and status_is_cancellable and budget_owner_or_focal_point and self._is_prc_secretary():
             available_actions.append("cancel")
 
         # only overall approver can approve or reject review
@@ -483,10 +483,11 @@ class InterventionDetailSerializer(
                     available_actions.append("review")
 
             # any unicef focal point user
-            if user in obj.unicef_focal_points.all() or obj.budget_owner == user:
+            if budget_owner_or_focal_point:
                 if not obj.partner_accepted:
                     available_actions.append("send_to_partner")
-                available_actions.append("cancel")
+                if self._is_prc_secretary():
+                    available_actions.append("cancel")
                 if obj.partner_accepted:
                     available_actions.append("unlock")
 
