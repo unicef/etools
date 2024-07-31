@@ -33,12 +33,11 @@ class PointOfInterestSerializer(serializers.ModelSerializer):
         return connection.tenant.name
 
     def get_region(self, obj):
-        # TODO: this will not work on multi country tenants . Not sure we need it at all
-        return obj.parent.name if obj.parent else ''
+        return obj.parent.name if hasattr(obj, 'parent') else ''
 
     class Meta:
         model = models.PointOfInterest
-        exclude = ('partner_organizations', 'point')
+        exclude = ('partner_organizations', 'point', 'created', 'modified', 'parent', 'other', 'private')
 
 
 class PointOfInterestLightSerializer(serializers.ModelSerializer):
@@ -94,7 +93,7 @@ class MaterialItemsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Item
-        exclude = ('material',)
+        exclude = ('material', 'transfers_history', 'created', 'modified',)
 
 
 class MaterialDetailSerializer(serializers.ModelSerializer):
@@ -103,7 +102,7 @@ class MaterialDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Material
-        fields = '__all__'
+        exclude = ["partner_materials"]
 
 
 class MaterialListSerializer(serializers.ModelSerializer):
@@ -111,7 +110,7 @@ class MaterialListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Material
-        fields = "__all__"
+        exclude = ["partner_materials"]
 
 
 class ItemSerializer(serializers.ModelSerializer):
