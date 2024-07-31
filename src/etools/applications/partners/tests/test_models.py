@@ -1866,13 +1866,13 @@ class TestPlannedEngagement(BaseTenantTestCase):
         )
 
     def test_spot_check_planned(self):
-        self.assertEquals(self.engagement.total_spot_check_planned, 3)
+        self.assertEqual(self.engagement.total_spot_check_planned, 3)
 
     def test_required_audit(self):
-        self.assertEquals(self.engagement.required_audit, 1)
+        self.assertEqual(self.engagement.required_audit, 1)
 
     def test_spot_check_required(self):
-        self.assertEquals(self.engagement.spot_check_required, self.engagement.partner.min_req_spot_checks + 3)
+        self.assertEqual(self.engagement.spot_check_required, self.engagement.partner.min_req_spot_checks + 3)
 
     def test_spot_check_required_with_completed_audit(self):
         partner = PartnerFactory(organization=OrganizationFactory(name="Partner"))
@@ -1890,7 +1890,7 @@ class TestPlannedEngagement(BaseTenantTestCase):
             special_audit=False
         )
 
-        self.assertEquals(pe.spot_check_required, pe.partner.min_req_spot_checks + 2)
+        self.assertEqual(pe.spot_check_required, pe.partner.min_req_spot_checks + 2)
 
 
 class TestPartnerPlannedVisits(BaseTenantTestCase):

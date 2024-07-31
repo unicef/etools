@@ -1,7 +1,7 @@
 import json
 
-from django.contrib.postgres.fields.jsonb import KeyTextTransform
 from django.db.models import Max
+from django.db.models.fields.json import KeyTextTransform
 
 from rest_framework import serializers
 
