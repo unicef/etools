@@ -290,6 +290,11 @@ TEMPLATES = [
     },
 ]
 
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+}
+
 # DJANGO: URLS
 ROOT_URLCONF = 'etools.config.urls'
 
@@ -533,8 +538,8 @@ SOCIAL_AUTH_SANITIZE_REDIRECTS = False
 SOCIAL_AUTH_JSONFIELD_ENABLED = True
 POLICY = os.getenv('AZURE_B2C_POLICY_NAME', "b2c_1A_UNICEF_PARTNERS_signup_signin")
 
-TENANT_ID = os.getenv('AZURE_B2C_TENANT', 'unicefpartners')
-TENANT_B2C_URL = f'{TENANT_ID}.b2clogin.com'
+TENANT_NAME = os.getenv('AZURE_B2C_TENANT', 'unicefpartners')
+TENANT_B2C_URL = f'{TENANT_NAME}.b2clogin.com'
 
 SCOPE = ['openid', 'email']
 IGNORE_DEFAULT_SCOPE = True
@@ -544,7 +549,7 @@ SOCIAL_AUTH_PROTECTED_USER_FIELDS = ['email']
 # SOCIAL_AUTH_WHITELISTED_DOMAINS = ['unicef.org', 'google.com', 'ravdev.com']
 LOGIN_ERROR_URL = "/workspace_inactive"
 
-SOCIAL_LOGOUT_URL = f'https://{TENANT_B2C_URL}/{TENANT_ID}.onmicrosoft.com/{POLICY}/oauth2/v2.0/logout' \
+SOCIAL_LOGOUT_URL = f'https://{TENANT_B2C_URL}/{TENANT_NAME}.onmicrosoft.com/{POLICY}/oauth2/v2.0/logout' \
                     f'?post_logout_redirect_uri={HOST}/logout/'
 
 
@@ -612,7 +617,7 @@ ATTACHMENT_INVALID_FILE_TYPES = [
 ]
 
 GEOS_LIBRARY_PATH = os.getenv('GEOS_LIBRARY_PATH', '/usr/lib/libgeos_c.so.1')  # default path
-GDAL_LIBRARY_PATH = os.getenv('GDAL_LIBRARY_PATH', '/usr/lib/libgdal.so.28')  # default path
+GDAL_LIBRARY_PATH = os.getenv('GDAL_LIBRARY_PATH', '/usr/lib/libgdal.so.34')  # default path
 
 SHELL_PLUS_PRE_IMPORTS = (
     ('etools.applications.core.util_scripts', '*'),

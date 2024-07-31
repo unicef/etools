@@ -127,7 +127,7 @@ class TPMPartnerViewSet(
     filter_backends = (SearchFilter, OrderingFilter, DjangoFilterBackend)
     search_fields = ('vendor_number', 'name')
     ordering_fields = ('vendor_number', 'name', 'phone_number', 'email')
-    filter_fields = (
+    filterset_fields = (
         'blocked', 'hidden', 'deleted_flag',
     )
 
