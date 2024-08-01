@@ -224,7 +224,7 @@ class InterventionListAPIView(QueryStringFilterMixin, ExportModelMixin, Interven
                 expression = functools.reduce(operator.and_, queries)
                 q = q.filter(expression)
 
-        return q
+        return q.order_by('-id')
 
     def list(self, request):
         """
