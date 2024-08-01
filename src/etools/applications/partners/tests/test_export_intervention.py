@@ -237,7 +237,7 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
             'get',
             reverse('pmp_v3:intervention-list'),
             user=self.unicef_staff,
-            data={"format": "csv", "page_size": "all"},
+            data={"format": "csv"},
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)

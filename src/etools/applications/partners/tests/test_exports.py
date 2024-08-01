@@ -231,7 +231,7 @@ class TestModelExport(BaseTenantTestCase):
             'get',
             '/api/pmp/v3/interventions/',
             user=self.unicef_staff,
-            data={"format": "csv", "page_size": "all"},
+            data={"format": "csv"},
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
