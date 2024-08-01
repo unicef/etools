@@ -5,3 +5,6 @@ FMUser = GroupWrapper(code='fm_user',
 
 MonitoringVisitApprover = GroupWrapper(code='monitoring_visit_approver',
                                        name='Monitoring Visit Approver')
+
+ReportReviewer = GroupWrapper(code='report_reviewer',
+                              name='Report Reviewer')

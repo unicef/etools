@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-04-11 05:18+0000\n"
+"POT-Creation-Date: 2024-06-28 08:32+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -232,6 +232,9 @@ msgstr "Мониторинг действий по действиям"
 
 msgid "History"
 msgstr "История"
+
+msgid "Report reviewer must be a PME or Report Reviewer."
+msgstr ""
 
 msgid "Document Type"
 msgstr "Тип документа"
