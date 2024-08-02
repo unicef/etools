@@ -362,9 +362,6 @@ class PMPInterventionCancelView(PMPInterventionActionView):
         if pd.status == Intervention.CANCELLED:
             raise ValidationError(_("PD has already been cancelled."))
 
-        if self.request.user not in pd.unicef_focal_points.all() and self.request.user != pd.budget_owner:
-            raise ValidationError(_("Only focal points or budget owners can cancel"))
-
         if not get_user_model().objects.filter(
                 pk=request.user.pk,
                 realms__group__name__in=[PRC_SECRETARY],

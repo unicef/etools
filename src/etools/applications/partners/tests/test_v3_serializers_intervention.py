@@ -104,13 +104,11 @@ class TestInterventionDetailSerializer(BaseTenantTestCase):
         expected_actions = self.default_actions + ["accept", "send_to_partner", "accept_on_behalf_of_partner"]
         self.assertEqual(sorted(available_actions), sorted(expected_actions))
 
-    def test_available_actions_budget_owner_prc_secretary(self):
-        pd = InterventionFactory(budget_owner=self.prc_secretary)
+    def test_available_actions_prc_secretary(self):
+        pd = InterventionFactory()
         self.assertEqual(pd.status, pd.DRAFT)
         available_actions = self.prc_secretary_serializer.get_available_actions(pd)
-        expected_actions = self.default_actions + [
-            "accept", "send_to_partner", "accept_on_behalf_of_partner", "cancel",
-        ]
+        expected_actions = self.default_actions + ["cancel"]
         self.assertEqual(sorted(available_actions), sorted(expected_actions))
 
     def test_available_actions_management(self):
@@ -126,20 +124,12 @@ class TestInterventionDetailSerializer(BaseTenantTestCase):
         expected_actions = self.default_actions
         self.assertEqual(sorted(available_actions), sorted(expected_actions))
 
-    def test_available_actions_focal_point_cancel(self):
+    def test_available_actions_focal_point(self):
         pd = InterventionFactory()
         pd.unicef_focal_points.add(self.unicef_user)
         self.assertEqual(pd.status, pd.DRAFT)
         available_actions = self.unicef_serializer.get_available_actions(pd)
         expected_actions = self.default_actions + ['accept_on_behalf_of_partner', 'send_to_partner']
-        self.assertEqual(sorted(available_actions), sorted(expected_actions))
-
-    def test_available_actions_focal_point_prc_secretary_cancel(self):
-        pd = InterventionFactory()
-        pd.unicef_focal_points.add(self.prc_secretary)
-        self.assertEqual(pd.status, pd.DRAFT)
-        available_actions = self.prc_secretary_serializer.get_available_actions(pd)
-        expected_actions = self.default_actions + ['accept_on_behalf_of_partner', 'send_to_partner', 'cancel']
         self.assertEqual(sorted(available_actions), sorted(expected_actions))
 
     def test_available_actions_management_unsuspend(self):
