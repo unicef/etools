@@ -399,6 +399,14 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
             agreement=self.pca_signed1,
             status=models.Intervention.ACTIVE
         )
+        cancelled_intervention = InterventionFactory(
+            agreement=self.pca_signed1,
+            status=models.Intervention.CANCELLED
+        )
+        draft_intervention = InterventionFactory(
+            agreement=self.pca_signed1,
+            status=models.Intervention.DRAFT
+        )
         InterventionPlannedVisitsFactory(
             intervention=intervention,
             year=year - 1,
@@ -406,6 +414,18 @@ class TestPartnerOrganizationModel(BaseTenantTestCase):
         )
         InterventionPlannedVisitsFactory(
             intervention=intervention,
+            year=year,
+            programmatic_q1=1,
+            programmatic_q3=3,
+        )
+        InterventionPlannedVisitsFactory(
+            intervention=draft_intervention,
+            year=year,
+            programmatic_q1=1,
+            programmatic_q3=3,
+        )
+        InterventionPlannedVisitsFactory(
+            intervention=cancelled_intervention,
             year=year,
             programmatic_q1=1,
             programmatic_q3=3,

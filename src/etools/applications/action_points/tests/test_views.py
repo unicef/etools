@@ -11,6 +11,7 @@ from etools.applications.action_points.categories.models import Category
 from etools.applications.action_points.models import ActionPoint, OperationsGroup, PME
 from etools.applications.action_points.tests.base import ActionPointsTestCaseMixin
 from etools.applications.action_points.tests.factories import ActionPointCategoryFactory, ActionPointFactory
+from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.audit.tests.factories import MicroAssessmentFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.permissions import UNICEF_USER
@@ -220,6 +221,85 @@ class TestActionPointViewSet(TestExportMixin, ActionPointsTestCaseMixin, BaseTen
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['comments']), 1)
         self.assertEqual(len(response.data['history']), 1)
+
+    def test_supporting_document_optional(self):
+        action_point = ActionPointFactory(status='open', comments__count=0)
+
+        response = self.forced_auth_req(
+            'options',
+            reverse('action-points:action-points-detail', args=(action_point.id,)),
+            user=action_point.author
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(
+            response.data['actions']['PUT']['comments']['child']['children']['supporting_document']['required']
+        )
+
+    def test_add_supporting_document(self):
+        action_point = ActionPointFactory(status='open', comments__count=1)
+        comment = action_point.comments.first()
+        attachment = AttachmentFactory(file_type=None, uploaded_by=None)
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse('action-points:action-points-detail', args=(action_point.id,)),
+            user=action_point.author,
+            data={
+                'comments': [{
+                    'id': comment.id,
+                    'supporting_document': attachment.id
+                }]
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        document = comment.supporting_document.first()
+        self.assertIsNotNone(document)
+        self.assertEqual(document.id, attachment.id)
+        self.assertEqual(document.uploaded_by, action_point.author)
+        self.assertEqual(document.code, 'action_points_supporting_document')
+        self.assertEqual(response.data['comments'][0]['supporting_document']['id'], attachment.id)
+
+    def test_remove_supporting_document(self):
+        action_point = ActionPointFactory(status='open', comments__count=1)
+        comment = action_point.comments.first()
+        AttachmentFactory(code='action_points_supporting_document', content_object=comment)
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse('action-points:action-points-detail', args=(action_point.id,)),
+            user=action_point.author,
+            data={
+                'comments': [{
+                    'id': comment.id,
+                    'supporting_document': None
+                }]
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(comment.supporting_document.count(), 0)
+
+    def test_add_supporting_document_permission_denied(self):
+        action_point = ActionPointFactory(status='completed', comments__count=1)
+        comment = action_point.comments.first()
+        attachment = AttachmentFactory()
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse('action-points:action-points-detail', args=(action_point.id,)),
+            user=action_point.author,
+            data={
+                'comments': [{
+                    'id': comment.id,
+                    'supporting_document': attachment.id
+                }]
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(comment.supporting_document.count(), 0)
 
     def test_complete(self):
         action_point = ActionPointFactory(status='pre_completed')
