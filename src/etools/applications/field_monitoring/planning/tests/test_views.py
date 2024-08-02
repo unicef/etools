@@ -16,6 +16,7 @@ from etools.applications.attachments.tests.factories import (
     AttachmentFileTypeFactory,
     AttachmentLinkFactory,
 )
+from etools.applications.audit.models import UNICEFUser
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.field_monitoring.data_collection.models import (
     ActivityOverallFinding,
@@ -27,6 +28,7 @@ from etools.applications.field_monitoring.data_collection.tests.factories import
 )
 from etools.applications.field_monitoring.fm_settings.models import Question
 from etools.applications.field_monitoring.fm_settings.tests.factories import QuestionFactory
+from etools.applications.field_monitoring.groups import ReportReviewer
 from etools.applications.field_monitoring.planning.models import MonitoringActivity, YearPlan
 from etools.applications.field_monitoring.planning.tests.factories import (
     MonitoringActivityActionPointFactory,
@@ -45,7 +47,9 @@ from etools.applications.partners.tests.factories import (
 )
 from etools.applications.reports.models import ResultType
 from etools.applications.reports.tests.factories import OfficeFactory, ResultFactory, SectionFactory
+from etools.applications.tpm.models import PME
 from etools.applications.tpm.tests.factories import SimpleTPMPartnerFactory, TPMPartnerFactory, TPMUserFactory
+from etools.libraries.djangolib.models import GroupWrapper
 
 
 class YearPlanViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
@@ -93,6 +97,9 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
     def setUp(self):
         super().setUp()
         call_command("update_notifications")
+
+        # clearing groups cache
+        GroupWrapper.invalidate_instances()
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_create_empty_visit(self):
@@ -379,7 +386,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         ActivityOverallFinding.objects.create(monitoring_activity=activity, narrative_finding='test')
         goto('data_collection', visit_lead)
         goto('report_finalization', visit_lead)
-        goto('submitted', visit_lead, {'report_reviewer': UserFactory(unicef_user=True).id},
+        goto('submitted', visit_lead, {'report_reviewer': UserFactory(report_reviewer=True).id},
              mail_count=1)
         goto('report_finalization', self.pme, mail_count=1)
         goto('submitted', visit_lead, mail_count=activity.country_pmes.count())
@@ -463,7 +470,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         self._test_update(
             self.fm_user,
             activity,
-            {'report_reviewer': UserFactory(unicef_user=True).id},
+            {'report_reviewer': UserFactory(pme=True).id},
             expected_status=status.HTTP_400_BAD_REQUEST,
             basic_errors=['Cannot change fields while in assigned: report_reviewer'],
         )
@@ -500,13 +507,49 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         )
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_submit_report_reviewer_invalid_group(self):
+        activity = MonitoringActivityFactory(monitor_type='staff', report_reviewer=None, status='report_finalization')
+
+        self._test_update(
+            activity.visit_lead,
+            activity,
+            {'status': 'submitted', 'report_reviewer': UserFactory(unicef_user=True).id},
+            expected_status=status.HTTP_400_BAD_REQUEST,
+            field_errors=['report_reviewer'],
+        )
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_submit_report_reviewer_pme_ok(self):
+        activity = MonitoringActivityFactory(monitor_type='staff', report_reviewer=None, status='report_finalization')
+        ActivityOverallFinding.objects.create(monitoring_activity=activity, narrative_finding='test')
+
+        self._test_update(
+            activity.visit_lead,
+            activity,
+            {'status': 'submitted', 'report_reviewer': UserFactory(pme=True).id},
+            expected_status=status.HTTP_200_OK,
+        )
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_submit_report_reviewer_group_ok(self):
+        activity = MonitoringActivityFactory(monitor_type='staff', report_reviewer=None, status='report_finalization')
+        ActivityOverallFinding.objects.create(monitoring_activity=activity, narrative_finding='test')
+
+        self._test_update(
+            activity.visit_lead,
+            activity,
+            {'status': 'submitted', 'report_reviewer': UserFactory(report_reviewer=True).id},
+            expected_status=status.HTTP_200_OK,
+        )
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_submitted_staff_report_reviewer_not_editable(self):
         activity = MonitoringActivityFactory(monitor_type='staff', status='submitted')
 
         self._test_update(
             activity.visit_lead,
             activity,
-            {'report_reviewer': UserFactory(unicef_user=True).id},
+            {'report_reviewer': UserFactory(pme=True).id},
             expected_status=status.HTTP_400_BAD_REQUEST,
             basic_errors=['Cannot change fields while in submitted: report_reviewer'],
         )
@@ -954,6 +997,17 @@ class FMUsersViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase):
 
         self.assertEqual(response.data['results'][0]['user_type'], 'tpm')
         self.assertEqual(response.data['results'][0]['tpm_partner'], tpm_partner)
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_filter_report_reviewers(self):
+        self._test_list(
+            self.unicef_user, [
+                self.pme,
+                UserFactory(report_reviewer=True),
+                UserFactory(realms__data=[UNICEFUser.name, PME.name, ReportReviewer.name])
+            ],
+            data={'user_type': 'report_reviewer'},
+        )
 
 
 class CPOutputsViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenantTestCase):

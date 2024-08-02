@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-07-16 09:27+0000\n"
+"POT-Creation-Date: 2024-06-28 08:32+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -71,56 +71,6 @@ msgstr "Campos obrigatórios não preenchidos em %(status)s: %(fields)s"
 #, python-format
 msgid "Cannot change fields while in %(status)s: %(field)s"
 msgstr "Não é possível alterar os campos enquanto em %(status)s: %(field)s"
-
-msgid "Ref. #"
-msgstr ""
-
-msgid "Link"
-msgstr ""
-
-msgid "Start Date"
-msgstr "Data de início"
-
-msgid "End Date"
-msgstr "Data Final"
-
-msgid "Location"
-msgstr "Localização"
-
-msgid "Site"
-msgstr ""
-
-msgid "Sections"
-msgstr "Seções"
-
-msgid "Field Offices"
-msgstr "Escritórios de campo"
-
-msgid "Status"
-msgstr "Estado"
-
-msgid "Primary Field Monitor is"
-msgstr ""
-
-msgid "Team Members"
-msgstr "Membros da Equipe"
-
-msgid "TPM Partner"
-msgstr "Parceiro TPM"
-
-msgid "Person Responsible"
-msgstr "Pessoa Responsável"
-
-#, fuzzy
-#| msgid "Partner"
-msgid "Partners"
-msgstr "Parceiro"
-
-msgid "PD/SPD"
-msgstr ""
-
-msgid "Outputs"
-msgstr "Saídas"
 
 msgid "Prioritization Criteria"
 msgstr "Critérios de Priorização"
@@ -206,6 +156,15 @@ msgstr "Cancelado"
 msgid "Reference Number"
 msgstr "Número de referência"
 
+msgid "TPM Partner"
+msgstr "Parceiro TPM"
+
+msgid "Team Members"
+msgstr "Membros da Equipe"
+
+msgid "Person Responsible"
+msgstr "Pessoa Responsável"
+
 msgid "Report Reviewer"
 msgstr ""
 
@@ -216,6 +175,33 @@ msgstr "Revisão"
 
 msgid "Field Office"
 msgstr "Escritório de campo"
+
+msgid "Field Offices"
+msgstr "Escritórios de campo"
+
+msgid "Sections"
+msgstr "Seções"
+
+msgid "Location"
+msgstr "Localização"
+
+msgid "Site"
+msgstr ""
+
+msgid "PD/SPD"
+msgstr ""
+
+msgid "Outputs"
+msgstr "Saídas"
+
+msgid "Start Date"
+msgstr "Data de início"
+
+msgid "End Date"
+msgstr "Data Final"
+
+msgid "Status"
+msgstr "Estado"
 
 msgid "Activity Attachments"
 msgstr "Anexos de Atividade"
@@ -243,6 +229,9 @@ msgstr "Pontos de Ação da Atividade de Monitoramento"
 
 msgid "History"
 msgstr "História"
+
+msgid "Report reviewer must be a PME or Report Reviewer."
+msgstr ""
 
 msgid "Document Type"
 msgstr "Tipo de Documento"
@@ -276,6 +265,9 @@ msgstr "Escritório do Cessionário"
 
 msgid "Action Point Category"
 msgstr "Categoria de Ponto de Ação"
+
+msgid "Link"
+msgstr ""
 
 msgid "Priority"
 msgstr "Prioridade"
