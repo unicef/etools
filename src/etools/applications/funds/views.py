@@ -53,6 +53,19 @@ class FRsView(APIView):
     """
     permission_classes = (permissions.IsAdminUser,)
 
+    def _post(self, request, *args, **kwargs):
+        return Response(data={}, status=status.HTTP_201_CREATED)
+    
+    def post(self, request, *args, **kwargs):
+        serializer = FRsSerializer(data=request.data)
+        if serializer.is_valid():
+           #frs = FR.objects.all()  # Here you should filter/query your FR objects as required
+           #response_data = FRsSerializer(frs, many=True).data
+           #TODO: Implement  
+           return Response(data={}, status=status.HTTP_201_CREATED)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     def get(self, request, format=None):
         values = request.query_params.get("values", '').split(",")
         intervention_id = request.query_params.get("intervention", None)

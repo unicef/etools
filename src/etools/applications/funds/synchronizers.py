@@ -14,6 +14,9 @@ from etools.applications.funds.models import (
     FundsReservationHeader,
     FundsReservationItem,
 )
+
+from etools.applications.funds.api import FRAPI
+
 from etools.applications.vision.synchronizers import VisionDataTenantSynchronizer
 
 
@@ -286,6 +289,9 @@ class FundReservationsSynchronizer(VisionDataTenantSynchronizer):
         processed = h_processed[0] + i_processed[0] + h_processed[1] + i_processed[1]
 
         return processed
+    
+    def create_fr(self, fr):
+        return FRAPI(self.user).post(fr)
 
 
 class DelegatedFundReservationsSynchronizer(FundReservationsSynchronizer, MultiModelDataSynchronizer):
