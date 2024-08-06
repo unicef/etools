@@ -28,7 +28,7 @@ def set_country(user, request):
 
 class every_country:
     """
-    Loop through every available available tenant/country, then revert back to whatever was set before.
+    Loop through every available tenant/country, then revert back to whatever was set before.
 
     Example usage:
 

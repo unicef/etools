@@ -106,3 +106,28 @@ class DonorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Donor
         fields = "__all__"
+
+
+class ExternalFundsReservationItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FundsReservationItem
+        exclude = ('id', 'created', 'modified', 'fund_reservation')
+
+
+class ExternalFundsReservationSerializer(serializers.ModelSerializer):
+    business_area_code = serializers.CharField(required=True, allow_null=False, allow_blank=False)
+    fr_items = ExternalFundsReservationItemSerializer(many=True, required=True, allow_null=False)
+    pd_reference_number = serializers.CharField(required=True, allow_null=False, allow_blank=False)
+
+    class Meta:
+        model = FundsReservationHeader
+        exclude = ('id', 'created', 'modified', 'intervention')
+
+    def create(self, validated_data):
+        validated_data.pop('business_area_code')
+        validated_data.pop('pd_reference_number')
+        fr_items = validated_data.pop('fr_items', None)
+        instance = super().create(validated_data)
+        to_create = [FundsReservationItem(fund_reservation=instance, **fr_item) for fr_item in fr_items]
+        FundsReservationItem.objects.bulk_create(to_create)
+        return instance

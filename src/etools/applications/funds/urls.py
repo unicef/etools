@@ -9,6 +9,7 @@ from etools.applications.funds.views import (
     FundsReservationItemListAPIView,
     GrantListAPIView,
 )
+from etools.applications.funds.views_ext import ExternalReservationAPIView
 
 app_name = 'funds'
 urlpatterns = (
@@ -31,4 +32,7 @@ urlpatterns = (
     re_path(r'^grant/$',
             view=GrantListAPIView.as_view(),
             name='funds-grant'),
+    re_path(r'^external-reservation/$',
+            view=ExternalReservationAPIView.as_view(),
+            name='external-funds-reservation'),
 )

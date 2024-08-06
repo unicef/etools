@@ -395,12 +395,12 @@ class TestTripViewSet(BaseTenantTestCase):
         for _ in range(10):
             TripFactory()
 
-        trip = TripFactory(description='Description for trip')
+        trip = TripFactory(description='Trip description')
 
         response = self.forced_auth_req(
             "get",
             reverse('travel:trip-list'),
-            data={"search": trip.description[-4:]},
+            data={"search": "descript"},
             user=self.user,
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
