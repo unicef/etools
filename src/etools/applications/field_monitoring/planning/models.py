@@ -25,8 +25,8 @@ from etools.applications.field_monitoring.data_collection.offline.synchronizer i
 from etools.applications.field_monitoring.fm_settings.models import LocationSite, Method, Option, Question
 from etools.applications.field_monitoring.planning.mixins import ProtectUnknownTransitionsMeta
 from etools.applications.field_monitoring.planning.transitions.permissions import (
+    approve_final_report_permission,
     user_is_field_monitor_permission,
-    user_is_pme_or_approver_permission,
     user_is_visit_lead_permission,
 )
 from etools.applications.locations.models import Location
@@ -578,12 +578,12 @@ class MonitoringActivity(
         pass
 
     @transition(field=status, source=STATUSES.submitted, target=STATUSES.completed,
-                permission=user_is_pme_or_approver_permission)
+                permission=approve_final_report_permission)
     def complete(self):
         pass
 
     @transition(field=status, source=STATUSES.submitted, target=STATUSES.report_finalization,
-                permission=user_is_pme_or_approver_permission)
+                permission=approve_final_report_permission)
     def reject_report(self):
         pass
 
