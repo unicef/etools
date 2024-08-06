@@ -3,6 +3,7 @@ from datetime import date, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
 
+from django.db import connection
 from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
@@ -12,6 +13,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.environment.tests.factories import TenantSwitchFactory
 from etools.applications.funds.tests.factories import (
     DonorFactory,
     FundsReservationHeaderFactory,
@@ -343,6 +345,9 @@ class TestExternalReservationAPIView(BaseTenantTestCase):
     @override_settings(ETOOLS_EZHACT_EMAIL='test@example.com', ETOOLS_EZHACT_TOKEN='testkey')
     def test_post_201(self):
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token.key)
+        tenant_switch = TenantSwitchFactory(name="ezhact_external_fr_disabled")
+        tenant_switch.countries.add(connection.tenant)
+        self.assertTrue(tenant_switch.is_active())
         data = {
             "fr_items": [
                 {
@@ -419,11 +424,21 @@ class TestExternalReservationAPIView(BaseTenantTestCase):
                 self.assertEqual(get_instance_str(actual_value), expected_item[field])
 
     def test_post_unauthorized_401(self):
+        tenant_switch = TenantSwitchFactory(name="ezhact_external_fr_disabled")
+        tenant_switch.countries.add(connection.tenant)
+        self.assertTrue(tenant_switch.is_active())
+
         with override_settings(ETOOLS_EZHACT_EMAIL='test@example.com', ETOOLS_EZHACT_TOKEN='wrongkey'):
             response = self.client.post(reverse('funds:external-funds-reservation'), data={}, format='json')
 
             self.assertEqual(status.HTTP_401_UNAUTHORIZED, response.status_code)
 
         with override_settings(ETOOLS_EZHACT_EMAIL='wrong@example.com', ETOOLS_EZHACT_TOKEN='testkey'):
+            response = self.client.post(reverse('funds:external-funds-reservation'), data={}, format='json')
+            self.assertEqual(status.HTTP_401_UNAUTHORIZED, response.status_code)
+
+        tenant_switch.is_active = False
+        tenant_switch.save()
+        with override_settings(ETOOLS_EZHACT_EMAIL='test@example.com', ETOOLS_EZHACT_TOKEN='testkey'):
             response = self.client.post(reverse('funds:external-funds-reservation'), data={}, format='json')
             self.assertEqual(status.HTTP_401_UNAUTHORIZED, response.status_code)

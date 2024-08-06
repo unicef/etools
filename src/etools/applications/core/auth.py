@@ -21,6 +21,7 @@ from social_core.exceptions import AuthCanceled, AuthMissingParameter
 from social_core.pipeline import social_auth, user as social_core_user
 from social_django.middleware import SocialAuthExceptionMiddleware
 
+from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.organizations.models import Organization
 from etools.applications.users.models import Country, Realm
 from etools.libraries.tenant_support.utils import set_country
@@ -253,5 +254,7 @@ class eToolsEZHactTokenAuth(TokenAuthentication):
                 except get_tenant_model().DoesNotExist:
                     return None
                 connection.set_tenant(country)
+                if not tenant_switch_is_active('ezhact_external_fr_disabled'):
+                    return None
                 return user, token
         return None
