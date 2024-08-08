@@ -64,8 +64,10 @@ class UserTypeFilter(BaseFilterBackend):
             return queryset.filter(tpm_partner__isnull=False).distinct()
         elif value == 'report_reviewer':
             return queryset.filter(
+                is_active=True,
                 realms__country=connection.tenant,
                 realms__group__name__in=[PME.name, ReportReviewer.name],
+                realms__is_active=True,
             ).distinct()
         else:
             return queryset.filter(is_staff=True)
