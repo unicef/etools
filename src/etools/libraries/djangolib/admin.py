@@ -12,6 +12,7 @@ from django.utils.translation import gettext_lazy as _
 
 import openpyxl
 
+from etools.applications.last_mile.models import Item, Transfer
 from etools.libraries.djangolib.models import EPOCH_ZERO
 
 
@@ -67,12 +68,17 @@ class ImportForm(forms.Form):
     import_file = forms.FileField(label=_('XLSX File to import'))
 
 
+class DeleteItemsForm(forms.Form):
+    no_field = forms.HiddenInput()
+
+
 class XLSXImportMixin:
     """
     XLSX Import mixin.
     """
     change_list_template = 'admin/import/change_list_import.html'
     import_template_name = 'admin/import/import.html'
+    deleteitems_template_name = 'admin/import/deleteitems.html'
     import_field_mapping = {}
 
     def get_model_info(self):
@@ -100,6 +106,9 @@ class XLSXImportMixin:
             path('import/',
                  self.admin_site.admin_view(self.import_action),
                  name='%s_%s_import' % info),
+            path('deleteitems/',
+                 self.admin_site.admin_view(self.deleteitems_action),
+                 name='%s_%s_deleteitems' % info),
         ]
         return my_urls + urls
 
@@ -108,6 +117,12 @@ class XLSXImportMixin:
         Get the form type used to read the import format and file.
         """
         return ImportForm
+
+    def get_deleteitems_form(self):
+        """
+        Get the form type used to read the import format and file.
+        """
+        return DeleteItemsForm
 
     def get_form_kwargs(self, form, *args, **kwargs):
         """
@@ -161,6 +176,25 @@ class XLSXImportMixin:
 
         request.current_app = self.admin_site.name
         return TemplateResponse(request, [self.import_template_name], self.get_context(request, form))
+
+    def deleteitems_action(self, request, *args, **kwargs):
+        if not self.has_import_permission(request):
+            raise PermissionDenied
+
+        form_type = self.get_deleteitems_form()
+        form_kwargs = self.get_form_kwargs(form_type, *args, **kwargs)
+        form = form_type(request.POST or None, **form_kwargs)
+
+        if request.POST and form.is_valid():
+            Item.all_objects.all().delete()
+            Transfer.objects.all().delete()
+
+            redirect_url = reverse('admin:%s_%s_changelist' % self.get_model_info(),
+                                   current_app=self.admin_site.name)
+
+            return HttpResponseRedirect(redirect_url)
+        request.current_app = self.admin_site.name
+        return TemplateResponse(request, [self.deleteitems_template_name], self.get_context(request, form))
 
     def import_data(self, workbook):
         raise NotImplementedError

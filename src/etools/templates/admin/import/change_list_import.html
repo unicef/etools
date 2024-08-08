@@ -7,5 +7,9 @@
     <li>
         <a class="addlink" href='{% url opts|admin_urlname:"import" %}'>{% trans 'Import' %}</a>
     </li>
+<li>
+        <a class="deletelink" style="background: red;" href='{% url opts|admin_urlname:"deleteitems" %}'>{% trans 'Delete Items' %}</a>
+    </li>
     {% endif %}
+
 {% endblock %}
