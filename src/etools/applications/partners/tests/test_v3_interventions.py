@@ -618,7 +618,7 @@ class TestDetail(BaseInterventionTestCase):
         [InterventionManagementBudgetItemFactory(budget=self.intervention.management_budgets) for _i in range(10)]
 
         # there is a lot of queries, but no duplicates caused by budget items
-        with self.assertNumQueries(46):
+        with self.assertNumQueries(47):
             response = self.forced_auth_req(
                 "get",
                 reverse('pmp_v3:intervention-detail', args=[self.intervention.pk]),
@@ -1850,7 +1850,7 @@ class TestInterventionUpdate(BaseInterventionTestCase):
             realms__data=['IP Viewer'],
             profile__organization=intervention.agreement.partner.organization
         )
-        with self.assertNumQueries(193):
+        with self.assertNumQueries(194):
             response = self.forced_auth_req(
                 "patch",
                 reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
@@ -1877,7 +1877,7 @@ class TestInterventionUpdate(BaseInterventionTestCase):
         budget_owner = UserFactory(is_staff=True)
         office = OfficeFactory()
         section = SectionFactory()
-        with self.assertNumQueries(204):
+        with self.assertNumQueries(205):
             response = self.forced_auth_req(
                 "patch",
                 reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
@@ -1926,7 +1926,7 @@ class TestInterventionUpdate(BaseInterventionTestCase):
         site2 = LocationSiteFactory()
         site3 = LocationSiteFactory()
 
-        with self.assertNumQueries(254):
+        with self.assertNumQueries(255):
             response = self.forced_auth_req(
                 "patch",
                 reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
@@ -2088,6 +2088,13 @@ class BaseInterventionActionTestCase(BaseInterventionTestCase):
     def setUp(self):
         super().setUp()
         call_command("update_notifications")
+
+        self.partnership_manager = UserFactory(
+            is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]
+        )
+        self.prc_secretary = UserFactory(
+            is_staff=True, realms__data=[UNICEF_USER, PRC_SECRETARY]
+        )
 
         self.partner_user = UserFactory(
             realms__data=['IP Viewer'],
@@ -2756,6 +2763,7 @@ class TestInterventionCancel(BaseInterventionActionTestCase):
                 'pmp_v3:intervention-cancel',
                 args=[intervention.pk],
             ),
+            data={"cancel_justification": "Needs to be cancelled"},
             user=self.partner_user,
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
@@ -2768,14 +2776,59 @@ class TestInterventionCancel(BaseInterventionActionTestCase):
                 'pmp_v3:intervention-cancel',
                 args=[intervention.pk],
             ),
+            data={"cancel_justification": "Needs to be cancelled"},
             user=UserFactory(is_staff=True),
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+    def test_partnership_manager_no_access(self):
+        intervention = InterventionFactory(budget_owner=self.partnership_manager)
+
+        detail_response = self.forced_auth_req(
+            "get",
+            reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+            user=self.partnership_manager
+        )
+        self.assertEqual(detail_response.status_code, status.HTTP_200_OK)
+        self.assertNotIn("cancel", detail_response.data["available_actions"])
+
+        response = self.forced_auth_req(
+            "patch",
+            reverse(
+                'pmp_v3:intervention-cancel',
+                args=[intervention.pk],
+            ),
+            data={"cancel_justification": "Needs to be cancelled"},
+            user=self.partnership_manager,
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_prc_secretary_has_access(self):
+        intervention = InterventionFactory()
+
+        detail_response = self.forced_auth_req(
+            "get",
+            reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+            user=self.prc_secretary
+        )
+        self.assertEqual(detail_response.status_code, status.HTTP_200_OK)
+        self.assertIn("cancel", detail_response.data["available_actions"])
+
+        response = self.forced_auth_req(
+            "patch",
+            reverse(
+                'pmp_v3:intervention-cancel',
+                args=[intervention.pk],
+            ),
+            data={"cancel_justification": "Needs to be cancelled"},
+            user=self.prc_secretary,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+
     @mock.patch("etools.applications.partners.tasks.send_pd_to_vision.delay")
     def test_patch(self, send_to_vision_mock):
         # unicef cancels
-        self.intervention.unicef_focal_points.add(self.unicef_user)
+        self.intervention.unicef_focal_points.add(self.prc_secretary)
         self.assertFalse(self.intervention.unicef_accepted)
         self.assertIsNone(self.intervention.cancel_justification)
         mock_send = mock.Mock(return_value=self.mock_email)
@@ -2791,7 +2844,7 @@ class TestInterventionCancel(BaseInterventionActionTestCase):
                 "patch",
                 self.url,
                 data={"cancel_justification": "Needs to be cancelled"},
-                user=self.unicef_user,
+                user=self.prc_secretary,
             )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         mock_send.assert_called()
