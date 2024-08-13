@@ -111,6 +111,11 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         self._test_create(self.fm_user, {'location': LocationFactory().id})
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_create_remote_monitoring(self):
+        response = self._test_create(self.fm_user, {'location': LocationFactory().id, 'remote_monitoring': True})
+        self.assertTrue(response.data['remote_monitoring'])
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_list(self):
         activities = [
             MonitoringActivityFactory(monitor_type='tpm', tpm_partner=None),
