@@ -202,6 +202,21 @@ class TestList(BaseInterventionTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 40)
 
+    def test_intervention_list_with_pagination(self):
+        for i in range(30):
+            InterventionFactory()
+
+        with self.assertNumQueries(11):
+            response = self.forced_auth_req(
+                'get',
+                reverse('pmp_v3:intervention-list'),
+                user=self.unicef_user,
+                data={'page_size': 20, 'page': 1}
+            )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 20)
+
     def test_not_authenticated(self):
         response = self.forced_auth_req(
             "get",
