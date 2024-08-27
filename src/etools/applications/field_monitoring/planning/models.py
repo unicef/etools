@@ -233,6 +233,7 @@ class MonitoringActivity(
     )
 
     monitor_type = models.CharField(max_length=10, choices=MONITOR_TYPE_CHOICES, default=MONITOR_TYPE_CHOICES.staff)
+    remote_monitoring = models.BooleanField(default=False, verbose_name=_('Involves Remote Monitoring'))
 
     tpm_partner = models.ForeignKey(TPMPartner, blank=True, null=True, verbose_name=_('TPM Partner'),
                                     on_delete=models.CASCADE)
