@@ -15,7 +15,6 @@ from unicef_restlib.pagination import DynamicPageNumberPagination
 from unicef_restlib.views import MultiSerializerViewSetMixin, SafeTenantViewSetMixin
 from unicef_snapshot.views import FSMSnapshotViewMixin
 
-from etools.applications.action_points.export import export_non_ascii_patch  # noqa F401
 from etools.applications.action_points.categories.models import Category
 from etools.applications.action_points.categories.serializers import CategorySerializer
 from etools.applications.action_points.conditions import (
@@ -32,6 +31,7 @@ from etools.applications.action_points.conditions import (
     RelatedActionPointCondition,
     UnRelatedActionPointCondition,
 )
+from etools.applications.action_points.export import export_non_ascii_patch  # noqa F401
 from etools.applications.action_points.export.renderers import ActionPointCSVRenderer
 from etools.applications.action_points.export.serializers import ActionPointExportSerializer
 from etools.applications.action_points.filters import ReferenceNumberOrderingFilter, RelatedModuleFilter
