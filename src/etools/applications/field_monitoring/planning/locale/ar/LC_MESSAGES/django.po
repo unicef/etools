@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-04-11 05:18+0000\n"
+"POT-Creation-Date: 2024-08-13 03:24+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -157,6 +157,9 @@ msgstr "مُلغى"
 msgid "Reference Number"
 msgstr "الرقم المرجعي"
 
+msgid "Involves Remote Monitoring"
+msgstr ""
+
 msgid "TPM Partner"
 msgstr "المُراقب المستقل الشريك"
 
@@ -230,6 +233,9 @@ msgstr "نقاط إجراء مراقب النشاط"
 
 msgid "History"
 msgstr "السجل التاريخي"
+
+msgid "Report reviewer must be a PME or Report Reviewer."
+msgstr ""
 
 msgid "Document Type"
 msgstr "نوع الوثيقة"
