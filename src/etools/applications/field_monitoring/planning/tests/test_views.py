@@ -111,6 +111,11 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         self._test_create(self.fm_user, {'location': LocationFactory().id})
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_create_remote_monitoring(self):
+        response = self._test_create(self.fm_user, {'location': LocationFactory().id, 'remote_monitoring': True})
+        self.assertTrue(response.data['remote_monitoring'])
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_list(self):
         activities = [
             MonitoringActivityFactory(monitor_type='tpm', tpm_partner=None),
@@ -1000,6 +1005,19 @@ class FMUsersViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase):
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_filter_report_reviewers(self):
+        # user is inactive in terms of Field Monitoring - he has no
+        inactive_user = UserFactory(realms__data=[UNICEFUser.name, PME.name, ReportReviewer.name])
+        for realm in inactive_user.realms.all():
+            # don't deactivate basic unicef group
+            if realm.group.name == UNICEFUser.name:
+                continue
+
+            realm.is_active = False
+            realm.save()
+
+        inactive_user.refresh_from_db()
+        self.assertTrue(inactive_user.is_active)
+
         self._test_list(
             self.unicef_user, [
                 self.pme,

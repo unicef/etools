@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-08-02 10:59+0000\n"
+"POT-Creation-Date: 2024-08-13 03:24+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -74,56 +74,6 @@ msgstr "Обязательные поля не заполнены в %(status)s:
 #, python-format
 msgid "Cannot change fields while in %(status)s: %(field)s"
 msgstr "Невозможно изменить поля в %(status)s: %(field)s"
-
-msgid "Ref. #"
-msgstr ""
-
-msgid "Link"
-msgstr "Ссылка"
-
-msgid "Start Date"
-msgstr "Дата начала"
-
-msgid "End Date"
-msgstr "Дата окончания"
-
-msgid "Location"
-msgstr "Местоположение"
-
-msgid "Site"
-msgstr "Сайт"
-
-msgid "Sections"
-msgstr "Разделы"
-
-msgid "Field Offices"
-msgstr "Местные офисы"
-
-msgid "Status"
-msgstr "Статус"
-
-msgid "Primary Field Monitor is"
-msgstr ""
-
-msgid "Team Members"
-msgstr "Члены команды"
-
-msgid "TPM Partner"
-msgstr "Партнер TPM"
-
-msgid "Person Responsible"
-msgstr "Ответственное лицо"
-
-#, fuzzy
-#| msgid "Partner"
-msgid "Partners"
-msgstr "Партнер"
-
-msgid "PD/SPD"
-msgstr "ПД/СПД"
-
-msgid "Outputs"
-msgstr "выходы"
 
 msgid "Prioritization Criteria"
 msgstr "Критерии приоритизации"
@@ -209,6 +159,18 @@ msgstr "Отменено"
 msgid "Reference Number"
 msgstr "Ссылочный номер"
 
+msgid "Involves Remote Monitoring"
+msgstr ""
+
+msgid "TPM Partner"
+msgstr "Партнер TPM"
+
+msgid "Team Members"
+msgstr "Члены команды"
+
+msgid "Person Responsible"
+msgstr "Ответственное лицо"
+
 msgid "Report Reviewer"
 msgstr ""
 
@@ -219,6 +181,33 @@ msgstr "Обзор"
 
 msgid "Field Office"
 msgstr "Полевой офис"
+
+msgid "Field Offices"
+msgstr "Местные офисы"
+
+msgid "Sections"
+msgstr "Разделы"
+
+msgid "Location"
+msgstr "Местоположение"
+
+msgid "Site"
+msgstr "Сайт"
+
+msgid "PD/SPD"
+msgstr "ПД/СПД"
+
+msgid "Outputs"
+msgstr "выходы"
+
+msgid "Start Date"
+msgstr "Дата начала"
+
+msgid "End Date"
+msgstr "Дата окончания"
+
+msgid "Status"
+msgstr "Статус"
 
 msgid "Activity Attachments"
 msgstr "вложения активности"
@@ -282,6 +271,9 @@ msgstr "Офис правопреемника"
 
 msgid "Action Point Category"
 msgstr "Категория точки действия"
+
+msgid "Link"
+msgstr "Ссылка"
 
 msgid "Priority"
 msgstr "Приоритет"
