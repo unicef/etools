@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-08-13 03:24+0000\n"
+"POT-Creation-Date: 2024-08-28 14:06+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -72,6 +72,56 @@ msgstr "الحقول المطلوبة لم يتم إكمالها في %(status)s
 #, python-format
 msgid "Cannot change fields while in %(status)s: %(field)s"
 msgstr "لا يمكن تغيير الحقول أثناء تواجد %(status)s: %(field)s"
+
+msgid "Ref. #"
+msgstr ""
+
+msgid "Link"
+msgstr "رابط"
+
+msgid "Start Date"
+msgstr "تاريخ البدء"
+
+msgid "End Date"
+msgstr "تاريخ الانتهاء"
+
+msgid "Location"
+msgstr "الموقع"
+
+msgid "Site"
+msgstr "مكان"
+
+msgid "Sections"
+msgstr "الأقسام"
+
+msgid "Field Offices"
+msgstr "المكاتب الميدانية"
+
+msgid "Status"
+msgstr "الحالة"
+
+msgid "Primary Field Monitor is"
+msgstr ""
+
+msgid "Team Members"
+msgstr "أعضاء الفريق"
+
+msgid "TPM Partner"
+msgstr "المُراقب المستقل الشريك"
+
+msgid "Person Responsible"
+msgstr "الشخص المسؤول"
+
+#, fuzzy
+#| msgid "Partner"
+msgid "Partners"
+msgstr "الشريك"
+
+msgid "PD/SPD"
+msgstr "PD/SPD"
+
+msgid "Outputs"
+msgstr "المخرجات"
 
 msgid "Prioritization Criteria"
 msgstr "معايير تحديد الأولويات"
@@ -160,15 +210,6 @@ msgstr "الرقم المرجعي"
 msgid "Involves Remote Monitoring"
 msgstr ""
 
-msgid "TPM Partner"
-msgstr "المُراقب المستقل الشريك"
-
-msgid "Team Members"
-msgstr "أعضاء الفريق"
-
-msgid "Person Responsible"
-msgstr "الشخص المسؤول"
-
 msgid "Report Reviewer"
 msgstr ""
 
@@ -179,33 +220,6 @@ msgstr "المعاينة"
 
 msgid "Field Office"
 msgstr "المكتب الميداني"
-
-msgid "Field Offices"
-msgstr "المكاتب الميدانية"
-
-msgid "Sections"
-msgstr "الأقسام"
-
-msgid "Location"
-msgstr "الموقع"
-
-msgid "Site"
-msgstr "مكان"
-
-msgid "PD/SPD"
-msgstr "PD/SPD"
-
-msgid "Outputs"
-msgstr "المخرجات"
-
-msgid "Start Date"
-msgstr "تاريخ البدء"
-
-msgid "End Date"
-msgstr "تاريخ الانتهاء"
-
-msgid "Status"
-msgstr "الحالة"
 
 msgid "Activity Attachments"
 msgstr "مرفقات النشاط"
@@ -269,9 +283,6 @@ msgstr "مكتب المعين له العمل"
 
 msgid "Action Point Category"
 msgstr "فئة نقطة العمل"
-
-msgid "Link"
-msgstr "رابط"
 
 msgid "Priority"
 msgstr "الأولوية"
