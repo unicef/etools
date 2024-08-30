@@ -695,6 +695,31 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('Content-Disposition', response.headers)
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_visits_csv_export(self):
+        MonitoringActivityFactory(status='draft')
+        MonitoringActivityFactory(status='assigned')
+        MonitoringActivityFactory(status='completed')
+        MonitoringActivityFactory(status='cancelled')
+        [
+            MonitoringActivityFactory(
+                interventions=[InterventionFactory()],
+                cp_outputs=[ResultFactory(result_type__name=ResultType.OUTPUT)],
+                partners=[PartnerFactory()],
+                offices=[OfficeFactory()],
+                sections=[SectionFactory()],
+                team_members=[UserFactory()],
+                visit_lead=UserFactory(),
+            )
+            for _ in range(20)
+        ]
+
+        with self.assertNumQueries(15):
+            response = self.make_request_to_viewset(self.unicef_user, action='export', method='get', data={'page': 1, 'page_size': 100})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('Content-Disposition', response.headers)
+        self.assertEqual(len(response.data), 24)
+
 
 class TestActivityAttachmentsView(FMBaseTestCaseMixin, APIViewSetTestCase):
     base_view = 'field_monitoring_planning:activity_attachments'
