@@ -10,7 +10,6 @@ from etools.applications.field_monitoring.planning.models import MonitoringActiv
 from etools.applications.field_monitoring.utils.filters import M2MInFilter
 from etools.applications.partners.models import Intervention
 from etools.applications.reports.models import Result
-from etools.applications.tpm.models import PME
 from etools.applications.users.mixins import TPM_ACTIVE_GROUPS
 
 

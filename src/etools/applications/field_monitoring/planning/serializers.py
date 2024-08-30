@@ -1,7 +1,6 @@
 from copy import copy
 
 from django.utils.translation import gettext as _
-from etools.applications.field_monitoring.groups import MonitoringVisitApprover
 
 from rest_framework import serializers
 from unicef_attachments.fields import FileTypeModelChoiceField
@@ -30,7 +29,6 @@ from etools.applications.partners.serializers.partner_organization_v2 import Min
 from etools.applications.reports.models import ResultType
 from etools.applications.reports.serializers.v1 import SectionSerializer
 from etools.applications.reports.serializers.v2 import MinimalOutputListSerializer, OfficeSerializer
-from etools.applications.tpm.models import PME
 from etools.applications.tpm.tpmpartners.models import TPMPartner
 from etools.applications.users.serializers import MinimalUserSerializer
 
@@ -160,7 +158,6 @@ class MonitoringActivitySerializer(UserContextSerializerMixin, MonitoringActivit
             {'transition': transition.method.__name__, 'target': transition.target}
             for transition in get_available_transitions(obj, self.get_user())
         ]
-
 
 
 class ActivityAttachmentSerializer(BaseAttachmentSerializer):
