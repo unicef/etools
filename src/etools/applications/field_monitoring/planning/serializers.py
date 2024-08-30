@@ -1,6 +1,7 @@
 from copy import copy
 
 from django.utils.translation import gettext as _
+from etools.applications.field_monitoring.groups import MonitoringVisitApprover
 
 from rest_framework import serializers
 from unicef_attachments.fields import FileTypeModelChoiceField
@@ -16,7 +17,6 @@ from etools.applications.action_points.categories.serializers import CategoryMod
 from etools.applications.action_points.serializers import ActionPointBaseSerializer, HistorySerializer
 from etools.applications.field_monitoring.fm_settings.models import Question
 from etools.applications.field_monitoring.fm_settings.serializers import LocationSiteSerializer, QuestionSerializer
-from etools.applications.field_monitoring.groups import ReportReviewer
 from etools.applications.field_monitoring.planning.activity_validation.permissions import ActivityPermissions
 from etools.applications.field_monitoring.planning.models import (
     MonitoringActivity,
@@ -161,11 +161,6 @@ class MonitoringActivitySerializer(UserContextSerializerMixin, MonitoringActivit
             for transition in get_available_transitions(obj, self.get_user())
         ]
 
-    def validate_report_reviewer(self, value):
-        if not value.groups.filter(name__in=[PME.name, ReportReviewer.name]).exists():
-            raise serializers.ValidationError(_('Report reviewer must be a PME or Report Reviewer.'))
-
-        return value
 
 
 class ActivityAttachmentSerializer(BaseAttachmentSerializer):

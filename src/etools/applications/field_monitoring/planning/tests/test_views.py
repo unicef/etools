@@ -5,6 +5,7 @@ from django.core.management import call_command
 from django.test.utils import override_settings
 from django.urls import reverse
 from django.utils import timezone
+from etools.applications.field_monitoring.groups import MonitoringVisitApprover
 
 from rest_framework import status
 from unicef_attachments.models import Attachment, AttachmentLink, FileType
@@ -28,7 +29,6 @@ from etools.applications.field_monitoring.data_collection.tests.factories import
 )
 from etools.applications.field_monitoring.fm_settings.models import Question
 from etools.applications.field_monitoring.fm_settings.tests.factories import QuestionFactory
-from etools.applications.field_monitoring.groups import ReportReviewer
 from etools.applications.field_monitoring.planning.models import MonitoringActivity, YearPlan
 from etools.applications.field_monitoring.planning.tests.factories import (
     MonitoringActivityActionPointFactory,
@@ -1032,7 +1032,7 @@ class FMUsersViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase):
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_filter_report_reviewers(self):
         # user is inactive in terms of Field Monitoring - he has no
-        inactive_user = UserFactory(realms__data=[UNICEFUser.name, PME.name, ReportReviewer.name])
+        inactive_user = UserFactory(realms__data=[UNICEFUser.name, PME.name, MonitoringVisitApprover.name])
         for realm in inactive_user.realms.all():
             # don't deactivate basic unicef group
             if realm.group.name == UNICEFUser.name:
@@ -1048,7 +1048,7 @@ class FMUsersViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase):
             self.unicef_user, [
                 self.pme,
                 UserFactory(report_reviewer=True),
-                UserFactory(realms__data=[UNICEFUser.name, PME.name, ReportReviewer.name])
+                UserFactory(realms__data=[UNICEFUser.name, PME.name, MonitoringVisitApprover.name])
             ],
             data={'user_type': 'report_reviewer'},
         )
