@@ -29,7 +29,6 @@ from etools.applications.field_monitoring.permissions import (
     IsMonitoringVisitApprover,
     IsObjectAction,
     IsReadAction,
-    IsReportReviewer,
     IsVisitLead,
 )
 from etools.applications.field_monitoring.planning.activity_validation.validator import ActivityValid
@@ -160,7 +159,7 @@ class MonitoringActivitiesViewSet(
     permission_classes = FMBaseViewSet.permission_classes + [
         IsReadAction |
         (IsEditAction & IsListAction & IsFieldMonitor) |
-        (IsEditAction & (IsObjectAction & (IsFieldMonitor | IsVisitLead | IsMonitoringVisitApprover | IsReportReviewer)))
+        (IsEditAction & (IsObjectAction & (IsFieldMonitor | IsVisitLead | IsMonitoringVisitApprover)))
     ]
     filter_backends = (
         DjangoFilterBackend, ReferenceNumberOrderingFilter,
