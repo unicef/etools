@@ -1,6 +1,6 @@
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 
-from etools.applications.field_monitoring.groups import FMUser, MonitoringVisitApprover
+from etools.applications.field_monitoring.groups import FMUser, MonitoringVisitApprover, ReportReviewer
 from etools.applications.field_monitoring.planning.activity_validation.permissions import ActivityPermissions
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
 from etools.applications.tpm.models import PME
@@ -64,6 +64,10 @@ class IsPME(UserInGroup):
 
 class IsMonitoringVisitApprover(UserInGroup):
     group = MonitoringVisitApprover.name
+
+
+class IsReportReviewer(UserInGroup):
+    group = ReportReviewer.name
 
 
 IsFieldMonitor = IsFMUser | IsPME

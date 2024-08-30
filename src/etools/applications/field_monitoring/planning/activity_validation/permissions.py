@@ -1,4 +1,4 @@
-from etools.applications.field_monitoring.groups import FMUser, MonitoringVisitApprover
+from etools.applications.field_monitoring.groups import FMUser, MonitoringVisitApprover, ReportReviewer
 from etools.applications.partners.permissions import PMPPermissions
 from etools.applications.tpm.models import PME
 
@@ -22,7 +22,7 @@ class ActivityPermissions(PMPPermissions):
         if {FMUser.name, PME.name}.intersection(self.user_groups):
             self.user_groups.add('Field Monitor')
 
-        if {MonitoringVisitApprover.name, PME.name}.intersection(self.user_groups):
+        if {MonitoringVisitApprover.name, PME.name, ReportReviewer.name}.intersection(self.user_groups):
             self.user_groups.add('Approvers')
 
         self.user_groups.add('All Users')
