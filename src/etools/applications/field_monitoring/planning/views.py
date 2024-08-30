@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model
 from django.db import connection, transaction
 from django.db.models import Count, F, Prefetch, Q
 from django.http import Http404
+from django.utils import timezone
 from django.utils.translation import gettext as _
 
 from django_filters.rest_framework import DjangoFilterBackend
@@ -33,6 +34,8 @@ from etools.applications.field_monitoring.permissions import (
     IsVisitLead,
 )
 from etools.applications.field_monitoring.planning.activity_validation.validator import ActivityValid
+from etools.applications.field_monitoring.planning.export.renderers import MonitoringActivityCSVRenderer
+from etools.applications.field_monitoring.planning.export.serializers import MonitoringActivityExportSerializer
 from etools.applications.field_monitoring.planning.filters import (
     CPOutputsFilterSet,
     HactForPartnerFilter,
@@ -262,6 +265,18 @@ class MonitoringActivitiesViewSet(
             request, "fm/visit_pdf.html", context=context,
             filename="visit_{}.pdf".format(ma.reference_number)
         )
+
+    @action(detail=False, methods=['get'], url_path='export', renderer_classes=(MonitoringActivityCSVRenderer,))
+    def export(self, request, *args, **kwargs):
+        activities = self.filter_queryset(self.get_queryset()).prefetch_related(
+            'sections',
+            'offices',
+        )
+
+        serializer = MonitoringActivityExportSerializer(activities, many=True)
+        return Response(serializer.data, headers={
+            'Content-Disposition': 'attachment;filename=monitoring_activities_{}.csv'.format(timezone.now().date())
+        })
 
 
 class FMUsersViewSet(
