@@ -101,6 +101,8 @@ def get_blueprint_for_activity_and_method(activity: 'MonitoringActivity', method
                         options_key=options_key,
                         help_text=question.specific_details,
                         required=False,
+                        # For HACT questions, a warning that is mandatory to fill in is needed in the frontend
+                        styling=['mandatory_warning'] if question.question.category.name == 'HACT' else []
                     )
                 )
             level_block.add(target_block)
