@@ -82,7 +82,7 @@ def get_blueprint_for_activity_and_method(activity: 'MonitoringActivity', method
             )
             questions_block = Group('questions', styling=['abstract'], required=False)
             target_block.add(questions_block)
-            for question in target_questions.distinct():
+            for question in target_questions.select_related('question__category').distinct():
                 if question.question.answer_type in [
                     Question.ANSWER_TYPES.bool,
                     Question.ANSWER_TYPES.likert_scale
