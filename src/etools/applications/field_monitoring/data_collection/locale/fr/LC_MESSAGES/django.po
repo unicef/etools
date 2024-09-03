@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-05-14 08:38+0000\n"
+"POT-Creation-Date: 2024-08-30 09:24+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -96,8 +96,8 @@ msgstr "Conclusions générales de l'activité"
 msgid "Source of Information"
 msgstr "Source d'information"
 
-msgid "Overall Finding"
-msgstr "Conclusion générale"
+msgid "General Observations"
+msgstr "Observations générales"
 
 #, python-format
 msgid "Unable to find %(level)s with id %(target_id)s"
@@ -140,3 +140,6 @@ msgstr ""
 
 msgid "Report Attachments"
 msgstr "Pièces jointes du rapport"
+
+#~ msgid "Overall Finding"
+#~ msgstr "Conclusion générale"

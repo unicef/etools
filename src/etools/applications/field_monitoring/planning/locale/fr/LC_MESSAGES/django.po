@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-04-11 05:18+0000\n"
+"POT-Creation-Date: 2024-08-28 14:06+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -74,6 +74,56 @@ msgstr "Champs obligatoires non renseignés dans %(status)s: %(fields)s"
 #, python-format
 msgid "Cannot change fields while in %(status)s: %(field)s"
 msgstr "Impossible de modifier les champs dans %(status)s: %(field)s"
+
+msgid "Ref. #"
+msgstr ""
+
+msgid "Link"
+msgstr "Lien"
+
+msgid "Start Date"
+msgstr "Date de début"
+
+msgid "End Date"
+msgstr "Date de fin"
+
+msgid "Location"
+msgstr "Localisation"
+
+msgid "Site"
+msgstr "Site"
+
+msgid "Sections"
+msgstr "Sections"
+
+msgid "Field Offices"
+msgstr "Bureaux de terrain"
+
+msgid "Status"
+msgstr "Statut"
+
+msgid "Primary Field Monitor is"
+msgstr ""
+
+msgid "Team Members"
+msgstr "Membres de l'équipe"
+
+msgid "TPM Partner"
+msgstr "Partenaire TPM"
+
+msgid "Person Responsible"
+msgstr "Personne responsable"
+
+#, fuzzy
+#| msgid "Partner"
+msgid "Partners"
+msgstr "Partenaires"
+
+msgid "PD/SPD"
+msgstr "PD/SSFA"
+
+msgid "Outputs"
+msgstr "Produits"
 
 msgid "Prioritization Criteria"
 msgstr "Critères de priorisation"
@@ -159,14 +209,8 @@ msgstr "Annulé"
 msgid "Reference Number"
 msgstr "Numéro de réference"
 
-msgid "TPM Partner"
-msgstr "Partenaire TPM"
-
-msgid "Team Members"
-msgstr "Membres de l'équipe"
-
-msgid "Person Responsible"
-msgstr "Personne responsable"
+msgid "Involves Remote Monitoring"
+msgstr ""
 
 msgid "Report Reviewer"
 msgstr ""
@@ -178,33 +222,6 @@ msgstr "Examen"
 
 msgid "Field Office"
 msgstr "Bureau de terrain"
-
-msgid "Field Offices"
-msgstr "Bureaux de terrain"
-
-msgid "Sections"
-msgstr "Sections"
-
-msgid "Location"
-msgstr "Localisation"
-
-msgid "Site"
-msgstr "Site"
-
-msgid "PD/SPD"
-msgstr "PD/SSFA"
-
-msgid "Outputs"
-msgstr "Produits"
-
-msgid "Start Date"
-msgstr "Date de début"
-
-msgid "End Date"
-msgstr "Date de fin"
-
-msgid "Status"
-msgstr "Statut"
 
 msgid "Activity Attachments"
 msgstr "Pièces jointes d'activité"
@@ -232,6 +249,9 @@ msgstr "Points d'action de l'activité de suivi"
 
 msgid "History"
 msgstr "Historique"
+
+msgid "Report reviewer must be a PME or Report Reviewer."
+msgstr ""
 
 msgid "Document Type"
 msgstr "Type de document"
@@ -265,9 +285,6 @@ msgstr "Bureau du Destinataire"
 
 msgid "Action Point Category"
 msgstr "Catégorie de point d'action"
-
-msgid "Link"
-msgstr "Lien"
 
 msgid "Priority"
 msgstr "Priorité"

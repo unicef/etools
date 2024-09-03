@@ -7,6 +7,7 @@ from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from unicef_attachments.models import Attachment
 from unicef_rest_export.renderers import ExportOpenXMLRenderer
 from unicef_rest_export.serializers import ExportSerializer
 from unicef_rest_export.views import ExportMixin
@@ -33,7 +34,7 @@ from etools.applications.action_points.conditions import (
 from etools.applications.action_points.export.renderers import ActionPointCSVRenderer
 from etools.applications.action_points.export.serializers import ActionPointExportSerializer
 from etools.applications.action_points.filters import ReferenceNumberOrderingFilter, RelatedModuleFilter
-from etools.applications.action_points.models import ActionPoint
+from etools.applications.action_points.models import ActionPoint, ActionPointComment
 from etools.applications.action_points.serializers import (
     ActionPointCreateSerializer,
     ActionPointListSerializer,
@@ -49,7 +50,7 @@ class CategoryViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     serializer_class = CategorySerializer
     queryset = Category.objects.all()
     filter_backends = (DjangoFilterBackend,)
-    filter_fields = ('module',)
+    filterset_fields = ('module',)
 
 
 class ActionPointViewSet(
@@ -69,7 +70,17 @@ class ActionPointViewSet(
     metadata_class = PermissionBasedMetadata
     pagination_class = DynamicPageNumberPagination
     permission_classes = [IsAuthenticated]
-    queryset = ActionPoint.objects.select_related()
+    queryset = ActionPoint.objects.select_related().prefetch_related(
+        Prefetch(
+            'comments',
+            ActionPointComment.objects.prefetch_related(
+                Prefetch(
+                    'supporting_document',
+                    Attachment.objects.select_related('uploaded_by'),
+                ),
+            )
+        )
+    )
     serializer_class = ActionPointSerializer
     serializer_action_classes = {
         'create': ActionPointCreateSerializer,
@@ -89,12 +100,12 @@ class ActionPointViewSet(
         'cp_output__name', 'partner__organization__name', 'section__name', 'office__name', 'assigned_to__first_name',
         'assigned_to__last_name', 'due_date', 'status', 'pk'
     )
-    filter_fields = {field: ['exact'] for field in (
+    filterset_fields = {field: ['exact'] for field in (
         'assigned_by', 'assigned_to', 'high_priority', 'author', 'section', 'location',
         'office', 'partner', 'intervention', 'cp_output',
         'engagement', 'psea_assessment', 'tpm_activity', 'travel_activity',
     )}
-    filter_fields.update({
+    filterset_fields.update({
         'status': ['exact', 'in'],
         'section': ['exact', 'in'],
         'due_date': ['exact', 'lte', 'gte']
