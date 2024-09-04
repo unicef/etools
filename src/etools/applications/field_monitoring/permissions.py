@@ -64,7 +64,7 @@ class IsPME(UserInGroup):
 
 class IsMonitoringVisitApprover(BasePermission):
     def has_permission(self, request, view):
-        group_names = {MonitoringVisitApprover.name, PME.name}
+        group_names = {MonitoringVisitApprover.name, PME.name, "UNICEF User"}
         return any(group.name in group_names for group in request.user.groups.all())
 
     def has_object_permission(self, request, view, obj):
