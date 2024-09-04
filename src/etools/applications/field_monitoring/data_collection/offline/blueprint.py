@@ -67,7 +67,8 @@ def get_blueprint_for_activity_and_method(activity: 'MonitoringActivity', method
             target_block = Group(
                 str(target.id),
                 TextField(
-                    'overall', label=_('General Observations'), styling=['wide', 'additional'], required=False
+                    'overall', label=_('General Observations'), styling=['wide', 'additional'], required=False,
+                    placeholder=_('Please enter general observations here')
                 ),
                 Group(
                     'attachments',
