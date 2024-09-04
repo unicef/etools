@@ -16,7 +16,6 @@ from etools.applications.attachments.tests.factories import (
     AttachmentFileTypeFactory,
     AttachmentLinkFactory,
 )
-from etools.applications.audit.models import UNICEFUser
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.field_monitoring.data_collection.models import (
     ActivityOverallFinding,
@@ -28,7 +27,6 @@ from etools.applications.field_monitoring.data_collection.tests.factories import
 )
 from etools.applications.field_monitoring.fm_settings.models import Question
 from etools.applications.field_monitoring.fm_settings.tests.factories import QuestionFactory
-from etools.applications.field_monitoring.groups import ReportReviewer
 from etools.applications.field_monitoring.planning.models import MonitoringActivity, YearPlan
 from etools.applications.field_monitoring.planning.tests.factories import (
     MonitoringActivityActionPointFactory,
@@ -47,7 +45,6 @@ from etools.applications.partners.tests.factories import (
 )
 from etools.applications.reports.models import ResultType
 from etools.applications.reports.tests.factories import OfficeFactory, ResultFactory, SectionFactory
-from etools.applications.tpm.models import PME
 from etools.applications.tpm.tests.factories import SimpleTPMPartnerFactory, TPMPartnerFactory, TPMUserFactory
 from etools.libraries.djangolib.models import GroupWrapper
 
@@ -512,15 +509,15 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         )
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
-    def test_submit_report_reviewer_invalid_group(self):
+    def test_submit_report_reviewer_unicef_user_ok(self):
         activity = MonitoringActivityFactory(monitor_type='staff', report_reviewer=None, status='report_finalization')
+        ActivityOverallFinding.objects.create(monitoring_activity=activity, narrative_finding='test')
 
         self._test_update(
             activity.visit_lead,
             activity,
             {'status': 'submitted', 'report_reviewer': UserFactory(unicef_user=True).id},
-            expected_status=status.HTTP_400_BAD_REQUEST,
-            field_errors=['report_reviewer'],
+            expected_status=status.HTTP_200_OK,
         )
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
@@ -570,6 +567,15 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         self.assertEqual(activity.reviewed_by, approver)
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_complete_by_report_reviewer(self):
+        report_reviewer = UserFactory(report_reviewer=True)
+        activity = MonitoringActivityFactory(monitor_type='staff', status='submitted', report_reviewer=report_reviewer)
+
+        self._test_update(report_reviewer, activity, {'status': 'completed'})
+        activity.refresh_from_db()
+        self.assertEqual(activity.status, MonitoringActivity.STATUS_COMPLETED)
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_report_reject_reviewed_by_set(self):
         activity = MonitoringActivityFactory(monitor_type='staff', status='submitted')
         StartedChecklistFactory(monitoring_activity=activity)
@@ -584,6 +590,23 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         )
         activity.refresh_from_db()
         self.assertEqual(activity.reviewed_by, approver)
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_report_reject_by_report_reviewer(self):
+        report_reviewer = UserFactory(report_reviewer=True)
+        activity = MonitoringActivityFactory(monitor_type='staff', status='submitted', report_reviewer=report_reviewer)
+        StartedChecklistFactory(monitoring_activity=activity)
+        ActivityOverallFinding.objects.create(monitoring_activity=activity, narrative_finding='narrative')
+
+        self.assertIsNone(activity.reviewed_by)
+        self._test_update(
+            report_reviewer,
+            activity,
+            {'status': 'report_finalization', 'report_reject_reason': 'test'},
+        )
+        activity.refresh_from_db()
+        self.assertEqual(activity.status, MonitoringActivity.STATUS_REPORT_FINALIZATION)
+        self.assertEqual(activity.report_reject_reason, 'test')
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_draft_status_permissions(self):
@@ -1002,30 +1025,6 @@ class FMUsersViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase):
 
         self.assertEqual(response.data['results'][0]['user_type'], 'tpm')
         self.assertEqual(response.data['results'][0]['tpm_partner'], tpm_partner)
-
-    @override_settings(UNICEF_USER_EMAIL="@example.com")
-    def test_filter_report_reviewers(self):
-        # user is inactive in terms of Field Monitoring - he has no
-        inactive_user = UserFactory(realms__data=[UNICEFUser.name, PME.name, ReportReviewer.name])
-        for realm in inactive_user.realms.all():
-            # don't deactivate basic unicef group
-            if realm.group.name == UNICEFUser.name:
-                continue
-
-            realm.is_active = False
-            realm.save()
-
-        inactive_user.refresh_from_db()
-        self.assertTrue(inactive_user.is_active)
-
-        self._test_list(
-            self.unicef_user, [
-                self.pme,
-                UserFactory(report_reviewer=True),
-                UserFactory(realms__data=[UNICEFUser.name, PME.name, ReportReviewer.name])
-            ],
-            data={'user_type': 'report_reviewer'},
-        )
 
 
 class CPOutputsViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenantTestCase):
