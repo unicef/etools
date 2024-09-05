@@ -19,6 +19,7 @@ from sys import path
 
 from django.core.wsgi import get_wsgi_application
 
+import setuptools  # noqa: F401
 from dj_static import Cling
 
 PACKAGE_ROOT = dirname(dirname(abspath(__file__)))
