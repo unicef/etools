@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-08-30 09:24+0000\n"
+"POT-Creation-Date: 2024-09-04 09:09+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -99,6 +99,9 @@ msgstr "مصدر المعلومات"
 
 msgid "General Observations"
 msgstr "ملاحظات عامة"
+
+msgid "Please enter general observations here"
+msgstr "الرجاء إدخال الملاحظات العامة هنا"
 
 #, python-format
 msgid "Unable to find %(level)s with id %(target_id)s"

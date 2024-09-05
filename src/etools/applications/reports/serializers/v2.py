@@ -484,7 +484,7 @@ class ResultFrameworkSerializer(serializers.Serializer):
                 i.name for i in obj.ram_indicators.all()
                 if i.name
             ])
-        return obj.indicator.title
+        return obj.indicator.title if obj.is_active else f"[{_('Inactive')}] {obj.indicator.title}"
 
     def get_target(self, obj):
         if hasattr(obj, "target"):

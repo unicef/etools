@@ -22,6 +22,7 @@ from django.utils.translation import gettext_lazy as _
 
 import dj_database_url
 import sentry_sdk
+import setuptools  # noqa: F401
 import yaml
 from sentry_sdk import configure_scope
 from sentry_sdk.integrations.celery import CeleryIntegration
@@ -698,6 +699,3 @@ PBI_CONFIG = {
     "SCOPE_BASE": ['https://analysis.windows.net/powerbi/api/.default'],
     "AUTHORITY_URL": f"https://login.microsoftonline.com/{get_from_secrets_or_env('PBI_LMSM_TENANT_ID', '')}"
 }
-
-# FAM documents skip dates validation on created/update prior the date
-SKIP_VALIDATION_BEFORE = get_from_secrets_or_env('SKIP_VALIDATION_BEFORE', '2024-08-01')
