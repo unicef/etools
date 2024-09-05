@@ -561,6 +561,12 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         activity = MonitoringActivityFactory(monitor_type='staff', status='submitted')
         approver = UserFactory(approver=True)
 
+        response = self._test_retrieve(approver, activity)
+        # check transitions exists
+        self.assertListEqual(
+            [t['transition'] for t in response.data['transitions']],
+            ['complete', 'reject_report'])
+
         self.assertIsNone(activity.reviewed_by)
         self._test_update(approver, activity, {'status': 'completed'})
         activity.refresh_from_db()
@@ -568,8 +574,14 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_complete_by_report_reviewer(self):
-        report_reviewer = UserFactory(report_reviewer=True)
+        report_reviewer = UserFactory(unicef_user=True)
         activity = MonitoringActivityFactory(monitor_type='staff', status='submitted', report_reviewer=report_reviewer)
+
+        response = self._test_retrieve(report_reviewer, activity)
+        # check transitions exists
+        self.assertListEqual(
+            [t['transition'] for t in response.data['transitions']],
+            ['complete', 'reject_report'])
 
         self._test_update(report_reviewer, activity, {'status': 'completed'})
         activity.refresh_from_db()
@@ -593,7 +605,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_report_reject_by_report_reviewer(self):
-        report_reviewer = UserFactory(report_reviewer=True)
+        report_reviewer = UserFactory(unicef_user=True)
         activity = MonitoringActivityFactory(monitor_type='staff', status='submitted', report_reviewer=report_reviewer)
         StartedChecklistFactory(monitoring_activity=activity)
         ActivityOverallFinding.objects.create(monitoring_activity=activity, narrative_finding='narrative')
