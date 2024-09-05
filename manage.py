@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import os
 import sys
+import setuptools  # noqa: F401
 
 SRC = os.path.abspath("src")
 sys.path.insert(0, SRC)
