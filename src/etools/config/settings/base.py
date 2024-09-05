@@ -22,6 +22,7 @@ from django.utils.translation import gettext_lazy as _
 
 import dj_database_url
 import sentry_sdk
+import setuptools  # noqa: F401
 import yaml
 from sentry_sdk import configure_scope
 from sentry_sdk.integrations.celery import CeleryIntegration
