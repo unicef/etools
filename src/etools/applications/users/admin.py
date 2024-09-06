@@ -33,7 +33,7 @@ from etools.applications.users.signals import sync_realms_to_prp_on_update
 from etools.applications.users.tasks import sync_realms_to_prp
 from etools.applications.vision.tasks import sync_handler, vision_sync_task
 from etools.libraries.azure_graph_api.tasks import sync_user
-from etools.libraries.djangolib.admin import RestrictedEditAdminMixin, XLSXImportMixin
+from etools.libraries.djangolib.admin import RestrictedEditAdminMixin, RssRealmEditAdminMixin, XLSXImportMixin
 from etools.libraries.djangolib.utils import temporary_disconnect_signal
 
 
@@ -167,12 +167,13 @@ class ProfileAdmin(admin.ModelAdmin):
         obj.save()
 
 
-class RealmInline(admin.StackedInline):
+class RealmInline(RssRealmEditAdminMixin, admin.StackedInline):
     verbose_name_plural = "Realms in current country"
 
     model = Realm
     raw_id_fields = ('country', 'organization', 'group')
     extra = 0
+    show_change_link = True
 
     def get_queryset(self, request):
         if isinstance(connection.tenant, FakeTenant):
@@ -402,8 +403,9 @@ class MultipleRealmForm(forms.ModelForm):
         widget=widgets.ManyToManyRawIdWidget(Realm._meta.get_field("country").remote_field, admin.site),
         queryset=Country.objects.all())
     group = forms.ModelMultipleChoiceField(
-        widget=widgets.ManyToManyRawIdWidget(Realm._meta.get_field("group").remote_field, admin.site),
-        queryset=Group.objects.all())
+        widget=widgets.FilteredSelectMultiple('group', True),
+        queryset=Group.objects.all(),
+        help_text=_('Hold down “Control”, or “Command” on a Mac, to select more than one.'))
     organization = forms.ModelChoiceField(
         widget=widgets.ForeignKeyRawIdWidget(Realm._meta.get_field("organization").remote_field, admin.site),
         queryset=Organization.objects.all())
@@ -412,14 +414,23 @@ class MultipleRealmForm(forms.ModelForm):
         model = Realm
         fields = ['user', 'country', 'group', 'organization']
 
+    def _post_clean(self):
+        pass
 
-class RealmAdmin(RestrictedEditAdminMixin, SnapshotModelAdmin):
+    def prepare_for_rss(self):
+        self.fields['group'].queryset = Group.objects.filter(name__in=RssRealmEditAdminMixin.GROUPS_ALLOWED)
+        self.fields['organization'].initial = 1
+        self.fields['organization'].widget = forms.TextInput(attrs={'readonly': 'readonly'})
+        self.fields['user'].help_text = "UNICEF Users only"
+
+
+class RealmAdmin(RssRealmEditAdminMixin, SnapshotModelAdmin):
     change_list_template = "admin/users/realm/change_list.html"
 
     raw_id_fields = ('user', 'organization')
     search_fields = ('user__email', 'user__first_name', 'user__last_name', 'country__name',
                      'organization__name', 'organization__vendor_number', 'group__name')
-    autocomplete_fields = ('country', 'group')
+    autocomplete_fields = ('country',)
     list_filter = ('country', 'group')
 
     inlines = (ActivityInline, )
@@ -435,30 +446,45 @@ class RealmAdmin(RestrictedEditAdminMixin, SnapshotModelAdmin):
         ]
         return custom_urls + urlpatterns
 
+    def get_readonly_fields(self, request, obj=None):
+        readonly_fields = ['user', 'country', 'organization', 'group']
+        if self.has_change_permission(request):
+            if not obj:
+                return self.readonly_fields
+
+            if self.is_only_rss(request):
+                if obj.group.name in self.GROUPS_ALLOWED and obj.user.is_unicef_user():
+                    return readonly_fields
+                readonly_fields.append('is_active')
+                return readonly_fields
+        return self.readonly_fields
+
     @csrf_protect_m
     def multiple_realms(self, request, obj=None, form_url='', extra_context=None):
         opts = self.model._meta
         app_label = opts.app_label
-        if request.method == 'GET':
-            fieldsets = [(None, {'fields': ['user', 'country', 'organization', 'group']})]
-            initial = self.get_changeform_initial_data(request)
-            form = MultipleRealmForm(initial=initial)
-            admin_form = helpers.AdminForm(form, fieldsets, {}, model_admin=self)
-            context = {
-                **self.admin_site.each_context(request),
-                'module_name': str(opts.verbose_name_plural),
-                'has_add_permission': self.has_add_permission(request),
-                'opts': opts,
-                'app_label': app_label,
-                'title': 'Add Multiple Realms',
-                'media': self.media,
-                'adminform': admin_form,
-                'is_popup': IS_POPUP_VAR in request.POST or IS_POPUP_VAR in request.GET,
-                'to_field': request.POST.get(TO_FIELD_VAR, request.GET.get(TO_FIELD_VAR)),
-                'form_url': reverse('admin:multiple-realms', current_app=self.admin_site.name),
-                **(extra_context or {}),
-            }
+        fieldsets = [(None, {'fields': ['user', 'country', 'organization', 'group']})]
+        initial = self.get_changeform_initial_data(request)
+        form = MultipleRealmForm(initial=initial)
+        admin_form = helpers.AdminForm(form, fieldsets, {}, model_admin=self)
+        context = {
+            **self.admin_site.each_context(request),
+            'module_name': str(opts.verbose_name_plural),
+            'has_add_permission': self.has_add_permission(request),
+            'opts': opts,
+            'app_label': app_label,
+            'title': 'Add Multiple Realms',
+            'media': self.media,
+            'adminform': admin_form,
+            'is_popup': IS_POPUP_VAR in request.POST or IS_POPUP_VAR in request.GET,
+            'to_field': request.POST.get(TO_FIELD_VAR, request.GET.get(TO_FIELD_VAR)),
+            'form_url': reverse('admin:multiple-realms', current_app=self.admin_site.name),
+            **(extra_context or {}),
+        }
+        if self.is_only_rss(request):
+            form.prepare_for_rss()
 
+        if request.method == 'GET':
             request.current_app = self.admin_site.name
             return TemplateResponse(request, 'admin/users/realm/add_multiple.html', context)
 
@@ -467,7 +493,17 @@ class RealmAdmin(RestrictedEditAdminMixin, SnapshotModelAdmin):
                 user_ids = request.POST.get('user').split(',')
                 country_ids = request.POST.get('country').split(',')
                 organization_id = request.POST.get('organization')
-                group_ids = request.POST.get('group').split(',')
+                group_ids = request.POST.getlist('group')
+                if self.is_only_rss(request):
+                    organization_id = 1  # UNICEF org
+                    if User.objects.filter(id__in=user_ids).\
+                            exclude(email__endswith=settings.UNICEF_USER_EMAIL).exists():
+                        form = MultipleRealmForm(data=request.POST)
+                        form.prepare_for_rss()
+                        admin_form = helpers.AdminForm(form, fieldsets, {}, model_admin=self)
+                        admin_form.form.add_error('user', 'Only UNICEF Users can have new realms added.')
+                        context['adminform'] = admin_form
+                        return TemplateResponse(request, 'admin/users/realm/add_multiple.html', context)
                 with transaction.atomic(using=router.db_for_write(self.model)):
                     for user_id in user_ids:
                         for country_id in country_ids:

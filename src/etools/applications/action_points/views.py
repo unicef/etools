@@ -31,6 +31,7 @@ from etools.applications.action_points.conditions import (
     RelatedActionPointCondition,
     UnRelatedActionPointCondition,
 )
+from etools.applications.action_points.export import export_non_ascii_patch  # noqa F401
 from etools.applications.action_points.export.renderers import ActionPointCSVRenderer
 from etools.applications.action_points.export.serializers import ActionPointExportSerializer
 from etools.applications.action_points.filters import ReferenceNumberOrderingFilter, RelatedModuleFilter
