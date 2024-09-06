@@ -65,7 +65,7 @@ class RestrictedEditAdmin(RestrictedEditAdminMixin, admin.ModelAdmin):
 
 class RssRealmEditAdminMixin(RestrictedEditAdminMixin):
     GROUPS_ALLOWED = ["UNICEF User", "FM User", "PME", "Auditor",
-                      "UNICEF Audit Focal Point"]  # "FM Report Reviewer", "UNICEF Reviewer" #TODO
+                      "UNICEF Audit Focal Point", "Monitoring Visit Approver", "User Reviewer"]
 
     def has_add_permission(self, request, obj=None):
         allowed = super().has_add_permission(request, obj=None)
