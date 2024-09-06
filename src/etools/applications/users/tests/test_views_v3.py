@@ -928,6 +928,21 @@ class TestUserRealmView(BaseTenantTestCase):
             self.assertTrue(realm['is_active'])
         self.assertEqual(len(response.data['realms']), 2)
 
+    def test_patch_update_job_title_200(self):
+        new_user = UserFactory(realms__data=[], profile__organization=self.organization, profile__job_title='Job Title')
+        data = {
+            "job_title": "An updated job title",
+            "organization": self.organization.pk,
+            "groups": [GroupFactory(name=IPViewer.name).pk, GroupFactory(name=IPEditor.name).pk],
+        }
+        self.assertEqual(new_user.profile.job_title, 'Job Title')
+        response = self.make_request_detail(self.partnership_manager, new_user.id, data=data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        for realm in response.data['realms']:
+            self.assertTrue(realm['is_active'])
+        self.assertEqual(len(response.data['realms']), 2)
+        self.assertEqual(response.data['job_title'], data['job_title'])
+
 
 class TestStagedUserViewSet(BaseTenantTestCase):
     @classmethod

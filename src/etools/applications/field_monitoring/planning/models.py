@@ -26,7 +26,7 @@ from etools.applications.field_monitoring.fm_settings.models import LocationSite
 from etools.applications.field_monitoring.planning.mixins import ProtectUnknownTransitionsMeta
 from etools.applications.field_monitoring.planning.transitions.permissions import (
     user_is_field_monitor_permission,
-    user_is_pme_or_approver_permission,
+    user_is_pme_or_approver_or_reviewer_permission,
     user_is_visit_lead_permission,
 )
 from etools.applications.locations.models import Location
@@ -233,6 +233,7 @@ class MonitoringActivity(
     )
 
     monitor_type = models.CharField(max_length=10, choices=MONITOR_TYPE_CHOICES, default=MONITOR_TYPE_CHOICES.staff)
+    remote_monitoring = models.BooleanField(default=False, verbose_name=_('Involves Remote Monitoring'))
 
     tpm_partner = models.ForeignKey(TPMPartner, blank=True, null=True, verbose_name=_('TPM Partner'),
                                     on_delete=models.CASCADE)
@@ -578,12 +579,12 @@ class MonitoringActivity(
         pass
 
     @transition(field=status, source=STATUSES.submitted, target=STATUSES.completed,
-                permission=user_is_pme_or_approver_permission)
+                permission=user_is_pme_or_approver_or_reviewer_permission)
     def complete(self):
         pass
 
     @transition(field=status, source=STATUSES.submitted, target=STATUSES.report_finalization,
-                permission=user_is_pme_or_approver_permission)
+                permission=user_is_pme_or_approver_or_reviewer_permission)
     def reject_report(self):
         pass
 
