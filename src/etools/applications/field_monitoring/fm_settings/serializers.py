@@ -60,12 +60,17 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class QuestionLightSerializer(serializers.ModelSerializer):
+    show_mandatory_warning = serializers.SerializerMethodField()
+
+    def get_show_mandatory_warning(self, obj):
+        return obj.other['olc'].get("mandatory_warning", False) if obj.other.get("olc") else False
+
     class Meta:
         model = Question
         fields = (
             'id', 'answer_type', 'choices_size', 'level',
             'methods', 'category', 'sections', 'text',
-            'is_hact', 'is_active', 'is_custom', 'order'
+            'is_hact', 'is_active', 'is_custom', 'order', 'show_mandatory_warning'
         )
 
 
