@@ -22,6 +22,7 @@ from django.utils.translation import gettext_lazy as _
 
 import dj_database_url
 import sentry_sdk
+import setuptools  # noqa: F401
 import yaml
 from sentry_sdk import configure_scope
 from sentry_sdk.integrations.celery import CeleryIntegration
@@ -401,6 +402,7 @@ REST_FRAMEWORK = {
         'etools.applications.core.auth.EToolsTenantJWTAuthentication',
         'etools.applications.core.auth.eToolsOLCTokenAuth',
         'etools.applications.core.auth.EtoolsTokenAuthentication',
+        'etools.applications.core.auth.eToolsEZHactTokenAuth',
     ),
     'TEST_REQUEST_RENDERER_CLASSES': (
         'rest_framework.renderers.JSONRenderer',
@@ -511,6 +513,10 @@ EZHACT_API_PASSWORD = get_from_secrets_or_env('EZHACT_API_PASSWORD', '')
 EZHACT_INTEGRATION_DISABLED = bool(get_from_secrets_or_env('EZHACT_INTEGRATION_DISABLED', False))
 EZHACT_CERT_PATH = os.path.join(CONFIG_ROOT, 'keys/vision/ezhact_cert.pem')
 EZHACT_KEY_PATH = os.path.join(CONFIG_ROOT, 'keys/vision/ezhact_key.pem')
+
+# Funds reservation API
+ETOOLS_EZHACT_TOKEN = get_from_secrets_or_env('ETOOLS_EZHACT_TOKEN', '')
+ETOOLS_EZHACT_EMAIL = get_from_secrets_or_env('ETOOLS_EZHACT_EMAIL', '')
 
 # ALLOW BASIC AUTH FOR DEMO SITE
 ALLOW_BASIC_AUTH = get_from_secrets_or_env('ALLOW_BASIC_AUTH', False)
