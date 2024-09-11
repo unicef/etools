@@ -389,9 +389,9 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         goto('data_collection', visit_lead)
         goto('report_finalization', visit_lead)
         goto('submitted', visit_lead, {'report_reviewer': UserFactory(report_reviewer=True).id},
-             mail_count=1)
+             mail_count=activity.country_pmes.count() + 1)  # +1: send to report reviewer if set
         goto('report_finalization', self.pme, mail_count=1)
-        goto('submitted', visit_lead, mail_count=activity.country_pmes.count())
+        goto('submitted', visit_lead, mail_count=activity.country_pmes.count() + 1)  # +1: send to report reviewer if set
         goto('completed', self.pme)
         activity.status = "submitted"
         activity.save(update_fields=["status"])

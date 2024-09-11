@@ -368,11 +368,10 @@ class MonitoringActivity(
                 )
 
     def send_submit_notice(self):
+        recipients = set(self.country_pmes)
+
         if self.report_reviewer:
-            recipients = [self.report_reviewer]
-        else:
-            # edge case: if visit was already sent to tpm before report reviewer has become mandatory, apply old logic
-            recipients = self.country_pmes
+            recipients.add(self.report_reviewer)
 
         if self.monitor_type == self.MONITOR_TYPE_CHOICES.staff:
             email_template = 'fm/activity/staff-submit'
