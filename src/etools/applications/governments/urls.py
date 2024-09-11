@@ -1,8 +1,8 @@
 from django.urls import path
 
-from etools.applications.gdd.views.digital_document import DigitalDocumentListCreateView, \
+from etools.applications.governments.views.digital_document import DigitalDocumentListCreateView, \
     DigitalDocumentRetrieveUpdateView
-from etools.applications.gdd.views.government import GovernmentOrganizationListAPIView, GovernmentStaffMemberListAPIVIew
+from etools.applications.governments.views.government import GovernmentOrganizationListAPIView, GovernmentStaffMemberListAPIVIew
 
 app_name = 'governments'
 
