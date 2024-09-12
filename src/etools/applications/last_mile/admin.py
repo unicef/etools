@@ -216,7 +216,7 @@ class ItemAdmin(XLSXImportMixin, admin.ModelAdmin):
     import_field_mapping = {
         'Partner Vendor Number': 'transfer__partner_organization__vendor_number',
         'Material Number': 'material__number',
-        'Warehouse Name': 'transfer__destination_point__name',
+        'Warehouse P_code': 'transfer__destination_point__p_code',
         'Material Description': 'partner_material__description',
         'Batch Number': 'batch_id',
         'Expiry Date': 'expiry_date',
@@ -252,7 +252,7 @@ class ItemAdmin(XLSXImportMixin, admin.ModelAdmin):
             # imported_destination_names.add(imp_record['transfer__destination_point__name'])
             imported_partner_destination_name_pair.add(
                 (imp_record['transfer__partner_organization__vendor_number'],
-                 imp_record['transfer__destination_point__name'])
+                 imp_record['transfer__destination_point__p_code'])
             )
 
         def filter_records(dict_key, model, filter_name, imported_set, recs):
@@ -311,9 +311,9 @@ class ItemAdmin(XLSXImportMixin, admin.ModelAdmin):
         # )
 
         poi_qs, imported_records = filter_complex_records(
-            dict_keys=["transfer__partner_organization__vendor_number", "transfer__destination_point__name"],
+            dict_keys=["transfer__partner_organization__vendor_number", "transfer__destination_point__p_code"],
             model=models.PointOfInterest,
-            filter_names=["partner_organizations__organization__vendor_number", "name"],
+            filter_names=["partner_organizations__organization__vendor_number", "p_code"],
             imported_set=imported_partner_destination_name_pair,
             recs=imported_records
         )
@@ -321,7 +321,7 @@ class ItemAdmin(XLSXImportMixin, admin.ModelAdmin):
         poi_dict = {}
         for poi in poi_qs.prefetch_related("partner_organizations"):
             for partner_org in poi.partner_organizations.all():
-                dict_key = partner_org.vendor_number + poi.name
+                dict_key = partner_org.vendor_number + poi.p_code
                 poi_dict[dict_key] = poi
 
         transfers = {}
@@ -338,7 +338,7 @@ class ItemAdmin(XLSXImportMixin, admin.ModelAdmin):
         for imp_r in imported_records:
             material = material_dict[imp_r.pop("material__number")]
             partner = partner_dict[imp_r.pop("transfer__partner_organization__vendor_number")]
-            poi = poi_dict[partner.vendor_number + imp_r.pop("transfer__destination_point__name")]
+            poi = poi_dict[partner.vendor_number + imp_r.pop("transfer__destination_point__p_code")]
             # ensure the POI belongs to the partner else skip:
             if partner not in poi.partner_organizations.all():
                 logging.error(f"skipping record as POI {poi} does not belong to the Partner Org: {partner}")
