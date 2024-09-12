@@ -996,7 +996,7 @@ class TestClusterListAPIView(BaseTenantTestCase):
         self.assertEqual(len(response.data), 2)
         clusters = [item['cluster_name'] for item in response.data]
         clusters.sort()
-        self.assertEquals(['ABC', 'XYZ'], clusters)
+        self.assertEqual(['ABC', 'XYZ'], clusters)
 
 
 class SpecialReportingRequirementListCreateMixin:

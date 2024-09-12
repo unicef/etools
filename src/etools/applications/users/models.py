@@ -252,7 +252,7 @@ class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
         if self.email != self.email.lower():
             raise ValidationError("Email must be lowercase.")
 
-        if not self.is_active:
+        if self.pk and not self.is_active:
             self.realms.update(is_active=False)
         super().save(*args, **kwargs)
 

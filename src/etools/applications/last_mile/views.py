@@ -7,7 +7,6 @@ from django.shortcuts import get_object_or_404
 from django.utils.functional import cached_property
 from django.utils.translation import gettext as _
 
-import requests
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, status
 from rest_framework.decorators import action
@@ -20,7 +19,7 @@ from rest_framework.viewsets import GenericViewSet, ModelViewSet, ReadOnlyModelV
 from unicef_restlib.pagination import DynamicPageNumberPagination
 
 from etools.applications.last_mile import models, serializers
-from etools.applications.last_mile.filters import TransferFilter
+from etools.applications.last_mile.filters import POIFilter, TransferFilter
 from etools.applications.last_mile.permissions import IsIPLMEditor
 from etools.applications.last_mile.tasks import notify_upload_waybill
 from etools.applications.partners.models import Agreement, PartnerOrganization
@@ -57,7 +56,7 @@ class PointOfInterestViewSet(POIQuerysetMixin, ModelViewSet):
     pagination_class = DynamicPageNumberPagination
 
     filter_backends = (DjangoFilterBackend, SearchFilter)
-    filter_fields = ('poi_type',)
+    filterset_class = POIFilter
     search_fields = ('name', 'p_code', 'parent__name', 'parent__p_code')
 
     def get_queryset(self):
@@ -412,36 +411,18 @@ class PowerBIDataView(APIView):
     def pbi_headers(self):
         return {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + self.get_pbi_access_token()}
 
-    def get_embed_url(self, workspace_id, report_id):
-        url_to_call = f'https://api.powerbi.com/v1.0/myorg/groups/{workspace_id}/reports/{report_id}'
-        api_response = requests.get(url_to_call, headers=self.pbi_headers)
-        if api_response.status_code == 200:
-            r = api_response.json()
-            return r["embedUrl"], r["datasetId"]
-
-    def get_embed_token(self, dataset_id, workspace_id, report_id):
-        embed_token_api = 'https://api.powerbi.com/v1.0/myorg/GenerateToken'
-        request_body = {
-            "datasets": [{'id': dataset_id}],
-            "reports": [{'id': report_id}],
-            "targetWorkspaces": [{'id': workspace_id}]
-        }
-        api_response = requests.post(embed_token_api, data=request_body, headers=self.pbi_headers)
-        if api_response.status_code == 200:
-            return api_response.json()["token"]
-        return None
-
     def get(self, request, *args, **kwargs):
         try:
             embed_url, dataset_id = get_embed_url(self.pbi_headers)
-            print(embed_url, 'embedurl')
             embed_token = get_embed_token(dataset_id, self.pbi_headers)
-            print(embed_token)
         except TokenRetrieveException:
-            raise PermissionDenied('Token cannot be retrieved')
+            return Response("Temporary unavailable, PowerBI information cannot be retrieved from Microsoft Servers",
+                            status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
         resp_data = {
             "report_id": settings.PBI_CONFIG["REPORT_ID"],
             "embed_url": embed_url,
-            "access_token": embed_token
+            "access_token": embed_token,
+            "vendor_number": request.user.profile.organization.vendor_number
         }
         return Response(resp_data, status=status.HTTP_200_OK)

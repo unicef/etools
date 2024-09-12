@@ -1,8 +1,5 @@
-import datetime
 
-from django.conf import settings
 from django.utils import timezone
-from django.utils.timezone import utc
 from django.utils.translation import gettext as _
 
 from rest_framework import serializers
@@ -53,35 +50,32 @@ class EngagementDatesValidation:
             if value and key in date_fields and timezone.now().date() < value:
                 errors[key] = _('Date should be in past.')
 
-        skip_before_date = datetime.datetime.strptime(settings.SKIP_VALIDATION_BEFORE, '%Y-%m-%d').replace(tzinfo=utc)
-        if (self.instance and self.instance.created >= skip_before_date) or \
-                (not self.instance and timezone.now().date() >= skip_before_date.date()):
-            start_date = validated_data.get('start_date', self.instance.start_date if self.instance else None)
-            end_date = validated_data.get('end_date', self.instance.end_date if self.instance else None)
-            partner_contacted_at = validated_data.get('partner_contacted_at', self.instance.partner_contacted_at if self.instance else None)
-            date_of_field_visit = validated_data.get('date_of_field_visit', self.instance.date_of_field_visit if self.instance else None)
-            date_of_draft_report_to_ip = validated_data.get('date_of_draft_report_to_ip', self.instance.date_of_draft_report_to_ip if self.instance else None)
-            date_of_comments_by_ip = validated_data.get('date_of_comments_by_ip', self.instance.date_of_comments_by_ip if self.instance else None)
-            date_of_draft_report_to_unicef = validated_data.get('date_of_draft_report_to_unicef', self.instance.date_of_draft_report_to_unicef if self.instance else None)
-            date_of_comments_by_unicef = validated_data.get('date_of_comments_by_unicef', self.instance.date_of_comments_by_unicef if self.instance else None)
+        start_date = validated_data.get('start_date', self.instance.start_date if self.instance else None)
+        end_date = validated_data.get('end_date', self.instance.end_date if self.instance else None)
+        partner_contacted_at = validated_data.get('partner_contacted_at', self.instance.partner_contacted_at if self.instance else None)
+        date_of_field_visit = validated_data.get('date_of_field_visit', self.instance.date_of_field_visit if self.instance else None)
+        date_of_draft_report_to_ip = validated_data.get('date_of_draft_report_to_ip', self.instance.date_of_draft_report_to_ip if self.instance else None)
+        date_of_comments_by_ip = validated_data.get('date_of_comments_by_ip', self.instance.date_of_comments_by_ip if self.instance else None)
+        date_of_draft_report_to_unicef = validated_data.get('date_of_draft_report_to_unicef', self.instance.date_of_draft_report_to_unicef if self.instance else None)
+        date_of_comments_by_unicef = validated_data.get('date_of_comments_by_unicef', self.instance.date_of_comments_by_unicef if self.instance else None)
 
-            if start_date and end_date and end_date < start_date:
-                errors['end_date'] = _('This date should be after Period Start Date.')
-            if end_date and partner_contacted_at and partner_contacted_at < end_date:
-                errors['partner_contacted_at'] = _('This date should be after Period End Date.')
+        if start_date and end_date and end_date < start_date:
+            errors['end_date'] = _('This date should be after Period Start Date.')
+        if end_date and partner_contacted_at and partner_contacted_at < end_date:
+            errors['partner_contacted_at'] = _('This date should be after Period End Date.')
 
-            if partner_contacted_at and date_of_field_visit and date_of_field_visit < partner_contacted_at:
-                errors['date_of_field_visit'] = _('This date should be after Date IP was contacted.')
+        if partner_contacted_at and date_of_field_visit and date_of_field_visit < partner_contacted_at:
+            errors['date_of_field_visit'] = _('This date should be after Date IP was contacted.')
 
-            if date_of_field_visit and date_of_draft_report_to_ip and date_of_draft_report_to_ip < date_of_field_visit:
-                # date of field visit is editable even if date of draft report is readonly, map error to field visit date
-                errors['date_of_field_visit'] = _('This date should be before Date Draft Report Issued to IP.')
-            if date_of_draft_report_to_ip and date_of_comments_by_ip and date_of_comments_by_ip < date_of_draft_report_to_ip:
-                errors['date_of_comments_by_ip'] = _('This date should be after Date Draft Report Issued to UNICEF.')
-            if date_of_comments_by_ip and date_of_draft_report_to_unicef and date_of_draft_report_to_unicef < date_of_comments_by_ip:
-                errors['date_of_draft_report_to_unicef'] = _('This date should be after Date Comments Received from IP.')
-            if date_of_draft_report_to_unicef and date_of_comments_by_unicef and date_of_comments_by_unicef < date_of_draft_report_to_unicef:
-                errors['date_of_comments_by_unicef'] = _('This date should be after Date Draft Report Issued to UNICEF.')
+        if date_of_field_visit and date_of_draft_report_to_ip and date_of_draft_report_to_ip < date_of_field_visit:
+            # date of field visit is editable even if date of draft report is readonly, map error to field visit date
+            errors['date_of_field_visit'] = _('This date should be before Date Draft Report Issued to IP.')
+        if date_of_draft_report_to_ip and date_of_comments_by_ip and date_of_comments_by_ip < date_of_draft_report_to_ip:
+            errors['date_of_comments_by_ip'] = _('This date should be after Date Draft Report Issued to UNICEF.')
+        if date_of_comments_by_ip and date_of_draft_report_to_unicef and date_of_draft_report_to_unicef < date_of_comments_by_ip:
+            errors['date_of_draft_report_to_unicef'] = _('This date should be after Date Comments Received from IP.')
+        if date_of_draft_report_to_unicef and date_of_comments_by_unicef and date_of_comments_by_unicef < date_of_draft_report_to_unicef:
+            errors['date_of_comments_by_unicef'] = _('This date should be after Date Draft Report Issued to UNICEF.')
 
         if errors:
             raise serializers.ValidationError(errors)
