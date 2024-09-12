@@ -1,5 +1,7 @@
 # Python bytecode:
-*.py[co]
+__pycache__/
+*.py[cod]
+*$py.class
 
 # Packaging files:
 *.egg*
@@ -117,3 +119,6 @@ src/etools/config/settings/custom.py
 coverage.xml
 .venv/
 **/{'workspace': 'ZZZ'}*
+
+# PEP 582; used by e.g. github.com/David-OConnor/pyflow and github.com/pdm-project/pdm
+__pypackages__/

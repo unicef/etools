@@ -124,7 +124,7 @@ class MonitoringActivityLightSerializer(serializers.ModelSerializer):
         model = MonitoringActivity
         fields = (
             'id', 'reference_number',
-            'monitor_type', 'tpm_partner',
+            'monitor_type', 'remote_monitoring', 'tpm_partner',
             'visit_lead', 'team_members',
             'location', 'location_site',
             'partners', 'interventions', 'cp_outputs',

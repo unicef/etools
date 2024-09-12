@@ -343,7 +343,7 @@ class TestLowerResultSimpleCUSerializer(BaseTenantTestCase):
         serializer = LowerResultSimpleCUSerializer(data=self.data)
         self.assertTrue(serializer.is_valid())
         msg = "You can't associate this PD Output to a different CP Result"
-        with self.assertRaisesRegexp(ValidationError, msg):
+        with self.assertRaisesRegex(ValidationError, msg):
             serializer.update(self.lower_result, serializer.validated_data)
 
     def test_update(self):
@@ -402,7 +402,7 @@ class TestLowerResultCUSerializer(BaseTenantTestCase):
         )
         self.assertTrue(serializer.is_valid())
         msg = "Indicator has an ID but could not be found in the db"
-        with self.assertRaisesRegexp(ValidationError, msg):
+        with self.assertRaisesRegex(ValidationError, msg):
             serializer.create(serializer.validated_data)
 
     def test_update(self):
