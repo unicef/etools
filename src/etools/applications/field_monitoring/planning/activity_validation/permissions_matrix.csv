@@ -16,6 +16,9 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,monitor_type,Field Monitor,,draft,edit,TRUE
 ,monitor_type,Field Monitor,,checklist,edit,TRUE
 ,monitor_type,Field Monitor,,review,edit,TRUE
+,remote_monitoring,Field Monitor,,draft,edit,TRUE
+,remote_monitoring,Field Monitor,,checklist,edit,TRUE
+,remote_monitoring,Field Monitor,,review,edit,TRUE
 ,visit_lead,Field Monitor,,draft,edit,TRUE
 ,visit_lead,Field Monitor,,checklist,edit,TRUE
 ,visit_lead,Field Monitor,,review,edit,TRUE
@@ -84,6 +87,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,field_office,All Users,,*,view,TRUE
 ,offices,All Users,,*,view,TRUE
 ,monitor_type,All Users,,*,view,TRUE
+,remote_monitoring,All Users,,*,view,TRUE
 ,visit_lead,All Users,,*,view,TRUE
 ,sections,All Users,,*,view,TRUE
 ,tpm_partner,All Users,,*,view,TRUE

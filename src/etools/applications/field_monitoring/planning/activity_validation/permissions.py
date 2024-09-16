@@ -21,8 +21,8 @@ class ActivityPermissions(PMPPermissions):
         self.user_groups = set(self.user_groups)
         if {FMUser.name, PME.name}.intersection(self.user_groups):
             self.user_groups.add('Field Monitor')
-
-        if {MonitoringVisitApprover.name, PME.name}.intersection(self.user_groups):
+        if {MonitoringVisitApprover.name, PME.name}.intersection(self.user_groups) or \
+                self.user == self.instance.report_reviewer:
             self.user_groups.add('Approvers')
 
         self.user_groups.add('All Users')

@@ -56,7 +56,7 @@ class ChecklistBlueprintViewTestCase(APIViewSetTestCase, BaseTenantTestCase):
 
     def test_get_blueprint(self):
         AttachmentFactory(content_object=self.started_checklist.overall_findings.first(), code='attachments')
-        with self.assertNumQueries(16):  # todo: optimize queries
+        with self.assertNumQueries(15):  # todo: optimize queries
             response = self.make_detail_request(self.team_member, self.started_checklist, action='blueprint',
                                                 method='get')
         data = response.data
@@ -312,7 +312,7 @@ class MonitoringActivityOfflineBlueprintsSyncTestCase(APIViewSetTestCase, BaseTe
     @override_settings(ETOOLS_OFFLINE_API='http://example.com/b/api/remote/blueprint/',
                        SENTRY_DSN='https://test.dns',
                        UNICEF_USER_EMAIL="@example.com")
-    @patch('sentry_sdk.api.Hub.current.capture_exception')
+    @patch('sentry_sdk.Scope.capture_exception')
     @patch('etools.applications.field_monitoring.data_collection.offline.synchronizer.OfflineCollect.add')
     def test_add_offline_backend_unavailable(self, add_mock, capture_event_mock):
         def communication_failure(*args, **kwargs):
@@ -332,7 +332,7 @@ class MonitoringActivityOfflineBlueprintsSyncTestCase(APIViewSetTestCase, BaseTe
     @override_settings(ETOOLS_OFFLINE_API='http://example.com/b/api/remote/blueprint/',
                        SENTRY_DSN='https://test.dns',
                        UNICEF_USER_EMAIL="@example.com")
-    @patch('sentry_sdk.api.Hub.current.capture_exception')
+    @patch('sentry_sdk.Scope.capture_exception')
     @patch('etools.applications.field_monitoring.data_collection.offline.synchronizer.OfflineCollect.update')
     def test_update_offline_backend_unavailable(self, update_mock, capture_event_mock):
         def communication_failure(*args, **kwargs):
@@ -352,7 +352,7 @@ class MonitoringActivityOfflineBlueprintsSyncTestCase(APIViewSetTestCase, BaseTe
     @override_settings(ETOOLS_OFFLINE_API='http://example.com/b/api/remote/blueprint/',
                        SENTRY_DSN='https://test.dns',
                        UNICEF_USER_EMAIL="@example.com")
-    @patch('sentry_sdk.api.Hub.current.capture_exception')
+    @patch('sentry_sdk.Scope.capture_exception')
     @patch('etools.applications.field_monitoring.data_collection.offline.synchronizer.OfflineCollect.delete')
     def test_delete_offline_backend_unavailable(self, delete_mock, capture_event_mock):
         def communication_failure(*args, **kwargs):

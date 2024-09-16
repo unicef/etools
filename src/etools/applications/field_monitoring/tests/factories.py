@@ -29,6 +29,10 @@ class UserFactory(BaseUserFactory):
             realms__data=[UNICEFUser.name, MonitoringVisitApprover.name],
         )
 
+        report_reviewer = factory.Trait(
+            realms__data=[UNICEFUser.name, MonitoringVisitApprover.name]
+        )
+
     @factory.post_generation
     def realms(self, create, extracted, data=None, **kwargs):
         if not create:

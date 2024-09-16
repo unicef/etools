@@ -26,7 +26,7 @@ class TestClient(TestCase):
             responses.POST, settings.AZURE_TOKEN_URL,
             json={'access_token': 't0k3n'}, status=400
         )
-        with self.assertRaisesRegexp(AzureHttpError, "Error during token retrieval 400"):
+        with self.assertRaisesRegex(AzureHttpError, "Error during token retrieval 400"):
             get_token()
 
     @responses.activate
@@ -43,8 +43,8 @@ class TestClient(TestCase):
             json={'@odata.deltaLink': 'delta'},
         )
         status, delta = azure_sync_users(url)
-        self.assertEquals(status, 'status')
-        self.assertEquals(delta, 'delta')
+        self.assertEqual(status, 'status')
+        self.assertEqual(delta, 'delta')
         self.assertEqual(token.call_count, 1)
         self.assertEqual(token.call_args[0], ())
         self.assertEqual(handle_function.call_count, 1)
@@ -62,7 +62,7 @@ class TestClient(TestCase):
             responses.GET, url, status=400,
             json={},
         )
-        with self.assertRaisesRegexp(AzureHttpError, "Error processing the response 400"):
+        with self.assertRaisesRegex(AzureHttpError, "Error processing the response 400"):
             azure_sync_users(url)
         self.assertEqual(token.call_count, 1)
         self.assertEqual(token.call_args[0], ())

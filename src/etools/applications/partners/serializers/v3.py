@@ -18,15 +18,12 @@ from etools.applications.users.serializers_v3 import MinimalUserSerializer
 
 
 class CPOutputValidator:
-    set_context = True
+    requires_context = True
 
-    def set_context(self, field):
-        self.intervention = field.parent.intervention
-
-    def __call__(self, value):
+    def __call__(self, value, serializer_field):
         # check that value provided matches allowed options
         cp_output_qs = InterventionResultLink.objects.filter(
-            intervention=self.intervention,
+            intervention=serializer_field.parent.intervention,
             cp_output=value,
         )
         if not cp_output_qs.exists():

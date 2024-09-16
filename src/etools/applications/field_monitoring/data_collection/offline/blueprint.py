@@ -67,7 +67,8 @@ def get_blueprint_for_activity_and_method(activity: 'MonitoringActivity', method
             target_block = Group(
                 str(target.id),
                 TextField(
-                    'overall', label=_('Overall Finding'), styling=['wide', 'additional'], required=False
+                    'overall', label=_('General Observations'), styling=['wide', 'additional'], required=False,
+                    placeholder=_('Please enter general observations here')
                 ),
                 Group(
                     'attachments',
@@ -82,7 +83,7 @@ def get_blueprint_for_activity_and_method(activity: 'MonitoringActivity', method
             )
             questions_block = Group('questions', styling=['abstract'], required=False)
             target_block.add(questions_block)
-            for question in target_questions.distinct():
+            for question in target_questions.select_related('question__category').distinct():
                 if question.question.answer_type in [
                     Question.ANSWER_TYPES.bool,
                     Question.ANSWER_TYPES.likert_scale
@@ -101,6 +102,10 @@ def get_blueprint_for_activity_and_method(activity: 'MonitoringActivity', method
                         options_key=options_key,
                         help_text=question.specific_details,
                         required=False,
+                        # For HACT questions, a warning that is mandatory to fill in is needed in the frontend
+                        styling=['mandatory_warning']
+                        if 'olc' in question.question.other and
+                           question.question.other["olc"].get("mandatory_warning", False) else []
                     )
                 )
             level_block.add(target_block)
