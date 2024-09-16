@@ -40,22 +40,17 @@ class VisionIngestMaterialsApiView(APIView):
     def post(self, request):
         set_country('somalia')
         materials_to_create = []
-        materials_to_update = []
         for material in request.data:
             model_dict = {}
             for k, v in material.items():
                 if k in self.mapping:
                     model_dict[self.mapping[k]] = strip_tags(v)  # strip text that has html tags
             try:
-                obj = models.Material.objects.get(number=model_dict['number'])
-                for field, value in model_dict.items():
-                    setattr(obj, field, value)
-                materials_to_update.append(obj)
+                models.Material.objects.get(number=model_dict['number'])
             except models.Material.DoesNotExist:
                 materials_to_create.append(models.Material(**model_dict))
 
         models.Material.objects.bulk_create(materials_to_create)
-        models.Material.objects.bulk_update(materials_to_update, fields=list(self.mapping.values()))
 
         return Response(status=status.HTTP_200_OK)
 
@@ -176,16 +171,15 @@ class VisionIngestTransfersApiView(APIView):
 
     @staticmethod
     def get_transfer(transfer_dict):
-        for_create = True
         try:
             organization = Organization.objects.get(vendor_number=transfer_dict['vendor_number'])
         except Organization.DoesNotExist:
             logging.error(f"No organization found in etools for {transfer_dict['vendor_number']}")
-            return for_create, None
+            return None
 
         if not hasattr(organization, 'partner'):
-            logging.error(f'No partner in rwanda available for vendor_number {transfer_dict["vendor_number"]}')
-            return for_create, None
+            logging.error(f'No partner available for vendor_number {transfer_dict["vendor_number"]}')
+            return None
 
         origin_point = models.PointOfInterest.objects.get(pk=1)  # Unicef Warehouse
         transfer_dict.pop('vendor_number')
@@ -197,16 +191,13 @@ class VisionIngestTransfersApiView(APIView):
 
         try:
             transfer_obj = models.Transfer.objects.get(unicef_release_order=transfer_dict['unicef_release_order'])
-            for_create = False
-            for field, value in transfer_dict.items():
-                setattr(transfer_obj, field, value)
-            return for_create, transfer_obj
+            return transfer_obj
         except models.Transfer.DoesNotExist:
-            return for_create, models.Transfer(**transfer_dict)
+            return models.Transfer(**transfer_dict)
 
     @staticmethod
     def import_items(transfer_items):
-        items_to_create, items_to_update = [], []
+        items_to_create = []
         for unicef_ro, items in transfer_items.items():
             try:
                 transfer = models.Transfer.objects.get(unicef_release_order=unicef_ro)
@@ -218,38 +209,28 @@ class VisionIngestTransfersApiView(APIView):
                 try:
                     material = models.Material.objects.get(number=item_dict['material'])
                     item_dict['material'] = material
-                    if item_dict['description'] != material.short_description:
-                        models.PartnerMaterial.objects.update_or_create(
-                            partner_organization=transfer.partner_organization,
-                            material=material,
-                            defaults={'description': item_dict['description']}
-                        )
                     item_dict.pop('description')
                     if item_dict['uom'] == material.original_uom:
                         item_dict.pop('uom')
                 except models.Material.DoesNotExist:
                     logging.error(f"No Material found in etools with # {item_dict['material']}")
                     continue
+
                 try:
-                    item_obj = models.Item.objects.get(
-                        transfer__unicef_release_order=unicef_ro, unicef_ro_item=item_dict['unicef_ro_item'])
-                    for field, value in item_dict.items():
-                        setattr(item_obj, field, value)
-                    items_to_update.append(item_obj)
+                    models.Item.objects.get(other__itemid=f"{unicef_ro}-{item_dict['unicef_ro_item']}")
                 except models.Item.DoesNotExist:
-                    item_dict['transfer'] = transfer
-                    items_to_create.append(models.Item(**item_dict))
+                    try:
+                        models.Item.objects.get(
+                            transfer__unicef_release_order=unicef_ro, unicef_ro_item=item_dict['unicef_ro_item'])
+                    except models.Item.DoesNotExist:
+                        item_dict['transfer'] = transfer
+                        items_to_create.append(models.Item(**item_dict))
 
         models.Item.objects.bulk_create(items_to_create)
-        models.Item.objects.bulk_update(
-            items_to_update,
-            fields=['unicef_ro_item', 'material', 'quantity', 'uom', 'batch_id', 'expiry_date',
-                    'purchase_order_item', 'amount_usd', 'other']
-        )
 
     def post(self, request):
         set_country('somalia')
-        transfers_to_create, transfers_to_update = [], []
+        transfers_to_create = []
         transfer_items = {}
         for row in request.data:
             # only consider LD events
@@ -267,17 +248,14 @@ class VisionIngestTransfersApiView(APIView):
                         item_dict[self.item_mapping[k]] = v if v else None
                     else:
                         item_dict[self.item_mapping[k]] = strip_tags(v)
+            item_dict['other']['itemid'] = f"{transfer_dict['unicef_release_order']}-{item_dict['unicef_ro_item']}"
 
-            created, transfer_obj = self.get_transfer(transfer_dict)
+            transfer_obj = self.get_transfer(transfer_dict)
             if not transfer_obj:
                 continue
 
-            if created and transfer_obj.unicef_release_order not in \
-                    [o.unicef_release_order for o in transfers_to_create]:
+            if not transfer_obj.pk and transfer_obj.unicef_release_order not in [o.unicef_release_order for o in transfers_to_create]:
                 transfers_to_create.append(transfer_obj)
-            elif not created and transfer_obj.unicef_release_order not in \
-                    [o.unicef_release_order for o in transfers_to_update]:
-                transfers_to_update.append(transfer_obj)
 
             if transfer_dict['unicef_release_order'] in transfer_items:
                 transfer_items[transfer_dict['unicef_release_order']].append(item_dict)
@@ -285,10 +263,6 @@ class VisionIngestTransfersApiView(APIView):
                 transfer_items[transfer_dict['unicef_release_order']] = [item_dict]
 
         models.Transfer.objects.bulk_create(transfers_to_create)
-        models.Transfer.objects.bulk_update(
-            transfers_to_update,
-            fields=['purchase_order_id', 'pd_number', 'waybill_id', 'origin_check_out_at']
-        )
         self.import_items(transfer_items)
 
         return Response(status=status.HTTP_200_OK)

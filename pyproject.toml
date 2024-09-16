@@ -64,7 +64,7 @@ dependencies = [
     "sentry-sdk",
     "requests",
     "social-auth-app-django",
-    "social-auth-core[azuread]==4.1",
+    "social-auth-core[azuread]==4.5.4",
     "tenant-schemas-celery",
     "unicef-attachments @ git+https://github.com/unicef/unicef-attachments.git@dj4.2-ch32786",
     "unicef-djangolib",
@@ -77,6 +77,7 @@ dependencies = [
     "msal",
     "gdal==3.8.5",
     "jsonschema>=4.22.0",
+    "setuptools>=70.1.1",
 ]
 requires-python = ">=3.12"
 readme = "README.md"
