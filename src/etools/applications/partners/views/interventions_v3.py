@@ -6,7 +6,6 @@ from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction, utils
 from django.http import HttpResponse
-from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext as _
 
 from easy_pdf.rendering import render_to_pdf_response

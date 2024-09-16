@@ -42,6 +42,7 @@ from etools.applications.partners.models import (
 from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, PRC_SECRETARY, UNICEF_USER
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
+    FileTypeFactory,
     InterventionAmendmentFactory,
     InterventionFactory,
     InterventionManagementBudgetItemFactory,
