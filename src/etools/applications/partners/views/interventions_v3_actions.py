@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group
 from django.db import connection, transaction
+from django.db.models import OuterRef, Subquery
 from django.http import HttpResponseForbidden
 from django.urls import reverse
 from django.utils import timezone
@@ -29,6 +29,7 @@ from etools.applications.partners.serializers.interventions_v3 import (
 )
 from etools.applications.partners.tasks import send_pd_to_vision
 from etools.applications.partners.views.interventions_v3 import InterventionDetailAPIView, PMPInterventionMixin
+from etools.applications.users.models import Realm
 from etools.applications.utils.helpers import lock_request
 
 
@@ -337,11 +338,16 @@ class PMPInterventionReviewView(PMPInterventionActionView):
                 template_name = 'partners/intervention/unicef_signature'
             else:
                 template_name = 'partners/intervention/unicef_sent_for_review'
+                active_prc_realm_subquery = Realm.objects.filter(
+                    country=connection.tenant,
+                    group__name=PRC_SECRETARY,
+                    is_active=True,
+                    pk=OuterRef('realms')
+                ).values('pk')
                 recipients = recipients.union(set(
-                    get_user_model().objects.filter(
-                        profile__country=connection.tenant,
-                        realms__group=Group.objects.get(name=PRC_SECRETARY),
-                    ).distinct().values_list('email', flat=True)
+                    get_user_model().objects.filter(profile__country=connection.tenant,
+                                                    realms__in=Subquery(active_prc_realm_subquery),
+                                                    ).distinct().values_list('email', flat=True)
                 ))
 
             self.send_notification(
@@ -362,8 +368,8 @@ class PMPInterventionCancelView(PMPInterventionActionView):
         if pd.status == Intervention.CANCELLED:
             raise ValidationError(_("PD has already been cancelled."))
 
-        if self.request.user not in pd.unicef_focal_points.all() and self.request.user != pd.budget_owner:
-            raise ValidationError(_("Only focal points or budget owners can cancel"))
+        if not request.user.groups.filter(name=PRC_SECRETARY).exists():
+            raise ValidationError(_("Only PRC Secretary can cancel"))
 
         request.data.update({"status": Intervention.CANCELLED})
 

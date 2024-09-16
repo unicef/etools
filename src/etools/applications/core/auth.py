@@ -4,8 +4,10 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import ModelBackend
 from django.contrib.auth.models import Group, Permission
+from django.db import connection
 from django.http import HttpResponseRedirect
 
+from django_tenants.utils import get_tenant_model
 from rest_framework.authentication import (
     BasicAuthentication,
     get_authorization_header,
@@ -19,6 +21,7 @@ from social_core.exceptions import AuthCanceled, AuthMissingParameter
 from social_core.pipeline import social_auth, user as social_core_user
 from social_django.middleware import SocialAuthExceptionMiddleware
 
+from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.organizations.models import Organization
 from etools.applications.users.models import Country, Realm
 from etools.libraries.tenant_support.utils import set_country
@@ -118,7 +121,7 @@ class eToolsModelBackend(ModelBackend):
 
 
 class CustomAzureADBBCOAuth2(AzureADB2COAuth2):
-    BASE_URL = 'https://{tenant_id}.b2clogin.com/{tenant_id}.onmicrosoft.com'
+    BASE_URL = 'https://{tenant_name}.b2clogin.com/{tenant_name}.onmicrosoft.com'
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -229,3 +232,29 @@ class CsrfExemptSessionAuthentication(SessionAuthentication):
 
     def enforce_csrf(self, request):
         return
+
+
+class eToolsEZHactTokenAuth(TokenAuthentication):
+    def authenticate(self, request):
+        key = get_authorization_header(request)
+        try:
+            token = key.decode()
+        except UnicodeError:
+            # 'Invalid token header. '
+            # 'Token string should not contain invalid characters.'
+            return None
+        if bool(token == f"Token {settings.ETOOLS_EZHACT_TOKEN}"):
+            try:
+                user = get_user_model().objects.get(email=settings.ETOOLS_EZHACT_EMAIL)
+            except get_user_model().DoesNotExist:
+                return None
+            else:
+                try:
+                    country = get_tenant_model().objects.get(business_area_code=request.data.get("business_area_code"))
+                except get_tenant_model().DoesNotExist:
+                    return None
+                connection.set_tenant(country)
+                if not tenant_switch_is_active('ezhact_external_fr_disabled'):
+                    return None
+                return user, token
+        return None

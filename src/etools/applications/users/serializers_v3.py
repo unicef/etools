@@ -154,12 +154,14 @@ class UserRealmRetrieveSerializer(serializers.ModelSerializer):
 class UserRealmBaseSerializer(GroupEditPermissionMixin, serializers.ModelSerializer):
     organization = serializers.IntegerField(required=False, allow_null=False, write_only=True)
     groups = serializers.ListField(child=serializers.IntegerField(), required=True, allow_null=False, write_only=True)
+    job_title = serializers.CharField(required=False, allow_blank=True, write_only=True)
 
     class Meta:
         model = get_user_model()
         fields = [
             'organization',
-            'groups'
+            'groups',
+            'job_title'
         ]
 
     def validate_organization(self, value):
@@ -213,7 +215,6 @@ class UserRealmBaseSerializer(GroupEditPermissionMixin, serializers.ModelSeriali
 
 class UserRealmCreateSerializer(UserRealmBaseSerializer):
     email = serializers.CharField(required=True, write_only=True, validators=[LowerCaseEmailValidator()])
-    job_title = serializers.CharField(required=False, allow_blank=True, write_only=True)
     phone_number = serializers.CharField(required=False, allow_blank=True, write_only=True)
 
     class Meta(UserRealmBaseSerializer.Meta):
@@ -315,7 +316,10 @@ class UserRealmUpdateSerializer(UserRealmBaseSerializer):
         # clean up profile organization if no realm is active for context country and organization
         if not instance.realms.filter(is_active=True, **context_qs_params).exists():
             instance.profile.organization = None
-        instance.profile.save(update_fields=['organization'])
+        if validated_data.get('job_title'):
+            instance.profile.job_title = validated_data.get('job_title')
+
+        instance.profile.save(update_fields=['organization', 'job_title'])
 
         sync_realms_to_prp.apply_async(
             (instance.id, timezone.now().timestamp()),

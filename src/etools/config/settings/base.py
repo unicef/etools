@@ -22,6 +22,7 @@ from django.utils.translation import gettext_lazy as _
 
 import dj_database_url
 import sentry_sdk
+import setuptools  # noqa: F401
 import yaml
 from sentry_sdk import configure_scope
 from sentry_sdk.integrations.celery import CeleryIntegration
@@ -401,6 +402,7 @@ REST_FRAMEWORK = {
         'etools.applications.core.auth.EToolsTenantJWTAuthentication',
         'etools.applications.core.auth.eToolsOLCTokenAuth',
         'etools.applications.core.auth.EtoolsTokenAuthentication',
+        'etools.applications.core.auth.eToolsEZHactTokenAuth',
     ),
     'TEST_REQUEST_RENDERER_CLASSES': (
         'rest_framework.renderers.JSONRenderer',
@@ -512,6 +514,10 @@ EZHACT_INTEGRATION_DISABLED = bool(get_from_secrets_or_env('EZHACT_INTEGRATION_D
 EZHACT_CERT_PATH = os.path.join(CONFIG_ROOT, 'keys/vision/ezhact_cert.pem')
 EZHACT_KEY_PATH = os.path.join(CONFIG_ROOT, 'keys/vision/ezhact_key.pem')
 
+# Funds reservation API
+ETOOLS_EZHACT_TOKEN = get_from_secrets_or_env('ETOOLS_EZHACT_TOKEN', '')
+ETOOLS_EZHACT_EMAIL = get_from_secrets_or_env('ETOOLS_EZHACT_EMAIL', '')
+
 # ALLOW BASIC AUTH FOR DEMO SITE
 ALLOW_BASIC_AUTH = get_from_secrets_or_env('ALLOW_BASIC_AUTH', False)
 if ALLOW_BASIC_AUTH:
@@ -538,8 +544,8 @@ SOCIAL_AUTH_SANITIZE_REDIRECTS = False
 SOCIAL_AUTH_JSONFIELD_ENABLED = True
 POLICY = os.getenv('AZURE_B2C_POLICY_NAME', "b2c_1A_UNICEF_PARTNERS_signup_signin")
 
-TENANT_ID = os.getenv('AZURE_B2C_TENANT', 'unicefpartners')
-TENANT_B2C_URL = f'{TENANT_ID}.b2clogin.com'
+TENANT_NAME = os.getenv('AZURE_B2C_TENANT', 'unicefpartners')
+TENANT_B2C_URL = f'{TENANT_NAME}.b2clogin.com'
 
 SCOPE = ['openid', 'email']
 IGNORE_DEFAULT_SCOPE = True
@@ -549,7 +555,7 @@ SOCIAL_AUTH_PROTECTED_USER_FIELDS = ['email']
 # SOCIAL_AUTH_WHITELISTED_DOMAINS = ['unicef.org', 'google.com', 'ravdev.com']
 LOGIN_ERROR_URL = "/workspace_inactive"
 
-SOCIAL_LOGOUT_URL = f'https://{TENANT_B2C_URL}/{TENANT_ID}.onmicrosoft.com/{POLICY}/oauth2/v2.0/logout' \
+SOCIAL_LOGOUT_URL = f'https://{TENANT_B2C_URL}/{TENANT_NAME}.onmicrosoft.com/{POLICY}/oauth2/v2.0/logout' \
                     f'?post_logout_redirect_uri={HOST}/logout/'
 
 
