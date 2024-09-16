@@ -22,7 +22,7 @@ from unicef_snapshot.models import Activity
 from unicef_snapshot.utils import create_dict_with_relations, create_snapshot
 from waffle.utils import get_cache
 
-from etools.applications.attachments.tests.factories import AttachmentFactory
+from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.core.tests.factories import EmailFactory
 from etools.applications.core.tests.mixins import URLAssertionMixin
@@ -42,9 +42,7 @@ from etools.applications.partners.models import (
 from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, PRC_SECRETARY, UNICEF_USER
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
-    FileTypeFactory,
     InterventionAmendmentFactory,
-    InterventionAttachmentFactory,
     InterventionFactory,
     InterventionManagementBudgetItemFactory,
     InterventionResultLinkFactory,
@@ -3553,7 +3551,7 @@ class TestInterventionAttachments(BaseTenantTestCase):
             self.list_url,
             user=self.partnership_manager,
             data={
-                "type": FileTypeFactory().pk,
+                "type": AttachmentFileTypeFactory(group=['intervention_attachments']).pk,
                 "attachment_document": self.example_attachment.pk,
             },
         )
@@ -3571,7 +3569,7 @@ class TestInterventionAttachments(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
 
     def test_remove_attachment(self):
-        attachment = InterventionAttachmentFactory(intervention=self.intervention)
+        attachment = AttachmentFactory(content_object=self.intervention, code='partners_intervention_attachments')
         response = self.forced_auth_req(
             'delete',
             reverse('pmp_v3:intervention-attachments-update', args=[self.intervention.id, attachment.id]),
@@ -3636,7 +3634,7 @@ class TestInterventionAttachments(BaseTenantTestCase):
                 reverse('pmp_v3:intervention-attachment-list', args=[intervention.id]),
                 user=user,
                 data={
-                    "type": FileTypeFactory().pk,
+                    "type": AttachmentFileTypeFactory(group=['intervention_attachments']).pk,
                     "attachment_document": AttachmentFactory(file="test_file.pdf", file_type=None, code="").pk,
                 },
             )
@@ -3777,7 +3775,7 @@ class TestInterventionAttachments(BaseTenantTestCase):
             reverse('pmp_v3:intervention-attachment-list', args=[active_intervention.id]),
             user=user,
             data={
-                "type": FileTypeFactory().pk,
+                "type": AttachmentFileTypeFactory(group=['intervention_attachments']).pk,
                 "attachment_document": AttachmentFactory(file="test_file.pdf", file_type=None, code="").pk,
             },
         )

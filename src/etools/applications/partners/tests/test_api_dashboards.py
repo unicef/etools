@@ -8,13 +8,10 @@ from rest_framework import status
 
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.action_points.tests.factories import ActionPointFactory
+from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import FileType, Intervention
-from etools.applications.partners.tests.factories import (
-    FileTypeFactory,
-    InterventionAttachmentFactory,
-    InterventionFactory,
-)
+from etools.applications.partners.tests.factories import FileTypeFactory, InterventionFactory
 from etools.applications.t2f.models import Travel, TravelType
 from etools.applications.t2f.tests.factories import TravelActivityFactory, TravelFactory
 from etools.applications.users.tests.factories import UserFactory
@@ -46,9 +43,10 @@ class TestInterventionPartnershipDashView(BaseTenantTestCase):
         self.assertIsNone(data[0]["days_last_pv"])
 
     def test_get_has_final_partnership_review(self):
-        InterventionAttachmentFactory(
-            intervention=self.intervention,
-            type=self.file_type,
+        AttachmentFactory(
+            content_object=self.intervention,
+            code='partners_intervention_attachments',
+            file_type__name='final_partnership_review',
         )
         response = self.forced_auth_req(
             "get",

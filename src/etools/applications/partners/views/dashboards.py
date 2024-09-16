@@ -1,17 +1,19 @@
 import functools
 import operator
 
+from django.contrib.contenttypes.models import ContentType
 from django.db.models import Case, CharField, Count, F, Max, Min, OuterRef, Q, Subquery, Sum, When
 
 from rest_framework.generics import ListCreateAPIView
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework_csv import renderers as r
+from unicef_attachments.models import Attachment
 from unicef_restlib.views import QueryStringFilterMixin
 
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.partners.exports_v2 import PartnershipDashCSVRenderer
-from etools.applications.partners.models import FileType, Intervention, InterventionAttachment
+from etools.applications.partners.models import Intervention
 from etools.applications.partners.serializers.dashboards import InterventionDashSerializer
 from etools.applications.t2f.models import Travel, TravelActivity, TravelType
 from etools.libraries.djangolib.models import MaxDistinct
@@ -37,9 +39,10 @@ class InterventionPartnershipDashView(QueryStringFilterMixin, ListCreateAPIView)
     search_terms = ('agreement__partner__name__icontains', )
 
     def get_queryset(self):
-        final_partnership_review_qs = InterventionAttachment.objects.filter(
-            intervention__pk=OuterRef("pk"),
-            type__name=FileType.FINAL_PARTNERSHIP_REVIEW,
+        final_partnership_review_qs = Attachment.objects.filter(
+            content_type_id=ContentType.objects.get_for_model(Intervention).id,
+            object_id=OuterRef("pk"),
+            file_type__name='final_partnership_review',
         ).values("pk")[:1]
 
         action_points_qs = Intervention.objects.filter(

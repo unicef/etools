@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-08-02 08:05+0000\n"
+"POT-Creation-Date: 2023-05-30 08:57+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -62,9 +62,6 @@ msgstr "HACT"
 
 msgid "Signed Amendment"
 msgstr "Aditivo assinado"
-
-msgid "Termination Doc Attachment"
-msgstr ""
 
 msgid "Agreement Details"
 msgstr "Detalhes do Acordo"
@@ -151,6 +148,67 @@ msgstr "Visitas programáticas planejadas"
 msgid "Implementing Partner"
 msgstr "Parceiro implementador"
 
+msgid "Shared IP"
+msgstr "IP compartilhado"
+
+msgid "Cash Transfer 1 OCT - 30 SEP"
+msgstr "Transferência financeira de 1 de outubro a 30 de setembro"
+
+msgid "Liquidations 1 OCT - 30 SEP"
+msgstr "Liquidações de 1 de outubro a 30 de setembro"
+
+msgid "Cash Transfers Jan - Dec"
+msgstr "Transferências financeiras de janeiro a dezembro"
+
+msgid "Risk Rating"
+msgstr "Classificação de risco"
+
+msgid "Expiring Threshold"
+msgstr "Limite de expiração"
+
+msgid "Approach Threshold"
+msgstr "Limiar de Abordagem"
+
+msgid "Programmatic Visits Planned Q1"
+msgstr "Visitas programáticas planejadas para o primeiro trimestre"
+
+msgid "Q2"
+msgstr "Q2"
+
+msgid "Q3"
+msgstr "Q3"
+
+msgid "Q4"
+msgstr "Q4"
+
+msgid "Programmatic Visits M.R"
+msgstr "Visitas programáticas M.R"
+
+msgid "Programmatic Visits Completed Q1"
+msgstr "Visitas programáticas concluídas no primeiro trimestre"
+
+msgid "Spot Checks Planned Q1"
+msgstr ""
+"Spot Checks / Verificações pontuais planejadas para o primeiro trimestre"
+
+msgid "Spot Checks M.R"
+msgstr "Spot Checks M.R"
+
+msgid "Follow Up"
+msgstr "Acompanhamento"
+
+msgid "Spot Checks Completed Q1"
+msgstr "Spot Checks / Verificações pontuais concluídas no primeiro trimestre"
+
+msgid "Audits M.R"
+msgstr "Mínimo Requeridas Auditorias"
+
+msgid "Audit Completed"
+msgstr "Auditoria concluída"
+
+msgid "Audits Outstanding Findings"
+msgstr "Auditoria: Apontamentos Importantes "
+
 msgid "Sections"
 msgstr "Seções"
 
@@ -184,6 +242,18 @@ msgstr "Valor de DCT pendente entre 6 e 9 meses"
 
 msgid "Outstanding DCT Amount more than 9 months"
 msgstr "Valor de DCT pendente há mais de 9 meses"
+
+msgid "Programmatic Visits Planned"
+msgstr "Visitas programáticas planejadas"
+
+msgid "Programmatic Visits Completed"
+msgstr "Visitas programáticas concluídas"
+
+msgid "Spot Check Required"
+msgstr "É necessária realizar um Spot Check (verificação pontual)"
+
+msgid "Spot Checks Completed"
+msgstr "Spot Checks/ Verificações pontuais concluídas"
 
 msgid "Reference Number"
 msgstr "Número de Referência"
@@ -622,6 +692,23 @@ msgstr "Orçamento detalhado do plano de trabalho"
 msgid "Supply Contribution (Planned)"
 msgstr "Contribuição de supimentos (planejada)"
 
+msgid "Unable to associate staff member to UNICEF user"
+msgstr "Não é possível associar o funcionário ao usuário UNICEF"
+
+#, python-format
+msgid "This user already exists under a different partnership: %s"
+msgstr "Este usuário já existe em uma parceria diferente: %s"
+
+#, python-format
+msgid ""
+"User emails cannot be changed, please remove the user and add another one: %s"
+msgstr ""
+"Os e-mails do usuário não podem ser alterados, remova o usuário e adicione "
+"outro: %s"
+
+msgid "User already synced to PRP and cannot be disabled."
+msgstr "O usuário já está sincronizado com o PRP e não pode ser desabilitado."
+
 msgid "Name"
 msgstr "Nome"
 
@@ -675,9 +762,6 @@ msgstr "País"
 
 msgid "Alternate ID"
 msgstr "Identificação alternativa"
-
-msgid "Risk Rating"
-msgstr "Classificação de risco"
 
 msgid "Last Assessment Date"
 msgstr "Data da última avaliação"
@@ -741,6 +825,21 @@ msgstr "Seção principal"
 
 msgid "Core Values Assessment"
 msgstr "Core Values Assessment / Avaliação Core Values"
+
+msgid "User"
+msgstr "Usuário:"
+
+msgid "Title"
+msgstr "Título"
+
+msgid "First Name"
+msgstr "Primeiro nome"
+
+msgid "Last Name"
+msgstr "Sobrenome"
+
+msgid "Active"
+msgstr "Ativo"
 
 msgid "Spot Check Follow Up Required"
 msgstr "É necessário fazer o acompanhamento do Spot Check"
@@ -835,11 +934,21 @@ msgstr "Suspenso"
 msgid "Terminated"
 msgstr "Rescindido"
 
+#, fuzzy
+#| msgid "Partner Authorized Officer"
+msgid "(old)Partner Authorized Officer"
+msgstr "Oficial autorizado do parceiro"
+
 msgid "Attached Agreement"
 msgstr "Acordo anexo"
 
 msgid "Termination document for PCAs"
 msgstr "Documento de rescisão para PCAs"
+
+#, fuzzy
+#| msgid "Signed by partner"
+msgid "(old)Signed by partner"
+msgstr "Assinado pelo parceiro"
 
 msgid "Signed by partner"
 msgstr "Assinado pelo parceiro"
@@ -879,9 +988,6 @@ msgstr "Revisar"
 
 msgid "Signature"
 msgstr "Assinatura"
-
-msgid "Active"
-msgstr "Ativo"
 
 msgid "Cancelled"
 msgstr "Cancelado"
@@ -924,6 +1030,16 @@ msgstr "Data de realização da revisão final da parceria"
 
 msgid "Final Review Approved"
 msgstr "Revisão final aprovada"
+
+#, fuzzy
+#| msgid "Signed by Partner"
+msgid "(old)Signed by Partner"
+msgstr "Assinado pelo parceiro"
+
+#, fuzzy
+#| msgid "CSO Authorized Officials"
+msgid "(old)CSO Authorized Officials"
+msgstr "Oficiais da OSC (organização da Sociedade Civil) Autorizados a assinar"
 
 msgid "Contingency PD"
 msgstr "PD de contingência"
@@ -1012,6 +1128,9 @@ msgstr "Orientação técnica"
 msgid "Cancel Justification"
 msgstr "Cancelar Justificativa"
 
+msgid "Attachments"
+msgstr "Anexos"
+
 msgid "Metadata"
 msgstr "Metadados"
 
@@ -1062,15 +1181,6 @@ msgstr "Aditivos da implementação do programa"
 
 msgid "Q1"
 msgstr ""
-
-msgid "Q2"
-msgstr "Q2"
-
-msgid "Q3"
-msgstr "Q3"
-
-msgid "Q4"
-msgstr "Q4"
 
 msgid "Intervention"
 msgstr "Intervenção"
@@ -1240,9 +1350,6 @@ msgstr "Aprovador geral"
 msgid "Sent Back by Secretary Comment"
 msgstr "Enviado para comentário do(a) secretário(a)"
 
-msgid "User"
-msgstr "Usuário:"
-
 msgid "FACE"
 msgstr ""
 
@@ -1365,9 +1472,6 @@ msgstr ""
 "comunicação, proporcional à sua contribuição ao programa (local, viagens, "
 "etc.)"
 
-msgid "Title"
-msgstr "Título"
-
 msgid "Unit Number"
 msgstr "Número da unidade"
 
@@ -1480,9 +1584,6 @@ msgstr "Tipo de anexo"
 msgid "N/A"
 msgstr "N/A"
 
-msgid "Attachments"
-msgstr "Anexos"
-
 msgid "CSO Contribution"
 msgstr "Contribuição da OSC (Organização da Sociedade Civil)"
 
@@ -1531,8 +1632,11 @@ msgstr "Visita planejada não pode ser definida para intervenções encerradas"
 msgid ""
 "An attachment cannot be changed in statuses \"Ended, Closed or Terminated\""
 msgstr ""
-"Um anexo não pode ser alterado nos status \"Finalizado, Fechado ou "
-"Encerrado\""
+"Um anexo não pode ser alterado nos status \"Finalizado, Fechado ou Encerrado"
+"\""
+
+msgid "Unable to find corresponding file type."
+msgstr ""
 
 msgid "An Output cannot be updated for a partner that is blocked in Vision"
 msgstr ""
@@ -1629,6 +1733,13 @@ msgstr ""
 "Dados de orçamento inválidos. O valor financeiro total deve ser igual ao "
 "número dos itens * preço por item."
 
+msgid ""
+"User already synced to PRP and cannot be disabled. Please instruct the "
+"partner to disable from PRP"
+msgstr ""
+"O usuário já está sincronizado com o PRP e não pode ser desabilitado. Por "
+"favor, instrua o parceiro a desabilitar do PRP"
+
 msgid "The Date of Report cannot be in the future"
 msgstr "A data do relatório não pode estar no futuro"
 
@@ -1653,9 +1764,6 @@ msgstr "O número do fornecedor deve pertencer ao grupo de contas PRG2"
 
 msgid "Unknown intervention."
 msgstr "Intervenção desconhecida."
-
-msgid "Results cannot be changed in this status"
-msgstr "Os resultados não podem ser alterados neste estado"
 
 msgid "EZHACT Vision integration disabled"
 msgstr "Integração com o EZHACT Vision desativada"
@@ -1792,44 +1900,11 @@ msgstr "Oficial autorizado do UNICEF"
 msgid "Date Uploaded"
 msgstr "Data de upload"
 
-msgid "Document"
-msgstr "Documento"
-
 msgid "Invalid"
 msgstr "Inválido"
 
-msgid "Review for eTools reference number: "
-msgstr "Revisão do número de referência do eTools:"
-
-msgid "Submitted By"
-msgstr "Submetido por"
-
-msgid "Date of submission for review"
-msgstr "Data de envio para revisão"
-
-msgid "Overall Comment"
-msgstr "Comentário geral"
-
-msgid "Overall Approval"
-msgstr "Aprovação geral"
-
-msgid "Overall Review"
-msgstr "Revisão geral"
-
-msgid "PRC Member Reviews"
-msgstr "Avaliações de membros da PRC"
-
-msgid "PRC Member Name"
-msgstr "Nome do membro da PRC"
-
-msgid "Approved"
-msgstr "Aprovada"
-
-msgid "Approval comment"
-msgstr "Comentário de aprovação"
-
-msgid "Review date"
-msgstr "Data da revisão"
+msgid "Document"
+msgstr "Documento"
 
 msgid ""
 "Agreement cannot transition to signed until the start date is less than or "
@@ -1906,8 +1981,12 @@ msgstr ""
 "O valor total do FR precisa ser igual ao valor total real, e o total de DCTs "
 "pendentes precisa ser igual a 0"
 
-msgid "Final Review must be approved"
-msgstr "A revisão final deve ser aprovada"
+msgid ""
+"Final Review must be approved for documents having amount transferred "
+"greater than 100,000"
+msgstr ""
+"Documentos com montante  superior a 100.000 USD devem ter a revisão final "
+"aprovada."
 
 msgid "Cannot Transition status while adding an amendment"
 msgstr "Não é possível fazer a transição do status ao inserir o aditivo."
@@ -1955,8 +2034,8 @@ msgstr "O PD não pode ser ativado se o parceiro estiver bloqueado no VISION."
 msgid "Agreement selected is not of type SSFA"
 msgstr "O contrato selecionado não é do tipo SSFA"
 
-msgid " without deleting the indicators first "
-msgstr "sem excluir os indicadores primeiro "
+msgid " without deleting the indicators first"
+msgstr "sem excluir os indicadores primeiro"
 
 #, python-format
 msgid ""
@@ -2128,9 +2207,6 @@ msgstr "O PD já foi enviado ao parceiro."
 msgid "Meeting date is not available."
 msgstr "A data da reunião não está disponível."
 
-msgid "No valid data found in the file."
-msgstr ""
-
 msgid "Action is not allowed"
 msgstr "A ação não é permitida"
 
@@ -2191,8 +2267,8 @@ msgstr ""
 msgid "PD has already been cancelled."
 msgstr "PD já foi cancelado."
 
-msgid "Only PRC Secretary can cancel"
-msgstr ""
+msgid "Only focal points or budget owners can cancel"
+msgstr "Somente pontos focais ou proprietários de orçamento podem cancelar"
 
 msgid "PD has already been terminated."
 msgstr "PD já foi encerrado."
@@ -2278,129 +2354,6 @@ msgstr ""
 
 msgid "Partnership Manager role required for pca export."
 msgstr "A função de gerente de parceria é necessária para a exportação de pca."
-
-#~ msgid "Only focal points or budget owners can cancel"
-#~ msgstr "Somente pontos focais ou proprietários de orçamento podem cancelar"
-
-#~ msgid "Shared IP"
-#~ msgstr "IP compartilhado"
-
-#~ msgid "Cash Transfer 1 OCT - 30 SEP"
-#~ msgstr "Transferência financeira de 1 de outubro a 30 de setembro"
-
-#~ msgid "Liquidations 1 OCT - 30 SEP"
-#~ msgstr "Liquidações de 1 de outubro a 30 de setembro"
-
-#~ msgid "Cash Transfers Jan - Dec"
-#~ msgstr "Transferências financeiras de janeiro a dezembro"
-
-#~ msgid "Expiring Threshold"
-#~ msgstr "Limite de expiração"
-
-#~ msgid "Approach Threshold"
-#~ msgstr "Limiar de Abordagem"
-
-#~ msgid "Programmatic Visits Planned Q1"
-#~ msgstr "Visitas programáticas planejadas para o primeiro trimestre"
-
-#~ msgid "Programmatic Visits M.R"
-#~ msgstr "Visitas programáticas M.R"
-
-#~ msgid "Programmatic Visits Completed Q1"
-#~ msgstr "Visitas programáticas concluídas no primeiro trimestre"
-
-#~ msgid "Spot Checks Planned Q1"
-#~ msgstr ""
-#~ "Spot Checks / Verificações pontuais planejadas para o primeiro trimestre"
-
-#~ msgid "Spot Checks M.R"
-#~ msgstr "Spot Checks M.R"
-
-#~ msgid "Follow Up"
-#~ msgstr "Acompanhamento"
-
-#~ msgid "Spot Checks Completed Q1"
-#~ msgstr ""
-#~ "Spot Checks / Verificações pontuais concluídas no primeiro trimestre"
-
-#~ msgid "Audits M.R"
-#~ msgstr "Mínimo Requeridas Auditorias"
-
-#~ msgid "Audit Completed"
-#~ msgstr "Auditoria concluída"
-
-#~ msgid "Audits Outstanding Findings"
-#~ msgstr "Auditoria: Apontamentos Importantes "
-
-#~ msgid "Programmatic Visits Planned"
-#~ msgstr "Visitas programáticas planejadas"
-
-#~ msgid "Programmatic Visits Completed"
-#~ msgstr "Visitas programáticas concluídas"
-
-#~ msgid "Spot Check Required"
-#~ msgstr "É necessária realizar um Spot Check (verificação pontual)"
-
-#~ msgid "Spot Checks Completed"
-#~ msgstr "Spot Checks/ Verificações pontuais concluídas"
-
-#~ msgid ""
-#~ "Final Review must be approved for documents having amount transferred "
-#~ "greater than 100,000"
-#~ msgstr ""
-#~ "Documentos com montante  superior a 100.000 USD devem ter a revisão final "
-#~ "aprovada."
-
-#~ msgid "Unable to associate staff member to UNICEF user"
-#~ msgstr "Não é possível associar o funcionário ao usuário UNICEF"
-
-#~ msgid "This user already exists under a different partnership: %s"
-#~ msgstr "Este usuário já existe em uma parceria diferente: %s"
-
-#~ msgid ""
-#~ "User emails cannot be changed, please remove the user and add another "
-#~ "one: %s"
-#~ msgstr ""
-#~ "Os e-mails do usuário não podem ser alterados, remova o usuário e "
-#~ "adicione outro: %s"
-
-#~ msgid "User already synced to PRP and cannot be disabled."
-#~ msgstr ""
-#~ "O usuário já está sincronizado com o PRP e não pode ser desabilitado."
-
-#~ msgid "First Name"
-#~ msgstr "Primeiro nome"
-
-#~ msgid "Last Name"
-#~ msgstr "Sobrenome"
-
-#, fuzzy
-#~| msgid "Partner Authorized Officer"
-#~ msgid "(old)Partner Authorized Officer"
-#~ msgstr "Oficial autorizado do parceiro"
-
-#, fuzzy
-#~| msgid "Signed by partner"
-#~ msgid "(old)Signed by partner"
-#~ msgstr "Assinado pelo parceiro"
-
-#, fuzzy
-#~| msgid "Signed by Partner"
-#~ msgid "(old)Signed by Partner"
-#~ msgstr "Assinado pelo parceiro"
-
-#, fuzzy
-#~| msgid "CSO Authorized Officials"
-#~ msgid "(old)CSO Authorized Officials"
-#~ msgstr ""
-#~ "Oficiais da OSC (organização da Sociedade Civil) Autorizados a assinar"
-
-#~ msgid ""
-#~ "User already synced to PRP and cannot be disabled. Please instruct the "
-#~ "partner to disable from PRP"
-#~ msgstr ""
-#~ "O usuário já está sincronizado com o PRP e não pode ser desabilitado. Por "
-#~ "favor, instrua o parceiro a desabilitar do PRP"
 
 #~ msgid "Planned Visit to be set only at Partner level"
 #~ msgstr "Visita planejada a ser definida apenas no nível do parceiro"

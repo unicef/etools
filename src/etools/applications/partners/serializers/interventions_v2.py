@@ -1,4 +1,5 @@
 from datetime import date, datetime, timedelta
+from functools import lru_cache
 from operator import itemgetter
 
 from django.contrib.auth import get_user_model
@@ -13,8 +14,8 @@ from rest_framework.relations import RelatedField
 from rest_framework.serializers import ValidationError
 from rest_framework.validators import UniqueTogetherValidator
 from rest_framework_gis.fields import GeometryField
-from unicef_attachments.fields import AttachmentSingleFileField
-from unicef_attachments.models import Attachment
+from unicef_attachments.fields import AttachmentSingleFileField, FileTypeModelChoiceField
+from unicef_attachments.models import Attachment, FileType as AttachmentFileType
 from unicef_attachments.serializers import AttachmentSerializerMixin
 from unicef_locations.serializers import LocationSerializer
 from unicef_snapshot.serializers import SnapshotModelSerializer
@@ -24,10 +25,8 @@ from etools.applications.funds.models import FundsCommitmentItem, FundsReservati
 from etools.applications.funds.serializers import FRHeaderSerializer, FRsSerializer
 from etools.applications.organizations.models import OrganizationType
 from etools.applications.partners.models import (
-    FileType,
     Intervention,
     InterventionAmendment,
-    InterventionAttachment,
     InterventionBudget,
     InterventionPlannedVisits,
     InterventionPlannedVisitSite,
@@ -507,21 +506,46 @@ class InterventionToIndicatorsListSerializer(serializers.ModelSerializer):
         )
 
 
-class InterventionAttachmentSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
-    attachment_file = serializers.FileField(source="attachment", read_only=True)
-    attachment_document = AttachmentSingleFileField(
-        source="attachment_file",
-        override="attachment",
+class AttachmentField(serializers.Field):
+    def to_representation(self, value):
+        if not value:
+            return None
+
+        attachment = Attachment.objects.get(pk=value)
+        if not getattr(attachment.file, "url", None):
+            return None
+
+        url = attachment.file.url
+        request = self.context.get('request', None)
+        if request is not None:
+            return request.build_absolute_uri(url)
+        return url
+
+    def to_internal_value(self, data):
+        return data
+
+
+class InterventionAttachmentSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(read_only=True)
+    intervention = serializers.IntegerField(read_only=True, source='object_id')
+    attachment = serializers.FileField(read_only=True, source='file')
+    attachment_file = serializers.FileField(read_only=True, source='file')
+    attachment_document = AttachmentField(source='pk')
+    type = FileTypeModelChoiceField(
+        label=_('Document Type'),
+        queryset=AttachmentFileType.objects.group_by('intervention_attachments'),
+        source='file_type'
     )
+    active = serializers.BooleanField(source='is_active', required=False)
 
     def update(self, instance, validated_data):
-        intervention = validated_data.get('intervention', instance.intervention)
+        intervention = instance.content_object
         if intervention and intervention.status in [Intervention.ENDED, Intervention.CLOSED, Intervention.TERMINATED]:
             raise ValidationError(_('An attachment cannot be changed in statuses "Ended, Closed or Terminated"'))
         return super().update(instance, validated_data)
 
     class Meta:
-        model = InterventionAttachment
+        model = Attachment
         fields = (
             'id',
             'intervention',
@@ -534,17 +558,22 @@ class InterventionAttachmentSerializer(AttachmentSerializerMixin, serializers.Mo
         )
 
 
-class SingleInterventionAttachmentField(serializers.Field):
+class FinalPartnershipReviewAttachmentField(serializers.Field):
+    default_error_messages = {
+        'no_file_type': _('Unable to find corresponding file type.'),
+    }
+
     def __init__(self, *args, type_name: str = None, read_field: serializers.ModelSerializer = None, **kwargs):
         self.type_name = type_name
         self.read_field = read_field
         super().__init__(*args, **kwargs)
 
-    def get_file_type(self) -> FileType:
-        return FileType.objects.get(name=self.type_name)
-
-    def get_intervention_attachment(self, intervention: Intervention) -> InterventionAttachment:
-        return intervention.attachments.filter(type=self.get_file_type()).first()
+    @lru_cache
+    def get_file_type(self) -> AttachmentFileType:
+        return AttachmentFileType.objects.filter(
+            name='final_partnership_review',
+            code='pmp_documents',
+        ).first()
 
     def to_internal_value(self, data: int) -> Attachment:
         return Attachment.objects.filter(pk=data).first()
@@ -556,22 +585,18 @@ class SingleInterventionAttachmentField(serializers.Field):
 
         return self.read_field.to_representation(instance=value)
 
-    def set_attachment(self, intervention: Intervention, attachment: Attachment) -> InterventionAttachment:
-        existing_attachment = self.get_intervention_attachment(intervention)
-        if existing_attachment:
-            existing_attachment.delete()
-
-        intervention_attachment = InterventionAttachment.objects.create(
-            intervention=intervention,
-            type=self.get_file_type(),
-            attachment=attachment.file,
-        )
-
-        attachment.code = 'partners_intervention_attachment'
-        attachment.content_object = intervention_attachment
+    def set_attachment(self, intervention: Intervention, attachment: Attachment):
+        attachment.code = 'partners_intervention_attachments'
+        attachment.content_object = intervention
+        attachment.file_type = self.get_file_type()
         attachment.save()
 
-        return intervention_attachment
+    def run_validation(self, *args, **kwargs):
+        value = super().run_validation(*args, **kwargs)
+        file_type = self.get_file_type()
+        if not file_type:
+            self.fail('no_file_type')
+        return value
 
 
 class BaseInterventionResultNestedSerializer(serializers.ModelSerializer):
@@ -817,8 +842,7 @@ class InterventionCreateUpdateSerializer(
         queryset=FundsReservationHeader.objects.prefetch_related('intervention').all(),
         required=False,
     )
-    final_partnership_review = SingleInterventionAttachmentField(
-        type_name=FileType.FINAL_PARTNERSHIP_REVIEW,
+    final_partnership_review = FinalPartnershipReviewAttachmentField(
         read_field=InterventionAttachmentSerializer(),
         required=False,
     )
