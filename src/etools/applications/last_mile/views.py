@@ -1,6 +1,5 @@
 from functools import cache
 
-import requests
 from django.conf import settings
 from django.db import connection
 from django.db.models import CharField, OuterRef, Prefetch, Q, Subquery
@@ -8,6 +7,7 @@ from django.shortcuts import get_object_or_404
 from django.utils.functional import cached_property
 from django.utils.translation import gettext as _
 
+import requests
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, status
 from rest_framework.decorators import action
