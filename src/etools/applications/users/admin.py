@@ -23,6 +23,8 @@ from admin_extra_urls.mixins import ExtraUrlMixin
 from django_tenants.admin import TenantAdminMixin
 from django_tenants.postgresql_backend.base import FakeTenant
 from django_tenants.utils import get_public_schema_name
+from rest_framework.authtoken.admin import TokenAdmin
+from rest_framework.authtoken.models import TokenProxy
 from unicef_snapshot.admin import ActivityInline, SnapshotModelAdmin
 
 from etools.applications.funds.tasks import sync_all_delegated_frs, sync_country_delegated_fr
@@ -531,6 +533,10 @@ class StagedUserAdmin(admin.ModelAdmin):
         return False
 
 
+class CustomTokenAdmin(TokenAdmin):
+    raw_id_fields = ('user',)
+
+
 # Re-register UserAdmin
 admin.site.register(get_user_model(), UserAdminPlus)
 admin.site.register(UserProfile, ProfileAdmin)
@@ -538,3 +544,7 @@ admin.site.register(Country, CountryAdmin)
 admin.site.register(WorkspaceCounter)
 admin.site.register(Realm, RealmAdmin)
 admin.site.register(StagedUser, StagedUserAdmin)
+
+
+admin.site.unregister(TokenProxy)
+admin.site.register(TokenProxy, CustomTokenAdmin)
