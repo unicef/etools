@@ -21,6 +21,7 @@ from etools.applications.field_monitoring.planning.models import (
     MonitoringActivity,
     MonitoringActivityActionPoint,
     QuestionTemplate,
+    TPMConcern,
     YearPlan,
 )
 from etools.applications.field_monitoring.utils.fsm import get_available_transitions
@@ -269,3 +270,32 @@ class MonitoringActivityActionPointSerializer(ActionPointBaseSerializer):
         extra_kwargs.update({
             'high_priority': {'label': _('Priority')},
         })
+
+
+class TPMConcernSerializer(UserContextSerializerMixin, SnapshotModelSerializer, serializers.ModelSerializer):
+    reference_number = serializers.ReadOnlyField(label=_('Reference Number'))
+    author = MinimalUserSerializer(read_only=True, label=_('Author'))
+
+    category = CategoryModelChoiceField(
+        label=_('TPM Concern Category'), required=True, queryset=Category.objects.filter(module=Category.MODULE_CHOICES.fm))
+
+    # partner = SeparatedReadWriteField(
+    #     label=_('Related Partner'), read_field=MinimalPartnerOrganizationListSerializer(), required=False)
+    # intervention = SeparatedReadWriteField(
+    #     label=_('Related PD/SPD'), read_field=FMInterventionListSerializer(), required=False)
+    # cp_output = SeparatedReadWriteField(
+    #     label=_('Related CP Output'), read_field=MinimalOutputListSerializer(), required=False)
+
+    class Meta:
+        model = TPMConcern
+        fields = [
+            'id', 'reference_number', 'category',
+            'author', 'high_priority', 'description',
+        ]
+
+    def create(self, validated_data):
+        validated_data.update({
+            'author': self.get_user(),
+        })
+
+        return super().create(validated_data)
