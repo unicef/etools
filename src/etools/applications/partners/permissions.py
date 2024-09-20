@@ -169,6 +169,15 @@ class InterventionPermissions(PMPPermissions):
         def not_ssfa(instance):
             return not is_spd_non_hum(instance)
 
+        def unlocked_amendment_mode_without_fr(instance):
+            if not unlocked(instance):
+                return False
+
+            if not user_added_amendment(self.instance) or \
+                    (user_added_amendment(self.instance) and not self.instance.amendment.intervention.frs.exists()):
+                return True
+            return False
+
         staff_member = self.user
 
         # focal points are prefetched, so just cast to array to collect ids
@@ -218,6 +227,7 @@ class InterventionPermissions(PMPPermissions):
             'unicef_court': self.instance.unicef_court and unlocked(self.instance),
             'partner_court': not self.instance.unicef_court and unlocked(self.instance),
             'unlocked': unlocked(self.instance),
+            'unlocked_amendment_mode_without_fr': unlocked_amendment_mode_without_fr(self.instance),
             'is_spd': self.instance.document_type == self.instance.SPD,
             'is_spd_non_hum': is_spd_non_hum(self.instance),
             'is_pd_unlocked': self.instance.document_type == self.instance.PD and not self.instance.locked,

@@ -17,6 +17,7 @@ from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.environment.tests.factories import TenantSwitchFactory
 from etools.applications.field_monitoring.fm_settings.tests.factories import LocationSiteFactory
+from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
 from etools.applications.partners.models import Intervention, InterventionAmendment
 from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, UNICEF_USER
 from etools.applications.partners.tests.factories import (
@@ -379,6 +380,29 @@ class TestInterventionAmendments(BaseTestInterventionAmendments, BaseTenantTestC
         self.assertEqual(original_intervention_response.status_code, status.HTTP_200_OK)
         self.assertTrue(original_intervention_response.data['permissions']['view']['sites'])
         self.assertTrue(original_intervention_response.data['permissions']['edit']['sites'])
+
+    def test_currency_editable_if_no_frs(self):
+        amendment = InterventionAmendmentFactory(intervention=self.active_intervention)
+
+        response = self.forced_auth_req(
+            'get', reverse('pmp_v3:intervention-detail', args=[amendment.amended_intervention.pk]), self.unicef_staff
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(amendment.intervention.frs.exists())
+        # view and edit rights when no frs present in the original intervention
+        self.assertTrue(response.data['permissions']['view']['document_currency'])
+        self.assertTrue(response.data['permissions']['edit']['document_currency'])
+
+        FundsReservationHeaderFactory(intervention=self.active_intervention)
+
+        original_intervention_response = self.forced_auth_req(
+            'get', reverse('pmp_v3:intervention-detail', args=[amendment.amended_intervention.pk]), self.unicef_staff
+        )
+        self.assertEqual(original_intervention_response.status_code, status.HTTP_200_OK)
+        self.assertTrue(amendment.intervention.frs.exists())
+        # view and no edit rights when frs present in the original intervention
+        self.assertTrue(original_intervention_response.data['permissions']['view']['document_currency'])
+        self.assertFalse(original_intervention_response.data['permissions']['edit']['document_currency'])
 
 
 class TestInterventionAmendmentDeleteView(BaseTenantTestCase):
