@@ -554,7 +554,7 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['status'], models.Transfer.PENDING)
         self.assertEqual(response.data['transfer_type'], models.Transfer.HANDOVER)
-        self.assertIn(response.data['proof_file'], self.attachment.file.path)
+        self.assertIn(response.data['proof_file'], self.attachment.file_link)
 
         handover_transfer = models.Transfer.objects.get(pk=response.data['id'])
         self.assertEqual(handover_transfer.partner_organization, agreement.partner)
@@ -613,7 +613,7 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['status'], models.Transfer.COMPLETED)
         self.assertEqual(response.data['transfer_type'], models.Transfer.WASTAGE)
-        self.assertIn(response.data['proof_file'], self.attachment.file.path)
+        self.assertIn(response.data['proof_file'], self.attachment.file_link)
 
         wastage_transfer = models.Transfer.objects.get(pk=response.data['id'])
         self.assertEqual(wastage_transfer.destination_point, None)
