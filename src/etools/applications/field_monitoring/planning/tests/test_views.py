@@ -32,6 +32,7 @@ from etools.applications.field_monitoring.planning.tests.factories import (
     MonitoringActivityActionPointFactory,
     MonitoringActivityFactory,
     QuestionTemplateFactory,
+    TPMConcernFactory,
     YearPlanFactory,
 )
 from etools.applications.field_monitoring.tests.base import APIViewSetTestCase, FMBaseTestCaseMixin
@@ -1213,6 +1214,38 @@ class MonitoringActivityActionPointsViewTestCase(FMBaseTestCaseMixin, APIViewSet
             sorted([ap['id'] for ap in response.data['results']]),
             sorted([ap.id for ap in action_points])
         )
+
+
+class TPMConcernViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenantTestCase):
+    base_view = 'field_monitoring_planning:activity_tpm_concerns'
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        cls.activity = MonitoringActivityFactory(status='data_collection')
+        cls.create_data = {
+            'description': 'do something',
+            'category': ActionPointCategoryFactory(module='fm').id,
+        }
+
+    def get_list_args(self):
+        return [self.activity.pk]
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_list(self):
+        tpm_concerns = TPMConcernFactory.create_batch(size=10, monitoring_activity=self.activity)
+        TPMConcernFactory()
+
+        with self.assertNumQueries(14):  # prefetched 13 queries
+            self._test_list(self.unicef_user, tpm_concerns)
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_create(self):
+        response = self._test_create(
+            self.fm_user,
+            data=self.create_data,
+        )
+        self.assertEqual(len(response.data['history']), 1)
 
 
 class PartnersViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenantTestCase):

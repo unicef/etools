@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-08-30 14:42+0000\n"
+"POT-Creation-Date: 2024-09-20 17:32+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -245,6 +245,32 @@ msgstr "نقطة إجراء مراقب النشاط"
 msgid "Monitoring Activity Action Points"
 msgstr "نقاط إجراء مراقب النشاط"
 
+#, fuzzy
+#| msgid "Sections"
+msgid "Description"
+msgstr "الأقسام"
+
+msgid "Category"
+msgstr ""
+
+#, fuzzy
+#| msgid "Priority"
+msgid "High Priority"
+msgstr "الأولوية"
+
+msgid "Author"
+msgstr ""
+
+#, fuzzy
+#| msgid "TPM Partner"
+msgid "TPM Concern"
+msgstr "المُراقب المستقل الشريك"
+
+#, fuzzy
+#| msgid "TPM Partner"
+msgid "TPM Concerns"
+msgstr "المُراقب المستقل الشريك"
+
 msgid "History"
 msgstr "السجل التاريخي"
 
@@ -283,6 +309,9 @@ msgstr "فئة نقطة العمل"
 
 msgid "Priority"
 msgstr "الأولوية"
+
+msgid "TPM Concern Category"
+msgstr ""
 
 msgid "Annual Field Monitoring Rationale"
 msgstr "الأساس المنطقي السنوي للرصد الميداني"

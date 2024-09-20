@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-08-30 14:42+0000\n"
+"POT-Creation-Date: 2024-09-20 17:32+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -247,6 +247,32 @@ msgstr "Point d'action de l'activité de suivi"
 msgid "Monitoring Activity Action Points"
 msgstr "Points d'action de l'activité de suivi"
 
+#, fuzzy
+#| msgid "Sections"
+msgid "Description"
+msgstr "Sections"
+
+msgid "Category"
+msgstr ""
+
+#, fuzzy
+#| msgid "Priority"
+msgid "High Priority"
+msgstr "Priorité"
+
+msgid "Author"
+msgstr ""
+
+#, fuzzy
+#| msgid "TPM Partner"
+msgid "TPM Concern"
+msgstr "Partenaire TPM"
+
+#, fuzzy
+#| msgid "TPM Partner"
+msgid "TPM Concerns"
+msgstr "Partenaire TPM"
+
 msgid "History"
 msgstr "Historique"
 
@@ -285,6 +311,9 @@ msgstr "Catégorie de point d'action"
 
 msgid "Priority"
 msgstr "Priorité"
+
+msgid "TPM Concern Category"
+msgstr ""
 
 msgid "Annual Field Monitoring Rationale"
 msgstr "Justification du suivi annuel sur le terrain"

@@ -13,6 +13,7 @@ class ActivityPermissions(PMPPermissions):
         'additional_info',
         'report_attachments',
         'action_points',
+        'tpm_concerns'
     ]
 
     def __init__(self, **kwargs):

@@ -50,6 +50,10 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,action_points,UNICEF User,is_visit_lead,report_finalization,edit,TRUE
 ,action_points,Field Monitor,,completed,edit,TRUE
 ,action_points,UNICEF User,is_visit_lead,completed,edit,TRUE
+,tpm_concerns,UNICEF User,,*,edit,True
+,tpm_concerns,Field Monitor,tpm_visit+tpm_ma_related,data_collection,edit,TRUE
+,tpm_concerns,Field Monitor,tpm_visit+tpm_ma_related,submitted,edit,TRUE
+,tpm_concerns,Field Monitor,tpm_visit+tpm_ma_related,report_finalization,edit,TRUE
 ,cancel_reason,Field Monitor,,*,edit,TRUE
 ,report_reject_reason,Approvers,,*,edit,TRUE
 ,reject_reason,All Users,is_ma_related_user,*,edit,TRUE
@@ -115,6 +119,11 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,action_points,UNICEF User,is_visit_lead,report_finalization,view,TRUE
 ,action_points,Field Monitor,,completed,view,TRUE
 ,action_points,UNICEF User,is_visit_lead,completed,view,TRUE
+,tpm_concerns,UNICEF User,*,*,view,True
+,tpm_concerns,Field Monitor,tpm_visit+tpm_ma_related,data_collection,view,TRUE
+,tpm_concerns,Field Monitor,tpm_visit+tpm_ma_related,submitted,view,TRUE
+,tpm_concerns,Field Monitor,tpm_visit+tpm_ma_related,report_finalization,view,TRUE
+,tpm_concerns,Field Monitor,tpm_visit+tpm_ma_related,completed,view,True
 ,activity_question_set,All Users,,checklist,view,TRUE
 ,activity_question_set_review,All Users,,review,view,TRUE
 ,activity_question_set_review,All Users,,assigned,view,TRUE
