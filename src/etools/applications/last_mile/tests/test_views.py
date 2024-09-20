@@ -293,7 +293,7 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.incoming.refresh_from_db()
         self.assertEqual(self.incoming.status, models.Transfer.COMPLETED)
-        self.assertIn(response.data['proof_file'], self.attachment.file.path)
+        self.assertIn(response.data['proof_file'], self.attachment.file_link)
 
         self.assertIn(f'DW @ {checkin_data["destination_check_in_at"].strftime("%y-%m-%d")}', self.incoming.name)
         self.assertEqual(self.incoming.items.count(), len(response.data['items']))
@@ -334,7 +334,7 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.incoming.refresh_from_db()
         self.assertEqual(self.incoming.status, models.Transfer.COMPLETED)
-        self.assertIn(response.data['proof_file'], self.attachment.file.path)
+        self.assertIn(response.data['proof_file'], self.attachment.file_link)
         self.assertEqual(self.incoming.name, checkin_data['name'])
         self.assertEqual(self.incoming.items.count(), len(response.data['items']))
         self.assertEqual(self.incoming.items.get(pk=item_1.pk).quantity, 11)
@@ -382,7 +382,7 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.incoming.refresh_from_db()
         self.assertEqual(self.incoming.status, models.Transfer.COMPLETED)
-        self.assertIn(response.data['proof_file'], self.attachment.file.path)
+        self.assertIn(response.data['proof_file'], self.attachment.file_link)
         self.assertEqual(self.incoming.name, checkin_data['name'])
         self.assertEqual(self.incoming.items.count(), len(response.data['items']))
         self.assertEqual(self.incoming.items.count(), 1)  # only 1 checked-in item is visible, non RUFT
@@ -482,7 +482,7 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['status'], models.Transfer.PENDING)
         self.assertEqual(response.data['transfer_type'], models.Transfer.DISTRIBUTION)
-        self.assertIn(response.data['proof_file'], self.attachment.file.path)
+        self.assertIn(response.data['proof_file'], self.attachment.file_link)
 
         checkout_transfer = models.Transfer.objects.get(pk=response.data['id'])
         self.assertEqual(checkout_transfer.destination_point, self.hospital)
@@ -519,7 +519,7 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['status'], models.Transfer.COMPLETED)
         self.assertEqual(response.data['transfer_type'], models.Transfer.WASTAGE)
-        self.assertIn(response.data['proof_file'], self.attachment.file.path)
+        self.assertIn(response.data['proof_file'], self.attachment.file_link)
 
         wastage_transfer = models.Transfer.objects.get(pk=response.data['id'])
         self.assertEqual(wastage_transfer.destination_point, destination)
@@ -554,7 +554,7 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['status'], models.Transfer.PENDING)
         self.assertEqual(response.data['transfer_type'], models.Transfer.HANDOVER)
-        self.assertIn(response.data['proof_file'], self.attachment.file.path)
+        self.assertIn(response.data['proof_file'], self.attachment.file_link)
 
         handover_transfer = models.Transfer.objects.get(pk=response.data['id'])
         self.assertEqual(handover_transfer.partner_organization, agreement.partner)
@@ -613,7 +613,7 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['status'], models.Transfer.COMPLETED)
         self.assertEqual(response.data['transfer_type'], models.Transfer.WASTAGE)
-        self.assertIn(response.data['proof_file'], self.attachment.file.path)
+        self.assertIn(response.data['proof_file'], self.attachment.file_link)
 
         wastage_transfer = models.Transfer.objects.get(pk=response.data['id'])
         self.assertEqual(wastage_transfer.destination_point, None)

@@ -97,7 +97,7 @@ class TestAgreementsAPI(BaseTenantTestCase):
         status_code, response = self.run_request(self.agreement1.pk)
 
         self.assertEqual(status_code, status.HTTP_200_OK)
-        self.assertTrue(response["attachment"].endswith(attachment.file.url))
+        self.assertTrue(response["attachment"].endswith(attachment.file_link))
 
     def test_add_new_PCA(self):
         self.assertFalse(Activity.objects.exists())
@@ -399,7 +399,7 @@ class TestAgreementsAPI(BaseTenantTestCase):
         )
 
         self.assertEqual(status_code, status.HTTP_200_OK)
-        self.assertTrue(response["attachment"].endswith(attachment.file.url))
+        self.assertTrue(response["attachment"].endswith(attachment.file_link))
         attachment_update = Attachment.objects.get(pk=attachment.pk)
         self.assertEqual(attachment_update.content_object, agreement)
         self.assertEqual(attachment_update.file_type, self.file_type_agreement)
@@ -450,7 +450,7 @@ class TestAgreementsAPI(BaseTenantTestCase):
         status_code, response = self.run_request(agreement.pk)
         self.assertEqual(status_code, status.HTTP_200_OK)
         self.assertTrue(
-            response["attachment"].endswith(attachment_current.file.url)
+            response["attachment"].endswith(attachment_current.file_link)
         )
 
         data = {
@@ -464,7 +464,7 @@ class TestAgreementsAPI(BaseTenantTestCase):
 
         self.assertEqual(status_code, status.HTTP_200_OK)
         self.assertTrue(
-            response["attachment"].endswith(attachment_new.file.url)
+            response["attachment"].endswith(attachment_new.file_link)
         )
         agreement_updated = Agreement.objects.get(pk=agreement.pk)
         self.assertEqual(agreement_updated.attachment.last(), attachment_new)

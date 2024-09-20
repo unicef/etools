@@ -314,6 +314,15 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
             self.reference_number = self.get_reference_number()
             self.save()
 
+    def get_related_third_party_users(self):
+        return get_user_model().objects.filter(
+            models.Q(pk__in=self.authorized_officers.values_list('id')) |
+            models.Q(pk__in=self.staff_members.values_list('id'))
+        ).filter(
+            realms__organization=self.agreement.auditor_firm.organization,
+            realms__is_active=True,
+        )
+
 
 class RiskCategory(OrderedModel, models.Model):
     """Group of questions"""
