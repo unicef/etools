@@ -42,7 +42,6 @@ from etools.applications.partners.models import (
 from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, PRC_SECRETARY, UNICEF_USER
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
-    FileTypeFactory,
     InterventionAmendmentFactory,
     InterventionFactory,
     InterventionManagementBudgetItemFactory,
@@ -1849,7 +1848,7 @@ class TestInterventionUpdate(BaseInterventionTestCase):
             realms__data=['IP Viewer'],
             profile__organization=intervention.agreement.partner.organization
         )
-        with self.assertNumQueries(194):
+        with self.assertNumQueries(196):
             response = self.forced_auth_req(
                 "patch",
                 reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
@@ -1876,7 +1875,7 @@ class TestInterventionUpdate(BaseInterventionTestCase):
         budget_owner = UserFactory(is_staff=True)
         office = OfficeFactory()
         section = SectionFactory()
-        with self.assertNumQueries(205):
+        with self.assertNumQueries(207):
             response = self.forced_auth_req(
                 "patch",
                 reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
@@ -1925,7 +1924,7 @@ class TestInterventionUpdate(BaseInterventionTestCase):
         site2 = LocationSiteFactory()
         site3 = LocationSiteFactory()
 
-        with self.assertNumQueries(255):
+        with self.assertNumQueries(257):
             response = self.forced_auth_req(
                 "patch",
                 reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
@@ -3705,7 +3704,7 @@ class TestInterventionAttachments(BaseTenantTestCase):
                 reverse('pmp_v3:intervention-attachment-list', args=[intervention.id]),
                 user=user,
                 data={
-                    "type": FileTypeFactory().pk,
+                    "type": AttachmentFileTypeFactory(group=['intervention_attachments']).pk,
                     "attachment_document": AttachmentFactory(file="test_file.pdf", file_type=None, code="").pk,
                 },
             )
