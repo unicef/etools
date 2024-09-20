@@ -8,6 +8,7 @@ from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import Intervention
 from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, UNICEF_USER
 from etools.applications.partners.tests.factories import (
+    InterventionAmendmentFactory,
     InterventionFactory,
     InterventionResultLinkFactory,
     PartnerFactory,
@@ -173,11 +174,9 @@ class TestPMPSpecialReportingRequirementListCreateView(BaseTenantTestCase):
         cls.unicef_staff = UserFactory(
             is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]
         )
-        cls.intervention = InterventionFactory(
+        cls.intervention = InterventionAmendmentFactory(intervention=InterventionFactory(
             start=datetime.date(2001, 1, 1),
-            status=Intervention.DRAFT,
-            in_amendment=True,
-        )
+            status=Intervention.DRAFT)).amended_intervention
         cls.intervention.unicef_focal_points.add(cls.unicef_staff)
 
         cls.url = reverse(
@@ -275,14 +274,11 @@ class TestSpecialReportingRequirementRetrieveUpdateDestroyView(BaseTenantTestCas
             realms__data=['IP Viewer'],
             profile__organization=cls.partner.organization
         )
-
-        cls.intervention = InterventionFactory(
+        cls.intervention = InterventionAmendmentFactory(intervention=InterventionFactory(
             start=datetime.date(2001, 1, 1),
             status=Intervention.DRAFT,
-            in_amendment=True,
             agreement__partner=cls.partner,
-            date_sent_to_partner=datetime.date.today()
-        )
+            date_sent_to_partner=datetime.date.today())).amended_intervention
         cls.intervention.partner_focal_points.add(cls.partner_focal_point)
         cls.intervention.unicef_focal_points.add(cls.unicef_staff)
 

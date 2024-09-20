@@ -14,7 +14,11 @@ from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.core.tests.mixins import URLAssertionMixin
 from etools.applications.partners.models import Intervention
 from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, UNICEF_USER
-from etools.applications.partners.tests.factories import InterventionFactory, InterventionResultLinkFactory
+from etools.applications.partners.tests.factories import (
+    InterventionAmendmentFactory,
+    InterventionFactory,
+    InterventionResultLinkFactory,
+)
 from etools.applications.partners.tests.test_utils import setup_intervention_test_data
 from etools.applications.reports.models import (
     CountryProgramme,
@@ -1005,11 +1009,9 @@ class SpecialReportingRequirementListCreateMixin:
         cls.unicef_staff = UserFactory(
             is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]
         )
-        cls.intervention = InterventionFactory(
+        cls.intervention = InterventionAmendmentFactory(intervention=InterventionFactory(
             start=datetime.date(2001, 1, 1),
-            status=Intervention.DRAFT,
-            in_amendment=True,
-        )
+            status=Intervention.DRAFT)).amended_intervention
         cls.url = reverse(
             "reports:interventions-special-reporting-requirements",
             kwargs={'intervention_pk': cls.intervention.id}
@@ -1113,11 +1115,9 @@ class TestSpecialReportingRequirementRetrieveUpdateDestroyView(BaseTenantTestCas
         cls.unicef_staff = UserFactory(
             is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]
         )
-        cls.intervention = InterventionFactory(
+        cls.intervention = InterventionAmendmentFactory(intervention=InterventionFactory(
             start=datetime.date(2001, 1, 1),
-            status=Intervention.DRAFT,
-            in_amendment=True,
-        )
+            status=Intervention.DRAFT)).amended_intervention
 
     def _get_url(self, requirement):
         return reverse(

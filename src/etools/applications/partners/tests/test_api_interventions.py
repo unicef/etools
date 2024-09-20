@@ -1871,11 +1871,9 @@ class BaseInterventionReportingRequirementMixin:
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
         _add_user_to_partnership_manager_group(cls.unicef_staff)
-        cls.intervention = InterventionFactory(
+        cls.intervention = InterventionAmendmentFactory(intervention=InterventionFactory(
             start=datetime.date(2001, 1, 1),
-            status=Intervention.DRAFT,
-            in_amendment=True,
-        )
+            status=Intervention.DRAFT)).amended_intervention
         cls.result_link = InterventionResultLinkFactory(
             intervention=cls.intervention
         )

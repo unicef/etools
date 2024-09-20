@@ -15,7 +15,7 @@ from etools.applications.partners.tests.factories import (
     InterventionFactory,
     InterventionResultLinkFactory,
 )
-from etools.applications.reports.models import LowerResult, ResultType
+from etools.applications.reports.models import AppliedIndicator, LowerResult, ResultType
 from etools.applications.reports.tests.factories import (
     AppliedIndicatorFactory,
     InterventionActivityFactory,
@@ -600,13 +600,15 @@ class TestAppliedIndicatorsUpdate(TestInterventionLowerResultsViewBase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
 
     def test_update_inactive_indicator_in_amendment(self):
-        self.applied_indicator.is_active = False
-        self.applied_indicator.save()
+        amendment = InterventionAmendmentFactory(intervention=self.intervention)
+        applied_indicator = AppliedIndicator.objects.filter(lower_result__result_link__intervention=amendment.amended_intervention).first()
+        applied_indicator.is_active = False
+        applied_indicator.save()
 
-        self.intervention.in_amendment = True
-        self.intervention.save()
+        detail_url = reverse('partners:intervention-indicators-update', args=[applied_indicator.pk])
+        self.assertTrue(amendment.amended_intervention.in_amendment)
 
-        response = self.forced_auth_req('patch', self.detail_url, self.user,
+        response = self.forced_auth_req('patch', detail_url, self.user,
                                         data={'indicator': {'title': "Updated Title"}})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
         self.assertIn('You cannot update inactive indicators when the PD is in amendment.', response.data)

@@ -3,7 +3,11 @@ import datetime
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.models import Intervention
 from etools.applications.partners.serializers.interventions_v2 import InterventionReportingRequirementCreateSerializer
-from etools.applications.partners.tests.factories import InterventionFactory, InterventionResultLinkFactory
+from etools.applications.partners.tests.factories import (
+    InterventionAmendmentFactory,
+    InterventionFactory,
+    InterventionResultLinkFactory,
+)
 from etools.applications.reports.models import ReportingRequirement
 from etools.applications.reports.tests.factories import AppliedIndicatorFactory, LowerResultFactory
 from etools.applications.users.tests.factories import UserFactory
@@ -12,11 +16,11 @@ from etools.applications.users.tests.factories import UserFactory
 class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
-        cls.intervention = InterventionFactory(
+        cls.intervention = InterventionAmendmentFactory(intervention=InterventionFactory(
             start=datetime.date(2001, 1, 1),
             end=datetime.date(2001, 12, 31),
-            in_amendment=True,
-        )
+            status=Intervention.DRAFT)).amended_intervention
+
         cls.result_link = InterventionResultLinkFactory(
             intervention=cls.intervention
         )
@@ -76,7 +80,8 @@ class TestInterventionReportingRequirementCreateSerializer(BaseTenantTestCase):
         )
 
     def test_validation_pd_has_no_start(self):
-        intervention = InterventionFactory(in_amendment=True, start=None, end=None)
+        intervention = InterventionAmendmentFactory(intervention=InterventionFactory(
+            start=None, end=None)).amended_intervention
         result_link = InterventionResultLinkFactory(intervention=intervention)
         lower_result = LowerResultFactory(result_link=result_link)
         AppliedIndicatorFactory(lower_result=lower_result)

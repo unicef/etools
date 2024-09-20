@@ -12,7 +12,7 @@ from etools.applications.partners.tests.factories import (
     InterventionFactory,
     InterventionResultLinkFactory,
 )
-from etools.applications.reports.models import InterventionActivityItem, InterventionTimeFrame, ResultType
+from etools.applications.reports.models import InterventionActivityItem, InterventionTimeFrame, LowerResult, ResultType
 from etools.applications.reports.tests.factories import (
     InterventionActivityFactory,
     InterventionActivityItemFactory,
@@ -520,11 +520,16 @@ class TestPermissions(BaseTestCase):
 
     def test_create_in_amendment(self):
         self.intervention.unicef_court = False
-        self.intervention.in_amendment = True
         self.intervention.save()
+        amendment = InterventionAmendmentFactory(intervention=self.intervention)
+        pd_output = LowerResult.objects.filter(result_link__intervention=amendment.amended_intervention).first()
 
+        list_url = reverse(
+            'partners:intervention-activity-list',
+            args=[amendment.amended_intervention.pk, pd_output.pk]
+        )
         response = self.forced_auth_req(
-            'post', self.list_url, self.user,
+            'post', list_url, self.user,
             data={'name': 'test', 'context_details': 'test'}
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
