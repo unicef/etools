@@ -50,7 +50,6 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,action_points,UNICEF User,is_visit_lead,report_finalization,edit,TRUE
 ,action_points,Field Monitor,,completed,edit,TRUE
 ,action_points,UNICEF User,is_visit_lead,completed,edit,TRUE
-,tpm_concerns,UNICEF User,,*,edit,True
 ,tpm_concerns,Field Monitor,tpm_visit+tpm_ma_related,data_collection,edit,TRUE
 ,tpm_concerns,Field Monitor,tpm_visit+tpm_ma_related,submitted,edit,TRUE
 ,tpm_concerns,Field Monitor,tpm_visit+tpm_ma_related,report_finalization,edit,TRUE
