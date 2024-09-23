@@ -111,10 +111,8 @@ msgstr "Parceiro TPM"
 msgid "Person Responsible"
 msgstr "Pessoa Responsável"
 
-#, fuzzy
-#| msgid "Partner"
 msgid "Partners"
-msgstr "Parceiro"
+msgstr ""
 
 msgid "PD/SPD"
 msgstr ""
@@ -212,10 +210,8 @@ msgstr ""
 msgid "Report Reviewer"
 msgstr ""
 
-#, fuzzy
-#| msgid "Review"
 msgid "Reviewed By"
-msgstr "Revisão"
+msgstr ""
 
 msgid "Field Office"
 msgstr "Escritório de campo"
@@ -244,10 +240,8 @@ msgstr "Ponto de Ação da Atividade de Monitoramento"
 msgid "Monitoring Activity Action Points"
 msgstr "Pontos de Ação da Atividade de Monitoramento"
 
-#, fuzzy
-#| msgid "Sections"
 msgid "Description"
-msgstr "Seções"
+msgstr ""
 
 msgid "Category"
 msgstr ""
