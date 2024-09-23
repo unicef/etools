@@ -255,23 +255,17 @@ msgstr "Разделы"
 msgid "Category"
 msgstr ""
 
-#, fuzzy
-#| msgid "Priority"
 msgid "High Priority"
-msgstr "Приоритет"
+msgstr ""
 
 msgid "Author"
 msgstr ""
 
-#, fuzzy
-#| msgid "TPM Partner"
 msgid "TPM Concern"
-msgstr "Партнер TPM"
+msgstr ""
 
-#, fuzzy
-#| msgid "TPM Partner"
 msgid "TPM Concerns"
-msgstr "Партнер TPM"
+msgstr ""
 
 msgid "History"
 msgstr "История"

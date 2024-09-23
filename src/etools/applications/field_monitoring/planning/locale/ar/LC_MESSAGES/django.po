@@ -253,23 +253,17 @@ msgstr "الأقسام"
 msgid "Category"
 msgstr ""
 
-#, fuzzy
-#| msgid "Priority"
 msgid "High Priority"
-msgstr "الأولوية"
+msgstr ""
 
 msgid "Author"
 msgstr ""
 
-#, fuzzy
-#| msgid "TPM Partner"
 msgid "TPM Concern"
-msgstr "المُراقب المستقل الشريك"
+msgstr ""
 
-#, fuzzy
-#| msgid "TPM Partner"
 msgid "TPM Concerns"
-msgstr "المُراقب المستقل الشريك"
+msgstr ""
 
 msgid "History"
 msgstr "السجل التاريخي"

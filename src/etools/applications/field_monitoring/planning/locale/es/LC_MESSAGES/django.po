@@ -255,23 +255,17 @@ msgstr "Secciones"
 msgid "Category"
 msgstr ""
 
-#, fuzzy
-#| msgid "Priority"
 msgid "High Priority"
-msgstr "Prioridad"
+msgstr ""
 
 msgid "Author"
 msgstr ""
 
-#, fuzzy
-#| msgid "TPM Partner"
 msgid "TPM Concern"
-msgstr "Socio de TPM"
+msgstr ""
 
-#, fuzzy
-#| msgid "TPM Partner"
 msgid "TPM Concerns"
-msgstr "Socio de TPM"
+msgstr ""
 
 msgid "History"
 msgstr "Historia"
