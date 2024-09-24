@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-08-02 08:05+0000\n"
+"POT-Creation-Date: 2024-09-24 09:12+0000\n"
 "Language: ru\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -1218,6 +1218,14 @@ msgstr "Офицеры КРП"
 msgid "Overall Approver"
 msgstr "Утверждающий"
 
+#, fuzzy
+#| msgid "CSO Authorized Officer"
+msgid "Authorized Officer"
+msgstr "Уполномоченный сотрудник ОГО"
+
+msgid "Recommend for Approval"
+msgstr ""
+
 msgid "Sent Back by Secretary Comment"
 msgstr "Возвращено с комментарием секретаря"
 
@@ -1625,6 +1633,9 @@ msgstr ""
 
 msgid "Vendor number must belong to PRG2 account group"
 msgstr "Номер поставщика должен принадлежать к группе учетных записей PRG2."
+
+msgid "Authorized officer cannot be the same as overall approver."
+msgstr ""
 
 msgid "Unknown intervention."
 msgstr "Неизвестное вмешательство."
@@ -2185,7 +2196,9 @@ msgstr "Разблокировать могут только координат�
 msgid "PD is already in Signature status."
 msgstr "ПД уже находится в статусе подписи."
 
-msgid "Only overall approver can accept review."
+#, fuzzy
+#| msgid "Only overall approver can accept review."
+msgid "Only authorized officer can accept review."
 msgstr "Только общий утверждающий может принять отзыв."
 
 msgid "PD is already unlocked."

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-08-02 08:05+0000\n"
+"POT-Creation-Date: 2024-09-24 09:12+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1237,6 +1237,14 @@ msgstr "Oficiais dp PRC"
 msgid "Overall Approver"
 msgstr "Aprovador geral"
 
+#, fuzzy
+#| msgid "CSO Authorized Officer"
+msgid "Authorized Officer"
+msgstr "Oficial autorizado da OSC (Organização da Sociedade Civil)"
+
+msgid "Recommend for Approval"
+msgstr ""
+
 msgid "Sent Back by Secretary Comment"
 msgstr "Enviado para comentário do(a) secretário(a)"
 
@@ -1650,6 +1658,9 @@ msgstr ""
 
 msgid "Vendor number must belong to PRG2 account group"
 msgstr "O número do fornecedor deve pertencer ao grupo de contas PRG2"
+
+msgid "Authorized officer cannot be the same as overall approver."
+msgstr ""
 
 msgid "Unknown intervention."
 msgstr "Intervenção desconhecida."
@@ -2217,7 +2228,9 @@ msgstr ""
 msgid "PD is already in Signature status."
 msgstr "PD já está no status de assinatura."
 
-msgid "Only overall approver can accept review."
+#, fuzzy
+#| msgid "Only overall approver can accept review."
+msgid "Only authorized officer can accept review."
 msgstr "Somente o aprovador geral pode aceitar a revisão."
 
 msgid "PD is already unlocked."
