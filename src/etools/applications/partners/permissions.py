@@ -195,6 +195,9 @@ class InterventionPermissions(PMPPermissions):
             if self.user.id == review.overall_approver_id:
                 self.user_groups.append('Overall Approver')
 
+            if self.user.id == review.authorized_officer_id:
+                self.user_groups.append('Review Authorized Officer')
+
             if review.prc_reviews.filter(overall_review=review, user=self.user).exists():
                 self.user_groups.append('PRC Officer')
 
@@ -682,3 +685,17 @@ class UserIsUnicefFocalPoint(BasePermission):
         if hasattr(view, 'get_root_object'):
             obj = view.get_root_object()
         return request.user in obj.unicef_focal_points.all()
+
+
+class UserIsReviewOverallApprover(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        if hasattr(view, 'get_root_object'):
+            obj = view.get_root_object()
+        return obj.review and request.user.id == obj.review.overall_approver_id
+
+
+class UserIsReviewAuthorizedOfficer(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        if hasattr(view, 'get_root_object'):
+            obj = view.get_root_object()
+        return obj.review and request.user.id == obj.review.authorized_officer_id

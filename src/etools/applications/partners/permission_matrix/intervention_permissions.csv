@@ -222,9 +222,9 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,result_links,UNICEF User,prp_mode_on,*,View,TRUE
 ,review_date_prc,*,,*,View,TRUE
 ,review_date_prc,Unicef Focal Point,,Signature,Edit,TRUE
-,review_date_prc,Overall Approver,,Signature,Edit,TRUE
+,review_date_prc,Review Authorized Officer,,Signature,Edit,TRUE
 ,review_date_prc,Unicef Focal Point,,Review,Edit,TRUE
-,review_date_prc,Overall Approver,,Review,Edit,TRUE
+,review_date_prc,Review Authorized Officer,,Review,Edit,TRUE
 ,risks,*,,*,View,TRUE
 ,risks,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
 ,risks,Partner User,partner_court,Draft,Edit,TRUE
@@ -284,6 +284,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,partner_accepted,*,,Draft,Edit,TRUE
 ,reviews,PRC Secretary,,Review,Edit,TRUE
 ,reviews,Overall Approver,,Review,Edit,TRUE
+,reviews,Review Authorized Officer,,Review,Edit,TRUE
 ,reviews,Partner User,,*,View,FALSE
 ,prc_reviews,PRC Officer,,Review,Edit,TRUE
 ,prc_reviews,UNICEF User,,Draft,View,FALSE

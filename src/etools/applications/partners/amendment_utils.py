@@ -712,6 +712,7 @@ INTERVENTION_FULL_SNAPSHOT_RELATED_FIELDS['partners.InterventionReview'] = [
     'submitted_by',
     'prc_officers',
     'overall_approver',
+    'authorized_officer',
 ]
 INTERVENTION_FULL_SNAPSHOT_RELATED_FIELDS['partners.PRCOfficerInterventionReview'] = [
     'user',
