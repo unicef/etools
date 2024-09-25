@@ -1222,6 +1222,7 @@ class TPMConcernViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
+        cls.tpm_user = UserFactory(first_name='TPM user', tpm_user=True)
         cls.activity_draft = MonitoringActivityFactory(status='draft', monitor_type='tpm')
         cls.activity_data_collection = MonitoringActivityFactory(status='data_collection', monitor_type='tpm')
         cls.create_data = {
@@ -1240,7 +1241,7 @@ class TPMConcernViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         with self.assertNumQueries(5):
             self._test_list(self.unicef_user, tpm_concerns)
         with self.assertNumQueries(5):
-            self._test_list(self.fm_user, tpm_concerns)
+            self._test_list(self.tpm_user, tpm_concerns)
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_create_as_unicef_forbidden(self):
@@ -1251,19 +1252,19 @@ class TPMConcernViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         )
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
-    def test_create_as_non_related_fm_user_forbidden(self):
+    def test_create_as_non_related_tpm_user_forbidden(self):
         self._test_create(
-            self.fm_user,
+            self.tpm_user,
             data=self.create_data,
             expected_status=status.HTTP_403_FORBIDDEN
         )
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
-    def test_create_as_related_fm_user_allowed(self):
-        self.activity_data_collection.team_members.add(self.fm_user)
+    def test_create_as_related_tpm_user_allowed(self):
+        self.activity_data_collection.team_members.add(self.tpm_user)
         self.assertEqual(self.activity_data_collection.tpmconcern_set.count(), 0)
         response = self._test_create(
-            self.fm_user,
+            self.tpm_user,
             data=self.create_data,
             expected_status=status.HTTP_201_CREATED
         )
@@ -1271,13 +1272,12 @@ class TPMConcernViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         self.assertEqual(response.data['description'], self.create_data['description'])
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
-    def test_create_as_related_fm_user_in_draft_forbidden(self):
-        self.activity_data_collection.team_members.add(self.fm_user)
-
+    def test_create_as_related_tpm_user_in_draft_forbidden(self):
+        self.activity_data_collection.team_members.add(self.tpm_user)
         response = self.forced_auth_req(
             'post',
             reverse('field_monitoring_planning:activity_tpm_concerns-list', args=(self.activity_draft.id,)),
-            user=self.fm_user
+            user=self.tpm_user
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
@@ -1294,41 +1294,42 @@ class TPMConcernViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
-    def test_update_as_non_related_fm_user_forbidden(self):
+    def test_update_as_non_related_tpm_user_forbidden(self):
         tpm_concern = TPMConcernFactory(monitoring_activity=self.activity_data_collection)
         response = self.forced_auth_req(
             'patch',
             reverse('field_monitoring_planning:activity_tpm_concerns-detail',
                     args=(self.activity_data_collection.id, tpm_concern.id)),
-            user=self.fm_user,
+            user=self.tpm_user,
             data={"description": "updated description"}
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
-    def test_update_as_related_fm_user_in_draft_forbidden(self):
-        self.activity_draft.team_members.add(self.fm_user)
+    def test_update_as_related_tpm_user_in_draft_forbidden(self):
+        self.activity_draft.team_members.add(self.tpm_user)
         tpm_concern = TPMConcernFactory(monitoring_activity=self.activity_draft)
         response = self.forced_auth_req(
             'patch',
             reverse('field_monitoring_planning:activity_tpm_concerns-detail',
                     args=(self.activity_draft.id, tpm_concern.id)),
-            user=self.fm_user,
+            user=self.tpm_user,
             data={"description": "updated description"}
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
-    def test_update_as_related_fm_user_allowed(self):
-        self.activity_data_collection.team_members.add(self.fm_user)
+    def test_update_as_related_tpm_user_allowed(self):
+        self.activity_data_collection.team_members.add(self.tpm_user)
         tpm_concern = TPMConcernFactory(monitoring_activity=self.activity_data_collection)
         response = self.forced_auth_req(
             'patch',
             reverse('field_monitoring_planning:activity_tpm_concerns-detail',
                     args=(self.activity_data_collection.id, tpm_concern.id)),
-            user=self.fm_user,
+            user=self.tpm_user,
             data={"description": "updated description"}
         )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['description'], 'updated description')
         tpm_concern.refresh_from_db()
         self.assertEqual(tpm_concern.description, 'updated description')
