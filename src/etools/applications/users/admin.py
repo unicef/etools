@@ -427,7 +427,7 @@ class MultipleRealmForm(forms.ModelForm):
         self.fields['user'].help_text = "UNICEF Users only"
 
 
-class RealmAdminForm(forms.ModelForm):
+class RealmAdminForm(forms.ModelForm, RssRealmEditAdminMixin):
     user = forms.ModelChoiceField(
         widget=widgets.ForeignKeyRawIdWidget(Realm._meta.get_field("user").remote_field, admin.site),
         queryset=get_user_model().objects.all())
@@ -447,7 +447,7 @@ class RealmAdminForm(forms.ModelForm):
 
     def clean_user(self):
         user = self.cleaned_data.get("user")
-        if not user.is_unicef_user():
+        if self.is_only_rss(self.request) and not user.is_unicef_user():
             raise ValidationError("The selected user is not Unicef")
         return user
 
@@ -491,6 +491,7 @@ class RealmAdmin(RssRealmEditAdminMixin, SnapshotModelAdmin):
 
     def get_form(self, request, obj=None, change=False, **kwargs):
         form = super().get_form(request, obj, **kwargs)
+        form.request = request
         if not obj and self.is_only_rss(request):
             form.base_fields['group'].queryset = Group.objects.filter(name__in=RssRealmEditAdminMixin.GROUPS_ALLOWED)
             form.base_fields['organization'].initial = 1
