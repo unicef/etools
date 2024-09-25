@@ -9,6 +9,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import UserChangeForm
 from django.contrib.auth.models import Group
+from django.core.exceptions import ValidationError
 from django.db import connection, router, transaction
 from django.db.models.signals import post_save
 from django.http.response import HttpResponseRedirect
@@ -426,7 +427,34 @@ class MultipleRealmForm(forms.ModelForm):
         self.fields['user'].help_text = "UNICEF Users only"
 
 
+class RealmAdminForm(forms.ModelForm):
+    user = forms.ModelChoiceField(
+        widget=widgets.ForeignKeyRawIdWidget(Realm._meta.get_field("user").remote_field, admin.site),
+        queryset=get_user_model().objects.all())
+    country = forms.ModelChoiceField(
+        widget=widgets.ForeignKeyRawIdWidget(Realm._meta.get_field("country").remote_field, admin.site),
+        queryset=Country.objects.all())
+    group = forms.ModelChoiceField(
+        widget=forms.Select(),
+        queryset=Group.objects.all())
+    organization = forms.ModelChoiceField(
+        widget=widgets.ForeignKeyRawIdWidget(Realm._meta.get_field("organization").remote_field, admin.site),
+        queryset=Organization.objects.all())
+
+    class Meta:
+        model = Realm
+        fields = ['user', 'country', 'group', 'organization', 'is_active']
+
+    def clean_user(self):
+        user = self.cleaned_data.get("user")
+        if not user.is_unicef_user():
+            raise ValidationError("The selected user is not Unicef")
+        return user
+
+
 class RealmAdmin(RssRealmEditAdminMixin, SnapshotModelAdmin):
+    model = Realm
+    form = RealmAdminForm
     change_list_template = "admin/users/realm/change_list.html"
 
     raw_id_fields = ('user', 'organization')
@@ -460,6 +488,15 @@ class RealmAdmin(RssRealmEditAdminMixin, SnapshotModelAdmin):
                 readonly_fields.append('is_active')
                 return readonly_fields
         return self.readonly_fields
+
+    def get_form(self, request, obj=None, change=False, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        if not obj and self.is_only_rss(request):
+            form.base_fields['group'].queryset = Group.objects.filter(name__in=RssRealmEditAdminMixin.GROUPS_ALLOWED)
+            form.base_fields['organization'].initial = 1
+            form.base_fields['organization'].widget = forms.TextInput(attrs={'readonly': 'readonly'})
+            form.base_fields['user'].help_text = "UNICEF Users only"
+        return form
 
     @csrf_protect_m
     def multiple_realms(self, request, obj=None, form_url='', extra_context=None):
