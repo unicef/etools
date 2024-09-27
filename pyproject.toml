@@ -69,7 +69,7 @@ dependencies = [
     'unicef-attachments==0.12',
     'unicef-djangolib==0.7',
     'unicef-locations==4.2',
-    'unicef-notification==1.4',
+    "unicef-notification==1.4.1",
     'unicef-rest-export==0.6',
     'unicef-restlib==0.7',
     'unicef-snapshot==1.3',

@@ -5,7 +5,7 @@
 groups = ["default", "dev"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:b794a4b0f03eeabed798e4a7ff02a7d3d67864e3965c84cdfab5422b9a5f2f8d"
+content_hash = "sha256:0f22381b6d4265ae1d7aa2189d5e0f68ebf14481a3f03f51fa73d43bc9608d2a"
 
 [[metadata.targets]]
 requires_python = ">=3.12"
@@ -2827,17 +2827,18 @@ files = [
 
 [[package]]
 name = "unicef-notification"
-version = "1.4"
+version = "1.4.1"
 summary = "Django package that handles sending of notifications"
 groups = ["default"]
 dependencies = [
     "django",
     "django-model-utils",
     "django-post-office",
+    "setuptools",
 ]
 files = [
-    {file = "unicef_notification-1.4-py2.py3-none-any.whl", hash = "sha256:b9487cf1c4236e5ab0711831f8d16de9406f7ff6621ff5e867f531a5f6805c5c"},
-    {file = "unicef_notification-1.4.tar.gz", hash = "sha256:dd769064344377c34b02acc11cc235156aceeccc68b07a416125dbe0d466f7b1"},
+    {file = "unicef_notification-1.4.1-py2.py3-none-any.whl", hash = "sha256:e378ede54db50fab2fdc7cccc40206b5b3803ba5fac907a7c42c12846be8d662"},
+    {file = "unicef_notification-1.4.1.tar.gz", hash = "sha256:1f430684a1ba65f9f8f97e0b17f6b40869e28415bf1c83459e824b3815e7722f"},
 ]
 
 [[package]]
