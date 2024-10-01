@@ -159,6 +159,27 @@ class MonitoringActivitySerializer(UserContextSerializerMixin, MonitoringActivit
             for transition in get_available_transitions(obj, self.get_user())
         ]
 
+    def _validate_team_members(self, instance, value):
+        """team members shouldn't be editable once visit was synchronized to OLC"""
+        if value is None:
+            return
+
+        if instance.status in [
+            MonitoringActivity.STATUS_DRAFT,
+            MonitoringActivity.STATUS_CHECKLIST,
+            MonitoringActivity.STATUS_REVIEW,
+        ]:
+            return
+
+        if set(instance.team_members.values_list('id', flat=True)) - set(v.id for v in value):
+            raise serializers.ValidationError({'team_members': _('Team members removal not allowed')})
+
+    def update(self, instance, validated_data):
+        team_members = validated_data.get('team_members', None)
+        self._validate_team_members(instance, team_members)
+
+        return super().update(instance, validated_data)
+
 
 class ActivityAttachmentSerializer(BaseAttachmentSerializer):
     file_type = FileTypeModelChoiceField(

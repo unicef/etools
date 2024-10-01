@@ -44,7 +44,6 @@ class ActivityPermissions(PMPPermissions):
             'tpm_visit': self.instance.monitor_type == monitor_types.tpm,
             'staff_visit': self.instance.monitor_type == monitor_types.staff,
             'staff_visit+is_visit_lead': self.instance.monitor_type == monitor_types.staff and is_visit_lead(),
-            'tpm_visit+tpm_ma_related': self.instance.monitor_type == monitor_types.tpm and is_ma_user(),
         }
 
         if getattr(self.instance, 'old', None) is not None:
