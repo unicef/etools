@@ -382,14 +382,27 @@ class TestInterventionAmendments(BaseTestInterventionAmendments, BaseTenantTestC
 
     def test_currency_editable_amendment(self):
         amendment = InterventionAmendmentFactory(intervention=self.active_intervention)
-
+        pd = amendment.amended_intervention
         response = self.forced_auth_req(
-            'get', reverse('pmp_v3:intervention-detail', args=[amendment.amended_intervention.pk]), self.unicef_staff
+            'get',
+            reverse('pmp_v3:intervention-detail', args=[pd.pk]),
+            self.unicef_staff
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # view and no edit rights when in amendment
         self.assertTrue(response.data['permissions']['view']['document_currency'])
         self.assertFalse(response.data['permissions']['edit']['document_currency'])
+
+        self.assertEqual(amendment.amended_intervention.document_currency, 'USD')
+        response = self.forced_auth_req(
+            'patch',
+            reverse('pmp_v3:intervention-detail', args=[pd.pk]),
+            self.unicef_staff,
+            data={"document_currency": "RON"}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        pd.refresh_from_db()
+        self.assertEqual(pd.document_currency, 'USD')
 
 
 class TestInterventionAmendmentDeleteView(BaseTenantTestCase):
