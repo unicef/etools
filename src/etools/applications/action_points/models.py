@@ -14,7 +14,10 @@ from unicef_djangolib.fields import CodedGenericRelation
 from unicef_snapshot.models import Activity
 
 from etools.applications.action_points.categories.models import Category
-from etools.applications.action_points.transitions.conditions import ActionPointCompleteActionsTakenCheck
+from etools.applications.action_points.transitions.conditions import (
+    ActionPointCompleteActionsTakenCheck,
+    ActionPointHighPriorityCompleteAttachmentCheck,
+)
 from etools.applications.action_points.transitions.serializers.serializers import ActionPointCompleteSerializer
 from etools.applications.core.urlresolvers import build_frontend_url
 from etools.applications.environment.notifications import send_notification_with_template
@@ -268,7 +271,8 @@ class ActionPoint(TimeStampedModel):
     @transition(status, source=STATUSES.open, target=STATUSES.completed,
                 permission=has_action_permission(action='complete'),
                 conditions=[
-                    ActionPointCompleteActionsTakenCheck.as_condition()
+                    ActionPointCompleteActionsTakenCheck.as_condition(),
+                    ActionPointHighPriorityCompleteAttachmentCheck.as_condition()
                 ],
                 custom={'serializer': ActionPointCompleteSerializer})
     def complete(self, completed_by=None, potential_verifier=None):

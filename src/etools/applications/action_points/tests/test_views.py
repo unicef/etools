@@ -634,6 +634,19 @@ class TestReviewClosedActionPoint(ActionPointsTestCaseMixin, BaseTenantTestCase)
         cls.unicef_user = UserFactory()
         cls.common_user = SimpleUserFactory()
 
+    def test_high_priority_complete_no_attachment(self):
+        action_point = ActionPointFactory(
+            status='pre_completed',
+            high_priority=True,
+        )
+        response = self.forced_auth_req(
+            'post',
+            reverse('action-points:action-points-transition', args=(action_point.id, 'complete')),
+            user=self.pme_user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertTrue('High priority action points can not be marked completed without adding an attachment.' in response.data['comments'])
+
     def test_high_priority_author_completes(self):
         # author has PME group though it shouldn't be able to transition without providing verifier
         action_point = ActionPointFactory(
@@ -641,6 +654,7 @@ class TestReviewClosedActionPoint(ActionPointsTestCaseMixin, BaseTenantTestCase)
             high_priority=True,
             author__realms__data=[UNICEF_USER, PME.name],
         )
+        AttachmentFactory(content_object=action_point.comments.first(), code='action_points_supporting_document')
         reviewer = UserFactory()
 
         response = self.forced_auth_req(
@@ -660,7 +674,7 @@ class TestReviewClosedActionPoint(ActionPointsTestCaseMixin, BaseTenantTestCase)
             user=action_point.author,
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
+        self.assertTrue('Potential verifier is required' in response.data['non_field_errors'])
         mock_email = Mock()
         with patch("etools.applications.action_points.models.ActionPoint.send_email", mock_email):
             response = self.forced_auth_req(
@@ -696,6 +710,7 @@ class TestReviewClosedActionPoint(ActionPointsTestCaseMixin, BaseTenantTestCase)
 
     def test_high_priority_pme_completes_without_verifier(self):
         action_point = ActionPointFactory(status='pre_completed', high_priority=True)
+        AttachmentFactory(content_object=action_point.comments.first(), code='action_points_supporting_document')
         response = self.forced_auth_req(
             'post',
             reverse('action-points:action-points-transition', args=(action_point.id, 'complete')),
