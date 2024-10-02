@@ -7,12 +7,15 @@ from etools.applications.action_points.conditions import (
     ActionPointModuleCondition,
     ActionPointNotAuthorCondition,
     ActionPointPotentialVerifierCondition,
+    AuthorIsAssignee,
+    CompleteHighPriorityActionPointAttachmentCondition,
     HighPriorityActionPointCondition,
     LowPriorityActionPointCondition,
     NotVerifiedActionPointCondition,
     PotentialVerifierProvidedCondition,
     RelatedActionPointCondition,
     UnRelatedActionPointCondition,
+    VerifiedActionPointCondition,
 )
 from etools.applications.action_points.models import ActionPoint, OperationsGroup, PME, UNICEFUser
 from etools.applications.permissions2.conditions import GroupCondition, NewObjectCondition, ObjectStatusCondition
@@ -60,11 +63,6 @@ class Command(BaseCommand):
 
     related_action_point_edit = action_point_base_edit
     not_related_action_point_edit = action_point_base_edit + action_point_pmp_relations
-
-    # verification
-    action_point_verification_process_edit = [
-        'action_points.actionpoint.is_adequate',
-    ]
 
     # common fields, should be visible always
     action_point_list = [
@@ -170,17 +168,26 @@ class Command(BaseCommand):
     def not_verified_action_point(self):
         return [NotVerifiedActionPointCondition.predicate]
 
+    def verified_action_point(self):
+        return [VerifiedActionPointCondition.predicate]
+
     def potential_verifier_provided(self):
         return [PotentialVerifierProvidedCondition.predicate]
 
     def high_priority_action_point(self):
         return [HighPriorityActionPointCondition.predicate]
 
+    def complete_high_priority_action_point(self):
+        return [CompleteHighPriorityActionPointAttachmentCondition.predicate]
+
     def low_priority_action_point(self):
         return [LowPriorityActionPointCondition.predicate]
 
     def not_author(self):
         return [ActionPointNotAuthorCondition.predicate]
+
+    def author_is_assignee(self):
+        return [AuthorIsAssignee.predicate]
 
     def handle(self, *args, **options):
         self.verbosity = options.get('verbosity', 1)
@@ -244,17 +251,28 @@ class Command(BaseCommand):
             condition=self.action_point_status(ActionPoint.STATUSES.open) + self.low_priority_action_point()
         )
 
-        # if high priority, unlock verification process
+        # high priority action points permissions
+
+        # author with PME group shouldn't be able to verify
         self.add_permission(
             [self.pme, self.operations, self.potential_verifier],
             'edit',
-            self.action_point_verification_process_edit,
-            condition=self.action_point_status(ActionPoint.STATUSES.completed) + self.high_priority_action_point() + self.not_author() + self.not_verified_action_point()
+            'action_points.actionpoint.is_adequate',
+            condition=self.action_point_status(ActionPoint.STATUSES.open) + self.high_priority_action_point() + self.not_author() + self.not_verified_action_point()
         )
-        # require potential verifier to be provided if transition performs by author even if it has PME group
+
+        # if author is assignee, allow edit for potential verifier
         self.add_permission(
             [self.pme, self.assigned_by, self.assignee, self.author],
+            'edit',
+            'action_points.actionpoint.potential_verifier',
+            condition=self.action_point_status(ActionPoint.STATUSES.open) + self.high_priority_action_point() + self.author_is_assignee()
+        )
+
+        # complete transition allowed for same author and assignee, only if it has been verified
+        self.add_permission(
+            [self.pme, self.assigned_by, self.assignee, self.author, self.potential_verifier],
             'action',
             'action_points.actionpoint.complete',
-            condition=self.action_point_status(ActionPoint.STATUSES.open) + self.high_priority_action_point()
+            condition=self.action_point_status(ActionPoint.STATUSES.open) + self.complete_high_priority_action_point() + self.verified_action_point()
         )

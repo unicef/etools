@@ -13,11 +13,17 @@ class ActionPointCompleteActionsTakenCheck(BaseTransitionCheck):
         return errors
 
 
-class ActionPointHighPriorityCompleteAttachmentCheck(BaseTransitionCheck):
+class ActionPointHighPriorityCompleteCheck(BaseTransitionCheck):
     def get_errors(self, instance, *args, **kwargs):
         errors = super().get_errors(instance, *args, **kwargs)
 
-        if instance.high_priority and not instance.comments.filter(supporting_document__isnull=False).exists():
+        if not instance.high_priority:
+            return errors
+
+        if not instance.comments.filter(supporting_document__isnull=False).exists():
             errors['comments'] = _('High priority action points can not be marked completed without adding an attachment.')
+
+        if instance.author == instance.assigned_by and not instance.verified_by:
+            errors['comments'] = _('High priority action points can not be marked completed without verifying.')
 
         return errors

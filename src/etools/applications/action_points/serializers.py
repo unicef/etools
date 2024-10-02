@@ -242,7 +242,6 @@ class HistorySerializer(serializers.ModelSerializer):
 class ActionPointSerializer(WritableNestedSerializerMixin, ActionPointListSerializer):
     comments = CommentSerializer(many=True, label=_('Actions Taken'), required=False)
     history = HistorySerializer(many=True, label=_('History'), read_only=True, source='get_meaningful_history')
-    potential_verifier = MinimalUserSerializer(read_only=True, label=_('Potential Verifier'))
     verified_by = MinimalUserSerializer(read_only=True, label=_('Verified By'))
 
     related_object_str = serializers.ReadOnlyField(label=_('Related Document'))
@@ -254,6 +253,12 @@ class ActionPointSerializer(WritableNestedSerializerMixin, ActionPointListSerial
             'potential_verifier', 'verified_by', 'is_adequate',
         ]
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if instance.potential_verifier:
+            data['potential_verifier'] = MinimalUserSerializer(instance=instance.potential_verifier).data
+        return data
+
     def validate_category(self, value):
         if value and value.module != self.instance.related_module:
             raise serializers.ValidationError(_('Category doesn\'t belong to selected module.'))
@@ -262,6 +267,9 @@ class ActionPointSerializer(WritableNestedSerializerMixin, ActionPointListSerial
     def validate(self, attrs):
         validated_data = super().validate(attrs)
         if 'potential_verifier' in validated_data:
+            if not self.instance.high_priority:
+                raise serializers.ValidationError(_("Verifiers are allowed only for high priority action points."))
+
             if self.instance.author == validated_data['potential_verifier']:
                 raise serializers.ValidationError(_("Author cannot verify own action point."))
 
