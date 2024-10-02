@@ -30,6 +30,7 @@ from etools.applications.field_monitoring.permissions import (
     IsMonitoringVisitApprover,
     IsObjectAction,
     IsReadAction,
+    IsTeamMember,
     IsVisitLead,
 )
 from etools.applications.field_monitoring.planning.activity_validation.validator import ActivityValid
@@ -48,6 +49,7 @@ from etools.applications.field_monitoring.planning.mixins import EmptyQuerysetFo
 from etools.applications.field_monitoring.planning.models import (
     MonitoringActivity,
     MonitoringActivityActionPoint,
+    TPMConcern,
     YearPlan,
 )
 from etools.applications.field_monitoring.planning.serializers import (
@@ -58,6 +60,7 @@ from etools.applications.field_monitoring.planning.serializers import (
     MonitoringActivityLightSerializer,
     MonitoringActivitySerializer,
     TemplatedQuestionSerializer,
+    TPMConcernSerializer,
     YearPlanSerializer,
 )
 from etools.applications.field_monitoring.views import FMBaseViewSet, LinkedAttachmentsViewSet
@@ -162,7 +165,7 @@ class MonitoringActivitiesViewSet(
     permission_classes = FMBaseViewSet.permission_classes + [
         IsReadAction |
         (IsEditAction & IsListAction & IsFieldMonitor) |
-        (IsEditAction & (IsObjectAction & (IsFieldMonitor | IsVisitLead | IsMonitoringVisitApprover)))
+        (IsEditAction & (IsObjectAction & (IsFieldMonitor | IsVisitLead | IsTeamMember | IsMonitoringVisitApprover)))
     ]
     filter_backends = (
         DjangoFilterBackend, ReferenceNumberOrderingFilter,
@@ -397,6 +400,25 @@ class MonitoringActivityActionPointViewSet(
     serializer_class = MonitoringActivityActionPointSerializer
     permission_classes = FMBaseViewSet.permission_classes + [
         IsReadAction | (IsEditAction & activity_field_is_editable_permission('action_points'))
+    ]
+
+    def perform_create(self, serializer):
+        serializer.save(monitoring_activity=self.get_parent_object())
+
+
+class TPMConcernsViewSet(
+    FMBaseViewSet,
+    NestedViewSetMixin,
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet
+):
+    queryset = TPMConcern.objects.prefetch_related('author', 'author__profile', 'category')
+    serializer_class = TPMConcernSerializer
+    permission_classes = FMBaseViewSet.permission_classes + [
+        IsReadAction | (IsEditAction & activity_field_is_editable_permission('tpm_concerns'))
     ]
 
     def perform_create(self, serializer):
