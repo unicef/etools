@@ -1935,7 +1935,7 @@ msgid "Agreement selected is not of type SSFA"
 msgstr "Выбранное соглашение не относится к типу ДФМП"
 
 msgid " without deleting the indicators first "
-msgstr ""
+msgstr " без предварительного удаления индикаторов "
 
 #, python-format
 msgid ""
