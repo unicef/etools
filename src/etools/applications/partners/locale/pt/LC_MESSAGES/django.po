@@ -1237,10 +1237,8 @@ msgstr "Oficiais dp PRC"
 msgid "Overall Approver"
 msgstr "Aprovador geral"
 
-#, fuzzy
-#| msgid "CSO Authorized Officer"
 msgid "Authorized Officer"
-msgstr "Oficial autorizado da OSC (Organização da Sociedade Civil)"
+msgstr ""
 
 msgid "Recommend for Approval"
 msgstr ""
@@ -2228,10 +2226,8 @@ msgstr ""
 msgid "PD is already in Signature status."
 msgstr "PD já está no status de assinatura."
 
-#, fuzzy
-#| msgid "Only overall approver can accept review."
 msgid "Only authorized officer can accept review."
-msgstr "Somente o aprovador geral pode aceitar a revisão."
+msgstr ""
 
 msgid "PD is already unlocked."
 msgstr "PD já está desbloqueado."

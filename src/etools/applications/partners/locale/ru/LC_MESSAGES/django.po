@@ -1218,10 +1218,8 @@ msgstr "Офицеры КРП"
 msgid "Overall Approver"
 msgstr "Утверждающий"
 
-#, fuzzy
-#| msgid "CSO Authorized Officer"
 msgid "Authorized Officer"
-msgstr "Уполномоченный сотрудник ОГО"
+msgstr ""
 
 msgid "Recommend for Approval"
 msgstr ""
@@ -1936,10 +1934,8 @@ msgstr "ПД не может быть активирован, если парт�
 msgid "Agreement selected is not of type SSFA"
 msgstr "Выбранное соглашение не относится к типу ДФМП"
 
-#, fuzzy
-#| msgid " without deleting the indicators first"
 msgid " without deleting the indicators first "
-msgstr "без предварительного удаления индикаторов"
+msgstr ""
 
 #, python-format
 msgid ""
@@ -2196,10 +2192,8 @@ msgstr "Разблокировать могут только координат�
 msgid "PD is already in Signature status."
 msgstr "ПД уже находится в статусе подписи."
 
-#, fuzzy
-#| msgid "Only overall approver can accept review."
 msgid "Only authorized officer can accept review."
-msgstr "Только общий утверждающий может принять отзыв."
+msgstr ""
 
 msgid "PD is already unlocked."
 msgstr "ПД уже разблокирован."

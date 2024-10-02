@@ -1226,10 +1226,8 @@ msgstr "Agents de la RPC"
 msgid "Overall Approver"
 msgstr "Approbation générale"
 
-#, fuzzy
-#| msgid "CSO Authorized Officer"
 msgid "Authorized Officer"
-msgstr "Agent autorisé de l'OSC"
+msgstr ""
 
 msgid "Recommend for Approval"
 msgstr ""
@@ -2221,10 +2219,8 @@ msgstr ""
 msgid "PD is already in Signature status."
 msgstr "PD est déjà en statut Signature."
 
-#, fuzzy
-#| msgid "Only overall approver can accept review."
 msgid "Only authorized officer can accept review."
-msgstr "Seul l'approbateur général peut accepter la révision."
+msgstr ""
 
 msgid "PD is already unlocked."
 msgstr "PD est déjà déverrouillé."

@@ -1217,10 +1217,8 @@ msgstr "عضو لجنة مراجعة الشراكات"
 msgid "Overall Approver"
 msgstr "الموافق العام"
 
-#, fuzzy
-#| msgid "CSO Authorized Officer"
 msgid "Authorized Officer"
-msgstr "موظف مفوض من منظمات المجتمع المدني"
+msgstr ""
 
 msgid "Recommend for Approval"
 msgstr ""
@@ -2147,10 +2145,8 @@ msgstr "يمكن فقط لجهات الاتصال أو مالكي الميزان
 msgid "PD is already in Signature status."
 msgstr "PD موجود بالفعل في حالة التوقيع."
 
-#, fuzzy
-#| msgid "Only overall approver can accept review."
 msgid "Only authorized officer can accept review."
-msgstr "يمكن للموافق العام فقط قبول المراجعة."
+msgstr ""
 
 msgid "PD is already unlocked."
 msgstr "تم إلغاء تأمين PD بالفعل."
