@@ -224,6 +224,7 @@ class InterventionPermissions(PMPPermissions):
             'unicef_not_accepted': unicef_not_accepted(self.instance),
             'unicef_not_accepted_contingency': unicef_not_accepted_contingency(self.instance),
             'unlocked_or_contingency': unlocked_or_contingency(self.instance),
+            'unlocked+not_in_amendment_mode': unlocked(self.instance) and not user_added_amendment(self.instance),
             'unicef_not_accepted_spd': not_spd(self.instance) or unicef_not_accepted(self.instance),
             'unlocked_or_spd': not not_spd(self.instance) or unlocked(self.instance),
             'unicef_not_accepted_spd_non_hum': unicef_not_accepted_spd_non_hum(self.instance),
