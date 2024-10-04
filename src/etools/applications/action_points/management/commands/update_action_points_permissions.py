@@ -258,7 +258,7 @@ class Command(BaseCommand):
             [self.pme, self.operations, self.potential_verifier],
             'edit',
             'action_points.actionpoint.is_adequate',
-            condition=self.action_point_status(ActionPoint.STATUSES.open) + self.high_priority_action_point() + self.not_author() + self.not_verified_action_point()
+            condition=self.action_point_status(ActionPoint.STATUSES.open) + self.high_priority_action_point() + self.not_author()
         )
 
         # if author is assignee, allow edit for potential verifier

@@ -26,4 +26,7 @@ class ActionPointHighPriorityCompleteCheck(BaseTransitionCheck):
         if instance.author == instance.assigned_by and not instance.verified_by:
             errors['comments'] = _('High priority action points can not be marked completed without verifying.')
 
+        if instance.verified_by and not instance.is_adequate:
+            errors['comments'] = _('High priority action points can not be marked completed if inadequate.')
+
         return errors
