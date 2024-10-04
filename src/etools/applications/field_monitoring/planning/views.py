@@ -6,6 +6,7 @@ from django.db import connection, transaction
 from django.db.models import Case, CharField, Count, F, Prefetch, Q, Value, When
 from django.db.models.functions import Concat
 from django.http import Http404
+from django.utils import timezone
 from django.utils.translation import gettext as _
 
 from django_filters.rest_framework import DjangoFilterBackend
@@ -27,11 +28,15 @@ from etools.applications.field_monitoring.permissions import (
     IsEditAction,
     IsFieldMonitor,
     IsListAction,
+    IsMonitoringVisitApprover,
     IsObjectAction,
     IsReadAction,
+    IsTeamMember,
     IsVisitLead,
 )
 from etools.applications.field_monitoring.planning.activity_validation.validator import ActivityValid
+from etools.applications.field_monitoring.planning.export.renderers import MonitoringActivityCSVRenderer
+from etools.applications.field_monitoring.planning.export.serializers import MonitoringActivityExportSerializer
 from etools.applications.field_monitoring.planning.filters import (
     CPOutputsFilterSet,
     HactForPartnerFilter,
@@ -45,6 +50,7 @@ from etools.applications.field_monitoring.planning.mixins import EmptyQuerysetFo
 from etools.applications.field_monitoring.planning.models import (
     MonitoringActivity,
     MonitoringActivityActionPoint,
+    TPMConcern,
     YearPlan,
 )
 from etools.applications.field_monitoring.planning.serializers import (
@@ -55,6 +61,7 @@ from etools.applications.field_monitoring.planning.serializers import (
     MonitoringActivityLightSerializer,
     MonitoringActivitySerializer,
     TemplatedQuestionSerializer,
+    TPMConcernSerializer,
     YearPlanSerializer,
 )
 from etools.applications.field_monitoring.views import FMBaseViewSet, LinkedAttachmentsViewSet
@@ -159,13 +166,13 @@ class MonitoringActivitiesViewSet(
     permission_classes = FMBaseViewSet.permission_classes + [
         IsReadAction |
         (IsEditAction & IsListAction & IsFieldMonitor) |
-        (IsEditAction & (IsObjectAction & (IsFieldMonitor | IsVisitLead)))
+        (IsEditAction & (IsObjectAction & (IsFieldMonitor | IsVisitLead | IsTeamMember | IsMonitoringVisitApprover)))
     ]
     filter_backends = (
         DjangoFilterBackend, ReferenceNumberOrderingFilter,
         OrderingFilter, SearchFilter, HactForPartnerFilter,
     )
-    filter_class = MonitoringActivitiesFilterSet
+    filterset_class = MonitoringActivitiesFilterSet
     ordering_fields = (
         'start_date', 'end_date', 'location', 'location_site', 'monitor_type', 'checklists_count', 'status'
     )
@@ -262,6 +269,18 @@ class MonitoringActivitiesViewSet(
             filename="visit_{}.pdf".format(ma.reference_number)
         )
 
+    @action(detail=False, methods=['get'], url_path='export', renderer_classes=(MonitoringActivityCSVRenderer,))
+    def export(self, request, *args, **kwargs):
+        activities = self.filter_queryset(self.get_queryset()).prefetch_related(
+            'sections',
+            'offices',
+        )
+
+        serializer = MonitoringActivityExportSerializer(activities, many=True)
+        return Response(serializer.data, headers={
+            'Content-Disposition': 'attachment;filename=monitoring_activities_{}.csv'.format(timezone.now().date())
+        })
+
 
 class FMUsersViewSet(
     FMBaseViewSet,
@@ -319,7 +338,7 @@ class CPOutputsViewSet(
     viewsets.GenericViewSet,
 ):
     filter_backends = (DjangoFilterBackend,)
-    filter_class = CPOutputsFilterSet
+    filterset_class = CPOutputsFilterSet
     queryset = Result.objects.filter(result_type__name=ResultType.OUTPUT).select_related('result_type').order_by('name')
     serializer_class = CPOutputListSerializer
 
@@ -331,8 +350,8 @@ class InterventionsViewSet(
     viewsets.GenericViewSet,
 ):
     filter_backends = (DjangoFilterBackend,)
-    filter_class = InterventionsFilterSet
-    queryset = Intervention.objects.base_qs().exclude(
+    filterset_class = InterventionsFilterSet
+    queryset = Intervention.objects.exclude(
         status__in=[
             Intervention.DRAFT, Intervention.SIGNATURE,
             Intervention.SIGNED, Intervention.REVIEW,
@@ -394,6 +413,25 @@ class MonitoringActivityActionPointViewSet(
     serializer_class = MonitoringActivityActionPointSerializer
     permission_classes = FMBaseViewSet.permission_classes + [
         IsReadAction | (IsEditAction & activity_field_is_editable_permission('action_points'))
+    ]
+
+    def perform_create(self, serializer):
+        serializer.save(monitoring_activity=self.get_parent_object())
+
+
+class TPMConcernsViewSet(
+    FMBaseViewSet,
+    NestedViewSetMixin,
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet
+):
+    queryset = TPMConcern.objects.prefetch_related('author', 'author__profile', 'category')
+    serializer_class = TPMConcernSerializer
+    permission_classes = FMBaseViewSet.permission_classes + [
+        IsReadAction | (IsEditAction & activity_field_is_editable_permission('tpm_concerns'))
     ]
 
     def perform_create(self, serializer):

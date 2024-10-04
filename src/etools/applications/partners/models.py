@@ -726,7 +726,14 @@ class PartnerOrganization(TimeStampedModel):
         year = datetime.date.today().year
         if self.partner_type != 'Government':
             pv = InterventionPlannedVisits.objects.filter(
-                intervention__agreement__partner=self, year=year).exclude(intervention__status=Intervention.DRAFT)
+                intervention__agreement__partner=self,
+                year=year,
+            ).exclude(
+                intervention__status__in=[
+                    Intervention.DRAFT,
+                    Intervention.CANCELLED,
+                ],
+            )
             pvq1 = pv.aggregate(models.Sum('programmatic_q1'))['programmatic_q1__sum'] or 0
             pvq2 = pv.aggregate(models.Sum('programmatic_q2'))['programmatic_q2__sum'] or 0
             pvq3 = pv.aggregate(models.Sum('programmatic_q3'))['programmatic_q3__sum'] or 0
@@ -2760,7 +2767,13 @@ class InterventionAmendment(TimeStampedModel):
         self.amended_intervention.submission_date = timezone.now().date()
         self.amended_intervention.save()
 
+    def clean_amended_intervention(self):
+        # strip amended prefix from title in case of modifications
+        self.amended_intervention.title = self.amended_intervention.title.replace('[Amended]', '').lstrip(' ')
+
     def merge_amendment(self):
+        self.clean_amended_intervention()
+
         merge_instance(
             self.intervention,
             self.amended_intervention,
@@ -2801,6 +2814,7 @@ class InterventionAmendment(TimeStampedModel):
         amended_intervention.delete()
 
     def get_difference(self):
+        self.clean_amended_intervention()
         return calculate_difference(
             self.intervention,
             self.amended_intervention,
@@ -3224,6 +3238,16 @@ class InterventionReview(InterventionReviewQuestionnaire, TimeStampedModel):
         on_delete=models.CASCADE,
         related_name='+',
     )
+    authorized_officer = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name=_('Authorized Officer'),
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name='+',
+    )
+
+    is_recommended_for_approval = models.BooleanField(default=False, verbose_name=_('Recommend for Approval'))
 
     sent_back_comment = models.TextField(verbose_name=_('Sent Back by Secretary Comment'), blank=True)
 

@@ -565,7 +565,7 @@ class TestEngagementCreateActivePDViewSet:
 
         response = self._do_create(self.unicef_focal_point, self.create_data)
 
-        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['active_pd'], [])
 
     def test_partner_with_active_pd(self):
@@ -574,7 +574,7 @@ class TestEngagementCreateActivePDViewSet:
 
         response = self._do_create(self.unicef_focal_point, self.create_data)
 
-        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_government_partner_without_active_pd(self):
         self.engagement.partner.partner_type = OrganizationType.GOVERNMENT
@@ -583,7 +583,7 @@ class TestEngagementCreateActivePDViewSet:
 
         response = self._do_create(self.unicef_focal_point, self.create_data)
 
-        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_attachments(self):
         file_type_engagement = AttachmentFileTypeFactory(
@@ -598,7 +598,7 @@ class TestEngagementCreateActivePDViewSet:
 
         response = self._do_create(self.unicef_focal_point, self.create_data)
 
-        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         data = json.loads(response.content)
         engagement_val = data["engagement_attachments"]
@@ -619,7 +619,7 @@ class TestMicroAssessmentCreateViewSet(TestEngagementCreateActivePDViewSet, Base
         data = copy(self.create_data)
         data['partner_contacted_at'] = datetime.datetime.now() + datetime.timedelta(days=1)
         response = self._do_create(self.unicef_focal_point, data)
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('partner_contacted_at', response.data)
 
 
@@ -634,14 +634,14 @@ class TestAuditCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEngage
         data = copy(self.create_data)
         data['end_date'] = data['start_date'] - datetime.timedelta(days=1)
         response = self._do_create(self.unicef_focal_point, data)
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('end_date', response.data)
 
     def test_partner_contacted_at_validation(self):
         data = copy(self.create_data)
         data['partner_contacted_at'] = data['end_date'] - datetime.timedelta(days=1)
         response = self._do_create(self.unicef_focal_point, data)
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('partner_contacted_at', response.data)
 
 
@@ -683,7 +683,7 @@ class TestSpotCheckCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEn
         self.create_data["sections"] = [section_1.pk, section_2.pk]
         response = self._do_create(self.unicef_focal_point, self.create_data)
 
-        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(
             sorted(response.data['sections'], key=lambda x: x["id"]),
             sorted(
@@ -707,8 +707,8 @@ class TestSpotCheckCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEn
         self.create_data["offices"] = [office_1.pk, office_2.pk]
         response = self._do_create(self.unicef_focal_point, self.create_data)
 
-        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
-        self.assertEquals(
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(
             sorted(response.data['offices'], key=lambda x: x["id"]),
             sorted(
                 [
@@ -719,7 +719,7 @@ class TestSpotCheckCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEn
             ),
         )
         spot_check = SpotCheck.objects.get(pk=response.data["id"])
-        self.assertEquals(
+        self.assertEqual(
             sorted([o.pk for o in spot_check.offices.all()]),
             sorted([office_1.pk, office_2.pk]),
         )
@@ -728,14 +728,14 @@ class TestSpotCheckCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEn
         data = copy(self.create_data)
         data['end_date'] = data['start_date'] - datetime.timedelta(days=1)
         response = self._do_create(self.unicef_focal_point, data)
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('end_date', response.data)
 
     def test_partner_contacted_at_validation(self):
         data = copy(self.create_data)
         data['partner_contacted_at'] = data['end_date'] - datetime.timedelta(days=1)
         response = self._do_create(self.unicef_focal_point, data)
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('partner_contacted_at', response.data)
 
 
@@ -754,27 +754,27 @@ class SpecialAuditCreateViewSet(BaseTestEngagementsCreateViewSet, BaseTenantTest
     def test_engagement_with_active_pd(self):
         response = self._do_create(self.unicef_focal_point, self.create_data)
 
-        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_engagement_without_active_pd(self):
         del self.create_data['active_pd']
 
         response = self._do_create(self.unicef_focal_point, self.create_data)
 
-        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_end_date_validation(self):
         data = copy(self.create_data)
         data['end_date'] = data['start_date'] - datetime.timedelta(days=1)
         response = self._do_create(self.unicef_focal_point, data)
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('end_date', response.data)
 
     def test_partner_contacted_at_validation(self):
         data = copy(self.create_data)
         data['partner_contacted_at'] = data['end_date'] - datetime.timedelta(days=1)
         response = self._do_create(self.unicef_focal_point, data)
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('partner_contacted_at', response.data)
 
 
@@ -835,7 +835,7 @@ class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenan
             'date_of_draft_report_to_unicef': None,
             'date_of_comments_by_unicef': None,
         })
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('date_of_field_visit', response.data)
 
     def test_date_of_draft_report_to_ip_after_date_of_field_visit_validation(self):
@@ -848,7 +848,7 @@ class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenan
             'date_of_draft_report_to_unicef': None,
             'date_of_comments_by_unicef': None,
         })
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('date_of_field_visit', response.data)
 
     def test_date_of_comments_by_ip_after_date_of_draft_report_to_ip_validation(self):
@@ -861,7 +861,7 @@ class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenan
             'date_of_draft_report_to_unicef': None,
             'date_of_comments_by_unicef': None,
         })
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('date_of_comments_by_ip', response.data)
 
     def test_date_of_draft_report_to_unicef_after_date_of_comments_by_ip_validation(self):
@@ -874,7 +874,7 @@ class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenan
             'date_of_draft_report_to_unicef': self.engagement.end_date,
             'date_of_comments_by_unicef': None,
         })
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('date_of_draft_report_to_unicef', response.data)
 
     def test_date_of_comments_by_unicef_after_date_of_draft_report_to_unicef_validation(self):
@@ -887,7 +887,7 @@ class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenan
             'date_of_draft_report_to_unicef': self.engagement.end_date + datetime.timedelta(days=5),
             'date_of_comments_by_unicef': self.engagement.end_date,
         })
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('date_of_comments_by_unicef', response.data)
 
     def test_dates_update_ok(self):
@@ -900,7 +900,7 @@ class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenan
             'date_of_draft_report_to_unicef': self.engagement.end_date + datetime.timedelta(days=5),
             'date_of_comments_by_unicef': self.engagement.end_date + datetime.timedelta(days=6),
         })
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
 class TestEngagementActionPointViewSet(EngagementTransitionsTestCaseMixin, BaseTenantTestCase):

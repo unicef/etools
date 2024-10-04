@@ -1,8 +1,12 @@
+from copy import copy
+
+from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
-from django_comments.models import Comment
 from rest_framework import serializers
+from unicef_attachments.models import Attachment, AttachmentLink
+from unicef_attachments.serializers import BaseAttachmentSerializer
 from unicef_locations.serializers import LocationLightSerializer
 from unicef_restlib.fields import SeparatedReadWriteField
 from unicef_restlib.serializers import UserContextSerializerMixin, WritableNestedSerializerMixin
@@ -11,7 +15,7 @@ from unicef_snapshot.serializers import SnapshotModelSerializer
 
 from etools.applications.action_points.categories.models import Category
 from etools.applications.action_points.categories.serializers import CategorySerializer
-from etools.applications.action_points.models import ActionPoint
+from etools.applications.action_points.models import ActionPoint, ActionPointComment
 from etools.applications.partners.serializers.interventions_v2 import MinimalInterventionListSerializer
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.permissions2.serializers import PermissionsBasedSerializerMixin
@@ -132,13 +136,36 @@ class ActionPointCreateSerializer(ActionPointListSerializer):
         return super().create(validated_data)
 
 
+class CommentSupportingDocumentSerializer(BaseAttachmentSerializer):
+    class Meta(BaseAttachmentSerializer.Meta):
+        extra_kwargs = copy(BaseAttachmentSerializer.Meta.extra_kwargs)
+        extra_kwargs.update({
+            'id': {'read_only': False},
+            'file': {'read_only': True},
+            'hyperlink': {'read_only': True},
+        })
+
+    def _validate_attachment(self, validated_data, instance=None):
+        """file shouldn't be editable"""
+        return
+
+
 class CommentSerializer(UserContextSerializerMixin, WritableNestedSerializerMixin, serializers.ModelSerializer):
     user = MinimalUserSerializer(read_only=True, label=_('Author'))
+    supporting_document = SeparatedReadWriteField(
+        read_field=serializers.SerializerMethodField(),
+        write_field=serializers.PrimaryKeyRelatedField(
+            queryset=Attachment.objects.filter(object_id__isnull=True),
+            required=False,
+            allow_null=True,
+        ),
+        required=False
+    )
 
     class Meta(WritableNestedSerializerMixin.Meta):
-        model = Comment
+        model = ActionPointComment
         fields = (
-            'id', 'user', 'comment', 'submit_date'
+            'id', 'user', 'comment', 'submit_date', 'supporting_document',
         )
         extra_kwargs = {
             'user': {'read_only': True},
@@ -146,12 +173,55 @@ class CommentSerializer(UserContextSerializerMixin, WritableNestedSerializerMixi
         }
 
     def create(self, validated_data):
+        has_supporting_document = 'supporting_document' in validated_data
+        supporting_document = validated_data.pop('supporting_document', None)
         validated_data.update({
             'user': self.get_user(),
             'submit_date': timezone.now(),
             'site': get_current_site(),
         })
-        return super().create(validated_data)
+        instance = super().create(validated_data)
+        if has_supporting_document:
+            self.save_supporting_document(instance, supporting_document)
+        return instance
+
+    def update(self, instance, validated_data):
+        has_supporting_document = 'supporting_document' in validated_data
+        supporting_document = validated_data.pop('supporting_document', None)
+        instance = super().update(instance, validated_data)
+        if has_supporting_document:
+            self.save_supporting_document(instance, supporting_document)
+        return instance
+
+    def get_supporting_document(self, rel):
+        supporting_documents = list(rel.all())
+        if not supporting_documents:
+            return None
+
+        return CommentSupportingDocumentSerializer(instance=supporting_documents[0]).data
+
+    def save_supporting_document(self, obj, supporting_document):
+        comment_ct = ContentType.objects.get_for_model(ActionPointComment)
+
+        existing_document = list(obj.supporting_document.all())
+        if existing_document:
+            # unlink existing docs if there are any
+            obj.supporting_document.update(object_id=None)
+            AttachmentLink.objects.filter(object_id=obj.pk, content_type=comment_ct).update(object_id=None)
+
+        if supporting_document is None:
+            return
+
+        supporting_document.content_object = obj
+        supporting_document.code = 'action_points_supporting_document'
+        supporting_document.uploaded_by = self.get_user()
+        supporting_document.save()
+        # keep attachment link in sync
+        AttachmentLink.objects.get_or_create(
+            attachment_id=supporting_document.pk,
+            object_id=obj.pk,
+            content_type=comment_ct,
+        )
 
 
 class HistorySerializer(serializers.ModelSerializer):
@@ -172,8 +242,9 @@ class HistorySerializer(serializers.ModelSerializer):
 class ActionPointSerializer(WritableNestedSerializerMixin, ActionPointListSerializer):
     comments = CommentSerializer(many=True, label=_('Actions Taken'), required=False)
     history = HistorySerializer(many=True, label=_('History'), read_only=True, source='get_meaningful_history')
-    potential_verifier = MinimalUserSerializer(read_only=True, label=_('Potential Verifier'))
     verified_by = MinimalUserSerializer(read_only=True, label=_('Verified By'))
+    potential_verifier = SeparatedReadWriteField(label=_('Assigned Verifier'), required=False,
+                                                 read_field=MinimalUserSerializer())
 
     related_object_str = serializers.ReadOnlyField(label=_('Related Document'))
     related_object_url = serializers.ReadOnlyField()
@@ -189,15 +260,25 @@ class ActionPointSerializer(WritableNestedSerializerMixin, ActionPointListSerial
             raise serializers.ValidationError(_('Category doesn\'t belong to selected module.'))
         return value
 
-    def validate(self, attrs):
-        validated_data = super().validate(attrs)
-        if 'potential_verifier' in validated_data:
-            if self.instance.author == validated_data['potential_verifier']:
+    def validate_is_adequate(self, value):
+        if value and self.instance.high_priority:
+            if not self.instance.comments.exists():
+                raise serializers.ValidationError(_('High priority action points need to have an Action Taken.'))
+            if self.instance.author == self.get_user():
                 raise serializers.ValidationError(_("Author cannot verify own action point."))
+        return value
 
-        return validated_data
+    def validate_potential_verifier(self, value):
+        if value:
+            if not self.instance.high_priority:
+                raise serializers.ValidationError(_("Verifiers are allowed only for high priority action points."))
+            elif self.instance.author == value:
+                raise serializers.ValidationError(_("Author cannot verify own action point."))
+        return value
 
     def update(self, instance, validated_data):
         if 'is_adequate' in validated_data:
             validated_data['verified_by'] = self.get_user()
+        if 'comments' in validated_data and self.instance.is_adequate:
+            validated_data['is_adequate'] = False
         return super().update(instance, validated_data)

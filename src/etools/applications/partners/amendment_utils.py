@@ -647,8 +647,7 @@ INTERVENTION_AMENDMENT_IGNORED_FIELDS = {
     'partners.Intervention': [
         'modified',
         'number', 'status', 'in_amendment',
-        'title',
-        'sites',
+        'sites', 'tpmconcern',
 
         # submission
         'unicef_court',
@@ -713,6 +712,7 @@ INTERVENTION_FULL_SNAPSHOT_RELATED_FIELDS['partners.InterventionReview'] = [
     'submitted_by',
     'prc_officers',
     'overall_approver',
+    'authorized_officer',
 ]
 INTERVENTION_FULL_SNAPSHOT_RELATED_FIELDS['partners.PRCOfficerInterventionReview'] = [
     'user',

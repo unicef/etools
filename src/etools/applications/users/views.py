@@ -76,16 +76,18 @@ class ChangeUserRoleView(CreateAPIView, GenericAPIView):
             roles = []
             for desired_role_name in data["roles"]:
                 roles.append(get_object_or_404(Group, name=desired_role_name))
-                # add unicef user role to roles list by default
-                roles.append(Group.objects.get(name="UNICEF User"))
+            # add unicef user role to roles list by default
+            roles.append(Group.objects.get(name="UNICEF User"))
         except Http404 as e:
             raise ValidationError({"error": e})
 
         if not user.is_unicef_user():
             raise ValidationError({"error": "only users with UNICEF email addresses can be updated"})
 
-        details["previous_roles"] = list(user.groups.all().values_list("name", flat=True))
         unicef_organization = Organization.objects.get(name='UNICEF', vendor_number='000')
+        details["previous_roles"] = \
+            list(user.realms.filter(country=workspace, organization=unicef_organization, is_active=True).values_list(
+                "group__name", flat=True))
 
         if data["access_type"] == "revoke":
             user.realms\
@@ -113,7 +115,10 @@ class ChangeUserRoleView(CreateAPIView, GenericAPIView):
                         workspace.name)
         user.profile.country = workspace
         user.profile.save()
-        details["current_roles"] = list(user.groups.filter().values_list("name", flat=True))
+        details["current_roles"] = \
+            list(user.realms.filter(country=workspace, organization=unicef_organization, is_active=True).values_list(
+                "group__name", flat=True))
+
         return JsonResponse({'email': user.email, "status": "success", "details": details},
                             content_type="application/json",
                             status=status.HTTP_200_OK)

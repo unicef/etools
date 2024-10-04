@@ -15,7 +15,7 @@ from model_utils.models import TimeStampedModel
 from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CodedGenericRelation
 
-from etools.applications.action_points.models import ActionPoint
+from etools.applications.action_points.models import ActionPoint, Category
 from etools.applications.core.permissions import import_permissions
 from etools.applications.core.urlresolvers import build_frontend_url
 from etools.applications.environment.notifications import send_notification_with_template
@@ -26,7 +26,7 @@ from etools.applications.field_monitoring.fm_settings.models import LocationSite
 from etools.applications.field_monitoring.planning.mixins import ProtectUnknownTransitionsMeta
 from etools.applications.field_monitoring.planning.transitions.permissions import (
     user_is_field_monitor_permission,
-    user_is_pme_or_approver_permission,
+    user_is_pme_or_approver_or_reviewer_permission,
     user_is_visit_lead_permission,
 )
 from etools.applications.locations.models import Location
@@ -233,6 +233,7 @@ class MonitoringActivity(
     )
 
     monitor_type = models.CharField(max_length=10, choices=MONITOR_TYPE_CHOICES, default=MONITOR_TYPE_CHOICES.staff)
+    remote_monitoring = models.BooleanField(default=False, verbose_name=_('Involves Remote Monitoring'))
 
     tpm_partner = models.ForeignKey(TPMPartner, blank=True, null=True, verbose_name=_('TPM Partner'),
                                     on_delete=models.CASCADE)
@@ -367,11 +368,10 @@ class MonitoringActivity(
                 )
 
     def send_submit_notice(self):
+        recipients = set(self.country_pmes)
+
         if self.report_reviewer:
-            recipients = [self.report_reviewer]
-        else:
-            # edge case: if visit was already sent to tpm before report reviewer has become mandatory, apply old logic
-            recipients = self.country_pmes
+            recipients.add(self.report_reviewer)
 
         if self.monitor_type == self.MONITOR_TYPE_CHOICES.staff:
             email_template = 'fm/activity/staff-submit'
@@ -578,12 +578,12 @@ class MonitoringActivity(
         pass
 
     @transition(field=status, source=STATUSES.submitted, target=STATUSES.completed,
-                permission=user_is_pme_or_approver_permission)
+                permission=user_is_pme_or_approver_or_reviewer_permission)
     def complete(self):
         pass
 
     @transition(field=status, source=STATUSES.submitted, target=STATUSES.report_finalization,
-                permission=user_is_pme_or_approver_permission)
+                permission=user_is_pme_or_approver_or_reviewer_permission)
     def reject_report(self):
         pass
 
@@ -752,6 +752,44 @@ class MonitoringActivityActionPoint(ActionPoint):
         if self.monitoring_activity:
             context['monitoring_activity'] = self.monitoring_activity.get_mail_context(user=user)
         return context
+
+
+class TPMConcern(TimeStampedModel):
+    reference_number = models.CharField(verbose_name=_("Reference Number"), max_length=100, null=True, blank=True)
+    description = models.TextField(verbose_name=_('Description'))
+    category = models.ForeignKey(Category, verbose_name=_('Category'), blank=True, null=True, on_delete=models.CASCADE)
+    high_priority = models.BooleanField(default=False, verbose_name=_('High Priority'))
+
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='created_tpm_concerns',
+                               verbose_name=_('Author'), on_delete=models.CASCADE)
+    partner = models.ForeignKey(
+        'partners.PartnerOrganization', verbose_name=_('Partner'), blank=True, null=True, on_delete=models.CASCADE)
+    cp_output = models.ForeignKey(
+        'reports.Result', verbose_name=_('CP Output'), blank=True, null=True, on_delete=models.CASCADE)
+    intervention = models.ForeignKey(
+        'partners.Intervention', verbose_name=_('PD/SPD'), blank=True, null=True, on_delete=models.CASCADE)
+    monitoring_activity = models.ForeignKey(
+        MonitoringActivity, verbose_name=_('Monitoring Activity'), blank=True, null=True, on_delete=models.CASCADE)
+
+    class Meta:
+        ordering = ('id', )
+        verbose_name = _('TPM Concern')
+        verbose_name_plural = _('TPM Concerns')
+
+    def get_reference_number(self):
+        if self.reference_number:
+            return self.reference_number
+        return '{}/{}/{}'.format(
+            connection.tenant.country_short_code or '',
+            self.created.year,
+            self.id,
+        )
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        if not self.reference_number:
+            self.reference_number = self.get_reference_number()
+            self.save()
 
 
 class MonitoringActivityGroup(models.Model):
