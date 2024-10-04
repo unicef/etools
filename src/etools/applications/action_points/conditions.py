@@ -97,7 +97,8 @@ class VerifiedActionPointCondition(SimpleCondition):
         self.action_point = action_point
 
     def is_satisfied(self):
-        return self.action_point.verified_by is not None if self.action_point.high_priority else True
+        return self.action_point.verified_by is not None \
+            if self.action_point.high_priority and self.action_point.author == self.action_point.assigned_to else True
 
 
 class PotentialVerifierProvidedCondition(SimpleCondition):
