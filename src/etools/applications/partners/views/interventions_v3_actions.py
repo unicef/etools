@@ -19,6 +19,8 @@ from etools.applications.partners.permissions import (
     PARTNERSHIP_MANAGER_GROUP,
     PRC_SECRETARY,
     user_group_permission,
+    UserIsReviewAuthorizedOfficer,
+    UserIsReviewOverallApprover,
     UserIsUnicefFocalPoint,
 )
 from etools.applications.partners.serializers.interventions_v3 import (
@@ -233,7 +235,10 @@ class PMPInterventionRejectReviewView(PMPInterventionActionView):
 
 
 class PMPInterventionSendBackViewReview(PMPInterventionActionView):
-    permission_classes = [IsAuthenticated, user_group_permission(PRC_SECRETARY)]
+    permission_classes = [
+        IsAuthenticated,
+        user_group_permission(PRC_SECRETARY) | UserIsReviewOverallApprover | UserIsReviewAuthorizedOfficer,
+    ]
 
     @transaction.atomic
     def update(self, request, *args, **kwargs):
@@ -517,8 +522,8 @@ class PMPInterventionSignatureView(PMPInterventionActionView):
             raise ValidationError(_("PD is already in Signature status."))
         if not pd.review:
             raise ValidationError(_("PD review is missing"))
-        if pd.review.overall_approver_id != request.user.pk:
-            raise ValidationError(_("Only overall approver can accept review."))
+        if pd.review.authorized_officer_id != request.user.pk:
+            raise ValidationError(_("Only authorized officer can accept review."))
 
         pd.review.overall_approval = True
         if not pd.review.review_date:

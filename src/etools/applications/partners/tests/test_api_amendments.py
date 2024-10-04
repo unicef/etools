@@ -545,6 +545,7 @@ class TestInterventionAmendmentsMerge(BaseTestInterventionAmendments, BaseTenant
         review = InterventionReviewFactory(
             intervention=self.amended_intervention, overall_approval=True,
             overall_approver=UserFactory(is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
+            authorized_officer=UserFactory(is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
         )
 
         # sign amended intervention
@@ -565,7 +566,7 @@ class TestInterventionAmendmentsMerge(BaseTestInterventionAmendments, BaseTenant
         response = self.forced_auth_req(
             'patch',
             reverse('pmp_v3:intervention-signature', args=[self.amended_intervention.pk]),
-            review.overall_approver,
+            review.authorized_officer,
             data={}
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
