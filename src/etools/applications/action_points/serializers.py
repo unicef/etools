@@ -272,7 +272,7 @@ class ActionPointSerializer(WritableNestedSerializerMixin, ActionPointListSerial
         if value:
             if not self.instance.high_priority:
                 raise serializers.ValidationError(_("Verifiers are allowed only for high priority action points."))
-            elif self.instance.author.pk == value:
+            elif self.instance.author == value:
                 raise serializers.ValidationError(_("Author cannot verify own action point."))
         return value
 
