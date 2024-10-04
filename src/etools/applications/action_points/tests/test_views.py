@@ -8,7 +8,7 @@ from factory import fuzzy
 from rest_framework import status
 
 from etools.applications.action_points.categories.models import Category
-from etools.applications.action_points.models import ActionPoint, OperationsGroup, PME
+from etools.applications.action_points.models import OperationsGroup, PME
 from etools.applications.action_points.tests.base import ActionPointsTestCaseMixin
 from etools.applications.action_points.tests.factories import ActionPointCategoryFactory, ActionPointFactory
 from etools.applications.attachments.tests.factories import AttachmentFactory
@@ -539,6 +539,22 @@ class TestOpenHighPriorityActionPointDetailViewMetadata(TestOpenActionPointDetai
     def test_author_editable_fields(self):
         self._test_detail_options(self.author, writable_fields=self.editable_fields)
 
+    def test_author_is_assignee_editable_fields(self):
+        self.action_point.assigned_to = self.action_point.author
+        self.action_point.save()
+        editable_fields = self.editable_fields + ['potential_verifier']
+        self._test_detail_options(self.author, writable_fields=editable_fields)
+
+    def test_pme_editable_fields(self):
+        editable_fields = self.editable_fields + ['is_adequate']
+        self._test_detail_options(self.pme_user, writable_fields=editable_fields)
+
+    def test_pme_is_author_editable_fields(self):
+        self.action_point.author = self.pme_user
+        self.action_point.save()
+        editable_fields = self.editable_fields
+        self._test_detail_options(self.pme_user, writable_fields=editable_fields)
+
 
 class TestRelatedOpenActionPointDetailViewMetadata(TestOpenActionPointDetailViewMetadata):
     editable_fields = [
@@ -618,13 +634,13 @@ class TestHighPriorityClosedNotVerifiedActionPointDetailViewMetadata(
         self.action_point.save()
 
     def test_pme_editable_fields(self):
-        self._test_detail_options(self.pme_user, writable_fields=['is_adequate'])
+        self._test_detail_options(self.pme_user, can_update=False)
 
     def test_operations_editable_fields(self):
-        self._test_detail_options(self.operations, writable_fields=['is_adequate'])
+        self._test_detail_options(self.operations, can_update=False)
 
 
-class TestReviewClosedActionPoint(ActionPointsTestCaseMixin, BaseTenantTestCase):
+class TestVerifyHighPriorityActionPoint(ActionPointsTestCaseMixin, BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         call_command('update_action_points_permissions', verbosity=0)
@@ -632,58 +648,66 @@ class TestReviewClosedActionPoint(ActionPointsTestCaseMixin, BaseTenantTestCase)
 
         cls.pme_user = PMEUserFactory()
         cls.unicef_user = UserFactory()
-        cls.common_user = SimpleUserFactory()
 
-    def test_high_priority_author_completes(self):
-        # author has PME group though it shouldn't be able to transition without providing verifier
+    def test_author_set_potential_verifier(self):
+        # the verifier is editable when author is also assignee
         action_point = ActionPointFactory(
-            status='pre_completed',
+            status='open',
             high_priority=True,
-            author__realms__data=[UNICEF_USER, PME.name],
+            author=self.pme_user,
+            assigned_to=self.pme_user
         )
-        reviewer = UserFactory()
-
-        response = self.forced_auth_req(
-            'options',
-            reverse('action-points:action-points-detail', args=(action_point.id,)),
-            user=action_point.author,
-        )
+        self.assertEqual(action_point.verified_by, None)
+        mock_email = Mock()
+        with patch("etools.applications.action_points.models.ActionPoint.send_email", mock_email):
+            response = self.forced_auth_req(
+                'patch',
+                reverse('action-points:action-points-detail', args=(action_point.id,)),
+                user=action_point.author,
+                data={
+                    'potential_verifier': self.unicef_user.pk
+                }
+            )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(
-            response.data['actions']['allowed_FSM_transitions'],
-            [{'code': 'complete', 'display_name': 'complete'}]
-        )
+        refresh_ap = action_point.__class__.objects.get(id=action_point.id)
+        self.assertEqual(refresh_ap.potential_verifier, self.unicef_user)
+        self.assertEqual(response.data['potential_verifier']['id'], self.unicef_user.id)
+        self.assertEqual(mock_email.call_count, 1)
 
-        response = self.forced_auth_req(
-            'post',
-            reverse('action-points:action-points-transition', args=(action_point.id, 'complete')),
-            user=action_point.author,
+    def test_author_himself_potential_verifier(self):
+        action_point = ActionPointFactory(
+            status='open',
+            high_priority=True,
+            author=self.pme_user,
+            assigned_to=self.pme_user
         )
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(action_point.potential_verifier, None)
 
         mock_email = Mock()
         with patch("etools.applications.action_points.models.ActionPoint.send_email", mock_email):
             response = self.forced_auth_req(
-                'post',
-                reverse('action-points:action-points-transition', args=(action_point.id, 'complete')),
+                'patch',
+                reverse('action-points:action-points-detail', args=(action_point.id,)),
                 user=action_point.author,
                 data={
-                    'potential_verifier': reviewer.id
+                    'potential_verifier': self.pme_user.pk
                 }
             )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        action_point = ActionPoint.objects.get(pk=action_point.pk)
-        self.assertEqual(action_point.potential_verifier, reviewer)
-        self.assertEqual(mock_email.call_count, 2)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertTrue("Author cannot verify own action point." in response.data['potential_verifier'])
+        refresh_ap = action_point.__class__.objects.get(id=action_point.id)
+        self.assertEqual(refresh_ap.potential_verifier, None)
 
-    def test_high_priority_author_verifies(self):
+    def test_author_verifies(self):
         # author has PME group though it shouldn't be able to verify
         action_point = ActionPointFactory(
-            status='completed',
+            status='open',
             high_priority=True,
-            author__realms__data=[UNICEF_USER, PME.name],
+            author=self.pme_user,
+            comments__count=1
         )
-
+        self.assertEqual(action_point.is_adequate, False)
+        self.assertEqual(action_point.verified_by, None)
         response = self.forced_auth_req(
             'patch',
             reverse('action-points:action-points-detail', args=(action_point.id,)),
@@ -692,19 +716,16 @@ class TestReviewClosedActionPoint(ActionPointsTestCaseMixin, BaseTenantTestCase)
                 'is_adequate': True
             }
         )
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
-    def test_high_priority_pme_completes_without_verifier(self):
-        action_point = ActionPointFactory(status='pre_completed', high_priority=True)
-        response = self.forced_auth_req(
-            'post',
-            reverse('action-points:action-points-transition', args=(action_point.id, 'complete')),
-            user=self.pme_user,
-        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        refresh_ap = action_point.__class__.objects.get(id=action_point.id)
+        self.assertEqual(refresh_ap.verified_by, None)
+        self.assertEqual(refresh_ap.is_adequate, False)
 
-    def test_high_priority_pme_verifies(self):
-        action_point = ActionPointFactory(status='completed', high_priority=True)
+    def test_pme_verifies(self):
+        action_point = ActionPointFactory(status='open', high_priority=True, comments__count=1)
+        self.assertEqual(action_point.is_adequate, False)
+        self.assertEqual(action_point.verified_by, None)
+
         response = self.forced_auth_req(
             'patch',
             reverse('action-points:action-points-detail', args=(action_point.id,)),
@@ -716,6 +737,143 @@ class TestReviewClosedActionPoint(ActionPointsTestCaseMixin, BaseTenantTestCase)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['is_adequate'], True)
         self.assertEqual(response.data['verified_by']['id'], self.pme_user.id)
+        refresh_ap = action_point.__class__.objects.get(id=action_point.id)
+        self.assertEqual(refresh_ap.verified_by, self.pme_user)
+        self.assertEqual(refresh_ap.is_adequate, True)
+
+    def test_verifies_without_action_taken(self):
+        action_point = ActionPointFactory(status='open', high_priority=True)
+        self.assertEqual(action_point.is_adequate, False)
+        self.assertEqual(action_point.verified_by, None)
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse('action-points:action-points-detail', args=(action_point.id,)),
+            user=self.pme_user,
+            data={
+                'is_adequate': True
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertTrue('High priority action points need to have an Action Taken.' in response.data['is_adequate'])
+        refresh_ap = action_point.__class__.objects.get(id=action_point.id)
+        self.assertEqual(refresh_ap.verified_by, None)
+        self.assertEqual(refresh_ap.is_adequate, False)
+
+    def test_action_taken_after_verify_reset(self):
+        action_point = ActionPointFactory(
+            status='open', high_priority=True, comments__count=1, is_adequate=True, verified_by=UserFactory())
+        self.assertEqual(action_point.is_adequate, True)
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse('action-points:action-points-detail', args=(action_point.id,)),
+            user=self.pme_user,
+            data={
+                'comments': [{
+                    'comment': fuzzy.FuzzyText().fuzz()
+                }]
+            }
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        refresh_ap = action_point.__class__.objects.get(id=action_point.id)
+        self.assertEqual(refresh_ap.is_adequate, False)
+
+
+class TestCompleteActionPoint(ActionPointsTestCaseMixin, BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        call_command('update_action_points_permissions', verbosity=0)
+        call_command('update_notifications')
+
+        cls.pme_user = PMEUserFactory()
+        cls.unicef_user = UserFactory()
+        cls.common_user = SimpleUserFactory()
+
+    def test_high_priority_complete_no_attachment(self):
+        action_point = ActionPointFactory(
+            status='pre_completed',
+            high_priority=True,
+        )
+        response = self.forced_auth_req(
+            'post',
+            reverse('action-points:action-points-transition', args=(action_point.id, 'complete')),
+            user=self.pme_user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertTrue('High priority action points can not be marked completed without adding an attachment.' in response.data['comments'])
+
+    def test_high_priority_author_completes_without_verifier(self):
+        # author has PME group though it shouldn't be able to transition without providing verifier
+        action_point = ActionPointFactory(
+            status='pre_completed',
+            high_priority=True,
+            author__realms__data=[UNICEF_USER, PME.name],
+        )
+        AttachmentFactory(content_object=action_point.comments.first(), code='action_points_supporting_document')
+
+        response = self.forced_auth_req(
+            'options',
+            reverse('action-points:action-points-detail', args=(action_point.id,)),
+            user=action_point.author,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            response.data['actions']['allowed_FSM_transitions'],
+            []
+        )
+
+        response = self.forced_auth_req(
+            'post',
+            reverse('action-points:action-points-transition', args=(action_point.id, 'complete')),
+            user=action_point.author,
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_pme_completes_with_adequate_verification(self):
+        action_point = ActionPointFactory(status='pre_completed', high_priority=True)
+        AttachmentFactory(content_object=action_point.comments.first(), code='action_points_supporting_document')
+
+        response = self.forced_auth_req(
+            'post',
+            reverse('action-points:action-points-transition', args=(action_point.id, 'complete')),
+            user=self.pme_user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+        action_point.verified_by = UserFactory()
+        action_point.is_adequate = True
+        action_point.save()
+        mock_email = Mock()
+        with patch("etools.applications.action_points.models.ActionPoint.send_email", mock_email):
+            response = self.forced_auth_req(
+                'post',
+                reverse('action-points:action-points-transition', args=(action_point.id, 'complete')),
+                user=self.pme_user,
+            )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(mock_email.call_count, 1)
+
+    def test_pme_completes_with_inadequate_verification(self):
+        action_point = ActionPointFactory(status='pre_completed', high_priority=True, verified_by=UserFactory())
+        AttachmentFactory(content_object=action_point.comments.first(), code='action_points_supporting_document')
+
+        response = self.forced_auth_req(
+            'post',
+            reverse('action-points:action-points-transition', args=(action_point.id, 'complete')),
+            user=self.pme_user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertTrue('High priority action points can not be marked completed if inadequate.' in response.data['comments'])
+
+        action_point.is_adequate = True
+        action_point.save()
+        response = self.forced_auth_req(
+            'post',
+            reverse('action-points:action-points-transition', args=(action_point.id, 'complete')),
+            user=self.pme_user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_low_priority_author_completes(self):
         action_point = ActionPointFactory(status='pre_completed', high_priority=False)

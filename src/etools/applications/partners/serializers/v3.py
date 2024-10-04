@@ -44,6 +44,7 @@ class InterventionReviewSerializer(serializers.ModelSerializer):
     created_date = serializers.DateField(read_only=True)
     submitted_by = MinimalUserSerializer(read_only=True)
     overall_approver = SeparatedReadWriteField(read_field=MinimalUserSerializer())
+    authorized_officer = SeparatedReadWriteField(read_field=MinimalUserSerializer())
 
     class Meta:
         model = InterventionReview
@@ -58,6 +59,7 @@ class InterventionReviewSerializer(serializers.ModelSerializer):
             'meeting_date',
             'prc_officers',
             'overall_approver',
+            'authorized_officer',
 
             'relationship_is_represented',
             'partner_comparative_advantage',
@@ -70,12 +72,27 @@ class InterventionReviewSerializer(serializers.ModelSerializer):
 
             'overall_comment',
             'actions_list',
+            'is_recommended_for_approval',
             'overall_approval',
             'sent_back_comment',
         )
         read_only_fields = (
             'amendment', 'review_type', 'overall_approval', 'sent_back_comment',
         )
+
+    def validate(self, attrs):
+        validated_data = super().validate(attrs)
+        overall_approver = validated_data.get(
+            'overall_approver',
+            self.instance.overall_approver if self.instance else None
+        )
+        authorized_officer = validated_data.get(
+            'authorized_officer',
+            self.instance.authorized_officer if self.instance else None
+        )
+        if overall_approver and authorized_officer and overall_approver == authorized_officer:
+            raise ValidationError(_('Authorized officer cannot be the same as overall approver.'))
+        return validated_data
 
     def update(self, instance, validated_data):
         self._update_prc_officers(instance, validated_data)

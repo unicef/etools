@@ -4,7 +4,7 @@ from etools.applications.audit.models import UNICEFUser
 from etools.applications.field_monitoring.groups import FMUser, MonitoringVisitApprover
 from etools.applications.firms.tests.factories import BaseUserFactory
 from etools.applications.organizations.tests.factories import OrganizationFactory
-from etools.applications.tpm.models import PME
+from etools.applications.tpm.models import PME, ThirdPartyMonitor
 from etools.applications.users.tests.factories import CountryFactory, GroupFactory, RealmFactory
 
 
@@ -31,6 +31,9 @@ class UserFactory(BaseUserFactory):
 
         report_reviewer = factory.Trait(
             realms__data=[UNICEFUser.name, MonitoringVisitApprover.name]
+        )
+        tpm_user = factory.Trait(
+            realms__data=[ThirdPartyMonitor.name]
         )
 
     @factory.post_generation

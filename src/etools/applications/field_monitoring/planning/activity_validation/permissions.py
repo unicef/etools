@@ -1,6 +1,6 @@
 from etools.applications.field_monitoring.groups import FMUser, MonitoringVisitApprover
 from etools.applications.partners.permissions import PMPPermissions
-from etools.applications.tpm.models import PME
+from etools.applications.tpm.models import PME, ThirdPartyMonitor
 
 
 class ActivityPermissions(PMPPermissions):
@@ -13,6 +13,7 @@ class ActivityPermissions(PMPPermissions):
         'additional_info',
         'report_attachments',
         'action_points',
+        'tpm_concerns'
     ]
 
     def __init__(self, **kwargs):
@@ -24,6 +25,9 @@ class ActivityPermissions(PMPPermissions):
         if {MonitoringVisitApprover.name, PME.name}.intersection(self.user_groups) or \
                 self.user == self.instance.report_reviewer:
             self.user_groups.add('Approvers')
+
+        if {ThirdPartyMonitor.name}.intersection(self.user_groups):
+            self.user_groups.add('Third Party Monitor')
 
         self.user_groups.add('All Users')
 
