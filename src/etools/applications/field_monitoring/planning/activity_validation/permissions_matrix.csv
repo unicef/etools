@@ -29,8 +29,8 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,team_members,Field Monitor,,draft,edit,TRUE
 ,team_members,Field Monitor,,checklist,edit,TRUE
 ,team_members,Field Monitor,,review,edit,TRUE
-,team_members,All Users,is_visit_lead,assigned,edit,TRUE
-,team_members,All Users,is_visit_lead,data_collection,edit,TRUE
+,team_members,All Users,tpm_visit+tpm_ma_related+is_visit_lead,assigned,edit,TRUE
+,team_members,All Users,tpm_visit+tpm_ma_related+is_visit_lead,data_collection,edit,TRUE
 ,partners,Field Monitor,,draft,edit,TRUE
 ,interventions,Field Monitor,,draft,edit,TRUE
 ,cp_outputs,Field Monitor,,draft,edit,TRUE
