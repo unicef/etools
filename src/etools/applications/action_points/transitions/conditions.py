@@ -23,8 +23,9 @@ class ActionPointHighPriorityCompleteCheck(BaseTransitionCheck):
         if not instance.comments.filter(supporting_document__isnull=False).exists():
             errors['comments'] = _('High priority action points can not be marked completed without adding an attachment.')
 
-        if instance.author == instance.assigned_by and not instance.verified_by:
-            errors['comments'] = _('High priority action points can not be marked completed without verifying.')
+        if instance.author == instance.assigned_to and not instance.verified_by:
+            errors['comments'] = _('High priority action points can not be marked completed without verifying '
+                                   'if the author is also the assignee.')
 
         if instance.verified_by and not instance.is_adequate:
             errors['comments'] = _('High priority action points can not be marked completed if inadequate.')

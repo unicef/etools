@@ -811,7 +811,7 @@ class TestCompleteActionPoint(ActionPointsTestCaseMixin, BaseTenantTestCase):
             author__realms__data=[UNICEF_USER, PME.name],
         )
         AttachmentFactory(content_object=action_point.comments.first(), code='action_points_supporting_document')
-
+        self.assertNotEqual(action_point.author, action_point.assigned_to)
         response = self.forced_auth_req(
             'options',
             reverse('action-points:action-points-detail', args=(action_point.id,)),
@@ -820,7 +820,7 @@ class TestCompleteActionPoint(ActionPointsTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(
             response.data['actions']['allowed_FSM_transitions'],
-            []
+            [{'code': 'complete', 'display_name': 'complete'}]
         )
 
         response = self.forced_auth_req(
@@ -828,10 +828,11 @@ class TestCompleteActionPoint(ActionPointsTestCaseMixin, BaseTenantTestCase):
             reverse('action-points:action-points-transition', args=(action_point.id, 'complete')),
             user=action_point.author,
         )
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_pme_completes_with_adequate_verification(self):
-        action_point = ActionPointFactory(status='pre_completed', high_priority=True)
+        action_point = ActionPointFactory(
+            status='pre_completed', high_priority=True, author=self.pme_user, assigned_to=self.pme_user)
         AttachmentFactory(content_object=action_point.comments.first(), code='action_points_supporting_document')
 
         response = self.forced_auth_req(
@@ -839,7 +840,9 @@ class TestCompleteActionPoint(ActionPointsTestCaseMixin, BaseTenantTestCase):
             reverse('action-points:action-points-transition', args=(action_point.id, 'complete')),
             user=self.pme_user,
         )
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertTrue('High priority action points can not be marked completed without verifying '
+                        'if the author is also the assignee.' in response.data['comments'])
 
         action_point.verified_by = UserFactory()
         action_point.is_adequate = True
