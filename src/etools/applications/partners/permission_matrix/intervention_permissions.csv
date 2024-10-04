@@ -88,7 +88,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.5,country_programmes,*,,*,Required,FALSE
 3.9.1,document_type,Unicef Focal Point,unlocked,Draft,Edit,TRUE
 3.9.1,document_type,*,,*,Required,TRUE
-,document_currency,Unicef Focal Point,unlocked,Draft,Edit,TRUE
+,document_currency,Unicef Focal Point,unlocked+not_in_amendment_mode,Draft,Edit,TRUE
 ,document_currency,*,,*,Required,TRUE
 3.9.2,end,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
 3.9.2,end,Partner User,partner_court,Draft,Edit,TRUE
