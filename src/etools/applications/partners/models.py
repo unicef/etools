@@ -3235,6 +3235,16 @@ class InterventionReview(InterventionReviewQuestionnaire, TimeStampedModel):
         on_delete=models.CASCADE,
         related_name='+',
     )
+    authorized_officer = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name=_('Authorized Officer'),
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+        related_name='+',
+    )
+
+    is_recommended_for_approval = models.BooleanField(default=False, verbose_name=_('Recommend for Approval'))
 
     sent_back_comment = models.TextField(verbose_name=_('Sent Back by Secretary Comment'), blank=True)
 
