@@ -674,6 +674,30 @@ class TestVerifyHighPriorityActionPoint(ActionPointsTestCaseMixin, BaseTenantTes
         self.assertEqual(response.data['potential_verifier']['id'], self.unicef_user.id)
         self.assertEqual(mock_email.call_count, 1)
 
+    def test_author_himself_potential_verifier(self):
+        action_point = ActionPointFactory(
+            status='open',
+            high_priority=True,
+            author=self.pme_user,
+            assigned_to=self.pme_user
+        )
+        self.assertEqual(action_point.potential_verifier, None)
+
+        mock_email = Mock()
+        with patch("etools.applications.action_points.models.ActionPoint.send_email", mock_email):
+            response = self.forced_auth_req(
+                'patch',
+                reverse('action-points:action-points-detail', args=(action_point.id,)),
+                user=action_point.author,
+                data={
+                    'potential_verifier': self.pme_user.pk
+                }
+            )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertTrue("Author cannot verify own action point." in response.data['potential_verifier'])
+        refresh_ap = action_point.__class__.objects.get(id=action_point.id)
+        self.assertEqual(refresh_ap.potential_verifier, None)
+
     def test_author_verifies(self):
         # author has PME group though it shouldn't be able to verify
         action_point = ActionPointFactory(
