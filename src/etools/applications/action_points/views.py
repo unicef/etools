@@ -24,12 +24,15 @@ from etools.applications.action_points.conditions import (
     ActionPointModuleCondition,
     ActionPointNotAuthorCondition,
     ActionPointPotentialVerifierCondition,
+    AuthorIsAssignee,
+    CompleteHighPriorityActionPointAttachmentCondition,
     HighPriorityActionPointCondition,
     LowPriorityActionPointCondition,
     NotVerifiedActionPointCondition,
     PotentialVerifierProvidedCondition,
     RelatedActionPointCondition,
     UnRelatedActionPointCondition,
+    VerifiedActionPointCondition,
 )
 from etools.applications.action_points.export import export_non_ascii_patch  # noqa F401
 from etools.applications.action_points.export.renderers import ActionPointCSVRenderer
@@ -131,6 +134,9 @@ class ActionPointViewSet(
             LowPriorityActionPointCondition(obj),
             HighPriorityActionPointCondition(obj),
             NotVerifiedActionPointCondition(obj),
+            VerifiedActionPointCondition(obj),
+            CompleteHighPriorityActionPointAttachmentCondition(obj),
+            AuthorIsAssignee(obj),
             PotentialVerifierProvidedCondition(obj),
         ])
         return context

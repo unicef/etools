@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-08-02 08:05+0000\n"
+"POT-Creation-Date: 2024-09-24 09:12+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1217,6 +1217,12 @@ msgstr "عضو لجنة مراجعة الشراكات"
 msgid "Overall Approver"
 msgstr "الموافق العام"
 
+msgid "Authorized Officer"
+msgstr ""
+
+msgid "Recommend for Approval"
+msgstr ""
+
 msgid "Sent Back by Secretary Comment"
 msgstr "تم الإرسال مرة أخرى بسبب تعليق السكرتير"
 
@@ -1601,6 +1607,9 @@ msgstr ""
 
 msgid "Vendor number must belong to PRG2 account group"
 msgstr "يجب أن ينتمي رقم البائع إلى مجموعة حسابات PRG2"
+
+msgid "Authorized officer cannot be the same as overall approver."
+msgstr ""
 
 msgid "Unknown intervention."
 msgstr "تدخل غير معروف."
@@ -2136,8 +2145,8 @@ msgstr "يمكن فقط لجهات الاتصال أو مالكي الميزان
 msgid "PD is already in Signature status."
 msgstr "PD موجود بالفعل في حالة التوقيع."
 
-msgid "Only overall approver can accept review."
-msgstr "يمكن للموافق العام فقط قبول المراجعة."
+msgid "Only authorized officer can accept review."
+msgstr ""
 
 msgid "PD is already unlocked."
 msgstr "تم إلغاء تأمين PD بالفعل."

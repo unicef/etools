@@ -90,6 +90,17 @@ class NotVerifiedActionPointCondition(SimpleCondition):
         return self.action_point.verified_by is None
 
 
+class VerifiedActionPointCondition(SimpleCondition):
+    predicate = 'action_points_actionpoint.verified'
+
+    def __init__(self, action_point):
+        self.action_point = action_point
+
+    def is_satisfied(self):
+        return self.action_point.verified_by is not None \
+            if self.action_point.high_priority and self.action_point.author == self.action_point.assigned_to else True
+
+
 class PotentialVerifierProvidedCondition(SimpleCondition):
     predicate = 'action_points_actionpoint.potential_verifier_provided'
 
@@ -110,6 +121,16 @@ class HighPriorityActionPointCondition(SimpleCondition):
         return self.action_point.high_priority
 
 
+class CompleteHighPriorityActionPointAttachmentCondition(SimpleCondition):
+    predicate = 'action_points_actionpoint.complete_high_priority'
+
+    def __init__(self, action_point):
+        self.action_point = action_point
+
+    def is_satisfied(self):
+        return self.action_point.high_priority and self.action_point.comments.filter(supporting_document__isnull=False).exists()
+
+
 class LowPriorityActionPointCondition(SimpleCondition):
     predicate = '!action_points_actionpoint.high_priority'
 
@@ -118,3 +139,13 @@ class LowPriorityActionPointCondition(SimpleCondition):
 
     def is_satisfied(self):
         return not self.action_point.high_priority
+
+
+class AuthorIsAssignee(SimpleCondition):
+    predicate = 'author=action_points_actionpoint.assigned_to'
+
+    def __init__(self, action_point):
+        self.action_point = action_point
+
+    def is_satisfied(self):
+        return self.action_point.author == self.action_point.assigned_to
