@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-09-20 17:32+0000\n"
+"POT-Creation-Date: 2024-10-01 11:59+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -264,6 +264,9 @@ msgstr ""
 msgid "History"
 msgstr "Historia"
 
+msgid "Team members removal not allowed"
+msgstr ""
+
 msgid "Document Type"
 msgstr "Tipo de Documento"
 
@@ -308,12 +311,6 @@ msgstr "Lógica anual del monitoreo de terreno"
 
 msgid "Templates"
 msgstr "Plantillas"
-
-msgid "No Access"
-msgstr "Sin Acceso"
-
-msgid "Inactive"
-msgstr "Inactivo"
 
 msgid "Attachments"
 msgstr "Archivos adjuntos"

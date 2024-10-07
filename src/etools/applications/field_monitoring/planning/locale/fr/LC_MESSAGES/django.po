@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-09-20 17:32+0000\n"
+"POT-Creation-Date: 2024-10-01 11:59+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -265,6 +265,9 @@ msgstr ""
 msgid "History"
 msgstr "Historique"
 
+msgid "Team members removal not allowed"
+msgstr ""
+
 msgid "Document Type"
 msgstr "Type de document"
 
@@ -309,12 +312,6 @@ msgstr "Justification du suivi annuel sur le terrain"
 
 msgid "Templates"
 msgstr "Modèles"
-
-msgid "No Access"
-msgstr "Pas d'accès"
-
-msgid "Inactive"
-msgstr "Inactif"
 
 msgid "Attachments"
 msgstr "Pièces jointes"
