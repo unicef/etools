@@ -170,6 +170,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
             "termination_doc",  # not used, legacy
             "termination_doc_attachment",
             "title",
+            "tpmconcern",
             "travel_activities",
             "unicef_accepted",
             "unicef_court",
@@ -619,9 +620,8 @@ class TestInterventionsAPI(BaseTenantTestCase):
         self.assertCountEqual(self.ALL_FIELDS, response['permissions']['edit'].keys())
         edit_permissions = response['permissions']['edit']
         required_permissions = response['permissions']['required']
-        # TODO REALMS: remove perm.startswith('old')
         self.assertCountEqual(self.EDITABLE_FIELDS['draft'],
-                              [perm for perm in edit_permissions if not perm.startswith('old') and edit_permissions[perm]])
+                              [perm for perm in edit_permissions if edit_permissions[perm]])
         self.assertCountEqual(self.REQUIRED_FIELDS['draft'],
                               [perm for perm in required_permissions if required_permissions[perm]])
 
@@ -847,7 +847,7 @@ class TestAPIInterventionResultLinkListView(BaseTenantTestCase):
         if expected_keys is None:
             expected_keys = self.expected_field_names
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_json = json.loads(response.rendered_content)
         self.assertIsInstance(response_json, list)
         self.assertEqual(len(response_json), 2)
@@ -865,7 +865,7 @@ class TestAPIInterventionResultLinkListView(BaseTenantTestCase):
     def test_no_permission_user_forbidden(self):
         """Ensure a non-staff user gets the 403 smackdown"""
         response = self._make_request(UserFactory())
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_unauthenticated_user_forbidden(self):
         """Ensure an unauthenticated user gets the 403 smackdown"""
@@ -873,7 +873,7 @@ class TestAPIInterventionResultLinkListView(BaseTenantTestCase):
         view_info = resolve(self.url)
         request = factory.get(self.url)
         response = view_info.func(request)
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_staff_access_ok(self):
         """Ensure a staff user has access"""
@@ -884,7 +884,7 @@ class TestAPIInterventionResultLinkListView(BaseTenantTestCase):
         """A non-staff user has read access if in the correct group"""
         user = UserFactory()
         response = self._make_request(user)
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
         _add_user_to_partnership_manager_group(user)
 
@@ -914,7 +914,7 @@ class TestAPIInterventionResultLinkCreateView(BaseTenantTestCase):
 
     def assertResponseFundamentals(self, response):
         """Assert common fundamentals about the response."""
-        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         response_json = json.loads(response.rendered_content)
         self.assertIsInstance(response_json, dict)
         self.assertIn('id', response_json.keys())
@@ -922,7 +922,7 @@ class TestAPIInterventionResultLinkCreateView(BaseTenantTestCase):
     def test_no_permission_user_forbidden(self):
         """Ensure a non-staff user gets the 403 smackdown"""
         response = self._make_request(UserFactory())
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_unauthenticated_user_forbidden(self):
         """Ensure an unauthenticated user gets the 403 smackdown"""
@@ -930,13 +930,13 @@ class TestAPIInterventionResultLinkCreateView(BaseTenantTestCase):
         view_info = resolve(self.url)
         request = factory.post(self.url, data=self.data, format='json')
         response = view_info.func(request)
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_group_permission_non_staff(self):
         """Ensure group membership is sufficient for create; even non-staff group members can create"""
         user = UserFactory()
         response = self._make_request(user)
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
         _add_user_to_partnership_manager_group(user)
 
@@ -981,7 +981,7 @@ class TestAPIInterventionResultLinkRetrieveView(BaseTenantTestCase):
 
     def assertResponseFundamentals(self, response):
         """Assert common fundamentals about the response."""
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_json = json.loads(response.rendered_content)
         self.assertIsInstance(response_json, dict)
         self.assertEqual(self.expected_keys, sorted(response_json.keys()))
@@ -989,7 +989,7 @@ class TestAPIInterventionResultLinkRetrieveView(BaseTenantTestCase):
     def test_no_permission_user_forbidden(self):
         """Ensure a non-staff user gets the 403 smackdown"""
         response = self._make_request(UserFactory())
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_unauthenticated_user_forbidden(self):
         """Ensure an unauthenticated user gets the 403 smackdown"""
@@ -997,7 +997,7 @@ class TestAPIInterventionResultLinkRetrieveView(BaseTenantTestCase):
         view_info = resolve(self.url)
         request = factory.get(self.url, format='json')
         response = view_info.func(request)
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_staff_access_ok(self):
         """Ensure a staff user can access"""
@@ -1008,7 +1008,7 @@ class TestAPIInterventionResultLinkRetrieveView(BaseTenantTestCase):
         """Ensure group membership is sufficient for retrieval; even non-staff group members can retrieve"""
         user = UserFactory()
         response = self._make_request(user)
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
         _add_user_to_partnership_manager_group(user)
 
@@ -1035,14 +1035,14 @@ class TestAPIInterventionResultLinkUpdateView(BaseTenantTestCase):
 
     def assertResponseFundamentals(self, response):
         """Assert common fundamentals about the response."""
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         intervention_result_link = InterventionResultLink.objects.get(pk=self.intervention_result_link.id)
         self.assertEqual(intervention_result_link.cp_output.id, self.new_cp_output.id)
 
     def test_no_permission_user_forbidden(self):
         """Ensure a non-staff user gets the 403 smackdown"""
         response = self._make_request(UserFactory())
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_unauthenticated_user_forbidden(self):
         """Ensure an unauthenticated user gets the 403 smackdown"""
@@ -1050,18 +1050,18 @@ class TestAPIInterventionResultLinkUpdateView(BaseTenantTestCase):
         view_info = resolve(self.url)
         request = factory.patch(self.url, data=self.data, format='json')
         response = view_info.func(request)
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_staff_access_refused(self):
         """Ensure a staff doesn't have write access"""
         response = self._make_request(UserFactory(is_staff=True))
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_group_permission_non_staff(self):
         """Ensure group membership is sufficient for update; even non-staff group members can update"""
         user = UserFactory()
         response = self._make_request(user)
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
         _add_user_to_partnership_manager_group(user)
 
@@ -1095,13 +1095,13 @@ class TestAPIInterventionResultLinkDeleteView(BaseTenantTestCase):
 
     def assertResponseFundamentals(self, response):
         """Assert common fundamentals about the response."""
-        self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(InterventionResultLink.objects.filter(pk=self.intervention_result_link.id).exists())
 
     def test_no_permission_user_forbidden(self):
         """Ensure a non-staff user gets the 403 smackdown"""
         response = self._make_request(UserFactory())
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_unauthenticated_user_forbidden(self):
         """Ensure an unauthenticated user gets the 403 smackdown"""
@@ -1109,18 +1109,18 @@ class TestAPIInterventionResultLinkDeleteView(BaseTenantTestCase):
         view_info = resolve(self.url)
         request = factory.patch(self.url, format='json')
         response = view_info.func(request)
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_staff_access_refused(self):
         """Ensure a staff doesn't have write access"""
         response = self._make_request(UserFactory(is_staff=True))
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_group_permission_non_staff(self):
         """Ensure group membership is sufficient for update; even non-staff group members can update"""
         user = UserFactory()
         response = self._make_request(user)
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
         _add_user_to_partnership_manager_group(user)
 
@@ -1160,7 +1160,7 @@ class TestAPIInterventionLowerResultListView(BaseTenantTestCase):
         if expected_keys is None:
             expected_keys = self.expected_field_names
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_json = json.loads(response.rendered_content)
         self.assertIsInstance(response_json, list)
         self.assertEqual(len(response_json), 2)
@@ -1178,7 +1178,7 @@ class TestAPIInterventionLowerResultListView(BaseTenantTestCase):
     def test_no_permission_user_forbidden(self):
         """Ensure a non-staff user gets the 403 smackdown"""
         response = self._make_request(UserFactory())
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_unauthenticated_user_forbidden(self):
         """Ensure an unauthenticated user gets the 403 smackdown"""
@@ -1186,7 +1186,7 @@ class TestAPIInterventionLowerResultListView(BaseTenantTestCase):
         view_info = resolve(self.url)
         request = factory.get(self.url)
         response = view_info.func(request)
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_staff_access_ok(self):
         """Ensure a staff user has access"""
@@ -1197,7 +1197,7 @@ class TestAPIInterventionLowerResultListView(BaseTenantTestCase):
         """A non-staff user has read access if in the correct group"""
         user = UserFactory()
         response = self._make_request(user)
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
         _add_user_to_partnership_manager_group(user)
 
@@ -1227,7 +1227,7 @@ class TestAPIInterventionLowerResultCreateView(BaseTenantTestCase):
 
     def assertResponseFundamentals(self, response):
         """Assert common fundamentals about the response."""
-        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         response_json = json.loads(response.rendered_content)
         self.assertIsInstance(response_json, dict)
         self.assertIn('id', response_json.keys())
@@ -1242,7 +1242,7 @@ class TestAPIInterventionLowerResultCreateView(BaseTenantTestCase):
     def test_no_permission_user_forbidden(self):
         """Ensure a non-staff user gets the 403 smackdown"""
         response = self._make_request(UserFactory())
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_unauthenticated_user_forbidden(self):
         """Ensure an unauthenticated user gets the 403 smackdown"""
@@ -1250,13 +1250,13 @@ class TestAPIInterventionLowerResultCreateView(BaseTenantTestCase):
         view_info = resolve(self.url)
         request = factory.post(self.url, data=self.data, format='json')
         response = view_info.func(request)
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_group_permission_non_staff(self):
         """Ensure group membership is sufficient for create; even non-staff group members can create"""
         user = UserFactory()
         response = self._make_request(user)
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
         _add_user_to_partnership_manager_group(user)
 
@@ -1333,7 +1333,7 @@ class BaseAPIInterventionIndicatorsListMixin:
         if expected_keys is None:
             expected_keys = self.expected_field_names
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_json = json.loads(response.rendered_content)
         self.assertIsInstance(response_json, list)
         self.assertEqual(len(response_json), 2)
@@ -1351,7 +1351,7 @@ class BaseAPIInterventionIndicatorsListMixin:
     def test_no_permission_user_forbidden(self):
         """Ensure a non-staff user gets the 403 smackdown"""
         response = self._make_request(UserFactory())
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_unauthenticated_user_forbidden(self):
         """Ensure an unauthenticated user gets the 403 smackdown"""
@@ -1359,7 +1359,7 @@ class BaseAPIInterventionIndicatorsListMixin:
         view_info = resolve(self.url)
         request = factory.get(self.url)
         response = view_info.func(request)
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_staff_access_ok(self):
         """Ensure a staff user has access"""
@@ -1370,7 +1370,7 @@ class BaseAPIInterventionIndicatorsListMixin:
         """A non-staff user has read access if in the correct group"""
         user = UserFactory()
         response = self._make_request(user)
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
         _add_user_to_partnership_manager_group(user)
 
@@ -1428,7 +1428,7 @@ class BaseAPIInterventionIndicatorsCreateMixin:
 
     def assertResponseFundamentals(self, response):
         """Assert common fundamentals about the response."""
-        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         response_json = json.loads(response.rendered_content)
         self.assertIsInstance(response_json, dict)
         self.assertIn('id', response_json.keys())
@@ -1443,7 +1443,7 @@ class BaseAPIInterventionIndicatorsCreateMixin:
     def test_no_permission_user_forbidden(self):
         """Ensure a non-staff user gets the 403 smackdown"""
         response = self._make_request(UserFactory())
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_unauthenticated_user_forbidden(self):
         """Ensure an unauthenticated user gets the 403 smackdown"""
@@ -1451,13 +1451,13 @@ class BaseAPIInterventionIndicatorsCreateMixin:
         view_info = resolve(self.url)
         request = factory.post(self.url, data=self.data, format='json')
         response = view_info.func(request)
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_group_permission_non_staff(self):
         """Ensure group membership is sufficient for create; even non-staff group members can create"""
         user = UserFactory(is_staff=True)
         response = self._make_request(user)
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
         _add_user_to_partnership_manager_group(user)
         self.lower_result.result_link.intervention.unicef_focal_points.add(user)
@@ -1481,7 +1481,7 @@ class BaseAPIInterventionIndicatorsCreateMixin:
 
         response = self._make_request(user, data)
         # Adding the same indicator again should fail.
-        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(list(response_json.keys()), ['non_field_errors'])
         self.assertIsInstance(response_json['non_field_errors'], list)
@@ -1541,7 +1541,7 @@ class TestAPInterventionIndicatorsUpdateView(BaseTenantTestCase):
 
     def assertResponseFundamentals(self, response):
         """Assert common fundamentals about the response."""
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_json = json.loads(response.rendered_content)
         self.assertIsInstance(response_json, dict)
         self.assertIn('id', response_json.keys())
@@ -1557,7 +1557,7 @@ class TestAPInterventionIndicatorsUpdateView(BaseTenantTestCase):
     def test_no_permission_user_forbidden(self):
         """Ensure a non-staff user gets the 403 smackdown"""
         response = self._make_request(UserFactory())
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_unauthenticated_user_forbidden(self):
         """Ensure an unauthenticated user gets the 403 smackdown"""
@@ -1565,7 +1565,7 @@ class TestAPInterventionIndicatorsUpdateView(BaseTenantTestCase):
         view_info = resolve(self.url)
         request = factory.patch(self.url, data=self.data, format='json')
         response = view_info.func(request)
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_update(self):
         self.data["is_active"] = False
@@ -1635,7 +1635,7 @@ class TestInterventionResultListAPIView(BaseTenantTestCase):
 
     def assertResponseFundamentals(self, response):
         """Assert common fundamentals about the response."""
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_json = json.loads(response.rendered_content)
         self.assertIsInstance(response_json, list)
         self.assertEqual(len(response_json), 1)
@@ -1650,7 +1650,7 @@ class TestInterventionResultListAPIView(BaseTenantTestCase):
             user=self.unicef_staff,
             data={"search": "random"}
         )
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_json = json.loads(response.rendered_content)
         self.assertIsInstance(response_json, list)
         self.assertFalse(response_json)
@@ -1701,7 +1701,7 @@ class TestInterventionIndicatorListAPIView(BaseTenantTestCase):
 
     def assertResponseFundamentals(self, response):
         """Assert common fundamentals about the response."""
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_json = json.loads(response.rendered_content)
         self.assertIsInstance(response_json, list)
         self.assertEqual(len(response_json), 1)
@@ -1726,7 +1726,7 @@ class TestInterventionIndicatorListAPIView(BaseTenantTestCase):
             user=self.unicef_staff,
             data={"search": "random"}
         )
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_json = json.loads(response.rendered_content)
         self.assertIsInstance(response_json, list)
         self.assertFalse(response_json)
@@ -1746,7 +1746,7 @@ class TestInterventionAmendmentListAPIView(BaseTenantTestCase):
 
     def assertResponseFundamentals(self, response):
         """Assert common fundamentals about the response."""
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_json = json.loads(response.rendered_content)
         self.assertIsInstance(response_json, list)
         self.assertEqual(len(response_json), 1)
@@ -1782,7 +1782,7 @@ class TestInterventionAmendmentListAPIView(BaseTenantTestCase):
             user=self.unicef_staff,
             data={"search": "random"}
         )
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_json = json.loads(response.rendered_content)
         self.assertIsInstance(response_json, list)
         self.assertFalse(response_json)
@@ -1797,7 +1797,7 @@ class TestInterventionListMapView(BaseTenantTestCase):
 
     def assertResponseFundamentals(self, response):
         """Assert common fundamentals about the response."""
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_json = json.loads(response.rendered_content)
         self.assertIsInstance(response_json, list)
         self.assertEqual(len(response_json), 1)

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-04-11 05:18+0000\n"
+"POT-Creation-Date: 2024-10-01 11:59+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,9 +16,9 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=4; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
-"%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || (n"
-"%100>=11 && n%100<=14)? 2 : 3);\n"
+"Plural-Forms: nplurals=4; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
+"n%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || "
+"(n%100>=11 && n%100<=14)? 2 : 3);\n"
 
 msgid "TPM Partner selected for staff activity"
 msgstr "партнер TPM выбран для работы персонала"
@@ -74,6 +74,54 @@ msgstr "Обязательные поля не заполнены в %(status)s:
 #, python-format
 msgid "Cannot change fields while in %(status)s: %(field)s"
 msgstr "Невозможно изменить поля в %(status)s: %(field)s"
+
+msgid "Ref. #"
+msgstr ""
+
+msgid "Link"
+msgstr "Ссылка"
+
+msgid "Start Date"
+msgstr "Дата начала"
+
+msgid "End Date"
+msgstr "Дата окончания"
+
+msgid "Location"
+msgstr "Местоположение"
+
+msgid "Site"
+msgstr "Сайт"
+
+msgid "Sections"
+msgstr "Разделы"
+
+msgid "Field Offices"
+msgstr "Местные офисы"
+
+msgid "Status"
+msgstr "Статус"
+
+msgid "Primary Field Monitor is"
+msgstr ""
+
+msgid "Team Members"
+msgstr "Члены команды"
+
+msgid "TPM Partner"
+msgstr "Партнер TPM"
+
+msgid "Person Responsible"
+msgstr "Ответственное лицо"
+
+msgid "Partners"
+msgstr ""
+
+msgid "PD/SPD"
+msgstr "ПД/СПД"
+
+msgid "Outputs"
+msgstr "выходы"
 
 msgid "Prioritization Criteria"
 msgstr "Критерии приоритизации"
@@ -159,52 +207,17 @@ msgstr "Отменено"
 msgid "Reference Number"
 msgstr "Ссылочный номер"
 
-msgid "TPM Partner"
-msgstr "Партнер TPM"
-
-msgid "Team Members"
-msgstr "Члены команды"
-
-msgid "Person Responsible"
-msgstr "Ответственное лицо"
+msgid "Involves Remote Monitoring"
+msgstr ""
 
 msgid "Report Reviewer"
 msgstr ""
 
-#, fuzzy
-#| msgid "Review"
 msgid "Reviewed By"
-msgstr "Обзор"
+msgstr ""
 
 msgid "Field Office"
 msgstr "Полевой офис"
-
-msgid "Field Offices"
-msgstr "Местные офисы"
-
-msgid "Sections"
-msgstr "Разделы"
-
-msgid "Location"
-msgstr "Местоположение"
-
-msgid "Site"
-msgstr "Сайт"
-
-msgid "PD/SPD"
-msgstr "ПД/СПД"
-
-msgid "Outputs"
-msgstr "выходы"
-
-msgid "Start Date"
-msgstr "Дата начала"
-
-msgid "End Date"
-msgstr "Дата окончания"
-
-msgid "Status"
-msgstr "Статус"
 
 msgid "Activity Attachments"
 msgstr "вложения активности"
@@ -230,8 +243,29 @@ msgstr "Точка действия по мониторингу активнос
 msgid "Monitoring Activity Action Points"
 msgstr "Мониторинг действий по действиям"
 
+msgid "Description"
+msgstr ""
+
+msgid "Category"
+msgstr ""
+
+msgid "High Priority"
+msgstr ""
+
+msgid "Author"
+msgstr ""
+
+msgid "TPM Concern"
+msgstr ""
+
+msgid "TPM Concerns"
+msgstr ""
+
 msgid "History"
 msgstr "История"
+
+msgid "Team members removal not allowed"
+msgstr ""
 
 msgid "Document Type"
 msgstr "Тип документа"
@@ -266,11 +300,11 @@ msgstr "Офис правопреемника"
 msgid "Action Point Category"
 msgstr "Категория точки действия"
 
-msgid "Link"
-msgstr "Ссылка"
-
 msgid "Priority"
 msgstr "Приоритет"
+
+msgid "TPM Concern Category"
+msgstr ""
 
 msgid "Annual Field Monitoring Rationale"
 msgstr "Обоснование ежегодного полевого мониторинга"

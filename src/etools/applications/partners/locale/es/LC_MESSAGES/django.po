@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: et-partners2-bk\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-06-04 15:42+0000\n"
+"POT-Creation-Date: 2024-09-24 09:12+0000\n"
 "Language: es\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -1216,6 +1216,12 @@ msgstr "Funcionarios del PRC"
 msgid "Overall Approver"
 msgstr "Aprobador general"
 
+msgid "Authorized Officer"
+msgstr ""
+
+msgid "Recommend for Approval"
+msgstr ""
+
 msgid "Sent Back by Secretary Comment"
 msgstr "Enviado por el Secretario Comentario"
 
@@ -1634,6 +1640,9 @@ msgstr ""
 
 msgid "Vendor number must belong to PRG2 account group"
 msgstr "El número de proveedor debe pertenecer al grupo de cuentas PRG2"
+
+msgid "Authorized officer cannot be the same as overall approver."
+msgstr ""
 
 msgid "Unknown intervention."
 msgstr "Intervención desconocida."
@@ -2167,9 +2176,8 @@ msgstr ""
 msgid "PD has already been cancelled."
 msgstr "PD ya ha sido cancelado."
 
-msgid "Only focal points or budget owners can cancel"
+msgid "Only PRC Secretary can cancel"
 msgstr ""
-"Solo los puntos focales o los responsables del presupuesto pueden cancelar"
 
 msgid "PD has already been terminated."
 msgstr "PD ya ha sido terminado."
@@ -2195,8 +2203,8 @@ msgstr ""
 msgid "PD is already in Signature status."
 msgstr "PD ya está en estado de firma."
 
-msgid "Only overall approver can accept review."
-msgstr "Solo el aprobador general puede aceptar la revisión."
+msgid "Only authorized officer can accept review."
+msgstr ""
 
 msgid "PD is already unlocked."
 msgstr "PD ya está desbloqueado."
@@ -2258,6 +2266,10 @@ msgstr ""
 msgid "Partnership Manager role required for pca export."
 msgstr ""
 "Se requiere el rol de Gerente de asociación para la exportación de PCA."
+
+#~ msgid "Only focal points or budget owners can cancel"
+#~ msgstr ""
+#~ "Solo los puntos focales o los responsables del presupuesto pueden cancelar"
 
 #~ msgid "Shared IP"
 #~ msgstr "IP compartida"

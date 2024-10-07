@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-06-04 15:42+0000\n"
+"POT-Creation-Date: 2024-09-24 09:12+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1226,6 +1226,12 @@ msgstr "Agents de la RPC"
 msgid "Overall Approver"
 msgstr "Approbation générale"
 
+msgid "Authorized Officer"
+msgstr ""
+
+msgid "Recommend for Approval"
+msgstr ""
+
 msgid "Sent Back by Secretary Comment"
 msgstr "Renvoyé par le secrétaire Commentaire"
 
@@ -1640,6 +1646,9 @@ msgstr ""
 
 msgid "Vendor number must belong to PRG2 account group"
 msgstr "Le numéro de fournisseur doit appartenir au groupe de comptes PRG2"
+
+msgid "Authorized officer cannot be the same as overall approver."
+msgstr ""
 
 msgid "Unknown intervention."
 msgstr "Intervention inconnue."
@@ -2182,8 +2191,8 @@ msgstr ""
 msgid "PD has already been cancelled."
 msgstr "PD a déjà été annulé."
 
-msgid "Only focal points or budget owners can cancel"
-msgstr "Seuls les points focaux ou les propriétaires de budget peuvent annuler"
+msgid "Only PRC Secretary can cancel"
+msgstr ""
 
 msgid "PD has already been terminated."
 msgstr "PD a déjà été terminé."
@@ -2210,8 +2219,8 @@ msgstr ""
 msgid "PD is already in Signature status."
 msgstr "PD est déjà en statut Signature."
 
-msgid "Only overall approver can accept review."
-msgstr "Seul l'approbateur général peut accepter la révision."
+msgid "Only authorized officer can accept review."
+msgstr ""
 
 msgid "PD is already unlocked."
 msgstr "PD est déjà déverrouillé."
@@ -2272,6 +2281,10 @@ msgstr ""
 
 msgid "Partnership Manager role required for pca export."
 msgstr "Rôle de gestionnaire de partenariat requis pour l'exportation pca."
+
+#~ msgid "Only focal points or budget owners can cancel"
+#~ msgstr ""
+#~ "Seuls les points focaux ou les propriétaires de budget peuvent annuler"
 
 #~ msgid "Shared IP"
 #~ msgstr "IP partagée"

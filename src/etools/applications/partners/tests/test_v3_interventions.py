@@ -202,6 +202,21 @@ class TestList(BaseInterventionTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 40)
 
+    def test_intervention_list_with_pagination(self):
+        for i in range(30):
+            InterventionFactory()
+
+        with self.assertNumQueries(11):
+            response = self.forced_auth_req(
+                'get',
+                reverse('pmp_v3:intervention-list'),
+                user=self.unicef_user,
+                data={'page_size': 20, 'page': 1}
+            )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 20)
+
     def test_not_authenticated(self):
         response = self.forced_auth_req(
             "get",
@@ -603,7 +618,7 @@ class TestDetail(BaseInterventionTestCase):
         [InterventionManagementBudgetItemFactory(budget=self.intervention.management_budgets) for _i in range(10)]
 
         # there is a lot of queries, but no duplicates caused by budget items
-        with self.assertNumQueries(46):
+        with self.assertNumQueries(47):
             response = self.forced_auth_req(
                 "get",
                 reverse('pmp_v3:intervention-detail', args=[self.intervention.pk]),
@@ -1835,7 +1850,7 @@ class TestInterventionUpdate(BaseInterventionTestCase):
             realms__data=['IP Viewer'],
             profile__organization=intervention.agreement.partner.organization
         )
-        with self.assertNumQueries(193):
+        with self.assertNumQueries(194):
             response = self.forced_auth_req(
                 "patch",
                 reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
@@ -1862,7 +1877,7 @@ class TestInterventionUpdate(BaseInterventionTestCase):
         budget_owner = UserFactory(is_staff=True)
         office = OfficeFactory()
         section = SectionFactory()
-        with self.assertNumQueries(204):
+        with self.assertNumQueries(205):
             response = self.forced_auth_req(
                 "patch",
                 reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
@@ -1911,7 +1926,7 @@ class TestInterventionUpdate(BaseInterventionTestCase):
         site2 = LocationSiteFactory()
         site3 = LocationSiteFactory()
 
-        with self.assertNumQueries(254):
+        with self.assertNumQueries(255):
             response = self.forced_auth_req(
                 "patch",
                 reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
@@ -2074,6 +2089,13 @@ class BaseInterventionActionTestCase(BaseInterventionTestCase):
         super().setUp()
         call_command("update_notifications")
 
+        self.partnership_manager = UserFactory(
+            is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]
+        )
+        self.prc_secretary = UserFactory(
+            is_staff=True, realms__data=[UNICEF_USER, PRC_SECRETARY]
+        )
+
         self.partner_user = UserFactory(
             realms__data=['IP Viewer'],
             profile__organization=self.partner.organization
@@ -2089,6 +2111,7 @@ class BaseInterventionActionTestCase(BaseInterventionTestCase):
             agreement=agreement,
             start=datetime.date.today(),
             end=datetime.date.today() + datetime.timedelta(days=3),
+            date_sent_to_partner=datetime.date.today(),
             signed_by_unicef_date=datetime.date.today(),
             signed_by_partner_date=datetime.date.today(),
             unicef_signatory=self.unicef_user,
@@ -2675,7 +2698,7 @@ class TestInterventionReviews(BaseInterventionTestCase):
             },
             user=self.unicef_prc_secretary
         )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertEqual(response.data["id"], review.pk)
         self.assertEqual(response.data["overall_comment"], "second")
         review.refresh_from_db()
@@ -2741,6 +2764,7 @@ class TestInterventionCancel(BaseInterventionActionTestCase):
                 'pmp_v3:intervention-cancel',
                 args=[intervention.pk],
             ),
+            data={"cancel_justification": "Needs to be cancelled"},
             user=self.partner_user,
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
@@ -2753,14 +2777,59 @@ class TestInterventionCancel(BaseInterventionActionTestCase):
                 'pmp_v3:intervention-cancel',
                 args=[intervention.pk],
             ),
+            data={"cancel_justification": "Needs to be cancelled"},
             user=UserFactory(is_staff=True),
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+    def test_partnership_manager_no_access(self):
+        intervention = InterventionFactory(budget_owner=self.partnership_manager)
+
+        detail_response = self.forced_auth_req(
+            "get",
+            reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+            user=self.partnership_manager
+        )
+        self.assertEqual(detail_response.status_code, status.HTTP_200_OK)
+        self.assertNotIn("cancel", detail_response.data["available_actions"])
+
+        response = self.forced_auth_req(
+            "patch",
+            reverse(
+                'pmp_v3:intervention-cancel',
+                args=[intervention.pk],
+            ),
+            data={"cancel_justification": "Needs to be cancelled"},
+            user=self.partnership_manager,
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_prc_secretary_has_access(self):
+        intervention = InterventionFactory()
+
+        detail_response = self.forced_auth_req(
+            "get",
+            reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+            user=self.prc_secretary
+        )
+        self.assertEqual(detail_response.status_code, status.HTTP_200_OK)
+        self.assertIn("cancel", detail_response.data["available_actions"])
+
+        response = self.forced_auth_req(
+            "patch",
+            reverse(
+                'pmp_v3:intervention-cancel',
+                args=[intervention.pk],
+            ),
+            data={"cancel_justification": "Needs to be cancelled"},
+            user=self.prc_secretary,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+
     @mock.patch("etools.applications.partners.tasks.send_pd_to_vision.delay")
     def test_patch(self, send_to_vision_mock):
         # unicef cancels
-        self.intervention.unicef_focal_points.add(self.unicef_user)
+        self.intervention.unicef_focal_points.add(self.prc_secretary)
         self.assertFalse(self.intervention.unicef_accepted)
         self.assertIsNone(self.intervention.cancel_justification)
         mock_send = mock.Mock(return_value=self.mock_email)
@@ -2776,7 +2845,7 @@ class TestInterventionCancel(BaseInterventionActionTestCase):
                 "patch",
                 self.url,
                 data={"cancel_justification": "Needs to be cancelled"},
-                user=self.unicef_user,
+                user=self.prc_secretary,
             )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         mock_send.assert_called()
@@ -3062,7 +3131,7 @@ class TestInterventionSignature(BaseInterventionActionTestCase):
         InterventionReviewFactory(intervention=self.intervention)
         response = self.forced_auth_req("patch", self.url, user=self.unicef_user)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('Only overall approver can accept review.', response.data)
+        self.assertIn('Only authorized officer can accept review.', response.data)
 
     def test_patch(self):
         # unicef signature
@@ -3072,7 +3141,8 @@ class TestInterventionSignature(BaseInterventionActionTestCase):
         self.intervention.save()
         InterventionReviewFactory(
             intervention=self.intervention,
-            overall_approver=self.unicef_user,
+            overall_approver=UserFactory(),
+            authorized_officer=self.unicef_user,
             review_type=InterventionReview.PRC,
         )
         mock_send = mock.Mock(return_value=self.mock_email)
@@ -3756,7 +3826,7 @@ class TestPMPInterventionIndicatorsUpdateView(BaseTenantTestCase):
             user=self.unicef_user,
             data={},
         )
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_patch(self):
         data = {
@@ -3772,7 +3842,7 @@ class TestPMPInterventionIndicatorsUpdateView(BaseTenantTestCase):
             user=self.partnership_manager,
             data=data,
         )
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         # The id of the newly-created indicator should be associated with
         # lower result, and it should be the only one associated with that
         # result.
@@ -3797,7 +3867,7 @@ class TestPMPInterventionIndicatorsUpdateView(BaseTenantTestCase):
             user=self.partnership_manager,
             data={'indicator': {'title': f'new_{old_title}', 'code': 'new_code'}},
         )
-        self.assertEquals(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertNotEqual(response.data['id'], self.indicator.id)
         self.assertNotEqual(response.data['indicator']['id'], self.indicator.indicator.id)
         self.assertEqual(response.data['indicator']['title'], f'new_{old_title}')
@@ -3823,7 +3893,7 @@ class TestPMPInterventionIndicatorsUpdateView(BaseTenantTestCase):
             user=self.partnership_manager,
             data={'indicator': {'title': 'new title'}},
         )
-        self.assertEquals(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertNotEqual(response.data['id'], self.indicator.id)
         self.assertNotEqual(response.data['indicator']['id'], self.indicator.indicator.id)
         self.assertEqual(response.data['indicator']['title'], 'new title')
@@ -3905,7 +3975,7 @@ class TestPMPInterventionIndicatorsCreateView(
                 'baseline': {'v': value, 'd': 1}
             })
             response = self._make_request(user, data)
-            self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
             response_json = json.loads(response.rendered_content)
             self.assertEqual(response_json['target'], [response_error])
             self.assertEqual(response_json['baseline'], [response_error])

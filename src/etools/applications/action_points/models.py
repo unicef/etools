@@ -4,20 +4,36 @@ from django.contrib.contenttypes.fields import GenericRelation
 from django.db import connection, models
 from django.utils.translation import gettext_lazy as _
 
+from django_comments.models import Comment
 from django_fsm import FSMField, transition
 from model_utils import Choices, FieldTracker
 from model_utils.fields import MonitorField
 from model_utils.models import TimeStampedModel
+from unicef_attachments.models import Attachment
+from unicef_djangolib.fields import CodedGenericRelation
 from unicef_snapshot.models import Activity
 
 from etools.applications.action_points.categories.models import Category
-from etools.applications.action_points.transitions.conditions import ActionPointCompleteActionsTakenCheck
-from etools.applications.action_points.transitions.serializers.serializers import ActionPointCompleteSerializer
+from etools.applications.action_points.transitions.conditions import (
+    ActionPointCompleteActionsTakenCheck,
+    ActionPointHighPriorityCompleteCheck,
+)
 from etools.applications.core.urlresolvers import build_frontend_url
 from etools.applications.environment.notifications import send_notification_with_template
 from etools.libraries.djangolib.models import GroupWrapper
 from etools.libraries.djangolib.utils import get_environment
 from etools.libraries.fsm.views import has_action_permission
+
+
+class ActionPointComment(Comment):
+    supporting_document = CodedGenericRelation(
+        Attachment, verbose_name=_('Related Documents'), code='action_points_supporting_document', blank=True
+    )
+
+    class Meta:
+        proxy = True
+        verbose_name = _('Action Point Comment')
+        verbose_name_plural = _('Action Point Comments')
 
 
 class ActionPointManager(models.Manager):
@@ -87,7 +103,7 @@ class ActionPoint(TimeStampedModel):
                                       default=None, monitor='status', when=[STATUSES.completed])
     date_of_verification = MonitorField(verbose_name=_('Date Action Point Verified'), null=True, blank=True,
                                         default=None, monitor='verified_by')
-    comments = GenericRelation('django_comments.Comment', object_id_field='object_pk')
+    comments = GenericRelation(ActionPointComment, object_id_field='object_pk')
     history = GenericRelation('unicef_snapshot.Activity', object_id_field='target_object_id',
                               content_type_field='target_content_type')
     reference_number = models.CharField(
@@ -104,7 +120,7 @@ class ActionPoint(TimeStampedModel):
                                            verbose_name=_('Potential Verifier'), on_delete=models.CASCADE,
                                            blank=True, null=True)
 
-    tracker = FieldTracker(fields=['assigned_to', 'reference_number'])
+    tracker = FieldTracker(fields=['assigned_to', 'reference_number', 'potential_verifier'])
 
     objects = ActionPointManager()
 
@@ -172,6 +188,11 @@ class ActionPoint(TimeStampedModel):
         )
 
     def save(self, *args, **kwargs):
+        if self.tracker.has_changed('potential_verifier') and self.potential_verifier:
+            self.send_email(
+                self.potential_verifier,
+                'action_points/action_point/action_point-available-for-verification',
+            )
         super().save(*args, **kwargs)
         if not self.reference_number:
             self.reference_number = self.get_reference_number()
@@ -243,23 +264,16 @@ class ActionPoint(TimeStampedModel):
         )
 
     def _do_complete(self, completed_by=None):
-        if self.potential_verifier:
-            self.send_email(
-                self.potential_verifier,
-                'action_points/action_point/action_point-available-for-verification',
-            )
         self.send_email(self.assigned_by, 'action_points/action_point/completed', cc=[self.assigned_to.email],
                         additional_context={'completed_by': (completed_by or self.assigned_to).get_full_name()})
 
     @transition(status, source=STATUSES.open, target=STATUSES.completed,
                 permission=has_action_permission(action='complete'),
                 conditions=[
-                    ActionPointCompleteActionsTakenCheck.as_condition()
-                ],
-                custom={'serializer': ActionPointCompleteSerializer})
-    def complete(self, completed_by=None, potential_verifier=None):
-        if potential_verifier:
-            self.potential_verifier = potential_verifier
+                    ActionPointCompleteActionsTakenCheck.as_condition(),
+                    ActionPointHighPriorityCompleteCheck.as_condition()
+                ])
+    def complete(self, completed_by=None):
         self._do_complete(completed_by=completed_by)
 
 

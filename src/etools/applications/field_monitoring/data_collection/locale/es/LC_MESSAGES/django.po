@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-05-14 08:38+0000\n"
+"POT-Creation-Date: 2024-09-04 09:09+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -96,8 +96,11 @@ msgstr "Conclusión General de las Actividades"
 msgid "Source of Information"
 msgstr "Fuente de Información"
 
-msgid "Overall Finding"
-msgstr "Conclusiones Generales"
+msgid "General Observations"
+msgstr "Observaciones generales"
+
+msgid "Please enter general observations here"
+msgstr "Por favor ingrese aquí sus observaciones generales"
 
 #, python-format
 msgid "Unable to find %(level)s with id %(target_id)s"
@@ -126,10 +129,8 @@ msgstr ""
 "El código de espacio de trabajo proporcionado no es un código de área de "
 "negocio válido: %s"
 
-#, fuzzy
-#| msgid "User is required"
 msgid "Workspace is required"
-msgstr "Se requiere usuario"
+msgstr ""
 
 msgid "User is required"
 msgstr "Se requiere usuario"
@@ -143,3 +144,6 @@ msgstr ""
 
 msgid "Report Attachments"
 msgstr "Anexos del informe"
+
+#~ msgid "Overall Finding"
+#~ msgstr "Conclusiones Generales"

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-06-04 15:42+0000\n"
+"POT-Creation-Date: 2024-09-24 09:12+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1237,6 +1237,12 @@ msgstr "Oficiais dp PRC"
 msgid "Overall Approver"
 msgstr "Aprovador geral"
 
+msgid "Authorized Officer"
+msgstr ""
+
+msgid "Recommend for Approval"
+msgstr ""
+
 msgid "Sent Back by Secretary Comment"
 msgstr "Enviado para comentário do(a) secretário(a)"
 
@@ -1531,8 +1537,8 @@ msgstr "Visita planejada não pode ser definida para intervenções encerradas"
 msgid ""
 "An attachment cannot be changed in statuses \"Ended, Closed or Terminated\""
 msgstr ""
-"Um anexo não pode ser alterado nos status \"Finalizado, Fechado ou Encerrado"
-"\""
+"Um anexo não pode ser alterado nos status \"Finalizado, Fechado ou "
+"Encerrado\""
 
 msgid "An Output cannot be updated for a partner that is blocked in Vision"
 msgstr ""
@@ -1650,6 +1656,9 @@ msgstr ""
 
 msgid "Vendor number must belong to PRG2 account group"
 msgstr "O número do fornecedor deve pertencer ao grupo de contas PRG2"
+
+msgid "Authorized officer cannot be the same as overall approver."
+msgstr ""
 
 msgid "Unknown intervention."
 msgstr "Intervenção desconhecida."
@@ -2191,8 +2200,8 @@ msgstr ""
 msgid "PD has already been cancelled."
 msgstr "PD já foi cancelado."
 
-msgid "Only focal points or budget owners can cancel"
-msgstr "Somente pontos focais ou proprietários de orçamento podem cancelar"
+msgid "Only PRC Secretary can cancel"
+msgstr ""
 
 msgid "PD has already been terminated."
 msgstr "PD já foi encerrado."
@@ -2217,8 +2226,8 @@ msgstr ""
 msgid "PD is already in Signature status."
 msgstr "PD já está no status de assinatura."
 
-msgid "Only overall approver can accept review."
-msgstr "Somente o aprovador geral pode aceitar a revisão."
+msgid "Only authorized officer can accept review."
+msgstr ""
 
 msgid "PD is already unlocked."
 msgstr "PD já está desbloqueado."
@@ -2278,6 +2287,9 @@ msgstr ""
 
 msgid "Partnership Manager role required for pca export."
 msgstr "A função de gerente de parceria é necessária para a exportação de pca."
+
+#~ msgid "Only focal points or budget owners can cancel"
+#~ msgstr "Somente pontos focais ou proprietários de orçamento podem cancelar"
 
 #~ msgid "Shared IP"
 #~ msgstr "IP compartilhado"

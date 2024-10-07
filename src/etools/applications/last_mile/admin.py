@@ -39,7 +39,7 @@ class PointOfInterestAdmin(XLSXImportMixin, admin.ModelAdmin):
     readonly_fields = ('partner_names',)
     list_display = ('name', 'parent', 'poi_type', 'p_code')
     list_select_related = ('parent',)
-    list_filter = ('private', 'is_active')
+    list_filter = ('private', 'is_active', 'poi_type')
     search_fields = ('name', 'p_code')
     raw_id_fields = ('partner_organizations',)
     formfield_overrides = {
@@ -80,7 +80,9 @@ class PointOfInterestAdmin(XLSXImportMixin, admin.ModelAdmin):
                     continue
                 poi_dict[self.import_field_mapping[col[0].value]] = str(col[row].value).strip()
 
-            if not poi_dict.get('p_code'):
+            # add a pcode as it doesn't exist:
+            p_code = poi_dict.get('p_code', None)
+            if not p_code or p_code == "None":
                 # add a pcode if it doesn't exist:
                 poi_dict['p_code'] = generate_hash(poi_dict['partner_org_vendor_no'] + poi_dict['name'] + poi_dict['poi_type'], 12)
             long = poi_dict.pop('longitude')

@@ -22,6 +22,7 @@ from django.utils.translation import gettext_lazy as _
 
 import dj_database_url
 import sentry_sdk
+import setuptools  # noqa: F401
 import yaml
 from sentry_sdk import configure_scope
 from sentry_sdk.integrations.celery import CeleryIntegration
@@ -290,6 +291,11 @@ TEMPLATES = [
     },
 ]
 
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+}
+
 # DJANGO: URLS
 ROOT_URLCONF = 'etools.config.urls'
 
@@ -396,6 +402,7 @@ REST_FRAMEWORK = {
         'etools.applications.core.auth.EToolsTenantJWTAuthentication',
         'etools.applications.core.auth.eToolsOLCTokenAuth',
         'etools.applications.core.auth.EtoolsTokenAuthentication',
+        'etools.applications.core.auth.eToolsEZHactTokenAuth',
     ),
     'TEST_REQUEST_RENDERER_CLASSES': (
         'rest_framework.renderers.JSONRenderer',
@@ -507,6 +514,10 @@ EZHACT_INTEGRATION_DISABLED = bool(get_from_secrets_or_env('EZHACT_INTEGRATION_D
 EZHACT_CERT_PATH = os.path.join(CONFIG_ROOT, 'keys/vision/ezhact_cert.pem')
 EZHACT_KEY_PATH = os.path.join(CONFIG_ROOT, 'keys/vision/ezhact_key.pem')
 
+# Funds reservation API
+ETOOLS_EZHACT_TOKEN = get_from_secrets_or_env('ETOOLS_EZHACT_TOKEN', '')
+ETOOLS_EZHACT_EMAIL = get_from_secrets_or_env('ETOOLS_EZHACT_EMAIL', '')
+
 # ALLOW BASIC AUTH FOR DEMO SITE
 ALLOW_BASIC_AUTH = get_from_secrets_or_env('ALLOW_BASIC_AUTH', False)
 if ALLOW_BASIC_AUTH:
@@ -533,8 +544,8 @@ SOCIAL_AUTH_SANITIZE_REDIRECTS = False
 SOCIAL_AUTH_JSONFIELD_ENABLED = True
 POLICY = os.getenv('AZURE_B2C_POLICY_NAME', "b2c_1A_UNICEF_PARTNERS_signup_signin")
 
-TENANT_ID = os.getenv('AZURE_B2C_TENANT', 'unicefpartners')
-TENANT_B2C_URL = f'{TENANT_ID}.b2clogin.com'
+TENANT_NAME = os.getenv('AZURE_B2C_TENANT', 'unicefpartners')
+TENANT_B2C_URL = f'{TENANT_NAME}.b2clogin.com'
 
 SCOPE = ['openid', 'email']
 IGNORE_DEFAULT_SCOPE = True
@@ -544,7 +555,7 @@ SOCIAL_AUTH_PROTECTED_USER_FIELDS = ['email']
 # SOCIAL_AUTH_WHITELISTED_DOMAINS = ['unicef.org', 'google.com', 'ravdev.com']
 LOGIN_ERROR_URL = "/workspace_inactive"
 
-SOCIAL_LOGOUT_URL = f'https://{TENANT_B2C_URL}/{TENANT_ID}.onmicrosoft.com/{POLICY}/oauth2/v2.0/logout' \
+SOCIAL_LOGOUT_URL = f'https://{TENANT_B2C_URL}/{TENANT_NAME}.onmicrosoft.com/{POLICY}/oauth2/v2.0/logout' \
                     f'?post_logout_redirect_uri={HOST}/logout/'
 
 
@@ -612,7 +623,7 @@ ATTACHMENT_INVALID_FILE_TYPES = [
 ]
 
 GEOS_LIBRARY_PATH = os.getenv('GEOS_LIBRARY_PATH', '/usr/lib/libgeos_c.so.1')  # default path
-GDAL_LIBRARY_PATH = os.getenv('GDAL_LIBRARY_PATH', '/usr/lib/libgdal.so.28')  # default path
+GDAL_LIBRARY_PATH = os.getenv('GDAL_LIBRARY_PATH', '/usr/lib/libgdal.so.34')  # default path
 
 SHELL_PLUS_PRE_IMPORTS = (
     ('etools.applications.core.util_scripts', '*'),
@@ -652,7 +663,7 @@ ECN_API_ENDPOINT = get_from_secrets_or_env('ECN_API_ENDPOINT', '')  # example: h
 
 # This variable prevents certain admin sections from being edited by superusers unless
 # their user emails are in the ADMIN_EDIT_EMAILS variable below
-RESTRICTED_ADMIN = get_from_secrets_or_env('RESTRICTED_ADMIN', True)
+RESTRICTED_ADMIN = str2bool(get_from_secrets_or_env('RESTRICTED_ADMIN', 'True'))
 
 # Emails allowed to edit admin models in Partners and Reports apps if RESTRICTED_ADMIN is enabled
 ADMIN_EDIT_EMAILS = get_from_secrets_or_env('ADMIN_EDIT_EMAILS', '')
@@ -693,6 +704,3 @@ PBI_CONFIG = {
     "SCOPE_BASE": ['https://analysis.windows.net/powerbi/api/.default'],
     "AUTHORITY_URL": f"https://login.microsoftonline.com/{get_from_secrets_or_env('PBI_LMSM_TENANT_ID', '')}"
 }
-
-# FAM documents skip dates validation on created/update prior the date
-SKIP_VALIDATION_BEFORE = get_from_secrets_or_env('SKIP_VALIDATION_BEFORE', '2024-08-01')

@@ -64,6 +64,34 @@ class RestrictedEditAdmin(RestrictedEditAdminMixin, admin.ModelAdmin):
     pass
 
 
+class RssRealmEditAdminMixin(RestrictedEditAdminMixin):
+    GROUPS_ALLOWED = ["UNICEF User", "FM User", "PME", "Auditor",
+                      "UNICEF Audit Focal Point", "Monitoring Visit Approver", "User Reviewer"]
+
+    def has_add_permission(self, request, obj=None):
+        allowed = super().has_add_permission(request, obj=None)
+        if allowed:
+            return allowed
+
+        if request.user.groups.filter(name='RSS').exists():
+            return True
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        allowed = super().has_change_permission(request, obj=None)
+        if allowed:
+            return allowed
+
+        if request.user.groups.filter(name='RSS').exists():
+            return True
+        return False
+
+    def is_only_rss(self, request):
+        if request.user.email not in settings.ADMIN_EDIT_EMAILS and request.user.groups.filter(name='RSS').exists():
+            return True
+        return False
+
+
 class ImportForm(forms.Form):
     import_file = forms.FileField(label=_('XLSX File to import'))
 

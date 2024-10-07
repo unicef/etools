@@ -45,7 +45,7 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
             data=filters
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertCountEqual(
             map(lambda x: x['id'], response.data['results']),
             map(lambda x: x.id, expected_visits)
@@ -178,7 +178,7 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
             reverse('tpm:visits-list'),
             user=user
         )
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 0)
 
     def test_create_empty(self):
@@ -189,7 +189,7 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
             data={}
         )
 
-        self.assertEquals(create_response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)
 
     def test_intervention_bilateral_partner(self):
         visit = TPMVisitFactory(
@@ -301,10 +301,10 @@ class TestTPMVisitViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCase)
             data={}
         )
 
-        self.assertEquals(create_response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(create_response.status_code, status.HTTP_201_CREATED)
 
         visit = TPMVisit.objects.get(id=create_response.data['id'])
-        self.assertEquals(visit.author, self.pme_user)
+        self.assertEqual(visit.author, self.pme_user)
 
     def _test_partner(self, expected_status=status.HTTP_201_CREATED, **kwargs):
         partner = TPMPartnerFactory(**kwargs)
@@ -491,21 +491,21 @@ class TestTPMStaffMembersViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTe
                 reverse('tpm:tpmstaffmembers-list', args=(self.tpm_partner.id,)),
                 user=self.pme_user
             )
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         response = self.forced_auth_req(
             'get',
             reverse('tpm:tpmstaffmembers-list', args=(self.tpm_partner.id,)),
             user=self.tpm_user
         )
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         response = self.forced_auth_req(
             'get',
             reverse('tpm:tpmstaffmembers-list', args=(self.tpm_partner.id,)),
             user=self.unicef_user
         )
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_list_active_inactive_realms(self):
         inactive_tpm_user = TPMUserFactory(tpm_partner=self.tpm_partner)
@@ -516,9 +516,9 @@ class TestTPMStaffMembersViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTe
             reverse('tpm:tpmstaffmembers-list', args=(self.tpm_partner.id,)),
             user=self.pme_user
         )
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response.data['results']), 3)
-        self.assertEquals(
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 3)
+        self.assertEqual(
             [inactive_tpm_user.pk],
             [staff['pk'] for staff in response.data['results'] if not staff['has_active_realm']])
 
@@ -530,7 +530,7 @@ class TestTPMStaffMembersViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTe
                         args=(self.tpm_partner.id, self.tpm_partner.staff_members.first().id)),
                 user=self.pme_user
             )
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         response = self.forced_auth_req(
             'get',
@@ -538,7 +538,7 @@ class TestTPMStaffMembersViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTe
                     args=(self.tpm_partner.id, self.tpm_partner.staff_members.first().id)),
             user=self.tpm_user
         )
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         response = self.forced_auth_req(
             'get',
@@ -546,7 +546,7 @@ class TestTPMStaffMembersViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTe
                     args=(self.tpm_partner.id, self.tpm_partner.staff_members.first().id)),
             user=self.unicef_user
         )
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_staff_members_csv(self):
         self._test_export(self.pme_user, 'tpm:tpmstaffmembers-export', args=(self.tpm_partner.id,))
@@ -565,7 +565,7 @@ class TestTPMPartnerViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCas
             user=user
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertCountEqual(
             map(lambda x: x['id'], response.data['results']),
             map(lambda x: x.id, expected_firms)
@@ -578,7 +578,7 @@ class TestTPMPartnerViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCas
             user=user
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         if can_create:
             self.assertIn('POST', response.data['actions'])
@@ -596,7 +596,7 @@ class TestTPMPartnerViewSet(TestExportMixin, TPMTestCaseMixin, BaseTenantTestCas
             user=user
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         if can_update:
             self.assertIn('PUT', response.data['actions'])

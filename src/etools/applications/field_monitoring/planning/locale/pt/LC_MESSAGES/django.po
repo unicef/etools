@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-04-11 05:18+0000\n"
+"POT-Creation-Date: 2024-10-01 11:59+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -71,6 +71,54 @@ msgstr "Campos obrigatórios não preenchidos em %(status)s: %(fields)s"
 #, python-format
 msgid "Cannot change fields while in %(status)s: %(field)s"
 msgstr "Não é possível alterar os campos enquanto em %(status)s: %(field)s"
+
+msgid "Ref. #"
+msgstr ""
+
+msgid "Link"
+msgstr ""
+
+msgid "Start Date"
+msgstr "Data de início"
+
+msgid "End Date"
+msgstr "Data Final"
+
+msgid "Location"
+msgstr "Localização"
+
+msgid "Site"
+msgstr ""
+
+msgid "Sections"
+msgstr "Seções"
+
+msgid "Field Offices"
+msgstr "Escritórios de campo"
+
+msgid "Status"
+msgstr "Estado"
+
+msgid "Primary Field Monitor is"
+msgstr ""
+
+msgid "Team Members"
+msgstr "Membros da Equipe"
+
+msgid "TPM Partner"
+msgstr "Parceiro TPM"
+
+msgid "Person Responsible"
+msgstr "Pessoa Responsável"
+
+msgid "Partners"
+msgstr ""
+
+msgid "PD/SPD"
+msgstr ""
+
+msgid "Outputs"
+msgstr "Saídas"
 
 msgid "Prioritization Criteria"
 msgstr "Critérios de Priorização"
@@ -156,52 +204,17 @@ msgstr "Cancelado"
 msgid "Reference Number"
 msgstr "Número de referência"
 
-msgid "TPM Partner"
-msgstr "Parceiro TPM"
-
-msgid "Team Members"
-msgstr "Membros da Equipe"
-
-msgid "Person Responsible"
-msgstr "Pessoa Responsável"
+msgid "Involves Remote Monitoring"
+msgstr ""
 
 msgid "Report Reviewer"
 msgstr ""
 
-#, fuzzy
-#| msgid "Review"
 msgid "Reviewed By"
-msgstr "Revisão"
+msgstr ""
 
 msgid "Field Office"
 msgstr "Escritório de campo"
-
-msgid "Field Offices"
-msgstr "Escritórios de campo"
-
-msgid "Sections"
-msgstr "Seções"
-
-msgid "Location"
-msgstr "Localização"
-
-msgid "Site"
-msgstr ""
-
-msgid "PD/SPD"
-msgstr ""
-
-msgid "Outputs"
-msgstr "Saídas"
-
-msgid "Start Date"
-msgstr "Data de início"
-
-msgid "End Date"
-msgstr "Data Final"
-
-msgid "Status"
-msgstr "Estado"
 
 msgid "Activity Attachments"
 msgstr "Anexos de Atividade"
@@ -227,8 +240,29 @@ msgstr "Ponto de Ação da Atividade de Monitoramento"
 msgid "Monitoring Activity Action Points"
 msgstr "Pontos de Ação da Atividade de Monitoramento"
 
+msgid "Description"
+msgstr ""
+
+msgid "Category"
+msgstr ""
+
+msgid "High Priority"
+msgstr ""
+
+msgid "Author"
+msgstr ""
+
+msgid "TPM Concern"
+msgstr ""
+
+msgid "TPM Concerns"
+msgstr ""
+
 msgid "History"
 msgstr "História"
+
+msgid "Team members removal not allowed"
+msgstr ""
 
 msgid "Document Type"
 msgstr "Tipo de Documento"
@@ -263,11 +297,11 @@ msgstr "Escritório do Cessionário"
 msgid "Action Point Category"
 msgstr "Categoria de Ponto de Ação"
 
-msgid "Link"
-msgstr ""
-
 msgid "Priority"
 msgstr "Prioridade"
+
+msgid "TPM Concern Category"
+msgstr ""
 
 msgid "Annual Field Monitoring Rationale"
 msgstr "Justificativa do Monitoramento de Campo Anual"
