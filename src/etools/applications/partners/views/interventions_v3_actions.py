@@ -304,7 +304,7 @@ class PMPInterventionReviewView(PMPInterventionActionView):
         request.data.clear()
         request.data.update({"status": Intervention.REVIEW})
 
-        if review.review_type == InterventionReview.PRC and not pd.submission_date_prc:
+        if review.review_type in [InterventionReview.PRC, InterventionReview.NPRC] and not pd.submission_date_prc:
             # save date when first prc review submitted
             request.data["submission_date_prc"] = timezone.now().date()
 
@@ -532,7 +532,7 @@ class PMPInterventionSignatureView(PMPInterventionActionView):
 
         request.data.clear()
         request.data.update({"status": Intervention.SIGNATURE})
-        if pd.review.review_type == InterventionReview.PRC:
+        if pd.review.review_type in [InterventionReview.PRC, InterventionReview.NPRC]:
             request.data["review_date_prc"] = timezone.now().date()
 
         response = super().update(request, *args, **kwargs)

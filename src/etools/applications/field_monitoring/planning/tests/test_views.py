@@ -1,4 +1,5 @@
 from datetime import date, timedelta
+from unittest.mock import patch
 
 from django.core import mail
 from django.core.management import call_command
@@ -295,6 +296,110 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             data={'team_members': [tpm_staff_1.pk, tpm_staff_2.pk, tpm_staff_3.pk]},
             expected_status=status.HTTP_200_OK
         )
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_draft_tpm_team_members_removal(self):
+        tpm_partner = TPMPartnerFactory()
+        team_members = [
+            TPMUserFactory(
+                tpm_partner=tpm_partner, profile__organization=tpm_partner.organization
+            )
+            for _i in range(3)
+        ]
+        activity = MonitoringActivityFactory(
+            monitor_type='tpm', tpm_partner=tpm_partner, status='draft',
+            team_members=team_members,
+        )
+        self._test_update(
+            self.fm_user, activity,
+            data={'team_members': [m.pk for m in team_members[:-1]]},
+            expected_status=status.HTTP_200_OK,
+        )
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_data_collection_tpm_team_members_removal(self):
+        tpm_partner = TPMPartnerFactory()
+        team_members = [
+            TPMUserFactory(
+                tpm_partner=tpm_partner, profile__organization=tpm_partner.organization
+            )
+            for _i in range(3)
+        ]
+        activity = MonitoringActivityFactory(
+            monitor_type='tpm', tpm_partner=tpm_partner, status='data_collection',
+            team_members=team_members,
+        )
+        self._test_update(
+            activity.visit_lead, activity,
+            data={'team_members': [m.pk for m in team_members[:-1]]},
+            expected_status=status.HTTP_400_BAD_REQUEST,
+            field_errors=['team_members'],
+        )
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    @patch('etools.applications.field_monitoring.planning.signals.MonitoringActivityOfflineSynchronizer.update_data_collectors_list')
+    def test_data_collection_tpm_team_members_add(self, olc_update_mock):
+        tpm_partner = TPMPartnerFactory()
+        team_members = [
+            TPMUserFactory(
+                tpm_partner=tpm_partner, profile__organization=tpm_partner.organization
+            )
+            for _i in range(3)
+        ]
+        activity = MonitoringActivityFactory(
+            monitor_type='tpm', tpm_partner=tpm_partner, status='data_collection',
+            team_members=team_members[:-1],
+        )
+        olc_update_mock.reset_mock()
+        self._test_update(
+            activity.visit_lead, activity,
+            data={'team_members': [m.pk for m in team_members]},
+            expected_status=status.HTTP_200_OK,
+        )
+        olc_update_mock.assert_called()
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_draft_staff_team_members_removal(self):
+        team_members = [UserFactory(unicef_user=True) for _i in range(3)]
+        activity = MonitoringActivityFactory(
+            status='draft', monitor_type='staff',
+            team_members=team_members
+        )
+        self._test_update(
+            self.fm_user, activity,
+            data={'team_members': [m.pk for m in team_members[:-1]]},
+            expected_status=status.HTTP_200_OK,
+        )
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_data_collection_staff_team_members_removal(self):
+        team_members = [UserFactory(unicef_user=True) for _i in range(3)]
+        activity = MonitoringActivityFactory(
+            status='data_collection', monitor_type='staff',
+            team_members=team_members
+        )
+        self._test_update(
+            self.fm_user, activity,
+            data={'team_members': [m.pk for m in team_members[:-1]]},
+            expected_status=status.HTTP_400_BAD_REQUEST,
+            field_errors=['team_members'],
+        )
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    @patch('etools.applications.field_monitoring.planning.signals.MonitoringActivityOfflineSynchronizer.update_data_collectors_list')
+    def test_data_collection_staff_team_members_add(self, olc_update_mock):
+        team_members = [UserFactory(unicef_user=True) for _i in range(3)]
+        activity = MonitoringActivityFactory(
+            status='data_collection', monitor_type='staff',
+            team_members=team_members[:-1]
+        )
+        olc_update_mock.reset_mock()
+        self._test_update(
+            self.fm_user, activity,
+            data={'team_members': [m.pk for m in team_members]},
+            expected_status=status.HTTP_200_OK,
+        )
+        olc_update_mock.assert_called()
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_auto_accept_activity(self):
