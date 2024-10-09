@@ -242,8 +242,9 @@ class HistorySerializer(serializers.ModelSerializer):
 class ActionPointSerializer(WritableNestedSerializerMixin, ActionPointListSerializer):
     comments = CommentSerializer(many=True, label=_('Actions Taken'), required=False)
     history = HistorySerializer(many=True, label=_('History'), read_only=True, source='get_meaningful_history')
-    potential_verifier = MinimalUserSerializer(read_only=True, label=_('Potential Verifier'))
     verified_by = MinimalUserSerializer(read_only=True, label=_('Verified By'))
+    potential_verifier = SeparatedReadWriteField(label=_('Assigned Verifier'), required=False,
+                                                 read_field=MinimalUserSerializer())
 
     related_object_str = serializers.ReadOnlyField(label=_('Related Document'))
     related_object_url = serializers.ReadOnlyField()
@@ -259,15 +260,25 @@ class ActionPointSerializer(WritableNestedSerializerMixin, ActionPointListSerial
             raise serializers.ValidationError(_('Category doesn\'t belong to selected module.'))
         return value
 
-    def validate(self, attrs):
-        validated_data = super().validate(attrs)
-        if 'potential_verifier' in validated_data:
-            if self.instance.author == validated_data['potential_verifier']:
+    def validate_is_adequate(self, value):
+        if value and self.instance.high_priority:
+            if not self.instance.comments.exists():
+                raise serializers.ValidationError(_('High priority action points need to have an Action Taken.'))
+            if self.instance.author == self.get_user():
                 raise serializers.ValidationError(_("Author cannot verify own action point."))
+        return value
 
-        return validated_data
+    def validate_potential_verifier(self, value):
+        if value:
+            if not self.instance.high_priority:
+                raise serializers.ValidationError(_("Verifiers are allowed only for high priority action points."))
+            elif self.instance.author == value:
+                raise serializers.ValidationError(_("Author cannot verify own action point."))
+        return value
 
     def update(self, instance, validated_data):
         if 'is_adequate' in validated_data:
             validated_data['verified_by'] = self.get_user()
+        if 'comments' in validated_data and self.instance.is_adequate:
+            validated_data['is_adequate'] = False
         return super().update(instance, validated_data)
