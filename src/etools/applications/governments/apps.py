@@ -1,6 +1,9 @@
-from django.apps import AppConfig
+from django.apps import AppConfig as BaseAppConfig
 
 
-class GddConfig(AppConfig):
-    default_auto_field = 'django.db.models.BigAutoField'
-    name = 'gdd'
+class AppConfig(BaseAppConfig):
+    name = __name__.rpartition('.')[0]
+    verbose_name = 'GDD'
+
+    def ready(self):
+        from . import signals  # NOQA

@@ -6,7 +6,7 @@ from etools.applications.partners.views.interventions_v3 import PMPInterventionL
     PMPInterventionRetrieveUpdateView
 
 
-class DigitalDocumentListCreateView(PMPInterventionListCreateView):
+class GovInterventionListCreateView(PMPInterventionListCreateView):
     ordering_fields = ('number', 'status', 'title', 'start', 'end')
 
     def get_queryset(self):
@@ -39,5 +39,5 @@ class DigitalDocumentListCreateView(PMPInterventionListCreateView):
         return super().create(request, *args, **kwargs)
 
 
-class DigitalDocumentRetrieveUpdateView(PMPInterventionRetrieveUpdateView):
+class GovInterventionRetrieveUpdateView(PMPInterventionRetrieveUpdateView):
     pass

@@ -1736,12 +1736,10 @@ class Intervention(TimeStampedModel):
         (EXPIRED, _("Expired")),
     )
     PD = 'PD'
-    DD = 'DD'
     SPD = 'SPD'
     SSFA = 'SSFA'
     INTERVENTION_TYPES = (
         (PD, _('Programme Document')),
-        (DD, _('Government Digital Document')),
         (SPD, _('Simplified Programme Document')),
         # (SSFA, 'SSFA'),
     )

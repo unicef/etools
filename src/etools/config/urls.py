@@ -145,7 +145,7 @@ urlpatterns = [
     # *************** Government Digital Document API ******************
     re_path(
         r'^api/gdd/',
-        include('etools.applications.governments.urls', namespace='governments'),
+        include('etools.applications.governments.urls', namespace='governments_api'),
     ),
 ]
 
