@@ -1,4 +1,5 @@
 import datetime
+from copy import copy
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.reports.models import CountryProgramme, Indicator, Result, ResultType
@@ -586,6 +587,8 @@ class TestRAMSynchronizer(BaseTenantTestCase):
             "INDICATOR_BASELINE": "BLINE",
             "INDICATOR_TARGET": "Target",
         }
+        self.data_second_wbs = copy(self.data)
+        self.data_second_wbs["WBS_ELEMENT_CODE"] = "1234567890AQWEE"
         self.adapter = RAMSynchronizer(business_area_code=self.country.business_area_code)
 
     def test_convert_records(self):
@@ -600,9 +603,21 @@ class TestRAMSynchronizer(BaseTenantTestCase):
             "code": "WBS",
             "target": "Target",
             "ram_indicator": True,
-            "result__wbs": "1234/56/78/90A/BCD"
+            "result__wbs": ["1234/56/78/90A/BCD"]
         }})
         self.assertEqual(wbss, ["1234/56/78/90A/BCD"])
+
+    def test_clean_records_two_wbs(self):
+        records, wbss = self.adapter._clean_records([self.data, self.data_second_wbs])
+        self.assertEqual(records, {"WBS": {
+            "name": "NAME",
+            "baseline": "BLINE",
+            "code": "WBS",
+            "target": "Target",
+            "ram_indicator": True,
+            "result__wbs": ["1234/56/78/90A/BCD", "1234/56/78/90A/QWE"]
+        }})
+        self.assertEqual(wbss, ["1234/56/78/90A/BCD", "1234/56/78/90A/QWE"])
 
     def test_process_indicators_update(self):
         """Check that update happens if field name changed"""
@@ -673,7 +688,7 @@ class TestRAMSynchronizer(BaseTenantTestCase):
         response = self.adapter.process_indicators([self.data])
         self.assertEqual(response, {
             "details": "Created Skipped 0\n"
-            "Updated Skipped 0\n"
+            "Updated Skipped 1\n"
             "Created 0\n"
             "Indicators Updated to Active 0\n"
             "Indicators Updated to Inactive 0\n"
@@ -794,3 +809,38 @@ class TestRAMSynchronizer(BaseTenantTestCase):
             "processed": 0
         })
         self.assertFalse(indicator_qs.exists())
+
+    def test_process_indicators_add_multiple_results(self):
+        """Check that indicator coiled, if multiple wbs available"""
+        result1 = ResultFactory(
+            result_type=self.result_type_output,
+            wbs="1234/56/78/90A/BCD"
+        )
+        result2 = ResultFactory(
+            result_type=self.result_type_output,
+            wbs="1234/56/78/90A/QWE"
+        )
+        indicator1 = IndicatorFactory(
+            code="WBS",
+            name="NAME",
+            baseline="BLINE",
+            target="Target",
+            result=result1,
+        )
+        data2 = copy(self.data)
+        data2["WBS_ELEMENT_CODE"] = result2.wbs
+        self.assertFalse(Indicator.objects.filter(code=indicator1.code, result=result2).exists())
+        response = self.adapter.process_indicators([self.data, self.data_second_wbs])
+        self.assertEqual(response, {
+            "details": "Created Skipped 0\n"
+            "Updated Skipped 0\n"
+            "Created 1\n"
+            "Indicators Updated to Active 0\n"
+            "Indicators Updated to Inactive 0\n"
+            "Updated 0",
+            "total_records": 2,
+            "processed": 1
+        })
+        indicator_untouched = Indicator.objects.get(pk=indicator1.pk)
+        self.assertEqual(indicator_untouched.result, result1)
+        self.assertTrue(Indicator.objects.filter(code=indicator1.code, result=result2).exists())
