@@ -25,7 +25,7 @@ from etools.applications.core.permissions import import_permissions
 from etools.applications.environment.notifications import send_notification_with_template
 from etools.applications.funds.models import FundsReservationHeader
 from etools.applications.locations.models import Location
-from etools.applications.organizations.models import Organization, OrganizationType
+from etools.applications.organizations.models import Organization
 from etools.applications.partners.amendment_utils import copy_instance, INTERVENTION_AMENDMENT_RELATED_FIELDS, \
     INTERVENTION_AMENDMENT_IGNORED_FIELDS, INTERVENTION_AMENDMENT_DEFAULTS, INTERVENTION_AMENDMENT_COPY_POST_EFFECTS, \
     merge_instance, INTERVENTION_AMENDMENT_MERGE_POST_EFFECTS, calculate_difference, \
@@ -925,7 +925,7 @@ class GovIntervention(TimeStampedModel):
             try:
                 document_id = self.amendment.intervention_id
                 amendment_relative_number = self.amendment.amendment_number
-            except GovInterventionAmendment.DoesNotExist:
+            except GovernmentAmendment.DoesNotExist:
                 document_id = self.id
                 amendment_relative_number = None
         else:
@@ -977,7 +977,7 @@ class GovIntervention(TimeStampedModel):
         super().save()
 
         if not oldself:
-            self.planned_budget = GovInterventionBudget.objects.create(intervention=self)
+            self.planned_budget = GovernmentBudget.objects.create(intervention=self)
 
     def has_active_amendment(self, kind=None):
         active_amendments = self.amendments.filter(is_active=True)
@@ -1003,7 +1003,7 @@ class GovIntervention(TimeStampedModel):
         ).exists()
 
 
-class GovInterventionAmendment(TimeStampedModel):
+class GovernmentAmendment(TimeStampedModel):
     """
     Represents an amendment for the partner intervention.
 
@@ -1248,7 +1248,7 @@ class GovInterventionAmendment(TimeStampedModel):
         )
 
 
-class GovInterventionPlannedVisitSite(models.Model):
+class GovernmentPlannedVisitSite(models.Model):
     Q1 = 1
     Q2 = 2
     Q3 = 3
@@ -1261,7 +1261,7 @@ class GovInterventionPlannedVisitSite(models.Model):
         (Q4, _('Q4')),
     )
 
-    planned_visits = models.ForeignKey('governments.GovInterventionPlannedVisits', on_delete=models.CASCADE)
+    planned_visits = models.ForeignKey('governments.GovernmentPlannedVisits', on_delete=models.CASCADE)
     site = models.ForeignKey('field_monitoring_settings.LocationSite', on_delete=models.CASCADE)
     quarter = models.PositiveSmallIntegerField(choices=QUARTER_CHOICES)
 
@@ -1269,7 +1269,7 @@ class GovInterventionPlannedVisitSite(models.Model):
         unique_together = ('planned_visits', 'site', 'quarter')
 
 
-class GovInterventionPlannedVisits(TimeStampedModel):
+class GovernmentPlannedVisits(TimeStampedModel):
     """Represents planned visits for the intervention"""
 
     intervention = models.ForeignKey(
@@ -1283,7 +1283,7 @@ class GovInterventionPlannedVisits(TimeStampedModel):
     programmatic_q4 = models.IntegerField(default=0, verbose_name=_('Programmatic Q4'))
     sites = models.ManyToManyField(
         'field_monitoring_settings.LocationSite',
-        through=GovInterventionPlannedVisitSite,
+        through=GovernmentPlannedVisitSite,
         verbose_name=_('Sites'),
         blank=True,
     )
@@ -1300,7 +1300,7 @@ class GovInterventionPlannedVisits(TimeStampedModel):
     def programmatic_sites(self, quarter):
         from etools.applications.field_monitoring.fm_settings.models import LocationSite
         return LocationSite.objects.filter(
-            pk__in=GovInterventionPlannedVisitSite.objects.filter(
+            pk__in=GovernmentPlannedVisitSite.objects.filter(
                 site__in=self.sites.all(),
                 planned_visits=self,
                 quarter=quarter
@@ -1309,22 +1309,22 @@ class GovInterventionPlannedVisits(TimeStampedModel):
 
     @property
     def programmatic_q1_sites(self):
-        return self.programmatic_sites(GovInterventionPlannedVisitSite.Q1)
+        return self.programmatic_sites(GovernmentPlannedVisitSite.Q1)
 
     @property
     def programmatic_q2_sites(self):
-        return self.programmatic_sites(GovInterventionPlannedVisitSite.Q2)
+        return self.programmatic_sites(GovernmentPlannedVisitSite.Q2)
 
     @property
     def programmatic_q3_sites(self):
-        return self.programmatic_sites(GovInterventionPlannedVisitSite.Q3)
+        return self.programmatic_sites(GovernmentPlannedVisitSite.Q3)
 
     @property
     def programmatic_q4_sites(self):
-        return self.programmatic_sites(GovInterventionPlannedVisitSite.Q4)
+        return self.programmatic_sites(GovernmentPlannedVisitSite.Q4)
 
 
-class GovInterventionBudget(TimeStampedModel):
+class GovernmentBudget(TimeStampedModel):
     """
     Represents a budget for the intervention
     """
@@ -1459,7 +1459,7 @@ class GovInterventionBudget(TimeStampedModel):
         self.in_kind_amount_local = 0
         self.partner_supply_local = 0
         for item in intervention.supply_items.all():
-            if item.provided_by == GovInterventionSupplyItem.PROVIDED_BY_UNICEF:
+            if item.provided_by == GovernmentSupplyItem.PROVIDED_BY_UNICEF:
                 self.in_kind_amount_local += item.total_price
             else:
                 self.partner_supply_local += item.total_price
@@ -1478,7 +1478,7 @@ class GovInterventionBudget(TimeStampedModel):
             self.save()
 
 
-class GovInterventionReviewQuestionnaire(models.Model):
+class GovernmentReviewQuestionnaire(models.Model):
     # answer fields to be renamed when questionnaire will be available
     ANSWERS = Choices(
         ('', _('Not decided yet')),
@@ -1542,7 +1542,7 @@ class GovInterventionReviewQuestionnaire(models.Model):
         abstract = True
 
 
-class GovInterventionReview(GovInterventionReviewQuestionnaire, TimeStampedModel):
+class GovernmentReview(GovernmentReviewQuestionnaire, TimeStampedModel):
     PRC = 'prc'
     NPRC = 'non-prc'
     NORV = 'no-review'
@@ -1567,7 +1567,7 @@ class GovInterventionReview(GovInterventionReviewQuestionnaire, TimeStampedModel
     )
 
     amendment = models.ForeignKey(
-        GovInterventionAmendment,
+        GovernmentAmendment,
         null=True,
         blank=True,
         verbose_name=_("Amendment"),
@@ -1629,8 +1629,8 @@ class GovInterventionReview(GovInterventionReviewQuestionnaire, TimeStampedModel
         return self.created.date()
 
 
-class GovInterventionReviewNotification(TimeStampedModel):
-    review = models.ForeignKey(GovInterventionReview, related_name='gov_prc_notifications', on_delete=models.CASCADE)
+class GovernmentReviewNotification(TimeStampedModel):
+    review = models.ForeignKey(GovernmentReview, related_name='gov_prc_notifications', on_delete=models.CASCADE)
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         verbose_name=_('User'),
@@ -1661,7 +1661,7 @@ class GovInterventionReviewNotification(TimeStampedModel):
         )
 
     @classmethod
-    def notify_officers_for_review(cls, review: GovInterventionReview):
+    def notify_officers_for_review(cls, review: GovernmentReview):
         notified_users = cls.objects.filter(
             review=review,
             created__gt=timezone.now() - datetime.timedelta(days=1),
@@ -1674,7 +1674,7 @@ class GovInterventionReviewNotification(TimeStampedModel):
             cls.objects.create(review=review, user=user)
 
 
-class GovPRCOfficerInterventionReview(GovInterventionReviewQuestionnaire, TimeStampedModel):
+class GovernmentPRCOfficerReview(GovernmentReviewQuestionnaire, TimeStampedModel):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         verbose_name=_('User'),
@@ -1682,14 +1682,14 @@ class GovPRCOfficerInterventionReview(GovInterventionReviewQuestionnaire, TimeSt
         on_delete=models.CASCADE,
     )
 
-    overall_review = models.ForeignKey(GovInterventionReview, on_delete=models.CASCADE, related_name='gov_prc_reviews')
+    overall_review = models.ForeignKey(GovernmentReview, on_delete=models.CASCADE, related_name='gov_prc_reviews')
     review_date = models.DateField(null=True, blank=True, verbose_name=_('Review Date'))
 
     class Meta:
         ordering = ['-created']
 
 
-class GovInterventionAttachment(TimeStampedModel):
+class GovernmentAttachment(TimeStampedModel):
     """
     Represents a file for the partner intervention
 
@@ -1741,7 +1741,7 @@ class GovInterventionAttachment(TimeStampedModel):
         return self.attachment.name
 
 
-class GovInterventionReportingPeriod(TimeStampedModel):
+class GovernmentReportingPeriod(TimeStampedModel):
     """
     Represents a set of 3 dates associated with an Intervention (start, end,
     and due).
@@ -1766,7 +1766,7 @@ class GovInterventionReportingPeriod(TimeStampedModel):
         )
 
 
-class GovInterventionSupplyItem(TimeStampedModel):
+class GovernmentSupplyItem(TimeStampedModel):
     PROVIDED_BY_UNICEF = 'unicef'
     PROVIDED_BY_PARTNER = 'partner'
     PROVIDED_BY_CHOICES = Choices(
@@ -1867,46 +1867,7 @@ class DirectCashTransfer(models.Model):
     tracker = FieldTracker()
 
 
-class GovPlannedVisits(TimeStampedModel):
-    """Represents planned visits for the partner"""
-
-    partner = models.ForeignKey(
-        PartnerOrganization,
-        related_name='gov_planned_visits',
-        verbose_name=_('Partner'),
-        on_delete=models.CASCADE,
-    )
-    year = models.IntegerField(default=get_current_year, verbose_name=_('Year'))
-    programmatic_q1 = models.IntegerField(default=0, verbose_name=_('Programmatic Q1'))
-    programmatic_q2 = models.IntegerField(default=0, verbose_name=_('Programmatic Q2'))
-    programmatic_q3 = models.IntegerField(default=0, verbose_name=_('Programmatic Q3'))
-    programmatic_q4 = models.IntegerField(default=0, verbose_name=_('Programmatic Q4'))
-
-    tracker = FieldTracker()
-
-    class Meta:
-        unique_together = ('partner', 'year')
-        verbose_name_plural = _('Partner Planned Visits')
-
-    def __str__(self):
-        return '{} {}'.format(self.partner, self.year)
-
-    @property
-    def total(self):
-        return (
-            self.programmatic_q1 +
-            self.programmatic_q2 +
-            self.programmatic_q3 +
-            self.programmatic_q4
-        )
-
-    @transaction.atomic
-    def save(self, **kwargs):
-        super().save(**kwargs)
-        self.partner.update_planned_visits_to_hact()
-
-
-class GovInterventionRisk(TimeStampedModel):
+class GovernmentRisk(TimeStampedModel):
     RISK_TYPE_ENVIRONMENTAL = "environment"
     RISK_TYPE_FINANCIAL = "financial"
     RISK_TYPE_OPERATIONAL = "operational"
@@ -2025,7 +1986,7 @@ class EWPActivity(TimeStampedModel):
     partners = models.ManyToManyField(PartnerOrganization, related_name="ewp_activities", blank=True)
 
 
-class GovInterventionResultLink(TimeStampedModel):
+class GovernmentResultLink(TimeStampedModel):
     code = models.CharField(verbose_name=_("Code"), max_length=50, blank=True, null=True)
     intervention = models.ForeignKey(
         GovIntervention, related_name='result_links', verbose_name=_('Intervention'),
@@ -2078,12 +2039,12 @@ class GovInterventionResultLink(TimeStampedModel):
         cls.objects.bulk_update(result_links, fields=['code'])
 
 
-class GovLowerResult(TimeStampedModel):
+class GovernmentLowerResult(TimeStampedModel):
     """Lower result is always an output"""
 
     # link to intermediary model to intervention and cp ouptut
     result_link = models.ForeignKey(
-        GovInterventionResultLink,
+        GovernmentResultLink,
         related_name='ll_results',
         verbose_name=_('Result Link'),
         on_delete=models.CASCADE,
@@ -2144,7 +2105,7 @@ class GovLowerResult(TimeStampedModel):
         return results["total"] if results["total"] is not None else 0
 
 
-class GovInterventionActivity(TimeStampedModel):
+class GovernmentActivity(TimeStampedModel):
     ewp_activity = models.ForeignKey(
         EWPActivity,
         verbose_name=_("EWP Activity"),
@@ -2176,7 +2137,7 @@ class GovInterventionActivity(TimeStampedModel):
     )
 
     time_frames = models.ManyToManyField(
-        'governments.GovInterventionTimeFrame',
+        'governments.GovernmentTimeFrame',
         verbose_name=_('Time Frames Enabled'),
         blank=True,
         related_name='activities',
@@ -2193,7 +2154,7 @@ class GovInterventionActivity(TimeStampedModel):
         return "{} {}".format(self.result, self.name)
 
     def update_cash(self):
-        items = GovInterventionActivityItem.objects.filter(activity=self)
+        items = GovernmentActivityItem.objects.filter(activity=self)
         items_exists = items.exists()
         if not items_exists:
             return
@@ -2228,7 +2189,7 @@ class GovInterventionActivity(TimeStampedModel):
         self.result.result_link.intervention.planned_budget.save()
 
     @classmethod
-    def renumber_activities_for_result(cls, result: GovLowerResult, start_id=None):
+    def renumber_activities_for_result(cls, result: GovernmentLowerResult, start_id=None):
         activities = result.activities.all()
         # drop codes because in another case we'll face to UniqueViolation exception
         activities.update(code=None)
@@ -2243,9 +2204,9 @@ class GovInterventionActivity(TimeStampedModel):
         return ', '.join([f'{tf.start_date.year} Q{tf.quarter}' for tf in self.time_frames.all()])
 
 
-class GovInterventionActivityItem(TimeStampedModel):
+class GovernmentActivityItem(TimeStampedModel):
     activity = models.ForeignKey(
-        GovInterventionActivity,
+        GovernmentActivity,
         verbose_name=_("Government Intervention Activity"),
         related_name="items",
         on_delete=models.CASCADE,
@@ -2307,7 +2268,7 @@ class GovInterventionActivityItem(TimeStampedModel):
         self.activity.update_cash()
 
     @classmethod
-    def renumber_items_for_activity(cls, activity: GovInterventionActivity, start_id=None):
+    def renumber_items_for_activity(cls, activity: GovernmentActivity, start_id=None):
         items = activity.items.all()
         # drop codes because in another case we'll face to UniqueViolation exception
         items.update(code=None)
@@ -2316,7 +2277,7 @@ class GovInterventionActivityItem(TimeStampedModel):
         cls.objects.bulk_update(items, fields=['code'])
 
 
-class GovInterventionTimeFrame(TimeStampedModel):
+class GovernmentTimeFrame(TimeStampedModel):
     intervention = models.ForeignKey(
         GovIntervention,
         verbose_name=_("Government Intervention"),
