@@ -136,7 +136,6 @@ class InterventionManager(models.Manager):
         from etools.applications.reports.models import InterventionActivity
 
         qs = super().get_queryset().only().prefetch_related(
-            'management_budgets',
             'supply_items',
             Prefetch('result_links__ll_results__activities',
                      queryset=InterventionActivity.objects.filter(is_active=True)),
@@ -155,7 +154,7 @@ class InterventionManager(models.Manager):
 
     def frs_qs(self):
         frs_query = FundsReservationHeader.objects.filter(
-            intervention=OuterRef("pk")
+            gov_intervention=OuterRef("pk")
         ).order_by().values("gov_intervention")
         qs = self.get_queryset().prefetch_related('result_links__cp_output')
         qs = qs.annotate(
@@ -330,33 +329,19 @@ class GovIntervention(TimeStampedModel):
         null=True,
         blank=True,
     )
-    prc_review_document = models.FileField(
-        verbose_name=_("Review Document by PRC"),
-        max_length=1024,
-        null=True,
-        blank=True,
-        upload_to=get_prc_intervention_file_path
-    )
     prc_review_attachment = CodedGenericRelation(
         Attachment,
         verbose_name=_('Review Document by PRC'),
-        code='partners_intervention_prc_review',
+        code='government_intervention_prc_review',
         blank=True,
         null=True
     )
     final_review_approved = models.BooleanField(verbose_name=_('Final Review Approved'), default=False)
 
-    signed_pd_document = models.FileField(
-        verbose_name=_("Signed PD Document"),
-        max_length=1024,
-        null=True,
-        blank=True,
-        upload_to=get_prc_intervention_file_path
-    )
     signed_pd_attachment = CodedGenericRelation(
         Attachment,
         verbose_name=_('Signed PD Document'),
-        code='partners_intervention_signed_pd',
+        code='government_intervention_signed_pd',
         blank=True,
         null=True
     )
@@ -404,17 +389,11 @@ class GovIntervention(TimeStampedModel):
         verbose_name=_("Contingency PD"),
         default=False,
     )
-    activation_letter = models.FileField(
-        verbose_name=_("Activation Document for Contingency PDs"),
-        max_length=1024,
-        null=True,
-        blank=True,
-        upload_to=get_intervention_file_path
-    )
+
     activation_letter_attachment = CodedGenericRelation(
         Attachment,
         verbose_name=_('Activation Document for Contingency PDs'),
-        code='partners_gov_intervention_activation_letter',
+        code='government_gov_intervention_activation_letter',
         blank=True,
         null=True
     )
@@ -422,17 +401,10 @@ class GovIntervention(TimeStampedModel):
         verbose_name=_('Activation Protocol'),
         blank=True, null=True,
     )
-    termination_doc = models.FileField(
-        verbose_name=_("Termination document for PDs"),
-        max_length=1024,
-        null=True,
-        blank=True,
-        upload_to=get_intervention_file_path
-    )
     termination_doc_attachment = CodedGenericRelation(
         Attachment,
         verbose_name=_('Termination document for PDs'),
-        code='partners_gov_intervention_termination_doc',
+        code='government_intervention_termination_doc',
         blank=True,
         null=True
     )
@@ -932,9 +904,8 @@ class GovIntervention(TimeStampedModel):
             document_id = self.id
             amendment_relative_number = None
 
-        reference_number = '{agreement}/{type}{year}{id}'.format(
-            agreement=self.agreement.base_number,
-            type=self.document_type,
+        reference_number = '{agreement}/{year}{id}'.format(
+            agreement=self.agreement.base_number if self.agreement else "Number to be set",
             year=self.reference_number_year,
             id=document_id
         )
@@ -952,11 +923,9 @@ class GovIntervention(TimeStampedModel):
 
     @transaction.atomic
     def save(self, force_insert=False, save_from_agreement=False, **kwargs):
-        # automatically set hq_support_cost to 7% for INGOs
-        if not self.pk:
-            if self.agreement.partner.cso_type == Organization.CSO_TYPE_INTERNATIONAL:
-                if not self.hq_support_cost:
-                    self.hq_support_cost = 7.0
+        # # automatically set hq_support_cost to 7% for INGOs
+        # if not self.pk:
+        #     self.hq_support_cost = 7.0
 
         oldself = None
         if self.pk and not force_insert:
@@ -1080,14 +1049,6 @@ class GovernmentAmendment(TimeStampedModel):
         max_length=15,
     )
 
-    # legacy field
-    signed_amendment = models.FileField(
-        verbose_name=_("Amendment Document"),
-        max_length=1024,
-        upload_to=get_intervention_amendment_file_path,
-        blank=True,
-    )
-
     # signatures
     signed_by_unicef_date = models.DateField(
         verbose_name=_("Signed by UNICEF Date"),
@@ -1119,7 +1080,7 @@ class GovernmentAmendment(TimeStampedModel):
     signed_amendment_attachment = CodedGenericRelation(
         Attachment,
         verbose_name=_('Amendment Document'),
-        code='partners_intervention_amendment_signed',
+        code='government_intervention_amendment_signed',
         blank=True,
     )
 
@@ -1450,9 +1411,7 @@ class GovernmentBudget(TimeStampedModel):
         programme_effectiveness = 0
         if not init:
             init_totals()
-        programme_effectiveness += intervention.management_budgets.unicef_total
-        self.partner_contribution_local += intervention.management_budgets.partner_total
-        self.total_unicef_cash_local_wo_hq += intervention.management_budgets.unicef_total
+
         self.unicef_cash_local = self.total_unicef_cash_local_wo_hq + self.total_hq_cash_local
 
         # in kind totals
@@ -1705,15 +1664,10 @@ class GovernmentAttachment(TimeStampedModel):
         on_delete=models.CASCADE,
     )
 
-    attachment = models.FileField(
-        max_length=1024,
-        upload_to=get_intervention_attachments_file_path,
-        verbose_name=_('Attachment')
-    )
     attachment_file = CodedGenericRelation(
         Attachment,
         verbose_name=_('Intervention Attachment'),
-        code='partners_intervention_attachment',
+        code='government_intervention_attachment',
         blank=True,
         null=True,
     )
@@ -1845,28 +1799,6 @@ class GovernmentSupplyItem(TimeStampedModel):
         self.intervention.planned_budget.save()
 
 
-class DirectCashTransfer(models.Model):
-    """
-    Represents a direct cash transfer
-    """
-
-    fc_ref = models.CharField(max_length=50, verbose_name=_('Fund Commitment Reference'))
-    amount_usd = models.DecimalField(decimal_places=2, max_digits=20, verbose_name=_('Amount (USD)'))
-    liquidation_usd = models.DecimalField(decimal_places=2, max_digits=20, verbose_name=_('Liquidation (USD)'))
-    outstanding_balance_usd = models.DecimalField(decimal_places=2, max_digits=20,
-                                                  verbose_name=_('Outstanding Balance (USD)'))
-    amount_less_than_3_Months_usd = models.DecimalField(decimal_places=2, max_digits=20,
-                                                        verbose_name=_('Amount less than 3 months (USD)'))
-    amount_3_to_6_months_usd = models.DecimalField(decimal_places=2, max_digits=20,
-                                                   verbose_name=_('Amount between 3 and 6 months (USD)'))
-    amount_6_to_9_months_usd = models.DecimalField(decimal_places=2, max_digits=20,
-                                                   verbose_name=_('Amount between 6 and 9 months (USD)'))
-    amount_more_than_9_Months_usd = models.DecimalField(decimal_places=2, max_digits=20,
-                                                        verbose_name=_('Amount more than 9 months (USD)'))
-
-    tracker = FieldTracker()
-
-
 class GovernmentRisk(TimeStampedModel):
     RISK_TYPE_ENVIRONMENTAL = "environment"
     RISK_TYPE_FINANCIAL = "financial"
@@ -1905,7 +1837,7 @@ class GovernmentRisk(TimeStampedModel):
         return "{} {}".format(self.intervention, self.get_risk_type_display())
 
 
-class Workplan(TimeStampedModel):
+class GovernmentEWP(TimeStampedModel):
     cp_output = models.ForeignKey(CountryProgramme, related_name='workplans', on_delete=models.CASCADE)
 
     name = models.CharField(verbose_name=_("Workplan Name"), max_length=50, blank=True, null=True)
@@ -1924,7 +1856,7 @@ class EWPResultLink(TimeStampedModel):
     code = models.CharField(verbose_name=_("Code"), max_length=50, blank=True, null=True)
 
     workplan = models.ForeignKey(
-        Workplan, related_name='ewp_result_links', verbose_name=_('Workplan'),
+        GovernmentEWP, related_name='ewp_result_links', verbose_name=_('Workplan'),
         on_delete=models.CASCADE, blank=True, null=True,
     )
     key_intervention = models.ForeignKey(
