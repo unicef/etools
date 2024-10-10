@@ -187,8 +187,6 @@ class PartnerOrganizationDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroy
     SERIALIZER_MAP = {
         'assessments': AssessmentDetailSerializer,
         'planned_visits': PartnerPlannedVisitsSerializer,
-        # TODO REALMS: clean up
-        # 'staff_members': PartnerStaffMemberCreateUpdateSerializer,
         'planned_engagement': PlannedEngagementNestedSerializer,
         'core_values_assessments': CoreValuesAssessmentSerializer
     }
@@ -203,7 +201,6 @@ class PartnerOrganizationDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroy
     def update(self, request, *args, **kwargs):
         related_fields = [
             'assessments',
-            # 'staff_members',    # TODO REALMS: clean up
             'planned_engagement',
             'planned_visits',
             'core_values_assessments'

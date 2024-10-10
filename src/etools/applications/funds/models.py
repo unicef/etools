@@ -71,6 +71,14 @@ class FundsReservationHeader(TimeStampedModel):
         null=True,
         on_delete=models.CASCADE,
     )
+    gov_intervention = models.ForeignKey(
+        'governments.GovIntervention',
+        verbose_name=_("Reference Number"),
+        related_name='frs',
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+    )
     vendor_code = models.CharField(
         verbose_name=_("Vendor Code"),
         max_length=20,
