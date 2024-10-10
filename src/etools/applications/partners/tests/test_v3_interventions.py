@@ -572,6 +572,26 @@ class TestDetail(BaseInterventionTestCase):
             user=self.unicef_user
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertNotIn("sign", response.data["available_actions"])
+        self.assertIn("reject_review", response.data["available_actions"])
+
+    def test_available_actions_authorized_officer_sign(self):
+        self.intervention.date_sent_to_partner = datetime.date.today()
+        self.intervention.unicef_accepted = True
+        self.intervention.partner_accepted = True
+        self.intervention.budget_owner = self.unicef_user
+        self.intervention.status = Intervention.REVIEW
+        self.intervention.save()
+        InterventionReviewFactory(intervention=self.intervention, review_type='prc', overall_approver=UserFactory())
+        InterventionReviewFactory(intervention=self.intervention, review_type='prc', overall_approver=UserFactory(),
+                                  authorized_officer=self.unicef_user)
+
+        response = self.forced_auth_req(
+            "get",
+            reverse('pmp_v3:intervention-detail', args=[self.intervention.pk]),
+            user=self.unicef_user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn("sign", response.data["available_actions"])
         self.assertIn("reject_review", response.data["available_actions"])
 
