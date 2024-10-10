@@ -15,7 +15,7 @@ from unicef_attachments.admin import AttachmentSingleInline
 from unicef_attachments.models import Attachment
 from unicef_snapshot.admin import ActivityInline, SnapshotModelAdmin
 
-from etools.applications.governments.models import GovIntervention, GovernmentResultLink, GovernmentAmendment, \
+from etools.applications.governments.models import GDD, GovernmentResultLink, GovernmentAmendment, \
     GovernmentBudget, GovernmentPlannedVisits, GovernmentAttachment, GovernmentSupplyItem, GovernmentReview
 from etools.applications.partners.mixins import CountryUsersAdminMixin, HiddenPartnerMixin
 from etools.applications.partners.models import Intervention
@@ -245,7 +245,7 @@ class GovInterventionAdmin(
         RestrictedEditAdminMixin,
         SnapshotModelAdmin
 ):
-    model = GovIntervention
+    model = GDD
 
     staff_only = False
 
@@ -445,7 +445,7 @@ class GovernmentSupplyItemAdmin(RestrictedEditAdmin):
     search_fields = ('title',)
 
 
-admin.site.register(GovIntervention, GovInterventionAdmin)
+admin.site.register(GDD, GovInterventionAdmin)
 admin.site.register(GovernmentAmendment, GovernmentAmendmentsAdmin)
 admin.site.register(GovernmentResultLink, GovernmentResultsLinkAdmin)
 admin.site.register(GovernmentBudget, GovernmentBudgetAdmin)

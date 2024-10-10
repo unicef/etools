@@ -15,7 +15,7 @@ from unicef_snapshot.serializers import SnapshotModelSerializer
 
 from etools.applications.field_monitoring.fm_settings.serializers import LocationSiteSerializer
 from etools.applications.funds.models import FundsReservationHeader
-from etools.applications.governments.models import GovIntervention
+from etools.applications.governments.models import GDD
 from etools.applications.partners.models import (
     FileType,
     InterventionAmendment,
@@ -144,7 +144,7 @@ class BaseInterventionListSerializer(serializers.ModelSerializer):
         return [section.pk for section in obj.sections.all()]
 
     class Meta:
-        model = GovIntervention
+        model = GDD
         fields = (
             'actual_amount',
             'budget_currency',
@@ -253,7 +253,7 @@ class InterventionListSerializer(BaseInterventionListSerializer):
 class MinimalInterventionListSerializer(serializers.ModelSerializer):
 
     class Meta:
-        model = GovIntervention
+        model = GDD
         fields = (
             'id',
             'title',
@@ -535,7 +535,7 @@ class InterventionDetailSerializer(
 
         return [s for s in obj.INTERVENTION_STATUS if s[0] in status_list]
 
-    def get_quarters(self, obj: GovIntervention):
+    def get_quarters(self, obj: GDD):
         return [
             {
                 'name': 'Q{}'.format(i + 1),
@@ -554,7 +554,7 @@ class InterventionDetailSerializer(
         return None
 
     class Meta:
-        model = GovIntervention
+        model = GDD
         fields = (
             "activation_letter_attachment",
             "activation_protocol",
@@ -686,7 +686,7 @@ class InterventionCreateUpdateSerializer(
     )
 
     class Meta:
-        model = GovIntervention
+        model = GDD
         fields = "__all__"
 
     def to_internal_value(self, data):

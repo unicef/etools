@@ -182,7 +182,7 @@ class InterventionManager(models.Manager):
         return qs
 
 
-class GovIntervention(TimeStampedModel):
+class GDD(TimeStampedModel):
     """
     Represents a government intervention.
     """
@@ -929,7 +929,7 @@ class GovIntervention(TimeStampedModel):
         oldself = None
         if self.pk and not force_insert:
             # load from DB
-            oldself = GovIntervention.objects.filter(pk=self.pk).first()
+            oldself = GDD.objects.filter(pk=self.pk).first()
 
         # update reference number if needed
         amendment_number = kwargs.get('amendment_number', None)
@@ -1011,7 +1011,7 @@ class GovernmentAmendment(TimeStampedModel):
     )
 
     intervention = models.ForeignKey(
-        GovIntervention,
+        GDD,
         verbose_name=_("Reference Number"),
         related_name='amendments',
         on_delete=models.CASCADE,
@@ -1090,7 +1090,7 @@ class GovernmentAmendment(TimeStampedModel):
         blank=True,
     )
     amended_intervention = models.OneToOneField(
-        GovIntervention,
+        GDD,
         verbose_name=_("Amended Intervention"),
         related_name='amendment',
         blank=True, null=True,
@@ -1233,7 +1233,7 @@ class GovernmentPlannedVisits(TimeStampedModel):
     """Represents planned visits for the intervention"""
 
     intervention = models.ForeignKey(
-        GovIntervention, related_name='planned_visits', verbose_name=_('Government Intervention'),
+        GDD, related_name='planned_visits', verbose_name=_('Government Intervention'),
         on_delete=models.CASCADE,
     )
     year = models.IntegerField(default=get_current_year, verbose_name=_('Year'))
@@ -1288,7 +1288,7 @@ class GovernmentBudget(TimeStampedModel):
     """
     Represents a budget for the intervention
     """
-    intervention = models.OneToOneField(GovIntervention, related_name='planned_budget', null=True, blank=True,
+    intervention = models.OneToOneField(GDD, related_name='planned_budget', null=True, blank=True,
                                         verbose_name=_('Intervention'), on_delete=models.CASCADE)
 
     # legacy values
@@ -1390,7 +1390,7 @@ class GovernmentBudget(TimeStampedModel):
         )
 
     def calc_totals(self, save=True):
-        intervention = GovIntervention.objects.budget_qs().get(id=self.intervention_id)
+        intervention = GDD.objects.budget_qs().get(id=self.intervention_id)
 
         # partner and unicef totals
         def init_totals():
@@ -1518,7 +1518,7 @@ class GovernmentReview(GovernmentReviewQuestionnaire, TimeStampedModel):
     )
 
     intervention = models.ForeignKey(
-        GovIntervention,
+        GDD,
         verbose_name=_("Government Intervention"),
         related_name='reviews',
         on_delete=models.CASCADE,
@@ -1655,7 +1655,7 @@ class GovernmentAttachment(TimeStampedModel):
     Relates to :model:`partners.WorkspaceFileType`
     """
     intervention = models.ForeignKey(
-        GovIntervention, related_name='attachments', verbose_name=_('Intervention'),
+        GDD, related_name='attachments', verbose_name=_('Intervention'),
         on_delete=models.CASCADE,
     )
     type = models.ForeignKey(
@@ -1703,7 +1703,7 @@ class GovernmentReportingPeriod(TimeStampedModel):
     within each set, start < end < due.
     """
     intervention = models.ForeignKey(
-        GovIntervention, related_name='reporting_periods', verbose_name=_('Government Intervention'),
+        GDD, related_name='reporting_periods', verbose_name=_('Government Intervention'),
         on_delete=models.CASCADE,
     )
     start_date = models.DateField(verbose_name='Reporting Period Start Date')
@@ -1728,7 +1728,7 @@ class GovernmentSupplyItem(TimeStampedModel):
     )
 
     intervention = models.ForeignKey(
-        GovIntervention,
+        GDD,
         verbose_name=_("Government Intervention"),
         related_name="supply_items",
         on_delete=models.CASCADE,
@@ -1817,7 +1817,7 @@ class GovernmentRisk(TimeStampedModel):
     )
 
     intervention = models.ForeignKey(
-        GovIntervention,
+        GDD,
         verbose_name=_("Government Intervention"),
         related_name="risks",
         on_delete=models.CASCADE,
@@ -1920,7 +1920,7 @@ class EWPActivity(TimeStampedModel):
 class GovernmentResultLink(TimeStampedModel):
     code = models.CharField(verbose_name=_("Code"), max_length=50, blank=True, null=True)
     intervention = models.ForeignKey(
-        GovIntervention, related_name='result_links', verbose_name=_('Intervention'),
+        GDD, related_name='result_links', verbose_name=_('Intervention'),
         on_delete=models.CASCADE,
     )
     cp_output = models.ForeignKey(
@@ -2210,7 +2210,7 @@ class GovernmentActivityItem(TimeStampedModel):
 
 class GovernmentTimeFrame(TimeStampedModel):
     intervention = models.ForeignKey(
-        GovIntervention,
+        GDD,
         verbose_name=_("Government Intervention"),
         related_name="quarters",
         on_delete=models.CASCADE,

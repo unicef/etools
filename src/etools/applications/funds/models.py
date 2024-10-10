@@ -72,7 +72,7 @@ class FundsReservationHeader(TimeStampedModel):
         on_delete=models.CASCADE,
     )
     gov_intervention = models.ForeignKey(
-        'governments.GovIntervention',
+        'governments.GDD',
         verbose_name=_("Reference Number"),
         related_name='frs',
         blank=True,

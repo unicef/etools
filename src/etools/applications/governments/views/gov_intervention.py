@@ -6,7 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from etools.applications.governments.filters import PartnerNameOrderingFilter
-from etools.applications.governments.models import GovIntervention
+from etools.applications.governments.models import GDD
 from etools.applications.governments.serializers.gov_intervention import InterventionListSerializer, \
     InterventionCreateUpdateSerializer, MinimalInterventionListSerializer, InterventionDetailSerializer
 from etools.applications.organizations.models import OrganizationType
@@ -49,7 +49,7 @@ class GovInterventionListCreateView(PMPInterventionListCreateView):
         return InterventionListSerializer
 
     def get_queryset(self):
-        qs = GovIntervention.objects.frs_qs().filter(partner_organization__organization__organization_type=OrganizationType.GOVERNMENT)\
+        qs = GDD.objects.frs_qs().filter(partner_organization__organization__organization_type=OrganizationType.GOVERNMENT)\
 
         return qs
 
