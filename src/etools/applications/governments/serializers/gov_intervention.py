@@ -180,7 +180,7 @@ class BaseInterventionListSerializer(serializers.ModelSerializer):
 class InterventionListSerializer(BaseInterventionListSerializer):
     fr_currencies_are_consistent = serializers.SerializerMethodField()
     all_currencies_are_consistent = serializers.SerializerMethodField()
-    # fr_currency = serializers.SerializerMethodField()  # TODO error
+    fr_currency = serializers.SerializerMethodField()
     multi_curr_flag = serializers.BooleanField()
 
     donors = serializers.SerializerMethodField()

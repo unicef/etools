@@ -7,7 +7,6 @@ from django.contrib.postgres.fields import ArrayField
 from django.core.validators import MinValueValidator
 from django.db import connection, models, transaction
 from django.db.models import Prefetch, OuterRef, Max, Min, Count, Subquery, Sum, Case, When, Q
-from django.forms import CharField
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.functional import cached_property
@@ -177,7 +176,7 @@ class InterventionManager(models.Manager):
             donors=StringConcat("frs__fr_items__donor", separator="|", distinct=True),
             donor_codes=StringConcat("frs__fr_items__donor_code", separator="|", distinct=True),
             grants=StringConcat("frs__fr_items__grant_number", separator="|", distinct=True),
-            max_fr_currency=MaxDistinct("frs__currency", output_field=CharField(), distinct=True),
+            max_fr_currency=MaxDistinct("frs__currency", output_field=models.CharField(), distinct=True),
             multi_curr_flag=Count(Case(When(frs__multi_curr_flag=True, then=1)))
         )
         return qs
