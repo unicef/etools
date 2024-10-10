@@ -15,17 +15,14 @@ from unicef_attachments.admin import AttachmentSingleInline
 from unicef_attachments.models import Attachment
 from unicef_snapshot.admin import ActivityInline, SnapshotModelAdmin
 
-from etools.applications.governments.models import GDD, GovernmentResultLink, GovernmentAmendment, \
-    GovernmentBudget, GovernmentPlannedVisits, GovernmentAttachment, GovernmentSupplyItem, GovernmentReview
+from etools.applications.governments.models import GDD, GDDResultLink, GDDAmendment, \
+    GDDBudget, GDDPlannedVisits, GDDAttachment, GDDSupplyItem, GDDReview
 from etools.applications.partners.mixins import CountryUsersAdminMixin, HiddenPartnerMixin
-from etools.applications.partners.models import Intervention
-from etools.applications.partners.synchronizers import PDVisionUploader
-from etools.applications.partners.tasks import send_pd_to_vision, sync_partner
 from etools.libraries.djangolib.admin import RestrictedEditAdmin, RestrictedEditAdminMixin
 
 
 class GovernmentReviewInlineAdmin(RestrictedEditAdminMixin, admin.TabularInline):
-    model = GovernmentReview
+    model = GDDReview
     extra = 0
 
     raw_id_fields = [
@@ -56,35 +53,35 @@ class AttachmentInlineAdminMixin:
 
 class GovernmentAmendmentSignedInline(AttachmentSingleInline):
     verbose_name_plural = _("Signed Attachment")
-    code = 'government_intervention_amendment_signed'
+    code = 'government_gdd_amendment_signed'
 
 
 class GovernmentAmendmentPRCReviewInline(AttachmentSingleInline):
     verbose_name_plural = _("PRC Reviewed Attachment")
-    code = 'government_intervention_amendment_internal_prc_review'
+    code = 'government_gdd_amendment_internal_prc_review'
 
 
 class GovernmentAmendmentsAdmin(AttachmentInlineAdminMixin, CountryUsersAdminMixin, RestrictedEditAdmin):
     staff_only = False
-    model = GovernmentAmendment
+    model = GDDAmendment
     readonly_fields = [
         'amendment_number',
     ]
     raw_id_fields = [
-        'intervention',
-        'amended_intervention',
+        'gdd',
+        'amended_gdd',
         'unicef_signatory',
         'partner_authorized_officer_signatory',
     ]
 
     list_display = (
-        'intervention',
+        'gdd',
         'types',
         'signed_date'
     )
-    search_fields = ('intervention__number', )
+    search_fields = ('gdd__number', )
     list_filter = (
-        'intervention',
+        'gdd',
         'types'
     )
     inlines = [
@@ -99,16 +96,16 @@ class GovernmentAmendmentsAdmin(AttachmentInlineAdminMixin, CountryUsersAdminMix
         """
         Overriding here to disable adding amendments to non-active partnerships
         """
-        if obj and obj.status == Intervention.ACTIVE:
+        if obj and obj.status == GDD.ACTIVE:
             return self.max_num
 
         return 0
 
 
 class GovernmentBudgetAdmin(RestrictedEditAdmin):
-    model = GovernmentBudget
+    model = GDDBudget
     fields = (
-        'intervention',
+        'gdd',
         'currency',
         'partner_contribution',
         'unicef_cash',
@@ -119,23 +116,23 @@ class GovernmentBudgetAdmin(RestrictedEditAdmin):
         'total',
     )
     list_display = (
-        'intervention',
+        'gdd',
         'total'
     )
     list_filter = (
-        'intervention',
+        'gdd',
     )
     search_fields = (
-        'intervention__number',
+        'gdd__number',
     )
     readonly_fields = ('total', )
     extra = 0
 
 
 class GovernmentPlannedVisitsAdmin(RestrictedEditAdmin):
-    model = GovernmentPlannedVisits
+    model = GDDPlannedVisits
     fields = (
-        'intervention',
+        'gdd',
         'year',
         'programmatic_q1',
         'programmatic_q2',
@@ -143,10 +140,10 @@ class GovernmentPlannedVisitsAdmin(RestrictedEditAdmin):
         'programmatic_q4',
     )
     search_fields = (
-        'intervention__number',
+        'gdd__number',
     )
     list_display = (
-        'intervention',
+        'gdd',
         'year',
         'programmatic_q1',
         'programmatic_q2',
@@ -156,9 +153,9 @@ class GovernmentPlannedVisitsAdmin(RestrictedEditAdmin):
 
 
 class GovernmentPlannedVisitsInline(RestrictedEditAdminMixin, admin.TabularInline):
-    model = GovernmentPlannedVisits
+    model = GDDPlannedVisits
     fields = (
-        'intervention',
+        'gdd',
         'year',
         'programmatic_q1',
         'programmatic_q2',
@@ -170,20 +167,20 @@ class GovernmentPlannedVisitsInline(RestrictedEditAdminMixin, admin.TabularInlin
 
 class AttachmentFileInline(AttachmentSingleInline):
     verbose_name_plural = _("Attachment")
-    code = 'government_intervention_attachment'
+    code = 'government_gdd_attachment'
 
 
 class GovernmentAttachmentAdmin(AttachmentInlineAdminMixin, RestrictedEditAdmin):
-    model = GovernmentAttachment
+    model = GDDAttachment
     list_display = (
-        'intervention',
+        'gdd',
         'type',
     )
     list_filter = (
-        'intervention',
+        'gdd',
     )
     fields = (
-        'intervention',
+        'gdd',
         'type',
     )
     inlines = [
@@ -192,10 +189,10 @@ class GovernmentAttachmentAdmin(AttachmentInlineAdminMixin, RestrictedEditAdmin)
 
 
 class GovernmentAttachmentsInline(RestrictedEditAdminMixin, admin.TabularInline):
-    model = GovernmentAttachment
+    model = GDDAttachment
     fields = ('type',)
     extra = 0
-    code = 'government_intervention_attachment'
+    code = 'government_gdd_attachment'
 
     def get_formset(self, request, obj=None, **kwargs):
         formset = super().get_formset(request, obj, **kwargs)
@@ -205,22 +202,22 @@ class GovernmentAttachmentsInline(RestrictedEditAdminMixin, admin.TabularInline)
 
 class GovernmentResultsLinkAdmin(RestrictedEditAdmin):
 
-    model = GovernmentResultLink
+    model = GDDResultLink
     fields = (
-        'intervention',
+        'gdd',
         'cp_output',
         'ram_indicators'
     )
     list_display = (
-        'intervention',
+        'gdd',
         'cp_output',
     )
     list_filter = (
-        'intervention',
+        'gdd',
         'cp_output',
     )
     search_fields = (
-        'intervention__title',
+        'gdd__title',
     )
     formfield_overrides = {
         models.ManyToManyField: {'widget': SelectMultiple(attrs={'size': '5', 'style': 'width:100%'})},
@@ -229,15 +226,15 @@ class GovernmentResultsLinkAdmin(RestrictedEditAdmin):
 
 class PRCReviewAttachmentInline(AttachmentSingleInline):
     verbose_name_plural = _("Review Document by PRC")
-    code = 'government_intervention_prc_review'
+    code = 'government_gdd_prc_review'
 
 
 class SignedPDAttachmentInline(AttachmentSingleInline):
     verbose_name_plural = _("Signed PD Document")
-    code = 'government_intervention_signed_pd'
+    code = 'government_gdd_signed_pd'
 
 
-class GovInterventionAdmin(
+class GDDAdmin(
         ExtraUrlMixin,
         AttachmentInlineAdminMixin,
         CountryUsersAdminMixin,
@@ -295,7 +292,7 @@ class GovInterventionAdmin(
     )
     country_office_admin_editable = ('unicef_court', )
     fieldsets = (
-        (_('Intervention Details'), {
+        (_('GDD Details'), {
             'fields':
                 (
                     'agreement',
@@ -362,15 +359,6 @@ class GovInterventionAdmin(
         GovernmentReviewInlineAdmin,
     )
 
-    @button(label='Send to Vision')
-    def send_to_vision(self, request, pk):
-        if not PDVisionUploader(Intervention.objects.get(pk=pk)).is_valid():
-            messages.error(request, _('PD is not ready for Vision synchronization.'))
-            return
-
-        send_pd_to_vision.delay(connection.tenant.name, pk)
-        messages.success(request, _('PD was sent to Vision.'))
-
     def created_date(self, obj):
         return obj.created_at.strftime('%d-%m-%Y')
 
@@ -385,8 +373,8 @@ class GovInterventionAdmin(
         return request.user.is_superuser or request.user.groups.filter(name='Country Office Administrator').exists()
 
     def attachments_link(self, obj):
-        url = "{}?intervention__id__exact={}".format(
-            reverse("admin:government_interventionattachment_changelist"),
+        url = "{}?gdd__id__exact={}".format(
+            reverse("admin:government_gddattachment_changelist"),
             obj.pk
         )
         return mark_safe("<a href='{}'>{}</a>".format(
@@ -424,7 +412,7 @@ class GovInterventionAdmin(
     def save_formset(self, request, form, formset, change):
         instances = formset.save()
         for instance in instances:
-            if isinstance(instance, GovernmentAttachment):
+            if isinstance(instance, GDDAttachment):
                 # update attachment file data
                 content_type = ContentType.objects.get_for_model(instance)
                 Attachment.objects.update_or_create(
@@ -439,17 +427,17 @@ class GovInterventionAdmin(
 
 
 class GovernmentSupplyItemAdmin(RestrictedEditAdmin):
-    list_display = ('intervention', 'title', 'unit_number', 'unit_price', 'provided_by')
-    list_select_related = ('intervention',)
+    list_display = ('gdd', 'title', 'unit_number', 'unit_price', 'provided_by')
+    list_select_related = ('gdd',)
     list_filter = ('provided_by',)
     search_fields = ('title',)
 
 
-admin.site.register(GDD, GovInterventionAdmin)
-admin.site.register(GovernmentAmendment, GovernmentAmendmentsAdmin)
-admin.site.register(GovernmentResultLink, GovernmentResultsLinkAdmin)
-admin.site.register(GovernmentBudget, GovernmentBudgetAdmin)
-admin.site.register(GovernmentPlannedVisits, GovernmentPlannedVisitsAdmin)
-admin.site.register(GovernmentAttachment, GovernmentAttachmentAdmin)
-admin.site.register(GovernmentSupplyItem, GovernmentSupplyItemAdmin)
+admin.site.register(GDD, GDDAdmin)
+admin.site.register(GDDAmendment, GovernmentAmendmentsAdmin)
+admin.site.register(GDDResultLink, GovernmentResultsLinkAdmin)
+admin.site.register(GDDBudget, GovernmentBudgetAdmin)
+admin.site.register(GDDPlannedVisits, GovernmentPlannedVisitsAdmin)
+admin.site.register(GDDAttachment, GovernmentAttachmentAdmin)
+admin.site.register(GDDSupplyItem, GovernmentSupplyItemAdmin)
 

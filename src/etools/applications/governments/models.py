@@ -31,8 +31,10 @@ from etools.applications.partners.amendment_utils import copy_instance, INTERVEN
     INTERVENTION_AMENDMENT_DIFF_POST_EFFECTS
 from etools.applications.partners.models import Agreement, PartnerOrganization, _get_partner_base_path, \
     get_default_cash_transfer_modalities, FileType
-from etools.applications.partners.validation import (
-    interventions as intervention_validation,
+
+# TODO imports 
+from etools.applications.governments.validation import (
+    gdds as gdd_validation,
 )
 
 from etools.applications.reports.models import CountryProgramme, Office, Section, Indicator, Result
@@ -42,57 +44,51 @@ from etools.libraries.djangolib.models import StringConcat, MaxDistinct
 from etools.libraries.djangolib.utils import get_environment
 
 
-def get_intervention_file_path(instance, filename):
+def get_gdd_file_path(instance, filename):
     return '/'.join([
-        _get_partner_base_path(instance.agreement.partner),
-        'agreements',
-        str(instance.agreement.id),
-        'gov_interventions',
+        _get_partner_base_path(instance.partner),
+        'gdds',
         str(instance.id),
         filename
     ])
 
 
-def get_prc_intervention_file_path(instance, filename):
+def get_prc_gdd_file_path(instance, filename):
     return '/'.join([
-        _get_partner_base_path(instance.agreement.partner),
-        'agreements',
-        str(instance.agreement.id),
-        'gov_interventions',
+        _get_partner_base_path(instance.partner),
+        'gdds',
         str(instance.id),
         'prc',
         filename
     ])
 
 
-def get_intervention_attachments_file_path(instance, filename):
+def get_gdd_attachments_file_path(instance, filename):
     return '/'.join([
-        _get_partner_base_path(instance.intervention.agreement.partner),
-        'agreements',
-        str(instance.intervention.agreement.id),
-        'gov_interventions',
-        str(instance.intervention.id),
+        _get_partner_base_path(instance.gdd.partner),
+        'gdds',
+        str(instance.gdd.id),
         'attachments',
         str(instance.id),
         filename
     ])
 
 
-def get_intervention_amendment_file_path(instance, filename):
+def get_gdd_amendment_file_path(instance, filename):
     return '/'.join([
-        _get_partner_base_path(instance.intervention.agreement.partner),
-        str(instance.intervention.agreement.partner.id),
+        _get_partner_base_path(instance.gdd.agreement.partner),
+        str(instance.gdd.agreement.partner.id),
         'agreements',
-        str(instance.intervention.agreement.id),
-        'gov_interventions',
-        str(instance.intervention.id),
+        str(instance.gdd.agreement.id),
+        'gov_gdds',
+        str(instance.gdd.id),
         'amendments',
         str(instance.id),
         filename
     ])
 
 
-class InterventionManager(models.Manager):
+class GDDManager(models.Manager):
 
     def get_queryset(self):
         return super().get_queryset().prefetch_related(
@@ -127,17 +123,16 @@ class InterventionManager(models.Manager):
             'sites',
             'planned_visits__sites',
             # Prefetch('supply_items',
-            #          queryset=InterventionSupplyItem.objects.order_by('-id')),
+            #          queryset=GDDSupplyItem.objects.order_by('-id')),
         )
         return qs
 
     def budget_qs(self):
-        from etools.applications.reports.models import InterventionActivity
 
         qs = super().get_queryset().only().prefetch_related(
             'supply_items',
             Prefetch('result_links__ll_results__activities',
-                     queryset=InterventionActivity.objects.filter(is_active=True)),
+                     queryset=GDDActivity.objects.filter(is_active=True)),
         )
         return qs
 
@@ -153,8 +148,8 @@ class InterventionManager(models.Manager):
 
     def frs_qs(self):
         frs_query = FundsReservationHeader.objects.filter(
-            gov_intervention=OuterRef("pk")
-        ).order_by().values("gov_intervention")
+            gov_gdd=OuterRef("pk")
+        ).order_by().values("gdd")
         qs = self.get_queryset().prefetch_related('result_links__cp_output')
         qs = qs.annotate(
             Max("frs__end_date"),
@@ -169,8 +164,8 @@ class InterventionManager(models.Manager):
             frs__total_amt_local__sum=Subquery(
                 frs_query.annotate(total=Sum("total_amt_local")).values("total")[:1]
             ),
-            frs__intervention_amt__sum=Subquery(
-                frs_query.annotate(total=Sum("intervention_amt")).values("total")[:1]
+            frs__gdd_amt__sum=Subquery(
+                frs_query.annotate(total=Sum("gdd_amt")).values("total")[:1]
             ),
             location_p_codes=StringConcat("flat_locations__p_code", separator="|", distinct=True),
             donors=StringConcat("frs__fr_items__donor", separator="|", distinct=True),
@@ -184,7 +179,7 @@ class InterventionManager(models.Manager):
 
 class GDD(TimeStampedModel):
     """
-    Represents a government intervention.
+    Represents a government gdd.
     """
 
     DRAFT = 'draft'
@@ -253,28 +248,28 @@ class GDD(TimeStampedModel):
     )
 
     tracker = FieldTracker(["date_sent_to_partner", "start", "end", "budget_owner"])
-    objects = InterventionManager()
+    objects = GDDManager()
 
     agreement = models.ForeignKey(
         Agreement,
         verbose_name=_("Agreement"),
-        related_name='government_interventions',
+        related_name='government_gdds',
         on_delete=models.CASCADE,
         null=True, blank=True
     )
     partner_organization = models.ForeignKey(
         PartnerOrganization,
         verbose_name=_("Government"),
-        related_name='government_interventions',
+        related_name='government_gdds',
         on_delete=models.CASCADE,
         null=True, blank=True
     )
     country_programmes = models.ManyToManyField(
         CountryProgramme,
         verbose_name=_("Country Programmes"),
-        related_name='government_interventions',
+        related_name='government_gdds',
         blank=True,
-        help_text='Which Country Programme does this Intervention belong to?',
+        help_text='Which Country Programme does this GDD belong to?',
     )
     number = models.CharField(
         verbose_name=_('Reference Number'),
@@ -296,13 +291,13 @@ class GDD(TimeStampedModel):
         verbose_name=_("Start Date"),
         null=True,
         blank=True,
-        help_text='The date the Intervention will start'
+        help_text='The date the GDD will start'
     )
     end = models.DateField(
         verbose_name=_("End Date"),
         null=True,
         blank=True,
-        help_text='The date the Intervention will end'
+        help_text='The date the GDD will end'
     )
     submission_date = models.DateField(
         verbose_name=_("Document Submission Date by CSO"),
@@ -331,7 +326,7 @@ class GDD(TimeStampedModel):
     prc_review_attachment = CodedGenericRelation(
         Attachment,
         verbose_name=_('Review Document by PRC'),
-        code='government_intervention_prc_review',
+        code='government_gdd_prc_review',
         blank=True,
         null=True
     )
@@ -340,7 +335,7 @@ class GDD(TimeStampedModel):
     signed_pd_attachment = CodedGenericRelation(
         Attachment,
         verbose_name=_('Signed PD Document'),
-        code='government_intervention_signed_pd',
+        code='government_gdd_signed_pd',
         blank=True,
         null=True
     )
@@ -358,7 +353,7 @@ class GDD(TimeStampedModel):
     unicef_signatory = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         verbose_name=_("Signed by UNICEF"),
-        related_name='signed_gov_interventions+',
+        related_name='signed_gdds+',
         blank=True,
         null=True,
         on_delete=models.CASCADE,
@@ -366,7 +361,7 @@ class GDD(TimeStampedModel):
     partner_authorized_officer_signatory = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         verbose_name=_("Signed by Partner"),
-        related_name='signed_gov_interventions',
+        related_name='signed_gdds',
         blank=True,
         null=True,
         on_delete=models.CASCADE,
@@ -376,12 +371,12 @@ class GDD(TimeStampedModel):
         settings.AUTH_USER_MODEL,
         verbose_name=_("UNICEF Focal Points"),
         blank=True,
-        related_name='unicef_gov_interventions_focal_points+'
+        related_name='unicef_gdds_focal_points+'
     )
     partner_focal_points = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
         verbose_name=_("CSO Authorized Officials"),
-        related_name='gov_interventions_focal_points+',
+        related_name='gdds_focal_points+',
         blank=True
     )
     contingency_pd = models.BooleanField(
@@ -392,7 +387,7 @@ class GDD(TimeStampedModel):
     activation_letter_attachment = CodedGenericRelation(
         Attachment,
         verbose_name=_('Activation Document for Contingency PDs'),
-        code='government_gov_intervention_activation_letter',
+        code='government_gdd_activation_letter',
         blank=True,
         null=True
     )
@@ -403,7 +398,7 @@ class GDD(TimeStampedModel):
     termination_doc_attachment = CodedGenericRelation(
         Attachment,
         verbose_name=_('Termination document for PDs'),
-        code='government_intervention_termination_doc',
+        code='government_gdd_termination_doc',
         blank=True,
         null=True
     )
@@ -411,19 +406,19 @@ class GDD(TimeStampedModel):
         Section,
         verbose_name=_("Sections"),
         blank=True,
-        related_name='gov_interventions',
+        related_name='gdds',
     )
     offices = models.ManyToManyField(
         Office,
         verbose_name=_("Office"),
         blank=True,
-        related_name='office_gov_interventions',
+        related_name='office_gdds',
     )
-    flat_locations = models.ManyToManyField(Location, related_name="gov_intervention_flat_locations", blank=True,
+    flat_locations = models.ManyToManyField(Location, related_name="gdds_flat_locations", blank=True,
                                             verbose_name=_('Locations'))
 
     sites = models.ManyToManyField('field_monitoring_settings.LocationSite',
-                                   related_name='gov_interventions',
+                                   related_name='gdds',
                                    blank=True,
                                    verbose_name=_('Sites'))
 
@@ -614,10 +609,10 @@ class GDD(TimeStampedModel):
 
     def get_frontend_object_url(self, to_unicef=True, suffix='strategy'):
         host = settings.HOST if "https://" in settings.HOST else f'https://{settings.HOST}'
-        return f'{host}/gdd/interventions/{self.pk}/{suffix}'
+        return f'{host}/gdd/gdds/{self.pk}/{suffix}'
 
     def get_object_url(self):
-        return reverse("governments_api:intervention-detail", args=[self.pk])
+        return reverse("governments_api:gdd-detail", args=[self.pk])
 
     @classmethod
     def permission_structure(cls):
@@ -641,7 +636,7 @@ class GDD(TimeStampedModel):
 
     @property
     def locked(self):
-        # an Intervention is "locked" for editing if any of the parties accepted the current version
+        # an GDD is "locked" for editing if any of the parties accepted the current version
         # in order for editing to continue the "acceptance" needs to be lifted so that it can be re-acknowledged
         # and accepted again after the edits were done.
         return self.partner_accepted or self.unicef_accepted
@@ -690,7 +685,7 @@ class GDD(TimeStampedModel):
     @property
     def sections_present(self):
         # for permissions validation. the name of this def needs to remain the same as defined in the permission matrix.
-        # /assets/partner/intervention_permission.csv
+        # /assets/partner/gdd_permission.csv
         return True if len(self.combined_sections) > 0 else None
 
     @property
@@ -733,8 +728,8 @@ class GDD(TimeStampedModel):
             for lower_result in link.ll_results.all()
         ]
 
-    def intervention_clusters(self):
-        # return intervention clusters as an array of strings
+    def gdd_clusters(self):
+        # return gdd clusters as an array of strings
         clusters = set()
         for lower_result in self.all_lower_results:
             for applied_indicator in lower_result.applied_indicators.all():
@@ -749,7 +744,7 @@ class GDD(TimeStampedModel):
             'total_frs_amt_usd': 0,
             'total_outstanding_amt': 0,
             'total_outstanding_amt_usd': 0,
-            'total_intervention_amt': 0,
+            'total_gdd_amt': 0,
             'total_actual_amt': 0,
             'total_actual_amt_usd': 0,
             'earliest_start_date': None,
@@ -760,7 +755,7 @@ class GDD(TimeStampedModel):
             r['total_frs_amt_usd'] += fr.total_amt
             r['total_outstanding_amt'] += fr.outstanding_amt_local
             r['total_outstanding_amt_usd'] += fr.outstanding_amt
-            r['total_intervention_amt'] += fr.intervention_amt
+            r['total_gdd_amt'] += fr.gdd_amt
             r['total_actual_amt'] += fr.actual_amt_local
             r['total_actual_amt_usd'] += fr.actual_amt
             if r['earliest_start_date'] is None:
@@ -806,36 +801,36 @@ class GDD(TimeStampedModel):
     @transition(field=status,
                 source=[DRAFT],
                 target=[REVIEW],
-                conditions=[intervention_validation.transition_to_review])
+                conditions=[gdd_validation.transition_to_review])
     def transtion_to_review(self):
         pass
 
     @transition(field=status,
                 source=[REVIEW],
                 target=[SIGNATURE],
-                conditions=[intervention_validation.transition_to_signature])
+                conditions=[gdd_validation.transition_to_signature])
     def transition_to_signature(self):
         pass
 
     @transition(field=status,
                 source=[SUSPENDED, SIGNED],
                 target=[ACTIVE],
-                conditions=[intervention_validation.transition_to_active],
-                permission=intervention_validation.partnership_manager_only)
+                conditions=[gdd_validation.transition_to_active],
+                permission=gdd_validation.partnership_manager_only)
     def transition_to_active(self):
         pass
 
     @transition(field=status,
                 source=[REVIEW, SIGNATURE, SUSPENDED],
                 target=[SIGNED],
-                conditions=[intervention_validation.transition_to_signed])
+                conditions=[gdd_validation.transition_to_signed])
     def transition_to_signed(self):
         pass
 
     @transition(field=status,
                 source=[DRAFT, REVIEW, SIGNATURE],
                 target=[CANCELLED],
-                conditions=[intervention_validation.transition_to_cancelled])
+                conditions=[gdd_validation.transition_to_cancelled])
     def transition_to_cancelled(self):
         pass
 
@@ -857,7 +852,7 @@ class GDD(TimeStampedModel):
     @transition(field=status,
                 source=[ACTIVE],
                 target=[ENDED],
-                conditions=[intervention_validation.transition_to_ended])
+                conditions=[gdd_validation.transition_to_ended])
     def transition_to_ended(self):
         # From active, ended, suspended and terminated you cannot move to draft or cancelled because yo'll
         # mess up the reference numbers.
@@ -866,37 +861,37 @@ class GDD(TimeStampedModel):
     @transition(field=status,
                 source=[ENDED],
                 target=[CLOSED],
-                conditions=[intervention_validation.transition_to_closed])
+                conditions=[gdd_validation.transition_to_closed])
     def transition_to_closed(self):
         pass
 
     @transition(field=status,
                 source=[ACTIVE, SIGNED],
                 target=[SUSPENDED],
-                conditions=[intervention_validation.transition_to_suspended],
-                permission=intervention_validation.partnership_manager_only)
+                conditions=[gdd_validation.transition_to_suspended],
+                permission=gdd_validation.partnership_manager_only)
     def transition_to_suspended(self):
         pass
 
     @transition(field=status,
                 source=[ACTIVE, SUSPENDED, SIGNED],
                 target=[TERMINATED],
-                conditions=[intervention_validation.transition_to_terminated],
-                permission=intervention_validation.partnership_manager_only)
+                conditions=[gdd_validation.transition_to_terminated],
+                permission=gdd_validation.partnership_manager_only)
     def transition_to_terminated(self):
         pass
 
     @property
     def reference_number(self):
         """
-        if intervention is in amendment, replace id part from reference number to original one
+        if gdd is in amendment, replace id part from reference number to original one
         and add postfix to keep it unique
         """
         if self.in_amendment:
             try:
-                document_id = self.amendment.intervention_id
+                document_id = self.amendment.gdd_id
                 amendment_relative_number = self.amendment.amendment_number
-            except GovernmentAmendment.DoesNotExist:
+            except GDDAmendment.DoesNotExist:
                 document_id = self.id
                 amendment_relative_number = None
         else:
@@ -945,7 +940,7 @@ class GDD(TimeStampedModel):
         super().save()
 
         if not oldself:
-            self.planned_budget = GovernmentBudget.objects.create(intervention=self)
+            self.planned_budget = GDDBudget.objects.create(gdd=self)
 
     def has_active_amendment(self, kind=None):
         active_amendments = self.amendments.filter(is_active=True)
@@ -960,8 +955,8 @@ class GDD(TimeStampedModel):
 
     def was_active_before(self):
         """
-        check whether intervention was in signed or active status before.
-        if yes, it should be treated in special way because intervention is synchronized to PRP
+        check whether gdd was in signed or active status before.
+        if yes, it should be treated in special way because gdd is synchronized to PRP
         """
         return Activity.objects.filter(
             target_content_type=ContentType.objects.get_for_model(self),
@@ -971,11 +966,11 @@ class GDD(TimeStampedModel):
         ).exists()
 
 
-class GovernmentAmendment(TimeStampedModel):
+class GDDAmendment(TimeStampedModel):
     """
-    Represents an amendment for the partner intervention.
+    Represents an amendment for the partner gdd.
 
-    Relates to :model:`governments.GovInterventions`
+    Relates to :model:`governments.GDD`
     """
 
     DATES = 'dates'
@@ -1010,7 +1005,7 @@ class GovernmentAmendment(TimeStampedModel):
         (KIND_CONTINGENCY, _('Contingency')),
     )
 
-    intervention = models.ForeignKey(
+    gdd = models.ForeignKey(
         GDD,
         verbose_name=_("Reference Number"),
         related_name='amendments',
@@ -1079,19 +1074,19 @@ class GovernmentAmendment(TimeStampedModel):
     signed_amendment_attachment = CodedGenericRelation(
         Attachment,
         verbose_name=_('Amendment Document'),
-        code='government_intervention_amendment_signed',
+        code='government_gdd_amendment_signed',
         blank=True,
     )
 
     internal_prc_review = CodedGenericRelation(
         Attachment,
         verbose_name=_('Internal PRC Review'),
-        code='partners_intervention_amendment_internal_prc_review',
+        code='partners_gdd_amendment_internal_prc_review',
         blank=True,
     )
-    amended_intervention = models.OneToOneField(
+    amended_gdd = models.OneToOneField(
         GDD,
-        verbose_name=_("Amended Intervention"),
+        verbose_name=_("Amended GDD"),
         related_name='amendment',
         blank=True, null=True,
         on_delete=models.SET_NULL,
@@ -1102,7 +1097,7 @@ class GovernmentAmendment(TimeStampedModel):
     tracker = FieldTracker()
 
     def compute_reference_number(self):
-        number = str(self.intervention.amendments.filter(kind=self.kind).count() + 1)
+        number = str(self.gdd.amendments.filter(kind=self.kind).count() + 1)
         code = {
             self.KIND_NORMAL: 'amd',
             self.KIND_CONTINGENCY: 'camd',
@@ -1114,18 +1109,18 @@ class GovernmentAmendment(TimeStampedModel):
         new_amendment = self.pk is None
         if new_amendment:
             self.amendment_number = self.compute_reference_number()
-            self._copy_intervention()
+            self._copy_gdd()
 
         super().save(**kwargs)
 
         if new_amendment:
-            # re-calculate intervention reference number when amendment relation is available
-            self.amended_intervention.update_reference_number()
-            self.amended_intervention.save()
+            # re-calculate gdd reference number when amendment relation is available
+            self.amended_gdd.update_reference_number()
+            self.amended_gdd.save()
 
     def delete(self, **kwargs):
-        if self.amended_intervention:
-            self.amended_intervention.delete()
+        if self.amended_gdd:
+            self.amended_gdd.delete()
         super().delete(**kwargs)
 
     def __str__(self):
@@ -1136,30 +1131,30 @@ class GovernmentAmendment(TimeStampedModel):
 
     class Meta:
         verbose_name = _('Amendment')
-        verbose_name_plural = _('Intervention amendments')
+        verbose_name_plural = _('GDD amendments')
 
-    def _copy_intervention(self):
-        self.amended_intervention, self.related_objects_map = copy_instance(
-            self.intervention,
+    def _copy_gdd(self):
+        self.amended_gdd, self.related_objects_map = copy_instance(
+            self.gdd,
             INTERVENTION_AMENDMENT_RELATED_FIELDS,
             INTERVENTION_AMENDMENT_IGNORED_FIELDS,
             INTERVENTION_AMENDMENT_DEFAULTS,
             INTERVENTION_AMENDMENT_COPY_POST_EFFECTS,
         )
-        self.amended_intervention.title = '[Amended] ' + self.intervention.title
-        self.amended_intervention.submission_date = timezone.now().date()
-        self.amended_intervention.save()
+        self.amended_gdd.title = '[Amended] ' + self.gdd.title
+        self.amended_gdd.submission_date = timezone.now().date()
+        self.amended_gdd.save()
 
-    def clean_amended_intervention(self):
+    def clean_amended_gdd(self):
         # strip amended prefix from title in case of modifications
-        self.amended_intervention.title = self.amended_intervention.title.replace('[Amended]', '').lstrip(' ')
+        self.amended_gdd.title = self.amended_gdd.title.replace('[Amended]', '').lstrip(' ')
 
     def merge_amendment(self):
-        self.clean_amended_intervention()
+        self.clean_amended_gdd()
 
         merge_instance(
-            self.intervention,
-            self.amended_intervention,
+            self.gdd,
+            self.amended_gdd,
             self.related_objects_map,
             INTERVENTION_AMENDMENT_RELATED_FIELDS,
             INTERVENTION_AMENDMENT_IGNORED_FIELDS,
@@ -1168,39 +1163,39 @@ class GovernmentAmendment(TimeStampedModel):
         )
 
         # copy signatures to amendment
-        pd_attachment = self.amended_intervention.signed_pd_attachment.first()
+        pd_attachment = self.amended_gdd.signed_pd_attachment.first()
         if pd_attachment:
-            pd_attachment.code = 'partners_intervention_amendment_signed'
+            pd_attachment.code = 'partners_gdd_amendment_signed'
             pd_attachment.content_object = self
             pd_attachment.save()
 
-        self.signed_by_unicef_date = self.amended_intervention.signed_by_unicef_date
-        self.signed_by_partner_date = self.amended_intervention.signed_by_partner_date
-        self.unicef_signatory = self.amended_intervention.unicef_signatory
-        self.partner_authorized_officer_signatory = self.amended_intervention.partner_authorized_officer_signatory
+        self.signed_by_unicef_date = self.amended_gdd.signed_by_unicef_date
+        self.signed_by_partner_date = self.amended_gdd.signed_by_partner_date
+        self.unicef_signatory = self.amended_gdd.unicef_signatory
+        self.partner_authorized_officer_signatory = self.amended_gdd.partner_authorized_officer_signatory
 
-        self.amended_intervention.reviews.update(intervention=self.intervention)
+        self.amended_gdd.reviews.update(gdd=self.gdd)
 
-        amended_intervention = self.amended_intervention
+        amended_gdd = self.amended_gdd
 
-        self.amended_intervention = None
+        self.amended_gdd = None
         self.is_active = False
         self.save()
 
         # TODO: Technical debt - remove after tempoorary exception for ended amendments is removed.
-        if self.intervention.status == self.intervention.ENDED:
-            if self.intervention.end >= datetime.date.today() >= self.intervention.start:
-                self.intervention.status = self.intervention.ACTIVE
+        if self.gdd.status == self.gdd.ENDED:
+            if self.gdd.end >= datetime.date.today() >= self.gdd.start:
+                self.gdd.status = self.gdd.ACTIVE
 
-        self.intervention.save(amendment_number=self.intervention.amendments.filter(is_active=False).count())
+        self.gdd.save(amendment_number=self.gdd.amendments.filter(is_active=False).count())
 
-        amended_intervention.delete()
+        amended_gdd.delete()
 
     def get_difference(self):
-        self.clean_amended_intervention()
+        self.clean_amended_gdd()
         return calculate_difference(
-            self.intervention,
-            self.amended_intervention,
+            self.gdd,
+            self.amended_gdd,
             self.related_objects_map,
             INTERVENTION_AMENDMENT_RELATED_FIELDS,
             INTERVENTION_AMENDMENT_IGNORED_FIELDS,
@@ -1208,7 +1203,7 @@ class GovernmentAmendment(TimeStampedModel):
         )
 
 
-class GovernmentPlannedVisitSite(models.Model):
+class GDDPlannedVisitSite(models.Model):
     Q1 = 1
     Q2 = 2
     Q3 = 3
@@ -1221,7 +1216,7 @@ class GovernmentPlannedVisitSite(models.Model):
         (Q4, _('Q4')),
     )
 
-    planned_visits = models.ForeignKey('governments.GovernmentPlannedVisits', on_delete=models.CASCADE)
+    planned_visits = models.ForeignKey('governments.GDDPlannedVisits', on_delete=models.CASCADE)
     site = models.ForeignKey('field_monitoring_settings.LocationSite', on_delete=models.CASCADE)
     quarter = models.PositiveSmallIntegerField(choices=QUARTER_CHOICES)
 
@@ -1229,11 +1224,11 @@ class GovernmentPlannedVisitSite(models.Model):
         unique_together = ('planned_visits', 'site', 'quarter')
 
 
-class GovernmentPlannedVisits(TimeStampedModel):
-    """Represents planned visits for the intervention"""
+class GDDPlannedVisits(TimeStampedModel):
+    """Represents planned visits for the gdd"""
 
-    intervention = models.ForeignKey(
-        GDD, related_name='planned_visits', verbose_name=_('Government Intervention'),
+    gdd = models.ForeignKey(
+        GDD, related_name='planned_visits', verbose_name=_('GDD'),
         on_delete=models.CASCADE,
     )
     year = models.IntegerField(default=get_current_year, verbose_name=_('Year'))
@@ -1243,7 +1238,7 @@ class GovernmentPlannedVisits(TimeStampedModel):
     programmatic_q4 = models.IntegerField(default=0, verbose_name=_('Programmatic Q4'))
     sites = models.ManyToManyField(
         'field_monitoring_settings.LocationSite',
-        through=GovernmentPlannedVisitSite,
+        through=GDDPlannedVisitSite,
         verbose_name=_('Sites'),
         blank=True,
     )
@@ -1251,16 +1246,16 @@ class GovernmentPlannedVisits(TimeStampedModel):
     tracker = FieldTracker()
 
     class Meta:
-        unique_together = ('intervention', 'year')
-        verbose_name_plural = _('Intervention Planned Visits')
+        unique_together = ('gdd', 'year')
+        verbose_name_plural = _('GDD Planned Visits')
 
     def __str__(self):
-        return '{} {}'.format(self.intervention, self.year)
+        return '{} {}'.format(self.gdd, self.year)
 
     def programmatic_sites(self, quarter):
         from etools.applications.field_monitoring.fm_settings.models import LocationSite
         return LocationSite.objects.filter(
-            pk__in=GovernmentPlannedVisitSite.objects.filter(
+            pk__in=GDDPlannedVisitSite.objects.filter(
                 site__in=self.sites.all(),
                 planned_visits=self,
                 quarter=quarter
@@ -1269,27 +1264,27 @@ class GovernmentPlannedVisits(TimeStampedModel):
 
     @property
     def programmatic_q1_sites(self):
-        return self.programmatic_sites(GovernmentPlannedVisitSite.Q1)
+        return self.programmatic_sites(GDDPlannedVisitSite.Q1)
 
     @property
     def programmatic_q2_sites(self):
-        return self.programmatic_sites(GovernmentPlannedVisitSite.Q2)
+        return self.programmatic_sites(GDDPlannedVisitSite.Q2)
 
     @property
     def programmatic_q3_sites(self):
-        return self.programmatic_sites(GovernmentPlannedVisitSite.Q3)
+        return self.programmatic_sites(GDDPlannedVisitSite.Q3)
 
     @property
     def programmatic_q4_sites(self):
-        return self.programmatic_sites(GovernmentPlannedVisitSite.Q4)
+        return self.programmatic_sites(GDDPlannedVisitSite.Q4)
 
 
-class GovernmentBudget(TimeStampedModel):
+class GDDBudget(TimeStampedModel):
     """
-    Represents a budget for the intervention
+    Represents a budget for the gdd
     """
-    intervention = models.OneToOneField(GDD, related_name='planned_budget', null=True, blank=True,
-                                        verbose_name=_('Intervention'), on_delete=models.CASCADE)
+    gdd = models.OneToOneField(GDD, related_name='planned_budget', null=True, blank=True,
+                                        verbose_name=_('GDD'), on_delete=models.CASCADE)
 
     # legacy values
     partner_contribution = models.DecimalField(max_digits=20, decimal_places=2, default=0,
@@ -1306,7 +1301,7 @@ class GovernmentBudget(TimeStampedModel):
     # sum of all activity/management budget cso/partner values
     partner_contribution_local = models.DecimalField(max_digits=20, decimal_places=2, default=0,
                                                      verbose_name=_('Partner Contribution Local'))
-    # sum of partner supply items (InterventionSupplyItem)
+    # sum of partner supply items (GDDSupplyItem)
     partner_supply_local = models.DecimalField(
         max_digits=20, decimal_places=2, default=0,
         verbose_name=_('Partner Supplies Local')
@@ -1327,7 +1322,7 @@ class GovernmentBudget(TimeStampedModel):
     # unicef cash including headquarters contribution
     unicef_cash_local = models.DecimalField(max_digits=20, decimal_places=2, default=0,
                                             verbose_name=_('Unicef Cash Local'))
-    # sum of unicef supply items (InterventionSupplyItem)
+    # sum of unicef supply items (GDDSupplyItem)
     in_kind_amount_local = models.DecimalField(
         max_digits=20, decimal_places=2, default=0,
         verbose_name=_('UNICEF Supplies Local')
@@ -1344,7 +1339,7 @@ class GovernmentBudget(TimeStampedModel):
     tracker = FieldTracker()
 
     class Meta:
-        verbose_name_plural = _('Intervention budget')
+        verbose_name_plural = _('GDD budget')
 
     @property
     def partner_contribution_percent(self):
@@ -1385,12 +1380,12 @@ class GovernmentBudget(TimeStampedModel):
         # self.total is None if object hasn't been saved yet
         total_local = self.total_local if self.total_local else decimal.Decimal('0.00')
         return '{}: {:.2f}'.format(
-            self.intervention,
+            self.gdd,
             total_local
         )
 
     def calc_totals(self, save=True):
-        intervention = GDD.objects.budget_qs().get(id=self.intervention_id)
+        gdd = GDD.objects.budget_qs().get(id=self.gdd_id)
 
         # partner and unicef totals
         def init_totals():
@@ -1398,7 +1393,7 @@ class GovernmentBudget(TimeStampedModel):
             self.total_unicef_cash_local_wo_hq = 0
 
         init = False
-        for link in intervention.result_links.all():
+        for link in gdd.result_links.all():
             for result in link.ll_results.all():
                 for activity in result.activities.all():  # activities prefetched with is_active=True in budget_qs
                     if not init:
@@ -1416,8 +1411,8 @@ class GovernmentBudget(TimeStampedModel):
         # in kind totals
         self.in_kind_amount_local = 0
         self.partner_supply_local = 0
-        for item in intervention.supply_items.all():
-            if item.provided_by == GovernmentSupplyItem.PROVIDED_BY_UNICEF:
+        for item in gdd.supply_items.all():
+            if item.provided_by == GDDSupplyItem.PROVIDED_BY_UNICEF:
                 self.in_kind_amount_local += item.total_price
             else:
                 self.partner_supply_local += item.total_price
@@ -1436,7 +1431,7 @@ class GovernmentBudget(TimeStampedModel):
             self.save()
 
 
-class GovernmentReviewQuestionnaire(models.Model):
+class GDDReviewQuestionnaire(models.Model):
     # answer fields to be renamed when questionnaire will be available
     ANSWERS = Choices(
         ('', _('Not decided yet')),
@@ -1500,7 +1495,7 @@ class GovernmentReviewQuestionnaire(models.Model):
         abstract = True
 
 
-class GovernmentReview(GovernmentReviewQuestionnaire, TimeStampedModel):
+class GDDReview(GDDReviewQuestionnaire, TimeStampedModel):
     PRC = 'prc'
     NPRC = 'non-prc'
     NORV = 'no-review'
@@ -1517,15 +1512,15 @@ class GovernmentReview(GovernmentReviewQuestionnaire, TimeStampedModel):
         )
     )
 
-    intervention = models.ForeignKey(
+    gdd = models.ForeignKey(
         GDD,
-        verbose_name=_("Government Intervention"),
+        verbose_name=_("GDD"),
         related_name='reviews',
         on_delete=models.CASCADE,
     )
 
     amendment = models.ForeignKey(
-        GovernmentAmendment,
+        GDDAmendment,
         null=True,
         blank=True,
         verbose_name=_("Amendment"),
@@ -1587,8 +1582,8 @@ class GovernmentReview(GovernmentReviewQuestionnaire, TimeStampedModel):
         return self.created.date()
 
 
-class GovernmentReviewNotification(TimeStampedModel):
-    review = models.ForeignKey(GovernmentReview, related_name='gov_prc_notifications', on_delete=models.CASCADE)
+class GDDReviewNotification(TimeStampedModel):
+    review = models.ForeignKey(GDDReview, related_name='gov_prc_notifications', on_delete=models.CASCADE)
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         verbose_name=_('User'),
@@ -1606,20 +1601,20 @@ class GovernmentReviewNotification(TimeStampedModel):
     def send_notification(self):
         context = {
             'environment': get_environment(),
-            'intervention_number': self.review.intervention.reference_number,
+            'gdd_number': self.review.gdd.reference_number,
             'meeting_date': self.review.meeting_date.strftime('%d-%m-%Y'),
             'user_name': self.user.get_full_name(),
-            'url': self.review.intervention.get_frontend_object_url(suffix='review')
+            'url': self.review.gdd.get_frontend_object_url(suffix='review')
         }
 
         send_notification_with_template(
             recipients=[self.user.email],
-            template_name='partners/intervention/prc_review_notification',
+            template_name='partners/gdd/prc_review_notification',
             context=context,
         )
 
     @classmethod
-    def notify_officers_for_review(cls, review: GovernmentReview):
+    def notify_officers_for_review(cls, review: GDDReview):
         notified_users = cls.objects.filter(
             review=review,
             created__gt=timezone.now() - datetime.timedelta(days=1),
@@ -1632,7 +1627,7 @@ class GovernmentReviewNotification(TimeStampedModel):
             cls.objects.create(review=review, user=user)
 
 
-class GovernmentPRCOfficerReview(GovernmentReviewQuestionnaire, TimeStampedModel):
+class GDDPRCOfficerReview(GDDReviewQuestionnaire, TimeStampedModel):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         verbose_name=_('User'),
@@ -1640,22 +1635,22 @@ class GovernmentPRCOfficerReview(GovernmentReviewQuestionnaire, TimeStampedModel
         on_delete=models.CASCADE,
     )
 
-    overall_review = models.ForeignKey(GovernmentReview, on_delete=models.CASCADE, related_name='gov_prc_reviews')
+    overall_review = models.ForeignKey(GDDReview, on_delete=models.CASCADE, related_name='gov_prc_reviews')
     review_date = models.DateField(null=True, blank=True, verbose_name=_('Review Date'))
 
     class Meta:
         ordering = ['-created']
 
 
-class GovernmentAttachment(TimeStampedModel):
+class GDDAttachment(TimeStampedModel):
     """
-    Represents a file for the partner intervention
+    Represents a file for the partner gdd
 
-    Relates to :model:`governments.Intervention`
+    Relates to :model:`governments.GDD`
     Relates to :model:`partners.WorkspaceFileType`
     """
-    intervention = models.ForeignKey(
-        GDD, related_name='attachments', verbose_name=_('Intervention'),
+    gdd = models.ForeignKey(
+        GDD, related_name='attachments', verbose_name=_('GDD'),
         on_delete=models.CASCADE,
     )
     type = models.ForeignKey(
@@ -1663,10 +1658,10 @@ class GovernmentAttachment(TimeStampedModel):
         on_delete=models.CASCADE,
     )
 
-    attachment_file = CodedGenericRelation(
+    attachment = CodedGenericRelation(
         Attachment,
-        verbose_name=_('Intervention Attachment'),
-        code='government_intervention_attachment',
+        verbose_name=_('GDD Attachment'),
+        code='government_gdd_attachment',
         blank=True,
         null=True,
     )
@@ -1681,7 +1676,7 @@ class GovernmentAttachment(TimeStampedModel):
         super().save(*args, **kwargs)
 
         # synchronize type to .attachment_file.file_type when possible
-        attachment_file = self.attachment_file.last()
+        attachment_file = self.attachment.last()
         if attachment_file:
             file_type = AttachmentFileType.objects.filter(
                 Q(label__iexact=self.type.name) | Q(name__iexact=self.type.name)
@@ -1694,16 +1689,16 @@ class GovernmentAttachment(TimeStampedModel):
         return self.attachment.name
 
 
-class GovernmentReportingPeriod(TimeStampedModel):
+class GDDReportingPeriod(TimeStampedModel):
     """
-    Represents a set of 3 dates associated with an Intervention (start, end,
+    Represents a set of 3 dates associated with an GDD (start, end,
     and due).
 
-    There can be multiple sets of these dates for each intervention, but
+    There can be multiple sets of these dates for each gdd, but
     within each set, start < end < due.
     """
-    intervention = models.ForeignKey(
-        GDD, related_name='reporting_periods', verbose_name=_('Government Intervention'),
+    gdd = models.ForeignKey(
+        GDD, related_name='reporting_periods', verbose_name=_('GDD'),
         on_delete=models.CASCADE,
     )
     start_date = models.DateField(verbose_name='Reporting Period Start Date')
@@ -1715,11 +1710,11 @@ class GovernmentReportingPeriod(TimeStampedModel):
 
     def __str__(self):
         return '{} ({} - {}) due on {}'.format(
-            self.intervention, self.start_date, self.end_date, self.due_date
+            self.gdd, self.start_date, self.end_date, self.due_date
         )
 
 
-class GovernmentSupplyItem(TimeStampedModel):
+class GDDSupplyItem(TimeStampedModel):
     PROVIDED_BY_UNICEF = 'unicef'
     PROVIDED_BY_PARTNER = 'partner'
     PROVIDED_BY_CHOICES = Choices(
@@ -1727,9 +1722,9 @@ class GovernmentSupplyItem(TimeStampedModel):
         (PROVIDED_BY_PARTNER, _('Partner')),
     )
 
-    intervention = models.ForeignKey(
+    gdd = models.ForeignKey(
         GDD,
-        verbose_name=_("Government Intervention"),
+        verbose_name=_("GDD"),
         related_name="supply_items",
         on_delete=models.CASCADE,
     )
@@ -1750,7 +1745,7 @@ class GovernmentSupplyItem(TimeStampedModel):
         default=0,
     )
     # result = models.ForeignKey(
-    #     InterventionResultLink,
+    #     GDDResultLink,
     #     verbose_name=_("Result"),
     #     on_delete=models.CASCADE,
     #     null=True,
@@ -1784,21 +1779,21 @@ class GovernmentSupplyItem(TimeStampedModel):
         ordering = ('id',)
 
     def __str__(self):
-        return "{} {}".format(self.intervention, self.title)
+        return "{} {}".format(self.gdd, self.title)
 
     def save(self, *args, **kwargs):
         self.total_price = self.unit_number * self.unit_price
         super().save()
         # update budgets
-        self.intervention.planned_budget.save()
+        self.gdd.planned_budget.save()
 
     def delete(self, **kwargs):
         super().delete(**kwargs)
         # update budgets
-        self.intervention.planned_budget.save()
+        self.gdd.planned_budget.save()
 
 
-class GovernmentRisk(TimeStampedModel):
+class GDDRisk(TimeStampedModel):
     RISK_TYPE_ENVIRONMENTAL = "environment"
     RISK_TYPE_FINANCIAL = "financial"
     RISK_TYPE_OPERATIONAL = "operational"
@@ -1816,9 +1811,9 @@ class GovernmentRisk(TimeStampedModel):
         (RISK_TYPE_SECURITY, _("Safety & security")),
     )
 
-    intervention = models.ForeignKey(
+    gdd = models.ForeignKey(
         GDD,
-        verbose_name=_("Government Intervention"),
+        verbose_name=_("GDD"),
         related_name="risks",
         on_delete=models.CASCADE,
     )
@@ -1833,7 +1828,7 @@ class GovernmentRisk(TimeStampedModel):
         ordering = ('id',)
 
     def __str__(self):
-        return "{} {}".format(self.intervention, self.get_risk_type_display())
+        return "{} {}".format(self.gdd, self.get_risk_type_display())
 
 
 class GovernmentEWP(TimeStampedModel):
@@ -1871,7 +1866,7 @@ class EWPResultLink(TimeStampedModel):
 
     def __str__(self):
         return '{} {}'.format(
-            self.intervention, self.cp_output
+            self.gdd, self.cp_output
         )
 
     def total(self):
@@ -1888,15 +1883,15 @@ class EWPResultLink(TimeStampedModel):
             if self.cp_output:
                 self.code = str(
                     # explicitly perform model.objects.count to avoid caching
-                    self.__class__.objects.filter(intervention=self.intervention).exclude(cp_output=None).count() + 1,
+                    self.__class__.objects.filter(gdd=self.gdd).exclude(cp_output=None).count() + 1,
                 )
             else:
                 self.code = '0'
         super().save(*args, **kwargs)
 
     @classmethod
-    def renumber_result_links_for_intervention(cls, intervention):
-        result_links = intervention.result_links.exclude(cp_output=None)
+    def renumber_result_links_for_gdd(cls, gdd):
+        result_links = gdd.result_links.exclude(cp_output=None)
         # drop codes because in another case we'll face to UniqueViolation exception
         result_links.update(code=None)
         for i, result_link in enumerate(result_links):
@@ -1917,14 +1912,14 @@ class EWPActivity(TimeStampedModel):
     partners = models.ManyToManyField(PartnerOrganization, related_name="ewp_activities", blank=True)
 
 
-class GovernmentResultLink(TimeStampedModel):
+class GDDResultLink(TimeStampedModel):
     code = models.CharField(verbose_name=_("Code"), max_length=50, blank=True, null=True)
-    intervention = models.ForeignKey(
-        GDD, related_name='result_links', verbose_name=_('Intervention'),
+    gdd = models.ForeignKey(
+        GDD, related_name='result_links', verbose_name=_('GDD'),
         on_delete=models.CASCADE,
     )
     cp_output = models.ForeignKey(
-        Result, related_name='gov_intervention_links', verbose_name=_('CP Output'),
+        Result, related_name='gdd_links', verbose_name=_('CP Output'),
         on_delete=models.CASCADE, blank=True, null=True,
     )
     ram_indicators = models.ManyToManyField(Indicator, blank=True, verbose_name=_('RAM Indicators'))
@@ -1932,12 +1927,12 @@ class GovernmentResultLink(TimeStampedModel):
     tracker = FieldTracker()
 
     class Meta:
-        unique_together = ['intervention', 'cp_output']
+        unique_together = ['gdd', 'cp_output']
         ordering = ['created']
 
     def __str__(self):
         return '{} {}'.format(
-            self.intervention, self.cp_output
+            self.gdd, self.cp_output
         )
 
     def total(self):
@@ -1954,15 +1949,15 @@ class GovernmentResultLink(TimeStampedModel):
             if self.cp_output:
                 self.code = str(
                     # explicitly perform model.objects.count to avoid caching
-                    self.__class__.objects.filter(intervention=self.intervention).exclude(cp_output=None).count() + 1,
+                    self.__class__.objects.filter(gdd=self.gdd).exclude(cp_output=None).count() + 1,
                 )
             else:
                 self.code = '0'
         super().save(*args, **kwargs)
 
     @classmethod
-    def renumber_result_links_for_intervention(cls, intervention):
-        result_links = intervention.result_links.exclude(cp_output=None)
+    def renumber_result_links_for_gdd(cls, gdd):
+        result_links = gdd.result_links.exclude(cp_output=None)
         # drop codes because in another case we'll face to UniqueViolation exception
         result_links.update(code=None)
         for i, result_link in enumerate(result_links):
@@ -1970,12 +1965,12 @@ class GovernmentResultLink(TimeStampedModel):
         cls.objects.bulk_update(result_links, fields=['code'])
 
 
-class GovernmentLowerResult(TimeStampedModel):
+class GDDKeyIntervention(TimeStampedModel):
     """Lower result is always an output"""
 
-    # link to intermediary model to intervention and cp ouptut
+    # link to intermediary model to gdd and cp ouptut
     result_link = models.ForeignKey(
-        GovernmentResultLink,
+        GDDResultLink,
         related_name='ll_results',
         verbose_name=_('Result Link'),
         on_delete=models.CASCADE,
@@ -2006,7 +2001,7 @@ class GovernmentLowerResult(TimeStampedModel):
             )
         super().save(*args, **kwargs)
         # update budgets
-        self.result_link.intervention.planned_budget.save()
+        self.result_link.gdd.planned_budget.save()
 
     @classmethod
     def renumber_results_for_result_link(cls, result_link):
@@ -2036,11 +2031,11 @@ class GovernmentLowerResult(TimeStampedModel):
         return results["total"] if results["total"] is not None else 0
 
 
-class GovernmentActivity(TimeStampedModel):
+class GDDActivity(TimeStampedModel):
     ewp_activity = models.ForeignKey(
         EWPActivity,
         verbose_name=_("EWP Activity"),
-        related_name="gov_intervention_activities",
+        related_name="gdd_activities",
         on_delete=models.CASCADE,
     )
     code = models.CharField(
@@ -2068,7 +2063,7 @@ class GovernmentActivity(TimeStampedModel):
     )
 
     time_frames = models.ManyToManyField(
-        'governments.GovernmentTimeFrame',
+        'governments.GDDTimeFrame',
         verbose_name=_('Time Frames Enabled'),
         blank=True,
         related_name='activities',
@@ -2077,15 +2072,15 @@ class GovernmentActivity(TimeStampedModel):
     is_active = models.BooleanField(default=True, verbose_name=_('Is Active'))
 
     class Meta:
-        verbose_name = _('Intervention Activity')
-        verbose_name_plural = _('Intervention Activities')
+        verbose_name = _('GDD Activity')
+        verbose_name_plural = _('GDD Activities')
         ordering = ('id',)
 
     def __str__(self):
         return "{} {}".format(self.result, self.name)
 
     def update_cash(self):
-        items = GovernmentActivityItem.objects.filter(activity=self)
+        items = GDDActivityItem.objects.filter(activity=self)
         items_exists = items.exists()
         if not items_exists:
             return
@@ -2117,10 +2112,10 @@ class GovernmentActivity(TimeStampedModel):
             )
         super().save(*args, **kwargs)
         # update budgets
-        self.result.result_link.intervention.planned_budget.save()
+        self.result.result_link.gdd.planned_budget.save()
 
     @classmethod
-    def renumber_activities_for_result(cls, result: GovernmentLowerResult, start_id=None):
+    def renumber_activities_for_result(cls, result: GDDKeyIntervention, start_id=None):
         activities = result.activities.all()
         # drop codes because in another case we'll face to UniqueViolation exception
         activities.update(code=None)
@@ -2135,10 +2130,10 @@ class GovernmentActivity(TimeStampedModel):
         return ', '.join([f'{tf.start_date.year} Q{tf.quarter}' for tf in self.time_frames.all()])
 
 
-class GovernmentActivityItem(TimeStampedModel):
+class GDDActivityItem(TimeStampedModel):
     activity = models.ForeignKey(
-        GovernmentActivity,
-        verbose_name=_("Government Intervention Activity"),
+        GDDActivity,
+        verbose_name=_("GDD Activity"),
         related_name="items",
         on_delete=models.CASCADE,
     )
@@ -2181,8 +2176,8 @@ class GovernmentActivityItem(TimeStampedModel):
     )
 
     class Meta:
-        verbose_name = _('Intervention Activity Item')
-        verbose_name_plural = _('Intervention Activity Items')
+        verbose_name = _('GDD Activity Item')
+        verbose_name_plural = _('GDD Activity Items')
         ordering = ('id',)
 
     def __str__(self):
@@ -2199,7 +2194,7 @@ class GovernmentActivityItem(TimeStampedModel):
         self.activity.update_cash()
 
     @classmethod
-    def renumber_items_for_activity(cls, activity: GovernmentActivity, start_id=None):
+    def renumber_items_for_activity(cls, activity: GDDActivity, start_id=None):
         items = activity.items.all()
         # drop codes because in another case we'll face to UniqueViolation exception
         items.update(code=None)
@@ -2208,10 +2203,10 @@ class GovernmentActivityItem(TimeStampedModel):
         cls.objects.bulk_update(items, fields=['code'])
 
 
-class GovernmentTimeFrame(TimeStampedModel):
-    intervention = models.ForeignKey(
+class GDDTimeFrame(TimeStampedModel):
+    gdd = models.ForeignKey(
         GDD,
-        verbose_name=_("Government Intervention"),
+        verbose_name=_("GDD"),
         related_name="quarters",
         on_delete=models.CASCADE,
     )
@@ -2225,10 +2220,68 @@ class GovernmentTimeFrame(TimeStampedModel):
 
     def __str__(self):
         return "{} {} - {}".format(
-            self.intervention,
+            self.gdd,
             self.start_date,
             self.end_date,
         )
 
     class Meta:
-        ordering = ('intervention', 'start_date',)
+        ordering = ('gdd', 'start_date',)
+
+
+
+class GDDReportingRequirement(TimeStampedModel):
+    TYPE_QPR = "QPR"
+    TYPE_HR = "HR"
+    TYPE_CHOICES = (
+        (TYPE_QPR, _("Standard Quarterly Progress Report")),
+        (TYPE_HR, _("Humanitarian Report")),
+    )
+
+    gdd = models.ForeignKey(
+        "governments.GDD",
+        on_delete=models.CASCADE,
+        verbose_name=_("GDD"),
+        related_name="reporting_requirements"
+    )
+    start_date = models.DateField(
+        null=True,
+        verbose_name=_('Start Date')
+    )
+    end_date = models.DateField(
+        null=True,
+        verbose_name=_('End Date')
+    )
+    due_date = models.DateField(verbose_name=_('Due Date'))
+    report_type = models.CharField(max_length=50, choices=TYPE_CHOICES)
+
+    class Meta:
+        ordering = ("-end_date", )
+
+    def __str__(self):
+        return "{} ({}) {}".format(
+            self.get_report_type_display(),
+            self.report_type,
+            self.due_date
+        )
+
+
+class GDDSpecialReportingRequirement(TimeStampedModel):
+    gdd = models.ForeignKey(
+        "governments.GDD",
+        on_delete=models.CASCADE,
+        verbose_name=_("GDD"),
+        related_name="special_reporting_requirements"
+    )
+    description = models.CharField(
+        blank=True,
+        max_length=256,
+        verbose_name=_("Description")
+    )
+    due_date = models.DateField(verbose_name=_('Due Date'))
+
+    class Meta:
+        ordering = ("-due_date", )
+
+    def __str__(self):
+        return str(self.due_date)

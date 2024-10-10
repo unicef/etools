@@ -6,6 +6,13 @@ import string
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.utils.translation import gettext as _
+from etools.applications.funds.serializers import FRsSerializer
+from etools.applications.governments.serializers.amendments import GDDAmendmentCUSerializer
+from etools.applications.governments.serializers.gdd_snapshot import FullGDDSnapshotSerializerMixin
+from etools.applications.governments.serializers.helpers import GDDAttachmentSerializer, \
+    GDDBudgetCUSerializer, GDDPlannedVisitsNestedSerializer, GDDReviewSerializer, GDDTimeFrameSerializer
+from etools.applications.governments.serializers.result_structure import GDDResultNestedSerializer, \
+    GDDResultCUSerializer
 
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
@@ -16,46 +23,52 @@ from unicef_snapshot.serializers import SnapshotModelSerializer
 from etools.applications.field_monitoring.fm_settings.serializers import LocationSiteSerializer
 from etools.applications.funds.models import FundsReservationHeader
 from etools.applications.governments.models import GDD
-from etools.applications.partners.models import (
+from etools.applications.governments.models import (
     FileType,
-    InterventionAmendment,
-    InterventionManagementBudget,
-    InterventionManagementBudgetItem,
-    InterventionReview,
-    InterventionRisk,
-    InterventionSupplyItem,
+    GDDAmendment,
+    GDDReview,
+    GDDRisk,
+    GDDSupplyItem,
 )
-from etools.applications.partners.permissions import (
-    InterventionPermissions,
+from etools.applications.governments.permissions import (
+    GDDPermissions,
     PARTNERSHIP_MANAGER_GROUP,
     PRC_SECRETARY,
     SENIOR_MANAGEMENT_GROUP,
 )
-from etools.applications.partners.serializers.intervention_snapshot import FullInterventionSnapshotSerializerMixin
-from etools.applications.partners.serializers.interventions_v2 import (
-    FRsSerializer,
-    InterventionAmendmentCUSerializer,
-    InterventionAttachmentSerializer,
-    InterventionBudgetCUSerializer,
-    InterventionListSerializer as InterventionV2ListSerializer,
-    InterventionResultNestedSerializer,
-    InterventionResultsStructureSerializer,
-    PlannedVisitsNestedSerializer,
-    SingleInterventionAttachmentField,
-)
+# TODO: snapshot stuff
+# from etools.applications.governments.serializers.gdd_snapshot import FullGDDSnapshotSerializerMixin
+# from etools.applications.governments.serializers.gdds_v2 import (
+#     FRsSerializer,
+#     GDDAmendmentCUSerializer,
+#     GDDAttachmentSerializer,
+#     GDDBudgetCUSerializer,
+#     GDDListSerializer as GDDV2ListSerializer,
+#     GDDResultNestedSerializer,
+#     GDDResultsStructureSerializer,
+#     PlannedVisitsNestedSerializer,
+#     SingleGDDAttachmentField,
+# )
 from etools.applications.partners.serializers.partner_organization_v2 import PartnerStaffMemberUserSerializer
-from etools.applications.partners.serializers.v3 import InterventionReviewSerializer
 from etools.applications.partners.utils import get_quarters_range
-from etools.applications.reports.serializers.v2 import InterventionTimeFrameSerializer
 from etools.applications.users.serializers_v3 import MinimalUserSerializer
 
+class MinimalGDDListSerializer(serializers.ModelSerializer):
 
-
-class RiskSerializer(FullInterventionSnapshotSerializerMixin, serializers.ModelSerializer):
     class Meta:
-        model = InterventionRisk
-        fields = ('id', 'risk_type', 'mitigation_measures', 'intervention')
-        kwargs = {'intervention': {'write_only': True}}
+        model = GDD
+        fields = (
+            'id',
+            'title',
+            'number',
+        )
+
+
+class RiskSerializer(FullGDDSnapshotSerializerMixin, serializers.ModelSerializer):
+    class Meta:
+        model = GDDRisk
+        fields = ('id', 'risk_type', 'mitigation_measures', 'gdd')
+        kwargs = {'gdd': {'write_only': True}}
 
     def validate_mitigation_measures(self, value):
         if value and len(value) > 2500:
@@ -64,13 +77,13 @@ class RiskSerializer(FullInterventionSnapshotSerializerMixin, serializers.ModelS
             )
         return value
 
-    def get_intervention(self):
-        return self.validated_data['intervention']
+    def get_gdd(self):
+        return self.validated_data['gdd']
 
 
-class SupplyItemSerializer(FullInterventionSnapshotSerializerMixin, serializers.ModelSerializer):
+class SupplyItemSerializer(FullGDDSnapshotSerializerMixin, serializers.ModelSerializer):
     class Meta:
-        model = InterventionSupplyItem
+        model = GDDSupplyItem
         fields = (
             "id",
             "title",
@@ -84,14 +97,14 @@ class SupplyItemSerializer(FullInterventionSnapshotSerializerMixin, serializers.
         )
 
     def create(self, validated_data):
-        validated_data["intervention"] = self.initial_data.get("intervention")
+        validated_data["gdd"] = self.initial_data.get("gdd")
         return super().create(validated_data)
 
-    def get_intervention(self):
-        return self.context["intervention"]
+    def get_gdd(self):
+        return self.context["gdd"]
 
 
-class BaseInterventionListSerializer(serializers.ModelSerializer):
+class BaseGDDListSerializer(serializers.ModelSerializer):
     partner_name = serializers.CharField(source='partner_organization.name')
     unicef_cash = serializers.DecimalField(source='total_unicef_cash', read_only=True, max_digits=20, decimal_places=2)
     cso_contribution = serializers.DecimalField(source='total_partner_contribution', read_only=True, max_digits=20,
@@ -112,8 +125,8 @@ class BaseInterventionListSerializer(serializers.ModelSerializer):
         max_digits=20,
         decimal_places=2
     )
-    frs_total_intervention_amt = serializers.DecimalField(
-        source='frs__intervention_amt__sum',
+    frs_total_gdd_amt = serializers.DecimalField(
+        source='frs__gdd_amt__sum',
         read_only=True,
         max_digits=20,
         decimal_places=2
@@ -157,7 +170,7 @@ class BaseInterventionListSerializer(serializers.ModelSerializer):
             'frs_earliest_start_date',
             'frs_latest_end_date',
             'frs_total_frs_amt',
-            'frs_total_intervention_amt',
+            'frs_total_gdd_amt',
             'frs_total_outstanding_amt',
             'id',
             'metadata',
@@ -177,7 +190,7 @@ class BaseInterventionListSerializer(serializers.ModelSerializer):
         )
 
 
-class InterventionListSerializer(BaseInterventionListSerializer):
+class GDDListSerializer(BaseGDDListSerializer):
     fr_currencies_are_consistent = serializers.SerializerMethodField()
     all_currencies_are_consistent = serializers.SerializerMethodField()
     fr_currency = serializers.SerializerMethodField()
@@ -215,8 +228,8 @@ class InterventionListSerializer(BaseInterventionListSerializer):
     def get_fr_currency(self, obj):
         return obj.max_fr_currency if self.fr_currencies_ok(obj) else ''
 
-    class Meta(BaseInterventionListSerializer.Meta):
-        fields = BaseInterventionListSerializer.Meta.fields + (
+    class Meta(BaseGDDListSerializer.Meta):
+        fields = BaseGDDListSerializer.Meta.fields + (
             'all_currencies_are_consistent',
             'donor_codes',
             'donors',
@@ -250,24 +263,13 @@ class InterventionListSerializer(BaseInterventionListSerializer):
         )
 
 
-class MinimalInterventionListSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = GDD
-        fields = (
-            'id',
-            'title',
-            'number',
-        )
-
-
-class InterventionDetailSerializer(
-    FullInterventionSnapshotSerializerMixin,
+class GDDDetailSerializer(
+    FullGDDSnapshotSerializerMixin,
     serializers.ModelSerializer,
 ):
     activation_letter_attachment = AttachmentSingleFileField(read_only=True)
-    amendments = InterventionAmendmentCUSerializer(many=True, read_only=True, required=False)
-    attachments = InterventionAttachmentSerializer(many=True, read_only=True, required=False)
+    amendments = GDDAmendmentCUSerializer(many=True, read_only=True, required=False)
+    attachments = GDDAttachmentSerializer(many=True, read_only=True, required=False)
     available_actions = serializers.SerializerMethodField()
     budget_owner = MinimalUserSerializer()
     status_list = serializers.SerializerMethodField()
@@ -286,28 +288,25 @@ class InterventionDetailSerializer(
     partner_id = serializers.CharField(source='partner_organization.id', read_only=True)
     partner_vendor = serializers.CharField(source='partner_organization.vendor_number')
     # permissions = serializers.SerializerMethodField(read_only=True)
-    planned_budget = InterventionBudgetCUSerializer(read_only=True)
-    planned_visits = PlannedVisitsNestedSerializer(many=True, read_only=True, required=False)
+    planned_budget = GDDBudgetCUSerializer(read_only=True)
+    planned_visits = GDDPlannedVisitsNestedSerializer(many=True, read_only=True, required=False)
     prc_review_attachment = AttachmentSingleFileField(required=False)
-    result_links = InterventionResultNestedSerializer(many=True, read_only=True, required=False)
+    result_links = GDDResultNestedSerializer(many=True, read_only=True, required=False)
     section_names = serializers.SerializerMethodField(read_only=True)
     signed_pd_attachment = AttachmentSingleFileField(read_only=True)
     sites = LocationSiteSerializer(many=True)
     submitted_to_prc = serializers.ReadOnlyField()
     termination_doc_attachment = AttachmentSingleFileField(read_only=True)
-    final_partnership_review = SingleInterventionAttachmentField(
-        type_name=FileType.FINAL_PARTNERSHIP_REVIEW,
-        read_field=InterventionAttachmentSerializer()
-    )
+    final_partnership_review = AttachmentSingleFileField(read_only=True)
     risks = RiskSerializer(many=True, read_only=True)
-    reviews = InterventionReviewSerializer(many=True, read_only=True)
-    quarters = InterventionTimeFrameSerializer(many=True, read_only=True)
+    reviews = GDDReviewSerializer(many=True, read_only=True)
+    quarters = GDDTimeFrameSerializer(many=True, read_only=True)
     supply_items = SupplyItemSerializer(many=True, read_only=True)
     unicef_signatory = MinimalUserSerializer()
     unicef_focal_points = MinimalUserSerializer(many=True)
     partner_focal_points = PartnerStaffMemberUserSerializer(many=True)
     partner_authorized_officer_signatory = PartnerStaffMemberUserSerializer()
-    original_intervention = serializers.SerializerMethodField()
+    original_gdd = serializers.SerializerMethodField()
     in_amendment_date = serializers.SerializerMethodField()
 
     def get_location_p_codes(self, obj):
@@ -334,17 +333,17 @@ class InterventionDetailSerializer(
                 grants.add(fr_li.grant_number)
         return grants
 
-    # def get_permissions(self, obj):
-    #     if 'permissions' in self.context:
-    #         return self.context['permissions']
-    #     user = self.context['request'].user
-    #     ps = GovIntervention.permission_structure()
-    #     permissions = GovInterventionPermissions(
-    #         user=user,
-    #         instance=self.instance,
-    #         permission_structure=ps,
-    #     )
-    #     return permissions.get_permissions()
+    def get_permissions(self, obj):
+        if 'permissions' in self.context:
+            return self.context['permissions']
+        user = self.context['request'].user
+        ps = GDD.permission_structure()
+        permissions = GDDPermissions(
+            user=user,
+            instance=self.instance,
+            permission_structure=ps,
+        )
+        return permissions.get_permissions()
 
     def get_locations(self, obj):
         return [loc.id for loc in obj.flat_locations.all()]
@@ -365,7 +364,7 @@ class InterventionDetailSerializer(
         return [loc.id for loc in obj.sections.all()]
 
     def get_cluster_names(self, obj):
-        return [c for c in obj.intervention_clusters()]
+        return [c for c in obj.gdd_clusters()]
 
     def get_in_amendment_date(self, obj):
         return obj.amendment.created if hasattr(obj, 'amendment') else None
@@ -454,7 +453,7 @@ class InterventionDetailSerializer(
             available_actions.append("sign")
             available_actions.append("reject_review")
 
-        # prc secretary can send back intervention if not approved yet
+        # prc secretary can send back gdd if not approved yet
         if obj.status == obj.REVIEW and self._is_prc_secretary() and obj.review and obj.review.overall_approval is None:
             available_actions.append("send_back_review")
 
@@ -545,11 +544,11 @@ class InterventionDetailSerializer(
             for i, quarter in enumerate(get_quarters_range(obj.start, obj.end))
         ]
 
-    def get_original_intervention(self, obj):
+    def get_original_gdd(self, obj):
         if obj.in_amendment:
             try:
-                return obj.amendment.intervention_id
-            except InterventionAmendment.DoesNotExist:
+                return obj.amendment.gdd_id
+            except GDDAmendment.DoesNotExist:
                 return None
         return None
 
@@ -654,36 +653,32 @@ class InterventionDetailSerializer(
             "unicef_court",
             "unicef_focal_points",
             "unicef_signatory",
-            "original_intervention",
+            "original_gdd",
         )
 
-    def get_intervention(self):
+    def get_gdd(self):
         return self.instance
 
 
-class InterventionCreateUpdateSerializer(
+class GDDCreateUpdateSerializer(
     AttachmentSerializerMixin,
     SnapshotModelSerializer,
 ):
-    planned_budget = InterventionBudgetCUSerializer(read_only=True)
+    planned_budget = GDDBudgetCUSerializer(read_only=True)
     partner = serializers.CharField(source='agreement.partner.name', read_only=True)
     prc_review_attachment = AttachmentSingleFileField(required=False)
     signed_pd_attachment = AttachmentSingleFileField(required=False)
     activation_letter_attachment = AttachmentSingleFileField(required=False)
     termination_doc_attachment = AttachmentSingleFileField()
-    planned_visits = PlannedVisitsNestedSerializer(many=True, read_only=True, required=False)
-    attachments = InterventionAttachmentSerializer(many=True, read_only=True, required=False)
-    # result_links = InterventionResultCUSerializer(many=True, read_only=True, required=False)
+    planned_visits = GDDPlannedVisitsNestedSerializer(many=True, read_only=True, required=False)
+    attachments = GDDAttachmentSerializer(many=True, read_only=True, required=False)
+    result_links = GDDResultCUSerializer(many=True, read_only=True, required=False)
     frs = serializers.PrimaryKeyRelatedField(
         many=True,
-        queryset=FundsReservationHeader.objects.prefetch_related('intervention').all(),
+        queryset=FundsReservationHeader.objects.prefetch_related('gdd').all(),
         required=False,
     )
-    final_partnership_review = SingleInterventionAttachmentField(
-        type_name=FileType.FINAL_PARTNERSHIP_REVIEW,
-        read_field=InterventionAttachmentSerializer(),
-        required=False,
-    )
+    final_partnership_review = AttachmentSingleFileField(required=False)
 
     class Meta:
         model = GDD
@@ -697,8 +692,8 @@ class InterventionCreateUpdateSerializer(
 
     def validate_frs(self, frs):
         for fr in frs:
-            if fr.intervention:
-                if (self.instance is None) or (not self.instance.id) or (fr.intervention.id != self.instance.id):
+            if fr.gdd:
+                if (self.instance is None) or (not self.instance.id) or (fr.gdd.id != self.instance.id):
                     raise ValidationError([
                         _('One or more of the FRs selected is related to a different PD/SPD, %s') % fr.fr_number])
             else:
@@ -780,5 +775,5 @@ class InterventionCreateUpdateSerializer(
 
         return updated
 
-    def get_intervention(self):
+    def get_gdd(self):
         return self.instance

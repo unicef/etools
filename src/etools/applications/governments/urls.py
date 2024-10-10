@@ -1,7 +1,7 @@
 from django.urls import path
 
-from etools.applications.governments.views.gov_intervention import GovInterventionListCreateView, \
-    GovInterventionRetrieveUpdateView
+from etools.applications.governments.views.gov_intervention import GDDListCreateView, \
+    GDDRetrieveUpdateView
 from etools.applications.governments.views.government import GovernmentOrganizationListAPIView, GovernmentStaffMemberListAPIVIew
 
 app_name = 'governments'
@@ -23,17 +23,17 @@ urlpatterns = [
         name='government-staff-members-list',
     ),
     path(
-        'interventions/',
-        view=GovInterventionListCreateView.as_view(
+        'gdds/',
+        view=GDDListCreateView.as_view(
             http_method_names=['get', 'post'],
         ),
-        name='gov-intervention-list',
+        name='gdd-list',
     ),
     path(
-        'interventions/<int:pk>/',
-        view=GovInterventionRetrieveUpdateView.as_view(
+        'gdds/<int:pk>/',
+        view=GDDRetrieveUpdateView.as_view(
             http_method_names=['get', 'patch'],
         ),
-        name='gov-intervention-detail',
+        name='gdd-detail',
     ),
 ]
