@@ -906,7 +906,7 @@ class GDD(TimeStampedModel):
             amendment_relative_number = None
 
         reference_number = '{agreement}/{year}{id}'.format(
-            agreement=self.agreement.base_number if self.agreement else "Number to be set",
+            agreement=self.agreement.base_number if self.agreement else "Number to be set",  # TODO
             year=self.reference_number_year,
             id=document_id
         )

@@ -111,21 +111,21 @@ def transition_to_closed(i):
 
 
 def transition_to_terminated(i):
-    from etools.applications.partners.models import InterventionAmendment
+    from etools.applications.governments.models import GDDAmendment
 
     if not i.termination_doc_attachment.exists():
         raise TransitionError([_('Cannot Transition without termination doc attached')])
-    if i.has_active_amendment(InterventionAmendment.KIND_NORMAL):
+    if i.has_active_amendment(GDDAmendment.KIND_NORMAL):
         raise TransitionError([_('Cannot Transition status while adding an amendment')])
     return True
 
 
 def transition_to_ended(i):
-    from etools.applications.partners.models import InterventionAmendment
+    from etools.applications.governments.models import GDDAmendment
 
     if i.termination_doc_attachment.exists():
         raise TransitionError([_('Cannot Transition to ended if termination_doc attached')])
-    if i.has_active_amendment(InterventionAmendment.KIND_NORMAL):
+    if i.has_active_amendment(GDDAmendment.KIND_NORMAL):
         raise TransitionError([_('Cannot Transition status while adding an amendment')])
 
     if i.agreement.partner.blocked:
@@ -137,9 +137,9 @@ def transition_to_ended(i):
 
 
 def transition_to_suspended(i):
-    from etools.applications.partners.models import InterventionAmendment
+    from etools.applications.governments.models import GDDAmendment
 
-    if i.has_active_amendment(InterventionAmendment.KIND_NORMAL):
+    if i.has_active_amendment(GDDAmendment.KIND_NORMAL):
         raise TransitionError([_('Cannot Transition status while adding an amendment')])
 
     if i.agreement.partner.blocked:
@@ -167,9 +167,9 @@ def transition_to_signature(i):
 
 
 def transition_to_signed(i):
-    from etools.applications.partners.models import Agreement, InterventionAmendment
+    from etools.applications.governments.models import GDDAmendment
 
-    if i.has_active_amendment(InterventionAmendment.KIND_NORMAL):
+    if i.has_active_amendment(GDDAmendment.KIND_NORMAL):
         raise TransitionError([_('Cannot Transition status while adding an amendment')])
 
     if i.agreement.partner.blocked:
@@ -254,7 +254,7 @@ def rigid_in_amendment_flag(i):
 
 
 def locations_valid(i):
-    print("TODO: activity indicators need to be a subset of gdd flat locations")
+    # TODO: activity indicators need to be a subset of gdd flat locations")
     # ind_locations = Location.objects.filter(
     #     applied_indicators__lower_result__result_link__gdd__pk=i.pk).distinct()
     # diff_locations = ind_locations.difference(i.flat_locations.all())
@@ -267,7 +267,7 @@ def locations_valid(i):
 
 
 def cp_structure_valid(i):
-    print("TODO: Think what validation we need here")
+    # "TODO: Think what validation we need here")
     #
     # if i.agreement.agreement_type == i.agreement.PCA:
     #     invalid = False
@@ -302,23 +302,23 @@ def all_activities_have_timeframes(i):
 
 
 def review_was_accepted(i):
-    from etools.applications.partners.models import InterventionReview
+    from etools.applications.governments.models import GDDReview
 
     r = i.review
-    if r.review_type == InterventionReview.NORV:
+    if r.review_type == GDDReview.NORV:
         return True
 
     return r.overall_approval if r else False
 
 
 class GDDValid(CompleteValidation):
-    VALIDATION_CLASS = 'partners.Intervention'
+    VALIDATION_CLASS = 'governments.GDD'
     # validations that will be checked on every object... these functions only take the new instance
     BASIC_VALIDATIONS = [
         start_end_dates_valid,
         signed_date_valid,
         start_date_signed_valid,
-        start_date_related_agreement_valid,
+        # start_date_related_agreement_valid,
         rigid_in_amendment_flag,
         locations_valid,
         cp_structure_valid,

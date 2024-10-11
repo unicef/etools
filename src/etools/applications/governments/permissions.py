@@ -119,18 +119,6 @@ class GDDPermissions(PMPPermissions):
         def user_added_amendment(instance):
             return instance.in_amendment is True
 
-        # TODO: remove this as sooon as it expires on July first. Technical Debt - hard coded exception
-        def post_epd_temp_conditions(i):
-            # quick fix for offices that have not added their amendments in the system before the release date.
-            today = datetime.date.today()
-            available_til = datetime.date(2023, 7, 1)
-            begin_date = datetime.date(2022, 12, 1)
-            release_date = datetime.date(2023, 4, 30)
-            if i.end and begin_date <= i.end < release_date \
-                    and today < available_til:
-                return True
-            return False
-
         def prp_mode_off():
             return tenant_switch_is_active("prp_mode_off")
 
@@ -207,7 +195,6 @@ class GDDPermissions(PMPPermissions):
             'unicef_not_accepted_contingency': unicef_not_accepted_contingency(self.instance),
             'unlocked_or_contingency': unlocked_or_contingency(self.instance),
             'unlocked+not_in_amendment_mode': unlocked(self.instance) and not user_added_amendment(self.instance),
-            'post_epd_temp_conditions': post_epd_temp_conditions(self.instance),
             'cfei_absent': not self.instance.cfei_number
         }
 

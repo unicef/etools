@@ -11,7 +11,6 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.2.7,amendments,*,,Draft,View,FALSE
 3.2.8,amendments,Unicef Focal Point,not_in_amendment_mode,Signed,Edit,TRUE
 3.2.9,amendments,Unicef Focal Point,not_in_amendment_mode,Active,Edit,TRUE
-3.2.9,amendments,Unicef Focal Point,post_epd_temp_conditions,Ended,Edit,TRUE
 3.3.7,attachments,*,not_in_amendment_mode,*,View,TRUE
 3.3.7,attachments,Unicef Focal Point,not_in_amendment_mode,Draft,Edit,TRUE
 3.3.7,attachments,Partner User,not_in_amendment_mode,Draft,Edit,TRUE
@@ -258,6 +257,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,title,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
 ,title,Partner User,partner_court,Draft,Edit,TRUE
 ,title,*,,*,Required,TRUE
+,reference_number_year,*,,*,Required,TRUE
 ,unicef_focal_points,*,not_in_amendment_mode,*,View,TRUE
 ,unicef_focal_points,Partnership Manager,,*,Edit,TRUE
 ,unicef_focal_points,Partnership Manager,user_adds_amendment,*,Edit,TRUE
@@ -287,9 +287,6 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,signed_pd_attachment,*,,Review,Required,FALSE
 ,date_sent_to_partner,*,,Draft,Required,FALSE
 ,context,*,unlocked,Draft,Required,FALSE
-,implementation_strategy,*,contingency_on,Review,Required,FALSE
-,implementation_strategy,*,contingency_on,Signature,Required,FALSE
-,implementation_strategy,*,contingency_on,Signed,Required,FALSE
 ,ip_program_contribution,*,unlocked,Draft,Required,FALSE
 ,cash_transfer_modalities,*,contingency_on,Signed,Required,FALSE
 ,cash_transfer_modalities,*,contingency_on,Review,Required,FALSE
