@@ -2,10 +2,8 @@ import datetime
 from functools import lru_cache
 
 from django.apps import apps
-from django.conf import settings
 from django.utils.translation import gettext as _
 
-from etools_validator.utils import check_rigid_related
 from rest_framework import permissions
 from rest_framework.permissions import BasePermission
 
@@ -152,7 +150,6 @@ class GDDPermissions(PMPPermissions):
         def unlocked_or_contingency(instance):
             """ field not required to accept if contingency is on"""
             return instance.contingency_pd or not instance.locked
-
 
         staff_member = self.user
 
@@ -410,7 +407,7 @@ def gdd_field_has_view_permission(field):
     or return GDD instance via get_object (can be used for detail actions).
     """
 
-    from etools.applications.partners.models import GDD
+    from etools.applications.governments.models import GDD
 
     class FieldPermission(BasePermission):
         def has_permission(self, request, view):

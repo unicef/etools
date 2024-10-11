@@ -1,51 +1,52 @@
+import datetime
 import functools
 import logging
 import operator
-import datetime
-from copy import copy
 
+from django.db import connection, transaction
 from django.db.models import Q
-from django.utils.translation import gettext as _
-from django.db import transaction, connection
 from django.http import Http404
-from etools.applications.core.mixins import ExportModelMixin
-from etools.applications.core.renderers import CSVFlatRenderer
-from etools.applications.governments.exports import GDDCSVRenderer
+from django.utils.translation import gettext as _
 
-from etools.applications.governments.permissions import PMPGDDPermission, PartnershipManagerPermission
-from etools.applications.governments.serializers.exports import GDDExportSerializer, GDDExportFlatSerializer
-from etools.applications.governments.serializers.gdd import GDDListSerializer, MinimalGDDListSerializer, \
-    GDDCreateUpdateSerializer, GDDDetailSerializer
-from etools.applications.governments.serializers.helpers import GDDPlannedVisitsCUSerializer, GDDBudgetCUSerializer, \
-    GDDRiskSerializer
-from etools.applications.governments.serializers.result_structure import GDDResultCUSerializer
-from etools.applications.governments.validation.gdds import GDDValid
-
-from etools.applications.partners.models import PartnerOrganization
-from etools.applications.partners.views.interventions_v3 import PMPInterventionRetrieveUpdateView
-from etools.applications.users.models import Country
-
-from etools.applications.utils.pagination import AppendablePageNumberPagination
 from etools_validator.mixins import ValidatorViewMixin
 from rest_framework import status
-from rest_framework.exceptions import ValidationError, PermissionDenied
-from rest_framework.filters import OrderingFilter, BaseFilterBackend
+from rest_framework.exceptions import PermissionDenied, ValidationError
+from rest_framework.filters import OrderingFilter
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
-
-from etools.applications.governments.filters import PartnerNameOrderingFilter, GDDEditableByFilter, PartnerScopeFilter, \
-    ShowAmendmentsFilter
-from etools.applications.governments.models import GDD
-
-from etools.applications.organizations.models import OrganizationType
-from etools.libraries.djangolib.fields import CURRENCY_LIST
-
-
-
-
 from unicef_restlib.views import QueryStringFilterMixin
+
+from etools.applications.core.mixins import ExportModelMixin
+from etools.applications.core.renderers import CSVFlatRenderer
+from etools.applications.governments.exports import GDDCSVRenderer
+from etools.applications.governments.filters import (
+    GDDEditableByFilter,
+    PartnerNameOrderingFilter,
+    PartnerScopeFilter,
+    ShowAmendmentsFilter,
+)
+from etools.applications.governments.models import GDD
+from etools.applications.governments.permissions import PartnershipManagerPermission, PMPGDDPermission
+from etools.applications.governments.serializers.exports import GDDExportFlatSerializer, GDDExportSerializer
+from etools.applications.governments.serializers.gdd import (
+    GDDCreateUpdateSerializer,
+    GDDDetailSerializer,
+    GDDListSerializer,
+    MinimalGDDListSerializer,
+)
+from etools.applications.governments.serializers.helpers import (
+    GDDBudgetCUSerializer,
+    GDDPlannedVisitsCUSerializer,
+    GDDRiskSerializer,
+)
+from etools.applications.governments.serializers.result_structure import GDDResultCUSerializer
+from etools.applications.governments.validation.gdds import GDDValid
+from etools.applications.partners.models import PartnerOrganization
+from etools.applications.users.models import Country
+from etools.applications.utils.pagination import AppendablePageNumberPagination
+from etools.libraries.djangolib.fields import CURRENCY_LIST
 
 
 class PMPGDDBaseViewMixin:
@@ -79,7 +80,7 @@ class PMPGDDBaseViewMixin:
         try:
             if not self.is_partner_staff():
                 return GDD.objects.detail_qs().get(pk=pd_pk)
-            return self.pds().get(pk=pd_pk)
+            return self.gdds().get(pk=pd_pk)
         except GDD.DoesNotExist:
             return None
 
@@ -89,7 +90,7 @@ class PMPGDDBaseViewMixin:
             raise Http404
         return pd
 
-    def pds(self):
+    def gdds(self):
         """List of PDs user associated with"""
         if not self.is_partner_staff():
             return []
@@ -106,13 +107,13 @@ class PMPGDDBaseViewMixin:
         )
 
 
-
 class PMPGDDMixin(PMPGDDBaseViewMixin):
     def get_partner_staff_qs(self, qs):
         return qs.filter(
             partner=self.current_partner(),
             date_sent_to_partner__isnull=False,
         )
+
     def get_queryset(self, format=None):
         qs = super().get_queryset()
         if self.request.user.is_unicef_user():
@@ -149,7 +150,7 @@ class GDDListAPIView(QueryStringFilterMixin, ExportModelMixin, GDDListBaseView):
         ('agreements', 'agreement__in'),
         ('document_type', 'document_type__in'),
         ('cp_outputs', 'result_links__cp_output__pk__in'),
-        ('country_programme', 'country_programme__in'),
+        ('country_programme', 'country_programmes__in'),
         ('sections', 'sections__in'),
         ('cluster', 'result_links__ll_results__applied_indicators__cluster_indicator_title__icontains'),
         ('status', 'status__in'),
@@ -267,63 +268,9 @@ class GDDListAPIView(QueryStringFilterMixin, ExportModelMixin, GDDListBaseView):
 
         return response
 
+
 class GDDListCreateView(PMPGDDMixin, GDDListAPIView):
     pagination_class = AppendablePageNumberPagination
-    permission_classes = (IsAuthenticated, PMPGDDPermission)
-    search_terms = (
-        'title__icontains',
-        'partner__organization__name__icontains',
-        'number__icontains',
-        'cfei_number__icontains',
-    )
-    filter_backends = GDDListAPIView.filter_backends + (
-        GDDEditableByFilter,
-        OrderingFilter,
-        PartnerNameOrderingFilter
-    )
-    ordering_fields = ('number', 'document_type', 'status', 'title', 'start', 'end')
-
-    def get_serializer_class(self):
-        if self.request.method == "GET":
-            query_params = self.request.query_params
-            if "format" in query_params.keys():
-                export_format = query_params.get("format")
-                if export_format == "csv":
-                    return GDDExportSerializer
-                elif export_format == "csv_flat":
-                    return GDDExportFlatSerializer
-            if "verbosity" in query_params.keys():
-                if query_params.get("verbosity") == 'minimal':
-                    return MinimalGDDListSerializer
-        if self.request.method == "POST":
-            return GDDCreateUpdateSerializer
-        return GDDListSerializer
-
-    @transaction.atomic
-    def create(self, request, *args, **kwargs):
-        planned_budget = request.data.get("planned_budget")
-        super().create(request, *args, **kwargs)
-
-        # check if setting currency
-        if planned_budget and planned_budget.get("currency"):
-            currency = planned_budget.get("currency")
-            if currency not in CURRENCY_LIST:
-                raise ValidationError(f"Invalid currency: {currency}.")
-            self.instance.planned_budget.currency = currency
-            self.instance.planned_budget.save()
-
-        return Response(
-            GDDDetailSerializer(
-                self.instance,
-                context=self.get_serializer_context(),
-            ).data,
-            status=status.HTTP_201_CREATED,
-            headers=self.headers
-        )
-
-
-
-class GDDListCreateView(GDDListCreateView):
     permission_classes = (IsAuthenticated, PMPGDDPermission)
     search_terms = (
         'title__icontains',
@@ -354,11 +301,6 @@ class GDDListCreateView(GDDListCreateView):
             return GDDCreateUpdateSerializer
         return GDDListSerializer
 
-    def get_queryset(self):
-        qs = GDD.objects.frs_qs().filter(partner_organization__organization__organization_type=OrganizationType.GOVERNMENT)\
-
-        return qs
-
     @transaction.atomic
     def create(self, request, *args, **kwargs):
         planned_budget = request.data.get("planned_budget")
@@ -382,26 +324,24 @@ class GDDListCreateView(GDDListCreateView):
         )
 
 
-class GDDRetrieveUpdateView(PMPInterventionRetrieveUpdateView):
-    pass
-
-
-
-class GDDDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
+class GDDRetrieveUpdateView(PMPGDDMixin, ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
     """
     Retrieve and Update Agreement.
     """
     queryset = GDD.objects.detail_qs().all()
-    serializer_class = GDDDetailSerializer
     permission_classes = (PartnershipManagerPermission,)
 
     SERIALIZER_MAP = {
         'planned_visits': GDDPlannedVisitsCUSerializer,
-        'result_links': GDDResultCUSerializer
+        'result_links': GDDResultCUSerializer,
+        'risks': GDDRiskSerializer,
+        'planned_budget': GDDBudgetCUSerializer,
     }
     related_fields = [
         'planned_visits',
-        'result_links'
+        'result_links',
+        'risks',
+        'planned_budget',
     ]
     nested_related_names = [
         'll_results'
@@ -411,51 +351,6 @@ class GDDDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
         'prc_review_attachment',
         'final_partnership_review',
         'signed_pd_attachment',
-    ]
-
-    def get_serializer_class(self):
-        """
-        Use different serializers for methods
-        """
-        if self.request.method in ["PATCH", "PUT"]:
-            return GDDCreateUpdateSerializer
-        return super().get_serializer_class()
-
-    @transaction.atomic
-    def update(self, request, *args, **kwargs):
-        self.instance, old_instance, serializer = self.my_update(
-            request,
-            self.related_fields,
-            nested_related_names=self.nested_related_names,
-            related_non_serialized_fields=self.related_non_serialized_fields,
-            **kwargs
-        )
-
-        validator = GDDValid(self.instance, old=old_instance, user=request.user)
-        if not validator.is_valid:
-            logging.debug(validator.errors)
-            raise ValidationError(validator.errors)
-
-        if getattr(self.instance, '_prefetched_objects_cache', None):
-            # If 'prefetch_related' has been applied to a queryset, we need to
-            # refresh the instance from the database.
-            self.instance = self.get_object()
-
-        return Response(
-            GDDDetailSerializer(
-                self.instance,
-                context=self.get_serializer_context(),
-            ).data,
-        )
-class GDDRetrieveUpdateView(PMPGDDMixin, GDDDetailAPIView):
-    SERIALIZER_MAP = copy(GDDDetailAPIView.SERIALIZER_MAP)
-    SERIALIZER_MAP.update({
-        'risks': GDDRiskSerializer,
-        'planned_budget': GDDBudgetCUSerializer,
-    })
-    related_fields = GDDDetailAPIView.related_fields + [
-        'risks',
-        'planned_budget',
     ]
 
     def get_serializer_class(self):

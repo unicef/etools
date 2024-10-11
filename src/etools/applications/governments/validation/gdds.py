@@ -12,8 +12,8 @@ from etools_validator.exceptions import (
 from etools_validator.utils import check_required_fields, check_rigid_fields
 from etools_validator.validation import CompleteValidation
 
-from etools.applications.locations.models import Location
 from etools.applications.governments.permissions import GDDPermissions
+from etools.applications.locations.models import Location
 
 logger = logging.getLogger('governments.gdd.validation')
 
@@ -172,7 +172,6 @@ def transition_to_signed(i):
     if i.has_active_amendment(InterventionAmendment.KIND_NORMAL):
         raise TransitionError([_('Cannot Transition status while adding an amendment')])
 
-
     if i.agreement.partner.blocked:
         raise TransitionError([
             _('PD cannot transition to signed if the Partner is Blocked in Vision')
@@ -248,12 +247,10 @@ def signed_date_valid(i):
     return True
 
 
-
 def rigid_in_amendment_flag(i):
     if i.old_instance and i.in_amendment is True and i.old_instance.in_amendment is False:
         return False
     return True
-
 
 
 def locations_valid(i):

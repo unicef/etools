@@ -1,14 +1,16 @@
-from datetime import date, datetime, timedelta
+from datetime import date
+
 from django.utils.translation import gettext as _, gettext_lazy
 
-from etools.applications.governments.models import GDDAmendment
-from etools.applications.partners.serializers.interventions_v2 import PartnerStaffMemberUserSerializer
-from etools.applications.users.serializers_v3 import MinimalUserSerializer
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.validators import UniqueTogetherValidator
 from unicef_attachments.fields import AttachmentSingleFileField
 from unicef_attachments.serializers import AttachmentSerializerMixin
+
+from etools.applications.governments.models import GDDAmendment
+from etools.applications.partners.serializers.interventions_v2 import PartnerStaffMemberUserSerializer
+from etools.applications.users.serializers_v3 import MinimalUserSerializer
 
 
 class GDDAmendmentCUSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
@@ -76,5 +78,3 @@ class GDDAmendmentCUSerializer(AttachmentSerializerMixin, serializers.ModelSeria
                 raise ValidationError(_("Other description required, if type 'Other' selected."))
 
         return data
-
-

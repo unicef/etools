@@ -1,23 +1,31 @@
-from django.db import transaction
-from etools.applications.governments.models import GDDPlannedVisitSite, GDDPlannedVisits, GDD, GDDKeyIntervention, \
-    GDDResultLink, GDDAttachment, GDDBudget, GDDReview, GDDTimeFrame, GDDRisk
-from etools.applications.governments.serializers.gdd_snapshot import FullGDDSnapshotSerializerMixin
-from etools.applications.partners.serializers.interventions_v2 import PlannedVisitSitesQuarterSerializer, \
-    LocationSiteSerializer
-from django.contrib.auth import get_user_model
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.translation import gettext as _
-from etools.applications.users.serializers_v3 import MinimalUserSerializer
 
 from rest_framework import fields, serializers
 from rest_framework.relations import RelatedField
 from rest_framework.serializers import ValidationError
-
-from etools.applications.field_monitoring.fm_settings.models import LocationSite
-from etools.applications.organizations.models import OrganizationType
 from unicef_attachments.fields import AttachmentSingleFileField
 from unicef_attachments.serializers import AttachmentSerializerMixin
 from unicef_restlib.fields import SeparatedReadWriteField
+
+from etools.applications.field_monitoring.fm_settings.models import LocationSite
+from etools.applications.governments.models import (
+    GDD,
+    GDDAttachment,
+    GDDBudget,
+    GDDPlannedVisits,
+    GDDPlannedVisitSite,
+    GDDReview,
+    GDDRisk,
+    GDDTimeFrame,
+)
+from etools.applications.governments.serializers.gdd_snapshot import FullGDDSnapshotSerializerMixin
+from etools.applications.organizations.models import OrganizationType
+from etools.applications.partners.serializers.interventions_v2 import (
+    LocationSiteSerializer,
+    PlannedVisitSitesQuarterSerializer,
+)
+from etools.applications.users.serializers_v3 import MinimalUserSerializer
 
 
 class GDDRiskSerializer(serializers.ModelSerializer):
@@ -27,6 +35,7 @@ class GDDRiskSerializer(serializers.ModelSerializer):
             'risk_type',
             'mitigation_measures',
         ]
+
 
 class GDDTimeFrameSerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField()
@@ -201,6 +210,7 @@ class GDDPlannedVisitSitesQuarterSerializer(fields.ListField):
             planned_visits=planned_visits, quarter=self.quarter, site_id__in=sites_to_delete,
         ).delete()
 
+
 class GDDPlannedVisitsNestedSerializer(serializers.ModelSerializer):
     programmatic_q1_sites = PlannedVisitSitesQuarterSerializer(quarter=GDDPlannedVisitSite.Q1, required=False)
     programmatic_q2_sites = PlannedVisitSitesQuarterSerializer(quarter=GDDPlannedVisitSite.Q2, required=False)
@@ -221,6 +231,7 @@ class GDDPlannedVisitsNestedSerializer(serializers.ModelSerializer):
             'programmatic_q4',
             'programmatic_q4_sites',
         )
+
 
 class GDDPlannedVisitsCUSerializer(serializers.ModelSerializer):
     programmatic_q1_sites = GDDPlannedVisitSitesQuarterSerializer(quarter=GDDPlannedVisitSite.Q1, required=False)
@@ -290,5 +301,3 @@ class GDDPlannedVisitsCUSerializer(serializers.ModelSerializer):
         if sites_q4 is not None:
             self.fields['programmatic_q4_sites'].save(instance, sites_q4)
         return instance
-
-

@@ -1,8 +1,10 @@
 from django.urls import path
 
-from etools.applications.governments.views.gov_intervention import GDDListCreateView, \
-    GDDRetrieveUpdateView
-from etools.applications.governments.views.government import GovernmentOrganizationListAPIView, GovernmentStaffMemberListAPIVIew
+from etools.applications.governments.views.gov_intervention import GDDListCreateView, GDDRetrieveUpdateView
+from etools.applications.governments.views.government import (
+    GovernmentOrganizationListAPIView,
+    GovernmentStaffMemberListAPIVIew,
+)
 
 app_name = 'governments'
 

@@ -1,18 +1,6 @@
-import codecs
-import csv
-import decimal
-import string
-
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.utils.translation import gettext as _
-from etools.applications.funds.serializers import FRsSerializer
-from etools.applications.governments.serializers.amendments import GDDAmendmentCUSerializer
-from etools.applications.governments.serializers.gdd_snapshot import FullGDDSnapshotSerializerMixin
-from etools.applications.governments.serializers.helpers import GDDAttachmentSerializer, \
-    GDDBudgetCUSerializer, GDDPlannedVisitsNestedSerializer, GDDReviewSerializer, GDDTimeFrameSerializer
-from etools.applications.governments.serializers.result_structure import GDDResultNestedSerializer, \
-    GDDResultCUSerializer
 
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
@@ -22,19 +10,26 @@ from unicef_snapshot.serializers import SnapshotModelSerializer
 
 from etools.applications.field_monitoring.fm_settings.serializers import LocationSiteSerializer
 from etools.applications.funds.models import FundsReservationHeader
-from etools.applications.governments.models import GDD
-from etools.applications.governments.models import (
-    FileType,
-    GDDAmendment,
-    GDDReview,
-    GDDRisk,
-    GDDSupplyItem,
-)
+from etools.applications.funds.serializers import FRsSerializer
+from etools.applications.governments.models import GDD, GDDAmendment, GDDRisk, GDDSupplyItem
 from etools.applications.governments.permissions import (
     GDDPermissions,
     PARTNERSHIP_MANAGER_GROUP,
     PRC_SECRETARY,
     SENIOR_MANAGEMENT_GROUP,
+)
+from etools.applications.governments.serializers.amendments import GDDAmendmentCUSerializer
+from etools.applications.governments.serializers.gdd_snapshot import FullGDDSnapshotSerializerMixin
+from etools.applications.governments.serializers.helpers import (
+    GDDAttachmentSerializer,
+    GDDBudgetCUSerializer,
+    GDDPlannedVisitsNestedSerializer,
+    GDDReviewSerializer,
+    GDDTimeFrameSerializer,
+)
+from etools.applications.governments.serializers.result_structure import (
+    GDDResultCUSerializer,
+    GDDResultNestedSerializer,
 )
 # TODO: snapshot stuff
 # from etools.applications.governments.serializers.gdd_snapshot import FullGDDSnapshotSerializerMixin
@@ -52,6 +47,7 @@ from etools.applications.governments.permissions import (
 from etools.applications.partners.serializers.partner_organization_v2 import PartnerStaffMemberUserSerializer
 from etools.applications.partners.utils import get_quarters_range
 from etools.applications.users.serializers_v3 import MinimalUserSerializer
+
 
 class MinimalGDDListSerializer(serializers.ModelSerializer):
 
@@ -284,9 +280,9 @@ class GDDDetailSerializer(
     location_names = serializers.SerializerMethodField()
     location_p_codes = serializers.SerializerMethodField()
     locations = serializers.SerializerMethodField()
-    partner = serializers.CharField(source='partner_organization.name')
-    partner_id = serializers.CharField(source='partner_organization.id', read_only=True)
-    partner_vendor = serializers.CharField(source='partner_organization.vendor_number')
+    partner = serializers.CharField(source='partner_organization.name', read_only=True)
+    partner_id = serializers.CharField(source='partner_organization.id')
+    partner_vendor = serializers.CharField(source='partner_organization.vendor_number', read_only=True)
     permissions = serializers.SerializerMethodField(read_only=True)
     planned_budget = GDDBudgetCUSerializer(read_only=True)
     planned_visits = GDDPlannedVisitsNestedSerializer(many=True, read_only=True, required=False)
@@ -662,7 +658,7 @@ class GDDCreateUpdateSerializer(
     SnapshotModelSerializer,
 ):
     planned_budget = GDDBudgetCUSerializer(read_only=True)
-    partner = serializers.CharField(source='agreement.partner.name', read_only=True)
+    partner = serializers.CharField(source='partner_organization.name', read_only=True)
     prc_review_attachment = AttachmentSingleFileField(required=False)
     signed_pd_attachment = AttachmentSingleFileField(required=False)
     activation_letter_attachment = AttachmentSingleFileField(required=False)

@@ -1,13 +1,7 @@
 from django.db.models.signals import m2m_changed, post_delete, post_save
 from django.dispatch import receiver
 
-from etools.applications.governments.models import (
-    GDD,
-    GDDBudget,
-    GDDReview,
-    GDDSupplyItem,
-    GDDPRCOfficerReview,
-)
+from etools.applications.governments.models import GDD, GDDBudget, GDDPRCOfficerReview, GDDReview, GDDSupplyItem
 
 # TODO clean up: endpoint removed in prp
 # @receiver(post_save, sender=GDD)

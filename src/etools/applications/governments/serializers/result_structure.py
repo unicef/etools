@@ -1,28 +1,40 @@
-from django.db import transaction
-from etools.applications.governments.models import GDDPlannedVisitSite, GDDPlannedVisits, GDD, GDDKeyIntervention, \
-    GDDResultLink, GDDAttachment, GDDBudget, GDDActivity, EWPActivity, GDDActivityItem
-from etools.applications.governments.serializers.gdd_snapshot import FullGDDSnapshotSerializerMixin
-
-from etools.applications.partners.serializers.interventions_v2 import PlannedVisitSitesQuarterSerializer, \
-    LocationSiteSerializer
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ImproperlyConfigured
+from django.db import transaction
 from django.utils.translation import gettext as _, gettext_lazy
-from etools.applications.reports.serializers.v2 import LowerResultSerializer, LowerResultCUSerializer, \
-    IndicatorSerializer
 
 from rest_framework import fields, serializers
 from rest_framework.relations import RelatedField
 from rest_framework.serializers import ValidationError
+from unicef_attachments.fields import AttachmentSingleFileField
+from unicef_attachments.serializers import AttachmentSerializerMixin
 
 from etools.applications.field_monitoring.fm_settings.models import LocationSite
 from etools.applications.funds.models import FundsCommitmentItem, FundsReservationHeader
 from etools.applications.funds.serializers import FRHeaderSerializer, FRsSerializer
+from etools.applications.governments.models import (
+    EWPActivity,
+    GDD,
+    GDDActivity,
+    GDDActivityItem,
+    GDDAttachment,
+    GDDBudget,
+    GDDKeyIntervention,
+    GDDPlannedVisits,
+    GDDPlannedVisitSite,
+    GDDResultLink,
+)
+from etools.applications.governments.serializers.gdd_snapshot import FullGDDSnapshotSerializerMixin
 from etools.applications.organizations.models import OrganizationType
-from unicef_attachments.fields import AttachmentSingleFileField
-from unicef_attachments.serializers import AttachmentSerializerMixin
-
-
+from etools.applications.partners.serializers.interventions_v2 import (
+    LocationSiteSerializer,
+    PlannedVisitSitesQuarterSerializer,
+)
+from etools.applications.reports.serializers.v2 import (
+    IndicatorSerializer,
+    LowerResultCUSerializer,
+    LowerResultSerializer,
+)
 
 
 class GDDActivityItemSerializer(serializers.ModelSerializer):
@@ -212,8 +224,6 @@ class GDDResultCUSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
 
-
-
 class EWPActivitySerializer(serializers.ModelSerializer):
     class Meta:
         model = EWPActivity
@@ -329,7 +339,6 @@ class GDDKeyInterventionWithActivityItemsSerializer(GDDKeyInterventionSerializer
         fields = GDDKeyInterventionSerializer.Meta.fields + ["activities"]
 
 
-
 class BaseGDDResultNestedSerializer(serializers.ModelSerializer):
     cp_output_name = serializers.CharField(source="cp_output.output_name", read_only=True)
     ram_indicator_names = serializers.SerializerMethodField(read_only=True)
@@ -351,7 +360,6 @@ class BaseGDDResultNestedSerializer(serializers.ModelSerializer):
             'total',
         ]
         read_only_fields = ['code']
-
 
 
 class GDDResultNestedSerializer(BaseGDDResultNestedSerializer):

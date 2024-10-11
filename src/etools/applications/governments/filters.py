@@ -1,8 +1,10 @@
 from django.db import connection
-from etools.applications.partners.models import PartnerOrganization
-from etools.applications.users.mixins import PARTNER_ACTIVE_GROUPS
+
 from rest_framework.filters import BaseFilterBackend
 from rest_framework.generics import get_object_or_404
+
+from etools.applications.partners.models import PartnerOrganization
+from etools.applications.users.mixins import PARTNER_ACTIVE_GROUPS
 
 
 class PartnerNameOrderingFilter(BaseFilterBackend):
@@ -13,6 +15,7 @@ class PartnerNameOrderingFilter(BaseFilterBackend):
                 return queryset.order_by('-partner__organization__name')
             return queryset.order_by('partner__organization__name')
         return queryset
+
 
 class PartnerScopeFilter(BaseFilterBackend):
     def filter_queryset(self, request, queryset, view):
@@ -38,10 +41,8 @@ class GDDEditableByFilter(BaseFilterBackend):
         }.get(editable_by, {}))
 
 
-
 class ShowAmendmentsFilter(BaseFilterBackend):
     def filter_queryset(self, request, queryset, view):
         if 'show_amendments' in request.query_params:
             return queryset
         return queryset.filter(in_amendment=False)
-

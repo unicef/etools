@@ -1,11 +1,11 @@
 Field no,Field Name,Group,Condition,Status,Action,Allowed
-3.2.2,activation_letter,Unicef Focal Point,contingency_on,Signed,Edit,TRUE
 3.2.3,activation_letter_attachment,Unicef Focal Point,contingency_on,Signed,Edit,TRUE
 3.2.4,activation_letter_attachment,*,contingency_on,Active,Required,TRUE
 ,activation_protocol,Partnership Manager,,Draft,Edit,TRUE
 ,activation_protocol,*,contingency_on,*,Required,TRUE
 3.2.4,agreement,Unicef Focal Point,unlocked,Draft,Edit,TRUE
-3.2.5,agreement,*,,*,Required,TRUE
+,partner_organization,Unicef Focal Point,unlocked,Draft,Edit,TRUE
+,partner_organization,*,,*,Required,TRUE
 3.2.7,amendments,Partner User,,*,View,FALSE
 3.2.7,amendments,*,user_adds_amendment,*,View,FALSE
 3.2.7,amendments,*,,Draft,View,FALSE
@@ -80,14 +80,9 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,has_special_conditions_for_construction,Unicef Focal Point,,Ended,Edit,TRUE
 ,has_special_conditions_for_construction,Unicef Focal Point,,Suspended,Edit,TRUE
 3.4.1,contingency_pd,Unicef Focal Point,,Draft,Edit,TRUE
-3.5,country_programme,Unicef Focal Point,,Draft,Edit,TRUE
-3.5,country_programme,Unicef Focal Point,user_adds_amendment,*,Edit,TRUE
-3.5,country_programme,*,,*,Required,FALSE
 3.5,country_programmes,Unicef Focal Point,,Draft,Edit,TRUE
 3.5,country_programmes,Unicef Focal Point,user_adds_amendment,*,Edit,TRUE
 3.5,country_programmes,*,,*,Required,FALSE
-3.9.1,document_type,Unicef Focal Point,unlocked,Draft,Edit,TRUE
-3.9.1,document_type,*,,*,Required,TRUE
 ,document_currency,Unicef Focal Point,unlocked+not_in_amendment_mode,Draft,Edit,TRUE
 ,document_currency,*,,*,Required,TRUE
 3.9.2,end,Unicef Focal Point,unicef_court,Draft,Edit,TRUE

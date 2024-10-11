@@ -1,19 +1,19 @@
 from django.utils.translation import gettext as _
-from etools.applications.governments.serializers.amendments import GDDAmendmentCUSerializer
-from etools.applications.partners.serializers.exports.interventions import InterventionExportSerializer
-from etools.applications.reports.serializers.exports import IndicatorExportSerializer, IndicatorExportFlatSerializer
-from etools.applications.reports.serializers.v2 import IndicatorSerializer
 
 from rest_framework import serializers
 
 from etools.applications.core.mixins import ExportSerializerMixin
 from etools.applications.governments.models import GDD, GDDAmendment, GDDKeyIntervention, GDDResultLink
+from etools.applications.governments.serializers.amendments import GDDAmendmentCUSerializer
+from etools.applications.partners.serializers.exports.interventions import InterventionExportSerializer
 from etools.applications.partners.serializers.fields import TypeArrayField
 # from etools.applications.gdd.serializers.interventions_v2 import (
 #     GDDAmendmentCUSerializer,
 #     GDDAmendmentResultSerializer,
 # )
 from etools.applications.reports.models import Indicator
+from etools.applications.reports.serializers.exports import IndicatorExportFlatSerializer, IndicatorExportSerializer
+from etools.applications.reports.serializers.v2 import IndicatorSerializer
 
 
 class GDDExportSerializer(serializers.ModelSerializer):
@@ -300,6 +300,7 @@ class GDDExportSerializer(serializers.ModelSerializer):
 
 class GDDExportFlatSerializer(ExportSerializerMixin, InterventionExportSerializer):
     attachments = serializers.SerializerMethodField(label=_("Attachments"))
+    # TODO change to country_programmes m2m
     country_programme = serializers.CharField(
         label=_("Country Programme"),
         source='country_programme.name',

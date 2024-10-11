@@ -6,7 +6,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import ArrayField
 from django.core.validators import MinValueValidator
 from django.db import connection, models, transaction
-from django.db.models import Prefetch, OuterRef, Max, Min, Count, Subquery, Sum, Case, When, Q
+from django.db.models import Case, Count, Max, Min, OuterRef, Prefetch, Q, Subquery, Sum, When
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.functional import cached_property
@@ -23,24 +23,31 @@ from etools.applications.audit.models import get_current_year
 from etools.applications.core.permissions import import_permissions
 from etools.applications.environment.notifications import send_notification_with_template
 from etools.applications.funds.models import FundsReservationHeader
+from etools.applications.governments.validation import gdds as gdd_validation
 from etools.applications.locations.models import Location
-from etools.applications.organizations.models import Organization
-from etools.applications.partners.amendment_utils import copy_instance, INTERVENTION_AMENDMENT_RELATED_FIELDS, \
-    INTERVENTION_AMENDMENT_IGNORED_FIELDS, INTERVENTION_AMENDMENT_DEFAULTS, INTERVENTION_AMENDMENT_COPY_POST_EFFECTS, \
-    merge_instance, INTERVENTION_AMENDMENT_MERGE_POST_EFFECTS, calculate_difference, \
-    INTERVENTION_AMENDMENT_DIFF_POST_EFFECTS
-from etools.applications.partners.models import Agreement, PartnerOrganization, _get_partner_base_path, \
-    get_default_cash_transfer_modalities, FileType
-
-# TODO imports 
-from etools.applications.governments.validation import (
-    gdds as gdd_validation,
+from etools.applications.organizations.models import OrganizationType
+from etools.applications.partners.amendment_utils import (
+    calculate_difference,
+    copy_instance,
+    INTERVENTION_AMENDMENT_COPY_POST_EFFECTS,
+    INTERVENTION_AMENDMENT_DEFAULTS,
+    INTERVENTION_AMENDMENT_DIFF_POST_EFFECTS,
+    INTERVENTION_AMENDMENT_IGNORED_FIELDS,
+    INTERVENTION_AMENDMENT_MERGE_POST_EFFECTS,
+    INTERVENTION_AMENDMENT_RELATED_FIELDS,
+    merge_instance,
 )
-
-from etools.applications.reports.models import CountryProgramme, Office, Section, Indicator, Result
+from etools.applications.partners.models import (
+    _get_partner_base_path,
+    Agreement,
+    FileType,
+    get_default_cash_transfer_modalities,
+    PartnerOrganization,
+)
+from etools.applications.reports.models import CountryProgramme, Indicator, Office, Result, Section
 from etools.applications.t2f.models import Travel, TravelActivity, TravelType
 from etools.applications.users.models import User
-from etools.libraries.djangolib.models import StringConcat, MaxDistinct
+from etools.libraries.djangolib.models import MaxDistinct, StringConcat
 from etools.libraries.djangolib.utils import get_environment
 
 
@@ -91,16 +98,17 @@ def get_gdd_amendment_file_path(instance, filename):
 class GDDManager(models.Manager):
 
     def get_queryset(self):
-        return super().get_queryset().prefetch_related(
+        return super().get_queryset().select_related('partner_organization').prefetch_related(
             'agreement__partner',
             'agreement__partner__organization',
+            'partner_organization__organization',
             Prefetch('partner_focal_points', queryset=User.objects.base_qs()),
             Prefetch('unicef_focal_points', queryset=User.objects.base_qs()),
             'offices',
             'planned_budget',
             'sections',
             'country_programmes',
-        )
+        ).filter(partner_organization__organization__organization_type=OrganizationType.GOVERNMENT)
 
     def detail_qs(self):
         qs = super().get_queryset().prefetch_related(
@@ -121,8 +129,8 @@ class GDDManager(models.Manager):
             'flat_locations',
             'sites',
             'planned_visits__sites',
-            # Prefetch('supply_items',
-            #          queryset=GDDSupplyItem.objects.order_by('-id')),
+            Prefetch('supply_items',
+                     queryset=GDDSupplyItem.objects.order_by('-id')),
         )
         return qs
 
@@ -1283,7 +1291,7 @@ class GDDBudget(TimeStampedModel):
     Represents a budget for the gdd
     """
     gdd = models.OneToOneField(GDD, related_name='planned_budget', null=True, blank=True,
-                                        verbose_name=_('GDD'), on_delete=models.CASCADE)
+                               verbose_name=_('GDD'), on_delete=models.CASCADE)
 
     # legacy values
     partner_contribution = models.DecimalField(max_digits=20, decimal_places=2, default=0,
@@ -2226,7 +2234,6 @@ class GDDTimeFrame(TimeStampedModel):
 
     class Meta:
         ordering = ('gdd', 'start_date',)
-
 
 
 class GDDReportingRequirement(TimeStampedModel):
