@@ -373,10 +373,12 @@ class GDDAdmin(
         return request.user.is_superuser or request.user.groups.filter(name='Country Office Administrator').exists()
 
     def attachments_link(self, obj):
-        url = "{}?gdd__id__exact={}".format(
-            reverse("admin:government_gddattachment_changelist"),
-            obj.pk
-        )
+        # url = "{}?gdd__id__exact={}".format(
+        #     reverse("admin:government_gddattachment_changelist"),
+        #     obj.pk
+        # )
+        # // TODO: fix links to attachments
+        url = "TODO"
         return mark_safe("<a href='{}'>{}</a>".format(
             url,
             "Attachments"

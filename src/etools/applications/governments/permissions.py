@@ -129,8 +129,7 @@ class GDDPermissions(PMPPermissions):
             begin_date = datetime.date(2022, 12, 1)
             release_date = datetime.date(2023, 4, 30)
             if i.end and begin_date <= i.end < release_date \
-                    and today < available_til \
-                    and i.document_type != "SSFA":
+                    and today < available_til:
                 return True
             return False
 
@@ -154,20 +153,6 @@ class GDDPermissions(PMPPermissions):
             """ field not required to accept if contingency is on"""
             return instance.contingency_pd or not instance.locked
 
-        def is_spd_non_hum(instance):
-            # TODO: in the future we might want to add a money condition here (100k is the current limit)
-            return instance.document_type == instance.SPD and not instance.humanitarian_flag
-
-        def unicef_not_accepted_spd_non_hum(instance):
-            """ field not required to accept if pd is not non-humanitarian spd"""
-            # TODO: in the future we might want to add a money condition here (100k is the current limit)
-            return is_spd_non_hum(instance) or not instance.unicef_accepted
-
-        def not_spd(instance):
-            return not instance.document_type == instance.SPD
-
-        def not_ssfa(instance):
-            return not is_spd_non_hum(instance)
 
         staff_member = self.user
 
@@ -207,7 +192,6 @@ class GDDPermissions(PMPPermissions):
             'contingency_on': self.instance.contingency_pd is True,
             'in_amendment_mode': user_added_amendment(self.instance),
             'not_in_amendment_mode': not user_added_amendment(self.instance),
-            'not_ssfa': not_ssfa(self.instance),
             'user_adds_amendment': user_added_amendment(self.instance),
             'prp_mode_on': not prp_mode_off(),
             'prp_mode_on+contingency_on': not prp_mode_off() and self.instance.contingency_pd,
@@ -221,17 +205,11 @@ class GDDPermissions(PMPPermissions):
             'unicef_court': self.instance.unicef_court and unlocked(self.instance),
             'partner_court': not self.instance.unicef_court and unlocked(self.instance),
             'unlocked': unlocked(self.instance),
-            'is_spd': self.instance.document_type == self.instance.SPD,
-            'is_spd_non_hum': is_spd_non_hum(self.instance),
-            'is_pd_unlocked': self.instance.document_type == self.instance.PD and not self.instance.locked,
+            'is_pd_unlocked': not self.instance.locked,
             'unicef_not_accepted': unicef_not_accepted(self.instance),
             'unicef_not_accepted_contingency': unicef_not_accepted_contingency(self.instance),
             'unlocked_or_contingency': unlocked_or_contingency(self.instance),
             'unlocked+not_in_amendment_mode': unlocked(self.instance) and not user_added_amendment(self.instance),
-            'unicef_not_accepted_spd': not_spd(self.instance) or unicef_not_accepted(self.instance),
-            'unlocked_or_spd': not not_spd(self.instance) or unlocked(self.instance),
-            'unicef_not_accepted_spd_non_hum': unicef_not_accepted_spd_non_hum(self.instance),
-            'not_ssfa+unicef_not_accepted': not_ssfa(self.instance) and unicef_not_accepted(self.instance),
             'post_epd_temp_conditions': post_epd_temp_conditions(self.instance),
             'cfei_absent': not self.instance.cfei_number
         }

@@ -2,6 +2,7 @@ import functools
 import logging
 import operator
 import datetime
+from copy import copy
 
 from django.db.models import Q
 from django.utils.translation import gettext as _
@@ -15,13 +16,12 @@ from etools.applications.governments.permissions import PMPGDDPermission, Partne
 from etools.applications.governments.serializers.exports import GDDExportSerializer, GDDExportFlatSerializer
 from etools.applications.governments.serializers.gdd import GDDListSerializer, MinimalGDDListSerializer, \
     GDDCreateUpdateSerializer, GDDDetailSerializer
-from etools.applications.governments.serializers.helpers import GDDPlannedVisitsCUSerializer
+from etools.applications.governments.serializers.helpers import GDDPlannedVisitsCUSerializer, GDDBudgetCUSerializer, \
+    GDDRiskSerializer
 from etools.applications.governments.serializers.result_structure import GDDResultCUSerializer
 from etools.applications.governments.validation.gdds import GDDValid
 
 from etools.applications.partners.models import PartnerOrganization
-from etools.applications.partners.serializers.interventions_v2 import MinimalInterventionListSerializer, \
-    InterventionCreateUpdateSerializer
 from etools.applications.partners.views.interventions_v3 import PMPInterventionRetrieveUpdateView
 from etools.applications.users.models import Country
 
@@ -30,7 +30,7 @@ from etools_validator.mixins import ValidatorViewMixin
 from rest_framework import status
 from rest_framework.exceptions import ValidationError, PermissionDenied
 from rest_framework.filters import OrderingFilter, BaseFilterBackend
-from rest_framework.generics import ListCreateAPIView
+from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
@@ -187,7 +187,6 @@ class GDDListAPIView(QueryStringFilterMixin, ExportModelMixin, GDDListBaseView):
                     return MinimalGDDListSerializer
         if self.request.method == "POST":
             return GDDCreateUpdateSerializer
-            return InterventionCreateUpdateSerializer
         return super().get_serializer_class()
 
     @transaction.atomic
@@ -295,9 +294,9 @@ class GDDListCreateView(PMPGDDMixin, GDDListAPIView):
                     return GDDExportFlatSerializer
             if "verbosity" in query_params.keys():
                 if query_params.get("verbosity") == 'minimal':
-                    return MinimalInterventionListSerializer
+                    return MinimalGDDListSerializer
         if self.request.method == "POST":
-            return InterventionCreateUpdateSerializer
+            return GDDCreateUpdateSerializer
         return GDDListSerializer
 
     @transaction.atomic
@@ -385,3 +384,110 @@ class GDDListCreateView(GDDListCreateView):
 
 class GDDRetrieveUpdateView(PMPInterventionRetrieveUpdateView):
     pass
+
+
+
+class GDDDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
+    """
+    Retrieve and Update Agreement.
+    """
+    queryset = GDD.objects.detail_qs().all()
+    serializer_class = GDDDetailSerializer
+    permission_classes = (PartnershipManagerPermission,)
+
+    SERIALIZER_MAP = {
+        'planned_visits': GDDPlannedVisitsCUSerializer,
+        'result_links': GDDResultCUSerializer
+    }
+    related_fields = [
+        'planned_visits',
+        'result_links'
+    ]
+    nested_related_names = [
+        'll_results'
+    ]
+    related_non_serialized_fields = [
+        # todo: add other CodedGenericRelation fields. at this moment they're not managed by permissions matrix
+        'prc_review_attachment',
+        'final_partnership_review',
+        'signed_pd_attachment',
+    ]
+
+    def get_serializer_class(self):
+        """
+        Use different serializers for methods
+        """
+        if self.request.method in ["PATCH", "PUT"]:
+            return GDDCreateUpdateSerializer
+        return super().get_serializer_class()
+
+    @transaction.atomic
+    def update(self, request, *args, **kwargs):
+        self.instance, old_instance, serializer = self.my_update(
+            request,
+            self.related_fields,
+            nested_related_names=self.nested_related_names,
+            related_non_serialized_fields=self.related_non_serialized_fields,
+            **kwargs
+        )
+
+        validator = GDDValid(self.instance, old=old_instance, user=request.user)
+        if not validator.is_valid:
+            logging.debug(validator.errors)
+            raise ValidationError(validator.errors)
+
+        if getattr(self.instance, '_prefetched_objects_cache', None):
+            # If 'prefetch_related' has been applied to a queryset, we need to
+            # refresh the instance from the database.
+            self.instance = self.get_object()
+
+        return Response(
+            GDDDetailSerializer(
+                self.instance,
+                context=self.get_serializer_context(),
+            ).data,
+        )
+class GDDRetrieveUpdateView(PMPGDDMixin, GDDDetailAPIView):
+    SERIALIZER_MAP = copy(GDDDetailAPIView.SERIALIZER_MAP)
+    SERIALIZER_MAP.update({
+        'risks': GDDRiskSerializer,
+        'planned_budget': GDDBudgetCUSerializer,
+    })
+    related_fields = GDDDetailAPIView.related_fields + [
+        'risks',
+        'planned_budget',
+    ]
+
+    def get_serializer_class(self):
+        if self.request.method in ["PATCH", "PUT"]:
+            return GDDCreateUpdateSerializer
+        return GDDDetailSerializer
+
+    @transaction.atomic
+    def update(self, request, *args, **kwargs):
+        self.instance, old_instance, serializer = self.my_update(
+            request,
+            self.related_fields,
+            nested_related_names=self.nested_related_names,
+            related_non_serialized_fields=self.related_non_serialized_fields,
+            **kwargs
+        )
+
+        validator = GDDValid(self.instance, old=old_instance, user=request.user)
+        if not validator.is_valid:
+            logging.debug(validator.errors)
+            raise ValidationError(validator.errors)
+
+        if getattr(self.instance, '_prefetched_objects_cache', None):
+            # If 'prefetch_related' has been applied to a queryset, we need to
+            # refresh the instance from the database.
+            self.instance = self.get_object()
+
+        context = self.get_serializer_context()
+        context['permissions'] = validator.get_permissions(self.instance)
+        return Response(
+            GDDDetailSerializer(
+                self.instance,
+                context=context,
+            ).data,
+        )

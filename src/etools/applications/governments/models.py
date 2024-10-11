@@ -118,7 +118,6 @@ class GDDManager(models.Manager):
             'result_links__ll_results',
             'result_links__ll_results__activities',
             'result_links__ll_results__activities__time_frames',
-            'management_budgets__items',
             'flat_locations',
             'sites',
             'planned_visits__sites',

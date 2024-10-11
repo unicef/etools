@@ -1,6 +1,6 @@
 from django.db import transaction
 from etools.applications.governments.models import GDDPlannedVisitSite, GDDPlannedVisits, GDD, GDDKeyIntervention, \
-    GDDResultLink, GDDAttachment, GDDBudget, GDDReview, GDDTimeFrame
+    GDDResultLink, GDDAttachment, GDDBudget, GDDReview, GDDTimeFrame, GDDRisk
 from etools.applications.governments.serializers.gdd_snapshot import FullGDDSnapshotSerializerMixin
 from etools.applications.partners.serializers.interventions_v2 import PlannedVisitSitesQuarterSerializer, \
     LocationSiteSerializer
@@ -19,6 +19,14 @@ from unicef_attachments.fields import AttachmentSingleFileField
 from unicef_attachments.serializers import AttachmentSerializerMixin
 from unicef_restlib.fields import SeparatedReadWriteField
 
+
+class GDDRiskSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GDDRisk
+        fields = [
+            'risk_type',
+            'mitigation_measures',
+        ]
 
 class GDDTimeFrameSerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField()
@@ -107,7 +115,6 @@ class GDDBudgetCUSerializer(
     serializers.ModelSerializer,
 ):
     unicef_cash_local = serializers.DecimalField(max_digits=20, decimal_places=2)
-    in_kind_amount_local = serializers.DecimalField(max_digits=20, decimal_places=2)
     total_unicef_contribution_local = serializers.DecimalField(max_digits=20, decimal_places=2)
     total_cash_local = serializers.DecimalField(max_digits=20, decimal_places=2)
     total_local = serializers.DecimalField(max_digits=20, decimal_places=2)

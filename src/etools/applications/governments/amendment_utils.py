@@ -596,7 +596,6 @@ GDD_AMENDMENT_RELATED_FIELDS = {
 
         # 1 to 1
         'planned_budget',
-        'management_budgets',
 
         # many to one
         'agreement',

@@ -287,7 +287,7 @@ class GDDDetailSerializer(
     partner = serializers.CharField(source='partner_organization.name')
     partner_id = serializers.CharField(source='partner_organization.id', read_only=True)
     partner_vendor = serializers.CharField(source='partner_organization.vendor_number')
-    # permissions = serializers.SerializerMethodField(read_only=True)
+    permissions = serializers.SerializerMethodField(read_only=True)
     planned_budget = GDDBudgetCUSerializer(read_only=True)
     planned_visits = GDDPlannedVisitsNestedSerializer(many=True, read_only=True, required=False)
     prc_review_attachment = AttachmentSingleFileField(required=False)
@@ -565,7 +565,6 @@ class GDDDetailSerializer(
             "cancel_justification",
             "capacity_development",
             "cash_transfer_modalities",
-            "cfei_number",
             "cluster_names",
             "confidential",
             "context",
@@ -576,7 +575,6 @@ class GDDDetailSerializer(
             "date_sent_to_partner",
             "days_from_review_to_signed",
             "days_from_submission_to_signed",
-            "document_type",
             "donor_codes",
             "donors",
             "end",
@@ -604,7 +602,6 @@ class GDDDetailSerializer(
             "location_names",
             "location_p_codes",
             "locations",
-            "management_budgets",
             "metadata",
             "modified",
             "number",
