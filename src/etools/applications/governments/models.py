@@ -47,6 +47,7 @@ from etools.applications.partners.models import (
 from etools.applications.reports.models import CountryProgramme, Indicator, Office, Result, Section
 from etools.applications.t2f.models import Travel, TravelActivity, TravelType
 from etools.applications.users.models import User
+from etools.applications.utils.helpers import generate_hash
 from etools.libraries.djangolib.models import MaxDistinct, StringConcat
 from etools.libraries.djangolib.utils import get_environment
 
@@ -906,7 +907,7 @@ class GDD(TimeStampedModel):
             amendment_relative_number = None
 
         reference_number = '{agreement}/{year}{id}'.format(
-            agreement=self.agreement.base_number if self.agreement else "Number to be set",  # TODO
+            agreement=self.agreement.base_number if self.agreement else self.pk,  # TODO if not agreement then hash?
             year=self.reference_number_year,
             id=document_id
         )

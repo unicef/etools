@@ -147,8 +147,8 @@ class GDDBudgetCUSerializer(
             "total_supply"
         )
 
-    def get_intervention(self):
-        return self.validated_data['intervention']
+    def get_gdd(self):
+        return self.validated_data['gdd']
 
 
 class GDDAttachmentSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):

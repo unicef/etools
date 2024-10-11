@@ -110,7 +110,7 @@ class PMPGDDBaseViewMixin:
 class PMPGDDMixin(PMPGDDBaseViewMixin):
     def get_partner_staff_qs(self, qs):
         return qs.filter(
-            partner=self.current_partner(),
+            partner_organization=self.current_partner(),
             date_sent_to_partner__isnull=False,
         )
 
@@ -274,7 +274,7 @@ class GDDListCreateView(PMPGDDMixin, GDDListAPIView):
     permission_classes = (IsAuthenticated, PMPGDDPermission)
     search_terms = (
         'title__icontains',
-        'partner__organization__name__icontains',
+        'partner_organization__organization__name__icontains',
         'number__icontains',
         'cfei_number__icontains',
     )

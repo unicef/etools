@@ -99,7 +99,7 @@ class PMPPermissions:
 class GDDPermissions(PMPPermissions):
 
     MODEL_NAME = 'governments.GDD'
-    EXTRA_FIELDS = ['sections_present', 'pd_outputs', 'final_partnership_review', 'prc_reviews', 'document_currency']
+    EXTRA_FIELDS = ['sections_present', 'pd_outputs', 'final_partnership_review', 'gov_prc_reviews', 'document_currency']
 
     def __init__(self, **kwargs):
         """
@@ -168,7 +168,7 @@ class GDDPermissions(PMPPermissions):
             if self.user.id == review.authorized_officer_id:
                 self.user_groups.append('Review Authorized Officer')
 
-            if review.prc_reviews.filter(overall_review=review, user=self.user).exists():
+            if review.gov_prc_reviews.filter(overall_review=review, user=self.user).exists():
                 self.user_groups.append('PRC Officer')
 
         self.user_groups = list(set(self.user_groups))
