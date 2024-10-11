@@ -125,8 +125,8 @@ class BaseGDDListSerializer(serializers.ModelSerializer):
         max_digits=20,
         decimal_places=2
     )
-    frs_total_gdd_amt = serializers.DecimalField(
-        source='frs__gdd_amt__sum',
+    frs_total_intervention_amt = serializers.DecimalField(
+        source='frs__intervention_amt__sum',
         read_only=True,
         max_digits=20,
         decimal_places=2
@@ -170,7 +170,7 @@ class BaseGDDListSerializer(serializers.ModelSerializer):
             'frs_earliest_start_date',
             'frs_latest_end_date',
             'frs_total_frs_amt',
-            'frs_total_gdd_amt',
+            'frs_total_intervention_amt',
             'frs_total_outstanding_amt',
             'id',
             'metadata',

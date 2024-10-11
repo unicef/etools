@@ -40,7 +40,7 @@ def transition_to_closed(i):
         'total_frs_amt_usd': 0,
         'total_outstanding_amt': 0,
         'total_outstanding_amt_usd': 0,
-        'total_gdd_amt': 0,
+        'total_intervention_amt': 0,
         'total_actual_amt': 0,
         'total_actual_amt_usd': 0,
         'earliest_start_date': None,
@@ -54,7 +54,7 @@ def transition_to_closed(i):
         r['total_frs_amt_usd'] += fr.total_amt
         r['total_outstanding_amt'] += fr.outstanding_amt_local
         r['total_outstanding_amt_usd'] += fr.outstanding_amt
-        r['total_gdd_amt'] += fr.gdd_amt
+        r['total_intervention_amt'] += fr.intervention_amt
         r['total_actual_amt'] += fr.actual_amt_local
         r['total_actual_amt_usd'] += fr.actual_amt
         if r['earliest_start_date'] is None:

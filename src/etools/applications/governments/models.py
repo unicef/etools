@@ -80,7 +80,7 @@ def get_gdd_amendment_file_path(instance, filename):
         str(instance.gdd.agreement.partner.id),
         'agreements',
         str(instance.gdd.agreement.id),
-        'gov_gdds',
+        'gdds',
         str(instance.gdd.id),
         'amendments',
         str(instance.id),
@@ -148,7 +148,7 @@ class GDDManager(models.Manager):
 
     def frs_qs(self):
         frs_query = FundsReservationHeader.objects.filter(
-            gov_gdd=OuterRef("pk")
+            gdd=OuterRef("pk")
         ).order_by().values("gdd")
         qs = self.get_queryset().prefetch_related('result_links__cp_output')
         qs = qs.annotate(
@@ -164,8 +164,8 @@ class GDDManager(models.Manager):
             frs__total_amt_local__sum=Subquery(
                 frs_query.annotate(total=Sum("total_amt_local")).values("total")[:1]
             ),
-            frs__gdd_amt__sum=Subquery(
-                frs_query.annotate(total=Sum("gdd_amt")).values("total")[:1]
+            frs__intervention_amt__sum=Subquery(
+                frs_query.annotate(total=Sum("intervention_amt")).values("total")[:1]
             ),
             location_p_codes=StringConcat("flat_locations__p_code", separator="|", distinct=True),
             donors=StringConcat("frs__fr_items__donor", separator="|", distinct=True),
@@ -744,7 +744,7 @@ class GDD(TimeStampedModel):
             'total_frs_amt_usd': 0,
             'total_outstanding_amt': 0,
             'total_outstanding_amt_usd': 0,
-            'total_gdd_amt': 0,
+            'total_intervention_amt': 0,
             'total_actual_amt': 0,
             'total_actual_amt_usd': 0,
             'earliest_start_date': None,
@@ -755,7 +755,7 @@ class GDD(TimeStampedModel):
             r['total_frs_amt_usd'] += fr.total_amt
             r['total_outstanding_amt'] += fr.outstanding_amt_local
             r['total_outstanding_amt_usd'] += fr.outstanding_amt
-            r['total_gdd_amt'] += fr.gdd_amt
+            r['total_intervention_amt'] += fr.intervention_amt
             r['total_actual_amt'] += fr.actual_amt_local
             r['total_actual_amt_usd'] += fr.actual_amt
             if r['earliest_start_date'] is None:
