@@ -257,30 +257,31 @@ def rigid_in_amendment_flag(i):
 
 
 def locations_valid(i):
-    raise BasicValidationError("TODO: activity indicators need to be a subset of gdd flat locations")
-    ind_locations = Location.objects.filter(
-        applied_indicators__lower_result__result_link__gdd__pk=i.pk).distinct()
-    diff_locations = ind_locations.difference(i.flat_locations.all())
-    if diff_locations:
-        raise BasicValidationError(
-            _('The following locations have been selected on the PD/SPD indicators and '
-              'cannot be removed without removing them from the indicators first: %(locations)s')
-            % {'locations': ', '.join([str(loc) for loc in diff_locations])})
+    print("TODO: activity indicators need to be a subset of gdd flat locations")
+    # ind_locations = Location.objects.filter(
+    #     applied_indicators__lower_result__result_link__gdd__pk=i.pk).distinct()
+    # diff_locations = ind_locations.difference(i.flat_locations.all())
+    # if diff_locations:
+    #     raise BasicValidationError(
+    #         _('The following locations have been selected on the PD/SPD indicators and '
+    #           'cannot be removed without removing them from the indicators first: %(locations)s')
+    #         % {'locations': ', '.join([str(loc) for loc in diff_locations])})
     return True
 
 
 def cp_structure_valid(i):
-    raise BasicValidationError("TODO: Think what validation we need here")
-    if i.agreement.agreement_type == i.agreement.PCA:
-        invalid = False
-        if i.country_programmes.count():
-            if i.agreement.country_programme not in i.country_programmes.all():
-                invalid = True
-
-        if invalid:
-            raise BasicValidationError(
-                _('The Country Programme selected on this PD is not the same as the Country Programme selected '
-                  'on the Agreement, please select %(cp)s') % {'cp': i.agreement.country_programme})
+    print("TODO: Think what validation we need here")
+    #
+    # if i.agreement.agreement_type == i.agreement.PCA:
+    #     invalid = False
+    #     if i.country_programmes.count():
+    #         if i.agreement.country_programme not in i.country_programmes.all():
+    #             invalid = True
+    #
+    #     if invalid:
+    #         raise BasicValidationError(
+    #             _('The Country Programme selected on this PD is not the same as the Country Programme selected '
+    #               'on the Agreement, please select %(cp)s') % {'cp': i.agreement.country_programme})
     return True
 
 
