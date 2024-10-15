@@ -111,6 +111,22 @@ class GovernmentEWP(TimeStampedModel):
     end_date = models.DateField(verbose_name=_('Workplan End Date'), null=True, blank=True)
 
 
+
+class EWPOutput(TimeStampedModel):
+    workplan = models.ForeignKey(
+        GovernmentEWP, related_name='ewp_outputs', verbose_name=_('Workplan'),
+        on_delete=models.CASCADE, blank=True, null=True,
+    )
+    cp_output = models.ForeignKey(Result, related_name='ewp_outputs', on_delete=models.PROTECT)
+
+
+
+class EWPKeyIntervention(TimeStampedModel):
+    ewp_output = models.ForeignKey(EWPOutput, related_name='ewp_key_interventions', on_delete=models.PROTECT)
+    cp_key_intervention = models.ForeignKey(Result, related_name='ewp_key_interventions', on_delete=models.PROTECT)
+
+
+
 class EWPActivity(TimeStampedModel):
     workplan = models.ForeignKey(
         GovernmentEWP, related_name='ewp_activities', verbose_name=_('Workplan'),
@@ -119,10 +135,7 @@ class EWPActivity(TimeStampedModel):
     wpa_id = models.CharField(verbose_name=_("Workplan Activity ID"), max_length=50, blank=True, null=True)
     wpa_wbs = models.CharField(verbose_name=_("Workplan Activity WBS"), max_length=50, blank=True, null=True)
 
-    # the following are extrapolated from the wbs. if the records matching the wbs are not in
-    # eTools we will skip the sync for this record
-    cp_output = models.ForeignKey(Result, related_name='ewp_activity', on_delete=models.PROTECT)
-    cp_key_intervention = models.ForeignKey(Result, related_name='ewp_activity_for_ki', on_delete=models.PROTECT)
+    ewp_key_intervention = models.ForeignKey(EWPKeyIntervention, related_name='ewp_activity_for_ki', on_delete=models.PROTECT)
 
     title = models.CharField(verbose_name=_("WPA Title"), max_length=50, blank=True, null=True)
     description = models.TextField(verbose_name=_("WPA Description"), blank=True, null=True)
@@ -1904,8 +1917,8 @@ class GDDResultLink(TimeStampedModel):
         on_delete=models.CASCADE, blank=True, null=True
         )
     cp_output = models.ForeignKey(
-        Result, related_name='result_links', verbose_name=_('CP Output'),
-        on_delete=models.CASCADE,
+        EWPOutput, related_name='result_links', verbose_name=_('CP Output'),
+        on_delete=models.PROTECT,
     )
     ram_indicators = models.ManyToManyField(Indicator, blank=True, verbose_name=_('RAM Indicators'))
 
@@ -1961,8 +1974,8 @@ class GDDKeyIntervention(TimeStampedModel):
         on_delete=models.CASCADE,
     )
     # This links to a result of type activity (WBS4)
-    cp_key_intervention = models.ForeignKey(
-        Result, related_name='gdd_key_interventions', verbose_name=_('CP Key Intervention'),
+    ewp_key_intervention = models.ForeignKey(
+        EWPKeyIntervention, related_name='gdd_key_interventions', verbose_name=_('CP Key Intervention'),
         on_delete=models.CASCADE, blank=True, null=True,)
 
     code = models.CharField(verbose_name=_("Code"), max_length=50, blank=True, null=True)
