@@ -49,4 +49,7 @@ urlpatterns = [
         ),
         name='gdd-detail-results-structure',
     ),
+    # TODO: endpoint for eWP activities based on country_programme id
+    #
+
 ]

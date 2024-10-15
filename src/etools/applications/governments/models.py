@@ -95,6 +95,43 @@ def get_gdd_amendment_file_path(instance, filename):
     ])
 
 
+
+class GovernmentEWP(TimeStampedModel):
+    country_programme = models.ForeignKey(CountryProgramme, related_name='workplans', on_delete=models.PROTECT)
+
+    name = models.CharField(verbose_name=_("Workplan Name"), max_length=50, blank=True, null=True)
+    ewp_id = models.CharField(verbose_name=_("Workplan ID"), max_length=50, blank=True, null=True)
+    wbs = models.CharField(verbose_name=_("Workplan WBS"), max_length=50, blank=True, null=True)
+    status = models.CharField(verbose_name=_("Status"), max_length=50, blank=True, null=True)
+    cost_center_code = models.CharField(verbose_name=_("Cost Center Code"), max_length=50, blank=True, null=True)
+    cost_center_name = models.CharField(verbose_name=_("Cost Center Name"), max_length=50, blank=True, null=True)
+    plan_type = models.CharField(verbose_name=_("Plan Type"), max_length=50, blank=True, null=True)
+    category_type = models.CharField(verbose_name=_("Plan Category Type"), max_length=50, blank=True, null=True)
+    start_date = models.DateField(verbose_name=_('Workplan Start Date'), null=True, blank=True)
+    end_date = models.DateField(verbose_name=_('Workplan End Date'), null=True, blank=True)
+
+
+class EWPActivity(TimeStampedModel):
+    workplan = models.ForeignKey(
+        GovernmentEWP, related_name='ewp_activities', verbose_name=_('Workplan'),
+        on_delete=models.CASCADE, blank=True, null=True,
+    )
+    wpa_id = models.CharField(verbose_name=_("Workplan Activity ID"), max_length=50, blank=True, null=True)
+    wpa_wbs = models.CharField(verbose_name=_("Workplan Activity WBS"), max_length=50, blank=True, null=True)
+
+    # the following are extrapolated from the wbs. if the records matching the wbs are not in
+    # eTools we will skip the sync for this record
+    cp_output = models.ForeignKey(Result, related_name='ewp_activity', on_delete=models.PROTECT)
+    cp_key_intervention = models.ForeignKey(Result, related_name='ewp_activity_for_ki', on_delete=models.PROTECT)
+
+    title = models.CharField(verbose_name=_("WPA Title"), max_length=50, blank=True, null=True)
+    description = models.TextField(verbose_name=_("WPA Description"), blank=True, null=True)
+    total_budget = models.CharField(verbose_name=_("Total budget"), max_length=50, blank=True, null=True)
+
+    locations = models.ManyToManyField(Location, related_name="ewp_activities", blank=True)
+    partners = models.ManyToManyField(PartnerOrganization, related_name="ewp_activities", blank=True)
+
+
 class GDDManager(models.Manager):
 
     def get_queryset(self):
@@ -271,12 +308,24 @@ class GDD(TimeStampedModel):
         on_delete=models.CASCADE,
         null=True, blank=True
     )
-    country_programmes = models.ManyToManyField(
+    country_programme = models.ForeignKey(
         CountryProgramme,
         verbose_name=_("Country Programmes"),
         related_name='government_gdds',
         blank=True,
         help_text='Which Country Programme does this GDD belong to?',
+        on_delete=models.PROTECT
+    )
+
+    # The selection of e_worplans needs to fall within the country_programme. No hard validation required for now.
+    # Only fronted filters
+    # TODO: endpoint needed to get e_workplans by country_programme id
+    e_workplans = models.ManyToManyField(
+        GovernmentEWP,
+        verbose_name=_("Government eWorkplans"),
+        related_name='government_gdds',
+        blank=True,
+        help_text='Which eWorkplans will this GDD be linked to?',
     )
     number = models.CharField(
         verbose_name=_('Reference Number'),
@@ -1843,20 +1892,6 @@ class GDDRisk(TimeStampedModel):
         return "{} {}".format(self.gdd, self.get_risk_type_display())
 
 
-class GovernmentEWP(TimeStampedModel):
-    country_programme = models.ForeignKey(CountryProgramme, related_name='workplans', on_delete=models.CASCADE)
-
-    name = models.CharField(verbose_name=_("Workplan Name"), max_length=50, blank=True, null=True)
-    workplan_id = models.CharField(verbose_name=_("Workplan ID"), max_length=50, blank=True, null=True)
-    workplan_wbs = models.CharField(verbose_name=_("Workplan WBS"), max_length=50, blank=True, null=True)
-    status = models.CharField(verbose_name=_("Status"), max_length=50, blank=True, null=True)
-    cost_center_code = models.CharField(verbose_name=_("Cost Center Code"), max_length=50, blank=True, null=True)
-    cost_center_name = models.CharField(verbose_name=_("Cost Center Name"), max_length=50, blank=True, null=True)
-    plan_type = models.CharField(verbose_name=_("Plan Type"), max_length=50, blank=True, null=True)
-    category_type = models.CharField(verbose_name=_("Plan Category Type"), max_length=50, blank=True, null=True)
-    start_date = models.DateField(verbose_name=_('Workplan Start Date'), null=True, blank=True)
-    end_date = models.DateField(verbose_name=_('Workplan End Date'), null=True, blank=True)
-
 
 class GDDResultLink(TimeStampedModel):
     code = models.CharField(verbose_name=_("Code"), max_length=50, blank=True, null=True)
@@ -1870,7 +1905,7 @@ class GDDResultLink(TimeStampedModel):
         )
     cp_output = models.ForeignKey(
         Result, related_name='result_links', verbose_name=_('CP Output'),
-        on_delete=models.CASCADE, blank=True, null=True,
+        on_delete=models.CASCADE,
     )
     ram_indicators = models.ManyToManyField(Indicator, blank=True, verbose_name=_('RAM Indicators'))
 
@@ -1921,12 +1956,15 @@ class GDDKeyIntervention(TimeStampedModel):
     # link to intermediary model to gdd and cp ouptut
     result_link = models.ForeignKey(
         GDDResultLink,
-        related_name='key_interventions',
+        related_name='gdd_key_interventions',
         verbose_name=_('Result Link'),
         on_delete=models.CASCADE,
     )
+    # This links to a result of type activity (WBS4)
+    cp_key_intervention = models.ForeignKey(
+        Result, related_name='gdd_key_interventions', verbose_name=_('CP Key Intervention'),
+        on_delete=models.CASCADE, blank=True, null=True,)
 
-    name = models.CharField(verbose_name=_("Name"), max_length=500)  # TODO TBD
     code = models.CharField(verbose_name=_("Code"), max_length=50, blank=True, null=True)
 
     def __str__(self):
@@ -1979,21 +2017,6 @@ class GDDKeyIntervention(TimeStampedModel):
             total=Sum("unicef_cash", filter=Q(is_active=True)),
         )
         return results["total"] if results["total"] is not None else 0
-
-
-class EWPActivity(TimeStampedModel):
-    workplan = models.ForeignKey(
-        GovernmentEWP, related_name='ewp_activities', verbose_name=_('Workplan'),
-        on_delete=models.CASCADE, blank=True, null=True,
-    )
-    wpa_id = models.CharField(verbose_name=_("Workplan Activity ID"), max_length=50, blank=True, null=True)
-    wpa_wbs = models.CharField(verbose_name=_("Workplan Activity WBS"), max_length=50, blank=True, null=True)
-    title = models.CharField(verbose_name=_("WPA Title"), max_length=50, blank=True, null=True)
-    description = models.TextField(verbose_name=_("WPA Description"), blank=True, null=True)
-    total_budget = models.CharField(verbose_name=_("Total budget"), max_length=50, blank=True, null=True)
-
-    locations = models.ManyToManyField(Location, related_name="ewp_activities", blank=True)
-    partners = models.ManyToManyField(PartnerOrganization, related_name="ewp_activities", blank=True)
 
 
 class GDDActivity(TimeStampedModel):

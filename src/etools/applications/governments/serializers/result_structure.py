@@ -161,7 +161,7 @@ class GDDKeyInterventionSerializer(serializers.ModelSerializer):
         model = GDDKeyIntervention
         fields = [
             "id",
-            "name",
+            "cp_key_intervention",
             "code",
             # "result_link",
             "total",
