@@ -1844,16 +1844,16 @@ class GDDRisk(TimeStampedModel):
 
 
 class GovernmentEWP(TimeStampedModel):
-    cp_output = models.ForeignKey(CountryProgramme, related_name='workplans', on_delete=models.CASCADE)
+    country_programme = models.ForeignKey(CountryProgramme, related_name='workplans', on_delete=models.CASCADE)
 
     name = models.CharField(verbose_name=_("Workplan Name"), max_length=50, blank=True, null=True)
     workplan_id = models.CharField(verbose_name=_("Workplan ID"), max_length=50, blank=True, null=True)
-    workplan_gid = models.CharField(verbose_name=_("Workplan GID"), max_length=50, blank=True, null=True)
+    workplan_wbs = models.CharField(verbose_name=_("Workplan WBS"), max_length=50, blank=True, null=True)
     status = models.CharField(verbose_name=_("Status"), max_length=50, blank=True, null=True)
     cost_center_code = models.CharField(verbose_name=_("Cost Center Code"), max_length=50, blank=True, null=True)
     cost_center_name = models.CharField(verbose_name=_("Cost Center Name"), max_length=50, blank=True, null=True)
     plan_type = models.CharField(verbose_name=_("Plan Type"), max_length=50, blank=True, null=True)
-    plan_category_type = models.CharField(verbose_name=_("Plan Category Type"), max_length=50, blank=True, null=True)
+    category_type = models.CharField(verbose_name=_("Plan Category Type"), max_length=50, blank=True, null=True)
     start_date = models.DateField(verbose_name=_('Workplan Start Date'), null=True, blank=True)
     end_date = models.DateField(verbose_name=_('Workplan End Date'), null=True, blank=True)
 
@@ -1987,7 +1987,7 @@ class EWPActivity(TimeStampedModel):
         on_delete=models.CASCADE, blank=True, null=True,
     )
     wpa_id = models.CharField(verbose_name=_("Workplan Activity ID"), max_length=50, blank=True, null=True)
-    wpa_gid = models.CharField(verbose_name=_("Workplan Activity GID"), max_length=50, blank=True, null=True)
+    wpa_wbs = models.CharField(verbose_name=_("Workplan Activity WBS"), max_length=50, blank=True, null=True)
     title = models.CharField(verbose_name=_("WPA Title"), max_length=50, blank=True, null=True)
     description = models.TextField(verbose_name=_("WPA Description"), blank=True, null=True)
     total_budget = models.CharField(verbose_name=_("Total budget"), max_length=50, blank=True, null=True)
