@@ -51,9 +51,9 @@ class GDDExportSerializer(serializers.ModelSerializer):
     sectors = serializers.SerializerMethodField(label=_("Sections"))
     locations = serializers.SerializerMethodField(label=_("Locations"))
     contingency_pd = serializers.SerializerMethodField(label=_("Contingency PD"))
-    gdd_clusters = serializers.SerializerMethodField(
-        label=_("Cluster"),
-    )
+    # gdd_clusters = serializers.SerializerMethodField(
+    #     label=_("Cluster"),
+    # )
     fr_numbers = serializers.SerializerMethodField(label=_("FR Number(s)"))
     fr_currency = serializers.SerializerMethodField(label=_("FR Currency"))
     fr_posting_date = serializers.SerializerMethodField(label=_("FR Posting Date"))
@@ -162,7 +162,7 @@ class GDDExportSerializer(serializers.ModelSerializer):
             "sectors",
             "locations",
             "contingency_pd",
-            "gdd_clusters",
+            # "gdd_clusters",
             "unicef_focal_points",
             "partner_focal_points",
             "budget_currency",
@@ -213,8 +213,8 @@ class GDDExportSerializer(serializers.ModelSerializer):
     def get_sectors(self, obj):
         return ', '.join([s.name for s in obj.sections.all()])
 
-    def get_gdd_clusters(self, obj):
-        return ', '.join([c for c in obj.gdd_clusters()])
+    # def get_gdd_clusters(self, obj):
+    #     return ', '.join([c for c in obj.gdd_clusters()])
 
     def get_contingency_pd(self, obj):
         return "Yes" if obj.contingency_pd else "No"
@@ -639,9 +639,9 @@ class GDDAmendmentExportSerializer(serializers.ModelSerializer):
     sectors = serializers.SerializerMethodField(label=_("Sections"))
     locations = serializers.SerializerMethodField(label=_("Locations"))
     contingency_pd = serializers.SerializerMethodField(label=_("Contingency PD"))
-    gdd_clusters = serializers.SerializerMethodField(
-        label=_("Cluster"),
-    )
+    # gdd_clusters = serializers.SerializerMethodField(
+    #     label=_("Cluster"),
+    # )
     fr_numbers = serializers.SerializerMethodField(label=_("FR Number(s)"))
     fr_currency = serializers.SerializerMethodField(label=_("FR Currency"))
     fr_posting_date = serializers.SerializerMethodField(label=_("FR Posting Date"))
@@ -751,7 +751,7 @@ class GDDAmendmentExportSerializer(serializers.ModelSerializer):
             "sectors",
             "locations",
             "contingency_pd",
-            "gdd_clusters",
+            # "gdd_clusters",
             "unicef_focal_points",
             "partner_focal_points",
             "budget_currency",
@@ -802,8 +802,8 @@ class GDDAmendmentExportSerializer(serializers.ModelSerializer):
     def get_sectors(self, obj):
         return ', '.join([s.name for s in obj.sections.all()])
 
-    def get_gdd_clusters(self, obj):
-        return ', '.join([c for c in obj.gdd_clusters()])
+    # def get_gdd_clusters(self, obj):
+    #     return ', '.join([c for c in obj.gdd_clusters()])
 
     def get_contingency_pd(self, obj):
         return "Yes" if obj.contingency_pd else "No"

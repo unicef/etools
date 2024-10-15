@@ -54,7 +54,7 @@ class GDDActivityItemSerializer(serializers.ModelSerializer):
             'unit_price',
             'no_units',
             'unicef_cash',
-            'cso_cash',
+            # 'cso_cash',
         )
 
     def validate(self, attrs):
@@ -63,10 +63,10 @@ class GDDActivityItemSerializer(serializers.ModelSerializer):
         unit_price = attrs.get('unit_price', self.instance.unit_price if self.instance else 0)
         no_units = attrs.get('no_units', self.instance.no_units if self.instance else 0)
         unicef_cash = attrs.get('unicef_cash', self.instance.unicef_cash if self.instance else 0)
-        cso_cash = attrs.get('cso_cash', self.instance.cso_cash if self.instance else 0)
+        # cso_cash = attrs.get('cso_cash', self.instance.cso_cash if self.instance else 0)
 
         # unit_price * no_units can contain more decimal places than we're able to save
-        if abs((unit_price * no_units) - (unicef_cash + cso_cash)) > 0.01:
+        if abs((unit_price * no_units) - unicef_cash) > 0.01:
             self.fail('invalid_budget')
 
         return attrs
@@ -163,7 +163,7 @@ class GDDKeyInterventionSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "code",
-            "result_link",
+            # "result_link",
             "total",
             "created",
             "modified",
@@ -247,7 +247,7 @@ class GDDActivityDetailSerializer(
             'created',
             'context_details',
             'unicef_cash',
-            'cso_cash',
+            # 'cso_cash',
             'items',
             'time_frames',
             'partner_percentage',
@@ -265,7 +265,7 @@ class GDDActivityDetailSerializer(
             # when we do partial update for activity having items attached without items provided in request
             # it's easy to break total values, so we ignore them
             attrs.pop('unicef_cash', None)
-            attrs.pop('cso_cash', None)
+            # attrs.pop('cso_cash', None)
         return attrs
 
     @transaction.atomic
@@ -319,14 +319,14 @@ class GDDActivitySerializer(serializers.ModelSerializer):
         model = GDDActivity
         fields = (
             'id', 'ewp_activity', 'code', 'context_details',
-            'unicef_cash', 'cso_cash', 'partner_percentage',
+            'unicef_cash', 'partner_percentage',
             'time_frames', 'is_active', 'created',
         )
         read_only_fields = ['code']
 
 
 class GDDKeyInterventionWithActivitiesSerializer(GDDKeyInterventionSerializer):
-    activities = GDDActivityDetailSerializer(read_only=True, many=True)
+    activities = GDDActivityDetailSerializer(read_only=True, many=True, source='gdd_activities')
 
     class Meta(GDDKeyInterventionSerializer.Meta):
         fields = GDDKeyInterventionSerializer.Meta.fields + ["activities"]
@@ -367,3 +367,13 @@ class GDDResultNestedSerializer(BaseGDDResultNestedSerializer):
 
     class Meta(BaseGDDResultNestedSerializer.Meta):
         fields = BaseGDDResultNestedSerializer.Meta.fields + ['key_interventions']
+
+
+class GDDDetailResultsStructureSerializer(serializers.ModelSerializer):
+    result_links = GDDResultNestedSerializer(many=True, read_only=True, required=False)
+
+    class Meta:
+        model = GDD
+        fields = (
+            "result_links",
+        )

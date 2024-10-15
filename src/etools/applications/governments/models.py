@@ -47,7 +47,6 @@ from etools.applications.partners.models import (
 from etools.applications.reports.models import CountryProgramme, Indicator, Office, Result, Section
 from etools.applications.t2f.models import Travel, TravelActivity, TravelType
 from etools.applications.users.models import User
-from etools.applications.utils.helpers import generate_hash
 from etools.libraries.djangolib.models import MaxDistinct, StringConcat
 from etools.libraries.djangolib.utils import get_environment
 
@@ -124,9 +123,9 @@ class GDDManager(models.Manager):
             'frs',
             'frs__fr_items',
             'result_links__cp_output',
-            'result_links__ll_results',
-            'result_links__ll_results__activities',
-            'result_links__ll_results__activities__time_frames',
+            'result_links__key_interventions',
+            'result_links__key_interventions__gdd_activities',
+            'result_links__key_interventions__gdd_activities__time_frames',
             'flat_locations',
             'sites',
             'planned_visits__sites',
@@ -139,7 +138,7 @@ class GDDManager(models.Manager):
 
         qs = super().get_queryset().only().prefetch_related(
             'supply_items',
-            Prefetch('result_links__ll_results__activities',
+            Prefetch('result_links__key_interventions__gdd_activities',
                      queryset=GDDActivity.objects.filter(is_active=True)),
         )
         return qs
@@ -733,17 +732,8 @@ class GDD(TimeStampedModel):
         # with prefetch_related
         return [
             lower_result for link in self.result_links.all()
-            for lower_result in link.ll_results.all()
+            for lower_result in link.key_interventions.all()
         ]
-
-    def gdd_clusters(self):
-        # return gdd clusters as an array of strings
-        clusters = set()
-        for lower_result in self.all_lower_results:
-            for applied_indicator in lower_result.applied_indicators.all():
-                if applied_indicator.cluster_name:
-                    clusters.add(applied_indicator.cluster_name)
-        return clusters
 
     @cached_property
     def total_frs(self):
@@ -1291,24 +1281,35 @@ class GDDBudget(TimeStampedModel):
     """
     Represents a budget for the gdd
     """
-    gdd = models.OneToOneField(GDD, related_name='planned_budget', null=True, blank=True,
-                               verbose_name=_('GDD'), on_delete=models.CASCADE)
-
+    gdd = models.OneToOneField(
+        GDD, verbose_name=_('GDD'),
+        related_name='planned_budget',
+        null=True, blank=True,
+        on_delete=models.CASCADE
+    )
     # legacy values
-    partner_contribution = models.DecimalField(max_digits=20, decimal_places=2, default=0,
-                                               verbose_name=_('Partner Contribution'))
-    unicef_cash = models.DecimalField(max_digits=20, decimal_places=2, default=0, verbose_name=_('Unicef Cash'))
+    partner_contribution = models.DecimalField(
+        max_digits=20, decimal_places=2, default=0,
+        verbose_name=_('Partner Contribution')
+    )
+    unicef_cash = models.DecimalField(
+        max_digits=20, decimal_places=2, default=0,
+        verbose_name=_('Unicef Cash')
+    )
     in_kind_amount = models.DecimalField(
-        max_digits=20,
-        decimal_places=2,
-        default=0,
+        max_digits=20, decimal_places=2, default=0,
         verbose_name=_('UNICEF Supplies')
     )
-    total = models.DecimalField(max_digits=20, decimal_places=2, verbose_name=_('Total'))
+    total = models.DecimalField(
+        max_digits=20, decimal_places=2,
+        verbose_name=_('Total')
+    )
 
     # sum of all activity/management budget cso/partner values
-    partner_contribution_local = models.DecimalField(max_digits=20, decimal_places=2, default=0,
-                                                     verbose_name=_('Partner Contribution Local'))
+    partner_contribution_local = models.DecimalField(
+        max_digits=20, decimal_places=2, default=0,
+        verbose_name=_('Partner Contribution Local')
+    )
     # sum of partner supply items (GDDSupplyItem)
     partner_supply_local = models.DecimalField(
         max_digits=20, decimal_places=2, default=0,
@@ -1328,20 +1329,23 @@ class GDDBudget(TimeStampedModel):
         verbose_name=_('Total HQ Cash Local')
     )
     # unicef cash including headquarters contribution
-    unicef_cash_local = models.DecimalField(max_digits=20, decimal_places=2, default=0,
-                                            verbose_name=_('Unicef Cash Local'))
+    unicef_cash_local = models.DecimalField(
+        max_digits=20, decimal_places=2, default=0,
+        verbose_name=_('Unicef Cash Local')
+    )
     # sum of unicef supply items (GDDSupplyItem)
     in_kind_amount_local = models.DecimalField(
         max_digits=20, decimal_places=2, default=0,
         verbose_name=_('UNICEF Supplies Local')
     )
     currency = CurrencyField(verbose_name=_('Currency'), null=False, default='')
-    total_local = models.DecimalField(max_digits=20, decimal_places=2, verbose_name=_('Total Local'))
+    total_local = models.DecimalField(
+        max_digits=20, decimal_places=2,
+        verbose_name=_('Total Local')
+    )
     programme_effectiveness = models.DecimalField(
-        max_digits=20,
-        decimal_places=2,
+        max_digits=20, decimal_places=2, default=0,
         verbose_name=_("Programme Effectiveness (%)"),
-        default=0,
     )
 
     tracker = FieldTracker()
@@ -1402,8 +1406,8 @@ class GDDBudget(TimeStampedModel):
 
         init = False
         for link in gdd.result_links.all():
-            for result in link.ll_results.all():
-                for activity in result.activities.all():  # activities prefetched with is_active=True in budget_qs
+            for result in link.key_interventions.all():
+                for activity in result.gdd_activities.all():  # activities prefetched with is_active=True in budget_qs
                     if not init:
                         init_totals()
                         init = True
@@ -1854,80 +1858,18 @@ class GovernmentEWP(TimeStampedModel):
     end_date = models.DateField(verbose_name=_('Workplan End Date'), null=True, blank=True)
 
 
-class EWPResultLink(TimeStampedModel):
-    code = models.CharField(verbose_name=_("Code"), max_length=50, blank=True, null=True)
-
-    workplan = models.ForeignKey(
-        GovernmentEWP, related_name='ewp_result_links', verbose_name=_('Workplan'),
-        on_delete=models.CASCADE, blank=True, null=True,
-    )
-    key_intervention = models.ForeignKey(
-        Result, related_name='ewp_result_links', verbose_name=_('Key Intervention'),
-        on_delete=models.CASCADE, blank=True, null=True
-    )
-    ram_indicators = models.ManyToManyField(Indicator, blank=True, verbose_name=_('RAM Indicators'))
-
-    tracker = FieldTracker()
-
-    class Meta:
-        ordering = ['created']
-
-    def __str__(self):
-        return '{} {}'.format(
-            self.gdd, self.cp_output
-        )
-
-    def total(self):
-        results = self.ll_results.filter().aggregate(
-            total=(
-                Sum("activities__unicef_cash", filter=Q(activities__is_active=True)) +
-                Sum("activities__cso_cash", filter=Q(activities__is_active=True))
-            ),
-        )
-        return results["total"] if results["total"] is not None else 0
-
-    def save(self, *args, **kwargs):
-        if not self.code:
-            if self.cp_output:
-                self.code = str(
-                    # explicitly perform model.objects.count to avoid caching
-                    self.__class__.objects.filter(gdd=self.gdd).exclude(cp_output=None).count() + 1,
-                )
-            else:
-                self.code = '0'
-        super().save(*args, **kwargs)
-
-    @classmethod
-    def renumber_result_links_for_gdd(cls, gdd):
-        result_links = gdd.result_links.exclude(cp_output=None)
-        # drop codes because in another case we'll face to UniqueViolation exception
-        result_links.update(code=None)
-        for i, result_link in enumerate(result_links):
-            result_link.code = str(i + 1)
-        cls.objects.bulk_update(result_links, fields=['code'])
-
-
-class EWPActivity(TimeStampedModel):
-    wpa_id = models.CharField(verbose_name=_("Workplan Activity ID"), max_length=50, blank=True, null=True)
-    wpa_gid = models.CharField(verbose_name=_("Workplan Activity GID"), max_length=50, blank=True, null=True)
-    title = models.CharField(verbose_name=_("WPA Title"), max_length=50, blank=True, null=True)
-    description = models.TextField(verbose_name=_("WPA Description"), blank=True, null=True)
-    total_budget = models.CharField(verbose_name=_("Total budget"), max_length=50, blank=True, null=True)
-
-    ewp_result_link = models.ForeignKey(EWPResultLink, related_name='ewp_activity', null=True, blank=True, on_delete=models.CASCADE)
-
-    locations = models.ManyToManyField(Location, related_name="ewp_activities", blank=True)
-    partners = models.ManyToManyField(PartnerOrganization, related_name="ewp_activities", blank=True)
-
-
 class GDDResultLink(TimeStampedModel):
     code = models.CharField(verbose_name=_("Code"), max_length=50, blank=True, null=True)
     gdd = models.ForeignKey(
         GDD, related_name='result_links', verbose_name=_('GDD'),
         on_delete=models.CASCADE,
     )
+    workplan = models.ForeignKey(
+        GovernmentEWP, related_name='result_links', verbose_name=_('Workplan'),
+        on_delete=models.CASCADE, blank=True, null=True
+        )
     cp_output = models.ForeignKey(
-        Result, related_name='gdd_links', verbose_name=_('CP Output'),
+        Result, related_name='result_links', verbose_name=_('CP Output'),
         on_delete=models.CASCADE, blank=True, null=True,
     )
     ram_indicators = models.ManyToManyField(Indicator, blank=True, verbose_name=_('RAM Indicators'))
@@ -1944,10 +1886,10 @@ class GDDResultLink(TimeStampedModel):
         )
 
     def total(self):
-        results = self.ll_results.filter().aggregate(
+        results = self.key_interventions.filter().aggregate(
             total=(
-                Sum("activities__unicef_cash", filter=Q(activities__is_active=True)) +
-                Sum("activities__cso_cash", filter=Q(activities__is_active=True))
+                Sum("gdd_activities__unicef_cash", filter=Q(gdd_activities__is_active=True)) +
+                Sum("gdd_activities__cso_cash", filter=Q(gdd_activities__is_active=True))
             ),
         )
         return results["total"] if results["total"] is not None else 0
@@ -1979,12 +1921,12 @@ class GDDKeyIntervention(TimeStampedModel):
     # link to intermediary model to gdd and cp ouptut
     result_link = models.ForeignKey(
         GDDResultLink,
-        related_name='ll_results',
+        related_name='key_interventions',
         verbose_name=_('Result Link'),
         on_delete=models.CASCADE,
     )
 
-    name = models.CharField(verbose_name=_("Name"), max_length=500)
+    name = models.CharField(verbose_name=_("Name"), max_length=500)  # TODO TBD
     code = models.CharField(verbose_name=_("Code"), max_length=50, blank=True, null=True)
 
     def __str__(self):
@@ -2013,7 +1955,7 @@ class GDDKeyIntervention(TimeStampedModel):
 
     @classmethod
     def renumber_results_for_result_link(cls, result_link):
-        results = result_link.ll_results.all()
+        results = result_link.key_interventions.all()
         # drop codes because in another case we'll face to UniqueViolation exception
         results.update(code=None)
         for i, result in enumerate(results):
@@ -2021,30 +1963,53 @@ class GDDKeyIntervention(TimeStampedModel):
         cls.objects.bulk_update(results, fields=['code'])
 
     def total(self):
-        results = self.activities.aggregate(
+        results = self.gdd_activities.aggregate(
             total=Sum("unicef_cash", filter=Q(is_active=True)) + Sum("cso_cash", filter=Q(is_active=True)),
         )
         return results["total"] if results["total"] is not None else 0
 
     def total_cso(self):
-        results = self.activities.aggregate(
+        results = self.gdd_activities.aggregate(
             total=Sum("cso_cash", filter=Q(is_active=True)),
         )
         return results["total"] if results["total"] is not None else 0
 
     def total_unicef(self):
-        results = self.activities.aggregate(
+        results = self.gdd_activities.aggregate(
             total=Sum("unicef_cash", filter=Q(is_active=True)),
         )
         return results["total"] if results["total"] is not None else 0
 
 
+class EWPActivity(TimeStampedModel):
+    workplan = models.ForeignKey(
+        GovernmentEWP, related_name='ewp_activities', verbose_name=_('Workplan'),
+        on_delete=models.CASCADE, blank=True, null=True,
+    )
+    wpa_id = models.CharField(verbose_name=_("Workplan Activity ID"), max_length=50, blank=True, null=True)
+    wpa_gid = models.CharField(verbose_name=_("Workplan Activity GID"), max_length=50, blank=True, null=True)
+    title = models.CharField(verbose_name=_("WPA Title"), max_length=50, blank=True, null=True)
+    description = models.TextField(verbose_name=_("WPA Description"), blank=True, null=True)
+    total_budget = models.CharField(verbose_name=_("Total budget"), max_length=50, blank=True, null=True)
+
+    locations = models.ManyToManyField(Location, related_name="ewp_activities", blank=True)
+    partners = models.ManyToManyField(PartnerOrganization, related_name="ewp_activities", blank=True)
+
+
 class GDDActivity(TimeStampedModel):
+    key_intervention = models.ForeignKey(
+        GDDKeyIntervention,
+        verbose_name=_("Key Intervention"),
+        related_name="gdd_activities",
+        blank=True, null=True,
+        on_delete=models.CASCADE,
+    )
     ewp_activity = models.ForeignKey(
         EWPActivity,
-        verbose_name=_("EWP Activity"),
+        verbose_name=_('eWP Activity'),
         related_name="gdd_activities",
-        on_delete=models.CASCADE,
+        blank=True, null=True,
+        on_delete=models.CASCADE
     )
     code = models.CharField(
         verbose_name=_("Code"),
@@ -2085,7 +2050,7 @@ class GDDActivity(TimeStampedModel):
         ordering = ('id',)
 
     def __str__(self):
-        return "{} {}".format(self.result, self.name)
+        return "{} {}".format(self.key_intervention, self.ewp_activity.title)
 
     def update_cash(self):
         items = GDDActivityItem.objects.filter(activity=self)
@@ -2114,17 +2079,17 @@ class GDDActivity(TimeStampedModel):
     def save(self, *args, **kwargs):
         if not self.code:
             self.code = '{0}.{1}'.format(
-                self.result.code,
+                self.key_intervention.code,
                 # explicitly perform model.objects.count to avoid caching
-                self.__class__.objects.filter(result=self.result).count() + 1,
+                self.__class__.objects.filter(key_intervention=self.key_intervention).count() + 1,
             )
         super().save(*args, **kwargs)
         # update budgets
-        self.result.result_link.gdd.planned_budget.save()
+        self.key_intervention.result_link.gdd.planned_budget.save()
 
     @classmethod
     def renumber_activities_for_result(cls, result: GDDKeyIntervention, start_id=None):
-        activities = result.activities.all()
+        activities = result.gdd_activities.all()
         # drop codes because in another case we'll face to UniqueViolation exception
         activities.update(code=None)
         for i, activity in enumerate(activities):

@@ -506,13 +506,13 @@ PartnershipManagerRefinedPermission = (
 
 # allow partners to load list ONLY for gdds to keep everything
 # else working right as before; at least for now
-PMPGDDPermission = (
+GDDPermission = (
     PartnershipManagerRefinedPermission | (view_action_permission('GET') & UserIsPartnerStaffMemberPermission)
 )
 
 # allow partners to load list ONLY for agreements to keep everything
 # else working right as before; at least for now
-PMPAgreementPermission = (
+AgreementPermission = (
     (view_action_permission('POST') & (
         UserIsStaffPermission | user_group_permission('Partnership Manager')
     )) |

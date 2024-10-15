@@ -607,7 +607,7 @@ GDD_AMENDMENT_RELATED_FIELDS = {
     ],
     'governments.GDDResultLink': [
         # one to many
-        'll_results',
+        'key_interventions',
 
         # many to many
         'ram_indicators',

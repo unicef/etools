@@ -5,10 +5,10 @@ from factory import fuzzy
 
 from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.field_monitoring.fm_settings.tests.factories import LocationSiteFactory
+from etools.applications.governments import models
 from etools.applications.organizations.models import OrganizationType
 from etools.applications.organizations.tests.factories import OrganizationFactory
-from etools.applications.governments import models
-from etools.applications.partners.tests.factories import PartnerFactory, FileTypeFactory
+from etools.applications.partners.tests.factories import FileTypeFactory, PartnerFactory
 from etools.applications.reports.tests.factories import CountryProgrammeFactory, ResultFactory
 from etools.applications.users.tests.factories import UserFactory
 

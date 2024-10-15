@@ -4,6 +4,7 @@ from django.contrib.auth.models import AnonymousUser
 from django.db import connection
 from django.urls import reverse
 from django.utils import timezone
+
 from rest_framework import status
 from rest_framework.test import APIClient
 from waffle.utils import get_cache
@@ -12,15 +13,19 @@ from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.funds.models import FundsReservationHeader
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory, FundsReservationItemFactory
 from etools.applications.governments.models import GDD, GDDSupplyItem
-from etools.applications.governments.permissions import UNICEF_USER, PARTNERSHIP_MANAGER_GROUP, PRC_SECRETARY
-from etools.applications.governments.tests.factories import GDDFactory, GDDAmendmentFactory, GDDReviewFactory, \
-    GDDSupplyItemFactory
+from etools.applications.governments.permissions import PARTNERSHIP_MANAGER_GROUP, PRC_SECRETARY, UNICEF_USER
+from etools.applications.governments.tests.factories import (
+    GDDAmendmentFactory,
+    GDDFactory,
+    GDDReviewFactory,
+    GDDSupplyItemFactory,
+)
 from etools.applications.organizations.models import OrganizationType
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.reports.models import ResultType
 from etools.applications.reports.tests.factories import CountryProgrammeFactory, ResultFactory
-from etools.applications.users.tests.factories import UserFactory, CountryFactory, GroupFactory, RealmFactory
+from etools.applications.users.tests.factories import CountryFactory, GroupFactory, RealmFactory, UserFactory
 
 
 class BaseGDDTestCase(BaseTenantTestCase):

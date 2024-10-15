@@ -12,7 +12,7 @@ from etools_validator.mixins import ValidatorViewMixin
 from rest_framework import status
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.filters import OrderingFilter
-from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.generics import ListCreateAPIView, RetrieveAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
@@ -28,7 +28,7 @@ from etools.applications.governments.filters import (
     ShowAmendmentsFilter,
 )
 from etools.applications.governments.models import GDD
-from etools.applications.governments.permissions import PartnershipManagerPermission, PMPGDDPermission
+from etools.applications.governments.permissions import GDDPermission, PartnershipManagerPermission
 from etools.applications.governments.serializers.exports import GDDExportFlatSerializer, GDDExportSerializer
 from etools.applications.governments.serializers.gdd import (
     GDDCreateUpdateSerializer,
@@ -41,7 +41,11 @@ from etools.applications.governments.serializers.helpers import (
     GDDPlannedVisitsCUSerializer,
     GDDRiskSerializer,
 )
-from etools.applications.governments.serializers.result_structure import GDDResultCUSerializer
+from etools.applications.governments.serializers.result_structure import (
+    GDDDetailResultsStructureSerializer,
+    GDDResultCUSerializer,
+    GDDResultNestedSerializer,
+)
 from etools.applications.governments.validation.gdds import GDDValid
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.users.models import Country
@@ -49,7 +53,7 @@ from etools.applications.utils.pagination import AppendablePageNumberPagination
 from etools.libraries.djangolib.fields import CURRENCY_LIST
 
 
-class PMPGDDBaseViewMixin:
+class GDDBaseViewMixin:
     # TODO need to set correct permissions
     # see ch21937
     permission_classes = [IsAuthenticated]
@@ -107,10 +111,10 @@ class PMPGDDBaseViewMixin:
         )
 
 
-class PMPGDDMixin(PMPGDDBaseViewMixin):
+class GDDMixin(GDDBaseViewMixin):
     def get_partner_staff_qs(self, qs):
         return qs.filter(
-            partner_organization=self.current_partner(),
+            partner=self.current_partner(),
             date_sent_to_partner__isnull=False,
         )
 
@@ -144,22 +148,22 @@ class GDDListAPIView(QueryStringFilterMixin, ExportModelMixin, GDDListBaseView):
         CSVFlatRenderer,
     )
 
-    search_terms = ('title__icontains', 'agreement__partner__organization__name__icontains', 'number__icontains')
+    search_terms = ('title__icontains', 'partner__organization__name__icontains', 'number__icontains')
     filters = [
-        ('partners', 'agreement__partner__in'),
+        ('partners', 'partner_organization__in'),
         ('agreements', 'agreement__in'),
         ('document_type', 'document_type__in'),
         ('cp_outputs', 'result_links__cp_output__pk__in'),
         ('country_programme', 'country_programmes__in'),
         ('sections', 'sections__in'),
-        ('cluster', 'result_links__ll_results__applied_indicators__cluster_indicator_title__icontains'),
+        ('cluster', 'result_links__key_interventions__applied_indicators__cluster_indicator_title__icontains'),
         ('status', 'status__in'),
         ('unicef_focal_points', 'unicef_focal_points__in'),
         ('start', 'start__gte'),
         ('end', 'end__lte'),
         ('end_after', 'end__gte'),
         ('office', 'offices__in'),
-        ('location', 'result_links__ll_results__applied_indicators__locations__name__icontains'),
+        ('location', 'result_links__key_interventions__applied_indicators__locations__name__icontains'),
         ('contingency_pd', 'contingency_pd'),
         ('grants', 'frs__fr_items__grant_number__in'),
         ('grants__contains', 'frs__fr_items__grant_number__icontains'),
@@ -200,7 +204,7 @@ class GDDListAPIView(QueryStringFilterMixin, ExportModelMixin, GDDListBaseView):
             'planned_visits',
             'result_links'
         ]
-        nested_related_names = ['ll_results']
+        nested_related_names = ['key_interventions']
 
         serializer = self.my_create(request,
                                     related_fields,
@@ -269,9 +273,9 @@ class GDDListAPIView(QueryStringFilterMixin, ExportModelMixin, GDDListBaseView):
         return response
 
 
-class GDDListCreateView(PMPGDDMixin, GDDListAPIView):
+class GDDListCreateView(GDDMixin, GDDListAPIView):
     pagination_class = AppendablePageNumberPagination
-    permission_classes = (IsAuthenticated, PMPGDDPermission)
+    permission_classes = (IsAuthenticated, GDDPermission)
     search_terms = (
         'title__icontains',
         'partner_organization__organization__name__icontains',
@@ -324,7 +328,7 @@ class GDDListCreateView(PMPGDDMixin, GDDListAPIView):
         )
 
 
-class GDDRetrieveUpdateView(PMPGDDMixin, ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
+class GDDRetrieveUpdateView(GDDMixin, ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
     """
     Retrieve and Update Agreement.
     """
@@ -344,7 +348,7 @@ class GDDRetrieveUpdateView(PMPGDDMixin, ValidatorViewMixin, RetrieveUpdateDestr
         'planned_budget',
     ]
     nested_related_names = [
-        'll_results'
+        'key_interventions'
     ]
     related_non_serialized_fields = [
         # todo: add other CodedGenericRelation fields. at this moment they're not managed by permissions matrix
@@ -386,3 +390,9 @@ class GDDRetrieveUpdateView(PMPGDDMixin, ValidatorViewMixin, RetrieveUpdateDestr
                 context=context,
             ).data,
         )
+
+
+class GDDRetrieveResultsStructure(GDDMixin, RetrieveAPIView):
+    queryset = GDD.objects.detail_qs()
+    serializer_class = GDDDetailResultsStructureSerializer
+    permission_classes = (IsAuthenticated, GDDPermission)

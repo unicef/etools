@@ -269,7 +269,7 @@ class GDDDetailSerializer(
     available_actions = serializers.SerializerMethodField()
     budget_owner = MinimalUserSerializer()
     status_list = serializers.SerializerMethodField()
-    cluster_names = serializers.SerializerMethodField()
+    # cluster_names = serializers.SerializerMethodField()
     days_from_review_to_signed = serializers.CharField(read_only=True)
     days_from_submission_to_signed = serializers.CharField(read_only=True)
     donor_codes = serializers.SerializerMethodField()
@@ -359,8 +359,8 @@ class GDDDetailSerializer(
     def get_flagged_sections(self, obj):
         return [loc.id for loc in obj.sections.all()]
 
-    def get_cluster_names(self, obj):
-        return [c for c in obj.gdd_clusters()]
+    # def get_cluster_names(self, obj):
+    #     return [c for c in obj.gdd_clusters()]
 
     def get_in_amendment_date(self, obj):
         return obj.amendment.created if hasattr(obj, 'amendment') else None
@@ -561,7 +561,7 @@ class GDDDetailSerializer(
             "cancel_justification",
             "capacity_development",
             "cash_transfer_modalities",
-            "cluster_names",
+            # "cluster_names",
             "confidential",
             "context",
             "contingency_pd",

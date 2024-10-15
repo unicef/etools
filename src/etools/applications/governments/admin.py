@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.contenttypes.models import ContentType
-from django.db import connection, models
+from django.db import connection, models as django_models
 from django.forms import SelectMultiple
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
@@ -12,22 +12,13 @@ from unicef_attachments.admin import AttachmentSingleInline
 from unicef_attachments.models import Attachment
 from unicef_snapshot.admin import ActivityInline, SnapshotModelAdmin
 
-from etools.applications.governments.models import (
-    GDD,
-    GDDAmendment,
-    GDDAttachment,
-    GDDBudget,
-    GDDPlannedVisits,
-    GDDResultLink,
-    GDDReview,
-    GDDSupplyItem,
-)
+from etools.applications.governments import models
 from etools.applications.partners.mixins import CountryUsersAdminMixin, HiddenPartnerMixin
 from etools.libraries.djangolib.admin import RestrictedEditAdmin, RestrictedEditAdminMixin
 
 
 class GovernmentReviewInlineAdmin(RestrictedEditAdminMixin, admin.TabularInline):
-    model = GDDReview
+    model = models.GDDReview
     extra = 0
 
     raw_id_fields = [
@@ -68,7 +59,7 @@ class GovernmentAmendmentPRCReviewInline(AttachmentSingleInline):
 
 class GovernmentAmendmentsAdmin(AttachmentInlineAdminMixin, CountryUsersAdminMixin, RestrictedEditAdmin):
     staff_only = False
-    model = GDDAmendment
+    model = models.GDDAmendment
     readonly_fields = [
         'amendment_number',
     ]
@@ -101,14 +92,14 @@ class GovernmentAmendmentsAdmin(AttachmentInlineAdminMixin, CountryUsersAdminMix
         """
         Overriding here to disable adding amendments to non-active partnerships
         """
-        if obj and obj.status == GDD.ACTIVE:
+        if obj and obj.status == models.GDD.ACTIVE:
             return self.max_num
 
         return 0
 
 
 class GovernmentBudgetAdmin(RestrictedEditAdmin):
-    model = GDDBudget
+    model = models.GDDBudget
     fields = (
         'gdd',
         'currency',
@@ -135,7 +126,7 @@ class GovernmentBudgetAdmin(RestrictedEditAdmin):
 
 
 class GovernmentPlannedVisitsAdmin(RestrictedEditAdmin):
-    model = GDDPlannedVisits
+    model = models.GDDPlannedVisits
     fields = (
         'gdd',
         'year',
@@ -158,7 +149,7 @@ class GovernmentPlannedVisitsAdmin(RestrictedEditAdmin):
 
 
 class GovernmentPlannedVisitsInline(RestrictedEditAdminMixin, admin.TabularInline):
-    model = GDDPlannedVisits
+    model = models.GDDPlannedVisits
     fields = (
         'gdd',
         'year',
@@ -176,7 +167,7 @@ class AttachmentFileInline(AttachmentSingleInline):
 
 
 class GovernmentAttachmentAdmin(AttachmentInlineAdminMixin, RestrictedEditAdmin):
-    model = GDDAttachment
+    model = models.GDDAttachment
     list_display = (
         'gdd',
         'type',
@@ -194,7 +185,7 @@ class GovernmentAttachmentAdmin(AttachmentInlineAdminMixin, RestrictedEditAdmin)
 
 
 class GovernmentAttachmentsInline(RestrictedEditAdminMixin, admin.TabularInline):
-    model = GDDAttachment
+    model = models.GDDAttachment
     fields = ('type',)
     extra = 0
     code = 'government_gdd_attachment'
@@ -207,7 +198,7 @@ class GovernmentAttachmentsInline(RestrictedEditAdminMixin, admin.TabularInline)
 
 class GovernmentResultsLinkAdmin(RestrictedEditAdmin):
 
-    model = GDDResultLink
+    model = models.GDDResultLink
     fields = (
         'gdd',
         'cp_output',
@@ -225,7 +216,7 @@ class GovernmentResultsLinkAdmin(RestrictedEditAdmin):
         'gdd__title',
     )
     formfield_overrides = {
-        models.ManyToManyField: {'widget': SelectMultiple(attrs={'size': '5', 'style': 'width:100%'})},
+        django_models.ManyToManyField: {'widget': SelectMultiple(attrs={'size': '5', 'style': 'width:100%'})},
     }
 
 
@@ -247,7 +238,7 @@ class GDDAdmin(
         RestrictedEditAdminMixin,
         SnapshotModelAdmin
 ):
-    model = GDD
+    model = models.GDD
 
     staff_only = False
 
@@ -419,7 +410,7 @@ class GDDAdmin(
     def save_formset(self, request, form, formset, change):
         instances = formset.save()
         for instance in instances:
-            if isinstance(instance, GDDAttachment):
+            if isinstance(instance, models.GDDAttachment):
                 # update attachment file data
                 content_type = ContentType.objects.get_for_model(instance)
                 Attachment.objects.update_or_create(
@@ -440,10 +431,14 @@ class GovernmentSupplyItemAdmin(RestrictedEditAdmin):
     search_fields = ('title',)
 
 
-admin.site.register(GDD, GDDAdmin)
-admin.site.register(GDDAmendment, GovernmentAmendmentsAdmin)
-admin.site.register(GDDResultLink, GovernmentResultsLinkAdmin)
-admin.site.register(GDDBudget, GovernmentBudgetAdmin)
-admin.site.register(GDDPlannedVisits, GovernmentPlannedVisitsAdmin)
-admin.site.register(GDDAttachment, GovernmentAttachmentAdmin)
-admin.site.register(GDDSupplyItem, GovernmentSupplyItemAdmin)
+admin.site.register(models.GDD, GDDAdmin)
+admin.site.register(models.GDDAmendment, GovernmentAmendmentsAdmin)
+admin.site.register(models.GDDResultLink, GovernmentResultsLinkAdmin)
+admin.site.register(models.GDDBudget, GovernmentBudgetAdmin)
+admin.site.register(models.GDDPlannedVisits, GovernmentPlannedVisitsAdmin)
+admin.site.register(models.GDDAttachment, GovernmentAttachmentAdmin)
+admin.site.register(models.GDDSupplyItem, GovernmentSupplyItemAdmin)
+admin.site.register(models.GDDKeyIntervention)
+admin.site.register(models.GDDActivity)
+admin.site.register(models.GDDActivityItem)
+admin.site.register(models.EWPActivity)
