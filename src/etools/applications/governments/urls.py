@@ -6,6 +6,7 @@ from etools.applications.governments.views.gdd import (
     GDDRetrieveUpdateView,
 )
 from etools.applications.governments.views.government import (
+    GovernmentEWPListView,
     GovernmentOrganizationListAPIView,
     GovernmentStaffMemberListAPIVIew,
 )
@@ -49,7 +50,11 @@ urlpatterns = [
         ),
         name='gdd-detail-results-structure',
     ),
-    # TODO: endpoint for eWP activities based on country_programme id
-    #
-
+    path(
+      'e-workplans/',
+      view=GovernmentEWPListView.as_view(
+          http_method_names=['get'],
+      ),
+      name='e-workplan-list',
+    )
 ]

@@ -95,7 +95,6 @@ def get_gdd_amendment_file_path(instance, filename):
     ])
 
 
-
 class GovernmentEWP(TimeStampedModel):
     country_programme = models.ForeignKey(CountryProgramme, related_name='workplans', on_delete=models.PROTECT)
 
