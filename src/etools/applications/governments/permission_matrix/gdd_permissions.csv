@@ -79,9 +79,9 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,has_special_conditions_for_construction,Unicef Focal Point,,Ended,Edit,TRUE
 ,has_special_conditions_for_construction,Unicef Focal Point,,Suspended,Edit,TRUE
 3.4.1,contingency_pd,Unicef Focal Point,,Draft,Edit,TRUE
-3.5,country_programmes,Unicef Focal Point,,Draft,Edit,TRUE
-3.5,country_programmes,Unicef Focal Point,user_adds_amendment,*,Edit,TRUE
-3.5,country_programmes,*,,*,Required,FALSE
+3.5,country_programme,Unicef Focal Point,,Draft,Edit,TRUE
+3.5,country_programme,Unicef Focal Point,user_adds_amendment,*,Edit,TRUE
+3.5,country_programme,*,,*,Required,FALSE
 ,document_currency,Unicef Focal Point,unlocked+not_in_amendment_mode,Draft,Edit,TRUE
 3.9.2,end,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
 3.9.2,end,Partner User,partner_court,Draft,Edit,TRUE

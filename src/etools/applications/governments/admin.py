@@ -298,7 +298,7 @@ class GDDAdmin(
                     'reference_number_year',
                     'title',
                     'status',
-                    'country_programmes',
+                    'country_programme',
                     'submission_date',
                     'sections',
                     'flat_locations',

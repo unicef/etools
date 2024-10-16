@@ -602,12 +602,12 @@ GDD_AMENDMENT_RELATED_FIELDS = {
         'budget_owner',
 
         # many to many
-        'country_programmes', 'unicef_focal_points', 'partner_focal_points', 'sites',
+        'country_programme', 'unicef_focal_points', 'partner_focal_points', 'sites',
         'sections', 'offices', 'flat_locations'
     ],
     'governments.GDDResultLink': [
         # one to many
-        'key_interventions',
+        'gdd_key_interventions',
 
         # many to many
         'ram_indicators',

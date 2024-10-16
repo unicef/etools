@@ -161,7 +161,7 @@ class GDDKeyInterventionSerializer(serializers.ModelSerializer):
         model = GDDKeyIntervention
         fields = [
             "id",
-            "cp_key_intervention",
+            "ewp_key_intervention",
             "code",
             # "result_link",
             "total",
@@ -180,16 +180,16 @@ class GDDKeyInterventionCUSerializer(serializers.ModelSerializer):
 
 class GDDResultCUSerializer(serializers.ModelSerializer):
 
-    key_interventions = GDDKeyInterventionSerializer(many=True, read_only=True)
+    gdd_key_interventions = GDDKeyInterventionSerializer(many=True, read_only=True)
 
     class Meta:
         model = GDDResultLink
         fields = "__all__"
 
-    def update_key_interventions(self, instance, key_interventions):
-        key_interventions = key_interventions if key_interventions else []
+    def update_gdd_key_interventions(self, instance, gdd_key_interventions):
+        gdd_key_interventions = gdd_key_interventions if gdd_key_interventions else []
 
-        for ki in key_interventions:
+        for ki in gdd_key_interventions:
             ki['result_link'] = instance.pk
             instance_id = ki.get('id', None)
             if instance_id:
@@ -212,15 +212,15 @@ class GDDResultCUSerializer(serializers.ModelSerializer):
 
     @transaction.atomic
     def create(self, validated_data):
-        key_interventions = self.context.pop('key_interventions', [])
+        gdd_key_interventions = self.context.pop('gdd_key_interventions', [])
         instance = super().create(validated_data)
-        self.update_key_interventions(instance, key_interventions)
+        self.update_gdd_key_interventions(instance, gdd_key_interventions)
         return instance
 
     @transaction.atomic
     def update(self, instance, validated_data):
-        key_interventions = self.context.pop('key_interventions', [])
-        self.update_key_interventions(instance, key_interventions)
+        gdd_key_interventions = self.context.pop('gdd_key_interventions', [])
+        self.update_gdd_key_interventions(instance, gdd_key_interventions)
         return super().update(instance, validated_data)
 
 
@@ -363,10 +363,10 @@ class BaseGDDResultNestedSerializer(serializers.ModelSerializer):
 
 
 class GDDResultNestedSerializer(BaseGDDResultNestedSerializer):
-    key_interventions = GDDKeyInterventionWithActivitiesSerializer(many=True, read_only=True)
+    gdd_key_interventions = GDDKeyInterventionWithActivitiesSerializer(many=True, read_only=True)
 
     class Meta(BaseGDDResultNestedSerializer.Meta):
-        fields = BaseGDDResultNestedSerializer.Meta.fields + ['key_interventions']
+        fields = BaseGDDResultNestedSerializer.Meta.fields + ['gdd_key_interventions']
 
 
 class GDDDetailResultsStructureSerializer(serializers.ModelSerializer):

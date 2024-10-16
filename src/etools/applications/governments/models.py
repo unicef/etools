@@ -111,7 +111,6 @@ class GovernmentEWP(TimeStampedModel):
     end_date = models.DateField(verbose_name=_('Workplan End Date'), null=True, blank=True)
 
 
-
 class EWPOutput(TimeStampedModel):
     workplan = models.ForeignKey(
         GovernmentEWP, related_name='ewp_outputs', verbose_name=_('Workplan'),
@@ -120,11 +119,9 @@ class EWPOutput(TimeStampedModel):
     cp_output = models.ForeignKey(Result, related_name='ewp_outputs', on_delete=models.PROTECT)
 
 
-
 class EWPKeyIntervention(TimeStampedModel):
     ewp_output = models.ForeignKey(EWPOutput, related_name='ewp_key_interventions', on_delete=models.PROTECT)
     cp_key_intervention = models.ForeignKey(Result, related_name='ewp_key_interventions', on_delete=models.PROTECT)
-
 
 
 class EWPActivity(TimeStampedModel):
@@ -157,7 +154,7 @@ class GDDManager(models.Manager):
             'offices',
             'planned_budget',
             'sections',
-            'country_programmes',
+            'country_programme',
         ).filter(partner_organization__organization__organization_type=OrganizationType.GOVERNMENT)
 
     def detail_qs(self):
@@ -169,13 +166,13 @@ class GDDManager(models.Manager):
             'offices',
             'planned_budget',
             'sections',
-            'country_programmes',
+            'country_programme',
             'frs',
             'frs__fr_items',
             'result_links__cp_output',
-            'result_links__key_interventions',
-            'result_links__key_interventions__gdd_activities',
-            'result_links__key_interventions__gdd_activities__time_frames',
+            'result_links__gdd_key_interventions',
+            'result_links__gdd_key_interventions__gdd_activities',
+            'result_links__gdd_key_interventions__gdd_activities__time_frames',
             'flat_locations',
             'sites',
             'planned_visits__sites',
@@ -188,7 +185,7 @@ class GDDManager(models.Manager):
 
         qs = super().get_queryset().only().prefetch_related(
             'supply_items',
-            Prefetch('result_links__key_interventions__gdd_activities',
+            Prefetch('result_links__gdd_key_interventions__gdd_activities',
                      queryset=GDDActivity.objects.filter(is_active=True)),
         )
         return qs
@@ -794,7 +791,7 @@ class GDD(TimeStampedModel):
         # with prefetch_related
         return [
             lower_result for link in self.result_links.all()
-            for lower_result in link.key_interventions.all()
+            for lower_result in link.gdd_key_interventions.all()
         ]
 
     @cached_property
@@ -1468,7 +1465,7 @@ class GDDBudget(TimeStampedModel):
 
         init = False
         for link in gdd.result_links.all():
-            for result in link.key_interventions.all():
+            for result in link.gdd_key_interventions.all():
                 for activity in result.gdd_activities.all():  # activities prefetched with is_active=True in budget_qs
                     if not init:
                         init_totals()
@@ -1905,7 +1902,6 @@ class GDDRisk(TimeStampedModel):
         return "{} {}".format(self.gdd, self.get_risk_type_display())
 
 
-
 class GDDResultLink(TimeStampedModel):
     code = models.CharField(verbose_name=_("Code"), max_length=50, blank=True, null=True)
     gdd = models.ForeignKey(
@@ -1934,7 +1930,7 @@ class GDDResultLink(TimeStampedModel):
         )
 
     def total(self):
-        results = self.key_interventions.filter().aggregate(
+        results = self.gdd_key_interventions.filter().aggregate(
             total=(
                 Sum("gdd_activities__unicef_cash", filter=Q(gdd_activities__is_active=True)) +
                 Sum("gdd_activities__cso_cash", filter=Q(gdd_activities__is_active=True))
@@ -2006,7 +2002,7 @@ class GDDKeyIntervention(TimeStampedModel):
 
     @classmethod
     def renumber_results_for_result_link(cls, result_link):
-        results = result_link.key_interventions.all()
+        results = result_link.gdd_key_interventions.all()
         # drop codes because in another case we'll face to UniqueViolation exception
         results.update(code=None)
         for i, result in enumerate(results):

@@ -44,7 +44,7 @@ class GDDExportSerializer(serializers.ModelSerializer):
         source='agreement.agreement_number',
         allow_null=True,
     )
-    country_programmes = serializers.SerializerMethodField(
+    country_programme = serializers.SerializerMethodField(
         label=_("Country Programmes"),
     )
     offices = serializers.SerializerMethodField(label=_("UNICEF Office"))
@@ -153,7 +153,7 @@ class GDDExportSerializer(serializers.ModelSerializer):
             "partner_type",
             "cso_type",
             "agreement_number",
-            "country_programmes",
+            "country_programme",
             "number",
             "title",
             "start",
@@ -201,11 +201,8 @@ class GDDExportSerializer(serializers.ModelSerializer):
     def get_unicef_signatory(self, obj):
         return obj.unicef_signatory.get_full_name() if obj.unicef_signatory else ''
 
-    def get_country_programmes(self, obj):
-        country_programmes = list(obj.country_programmes.all())
-        if not country_programmes and obj.agreement.country_programme:
-            country_programmes = [obj.agreement.country_programme]
-        return ', '.join([cp.name for cp in country_programmes])
+    def get_country_programme(self, obj):
+        return obj.country_programme.name
 
     def get_offices(self, obj):
         return ', '.join([o.name for o in obj.offices.all()])

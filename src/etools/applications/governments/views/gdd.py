@@ -154,16 +154,16 @@ class GDDListAPIView(QueryStringFilterMixin, ExportModelMixin, GDDListBaseView):
         ('agreements', 'agreement__in'),
         ('document_type', 'document_type__in'),
         ('cp_outputs', 'result_links__cp_output__pk__in'),
-        ('country_programme', 'country_programmes__in'),
+        ('country_programme', 'country_programme__in'),
         ('sections', 'sections__in'),
-        ('cluster', 'result_links__key_interventions__applied_indicators__cluster_indicator_title__icontains'),
+        # ('cluster', 'result_links__key_interventions__applied_indicators__cluster_indicator_title__icontains'),
         ('status', 'status__in'),
         ('unicef_focal_points', 'unicef_focal_points__in'),
         ('start', 'start__gte'),
         ('end', 'end__lte'),
         ('end_after', 'end__gte'),
         ('office', 'offices__in'),
-        ('location', 'result_links__key_interventions__applied_indicators__locations__name__icontains'),
+        ('location', 'result_links__gdd_key_interventions__applied_indicators__locations__name__icontains'),
         ('contingency_pd', 'contingency_pd'),
         ('grants', 'frs__fr_items__grant_number__in'),
         ('grants__contains', 'frs__fr_items__grant_number__icontains'),
@@ -204,7 +204,7 @@ class GDDListAPIView(QueryStringFilterMixin, ExportModelMixin, GDDListBaseView):
             'planned_visits',
             'result_links'
         ]
-        nested_related_names = ['key_interventions']
+        nested_related_names = ['gdd_key_interventions']
 
         serializer = self.my_create(request,
                                     related_fields,
@@ -348,7 +348,7 @@ class GDDRetrieveUpdateView(GDDMixin, ValidatorViewMixin, RetrieveUpdateDestroyA
         'planned_budget',
     ]
     nested_related_names = [
-        'key_interventions'
+        'gdd_key_interventions'
     ]
     related_non_serialized_fields = [
         # todo: add other CodedGenericRelation fields. at this moment they're not managed by permissions matrix
