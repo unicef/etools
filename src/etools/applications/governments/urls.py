@@ -6,6 +6,9 @@ from etools.applications.governments.views.gdd import (
     GDDRetrieveUpdateView,
 )
 from etools.applications.governments.views.government import (
+    EWPActivityListView,
+    EWPKeyInterventionListView,
+    EWPOutputListView,
     GovernmentEWPListView,
     GovernmentOrganizationListAPIView,
     GovernmentStaffMemberListAPIVIew,
@@ -51,10 +54,31 @@ urlpatterns = [
         name='gdd-detail-results-structure',
     ),
     path(
-      'e-workplans/',
+      'dropdown-options/e-workplans/',
       view=GovernmentEWPListView.as_view(
           http_method_names=['get'],
       ),
       name='e-workplan-list',
+    ),
+    path(
+        'dropdown-options/ewp-outputs/',
+        view=EWPOutputListView.as_view(
+            http_method_names=['get'],
+        ),
+        name='ewp-output-list',
+    ),
+    path(
+        'dropdown-options/ewp-key-interventions/',
+        view=EWPKeyInterventionListView.as_view(
+            http_method_names=['get'],
+        ),
+        name='ewp-key-intervention-list',
+    ),
+    path(
+        'dropdown-options/ewp-activities/',
+        view=EWPActivityListView.as_view(
+            http_method_names=['get'],
+        ),
+        name='ewp-activity-list',
     )
 ]

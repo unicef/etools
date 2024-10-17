@@ -16,12 +16,16 @@ from etools.applications.funds.tests.factories import FundsReservationHeaderFact
 from etools.applications.governments.models import GDD, GDDSupplyItem
 from etools.applications.governments.permissions import PARTNERSHIP_MANAGER_GROUP, PRC_SECRETARY, UNICEF_USER
 from etools.applications.governments.tests.factories import (
+    EWPActivityFactory,
+    EWPOutputFactory,
+    GDDActivityFactory,
     GDDAmendmentFactory,
     GDDFactory,
+    GDDKeyInterventionFactory,
+    GDDResultLinkFactory,
     GDDReviewFactory,
     GDDSupplyItemFactory,
-    GovernmentEWPFactory, GDDResultLinkFactory, GDDKeyInterventionFactory, GDDActivityFactory, EWPOutputFactory,
-    EWPActivityFactory,
+    GovernmentEWPFactory,
 )
 from etools.applications.organizations.models import OrganizationType
 from etools.applications.organizations.tests.factories import OrganizationFactory

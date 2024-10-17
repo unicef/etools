@@ -2,6 +2,7 @@ import datetime
 
 import factory
 from factory import fuzzy
+from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.field_monitoring.fm_settings.tests.factories import LocationSiteFactory
@@ -11,7 +12,6 @@ from etools.applications.organizations.tests.factories import OrganizationFactor
 from etools.applications.partners.tests.factories import FileTypeFactory, PartnerFactory
 from etools.applications.reports.tests.factories import CountryProgrammeFactory, ResultFactory
 from etools.applications.users.tests.factories import UserFactory
-from unicef_locations.tests.factories import LocationFactory
 
 
 class GovernmentEWPFactory(factory.django.DjangoModelFactory):
