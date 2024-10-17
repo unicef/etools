@@ -396,6 +396,12 @@ class InterventionDetailSerializer(
 
         return obj.review.overall_approver_id == user.pk
 
+    def _is_authorized_officer(self, obj, user):
+        if not obj.review:
+            return False
+
+        return obj.review.authorized_officer_id == user.pk
+
     def _is_partner_user(self, obj, user):
         return user.email in [o.email for o in obj.partner_focal_points.all()]
 
@@ -448,9 +454,16 @@ class InterventionDetailSerializer(
         if not obj.in_amendment and status_is_cancellable and self._is_prc_secretary():
             available_actions.append("cancel")
 
-        # only overall approver can approve or reject review
-        if obj.status == obj.REVIEW and self._is_overall_approver(obj, user):
+        # only authorized officer can approve
+        if obj.status == obj.REVIEW and self._is_authorized_officer(obj, user):
             available_actions.append("sign")
+
+        # PRC Secretary, overall approver and authorized officer can reject review
+        if obj.status == obj.REVIEW and (
+            self._is_prc_secretary() or
+            self._is_authorized_officer(obj, user) or
+            self._is_overall_approver(obj, user)
+        ):
             available_actions.append("reject_review")
 
         # prc secretary can send back intervention if not approved yet
