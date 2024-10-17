@@ -11,13 +11,51 @@ from etools.applications.organizations.tests.factories import OrganizationFactor
 from etools.applications.partners.tests.factories import FileTypeFactory, PartnerFactory
 from etools.applications.reports.tests.factories import CountryProgrammeFactory, ResultFactory
 from etools.applications.users.tests.factories import UserFactory
+from unicef_locations.tests.factories import LocationFactory
+
+
+class GovernmentEWPFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.GovernmentEWP
+
+    country_programme = factory.SubFactory(CountryProgrammeFactory)
+
+
+class EWPOutputFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.EWPOutput
+
+    workplan = factory.SubFactory(GovernmentEWPFactory)
+    cp_output = factory.SubFactory(ResultFactory)
+
+
+class EWPKeyInterventionFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.EWPKeyIntervention
+
+    ewp_output = factory.SubFactory(EWPOutputFactory)
+    cp_key_intervention = factory.SubFactory(ResultFactory)
+
+
+class EWPActivityFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.EWPActivity
+
+    workplan = factory.SubFactory(GovernmentEWPFactory)
+    ewp_key_intervention = factory.SubFactory(EWPKeyInterventionFactory)
+
+    @factory.post_generation
+    def locations(self, create, extracted, **kwargs):
+        location = LocationFactory()
+        self.locations.add(location)
 
 
 class GDDFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.GDD
 
-    partner_organization = factory.SubFactory(PartnerFactory, organization__organization_type=OrganizationType.GOVERNMENT)
+    partner = factory.SubFactory(PartnerFactory, organization__organization_type=OrganizationType.GOVERNMENT)
+    country_programme = factory.SubFactory(CountryProgrammeFactory)
     title = factory.Sequence(lambda n: 'GDD Title {}'.format(n))
     submission_date = datetime.datetime.today()
     reference_number_year = datetime.date.today().year
@@ -37,12 +75,6 @@ class GDDFactory(factory.django.DjangoModelFactory):
     capacity_development = "capacity_development"
     other_partners_involved = "other_partners_involved"
     other_details = "other_details"
-
-    @factory.post_generation
-    def country_programmes(self, create, extracted, **kwargs):
-
-        if extracted:
-            self.country_programmes.add(*extracted)
 
 
 class GDDAmendmentFactory(factory.django.DjangoModelFactory):
@@ -143,12 +175,31 @@ class GDDResultLinkFactory(factory.django.DjangoModelFactory):
         model = models.GDDResultLink
 
     gdd = factory.SubFactory(GDDFactory)
-    cp_output = factory.SubFactory(ResultFactory)
+    workplan = factory.SubFactory(GovernmentEWPFactory)
+    cp_output = factory.SubFactory(EWPOutputFactory)
 
     @factory.post_generation
     def ram_indicators(self, create, extracted, **kwargs):
         if extracted:
             self.ram_indicators.add(*extracted)
+
+
+class GDDKeyInterventionFactory(factory.django.DjangoModelFactory):
+
+    class Meta:
+        model = models.GDDKeyIntervention
+
+    result_link = factory.SubFactory(GDDResultLinkFactory)
+    ewp_key_intervention = factory.SubFactory(EWPKeyInterventionFactory)
+
+
+class GDDActivityFactory(factory.django.DjangoModelFactory):
+
+    class Meta:
+        model = models.GDDActivity
+
+    key_intervention = factory.SubFactory(GDDKeyInterventionFactory)
+    ewp_activity = factory.SubFactory(EWPActivityFactory)
 
 
 # class PlannedEngagementFactory(factory.django.DjangoModelFactory):

@@ -258,7 +258,7 @@ class GDDAdmin(
     )
     raw_id_fields = [
         'agreement',
-        'partner_organization',
+        'partner',
         'flat_locations',
         'partner_authorized_officer_signatory',
         'unicef_signatory',
@@ -292,7 +292,7 @@ class GDDAdmin(
             'fields':
                 (
                     'agreement',
-                    'partner_organization',
+                    'partner',
                     'in_amendment',
                     'number',
                     'reference_number_year',

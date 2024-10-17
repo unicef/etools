@@ -696,7 +696,7 @@ GDD_FULL_SNAPSHOT_RELATED_FIELDS['governments.GDD'].extend([
     'reviews',
 ])
 GDD_FULL_SNAPSHOT_RELATED_FIELDS['governments.GDDReview'] = [
-    'prc_reviews',
+    'gdd_prc_reviews',
     'submitted_by',
     'prc_officers',
     'overall_approver',

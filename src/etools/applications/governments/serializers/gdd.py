@@ -101,7 +101,7 @@ class SupplyItemSerializer(FullGDDSnapshotSerializerMixin, serializers.ModelSeri
 
 
 class BaseGDDListSerializer(serializers.ModelSerializer):
-    partner_name = serializers.CharField(source='partner_organization.name')
+    partner_name = serializers.CharField(source='partner.name')
     unicef_cash = serializers.DecimalField(source='total_unicef_cash', read_only=True, max_digits=20, decimal_places=2)
     cso_contribution = serializers.DecimalField(source='total_partner_contribution', read_only=True, max_digits=20,
                                                 decimal_places=2)
@@ -280,9 +280,9 @@ class GDDDetailSerializer(
     location_names = serializers.SerializerMethodField()
     location_p_codes = serializers.SerializerMethodField()
     locations = serializers.SerializerMethodField()
-    partner = serializers.CharField(source='partner_organization.name', read_only=True)
-    partner_id = serializers.CharField(source='partner_organization.id')
-    partner_vendor = serializers.CharField(source='partner_organization.vendor_number', read_only=True)
+    partner = serializers.CharField(source='partner.name', read_only=True)
+    partner_id = serializers.CharField(source='partner.id')
+    partner_vendor = serializers.CharField(source='partner.vendor_number', read_only=True)
     permissions = serializers.SerializerMethodField(read_only=True)
     planned_budget = GDDBudgetCUSerializer(read_only=True)
     planned_visits = GDDPlannedVisitsNestedSerializer(many=True, read_only=True, required=False)
@@ -454,7 +454,7 @@ class GDDDetailSerializer(
             available_actions.append("send_back_review")
 
         # PD is in review and user prc review not started
-        if obj.status == obj.REVIEW and obj.review and obj.review.prc_reviews.filter(
+        if obj.status == obj.REVIEW and obj.review and obj.review.gdd_prc_reviews.filter(
             user=user, overall_approval__isnull=True
         ).exists():
             available_actions.append("individual_review")
@@ -658,7 +658,6 @@ class GDDCreateUpdateSerializer(
     SnapshotModelSerializer,
 ):
     planned_budget = GDDBudgetCUSerializer(read_only=True)
-    partner = serializers.CharField(source='partner_organization.name', read_only=True)
     prc_review_attachment = AttachmentSingleFileField(required=False)
     signed_pd_attachment = AttachmentSingleFileField(required=False)
     activation_letter_attachment = AttachmentSingleFileField(required=False)

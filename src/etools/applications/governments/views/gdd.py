@@ -35,16 +35,12 @@ from etools.applications.governments.serializers.gdd import (
     GDDDetailSerializer,
     GDDListSerializer,
     MinimalGDDListSerializer,
+    RiskSerializer,
 )
-from etools.applications.governments.serializers.helpers import (
-    GDDBudgetCUSerializer,
-    GDDPlannedVisitsCUSerializer,
-    GDDRiskSerializer,
-)
+from etools.applications.governments.serializers.helpers import GDDBudgetCUSerializer, GDDPlannedVisitsCUSerializer
 from etools.applications.governments.serializers.result_structure import (
     GDDDetailResultsStructureSerializer,
     GDDResultCUSerializer,
-    GDDResultNestedSerializer,
 )
 from etools.applications.governments.validation.gdds import GDDValid
 from etools.applications.partners.models import PartnerOrganization
@@ -150,7 +146,7 @@ class GDDListAPIView(QueryStringFilterMixin, ExportModelMixin, GDDListBaseView):
 
     search_terms = ('title__icontains', 'partner__organization__name__icontains', 'number__icontains')
     filters = [
-        ('partners', 'partner_organization__in'),
+        ('partners', 'partner__in'),
         ('agreements', 'agreement__in'),
         ('document_type', 'document_type__in'),
         ('cp_outputs', 'result_links__cp_output__pk__in'),
@@ -278,7 +274,7 @@ class GDDListCreateView(GDDMixin, GDDListAPIView):
     permission_classes = (IsAuthenticated, GDDPermission)
     search_terms = (
         'title__icontains',
-        'partner_organization__organization__name__icontains',
+        'partner__organization__name__icontains',
         'number__icontains',
         'cfei_number__icontains',
     )
@@ -288,22 +284,6 @@ class GDDListCreateView(GDDMixin, GDDListAPIView):
         PartnerNameOrderingFilter
     )
     ordering_fields = ('number', 'status', 'title', 'start', 'end')
-
-    def get_serializer_class(self):
-        if self.request.method == "GET":
-            query_params = self.request.query_params
-            if "format" in query_params.keys():
-                export_format = query_params.get("format")
-                if export_format == "csv":
-                    return GDDExportSerializer
-                elif export_format == "csv_flat":
-                    return GDDExportFlatSerializer
-            if "verbosity" in query_params.keys():
-                if query_params.get("verbosity") == 'minimal':
-                    return MinimalGDDListSerializer
-        if self.request.method == "POST":
-            return GDDCreateUpdateSerializer
-        return GDDListSerializer
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):
@@ -333,12 +313,12 @@ class GDDRetrieveUpdateView(GDDMixin, ValidatorViewMixin, RetrieveUpdateDestroyA
     Retrieve and Update Agreement.
     """
     queryset = GDD.objects.detail_qs().all()
-    permission_classes = (PartnershipManagerPermission,)
+    permission_classes = (IsAuthenticated, GDDPermission)  # TODO TBD vs PMP
 
     SERIALIZER_MAP = {
         'planned_visits': GDDPlannedVisitsCUSerializer,
         'result_links': GDDResultCUSerializer,
-        'risks': GDDRiskSerializer,
+        'risks': RiskSerializer,
         'planned_budget': GDDBudgetCUSerializer,
     }
     related_fields = [

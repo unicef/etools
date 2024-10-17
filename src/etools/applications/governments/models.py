@@ -144,17 +144,17 @@ class EWPActivity(TimeStampedModel):
 class GDDManager(models.Manager):
 
     def get_queryset(self):
-        return super().get_queryset().select_related('partner_organization').prefetch_related(
+        return super().get_queryset().select_related('partner').prefetch_related(
             'agreement__partner',
             'agreement__partner__organization',
-            'partner_organization__organization',
+            'partner__organization',
             Prefetch('partner_focal_points', queryset=User.objects.base_qs()),
             Prefetch('unicef_focal_points', queryset=User.objects.base_qs()),
             'offices',
             'planned_budget',
             'sections',
             'country_programme',
-        ).filter(partner_organization__organization__organization_type=OrganizationType.GOVERNMENT)
+        ).filter(partner__organization__organization_type=OrganizationType.GOVERNMENT)
 
     def detail_qs(self):
         qs = super().get_queryset().prefetch_related(
@@ -195,8 +195,8 @@ class GDDManager(models.Manager):
             'reviews__submitted_by',
             'reviews__prc_officers',
             'reviews__overall_approver',
-            'reviews__prc_reviews',
-            'reviews__prc_reviews__user',
+            'reviews__gdd_prc_reviews',
+            'reviews__gdd_prc_reviews__user',
         )
 
     def frs_qs(self):
@@ -310,7 +310,7 @@ class GDD(TimeStampedModel):
         on_delete=models.CASCADE,
         null=True, blank=True
     )
-    partner_organization = models.ForeignKey(
+    partner = models.ForeignKey(
         PartnerOrganization,
         verbose_name=_("Government"),
         related_name='government_gdds',
@@ -321,14 +321,13 @@ class GDD(TimeStampedModel):
         CountryProgramme,
         verbose_name=_("Country Programmes"),
         related_name='government_gdds',
-        blank=True,
+        null=True, blank=True,  # TODO is this mandatory on create?
         help_text='Which Country Programme does this GDD belong to?',
         on_delete=models.PROTECT
     )
 
-    # The selection of e_worplans needs to fall within the country_programme. No hard validation required for now.
-    # Only fronted filters
-    # TODO: endpoint needed to get e_workplans by country_programme id
+    # The selection of e_workplans needs to fall within the country_programme.
+    # No hard validation required for now. Only frontend filters
     e_workplans = models.ManyToManyField(
         GovernmentEWP,
         verbose_name=_("Government eWorkplans"),
@@ -1701,11 +1700,11 @@ class GDDPRCOfficerReview(GDDReviewQuestionnaire, TimeStampedModel):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         verbose_name=_('User'),
-        related_name='gov_prc_reviews',
+        related_name='gdd_prc_reviews',
         on_delete=models.CASCADE,
     )
 
-    overall_review = models.ForeignKey(GDDReview, on_delete=models.CASCADE, related_name='gov_prc_reviews')
+    overall_review = models.ForeignKey(GDDReview, on_delete=models.CASCADE, related_name='gdd_prc_reviews')
     review_date = models.DateField(null=True, blank=True, verbose_name=_('Review Date'))
 
     class Meta:
@@ -1782,85 +1781,6 @@ class GDDReportingPeriod(TimeStampedModel):
         return '{} ({} - {}) due on {}'.format(
             self.gdd, self.start_date, self.end_date, self.due_date
         )
-
-
-class GDDSupplyItem(TimeStampedModel):
-    PROVIDED_BY_UNICEF = 'unicef'
-    PROVIDED_BY_PARTNER = 'partner'
-    PROVIDED_BY_CHOICES = Choices(
-        (PROVIDED_BY_UNICEF, _('UNICEF')),
-        (PROVIDED_BY_PARTNER, _('Partner')),
-    )
-
-    gdd = models.ForeignKey(
-        GDD,
-        verbose_name=_("GDD"),
-        related_name="supply_items",
-        on_delete=models.CASCADE,
-    )
-    title = models.CharField(
-        verbose_name=_("Title"),
-        max_length=150,
-    )
-    unit_number = models.DecimalField(
-        verbose_name=_("Unit Number"),
-        decimal_places=2,
-        max_digits=20,
-        default=1,
-    )
-    unit_price = models.DecimalField(
-        verbose_name=_("Unit Price"),
-        decimal_places=2,
-        max_digits=20,
-        default=0,
-    )
-    # result = models.ForeignKey(
-    #     GDDResultLink,
-    #     verbose_name=_("Result"),
-    #     on_delete=models.CASCADE,
-    #     null=True,
-    #     blank=True,
-    # )
-    total_price = models.DecimalField(
-        verbose_name=_("Total Price"),
-        decimal_places=2,
-        max_digits=20,
-        blank=True,
-        null=True,
-    )
-    other_mentions = models.TextField(
-        verbose_name=_("Other Mentions"),
-        blank=True,
-    )
-    provided_by = models.CharField(
-        max_length=10,
-        choices=PROVIDED_BY_CHOICES,
-        default=PROVIDED_BY_UNICEF,
-        verbose_name=_('Provided By'),
-    )
-    unicef_product_number = models.CharField(
-        verbose_name=_("UNICEF Product Number"),
-        max_length=150,
-        blank=True,
-        default="",
-    )
-
-    class Meta:
-        ordering = ('id',)
-
-    def __str__(self):
-        return "{} {}".format(self.gdd, self.title)
-
-    def save(self, *args, **kwargs):
-        self.total_price = self.unit_number * self.unit_price
-        super().save()
-        # update budgets
-        self.gdd.planned_budget.save()
-
-    def delete(self, **kwargs):
-        super().delete(**kwargs)
-        # update budgets
-        self.gdd.planned_budget.save()
 
 
 class GDDRisk(TimeStampedModel):
@@ -2205,6 +2125,85 @@ class GDDActivityItem(TimeStampedModel):
         for i, item in enumerate(items):
             item.code = '{0}.{1}'.format(activity.code, i + 1)
         cls.objects.bulk_update(items, fields=['code'])
+
+
+class GDDSupplyItem(TimeStampedModel):
+    PROVIDED_BY_UNICEF = 'unicef'
+    PROVIDED_BY_PARTNER = 'partner'
+    PROVIDED_BY_CHOICES = Choices(
+        (PROVIDED_BY_UNICEF, _('UNICEF')),
+        (PROVIDED_BY_PARTNER, _('Partner')),
+    )
+
+    gdd = models.ForeignKey(
+        GDD,
+        verbose_name=_("GDD"),
+        related_name="supply_items",
+        on_delete=models.CASCADE,
+    )
+    title = models.CharField(
+        verbose_name=_("Title"),
+        max_length=150,
+    )
+    unit_number = models.DecimalField(
+        verbose_name=_("Unit Number"),
+        decimal_places=2,
+        max_digits=20,
+        default=1,
+    )
+    unit_price = models.DecimalField(
+        verbose_name=_("Unit Price"),
+        decimal_places=2,
+        max_digits=20,
+        default=0,
+    )
+    result = models.ForeignKey(
+        GDDResultLink,
+        verbose_name=_("Result"),
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
+    total_price = models.DecimalField(
+        verbose_name=_("Total Price"),
+        decimal_places=2,
+        max_digits=20,
+        blank=True,
+        null=True,
+    )
+    other_mentions = models.TextField(
+        verbose_name=_("Other Mentions"),
+        blank=True,
+    )
+    provided_by = models.CharField(
+        max_length=10,
+        choices=PROVIDED_BY_CHOICES,
+        default=PROVIDED_BY_UNICEF,
+        verbose_name=_('Provided By'),
+    )
+    unicef_product_number = models.CharField(
+        verbose_name=_("UNICEF Product Number"),
+        max_length=150,
+        blank=True,
+        default="",
+    )
+
+    class Meta:
+        ordering = ('id',)
+
+    def __str__(self):
+        return "{} {}".format(self.gdd, self.title)
+
+    def save(self, *args, **kwargs):
+        self.total_price = self.unit_number * self.unit_price
+        super().save()
+        # update budgets
+        self.gdd.planned_budget.save()
+
+    def delete(self, **kwargs):
+        super().delete(**kwargs)
+        # update budgets
+        self.gdd.planned_budget.save()
 
 
 class GDDTimeFrame(TimeStampedModel):

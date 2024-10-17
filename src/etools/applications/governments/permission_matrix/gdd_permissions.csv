@@ -4,8 +4,8 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,activation_protocol,Partnership Manager,,Draft,Edit,TRUE
 ,activation_protocol,*,contingency_on,*,Required,TRUE
 3.2.4,agreement,Unicef Focal Point,unlocked,Draft,Edit,TRUE
-,partner_organization,Unicef Focal Point,unlocked,Draft,Edit,TRUE
-,partner_organization,*,,*,Required,TRUE
+,partner,Unicef Focal Point,unlocked,Draft,Edit,TRUE
+,partner,*,,*,Required,TRUE
 3.2.7,amendments,Partner User,,*,View,FALSE
 3.2.7,amendments,*,user_adds_amendment,*,View,FALSE
 3.2.7,amendments,*,,Draft,View,FALSE
@@ -82,6 +82,9 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.5,country_programme,Unicef Focal Point,,Draft,Edit,TRUE
 3.5,country_programme,Unicef Focal Point,user_adds_amendment,*,Edit,TRUE
 3.5,country_programme,*,,*,Required,FALSE
+,e_workplans,Unicef Focal Point,,Draft,Edit,TRUE
+,e_workplans,Unicef Focal Point,user_adds_amendment,*,Edit,TRUE
+,e_workplans,*,,*,Required,FALSE
 ,document_currency,Unicef Focal Point,unlocked+not_in_amendment_mode,Draft,Edit,TRUE
 3.9.2,end,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
 3.9.2,end,Partner User,partner_court,Draft,Edit,TRUE
@@ -277,9 +280,9 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,reviews,Overall Approver,,Review,Edit,TRUE
 ,reviews,Review Authorized Officer,,Review,Edit,TRUE
 ,reviews,Partner User,,*,View,FALSE
-,prc_reviews,PRC Officer,,Review,Edit,TRUE
-,prc_reviews,UNICEF User,,Draft,View,FALSE
-,prc_reviews,Partner User,,*,View,FALSE
+,gdd_prc_reviews,PRC Officer,,Review,Edit,TRUE
+,gdd_prc_reviews,UNICEF User,,Draft,View,FALSE
+,gdd_prc_reviews,Partner User,,*,View,FALSE
 ,partner_authorized_officer_signatory,*,,Review,Required,FALSE
 ,signed_by_partner_date,*,,Review,Required,FALSE
 ,signed_by_unicef_date,*,,Review,Required,FALSE
