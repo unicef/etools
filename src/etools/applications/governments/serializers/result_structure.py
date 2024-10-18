@@ -313,7 +313,7 @@ class GDDActivityDetailSerializer(serializers.ModelSerializer):
         model = GDDActivity
         fields = (
             'id', 'ewp_activity', 'code', 'context_details',
-            'unicef_cash', 'time_frames', 'is_active', 'created', 'items'
+            'unicef_cash', 'time_frames', 'is_active', 'created', 'items', 'locations'
         )
         read_only_fields = ['code']
 
