@@ -1979,6 +1979,7 @@ class GDDActivity(TimeStampedModel):
         blank=True, null=True,
         on_delete=models.CASCADE
     )
+    locations = models.ManyToManyField(Location, related_name="gdd_activities", blank=True)
     code = models.CharField(
         verbose_name=_("Code"),
         max_length=50,
