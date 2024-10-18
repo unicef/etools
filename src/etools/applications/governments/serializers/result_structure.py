@@ -340,7 +340,7 @@ class GDDKeyInterventionWithActivityItemsSerializer(GDDKeyInterventionSerializer
 
 
 class BaseGDDResultNestedSerializer(serializers.ModelSerializer):
-    cp_output_name = serializers.CharField(source="cp_output.output_name", read_only=True)
+    cp_output_name = serializers.CharField(source="cp_output.cp_output.name", read_only=True)
     ram_indicator_names = serializers.SerializerMethodField(read_only=True)
 
     def get_ram_indicator_names(self, obj):
