@@ -156,6 +156,7 @@ class GDDActivityItemBulkUpdateSerializer(GDDActivityItemSerializer):
 class GDDKeyInterventionSerializer(serializers.ModelSerializer):
 
     code = serializers.CharField(read_only=True)
+    name = serializers.CharField(source='ewp_key_intervention.cp_key_intervention.name', read_only=True)
 
     class Meta:
         model = GDDKeyIntervention
