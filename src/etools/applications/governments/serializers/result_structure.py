@@ -309,12 +309,13 @@ class GDDActivityDetailSerializer(serializers.ModelSerializer):
     ewp_activity = EWPActivitySerializer()
     items = GDDActivityItemSerializer(many=True, required=False)
     locations = LocationLightSerializer(many=True)
+    name = serializers.CharField(source='ewp_activity.title', read_only=True)
 
     class Meta:
         model = GDDActivity
         fields = (
             'id', 'ewp_activity', 'code', 'context_details',
-            'unicef_cash', 'time_frames', 'is_active', 'created', 'items', 'locations'
+            'unicef_cash', 'time_frames', 'is_active', 'created', 'items', 'locations', 'name'
         )
         read_only_fields = ['code']
 
