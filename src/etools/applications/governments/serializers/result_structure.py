@@ -164,6 +164,7 @@ class GDDKeyInterventionSerializer(serializers.ModelSerializer):
             "id",
             "ewp_key_intervention",
             "code",
+            "name",
             "result_link",
             "total",
             "created",

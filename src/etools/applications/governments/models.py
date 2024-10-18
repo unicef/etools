@@ -1903,7 +1903,7 @@ class GDDKeyIntervention(TimeStampedModel):
 
         return '{}: {}'.format(
             self.code,
-            self.name
+            self.ewp_key_intervention.cp_key_intervention.name
         )
 
     class Meta:
