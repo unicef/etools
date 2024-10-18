@@ -245,6 +245,7 @@ class GDDActivityCreateSerializer(
             'time_frames',
             'locations',
             'is_active',
+            'name'
         )
         read_only_fields = ['code']
 
