@@ -576,6 +576,7 @@ class GDDDetailSerializer(
             "end",
             "equity_narrative",
             "equity_rating",
+            "e_workplans",
             "final_partnership_review",
             "final_review_approved",
             "flagged_sections",
