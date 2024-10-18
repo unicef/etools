@@ -167,8 +167,7 @@ class EWPSynchronizer:
 
         new_outputs = {}
         for remote_output in new_remote_outputs:
-            new_outputs[f'{remote_output["wbs"]}{remote_output['workplan']}'], _ = EWPOutput.objects.get_or_create(cp_output=self.outputs[remote_output['wbs']],
-                                            workplan=self.workplans[remote_output['workplan']],)
+            new_outputs[f'{remote_output["wbs"]}{remote_output["workplan"]}'], _ = EWPOutput.objects.get_or_create(cp_output=self.outputs[remote_output['wbs']], workplan=self.workplans[remote_output['workplan']],)
 
         local_ewp_outputs.update(new_outputs)
         self.ewp_outputs = local_ewp_outputs
@@ -192,9 +191,9 @@ class EWPSynchronizer:
 
         new_kis = {}
         for remote_ki in new_remote_kis:
-            new_kis[f'{remote_ki["wbs"]}{remote_ki['workplan']}'], _ = EWPKeyIntervention.objects.get_or_create(
+            new_kis[f'{remote_ki["wbs"]}{remote_ki["workplan"]}'], _ = EWPKeyIntervention.objects.get_or_create(
                 cp_key_intervention=self.kis[remote_ki['wbs']],
-                ewp_output=self.ewp_outputs[f'{remote_ki["output"]}{remote_ki['workplan']}'], )
+                ewp_output=self.ewp_outputs[f'{remote_ki["output"]}{remote_ki["workplan"]}'], )
 
         local_ewp_kis.update(new_kis)
         self.ewp_key_interventions = local_ewp_kis
@@ -217,7 +216,7 @@ class EWPSynchronizer:
         # Todo bulk save:
         new_activities = {}
         for remote_activity in rem_activities.values():
-            ewp_ki_key = f'{remote_activity["ewp_key_intervention"]}{remote_activity['workplan']}'
+            ewp_ki_key = f'{remote_activity["ewp_key_intervention"]}{remote_activity["workplan"]}'
             # if there are no workplans or key interventions to match it means that we were missing some records like
             # certain CP Key Interventions (or activities) as not present in Insight Results Sync
             try:

@@ -13,7 +13,7 @@ from unicef_snapshot.serializers import SnapshotModelSerializer
 from etools.applications.field_monitoring.fm_settings.serializers import LocationSiteSerializer
 from etools.applications.funds.models import FundsReservationHeader
 from etools.applications.funds.serializers import FRsSerializer
-from etools.applications.governments.models import GDD, GDDAmendment, GDDRisk, GDDSupplyItem, GDDResultLink
+from etools.applications.governments.models import GDD, GDDAmendment, GDDResultLink, GDDRisk, GDDSupplyItem
 from etools.applications.governments.permissions import (
     GDDPermissions,
     PARTNERSHIP_MANAGER_GROUP,

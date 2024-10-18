@@ -8,6 +8,7 @@ from rest_framework.relations import RelatedField
 from rest_framework.serializers import ValidationError
 from unicef_attachments.fields import AttachmentSingleFileField
 from unicef_attachments.serializers import AttachmentSerializerMixin
+from unicef_restlib.fields import SeparatedReadWriteField
 
 from etools.applications.field_monitoring.fm_settings.models import LocationSite
 from etools.applications.funds.models import FundsCommitmentItem, FundsReservationHeader
@@ -25,16 +26,6 @@ from etools.applications.governments.models import (
     GDDResultLink,
 )
 from etools.applications.governments.serializers.gdd_snapshot import FullGDDSnapshotSerializerMixin
-from etools.applications.organizations.models import OrganizationType
-from etools.applications.partners.serializers.interventions_v2 import (
-    LocationSiteSerializer,
-    PlannedVisitSitesQuarterSerializer,
-)
-from etools.applications.reports.serializers.v2 import (
-    IndicatorSerializer,
-    LowerResultCUSerializer,
-    LowerResultSerializer,
-)
 
 
 class GDDActivityItemSerializer(serializers.ModelSerializer):
@@ -232,13 +223,11 @@ class EWPActivitySerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class GDDActivityDetailSerializer(
+class GDDActivityCreateSerializer(
     FullGDDSnapshotSerializerMixin,
     serializers.ModelSerializer,
 ):
     items = GDDActivityItemBulkUpdateSerializer(many=True, required=False)
-    partner_percentage = serializers.DecimalField(max_digits=5, decimal_places=2, read_only=True)
-    ewp_activity = EWPActivitySerializer()
 
     class Meta:
         model = GDDActivity
@@ -252,13 +241,12 @@ class GDDActivityDetailSerializer(
             # 'cso_cash',
             'items',
             'time_frames',
-            'partner_percentage',
             'is_active',
         )
         read_only_fields = ['code']
 
     def __init__(self, *args, **kwargs):
-        self.intervention = kwargs.pop('intervention', None)
+        self.gdd = kwargs.pop('gdd', None)
         super().__init__(*args, **kwargs)
 
     def validate(self, attrs):
@@ -273,7 +261,7 @@ class GDDActivityDetailSerializer(
     @transaction.atomic
     def create(self, validated_data):
         # TODO: [e4] remove this whenever a better validation is decided on. This is out of place but needed as a hotfix
-        if self.intervention.status in [self.intervention.SIGNATURE]:
+        if self.gdd.status in [self.gdd.SIGNATURE]:
             raise ValidationError(_("New activities are not able to be added in this status"))
         options = validated_data.pop('items', None)
         time_frames = validated_data.pop('time_frames', None)
@@ -287,7 +275,7 @@ class GDDActivityDetailSerializer(
         options = validated_data.pop('items', None)
         time_frames = validated_data.pop('time_frames', None)
         # TODO: [e4] remove this whenever a better validation is decided on. This is out of place but needed as a hotfix
-        if self.intervention.status not in [self.intervention.SIGNATURE]:
+        if self.gdd.status not in [self.gdd.SIGNATURE]:
             # if you're in status signature, ignore all other updates. This is horrible as the user can be confused
             # however it's a very limited amount of people that are able to make changes here and FE will inform them
             # otherwise would need to catch any intended changes as the FE currently re-submits existing fields
@@ -305,37 +293,29 @@ class GDDActivityDetailSerializer(
         if time_frames is None:
             return
 
-        new_time_frames = self.intervention.quarters.filter(id__in=[t.id for t in time_frames])
+        new_time_frames = self.gdd.quarters.filter(id__in=[t.id for t in time_frames])
         instance.time_frames.clear()
         instance.time_frames.add(*new_time_frames)
 
-    def get_intervention(self):
-        return self.intervention
+    def get_gdd(self):
+        return self.gdd
 
 
-class GDDActivitySerializer(serializers.ModelSerializer):
-    partner_percentage = serializers.DecimalField(max_digits=5, decimal_places=2, read_only=True)
+class GDDActivityDetailSerializer(serializers.ModelSerializer):
     ewp_activity = EWPActivitySerializer()
+    items = GDDActivityItemSerializer(many=True, required=False)
 
     class Meta:
         model = GDDActivity
         fields = (
             'id', 'ewp_activity', 'code', 'context_details',
-            'unicef_cash', 'partner_percentage',
-            'time_frames', 'is_active', 'created',
+            'unicef_cash', 'time_frames', 'is_active', 'created', 'items'
         )
         read_only_fields = ['code']
 
 
 class GDDKeyInterventionWithActivitiesSerializer(GDDKeyInterventionSerializer):
     activities = GDDActivityDetailSerializer(read_only=True, many=True, source='gdd_activities')
-
-    class Meta(GDDKeyInterventionSerializer.Meta):
-        fields = GDDKeyInterventionSerializer.Meta.fields + ["activities"]
-
-
-class GDDKeyInterventionWithActivityItemsSerializer(GDDKeyInterventionSerializer):
-    activities = GDDActivityDetailSerializer(read_only=True, many=True)
 
     class Meta(GDDKeyInterventionSerializer.Meta):
         fields = GDDKeyInterventionSerializer.Meta.fields + ["activities"]
