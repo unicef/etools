@@ -4,7 +4,7 @@ import logging
 
 from django.db import transaction
 from django.db.models import Q
-from etools.applications.governments.models import GovernmentEWP, EWPOutput, EWPKeyIntervention
+from etools.applications.governments.models import GovernmentEWP, EWPOutput, EWPKeyIntervention, EWPActivity
 from etools.applications.locations.models import Location
 from etools.applications.partners.models import PartnerOrganization
 
@@ -32,34 +32,100 @@ class EWPSynchronizer:
         # discrepancies in length. There should be no values missing from the db
         self.cps = {r.wbs: r for r in
                     CountryProgramme.objects.filter(wbs__in=self.data['remote_cps'])}
+        missing_cps = set(self.data['remote_cps']) - self.cps.keys()
+        if missing_cps:
+            logger.warning(f"Missing CountryProgrammes for WBSs: {missing_cps}")
+            self.data['remote_cps'] = [wbs for wbs in self.data['remote_cps'] if wbs not in missing_cps]
+
         self.outputs = {r.wbs: r for r in
                         Result.objects.filter(wbs__in=[r["wbs"] for r in self.data['remote_outputs']], result_type__name=ResultType.OUTPUT)}
+        remote_output_wbss = {r["wbs"] for r in self.data['remote_outputs']}
+        missing_outputs = remote_output_wbss - self.outputs.keys()
+        if missing_outputs:
+            logger.warning(f"Missing Outputs for WBSs: {missing_outputs}")
+            self.data['remote_outputs'] = [
+                r for r in self.data['remote_outputs'] if r["wbs"] not in missing_outputs
+            ]
+
         self.kis = {r.wbs: r for r in
                     Result.objects.filter(wbs__in=[r["wbs"] for r in self.data['remote_kis']], result_type__name=ResultType.ACTIVITY)}
+
+        remote_ki_wbss = {r["wbs"] for r in self.data['remote_kis']}
+        missing_kis = remote_ki_wbss - self.kis.keys()
+        if missing_kis:
+            logger.warning(f"Missing KIs for WBSs: {missing_kis}")
+            self.data['remote_kis'] = [
+                r for r in self.data['remote_kis'] if r["wbs"] not in missing_kis
+            ]
+
+
         self.locations = {r.p_code: r for r in Location.objects.filter(p_code__in=self.data['remote_locations'])}
+        missing_locations = set(self.data['remote_locations']) - self.locations.keys()
+        if missing_locations:
+            logger.warning(f"Missing Locations for P-Codes: {missing_locations}")
+            self.data['remote_locations'] = [
+                p_code for p_code in self.data['remote_locations'] if p_code not in missing_locations
+            ]
+
         self.partners = {r.organization.vendor_number: r for r in PartnerOrganization.objects.filter(
             organization__vendor_number__in=self.data['remote_partners'])}
+        missing_partners = set(self.data['remote_partners']) - self.partners.keys()
+        if missing_partners:
+            logger.warning(f"Missing Partners for Vendor Numbers: {missing_partners}")
+            self.data['remote_partners'] = [
+                vendor_number for vendor_number in self.data['remote_partners'] if vendor_number not in missing_partners
+            ]
+
+
 
     @staticmethod
     def _update_changes(local, remote):
         updated = False
         for k in remote:
-            if getattr(local, k) != remote[k]:
+            if k == "country_programme":
+                pass
+            elif getattr(local, k) != remote[k]:
                 updated = True
                 setattr(local, k, remote[k])
 
         return updated
 
-    def _get_local_parent(self, wbs, parent_type):
-        parent_map = {
-            # 10 is the number of characters for a cp wbs
-            'cp': (10, self.cps),
-            'outcome': (14, self.outcomes),
-            'output': (18, self.outputs)
-        }
-        parent_group = parent_map[parent_type][1]
-        wbs_length = parent_map[parent_type][0]
-        return parent_group.get(wbs[:wbs_length], None)
+    def _update_activity_changes(self, local, remote):
+        updated = False
+        for k in remote:
+            match k:
+                case 'workplan':
+
+                    local_wp = self.workplans.get(remote[k])
+                    if local_wp != local.workplan:
+                        local.workplan = local_wp
+                        updated = True
+
+                case 'ewp_key_intervention':
+                    # TODO: assuming certain things can't change like moving activities
+                    pass
+
+                case 'locations':
+                    local_pcodes = [l.p_code for l in local.locations.all()]
+                    if set(local_pcodes) != set(remote[k]):
+                        new_locs = Location.objects.filter(p_code__in=set(remote[k]))
+                        local.locations.set(new_locs)
+                        updated = True
+
+                case 'partners':
+                    local_vendors = [p.organization.vendor_number for p in local.partners.all()]
+                    if set(local_vendors) != set(remote[k]):
+                        new_partners = PartnerOrganization.objects.filter(
+                            organization__vendor_number__in=set(remote[k])
+                        )
+                        local.partners.set(new_partners)
+                        updated = True
+
+                case _:
+                    if getattr(local, k) != remote[k]:
+                        setattr(local, k, remote[k])
+                        updated = True
+        return updated
 
     def update_workplans(self):
         remote_ewps = self.data['remote_ewps']
@@ -136,43 +202,50 @@ class EWPSynchronizer:
 
     def update_activities(self):
         rem_activities = self.data['activities']
-        activity_type = ResultType.objects.get(name=ResultType.ACTIVITY)
         total_data = len(rem_activities)
         total_updated = 0
 
-        loc_activities = dict([(r.wbs, r) for r in Result.objects.filter(wbs__in=list(rem_activities.keys()),
-                                                                         result_type__name=ResultType.ACTIVITY)])
-
-        for loc_activity in loc_activities.values():
-            if self._update_changes(loc_activity, rem_activities[loc_activity.wbs]):
-                logger.debug('Updated {}'.format(loc_activity))
-                loc_activity.save()
+        # TODO: Prefetch related...
+        local_activities = {record.wbs: record for record in EWPActivity.objects.filter(wbs__in=list(rem_activities.keys()))}
+        for local_act in local_activities.values():
+            if self._update_activity_changes(local_act, rem_activities[local_act.wbs]):
+                logger.debug('Updated {}'.format(local_act))
                 total_updated += 1
-            del rem_activities[loc_activity.wbs]
+                local_act.save()
+            del rem_activities[local_act.wbs]
 
+        # Todo bulk save:
         new_activities = {}
-        for rem_activity in rem_activities.values():
-            rem_activity['country_programme'] = self._get_local_parent(rem_activity['wbs'], 'cp')
-            rem_activity['parent'] = self._get_local_parent(rem_activity['wbs'], 'output')
-            rem_activity['result_type'] = activity_type
+        for remote_activity in rem_activities.values():
+            ewp_ki_key = f'{remote_activity["ewp_key_intervention"]}{remote_activity['workplan']}'
+            # if there are no workplans or key interventions to match it means that we were missing some records like
+            # certain CP Key Interventions (or activities) as not present in Insight Results Sync
+            try:
+                remote_activity['workplan'] = self.workplans[remote_activity['workplan']]
+                remote_activity['ewp_key_intervention'] = self.ewp_key_interventions[ewp_ki_key]
+            except KeyError:
+                continue
+            vendor_numbers = remote_activity.pop('partners')
+            p_codes = remote_activity.pop('locations')
+            new_activities[remote_activity['wbs']], _ = EWPActivity.objects.get_or_create(**remote_activity)
 
-            new_activities[rem_activity['wbs']], _ = Result.objects.get_or_create(**rem_activity)
+            #TODO: here we need to figure out what to do if the partners or locations are not in the workspace
+            new_activities[remote_activity['wbs']].partners.set(
+                [self.partners.get(v) for v in vendor_numbers if self.partners.get(v) is not None]
+            )
+            new_activities[remote_activity['wbs']].locations.set(
+                [self.locations.get(v) for v in p_codes if self.locations.get(v) is not None]
+            )
 
         # add the newly created cps
-        loc_activities.update(new_activities)
-        self.outputs = loc_activities
+        local_activities.update(new_activities)
+        self.activities = local_activities
+
         return total_data, total_updated, len(new_activities)
+
 
     @transaction.atomic
     def update(self):
-        # data
-        # {"remote_cps": country_programmes_wbss,
-        #  "remote_outputs": output_wbss,
-        #  "remote_kis": ki_wbss,
-        #  "remote_partners": partner_vendor_numbers,
-        #  "remote_locations": location_p_codes,
-        #  "remote_ewps": ewps,
-        #  "activities": activities}
 
 
         total_ewps = self.update_workplans()
@@ -187,8 +260,8 @@ class EWPSynchronizer:
         kis = 'KIs updated: Total {}, Updated {}, New {}'.format(*total_kis)
 
         # update / add new Activities
-        # total_activities = self.update_activities()
-        # activities = 'Activities updated: Total {}, Updated {}, New {}'.format(*total_activities)
+        total_activities = self.update_activities()
+        activities = 'Activities updated: Total {}, Updated {}, New {}'.format(*total_activities)
 
         return {
             'details': '\n'.join([ewps, outputs, kis]),
@@ -197,41 +270,9 @@ class EWPSynchronizer:
         }
 
 
-class EWPsSynchronizer(FileDataSynchronizer):
-    # ENDPOINT = 'ramworkplans'
-    # REQUIRED_KEYS = (
-    #     "COUNTRY_PROGRAMME_NAME",
-    #     "COUNTRY_PROGRAMME_WBS",
-    #     "CP_START_DATE",
-    #     "CP_END_DATE",
-    #     "GOAL_AREA_CODE",
-    #     "GOAL_AREA_NAME",
-    #     "OUTCOME_WBS",
-    #     "OUTCOME_NAME",
-    #     "OUTCOME_START_DATE",
-    #     "OUTCOME_END_DATE",
-    #     "OUTPUT_WBS",
-    #     "OUTPUT_NAME",
-    #     "OUTPUT_START_DATE",
-    #     "OUTPUT_END_DATE",
-    #     "ACTIVITY_WBS",
-    #     "ACTIVITY_NAME",
-    #     "ACTIVITY_START_DATE",
-    #     "ACTIVITY_END_DATE",
-    #     "SIC_CODE",
-    #     "SIC_NAME",
-    #     "GIC_CODE",
-    #     "GIC_NAME",
-    #     "ACTIVITY_FOCUS_CODE",
-    #     "ACTIVITY_FOCUS_NAME",
-    #     "GENDER_MARKER_CODE",
-    #     "GENDER_MARKER_NAME",
-    #     "HUMANITARIAN_TAG",
-    #     "HUMANITARIAN_MARKER_CODE",
-    #     "HUMANITARIAN_MARKER_NAME",
-    #     "RESULT_AREA_CODE",
-    #     "RESULT_AREA_NAME",
-    # )
+# class EWPsSynchronizer(FileDataSynchronizer):
+class EWPsSynchronizer(VisionDataTenantSynchronizer):
+    ENDPOINT = 'ramworkplans'
     DATES = (
         "WPA_END_DATE",
         "WPA_START_DATE",
@@ -248,15 +289,18 @@ class EWPsSynchronizer(FileDataSynchronizer):
         ("CP_WBS", "country_programme"),
     )
     ACTIVITY_MAP = (
-        ("WPA_GID", "wpa_wbs"),
+        ("WPA_GID", "wbs"),
         ("WPA_ID", "wpa_id"),
-        # ("WPA_START_DATE", "start_date"),
-        # ("WPA_END_DATE", "end_date"),
+        ("WP_GID", "workplan"),
+        ("WPA_START_DATE", "start_date"),
+        ("WPA_END_DATE", "end_date"),
         ("WPA_TITLE", "title"),
         ("WPA_DESCRIPTION", "description"),
         ("TOTAL_BUDGET", "total_budget"),
         ("WPA_GEOLOCATIONS", "locations"),
         ("WPA_IMPLEMENTING_PARTNERS", "partners"),
+        ("VISION_ACTIVITY_WBS", "ewp_key_intervention"),
+        ('WP_GID', "workplan"), #This is the WBS, map later
     )
     REQUIRED_KEYS = set([r[0] for r in list(EWP_MAP + ACTIVITY_MAP)])
 
@@ -305,7 +349,7 @@ class EWPsSynchronizer(FileDataSynchronizer):
                     ewps[r['WP_GID']] = dict([(i[1], r[i[0]]) for i in self.EWP_MAP])
 
 
-            if not activities.get(r['VISION_ACTIVITY_WBS'], None):
+            if not activities.get(r['WPA_GID'], None):
                 if all([r[i[0]] for i in self.ACTIVITY_MAP]):
                     result = {}
                     for item in self.ACTIVITY_MAP:
@@ -326,7 +370,7 @@ class EWPsSynchronizer(FileDataSynchronizer):
                         else:
                             result[local_prop] = r[remote_key]
 
-                    activities[r['VISION_ACTIVITY_WBS']] = result
+                    activities[r['WPA_GID']] = result
 
         return {"remote_cps": country_programmes_wbss,
                 "remote_outputs": output_wbss,
@@ -337,13 +381,10 @@ class EWPsSynchronizer(FileDataSynchronizer):
                 "activities": activities}
 
     def _convert_records(self, records):
-        # try:
-        #     records = records['ROWSET']['ROW']
-        # except KeyError as exc:
-        #     raise VisionException(f'Expected key {exc} is missing from API response {records}.')
-
-        # with open('vision_response.json', 'w') as file:
-        #     json.dump(records, file, indent=4)
+        try:
+            records = records['ROWSET']['ROW']
+        except KeyError as exc:
+            raise VisionException(f'Expected key {exc} is missing from API response {records}.')
 
         for r in records:
             for k in self.DATES:
@@ -354,10 +395,7 @@ class EWPsSynchronizer(FileDataSynchronizer):
 
 
     def _save_records(self, records):
-        # synchronizer = ResultStructureSynchronizer(records)
         synchronizer = EWPSynchronizer(records)
         return synchronizer.update()
-
-        # return synchronizer.update()
 
 

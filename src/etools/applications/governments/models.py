@@ -108,6 +108,10 @@ class GovernmentEWP(TimeStampedModel):
     category_type = models.CharField(verbose_name=_("Plan Category Type"), max_length=50, blank=True, null=True)
     start_date = models.DateField(verbose_name=_('Workplan Start Date'), null=True, blank=True)
     end_date = models.DateField(verbose_name=_('Workplan End Date'), null=True, blank=True)
+    other = models.JSONField(verbose_name=_("Other"), blank=True, null=True)
+
+    def __str__(self):
+        return f'{self.wbs}-{self.ewp_id}'
 
 
 class EWPOutput(TimeStampedModel):
@@ -117,10 +121,16 @@ class EWPOutput(TimeStampedModel):
     )
     cp_output = models.ForeignKey(Result, related_name='ewp_outputs', on_delete=models.PROTECT)
 
+    def __str__(self):
+        return f'{self.workplan}-{self.cp_output}'
+
 
 class EWPKeyIntervention(TimeStampedModel):
     ewp_output = models.ForeignKey(EWPOutput, related_name='ewp_key_interventions', on_delete=models.PROTECT)
     cp_key_intervention = models.ForeignKey(Result, related_name='ewp_key_interventions', on_delete=models.PROTECT)
+
+    def __str__(self):
+        return f'{self.ewp_output}-{self.cp_key_intervention}'
 
 
 class EWPActivity(TimeStampedModel):
@@ -129,7 +139,7 @@ class EWPActivity(TimeStampedModel):
         on_delete=models.CASCADE, blank=True, null=True,
     )
     wpa_id = models.CharField(verbose_name=_("Workplan Activity ID"), max_length=500, blank=True, null=True)
-    wpa_wbs = models.CharField(verbose_name=_("Workplan Activity WBS"), max_length=500, blank=True, null=True)
+    wbs = models.CharField(verbose_name=_("Workplan Activity WBS"), max_length=500, blank=True, null=True)
 
     ewp_key_intervention = models.ForeignKey(EWPKeyIntervention, related_name='ewp_activity_for_ki', on_delete=models.PROTECT)
 
@@ -139,7 +149,12 @@ class EWPActivity(TimeStampedModel):
 
     locations = models.ManyToManyField(Location, related_name="ewp_activities", blank=True)
     partners = models.ManyToManyField(PartnerOrganization, related_name="ewp_activities", blank=True)
+    start_date = models.DateField(verbose_name=_('Activity Start Date'), null=True, blank=True)
+    end_date = models.DateField(verbose_name=_('Activity End Date'), null=True, blank=True)
+    other = models.JSONField(verbose_name=_("Other"), blank=True, null=True)
 
+    def __str__(self):
+        return f'{self.wbs} from {self.ewp_key_intervention}'
 
 class GDDManager(models.Manager):
 

@@ -431,6 +431,13 @@ class GovernmentSupplyItemAdmin(RestrictedEditAdmin):
     search_fields = ('title',)
 
 
+
+class EWPActivityAdmin(RestrictedEditAdmin):
+    raw_id_fields = ('partners', 'locations', 'workplan', 'ewp_key_intervention')
+
+
+
+
 admin.site.register(models.GDD, GDDAdmin)
 admin.site.register(models.GDDAmendment, GovernmentAmendmentsAdmin)
 admin.site.register(models.GDDResultLink, GovernmentResultsLinkAdmin)
@@ -441,7 +448,7 @@ admin.site.register(models.GDDSupplyItem, GovernmentSupplyItemAdmin)
 admin.site.register(models.GDDKeyIntervention)
 admin.site.register(models.GDDActivity)
 admin.site.register(models.GDDActivityItem)
-admin.site.register(models.EWPActivity)
+admin.site.register(models.EWPActivity, EWPActivityAdmin)
 admin.site.register(models.EWPKeyIntervention)
 admin.site.register(models.EWPOutput)
 admin.site.register(models.GovernmentEWP)
