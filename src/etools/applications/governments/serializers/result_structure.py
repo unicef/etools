@@ -8,6 +8,7 @@ from rest_framework.relations import RelatedField
 from rest_framework.serializers import ValidationError
 from unicef_attachments.fields import AttachmentSingleFileField
 from unicef_attachments.serializers import AttachmentSerializerMixin
+from unicef_locations.serializers import LocationLightSerializer
 from unicef_restlib.fields import SeparatedReadWriteField
 
 from etools.applications.field_monitoring.fm_settings.models import LocationSite
@@ -228,6 +229,7 @@ class GDDActivityCreateSerializer(
     serializers.ModelSerializer,
 ):
     items = GDDActivityItemBulkUpdateSerializer(many=True, required=False)
+    name = serializers.CharField(source='ewp_activity.title', read_only=True)
 
     class Meta:
         model = GDDActivity
@@ -241,6 +243,7 @@ class GDDActivityCreateSerializer(
             # 'cso_cash',
             'items',
             'time_frames',
+            'locations',
             'is_active',
         )
         read_only_fields = ['code']
@@ -304,6 +307,7 @@ class GDDActivityCreateSerializer(
 class GDDActivityDetailSerializer(serializers.ModelSerializer):
     ewp_activity = EWPActivitySerializer()
     items = GDDActivityItemSerializer(many=True, required=False)
+    locations = LocationLightSerializer(many=True)
 
     class Meta:
         model = GDDActivity
