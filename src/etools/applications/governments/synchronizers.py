@@ -4,16 +4,16 @@ import logging
 
 from django.db import transaction
 from django.db.models import Q
-from etools.applications.governments.models import GovernmentEWP, EWPOutput, EWPKeyIntervention, EWPActivity
-from etools.applications.locations.models import Location
-from etools.applications.partners.models import PartnerOrganization
 
 from unicef_vision.exceptions import VisionException
 from unicef_vision.settings import INSIGHT_DATE_FORMAT
+from unicef_vision.synchronizers import FileDataSynchronizer
 
+from etools.applications.governments.models import EWPActivity, EWPKeyIntervention, EWPOutput, GovernmentEWP
+from etools.applications.locations.models import Location
+from etools.applications.partners.models import PartnerOrganization
 from etools.applications.reports.models import CountryProgramme, Result, ResultType
 from etools.applications.vision.synchronizers import VisionDataTenantSynchronizer
-from unicef_vision.synchronizers import FileDataSynchronizer
 
 logger = logging.getLogger(__name__)
 
