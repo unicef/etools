@@ -37,7 +37,7 @@ from etools.applications.governments.serializers.gdd import (
     GDDDetailSerializer,
     GDDListSerializer,
     MinimalGDDListSerializer,
-    RiskSerializer, GDDResultLinkSimpleCUSerializer,
+    RiskSerializer, GDDResultLinkSimpleCUSerializer, DetailedGDDResponseMixin,
 )
 from etools.applications.governments.serializers.helpers import GDDBudgetCUSerializer, GDDPlannedVisitsCUSerializer
 from etools.applications.governments.serializers.result_structure import (
@@ -397,7 +397,7 @@ class GDDResultLinkListCreateView(ListCreateAPIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
-class GDDKeyInterventionCreateView(CreateAPIView):
+class GDDKeyInterventionCreateView(DetailedGDDResponseMixin, CreateAPIView):
     serializer_class = GDDKeyInterventionCUSerializer
     queryset = GDDKeyIntervention.objects.select_related('result_link').order_by('id')
     permission_classes = [
@@ -414,8 +414,8 @@ class GDDKeyInterventionCreateView(CreateAPIView):
     def get_root_object(self):
         return GDD.objects.filter(pk=self.kwargs.get('pk')).first()
 
-    # def get_gdd(self):
-    #     return self.get_root_object()
+    def get_gdd(self):
+        return self.get_root_object()
 
     # def get_serializer(self, *args, **kwargs):
     #     kwargs['gdd'] = self.get_root_object()

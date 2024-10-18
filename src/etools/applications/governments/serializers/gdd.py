@@ -4,6 +4,7 @@ from django.utils.translation import gettext as _, gettext_lazy
 
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
+from rest_framework.status import is_success
 from rest_framework.validators import UniqueTogetherValidator
 from unicef_attachments.fields import AttachmentSingleFileField
 from unicef_attachments.serializers import AttachmentSerializerMixin
@@ -806,3 +807,19 @@ class GDDResultLinkSimpleCUSerializer(FullGDDSnapshotSerializerMixin, serializer
     def get_gdd(self):
         return self.validated_data.get('gdd', getattr(self.instance, 'gdd', None))
 
+
+class DetailedGDDResponseMixin:
+    detailed_gdd_methods = ['post', 'put', 'patch']
+    detailed_gdd_serializer = GDDDetailSerializer
+
+    def get_intervention(self):
+        raise NotImplementedError
+
+    def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
+        if request.method.lower() in self.detailed_gdd_methods and is_success(response.status_code):
+            response.data['gdd'] = self.detailed_gdd_serializer(
+                instance=self.get_gdd(),
+                context=self.get_serializer_context(),
+            ).data
+        return response
