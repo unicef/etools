@@ -3,7 +3,7 @@ from django.urls import path
 from etools.applications.governments.views.gdd import (
     GDDListCreateView,
     GDDRetrieveResultsStructure,
-    GDDRetrieveUpdateView,
+    GDDRetrieveUpdateView, GDDResultLinkListCreateView,
 )
 from etools.applications.governments.views.government import (
     EWPActivityListView,
@@ -80,5 +80,11 @@ urlpatterns = [
             http_method_names=['get'],
         ),
         name='ewp-activity-list',
-    )
+    ),
+    path(
+        'gdds/<int:pk>/result-links/',
+        view=GDDResultLinkListCreateView.as_view(
+            http_method_names=['get', 'post']
+        ),
+        name='gdd-result-links-list'),
 ]

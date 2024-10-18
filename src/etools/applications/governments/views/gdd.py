@@ -1,3 +1,4 @@
+import copy
 import datetime
 import functools
 import logging
@@ -27,7 +28,7 @@ from etools.applications.governments.filters import (
     PartnerScopeFilter,
     ShowAmendmentsFilter,
 )
-from etools.applications.governments.models import GDD
+from etools.applications.governments.models import GDD, GDDResultLink
 from etools.applications.governments.permissions import GDDPermission, PartnershipManagerPermission
 from etools.applications.governments.serializers.exports import GDDExportFlatSerializer, GDDExportSerializer
 from etools.applications.governments.serializers.gdd import (
@@ -35,7 +36,7 @@ from etools.applications.governments.serializers.gdd import (
     GDDDetailSerializer,
     GDDListSerializer,
     MinimalGDDListSerializer,
-    RiskSerializer,
+    RiskSerializer, GDDResultLinkSimpleCUSerializer,
 )
 from etools.applications.governments.serializers.helpers import GDDBudgetCUSerializer, GDDPlannedVisitsCUSerializer
 from etools.applications.governments.serializers.result_structure import (
@@ -376,3 +377,20 @@ class GDDRetrieveResultsStructure(GDDMixin, RetrieveAPIView):
     queryset = GDD.objects.detail_qs()
     serializer_class = GDDDetailResultsStructureSerializer
     permission_classes = (IsAuthenticated, GDDPermission)
+
+
+class GDDResultLinkListCreateView(ListCreateAPIView):
+
+    serializer_class = GDDResultLinkSimpleCUSerializer
+    permission_classes = (PartnershipManagerPermission,)
+    queryset = GDDResultLink.objects.select_related('cp_output', 'cp_output__cp_output')
+
+    def create(self, request, *args, **kwargs):
+        raw_data = copy.deepcopy(request.data)
+        raw_data['gdd'] = kwargs.get('pk', None)
+
+        serializer = self.get_serializer(data=raw_data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)

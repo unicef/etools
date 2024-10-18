@@ -1,9 +1,10 @@
 from django.contrib.auth import get_user_model
 from django.db import transaction
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext as _, gettext_lazy
 
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
+from rest_framework.validators import UniqueTogetherValidator
 from unicef_attachments.fields import AttachmentSingleFileField
 from unicef_attachments.serializers import AttachmentSerializerMixin
 from unicef_snapshot.serializers import SnapshotModelSerializer
@@ -11,7 +12,7 @@ from unicef_snapshot.serializers import SnapshotModelSerializer
 from etools.applications.field_monitoring.fm_settings.serializers import LocationSiteSerializer
 from etools.applications.funds.models import FundsReservationHeader
 from etools.applications.funds.serializers import FRsSerializer
-from etools.applications.governments.models import GDD, GDDAmendment, GDDRisk, GDDSupplyItem
+from etools.applications.governments.models import GDD, GDDAmendment, GDDRisk, GDDSupplyItem, GDDResultLink
 from etools.applications.governments.permissions import (
     GDDPermissions,
     PARTNERSHIP_MANAGER_GROUP,
@@ -31,8 +32,6 @@ from etools.applications.governments.serializers.result_structure import (
     GDDResultCUSerializer,
     GDDResultNestedSerializer,
 )
-# TODO: snapshot stuff
-# from etools.applications.governments.serializers.gdd_snapshot import FullGDDSnapshotSerializerMixin
 # from etools.applications.governments.serializers.gdds_v2 import (
 #     FRsSerializer,
 #     GDDAmendmentCUSerializer,
@@ -770,3 +769,40 @@ class GDDCreateUpdateSerializer(
 
     def get_gdd(self):
         return self.instance
+
+
+class GDDResultLinkSimpleCUSerializer(FullGDDSnapshotSerializerMixin, serializers.ModelSerializer):
+    cp_output_name = serializers.CharField(source="cp_output.cp_output.name", read_only=True)
+    ram_indicator_names = serializers.SerializerMethodField(read_only=True)
+
+    def get_ram_indicator_names(self, obj):
+        return [i.name for i in obj.ram_indicators.all()]
+
+    def update(self, instance, validated_data):
+        gdd = validated_data.get('gdd', instance.gdd)
+        if gdd and gdd.partner.blocked is True:
+            raise ValidationError(_("An Output cannot be updated for a government that is blocked in Vision"))
+
+        return super().update(instance, validated_data)
+
+    def create(self, validated_data):
+        gdd = validated_data.get('gdd')
+        if gdd and gdd.partner.blocked is True:
+            raise ValidationError(_("An Output cannot be updated for a government that is blocked in Vision"))
+        return super().create(validated_data)
+
+    class Meta:
+        model = GDDResultLink
+        fields = "__all__"
+        read_only_fields = ['code']
+        validators = [
+            UniqueTogetherValidator(
+                queryset=GDDResultLink.objects.all(),
+                fields=["gdd", "cp_output"],
+                message=gettext_lazy("Invalid CP Output provided.")
+            )
+        ]
+
+    def get_gdd(self):
+        return self.validated_data.get('gdd', getattr(self.instance, 'gdd', None))
+

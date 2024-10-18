@@ -1866,6 +1866,8 @@ class GDDResultLink(TimeStampedModel):
                 )
             else:
                 self.code = '0'
+        if not self.workplan:
+            self.workplan = self.cp_output.workplan
         super().save(*args, **kwargs)
 
     @classmethod
