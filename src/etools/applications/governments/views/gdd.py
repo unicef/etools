@@ -13,7 +13,7 @@ from etools_validator.mixins import ValidatorViewMixin
 from rest_framework import status
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.filters import OrderingFilter
-from rest_framework.generics import ListCreateAPIView, RetrieveAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.generics import ListCreateAPIView, RetrieveAPIView, RetrieveUpdateDestroyAPIView, CreateAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
@@ -28,8 +28,9 @@ from etools.applications.governments.filters import (
     PartnerScopeFilter,
     ShowAmendmentsFilter,
 )
-from etools.applications.governments.models import GDD, GDDResultLink
-from etools.applications.governments.permissions import GDDPermission, PartnershipManagerPermission
+from etools.applications.governments.models import GDD, GDDResultLink, GDDKeyIntervention
+from etools.applications.governments.permissions import GDDPermission, PartnershipManagerPermission, \
+    AmendmentSessionOnlyDeletePermission
 from etools.applications.governments.serializers.exports import GDDExportFlatSerializer, GDDExportSerializer
 from etools.applications.governments.serializers.gdd import (
     GDDCreateUpdateSerializer,
@@ -41,7 +42,7 @@ from etools.applications.governments.serializers.gdd import (
 from etools.applications.governments.serializers.helpers import GDDBudgetCUSerializer, GDDPlannedVisitsCUSerializer
 from etools.applications.governments.serializers.result_structure import (
     GDDDetailResultsStructureSerializer,
-    GDDResultCUSerializer,
+    GDDResultCUSerializer, GDDKeyInterventionCUSerializer,
 )
 from etools.applications.governments.validation.gdds import GDDValid
 from etools.applications.partners.models import PartnerOrganization
@@ -394,3 +395,31 @@ class GDDResultLinkListCreateView(ListCreateAPIView):
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+
+class GDDKeyInterventionCreateView(CreateAPIView):
+    serializer_class = GDDKeyInterventionCUSerializer
+    queryset = GDDKeyIntervention.objects.select_related('result_link').order_by('id')
+    permission_classes = [
+        IsAuthenticated,
+        # IsReadAction | (IsEditAction & intervention_field_is_editable_permission('pd_outputs')),
+        # AmendmentSessionOnlyDeletePermission,
+    ]
+    # TODO TBD on
+    # def get_serializer_class(self):
+    #     if 'UNICEF User' in self.request.user.groups.values_list('name', flat=True):
+    #         return UNICEFInterventionLowerResultSerializer
+    #     return PartnerInterventionLowerResultSerializer
+
+    def get_root_object(self):
+        return GDD.objects.filter(pk=self.kwargs.get('pk')).first()
+
+    # def get_gdd(self):
+    #     return self.get_root_object()
+
+    # def get_serializer(self, *args, **kwargs):
+    #     kwargs['gdd'] = self.get_root_object()
+    #     return super().get_serializer(*args, **kwargs)
+
+    def get_queryset(self):
+        return super().get_queryset().filter(result_link__gdd=self.get_root_object())
