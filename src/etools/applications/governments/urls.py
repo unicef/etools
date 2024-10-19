@@ -8,7 +8,22 @@ from etools.applications.governments.views.gdd import (
     GDDRetrieveResultsStructure,
     GDDRetrieveUpdateView,
 )
-from etools.applications.governments.views.gdd_actions import *
+from etools.applications.governments.views.gdd_actions import (
+    GDDAcceptOnBehalfOfPartner,
+    GDDAcceptView,
+    GDDCancelView,
+    GDDRejectReviewView,
+    GDDReviewView,
+    GDDSendBackViewReview,
+    GDDSendToPartnerView,
+    GDDSendToUNICEFView,
+    GDDSignatureView,
+    GDDSuspendView,
+    GDDTerminateView,
+    GDDUnlockView,
+    GDDUnsuspendView,
+    PMPAmendedGDDMerge,
+)
 from etools.applications.governments.views.government import (
     EWPActivityListView,
     EWPKeyInterventionListView,
