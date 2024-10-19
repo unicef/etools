@@ -8,6 +8,7 @@ from etools.applications.governments.views.gdd import (
     GDDRetrieveResultsStructure,
     GDDRetrieveUpdateView,
 )
+from etools.applications.governments.views.gdd_actions import *
 from etools.applications.governments.views.government import (
     EWPActivityListView,
     EWPKeyInterventionListView,
@@ -57,6 +58,24 @@ urlpatterns = [
         name='gdd-detail-results-structure',
     ),
     path(
+        'gdds/<int:pk>/result-links/',
+        view=GDDResultLinkListCreateView.as_view(
+            http_method_names=['get', 'post']
+        ),
+        name='gdd-result-links-list'),
+    path(
+        'gdds/<int:pk>/key-interventions/',
+        view=GDDKeyInterventionCreateView.as_view(
+            http_method_names=['post']
+        ),
+        name='gdd-key-intervention-create'),
+    path(
+        'gdds/<int:gdd_pk>/key-interventions/<int:key_intervention_pk>/activities/',
+        view=GDDActivityCreateView.as_view(
+            http_method_names=['post']
+        ),
+        name='gdd-activity-create'),
+    path(
       'dropdown-options/e-workplans/',
       view=GovernmentEWPListView.as_view(
           http_method_names=['get'],
@@ -84,22 +103,83 @@ urlpatterns = [
         ),
         name='ewp-activity-list',
     ),
+] + [
     path(
-        'gdds/<int:pk>/result-links/',
-        view=GDDResultLinkListCreateView.as_view(
-            http_method_names=['get', 'post']
-        ),
-        name='gdd-result-links-list'),
+        'gdds/<int:pk>/accept/',
+        view=GDDAcceptView.as_view(http_method_names=['patch']),
+        name='gdd-accept',
+    ),
     path(
-        'gdds/<int:pk>/key-interventions/',
-        view=GDDKeyInterventionCreateView.as_view(
-            http_method_names=['post']
-        ),
-        name='gdd-key-intervention-create'),
+        'gdds/<int:pk>/accept_on_behalf_of_partner/',
+        view=GDDAcceptOnBehalfOfPartner.as_view(http_method_names=['patch']),
+        name='gdd-accept-behalf-of-partner',
+    ),
     path(
-        'gdds/<int:gdd_pk>/key-interventions/<int:key_intervention_pk>/activities/',
-        view=GDDActivityCreateView.as_view(
-            http_method_names=['post']
+        'gdds/<int:pk>/review/',
+        view=GDDReviewView.as_view(http_method_names=['patch']),
+        name='gdd-review',
+    ),
+    path(
+        'gdds/<int:pk>/reject_review/',
+        view=GDDRejectReviewView.as_view(
+            http_method_names=['patch'],
         ),
-        name='gdd-activity-create'),
+        name='gdd-reject-review',
+    ),
+    path(
+        'gdds/<int:pk>/send_back_review/',
+        view=GDDSendBackViewReview.as_view(
+            http_method_names=['patch'],
+        ),
+        name='gdd-send-back-review',
+    ),
+    path(
+        'gdds/<int:pk>/cancel/',
+        view=GDDCancelView.as_view(http_method_names=['patch']),
+        name='gdd-cancel',
+    ),
+    path(
+        'gdds/<int:pk>/terminate/',
+        view=GDDTerminateView.as_view(http_method_names=['patch']),
+        name='gdd-terminate',
+    ),
+    path(
+        'gdds/<int:pk>/suspend/',
+        view=GDDSuspendView.as_view(http_method_names=['patch']),
+        name='gdd-suspend',
+    ),
+    path(
+        'gdds/<int:pk>/unsuspend/',
+        view=GDDUnsuspendView.as_view(http_method_names=['patch']),
+        name='gdd-unsuspend',
+    ),
+    path(
+        'gdds/<int:pk>/sign/',
+        view=GDDSignatureView.as_view(http_method_names=['patch']),
+        name='gdd-signature',
+    ),
+    path(
+        'gdds/<int:pk>/unlock/',
+        view=GDDUnlockView.as_view(http_method_names=['patch']),
+        name='gdd-unlock',
+    ),
+    path(
+        'gdds/<int:pk>/send_to_partner/',
+        view=GDDSendToPartnerView.as_view(
+            http_method_names=['patch'],
+        ),
+        name='gdd-send-partner',
+    ),
+    path(
+        'gdds/<int:pk>/send_to_unicef/',
+        view=GDDSendToUNICEFView.as_view(
+            http_method_names=['patch'],
+        ),
+        name='gdd-send-unicef',
+    ),
+    path(
+        'gdds/<int:pk>/amendment_merge/',
+        view=PMPAmendedGDDMerge.as_view(http_method_names=['patch']),
+        name='gdd-amendment-merge',
+    ),
 ]
