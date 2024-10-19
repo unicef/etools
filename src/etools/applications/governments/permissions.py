@@ -131,14 +131,6 @@ class GDDPermissions(PMPPermissions):
         def unicef_not_accepted(instance):
             return not instance.unicef_accepted
 
-        def unicef_not_accepted_contingency(instance):
-            """ field not required to accept if contingency is on"""
-            return instance.contingency_pd or not instance.unicef_accepted
-
-        def unlocked_or_contingency(instance):
-            """ field not required to accept if contingency is on"""
-            return instance.contingency_pd or not instance.locked
-
         staff_member = self.user
 
         # focal points are prefetched, so just cast to array to collect ids
@@ -192,10 +184,7 @@ class GDDPermissions(PMPPermissions):
             'unlocked': unlocked(self.instance),
             'is_pd_unlocked': not self.instance.locked,
             'unicef_not_accepted': unicef_not_accepted(self.instance),
-            'unicef_not_accepted_contingency': unicef_not_accepted_contingency(self.instance),
-            'unlocked_or_contingency': unlocked_or_contingency(self.instance),
             'unlocked+not_in_amendment_mode': unlocked(self.instance) and not user_added_amendment(self.instance),
-            'cfei_absent': not self.instance.cfei_number
         }
 
     # override get_permissions to enable us to prevent old gdds from being blocked on transitions
