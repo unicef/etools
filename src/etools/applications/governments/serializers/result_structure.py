@@ -29,6 +29,7 @@ from etools.applications.governments.models import (
 from etools.applications.governments.serializers.gdd_snapshot import FullGDDSnapshotSerializerMixin
 
 
+
 class GDDActivityItemSerializer(serializers.ModelSerializer):
     default_error_messages = {
         'invalid_budget': _('Invalid budget data. Total cash should be equal to items number * price per item.')
@@ -145,12 +146,16 @@ class GDDActivityItemBulkUpdateSerializer(GDDActivityItemSerializer):
         return super().validate(attrs)
 
 
-class GDDKeyInterventionSerializer(serializers.ModelSerializer):
+class GDDKeyInterventionBaseSerializer(serializers.ModelSerializer):
 
     code = serializers.CharField(read_only=True)
     name = serializers.CharField(source='ewp_key_intervention.cp_key_intervention.name', read_only=True)
 
     class Meta:
+        abstract = True
+        extra_kwargs = {
+            'code': {'required': False},
+        }
         model = GDDKeyIntervention
         fields = [
             "id",
@@ -162,14 +167,31 @@ class GDDKeyInterventionSerializer(serializers.ModelSerializer):
             "created",
             "modified",
         ]
+class GDDKeyInterventionSerializer(GDDKeyInterventionBaseSerializer):
+    pass
 
+class GDDKeyInterventionCUSerializer(
+    FullGDDSnapshotSerializerMixin,
+    GDDKeyInterventionBaseSerializer,
+):
 
-class GDDKeyInterventionCUSerializer(serializers.ModelSerializer):
-    code = serializers.CharField(read_only=True)
+    class Meta(GDDKeyInterventionBaseSerializer.Meta):
+        fields = GDDKeyInterventionBaseSerializer.Meta.fields
 
-    class Meta:
-        model = GDDKeyIntervention
-        fields = '__all__'
+    def __init__(self, *args, **kwargs):
+        self.gdd = kwargs.pop('gdd', None)
+        super().__init__(*args, **kwargs)
+
+    def save(self, **kwargs):
+        if not self.gdd:
+            raise ValidationError(_('Unknown gdd.'))
+        return super().save(**kwargs)
+
+    def validate(self, attrs):
+        # TODO: [e4] remove this whenever a better validation is decided on. This is out of place but needed as a hotfix
+        if self.gdd.status in [self.gdd.SIGNATURE]:
+            raise ValidationError(_("Results cannot be changed in this status"))
+        return super().validate(attrs)
 
 
 class GDDResultCUSerializer(serializers.ModelSerializer):

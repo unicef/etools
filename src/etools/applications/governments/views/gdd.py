@@ -22,6 +22,7 @@ from unicef_restlib.views import QueryStringFilterMixin
 
 from etools.applications.core.mixins import ExportModelMixin
 from etools.applications.core.renderers import CSVFlatRenderer
+from etools.applications.field_monitoring.permissions import IsEditAction, IsReadAction
 from etools.applications.governments.exports import GDDCSVRenderer
 from etools.applications.governments.filters import (
     GDDEditableByFilter,
@@ -35,7 +36,7 @@ from etools.applications.governments.permissions import (
     GDDPermission,
     PartnershipManagerPermission,
 )
-from etools.applications.governments.serializers.exports import GDDExportFlatSerializer, GDDExportSerializer
+# from etools.applications.governments.serializers.exports import GDDExportFlatSerializer, GDDExportSerializer
 from etools.applications.governments.serializers.gdd import (
     GDDCreateUpdateSerializer,
     GDDDetailSerializer,
@@ -52,7 +53,9 @@ from etools.applications.governments.serializers.result_structure import (
     GDDResultCUSerializer,
 )
 from etools.applications.governments.validation.gdds import GDDValid
+from etools.applications.governments.views.gdd_snapshot import FullGDDSnapshotDeleteMixin
 from etools.applications.partners.models import PartnerOrganization
+from etools.applications.partners.permissions import intervention_field_is_editable_permission
 from etools.applications.users.models import Country
 from etools.applications.utils.pagination import AppendablePageNumberPagination
 from etools.libraries.djangolib.fields import CURRENCY_LIST
@@ -132,6 +135,7 @@ class GDDMixin(GDDBaseViewMixin):
             return self.get_partner_staff_qs(qs)
         return qs.none()
 
+
 class DetailedGDDResponseMixin:
     detailed_gdd_methods = ['post', 'put', 'patch']
     detailed_gdd_serializer = GDDDetailSerializer
@@ -147,6 +151,7 @@ class DetailedGDDResponseMixin:
                 context=self.get_serializer_context(),
             ).data
         return response
+
 
 class GDDListBaseView(ValidatorViewMixin, ListCreateAPIView):
     def get_queryset(self):
@@ -202,11 +207,12 @@ class GDDListAPIView(QueryStringFilterMixin, ExportModelMixin, GDDListBaseView):
         """
         if self.request.method == "GET":
             query_params = self.request.query_params
-            if "format" in query_params.keys():
-                if query_params.get("format") == 'csv':
-                    return GDDExportSerializer
-                if query_params.get("format") == 'csv_flat':
-                    return GDDExportFlatSerializer
+            # TODO: redo exports later
+            # if "format" in query_params.keys():
+            #   if query_params.get("format") == 'csv':
+            #       return GDDExportSerializer
+            #   if query_params.get("format") == 'csv_flat':
+            #         return GDDExportFlatSerializer
             if "verbosity" in query_params.keys():
                 if query_params.get("verbosity") == 'minimal':
                     return MinimalGDDListSerializer
@@ -419,19 +425,14 @@ class GDDResultLinkListCreateView(ListCreateAPIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
-class GDDKeyInterventionCreateView(DetailedGDDResponseMixin, CreateAPIView):
-    serializer_class = GDDKeyInterventionCUSerializer
+class GDDKeyInterventionViewMixin(DetailedGDDResponseMixin):
     queryset = GDDKeyIntervention.objects.select_related('result_link').order_by('id')
+    serializer_class = GDDKeyInterventionCUSerializer
     permission_classes = [
         IsAuthenticated,
-        # IsReadAction | (IsEditAction & intervention_field_is_editable_permission('pd_outputs')),
-        # AmendmentSessionOnlyDeletePermission,
+        IsReadAction | (IsEditAction & intervention_field_is_editable_permission('key_interventions')),
+        AmendmentSessionOnlyDeletePermission,
     ]
-    # TODO TBD on
-    # def get_serializer_class(self):
-    #     if 'UNICEF User' in self.request.user.groups.values_list('name', flat=True):
-    #         return UNICEFInterventionLowerResultSerializer
-    #     return PartnerInterventionLowerResultSerializer
 
     def get_root_object(self):
         return GDD.objects.filter(pk=self.kwargs.get('pk')).first()
@@ -439,16 +440,37 @@ class GDDKeyInterventionCreateView(DetailedGDDResponseMixin, CreateAPIView):
     def get_gdd(self):
         return self.get_root_object()
 
+    def get_serializer(self, *args, **kwargs):
+        kwargs['intervention'] = self.get_root_object()
+        return super().get_serializer(*args, **kwargs)
+
     def get_queryset(self):
         return super().get_queryset().filter(result_link__gdd=self.get_root_object())
 
 
-class GDDActivityCreateView(DetailedGDDResponseMixin, CreateAPIView):
+class GDDKeyInterventionListCreateView(GDDKeyInterventionViewMixin, ListCreateAPIView):
+    pass
+
+
+class GDDKeyInterventionDetailUpdateView(
+    GDDKeyInterventionViewMixin,
+    FullGDDSnapshotDeleteMixin,
+    RetrieveUpdateDestroyAPIView,
+):
+    def perform_destroy(self, instance):
+        # do cleanup if pd output is still not associated to cp output
+        result_link = instance.result_link
+        instance.delete()
+        if not result_link.gdd_key_interventions.exists():
+            result_link.delete()
+
+
+class GDDActivityMixinView(DetailedGDDResponseMixin):
     queryset = GDDActivity.objects.prefetch_related('items', 'time_frames').order_by('id')
     permission_classes = [
         IsAuthenticated,
-        # IsReadAction | (IsEditAction & intervention_field_is_editable_permission('pd_outputs')),
-        # AmendmentSessionOnlyDeletePermission,
+        IsReadAction | (IsEditAction & intervention_field_is_editable_permission('key_interventions')),
+        AmendmentSessionOnlyDeletePermission,
     ]
     serializer_class = GDDActivityCreateSerializer
 
@@ -473,5 +495,12 @@ class GDDActivityCreateView(DetailedGDDResponseMixin, CreateAPIView):
     def get_queryset(self):
         return super().get_queryset().filter(key_intervention=self.get_parent_object())
 
+
+class GDDActivityCreateView(GDDActivityMixinView, CreateAPIView):
+
     def perform_create(self, serializer):
         serializer.save(key_intervention=self.get_parent_object())
+
+
+class GDDActivityDetailUpdateView(GDDActivityMixinView, RetrieveUpdateDestroyAPIView):
+    pass

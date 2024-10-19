@@ -2,7 +2,9 @@ from django.urls import path
 
 from etools.applications.governments.views.gdd import (
     GDDActivityCreateView,
-    GDDKeyInterventionCreateView,
+    GDDActivityDetailUpdateView,
+    GDDKeyInterventionDetailUpdateView,
+    GDDKeyInterventionListCreateView,
     GDDListCreateView,
     GDDResultLinkListCreateView,
     GDDRetrieveResultsStructure,
@@ -80,10 +82,16 @@ urlpatterns = [
         name='gdd-result-links-list'),
     path(
         'gdds/<int:pk>/key-interventions/',
-        view=GDDKeyInterventionCreateView.as_view(
-            http_method_names=['post']
+        view=GDDKeyInterventionListCreateView.as_view(
+            http_method_names=['post', 'get']
         ),
         name='gdd-key-intervention-create'),
+    path(
+        'gdds/<int:gdd_pk>/key-interventions/<int:pk>/',
+        view=GDDKeyInterventionDetailUpdateView.as_view(
+            http_method_names=['patch', 'get', 'delete']
+        ),
+        name='gdd-key-intervention-detail'),
     path(
         'gdds/<int:gdd_pk>/key-interventions/<int:key_intervention_pk>/activities/',
         view=GDDActivityCreateView.as_view(
@@ -91,11 +99,17 @@ urlpatterns = [
         ),
         name='gdd-activity-create'),
     path(
-      'dropdown-options/e-workplans/',
-      view=GovernmentEWPListView.as_view(
-          http_method_names=['get'],
-      ),
-      name='e-workplan-list',
+        'gdds/<int:gdd_pk>/key-interventions/<int:key_intervention_pk>/activities/<int:pk>/',
+        view=GDDActivityDetailUpdateView.as_view(
+            http_method_names=['patch', 'get', 'delete']
+        ),
+        name='gdd-activity-detail'),
+    path(
+        'dropdown-options/e-workplans/',
+        view=GovernmentEWPListView.as_view(
+            http_method_names=['get'],
+        ),
+        name='e-workplan-list',
     ),
     path(
         'dropdown-options/ewp-outputs/',

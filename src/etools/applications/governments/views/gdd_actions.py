@@ -29,12 +29,12 @@ from etools.applications.governments.serializers.gdd import (
     GDDDetailSerializer,
 )
 from etools.applications.governments.tasks import send_gdd_to_vision
-from etools.applications.governments.views.gdd import GDDMixin, GDDRetrieveUpdateView
+from etools.applications.governments.views.gdd import GDDRetrieveUpdateView
 from etools.applications.users.models import Realm
 from etools.applications.utils.helpers import lock_request
 
 
-class GDDActionView(GDDMixin, GDDRetrieveUpdateView):
+class GDDActionView(GDDRetrieveUpdateView):
     def update(self, request, *args, **kwargs):
         response = super().update(request, *args, **kwargs)
         # need to overwrite successful response, so we get v3 serializer
