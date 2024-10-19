@@ -17,6 +17,7 @@ from rest_framework.generics import CreateAPIView, ListCreateAPIView, RetrieveAP
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
+from rest_framework.status import is_success
 from unicef_restlib.views import QueryStringFilterMixin
 
 from etools.applications.core.mixins import ExportModelMixin
@@ -36,7 +37,6 @@ from etools.applications.governments.permissions import (
 )
 from etools.applications.governments.serializers.exports import GDDExportFlatSerializer, GDDExportSerializer
 from etools.applications.governments.serializers.gdd import (
-    DetailedGDDResponseMixin,
     GDDCreateUpdateSerializer,
     GDDDetailSerializer,
     GDDListSerializer,
@@ -132,6 +132,21 @@ class GDDMixin(GDDBaseViewMixin):
             return self.get_partner_staff_qs(qs)
         return qs.none()
 
+class DetailedGDDResponseMixin:
+    detailed_gdd_methods = ['post', 'put', 'patch']
+    detailed_gdd_serializer = GDDDetailSerializer
+
+    def get_intervention(self):
+        raise NotImplementedError
+
+    def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
+        if request.method.lower() in self.detailed_gdd_methods and is_success(response.status_code):
+            response.data['gdd'] = self.detailed_gdd_serializer(
+                instance=self.get_gdd(),
+                context=self.get_serializer_context(),
+            ).data
+        return response
 
 class GDDListBaseView(ValidatorViewMixin, ListCreateAPIView):
     def get_queryset(self):

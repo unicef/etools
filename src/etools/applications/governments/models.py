@@ -1945,6 +1945,9 @@ class GDDKeyIntervention(TimeStampedModel):
             result.code = '{0}.{1}'.format(result_link.code, i + 1)
         cls.objects.bulk_update(results, fields=['code'])
 
+    def name(self):
+        return self.ewp_key_intervention.cp_key_intervention.name
+
     def total(self):
         results = self.gdd_activities.aggregate(
             total=Sum("unicef_cash", filter=Q(is_active=True)) + Sum("cso_cash", filter=Q(is_active=True)),
@@ -2066,7 +2069,11 @@ class GDDActivity(TimeStampedModel):
         cls.objects.bulk_update(activities, fields=['code'])
 
     def get_amended_name(self):
-        return f'{self.result} {self.name} (Total: {self.total}, UNICEF: {self.unicef_cash}, Partner: {self.cso_cash})'
+        return f'{self.ewp_activity} (Total: {self.total}, UNICEF: {self.unicef_cash})'
+
+    @cached_property
+    def name(self):
+        return f'{self.ewp_activity.title}'
 
     def get_time_frames_display(self):
         return ', '.join([f'{tf.start_date.year} Q{tf.quarter}' for tf in self.time_frames.all()])
