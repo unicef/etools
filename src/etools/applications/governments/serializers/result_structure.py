@@ -167,8 +167,12 @@ class GDDKeyInterventionBaseSerializer(serializers.ModelSerializer):
             "created",
             "modified",
         ]
+
+
 class GDDKeyInterventionSerializer(GDDKeyInterventionBaseSerializer):
     pass
+
+
 
 class GDDKeyInterventionCUSerializer(
     FullGDDSnapshotSerializerMixin,
@@ -192,6 +196,9 @@ class GDDKeyInterventionCUSerializer(
         if self.gdd.status in [self.gdd.SIGNATURE]:
             raise ValidationError(_("Results cannot be changed in this status"))
         return super().validate(attrs)
+
+    def get_gdd(self):
+        return self.gdd
 
 
 class GDDResultCUSerializer(serializers.ModelSerializer):

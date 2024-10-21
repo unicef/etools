@@ -440,7 +440,7 @@ class GDDKeyInterventionViewMixin(DetailedGDDResponseMixin):
         return self.get_root_object()
 
     def get_serializer(self, *args, **kwargs):
-        kwargs['intervention'] = self.get_root_object()
+        kwargs['gdd'] = self.get_root_object()
         return super().get_serializer(*args, **kwargs)
 
     def get_queryset(self):
