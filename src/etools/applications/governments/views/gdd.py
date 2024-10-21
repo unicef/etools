@@ -14,7 +14,7 @@ from rest_framework import status
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.filters import OrderingFilter
 from rest_framework.generics import CreateAPIView, ListCreateAPIView, RetrieveAPIView, RetrieveUpdateDestroyAPIView, \
-    DestroyAPIView
+    DestroyAPIView, get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
@@ -33,12 +33,12 @@ from etools.applications.governments.filters import (
     ShowAmendmentsFilter, GDDFilter,
 )
 from etools.applications.governments.models import GDD, GDDActivity, GDDKeyIntervention, GDDResultLink, GDDSupplyItem, \
-    GDDRisk
+    GDDRisk, GDDReportingRequirement
 from etools.applications.governments.permissions import (
     AmendmentSessionOnlyDeletePermission,
     gdd_field_is_editable_permission,
     GDDPermission,
-    PartnershipManagerPermission,
+    PartnershipManagerPermission, GDDPermissions,
 )
 # from etools.applications.governments.serializers.exports import GDDExportFlatSerializer, GDDExportSerializer
 from etools.applications.governments.serializers.gdd import (
@@ -51,7 +51,8 @@ from etools.applications.governments.serializers.gdd import (
     MinimalGDDListSerializer,
     RiskSerializer,
 )
-from etools.applications.governments.serializers.helpers import GDDBudgetCUSerializer, GDDPlannedVisitsCUSerializer
+from etools.applications.governments.serializers.helpers import GDDBudgetCUSerializer, GDDPlannedVisitsCUSerializer, \
+    GDDReportingRequirementCreateSerializer, GDDReportingRequirementListSerializer
 from etools.applications.governments.serializers.result_structure import (
     GDDActivityCreateSerializer,
     GDDDetailResultsStructureSerializer,
@@ -166,8 +167,8 @@ class GDDListBaseView(ValidatorViewMixin, ListCreateAPIView):
 
 class GDDListAPIView(QueryStringFilterMixin, ExportModelMixin, GDDListBaseView):
     """
-    Create new Interventions.
-    Returns a list of Interventions.
+    Create new GDDS.
+    Returns a list of GDDs.
     """
     serializer_class = GDDListSerializer
     permission_classes = (PartnershipManagerPermission,)
@@ -663,3 +664,54 @@ class GDDRiskDeleteView(FullGDDSnapshotDeleteMixin, DestroyAPIView):
     def get_queryset(self):
         return super().get_queryset().filter(gdd=self.get_root_object())
 
+class GDDReportingRequirementView(GDDMixin ,APIView):
+    serializer_create_class = GDDReportingRequirementCreateSerializer
+    serializer_list_class = GDDReportingRequirementListSerializer
+    permission_classes = (PartnershipManagerPermission, )
+    renderer_classes = (JSONRenderer, )
+
+    def get_data(self):
+        return {
+            "reporting_requirements": GDDReportingRequirement.objects.filter(
+                gdd=self.gdd,
+                report_type=self.report_type,
+            ).all()
+        }
+
+    def get_object(self, pk):
+        return get_object_or_404(GDD, pk=pk)
+
+    def get(self, request, gdd_pk, report_type, format=None):
+        self.gdd = self.get_object(gdd_pk)
+        self.report_type = report_type
+        return Response(
+            self.serializer_list_class(self.get_data()).data
+        )
+
+    def post(self, request, gdd_pk, report_type, format=None):
+        self.gdd = self.get_object(gdd_pk)
+        self.report_type = report_type
+        self.request.data["report_type"] = self.report_type
+        # TODO: [e4] remove this whenever a better validation is decided on. This is out of place but needed as a hotfix
+        # take into consideration the reporting requirements edit rights on the gdd
+        # move this into permissions when time allows
+
+        ps = GDD.permission_structure()
+        gdd_permissions = GDDPermissions(
+            user=request.user, instance=self.gdd, permission_structure=ps
+        ).get_permissions()
+
+        serializer = self.serializer_create_class(
+            data=self.request.data,
+            context={
+                "user": request.user,
+                "gdd": self.gdd,
+                "gdd_permissions": gdd_permissions
+            }
+        )
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                self.serializer_list_class(self.get_data()).data
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

@@ -12,7 +12,7 @@ from etools.applications.governments.views.gdd import (
     GDDRetrieveUpdateView,
     GDDSupplyItemListCreateView,
     GDDSupplyItemRetrieveUpdateView,
-    GDDSupplyItemUploadView, GDDRiskDeleteView,
+    GDDSupplyItemUploadView, GDDRiskDeleteView, GDDReportingRequirementView,
 )
 from etools.applications.governments.views.gdd_actions import (
     GDDAcceptOnBehalfOfPartner,
@@ -70,6 +70,15 @@ urlpatterns = [
             http_method_names=['get', 'patch'],
         ),
         name='gdd-detail',
+    ),
+
+
+path(
+        'gdds/<int:gdd_pk>/reporting-requirements/<str:report_type>/',
+        view=GDDReportingRequirementView.as_view(
+            http_method_names=['get', 'post', 'patch', 'delete']
+        ),
+        name='gdd-reporting-requirements',
     ),
     path(
         'gdds/<int:pk>/results-structure/',

@@ -133,13 +133,13 @@ def recalculate_result_links_numbering(instance, **kwargs):
     GDDResultLink.renumber_result_links_for_gdd(instance.gdd)
     for result_link in instance.gdd.result_links.filter(id__gt=instance.id).prefetch_related(
         'gdd_key_interventions',
-        'gdd_key_interventions__activities',
-        'gdd_key_interventions__activities__items',
+        'gdd_key_interventions__gdd_activities',
+        'gdd_key_interventions__gdd_activities__items',
     ):
         GDDKeyIntervention.renumber_results_for_result_link(result_link)
         for result in result_link.gdd_key_interventions.all():
             GDDActivity.renumber_activities_for_result(result)
-            for activity in result.activities.all():
+            for activity in result.gdd_activities.all():
                 GDDActivityItem.renumber_items_for_activity(activity)
 #
 #
@@ -147,8 +147,8 @@ def recalculate_result_links_numbering(instance, **kwargs):
 def recalculate_results_numbering(instance, **kwargs):
     GDDKeyIntervention.renumber_results_for_result_link(instance.result_link)
     for result in instance.result_link.gdd_key_interventions.filter(id__gt=instance.id).prefetch_related(
-        'activities',
-        'activities__items',
+        'gdd_activities',
+        'gdd_activities__items',
     ):
         GDDActivity.renumber_activities_for_result(result)
         for activity in result.gdd_activities.all():

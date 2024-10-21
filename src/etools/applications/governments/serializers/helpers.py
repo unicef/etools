@@ -1,4 +1,9 @@
+from datetime import date, datetime, timedelta
+from operator import itemgetter
+
 from django.core.exceptions import ImproperlyConfigured
+from django.db import transaction
+from django.utils.functional import cached_property
 from django.utils.translation import gettext as _
 
 from rest_framework import fields, serializers
@@ -15,17 +20,19 @@ from etools.applications.governments.models import (
     GDDBudget,
     GDDPlannedVisits,
     GDDPlannedVisitSite,
+    GDDReportingRequirement,
     GDDReview,
     GDDRisk,
     GDDTimeFrame,
 )
 from etools.applications.governments.serializers.gdd_snapshot import FullGDDSnapshotSerializerMixin
-from etools.applications.organizations.models import OrganizationType
+
 from etools.applications.partners.serializers.interventions_v2 import (
     LocationSiteSerializer,
     PlannedVisitSitesQuarterSerializer,
 )
 from etools.applications.users.serializers_v3 import MinimalUserSerializer
+from etools.libraries.pythonlib.hash import h11
 
 
 class GDDRiskSerializer(serializers.ModelSerializer):
@@ -262,7 +269,7 @@ class GDDPlannedVisitsCUSerializer(serializers.ModelSerializer):
                 pk=self.initial_data.get("id"),
             )
             if self.instance.gdd.status == GDD.TERMINATED:
-                raise ValidationError(_("Planned Visit cannot be set for Terminated interventions"))
+                raise ValidationError(_("Planned Visit cannot be set for Terminated gdds"))
 
         except self.Meta.model.DoesNotExist:
             self.instance = None
@@ -299,3 +306,258 @@ class GDDPlannedVisitsCUSerializer(serializers.ModelSerializer):
         if sites_q4 is not None:
             self.fields['programmatic_q4_sites'].save(instance, sites_q4)
         return instance
+
+
+class GDDReportingRequirementSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(required=False)
+    start_date = serializers.DateField(required=True, allow_null=False)
+    end_date = serializers.DateField(required=True, allow_null=False)
+
+    class Meta:
+        model = GDDReportingRequirement
+        fields = ("id", "start_date", "end_date", "due_date", )
+
+
+class GDDReportingRequirementListSerializer(serializers.ModelSerializer):
+    reporting_requirements = GDDReportingRequirementSerializer(
+        many=True,
+        read_only=True
+    )
+
+    class Meta:
+        model = GDD
+        fields = ("reporting_requirements", )
+
+
+class GDDReportingRequirementCreateSerializer(
+    FullGDDSnapshotSerializerMixin,
+    serializers.ModelSerializer,
+):
+    report_type = serializers.ChoiceField(
+        choices=GDDReportingRequirement.TYPE_CHOICES
+    )
+    reporting_requirements = GDDReportingRequirementSerializer(many=True)
+
+    class Meta:
+        model = GDD
+        fields = ("reporting_requirements", "report_type", )
+
+    def _validate_qpr(self, requirements):
+        self._validate_start_date(requirements)
+        self._validate_end_date(requirements)
+        self._validate_date_intervals(requirements)
+
+    def _validate_hr(self, requirements):
+
+        self._validate_start_date(requirements)
+        self._validate_end_date(requirements)
+        self._validate_date_intervals(requirements)
+
+    def _validate_start_date(self, requirements):
+        # Ensure that the first reporting requirement start date
+        # is on or after GDD start date
+        if requirements[0]["start_date"] < self.gdd.start:
+            raise serializers.ValidationError({
+                "reporting_requirements": {
+                    "start_date": _(
+                        _("Start date needs to be on or after GDD start date.")
+                    )
+                }
+            })
+
+    def _validate_end_date(self, requirements):
+        # Ensure that the last reporting requirement start date
+        # is on or before GDD end date
+        if requirements[-1]["end_date"] > self.gdd.end:
+            raise serializers.ValidationError({
+                "reporting_requirements": {
+                    "end_date": _(
+                        _("End date needs to be on or before GDD end date.")
+                    )
+                }
+            })
+
+    def _validate_date_intervals(self, requirements):
+        # Ensure start date is after previous end date
+        for i in range(0, len(requirements)):
+            if requirements[i]["start_date"] > requirements[i]["end_date"]:
+                raise serializers.ValidationError({
+                    "reporting_requirements": {
+                        "start_date": _(
+                            _("End date needs to be after the start date.")
+                        )
+                    }
+                })
+
+            if i > 0:
+                if requirements[i]["start_date"] != requirements[i - 1]["end_date"] + timedelta(days=1):
+                    raise serializers.ValidationError({
+                        "reporting_requirements": {
+                            "start_date": _(
+                                _("Next start date needs to be one day after previous end date.")
+                            )
+                        }
+                    })
+
+    def _order_data(self, data):
+        data["reporting_requirements"] = sorted(
+            data["reporting_requirements"],
+            key=itemgetter("start_date")
+        )
+        return data
+
+    def _get_hash_key_string(self, record):
+        k = str(record["start_date"]) + str(record["end_date"]) + str(record["due_date"])
+        return k.encode('utf-8')
+
+    def _tweak_data(self, validated_data):
+
+        current_reqs = GDDReportingRequirement.objects.values(
+            "id",
+            "start_date",
+            "end_date",
+            "due_date",
+        ).filter(
+            gdd=self.gdd,
+            report_type=validated_data["report_type"],
+        )
+
+        current_reqs_dict = {}
+        for c_r in current_reqs:
+            current_reqs_dict[h11(self._get_hash_key_string(c_r))] = c_r
+
+        current_ids_that_need_to_be_kept = []
+
+        # if records don't have id but match a record with an id, assigned the id accordingly
+        report_type = validated_data["report_type"]
+        for r in validated_data["reporting_requirements"]:
+            if not r.get('id'):
+                # try to map see if the record already exists in the existing records
+                hash_key = h11(self._get_hash_key_string(r))
+                if current_reqs_dict.get(hash_key):
+                    r['id'] = current_reqs_dict[hash_key]['id']
+                    # remove record so we can track which ones are left to be deleted later on.
+                    current_ids_that_need_to_be_kept.append(r['id'])
+                else:
+                    r["gdd"] = self.gdd
+            else:
+                current_ids_that_need_to_be_kept.append(r['id'])
+
+            r["report_type"] = report_type
+
+        return validated_data, current_ids_that_need_to_be_kept, current_reqs_dict
+
+    def run_validation(self, initial_data):
+        serializer = self.fields["reporting_requirements"].child
+        serializer.fields["start_date"].required = True
+        serializer.fields["end_date"].required = True
+        serializer.fields["due_date"].required = True
+
+        return super().run_validation(initial_data)
+
+    def validate(self, data):
+        """The first reporting requirement's start date needs to be
+        on or after the GDD start date.
+        Subsequent reporting requirements start date needs to be after the
+        previous reporting requirement end date.
+        """
+        self.gdd = self.context["gdd"]
+
+        # TODO: [e4] remove this whenever a better validation is decided on. This is out of place but needed as a hotfix
+        # take into consideration the reporting requirements edit rights on the gdd
+        # move this into permissions when time allows
+        permissions = self.context.get("gdd_permissions")
+        can_edit = permissions['edit'].get("reporting_requirements") if permissions else True
+
+        if self.gdd.status != GDD.DRAFT:
+            if self.gdd.status == GDD.TERMINATED:
+                ended = self.gdd.end < datetime.now().date() if self.gdd.end else True
+                if ended:
+                    raise serializers.ValidationError(
+                        _("Changes not allowed when GDD is terminated.")
+                    )
+            # TODO: [e4] remove this whenever a better validation is decided on.
+            # This is out of place but needed as a hotfix, can edit should be checked at the view level consistently
+            elif self.gdd.status == GDD.SIGNATURE and can_edit:
+                pass
+            else:
+                if not self.gdd.in_amendment and not self.gdd.termination_doc_attachment.exists():
+                    raise serializers.ValidationError(
+                        _("Changes not allowed when GDD not in amendment state.")
+                    )
+
+        if not self.gdd.start:
+            raise serializers.ValidationError(
+                _("GDD needs to have a start date.")
+            )
+
+        # Validate reporting requirements first
+        if not len(data["reporting_requirements"]):
+            raise serializers.ValidationError({
+                "reporting_requirements": _("This field cannot be empty.")
+            })
+
+        self._order_data(data)
+        # Make sure that all reporting requirements that have ids are actually related to current gdd
+        for rr in data["reporting_requirements"]:
+            try:
+                rr_id = rr['id']
+                req = GDDReportingRequirement.objects.get(pk=rr_id)
+                assert req.gdd.id == self.gdd.id
+            except GDDReportingRequirement.DoesNotExist:
+                raise serializers.ValidationError(_("Requirement ID passed in does not exist"))
+            except AssertionError:
+                raise serializers.ValidationError(_("Requirement ID passed in belongs to a different gdd"))
+            except KeyError:
+                pass
+
+        if data["report_type"] == GDDReportingRequirement.TYPE_QPR:
+            self._validate_qpr(data["reporting_requirements"])
+        elif data["report_type"] == GDDReportingRequirement.TYPE_HR:
+            self._validate_hr(data["reporting_requirements"])
+
+        return data
+
+    @cached_property
+    def _past_records_editable(self):
+        if self.gdd.status == GDD.DRAFT or \
+                (self.gdd.status == GDD.SIGNED and self.gdd.contingency_pd):
+            return True
+        return False
+
+    @transaction.atomic()
+    def create(self, validated_data):
+        today = date.today()
+        validated_data, current_ids_that_need_to_be_kept, current_reqs_dict = self._tweak_data(validated_data)
+        deletable_records = GDDReportingRequirement.objects.exclude(pk__in=current_ids_that_need_to_be_kept). \
+            filter(gdd=self.gdd, report_type=validated_data['report_type'])
+
+        if not self._past_records_editable:
+            if deletable_records.filter(start_date__lte=today).exists():
+                raise ValidationError(_("You're trying to delete a record that has a start date in the past"))
+
+        deletable_records.delete()
+
+        for r in validated_data["reporting_requirements"]:
+            if r.get("id"):
+                pk = r.pop("id")
+
+                # if this is a record that starts in the past and it's not editable and has changes (hash is different)
+                if r['start_date'] <= today and not self._past_records_editable and\
+                        not current_reqs_dict.get(h11(self._get_hash_key_string(r))):
+                    raise ValidationError(_("A record that starts in the passed cannot"
+                                          " be modified on a non-draft GDD"))
+                GDDReportingRequirement.objects.filter(pk=pk).update(**r)
+            else:
+                GDDReportingRequirement.objects.create(**r)
+
+        return self.gdd
+
+    def delete(self, validated_data):
+        for r in validated_data["reporting_requirements"]:
+            if r.get("id"):
+                GDDReportingRequirement.objects.filter(pk=r.get("id")).delete()
+        return self.gdd
+
+    def get_gdd(self):
+        return self.context['gdd']
