@@ -658,5 +658,5 @@ class GDDRiskDeleteView(FullGDDSnapshotDeleteMixin, DestroyAPIView):
 
 
     def get_queryset(self):
-        return super().get_queryset().filter(intervention=self.get_root_object())
+        return super().get_queryset().filter(gdd=self.get_root_object())
 
