@@ -6,11 +6,11 @@ from django.utils import timezone
 
 from celery.utils.log import get_task_logger
 from django_tenants.utils import get_tenant_model, schema_context
-from etools.applications.governments.models import GDDActivity, GDD
+
+from etools.applications.governments.models import GDD, GDDActivity
 from etools.applications.governments.serializers.exports.vision.gdd_v1 import GDDVisionExportSerializer
 from etools.applications.partners.synchronizers import VisionUploader
 from etools.config.celery import app
-
 
 logger = get_task_logger(__name__)
 

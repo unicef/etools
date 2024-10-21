@@ -297,7 +297,6 @@ class GDDExportSerializer(serializers.ModelSerializer):
 
 class GDDExportFlatSerializer(ExportSerializerMixin, InterventionExportSerializer):
     attachments = serializers.SerializerMethodField(label=_("Attachments"))
-    # TODO change to country_programmes m2m
     country_programme = serializers.CharField(
         label=_("Country Programme"),
         source='country_programme.name',
@@ -367,8 +366,6 @@ class GDDExportFlatSerializer(ExportSerializerMixin, InterventionExportSerialize
         )
 
     def get_planned_visits(self, obj):
-        if obj.agreement.partner.partner_type == 'Government':
-            return _('N/A')
         return ', '.join(['{} (Q1:{} Q2:{}, Q3:{}, Q4:{})'.format(
             pv.year, pv.programmatic_q1, pv.programmatic_q2, pv.programmatic_q3, pv.programmatic_q4
         ) for pv in obj.planned_visits.all()])

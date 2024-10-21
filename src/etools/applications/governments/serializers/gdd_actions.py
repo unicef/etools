@@ -1,5 +1,6 @@
-from etools.applications.governments.models import GDDReview
 from rest_framework import serializers
+
+from etools.applications.governments.models import GDDReview
 
 
 class AmendedGDDReviewActionSerializer(serializers.ModelSerializer):

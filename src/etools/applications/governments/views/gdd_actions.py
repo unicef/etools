@@ -5,8 +5,6 @@ from django.http import HttpResponseForbidden
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext as _
-from etools.applications.governments.serializers.gdd_actions import GDDReviewSendBackSerializer, \
-    AmendedGDDReviewActionSerializer, GDDReviewActionSerializer
 
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
@@ -14,7 +12,6 @@ from rest_framework.response import Response
 
 from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.environment.notifications import send_notification_with_template
-from etools.applications.governments.amendment_utils import MergeError
 from etools.applications.governments.models import GDD, GDDAmendment, GDDReview
 from etools.applications.governments.permissions import (
     IsGDDBudgetOwnerPermission,
@@ -25,11 +22,15 @@ from etools.applications.governments.permissions import (
     UserIsReviewOverallApprover,
     UserIsUnicefFocalPoint,
 )
-from etools.applications.governments.serializers.gdd import (
-    GDDDetailSerializer,
+from etools.applications.governments.serializers.gdd import GDDDetailSerializer
+from etools.applications.governments.serializers.gdd_actions import (
+    AmendedGDDReviewActionSerializer,
+    GDDReviewActionSerializer,
+    GDDReviewSendBackSerializer,
 )
 from etools.applications.governments.tasks import send_gdd_to_vision
 from etools.applications.governments.views.gdd import GDDRetrieveUpdateView
+from etools.applications.partners.amendment_utils import MergeError
 from etools.applications.users.models import Realm
 from etools.applications.utils.helpers import lock_request
 

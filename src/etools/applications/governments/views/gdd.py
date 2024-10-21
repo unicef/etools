@@ -4,7 +4,7 @@ import functools
 import logging
 import operator
 
-from django.db import connection, transaction
+from django.db import connection, transaction, utils
 from django.db.models import Q
 from django.http import Http404
 from django.utils.translation import gettext as _
@@ -18,6 +18,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.status import is_success
+from rest_framework.views import APIView
 from unicef_restlib.views import QueryStringFilterMixin
 
 from etools.applications.core.mixins import ExportModelMixin
@@ -30,11 +31,12 @@ from etools.applications.governments.filters import (
     PartnerScopeFilter,
     ShowAmendmentsFilter,
 )
-from etools.applications.governments.models import GDD, GDDActivity, GDDKeyIntervention, GDDResultLink
+from etools.applications.governments.models import GDD, GDDActivity, GDDKeyIntervention, GDDResultLink, GDDSupplyItem
 from etools.applications.governments.permissions import (
     AmendmentSessionOnlyDeletePermission,
+    gdd_field_is_editable_permission,
     GDDPermission,
-    PartnershipManagerPermission, gdd_field_is_editable_permission,
+    PartnershipManagerPermission,
 )
 # from etools.applications.governments.serializers.exports import GDDExportFlatSerializer, GDDExportSerializer
 from etools.applications.governments.serializers.gdd import (
@@ -42,6 +44,8 @@ from etools.applications.governments.serializers.gdd import (
     GDDDetailSerializer,
     GDDListSerializer,
     GDDResultLinkSimpleCUSerializer,
+    GDDSupplyItemSerializer,
+    GDDSupplyItemUploadSerializer,
     MinimalGDDListSerializer,
     RiskSerializer,
 )
@@ -222,7 +226,7 @@ class GDDListAPIView(QueryStringFilterMixin, ExportModelMixin, GDDListBaseView):
     @transaction.atomic
     def create(self, request, *args, **kwargs):
         """
-        Add a new Intervention
+        Add a new gdd
         :return: JSON
         """
         related_fields = [
@@ -503,3 +507,105 @@ class GDDActivityCreateView(GDDActivityMixinView, CreateAPIView):
 
 class GDDActivityDetailUpdateView(GDDActivityMixinView, RetrieveUpdateDestroyAPIView):
     pass
+
+
+class GDDSupplyItemMixin(GDDMixin, DetailedGDDResponseMixin):
+    queryset = GDDSupplyItem.objects.all()
+    serializer_class = GDDSupplyItemSerializer
+    permission_classes = [
+        IsAuthenticated,
+        IsReadAction | (IsEditAction & gdd_field_is_editable_permission('supply_items'))
+    ]
+
+    def get_partner_staff_qs(self, qs):
+        return qs.filter(
+            gdd__partner=self.current_partner(),
+            gdd__date_sent_to_partner__isnull=False,
+        ).distinct()
+
+    def get_queryset(self, **kwargs):
+        qs = super().get_queryset(**kwargs)
+        return qs.filter(gdd=self.get_root_object())
+
+    def get_root_object(self):
+        return self.get_gdd(self.kwargs.get("gdd_pk"))
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['gdd'] = self.get_root_object()
+        return context
+
+
+class GDDSupplyItemListCreateView(GDDSupplyItemMixin, ListCreateAPIView):
+    def get_serializer(self, *args, **kwargs):
+        if kwargs.get("data"):
+            kwargs["data"]["gdd"] = self.get_root_object()
+        return super().get_serializer(*args, **kwargs)
+
+
+class GDDSupplyItemRetrieveUpdateView(GDDSupplyItemMixin, RetrieveUpdateDestroyAPIView):
+    """View for retrieve/update/destroy of gdd Supply Item"""
+
+
+class GDDSupplyItemUploadView(GDDMixin, APIView):
+    serializer_class = GDDSupplyItemUploadSerializer
+
+    def post(self, request, *args, **kwargs):
+        gdd = self.get_gdd_or_404(self.kwargs.get("gdd_pk"))
+        serializer = GDDSupplyItemUploadSerializer(data=request.data)
+        # validate csv uploaded file
+        if not serializer.is_valid():
+            return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
+
+        # processing of file not in validator as we want to extra the data
+        # and use in later process
+        try:
+            file_data = serializer.extract_file_data()
+        except ValidationError as err:
+            return Response(
+                {"supply_items_file": err.detail},
+                status.HTTP_400_BAD_REQUEST,
+            )
+        if not file_data:
+            return Response(
+                {"supply_items_file": _("No valid data found in the file.")},
+                status.HTTP_400_BAD_REQUEST,
+            )
+
+        # update all supply items related to gdd
+        for title, unit_number, unit_price, product_number in file_data:
+            # check if supply item exists
+            supply_qs = GDDSupplyItem.objects.filter(
+                gdd=gdd,
+                title=title,
+                unit_price=unit_price,
+                provided_by=GDDSupplyItem.PROVIDED_BY_UNICEF,
+            )
+            if supply_qs.exists():
+                item = supply_qs.get()
+                item.unit_number += unit_number
+                item.save()
+            else:
+                try:
+                    GDDSupplyItem.objects.create(
+                        gdd=gdd,
+                        title=title,
+                        unit_number=unit_number,
+                        unit_price=unit_price,
+                        unicef_product_number=product_number,
+                        provided_by=GDDSupplyItem.PROVIDED_BY_UNICEF,
+                    )
+                except utils.DataError as err:
+                    return Response(
+                        {"supply_items_file": f"{product_number}:  {str(err)}"},
+                        status.HTTP_400_BAD_REQUEST,
+                    )
+        # make sure we get the correct totals
+        gdd.refresh_from_db()
+        return Response(
+            GDDDetailSerializer(
+                gdd,
+                context={"request": request},
+            ).data,
+            status=status.HTTP_200_OK,
+        )

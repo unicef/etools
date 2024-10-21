@@ -29,7 +29,6 @@ from etools.applications.governments.models import (
 from etools.applications.governments.serializers.gdd_snapshot import FullGDDSnapshotSerializerMixin
 
 
-
 class GDDActivityItemSerializer(serializers.ModelSerializer):
     default_error_messages = {
         'invalid_budget': _('Invalid budget data. Total cash should be equal to items number * price per item.')

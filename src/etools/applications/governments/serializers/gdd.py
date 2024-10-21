@@ -1,10 +1,14 @@
+import codecs
+import csv
+import decimal
+import string
+
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.utils.translation import gettext as _, gettext_lazy
 
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
-from rest_framework.status import is_success
 from rest_framework.validators import UniqueTogetherValidator
 from unicef_attachments.fields import AttachmentSingleFileField
 from unicef_attachments.serializers import AttachmentSerializerMixin
@@ -808,3 +812,84 @@ class GDDResultLinkSimpleCUSerializer(FullGDDSnapshotSerializerMixin, serializer
         return self.validated_data.get('gdd', getattr(self.instance, 'gdd', None))
 
 
+class GDDSupplyItemSerializer(FullGDDSnapshotSerializerMixin, serializers.ModelSerializer):
+    class Meta:
+        model = GDDSupplyItem
+        fields = (
+            "id",
+            "title",
+            "unit_number",
+            "unit_price",
+            "result",
+            "total_price",
+            "other_mentions",
+            "unicef_product_number",
+            "provided_by",
+        )
+
+    def create(self, validated_data):
+        validated_data["gdd"] = self.initial_data.get("gdd")
+        return super().create(validated_data)
+
+    def get_gdd(self):
+        return self.context["gdd"]
+
+
+class GDDSupplyItemUploadSerializer(serializers.Serializer):
+    required_columns = ["Product Number", "Product Title", "Quantity", "Indicative Price"]
+
+    supply_items_file = serializers.FileField()
+
+    def valid_row(self, row, index):
+        # cleanup values before work
+        for column in self.required_columns:
+            if row.get(column):
+                row[column] = row[column].strip()
+
+        # dont parse disclaimer line
+        if 'disclaimer' in ''.join(map(str, row.values())).lower():
+            return False
+
+        # skip if row is empty
+        if not any(row.get(c) for c in self.required_columns):
+            return False
+
+        for required_column in self.required_columns:
+            if not row.get(required_column):
+                raise ValidationError(f"Unable to process row {index}, missing value for '{required_column}'")
+
+        return True
+
+    def extract_file_data(self):
+        data = []
+        reader = csv.DictReader(
+            codecs.iterdecode(
+                self.validated_data.get("supply_items_file"),
+                "utf-8",
+                errors='ignore'
+            ),
+            delimiter=",",
+        )
+        for i, row in enumerate(reader):
+            index = i + 2  # enumeration starts from zero plus one for header
+            if self.valid_row(row, index):
+                try:
+                    quantity = decimal.Decimal(row["Quantity"])
+                except decimal.InvalidOperation:
+                    raise ValidationError(f"Unable to process row {index}, bad number provided for `Quantity`")
+
+                try:
+                    price = decimal.Decimal(row["Indicative Price"])
+                except decimal.InvalidOperation:
+                    raise ValidationError(f"Unable to process row {index}, bad number provided for `Indicative Price`")
+
+                title = ''.join([x if x in string.printable else '' for x in row["Product Title"]])
+                product_no = ''.join([x if x in string.printable else '' for x in row["Product Number"]])
+
+                data.append((
+                    title,
+                    quantity,
+                    price,
+                    product_no,
+                ))
+        return data

@@ -6,7 +6,7 @@ from rest_framework_csv import renderers as r
 class GDDCSVRenderer(r.CSVRenderer):
     header = [
         "partner_name", "vendor_number", "status", "partner_type", "cso_type", "agreement_number", "country_programme",
-        "document_type", "number", "title", "start", "end", "offices", "sectors", "locations", "contingency_pd",
+        "number", "title", "start", "end", "offices", "sectors", "locations", "contingency_pd",
         "intervention_clusters", "unicef_focal_points", "partner_focal_points", "budget_currency", "cso_contribution",
         "unicef_budget", "unicef_supply", "total_planned_budget", "fr_numbers", "fr_currency", "fr_posting_date",
         "fr_amount", "fr_actual_amount", "fr_outstanding_amt", "planned_visits", "submission_date",
@@ -25,7 +25,6 @@ class GDDCSVRenderer(r.CSVRenderer):
         "cso_type": _("CSO Type"),
         "agreement_number": _("Agreement"),
         "country_programme": _("Country Programme"),
-        "document_type": _("Document Type"),
         "number": _("Reference Number"),
         "title": _("Document Title"),
         "start": _("Start Date"),

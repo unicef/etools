@@ -1,10 +1,10 @@
-from etools.applications.governments.models import GDD
 from etools.applications.governments.amendment_utils import (
-    full_snapshot_instance,
     GDD_FULL_SNAPSHOT_IGNORED_FIELDS,
     GDD_FULL_SNAPSHOT_RELATED_FIELDS,
 )
+from etools.applications.governments.models import GDD
 from etools.applications.governments.serializers.gdd_snapshot import save_snapshot
+from etools.applications.partners.amendment_utils import full_snapshot_instance
 
 
 class FullGDDSnapshotDeleteMixin:

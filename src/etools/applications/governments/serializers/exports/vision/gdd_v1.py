@@ -1,10 +1,10 @@
 from django.db import connection
-from etools.applications.governments.models import GDDActivity, GDDKeyIntervention
-from etools.applications.governments.serializers.gdd import GDDDetailSerializer
-from etools.applications.governments.serializers.result_structure import GDDResultNestedSerializer
 
 from rest_framework import serializers
 
+from etools.applications.governments.models import GDDActivity, GDDKeyIntervention
+from etools.applications.governments.serializers.gdd import GDDDetailSerializer
+from etools.applications.governments.serializers.result_structure import GDDResultNestedSerializer
 from etools.applications.partners.serializers.interventions_v2 import InterventionResultNestedSerializer
 from etools.applications.partners.serializers.interventions_v3 import (
     InterventionDetailSerializer,
@@ -14,6 +14,7 @@ from etools.applications.reports.serializers.v2 import (
     InterventionActivitySerializer,
     LowerResultWithActivitiesSerializer,
 )
+
 
 class KeyInterventionSerializer(serializers.ModelSerializer):
 

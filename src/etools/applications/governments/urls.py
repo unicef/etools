@@ -9,6 +9,9 @@ from etools.applications.governments.views.gdd import (
     GDDResultLinkListCreateView,
     GDDRetrieveResultsStructure,
     GDDRetrieveUpdateView,
+    GDDSupplyItemListCreateView,
+    GDDSupplyItemRetrieveUpdateView,
+    GDDSupplyItemUploadView,
 )
 from etools.applications.governments.views.gdd_actions import (
     GDDAcceptOnBehalfOfPartner,
@@ -210,5 +213,20 @@ urlpatterns = [
         'gdds/<int:pk>/amendment_merge/',
         view=PMPAmendedGDDMerge.as_view(http_method_names=['patch']),
         name='gdd-amendment-merge',
+    ),
+    path(
+        'gdds/<int:gdd_pk>/supply/',
+        view=GDDSupplyItemListCreateView.as_view(),
+        name='gdd-supply-item',
+    ),
+    path(
+        'gdds/<int:gdd_pk>/supply/upload/',
+        view=GDDSupplyItemUploadView.as_view(),
+        name='gdd-supply-item-upload',
+    ),
+    path(
+        'gdds/<int:gdd_pk>/supply/<int:pk>/',
+        view=GDDSupplyItemRetrieveUpdateView.as_view(),
+        name='gdd-supply-item-detail',
     ),
 ]

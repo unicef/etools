@@ -3,11 +3,11 @@ from unicef_snapshot.models import Activity
 from unicef_snapshot.utils import jsonify
 
 from etools.applications.governments.amendment_utils import (
-    full_snapshot_instance,
     GDD_FULL_SNAPSHOT_IGNORED_FIELDS,
     GDD_FULL_SNAPSHOT_RELATED_FIELDS,
 )
 from etools.applications.governments.models import GDD
+from etools.applications.partners.amendment_utils import full_snapshot_instance
 
 
 def create_change_dict_recursive(prev_dict, current_dict):
