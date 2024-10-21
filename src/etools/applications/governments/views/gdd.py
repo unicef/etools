@@ -442,10 +442,13 @@ class GDDResultLinkUpdateView(FullGDDSnapshotDeleteMixin, RetrieveUpdateDestroyA
     def get_gdd(self):
         return self.get_object().gdd
 
+    def get_root_object(self):
+        return self.get_gdd()
+
     def delete(self, request, *args, **kwargs):
         # make sure there are no indicators added to this LLO
         obj = self.get_object()
-        if obj.key_interventions.exists():
+        if obj.gdd_key_interventions.exists():
             raise ValidationError(_('This CP Output cannot be removed from this GDD because there are nested'
                                   ' Results, please remove all Document Results to continue'))
         return super().delete(request, *args, **kwargs)
@@ -483,6 +486,9 @@ class GDDKeyInterventionDetailUpdateView(
     FullGDDSnapshotDeleteMixin,
     RetrieveUpdateDestroyAPIView,
 ):
+    def get_root_object(self):
+        return GDD.objects.filter(pk=self.kwargs.get('gdd_pk')).first()
+
     def perform_destroy(self, instance):
         # do cleanup if pd output is still not associated to cp output
         result_link = instance.result_link
@@ -649,6 +655,7 @@ class GDDRiskDeleteView(FullGDDSnapshotDeleteMixin, DestroyAPIView):
 
     def get_intervention(self):
         return self.get_root_object()
+
 
     def get_queryset(self):
         return super().get_queryset().filter(intervention=self.get_root_object())
