@@ -46,3 +46,10 @@ class ShowAmendmentsFilter(BaseFilterBackend):
         if 'show_amendments' in request.query_params:
             return queryset
         return queryset.filter(in_amendment=False)
+
+
+class GDDFilter(BaseFilterBackend):
+    def filter_queryset(self, request, queryset, view):
+        if request.parser_context['kwargs'] and 'gdd_pk' in request.parser_context['kwargs']:
+            return queryset.filter(gdd__pk=request.parser_context['kwargs']['gdd_pk'])
+        return queryset

@@ -12,7 +12,7 @@ from etools.applications.governments.views.gdd import (
     GDDRetrieveUpdateView,
     GDDSupplyItemListCreateView,
     GDDSupplyItemRetrieveUpdateView,
-    GDDSupplyItemUploadView,
+    GDDSupplyItemUploadView, GDDRiskDeleteView,
 )
 from etools.applications.governments.views.gdd_actions import (
     GDDAcceptOnBehalfOfPartner,
@@ -85,7 +85,7 @@ urlpatterns = [
         ),
         name='gdd-result-links-list'),
     path(
-        'gdds/result-links/<int:pk>',
+        'gdds/result-links/<int:pk>/',
         view=GDDResultLinkUpdateView.as_view(
             http_method_names=['delete']
         ),
@@ -141,6 +141,11 @@ urlpatterns = [
             http_method_names=['get'],
         ),
         name='ewp-activity-list',
+    ),
+path(
+        'gdds/<int:gdd_pk>/risks/<int:pk>/',
+        view=GDDRiskDeleteView.as_view(http_method_names=['delete']),
+        name='intervention-risk-delete',
     ),
 ] + [
     path(

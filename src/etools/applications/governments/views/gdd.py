@@ -13,7 +13,8 @@ from etools_validator.mixins import ValidatorViewMixin
 from rest_framework import status
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.filters import OrderingFilter
-from rest_framework.generics import CreateAPIView, ListCreateAPIView, RetrieveAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.generics import CreateAPIView, ListCreateAPIView, RetrieveAPIView, RetrieveUpdateDestroyAPIView, \
+    DestroyAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
@@ -29,9 +30,10 @@ from etools.applications.governments.filters import (
     GDDEditableByFilter,
     PartnerNameOrderingFilter,
     PartnerScopeFilter,
-    ShowAmendmentsFilter,
+    ShowAmendmentsFilter, GDDFilter,
 )
-from etools.applications.governments.models import GDD, GDDActivity, GDDKeyIntervention, GDDResultLink, GDDSupplyItem
+from etools.applications.governments.models import GDD, GDDActivity, GDDKeyIntervention, GDDResultLink, GDDSupplyItem, \
+    GDDRisk
 from etools.applications.governments.permissions import (
     AmendmentSessionOnlyDeletePermission,
     gdd_field_is_editable_permission,
@@ -430,8 +432,9 @@ class GDDResultLinkListCreateView(ListCreateAPIView):
 
 class GDDResultLinkUpdateView(FullGDDSnapshotDeleteMixin, RetrieveUpdateDestroyAPIView):
     serializer_class = GDDResultLinkSimpleCUSerializer
-    permission_classes = (PartnershipManagerPermission, IsReadAction | (IsEditAction & gdd_field_is_editable_permission('key_interventions')),)
-    filter_backends = (IsReadAction | (IsEditAction & gdd_field_is_editable_permission('key_interventions')),)
+    permission_classes = (PartnershipManagerPermission,
+                          IsReadAction | (IsEditAction & gdd_field_is_editable_permission('key_interventions')),)
+    filter_backends = (GDDFilter,)
     renderer_classes = (JSONRenderer,)
     queryset = GDDResultLink.objects.all()
 
@@ -632,3 +635,21 @@ class GDDSupplyItemUploadView(GDDMixin, APIView):
             ).data,
             status=status.HTTP_200_OK,
         )
+
+class GDDRiskDeleteView(FullGDDSnapshotDeleteMixin, DestroyAPIView):
+    queryset = GDDRisk.objects
+    permission_classes = [
+        IsAuthenticated,
+        IsReadAction | (IsEditAction & gdd_field_is_editable_permission('risks'))
+    ]
+
+    @functools.cache
+    def get_root_object(self):
+        return GDD.objects.filter(pk=self.kwargs.get('gdd_pk')).first()
+
+    def get_intervention(self):
+        return self.get_root_object()
+
+    def get_queryset(self):
+        return super().get_queryset().filter(intervention=self.get_root_object())
+
