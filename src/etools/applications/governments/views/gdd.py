@@ -653,7 +653,7 @@ class GDDRiskDeleteView(FullGDDSnapshotDeleteMixin, DestroyAPIView):
     def get_root_object(self):
         return GDD.objects.filter(pk=self.kwargs.get('gdd_pk')).first()
 
-    def get_intervention(self):
+    def get_gdd(self):
         return self.get_root_object()
 
 
