@@ -297,7 +297,7 @@ def all_pd_outputs_are_associated(i):
 def all_activities_have_timeframes(i):
     from etools.applications.governments.models import GDDActivity
     return not GDDActivity.objects.\
-        filter(result__result_link__gdd=i).\
+        filter(key_intervention__result_link__gdd=i).\
         filter(time_frames__isnull=True).exists()
 
 
