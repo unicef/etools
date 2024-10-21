@@ -47,7 +47,7 @@ class GDDAmendmentCUSerializer(AttachmentSerializerMixin, serializers.ModelSeria
         validators = [
             UniqueTogetherValidator(
                 queryset=GDDAmendment.objects.filter(is_active=True),
-                fields=["intervention", "kind"],
+                fields=["gdd", "kind"],
                 message=gettext_lazy("Cannot add a new amendment while another amendment of same kind is in progress."),
             )
         ]
@@ -69,8 +69,8 @@ class GDDAmendmentCUSerializer(AttachmentSerializerMixin, serializers.ModelSeria
     def validate(self, data):
         data = super().validate(data)
 
-        if 'intervention' in data:
-            if data['intervention'].agreement.partner.blocked is True:
+        if 'gdd' in data:
+            if data['gdd'].agreement.partner.blocked is True:
                 raise ValidationError(_("Cannot add a new amendment while the partner is blocked in Vision."))
 
         if GDDAmendment.OTHER in data["types"]:

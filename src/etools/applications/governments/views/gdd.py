@@ -34,7 +34,7 @@ from etools.applications.governments.models import GDD, GDDActivity, GDDKeyInter
 from etools.applications.governments.permissions import (
     AmendmentSessionOnlyDeletePermission,
     GDDPermission,
-    PartnershipManagerPermission,
+    PartnershipManagerPermission, gdd_field_is_editable_permission,
 )
 # from etools.applications.governments.serializers.exports import GDDExportFlatSerializer, GDDExportSerializer
 from etools.applications.governments.serializers.gdd import (
@@ -55,7 +55,6 @@ from etools.applications.governments.serializers.result_structure import (
 from etools.applications.governments.validation.gdds import GDDValid
 from etools.applications.governments.views.gdd_snapshot import FullGDDSnapshotDeleteMixin
 from etools.applications.partners.models import PartnerOrganization
-from etools.applications.partners.permissions import intervention_field_is_editable_permission
 from etools.applications.users.models import Country
 from etools.applications.utils.pagination import AppendablePageNumberPagination
 from etools.libraries.djangolib.fields import CURRENCY_LIST
@@ -140,7 +139,7 @@ class DetailedGDDResponseMixin:
     detailed_gdd_methods = ['post', 'put', 'patch']
     detailed_gdd_serializer = GDDDetailSerializer
 
-    def get_intervention(self):
+    def get_gdd(self):
         raise NotImplementedError
 
     def dispatch(self, request, *args, **kwargs):
@@ -430,7 +429,7 @@ class GDDKeyInterventionViewMixin(DetailedGDDResponseMixin):
     serializer_class = GDDKeyInterventionCUSerializer
     permission_classes = [
         IsAuthenticated,
-        IsReadAction | (IsEditAction & intervention_field_is_editable_permission('key_interventions')),
+        IsReadAction | (IsEditAction & gdd_field_is_editable_permission('key_interventions')),
         AmendmentSessionOnlyDeletePermission,
     ]
 
@@ -469,7 +468,7 @@ class GDDActivityMixinView(DetailedGDDResponseMixin):
     queryset = GDDActivity.objects.prefetch_related('items', 'time_frames').order_by('id')
     permission_classes = [
         IsAuthenticated,
-        IsReadAction | (IsEditAction & intervention_field_is_editable_permission('key_interventions')),
+        IsReadAction | (IsEditAction & gdd_field_is_editable_permission('key_interventions')),
         AmendmentSessionOnlyDeletePermission,
     ]
     serializer_class = GDDActivityCreateSerializer

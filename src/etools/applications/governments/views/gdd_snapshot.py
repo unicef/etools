@@ -6,19 +6,20 @@ from etools.applications.governments.amendment_utils import (
 )
 from etools.applications.governments.serializers.gdd_snapshot import save_snapshot
 
+
 class FullGDDSnapshotDeleteMixin:
     """
-    Save full intervention snapshot on delete.
+    Save full GDD snapshot on delete.
     """
 
-    def get_intervention(self):
+    def get_gdd(self):
         raise NotImplementedError
 
     def prefetch_relations(self, instance: object) -> GDD:
         return GDD.objects.full_snapshot_qs().get(pk=instance.pk)
 
     def delete(self, request, *args, **kwargs):
-        target = self.get_intervention()
+        target = self.get_gdd()
         target_before = full_snapshot_instance(
             self.prefetch_relations(target),
             GDD_FULL_SNAPSHOT_RELATED_FIELDS,

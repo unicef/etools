@@ -159,8 +159,8 @@ class GDDAttachmentSerializer(AttachmentSerializerMixin, serializers.ModelSerial
     )
 
     def update(self, instance, validated_data):
-        intervention = validated_data.get('gdd', instance.intervention)
-        if intervention and intervention.status in [GDD.ENDED, GDD.CLOSED, GDD.TERMINATED]:
+        gdd = validated_data.get('gdd', instance.gdd)
+        if gdd and gdd.status in [GDD.ENDED, GDD.CLOSED, GDD.TERMINATED]:
             raise ValidationError(_('An attachment cannot be changed in statuses "Ended, Closed or Terminated"'))
         return super().update(instance, validated_data)
 
@@ -258,12 +258,10 @@ class GDDPlannedVisitsCUSerializer(serializers.ModelSerializer):
     def is_valid(self, raise_exception=True):
         try:
             self.instance = self.Meta.model.objects.get(
-                intervention=self.initial_data.get("intervention"),
+                gdd=self.initial_data.get("gdd"),
                 pk=self.initial_data.get("id"),
             )
-            if self.instance.intervention.agreement.partner.partner_type == OrganizationType.GOVERNMENT:
-                raise ValidationError("Planned Visit to be set only at Partner level")
-            if self.instance.intervention.status == GDD.TERMINATED:
+            if self.instance.gdd.status == GDD.TERMINATED:
                 raise ValidationError(_("Planned Visit cannot be set for Terminated interventions"))
 
         except self.Meta.model.DoesNotExist:
