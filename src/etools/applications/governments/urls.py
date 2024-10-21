@@ -7,6 +7,7 @@ from etools.applications.governments.views.gdd import (
     GDDKeyInterventionListCreateView,
     GDDListCreateView,
     GDDResultLinkListCreateView,
+    GDDResultLinkUpdateView,
     GDDRetrieveResultsStructure,
     GDDRetrieveUpdateView,
     GDDSupplyItemListCreateView,
@@ -83,6 +84,12 @@ urlpatterns = [
             http_method_names=['get', 'post']
         ),
         name='gdd-result-links-list'),
+    path(
+        'gdds/result-links/<int:pk>',
+        view=GDDResultLinkUpdateView.as_view(
+            http_method_names=['delete']
+        ),
+        name='gdd-result-links-detail'),
     path(
         'gdds/<int:pk>/key-interventions/',
         view=GDDKeyInterventionListCreateView.as_view(

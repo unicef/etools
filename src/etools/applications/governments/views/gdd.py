@@ -428,6 +428,26 @@ class GDDResultLinkListCreateView(ListCreateAPIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
+class GDDResultLinkUpdateView(FullGDDSnapshotDeleteMixin, RetrieveUpdateDestroyAPIView):
+    serializer_class = GDDResultLinkSimpleCUSerializer
+    permission_classes = (PartnershipManagerPermission, IsReadAction | (IsEditAction & gdd_field_is_editable_permission('key_interventions')),)
+    filter_backends = (IsReadAction | (IsEditAction & gdd_field_is_editable_permission('key_interventions')),)
+    renderer_classes = (JSONRenderer,)
+    queryset = GDDResultLink.objects.all()
+
+    @functools.cache
+    def get_gdd(self):
+        return self.get_object().gdd
+
+    def delete(self, request, *args, **kwargs):
+        # make sure there are no indicators added to this LLO
+        obj = self.get_object()
+        if obj.key_interventions.exists():
+            raise ValidationError(_('This CP Output cannot be removed from this GDD because there are nested'
+                                  ' Results, please remove all Document Results to continue'))
+        return super().delete(request, *args, **kwargs)
+
+
 class GDDKeyInterventionViewMixin(DetailedGDDResponseMixin):
     queryset = GDDKeyIntervention.objects.select_related('result_link').order_by('id')
     serializer_class = GDDKeyInterventionCUSerializer
