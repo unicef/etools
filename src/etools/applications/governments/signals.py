@@ -72,7 +72,7 @@ def sync_budget_owner_to_amendment(instance: GDD, created: bool, **kwargs):
             amendment.amended_gdd.save()
 
 
-
+#
 @receiver(post_save, sender=GDD)
 def recalculate_time_frames(instance: GDD, created: bool, **kwargs):
     if instance.tracker.has_changed('start') or instance.tracker.has_changed('end'):
@@ -86,12 +86,12 @@ def recalculate_time_frames(instance: GDD, created: bool, **kwargs):
             else:
                 last_quarter = 0
 
-            GDDTimeFrame.objects.filter(intervention=instance, quarter__gt=last_quarter).delete()
+            GDDTimeFrame.objects.filter(gdd=instance, quarter__gt=last_quarter).delete()
 
         # move existing ones
         for old_quarter, new_quarter in zip(old_quarters, new_quarters):
             GDDTimeFrame.objects.filter(
-                intervention=instance, quarter=old_quarter.quarter
+                gdd=instance, quarter=old_quarter.quarter
             ).update(
                 start_date=new_quarter.start, end_date=new_quarter.end
             )
@@ -99,7 +99,7 @@ def recalculate_time_frames(instance: GDD, created: bool, **kwargs):
         # create missing if any
         for new_quarter in new_quarters[len(old_quarters):]:
             GDDTimeFrame.objects.get_or_create(
-                intervention=instance, quarter=new_quarter.quarter,
+                gdd=instance, quarter=new_quarter.quarter,
                 defaults={'start_date': new_quarter.start, 'end_date': new_quarter.end},
             )
 
