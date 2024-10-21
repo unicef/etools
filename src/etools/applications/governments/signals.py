@@ -7,7 +7,7 @@ from etools.applications.governments.models import (
     GDDPRCOfficerReview,
     GDDReview,
     GDDSupplyItem,
-    GDDTimeFrame,
+    GDDTimeFrame, GDDKeyIntervention, GDDActivity, GDDActivityItem, GDDResultLink,
 )
 from etools.applications.partners.utils import get_quarters_range
 
@@ -104,64 +104,64 @@ def recalculate_time_frames(instance: GDD, created: bool, **kwargs):
             )
 
 #
-# @receiver(post_delete, sender=InterventionActivity)
-# def calc_totals_on_delete(instance, **kwargs):
-#     try:
-#         result = LowerResult.objects.get(pk=instance.result.pk)
-#     except LowerResult.DoesNotExist:
-#         pass
-#     else:
-#         try:
-#             # update budgets
-#             result.result_link.intervention.planned_budget.save()
-#         except InterventionBudget.DoesNotExist:
-#             pass
-#
-#
-# @receiver(post_delete, sender=InterventionActivityItem)
-# def update_cash_on_delete(instance, **kwargs):
-#     try:
-#         Activity = InterventionActivity.objects.get(pk=instance.activity.pk)
-#     except InterventionActivity.DoesNotExist:
-#         pass
-#     else:
-#         Activity.update_cash()
-#
-#
-# @receiver(post_delete, sender=InterventionResultLink)
-# def recalculate_result_links_numbering(instance, **kwargs):
-#     InterventionResultLink.renumber_result_links_for_intervention(instance.intervention)
-#     for result_link in instance.intervention.result_links.filter(id__gt=instance.id).prefetch_related(
-#         'll_results',
-#         'll_results__activities',
-#         'll_results__activities__items',
-#     ):
-#         LowerResult.renumber_results_for_result_link(result_link)
-#         for result in result_link.ll_results.all():
-#             InterventionActivity.renumber_activities_for_result(result)
-#             for activity in result.activities.all():
-#                 InterventionActivityItem.renumber_items_for_activity(activity)
-#
-#
-# @receiver(post_delete, sender=LowerResult)
-# def recalculate_results_numbering(instance, **kwargs):
-#     LowerResult.renumber_results_for_result_link(instance.result_link)
-#     for result in instance.result_link.ll_results.filter(id__gt=instance.id).prefetch_related(
-#         'activities',
-#         'activities__items',
-#     ):
-#         InterventionActivity.renumber_activities_for_result(result)
-#         for activity in result.activities.all():
-#             InterventionActivityItem.renumber_items_for_activity(activity)
+@receiver(post_delete, sender=GDDActivity)
+def calc_totals_on_delete(instance, **kwargs):
+    try:
+        result = GDDKeyIntervention.objects.get(pk=instance.key_intervention.pk)
+    except GDDKeyIntervention.DoesNotExist:
+        pass
+    else:
+        try:
+            # update budgets
+            result.result_link.gdd.planned_budget.save()
+        except GDDBudget.DoesNotExist:
+            pass
 
 
-# @receiver(post_delete, sender=InterventionActivity)
-# def recalculate_activities_numbering(instance, **kwargs):
-#     InterventionActivity.renumber_activities_for_result(instance.result)
-#     for activity in instance.result.activities.filter(id__gt=instance.id).prefetch_related('items'):
-#         InterventionActivityItem.renumber_items_for_activity(activity)
+@receiver(post_delete, sender=GDDActivityItem)
+def update_cash_on_delete(instance, **kwargs):
+    try:
+        Activity = GDDActivity.objects.get(pk=instance.activity.pk)
+    except GDDActivity.DoesNotExist:
+        pass
+    else:
+        Activity.update_cash()
+
+#
+@receiver(post_delete, sender=GDDResultLink)
+def recalculate_result_links_numbering(instance, **kwargs):
+    GDDResultLink.renumber_result_links_for_gdd(instance.gdd)
+    for result_link in instance.gdd.result_links.filter(id__gt=instance.id).prefetch_related(
+        'gdd_key_interventions',
+        'gdd_key_interventions__activities',
+        'gdd_key_interventions__activities__items',
+    ):
+        GDDKeyIntervention.renumber_results_for_result_link(result_link)
+        for result in result_link.ll_results.all():
+            GDDActivity.renumber_activities_for_result(result)
+            for activity in result.activities.all():
+                GDDActivityItem.renumber_items_for_activity(activity)
 #
 #
-# @receiver(post_delete, sender=InterventionActivityItem)
-# def recalculate_items_numbering(instance, **kwargs):
-#     InterventionActivityItem.renumber_items_for_activity(instance.activity)
+@receiver(post_delete, sender=GDDKeyIntervention)
+def recalculate_results_numbering(instance, **kwargs):
+    GDDKeyIntervention.renumber_results_for_result_link(instance.result_link)
+    for result in instance.result_link.ll_results.filter(id__gt=instance.id).prefetch_related(
+        'activities',
+        'activities__items',
+    ):
+        GDDActivity.renumber_activities_for_result(result)
+        for activity in result.activities.all():
+            GDDActivityItem.renumber_items_for_activity(activity)
+
+
+@receiver(post_delete, sender=GDDActivity)
+def recalculate_activities_numbering(instance, **kwargs):
+    GDDActivity.renumber_activities_for_result(instance.result)
+    for activity in instance.result.activities.filter(id__gt=instance.id).prefetch_related('items'):
+        GDDActivityItem.renumber_items_for_activity(activity)
+
+
+@receiver(post_delete, sender=GDDActivityItem)
+def recalculate_items_numbering(instance, **kwargs):
+    GDDActivityItem.renumber_items_for_activity(instance.activity)
