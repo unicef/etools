@@ -755,10 +755,6 @@ class GDD(TimeStampedModel):
         # In the case in which on the pd there are more sections selected then all the indicators
         # the reason for the loops is to avoid creating new db queries
         sections = set(self.sections.all())
-        for lower_result in self.all_lower_results:
-            for applied_indicator in lower_result.applied_indicators.all():
-                if applied_indicator.section:
-                    sections.add(applied_indicator.section)
         return sections
 
     @property
