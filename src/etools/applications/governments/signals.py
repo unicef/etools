@@ -137,7 +137,7 @@ def recalculate_result_links_numbering(instance, **kwargs):
         'gdd_key_interventions__activities__items',
     ):
         GDDKeyIntervention.renumber_results_for_result_link(result_link)
-        for result in result_link.ll_results.all():
+        for result in result_link.gdd_key_interventions.all():
             GDDActivity.renumber_activities_for_result(result)
             for activity in result.activities.all():
                 GDDActivityItem.renumber_items_for_activity(activity)
@@ -146,7 +146,7 @@ def recalculate_result_links_numbering(instance, **kwargs):
 @receiver(post_delete, sender=GDDKeyIntervention)
 def recalculate_results_numbering(instance, **kwargs):
     GDDKeyIntervention.renumber_results_for_result_link(instance.result_link)
-    for result in instance.result_link.ll_results.filter(id__gt=instance.id).prefetch_related(
+    for result in instance.result_link.gdd_key_interventions.filter(id__gt=instance.id).prefetch_related(
         'activities',
         'activities__items',
     ):
