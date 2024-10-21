@@ -493,6 +493,9 @@ class GDDKeyInterventionDetailUpdateView(
         # do cleanup if pd output is still not associated to cp output
         result_link = instance.result_link
         instance.delete()
+        if instance.gdd_activites.exist():
+            raise ValidationError("Before deleting the Key Intervention,"
+                                  " you must delete the activities associated to ensure integrity")
         if not result_link.gdd_key_interventions.exists():
             result_link.delete()
 

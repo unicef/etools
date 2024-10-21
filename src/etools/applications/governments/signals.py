@@ -151,14 +151,14 @@ def recalculate_results_numbering(instance, **kwargs):
         'activities__items',
     ):
         GDDActivity.renumber_activities_for_result(result)
-        for activity in result.activities.all():
+        for activity in result.gdd_activities.all():
             GDDActivityItem.renumber_items_for_activity(activity)
 
 
 @receiver(post_delete, sender=GDDActivity)
 def recalculate_activities_numbering(instance, **kwargs):
     GDDActivity.renumber_activities_for_result(instance.key_intervention)
-    for activity in instance.key_intervention.activities.filter(id__gt=instance.id).prefetch_related('items'):
+    for activity in instance.key_intervention.gdd_activities.filter(id__gt=instance.id).prefetch_related('items'):
         GDDActivityItem.renumber_items_for_activity(activity)
 
 
