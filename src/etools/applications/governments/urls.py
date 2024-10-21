@@ -85,7 +85,7 @@ urlpatterns = [
         ),
         name='gdd-result-links-list'),
     path(
-        'gdds/result-links/<int:pk>/',
+        'gdds/<int:gdd_pk>/result-links/<int:pk>/',
         view=GDDResultLinkUpdateView.as_view(
             http_method_names=['delete']
         ),

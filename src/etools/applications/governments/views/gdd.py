@@ -440,7 +440,7 @@ class GDDResultLinkUpdateView(FullGDDSnapshotDeleteMixin, RetrieveUpdateDestroyA
 
     @functools.cache
     def get_gdd(self):
-        return self.get_object().gdd
+        return GDD.objects.filter(pk=self.kwargs.get('gdd_pk')).first()
 
     def get_root_object(self):
         return self.get_gdd()
