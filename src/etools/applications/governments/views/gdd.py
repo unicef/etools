@@ -525,21 +525,24 @@ class GDDSupplyItemMixin(GDDMixin, DetailedGDDResponseMixin):
 
     def get_queryset(self, **kwargs):
         qs = super().get_queryset(**kwargs)
-        return qs.filter(gdd=self.get_root_object())
+        return qs.filter(gdd=self.get_gdd())
 
     def get_root_object(self):
-        return self.get_gdd(self.kwargs.get("gdd_pk"))
+        return self.get_gdd()
+
+    def get_gdd(self):
+        return super().get_gdd(self.kwargs.get("gdd_pk"))
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
-        context['gdd'] = self.get_root_object()
+        context['gdd'] = self.get_gdd()
         return context
 
 
 class GDDSupplyItemListCreateView(GDDSupplyItemMixin, ListCreateAPIView):
     def get_serializer(self, *args, **kwargs):
         if kwargs.get("data"):
-            kwargs["data"]["gdd"] = self.get_root_object()
+            kwargs["data"]["gdd"] = self.get_gdd()
         return super().get_serializer(*args, **kwargs)
 
 
