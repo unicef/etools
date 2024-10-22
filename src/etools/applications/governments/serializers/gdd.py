@@ -662,6 +662,7 @@ class GDDCreateUpdateSerializer(
     AttachmentSerializerMixin,
     SnapshotModelSerializer,
 ):
+    partner = serializers.CharField(source='partner.name', read_only=True)
     planned_budget = GDDBudgetCUSerializer(read_only=True)
     prc_review_attachment = AttachmentSingleFileField(required=False)
     signed_pd_attachment = AttachmentSingleFileField(required=False)
