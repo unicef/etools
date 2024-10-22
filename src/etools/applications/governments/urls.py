@@ -1,19 +1,22 @@
 from django.urls import path
-from etools.applications.governments.serializers.helpers import GDDPRCOfficerReviewSerializer
 
 from etools.applications.governments.views.gdd import (
     GDDActivityCreateView,
     GDDActivityDetailUpdateView,
+    GDDAttachmentListCreateView,
+    GDDAttachmentUpdateDeleteView,
     GDDKeyInterventionDetailUpdateView,
     GDDKeyInterventionListCreateView,
     GDDListCreateView,
+    GDDReportingRequirementView,
     GDDResultLinkListCreateView,
     GDDResultLinkUpdateView,
     GDDRetrieveResultsStructure,
     GDDRetrieveUpdateView,
+    GDDRiskDeleteView,
     GDDSupplyItemListCreateView,
     GDDSupplyItemRetrieveUpdateView,
-    GDDSupplyItemUploadView, GDDRiskDeleteView, GDDReportingRequirementView,
+    GDDSupplyItemUploadView,
 )
 from etools.applications.governments.views.gdd_actions import (
     GDDAcceptOnBehalfOfPartner,
@@ -39,8 +42,12 @@ from etools.applications.governments.views.government import (
     GovernmentOrganizationListAPIView,
     GovernmentStaffMemberListAPIVIew,
 )
-from etools.applications.governments.views.review import GDDReviewDetailView, GDDReviewDetailPDFView, \
-    GDDOfficerReviewDetailView, GDDOfficerReviewListView
+from etools.applications.governments.views.review import (
+    GDDOfficerReviewDetailView,
+    GDDOfficerReviewListView,
+    GDDReviewDetailPDFView,
+    GDDReviewDetailView,
+)
 
 app_name = 'governments'
 
@@ -74,9 +81,7 @@ urlpatterns = [
         ),
         name='gdd-detail',
     ),
-
-
-path(
+    path(
         'gdds/<int:gdd_pk>/reporting-requirements/<str:report_type>/',
         view=GDDReportingRequirementView.as_view(
             http_method_names=['get', 'post', 'patch', 'delete']
@@ -154,7 +159,7 @@ path(
         ),
         name='ewp-activity-list',
     ),
-path(
+    path(
         'gdds/<int:gdd_pk>/risks/<int:pk>/',
         view=GDDRiskDeleteView.as_view(http_method_names=['delete']),
         name='intervention-risk-delete',
@@ -254,17 +259,17 @@ path(
         name='gdd-supply-item-detail',
     ),
 ] + [
-path(
+    path(
         'gdds/<int:pk>/reviews/',
         view=GDDReviewView.as_view(http_method_names=['patch']),
         name='gdd-review',
     ),
-path(
+    path(
         'gdds/<int:gdd_pk>/reviews/<int:pk>/',
         view=GDDReviewDetailView.as_view(http_method_names=['patch']),
         name='gdd-reviews-detail',
     ),
-path(
+    path(
         'gdds/<int:gdd_pk>/reviews/<int:review_pk>/pdf/',
         view=GDDReviewDetailPDFView.as_view(),
         name='gdd-review-pdf',
@@ -274,10 +279,19 @@ path(
         view=GDDOfficerReviewListView.as_view(),
         name='intervention-officers-review-list',
     ),
-path(
+    path(
         'gdds/<int:gdd_pk>/reviews/<int:review_pk>/officers-reviews/<int:user_pk>/',
         view=GDDOfficerReviewDetailView.as_view(),
         name='intervention-officers-review-detail',
     ),
-
+    path(
+        'gdds/<int:gdd_pk>/attachments/',
+        view=GDDAttachmentListCreateView.as_view(http_method_names=['get', 'post']),
+        name='intervention-attachment-list',
+    ),
+    path(
+        'gdds/<int:gdd_pk>/attachments/<int:pk>/',
+        view=GDDAttachmentUpdateDeleteView.as_view(http_method_names=['delete', 'patch']),
+        name='gdd-attachments-update',
+    ),
 ]

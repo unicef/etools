@@ -3,11 +3,15 @@ from django.dispatch import receiver
 
 from etools.applications.governments.models import (
     GDD,
+    GDDActivity,
+    GDDActivityItem,
     GDDBudget,
+    GDDKeyIntervention,
     GDDPRCOfficerReview,
+    GDDResultLink,
     GDDReview,
     GDDSupplyItem,
-    GDDTimeFrame, GDDKeyIntervention, GDDActivity, GDDActivityItem, GDDResultLink,
+    GDDTimeFrame,
 )
 from etools.applications.partners.utils import get_quarters_range
 

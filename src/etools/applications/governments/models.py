@@ -156,6 +156,7 @@ class EWPActivity(TimeStampedModel):
     def __str__(self):
         return f'{self.wbs} from {self.ewp_key_intervention}'
 
+
 class GDDManager(models.Manager):
 
     def get_queryset(self):

@@ -21,13 +21,13 @@ from etools.applications.governments.models import (
     GDDBudget,
     GDDPlannedVisits,
     GDDPlannedVisitSite,
+    GDDPRCOfficerReview,
     GDDReportingRequirement,
     GDDReview,
     GDDRisk,
-    GDDTimeFrame, GDDPRCOfficerReview,
+    GDDTimeFrame,
 )
 from etools.applications.governments.serializers.gdd_snapshot import FullGDDSnapshotSerializerMixin
-
 from etools.applications.partners.serializers.interventions_v2 import (
     LocationSiteSerializer,
     PlannedVisitSitesQuarterSerializer,
@@ -160,11 +160,7 @@ class GDDBudgetCUSerializer(
 
 
 class GDDAttachmentSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
-    attachment_file = serializers.FileField(source="attachment", read_only=True)
-    attachment_document = AttachmentSingleFileField(
-        source="attachment_file",
-        override="attachment",
-    )
+    attachment_document = AttachmentSingleFileField(source="attachment")
 
     def update(self, instance, validated_data):
         gdd = validated_data.get('gdd', instance.gdd)
@@ -180,10 +176,11 @@ class GDDAttachmentSerializer(AttachmentSerializerMixin, serializers.ModelSerial
             'created',
             'type',
             'active',
-            'attachment',
-            'attachment_file',
             'attachment_document',
         )
+        extra_kwargs = {
+            'gdd': {'read_only': True},
+        }
 
 
 class GDDPlannedVisitSitesQuarterSerializer(fields.ListField):

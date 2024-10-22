@@ -13,8 +13,14 @@ from etools_validator.mixins import ValidatorViewMixin
 from rest_framework import status
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.filters import OrderingFilter
-from rest_framework.generics import CreateAPIView, ListCreateAPIView, RetrieveAPIView, RetrieveUpdateDestroyAPIView, \
-    DestroyAPIView, get_object_or_404
+from rest_framework.generics import (
+    CreateAPIView,
+    DestroyAPIView,
+    get_object_or_404,
+    ListCreateAPIView,
+    RetrieveAPIView,
+    RetrieveUpdateDestroyAPIView,
+)
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
@@ -28,17 +34,27 @@ from etools.applications.field_monitoring.permissions import IsEditAction, IsRea
 from etools.applications.governments.exports import GDDCSVRenderer
 from etools.applications.governments.filters import (
     GDDEditableByFilter,
+    GDDFilter,
     PartnerNameOrderingFilter,
     PartnerScopeFilter,
-    ShowAmendmentsFilter, GDDFilter,
+    ShowAmendmentsFilter,
 )
-from etools.applications.governments.models import GDD, GDDActivity, GDDKeyIntervention, GDDResultLink, GDDSupplyItem, \
-    GDDRisk, GDDReportingRequirement
+from etools.applications.governments.models import (
+    GDD,
+    GDDActivity,
+    GDDAttachment,
+    GDDKeyIntervention,
+    GDDReportingRequirement,
+    GDDResultLink,
+    GDDRisk,
+    GDDSupplyItem,
+)
 from etools.applications.governments.permissions import (
     AmendmentSessionOnlyDeletePermission,
     gdd_field_is_editable_permission,
     GDDPermission,
-    PartnershipManagerPermission, GDDPermissions,
+    GDDPermissions,
+    PartnershipManagerPermission,
 )
 # from etools.applications.governments.serializers.exports import GDDExportFlatSerializer, GDDExportSerializer
 from etools.applications.governments.serializers.gdd import (
@@ -51,8 +67,13 @@ from etools.applications.governments.serializers.gdd import (
     MinimalGDDListSerializer,
     RiskSerializer,
 )
-from etools.applications.governments.serializers.helpers import GDDBudgetCUSerializer, GDDPlannedVisitsCUSerializer, \
-    GDDReportingRequirementCreateSerializer, GDDReportingRequirementListSerializer
+from etools.applications.governments.serializers.helpers import (
+    GDDAttachmentSerializer,
+    GDDBudgetCUSerializer,
+    GDDPlannedVisitsCUSerializer,
+    GDDReportingRequirementCreateSerializer,
+    GDDReportingRequirementListSerializer,
+)
 from etools.applications.governments.serializers.result_structure import (
     GDDActivityCreateSerializer,
     GDDDetailResultsStructureSerializer,
@@ -715,3 +736,68 @@ class GDDReportingRequirementView(GDDMixin ,APIView):
                 self.serializer_list_class(self.get_data()).data
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class GDDAutoTransitionsMixin:
+    @staticmethod
+    def perform_auto_transitions(gdd, user):
+        validator = GDDValid(gdd, old=gdd, user=user, disable_rigid_check=True)
+        validator.total_validation
+
+
+class GDDAttachmentListCreateView(GDDAutoTransitionsMixin, DetailedGDDResponseMixin, ListCreateAPIView):
+    serializer_class = GDDAttachmentSerializer
+    permission_classes = [
+        IsAuthenticated,
+        IsReadAction | (IsEditAction & gdd_field_is_editable_permission('attachments')),
+    ]
+    queryset = GDDAttachment.objects.all()
+
+    def get_root_object(self):
+        if not hasattr(self, '_gdd'):
+            self._gdd = GDD.objects.filter(pk=self.kwargs.get('gdd_pk')).first()
+        return self._gdd
+
+    def get_queryset(self):
+        return super().get_queryset().filter(gdd=self.get_root_object())
+
+    @transaction.atomic
+    def perform_create(self, serializer):
+        gdd = self.get_root_object()
+        serializer.save(gdd=gdd)
+        self.perform_auto_transitions(gdd, self.request.user)
+
+    def get_gdd(self):
+        return self.get_root_object()
+
+
+class GDDAttachmentUpdateDeleteView(GDDAutoTransitionsMixin, DetailedGDDResponseMixin, RetrieveUpdateDestroyAPIView):
+    serializer_class = GDDAttachmentSerializer
+    queryset = GDDAttachment.objects.all()
+    permission_classes = [
+        IsAuthenticated,
+        IsReadAction | (IsEditAction & gdd_field_is_editable_permission('attachments')),
+    ]
+
+    def get_root_object(self):
+        if not hasattr(self, '_gdd'):
+            self._gdd = GDD.objects.filter(pk=self.kwargs.get('gdd_pk')).first()
+        return self._gdd
+
+    def get_queryset(self):
+        return super().get_queryset().filter(gdd=self.get_root_object())
+
+    def get_gdd(self):
+        return self.get_root_object()
+
+    @transaction.atomic
+    def perform_update(self, serializer):
+        super().perform_update(serializer)
+        self.perform_auto_transitions(self.get_root_object(), self.request.user)
+
+    def delete(self, request, *args, **kwargs):
+        obj = self.get_object()
+
+        if obj.gdd.status != GDD.DRAFT:
+            raise ValidationError(_("Deleting an attachment can only be done in Draft status"))
+        return super().delete(request, *args, **kwargs)

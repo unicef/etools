@@ -1,15 +1,26 @@
 from django.conf import settings
+
 from easy_pdf.rendering import render_to_pdf_response
-from etools.applications.field_monitoring.permissions import IsReadAction, IsEditAction
-from etools.applications.governments.models import GDDReview, GDD, GDDPRCOfficerReview
-from etools.applications.governments.permissions import gdd_field_is_editable_permission, gdd_field_has_view_permission, \
-    UserIsStaffPermission, UserBelongsToObjectPermission
-from etools.applications.governments.serializers.helpers import GDDReviewSerializer, GDDPRCOfficerReviewSerializer
+from rest_framework.generics import (
+    get_object_or_404,
+    ListAPIView,
+    RetrieveAPIView,
+    RetrieveUpdateAPIView,
+    UpdateAPIView,
+)
+from rest_framework.permissions import IsAuthenticated
+
+from etools.applications.field_monitoring.permissions import IsEditAction, IsReadAction
+from etools.applications.governments.models import GDD, GDDPRCOfficerReview, GDDReview
+from etools.applications.governments.permissions import (
+    gdd_field_has_view_permission,
+    gdd_field_is_editable_permission,
+    UserBelongsToObjectPermission,
+    UserIsStaffPermission,
+)
+from etools.applications.governments.serializers.helpers import GDDPRCOfficerReviewSerializer, GDDReviewSerializer
 from etools.applications.governments.views.gdd import DetailedGDDResponseMixin, GDDBaseViewMixin
 from etools.libraries.djangolib.utils import get_current_site
-from rest_framework.generics import ListAPIView, RetrieveUpdateAPIView, RetrieveAPIView, get_object_or_404, \
-    UpdateAPIView
-from rest_framework.permissions import IsAuthenticated
 
 
 class GDDReviewMixin(DetailedGDDResponseMixin, GDDBaseViewMixin):
