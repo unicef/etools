@@ -1,4 +1,5 @@
 from django.urls import path
+from etools.applications.governments.serializers.helpers import GDDPRCOfficerReviewSerializer
 
 from etools.applications.governments.views.gdd import (
     GDDActivityCreateView,
@@ -38,6 +39,8 @@ from etools.applications.governments.views.government import (
     GovernmentOrganizationListAPIView,
     GovernmentStaffMemberListAPIVIew,
 )
+from etools.applications.governments.views.review import GDDReviewDetailView, GDDReviewDetailPDFView, \
+    GDDOfficerReviewDetailView, GDDOfficerReviewListView
 
 app_name = 'governments'
 
@@ -250,4 +253,31 @@ path(
         view=GDDSupplyItemRetrieveUpdateView.as_view(),
         name='gdd-supply-item-detail',
     ),
+] + [
+path(
+        'gdds/<int:pk>/reviews/',
+        view=GDDReviewView.as_view(http_method_names=['patch']),
+        name='gdd-review',
+    ),
+path(
+        'gdds/<int:gdd_pk>/reviews/<int:pk>/',
+        view=GDDReviewDetailView.as_view(http_method_names=['patch']),
+        name='gdd-reviews-detail',
+    ),
+path(
+        'gdds/<int:gdd_pk>/reviews/<int:review_pk>/pdf/',
+        view=GDDReviewDetailPDFView.as_view(),
+        name='gdd-review-pdf',
+    ),
+    path(
+        'gdds/<int:gdd_pk>/reviews/<int:review_pk>/officers-reviews/',
+        view=GDDOfficerReviewListView.as_view(),
+        name='intervention-officers-review-list',
+    ),
+path(
+        'gdds/<int:gdd_pk>/reviews/<int:review_pk>/officers-reviews/<int:user_pk>/',
+        view=GDDOfficerReviewDetailView.as_view(),
+        name='intervention-officers-review-detail',
+    ),
+
 ]

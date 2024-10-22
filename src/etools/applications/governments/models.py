@@ -382,7 +382,7 @@ class GDD(TimeStampedModel):
         verbose_name=_("Document Submission Date by CSO"),
         null=True,
         blank=True,
-        help_text='The date the partner submitted complete PD/SPD documents to Unicef',
+        help_text='The date the partner submitted complete GDD documents to Unicef',
     )
     submission_date_prc = models.DateField(
         verbose_name=_('Submission Date to PRC'),
@@ -1525,7 +1525,7 @@ class GDDReviewQuestionnaire(models.Model):
         blank=True, max_length=10,
         verbose_name=_('The proposed relationship is best represented and regulated by partnership '
                        '(as opposed to procurement), with both UNICEF and the CSO '
-                       'making clear contributions to the PD/SPD'),
+                       'making clear contributions to the GDD'),
         choices=ANSWERS,
     )
     partner_comparative_advantage = models.CharField(
@@ -1541,13 +1541,13 @@ class GDDReviewQuestionnaire(models.Model):
     )
     pd_is_relevant = models.CharField(
         blank=True, max_length=100,
-        verbose_name=_('The proposed PD/SPD is relevant to achieving results in the country programme document, '
+        verbose_name=_('The proposed GDD is relevant to achieving results in the country programme document, '
                        'the relevant sector workplan and or humanitarian response plan'),
         choices=ANSWERS,
     )
     pd_is_guided = models.CharField(
         blank=True, max_length=100,
-        verbose_name=_('The results framework of the proposed PD/SPD has been guided '
+        verbose_name=_('The results framework of the proposed GDD has been guided '
                        'by M&E feedback during the drafting process'),
         choices=ANSWERS,
     )
@@ -1558,7 +1558,7 @@ class GDDReviewQuestionnaire(models.Model):
     )
     budget_is_aligned = models.CharField(
         blank=True, max_length=100,
-        verbose_name=_('The budget of the proposed PD/SPD is aligned with the principles of value for money '
+        verbose_name=_('The budget of the proposed GDD is aligned with the principles of value for money '
                        'with the effective and efficient programme management costs adhering to office defined limits'),
         choices=ANSWERS,
     )

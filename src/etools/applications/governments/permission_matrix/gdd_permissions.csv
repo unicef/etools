@@ -172,7 +172,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.9.6,prc_review_attachment,Unicef Focal Point,,Review,Edit,TRUE
 3.9.7,prc_review_document,*,,*,View,TRUE
 3.9.8,prc_review_document,Unicef Focal Point,,Review,Edit,TRUE
-3.10.1,reference_number_year,UNICEF User,,*,View,TRUE
+,prc_reviews,UNICEF User,,Draft,View,FALSE
 3.13.1,reporting_requirements,Unicef Focal Point,,Draft,Edit,TRUE
 3.13.1,reporting_requirements,PRC Secretary,,Signature,Edit,TRUE
 3.13.1,reporting_requirements,Unicef Focal Point,not_ended,Terminated,Edit,TRUE
@@ -226,7 +226,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,title,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
 ,title,Partner User,partner_court,Draft,Edit,TRUE
 ,title,*,,*,Required,TRUE
-,reference_number_year,*,,*,Required,TRUE
+,prc_reviews,Partner User,,*,View,FALSE
 ,unicef_focal_points,*,not_in_amendment_mode,*,View,TRUE
 ,unicef_focal_points,Partnership Manager,,*,Edit,TRUE
 ,unicef_focal_points,Partnership Manager,user_adds_amendment,*,Edit,TRUE
@@ -268,3 +268,6 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,final_review_approved,UNICEF User,,Ended,View,TRUE
 ,final_review_approved,UNICEF User,,Closed,View,TRUE
 ,final_review_approved,Unicef Users Involved,,Ended,Edit,TRUE
+,prc_reviews,PRC Officer,,Review,Edit,TRUE
+,reviews,PRC Secretary,,Review,Edit,TRUE
+,reviews,Overall Approver,,Review,Edit,TRUE

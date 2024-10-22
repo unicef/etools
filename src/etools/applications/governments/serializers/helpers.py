@@ -3,6 +3,7 @@ from operator import itemgetter
 
 from django.core.exceptions import ImproperlyConfigured
 from django.db import transaction
+from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.translation import gettext as _
 
@@ -23,7 +24,7 @@ from etools.applications.governments.models import (
     GDDReportingRequirement,
     GDDReview,
     GDDRisk,
-    GDDTimeFrame,
+    GDDTimeFrame, GDDPRCOfficerReview,
 )
 from etools.applications.governments.serializers.gdd_snapshot import FullGDDSnapshotSerializerMixin
 
@@ -561,3 +562,38 @@ class GDDReportingRequirementCreateSerializer(
 
     def get_gdd(self):
         return self.context['gdd']
+
+
+class GDDPRCOfficerReviewSerializer(FullGDDSnapshotSerializerMixin, serializers.ModelSerializer):
+    user = MinimalUserSerializer(read_only=True)
+
+    class Meta:
+        model = GDDPRCOfficerReview
+        fields = (
+            'id',
+            'user',
+
+            'relationship_is_represented',
+            'partner_comparative_advantage',
+            'relationships_are_positive',
+            'pd_is_relevant',
+            'pd_is_guided',
+            'ges_considered',
+            'budget_is_aligned',
+            'supply_issues_considered',
+
+            'overall_comment',
+            'overall_approval',
+            'review_date',
+        )
+        read_only_fields = (
+            'review_date',
+        )
+
+    def update(self, instance, validated_data):
+        if validated_data.get('overall_approval') is not None:
+            validated_data['review_date'] = timezone.now().date()
+        return super().update(instance, validated_data)
+
+    def get_gdd(self):
+        return self.instance.overall_review.gdd
