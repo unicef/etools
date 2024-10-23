@@ -396,6 +396,12 @@ class GDDDetailSerializer(
 
         return obj.review.overall_approver_id == user.pk
 
+    def _is_authorized_officer(self, obj, user):
+        if not obj.review:
+            return False
+
+        return obj.review.authorized_officer == user.pk
+
     def _is_partner_user(self, obj, user):
         return user.email in [o.email for o in obj.partner_focal_points.all()]
 
@@ -450,8 +456,12 @@ class GDDDetailSerializer(
 
         # only overall approver can approve or reject review
         if obj.status == obj.REVIEW and self._is_overall_approver(obj, user):
-            available_actions.append("sign")
             available_actions.append("reject_review")
+
+
+        if obj.status == obj.REVIEW and self._is_authorized_officer(obj, user):
+            available_actions.append("reject_review")
+            available_actions.append("sign")
 
         # prc secretary can send back gdd if not approved yet
         if obj.status == obj.REVIEW and self._is_prc_secretary() and obj.review and obj.review.overall_approval is None:
