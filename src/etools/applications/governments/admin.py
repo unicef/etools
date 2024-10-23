@@ -24,7 +24,8 @@ class GovernmentReviewInlineAdmin(RestrictedEditAdminMixin, admin.TabularInline)
     raw_id_fields = [
         "prc_officers",
         "submitted_by",
-        "overall_approver"
+        "overall_approver",
+        "authorized_officer"
     ]
 
 
