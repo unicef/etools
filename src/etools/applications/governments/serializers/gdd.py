@@ -400,7 +400,7 @@ class GDDDetailSerializer(
         if not obj.review:
             return False
 
-        return obj.review.authorized_officer == user.pk
+        return obj.review.authorized_officer.pk == user.pk
 
     def _is_partner_user(self, obj, user):
         return user.email in [o.email for o in obj.partner_focal_points.all()]

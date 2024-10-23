@@ -103,7 +103,7 @@ def transition_to_closed(i):
     if i.has_active_amendment(GDDAmendment.KIND_NORMAL):
         raise TransitionError([_('Cannot Transition status while adding an amendment')])
 
-    if i.agreement.partner.blocked:
+    if i.partner.blocked:
         raise TransitionError([
             _('PD cannot be closed if the Partner is Blocked in Vision')
         ])
@@ -128,7 +128,7 @@ def transition_to_ended(i):
     if i.has_active_amendment(GDDAmendment.KIND_NORMAL):
         raise TransitionError([_('Cannot Transition status while adding an amendment')])
 
-    if i.agreement.partner.blocked:
+    if i.partner.blocked:
         raise TransitionError([
             _('PD cannot transition to ended if the Partner is Blocked in Vision')
         ])
@@ -142,7 +142,7 @@ def transition_to_suspended(i):
     if i.has_active_amendment(GDDAmendment.KIND_NORMAL):
         raise TransitionError([_('Cannot Transition status while adding an amendment')])
 
-    if i.agreement.partner.blocked:
+    if i.partner.blocked:
         raise TransitionError([
             _('PD cannot be suspended if the Partner is Blocked in Vision')
         ])
@@ -172,7 +172,7 @@ def transition_to_approved(i):
     if i.has_active_amendment(GDDAmendment.KIND_NORMAL):
         raise TransitionError([_('Cannot Transition status while adding an amendment')])
 
-    if i.agreement.partner.blocked:
+    if i.partner.blocked:
         raise TransitionError([
             _('PD cannot transition to approved if the Partner is Blocked in Vision')
         ])
@@ -187,8 +187,7 @@ def transition_to_active(i):
     if i.termination_doc_attachment.exists():
         raise TransitionError([_('Cannot Transition to ended if termination_doc attached')])
 
-    # Validation id 1 -> if gdd is PD make sure the agreement is in active status
-    if i.agreement.partner.blocked:
+    if i.partner.blocked:
         raise TransitionError([
             _('PD cannot be activated if the Partner is Blocked in Vision')
         ])
