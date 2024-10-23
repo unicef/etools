@@ -268,3 +268,15 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,prc_reviews,PRC Officer,,Review,Edit,TRUE
 ,reviews,PRC Secretary,,Review,Edit,TRUE
 ,reviews,Overall Approver,,Review,Edit,TRUE
+,partner_authorized_officer_signatory,*,,pending_approval,Required,FALSE
+,partner_authorized_officer_signatory,*,does_not_require_signature,approved,Required,FALSE
+,partner_authorized_officer_signatory,*,does_not_require_signature,active,Required,FALSE
+,partner_authorized_officer_signatory,*,does_not_require_signature,ended,Required,FALSE
+,partner_authorized_officer_signatory,*,does_not_require_signature,closed,Required,FALSE
+,partner_authorized_officer_signatory,*,does_not_require_signature,suspended,Required,FALSE
+,partner_authorized_officer_signatory,*,does_not_require_signature,terminated,Required,FALSE
+,partner_authorized_officer_signatory,*,does_not_require_signature,expired,Required,FALSE
+,signed_by_unicef_date,*,does_not_require_signature,*,Required,FALSE
+,signed_by_partner_date,*,does_not_require_signature,*,Required,FALSE
+,signed_pd_attachment,*,does_not_require_signature,*,Required,FALSE
+

@@ -185,6 +185,7 @@ class GDDPermissions(PMPPermissions):
             'is_pd_unlocked': not self.instance.locked,
             'unicef_not_accepted': unicef_not_accepted(self.instance),
             'unlocked+not_in_amendment_mode': unlocked(self.instance) and not user_added_amendment(self.instance),
+            'does_not_require_signature': self.instance.signature_required is False,
         }
 
     # override get_permissions to enable us to prevent old gdds from being blocked on transitions
@@ -441,6 +442,8 @@ class UserIsObjectPartnerStaffMember(UserIsPartnerStaffMemberPermission):
             return False
 
         return obj.partner.user_is_staff_member(request.user)
+
+
 
 
 class UserIsStaffPermission(BasePermission):

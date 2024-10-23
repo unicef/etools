@@ -4,6 +4,7 @@ from django.db.models import Value
 from django.db.models.functions import Concat
 from django.http import Http404
 from django.utils.functional import cached_property
+from etools.applications.governments.models import GDDAmendment
 
 from rest_framework import status
 from rest_framework.exceptions import PermissionDenied
@@ -203,6 +204,9 @@ class PMPDropdownsListApiView(APIView):
             ),
             'intervention_amendment_types': choices_to_json_ready(
                 InterventionAmendment.AMENDMENT_TYPES,
+            ),
+            'gdd_amendment_types': choices_to_json_ready(
+                GDDAmendment.AMENDMENT_TYPES,
             ),
             'currencies': choices_to_json_ready(CURRENCIES),
             'local_currency': self.get_local_currency(),

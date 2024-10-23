@@ -400,7 +400,7 @@ class GDDDetailSerializer(
         if not obj.review:
             return False
 
-        return obj.review.authorized_officer.pk == user.pk
+        return obj.review.authorized_officer_id == user.pk
 
     def _is_partner_user(self, obj, user):
         return user.email in [o.email for o in obj.partner_focal_points.all()]
@@ -539,6 +539,9 @@ class GDDDetailSerializer(
             ]
         elif obj.status not in [obj.APPROVED, obj.ACTIVE, obj.ENDED, obj.CLOSED]:
             status_list = pre_approved_statuses
+            # add this to clean up statuses if signature is not required
+            if not obj.signature_required:
+                status_list.remove(obj.PENDING_APPROVAL)
         else:
             status_list = post_approved_statuses
 

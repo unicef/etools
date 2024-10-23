@@ -391,15 +391,13 @@ class GDDValid(CompleteValidation):
             raise StateValidationError([_('Review needs to be approved')])
         return True
 
-    def state_signed_valid(self, gdd, user=None):
+    def state_approved_valid(self, gdd, user=None):
         self.check_required_fields(gdd)
         self.check_rigid_fields(gdd, related=True)
         if not all_activities_have_timeframes(gdd):
             raise StateValidationError([_('All activities must have at least one time frame')])
         if not all_pd_outputs_are_associated(gdd):
             raise StateValidationError([_('All PD Outputs need to be associated to a CP Output')])
-        if gdd.contingency_pd is False and gdd.total_unicef_budget == 0:
-            raise StateValidationError([_('UNICEF Cash $ or UNICEF Supplies $ should not be 0')])
         return True
 
     def state_suspended_valid(self, gdd, user=None):

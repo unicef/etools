@@ -678,6 +678,10 @@ class GDD(TimeStampedModel):
         verbose_name=_("Confidential"),
         default=False,
     )
+    signature_required = models.BooleanField(
+        verbose_name=_("Signature Required"),
+        default=False,
+    )
 
     class Meta:
         ordering = ['-created']
@@ -891,7 +895,7 @@ class GDD(TimeStampedModel):
                 source=[REVIEW, PENDING_APPROVAL, SUSPENDED],
                 target=[APPROVED],
                 conditions=[gdd_validation.transition_to_approved])
-    def transition_to_signed(self):
+    def transition_to_approved(self):
         pass
 
     @transition(field=status,
