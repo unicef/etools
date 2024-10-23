@@ -255,7 +255,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,signed_by_unicef_date,*,,Review,Required,FALSE
 ,signed_pd_attachment,*,,Review,Required,FALSE
 ,date_sent_to_partner,*,,Draft,Required,FALSE
-,context,*,unlocked,Draft,Required,FALSE
+,context,*,,,Required,FALSE
 ,cancel_justification,*,,Cancelled,Required,TRUE
 ,signed_by_partner_date,*,,pending_approval,Required,FALSE
 ,signed_by_unicef_date,*,,pending_approval,Required,FALSE
