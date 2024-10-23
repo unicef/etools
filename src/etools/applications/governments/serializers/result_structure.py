@@ -192,7 +192,7 @@ class GDDKeyInterventionCUSerializer(
 
     def validate(self, attrs):
         # TODO: [e4] remove this whenever a better validation is decided on. This is out of place but needed as a hotfix
-        if self.gdd.status in [self.gdd.SIGNATURE]:
+        if self.gdd.status in [self.gdd.PENDING_APPROVAL]:
             raise ValidationError(_("Results cannot be changed in this status"))
         return super().validate(attrs)
 
@@ -293,7 +293,7 @@ class GDDActivityCreateSerializer(
     @transaction.atomic
     def create(self, validated_data):
         # TODO: [e4] remove this whenever a better validation is decided on. This is out of place but needed as a hotfix
-        if self.gdd.status in [self.gdd.SIGNATURE]:
+        if self.gdd.status in [self.gdd.PENDING_APPROVAL]:
             raise ValidationError(_("New activities are not able to be added in this status"))
         options = validated_data.pop('items', None)
         time_frames = validated_data.pop('time_frames', None)
@@ -307,8 +307,8 @@ class GDDActivityCreateSerializer(
         options = validated_data.pop('items', None)
         time_frames = validated_data.pop('time_frames', None)
         # TODO: [e4] remove this whenever a better validation is decided on. This is out of place but needed as a hotfix
-        if self.gdd.status not in [self.gdd.SIGNATURE]:
-            # if you're in status signature, ignore all other updates. This is horrible as the user can be confused
+        if self.gdd.status not in [self.gdd.PENDING_APPROVAL]:
+            # if you're in status pending_approval, ignore all other updates. This is horrible as the user can be confused
             # however it's a very limited amount of people that are able to make changes here and FE will inform them
             # otherwise would need to catch any intended changes as the FE currently re-submits existing fields
             self.instance = super().update(instance, validated_data)

@@ -106,7 +106,7 @@ class GDDExportSerializer(serializers.ModelSerializer):
         label=_("Signed by UNICEF"),
     )
     partner_focal_points = serializers.SerializerMethodField(
-        label=_("CSO Authorized Officials"),
+        label=_("Government Authorized Officials"),
     )
     unicef_focal_points = serializers.SerializerMethodField(
         label=_("UNICEF Focal Points"),
@@ -116,11 +116,11 @@ class GDDExportSerializer(serializers.ModelSerializer):
     )
     cp_outputs = serializers.SerializerMethodField(label=_("CP Outputs"))
     url = serializers.SerializerMethodField(label=_("URL"))
-    days_from_submission_to_signed = serializers.SerializerMethodField(
-        label=_("Days from Submission to Signed"),
+    days_from_submission_to_approved = serializers.SerializerMethodField(
+        label=_("Days from Submission to Approved"),
     )
-    days_from_review_to_signed = serializers.SerializerMethodField(
-        label=_("Days from Review to Signed"),
+    days_from_review_to_approved = serializers.SerializerMethodField(
+        label=_("Days from Review to Approved"),
     )
     amendment_sum = serializers.SerializerMethodField(
         label=_("Total no. of amendments"),
@@ -184,8 +184,8 @@ class GDDExportSerializer(serializers.ModelSerializer):
             "signed_by_partner_date",
             "unicef_signatory",
             "signed_by_unicef_date",
-            "days_from_submission_to_signed",
-            "days_from_review_to_signed",
+            "days_from_submission_to_approved",
+            "days_from_review_to_approved",
             "amendment_sum",
             "last_amendment_date",
             "attachment_type",
@@ -256,11 +256,11 @@ class GDDExportSerializer(serializers.ModelSerializer):
     def get_url(self, obj):
         return 'https://{}/pmp/gdds/{}/details/'.format(self.context['request'].get_host(), obj.id)
 
-    def get_days_from_submission_to_signed(self, obj):
-        return obj.days_from_submission_to_signed
+    def get_days_from_submission_to_approved(self, obj):
+        return obj.days_from_submission_to_approved
 
-    def get_days_from_review_to_signed(self, obj):
-        return obj.days_from_review_to_signed
+    def get_days_from_review_to_approved(self, obj):
+        return obj.days_from_review_to_approved
 
     def get_fr_numbers(self, obj):
         return ', '.join([x.fr_number for x in obj.frs.all()]) if obj.frs.count() > 0 else ""
@@ -688,7 +688,7 @@ class GDDAmendmentExportSerializer(serializers.ModelSerializer):
         label=_("Signed by UNICEF"),
     )
     partner_focal_points = serializers.SerializerMethodField(
-        label=_("CSO Authorized Officials"),
+        label=_("Government Authorized Officials"),
     )
     unicef_focal_points = serializers.SerializerMethodField(
         label=_("UNICEF Focal Points"),
@@ -698,11 +698,11 @@ class GDDAmendmentExportSerializer(serializers.ModelSerializer):
     )
     cp_outputs = serializers.SerializerMethodField(label=_("CP Outputs"))
     url = serializers.SerializerMethodField(label=_("URL"))
-    days_from_submission_to_signed = serializers.SerializerMethodField(
-        label=_("Days from Submission to Signed"),
+    days_from_submission_to_approved = serializers.SerializerMethodField(
+        label=_("Days from Submission to Approved"),
     )
-    days_from_review_to_signed = serializers.SerializerMethodField(
-        label=_("Days from Review to Signed"),
+    days_from_review_to_approved = serializers.SerializerMethodField(
+        label=_("Days from Review to Approved"),
     )
     amendment_sum = serializers.SerializerMethodField(
         label=_("Total no. of amendments"),
@@ -767,8 +767,8 @@ class GDDAmendmentExportSerializer(serializers.ModelSerializer):
             "signed_by_partner_date",
             "unicef_signatory",
             "signed_by_unicef_date",
-            "days_from_submission_to_signed",
-            "days_from_review_to_signed",
+            "days_from_submission_to_approved",
+            "days_from_review_to_approved",
             "amendment_sum",
             "last_amendment_date",
             "attachment_type",
@@ -842,7 +842,7 @@ class GDDAmendmentExportSerializer(serializers.ModelSerializer):
     def get_url(self, obj):
         return 'https://{}/gdd/{}/details/'.format(self.context['request'].get_host(), obj.id)
 
-    def get_days_from_submission_to_signed(self, obj):
+    def get_days_from_submission_to_approved(self, obj):
         return obj.days_from_submission_to_signed
 
     def get_days_from_review_to_signed(self, obj):

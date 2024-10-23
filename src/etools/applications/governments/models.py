@@ -253,8 +253,8 @@ class GDD(TimeStampedModel):
 
     DRAFT = 'draft'
     REVIEW = 'review'
-    SIGNATURE = 'signature'
-    SIGNED = 'signed'
+    PENDING_APPROVAL = 'pending_approval'
+    APPROVED = 'approved'
     ACTIVE = 'active'
     ENDED = 'ended'
     CANCELLED = 'cancelled'
@@ -266,9 +266,9 @@ class GDD(TimeStampedModel):
 
     AUTO_TRANSITIONS = {
         DRAFT: [],
-        REVIEW: [SIGNATURE],
-        SIGNATURE: [SIGNED],
-        SIGNED: [ACTIVE, TERMINATED],
+        REVIEW: [PENDING_APPROVAL],
+        PENDING_APPROVAL: [APPROVED],
+        APPROVED: [ACTIVE, TERMINATED],
         ACTIVE: [ENDED, TERMINATED],
         ENDED: [CLOSED]
     }
@@ -276,8 +276,8 @@ class GDD(TimeStampedModel):
     INTERVENTION_STATUS = (
         (DRAFT, _("Development")),
         (REVIEW, _("Review")),
-        (SIGNATURE, _("Signature")),
-        (SIGNED, _('Signed')),
+        (PENDING_APPROVAL, _("Pending Approval")),
+        (APPROVED, _('Approved')),
         (ACTIVE, _("Active")),
         (CANCELLED, _("Cancelled")),
         (ENDED, _("Ended")),
@@ -380,7 +380,7 @@ class GDD(TimeStampedModel):
         help_text='The date the GDD will end'
     )
     submission_date = models.DateField(
-        verbose_name=_("Document Submission Date by CSO"),
+        verbose_name=_("Document Submission Date by Government"),
         null=True,
         blank=True,
         help_text='The date the partner submitted complete GDD documents to Unicef',
@@ -455,7 +455,7 @@ class GDD(TimeStampedModel):
     )
     partner_focal_points = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
-        verbose_name=_("CSO Authorized Officials"),
+        verbose_name=_("Government Authorized Officials"),
         related_name='gdds_focal_points+',
         blank=True
     )
@@ -700,11 +700,11 @@ class GDD(TimeStampedModel):
         return permissions
 
     @property
-    def days_from_submission_to_signed(self):
+    def days_from_submission_to_approved(self):
         if not self.submission_date:
             return 'Not Submitted'
         if not self.signed_by_unicef_date or not self.signed_by_partner_date:
-            return 'Not fully signed'
+            return 'Not fully approved'
         start = self.submission_date
         end = max([self.signed_by_partner_date, self.signed_by_unicef_date])
         days = [start + datetime.timedelta(x + 1) for x in range((end - start).days)]
@@ -726,7 +726,7 @@ class GDD(TimeStampedModel):
         if not self.review_date_prc:
             return 'Not Reviewed'
         if not self.signed_by_unicef_date or not self.signed_by_partner_date:
-            return 'Not fully signed'
+            return 'Not fully approved'
         start = self.review_date_prc
         end = max([self.signed_by_partner_date, self.signed_by_unicef_date])
         days = [start + datetime.timedelta(x + 1) for x in range((end - start).days)]
@@ -874,13 +874,13 @@ class GDD(TimeStampedModel):
 
     @transition(field=status,
                 source=[REVIEW],
-                target=[SIGNATURE],
-                conditions=[gdd_validation.transition_to_signature])
-    def transition_to_signature(self):
+                target=[PENDING_APPROVAL],
+                conditions=[gdd_validation.transition_to_pending_approval])
+    def transition_to_pending_approval(self):
         pass
 
     @transition(field=status,
-                source=[SUSPENDED, SIGNED],
+                source=[SUSPENDED, APPROVED],
                 target=[ACTIVE],
                 conditions=[gdd_validation.transition_to_active],
                 permission=gdd_validation.partnership_manager_only)
@@ -888,14 +888,14 @@ class GDD(TimeStampedModel):
         pass
 
     @transition(field=status,
-                source=[REVIEW, SIGNATURE, SUSPENDED],
-                target=[SIGNED],
-                conditions=[gdd_validation.transition_to_signed])
+                source=[REVIEW, PENDING_APPROVAL, SUSPENDED],
+                target=[APPROVED],
+                conditions=[gdd_validation.transition_to_approved])
     def transition_to_signed(self):
         pass
 
     @transition(field=status,
-                source=[DRAFT, REVIEW, SIGNATURE],
+                source=[DRAFT, REVIEW, PENDING_APPROVAL],
                 target=[CANCELLED],
                 conditions=[gdd_validation.transition_to_cancelled])
     def transition_to_cancelled(self):
@@ -903,7 +903,7 @@ class GDD(TimeStampedModel):
 
     @transition(field=status,
                 source=[
-                    SIGNED,
+                    APPROVED,
                     ACTIVE,
                     ENDED,
                     IMPLEMENTED,
@@ -933,7 +933,7 @@ class GDD(TimeStampedModel):
         pass
 
     @transition(field=status,
-                source=[ACTIVE, SIGNED],
+                source=[ACTIVE, APPROVED],
                 target=[SUSPENDED],
                 conditions=[gdd_validation.transition_to_suspended],
                 permission=gdd_validation.partnership_manager_only)
@@ -941,7 +941,7 @@ class GDD(TimeStampedModel):
         pass
 
     @transition(field=status,
-                source=[ACTIVE, SUSPENDED, SIGNED],
+                source=[ACTIVE, SUSPENDED, APPROVED],
                 target=[TERMINATED],
                 conditions=[gdd_validation.transition_to_terminated],
                 permission=gdd_validation.partnership_manager_only)
@@ -1022,14 +1022,14 @@ class GDD(TimeStampedModel):
 
     def was_active_before(self):
         """
-        check whether gdd was in signed or active status before.
+        check whether gdd was in approved or active status before.
         if yes, it should be treated in special way because gdd is synchronized to PRP
         """
         return Activity.objects.filter(
             target_content_type=ContentType.objects.get_for_model(self),
             target_object_id=self.id,
             action=Activity.UPDATE,
-            change__status__after__in=[self.SIGNED, self.ACTIVE],
+            change__status__after__in=[self.APPROVED, self.ACTIVE],
         ).exists()
 
 
@@ -1374,7 +1374,7 @@ class GDDBudget(TimeStampedModel):
         verbose_name=_('Total')
     )
 
-    # sum of all activity/management budget cso/partner values
+    # sum of all activity/management budget government/partner values
     partner_contribution_local = models.DecimalField(
         max_digits=20, decimal_places=2, default=0,
         verbose_name=_('Partner Contribution Local')
@@ -1525,19 +1525,19 @@ class GDDReviewQuestionnaire(models.Model):
     relationship_is_represented = models.CharField(
         blank=True, max_length=10,
         verbose_name=_('The proposed relationship is best represented and regulated by partnership '
-                       '(as opposed to procurement), with both UNICEF and the CSO '
+                       '(as opposed to procurement), with both UNICEF and the Government '
                        'making clear contributions to the GDD'),
         choices=ANSWERS,
     )
     partner_comparative_advantage = models.CharField(
         blank=True, max_length=100,
-        verbose_name=_('The partner selection evidences the CSO’s comparative advantage '
+        verbose_name=_('The partner selection evidences the Government’s comparative advantage '
                        'and value for money in relation to the planned results'),
         choices=ANSWERS,
     )
     relationships_are_positive = models.CharField(
         blank=True, max_length=100,
-        verbose_name=_('Previous UNICEF/UN relationships with the proposed CSO have been positive'),
+        verbose_name=_('Previous UNICEF/UN relationships with the proposed Government have been positive'),
         choices=ANSWERS,
     )
     pd_is_relevant = models.CharField(
@@ -1998,7 +1998,7 @@ class GDDActivity(TimeStampedModel):
         default=0,
     )
     cso_cash = models.DecimalField(
-        verbose_name=_("CSO Cash"),
+        verbose_name=_("Government Cash"),
         decimal_places=2,
         max_digits=20,
         default=0,
@@ -2115,7 +2115,7 @@ class GDDActivityItem(TimeStampedModel):
         default=0,
     )
     cso_cash = models.DecimalField(
-        verbose_name=_("CSO Cash"),
+        verbose_name=_("Government Cash"),
         decimal_places=2,
         max_digits=20,
         default=0,

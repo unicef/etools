@@ -274,8 +274,8 @@ class GDDDetailSerializer(
     budget_owner = MinimalUserSerializer()
     status_list = serializers.SerializerMethodField()
     # cluster_names = serializers.SerializerMethodField()
-    days_from_review_to_signed = serializers.CharField(read_only=True)
-    days_from_submission_to_signed = serializers.CharField(read_only=True)
+    days_from_review_to_approved = serializers.CharField(read_only=True)
+    days_from_submission_to_approved = serializers.CharField(read_only=True)
     donor_codes = serializers.SerializerMethodField()
     donors = serializers.SerializerMethodField()
     flagged_sections = serializers.SerializerMethodField(read_only=True)
@@ -436,14 +436,14 @@ class GDDDetailSerializer(
         if self._is_unicef_focal_point(obj, user) or obj.budget_owner == user:
             # amendments should be deleted instead of moving to cancelled/terminated
             if not obj.in_amendment:
-                if obj.status in [obj.SIGNED, obj.ACTIVE, obj.IMPLEMENTED, obj.SUSPENDED]:
+                if obj.status in [obj.APPROVED, obj.ACTIVE, obj.IMPLEMENTED, obj.SUSPENDED]:
                     available_actions.append("terminate")
                     if obj.status not in [obj.SUSPENDED]:
                         available_actions.append("suspend")
             if obj.status == obj.SUSPENDED:
                 available_actions.append("unsuspend")
 
-        status_is_cancellable = obj.status in [obj.DRAFT, obj.REVIEW, obj.SIGNATURE]
+        status_is_cancellable = obj.status in [obj.DRAFT, obj.REVIEW, obj.PENDING_APPROVAL]
         budget_owner_or_focal_point = obj.budget_owner == user or self._is_unicef_focal_point(obj, user)
         if not obj.in_amendment and status_is_cancellable and self._is_prc_secretary():
             available_actions.append("cancel")
@@ -463,7 +463,7 @@ class GDDDetailSerializer(
         ).exists():
             available_actions.append("individual_review")
 
-        if obj.in_amendment and obj.status == obj.SIGNED and budget_owner_or_focal_point:
+        if obj.in_amendment and obj.status == obj.APPROVED and budget_owner_or_focal_point:
             available_actions.append("amendment_merge")
 
         # if NOT in Development status then we're done
@@ -503,15 +503,15 @@ class GDDDetailSerializer(
         return [action for action in default_ordering if action in available_actions]
 
     def get_status_list(self, obj):
-        pre_signed_statuses = [
+        pre_approved_statuses = [
             obj.DRAFT,
             obj.REVIEW,
-            obj.SIGNATURE,
-            obj.SIGNED
+            obj.PENDING_APPROVAL,
+            obj.APPROVED
         ]
-        post_signed_statuses = [
+        post_approved_statuses = [
             obj.DRAFT,
-            obj.SIGNED,
+            obj.APPROVED,
             obj.ACTIVE,
             obj.ENDED,
             obj.CLOSED,
@@ -527,10 +527,10 @@ class GDDDetailSerializer(
             status_list = [
                 obj.CANCELLED,
             ]
-        elif obj.status not in [obj.SIGNED, obj.ACTIVE, obj.ENDED, obj.CLOSED]:
-            status_list = pre_signed_statuses
+        elif obj.status not in [obj.APPROVED, obj.ACTIVE, obj.ENDED, obj.CLOSED]:
+            status_list = pre_approved_statuses
         else:
-            status_list = post_signed_statuses
+            status_list = post_approved_statuses
 
         return [s for s in obj.INTERVENTION_STATUS if s[0] in status_list]
 
@@ -573,8 +573,8 @@ class GDDDetailSerializer(
             "created",
             "date_partnership_review_performed",
             "date_sent_to_partner",
-            "days_from_review_to_signed",
-            "days_from_submission_to_signed",
+            "days_from_review_to_approved",
+            "days_from_submission_to_approved",
             "donor_codes",
             "donors",
             "end",

@@ -338,9 +338,9 @@ class GDDReviewView(GDDActionView):
                 "budget_owner_name": f'{review.submitted_by.get_full_name()}'
             }
 
-            # if review is not required (no-review), gdd will be transitioned to signature status
-            if gdd.status == GDD.SIGNATURE:
-                template_name = 'governments/gdd/unicef_signature'
+            # if review is not required (no-review), gdd will be transitioned to pending approval status
+            if gdd.status == GDD.PENDING_APPROVAL:
+                template_name = 'governments/gdd/unicef_pending_approval'
             else:
                 template_name = 'governments/gdd/unicef_sent_for_review'
                 active_prc_realm_subquery = Realm.objects.filter(
@@ -518,8 +518,8 @@ class GDDSignatureView(GDDActionView):
         if self.is_partner_staff():
             return HttpResponseForbidden()
         gdd = self.get_object()
-        if gdd.status == GDD.SIGNATURE:
-            raise ValidationError(_("GDD is already in Signature status."))
+        if gdd.status == GDD.PENDING_APPROVAL:
+            raise ValidationError(_("GDD is already in Pending Approval status."))
         if not gdd.review:
             raise ValidationError(_("GDD review is missing"))
         if gdd.review.authorized_officer_id != request.user.pk:
@@ -531,7 +531,7 @@ class GDDSignatureView(GDDActionView):
         gdd.review.save()
 
         request.data.clear()
-        request.data.update({"status": GDD.SIGNATURE})
+        request.data.update({"status": GDD.PENDING_APPROVAL})
         if gdd.review.review_type in [GDDReview.PRC, GDDReview.NPRC]:
             request.data["review_date_prc"] = timezone.now().date()
 
@@ -549,7 +549,7 @@ class GDDSignatureView(GDDActionView):
             self.send_notification(
                 gdd,
                 recipients=recipients,
-                template_name='governments/gdd/unicef_signature',
+                template_name='governments/gdd/unicef_pending_approval',
                 context=context
             )
 
@@ -670,7 +670,7 @@ class PMPAmendedGDDMerge(GDDRetrieveUpdateView):
         gdd = self.get_object()
         if not gdd.in_amendment:
             raise ValidationError(_('Only amended gdds can be merged'))
-        if not gdd.status == GDD.SIGNED:
+        if not gdd.status == GDD.APPROVED:
             raise ValidationError(_('Amendment cannot be merged yet'))
         try:
             amendment = gdd.amendment

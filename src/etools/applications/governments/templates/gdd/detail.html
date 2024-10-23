@@ -326,8 +326,8 @@
             <td class="b-gray w-p10">{% translate "Result Level" %}</td>
             <td class="b-gray w-p40">{% translate "Result/activity" %}</td>
             <td class="b-gray w-p20">{% translate "Timeframe" %}</td>
-            <td class="b-gray w-p10">{% translate "Total (CSO + UNICEF)" %}[{{ pd.planned_budget.currency }}]</td>
-            <td class="b-gray w-p10">{% translate "CSO contribution" %}</td>
+            <td class="b-gray w-p10">{% translate "Total (Government + UNICEF)" %}[{{ pd.planned_budget.currency }}]</td>
+            <td class="b-gray w-p10">{% translate "Government contribution" %}</td>
             <td class="b-gray w-p10">{% translate "UNICEF contribution" %}</td>
           </tr>
           {% for result_link in pd.result_links.all %}
@@ -459,7 +459,7 @@
           </tr>
           <tr>
             <td>
-              <span>{% translate "CSO Authorized Officer" %}:</span><br/>
+              <span>{% translate "Government Authorized Officer" %}:</span><br/>
               <span>{% translate "Signature" %}:</span><br/>
               <span>{% translate "Date" %}:</span>
             </td>

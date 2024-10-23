@@ -160,13 +160,13 @@ def transition_to_cancelled(i):
     return True
 
 
-def transition_to_signature(i):
+def transition_to_pending_approval(i):
     # TODO ensure final partnership review document is set
     # this field is part of PR 2769
     return True
 
 
-def transition_to_signed(i):
+def transition_to_approved(i):
     from etools.applications.governments.models import GDDAmendment
 
     if i.has_active_amendment(GDDAmendment.KIND_NORMAL):
@@ -174,7 +174,7 @@ def transition_to_signed(i):
 
     if i.agreement.partner.blocked:
         raise TransitionError([
-            _('PD cannot transition to signed if the Partner is Blocked in Vision')
+            _('PD cannot transition to approved if the Partner is Blocked in Vision')
         ])
 
     return True
@@ -385,7 +385,7 @@ class GDDValid(CompleteValidation):
             raise StateValidationError([_('All PD Outputs need to be associated to a CP Output')])
         return True
 
-    def state_signature_valid(self, gdd, user=None):
+    def state_pending_approval_valid(self, gdd, user=None):
         self.check_required_fields(gdd)
         self.check_rigid_fields(gdd, related=True)
         if not review_was_accepted(gdd):

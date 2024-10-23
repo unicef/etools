@@ -6,7 +6,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.2.7,amendments,Partner User,,*,View,FALSE
 3.2.7,amendments,*,user_adds_amendment,*,View,FALSE
 3.2.7,amendments,*,,Draft,View,FALSE
-3.2.8,amendments,Unicef Focal Point,not_in_amendment_mode,Signed,Edit,TRUE
+3.2.8,amendments,Unicef Focal Point,not_in_amendment_mode,Approved,Edit,TRUE
 3.2.9,amendments,Unicef Focal Point,not_in_amendment_mode,Active,Edit,TRUE
 3.3.7,attachments,*,not_in_amendment_mode,*,View,TRUE
 3.3.7,attachments,Unicef Focal Point,not_in_amendment_mode,Draft,Edit,TRUE
@@ -16,12 +16,12 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.3.7,attachments,Unicef Focal Point,not_in_amendment_mode,Review,Edit,TRUE
 3.3.7,attachments,Senior Management Team,not_in_amendment_mode,Review,Edit,TRUE
 3.3.2,attachments,Representative Office,not_in_amendment_mode,Review,Edit,TRUE
-3.3.7,attachments,Unicef Focal Point,not_in_amendment_mode,Signature,Edit,TRUE
-3.3.7,attachments,Senior Management Team,not_in_amendment_mode,Signature,Edit,TRUE
-3.3.2,attachments,Representative Office,not_in_amendment_mode,Signature,Edit,TRUE
-3.3.7,attachments,Unicef Focal Point,not_in_amendment_mode,Signed,Edit,TRUE
-3.3.7,attachments,Senior Management Team,not_in_amendment_mode,Signed,Edit,TRUE
-3.3.2,attachments,Representative Office,not_in_amendment_mode,Signed,Edit,TRUE
+3.3.7,attachments,Unicef Focal Point,not_in_amendment_mode,Pending Approval,Edit,TRUE
+3.3.7,attachments,Senior Management Team,not_in_amendment_mode,Pending Approval,Edit,TRUE
+3.3.2,attachments,Representative Office,not_in_amendment_mode,Pending Approval,Edit,TRUE
+3.3.7,attachments,Unicef Focal Point,not_in_amendment_mode,Approved,Edit,TRUE
+3.3.7,attachments,Senior Management Team,not_in_amendment_mode,Approved,Edit,TRUE
+3.3.2,attachments,Representative Office,not_in_amendment_mode,Approved,Edit,TRUE
 3.3.7,attachments,Unicef Focal Point,not_in_amendment_mode,Active,Edit,TRUE
 3.3.7,attachments,Senior Management Team,not_in_amendment_mode,Active,Edit,TRUE
 3.3.2,attachments,Representative Office,not_in_amendment_mode,Active,Edit,TRUE
@@ -43,9 +43,9 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,has_data_processing_agreement,Partner User,,Draft,Edit,TRUE
 ,has_data_processing_agreement,Unicef Focal Point,,Review,Edit,TRUE
 ,has_data_processing_agreement,Partner User,,Review,Edit,TRUE
-,has_data_processing_agreement,Unicef Focal Point,,Signature,Edit,TRUE
-,has_data_processing_agreement,Partner User,,Signature,Edit,TRUE
-,has_data_processing_agreement,Unicef Focal Point,,Signed,Edit,TRUE
+,has_data_processing_agreement,Unicef Focal Point,,Pending Approval,Edit,TRUE
+,has_data_processing_agreement,Partner User,,Pending Approval,Edit,TRUE
+,has_data_processing_agreement,Unicef Focal Point,,Approved,Edit,TRUE
 ,has_data_processing_agreement,Unicef Focal Point,,Active,Edit,TRUE
 ,has_data_processing_agreement,Unicef Focal Point,,Ended,Edit,TRUE
 ,has_data_processing_agreement,Unicef Focal Point,,Suspended,Edit,TRUE
@@ -53,9 +53,9 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,has_activities_involving_children,Partner User,,Draft,Edit,TRUE
 ,has_activities_involving_children,Unicef Focal Point,,Review,Edit,TRUE
 ,has_activities_involving_children,Partner User,,Review,Edit,TRUE
-,has_activities_involving_children,Unicef Focal Point,,Signature,Edit,TRUE
-,has_activities_involving_children,Partner User,,Signature,Edit,TRUE
-,has_activities_involving_children,Unicef Focal Point,,Signed,Edit,TRUE
+,has_activities_involving_children,Unicef Focal Point,,Pending Approval,Edit,TRUE
+,has_activities_involving_children,Partner User,,Pending Approval,Edit,TRUE
+,has_activities_involving_children,Unicef Focal Point,,Approved,Edit,TRUE
 ,has_activities_involving_children,Unicef Focal Point,,Active,Edit,TRUE
 ,has_activities_involving_children,Unicef Focal Point,,Ended,Edit,TRUE
 ,has_activities_involving_children,Unicef Focal Point,,Suspended,Edit,TRUE
@@ -63,9 +63,9 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,has_special_conditions_for_construction,Partner User,,Draft,Edit,TRUE
 ,has_special_conditions_for_construction,Unicef Focal Point,,Review,Edit,TRUE
 ,has_special_conditions_for_construction,Partner User,,Review,Edit,TRUE
-,has_special_conditions_for_construction,Unicef Focal Point,,Signature,Edit,TRUE
-,has_special_conditions_for_construction,Partner User,,Signature,Edit,TRUE
-,has_special_conditions_for_construction,Unicef Focal Point,,Signed,Edit,TRUE
+,has_special_conditions_for_construction,Unicef Focal Point,,Pending Approval,Edit,TRUE
+,has_special_conditions_for_construction,Partner User,,Pending Approval,Edit,TRUE
+,has_special_conditions_for_construction,Unicef Focal Point,,Approved,Edit,TRUE
 ,has_special_conditions_for_construction,Unicef Focal Point,,Active,Edit,TRUE
 ,has_special_conditions_for_construction,Unicef Focal Point,,Ended,Edit,TRUE
 ,has_special_conditions_for_construction,Unicef Focal Point,,Suspended,Edit,TRUE
@@ -78,7 +78,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,document_currency,Unicef Focal Point,unlocked+not_in_amendment_mode,Draft,Edit,TRUE
 3.9.2,end,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
 3.9.2,end,Partner User,partner_court,Draft,Edit,TRUE
-3.9.3,end,PRC Secretary,,Signature,Edit,TRUE
+3.9.3,end,PRC Secretary,,Pending Approval,Edit,TRUE
 3.9.3,end,Unicef Focal Point,termination_doc_attached,Active,Edit,TRUE
 3.9.5,end,Unicef Focal Point,user_adds_amendment,*,Edit,TRUE
 3.9.5,final_partnership_review,UNICEF User,,*,View,TRUE
@@ -87,18 +87,18 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.9.5,date_partnership_review_performed,Unicef Focal Point,,Ended,Edit,TRUE
 3.9.5,flat_locations,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
 3.9.6,flat_locations,Partner User,partner_court,Draft,Edit,TRUE
-3.9.6,flat_locations,Unicef Focal Point,user_adds_amendment,Signed,Edit,TRUE
+3.9.6,flat_locations,Unicef Focal Point,user_adds_amendment,Approved,Edit,TRUE
 3.9.7,flat_locations,Unicef Focal Point,user_adds_amendment,Active,Edit,TRUE
 3.9.7,flat_locations,*,unlocked,Draft,Required,False
 3.9.8,frs,UNICEF User,not_in_amendment_mode,*,View,TRUE
 3.9.8,frs,Unicef Focal Point,not_in_amendment_mode,Draft,Edit,TRUE
 3.10.1,frs,Unicef Focal Point,not_in_amendment_mode,Review,Edit,TRUE
-3.10.1,frs,Unicef Focal Point,not_in_amendment_mode,Signature,Edit,TRUE
-3.10.1,frs,Unicef Focal Point,not_in_amendment_mode,Signed,Edit,TRUE
+3.10.1,frs,Unicef Focal Point,not_in_amendment_mode,Pending Approval,Edit,TRUE
+3.10.1,frs,Unicef Focal Point,not_in_amendment_mode,Approved,Edit,TRUE
 3.10.1,frs,PRC Secretary,not_in_amendment_mode,Draft,Edit,TRUE
 3.10.1,frs,PRC Secretary,not_in_amendment_mode,Review,Edit,TRUE
-3.10.1,frs,PRC Secretary,not_in_amendment_mode,Signature,Edit,TRUE
-3.10.1,frs,PRC Secretary,not_in_amendment_mode,Signed,Edit,TRUE
+3.10.1,frs,PRC Secretary,not_in_amendment_mode,Pending Approval,Edit,TRUE
+3.10.1,frs,PRC Secretary,not_in_amendment_mode,Approved,Edit,TRUE
 3.10.1,frs,PRC Secretary,not_in_amendment_mode,Active,Edit,TRUE
 3.10.1,frs,PRC Secretary,not_in_amendment_mode,Ended,Edit,TRUE
 3.10.1,frs,*,not_in_amendment_mode,Active,Required,TRUE
@@ -121,7 +121,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.12,hq_support_cost,Unicef Focal Point,,Draft,Edit,TRUE
 3.12.6,implementation_strategy,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
 3.12.6,implementation_strategy,Partner User,partner_court,Draft,Edit,TRUE
-3.2.5,in_amendment,Unicef Focal Point,,Signed,Edit,TRUE
+3.2.5,in_amendment,Unicef Focal Point,,Approved,Edit,TRUE
 3.2.7,in_amendment,Unicef Focal Point,,Active,Edit,TRUE
 3.2.8,ip_program_contribution,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
 3.2.9,ip_program_contribution,Partner User,partner_court,Draft,Edit,TRUE
@@ -132,7 +132,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.4.2,number,*,,*,Required,TRUE
 3.7,offices,Unicef Focal Point,,Draft,Edit,TRUE
 3.7,offices,Unicef Focal Point,,Review,Edit,TRUE
-3.7,offices,Unicef Focal Point,,Signature,Edit,TRUE
+3.7,offices,Unicef Focal Point,,Pending Approval,Edit,TRUE
 3.5,offices,Unicef Focal Point,user_adds_amendment,*,Edit,TRUE
 3.6,offices,*,unicef_not_accepted,Draft,Required,FALSE
 3.6,other_info,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
@@ -142,7 +142,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.2.3,other_partners_involved,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
 3.2.4,other_partners_involved,Partner User,partner_court,Draft,Edit,TRUE
 3.2.5,partner_authorized_officer_signatory,*,,Draft,View,FALSE
-3.2.7,partner_authorized_officer_signatory,Partner User,,Signature,Edit,TRUE
+3.2.7,partner_authorized_officer_signatory,Partner User,,Pending Approval,Edit,TRUE
 3.2.7,partner_authorized_officer_signatory,*,,Draft,Required,FALSE
 3.2.8,partner_focal_points,*,not_in_amendment_mode,*,View,TRUE
 3.2.8,partner_focal_points,*,,Closed,Edit,FALSE
@@ -150,7 +150,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.3.1,partner_focal_points,*,unicef_not_accepted,Draft,Required,FALSE
 3.3.2,pd_outputs,*,,*,View,TRUE
 3.3.3,pd_outputs,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
-3.3.3,pd_outputs,PRC Secretary,,Signature,Edit,TRUE
+3.3.3,pd_outputs,PRC Secretary,,Pending Approval,Edit,TRUE
 3.3.2,pd_outputs,Partner User,partner_court,Draft,Edit,TRUE
 3.3.3,pd_outputs,Unicef Focal Point,user_adds_amendment,*,Edit,TRUE
 3.3.3,planned_budget,Unicef Focal Point,,Draft,Edit,TRUE
@@ -158,14 +158,14 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.9.11,planned_visits,UNICEF User,not_in_amendment_mode,*,View,TRUE
 3.9.11,planned_visits,Unicef Focal Point,not_in_amendment_mode,Draft,Edit,TRUE
 3.9.11,planned_visits,Unicef Focal Point,not_in_amendment_mode,Review,Edit,TRUE
-3.9.11,planned_visits,Unicef Focal Point,not_in_amendment_mode,Signature,Edit,TRUE
-3.9.11,planned_visits,Unicef Focal Point,not_in_amendment_mode,Signed,Edit,TRUE
+3.9.11,planned_visits,Unicef Focal Point,not_in_amendment_mode,Pending Approval,Edit,TRUE
+3.9.11,planned_visits,Unicef Focal Point,not_in_amendment_mode,Approved,Edit,TRUE
 3.9.11,planned_visits,Unicef Focal Point,not_in_amendment_mode,Active,Edit,TRUE
 3.9.11,planned_visits,Unicef Focal Point,not_in_amendment_mode,Suspended,Edit,TRUE
 3.9.11,planned_visits,PME,not_in_amendment_mode,Draft,Edit,TRUE
 3.9.11,planned_visits,PME,not_in_amendment_mode,Review,Edit,TRUE
-3.9.11,planned_visits,PME,not_in_amendment_mode,Signature,Edit,TRUE
-3.9.11,planned_visits,PME,not_in_amendment_mode,Signed,Edit,TRUE
+3.9.11,planned_visits,PME,not_in_amendment_mode,Pending Approval,Edit,TRUE
+3.9.11,planned_visits,PME,not_in_amendment_mode,Approved,Edit,TRUE
 3.9.11,planned_visits,PME,not_in_amendment_mode,Active,Edit,TRUE
 3.9.11,planned_visits,PME,not_in_amendment_mode,Suspended,Edit,TRUE
 3.9.5,prc_review_attachment,*,,*,View,TRUE
@@ -174,18 +174,18 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.9.8,prc_review_document,Unicef Focal Point,,Review,Edit,TRUE
 ,prc_reviews,UNICEF User,,Draft,View,FALSE
 3.13.1,reporting_requirements,Unicef Focal Point,,Draft,Edit,TRUE
-3.13.1,reporting_requirements,PRC Secretary,,Signature,Edit,TRUE
+3.13.1,reporting_requirements,PRC Secretary,,Pending Approval,Edit,TRUE
 3.13.1,reporting_requirements,Unicef Focal Point,not_ended,Terminated,Edit,TRUE
 3.13.1,reporting_requirements,Unicef Focal Point,termination_doc_attached,Active,Edit,TRUE
-3.13.1,reporting_requirements,Unicef Focal Point,termination_doc_attached,Signed,Edit,TRUE
+3.13.1,reporting_requirements,Unicef Focal Point,termination_doc_attached,Approved,Edit,TRUE
 3.13.1,reporting_requirements,*,unicef_not_accepted,Draft,Required,FALSE
 ,result_links,Partner User,partner_court,Draft,Edit,TRUE
 3.13.1,result_links,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
-3.13.1,result_links,PRC Secretary,,Signature,Edit,TRUE
+3.13.1,result_links,PRC Secretary,,Pending Approval,Edit,TRUE
 3.13.1,result_links,Unicef Focal Point,user_adds_amendment,*,Edit,TRUE
 ,review_date_prc,*,,*,View,TRUE
-,review_date_prc,Unicef Focal Point,,Signature,Edit,TRUE
-,review_date_prc,Review Authorized Officer,,Signature,Edit,TRUE
+,review_date_prc,Unicef Focal Point,,Pending Approval,Edit,TRUE
+,review_date_prc,Review Authorized Officer,,Pending Approval,Edit,TRUE
 ,review_date_prc,Unicef Focal Point,,Review,Edit,TRUE
 ,review_date_prc,Review Authorized Officer,,Review,Edit,TRUE
 ,risks,*,,*,View,TRUE
@@ -194,24 +194,24 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,risks,*,,*,Required,False
 ,sections,Unicef Focal Point,,Draft,Edit,TRUE
 ,sections,Unicef Focal Point,,Review,Edit,TRUE
-,sections,Unicef Focal Point,,Signature,Edit,TRUE
+,sections,Unicef Focal Point,,Pending Approval,Edit,TRUE
 ,sections,Unicef Focal Point,user_adds_amendment,*,Edit,TRUE
 ,sections_present,UNICEF User,,*,Edit,TRUE
 ,sections_present,*,unicef_not_accepted,Draft,Required,FALSE
 ,signed_by_partner_date,*,,Draft,View,FALSE
-,signed_by_partner_date,Partner User,,Signature,Edit,TRUE
+,signed_by_partner_date,Partner User,,Pending Approval,Edit,TRUE
 ,signed_by_partner_date,*,,Draft,Required,FALSE
 ,signed_by_unicef_date,*,,Draft,View,FALSE
-,signed_by_unicef_date,Unicef Focal Point,,Signature,Edit,TRUE
+,signed_by_unicef_date,Unicef Focal Point,,Pending Approval,Edit,TRUE
 ,signed_by_unicef_date,*,,Draft,Required,FALSE
 ,signed_pd_attachment,*,,Draft,View,FALSE
-,signed_pd_attachment,Unicef Focal Point,,Signature,Edit,TRUE
+,signed_pd_attachment,Unicef Focal Point,,Pending Approval,Edit,TRUE
 ,signed_pd_attachment,*,,Draft,Required,FALSE
 ,signed_pd_document,*,,Draft,View,FALSE
-,signed_pd_document,Unicef Focal Point,,Signature,Edit,TRUE
+,signed_pd_document,Unicef Focal Point,,Pending Approval,Edit,TRUE
 ,start,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
 ,start,Partner User,partner_court,Draft,Edit,TRUE
-,start,PRC Secretary,,Signature,Edit,TRUE
+,start,PRC Secretary,,Pending Approval,Edit,TRUE
 ,submission_date,*,,*,View,TRUE
 ,submission_date,Unicef Focal Point,,Draft,Edit,TRUE
 ,submission_date,Partner User,,Draft,Edit,TRUE
@@ -235,10 +235,10 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,sites,Unicef Focal Point,not_in_amendment_mode,*,Edit,TRUE
 ,sites,*,,*,Required,FALSE
 ,unicef_signatory,*,,Draft,View,FALSE
-,unicef_signatory,Unicef Focal Point,,Signature,Edit,TRUE
+,unicef_signatory,Unicef Focal Point,,Pending Approval,Edit,TRUE
 ,unicef_signatory,*,,Draft,Required,FALSE
 ,unicef_signatory,*,,Review,Required,FALSE
-,unicef_signatory,*,,Signature,Required,FALSE
+,unicef_signatory,*,,Pending Approval,Required,FALSE
 ,unicef_accepted,*,,Draft,Edit,TRUE
 ,unicef_accepted,*,,Draft,Required,FALSE
 ,partner_accepted,*,,Draft,Required,FALSE
@@ -257,12 +257,12 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,date_sent_to_partner,*,,Draft,Required,FALSE
 ,context,*,unlocked,Draft,Required,FALSE
 ,cancel_justification,*,,Cancelled,Required,TRUE
-,signed_by_partner_date,*,,signature,Required,FALSE
-,signed_by_unicef_date,*,,signature,Required,FALSE
-,partner_authorized_officer_signatory,*,,signature,Required,FALSE
-,signed_pd_attachment,*,,signature,Required,FALSE
-3.2.7,partner_authorized_officer_signatory,Unicef Focal Point,,Signature,Edit,TRUE
-,signed_by_partner_date,Unicef Focal Point,,signature,Edit,TRUE
+,signed_by_partner_date,*,,pending_approval,Required,FALSE
+,signed_by_unicef_date,*,,pending_approval,Required,FALSE
+,partner_authorized_officer_signatory,*,,pending_approval,Required,FALSE
+,signed_pd_attachment,*,,pending_approval,Required,FALSE
+3.2.7,partner_authorized_officer_signatory,Unicef Focal Point,,Pending Approval,Edit,TRUE
+,signed_by_partner_date,Unicef Focal Point,,pending_approval,Edit,TRUE
 ,confidential,Unicef Focal Point,,Draft,Edit,TRUE
 ,confidential,UNICEF User,,*,View,TRUE
 ,final_review_approved,UNICEF User,,Ended,View,TRUE

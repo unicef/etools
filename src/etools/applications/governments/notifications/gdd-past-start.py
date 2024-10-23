@@ -5,7 +5,7 @@ defaults = {
     'content': """
     Dear Colleague,
 
-    Please note that the Partnership ref. {{ reference_number }} {{ title }} with {{ partner_name }} is signed, the start date for the GDD is {{ start_date }}. However, there is no FR associated with this partnership in eTools.
+    Please note that the Partnership ref. {{ reference_number }} {{ title }} with {{ partner_name }} is approved, the start date for the GDD is {{ start_date }}. However, there is no FR associated with this partnership in eTools.
     Please log into eTools and add the FR number to the record, so that the Government Digital Document/GDD status can progress to active status.
 
     Please follow the link below to add the FR information to your document.

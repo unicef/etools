@@ -476,7 +476,7 @@ class GDDReportingRequirementCreateSerializer(
                     )
             # TODO: [e4] remove this whenever a better validation is decided on.
             # This is out of place but needed as a hotfix, can edit should be checked at the view level consistently
-            elif self.gdd.status == GDD.SIGNATURE and can_edit:
+            elif self.gdd.status == GDD.PENDING_APPROVAL and can_edit:
                 pass
             else:
                 if not self.gdd.in_amendment and not self.gdd.termination_doc_attachment.exists():
@@ -519,7 +519,7 @@ class GDDReportingRequirementCreateSerializer(
     @cached_property
     def _past_records_editable(self):
         if self.gdd.status == GDD.DRAFT or \
-                (self.gdd.status == GDD.SIGNED and self.gdd.contingency_pd):
+                (self.gdd.status == GDD.APPROVED and self.gdd.contingency_pd):
             return True
         return False
 

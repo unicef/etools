@@ -872,7 +872,7 @@ class TestUpdate(BaseGDDTestCase):
     #     self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
     #     self.assertIn('Required fields not completed in draft', response.data[0]['description'])
     #
-    #     # check signature fields are not required in this case
+    #     # check pending_approval fields are not required in this case
     #     for field in [
     #         'signed_pd_attachment', 'date_sent_to_partner', 'signed_by_unicef_date',
     #         'signed_by_partner_date', 'partner_authorized_officer_signatory',
