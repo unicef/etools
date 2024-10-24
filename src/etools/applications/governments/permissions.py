@@ -2,10 +2,8 @@ import datetime
 from functools import lru_cache
 
 from django.apps import apps
-from django.conf import settings
 from django.utils.translation import gettext as _
 
-from etools_validator.utils import check_rigid_related
 from rest_framework import permissions
 from rest_framework.permissions import BasePermission
 
@@ -98,10 +96,10 @@ class PMPPermissions:
         return my_permissions
 
 
-class InterventionPermissions(PMPPermissions):
+class GDDPermissions(PMPPermissions):
 
-    MODEL_NAME = 'partners.Intervention'
-    EXTRA_FIELDS = ['sections_present', 'pd_outputs', 'final_partnership_review', 'prc_reviews', 'document_currency']
+    MODEL_NAME = 'governments.GDD'
+    EXTRA_FIELDS = ['sections_present', 'key_interventions', 'final_partnership_review', 'gdd_prc_reviews', 'document_currency']
 
     def __init__(self, **kwargs):
         """
@@ -121,19 +119,6 @@ class InterventionPermissions(PMPPermissions):
         def user_added_amendment(instance):
             return instance.in_amendment is True
 
-        # TODO: remove this as sooon as it expires on July first. Technical Debt - hard coded exception
-        def post_epd_temp_conditions(i):
-            # quick fix for offices that have not added their amendments in the system before the release date.
-            today = datetime.date.today()
-            available_til = datetime.date(2023, 7, 1)
-            begin_date = datetime.date(2022, 12, 1)
-            release_date = datetime.date(2023, 4, 30)
-            if i.end and begin_date <= i.end < release_date \
-                    and today < available_til \
-                    and i.document_type != "SSFA":
-                return True
-            return False
-
         def prp_mode_off():
             return tenant_switch_is_active("prp_mode_off")
 
@@ -145,29 +130,6 @@ class InterventionPermissions(PMPPermissions):
 
         def unicef_not_accepted(instance):
             return not instance.unicef_accepted
-
-        def unicef_not_accepted_contingency(instance):
-            """ field not required to accept if contingency is on"""
-            return instance.contingency_pd or not instance.unicef_accepted
-
-        def unlocked_or_contingency(instance):
-            """ field not required to accept if contingency is on"""
-            return instance.contingency_pd or not instance.locked
-
-        def is_spd_non_hum(instance):
-            # TODO: in the future we might want to add a money condition here (100k is the current limit)
-            return instance.document_type == instance.SPD and not instance.humanitarian_flag
-
-        def unicef_not_accepted_spd_non_hum(instance):
-            """ field not required to accept if pd is not non-humanitarian spd"""
-            # TODO: in the future we might want to add a money condition here (100k is the current limit)
-            return is_spd_non_hum(instance) or not instance.unicef_accepted
-
-        def not_spd(instance):
-            return not instance.document_type == instance.SPD
-
-        def not_ssfa(instance):
-            return not is_spd_non_hum(instance)
 
         staff_member = self.user
 
@@ -198,7 +160,7 @@ class InterventionPermissions(PMPPermissions):
             if self.user.id == review.authorized_officer_id:
                 self.user_groups.append('Review Authorized Officer')
 
-            if review.prc_reviews.filter(overall_review=review, user=self.user).exists():
+            if review.gdd_prc_reviews.filter(overall_review=review, user=self.user).exists():
                 self.user_groups.append('PRC Officer')
 
         self.user_groups = list(set(self.user_groups))
@@ -207,7 +169,6 @@ class InterventionPermissions(PMPPermissions):
             'contingency_on': self.instance.contingency_pd is True,
             'in_amendment_mode': user_added_amendment(self.instance),
             'not_in_amendment_mode': not user_added_amendment(self.instance),
-            'not_ssfa': not_ssfa(self.instance),
             'user_adds_amendment': user_added_amendment(self.instance),
             'prp_mode_on': not prp_mode_off(),
             'prp_mode_on+contingency_on': not prp_mode_off() and self.instance.contingency_pd,
@@ -221,67 +182,21 @@ class InterventionPermissions(PMPPermissions):
             'unicef_court': self.instance.unicef_court and unlocked(self.instance),
             'partner_court': not self.instance.unicef_court and unlocked(self.instance),
             'unlocked': unlocked(self.instance),
-            'is_spd': self.instance.document_type == self.instance.SPD,
-            'is_spd_non_hum': is_spd_non_hum(self.instance),
-            'is_pd_unlocked': self.instance.document_type == self.instance.PD and not self.instance.locked,
+            'is_pd_unlocked': not self.instance.locked,
             'unicef_not_accepted': unicef_not_accepted(self.instance),
-            'unicef_not_accepted_contingency': unicef_not_accepted_contingency(self.instance),
-            'unlocked_or_contingency': unlocked_or_contingency(self.instance),
             'unlocked+not_in_amendment_mode': unlocked(self.instance) and not user_added_amendment(self.instance),
-            'unicef_not_accepted_spd': not_spd(self.instance) or unicef_not_accepted(self.instance),
-            'unlocked_or_spd': not not_spd(self.instance) or unlocked(self.instance),
-            'unicef_not_accepted_spd_non_hum': unicef_not_accepted_spd_non_hum(self.instance),
-            'not_ssfa+unicef_not_accepted': not_ssfa(self.instance) and unicef_not_accepted(self.instance),
-            'post_epd_temp_conditions': post_epd_temp_conditions(self.instance),
-            'cfei_absent': not self.instance.cfei_number
+            'does_not_require_signature': self.instance.signature_required is False,
         }
 
-    # override get_permissions to enable us to prevent old interventions from being blocked on transitions
+    # override get_permissions to enable us to prevent old gdds from being blocked on transitions
     def get_permissions(self):
-        def intervention_is_v1():
-            if self.instance.status in [self.instance.DRAFT]:
-                return False
-            return self.instance.start < settings.PMP_V2_RELEASE_DATE if self.instance.start else False
 
-        # TODO: Remove this method when there are no active legacy programme documents
-        list_of_new_fields = ["budget_owner",
-                              "humanitarian_flag",
-                              "unicef_court",
-                              "date_sent_to_partner",
-                              "unicef_accepted",
-                              "partner_accepted",
-                              "context",
-                              "implementation_strategy",
-                              "gender_rating",
-                              "gender_narrative",
-                              "equity_rating",
-                              "equity_narrative",
-                              "sustainability_rating",
-                              "sustainability_narrative",
-                              "ip_program_contribution",
-                              "budget_owner",
-                              "hq_support_cost",
-                              "cash_transfer_modalities",
-                              "unicef_review_type",
-                              "capacity_development",
-                              "other_info",
-                              "other_partners_involved",
-                              "technical_guidance",
-                              "cancel_justification",
-                              "population_focus",
-                              "risks",
-                              "sites",
-                              "reporting_requirements",  # these last two fields avoids errors on existing SSFA valid
-                              "reference_number_year",
-                              "other_details"]
         ps = self.permission_structure
         my_permissions = {}
         for action in self.possible_actions:
             my_permissions[action] = {}
             for field in self.all_model_fields:
-                if action == "required" and field in list_of_new_fields and intervention_is_v1():
-                    my_permissions[action][field] = False
-                elif field in ps:
+                if field in ps:
                     if not ps[field][action]['true'] and not ps[field][action]['false']:
                         my_permissions[action][field] = self.actions_default_permissions[action]
                     else:
@@ -289,48 +204,6 @@ class InterventionPermissions(PMPPermissions):
                 else:
                     my_permissions[action][field] = self.actions_default_permissions[action]
         return my_permissions
-
-
-class AgreementPermissions(PMPPermissions):
-
-    MODEL_NAME = 'partners.Agreement'
-
-    def __init__(self, **kwargs):
-        """
-        :param kwargs: user, instance, permission_structure
-        if 'inbound_check' key, is sent in, that means that instance now contains all of the fields available in the
-        validation: old_instance, old.instance.property_old in case of related fields.
-        the reason for this is so that we can check the more complex permissions that can only be checked on save.
-        for example: in this case certain field are editable only when user adds an amendment. that means that we would
-        need access to the old amendments, new amendments in order to check this.
-        """
-        super().__init__(**kwargs)
-        inbound_check = kwargs.get('inbound_check', False)
-
-        def termination_doc_attached():
-            if self.instance.agreement_type != self.instance.PCA:
-                return True
-            if self.instance.termination_doc.exists():
-                return True
-            return False
-
-        def user_added_amendment(instance):
-            assert inbound_check, 'this function cannot be called unless instantiated with inbound_check=True'
-            # check_rigid_related checks if there were any changes from the previous
-            # amendments if there were changes it returns False
-            return not check_rigid_related(instance, 'amendments')
-
-        self.condition_map = {
-            'is type PCA or MOU or GTC': self.instance.agreement_type in [self.instance.PCA,
-                                                                          self.instance.MOU,
-                                                                          self.instance.GTC],
-            'is type PCA or SSFA': self.instance.agreement_type in [self.instance.PCA, self.instance.SSFA],
-            'is type SSFA': self.instance.agreement_type == self.instance.SSFA,
-            'is type MOU': self.instance.agreement_type == self.instance.MOU,
-            # this condition can only be checked on data save
-            'user adds amendment': False if not inbound_check else user_added_amendment(self.instance),
-            'termination_doc_attached': termination_doc_attached(),
-        }
 
 
 class PartnershipManagerPermission(permissions.BasePermission):
@@ -474,14 +347,14 @@ class ReadOnlyAPIUser(permissions.BasePermission):
             return False
 
 
-def intervention_field_is_editable_permission(field):
+def gdd_field_is_editable_permission(field):
     """
     Check the user is able to edit selected monitoring activity field.
-    View should either implement get_root_object to return instance of Intervention (if view is nested),
-    or return Intervention instance via get_object (can be used for detail actions).
+    View should either implement get_root_object to return instance of GDD (if view is nested),
+    or return GDD instance via get_object (can be used for detail actions).
     """
 
-    from etools.applications.partners.models import Intervention
+    from etools.applications.governments.models import GDD
 
     class FieldPermission(BasePermission):
         def has_permission(self, request, view):
@@ -495,8 +368,8 @@ def intervention_field_is_editable_permission(field):
             else:
                 instance = view.get_object()
 
-            ps = Intervention.permission_structure()
-            permissions = InterventionPermissions(
+            ps = GDD.permission_structure()
+            permissions = GDDPermissions(
                 user=request.user, instance=instance, permission_structure=ps
             )
             return permissions.get_permissions()['edit'].get(field)
@@ -504,14 +377,14 @@ def intervention_field_is_editable_permission(field):
     return FieldPermission
 
 
-def intervention_field_has_view_permission(field):
+def gdd_field_has_view_permission(field):
     """
     Check the user is able to view selected field.
-    View should either implement get_root_object to return instance of Intervention (if view is nested),
-    or return Intervention instance via get_object (can be used for detail actions).
+    View should either implement get_root_object to return instance of GDD (if view is nested),
+    or return GDD instance via get_object (can be used for detail actions).
     """
 
-    from etools.applications.partners.models import Intervention
+    from etools.applications.governments.models import GDD
 
     class FieldPermission(BasePermission):
         def has_permission(self, request, view):
@@ -525,8 +398,8 @@ def intervention_field_has_view_permission(field):
             else:
                 instance = view.get_object()
 
-            ps = Intervention.permission_structure()
-            permissions = InterventionPermissions(
+            ps = GDD.permission_structure()
+            permissions = GDDPermissions(
                 user=request.user, instance=instance, permission_structure=ps
             )
             return permissions.get_permissions()['view'].get(field)
@@ -569,6 +442,8 @@ class UserIsObjectPartnerStaffMember(UserIsPartnerStaffMemberPermission):
             return False
 
         return obj.partner.user_is_staff_member(request.user)
+
+
 
 
 class UserIsStaffPermission(BasePermission):
@@ -621,15 +496,15 @@ PartnershipManagerRefinedPermission = (
     )
 )
 
-# allow partners to load list ONLY for interventions to keep everything
+# allow partners to load list ONLY for gdds to keep everything
 # else working right as before; at least for now
-PMPInterventionPermission = (
+GDDPermission = (
     PartnershipManagerRefinedPermission | (view_action_permission('GET') & UserIsPartnerStaffMemberPermission)
 )
 
 # allow partners to load list ONLY for agreements to keep everything
 # else working right as before; at least for now
-PMPAgreementPermission = (
+AgreementPermission = (
     (view_action_permission('POST') & (
         UserIsStaffPermission | user_group_permission('Partnership Manager')
     )) |
@@ -649,7 +524,7 @@ class UserBelongsToObjectPermission(BasePermission):
         return obj.user == request.user
 
 
-class IsInterventionBudgetOwnerPermission(BasePermission):
+class IsGDDBudgetOwnerPermission(BasePermission):
     def has_object_permission(self, request, view, obj):
         if hasattr(view, 'get_root_object'):
             obj = view.get_root_object()
@@ -664,21 +539,21 @@ class AmendmentSessionOnlyDeletePermission(BasePermission):
         if request.method.upper() != 'DELETE':
             return True
 
-        intervention = view.get_root_object()
-        if not hasattr(intervention, 'amendment'):
+        gdd = view.get_root_object()
+        if not hasattr(gdd, 'amendment'):
             return True
 
-        amendment = intervention.amendment
+        amendment = gdd.amendment
         return obj.created > amendment.created
 
 
-class InterventionIsDraftPermission(BasePermission):
+class GDDIsDraftPermission(BasePermission):
     def has_permission(self, request, view):
-        intervention = view.get_root_object()
-        return intervention.status == 'draft'
+        gdd = view.get_root_object()
+        return gdd.status == 'draft'
 
 
-class InterventionAmendmentIsNotCompleted(BasePermission):
+class GDDAmendmentIsNotCompleted(BasePermission):
     def has_object_permission(self, request, view, obj):
         return obj.is_active
 
