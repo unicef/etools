@@ -114,7 +114,7 @@ class InventoryItemListView(POIQuerysetMixin, ListAPIView):
                 .filter(transfer__partner_organization=partner,
                         transfer__status=models.Transfer.COMPLETED,
                         transfer__destination_point=poi.pk)\
-                .exclude(transfer__transfer_type=models.Transfer.WASTAGE)
+                .exclude(transfer__transfer_type__in=[models.Transfer.WASTAGE, models.Transfer.DISPENSE])
 
             qs = qs.select_related('transfer',
                                    'material',
@@ -161,7 +161,7 @@ class InventoryMaterialsViewSet(POIQuerysetMixin, mixins.ListModelMixin, Generic
             .filter(transfer__status=models.Transfer.COMPLETED,
                     transfer__destination_point=poi.pk,
                     transfer__partner_organization=partner)\
-            .exclude(transfer__transfer_type=models.Transfer.WASTAGE)\
+            .exclude(transfer__transfer_type__in=[models.Transfer.WASTAGE, models.Transfer.DISPENSE])\
             .defer('transfer__origin_point__point',
                    'transfer__destination_point__point',
                    'transfer__origin_point__parent__geom',
@@ -296,10 +296,12 @@ class TransferViewSet(
 
         completed_filters = Q()
         completed_filters |= Q(Q(origin_point=location) & ~Q(destination_point=location))
-        completed_filters |= Q(destination_point=location, transfer_type=models.Transfer.WASTAGE)
+        completed_filters |= Q(destination_point=location,
+                               transfer_type__in=[models.Transfer.WASTAGE, models.Transfer.DISPENSE])
 
         qs = self.get_queryset().filter(status=models.Transfer.COMPLETED).filter(completed_filters)
-
+        # todo change for transfer_type == dispense/wastage
+        # if no transfer_type, get all
         if not self.request.query_params.get('transfer_type', None):
             qs = qs.exclude(transfer_type=models.Transfer.WASTAGE)
 
