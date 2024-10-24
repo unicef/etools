@@ -230,7 +230,6 @@ class TestTransferView(BaseTenantTestCase):
     def test_completed(self):
         url = reverse('last_mile:transfers-completed', args=(self.warehouse.pk,))
         response = self.forced_auth_req('get', url, user=self.partner_staff)
-
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 1)
         self.assertEqual(self.completed.pk, response.data['results'][0]['id'])
@@ -532,6 +531,40 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(self.checked_in.items.get(pk=item_2.pk).quantity, 22)
         self.assertIn(f'W @ {checkout_data["origin_check_out_at"].strftime("%y-%m-%d")}', wastage_transfer.name)
 
+    def test_checkout_dispense(self):
+        item_1 = ItemFactory(quantity=11, transfer=self.checked_in)
+        item_2 = ItemFactory(quantity=22, transfer=self.checked_in)
+
+        destination = PointOfInterestFactory()
+        checkout_data = {
+            "transfer_type": models.Transfer.DISPENSE,
+            "destination_point": destination.pk,
+            "comment": "",
+            "proof_file": self.attachment.pk,
+            "items": [
+                {"id": item_1.pk, "quantity": 9,}
+            ],
+            "origin_check_out_at": timezone.now()
+        }
+        url = reverse('last_mile:transfers-new-check-out', args=(self.warehouse.pk,))
+        response = self.forced_auth_req('post', url, user=self.partner_staff, data=checkout_data)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['status'], models.Transfer.COMPLETED)
+        self.assertEqual(response.data['transfer_type'], models.Transfer.DISPENSE)
+        self.assertIn(response.data['proof_file'], self.attachment.file.path)
+
+        dispense_transfer = models.Transfer.objects.get(pk=response.data['id'])
+        self.assertEqual(dispense_transfer.destination_point, destination)
+        self.assertEqual(dispense_transfer.items.count(), len(checkout_data['items']))
+        self.assertEqual(dispense_transfer.items.first().quantity, 9)
+        self.assertEqual(dispense_transfer.items.first().wastage_type, None)
+
+        self.assertEqual(self.checked_in.items.count(), 2)
+        self.assertEqual(self.checked_in.items.get(pk=item_1.pk).quantity, 2)
+        self.assertEqual(self.checked_in.items.get(pk=item_2.pk).quantity, 22)
+        self.assertIn(f'D @ {checkout_data["origin_check_out_at"].strftime("%y-%m-%d")}', dispense_transfer.name)
+
     def test_checkout_handover(self):
         item_1 = ItemFactory(quantity=11, transfer=self.checked_in)
         item_2 = ItemFactory(quantity=22, transfer=self.checked_in)
@@ -618,6 +651,29 @@ class TestTransferView(BaseTenantTestCase):
         wastage_transfer = models.Transfer.objects.get(pk=response.data['id'])
         self.assertEqual(wastage_transfer.destination_point, None)
 
+    def test_checkout_dispense_without_location(self):
+        item_1 = ItemFactory(quantity=11, transfer=self.checked_in)
+
+        checkout_data = {
+            "transfer_type": models.Transfer.DISPENSE,
+            "comment": "",
+            "proof_file": self.attachment.pk,
+            "items": [
+                {"id": item_1.pk, "quantity": 9,}
+            ],
+            "origin_check_out_at": timezone.now()
+        }
+        url = reverse('last_mile:transfers-new-check-out', args=(self.warehouse.pk,))
+        response = self.forced_auth_req('post', url, user=self.partner_staff, data=checkout_data)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['status'], models.Transfer.COMPLETED)
+        self.assertEqual(response.data['transfer_type'], models.Transfer.DISPENSE)
+        self.assertIn(response.data['proof_file'], self.attachment.file.path)
+
+        dispense_transfer = models.Transfer.objects.get(pk=response.data['id'])
+        self.assertEqual(dispense_transfer.destination_point, None)
+
     def test_checkout_without_proof_file(self):
         item_1 = ItemFactory(quantity=11, transfer=self.checked_in)
 
@@ -626,6 +682,23 @@ class TestTransferView(BaseTenantTestCase):
             "comment": "",
             "items": [
                 {"id": item_1.pk, "quantity": 9, "wastage_type": models.Item.EXPIRED},
+            ],
+            "origin_check_out_at": timezone.now()
+        }
+        url = reverse('last_mile:transfers-new-check-out', args=(self.warehouse.pk,))
+        response = self.forced_auth_req('post', url, user=self.partner_staff, data=checkout_data)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('The proof file is required.', response.data)
+
+    def test_checkout_without_proof_file_dispense(self):
+        item_1 = ItemFactory(quantity=11, transfer=self.checked_in)
+
+        checkout_data = {
+            "transfer_type": models.Transfer.DISPENSE,
+            "comment": "",
+            "items": [
+                {"id": item_1.pk, "quantity": 9,},
             ],
             "origin_check_out_at": timezone.now()
         }
