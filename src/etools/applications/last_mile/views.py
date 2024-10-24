@@ -293,17 +293,14 @@ class TransferViewSet(
     @action(detail=False, methods=['get'], url_path='completed')
     def completed(self, request, *args, **kwargs):
         location = self.get_parent_poi()
-
         completed_filters = Q()
         completed_filters |= Q(Q(origin_point=location) & ~Q(destination_point=location))
         completed_filters |= Q(destination_point=location,
                                transfer_type__in=[models.Transfer.WASTAGE, models.Transfer.DISPENSE])
 
         qs = self.get_queryset().filter(status=models.Transfer.COMPLETED).filter(completed_filters)
-        # todo change for transfer_type == dispense/wastage
-        # if no transfer_type, get all
         if not self.request.query_params.get('transfer_type', None):
-            qs = qs.exclude(transfer_type=models.Transfer.WASTAGE)
+            qs = qs.exclude(transfer_type__in=[models.Transfer.WASTAGE, models.Transfer.DISPENSE])
 
         return self.paginate_response(qs)
 

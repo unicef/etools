@@ -274,8 +274,8 @@ class TransferBaseSerializer(AttachmentSerializerMixin, serializers.ModelSeriali
             "HANDOVER": "HO",
             "WASTAGE": "W",
             "DELIVERY": "DW",
-            "DISTRIBUTION": "DD"
-
+            "DISTRIBUTION": "DD",
+            "DISPENSE": "D"
         }
         date = validated_data.get('origin_check_out_at') or validated_data.get('destination_check_in_at') or timezone.now()
         transfer_type = validated_data.get("transfer_type") or transfer_type
@@ -484,7 +484,6 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
     @transaction.atomic
     def create(self, validated_data):
         checkout_items = validated_data.pop('items')
-
         if not self.initial_data.get('proof_file'):
             raise ValidationError(_('The proof file is required.'))
 
