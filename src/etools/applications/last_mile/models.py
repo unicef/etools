@@ -308,13 +308,11 @@ class ItemManager(models.Manager):
 
 class Item(TimeStampedModel, models.Model):
     DAMAGED = 'DAMAGED'
-    STOLEN = 'STOLEN'
     EXPIRED = 'EXPIRED'
     LOST = 'LOST'
 
     WASTAGE_TYPE = (
         (DAMAGED, _('Damaged')),
-        (STOLEN, _('Stolen')),
         (EXPIRED, _('Expired')),
         (LOST, _('Lost')),
     )
