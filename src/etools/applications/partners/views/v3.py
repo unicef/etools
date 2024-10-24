@@ -4,7 +4,6 @@ from django.db.models import Value
 from django.db.models.functions import Concat
 from django.http import Http404
 from django.utils.functional import cached_property
-from etools.applications.governments.models import GDDAmendment
 
 from rest_framework import status
 from rest_framework.exceptions import PermissionDenied
@@ -16,6 +15,7 @@ from unicef_locations.models import GatewayType
 
 from etools.applications.attachments.models import AttachmentFlat
 from etools.applications.funds.models import FundsReservationItem
+from etools.applications.governments.models import GDDAmendment
 from etools.applications.organizations.models import Organization
 from etools.applications.partners.models import (
     Agreement,

@@ -80,15 +80,15 @@ class FRsView(APIView):
             qs._result_cache = None
 
         if intervention_id:
-            qs = qs.filter((Q(intervention__id=intervention_id) | Q(intervention__isnull=True)))
+            qs = qs.filter(Q(intervention__id=intervention_id) | (Q(intervention__isnull=True) & Q(gdd__isnull=True)))
             not_found = set(values) - set(qs.values_list('fr_number', flat=True))
             if not_found:
                 frs_not_found = FundsReservationHeader.objects.filter(fr_number__in=not_found)
-                errors = ['FR #{0} is already being used by PD/SPD ref [{0.intervention}]'.format(
-                    fr) for fr in frs_not_found]
+                errors = [f'FR #{0} is already being used by Document ref '
+                          f'[{fr.intervention if fr.intervention else fr.gdd}]' for fr in frs_not_found]
                 return self.bad_request(', '.join(errors))
         else:
-            qs = qs.filter(intervention__isnull=True)
+            qs = qs.filter(intervention__isnull=True, gdd__isnull=True)
 
         if qs.count() != len(values):
             return self.bad_request('One or more of the FRs are used by another PD/SPD '
