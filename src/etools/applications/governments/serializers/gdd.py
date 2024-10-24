@@ -642,6 +642,7 @@ class GDDDetailSerializer(
             "risks",
             "section_names",
             "sections",
+            "signature_required",
             "signed_by_partner_date",
             "signed_by_unicef_date",
             "signed_pd_attachment",
