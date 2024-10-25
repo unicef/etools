@@ -247,7 +247,7 @@ urlpatterns = [
         name='gdd-amendments-list'
     ),
     path(
-        'gdd/amendments/<int:pk>/',
+        'gdds/amendments/<int:pk>/',
         view=GDDAmendmentDeleteView.as_view(http_method_names=['delete', ]),
         name='gdd-amendments-del'
     ),
