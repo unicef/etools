@@ -28,7 +28,8 @@ from etools.applications.governments.amendment_utils import (
     GDD_AMENDMENT_DEFAULTS,
     GDD_AMENDMENT_DIFF_POST_EFFECTS,
     GDD_AMENDMENT_IGNORED_FIELDS,
-    GDD_AMENDMENT_RELATED_FIELDS, GDD_AMENDMENT_MERGE_POST_EFFECTS,
+    GDD_AMENDMENT_MERGE_POST_EFFECTS,
+    GDD_AMENDMENT_RELATED_FIELDS,
 )
 from etools.applications.governments.validation import gdds as gdd_validation
 from etools.applications.locations.models import Location
@@ -1007,7 +1008,7 @@ class GDD(TimeStampedModel):
 
         super().save()
 
-        if not oldself:
+        if not oldself and not hasattr(self, 'planned_budget'):
             self.planned_budget = GDDBudget.objects.create(gdd=self)
 
     def has_active_amendment(self, kind=None):
