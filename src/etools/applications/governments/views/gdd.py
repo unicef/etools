@@ -953,7 +953,7 @@ class GDDAmendmentDeleteView(FullGDDSnapshotDeleteMixin, DestroyAPIView):
     )
     queryset = GDDAmendment.objects.all()
 
-    def get_intervention(self):
+    def get_gdd(self):
         return self.get_root_object()
 
     @functools.cache
