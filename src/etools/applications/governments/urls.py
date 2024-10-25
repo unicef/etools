@@ -3,6 +3,8 @@ from django.urls import path
 from etools.applications.governments.views.gdd import (
     GDDActivityCreateView,
     GDDActivityDetailUpdateView,
+    GDDAmendmentDeleteView,
+    GDDAmendmentListAPIView,
     GDDAttachmentListCreateView,
     GDDAttachmentUpdateDeleteView,
     GDDFRsView,
@@ -238,6 +240,16 @@ urlpatterns = [
             http_method_names=['patch'],
         ),
         name='gdd-send-unicef',
+    ),
+    path(
+        'gdds/<int:gdd_pk>/amendments/',
+        view=GDDAmendmentListAPIView.as_view(http_method_names=['get', 'post']),
+        name='gdd-amendments-list'
+    ),
+    path(
+        'gdd/amendments/<int:pk>/',
+        view=GDDAmendmentDeleteView.as_view(http_method_names=['delete', ]),
+        name='gdd-amendments-del'
     ),
     path(
         'gdds/<int:pk>/amendment_merge/',

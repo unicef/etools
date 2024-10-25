@@ -1,4 +1,5 @@
 import datetime
+import html
 
 from django.conf import settings
 from django.db import connection
@@ -7,12 +8,14 @@ from django.utils import timezone
 from celery.utils.log import get_task_logger
 from django_tenants.utils import get_tenant_model, schema_context
 
-from etools.applications.governments.models import GDD, GDDActivity
+from etools.applications.environment.notifications import send_notification_with_template
+from etools.applications.governments.models import GDD, GDDActivity, GDDAmendment
 from etools.applications.governments.serializers.exports.vision.gdd_v1 import GDDVisionExportSerializer
 from etools.applications.partners.synchronizers import VisionUploader
 from etools.config.celery import app
 
 logger = get_task_logger(__name__)
+
 
 class GDDVisionUploader(VisionUploader):
     serializer_class = GDDVisionExportSerializer
@@ -41,6 +44,7 @@ class GDDVisionUploader(VisionUploader):
             return False
 
         return True
+
 
 @app.task
 def send_gdd_to_vision(tenant_name: str, gdd_pk: int, retry_counter=0):
@@ -83,3 +87,26 @@ def send_gdd_to_vision(tenant_name: str, gdd_pk: int, retry_counter=0):
                              f'PD number: {gdd_pk}. Business area code: {tenant.business_area_code}')
     finally:
         connection.set_tenant(original_tenant)
+
+
+@app.task
+def send_gdd_amendment_added_notification(schema_name, gdd):
+    """Email to focal point(s) if gdd amendment is added"""
+    with schema_context(schema_name):
+        recipients = [
+            fp.email for fp in gdd.partner_focal_points.all()
+            if fp.email
+        ]
+        amendment_choices = GDDAmendment.AMENDMENT_TYPES + GDDAmendment.AMENDMENT_TYPES_OLD
+        amendment_choice_values = [html.escape(amendment_choices[t])
+                                   for t in gdd.amendments.order_by('id').last().types]
+
+        send_notification_with_template(
+            recipients=recipients,
+            template_name="governments/gdd/amendment/added",
+            context={
+                "title": gdd.title,
+                "reference_number": gdd.reference_number,
+                "amendment_type": ', '.join(amendment_choice_values),
+            }
+        )
