@@ -542,7 +542,7 @@ class TestTransferView(BaseTenantTestCase):
             "comment": "",
             "proof_file": self.attachment.pk,
             "items": [
-                {"id": item_1.pk, "quantity": 9,}
+                {"id": item_1.pk, "quantity": 9}
             ],
             "origin_check_out_at": timezone.now()
         }
@@ -659,7 +659,7 @@ class TestTransferView(BaseTenantTestCase):
             "comment": "",
             "proof_file": self.attachment.pk,
             "items": [
-                {"id": item_1.pk, "quantity": 9,}
+                {"id": item_1.pk, "quantity": 9}
             ],
             "origin_check_out_at": timezone.now()
         }
@@ -698,7 +698,7 @@ class TestTransferView(BaseTenantTestCase):
             "transfer_type": models.Transfer.DISPENSE,
             "comment": "",
             "items": [
-                {"id": item_1.pk, "quantity": 9,},
+                {"id": item_1.pk, "quantity": 9},
             ],
             "origin_check_out_at": timezone.now()
         }
