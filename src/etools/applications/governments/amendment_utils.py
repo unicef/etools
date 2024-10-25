@@ -19,6 +19,7 @@ GDD_AMENDMENT_RELATED_FIELDS = {
 
         # many to one
         'agreement',
+        'partner',
         'budget_owner',
 
         # many to many
