@@ -102,8 +102,10 @@ class GDDOfficerReviewBaseView(DetailedGDDResponseMixin, GDDBaseViewMixin):
             return qs.none()
         return qs
 
+
 class GDDOfficerReviewListView(GDDOfficerReviewBaseView, ListAPIView):
     permission_classes = [IsAuthenticated, UserIsStaffPermission]
+
 
 class GDDOfficerReviewDetailView(GDDOfficerReviewBaseView, UpdateAPIView):
     permission_classes = [

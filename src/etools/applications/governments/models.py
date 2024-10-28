@@ -801,10 +801,11 @@ class GDD(TimeStampedModel):
     def all_lower_results(self):
         # todo: it'd be nice to be able to do this as a queryset but that may not be possible
         # with prefetch_related
-        return [
+        ff = [
             lower_result for link in self.result_links.all()
             for lower_result in link.gdd_key_interventions.all()
         ]
+        return ff
 
     @cached_property
     def total_frs(self):
@@ -1844,7 +1845,7 @@ class GDDResultLink(TimeStampedModel):
     workplan = models.ForeignKey(
         GovernmentEWP, related_name='result_links', verbose_name=_('Workplan'),
         on_delete=models.CASCADE, blank=True, null=True
-        )
+    )
     cp_output = models.ForeignKey(
         EWPOutput, related_name='result_links', verbose_name=_('CP Output'),
         on_delete=models.PROTECT,

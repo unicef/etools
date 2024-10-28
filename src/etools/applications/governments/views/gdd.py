@@ -683,6 +683,7 @@ class GDDSupplyItemUploadView(GDDMixin, APIView):
             status=status.HTTP_200_OK,
         )
 
+
 class GDDRiskDeleteView(FullGDDSnapshotDeleteMixin, DestroyAPIView):
     queryset = GDDRisk.objects
     permission_classes = [

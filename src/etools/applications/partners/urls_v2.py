@@ -52,7 +52,7 @@ from etools.applications.partners.views.partner_organization_v2 import (
     PartnerWithSpecialAuditCompleted,
     PlannedEngagementAPIView,
 )
-from etools.applications.partners.views.v1 import PCAPDFView, GTCPDFView
+from etools.applications.partners.views.v1 import GTCPDFView, PCAPDFView
 from etools.applications.partners.views.v2 import PMPDropdownsListApiView, PMPStaticDropdownsListAPIView
 
 # http://www.django-rest-framework.org/api-guide/format-suffixes/

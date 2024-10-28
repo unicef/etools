@@ -1,29 +1,16 @@
-from django.contrib.auth import get_user_model
-from django.core.exceptions import ImproperlyConfigured
 from django.db import transaction
-from django.utils.translation import gettext as _, gettext_lazy
+from django.utils.translation import gettext as _
 
-from rest_framework import fields, serializers
-from rest_framework.relations import RelatedField
+from rest_framework import serializers
 from rest_framework.serializers import ValidationError
-from unicef_attachments.fields import AttachmentSingleFileField
-from unicef_attachments.serializers import AttachmentSerializerMixin
 from unicef_locations.serializers import LocationLightSerializer
-from unicef_restlib.fields import SeparatedReadWriteField
 
-from etools.applications.field_monitoring.fm_settings.models import LocationSite
-from etools.applications.funds.models import FundsCommitmentItem, FundsReservationHeader
-from etools.applications.funds.serializers import FRHeaderSerializer, FRsSerializer
 from etools.applications.governments.models import (
     EWPActivity,
     GDD,
     GDDActivity,
     GDDActivityItem,
-    GDDAttachment,
-    GDDBudget,
     GDDKeyIntervention,
-    GDDPlannedVisits,
-    GDDPlannedVisitSite,
     GDDResultLink,
 )
 from etools.applications.governments.serializers.gdd_snapshot import FullGDDSnapshotSerializerMixin
@@ -170,7 +157,6 @@ class GDDKeyInterventionBaseSerializer(serializers.ModelSerializer):
 
 class GDDKeyInterventionSerializer(GDDKeyInterventionBaseSerializer):
     pass
-
 
 
 class GDDKeyInterventionCUSerializer(

@@ -434,11 +434,8 @@ class GovernmentSupplyItemAdmin(RestrictedEditAdmin):
     search_fields = ('title',)
 
 
-
 class EWPActivityAdmin(RestrictedEditAdmin):
     raw_id_fields = ('partners', 'locations', 'workplan', 'ewp_key_intervention')
-
-
 
 
 admin.site.register(models.GDD, GDDAdmin)
