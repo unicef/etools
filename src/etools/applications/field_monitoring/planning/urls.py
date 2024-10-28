@@ -18,6 +18,7 @@ root_api.register(r'partners', views.PartnersViewSet, basename='partners')
 activities_api = NestedComplexRouter(root_api, r'activities', lookup='monitoring_activity')
 activities_api.register(r'attachments', views.ActivityAttachmentsViewSet, basename='activity_attachments')
 activities_api.register(r'action-points', views.MonitoringActivityActionPointViewSet, basename='activity_action_points')
+activities_api.register(r'tpm-concerns', views.TPMConcernsViewSet, basename='activity_tpm_concerns')
 
 app_name = 'field_monitoring_planning'
 urlpatterns = [

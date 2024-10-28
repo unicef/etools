@@ -663,7 +663,7 @@ ECN_API_ENDPOINT = get_from_secrets_or_env('ECN_API_ENDPOINT', '')  # example: h
 
 # This variable prevents certain admin sections from being edited by superusers unless
 # their user emails are in the ADMIN_EDIT_EMAILS variable below
-RESTRICTED_ADMIN = get_from_secrets_or_env('RESTRICTED_ADMIN', True)
+RESTRICTED_ADMIN = str2bool(get_from_secrets_or_env('RESTRICTED_ADMIN', 'True'))
 
 # Emails allowed to edit admin models in Partners and Reports apps if RESTRICTED_ADMIN is enabled
 ADMIN_EDIT_EMAILS = get_from_secrets_or_env('ADMIN_EDIT_EMAILS', '')
