@@ -44,7 +44,7 @@ class PRPGDDListSerializer(serializers.ModelSerializer):
     offices = serializers.SlugRelatedField(many=True, read_only=True, slug_field='name')
     business_area_code = serializers.SerializerMethodField()
     partner_org = PRPPartnerOrganizationListSerializer(read_only=True, source='partner')
-    agreement = serializers.CharField(read_only=True, source='agreement.agreement_number')
+    agreement = serializers.SerializerMethodField()
     unicef_focal_points = UserFocalPointSerializer(many=True, read_only=True)
     agreement_auth_officers = PRPPartnerStaffMemberSerializer(many=True, read_only=True,
                                                               source='agreement.authorized_officers')
@@ -78,6 +78,9 @@ class PRPGDDListSerializer(serializers.ModelSerializer):
 
     def fr_currencies_ok(self, obj):
         return obj.frs__currency__count == 1 if obj.frs__currency__count else None
+
+    def get_agreement(self, obj):
+        return obj.agreement.agreement_number if obj.agreement else '-'
 
     def get_document_type(self, obj):
         return 'GDD'
