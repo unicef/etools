@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-09-16 13:07+0000\n"
+"POT-Creation-Date: 2024-09-24 09:12+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -64,10 +64,8 @@ msgstr "إطار النهج المنسق للتحويلات النقدية"
 msgid "Signed Amendment"
 msgstr "التعديل الموقع"
 
-#, fuzzy
-#| msgid "Intervention Attachment"
 msgid "Termination Doc Attachment"
-msgstr "مرفق التدخل"
+msgstr ""
 
 msgid "Agreement Details"
 msgstr "تفاصيل الاتفاقية"
@@ -999,9 +997,6 @@ msgstr "التوجيه الفني"
 msgid "Cancel Justification"
 msgstr "إلغاء التبرير"
 
-msgid "Attachments"
-msgstr "المرفقات"
-
 msgid "Metadata"
 msgstr "البيانات الوصفية"
 
@@ -1221,6 +1216,12 @@ msgstr "عضو لجنة مراجعة الشراكات"
 
 msgid "Overall Approver"
 msgstr "الموافق العام"
+
+msgid "Authorized Officer"
+msgstr ""
+
+msgid "Recommend for Approval"
+msgstr ""
 
 msgid "Sent Back by Secretary Comment"
 msgstr "تم الإرسال مرة أخرى بسبب تعليق السكرتير"
@@ -1457,6 +1458,9 @@ msgstr "نوع المرفق"
 msgid "N/A"
 msgstr "غير متاح"
 
+msgid "Attachments"
+msgstr "المرفقات"
+
 msgid "CSO Contribution"
 msgstr "مساهمة منظمات المجتمع المدني"
 
@@ -1501,9 +1505,6 @@ msgstr "لا يمكن تعيين الزيارة المخططة للتدخلات 
 msgid ""
 "An attachment cannot be changed in statuses \"Ended, Closed or Terminated\""
 msgstr "لا يمكن تغيير المرفق في الحالات \"منتهي أو مغلق أو منتهي\""
-
-msgid "Unable to find corresponding file type."
-msgstr ""
 
 msgid "An Output cannot be updated for a partner that is blocked in Vision"
 msgstr "لا يمكن تحديث الإخراج لشريك محظور في Vision"
@@ -1607,13 +1608,14 @@ msgstr ""
 msgid "Vendor number must belong to PRG2 account group"
 msgstr "يجب أن ينتمي رقم البائع إلى مجموعة حسابات PRG2"
 
+msgid "Authorized officer cannot be the same as overall approver."
+msgstr ""
+
 msgid "Unknown intervention."
 msgstr "تدخل غير معروف."
 
-#, fuzzy
-#| msgid "Signatures cannot be dated in the future"
 msgid "Results cannot be changed in this status"
-msgstr "لا يمكن تأريخ التوقيعات في المستقبل"
+msgstr "لا يمكن تغيير النتائج في هذه الحالة"
 
 msgid "EZHACT Vision integration disabled"
 msgstr "تم تعطيل تكامل مع برنامج vision- EZHACT"
@@ -1750,56 +1752,42 @@ msgstr "مسؤول اليونيسف المعتمد"
 msgid "Date Uploaded"
 msgstr "تاريخ الرفع"
 
-msgid "Invalid"
-msgstr "غير صالح"
-
 msgid "Document"
 msgstr "وثيقة"
+
+msgid "Invalid"
+msgstr "غير صالح"
 
 msgid "Review for eTools reference number: "
 msgstr ""
 
-#, fuzzy
-#| msgid "PRC Submitted By"
 msgid "Submitted By"
-msgstr "المقدم لدى لجنة مراجعة الشراكات"
+msgstr "مقدم بواسطة"
 
-#, fuzzy
-#| msgid "Days from Submission to Signed"
 msgid "Date of submission for review"
-msgstr "أيام من التقديم إلى التوقيع"
+msgstr "تاريخ التقديم للمراجعة"
 
-#, fuzzy
-#| msgid "Overall Approver"
 msgid "Overall Comment"
-msgstr "الموافق العام"
+msgstr "التعليق العام"
 
-#, fuzzy
-#| msgid "Overall Approver"
 msgid "Overall Approval"
-msgstr "الموافق العام"
+msgstr "الموافقة الشاملة"
 
-#, fuzzy
-#| msgid "Overall Approver"
 msgid "Overall Review"
-msgstr "الموافق العام"
+msgstr "نظرة شاملة"
 
-#, fuzzy
-#| msgid "PRC Review"
 msgid "PRC Member Reviews"
-msgstr "محضر لجنة مراجعة الشراكات"
+msgstr "تقييمات الأعضاء"
 
 msgid "PRC Member Name"
-msgstr ""
+msgstr "اسم عضو"
 
 msgid "Approved"
-msgstr ""
+msgstr "موافقة"
 
 msgid "Approval comment"
-msgstr ""
+msgstr "تعليق الموافقة"
 
-#, fuzzy
-#| msgid "Review Date"
 msgid "Review date"
 msgstr "تاريخ المراجعة"
 
@@ -1870,10 +1858,8 @@ msgstr ""
 "يجب ان يساوي إجمالي الحجز النقدي المبلغ الإجمالي الفعلي، و يكون قيمة المبالغ "
 "المعلقة 0"
 
-#, fuzzy
-#| msgid "Final Review Approved"
 msgid "Final Review must be approved"
-msgstr "تمت الموافقة على المراجعة النهائية"
+msgstr "يجب الموافقة على المراجعة النهائية"
 
 msgid "Cannot Transition status while adding an amendment"
 msgstr "لا يمكن نقل الحالة أثناء إضافة تعديل"
@@ -1918,10 +1904,8 @@ msgstr "لا يمكن تنشيط وثيقة البرامج إذا كان الش�
 msgid "Agreement selected is not of type SSFA"
 msgstr "الاتفاقية المختارة ليست من نوع اتفاقية التمويل الصغير"
 
-#, fuzzy
-#| msgid " without deleting the indicators first"
 msgid " without deleting the indicators first "
-msgstr "دون حذف المؤشرات أولا"
+msgstr " دون حذف المؤشرات أولا"
 
 #, python-format
 msgid ""
@@ -2161,8 +2145,8 @@ msgstr "يمكن فقط لجهات الاتصال أو مالكي الميزان
 msgid "PD is already in Signature status."
 msgstr "PD موجود بالفعل في حالة التوقيع."
 
-msgid "Only overall approver can accept review."
-msgstr "يمكن للموافق العام فقط قبول المراجعة."
+msgid "Only authorized officer can accept review."
+msgstr ""
 
 msgid "PD is already unlocked."
 msgstr "تم إلغاء تأمين PD بالفعل."
@@ -2216,6 +2200,9 @@ msgstr "لا تحتوي الاستجابة التي أرجعها الخادم ع
 
 msgid "Partnership Manager role required for pca export."
 msgstr "دور مدير الشراكة المطلوب لتصدير pca."
+
+#~ msgid "Only focal points or budget owners can cancel"
+#~ msgstr "يمكن فقط للنقاط المحورية أو مالكي الميزانية الإلغاء"
 
 #~ msgid "Shared IP"
 #~ msgstr "شريك منفذ مشترك"
@@ -2277,14 +2264,19 @@ msgstr "دور مدير الشراكة المطلوب لتصدير pca."
 #~ msgid "Spot Checks Completed"
 #~ msgstr "عدد الزيارات الرقابية المفاجئة المكتملة"
 
+#~ msgid ""
+#~ "Final Review must be approved for documents having amount transferred "
+#~ "greater than 100,000"
+#~ msgstr ""
+#~ "يجب الموافقة على المراجعة النهائية للوثائق التي يزيد المبلغ المحول عنها "
+#~ "عن 100،000"
+
 #~ msgid "Unable to associate staff member to UNICEF user"
 #~ msgstr "تعذر ربط الموظف بمستخدم اليونيسف"
 
-#, python-format
 #~ msgid "This user already exists under a different partnership: %s"
 #~ msgstr "هذا المستخدم موجود بالفعل ضمن شراكة مختلفة: %s"
 
-#, python-format
 #~ msgid ""
 #~ "User emails cannot be changed, please remove the user and add another "
 #~ "one: %s"
@@ -2319,16 +2311,6 @@ msgstr "دور مدير الشراكة المطلوب لتصدير pca."
 #~ msgstr ""
 #~ "قام المستخدم بالفعل بمزامنة PRP ولا يمكن تعطيله. يرجى توجيه الشريك "
 #~ "للتعطيل من PRP"
-
-#~ msgid ""
-#~ "Final Review must be approved for documents having amount transferred "
-#~ "greater than 100,000"
-#~ msgstr ""
-#~ "يجب الموافقة على المراجعة النهائية للوثائق التي يزيد المبلغ المحول عنها "
-#~ "عن 100،000"
-
-#~ msgid "Only focal points or budget owners can cancel"
-#~ msgstr "يمكن فقط للنقاط المحورية أو مالكي الميزانية الإلغاء"
 
 #~ msgid ""
 #~ "There was a PCA/SSFA signed with this partner or a transaction was "

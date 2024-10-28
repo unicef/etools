@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-09-16 13:07+0000\n"
+"POT-Creation-Date: 2024-09-24 09:12+0000\n"
 "Language: ru\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -61,10 +61,8 @@ msgstr "ГПДП"
 msgid "Signed Amendment"
 msgstr "Подписанная поправка"
 
-#, fuzzy
-#| msgid "Intervention Attachment"
 msgid "Termination Doc Attachment"
-msgstr "Приложения к программе"
+msgstr ""
 
 msgid "Agreement Details"
 msgstr "Детали соглашения"
@@ -998,9 +996,6 @@ msgstr "Техническое руководство"
 msgid "Cancel Justification"
 msgstr "Отменить обоснование"
 
-msgid "Attachments"
-msgstr "Вложения"
-
 msgid "Metadata"
 msgstr "Метаданные"
 
@@ -1222,6 +1217,12 @@ msgstr "Офицеры КРП"
 
 msgid "Overall Approver"
 msgstr "Утверждающий"
+
+msgid "Authorized Officer"
+msgstr ""
+
+msgid "Recommend for Approval"
+msgstr ""
 
 msgid "Sent Back by Secretary Comment"
 msgstr "Возвращено с комментарием секретаря"
@@ -1463,6 +1464,9 @@ msgstr "Тип вложения"
 msgid "N/A"
 msgstr "н/д"
 
+msgid "Attachments"
+msgstr "Вложения"
+
 msgid "CSO Contribution"
 msgstr "Вклад ОГО"
 
@@ -1513,9 +1517,6 @@ msgid ""
 msgstr ""
 "Вложение не может быть изменено в статусах «Завершено», «Закрыто» или "
 "«Прервано»."
-
-msgid "Unable to find corresponding file type."
-msgstr ""
 
 msgid "An Output cannot be updated for a partner that is blocked in Vision"
 msgstr ""
@@ -1631,13 +1632,14 @@ msgstr ""
 msgid "Vendor number must belong to PRG2 account group"
 msgstr "Номер поставщика должен принадлежать к группе учетных записей PRG2."
 
+msgid "Authorized officer cannot be the same as overall approver."
+msgstr ""
+
 msgid "Unknown intervention."
 msgstr "Неизвестное вмешательство."
 
-#, fuzzy
-#| msgid "Signatures cannot be dated in the future"
 msgid "Results cannot be changed in this status"
-msgstr "Подписи не могут быть датированы в будущем"
+msgstr "Результаты не могут быть изменены в этом статусе"
 
 msgid "EZHACT Vision integration disabled"
 msgstr "Интеграция с EZHACT Vision отключена"
@@ -1775,56 +1777,42 @@ msgstr "Уполномоченный сотрудник ЮНИСЕФ"
 msgid "Date Uploaded"
 msgstr "Дата загрузки"
 
-msgid "Invalid"
-msgstr "Неверно"
-
 msgid "Document"
 msgstr "Документ"
 
+msgid "Invalid"
+msgstr "Неверно"
+
 msgid "Review for eTools reference number: "
-msgstr ""
+msgstr "Обзор ссылочного номера eTools: "
 
-#, fuzzy
-#| msgid "PRC Submitted By"
 msgid "Submitted By"
-msgstr "КРП представлено"
+msgstr "Представленный"
 
-#, fuzzy
-#| msgid "Days from Submission to Signed"
 msgid "Date of submission for review"
-msgstr "Дней с момента подачи до подписания"
+msgstr "Дата подачи на рассмотрение"
 
-#, fuzzy
-#| msgid "Overall Approver"
 msgid "Overall Comment"
-msgstr "Утверждающий"
+msgstr "Общий комментарий"
 
-#, fuzzy
-#| msgid "Overall Approver"
 msgid "Overall Approval"
-msgstr "Утверждающий"
+msgstr "Общее одобрение"
 
-#, fuzzy
-#| msgid "Overall Approver"
 msgid "Overall Review"
-msgstr "Утверждающий"
+msgstr "Общий обзор"
 
-#, fuzzy
-#| msgid "PRC Review"
 msgid "PRC Member Reviews"
-msgstr "Рассмотрение КРП"
+msgstr "Отзывы участников"
 
 msgid "PRC Member Name"
-msgstr ""
+msgstr "Имя участника"
 
 msgid "Approved"
-msgstr ""
+msgstr "Одобренный"
 
 msgid "Approval comment"
-msgstr ""
+msgstr "Комментарий к утверждению"
 
-#, fuzzy
-#| msgid "Review Date"
 msgid "Review date"
 msgstr "Дата рассмотрения"
 
@@ -1901,10 +1889,8 @@ msgstr ""
 "Общая сумма РФ должна быть равна общей фактической сумме, а общая сумма "
 "непогашенных ПДП должна быть равна 0"
 
-#, fuzzy
-#| msgid "Final Review Approved"
 msgid "Final Review must be approved"
-msgstr "Окончательное рассмотрение утверждено"
+msgstr "Окончательный обзор должен быть одобрен"
 
 msgid "Cannot Transition status while adding an amendment"
 msgstr "Невозможно изменить статус при добавлении поправки"
@@ -1948,10 +1934,8 @@ msgstr "ПД не может быть активирован, если парт�
 msgid "Agreement selected is not of type SSFA"
 msgstr "Выбранное соглашение не относится к типу ДФМП"
 
-#, fuzzy
-#| msgid " without deleting the indicators first"
 msgid " without deleting the indicators first "
-msgstr "без предварительного удаления индикаторов"
+msgstr " без предварительного удаления индикаторов "
 
 #, python-format
 msgid ""
@@ -2208,8 +2192,8 @@ msgstr "Разблокировать могут только координат�
 msgid "PD is already in Signature status."
 msgstr "ПД уже находится в статусе подписи."
 
-msgid "Only overall approver can accept review."
-msgstr "Только общий утверждающий может принять отзыв."
+msgid "Only authorized officer can accept review."
+msgstr ""
 
 msgid "PD is already unlocked."
 msgstr "ПД уже разблокирован."
@@ -2266,6 +2250,9 @@ msgstr ""
 
 msgid "Partnership Manager role required for pca export."
 msgstr "Для экспорта PCA требуется роль менеджера по партнерству."
+
+#~ msgid "Only focal points or budget owners can cancel"
+#~ msgstr "Только координаторы или владельцы бюджета могут отменить"
 
 #~ msgid "Shared IP"
 #~ msgstr "Совместный ИП"
@@ -2327,14 +2314,19 @@ msgstr "Для экспорта PCA требуется роль менеджер
 #~ msgid "Spot Checks Completed"
 #~ msgstr "Завершенные выборочные проверки"
 
+#~ msgid ""
+#~ "Final Review must be approved for documents having amount transferred "
+#~ "greater than 100,000"
+#~ msgstr ""
+#~ "Окончательное рассмотрение должно быть утверждено для документов, сумма "
+#~ "перевода которых превышает 100 000 долл. США"
+
 #~ msgid "Unable to associate staff member to UNICEF user"
 #~ msgstr "Не удалось связать сотрудника с пользователем ЮНИСЕФ"
 
-#, python-format
 #~ msgid "This user already exists under a different partnership: %s"
 #~ msgstr "Этот пользователь уже существует в рамках другого партнерства: %s"
 
-#, python-format
 #~ msgid ""
 #~ "User emails cannot be changed, please remove the user and add another "
 #~ "one: %s"
@@ -2377,16 +2369,6 @@ msgstr "Для экспорта PCA требуется роль менеджер
 #~ msgstr ""
 #~ "Пользователь уже синхронизирован с PRP и не может быть отключен. "
 #~ "Попросите партнера отключить PRP"
-
-#~ msgid ""
-#~ "Final Review must be approved for documents having amount transferred "
-#~ "greater than 100,000"
-#~ msgstr ""
-#~ "Окончательное рассмотрение должно быть утверждено для документов, сумма "
-#~ "перевода которых превышает 100 000 долл. США"
-
-#~ msgid "Only focal points or budget owners can cancel"
-#~ msgstr "Только координаторы или владельцы бюджета могут отменить"
 
 #~ msgid "You must select a type for this CSO"
 #~ msgstr "Вы должны выбрать тип для этого ОГО"

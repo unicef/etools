@@ -19,6 +19,8 @@ from etools.applications.partners.permissions import (
     PARTNERSHIP_MANAGER_GROUP,
     PRC_SECRETARY,
     user_group_permission,
+    UserIsReviewAuthorizedOfficer,
+    UserIsReviewOverallApprover,
     UserIsUnicefFocalPoint,
 )
 from etools.applications.partners.serializers.interventions_v3 import (
@@ -233,7 +235,10 @@ class PMPInterventionRejectReviewView(PMPInterventionActionView):
 
 
 class PMPInterventionSendBackViewReview(PMPInterventionActionView):
-    permission_classes = [IsAuthenticated, user_group_permission(PRC_SECRETARY)]
+    permission_classes = [
+        IsAuthenticated,
+        user_group_permission(PRC_SECRETARY) | UserIsReviewOverallApprover | UserIsReviewAuthorizedOfficer,
+    ]
 
     @transaction.atomic
     def update(self, request, *args, **kwargs):
@@ -299,7 +304,7 @@ class PMPInterventionReviewView(PMPInterventionActionView):
         request.data.clear()
         request.data.update({"status": Intervention.REVIEW})
 
-        if review.review_type == InterventionReview.PRC and not pd.submission_date_prc:
+        if review.review_type in [InterventionReview.PRC, InterventionReview.NPRC] and not pd.submission_date_prc:
             # save date when first prc review submitted
             request.data["submission_date_prc"] = timezone.now().date()
 
@@ -517,8 +522,8 @@ class PMPInterventionSignatureView(PMPInterventionActionView):
             raise ValidationError(_("PD is already in Signature status."))
         if not pd.review:
             raise ValidationError(_("PD review is missing"))
-        if pd.review.overall_approver_id != request.user.pk:
-            raise ValidationError(_("Only overall approver can accept review."))
+        if pd.review.authorized_officer_id != request.user.pk:
+            raise ValidationError(_("Only authorized officer can accept review."))
 
         pd.review.overall_approval = True
         if not pd.review.review_date:
@@ -527,7 +532,7 @@ class PMPInterventionSignatureView(PMPInterventionActionView):
 
         request.data.clear()
         request.data.update({"status": Intervention.SIGNATURE})
-        if pd.review.review_type == InterventionReview.PRC:
+        if pd.review.review_type in [InterventionReview.PRC, InterventionReview.NPRC]:
             request.data["review_date_prc"] = timezone.now().date()
 
         response = super().update(request, *args, **kwargs)

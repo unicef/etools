@@ -5,12 +5,13 @@ from factory import fuzzy
 from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.action_points.categories.models import Category
-from etools.applications.action_points.tests.factories import ActionPointFactory
+from etools.applications.action_points.tests.factories import ActionPointCategoryFactory, ActionPointFactory
 from etools.applications.field_monitoring.fm_settings.tests.factories import QuestionFactory
 from etools.applications.field_monitoring.planning.models import (
     MonitoringActivity,
     MonitoringActivityGroup,
     QuestionTemplate,
+    TPMConcern,
     YearPlan,
 )
 from etools.applications.field_monitoring.tests.factories import UserFactory
@@ -161,6 +162,16 @@ class QuestionTemplateFactory(factory.django.DjangoModelFactory):
 class MonitoringActivityActionPointFactory(ActionPointFactory):
     monitoring_activity = factory.SubFactory(MonitoringActivityFactory, status='completed')
     category__module = Category.MODULE_CHOICES.fm
+
+
+class TPMConcernFactory(factory.django.DjangoModelFactory):
+    monitoring_activity = factory.SubFactory(MonitoringActivityFactory, status='data_collection')
+    category = factory.SubFactory(ActionPointCategoryFactory)
+    description = factory.fuzzy.FuzzyText()
+    author = factory.SubFactory(UserFactory)
+
+    class Meta:
+        model = TPMConcern
 
 
 class MonitoringActivityGroupFactory(factory.django.DjangoModelFactory):

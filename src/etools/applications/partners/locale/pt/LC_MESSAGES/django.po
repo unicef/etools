@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-09-16 13:07+0000\n"
+"POT-Creation-Date: 2024-09-24 09:12+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -63,10 +63,8 @@ msgstr "HACT"
 msgid "Signed Amendment"
 msgstr "Aditivo assinado"
 
-#, fuzzy
-#| msgid "Intervention Attachment"
 msgid "Termination Doc Attachment"
-msgstr "Anexo de intervenção"
+msgstr ""
 
 msgid "Agreement Details"
 msgstr "Detalhes do Acordo"
@@ -1014,9 +1012,6 @@ msgstr "Orientação técnica"
 msgid "Cancel Justification"
 msgstr "Cancelar Justificativa"
 
-msgid "Attachments"
-msgstr "Anexos"
-
 msgid "Metadata"
 msgstr "Metadados"
 
@@ -1241,6 +1236,12 @@ msgstr "Oficiais dp PRC"
 
 msgid "Overall Approver"
 msgstr "Aprovador geral"
+
+msgid "Authorized Officer"
+msgstr ""
+
+msgid "Recommend for Approval"
+msgstr ""
 
 msgid "Sent Back by Secretary Comment"
 msgstr "Enviado para comentário do(a) secretário(a)"
@@ -1485,6 +1486,9 @@ msgstr "Tipo de anexo"
 msgid "N/A"
 msgstr "N/A"
 
+msgid "Attachments"
+msgstr "Anexos"
+
 msgid "CSO Contribution"
 msgstr "Contribuição da OSC (Organização da Sociedade Civil)"
 
@@ -1535,9 +1539,6 @@ msgid ""
 msgstr ""
 "Um anexo não pode ser alterado nos status \"Finalizado, Fechado ou "
 "Encerrado\""
-
-msgid "Unable to find corresponding file type."
-msgstr ""
 
 msgid "An Output cannot be updated for a partner that is blocked in Vision"
 msgstr ""
@@ -1656,13 +1657,14 @@ msgstr ""
 msgid "Vendor number must belong to PRG2 account group"
 msgstr "O número do fornecedor deve pertencer ao grupo de contas PRG2"
 
+msgid "Authorized officer cannot be the same as overall approver."
+msgstr ""
+
 msgid "Unknown intervention."
 msgstr "Intervenção desconhecida."
 
-#, fuzzy
-#| msgid "Signatures cannot be dated in the future"
 msgid "Results cannot be changed in this status"
-msgstr "As assinaturas não podem ser datadas no futuro"
+msgstr "Os resultados não podem ser alterados neste estado"
 
 msgid "EZHACT Vision integration disabled"
 msgstr "Integração com o EZHACT Vision desativada"
@@ -1799,56 +1801,42 @@ msgstr "Oficial autorizado do UNICEF"
 msgid "Date Uploaded"
 msgstr "Data de upload"
 
-msgid "Invalid"
-msgstr "Inválido"
-
 msgid "Document"
 msgstr "Documento"
 
+msgid "Invalid"
+msgstr "Inválido"
+
 msgid "Review for eTools reference number: "
-msgstr ""
+msgstr "Revisão do número de referência do eTools:"
 
-#, fuzzy
-#| msgid "PRC Submitted By"
 msgid "Submitted By"
-msgstr "Submetido ao PRC por"
+msgstr "Submetido por"
 
-#, fuzzy
-#| msgid "Days from Submission to Signed"
 msgid "Date of submission for review"
-msgstr "Dias entre o envio até a assinatura"
+msgstr "Data de envio para revisão"
 
-#, fuzzy
-#| msgid "Overall Approver"
 msgid "Overall Comment"
-msgstr "Aprovador geral"
+msgstr "Comentário geral"
 
-#, fuzzy
-#| msgid "Overall Approver"
 msgid "Overall Approval"
-msgstr "Aprovador geral"
+msgstr "Aprovação geral"
 
-#, fuzzy
-#| msgid "Overall Approver"
 msgid "Overall Review"
-msgstr "Aprovador geral"
+msgstr "Revisão geral"
 
-#, fuzzy
-#| msgid "PRC Review"
 msgid "PRC Member Reviews"
-msgstr "Revisão da PRC"
+msgstr "Avaliações de membros da PRC"
 
 msgid "PRC Member Name"
-msgstr ""
+msgstr "Nome do membro da PRC"
 
 msgid "Approved"
-msgstr ""
+msgstr "Aprovada"
 
 msgid "Approval comment"
-msgstr ""
+msgstr "Comentário de aprovação"
 
-#, fuzzy
-#| msgid "Review Date"
 msgid "Review date"
 msgstr "Data da revisão"
 
@@ -1927,10 +1915,8 @@ msgstr ""
 "O valor total do FR precisa ser igual ao valor total real, e o total de DCTs "
 "pendentes precisa ser igual a 0"
 
-#, fuzzy
-#| msgid "Final Review Approved"
 msgid "Final Review must be approved"
-msgstr "Revisão final aprovada"
+msgstr "A revisão final deve ser aprovada"
 
 msgid "Cannot Transition status while adding an amendment"
 msgstr "Não é possível fazer a transição do status ao inserir o aditivo."
@@ -1978,10 +1964,8 @@ msgstr "O PD não pode ser ativado se o parceiro estiver bloqueado no VISION."
 msgid "Agreement selected is not of type SSFA"
 msgstr "O contrato selecionado não é do tipo SSFA"
 
-#, fuzzy
-#| msgid " without deleting the indicators first"
 msgid " without deleting the indicators first "
-msgstr "sem excluir os indicadores primeiro"
+msgstr "sem excluir os indicadores primeiro "
 
 #, python-format
 msgid ""
@@ -2242,8 +2226,8 @@ msgstr ""
 msgid "PD is already in Signature status."
 msgstr "PD já está no status de assinatura."
 
-msgid "Only overall approver can accept review."
-msgstr "Somente o aprovador geral pode aceitar a revisão."
+msgid "Only authorized officer can accept review."
+msgstr ""
 
 msgid "PD is already unlocked."
 msgstr "PD já está desbloqueado."
@@ -2303,6 +2287,9 @@ msgstr ""
 
 msgid "Partnership Manager role required for pca export."
 msgstr "A função de gerente de parceria é necessária para a exportação de pca."
+
+#~ msgid "Only focal points or budget owners can cancel"
+#~ msgstr "Somente pontos focais ou proprietários de orçamento podem cancelar"
 
 #~ msgid "Shared IP"
 #~ msgstr "IP compartilhado"
@@ -2366,14 +2353,19 @@ msgstr "A função de gerente de parceria é necessária para a exportação de 
 #~ msgid "Spot Checks Completed"
 #~ msgstr "Spot Checks/ Verificações pontuais concluídas"
 
+#~ msgid ""
+#~ "Final Review must be approved for documents having amount transferred "
+#~ "greater than 100,000"
+#~ msgstr ""
+#~ "Documentos com montante  superior a 100.000 USD devem ter a revisão final "
+#~ "aprovada."
+
 #~ msgid "Unable to associate staff member to UNICEF user"
 #~ msgstr "Não é possível associar o funcionário ao usuário UNICEF"
 
-#, python-format
 #~ msgid "This user already exists under a different partnership: %s"
 #~ msgstr "Este usuário já existe em uma parceria diferente: %s"
 
-#, python-format
 #~ msgid ""
 #~ "User emails cannot be changed, please remove the user and add another "
 #~ "one: %s"
@@ -2418,16 +2410,6 @@ msgstr "A função de gerente de parceria é necessária para a exportação de 
 #~ msgstr ""
 #~ "O usuário já está sincronizado com o PRP e não pode ser desabilitado. Por "
 #~ "favor, instrua o parceiro a desabilitar do PRP"
-
-#~ msgid ""
-#~ "Final Review must be approved for documents having amount transferred "
-#~ "greater than 100,000"
-#~ msgstr ""
-#~ "Documentos com montante  superior a 100.000 USD devem ter a revisão final "
-#~ "aprovada."
-
-#~ msgid "Only focal points or budget owners can cancel"
-#~ msgstr "Somente pontos focais ou proprietários de orçamento podem cancelar"
 
 #~ msgid "Planned Visit to be set only at Partner level"
 #~ msgstr "Visita planejada a ser definida apenas no nível do parceiro"

@@ -129,10 +129,8 @@ msgstr ""
 "El código de espacio de trabajo proporcionado no es un código de área de "
 "negocio válido: %s"
 
-#, fuzzy
-#| msgid "User is required"
 msgid "Workspace is required"
-msgstr "Se requiere usuario"
+msgstr ""
 
 msgid "User is required"
 msgstr "Se requiere usuario"
