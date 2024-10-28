@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-08-30 14:42+0000\n"
+"POT-Creation-Date: 2024-10-01 11:59+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -112,10 +112,8 @@ msgstr "المُراقب المستقل الشريك"
 msgid "Person Responsible"
 msgstr "الشخص المسؤول"
 
-#, fuzzy
-#| msgid "Partner"
 msgid "Partners"
-msgstr "الشريك"
+msgstr ""
 
 msgid "PD/SPD"
 msgstr "PD/SPD"
@@ -213,10 +211,8 @@ msgstr ""
 msgid "Report Reviewer"
 msgstr ""
 
-#, fuzzy
-#| msgid "Review"
 msgid "Reviewed By"
-msgstr "المعاينة"
+msgstr ""
 
 msgid "Field Office"
 msgstr "المكتب الميداني"
@@ -245,8 +241,29 @@ msgstr "نقطة إجراء مراقب النشاط"
 msgid "Monitoring Activity Action Points"
 msgstr "نقاط إجراء مراقب النشاط"
 
+msgid "Description"
+msgstr ""
+
+msgid "Category"
+msgstr ""
+
+msgid "High Priority"
+msgstr ""
+
+msgid "Author"
+msgstr ""
+
+msgid "TPM Concern"
+msgstr ""
+
+msgid "TPM Concerns"
+msgstr ""
+
 msgid "History"
 msgstr "السجل التاريخي"
+
+msgid "Team members removal not allowed"
+msgstr ""
 
 msgid "Document Type"
 msgstr "نوع الوثيقة"
@@ -283,6 +300,9 @@ msgstr "فئة نقطة العمل"
 
 msgid "Priority"
 msgstr "الأولوية"
+
+msgid "TPM Concern Category"
+msgstr ""
 
 msgid "Annual Field Monitoring Rationale"
 msgstr "الأساس المنطقي السنوي للرصد الميداني"

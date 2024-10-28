@@ -6,6 +6,7 @@ from etools.applications.field_monitoring.planning.models import (
     MonitoringActivityActionPoint,
     MonitoringActivityGroup,
     QuestionTemplate,
+    TPMConcern,
     YearPlan,
 )
 
@@ -71,3 +72,10 @@ class MonitoringActivityGroupAdmin(admin.ModelAdmin):
 @admin.register(MonitoringActivityActionPoint)
 class MonitoringActivityActionPointAdmin(ActionPointAdmin):
     list_display = ('monitoring_activity', ) + ActionPointAdmin.list_display
+
+
+@admin.register(TPMConcern)
+class TPMConcernPointAdmin(admin.ModelAdmin):
+    list_display = ('reference_number', 'monitoring_activity', 'author', 'high_priority')
+    list_select_related = ('monitoring_activity', 'author')
+    raw_id_fields = ('monitoring_activity', 'author', 'partner', 'cp_output', 'intervention')

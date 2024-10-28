@@ -86,6 +86,7 @@ class TestChangeUserRoleView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response = json.loads(response.content)
         self.assertEqual(response['status'], 'success')
+        response['details']['previous_roles'].sort()
         self.assertEqual(response['details']['previous_roles'], ["Partnership Manager", "UNICEF User"])
         self.assertEqual(response['details']['current_roles'], [])
 
@@ -105,7 +106,9 @@ class TestChangeUserRoleView(BaseTenantTestCase):
 
         response = json.loads(response.content)
         self.assertEqual(response['status'], 'success')
+        response['details']['previous_roles'].sort()
         self.assertEqual(response['details']['previous_roles'], ["Partnership Manager", "UNICEF User"])
+        response['details']['current_roles'].sort()
         self.assertEqual(
             response['details']['current_roles'],
             ['Partnership Manager', 'UNICEF Audit Focal Point', 'UNICEF User']
@@ -131,6 +134,7 @@ class TestChangeUserRoleView(BaseTenantTestCase):
         response = json.loads(response.content)
         self.assertEqual(response['status'], 'success')
         self.assertEqual(response['details']['previous_roles'], [])
+        response['details']['current_roles'].sort()
         self.assertEqual(
             response['details']['current_roles'], ['UNICEF Audit Focal Point', 'UNICEF User']
         )
@@ -151,7 +155,9 @@ class TestChangeUserRoleView(BaseTenantTestCase):
 
         response = json.loads(response.content)
         self.assertEqual(response['status'], 'success')
+        response['details']['previous_roles'].sort()
         self.assertEqual(response['details']['previous_roles'], ["Partnership Manager", "UNICEF User"])
+        response['details']['current_roles'].sort()
         self.assertEqual(response['details']['current_roles'], ["UNICEF Audit Focal Point", "UNICEF User"])
 
     def test_invalid_uppercase_email(self):
