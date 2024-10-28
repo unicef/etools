@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-09-24 09:12+0000\n"
+"POT-Creation-Date: 2024-10-28 07:37+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1003,6 +1003,9 @@ msgstr "Conseils techniques"
 msgid "Cancel Justification"
 msgstr "Justification de l'annulation"
 
+msgid "Attachments"
+msgstr "Pièces jointes"
+
 msgid "Metadata"
 msgstr "Métadonnées"
 
@@ -1473,9 +1476,6 @@ msgstr "Type de pièce jointe"
 msgid "N/A"
 msgstr "N/A"
 
-msgid "Attachments"
-msgstr "Pièces jointes"
-
 msgid "CSO Contribution"
 msgstr "Contribution des OSC"
 
@@ -1527,6 +1527,9 @@ msgid ""
 msgstr ""
 "Une pièce jointe ne peut pas être modifiée dans les statuts \"Terminé, Fermé "
 "ou Terminé\""
+
+msgid "Unable to find corresponding file type."
+msgstr ""
 
 msgid "An Output cannot be updated for a partner that is blocked in Vision"
 msgstr ""
@@ -1792,11 +1795,11 @@ msgstr "Agent autorisé de l'UNICEF"
 msgid "Date Uploaded"
 msgstr "Date du téléchargement"
 
-msgid "Document"
-msgstr "Document"
-
 msgid "Invalid"
 msgstr "Invalide"
+
+msgid "Document"
+msgstr "Document"
 
 msgid "Review for eTools reference number: "
 msgstr "Revue du numéro de référence eTools:"
