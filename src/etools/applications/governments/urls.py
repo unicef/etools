@@ -51,6 +51,7 @@ from etools.applications.governments.views.review import (
     GDDOfficerReviewListView,
     GDDReviewDetailPDFView,
     GDDReviewDetailView,
+    GDDReviewNotifyView,
 )
 
 app_name = 'governments'
@@ -282,6 +283,11 @@ urlpatterns = [
         'gdds/<int:gdd_pk>/reviews/<int:pk>/',
         view=GDDReviewDetailView.as_view(http_method_names=['patch']),
         name='gdd-reviews-detail',
+    ),
+    path(
+        'gdds/<int:gdd_pk>/reviews/<int:pk>/notify/',
+        view=GDDReviewNotifyView.as_view(),
+        name='gdd-reviews-notify',
     ),
     path(
         'gdds/<int:gdd_pk>/reviews/<int:review_pk>/pdf/',

@@ -1693,7 +1693,7 @@ class GDDReviewNotification(TimeStampedModel):
 
         send_notification_with_template(
             recipients=[self.user.email],
-            template_name='partners/gdd/prc_review_notification',
+            template_name='governments/gdd/prc_review_notification',
             context=context,
         )
 
