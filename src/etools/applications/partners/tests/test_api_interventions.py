@@ -101,6 +101,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
             "agreement_id",
             "amendment",
             "attachments",
+            "old_attachments",
             "budget_owner",
             "budget_owner_id",
             "cancel_justification",
