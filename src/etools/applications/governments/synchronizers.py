@@ -3,6 +3,7 @@ import logging
 
 from django.db import transaction
 from django.db.models import Q
+from etools.applications.environment.helpers import tenant_switch_is_active
 
 from unicef_vision.exceptions import VisionException
 from unicef_vision.settings import INSIGHT_DATE_FORMAT
@@ -389,3 +390,8 @@ class EWPsSynchronizer(VisionDataTenantSynchronizer):
     def _save_records(self, records):
         synchronizer = EWPSynchronizer(records)
         return synchronizer.update()
+
+    def sync(self):
+        if tenant_switch_is_active("EWP Sync Disabled"):
+            raise VisionException("EWP Sync is disabled")
+        return super().sync()
