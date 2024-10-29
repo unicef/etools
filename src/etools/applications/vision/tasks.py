@@ -2,6 +2,7 @@ from django.db import connection
 from django.utils import timezone
 
 from celery.utils.log import get_task_logger
+from etools.applications.governments.synchronizers import EWPsSynchronizer
 from unicef_vision.exceptions import VisionException
 
 from etools.applications.funds.synchronizers import FundReservationsSynchronizer
@@ -20,6 +21,7 @@ SYNC_HANDLERS = {
     'fund_reservation': FundReservationsSynchronizer,
     # 'fund_commitment': FundCommitmentSynchronizer,
     'dct': DirectCashTransferSynchronizer,
+    'ewp': EWPsSynchronizer,
 }
 
 

@@ -498,10 +498,7 @@ class GDDUnsuspendView(GDDActionView):
             context = {
                 "reference_number": gdd.reference_number,
                 "partner_name": str(gdd.partner),
-                "pd_link": reverse(
-                    "pmp_v3:gdd-detail",
-                    args=[gdd.pk]
-                ),
+                "pd_link": "to be implemented",
             }
             self.send_notification(
                 gdd,
