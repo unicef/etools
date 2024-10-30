@@ -101,7 +101,10 @@ class Organization(TimeStampedModel, models.Model):
         _list = []
         if hasattr(self, 'partner') and \
                 not self.partner.hidden:
-            _list.append('partner')
+            if self.organization_type == OrganizationType.GOVERNMENT:
+                _list.append('government')
+            else:
+                _list.append('partner')
         if hasattr(self, 'auditorfirm') and \
                 not self.auditorfirm.hidden:
             _list.append('audit')
