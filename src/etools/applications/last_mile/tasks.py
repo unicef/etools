@@ -57,3 +57,25 @@ def notify_wastage_transfer(tenant_name, transfer_pk, action='wastage_checkout')
             html_content_filename='emails/wastage_transfer.html',
             context={'transfer': transfer, 'action': action, 'header': action_map[action]}
         )
+
+
+@app.task
+def notify_first_checkin_transfer(tenant_name):
+    with schema_context(tenant_name):
+        recipients = User.objects \
+            .filter(realms__country__schema_name=tenant_name,
+                    realms__is_active=True,
+                    realms__group__name='LMSM Alert Receipt') \
+            .values_list('email', flat=True) \
+            .distinct()
+        email_context = {
+            'user_name': 'attachment.uploaded_by.full_name',
+            'destination': '{destination.__str__()} / {tenant_name.capitalize()}',
+            'waybill_url': 'waybill_url'
+        }
+        send_notification_with_template(
+            recipients=list(recipients),
+            template_name='last_mile/first_checkin',
+            context=email_context
+        )
+

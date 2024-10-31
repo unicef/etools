@@ -11,7 +11,7 @@ from unicef_attachments.serializers import AttachmentSerializerMixin
 
 from etools.applications.last_mile import models
 from etools.applications.last_mile.models import PartnerMaterial
-from etools.applications.last_mile.tasks import notify_wastage_transfer
+from etools.applications.last_mile.tasks import notify_wastage_transfer,notify_first_checkin_transfer
 from etools.applications.partners.models import Agreement, PartnerOrganization
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.users.serializers import MinimalUserSerializer
@@ -349,11 +349,12 @@ class TransferCheckinSerializer(TransferBaseSerializer):
 
         if instance.status == models.Transfer.COMPLETED:
             raise ValidationError(_('The transfer was already checked-in.'))
-
         validated_data['status'] = models.Transfer.COMPLETED
         validated_data['checked_in_by'] = self.context.get('request').user
         validated_data["destination_point"] = self.context["location"]
-
+        if not instance.checked_in_by and instance.origin_point.name == 'UNICEF Warehouse':  # Notify only if is Unicef Shipment
+            # Note : We need to insert into EmailTemplates the new template that is defined on notifications/first_checkin.py
+            notify_first_checkin_transfer.delay(connection.schema_name)
         if not instance.name and not validated_data.get('name'):
             validated_data['name'] = self.get_transfer_name(validated_data, instance.transfer_type)
 
