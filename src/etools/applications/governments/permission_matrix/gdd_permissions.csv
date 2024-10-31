@@ -148,11 +148,11 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.2.8,partner_focal_points,*,,Closed,Edit,FALSE
 3.2.8,partner_focal_points,*,in_amendment_mode,*,Edit,FALSE
 3.3.1,partner_focal_points,*,unicef_not_accepted,Draft,Required,FALSE
-3.3.2,pd_outputs,*,,*,View,TRUE
-3.3.3,pd_outputs,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
-3.3.3,pd_outputs,PRC Secretary,,pending_approval,Edit,TRUE
-3.3.2,pd_outputs,Partner User,partner_court,Draft,Edit,TRUE
-3.3.3,pd_outputs,Unicef Focal Point,user_adds_amendment,*,Edit,TRUE
+3.3.2,key_interventions,*,,*,View,TRUE
+3.3.3,key_interventions,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
+3.3.3,key_interventions,PRC Secretary,,pending_approval,Edit,TRUE
+3.3.2,key_interventions,Partner User,partner_court,Draft,Edit,TRUE
+3.3.3,key_interventions,Unicef Focal Point,user_adds_amendment,*,Edit,TRUE
 3.3.3,planned_budget,Unicef Focal Point,,Draft,Edit,TRUE
 3.9.11,planned_budget,Unicef Focal Point,user_adds_amendment,*,Edit,TRUE
 3.9.11,planned_visits,UNICEF User,not_in_amendment_mode,*,View,TRUE
