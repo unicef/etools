@@ -78,4 +78,3 @@ def notify_first_checkin_transfer(tenant_name):
             template_name='last_mile/first_checkin',
             context=email_context
         )
-
