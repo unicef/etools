@@ -2,7 +2,6 @@ from django.contrib.auth import get_user_model
 from django.db import connection, transaction
 from django.db.models import OuterRef, Subquery
 from django.http import HttpResponseForbidden
-from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext as _
 

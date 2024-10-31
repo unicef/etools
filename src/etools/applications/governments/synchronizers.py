@@ -3,11 +3,11 @@ import logging
 
 from django.db import transaction
 from django.db.models import Q
-from etools.applications.environment.helpers import tenant_switch_is_active
 
 from unicef_vision.exceptions import VisionException
 from unicef_vision.settings import INSIGHT_DATE_FORMAT
 
+from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.governments.models import EWPActivity, EWPKeyIntervention, EWPOutput, GovernmentEWP
 from etools.applications.locations.models import Location
 from etools.applications.partners.models import PartnerOrganization

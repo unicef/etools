@@ -2,10 +2,10 @@ from django.db import connection
 from django.utils import timezone
 
 from celery.utils.log import get_task_logger
-from etools.applications.governments.synchronizers import EWPsSynchronizer
 from unicef_vision.exceptions import VisionException
 
 from etools.applications.funds.synchronizers import FundReservationsSynchronizer
+from etools.applications.governments.synchronizers import EWPsSynchronizer
 from etools.applications.partners.synchronizers import DirectCashTransferSynchronizer, PartnerSynchronizer
 from etools.applications.reports.synchronizers import ProgrammeSynchronizer, RAMSynchronizer
 from etools.applications.users.models import Country
