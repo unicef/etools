@@ -100,6 +100,7 @@ class Transfer(TimeStampedModel, models.Model):
     DISTRIBUTION = 'DISTRIBUTION'
     HANDOVER = 'HANDOVER'
     WASTAGE = 'WASTAGE'
+    DISPENSE = 'DISPENSE'
 
     SHORT = 'SHORT'
     SURPLUS = 'SURPLUS'
@@ -112,7 +113,8 @@ class Transfer(TimeStampedModel, models.Model):
         (DELIVERY, _('Delivery')),
         (DISTRIBUTION, _('Distribution')),
         (HANDOVER, _('Handover')),
-        (WASTAGE, _('Wastage'))
+        (WASTAGE, _('Wastage')),
+        (DISPENSE, _('Dispense'))
     )
     TRANSFER_SUBTYPE = (
         (SHORT, _('Short')),
