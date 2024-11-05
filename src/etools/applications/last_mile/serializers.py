@@ -274,8 +274,8 @@ class TransferBaseSerializer(AttachmentSerializerMixin, serializers.ModelSeriali
             "HANDOVER": "HO",
             "WASTAGE": "W",
             "DELIVERY": "DW",
-            "DISTRIBUTION": "DD"
-
+            "DISTRIBUTION": "DD",
+            "DISPENSE": "D"
         }
         date = validated_data.get('origin_check_out_at') or validated_data.get('destination_check_in_at') or timezone.now()
         transfer_type = validated_data.get("transfer_type") or transfer_type
@@ -484,11 +484,10 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
     @transaction.atomic
     def create(self, validated_data):
         checkout_items = validated_data.pop('items')
-
         if not self.initial_data.get('proof_file'):
             raise ValidationError(_('The proof file is required.'))
 
-        if validated_data['transfer_type'] not in [models.Transfer.WASTAGE, models.Transfer.HANDOVER] \
+        if validated_data['transfer_type'] not in [models.Transfer.WASTAGE, models.Transfer.DISPENSE, models.Transfer.HANDOVER] \
                 and not validated_data.get('destination_point'):
             raise ValidationError(_('Destination location is mandatory at checkout.'))
         elif validated_data.get('destination_point'):
@@ -510,7 +509,7 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
             checked_out_by=self.context['request'].user,
             **validated_data)
 
-        if self.instance.transfer_type == models.Transfer.WASTAGE:
+        if self.instance.transfer_type in [models.Transfer.WASTAGE, models.Transfer.DISPENSE]:
             self.instance.status = models.Transfer.COMPLETED
 
         self.instance.save()
