@@ -5,16 +5,14 @@ from rest_framework_csv import renderers as r
 
 class GDDCSVRenderer(r.CSVRenderer):
     header = [
-        "partner_name", "vendor_number", "status", "partner_type", "cso_type", "agreement_number", "country_programme",
-        "number", "title", "start", "end", "offices", "sectors", "locations", "contingency_pd",
-        "intervention_clusters", "unicef_focal_points", "partner_focal_points", "budget_currency", "cso_contribution",
+        "partner_name", "vendor_number", "status", "partner_type", "agreement_number", "country_programme",
+        "number", "title", "start", "end", "offices", "sectors", "locations",
+        "unicef_focal_points", "partner_focal_points", "budget_currency",
         "unicef_budget", "unicef_supply", "total_planned_budget", "fr_numbers", "fr_currency", "fr_posting_date",
         "fr_amount", "fr_actual_amount", "fr_outstanding_amt", "planned_visits", "submission_date",
         "submission_date_prc", "review_date_prc", "partner_authorized_officer_signatory", "signed_by_partner_date",
-        "unicef_signatory", "signed_by_unicef_date", "days_from_submission_to_signed", "days_from_review_to_signed",
+        "unicef_signatory", "signed_by_unicef_date", "days_from_submission_to_approved", "days_from_review_to_approved",
         "amendment_sum", "last_amendment_date", "attachment_type", "total_attachments", "cp_outputs", "url",
-        "cfei_number", "has_data_processing_agreement", "has_activities_involving_children",
-        "has_special_conditions_for_construction",
     ]
 
     labels = {
@@ -22,7 +20,6 @@ class GDDCSVRenderer(r.CSVRenderer):
         "vendor_number": _("Vendor no."),
         "status": _("Status"),
         "partner_type": _("Partner Type"),
-        "cso_type": _("CSO Type"),
         "agreement_number": _("Agreement"),
         "country_programme": _("Country Programme"),
         "number": _("Reference Number"),
@@ -32,15 +29,12 @@ class GDDCSVRenderer(r.CSVRenderer):
         "offices": _("UNICEF Office"),
         "sectors": _("Sections"),
         "locations": _("Locations"),
-        "contingency_pd": _("Contingency PD?"),
-        "intervention_clusters": _("Cluster"),
         "unicef_focal_points": _("UNICEF Focal Points"),
         "partner_focal_points": _("Government Authorized Officials"),
         "budget_currency": _("Budget Currency"),
-        "cso_contribution": _("Total CSO Budget (USD)"),
         "unicef_budget": _("UNICEF Cash (USD)"),
         "unicef_supply": _("UNICEF Supply (USD)"),
-        "total_planned_budget": _("Total PD/SPD Budget (USD)"),
+        "total_planned_budget": _("Total GDD Budget (USD)"),
         "fr_numbers": _("FR Number(s)"),
         "fr_currency": _("FR Currency"),
         "fr_posting_date": _("FR Posting Date"),
@@ -65,8 +59,4 @@ class GDDCSVRenderer(r.CSVRenderer):
         "total_attachments": _("# of attachments"),
         "cp_outputs": _("CP Outputs"),
         "url": "URL",
-        "cfei_number": _("UNPP Number"),
-        "has_data_processing_agreement": _("Data Processing Agreement"),
-        "has_activities_involving_children": _("Activities involving children and young people"),
-        "has_special_conditions_for_construction": _("Special Conditions for Construction Works by Implementing Partners"),
     }

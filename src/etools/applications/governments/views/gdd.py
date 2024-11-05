@@ -71,6 +71,8 @@ from etools.applications.governments.serializers.amendments import GDDAmendmentC
 from etools.applications.governments.serializers.exports.gdd import (
     GDDAmendmentExportFlatSerializer,
     GDDAmendmentExportSerializer,
+    GDDExportFlatSerializer,
+    GDDExportSerializer,
 )
 from etools.applications.governments.serializers.gdd import (
     GDDCreateUpdateSerializer,
@@ -232,7 +234,6 @@ class GDDListAPIView(QueryStringFilterMixin, ExportModelMixin, GDDListBaseView):
         ('end_after', 'end__gte'),
         ('office', 'offices__in'),
         ('location', 'result_links__gdd_key_interventions__applied_indicators__locations__name__icontains'),
-        ('contingency_pd', 'contingency_pd'),
         ('grants', 'frs__fr_items__grant_number__in'),
         ('grants__contains', 'frs__fr_items__grant_number__icontains'),
         ('donors', 'frs__fr_items__donor__icontains'),
@@ -250,12 +251,11 @@ class GDDListAPIView(QueryStringFilterMixin, ExportModelMixin, GDDListBaseView):
         """
         if self.request.method == "GET":
             query_params = self.request.query_params
-            # TODO: redo exports later
-            # if "format" in query_params.keys():
-            #   if query_params.get("format") == 'csv':
-            #       return GDDExportSerializer
-            #   if query_params.get("format") == 'csv_flat':
-            #         return GDDExportFlatSerializer
+            if "format" in query_params.keys():
+                if query_params.get("format") == 'csv':
+                    return GDDExportSerializer
+                if query_params.get("format") == 'csv_flat':
+                    return GDDExportFlatSerializer
             if "verbosity" in query_params.keys():
                 if query_params.get("verbosity") == 'minimal':
                     return MinimalGDDListSerializer
