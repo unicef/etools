@@ -2,7 +2,6 @@ from django.contrib.auth import get_user_model
 from django.db import connection, transaction
 from django.db.models import OuterRef, Subquery
 from django.http import HttpResponseForbidden
-from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
@@ -498,10 +497,7 @@ class GDDUnsuspendView(GDDActionView):
             context = {
                 "reference_number": gdd.reference_number,
                 "partner_name": str(gdd.partner),
-                "pd_link": reverse(
-                    "pmp_v3:gdd-detail",
-                    args=[gdd.pk]
-                ),
+                "pd_link": "to be implemented",
             }
             self.send_notification(
                 gdd,

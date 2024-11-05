@@ -26,11 +26,13 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.status import is_success
 from rest_framework.views import APIView
+from rest_framework_csv import renderers as r
 from unicef_restlib.views import QueryStringFilterMixin
 from unicef_vision.exceptions import VisionException
 
 from etools.applications.core.mixins import ExportModelMixin
 from etools.applications.core.renderers import CSVFlatRenderer
+from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.field_monitoring.permissions import IsEditAction, IsReadAction
 from etools.applications.funds.models import FundsReservationHeader
 from etools.applications.funds.serializers import FRsSerializer
@@ -46,6 +48,7 @@ from etools.applications.governments.filters import (
 from etools.applications.governments.models import (
     GDD,
     GDDActivity,
+    GDDAmendment,
     GDDAttachment,
     GDDKeyIntervention,
     GDDReportingRequirement,
@@ -56,11 +59,19 @@ from etools.applications.governments.models import (
 from etools.applications.governments.permissions import (
     AmendmentSessionOnlyDeletePermission,
     gdd_field_is_editable_permission,
+    GDDAmendmentIsNotCompleted,
     GDDPermission,
     GDDPermissions,
+    IsGDDBudgetOwnerPermission,
     PartnershipManagerPermission,
+    UserIsNotPartnerStaffMemberPermission,
+    UserIsUnicefFocalPoint,
 )
-# from etools.applications.governments.serializers.exports import GDDExportFlatSerializer, GDDExportSerializer
+from etools.applications.governments.serializers.amendments import GDDAmendmentCUSerializer
+from etools.applications.governments.serializers.exports.gdd import (
+    GDDAmendmentExportFlatSerializer,
+    GDDAmendmentExportSerializer,
+)
 from etools.applications.governments.serializers.gdd import (
     GDDCreateUpdateSerializer,
     GDDDetailSerializer,
@@ -84,6 +95,7 @@ from etools.applications.governments.serializers.result_structure import (
     GDDKeyInterventionCUSerializer,
     GDDResultCUSerializer,
 )
+from etools.applications.governments.tasks import send_gdd_amendment_added_notification
 from etools.applications.governments.validation.gdds import GDDValid
 from etools.applications.governments.views.gdd_snapshot import FullGDDSnapshotDeleteMixin
 from etools.applications.partners.models import PartnerOrganization
@@ -671,6 +683,7 @@ class GDDSupplyItemUploadView(GDDMixin, APIView):
             status=status.HTTP_200_OK,
         )
 
+
 class GDDRiskDeleteView(FullGDDSnapshotDeleteMixin, DestroyAPIView):
     queryset = GDDRisk.objects
     permission_classes = [
@@ -876,3 +889,74 @@ class GDDFRsView(APIView):
 
     def bad_request(self, error_message):
         return Response(data={'error': _(error_message)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class GDDAmendmentListAPIView(ExportModelMixin, ValidatorViewMixin, ListCreateAPIView):
+    """
+    Returns a list of InterventionAmendments.
+    """
+    serializer_class = GDDAmendmentCUSerializer
+    permission_classes = (PartnershipManagerPermission, UserIsNotPartnerStaffMemberPermission)
+    filter_backends = (PartnerScopeFilter,)
+    renderer_classes = (
+        JSONRenderer,
+        r.CSVRenderer,
+        CSVFlatRenderer,
+    )
+
+    def get_serializer_class(self):
+        """
+        Use different serializers for methods
+        """
+        query_params = self.request.query_params
+        if "format" in query_params.keys():
+            if query_params.get("format") == 'csv':
+                return GDDAmendmentExportSerializer
+            if query_params.get("format") == 'csv_flat':
+                return GDDAmendmentExportFlatSerializer
+        return super().get_serializer_class()
+
+    def get_queryset(self, format=None):
+        q = GDDAmendment.objects.all()
+        query_params = self.request.query_params
+
+        if query_params:
+            queries = []
+            if "search" in query_params.keys():
+                queries.append(
+                    Q(intervention__number__icontains=query_params.get("search")) |
+                    Q(amendment_number__icontains=query_params.get("search"))
+                )
+            if queries:
+                expression = functools.reduce(operator.and_, queries)
+                q = q.filter(expression)
+        return q
+
+    def create(self, request, *args, **kwargs):
+        raw_data = request.data.copy()
+        raw_data['gdd'] = kwargs.get('gdd_pk', None)
+        serializer = self.get_serializer(data=raw_data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+
+        if tenant_switch_is_active('gdd_amendment_notifications_on'):
+            send_gdd_amendment_added_notification.delay(connection.schema_name, serializer.instance.gdd)
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+
+class GDDAmendmentDeleteView(FullGDDSnapshotDeleteMixin, DestroyAPIView):
+    permission_classes = (
+        IsAuthenticated,
+        GDDAmendmentIsNotCompleted,
+        UserIsUnicefFocalPoint | IsGDDBudgetOwnerPermission,
+    )
+    queryset = GDDAmendment.objects.all()
+
+    def get_gdd(self):
+        return self.get_root_object()
+
+    @functools.cache
+    def get_root_object(self):
+        return get_object_or_404(GDD.objects, amendments=self.kwargs.get('pk'))

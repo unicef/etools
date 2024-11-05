@@ -37,17 +37,6 @@ from etools.applications.governments.serializers.result_structure import (
     GDDResultCUSerializer,
     GDDResultNestedSerializer,
 )
-# from etools.applications.governments.serializers.gdds_v2 import (
-#     FRsSerializer,
-#     GDDAmendmentCUSerializer,
-#     GDDAttachmentSerializer,
-#     GDDBudgetCUSerializer,
-#     GDDListSerializer as GDDV2ListSerializer,
-#     GDDResultNestedSerializer,
-#     GDDResultsStructureSerializer,
-#     PlannedVisitsNestedSerializer,
-#     SingleGDDAttachmentField,
-# )
 from etools.applications.partners.serializers.partner_organization_v2 import PartnerStaffMemberUserSerializer
 from etools.applications.partners.utils import get_quarters_range
 from etools.applications.users.serializers_v3 import MinimalUserSerializer
@@ -457,7 +446,6 @@ class GDDDetailSerializer(
         # only overall approver can approve or reject review
         if obj.status == obj.REVIEW and self._is_overall_approver(obj, user):
             available_actions.append("reject_review")
-
 
         if obj.status == obj.REVIEW and self._is_authorized_officer(obj, user):
             available_actions.append("reject_review")

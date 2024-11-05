@@ -3,6 +3,8 @@ from django.urls import path
 from etools.applications.governments.views.gdd import (
     GDDActivityCreateView,
     GDDActivityDetailUpdateView,
+    GDDAmendmentDeleteView,
+    GDDAmendmentListAPIView,
     GDDAttachmentListCreateView,
     GDDAttachmentUpdateDeleteView,
     GDDFRsView,
@@ -43,11 +45,13 @@ from etools.applications.governments.views.government import (
     GovernmentOrganizationListAPIView,
     GovernmentStaffMemberListAPIVIew,
 )
+from etools.applications.governments.views.prp import PRPGDDListAPIView
 from etools.applications.governments.views.review import (
     GDDOfficerReviewDetailView,
     GDDOfficerReviewListView,
     GDDReviewDetailPDFView,
     GDDReviewDetailView,
+    GDDReviewNotifyView,
 )
 
 app_name = 'governments'
@@ -240,6 +244,16 @@ urlpatterns = [
         name='gdd-send-unicef',
     ),
     path(
+        'gdds/<int:gdd_pk>/amendments/',
+        view=GDDAmendmentListAPIView.as_view(http_method_names=['get', 'post']),
+        name='gdd-amendments-list'
+    ),
+    path(
+        'gdds/amendments/<int:pk>/',
+        view=GDDAmendmentDeleteView.as_view(http_method_names=['delete', ]),
+        name='gdd-amendments-del'
+    ),
+    path(
         'gdds/<int:pk>/amendment_merge/',
         view=PMPAmendedGDDMerge.as_view(http_method_names=['patch']),
         name='gdd-amendment-merge',
@@ -271,6 +285,11 @@ urlpatterns = [
         name='gdd-reviews-detail',
     ),
     path(
+        'gdds/<int:gdd_pk>/reviews/<int:pk>/notify/',
+        view=GDDReviewNotifyView.as_view(),
+        name='gdd-reviews-notify',
+    ),
+    path(
         'gdds/<int:gdd_pk>/reviews/<int:review_pk>/pdf/',
         view=GDDReviewDetailPDFView.as_view(),
         name='gdd-review-pdf',
@@ -299,5 +318,10 @@ urlpatterns = [
         'frs/',
         view=GDDFRsView.as_view(http_method_names=['get']),
         name='frs',
-    )
+    ),
+    # ************** PRP ********************************
+    path(
+        'prp-gdds/',
+        view=PRPGDDListAPIView.as_view(http_method_names=['get']),
+        name='prp-gdd-list'),
 ]

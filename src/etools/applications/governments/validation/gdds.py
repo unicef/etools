@@ -3,17 +3,11 @@ from datetime import date
 
 from django.utils.translation import gettext as _
 
-from etools_validator.exceptions import (
-    BasicValidationError,
-    DetailedStateValidationError,
-    StateValidationError,
-    TransitionError,
-)
+from etools_validator.exceptions import DetailedStateValidationError, StateValidationError, TransitionError
 from etools_validator.utils import check_required_fields, check_rigid_fields
 from etools_validator.validation import CompleteValidation
 
 from etools.applications.governments.permissions import GDDPermissions
-from etools.applications.locations.models import Location
 
 logger = logging.getLogger('governments.gdd.validation')
 

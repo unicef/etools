@@ -1,7 +1,10 @@
 from django.conf import settings
+from django.utils.translation import gettext as _
 
 from easy_pdf.rendering import render_to_pdf_response
+from rest_framework import status
 from rest_framework.generics import (
+    GenericAPIView,
     get_object_or_404,
     ListAPIView,
     RetrieveAPIView,
@@ -9,9 +12,10 @@ from rest_framework.generics import (
     UpdateAPIView,
 )
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
 from etools.applications.field_monitoring.permissions import IsEditAction, IsReadAction
-from etools.applications.governments.models import GDD, GDDPRCOfficerReview, GDDReview
+from etools.applications.governments.models import GDD, GDDPRCOfficerReview, GDDReview, GDDReviewNotification
 from etools.applications.governments.permissions import (
     gdd_field_has_view_permission,
     gdd_field_is_editable_permission,
@@ -102,8 +106,10 @@ class GDDOfficerReviewBaseView(DetailedGDDResponseMixin, GDDBaseViewMixin):
             return qs.none()
         return qs
 
+
 class GDDOfficerReviewListView(GDDOfficerReviewBaseView, ListAPIView):
     permission_classes = [IsAuthenticated, UserIsStaffPermission]
+
 
 class GDDOfficerReviewDetailView(GDDOfficerReviewBaseView, UpdateAPIView):
     permission_classes = [
@@ -114,3 +120,13 @@ class GDDOfficerReviewDetailView(GDDOfficerReviewBaseView, UpdateAPIView):
     ]
     lookup_field = 'user_id'
     lookup_url_kwarg = 'user_pk'
+
+
+class GDDReviewNotifyView(GDDReviewMixin, GenericAPIView):
+    def post(self, request, *args, **kwargs):
+        review = self.get_object()
+        if not review.meeting_date:
+            return Response([_('Meeting date is not available.')], status=status.HTTP_400_BAD_REQUEST)
+
+        GDDReviewNotification.notify_officers_for_review(review)
+        return Response({})

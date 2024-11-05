@@ -1,5 +1,4 @@
 import datetime
-import json
 import logging
 
 from django.db import transaction
@@ -7,8 +6,8 @@ from django.db.models import Q
 
 from unicef_vision.exceptions import VisionException
 from unicef_vision.settings import INSIGHT_DATE_FORMAT
-from unicef_vision.synchronizers import FileDataSynchronizer
 
+from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.governments.models import EWPActivity, EWPKeyIntervention, EWPOutput, GovernmentEWP
 from etools.applications.locations.models import Location
 from etools.applications.partners.models import PartnerOrganization
@@ -16,8 +15,6 @@ from etools.applications.reports.models import CountryProgramme, Result, ResultT
 from etools.applications.vision.synchronizers import VisionDataTenantSynchronizer
 
 logger = logging.getLogger(__name__)
-
-# Existing classes:
 
 
 class EWPSynchronizer:
@@ -38,7 +35,8 @@ class EWPSynchronizer:
             self.data['remote_cps'] = [wbs for wbs in self.data['remote_cps'] if wbs not in missing_cps]
 
         self.outputs = {r.wbs: r for r in
-                        Result.objects.filter(wbs__in=[r["wbs"] for r in self.data['remote_outputs']], result_type__name=ResultType.OUTPUT)}
+                        Result.objects.filter(wbs__in=[r["wbs"] for r in self.data['remote_outputs']],
+                                              result_type__name=ResultType.OUTPUT)}
         remote_output_wbss = {r["wbs"] for r in self.data['remote_outputs']}
         missing_outputs = remote_output_wbss - self.outputs.keys()
         if missing_outputs:
@@ -48,7 +46,8 @@ class EWPSynchronizer:
             ]
 
         self.kis = {r.wbs: r for r in
-                    Result.objects.filter(wbs__in=[r["wbs"] for r in self.data['remote_kis']], result_type__name=ResultType.ACTIVITY)}
+                    Result.objects.filter(wbs__in=[r["wbs"] for r in self.data['remote_kis']],
+                                          result_type__name=ResultType.ACTIVITY)}
 
         remote_ki_wbss = {r["wbs"] for r in self.data['remote_kis']}
         missing_kis = remote_ki_wbss - self.kis.keys()
@@ -57,7 +56,6 @@ class EWPSynchronizer:
             self.data['remote_kis'] = [
                 r for r in self.data['remote_kis'] if r["wbs"] not in missing_kis
             ]
-
 
         self.locations = {r.p_code: r for r in Location.objects.filter(p_code__in=self.data['remote_locations'])}
         missing_locations = set(self.data['remote_locations']) - self.locations.keys()
@@ -75,8 +73,6 @@ class EWPSynchronizer:
             self.data['remote_partners'] = [
                 vendor_number for vendor_number in self.data['remote_partners'] if vendor_number not in missing_partners
             ]
-
-
 
     @staticmethod
     def _update_changes(local, remote):
@@ -161,13 +157,15 @@ class EWPSynchronizer:
         for item in remote_ewp_outputs:
             query |= Q(cp_output__wbs=item["wbs"], workplan__wbs=item["workplan"])
 
-        local_ewp_outputs = {f'{record.cp_output.wbs}{record.workplan.wbs}': record for record in EWPOutput.objects.filter(query)}
+        local_ewp_outputs = {f'{record.cp_output.wbs}{record.workplan.wbs}': record for record in
+                             EWPOutput.objects.filter(query)}
 
         new_remote_outputs = [item for item in remote_ewp_outputs if item["wbs"] not in local_ewp_outputs.keys()]
 
         new_outputs = {}
         for remote_output in new_remote_outputs:
-            new_outputs[f'{remote_output["wbs"]}{remote_output["workplan"]}'], _ = EWPOutput.objects.get_or_create(cp_output=self.outputs[remote_output['wbs']], workplan=self.workplans[remote_output['workplan']],)
+            new_outputs[f'{remote_output["wbs"]}{remote_output["workplan"]}'], _ = EWPOutput.objects.get_or_create(
+                cp_output=self.outputs[remote_output['wbs']], workplan=self.workplans[remote_output['workplan']], )
 
         local_ewp_outputs.update(new_outputs)
         self.ewp_outputs = local_ewp_outputs
@@ -184,8 +182,8 @@ class EWPSynchronizer:
                        ewp_output__cp_output__wbs=item["output"],
                        ewp_output__workplan__wbs=item["workplan"])
 
-        local_ewp_kis = {f'{record.cp_key_intervention.wbs}{record.ewp_output.workplan.wbs}':
-                             record for record in EWPKeyIntervention.objects.filter(query)}
+        local_ewp_kis = {
+            f'{record.cp_key_intervention.wbs}{record.ewp_output.workplan.wbs}': record for record in EWPKeyIntervention.objects.filter(query)}
 
         new_remote_kis = [item for item in remote_ewp_kis if item["wbs"] not in local_ewp_kis.keys()]
 
@@ -205,7 +203,8 @@ class EWPSynchronizer:
         total_updated = 0
 
         # TODO: Prefetch related...
-        local_activities = {record.wbs: record for record in EWPActivity.objects.filter(wbs__in=list(rem_activities.keys()))}
+        local_activities = {record.wbs: record for record in
+                            EWPActivity.objects.filter(wbs__in=list(rem_activities.keys()))}
         for local_act in local_activities.values():
             if self._update_activity_changes(local_act, rem_activities[local_act.wbs]):
                 logger.debug('Updated {}'.format(local_act))
@@ -228,7 +227,7 @@ class EWPSynchronizer:
             p_codes = remote_activity.pop('locations')
             new_activities[remote_activity['wbs']], _ = EWPActivity.objects.get_or_create(**remote_activity)
 
-            #TODO: here we need to figure out what to do if the partners or locations are not in the workspace
+            # TODO: here we need to figure out what to do if the partners or locations are not in the workspace
             new_activities[remote_activity['wbs']].partners.set(
                 [self.partners.get(v) for v in vendor_numbers if self.partners.get(v) is not None]
             )
@@ -242,11 +241,8 @@ class EWPSynchronizer:
 
         return total_data, total_updated, len(new_activities)
 
-
     @transaction.atomic
     def update(self):
-
-
         total_ewps = self.update_workplans()
         ewps = 'CPs updated: Total {}, Updated {}, New {}'.format(*total_ewps)
 
@@ -263,9 +259,9 @@ class EWPSynchronizer:
         activities = 'Activities updated: Total {}, Updated {}, New {}'.format(*total_activities)
 
         return {
-            'details': '\n'.join([ewps, outputs, kis]),
-            'total_records': sum([i[0] for i in [total_ewps, total_outputs, total_kis]]),
-            'processed': sum([i[1] + i[2] for i in [total_ewps, total_outputs, total_kis]])
+            'details': '\n'.join([ewps, outputs, kis, activities]),
+            'total_records': sum([i[0] for i in [total_ewps, total_outputs, total_kis, total_activities]]),
+            'processed': sum([i[1] + i[2] for i in [total_ewps, total_outputs, total_kis, total_activities]])
         }
 
 
@@ -299,7 +295,7 @@ class EWPsSynchronizer(VisionDataTenantSynchronizer):
         ("WPA_GEOLOCATIONS", "locations"),
         ("WPA_IMPLEMENTING_PARTNERS", "partners"),
         ("VISION_ACTIVITY_WBS", "ewp_key_intervention"),
-        ('WP_GID', "workplan"), #This is the WBS, map later
+        ('WP_GID', "workplan"),  # This is the WBS, map later
     )
     REQUIRED_KEYS = set([r[0] for r in list(EWP_MAP + ACTIVITY_MAP)])
 
@@ -347,7 +343,6 @@ class EWPsSynchronizer(VisionDataTenantSynchronizer):
                 if all([r[i[0]] for i in self.EWP_MAP]):
                     ewps[r['WP_GID']] = dict([(i[1], r[i[0]]) for i in self.EWP_MAP])
 
-
             if not activities.get(r['WPA_GID'], None):
                 if all([r[i[0]] for i in self.ACTIVITY_MAP]):
                     result = {}
@@ -392,9 +387,11 @@ class EWPsSynchronizer(VisionDataTenantSynchronizer):
 
         return self._clean_records(records)
 
-
     def _save_records(self, records):
         synchronizer = EWPSynchronizer(records)
         return synchronizer.update()
 
-
+    def sync(self):
+        if tenant_switch_is_active("EWP Sync Disabled"):
+            raise VisionException("EWP Sync is disabled")
+        return super().sync()

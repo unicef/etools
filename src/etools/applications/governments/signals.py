@@ -10,30 +10,9 @@ from etools.applications.governments.models import (
     GDDPRCOfficerReview,
     GDDResultLink,
     GDDReview,
-    GDDSupplyItem,
     GDDTimeFrame,
 )
 from etools.applications.partners.utils import get_quarters_range
-
-# TODO clean up: endpoint removed in prp
-# @receiver(post_save, sender=GDD)
-# def sync_pd_partner_to_prp(instance: GDD, created: bool, **kwargs):
-#     if instance.date_sent_to_partner and instance.tracker.has_changed('date_sent_to_partner'):
-#         sync_partner_to_prp.delay(connection.tenant.name, instance.agreement.partner_id)
-
-
-@receiver(post_delete, sender=GDDSupplyItem)
-def calc_totals_on_delete(instance, **kwargs):
-    try:
-        gdd = GDD.objects.get(pk=instance.gdd.pk)
-    except GDD.DoesNotExist:
-        pass
-    else:
-        try:
-            # update budgets
-            gdd.planned_budget.save()
-        except GDDBudget.DoesNotExist:
-            pass
 
 
 @receiver(m2m_changed, sender=GDDReview.prc_officers.through)
@@ -76,7 +55,6 @@ def sync_budget_owner_to_amendment(instance: GDD, created: bool, **kwargs):
             amendment.amended_gdd.save()
 
 
-#
 @receiver(post_save, sender=GDD)
 def recalculate_time_frames(instance: GDD, created: bool, **kwargs):
     if instance.tracker.has_changed('start') or instance.tracker.has_changed('end'):
@@ -107,7 +85,7 @@ def recalculate_time_frames(instance: GDD, created: bool, **kwargs):
                 defaults={'start_date': new_quarter.start, 'end_date': new_quarter.end},
             )
 
-#
+
 @receiver(post_delete, sender=GDDActivity)
 def calc_totals_on_delete(instance, **kwargs):
     try:
@@ -131,7 +109,7 @@ def update_cash_on_delete(instance, **kwargs):
     else:
         Activity.update_cash()
 
-#
+
 @receiver(post_delete, sender=GDDResultLink)
 def recalculate_result_links_numbering(instance, **kwargs):
     GDDResultLink.renumber_result_links_for_gdd(instance.gdd)
@@ -145,8 +123,8 @@ def recalculate_result_links_numbering(instance, **kwargs):
             GDDActivity.renumber_activities_for_result(result)
             for activity in result.gdd_activities.all():
                 GDDActivityItem.renumber_items_for_activity(activity)
-#
-#
+
+
 @receiver(post_delete, sender=GDDKeyIntervention)
 def recalculate_results_numbering(instance, **kwargs):
     GDDKeyIntervention.renumber_results_for_result_link(instance.result_link)

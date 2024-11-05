@@ -23,20 +23,18 @@ from etools.applications.audit.models import get_current_year
 from etools.applications.core.permissions import import_permissions
 from etools.applications.environment.notifications import send_notification_with_template
 from etools.applications.funds.models import FundsReservationHeader
+from etools.applications.governments.amendment_utils import (
+    GDD_AMENDMENT_COPY_POST_EFFECTS,
+    GDD_AMENDMENT_DEFAULTS,
+    GDD_AMENDMENT_DIFF_POST_EFFECTS,
+    GDD_AMENDMENT_IGNORED_FIELDS,
+    GDD_AMENDMENT_MERGE_POST_EFFECTS,
+    GDD_AMENDMENT_RELATED_FIELDS,
+)
 from etools.applications.governments.validation import gdds as gdd_validation
 from etools.applications.locations.models import Location
 from etools.applications.organizations.models import OrganizationType
-from etools.applications.partners.amendment_utils import (
-    calculate_difference,
-    copy_instance,
-    INTERVENTION_AMENDMENT_COPY_POST_EFFECTS,
-    INTERVENTION_AMENDMENT_DEFAULTS,
-    INTERVENTION_AMENDMENT_DIFF_POST_EFFECTS,
-    INTERVENTION_AMENDMENT_IGNORED_FIELDS,
-    INTERVENTION_AMENDMENT_MERGE_POST_EFFECTS,
-    INTERVENTION_AMENDMENT_RELATED_FIELDS,
-    merge_instance,
-)
+from etools.applications.partners.amendment_utils import calculate_difference, copy_instance, merge_instance
 from etools.applications.partners.models import (
     _get_partner_base_path,
     Agreement,
@@ -803,10 +801,11 @@ class GDD(TimeStampedModel):
     def all_lower_results(self):
         # todo: it'd be nice to be able to do this as a queryset but that may not be possible
         # with prefetch_related
-        return [
+        ff = [
             lower_result for link in self.result_links.all()
             for lower_result in link.gdd_key_interventions.all()
         ]
+        return ff
 
     @cached_property
     def total_frs(self):
@@ -1010,7 +1009,7 @@ class GDD(TimeStampedModel):
 
         super().save()
 
-        if not oldself:
+        if not oldself and not hasattr(self, 'planned_budget'):
             self.planned_budget = GDDBudget.objects.create(gdd=self)
 
     def has_active_amendment(self, kind=None):
@@ -1207,10 +1206,10 @@ class GDDAmendment(TimeStampedModel):
     def _copy_gdd(self):
         self.amended_gdd, self.related_objects_map = copy_instance(
             self.gdd,
-            INTERVENTION_AMENDMENT_RELATED_FIELDS,
-            INTERVENTION_AMENDMENT_IGNORED_FIELDS,
-            INTERVENTION_AMENDMENT_DEFAULTS,
-            INTERVENTION_AMENDMENT_COPY_POST_EFFECTS,
+            GDD_AMENDMENT_RELATED_FIELDS,
+            GDD_AMENDMENT_IGNORED_FIELDS,
+            GDD_AMENDMENT_DEFAULTS,
+            GDD_AMENDMENT_COPY_POST_EFFECTS,
         )
         self.amended_gdd.title = '[Amended] ' + self.gdd.title
         self.amended_gdd.submission_date = timezone.now().date()
@@ -1227,10 +1226,10 @@ class GDDAmendment(TimeStampedModel):
             self.gdd,
             self.amended_gdd,
             self.related_objects_map,
-            INTERVENTION_AMENDMENT_RELATED_FIELDS,
-            INTERVENTION_AMENDMENT_IGNORED_FIELDS,
-            INTERVENTION_AMENDMENT_COPY_POST_EFFECTS,
-            INTERVENTION_AMENDMENT_MERGE_POST_EFFECTS,
+            GDD_AMENDMENT_RELATED_FIELDS,
+            GDD_AMENDMENT_IGNORED_FIELDS,
+            GDD_AMENDMENT_COPY_POST_EFFECTS,
+            GDD_AMENDMENT_MERGE_POST_EFFECTS,
         )
 
         # copy signatures to amendment
@@ -1268,9 +1267,9 @@ class GDDAmendment(TimeStampedModel):
             self.gdd,
             self.amended_gdd,
             self.related_objects_map,
-            INTERVENTION_AMENDMENT_RELATED_FIELDS,
-            INTERVENTION_AMENDMENT_IGNORED_FIELDS,
-            INTERVENTION_AMENDMENT_DIFF_POST_EFFECTS,
+            GDD_AMENDMENT_RELATED_FIELDS,
+            GDD_AMENDMENT_IGNORED_FIELDS,
+            GDD_AMENDMENT_DIFF_POST_EFFECTS,
         )
 
 
@@ -1694,7 +1693,7 @@ class GDDReviewNotification(TimeStampedModel):
 
         send_notification_with_template(
             recipients=[self.user.email],
-            template_name='partners/gdd/prc_review_notification',
+            template_name='governments/gdd/prc_review_notification',
             context=context,
         )
 
@@ -1846,7 +1845,7 @@ class GDDResultLink(TimeStampedModel):
     workplan = models.ForeignKey(
         GovernmentEWP, related_name='result_links', verbose_name=_('Workplan'),
         on_delete=models.CASCADE, blank=True, null=True
-        )
+    )
     cp_output = models.ForeignKey(
         EWPOutput, related_name='result_links', verbose_name=_('CP Output'),
         on_delete=models.PROTECT,

@@ -70,7 +70,7 @@ class GDDAmendmentCUSerializer(AttachmentSerializerMixin, serializers.ModelSeria
         data = super().validate(data)
 
         if 'gdd' in data:
-            if data['gdd'].agreement.partner.blocked is True:
+            if data['gdd'].partner.blocked is True:
                 raise ValidationError(_("Cannot add a new amendment while the partner is blocked in Vision."))
 
         if GDDAmendment.OTHER in data["types"]:

@@ -444,8 +444,6 @@ class UserIsObjectPartnerStaffMember(UserIsPartnerStaffMemberPermission):
         return obj.partner.user_is_staff_member(request.user)
 
 
-
-
 class UserIsStaffPermission(BasePermission):
     def has_permission(self, request, view):
         return request.user.is_staff
