@@ -168,6 +168,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.9.11,planned_visits,PME,not_in_amendment_mode,Approved,Edit,TRUE
 3.9.11,planned_visits,PME,not_in_amendment_mode,Active,Edit,TRUE
 3.9.11,planned_visits,PME,not_in_amendment_mode,Suspended,Edit,TRUE
+3.9.11,planned_visits,*,,*,Required,FALSE
 3.9.5,prc_review_attachment,*,,*,View,TRUE
 3.9.6,prc_review_attachment,Unicef Focal Point,,Review,Edit,TRUE
 3.9.7,prc_review_document,*,,*,View,TRUE
@@ -178,7 +179,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.13.1,reporting_requirements,Unicef Focal Point,not_ended,Terminated,Edit,TRUE
 3.13.1,reporting_requirements,Unicef Focal Point,termination_doc_attached,Active,Edit,TRUE
 3.13.1,reporting_requirements,Unicef Focal Point,termination_doc_attached,Approved,Edit,TRUE
-3.13.1,reporting_requirements,*,unicef_not_accepted,Draft,Required,FALSE
+3.13.1,reporting_requirements,*,,*,Required,FALSE
 ,result_links,Partner User,partner_court,Draft,Edit,TRUE
 3.13.1,result_links,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
 3.13.1,result_links,PRC Secretary,,pending_approval,Edit,TRUE
