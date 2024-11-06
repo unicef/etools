@@ -306,7 +306,7 @@ class GDDExportFlatSerializer(ExportSerializerMixin, GDDExportSerializer):
 
     def get_attachments(self, obj):
         return "\n".join(
-            ["{}: {}".format(a.type.name, a.attachment.url)
+            ["{}: {}".format(a.type.name, a.attachment.last().url)
              for a in obj.attachments.all()]
         )
 

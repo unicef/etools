@@ -336,7 +336,7 @@ class GDDListAPIView(QueryStringFilterMixin, ExportModelMixin, GDDListBaseView):
             if query_params.get("format") in ['csv', "csv_flat"]:
                 country = Country.objects.get(schema_name=connection.schema_name)
                 today = '{:%Y_%m_%d}'.format(datetime.date.today())
-                filename = f"PD_budget_as_of_{today}_{country.country_short_code}"
+                filename = f"GDD_budget_as_of_{today}_{country.country_short_code}"
                 response['Content-Disposition'] = f"attachment;filename={filename}.csv"
 
         return response
