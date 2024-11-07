@@ -24,7 +24,7 @@ GDD_AMENDMENT_RELATED_FIELDS = {
 
         # many to many
         'country_programme', 'unicef_focal_points', 'partner_focal_points', 'sites',
-        'sections', 'offices', 'flat_locations'
+        'sections', 'offices', 'flat_locations', 'e_workplans'
     ],
     'governments.GDDResultLink': [
         # one to many
@@ -33,12 +33,15 @@ GDD_AMENDMENT_RELATED_FIELDS = {
         # many to many
         'ram_indicators',
 
-        # one to one
+        # many to one
         'cp_output',
+
     ],
     'governments.GDDKeyIntervention': [
         # one to many
-        'activities',
+        'gdd_activities',
+        # many to one
+        'ewp_key_intervention'
     ],
     'governments.GDDSupplyItem': [
         # many to one
@@ -47,6 +50,10 @@ GDD_AMENDMENT_RELATED_FIELDS = {
     'governments.GDDActivity': [
         # one to many
         'items',
+        # many to one
+        'ewp_activity',
+        # many to many
+        'locations'
     ]
 }
 
@@ -131,14 +138,15 @@ GDD_FULL_SNAPSHOT_IGNORED_FIELDS['governments.GDDBudget'] = [
 # activity quarters
 def copy_activity_quarters(activity, activity_copy, fields_map):
     quarters = list(activity.time_frames.values_list('quarter', flat=True))
-    activity_copy.time_frames.add(*activity_copy.result.result_link.gdd.quarters.filter(quarter__in=quarters))
+
+    activity_copy.time_frames.add(*activity_copy.key_intervention.result_link.gdd.quarters.filter(quarter__in=quarters))
     fields_map['quarters'] = quarters
 
 
 def merge_activity_quarters(activity, activity_copy, fields_map):
     quarters = list(activity_copy.time_frames.values_list('quarter', flat=True))
     activity.time_frames.clear()
-    activity.time_frames.add(*activity.result.result_link.gdd.quarters.filter(quarter__in=quarters))
+    activity.time_frames.add(*activity.key_intervention.result_link.gdd.quarters.filter(quarter__in=quarters))
 
 
 def render_quarters_difference(activity, activity_copy, fields_map, difference):
