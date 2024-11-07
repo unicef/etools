@@ -109,7 +109,7 @@ urlpatterns = [
     path(
         'gdds/<int:gdd_pk>/result-links/<int:pk>/',
         view=GDDResultLinkUpdateView.as_view(
-            http_method_names=['delete']
+            http_method_names=['delete', 'patch']
         ),
         name='gdd-result-links-detail'),
     path(
