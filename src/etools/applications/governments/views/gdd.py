@@ -383,10 +383,10 @@ class GDDListCreateView(GDDMixin, GDDListAPIView):
 
 class GDDRetrieveUpdateView(GDDMixin, ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
     """
-    Retrieve and Update Agreement.
+    Retrieve and Update GDD
     """
     queryset = GDD.objects.detail_qs().all()
-    permission_classes = (IsAuthenticated, GDDPermission)  # TODO TBD vs PMP
+    permission_classes = (IsAuthenticated, GDDPermission)
 
     SERIALIZER_MAP = {
         'planned_visits': GDDPlannedVisitsCUSerializer,
