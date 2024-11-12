@@ -541,3 +541,21 @@ class GDDAmendmentIndicatorExportFlatSerializer(IndicatorExportFlatSerializer):
             [x.gdd.number
              for x in obj.gddresultlink_set.all()]
         )
+
+
+class GDDLocationExportSerializer(serializers.Serializer):
+    partner = serializers.CharField(source="gdd.partner.name")
+    partner_vendor_number = serializers.CharField(source="gdd.partner.vendor_number")
+    pd_ref_number = serializers.CharField(source="gdd.number")
+    partnership = serializers.CharField(source="gdd.agreement.agreement_number", default='-')
+    status = serializers.CharField(source="gdd.status")
+    location = serializers.CharField(source="selected_location.name", read_only=True)
+    section = serializers.CharField(source="section.name", read_only=True)
+    cp_output = serializers.CharField(source="gdd.cp_output_names")
+    start = serializers.CharField(source="gdd.start")
+    end = serializers.CharField(source="gdd.end")
+    focal_point = serializers.CharField(source="gdd.focal_point_names")
+    hyperlink = serializers.SerializerMethodField()
+
+    def get_hyperlink(self, obj):
+        return 'https://{}/pmp/gdd-interventions/{}/details/'.format(self.context['request'].get_host(), obj.gdd.id)

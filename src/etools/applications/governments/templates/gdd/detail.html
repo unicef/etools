@@ -130,34 +130,30 @@
         <tbody>
         <tr>
           <td class="b-gray w-p20">{% translate "eTools ref no" %}</td>
-          <td>{{ pd.number }}</td>
-        </tr>
-        <tr>
-          <td class="b-gray w-p20">{% translate "Document Type" %}</td>
-          <td>{{ pd.get_document_type_display }}{% if pd.humanitarian_flag %} (Humanitarian){% endif %} {% if pd.contingency_pd %} (Contingency){% endif %}</td>
+          <td>{{ gdd.number }}</td>
         </tr>
         <tr>
           <td class="b-gray w-p20">{% translate "UNICEF Office" %}</td>
-          <td>{{ pd_offices|join:", " }}</td>
+          <td>{{ gdd_offices|join:", " }}</td>
         </tr>
         <tr>
           <td class="b-gray w-p20">{% translate "Organization Name" %}</td>
-          <td>{{ pd.agreement.partner.name }}</td>
+          <td>{{ gdd.partner.name }}</td>
         </tr>
         <tr>
           <td class="b-gray w-p20">{% translate "Programme Title" %}</td>
-          <td>{{ pd.title }}</td>
+          <td>{{ gdd.title }}</td>
         </tr>
         <tr>
           <td class="b-gray w-p20">{% translate "Planned duration" %}</td>
           <td>
-            <span>{% translate "Start date" %}: {{ pd.start }}</span><br>
-            <span>{% translate "End date" %}: {{ pd.end }}</span>
+            <span>{% translate "Start date" %}: {{ gdd.start }}</span><br>
+            <span>{% translate "End date" %}: {{ gdd.end }}</span>
           </td>
         </tr>
         <tr>
           <td class="b-gray w-p20">{% translate "Geographical coverage" %}</td>
-          <td>{{ pd_locations|join:", " }}</td>
+          <td>{{ gdd_locations|join:", " }}</td>
         </tr>
         <tr>
           <td class="b-gray w-p20">{% translate "Budget" %}</td>
@@ -165,21 +161,11 @@
             <table class="no-border">
               <tr class="">
                 <td class="w-p12">{% translate "UNICEF Cash" %}:</td>
-                <td class="w-p12">{{ pd.planned_budget.unicef_cash_local | currency }}</td>
+                <td class="w-p12">{{ gdd.planned_budget.unicef_cash_local | currency }}</td>
                 <td class="w-p12">{% translate "Supplies" %}:</td>
-                <td class="w-p12">{{ pd.planned_budget.in_kind_amount_local | currency}}</td>
-                <td class="w-p12">{% translate "Capacity Strengthening Costs" %}:</td>
-                <td class="w-p12">{{ pd.planned_budget.total_hq_cash_local | currency }}</td>
+                <td class="w-p12">{{ gdd.planned_budget.in_kind_amount_local | currency}}</td>
                 <td class="w-p12">{% translate "Total" %}:</td>
-                <td class="w-p12">{{ pd.planned_budget.total_unicef_contribution_local | currency }}</td>
-              </tr>
-              <tr>
-                <td>{% translate "Partner Cash" %}:</td>
-                <td>{{ pd.planned_budget.partner_contribution_local | currency }}</td>
-                <td>{% translate "Supplies:" %}</td>
-                <td colspan="3">{{ pd.planned_budget.partner_supply_local | currency }}</td>
-                <td>{% translate "Total:" %}</td>
-                <td>{{ pd.planned_budget.total_partner_contribution_local | currency }}</td>
+                <td class="w-p12">{{ gdd.planned_budget.total_unicef_contribution_local | currency }}</td>
               </tr>
             </table>
           </td>
@@ -190,9 +176,9 @@
             <table class="no-border">
               <tr>
                 <td class="w-p12">{% translate "Currency" %}:</td>
-                <td class="w-p62">{{ pd.planned_budget.currency }}</td>
+                <td class="w-p62">{{ gdd.planned_budget.currency }}</td>
                 <td class="w-p12">{% translate "Total" %}:</td>
-                <td class="w-p12">{{ pd.planned_budget.total_local | currency }}</td>
+                <td class="w-p12">{{ gdd.planned_budget.total_local | currency }}</td>
               </tr>
             </table>
           </td>
@@ -206,50 +192,38 @@
           <td class="b-navy">{% translate "Strategy" %}</td>
         </tr>
         <tr>
-          <td class=""><span class="bold">{% translate "Context" %}:</span> {{ pd.context|escape|linebreaks }}</td>
+          <td class=""><span class="bold">{% translate "Context" %}:</span> {{ gdd.context|escape|linebreaks }}</td>
         </tr>
         <tr>
           <td class=""><span
-              class="bold">{% translate "Implementation Strategy & Technical Guidance" %}:</span> {{ pd.implementation_strategy|escape|linebreaks }}
+              class="bold">{% translate "Implementation Strategy & Technical Guidance" %}:</span> {{ gdd.implementation_strategy|escape|linebreaks }}
           </td>
         </tr>
         <tr>
-          <td class=""><span class="bold">{% translate "Capacity Development" %}:</span> {{ pd.capacity_development|escape|linebreaks }}</td>
+          <td class=""><span class="bold">{% translate "Other Partners involved" %}:</span> {{ gdd.other_partners_involved|escape|linebreaks }}</td>
         </tr>
         <tr>
-          <td class=""><span class="bold">{% translate "Other Partners involved" %}:</span> {{ pd.other_partners_involved|escape|linebreaks }}</td>
+          <td class=""><span class="bold">{% translate "Other Document Details" %}:</span> {{ gdd.other_details|escape|linebreaks }}</td>
         </tr>
         <tr>
-          <td class=""><span class="bold">{% translate "Other Document Details" %}:</span> {{ pd.other_details|escape|linebreaks }}</td>
-        </tr>
-        <tr>
-            <td class=""><span class="bold">{% translate "Data Processing Agreement" %}:</span> {% if pd.has_data_processing_agreement %}{% translate "Yes" %}{% else %}{% translate "No" %}{% endif %}</td>
-        </tr>
-        <tr>
-            <td class=""><span class="bold">{% translate "Activities involving children and young people" %}:</span> {% if pd.has_activities_involving_children %}{% translate "Yes" %}{% else %}{% translate "No" %}{% endif %}</td>
-        </tr>
-        <tr>
-            <td class=""><span class="bold">{% translate "Special Conditions for Construction Works by Implementing Partners" %}:</span> {% if pd.has_special_conditions_for_construction %}{% translate "Yes" %}{% else %}{% translate "No" %}{% endif %}</td>
-        </tr>
-        <tr>
-          <td class=""><span class="bold">{% translate "Gender Rating" %}:</span>{{ pd.get_gender_rating_display }} <br>
-            {{ pd.gender_narrative|escape|linebreaks }}
+          <td class=""><span class="bold">{% translate "Gender Rating" %}:</span>{{ gdd.get_gender_rating_display }} <br>
+            {{ gdd.gender_narrative|escape|linebreaks }}
           </td>
         </tr>
         <tr>
-          <td class=""><span class="bold">{% translate "Equity Rating" %}:</span> {{ pd.get_equity_rating_display }} <br>
-            {{ pd.equity_narrative|escape|linebreaks }}
+          <td class=""><span class="bold">{% translate "Equity Rating" %}:</span> {{ gdd.get_equity_rating_display }} <br>
+            {{ gdd.equity_narrative|escape|linebreaks }}
           </td>
         </tr>
         <tr>
-          <td class=""><span class="bold">{% translate "Sustainability Rating" %}:</span> {{ pd.get_sustainability_rating_display }} <br>
-            {{ pd.sustainability_narrative|escape|linebreaks }}
+          <td class=""><span class="bold">{% translate "Sustainability Rating" %}:</span> {{ gdd.get_sustainability_rating_display }} <br>
+            {{ gdd.sustainability_narrative|escape|linebreaks }}
           </td>
         </tr>
         <tr>
           <td class="">
             <span class="bold">{% translate "Risk & Proposed Mitigation Measures" %}:</span><br/>
-            {% for risk in pd.risks.all %}
+            {% for risk in gdd.risks.all %}
               <span class="">{{ risk.get_risk_type_display }}: {{ risk.mitigation_measures }}</span><br/>
             {% endfor %}
           </td>
@@ -266,14 +240,10 @@
           <tr>
             <td class="b-gray w-p30">{% translate "Result statement" %}</td>
             <td class="b-gray w-p30">{% translate "Performance indicator/s" %}</td>
-            <td class="b-gray w-p20">{% translate "Location" %}</td>
-            <td class="b-gray w-p5">{% translate "Baseline" %}</td>
-            <td class="b-gray w-p5">{% translate "Target" %}</td>
-            <td class="b-gray w-p10">{% translate "Means of Verification" %}</td>
           </tr>
-          {% for result_link in pd.result_links.all %}
+          {% for result_link in gdd.result_links.all %}
             <tr>
-              <td class="b-yellow w-p30">{{ result_link.cp_output.name }}</td>
+              <td class="b-yellow w-p30">{{ result_link.cp_output.cp_output.name }}</td>
               <td class="b-yellow w-p30">
                 {% for indicator in result_link.ram_indicators.all %}
                   <span>{{ indicator.name }}</span><br/>
@@ -284,33 +254,9 @@
               <td class="b-gray w-p5"></td>
               <td class="b-gray w-p10"></td>
             </tr>
-            {% for pd_output in result_link.ll_results.all %}
+            {% for ki in result_link.gdd_key_interventions.all %}
             <tr>
-            <td class="w-p30">{{ pd_output.name }}</td>
-              {% for indicator in pd_output.applied_indicators.all %}
-                    {%  if not forloop.first %}
-                        <td><span> </span></td>
-                    {% endif %}
-                      <td class="w-p30">{% if not indicator.is_active %} ({% translate 'Inactive' %}){% endif %} {{ indicator.indicator.title }}</td>
-                      <td class="w-p20">
-                        {% for location in indicator.locations.all %}
-                          <span class="small-text">{{ location.name }}{%  if not forloop.last %}, {% endif %}
-                          </span>
-                        {% endfor %}
-                      </td>
-                      <td class="w-p5">{{ indicator.baseline_display_string }}</td>
-                      <td class="w-p5">{{ indicator.target_display_string }}</td>
-                      <td class="w-p10">{{ indicator.means_of_verification }}</td>
-                  </tr>
-
-              {% empty %}
-                  <td class="w-p30"></td>
-                  <td class="w-p20"></td>
-                  <td class="w-p5"></td>
-                  <td class="w-p5"></td>
-                  <td class="w-p10"></td>
-
-              {% endfor %}
+            <td class="w-p30">{{ ki.name }}</td>
              </tr>
             {% endfor %}
           {% endfor %}
@@ -323,33 +269,28 @@
             <td colspan="6" class="b-navy">{% translate "Workplan Budget" %}</td>
           </tr>
           <tr>
-            <td class="b-gray w-p10">{% translate "Result Level" %}</td>
+            <td class="b-gray w-p30">{% translate "Result Level" %}</td>
             <td class="b-gray w-p40">{% translate "Result/activity" %}</td>
-            <td class="b-gray w-p20">{% translate "Timeframe" %}</td>
-            <td class="b-gray w-p10">{% translate "Total (Government + UNICEF)" %}[{{ pd.planned_budget.currency }}]</td>
-            <td class="b-gray w-p10">{% translate "Government contribution" %}</td>
-            <td class="b-gray w-p10">{% translate "UNICEF contribution" %}</td>
+            <td class="b-gray w-p30">{% translate "Timeframe" %}</td>
+            <td class="b-gray w-p10">{% translate "Total (UNICEF)" %}[{{ gdd.planned_budget.currency }}]</td>
           </tr>
-          {% for result_link in pd.result_links.all %}
-            {% for ll_result in result_link.ll_results.all %}
+          {% for result_link in gdd.result_links.all %}
+            {% for ki in result_link.gdd_key_interventions.all %}
               <tr>
                 <td class="b-yellow">{% translate "Prog. Output" %}</td>
                 <td class="b-yellow" colspan="2">
-                  {{ result_link.cp_output.name }}
+                  {{ result_link.cp_output.cp_output.name }}
                   <br>
-                  {{ ll_result.name }}
+                  {{ ki.ewp_key_intervention.cp_key_intervention.name }}
                 </td>
-                <td class="b-yellow">{{ ll_result.total | currency }}</td>
-                <td class="b-yellow">{{ ll_result.total_cso | currency }}</td>
-                <td class="b-yellow">{{ ll_result.total_unicef | currency }}</td>
+                <td class="b-yellow">{{ ki.total | currency }}</td>
               </tr>
-              {% for activity in ll_result.activities.all %}
+              {% for activity in ki.gdd_activities.all %}
                 <tr>
                   <td>Activity</td>
                   <td>{% if not activity.is_active %} ({% translate 'Inactive' %}) {% endif %}{{ activity.name }}</td>
                   <td>{{ activity.get_time_frames_display }}</td>
                   <td>{{ activity.cso_cash|add:activity.unicef_cash | currency }}</td>
-                  <td>{{ activity.cso_cash | currency }}</td>
                   <td>{{ activity.unicef_cash | currency }}</td>
                 </tr>
               {% endfor %}
@@ -358,48 +299,15 @@
           <tr>
             <td class="b-yellow">{% translate "Prog. Output" %}</td>
             <td colspan="2" class="b-yellow">{% translate "Effective and efficient programme management" %}</td>
-            <td class="b-yellow">{{ pd.management_budgets.total | currency }}</td>
-            <td class="b-yellow">{{ pd.management_budgets.partner_total | currency }}</td>
-            <td class="b-yellow">{{ pd.management_budgets.unicef_total | currency }}</td>
-          </tr>
-          <tr>
-            <td class="b-gray">{% translate "Activity" %}</td>
-            <td colspan="2">{% translate "In-country management & support" %}</td>
-            <td>{{ pd.management_budgets.act1_unicef|add:pd.management_budgets.act1_partner }}</td>
-            <td>{{ pd.management_budgets.act1_partner }}</td>
-            <td>{{ pd.management_budgets.act1_unicef }}</td>
-          </tr>
-          <tr>
-            <td class="b-gray">{% translate "Activity" %}</td>
-            <td colspan="2">{% translate "Operational costs" %}</td>
-            <td>{{ pd.management_budgets.act2_unicef|add:pd.management_budgets.act2_partner | currency }}</td>
-            <td>{{ pd.management_budgets.act2_partner | currency }}</td>
-            <td>{{ pd.management_budgets.act2_unicef | currency }}</td>
-          </tr>
-          <tr>
-            <td class="b-gray">{% translate "Activity" %}</td>
-            <td colspan="2">{% translate "Planning, monitoring, evaluation, and communication" %}</td>
-            <td>{{ pd.management_budgets.act3_unicef|add:pd.management_budgets.act3_partner | currency }}</td>
-            <td>{{ pd.management_budgets.act3_partner | currency }}</td>
-            <td>{{ pd.management_budgets.act3_unicef | currency }}</td>
+            <td class="b-yellow">{{ gdd.management_budgets.unicef_total | currency }}</td>
           </tr>
           <tr>
            <td colspan="3" class="b-blue">{% translate "Sub-total for programme costs" %}</td>
-            <td class="b-blue">{{ pd.planned_budget.total_unicef_cash_local_wo_hq|add:pd.planned_budget.partner_contribution_local | currency }}</td>
-            <td class="b-blue">{{ pd.planned_budget.partner_contribution_local | currency }}</td>
-            <td class="b-blue">{{ pd.planned_budget.total_unicef_cash_local_wo_hq | currency }}</td>
-          </tr>
-          <tr>
-            <td colspan="3" class="b-blue">{% translate "Capacity Strengthening Costs" %}</td>
-            <td class="b-blue">{{ pd.planned_budget.total_hq_cash_local | currency }}</td>
-            <td class="b-blue"></td>
-            <td class="b-blue">{{ pd.planned_budget.total_hq_cash_local | currency }}</td>
+            <td class="b-blue">{{ gdd.planned_budget.total_unicef_cash_local_wo_hq | currency }}</td>
           </tr>
           <tr>
            <td colspan="3" class="b-blue">{% translate "Total Cash budget" %}</td>
-            <td class="b-blue">{{ pd.planned_budget.total_cash_local | currency }}</td>
-            <td class="b-blue">{{ pd.planned_budget.partner_contribution_local | currency }}</td>
-            <td class="b-blue">{{ pd.planned_budget.unicef_cash_local | currency }}</td>
+            <td class="b-blue">{{ gdd.planned_budget.unicef_cash_local | currency }}</td>
           </tr>
         <tbody>
       </table>
@@ -416,7 +324,7 @@
           <td class="bold w-p15">{% translate "Price/unit" %}</td>
           <td class="bold w-p15">{% translate "Total Price" %}</td>
         </tr>
-        {% for supply_item in pd.supply_items.all %}
+        {% for supply_item in gdd.supply_items.all %}
           <tr>
             <td>{{ supply_item.get_provided_by_display }}</td>
             <td>{{ supply_item.title }}</td>
@@ -427,7 +335,7 @@
         {% endfor %}
         <tr>
           <td class="b-blue" colspan="4">{% translate "Total supply Cost" %}</td>
-          <td class="b-blue">{{ pd.planned_budget.in_kind_amount_local|add:pd.planned_budget.partner_supply_local | currency }}</td>
+          <td class="b-blue">{{ gdd.planned_budget.in_kind_amount_local|add:gdd.planned_budget.partner_supply_local | currency }}</td>
         </tr>
         <tbody>
       </table>
@@ -439,15 +347,15 @@
         </tr>
         <tr>
           <td class="b-gray w-p20">{% translate "Partner non-financial contribution" %}</td>
-          <td>{{ pd.ip_program_contribution|escape|linebreaks }}</td>
+          <td>{{ gdd.ip_program_contribution|escape|linebreaks }}</td>
         </tr>
         <tr>
           <td class="b-gray w-p20">{% translate "Cash Transfer modality" %}</td>
-          <td>{{ pd.get_cash_transfer_modalities_display }}</td>
+          <td>{{ gdd.get_cash_transfer_modalities_display }}</td>
         </tr>
         <tr>
           <td class="b-gray w-p20">{% translate "Activation Protocol" %}</td>
-          <td>{{ pd.activation_protocol }}</td>
+          <td>{{ gdd.activation_protocol }}</td>
         </tr>
         <tbody>
       </table>
@@ -483,7 +391,7 @@
             <td class="bold w-p40">{% translate "Document" %}</td>
             <td class="bold w-p10">{% translate "Invalid" %}</td>
           </tr>
-          {% for attachment in pd.attachments.all %}
+          {% for attachment in gdd.attachments.all %}
             <tr>
               <td>{{ attachment.created }}</td>
               <td>{{ attachment.type.get_name_display }}</td>
