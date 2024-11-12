@@ -71,7 +71,7 @@ class GDDResultsExportView(QueryStringFilterMixin, ListAPIView):
                 for ki in ki_qs:
                     ki_dict = {
                         'ind_result': ki.result_link.cp_output.cp_output.name,
-                        'ind_key_interventions': ki.ewp_key_intervention.cp_key_intervention.name,
+                        'ind_key_interventions': ki.ewp_key_intervention.cp_key_intervention.name if ki.ewp_key_intervention else '',
                         'ind_ram_indicators': ', '.join([ri.name for ri in Indicator.objects.filter(gddresultlink=ki.result_link).all()])
                     }
                     export_dict = {**gdd_dict, **ki_dict}
@@ -172,7 +172,7 @@ class GDDLocationsExportView(QueryStringFilterMixin, ListAPIView):
         response = Response(serializer.data)
 
         query_params = self.request.query_params
-        if query_params.get("format") in ['csv', 'csv_flat']:
+        if query_params.get("format") == 'csv':
             country = Country.objects.get(schema_name=connection.schema_name)
             today = '{:%Y_%m_%d}'.format(datetime.date.today())
             filename = f"GDD_locations_as_of_{today}_{country.country_short_code}"

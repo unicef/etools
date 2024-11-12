@@ -166,7 +166,7 @@ class GDDExportSerializer(serializers.ModelSerializer):
         return obj.unicef_signatory.get_full_name() if obj.unicef_signatory else ''
 
     def get_country_programme(self, obj):
-        return obj.country_programme.name
+        return obj.country_programme.name if obj.country_programme else ''
 
     def get_offices(self, obj):
         return ', '.join([o.name for o in obj.offices.all()])
