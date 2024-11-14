@@ -588,6 +588,9 @@ class GDDUnlockView(GDDActionView):
 class GDDSendToPartnerView(GDDActionView):
     def update(self, request, *args, **kwargs):
         gdd = self.get_object()
+        if not gdd.result_links.exists():
+            raise ValidationError(_("At least one CP Output is required before sending it to the Partner"))
+
         if not gdd.unicef_court:
             raise ValidationError(_("GDD is currently with Partner"))
 
