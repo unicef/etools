@@ -52,9 +52,14 @@ class PointOfInterestLightSerializer(serializers.ModelSerializer):
 
 
 class MaterialSerializer(serializers.ModelSerializer):
+    is_rutf_material = serializers.SerializerMethodField()
+
     class Meta:
         model = models.Material
         exclude = ('partner_materials',)
+
+    def get_is_rutf_material(self, obj):
+        return obj.number in settings.RUTF_MATERIALS
 
 
 class TransferListSerializer(serializers.ModelSerializer):
@@ -99,46 +104,67 @@ class MaterialItemsSerializer(serializers.ModelSerializer):
 class MaterialDetailSerializer(serializers.ModelSerializer):
     items = MaterialItemsSerializer(many=True)
     description = serializers.CharField(read_only=True)
+    is_rutf_material = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = models.Material
         exclude = ["partner_materials"]
+
+    def get_is_rutf_material(self, obj):
+        return obj.number in settings.RUTF_MATERIALS
 
 
 class MaterialListSerializer(serializers.ModelSerializer):
     description = serializers.CharField(read_only=True)
+    is_rutf_material = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = models.Material
         exclude = ["partner_materials"]
+
+    def get_is_rutf_material(self, obj):
+        return obj.number in settings.RUTF_MATERIALS
 
 
 class ItemSerializer(serializers.ModelSerializer):
     material = MaterialSerializer()
     description = serializers.CharField(read_only=True)
+    is_rutf_material = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = models.Item
         exclude = ('transfer',)
+
+    def get_is_rutf_material(self, obj):
+        return obj.material.number in settings.RUTF_MATERIALS
+    
 
 
 class ItemListSerializer(serializers.ModelSerializer):
     transfer = TransferMinimalSerializer()
     material = MaterialSerializer()
     description = serializers.CharField(read_only=True)
+    is_rutf_material = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = models.Item
         fields = '__all__'
 
+    def get_is_rutf_material(self, obj):
+        return obj.material.number in settings.RUTF_MATERIALS
+
 
 class ItemSimpleListSerializer(serializers.ModelSerializer):
     material = MaterialSerializer()
     description = serializers.CharField(read_only=True)
+    is_rutf_material = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = models.Item
         exclude = ('transfers_history',)
+
+    def get_is_rutf_material(self, obj):
+        return obj.material.number in settings.RUTF_MATERIALS
 
 
 class ItemUpdateSerializer(serializers.ModelSerializer):

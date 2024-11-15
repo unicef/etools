@@ -2,7 +2,7 @@ from functools import cache
 
 from django.conf import settings
 from django.db import connection
-from django.db.models import CharField, OuterRef, Prefetch, Q, Subquery
+from django.db.models import CharField, OuterRef, Prefetch, Q, Subquery, Case, When, Value, BooleanField
 from django.shortcuts import get_object_or_404
 from django.utils.functional import cached_property
 from django.utils.translation import gettext as _
@@ -126,7 +126,12 @@ class InventoryItemListView(POIQuerysetMixin, ListAPIView):
 
             qs = qs.annotate(description=Subquery(models.PartnerMaterial.objects.filter(
                 partner_organization=partner,
-                material=OuterRef('material')).values('description'), output_field=CharField()))
+                material=OuterRef('material')).values('description'), output_field=CharField(),                    
+                is_rutf_material=Case(
+                        When(material__id__in=settings.RUTF_MATERIALS, then=Value(True)),
+                        default=Value(False),
+                        output_field=BooleanField()
+                    )))
             return qs
         return self.queryset.none()
 
@@ -176,6 +181,13 @@ class InventoryMaterialsViewSet(POIQuerysetMixin, mixins.ListModelMixin, Generic
             .prefetch_related(Prefetch('items', queryset=items_qs)) \
             .annotate(description=Subquery(models.PartnerMaterial.objects.filter(
                 partner_organization=partner, material=OuterRef('id')).values('description')[:1], output_field=CharField()))\
+            .annotate(
+                is_rutf_material=Case(
+                    When(number__in=settings.RUTF_MATERIALS, then=Value(True)),
+                    default=Value(False),
+                    output_field=BooleanField()
+                )
+            )\
             .distinct()\
             .order_by('id', 'short_description')
 
@@ -234,7 +246,12 @@ class TransferViewSet(
                 .prefetch_related('transfers_history')
                 .annotate(description=Subquery(models.PartnerMaterial.objects.filter(
                     partner_organization=self.request.user.partner,
-                    material=OuterRef('material')).values('description'), output_field=CharField())))
+                    material=OuterRef('material')).values('description'), output_field=CharField()),
+                    is_rutf_material=Case(
+                        When(material__id__in=settings.RUTF_MATERIALS, then=Value(True)),
+                        default=Value(False),
+                        output_field=BooleanField()
+                    )))
         )
 
     @cache
