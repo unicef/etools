@@ -126,12 +126,12 @@ class InventoryItemListView(POIQuerysetMixin, ListAPIView):
 
             qs = qs.annotate(description=Subquery(models.PartnerMaterial.objects.filter(
                 partner_organization=partner,
-                material=OuterRef('material')).values('description'), output_field=CharField(),                    
+                material=OuterRef('material')).values('description'), output_field=CharField(),
                 is_rutf_material=Case(
-                        When(material__id__in=settings.RUTF_MATERIALS, then=Value(True)),
-                        default=Value(False),
-                        output_field=BooleanField()
-                    )))
+                    When(material__id__in=settings.RUTF_MATERIALS, then=Value(True)),
+                    default=Value(False),
+                    output_field=BooleanField()
+            )))
             return qs
         return self.queryset.none()
 
@@ -251,7 +251,7 @@ class TransferViewSet(
                         When(material__id__in=settings.RUTF_MATERIALS, then=Value(True)),
                         default=Value(False),
                         output_field=BooleanField()
-                    )))
+                )))
         )
 
     @cache

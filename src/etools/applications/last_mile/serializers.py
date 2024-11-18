@@ -115,7 +115,6 @@ class MaterialDetailSerializer(serializers.ModelSerializer):
         exclude = ["partner_materials"]
 
 
-
 class MaterialListSerializer(serializers.ModelSerializer):
     description = serializers.CharField(read_only=True)
     is_rutf_material = serializers.BooleanField(read_only=True)
@@ -123,7 +122,6 @@ class MaterialListSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Material
         exclude = ["partner_materials"]
-
 
 
 class ItemSerializer(serializers.ModelSerializer):
@@ -137,7 +135,6 @@ class ItemSerializer(serializers.ModelSerializer):
 
     def get_is_rutf_material(self, obj):
         return str(obj.material.id) in settings.RUTF_MATERIALS
-    
 
 
 class ItemListSerializer(serializers.ModelSerializer):
