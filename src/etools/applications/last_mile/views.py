@@ -2,7 +2,7 @@ from functools import cache
 
 from django.conf import settings
 from django.db import connection
-from django.db.models import CharField, OuterRef, Prefetch, Q, Subquery, Case, When, Value, BooleanField
+from django.db.models import BooleanField, Case, CharField, OuterRef, Prefetch, Q, Subquery, Value, When
 from django.shortcuts import get_object_or_404
 from django.utils.functional import cached_property
 from django.utils.translation import gettext as _
