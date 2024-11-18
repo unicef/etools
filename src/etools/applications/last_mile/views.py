@@ -183,7 +183,7 @@ class InventoryMaterialsViewSet(POIQuerysetMixin, mixins.ListModelMixin, Generic
                 partner_organization=partner, material=OuterRef('id')).values('description')[:1], output_field=CharField()))\
             .annotate(
                 is_rutf_material=Case(
-                    When(number__in=settings.RUTF_MATERIALS, then=Value(True)),
+                    When(id__in=settings.RUTF_MATERIALS, then=Value(True)),
                     default=Value(False),
                     output_field=BooleanField()
                 )
