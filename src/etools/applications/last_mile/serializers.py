@@ -95,10 +95,14 @@ class TransferMinimalSerializer(serializers.ModelSerializer):
 
 class MaterialItemsSerializer(serializers.ModelSerializer):
     transfer = TransferMinimalSerializer()
+    is_rutf_material = serializers.SerializerMethodField()
 
     class Meta:
         model = models.Item
         exclude = ('material', 'transfers_history', 'created', 'modified',)
+
+    def get_is_rutf_material(self, obj):
+        return obj.material.is_rutf_material
 
 
 class MaterialDetailSerializer(serializers.ModelSerializer):
@@ -110,8 +114,6 @@ class MaterialDetailSerializer(serializers.ModelSerializer):
         model = models.Material
         exclude = ["partner_materials"]
 
-    def get_is_rutf_material(self, obj):
-        return obj.number in settings.RUTF_MATERIALS
 
 
 class MaterialListSerializer(serializers.ModelSerializer):
@@ -122,8 +124,6 @@ class MaterialListSerializer(serializers.ModelSerializer):
         model = models.Material
         exclude = ["partner_materials"]
 
-    def get_is_rutf_material(self, obj):
-        return obj.number in settings.RUTF_MATERIALS
 
 
 class ItemSerializer(serializers.ModelSerializer):
