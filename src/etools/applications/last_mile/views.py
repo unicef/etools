@@ -128,7 +128,7 @@ class InventoryItemListView(POIQuerysetMixin, ListAPIView):
                 partner_organization=partner,
                 material=OuterRef('material')).values('description'), output_field=CharField(),
                 is_rutf_material=Case(
-                    When(material__id__in=settings.RUTF_MATERIALS, then=Value(True)),
+                    When(material__id__in=[valid_rutf_id for valid_rutf_id in settings.RUTF_MATERIALS if valid_rutf_id], then=Value(True)),
                     default=Value(False),
                     output_field=BooleanField()
             )))
@@ -183,7 +183,7 @@ class InventoryMaterialsViewSet(POIQuerysetMixin, mixins.ListModelMixin, Generic
                 partner_organization=partner, material=OuterRef('id')).values('description')[:1], output_field=CharField()))\
             .annotate(
                 is_rutf_material=Case(
-                    When(id__in=settings.RUTF_MATERIALS, then=Value(True)),
+                    When(id__in=[valid_rutf_id for valid_rutf_id in settings.RUTF_MATERIALS if valid_rutf_id], then=Value(True)),
                     default=Value(False),
                     output_field=BooleanField()
                 )
@@ -248,7 +248,7 @@ class TransferViewSet(
                     partner_organization=self.request.user.partner,
                     material=OuterRef('material')).values('description'), output_field=CharField()),
                     is_rutf_material=Case(
-                        When(material__id__in=settings.RUTF_MATERIALS, then=Value(True)),
+                        When(material__id__in=[valid_rutf_id for valid_rutf_id in settings.RUTF_MATERIALS if valid_rutf_id], then=Value(True)),
                         default=Value(False),
                         output_field=BooleanField()
                 )))
