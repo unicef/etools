@@ -600,7 +600,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             expected_status=status.HTTP_200_OK,
         )
         activity.refresh_from_db()
-        self.assertEqual(activity.report_reviewers.count(), 0)
+        self.assertEqual(activity.report_reviewers.count(), 1)
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_submit_staff_report_reviewer_required(self):

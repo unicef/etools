@@ -57,7 +57,7 @@ class BaseMonitoringActivityFactory(factory.django.DjangoModelFactory):
         if extracted:
             self.report_reviewers.add(*extracted)
         elif count:
-            self.report_reviewers.add(*UserFactory.create_batch(unicef_user=True))
+            self.report_reviewers.add(*UserFactory.create_batch(size = count, unicef_user=True))
 
     @factory.post_generation
     def sections(self, created, extracted, **kwargs):
@@ -115,13 +115,8 @@ class ReviewActivityFactory(ChecklistActivityFactory):
 class PreAssignedActivityFactory(ReviewActivityFactory):
     visit_lead = factory.SubFactory(UserFactory, unicef_user=True)
     team_members__count = 2
+    report_reviewers__count = 1
 
-    @factory.post_generation
-    def report_reviewers(self, created, extracted, count=0, **kwargs):
-        if extracted:
-            self.report_reviewers.add(*extracted)
-        elif count:
-            self.report_reviewers.add(*UserFactory.create_batch(unicef_user=True))
 
 
 class AssignedActivityFactory(PreAssignedActivityFactory):
@@ -143,7 +138,7 @@ class SubmittedActivityFactory(ReportFinalizationActivityFactory):
         if extracted:
             self.report_reviewers.add(*extracted)
         elif count:
-            self.report_reviewers.add(*UserFactory.create_batch(unicef_user=True))
+            self.report_reviewers.add(*UserFactory.create_batch(unicef_user=True,size=count))
 
 
 class CompletedActivityFactory(SubmittedActivityFactory):
