@@ -243,7 +243,7 @@ class MonitoringActivity(
                                    verbose_name=_('Person Responsible'), related_name='+',
                                    on_delete=models.SET_NULL)
 
-    report_reviewers = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True, null=True, verbose_name=_('Report Reviewer'),
+    report_reviewers = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True, verbose_name=_('Report Reviewer'),
                                               related_name='activities_to_review')
     reviewed_by = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, verbose_name=_('Reviewed By'),
                                     related_name='activities_reviewed', on_delete=models.SET_NULL)

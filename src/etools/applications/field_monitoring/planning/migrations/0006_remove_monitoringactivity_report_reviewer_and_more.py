@@ -20,7 +20,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='monitoringactivity',
             name='report_reviewers',
-            field=models.ManyToManyField(blank=True, null=True, related_name='activities_to_review', to=settings.AUTH_USER_MODEL, verbose_name='Report Reviewer'),
+            field=models.ManyToManyField(blank=True, related_name='activities_to_review', to=settings.AUTH_USER_MODEL, verbose_name='Report Reviewer'),
         ),
         migrations.RunPython(migrate_foreignkey_to_manytomany),
         migrations.RemoveField(

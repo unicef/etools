@@ -428,7 +428,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             status=MonitoringActivity.STATUSES.review,
             team_members=team_members,
             visit_lead=UserFactory(unicef_user=True),
-            report_reviewer=UserFactory(unicef_user=True),
+            report_reviewers=[UserFactory(unicef_user=True)],
         )
 
         response = self._test_update(self.fm_user, activity, data={'status': 'assigned'})
@@ -494,7 +494,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         ActivityOverallFinding.objects.create(monitoring_activity=activity, narrative_finding='test')
         goto('data_collection', visit_lead)
         goto('report_finalization', visit_lead)
-        goto('submitted', visit_lead, {'report_reviewer': UserFactory(report_reviewer=True).id},
+        goto('submitted', visit_lead, {'report_reviewers': [UserFactory(report_reviewer=True).id]},
              mail_count=activity.country_pmes.count() + 1)  # +1: send to report reviewer if set
         goto('report_finalization', self.pme, mail_count=1)
         goto('submitted', visit_lead, mail_count=activity.country_pmes.count() + 1)  # +1: send to report reviewer if set
@@ -561,14 +561,14 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_assign_tpm_report_reviewer_required(self):
-        activity = MonitoringActivityFactory(monitor_type='tpm', report_reviewer=None, status='pre_assigned')
+        activity = MonitoringActivityFactory(monitor_type='tpm', status='pre_assigned')
 
         self._test_update(
             self.fm_user,
             activity,
             {'status': 'assigned'},
             expected_status=status.HTTP_400_BAD_REQUEST,
-            basic_errors=['Required fields not completed in assigned: report_reviewer'],
+            basic_errors=['Required fields not completed in assigned: report_reviewers'],
         )
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
@@ -578,9 +578,9 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         self._test_update(
             self.fm_user,
             activity,
-            {'report_reviewer': UserFactory(pme=True).id},
+            {'report_reviewers':[ UserFactory(pme=True).id]},
             expected_status=status.HTTP_400_BAD_REQUEST,
-            basic_errors=['Cannot change fields while in assigned: report_reviewer'],
+            basic_errors=['Cannot change fields while in assigned: report_reviewers'],
         )
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
@@ -588,7 +588,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         tpm_partner = SimpleTPMPartnerFactory()
         visit_lead = TPMUserFactory(tpm_partner=tpm_partner)
         activity = MonitoringActivityFactory(
-            monitor_type='tpm', report_reviewer=None, status='report_finalization',
+            monitor_type='tpm', status='report_finalization',
             visit_lead=visit_lead, team_members=[visit_lead], tpm_partner=tpm_partner,
         )
         ActivityOverallFinding.objects.create(monitoring_activity=activity, narrative_finding='test')
@@ -600,53 +600,53 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             expected_status=status.HTTP_200_OK,
         )
         activity.refresh_from_db()
-        self.assertIsNone(activity.report_reviewer)
+        self.assertEqual(activity.report_reviewers.count(), 0)
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_submit_staff_report_reviewer_required(self):
-        activity = MonitoringActivityFactory(monitor_type='staff', report_reviewer=None, status='report_finalization')
+        activity = MonitoringActivityFactory(monitor_type='staff', status='report_finalization')
 
         self._test_update(
             activity.visit_lead,
             activity,
             {'status': 'submitted'},
             expected_status=status.HTTP_400_BAD_REQUEST,
-            basic_errors=['Required fields not completed in submitted: report_reviewer'],
+            basic_errors=['Required fields not completed in submitted: report_reviewers'],
         )
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_submit_report_reviewer_unicef_user_ok(self):
-        activity = MonitoringActivityFactory(monitor_type='staff', report_reviewer=None, status='report_finalization')
+        activity = MonitoringActivityFactory(monitor_type='staff', status='report_finalization')
         ActivityOverallFinding.objects.create(monitoring_activity=activity, narrative_finding='test')
 
         self._test_update(
             activity.visit_lead,
             activity,
-            {'status': 'submitted', 'report_reviewer': UserFactory(unicef_user=True).id},
+            {'status': 'submitted', 'report_reviewers': [UserFactory(unicef_user=True).id]},
             expected_status=status.HTTP_200_OK,
         )
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_submit_report_reviewer_pme_ok(self):
-        activity = MonitoringActivityFactory(monitor_type='staff', report_reviewer=None, status='report_finalization')
+        activity = MonitoringActivityFactory(monitor_type='staff', status='report_finalization')
         ActivityOverallFinding.objects.create(monitoring_activity=activity, narrative_finding='test')
 
         self._test_update(
             activity.visit_lead,
             activity,
-            {'status': 'submitted', 'report_reviewer': UserFactory(pme=True).id},
+            {'status': 'submitted', 'report_reviewers': [UserFactory(pme=True).id]},
             expected_status=status.HTTP_200_OK,
         )
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_submit_report_reviewer_group_ok(self):
-        activity = MonitoringActivityFactory(monitor_type='staff', report_reviewer=None, status='report_finalization')
+        activity = MonitoringActivityFactory(monitor_type='staff', status='report_finalization')
         ActivityOverallFinding.objects.create(monitoring_activity=activity, narrative_finding='test')
 
         self._test_update(
             activity.visit_lead,
             activity,
-            {'status': 'submitted', 'report_reviewer': UserFactory(report_reviewer=True).id},
+            {'status': 'submitted', 'report_reviewers': [UserFactory(report_reviewer=True).id]},
             expected_status=status.HTTP_200_OK,
         )
 
@@ -657,9 +657,9 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         self._test_update(
             activity.visit_lead,
             activity,
-            {'report_reviewer': UserFactory(pme=True).id},
+            {'report_reviewers': [UserFactory(pme=True).id]},
             expected_status=status.HTTP_400_BAD_REQUEST,
-            basic_errors=['Cannot change fields while in submitted: report_reviewer'],
+            basic_errors=['Cannot change fields while in submitted: report_reviewers'],
         )
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
@@ -681,7 +681,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_complete_by_report_reviewer(self):
         report_reviewer = UserFactory(unicef_user=True)
-        activity = MonitoringActivityFactory(monitor_type='staff', status='submitted', report_reviewer=report_reviewer)
+        activity = MonitoringActivityFactory(monitor_type='staff', status='submitted', report_reviewers=[report_reviewer])
 
         response = self._test_retrieve(report_reviewer, activity)
         # check transitions exists
@@ -712,7 +712,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_report_reject_by_report_reviewer(self):
         report_reviewer = UserFactory(unicef_user=True)
-        activity = MonitoringActivityFactory(monitor_type='staff', status='submitted', report_reviewer=report_reviewer)
+        activity = MonitoringActivityFactory(monitor_type='staff', status='submitted', report_reviewers=[report_reviewer])
         StartedChecklistFactory(monitoring_activity=activity)
         ActivityOverallFinding.objects.create(monitoring_activity=activity, narrative_finding='narrative')
 
