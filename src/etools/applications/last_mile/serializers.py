@@ -413,7 +413,7 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
     class Meta(TransferBaseSerializer.Meta):
         model = models.Transfer
         fields = TransferBaseSerializer.Meta.fields + (
-            'transfer_type', 'items', 'origin_check_out_at', 'destination_point', 'partner_id'
+            'transfer_type', 'items', 'origin_check_out_at', 'destination_point', 'partner_id', 'dispense_type'
         )
 
     def validate_partner_id(self, value):
