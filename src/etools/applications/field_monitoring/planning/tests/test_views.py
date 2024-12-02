@@ -561,8 +561,10 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_assign_tpm_report_reviewer_required(self):
-        activity = MonitoringActivityFactory(monitor_type='tpm', status='pre_assigned')
-
+        activity = MonitoringActivityFactory(
+            monitor_type='tpm', tpm_partner=SimpleTPMPartnerFactory(),
+            report_reviewers__count=0, status='pre_assigned'
+        )
         self._test_update(
             self.fm_user,
             activity,
@@ -573,12 +575,15 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_assigned_tpm_report_reviewer_not_editable(self):
-        activity = MonitoringActivityFactory(monitor_type='tpm', status='assigned')
+        activity = MonitoringActivityFactory(
+            monitor_type='tpm', tpm_partner=SimpleTPMPartnerFactory(), status='assigned'
+        )
+        usr = UserFactory(pme=True)
 
         self._test_update(
             self.fm_user,
             activity,
-            {'report_reviewers':[ UserFactory(pme=True).id]},
+            {'report_reviewers': [usr.id]},
             expected_status=status.HTTP_400_BAD_REQUEST,
             basic_errors=['Cannot change fields while in assigned: report_reviewers'],
         )
@@ -605,6 +610,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_submit_staff_report_reviewer_required(self):
         activity = MonitoringActivityFactory(monitor_type='staff', status='report_finalization')
+        ActivityOverallFinding.objects.create(monitoring_activity=activity, narrative_finding='test')
 
         self._test_update(
             activity.visit_lead,
@@ -653,6 +659,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_submitted_staff_report_reviewer_not_editable(self):
         activity = MonitoringActivityFactory(monitor_type='staff', status='submitted')
+        ActivityOverallFinding.objects.create(monitoring_activity=activity, narrative_finding='test')
 
         self._test_update(
             activity.visit_lead,
