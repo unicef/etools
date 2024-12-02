@@ -438,6 +438,13 @@ class EWPActivityAdmin(RestrictedEditAdmin):
     raw_id_fields = ('partners', 'locations', 'workplan', 'ewp_key_intervention')
 
 
+class GDDReviewAdmin(RestrictedEditAdmin):
+    raw_id_fields = ('prc_officers', 'submitted_by', 'overall_approver', 'authorized_officer')
+
+
+class GDDReviewNotificationAdmin(RestrictedEditAdmin):
+    raw_id_fields = ('user', 'review')
+
 admin.site.register(models.GDD, GDDAdmin)
 admin.site.register(models.GDDAmendment, GovernmentAmendmentsAdmin)
 admin.site.register(models.GDDResultLink, GovernmentResultsLinkAdmin)
@@ -452,3 +459,5 @@ admin.site.register(models.EWPActivity, EWPActivityAdmin)
 admin.site.register(models.EWPKeyIntervention)
 admin.site.register(models.EWPOutput)
 admin.site.register(models.GovernmentEWP)
+admin.site.register(models.GDDReview, GDDReviewAdmin)
+admin.site.register(models.GDDReviewNotification, GDDReviewNotificationAdmin)
