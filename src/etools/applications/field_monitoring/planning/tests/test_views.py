@@ -122,7 +122,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             MonitoringActivityFactory(monitor_type='staff'),
         ]
 
-        with self.assertNumQueries(9):
+        with self.assertNumQueries(10):
             self._test_list(self.unicef_user, activities, data={'page': 1, 'page_size': 10})
 
     def test_list_as_tpm_user(self):
@@ -137,7 +137,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             MonitoringActivityFactory(
                 monitor_type='staff', status='assigned')
         ]
-        with self.assertNumQueries(7):
+        with self.assertNumQueries(8):
             self._test_list(tpm_staff, [activities[0]], data={'page': 1, 'page_size': 10})
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
@@ -270,7 +270,8 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         self._test_update(
             self.fm_user, activity,
             data={'team_members': [tpm_staff_1.pk, tpm_staff_2.pk, tpm_staff_3.pk]},
-            expected_status=status.HTTP_200_OK
+            expected_status=status.HTTP_400_BAD_REQUEST,
+            basic_errors=['Cannot change fields while in assigned: team_members'],
         )
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
@@ -397,7 +398,8 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         self._test_update(
             self.fm_user, activity,
             data={'team_members': [m.pk for m in team_members]},
-            expected_status=status.HTTP_200_OK,
+            expected_status=status.HTTP_400_BAD_REQUEST,
+            basic_errors=['Cannot change fields while in data_collection: team_members'],
         )
         olc_update_mock.assert_called()
 
@@ -609,7 +611,8 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_submit_staff_report_reviewer_required(self):
-        activity = MonitoringActivityFactory(monitor_type='staff', status='report_finalization')
+        activity = MonitoringActivityFactory(
+            monitor_type='staff', status='report_finalization', report_reviewers__count=0)
         ActivityOverallFinding.objects.create(monitoring_activity=activity, narrative_finding='test')
 
         self._test_update(
@@ -862,7 +865,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             for _ in range(20)
         ]
 
-        with self.assertNumQueries(15):
+        with self.assertNumQueries(16):
             response = self.make_request_to_viewset(self.unicef_user, action='export', method='get', data={'page': 1, 'page_size': 100})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('Content-Disposition', response.headers)

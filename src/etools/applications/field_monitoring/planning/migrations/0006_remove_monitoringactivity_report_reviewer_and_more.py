@@ -9,6 +9,8 @@ def migrate_foreignkey_to_manytomany(apps, schema_editor):
     for monitoring_activity in MonitoringActivity.objects.all():
         if monitoring_activity.report_reviewer:  # Assuming old ForeignKey was named `author`
             monitoring_activity.report_reviewers.add(monitoring_activity.report_reviewer)
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -20,9 +22,9 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='monitoringactivity',
             name='report_reviewers',
-            field=models.ManyToManyField(blank=True, related_name='activities_to_review', to=settings.AUTH_USER_MODEL, verbose_name='Report Reviewer'),
+            field=models.ManyToManyField(blank=True, related_name='activities_to_review', to=settings.AUTH_USER_MODEL, verbose_name='Report Reviewers'),
         ),
-        migrations.RunPython(migrate_foreignkey_to_manytomany),
+        migrations.RunPython(migrate_foreignkey_to_manytomany, migrations.RunPython.noop),
         migrations.RemoveField(
             model_name='monitoringactivity',
             name='report_reviewer',
