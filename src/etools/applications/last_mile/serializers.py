@@ -57,7 +57,7 @@ class MaterialSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Material
         exclude = ('partner_materials',)
-    
+
     def get_material_type_translate(self, obj):
         material_type_translate = "RUTF" if obj.number in settings.RUTF_MATERIALS else "Other"
         return material_type_translate
@@ -111,7 +111,6 @@ class MaterialDetailSerializer(serializers.ModelSerializer):
     items = MaterialItemsSerializer(many=True)
     description = serializers.CharField(read_only=True)
     material_type_translate = serializers.SerializerMethodField()
-
 
     class Meta:
         model = models.Material
