@@ -179,7 +179,7 @@ def transition_to_active(i):
 
     # this validation needs to be here in order to attempt the next auto transitional validation
     if i.termination_doc_attachment.exists():
-        raise TransitionError([_('Cannot Transition to ended if termination_doc attached')])
+        raise TransitionError([_('Cannot Transition to active if termination_doc attached')])
 
     if i.partner.blocked:
         raise TransitionError([

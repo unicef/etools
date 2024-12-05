@@ -72,7 +72,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.5,country_programme,Unicef Focal Point,,Draft,Edit,TRUE
 3.5,country_programme,Unicef Focal Point,user_adds_amendment,*,Edit,TRUE
 3.5,country_programme,*,,*,Required,FALSE
-,e_workplans,Unicef Focal Point,,Draft,Edit,TRUE
+,e_workplans,Unicef Focal Point,unicef_not_accepted,Draft,Edit,TRUE
 ,e_workplans,Unicef Focal Point,user_adds_amendment,*,Edit,TRUE
 ,e_workplans,*,,*,Required,FALSE
 ,document_currency,Unicef Focal Point,unlocked+not_in_amendment_mode,Draft,Edit,TRUE
