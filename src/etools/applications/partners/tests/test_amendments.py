@@ -746,6 +746,7 @@ class AmendmentTestCase(BaseTenantTestCase):
         # basically there should be reverse relations to parent model and fields you're confident about to being ignored
         ignored_fields = {
             'partners.Intervention': [
+                'old_attachments',
                 'frs',
                 'special_reporting_requirements',
                 'quarters',

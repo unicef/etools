@@ -1,4 +1,5 @@
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.management import call_command
 from django.urls import reverse
 
 from rest_framework import status
@@ -17,6 +18,7 @@ class TestFinalPartnershipReviewManagement(BaseTestCase):
         cls.example_attachment = AttachmentFactory(
             file=SimpleUploadedFile('hello_world.txt', b'hello world!'),
         )
+        call_command('tenant_loaddata', 'attachments_file_types', verbosity=0)
 
     # test permissions
     def test_unicef_permissions(self):
@@ -83,9 +85,7 @@ class TestFinalPartnershipReviewManagement(BaseTestCase):
         self.assertEqual(response.data['permissions']['edit']['date_partnership_review_performed'], True)
         self.assertIn('hello_world.txt', response.data['final_partnership_review']['attachment'])
         self.assertEqual(
-            self.ended_intervention.attachments.get(
-                type__name=FileType.FINAL_PARTNERSHIP_REVIEW
-            ).attachment_file.get().pk,
+            self.ended_intervention.final_partnership_review.get().pk,
             self.example_attachment.pk
         )
 
