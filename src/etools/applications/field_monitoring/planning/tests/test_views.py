@@ -667,16 +667,35 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         activity = MonitoringActivityFactory(monitor_type='staff', status='submitted')
         approver = UserFactory(approver=True)
 
-        response = self._test_retrieve(approver, activity)
-        # check transitions exists
-        self.assertListEqual(
-            [t['transition'] for t in response.data['transitions']],
-            ['complete', 'reject_report'])
+        details_response = self._test_retrieve(approver, activity)
+        self.assertEqual(
+            ['complete', 'reject_report'],
+            [t['transition'] for t in details_response.data['transitions']],
+        )
 
         self.assertIsNone(activity.reviewed_by)
         self._test_update(approver, activity, {'status': 'completed'})
         activity.refresh_from_db()
         self.assertEqual(activity.reviewed_by, approver)
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_complete_by_visit_lead(self):
+        approver = UserFactory(approver=True)
+        activity = MonitoringActivityFactory(monitor_type='staff', status='submitted', visit_lead=approver)
+
+        details_response = self._test_retrieve(approver, activity)
+        self.assertEqual(
+            [],
+            [t['transition'] for t in details_response.data['transitions']],
+        )
+
+        self._test_update(
+            approver,
+            activity,
+            {'status': 'completed'},
+            expected_status=status.HTTP_400_BAD_REQUEST,
+            basic_errors=['generic_transition_fail']
+        )
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_complete_by_report_reviewer(self):
