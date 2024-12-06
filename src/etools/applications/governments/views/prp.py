@@ -1,11 +1,15 @@
 from django.db.models import CharField, Count, OuterRef, Q, Subquery, Sum
+from django.shortcuts import get_object_or_404
 
 from rest_framework.generics import ListAPIView
+from rest_framework.response import Response
+from rest_framework.views import APIView
 from unicef_restlib.views import QueryStringFilterMixin
 
 from etools.applications.funds.models import FundsReservationHeader
 from etools.applications.governments.models import GDD
-from etools.applications.governments.serializers.prp import PRPGDDListSerializer
+from etools.applications.governments.permissions import ReadOnlyAPIUser
+from etools.applications.governments.serializers.prp import GDDFileSerializer, PRPGDDListSerializer
 from etools.applications.partners.filters import PartnerScopeFilter
 from etools.applications.partners.permissions import ListCreateAPIMixedPermission
 from etools.applications.partners.views.helpers import set_tenant_or_fail
@@ -71,3 +75,16 @@ class PRPGDDListAPIView(QueryStringFilterMixin, ListAPIView):
         workspace = self.request.query_params.get('workspace', None)
         set_tenant_or_fail(workspace)
         return super().get_queryset()
+
+
+class PRPGDDFileView(APIView):
+    permission_classes = (ReadOnlyAPIUser,)
+
+    def get(self, request, gdd_pk):
+
+        workspace = request.query_params.get('workspace', None)
+        set_tenant_or_fail(workspace)
+
+        gdd = get_object_or_404(GDD, pk=gdd_pk)
+
+        return Response(GDDFileSerializer(gdd).data)

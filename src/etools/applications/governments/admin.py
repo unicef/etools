@@ -445,6 +445,7 @@ class GDDReviewAdmin(RestrictedEditAdmin):
 class GDDReviewNotificationAdmin(RestrictedEditAdmin):
     raw_id_fields = ('user', 'review')
 
+
 admin.site.register(models.GDD, GDDAdmin)
 admin.site.register(models.GDDAmendment, GovernmentAmendmentsAdmin)
 admin.site.register(models.GDDResultLink, GovernmentResultsLinkAdmin)
