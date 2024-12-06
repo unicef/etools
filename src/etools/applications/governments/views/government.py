@@ -43,7 +43,8 @@ class GovernmentEWPListView(ListAPIView):
         queryset = super().get_queryset()
 
         if 'country_programme_id' in self.request.query_params.keys():
-            return queryset.filter(country_programme_id=self.request.query_params.get('country_programme_id'))
+            return queryset.filter(country_programme_id=self.request.query_params.get('country_programme_id'))\
+                .order_by('name')
         return queryset.none()
 
 

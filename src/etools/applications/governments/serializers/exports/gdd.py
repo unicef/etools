@@ -5,7 +5,6 @@ from rest_framework import serializers
 from etools.applications.core.mixins import ExportSerializerMixin
 from etools.applications.governments.models import GDD, GDDAmendment, GDDKeyIntervention, GDDResultLink
 from etools.applications.governments.serializers.amendments import GDDAmendmentCUSerializer
-from etools.applications.partners.serializers.exports.interventions import InterventionExportSerializer
 from etools.applications.partners.serializers.fields import TypeArrayField
 from etools.applications.reports.models import Indicator
 from etools.applications.reports.serializers.exports import IndicatorExportFlatSerializer, IndicatorExportSerializer
@@ -17,22 +16,17 @@ class GDDExportSerializer(serializers.ModelSerializer):
 
     partner_name = serializers.CharField(
         label=_("Partner"),
-        source='agreement.partner.name',
+        source='partner.name',
         allow_null=True,
     )
     vendor_number = serializers.CharField(
         label=_("Vendor Number"),
-        source='agreement.partner.vendor_number',
+        source='partner.vendor_number',
         allow_null=True,
     )
     partner_type = serializers.CharField(
         label=_("Partner Type"),
-        source='agreement.partner.partner_type',
-        allow_null=True,
-    )
-    cso_type = serializers.CharField(
-        label=_("CSO Type"),
-        source='agreement.partner.cso_type',
+        source='partner.partner_type',
         allow_null=True,
     )
     agreement_number = serializers.CharField(
@@ -46,10 +40,7 @@ class GDDExportSerializer(serializers.ModelSerializer):
     offices = serializers.SerializerMethodField(label=_("UNICEF Office"))
     sectors = serializers.SerializerMethodField(label=_("Sections"))
     locations = serializers.SerializerMethodField(label=_("Locations"))
-    contingency_pd = serializers.SerializerMethodField(label=_("Contingency PD"))
-    # gdd_clusters = serializers.SerializerMethodField(
-    #     label=_("Cluster"),
-    # )
+
     fr_numbers = serializers.SerializerMethodField(label=_("FR Number(s)"))
     fr_currency = serializers.SerializerMethodField(label=_("FR Currency"))
     fr_posting_date = serializers.SerializerMethodField(label=_("FR Posting Date"))
@@ -69,13 +60,6 @@ class GDDExportSerializer(serializers.ModelSerializer):
         label=_("Budget Currency"),
         source="planned_budget.currency",
         allow_null=True,
-    )
-    cso_contribution = serializers.DecimalField(
-        label=_("Total CSO Contribution"),
-        source='total_partner_contribution',
-        read_only=True,
-        max_digits=20,
-        decimal_places=2,
     )
     unicef_budget = serializers.DecimalField(
         label=_("UNICEF Cash"),
@@ -130,15 +114,6 @@ class GDDExportSerializer(serializers.ModelSerializer):
     total_attachments = serializers.SerializerMethodField(
         label=_("# of attachments"),
     )
-    has_data_processing_agreement = serializers.SerializerMethodField(
-        label="Data Processing Agreement"
-    )
-    has_activities_involving_children = serializers.SerializerMethodField(
-        label="Activities involving children and young people"
-    )
-    has_special_conditions_for_construction = serializers.SerializerMethodField(
-        label="Special Conditions for Construction Works by Implementing Partners"
-    )
 
     class Meta:
         model = GDD
@@ -147,7 +122,6 @@ class GDDExportSerializer(serializers.ModelSerializer):
             "vendor_number",
             "status",
             "partner_type",
-            "cso_type",
             "agreement_number",
             "country_programme",
             "number",
@@ -157,12 +131,10 @@ class GDDExportSerializer(serializers.ModelSerializer):
             "offices",
             "sectors",
             "locations",
-            "contingency_pd",
-            # "gdd_clusters",
             "unicef_focal_points",
             "partner_focal_points",
             "budget_currency",
-            "cso_contribution",
+            # "cso_contribution",
             "unicef_budget",
             "unicef_supply",
             "total_planned_budget",
@@ -188,29 +160,19 @@ class GDDExportSerializer(serializers.ModelSerializer):
             "total_attachments",
             "cp_outputs",
             "url",
-            "cfei_number",
-            "has_data_processing_agreement",
-            "has_activities_involving_children",
-            "has_special_conditions_for_construction",
         )
 
     def get_unicef_signatory(self, obj):
         return obj.unicef_signatory.get_full_name() if obj.unicef_signatory else ''
 
     def get_country_programme(self, obj):
-        return obj.country_programme.name
+        return obj.country_programme.name if obj.country_programme else ''
 
     def get_offices(self, obj):
         return ', '.join([o.name for o in obj.offices.all()])
 
     def get_sectors(self, obj):
         return ', '.join([s.name for s in obj.sections.all()])
-
-    # def get_gdd_clusters(self, obj):
-    #     return ', '.join([c for c in obj.gdd_clusters()])
-
-    def get_contingency_pd(self, obj):
-        return "Yes" if obj.contingency_pd else "No"
 
     def get_locations(self, obj):
         return ', '.join([loc.name for loc in obj.flat_locations.all()])
@@ -221,8 +183,7 @@ class GDDExportSerializer(serializers.ModelSerializer):
     def get_partner_authorized_officer_signatory(self, obj):
         if obj.partner_authorized_officer_signatory:
             return obj.partner_authorized_officer_signatory.get_full_name()
-        else:
-            return ''
+        return ''
 
     def get_partner_focal_points(self, obj):
         return ', '.join([pf.get_full_name() for pf in obj.partner_focal_points.all()])
@@ -231,8 +192,7 @@ class GDDExportSerializer(serializers.ModelSerializer):
         return ', '.join([pf.get_full_name() for pf in obj.unicef_focal_points.all()])
 
     def get_cp_outputs(self, obj):
-        # cp output can be not specified for gdds in development
-        return ', '.join([rs.cp_output.name for rs in obj.result_links.all() if rs.cp_output])
+        return ', '.join([rs.cp_output.cp_output.name for rs in obj.result_links.all() if rs.cp_output])
 
     def fr_currencies_ok(self, obj):
         return obj.frs__currency__count == 1 if obj.frs__currency__count else None
@@ -275,23 +235,12 @@ class GDDExportSerializer(serializers.ModelSerializer):
         return obj.attachments.count()
 
     def get_planned_visits(self, obj):
-        if obj.agreement.partner.partner_type == 'Government':
-            return _('N/A')
         return ', '.join(['{} (Q1:{} Q2:{}, Q3:{}, Q4:{})'.format(
             pv.year, pv.programmatic_q1, pv.programmatic_q2, pv.programmatic_q3, pv.programmatic_q4
         ) for pv in obj.planned_visits.all()])
 
-    def get_has_data_processing_agreement(self, obj):
-        return "Yes" if obj.has_data_processing_agreement else "No"
 
-    def get_has_activities_involving_children(self, obj):
-        return "Yes" if obj.has_activities_involving_children else "No"
-
-    def get_has_special_conditions_for_construction(self, obj):
-        return "Yes" if obj.has_special_conditions_for_construction else "No"
-
-
-class GDDExportFlatSerializer(ExportSerializerMixin, InterventionExportSerializer):
+class GDDExportFlatSerializer(ExportSerializerMixin, GDDExportSerializer):
     attachments = serializers.SerializerMethodField(label=_("Attachments"))
     country_programme = serializers.CharField(
         label=_("Country Programme"),
@@ -299,12 +248,12 @@ class GDDExportFlatSerializer(ExportSerializerMixin, InterventionExportSerialize
         read_only=True,
         allow_null=True,
     )
-    partner_contribution = serializers.CharField(
-        label=_("CSO Contribution"),
-        source='planned_budget.partner_contribution',
-        read_only=True,
-        allow_null=True,
-    )
+    # partner_contribution = serializers.CharField(
+    #     label=_("CSO Contribution"),
+    #     source='planned_budget.partner_contribution',
+    #     read_only=True,
+    #     allow_null=True,
+    # )
     unicef_cash = serializers.CharField(
         label=_("UNICEF Cash"),
         source='planned_budget.unicef_cash',
@@ -317,12 +266,12 @@ class GDDExportFlatSerializer(ExportSerializerMixin, InterventionExportSerialize
         read_only=True,
         allow_null=True,
     )
-    partner_contribution_local = serializers.CharField(
-        label=_("CSO Contribution (Local)"),
-        source='planned_budget.partner_contribution_local',
-        read_only=True,
-        allow_null=True,
-    )
+    # partner_contribution_local = serializers.CharField(
+    #     label=_("CSO Contribution (Local)"),
+    #     source='planned_budget.partner_contribution_local',
+    #     read_only=True,
+    #     allow_null=True,
+    # )
     unicef_cash_local = serializers.CharField(
         label=_("UNICEF Cash (Local)"),
         source='planned_budget.unicef_cash_local',
@@ -357,7 +306,7 @@ class GDDExportFlatSerializer(ExportSerializerMixin, InterventionExportSerialize
 
     def get_attachments(self, obj):
         return "\n".join(
-            ["{}: {}".format(a.type.name, a.attachment.url)
+            ["{}: {}".format(a.type.name, a.attachment.last().url)
              for a in obj.attachments.all()]
         )
 
@@ -592,3 +541,21 @@ class GDDAmendmentIndicatorExportFlatSerializer(IndicatorExportFlatSerializer):
             [x.gdd.number
              for x in obj.gddresultlink_set.all()]
         )
+
+
+class GDDLocationExportSerializer(serializers.Serializer):
+    partner = serializers.CharField(source="gdd.partner.name")
+    partner_vendor_number = serializers.CharField(source="gdd.partner.vendor_number")
+    pd_ref_number = serializers.CharField(source="gdd.number")
+    partnership = serializers.CharField(source="gdd.agreement.agreement_number", default='-')
+    status = serializers.CharField(source="gdd.status")
+    location = serializers.CharField(source="selected_location.name", read_only=True)
+    section = serializers.CharField(source="section.name", read_only=True)
+    cp_output = serializers.CharField(source="gdd.cp_output_names")
+    start = serializers.CharField(source="gdd.start")
+    end = serializers.CharField(source="gdd.end")
+    focal_point = serializers.CharField(source="gdd.focal_point_names")
+    hyperlink = serializers.SerializerMethodField()
+
+    def get_hyperlink(self, obj):
+        return 'https://{}/pmp/gdd-interventions/{}/details/'.format(self.context['request'].get_host(), obj.gdd.id)

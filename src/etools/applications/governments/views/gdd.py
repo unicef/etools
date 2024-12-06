@@ -71,6 +71,8 @@ from etools.applications.governments.serializers.amendments import GDDAmendmentC
 from etools.applications.governments.serializers.exports.gdd import (
     GDDAmendmentExportFlatSerializer,
     GDDAmendmentExportSerializer,
+    GDDExportFlatSerializer,
+    GDDExportSerializer,
 )
 from etools.applications.governments.serializers.gdd import (
     GDDCreateUpdateSerializer,
@@ -232,7 +234,6 @@ class GDDListAPIView(QueryStringFilterMixin, ExportModelMixin, GDDListBaseView):
         ('end_after', 'end__gte'),
         ('office', 'offices__in'),
         ('location', 'result_links__gdd_key_interventions__applied_indicators__locations__name__icontains'),
-        ('contingency_pd', 'contingency_pd'),
         ('grants', 'frs__fr_items__grant_number__in'),
         ('grants__contains', 'frs__fr_items__grant_number__icontains'),
         ('donors', 'frs__fr_items__donor__icontains'),
@@ -250,12 +251,11 @@ class GDDListAPIView(QueryStringFilterMixin, ExportModelMixin, GDDListBaseView):
         """
         if self.request.method == "GET":
             query_params = self.request.query_params
-            # TODO: redo exports later
-            # if "format" in query_params.keys():
-            #   if query_params.get("format") == 'csv':
-            #       return GDDExportSerializer
-            #   if query_params.get("format") == 'csv_flat':
-            #         return GDDExportFlatSerializer
+            if "format" in query_params.keys():
+                if query_params.get("format") == 'csv':
+                    return GDDExportSerializer
+                if query_params.get("format") == 'csv_flat':
+                    return GDDExportFlatSerializer
             if "verbosity" in query_params.keys():
                 if query_params.get("verbosity") == 'minimal':
                     return MinimalGDDListSerializer
@@ -336,7 +336,7 @@ class GDDListAPIView(QueryStringFilterMixin, ExportModelMixin, GDDListBaseView):
             if query_params.get("format") in ['csv', "csv_flat"]:
                 country = Country.objects.get(schema_name=connection.schema_name)
                 today = '{:%Y_%m_%d}'.format(datetime.date.today())
-                filename = f"PD_budget_as_of_{today}_{country.country_short_code}"
+                filename = f"GDD_budget_as_of_{today}_{country.country_short_code}"
                 response['Content-Disposition'] = f"attachment;filename={filename}.csv"
 
         return response
@@ -383,10 +383,10 @@ class GDDListCreateView(GDDMixin, GDDListAPIView):
 
 class GDDRetrieveUpdateView(GDDMixin, ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
     """
-    Retrieve and Update Agreement.
+    Retrieve and Update GDD
     """
     queryset = GDD.objects.detail_qs().all()
-    permission_classes = (IsAuthenticated, GDDPermission)  # TODO TBD vs PMP
+    permission_classes = (IsAuthenticated, GDDPermission)
 
     SERIALIZER_MAP = {
         'planned_visits': GDDPlannedVisitsCUSerializer,

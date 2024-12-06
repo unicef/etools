@@ -724,7 +724,7 @@ class GDD(TimeStampedModel):
         return self.partner_accepted or self.unicef_accepted
 
     @property
-    def days_from_review_to_signed(self):
+    def days_from_review_to_approved(self):
         if not self.review_date_prc:
             return 'Not Reviewed'
         if not self.signed_by_unicef_date or not self.signed_by_partner_date:
@@ -746,7 +746,7 @@ class GDD(TimeStampedModel):
 
     @property
     def cp_output_names(self):
-        return ', '.join(link.cp_output.name for link in self.result_links.filter(cp_output__isnull=False))
+        return ', '.join(link.cp_output.cp_output.name for link in self.result_links.filter(cp_output__isnull=False))
 
     @property
     def focal_point_names(self):
@@ -1945,6 +1945,7 @@ class GDDKeyIntervention(TimeStampedModel):
             result.code = '{0}.{1}'.format(result_link.code, i + 1)
         cls.objects.bulk_update(results, fields=['code'])
 
+    @property
     def name(self):
         return self.ewp_key_intervention.cp_key_intervention.name
 

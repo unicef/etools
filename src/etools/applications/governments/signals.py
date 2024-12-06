@@ -139,9 +139,12 @@ def recalculate_results_numbering(instance, **kwargs):
 
 @receiver(post_delete, sender=GDDActivity)
 def recalculate_activities_numbering(instance, **kwargs):
-    GDDActivity.renumber_activities_for_result(instance.key_intervention)
-    for activity in instance.key_intervention.gdd_activities.filter(id__gt=instance.id).prefetch_related('items'):
-        GDDActivityItem.renumber_items_for_activity(activity)
+    try:
+        GDDActivity.renumber_activities_for_result(instance.key_intervention)
+        for activity in instance.key_intervention.gdd_activities.filter(id__gt=instance.id).prefetch_related('items'):
+            GDDActivityItem.renumber_items_for_activity(activity)
+    except GDDKeyIntervention.DoesNotExist:
+        pass
 
 
 @receiver(post_delete, sender=GDDActivityItem)

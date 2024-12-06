@@ -1,5 +1,11 @@
 from django.urls import path
 
+from etools.applications.governments.views.exports import (
+    GDDLocationsExportView,
+    GDDPDFView,
+    GDDResultsExportView,
+    GDDXLSView,
+)
 from etools.applications.governments.views.gdd import (
     GDDActivityCreateView,
     GDDActivityDetailUpdateView,
@@ -109,7 +115,7 @@ urlpatterns = [
     path(
         'gdds/<int:gdd_pk>/result-links/<int:pk>/',
         view=GDDResultLinkUpdateView.as_view(
-            http_method_names=['delete']
+            http_method_names=['delete', 'patch']
         ),
         name='gdd-result-links-detail'),
     path(
@@ -319,6 +325,25 @@ urlpatterns = [
         view=GDDFRsView.as_view(http_method_names=['get']),
         name='frs',
     ),
+
+    # ************** EXPORTS ****************************
+    path('gdds/results/',
+         view=GDDResultsExportView.as_view(http_method_names=['get']),
+         name='results-export'),
+    path('gdds/locations/',
+         view=GDDLocationsExportView.as_view(http_method_names=['get']),
+         name='results-export'),
+    path(
+        'gdds/<int:pk>/pdf/',
+        view=GDDPDFView.as_view(http_method_names=['get']),
+        name='intervention-detail-pdf',
+    ),
+    path(
+        'gdds/<int:pk>/xls/',
+        view=GDDXLSView.as_view(http_method_names=['get']),
+        name='intervention-detail-xls',
+    ),
+
     # ************** PRP ********************************
     path(
         'prp-gdds/',
