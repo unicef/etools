@@ -257,6 +257,7 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.incoming.refresh_from_db()
         self.assertEqual(self.incoming.status, models.Transfer.COMPLETED)
+        self.assertEqual("RUTF", response.data['items'][0]['material']['material_type_translate'])
         self.assertIn(self.attachment.filename, response.data['proof_file'])
         self.assertEqual(self.incoming.name, checkin_data['name'])
         self.assertEqual(self.incoming.items.count(), len(response.data['items']))
@@ -292,6 +293,7 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.incoming.refresh_from_db()
         self.assertEqual(self.incoming.status, models.Transfer.COMPLETED)
+        self.assertEqual("RUTF", response.data['items'][0]['material']['material_type_translate'])
         self.assertIn(response.data['proof_file'], self.attachment.file.path)
 
         self.assertIn(f'DW @ {checkin_data["destination_check_in_at"].strftime("%y-%m-%d")}', self.incoming.name)
@@ -333,6 +335,7 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.incoming.refresh_from_db()
         self.assertEqual(self.incoming.status, models.Transfer.COMPLETED)
+        self.assertEqual("RUTF", response.data['items'][0]['material']['material_type_translate'])
         self.assertIn(response.data['proof_file'], self.attachment.file.path)
         self.assertEqual(self.incoming.name, checkin_data['name'])
         self.assertEqual(self.incoming.items.count(), len(response.data['items']))
@@ -381,6 +384,7 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.incoming.refresh_from_db()
         self.assertEqual(self.incoming.status, models.Transfer.COMPLETED)
+        self.assertEqual("RUTF", response.data['items'][0]['material']['material_type_translate'])
         self.assertIn(response.data['proof_file'], self.attachment.file.path)
         self.assertEqual(self.incoming.name, checkin_data['name'])
         self.assertEqual(self.incoming.items.count(), len(response.data['items']))
@@ -478,6 +482,7 @@ class TestTransferView(BaseTenantTestCase):
         url = reverse('last_mile:transfers-new-check-out', args=(self.warehouse.pk,))
         response = self.forced_auth_req('post', url, user=self.partner_staff, data=checkout_data)
 
+        self.assertEqual("Other", response.data['items'][0]['material']['material_type_translate'])
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['status'], models.Transfer.PENDING)
         self.assertEqual(response.data['transfer_type'], models.Transfer.DISTRIBUTION)
@@ -515,6 +520,7 @@ class TestTransferView(BaseTenantTestCase):
         url = reverse('last_mile:transfers-new-check-out', args=(self.warehouse.pk,))
         response = self.forced_auth_req('post', url, user=self.partner_staff, data=checkout_data)
 
+        self.assertEqual("Other", response.data['items'][0]['material']['material_type_translate'])
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['status'], models.Transfer.COMPLETED)
         self.assertEqual(response.data['transfer_type'], models.Transfer.WASTAGE)
@@ -549,6 +555,7 @@ class TestTransferView(BaseTenantTestCase):
         url = reverse('last_mile:transfers-new-check-out', args=(self.warehouse.pk,))
         response = self.forced_auth_req('post', url, user=self.partner_staff, data=checkout_data)
 
+        self.assertEqual("Other", response.data['items'][0]['material']['material_type_translate'])
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['status'], models.Transfer.COMPLETED)
         self.assertEqual(response.data['transfer_type'], models.Transfer.DISPENSE)
@@ -584,6 +591,7 @@ class TestTransferView(BaseTenantTestCase):
         url = reverse('last_mile:transfers-new-check-out', args=(self.warehouse.pk,))
         response = self.forced_auth_req('post', url, user=self.partner_staff, data=checkout_data)
 
+        self.assertEqual("Other", response.data['items'][0]['material']['material_type_translate'])
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['status'], models.Transfer.PENDING)
         self.assertEqual(response.data['transfer_type'], models.Transfer.HANDOVER)

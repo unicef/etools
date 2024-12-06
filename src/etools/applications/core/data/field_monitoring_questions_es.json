@@ -1,0 +1,1571 @@
+[
+{
+  "model": "field_monitoring_settings.question",
+  "pk": 1,
+  "fields": {
+    "answer_type": "number",
+    "choices_size": null,
+    "level": "output",
+    "category": 4,
+    "text": "¿Cuántos NNA se puede estimar razonablemente que se benefician directamente del apoyo de UNICEF en este lugar?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      3
+    ],
+    "order": 1,
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "pk": 2,
+  "fields": {
+    "answer_type": "number",
+    "choices_size": null,
+    "level": "output",
+    "category": 4,
+    "text": "¿Cuántas niñas se puede estimar razonablemente que se benefician directamente del apoyo de UNICEF en este lugar?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      3
+    ],
+    "order": 2,
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "pk": 3,
+  "fields": {
+    "answer_type": "number",
+    "choices_size": null,
+    "level": "output",
+    "category": 4,
+    "text": "¿Cuántos NNA y adultos se puede estimar razonablemente que se benefician indirectamente del apoyo de UNICEF en este lugar?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      3
+    ],
+    "order": 3,
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "pk": 4,
+  "fields": {
+    "answer_type": "likert_scale",
+    "choices_size": null,
+    "level": "output",
+    "category": 4,
+    "text": "¿Existe alguna evidencia de exclusión o marginación de NNA con discapacidad de los servicios o la información?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      2,
+      3
+    ],
+    "order": 4,
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "pk": 5,
+  "fields": {
+    "answer_type": "likert_scale",
+    "choices_size": null,
+    "level": "output",
+    "category": 4,
+    "text": "¿Existe alguna evidencia de exclusión o marginación de grupos específicos, incluidos los NNA en movimiento, de los servicios o la información?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      2,
+      3
+    ],
+    "order": 5,
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "pk": 6,
+  "fields": {
+    "answer_type": "likert_scale",
+    "choices_size": null,
+    "level": "output",
+    "category": 3,
+    "text": "¿La implementación del programa cumple con los estándares programáticos clave de calidad e integridad?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      2,
+      3
+    ],
+    "order": 6,
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "pk": 7,
+  "fields": {
+    "answer_type": "text",
+    "choices_size": null,
+    "level": "output",
+    "category": 3,
+    "text": "¿Existe alguna evidencia de efectos negativos no deseados de los programas /servicios?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      2,
+      3
+    ],
+    "order": 7,
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "pk": 8,
+  "fields": {
+    "answer_type": "text",
+    "choices_size": null,
+    "level": "output",
+    "category": 5,
+    "text": "¿Hay evidencia de brechas en el apoyo a los servicios/ programas? Especifique con qué actores se relacionan estas brechas (UNICEF, socio, otros).",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      2
+    ],
+    "order": 8,
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "pk": 9,
+  "fields": {
+    "answer_type": "likert_scale",
+    "choices_size": null,
+    "level": "output",
+    "category": 5,
+    "text": "¿Existen brechas/desafíos en la coordinación entre servicios?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      3
+    ],
+    "order": 9,
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "pk": 10,
+  "fields": {
+    "answer_type": "likert_scale",
+    "choices_size": null,
+    "level": "output",
+    "category": 5,
+    "text": "¿Hay suficiente disponibilidad/adecuación del personal clave (número en niveles específicos) relevante para los puntos de servicio visitados?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      3
+    ],
+    "order": 10,
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "pk": 11,
+  "fields": {
+    "answer_type": "likert_scale",
+    "choices_size": null,
+    "level": "output",
+    "category": 5,
+    "text": "¿Los desembolsos presupuestarios para servicios/ programas son según lo planificado/asignado?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      3
+    ],
+    "order": 11,
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "pk": 12,
+  "fields": {
+    "answer_type": "likert_scale",
+    "choices_size": null,
+    "level": "output",
+    "category": 5,
+    "text": "¿Son puntuales los desembolsos presupuestarios para servicios/ programas ?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      3
+    ],
+    "order": 12,
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "pk": 13,
+  "fields": {
+    "answer_type": "text",
+    "choices_size": null,
+    "level": "output",
+    "category": 5,
+    "text": "¿Hay algún problema con las políticas/procedimientos que esté obstaculizando los servicios/ programas ?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1
+    ],
+    "order": 13,
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "pk": 14,
+  "fields": {
+    "answer_type": "likert_scale",
+    "choices_size": null,
+    "level": "output",
+    "category": 6,
+    "text": "¿Tienen NNA y adultos acceso a un canal seguro y accesible para denunciar la explotación y el abuso sexual?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      2
+    ],
+    "order": 14,
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "pk": 15,
+  "fields": {
+    "answer_type": "text",
+    "choices_size": null,
+    "level": "output",
+    "category": 6,
+    "text": "¿Los actores tienen alguna experiencia u observación de comportamientos de abuso o explotación sexual durante la implementación del programa? ¿Se reportó la experiencia u observación?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      2
+    ],
+    "order": 15,
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "pk": 16,
+  "fields": {
+    "answer_type": "likert_scale",
+    "choices_size": null,
+    "level": "output",
+    "category": 1,
+    "text": "¿Los socios implementadores proporcionan adecuadamente información crítica sobre prácticas de salvamento de vidas/ protección?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      2
+    ],
+    "order": 16,
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "pk": 17,
+  "fields": {
+    "answer_type": "likert_scale",
+    "choices_size": null,
+    "level": "output",
+    "category": 1,
+    "text": "¿Hay un involucramiento con las estructuras/ mecanismos/ capacidades comunitarias existentes?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      2,
+      3
+    ],
+    "order": 17,
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "pk": 18,
+  "fields": {
+    "answer_type": "likert_scale",
+    "choices_size": null,
+    "level": "output",
+    "category": 1,
+    "text": "¿Hay algún mecanismo eficaz de retroalimentación de la comunidad?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      2
+    ],
+    "order": 18,
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "pk": 19,
+  "fields": {
+    "answer_type": "text",
+    "choices_size": null,
+    "level": "output",
+    "category": 1,
+    "text": "Mencione los comentarios realizados por las comunidades y NNA sobre el programa y los servicios prestados.",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      2
+    ],
+    "order": 19,
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "pk": 20,
+  "fields": {
+    "answer_type": "likert_scale",
+    "choices_size": null,
+    "level": "partner",
+    "category": 2,
+    "text": "¿Se han implementado las actividades según lo planificado y reportado por el socio implementador?",
+    "is_hact": true,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      2,
+      3
+    ],
+    "order": 20,
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "pk": 21,
+  "fields": {
+    "answer_type": "text",
+    "choices_size": null,
+    "level": "partner",
+    "category": 2,
+    "text": "Mencione las actividades monitoreadas y verificadas durante la visita programática.",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      3
+    ],
+    "order": 21,
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "pk": 22,
+  "fields": {
+    "answer_type": "text",
+    "choices_size": null,
+    "level": "partner",
+    "category": 2,
+    "text": "Mencione las observaciones resultantes de la visita y los puntos de acción acordados con el socio implementador.",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      3
+    ],
+    "order": 22,
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "pk": 23,
+  "fields": {
+    "answer_type": "likert_scale",
+    "choices_size": null,
+    "level": "intervention",
+    "category": 7,
+    "text": "¿Los suministros clave proporcionados a través de la cooperación con el socio implementador están disponibles en condiciones seguras y utilizables?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      2,
+      3
+    ],
+    "order": 23,
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "pk": 24,
+  "fields": {
+    "answer_type": "likert_scale",
+    "choices_size": null,
+    "level": "intervention",
+    "category": 7,
+    "text": "¿Se entregaron a tiempo los suministros clave proporcionados a través de la cooperación?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      2
+    ],
+    "order": 24,
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "pk": 25,
+  "fields": {
+    "answer_type": "likert_scale",
+    "choices_size": null,
+    "level": "intervention",
+    "category": 7,
+    "text": "¿Se consideró justa y eficaz la distribución de los suministros clave?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      2,
+      3
+    ],
+    "order": 25,
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "pk": 26,
+  "fields": {
+    "answer_type": "likert_scale",
+    "choices_size": null,
+    "level": "intervention",
+    "category": 7,
+    "text": "¿Los suministros clave proporcionados a través de la cooperación cumplen con los estándares de calidad acordados?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      2,
+      3
+    ],
+    "order": 26,
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "pk": 27,
+  "fields": {
+    "answer_type": "likert_scale",
+    "choices_size": null,
+    "level": "intervention",
+    "category": 7,
+    "text": "¿Hay algún indicio de que los suministros proporcionados por el socio implementador se estén utilizando?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      2,
+      3
+    ],
+    "order": 27,
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "pk": 28,
+  "fields": {
+    "answer_type": "text",
+    "choices_size": null,
+    "level": "intervention",
+    "category": 7,
+    "text": "¿Hay algún indicio de la existencia de brechas en la disponibilidad de suministros esenciales para los servicios (no proporcionados por UNICEF)?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      3
+    ],
+    "order": 28,
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "pk": 29,
+  "fields": {
+    "answer_type": "likert_scale",
+    "choices_size": null,
+    "level": "intervention",
+    "category": 8,
+    "text": "¿Hay algún indicio de prácticas/creencias socioculturales que influyan en el acceso/uso/adopción (especialmente por parte de subgrupos vulnerables)?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      2
+    ],
+    "order": 29,
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "pk": 30,
+  "fields": {
+    "answer_type": "likert_scale",
+    "choices_size": null,
+    "level": "intervention",
+    "category": 8,
+    "text": "¿Hay algún indicio de barreras de costos que impidan el acceso a los servicios o la adopción de comportamientos?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      2
+    ],
+    "order": 30,
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "pk": 31,
+  "fields": {
+    "answer_type": "likert_scale",
+    "choices_size": null,
+    "level": "intervention",
+    "category": 8,
+    "text": "¿Están satisfechos los principales usuarios previstos con los servicios/ intervenciones del programa?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      2
+    ],
+    "order": 31,
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "pk": 32,
+  "fields": {
+    "answer_type": "likert_scale",
+    "choices_size": null,
+    "level": "intervention",
+    "category": 8,
+    "text": "¿Hay algún indicio de continuidad en el uso de los servicios/adopción sostenible de la práctica?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      2,
+      3
+    ],
+    "order": 32,
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "pk": 1033,
+  "fields": {
+    "answer_type": "likert_scale",
+    "choices_size": null,
+    "level": "partner",
+    "category": 6,
+    "text": "¿Los sitios del socio apoyados por UNICEF tienen materiales de comunicación visibles (carteles, panfletos, folletos) sobre cómo hacer denuncias de explotación y abuso sexual?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      3
+    ],
+    "order": 1033,
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "pk": 1034,
+  "fields": {
+    "answer_type": "likert_scale",
+    "choices_size": null,
+    "level": "partner",
+    "category": 6,
+    "text": "Proporción del personal del socio implementafor (personal, consultores, voluntarios, pasantes, subcontratistas) en el sitio que ha recibido capacitación sobre PEAS en los últimos 12 meses que cumple con los criterios mínimos",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      2
+    ],
+    "order": 1034,
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "pk": 1035,
+  "fields": {
+    "answer_type": "likert_scale",
+    "choices_size": null,
+    "level": "partner",
+    "category": 6,
+    "text": "Proporción de beneficiarios en el sitio del programa que pueden explicar al menos un canal para denunciar explotación y/o abuso sexual (como SMS, línea telefónica directa, correo electrónico, buzón de comentarios, punto focal de PEAS del socio implementador)",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      2
+    ],
+    "order": 1035,
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 1,
+  "fields": {
+    "question": 4,
+    "label": "Evidencia clara de exclusión o marginación",
+    "value": "1"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 2,
+  "fields": {
+    "question": 4,
+    "label": "Posible evidencia de exclusión o marginación",
+    "value": "2"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3,
+  "fields": {
+    "question": 4,
+    "label": "No hay evidencia de exclusión o marginación",
+    "value": "3"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 4,
+  "fields": {
+    "question": 4,
+    "label": "Evidencia de esfuerzos específicos de inclusión",
+    "value": "4"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 5,
+  "fields": {
+    "question": 4,
+    "label": "Evidencia de esfuerzos efectivos de inclusión",
+    "value": "5"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 6,
+  "fields": {
+    "question": 5,
+    "label": "Evidencia clara de exclusión o marginación",
+    "value": "1"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 7,
+  "fields": {
+    "question": 5,
+    "label": "Posible evidencia de exclusión o marginación",
+    "value": "2"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 8,
+  "fields": {
+    "question": 5,
+    "label": "No hay evidencia de exclusión o marginación",
+    "value": "3"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 9,
+  "fields": {
+    "question": 5,
+    "label": "Evidencia de esfuerzos específicos de inclusión",
+    "value": "4"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 10,
+  "fields": {
+    "question": 5,
+    "label": "Evidencia de esfuerzos efectivos de inclusión",
+    "value": "5"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 11,
+  "fields": {
+    "question": 6,
+    "label": "Incumple totalmente los estándares clave",
+    "value": "1"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 12,
+  "fields": {
+    "question": 6,
+    "label": "Incumple en su mayor parte los estandares clave",
+    "value": "2"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 13,
+  "fields": {
+    "question": 6,
+    "label": "Cumple parcialmente con los estándares clave",
+    "value": "3"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 14,
+  "fields": {
+    "question": 6,
+    "label": "Cumple en su mayoría con los estándares clave",
+    "value": "4"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 15,
+  "fields": {
+    "question": 6,
+    "label": "Cumple totalmente con los estándares clave",
+    "value": "5"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 16,
+  "fields": {
+    "question": 9,
+    "label": "No hay evidencia de coordinación",
+    "value": "1"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 17,
+  "fields": {
+    "question": 9,
+    "label": "Evidencia de coordinación débil",
+    "value": "2"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 18,
+  "fields": {
+    "question": 9,
+    "label": "Coordinación implementada y efectiva",
+    "value": "3"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 19,
+  "fields": {
+    "question": 10,
+    "label": "Alta limitación en la disponibilidad de personal clave",
+    "value": "1"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 20,
+  "fields": {
+    "question": 10,
+    "label": "Algunas limitaciones en la disponibilidad de personal clave",
+    "value": "2"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 21,
+  "fields": {
+    "question": 10,
+    "label": "Número suficiente de personal más clave en la mayoría de los niveles",
+    "value": "3"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 22,
+  "fields": {
+    "question": 11,
+    "label": "Altamente limitados los desembolsos presupuestarios (montos)",
+    "value": "1"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 23,
+  "fields": {
+    "question": 11,
+    "label": "Desembolsos presupuestarios limitados (montos)",
+    "value": "2"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 24,
+  "fields": {
+    "question": 11,
+    "label": "Desembolsos presupuestarios suficientes (montos)",
+    "value": "3"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 25,
+  "fields": {
+    "question": 12,
+    "label": "Altamente limitados los desembolsos presupuestarios (puntualidad)",
+    "value": "1"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 26,
+  "fields": {
+    "question": 12,
+    "label": "Desembolsos presupuestarios limitados (puntualidad)",
+    "value": "2"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 27,
+  "fields": {
+    "question": 12,
+    "label": "Desembolsos presupuestarios suficientes (puntualidad)",
+    "value": "3"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 28,
+  "fields": {
+    "question": 14,
+    "label": "No hay un canal seguro y accesible",
+    "value": "1"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 29,
+  "fields": {
+    "question": 14,
+    "label": "Canal disponible pero poco conocido",
+    "value": "2"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 30,
+  "fields": {
+    "question": 14,
+    "label": "Canal disponible y bien conocido",
+    "value": "3"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 31,
+  "fields": {
+    "question": 16,
+    "label": "Sin provisión",
+    "value": "1"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 32,
+  "fields": {
+    "question": 16,
+    "label": "Provisión insuficiente o limitada",
+    "value": "2"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 33,
+  "fields": {
+    "question": 16,
+    "label": "Evidencia de provisión adecuada",
+    "value": "3"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 34,
+  "fields": {
+    "question": 16,
+    "label": "Provisión efectiva y entendimiento",
+    "value": "4"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 35,
+  "fields": {
+    "question": 16,
+    "label": "Ejemplo de mejor práctica",
+    "value": "5"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 36,
+  "fields": {
+    "question": 17,
+    "label": "Sin compromiso",
+    "value": "1"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 37,
+  "fields": {
+    "question": 17,
+    "label": "Compromiso insuficiente o limitado",
+    "value": "2"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 38,
+  "fields": {
+    "question": 17,
+    "label": "Evidencia de compromiso adecuado",
+    "value": "3"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 39,
+  "fields": {
+    "question": 17,
+    "label": "Compromiso efectivo y participación",
+    "value": "4"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 40,
+  "fields": {
+    "question": 17,
+    "label": "Ejemplo de mejor práctica",
+    "value": "5"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 41,
+  "fields": {
+    "question": 18,
+    "label": "Sin mecanismo",
+    "value": "1"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 42,
+  "fields": {
+    "question": 18,
+    "label": "Mecanismo implementado",
+    "value": "2"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 43,
+  "fields": {
+    "question": 18,
+    "label": "Mecanismo implementado y utilizado",
+    "value": "3"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 44,
+  "fields": {
+    "question": 20,
+    "label": "Fuera de curso",
+    "value": "1"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 45,
+  "fields": {
+    "question": 20,
+    "label": "Restringido",
+    "value": "2"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 46,
+  "fields": {
+    "question": 20,
+    "label": "En curso",
+    "value": "3"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 47,
+  "fields": {
+    "question": 23,
+    "label": "Faltante",
+    "value": "1"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 48,
+  "fields": {
+    "question": 23,
+    "label": "Dañado o insuficiente",
+    "value": "2"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 49,
+  "fields": {
+    "question": 23,
+    "label": "Restringido",
+    "value": "3"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 50,
+  "fields": {
+    "question": 23,
+    "label": "Adecuado/ suficiente",
+    "value": "4"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 51,
+  "fields": {
+    "question": 23,
+    "label": "Exceso de suministro",
+    "value": "5"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 52,
+  "fields": {
+    "question": 24,
+    "label": "Retraso crítico",
+    "value": "1"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 53,
+  "fields": {
+    "question": 24,
+    "label": "Retraso/ impredecible",
+    "value": "2"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 54,
+  "fields": {
+    "question": 24,
+    "label": "A tiempo o temprano",
+    "value": "3"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 55,
+  "fields": {
+    "question": 25,
+    "label": "Muy insatisfecho",
+    "value": "1"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 56,
+  "fields": {
+    "question": 25,
+    "label": "Insatisfecho",
+    "value": "2"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 57,
+  "fields": {
+    "question": 25,
+    "label": "Neutral",
+    "value": "3"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 58,
+  "fields": {
+    "question": 25,
+    "label": "Satisfecho",
+    "value": "4"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 59,
+  "fields": {
+    "question": 25,
+    "label": "Muy satisfecho",
+    "value": "5"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 60,
+  "fields": {
+    "question": 26,
+    "label": "Por debajo de los estándares",
+    "value": "1"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 61,
+  "fields": {
+    "question": 26,
+    "label": "Inconsistente",
+    "value": "2"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 62,
+  "fields": {
+    "question": 26,
+    "label": "Cumple o excede los estándares",
+    "value": "3"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 63,
+  "fields": {
+    "question": 27,
+    "label": "Rechazado por los usuarios",
+    "value": "1"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 64,
+  "fields": {
+    "question": 27,
+    "label": "Uso deficiente o ineficaz",
+    "value": "2"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 65,
+  "fields": {
+    "question": 27,
+    "label": "Uso limitado o efectivo",
+    "value": "3"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 66,
+  "fields": {
+    "question": 27,
+    "label": "Uso adecuado y eficaz",
+    "value": "4"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 67,
+  "fields": {
+    "question": 27,
+    "label": "Uso fuerte y eficaz",
+    "value": "5"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 68,
+  "fields": {
+    "question": 29,
+    "label": "Muy negativo",
+    "value": "1"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 69,
+  "fields": {
+    "question": 29,
+    "label": "Negativo",
+    "value": "2"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 70,
+  "fields": {
+    "question": 29,
+    "label": "Neutral",
+    "value": "3"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 71,
+  "fields": {
+    "question": 29,
+    "label": "Positivo",
+    "value": "4"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 72,
+  "fields": {
+    "question": 29,
+    "label": "Muy positivo",
+    "value": "5"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 73,
+  "fields": {
+    "question": 30,
+    "label": "Barreras de costo críticamente prohibitivas",
+    "value": "1"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 74,
+  "fields": {
+    "question": 30,
+    "label": "Algunas barreras de costo prohibitivas",
+    "value": "2"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 75,
+  "fields": {
+    "question": 30,
+    "label": "Sin barreras de costo o menores",
+    "value": "3"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 76,
+  "fields": {
+    "question": 31,
+    "label": "Muy insatisfecho",
+    "value": "1"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 77,
+  "fields": {
+    "question": 31,
+    "label": "Insatisfecho",
+    "value": "2"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 78,
+  "fields": {
+    "question": 31,
+    "label": "Neutral",
+    "value": "3"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 79,
+  "fields": {
+    "question": 31,
+    "label": "Satisfecho",
+    "value": "4"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 80,
+  "fields": {
+    "question": 31,
+    "label": "Muy satisfecho",
+    "value": "5"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 81,
+  "fields": {
+    "question": 32,
+    "label": "Sostenibilidad limitada durante la implementación del programa",
+    "value": "1"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 82,
+  "fields": {
+    "question": 32,
+    "label": "Sostenibilidad limitada después de la salida del programa",
+    "value": "2"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 83,
+  "fields": {
+    "question": 32,
+    "label": "Sostenibilidad razonable después de la salida del programa",
+    "value": "3"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 1084,
+  "fields": {
+    "question": 1033,
+    "label": "No",
+    "value": "1"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 1085,
+  "fields": {
+    "question": 1033,
+    "label": "Sí, incluye algunos de los elementos necesarios",
+    "value": "2"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 1086,
+  "fields": {
+    "question": 1033,
+    "label": "Sí, incluye todos los elementos necesarios",
+    "value": "3"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 1087,
+  "fields": {
+    "question": 1034,
+    "label": "Ninguno",
+    "value": "1"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 1088,
+  "fields": {
+    "question": 1034,
+    "label": "1-25% han recibido capacitación",
+    "value": "2"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 1089,
+  "fields": {
+    "question": 1034,
+    "label": "26%-50% han recibido capacitación",
+    "value": "3"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 1090,
+  "fields": {
+    "question": 1034,
+    "label": "51%-75% han recibido capacitación",
+    "value": "4"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 1091,
+  "fields": {
+    "question": 1034,
+    "label": "76%-100% han recibido capacitación",
+    "value": "5"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 1092,
+  "fields": {
+    "question": 1035,
+    "label": "Ninguno de los beneficiarios está al tanto",
+    "value": "1"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 1093,
+  "fields": {
+    "question": 1035,
+    "label": "1-25% de los beneficiarios están al tanto",
+    "value": "2"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 1094,
+  "fields": {
+    "question": 1035,
+    "label": "26-50% de los beneficiarios están al tanto",
+    "value": "3"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 1095,
+  "fields": {
+    "question": 1035,
+    "label": "51%-75% de los beneficiarios están al tanto",
+    "value": "4"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 1096,
+  "fields": {
+    "question": 1035,
+    "label": "76%-100% de los beneficiarios están al tanto",
+    "value": "5"
+  }
+}
+]
