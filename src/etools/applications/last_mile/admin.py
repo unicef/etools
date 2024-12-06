@@ -216,13 +216,13 @@ class ItemAdmin(XLSXImportMixin, admin.ModelAdmin):
     import_field_mapping = {
         'Partner Vendor Number': 'transfer__partner_organization__vendor_number',
         'Material Number': 'material__number',
-        'Warehouse P_code': 'transfer__destination_point__p_code',
-        'Material Description': 'partner_material__description',
-        'Batch Number': 'batch_id',
-        'Expiry Date': 'expiry_date',
+        'Partner Custom Description': 'partner_material__description',
         'Quantity': 'quantity',
-        'UOM': 'uom'
-
+        'Expiry Date': 'expiry_date',
+        'Batch Number': 'batch_id',
+        'Warehouse P_code': 'transfer__destination_point__p_code',
+        'PO Number': 'other__imported_po_number',
+        'Waybill Number': 'transfer__waybill_id'
     }
 
     def has_import_permission(self, request):
@@ -356,11 +356,15 @@ class ItemAdmin(XLSXImportMixin, admin.ModelAdmin):
                 name="Initial Imports",
                 partner_organization=partner,
                 destination_point=poi,
+                waybill_id=imp_r.pop('transfer__waybill_id'),
             ))
 
             imp_r['transfer_id'] = transfer.pk
             imp_r["material_id"] = material.pk
             imp_r["other"] = {"item_was_imported": True}
+
+            if imp_r["other__imported_po_number"]:
+                imp_r["other"]["imported_po_number"] = imp_r["other__imported_po_number"]
 
             models.Item.objects.update_or_create(
                 **imp_r
