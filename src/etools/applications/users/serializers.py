@@ -3,7 +3,7 @@ from django.utils.encoding import force_str
 
 from rest_framework import serializers
 
-from etools.applications.organizations.models import Organization
+from etools.applications.organizations.models import Organization, OrganizationType
 from etools.applications.users.models import Country, Group, Realm, UserProfile
 from etools.applications.users.validators import EmailValidator, LowerCaseEmailValidator
 
@@ -26,10 +26,16 @@ class OrganizationSerializer(SimpleOrganizationSerializer):
     Do not use this serializer on a list of Organizations due to performance issues.
     """
     relationship_types = serializers.ListSerializer(child=serializers.CharField(), read_only=True)
+    is_government = serializers.SerializerMethodField()
 
     class Meta(SimpleOrganizationSerializer.Meta):
         model = Organization
-        fields = SimpleOrganizationSerializer.Meta.fields + ['relationship_types']
+        fields = SimpleOrganizationSerializer.Meta.fields + ['relationship_types', 'is_government']
+
+    def get_is_government(self, obj):
+        if obj.organization_type == OrganizationType.GOVERNMENT:
+            return True
+        return False
 
 
 class UserProfileSerializer(serializers.ModelSerializer):

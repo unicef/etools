@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: et-partners2-bk\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-09-24 09:12+0000\n"
+"POT-Creation-Date: 2024-11-12 11:55+0000\n"
 "Language: es\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -801,6 +801,9 @@ msgstr "Convenio de financiación a pequeña escala"
 
 msgid "Memorandum of Understanding"
 msgstr "Memorándum de acuerdo"
+
+msgid "General Terms and Conditions"
+msgstr ""
 
 msgid "Draft"
 msgstr "Borrador"

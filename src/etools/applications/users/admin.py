@@ -376,6 +376,10 @@ class CountryAdmin(ExtraUrlMixin, TenantAdminMixin, admin.ModelAdmin):
     def sync_dct(self, request, pk):
         return self.execute_sync(pk, 'dct', request)
 
+    @button()
+    def sync_ewp(self, request, pk):
+        return self.execute_sync(pk, 'ewp', request)
+
     @staticmethod
     def execute_sync(country_pk, synchronizer, request):
         country = Country.objects.get(pk=country_pk)

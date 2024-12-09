@@ -33,6 +33,7 @@ class TestPMPDropdownsListApiView(BaseTenantTestCase):
             'cso_types',
             'currencies',
             'file_types',
+            'gdd_amendment_types',
             'gender_equity_sustainability_ratings',
             'intervention_amendment_types',
             'intervention_doc_type',

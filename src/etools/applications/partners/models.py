@@ -1167,10 +1167,12 @@ class Agreement(TimeStampedModel):
     PCA = 'PCA'
     MOU = 'MOU'
     SSFA = 'SSFA'
+    GTC = 'GTC'
     AGREEMENT_TYPES = (
         (PCA, _("Programme Cooperation Agreement")),
         (SSFA, _('Small Scale Funding Agreement')),
         (MOU, _('Memorandum of Understanding')),
+        (GTC, _('General Terms and Conditions'))
     )
 
     DRAFT = "draft"

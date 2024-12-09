@@ -52,7 +52,7 @@ from etools.applications.partners.views.partner_organization_v2 import (
     PartnerWithSpecialAuditCompleted,
     PlannedEngagementAPIView,
 )
-from etools.applications.partners.views.v1 import PCAPDFView
+from etools.applications.partners.views.v1 import GTCPDFView, PCAPDFView
 from etools.applications.partners.views.v2 import PMPDropdownsListApiView, PMPStaticDropdownsListAPIView
 
 # http://www.django-rest-framework.org/api-guide/format-suffixes/
@@ -68,6 +68,7 @@ urlpatterns = (
             name='agreement-delete'),
 
     re_path(r'^agreements/(?P<agr>\d+)/generate_doc/$', PCAPDFView.as_view(), name='pca_pdf'),
+    re_path(r'^agreements/(?P<agr>\d+)/generate_gtc/$', GTCPDFView.as_view(), name='gtc_pdf'),
     re_path(r'^agreements/amendments/$',
             view=AgreementAmendmentListAPIView.as_view(),
             name='agreement-amendment-list'),
