@@ -69,7 +69,7 @@ class IsMonitoringVisitApprover(BasePermission):
 
     def has_object_permission(self, request, view, obj):
         group_names = {MonitoringVisitApprover.name, PME.name}
-        return (request.user == obj.report_reviewer or
+        return (request.user in obj.report_reviewers.all() or
                 any(group.name in group_names for group in request.user.groups.all()))
 
 

@@ -38,7 +38,7 @@ class MonitoringActivityAdmin(admin.ModelAdmin):
     raw_id_fields = ('tpm_partner', 'visit_lead', 'location',
                      'team_members', 'offices', 'sections',
                      'partners', 'interventions', 'cp_outputs',
-                     'report_reviewer', 'reviewed_by')
+                     'report_reviewers', 'reviewed_by')
 
     def get_queryset(self, request):
         return super().get_queryset(request)\
