@@ -77,7 +77,7 @@ class PRPGDDListSerializer(serializers.ModelSerializer):
 
     disbursement_percent = serializers.SerializerMethodField()
 
-    had_signed_document = serializers.SerializerMethodField()
+    has_signed_document = serializers.SerializerMethodField()
 
     def get_has_signed_document(self, obj):
         if obj.signed_pd_attachment:
@@ -153,7 +153,8 @@ class PRPGDDListSerializer(serializers.ModelSerializer):
             'unicef_budget_cash',
             'unicef_budget_supplies',
             'disbursement',
-            'disbursement_percent'
+            'disbursement_percent',
+            'has_signed_document'
         )
 
 
