@@ -1,0 +1,26 @@
+[
+{
+  "model": "field_monitoring_planning.questiontemplate",
+  "pk": 1034,
+  "fields": {
+    "partner": null,
+    "cp_output": null,
+    "intervention": null,
+    "question": 1034,
+    "is_active": true,
+    "specific_details": "Criterios mínimos para la capacitación en PEAS incluyen lo siguiente: 1) una definición de EAS (que esté alineada con la definición de la ONU); 2) explicación sobre la prohibición de la EAS; y 3) acciones que el personal está obligado a tomar (es decir, informar de manera inmediata las denuncias y X- personal del socio X- personal del socio Escala -5 Ninguno 1-25% han recibido capacitación. 26%-50% han recibido capacitación. 51-75% han recibido capacitación. 76-100% han recibido capacitación. Corresponde al indicador en el Resultado 2.3, Marco de Monitoreo de Resultados, referir a las víctimas)."
+  }
+},
+{
+  "model": "field_monitoring_planning.questiontemplate",
+  "pk": 1035,
+  "fields": {
+    "partner": null,
+    "cp_output": null,
+    "intervention": null,
+    "question": 1035,
+    "is_active": true,
+    "specific_details": "Elementos necesarios incluyen: 1. Disponible en el idioma local; 2. Adaptado para diferentes niveles de alfabetización; 3. La información de contacto es clara (SMS, correo electrónico o número de teléfono); 4. El diseño es adecuado para niños."
+  }
+}
+]

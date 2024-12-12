@@ -5,7 +5,7 @@
 groups = ["default", "dev"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:0f22381b6d4265ae1d7aa2189d5e0f68ebf14481a3f03f51fa73d43bc9608d2a"
+content_hash = "sha256:5a07d5b1fedf15597c0537952728a5b7314fc0643f52529f89194fef1952bb23"
 
 [[metadata.targets]]
 requires_python = ">=3.12"
@@ -721,7 +721,7 @@ files = [
 
 [[package]]
 name = "django-debug-toolbar"
-version = "4.3.0"
+version = "4.2.0"
 requires_python = ">=3.8"
 summary = "A configurable set of panels that display various debug information about the current request/response."
 groups = ["default"]
@@ -730,8 +730,8 @@ dependencies = [
     "sqlparse>=0.2",
 ]
 files = [
-    {file = "django_debug_toolbar-4.3.0-py3-none-any.whl", hash = "sha256:e09b7dcb8417b743234dfc57c95a7c1d1d87a88844abd13b4c5387f807b31bf6"},
-    {file = "django_debug_toolbar-4.3.0.tar.gz", hash = "sha256:0b0dddee5ea29b9cb678593bc0d7a6d76b21d7799cb68e091a2148341a80f3c4"},
+    {file = "django_debug_toolbar-4.2.0-py3-none-any.whl", hash = "sha256:af99128c06e8e794479e65ab62cc6c7d1e74e1c19beb44dcbf9bad7a9c017327"},
+    {file = "django_debug_toolbar-4.2.0.tar.gz", hash = "sha256:bc7fdaafafcdedefcc67a4a5ad9dac96efd6e41db15bc74d402a54a2ba4854dc"},
 ]
 
 [[package]]
@@ -2000,8 +2000,8 @@ requires_python = ">=3.7"
 summary = "JSON Web Token implementation in Python"
 groups = ["default"]
 dependencies = [
+    "PyJWT==2.8.0",
     "cryptography>=3.4.0",
-    "pyjwt==2.8.0",
 ]
 files = [
     {file = "PyJWT-2.8.0-py3-none-any.whl", hash = "sha256:59127c392cc44c2da5bb3192169a91f429924e17aff6534d70fdc02ab3e04320"},
