@@ -57,3 +57,32 @@ def notify_wastage_transfer(tenant_name, transfer_pk, action='wastage_checkout')
             html_content_filename='emails/wastage_transfer.html',
             context={'transfer': transfer, 'action': action, 'header': action_map[action]}
         )
+
+
+@app.task
+def notify_first_checkin_transfer(tenant_name, transfer_pk):
+    with schema_context(tenant_name):
+        transfer = models.Transfer.objects.get(pk=transfer_pk)
+        # waybill_url = request.build_absolute_uri(transfer.waybill.url if transfer.waybill else '')
+
+        recipients = User.objects \
+            .filter(realms__country__schema_name=tenant_name,
+                    realms__is_active=True,
+                    realms__group__name='LMSM Alert Receipt') \
+            .values_list('email', flat=True) \
+            .distinct()
+        print(f"Important things to verify : {transfer.partner_organization.organization.name}")
+        print(f"Important things to verify : {transfer.name}")
+        print(f"Important things to verify : {transfer.destination_check_in_at}")
+        print(f"Important things to verify : {transfer.checked_in_by.full_name}")
+        print(f"Important things to verify : {transfer.name}")
+        print(f"Important things to verify : {transfer.destination_point.name}")
+        print(f"Important things to verify : {transfer.destination_point.poi_type.name}")
+
+        send_notification(
+            recipients=list(recipients),
+            from_address=settings.DEFAULT_FROM_EMAIL,
+            subject='Acknowledged by IP',
+            html_content_filename='emails/first_checkin.html',
+            context={'transfer': transfer, "waybill_uri": "waybill_url"}
+        )
