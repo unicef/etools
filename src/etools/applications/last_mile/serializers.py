@@ -352,7 +352,10 @@ class TransferCheckinSerializer(TransferBaseSerializer):
         validated_data['status'] = models.Transfer.COMPLETED
         validated_data['checked_in_by'] = self.context.get('request').user
         validated_data["destination_point"] = self.context["location"]
-        if not instance.checked_in_by and instance.origin_point.name == 'UNICEF Warehouse':  # Notify only if is Unicef Shipment
+        is_unicef_warehouse = False
+        if instance.origin_point:
+            is_unicef_warehouse = instance.origin_point.name == 'UNICEF Warehouse'
+        if not instance.checked_in_by and is_unicef_warehouse:  # Notify only if is Unicef Shipment
             # Note : We need to insert into EmailTemplates the new template that is defined on notifications/first_checkin.py
             notify_first_checkin_transfer.delay(connection.schema_name)
         if not instance.name and not validated_data.get('name'):
