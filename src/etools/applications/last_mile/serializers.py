@@ -52,9 +52,15 @@ class PointOfInterestLightSerializer(serializers.ModelSerializer):
 
 
 class MaterialSerializer(serializers.ModelSerializer):
+    material_type_translate = serializers.SerializerMethodField()
+
     class Meta:
         model = models.Material
         exclude = ('partner_materials',)
+
+    def get_material_type_translate(self, obj):
+        material_type_translate = "RUTF" if obj.number in settings.RUTF_MATERIALS else "Other"
+        return material_type_translate
 
 
 class TransferListSerializer(serializers.ModelSerializer):
@@ -90,27 +96,42 @@ class TransferMinimalSerializer(serializers.ModelSerializer):
 
 class MaterialItemsSerializer(serializers.ModelSerializer):
     transfer = TransferMinimalSerializer()
+    material_type_translate = serializers.SerializerMethodField()
 
     class Meta:
         model = models.Item
         exclude = ('material', 'transfers_history', 'created', 'modified',)
 
+    def get_material_type_translate(self, obj):
+        material_type_translate = "RUTF" if obj.material.number in settings.RUTF_MATERIALS else "Other"
+        return material_type_translate
+
 
 class MaterialDetailSerializer(serializers.ModelSerializer):
     items = MaterialItemsSerializer(many=True)
     description = serializers.CharField(read_only=True)
+    material_type_translate = serializers.SerializerMethodField()
 
     class Meta:
         model = models.Material
         exclude = ["partner_materials"]
+
+    def get_material_type_translate(self, obj):
+        material_type_translate = "RUTF" if obj.number in settings.RUTF_MATERIALS else "Other"
+        return material_type_translate
 
 
 class MaterialListSerializer(serializers.ModelSerializer):
     description = serializers.CharField(read_only=True)
+    material_type_translate = serializers.SerializerMethodField()
 
     class Meta:
         model = models.Material
         exclude = ["partner_materials"]
+
+    def get_material_type_translate(self, obj):
+        material_type_translate = "RUTF" if obj.number in settings.RUTF_MATERIALS else "Other"
+        return material_type_translate
 
 
 class ItemSerializer(serializers.ModelSerializer):
@@ -274,8 +295,8 @@ class TransferBaseSerializer(AttachmentSerializerMixin, serializers.ModelSeriali
             "HANDOVER": "HO",
             "WASTAGE": "W",
             "DELIVERY": "DW",
-            "DISTRIBUTION": "DD"
-
+            "DISTRIBUTION": "DD",
+            "DISPENSE": "D"
         }
         date = validated_data.get('origin_check_out_at') or validated_data.get('destination_check_in_at') or timezone.now()
         transfer_type = validated_data.get("transfer_type") or transfer_type
@@ -422,7 +443,7 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
     class Meta(TransferBaseSerializer.Meta):
         model = models.Transfer
         fields = TransferBaseSerializer.Meta.fields + (
-            'transfer_type', 'items', 'origin_check_out_at', 'destination_point', 'partner_id'
+            'transfer_type', 'items', 'origin_check_out_at', 'destination_point', 'partner_id', 'dispense_type'
         )
 
     def validate_partner_id(self, value):
@@ -493,11 +514,10 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
     @transaction.atomic
     def create(self, validated_data):
         checkout_items = validated_data.pop('items')
-
         if not self.initial_data.get('proof_file'):
             raise ValidationError(_('The proof file is required.'))
 
-        if validated_data['transfer_type'] not in [models.Transfer.WASTAGE, models.Transfer.HANDOVER] \
+        if validated_data['transfer_type'] not in [models.Transfer.WASTAGE, models.Transfer.DISPENSE, models.Transfer.HANDOVER] \
                 and not validated_data.get('destination_point'):
             raise ValidationError(_('Destination location is mandatory at checkout.'))
         elif validated_data.get('destination_point'):
@@ -519,7 +539,7 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
             checked_out_by=self.context['request'].user,
             **validated_data)
 
-        if self.instance.transfer_type == models.Transfer.WASTAGE:
+        if self.instance.transfer_type in [models.Transfer.WASTAGE, models.Transfer.DISPENSE]:
             self.instance.status = models.Transfer.COMPLETED
 
         self.instance.save()
