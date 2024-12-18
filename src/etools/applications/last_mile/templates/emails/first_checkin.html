@@ -102,7 +102,10 @@
   <body style="background-color:#EEEEEE;font-family:sans-serif;-webkit-font-smoothing:antialiased;
                font-size:14px;line-height:1.4;margin:0;padding:0;-ms-text-size-adjust:100%;
                -webkit-text-size-adjust:100%;">
-    
+
+    <h1 style="color:#212121;font-family:sans-serif;line-height:1.4;margin:0;margin-bottom:24px;margin-top:8px;color:#0099FF;font-size:22px;font-weight:normal;">Last Mile Supply Monitoring Solution</h1>
+    <p style="font-family:sans-serif;font-size:14px;font-weight:normal;margin:0;margin-bottom:24px;"><strong style="font-weight:bold;white-space:nowrap;">Dear colleague, </strong><br> This is to inform you that an Implementing Partner has checked in a shipment in one of its storage facilities. An electronic copy of the waybill signed by the partner during the handover can be accessed in the first table below in the Waybill Document section. </p>
+        
     <table border="0" cellpadding="0" cellspacing="0" class="body"
            style="border-collapse:separate;mso-table-lspace:0pt;mso-table-rspace:0pt;
            background-color:#EEEEEE;width:100%;">
@@ -151,115 +154,163 @@
                     <tr>
                       <td style="font-family:sans-serif;font-size:14px;vertical-align:top;">
                           {% block content %}
-                            <h3>Wastage information</h3>
+                            <h3>UNICEF Shipment Information</h3>
                             <table border="1">
                               <tr>
                                 <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                                           box-sizing:border-box;max-height:56px;margin:0;
                                                           padding:10px;overflow:hidden;
                                                           background-color:#0099FF;">
-                                    <span style="color: white;font-weight: bold;">IP Number</span>
+                                    <span style="color: white;font-weight: bold;">Shipment Number</span>
                                 </td>
                                 <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                                           box-sizing:border-box;max-height:56px;margin:0;
                                                           padding:10px;overflow:hidden;
                                                           background-color:#0099FF;">
-                                    <span style="color: white;font-weight: bold;">Wastage ID</span>
+                                    <span style="color: white;font-weight: bold;">Shipment Type</span>
                                 </td>
                                 <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                                           box-sizing:border-box;width:100%;max-height:56px;margin:0;
                                                           padding:10px;overflow:hidden;
                                                           background-color:#0099FF;">
-                                    <span style="color: white;font-weight: bold;">Checked In Date</span>
+                                    <span style="color: white;font-weight: bold;">Document Creation Date</span>
                                 </td>
                                 <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                                           box-sizing:border-box;width:100%;max-height:56px;margin:0;
                                                           padding:10px;overflow:hidden;
                                                           background-color:#0099FF;">
-                                    <span style="color: white;font-weight: bold;">Checked In By</span>
+                                    <span style="color: white;font-weight: bold;">PO Number</span>
                                 </td>
                                 <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                                           box-sizing:border-box;width:100%;max-height:56px;margin:0;
                                                           padding:10px;overflow:hidden;
                                                           background-color:#0099FF;">
-                                    <span style="color: white;font-weight: bold;">Checked Out Date</span>
+                                    <span style="color: white;font-weight: bold;">Delivery Number</span>
                                 </td>
                                 <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                                           box-sizing:border-box;width:100%;max-height:56px;margin:0;
                                                           padding:10px;overflow:hidden;
                                                           background-color:#0099FF;">
-                                    <span style="color: white;font-weight: bold;">Checked Out By</span>
+                                    <span style="color: white;font-weight: bold;">Waybill Number</span>
                                 </td>
                                   <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                                           box-sizing:border-box;width:100%;max-height:56px;margin:0;
                                                           padding:10px;overflow:hidden;
                                                           background-color:#0099FF;">
-                                    <span style="color: white;font-weight: bold;">Location Name</span>
-                                </td>
-                                <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
-                                                          box-sizing:border-box;width:100%;max-height:56px;margin:0;
-                                                          padding:10px;overflow:hidden;
-                                                          background-color:#0099FF;">
-                                    <span style="color: white;font-weight: bold;">Location Region</span>
-                                </td>
-                                <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
-                                                          box-sizing:border-box;width:100%;max-height:56px;margin:0;
-                                                          padding:10px;overflow:hidden;
-                                                          background-color:#0099FF;">
-                                    <span style="color: white;font-weight: bold;">Location Type</span>
-                                </td>
-                                <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
-                                                          box-sizing:border-box;width:100%;max-height:56px;margin:0;
-                                                          padding:10px;overflow:hidden;
-                                                          background-color:#0099FF;">
-                                    <span style="color: white;font-weight: bold;">Transfer Created</span>
+                                    <span style="color: white;font-weight: bold;">Waybill Document</span>
                                 </td>
                               </tr>
                               <tr >
                                  <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                            box-sizing:border-box;padding:10px;">
-                                     {{ transfer.partner_organization.vendor_number }}
+                                     WIP - Shipment Number
                                  </td>
                                  <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                            box-sizing:border-box;padding:10px;">
-                                     {{ transfer.id }}
+                                     WIP - Shipment Type
                                  </td>
                                  <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                            box-sizing:border-box;padding:10px;">
-                                     {{ transfer.destination_check_in_at|date:'Y-m-d H:i' }}
+                                     WIP - Document Creation Date
                                  </td>
                                  <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                            box-sizing:border-box;padding:10px;">
-                                     {{ transfer.checked_in_by.full_name }}
+                                     WIP - PO Number
                                  </td>
                                  <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                            box-sizing:border-box;padding:10px;">
-                                     {{ transfer.origin_check_out_at|date:'Y-m-d H:i' }}
+                                     WIP - Delivery Number
                                  </td>
                                  <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                            box-sizing:border-box;padding:10px;">
-                                     {{ transfer.checked_out_by.full_name }}
+                                     {{ transfer.waybill_id }}
                                  </td>
                                  <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                            box-sizing:border-box;padding:10px;">
-                                     {{ transfer.destination_point.name }}
-                                 </td>
-                                 <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
-                                           box-sizing:border-box;padding:10px;">
-                                     {{ transfer.destination_point.parent }}
-                                 </td>
-                                 <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
-                                           box-sizing:border-box;padding:10px;">
-                                     {{ transfer.destination_point.poi_type.name }}
-                                 </td>
-                                 <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
-                                           box-sizing:border-box;padding:10px;">
-                                     {{ transfer.created|date:'Y-m-d H:i' }}
+                                     <a href="{{ waybill_uri }}" target="_blank">{{ waybill_uri }}</a>
                                  </td>
                               </tr>
                           </table><br/>
 
-                            <h3>Items {{ header }}</h3>
+                          <h3>Implementing Partner check-in Information</h3>
+                          <table border="1">
+                            <tr>
+                              <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                                        box-sizing:border-box;max-height:56px;margin:0;
+                                                        padding:10px;overflow:hidden;
+                                                        background-color:#0099FF;">
+                                  <span style="color: white;font-weight: bold;">Implementing Partner Name</span>
+                              </td>
+                              <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                                        box-sizing:border-box;max-height:56px;margin:0;
+                                                        padding:10px;overflow:hidden;
+                                                        background-color:#0099FF;">
+                                  <span style="color: white;font-weight: bold;">Transfer Name</span>
+                              </td>
+                              <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                                        box-sizing:border-box;width:100%;max-height:56px;margin:0;
+                                                        padding:10px;overflow:hidden;
+                                                        background-color:#0099FF;">
+                                  <span style="color: white;font-weight: bold;">Checked In Date</span>
+                              </td>
+                              <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                                        box-sizing:border-box;width:100%;max-height:56px;margin:0;
+                                                        padding:10px;overflow:hidden;
+                                                        background-color:#0099FF;">
+                                  <span style="color: white;font-weight: bold;">Checked In By</span>
+                              </td>
+                              <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                                        box-sizing:border-box;width:100%;max-height:56px;margin:0;
+                                                        padding:10px;overflow:hidden;
+                                                        background-color:#0099FF;">
+                                  <span style="color: white;font-weight: bold;">Location Name</span>
+                              </td>
+                              <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                                        box-sizing:border-box;width:100%;max-height:56px;margin:0;
+                                                        padding:10px;overflow:hidden;
+                                                        background-color:#0099FF;">
+                                  <span style="color: white;font-weight: bold;">District</span>
+                              </td>
+                                <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                                        box-sizing:border-box;width:100%;max-height:56px;margin:0;
+                                                        padding:10px;overflow:hidden;
+                                                        background-color:#0099FF;">
+                                  <span style="color: white;font-weight: bold;">Location Type</span>
+                              </td>
+                            </tr>
+                            <tr >
+                               <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                         box-sizing:border-box;padding:10px;">
+                                   {{ transfer.partner_organization.organization.name }}
+                               </td>
+                               <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                         box-sizing:border-box;padding:10px;">
+                                   {{ transfer.name }}
+                               </td>
+                               <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                         box-sizing:border-box;padding:10px;">
+                                   {{ transfer.destination_check_in_at|date:'Y-m-d H:i' }}
+                               </td>
+                               <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                         box-sizing:border-box;padding:10px;">
+                                   {{ transfer.checked_in_by.full_name }}
+                               </td>
+                               <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                         box-sizing:border-box;padding:10px;">
+                                   {{ transfer.destination_point.name }}
+                               </td>
+                               <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                         box-sizing:border-box;padding:10px;">
+                                   {{ transfer.destination_point.parent.name }} ({{ transfer.destination_point.parent.admin_level_name }} : {{ transfer.destination_point.parent.p_code }})
+                               </td>
+                               <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                         box-sizing:border-box;padding:10px;">
+                                   {{ transfer.destination_point.poi_type.name }}
+                               </td>
+                            </tr>
+                        </table><br/>
+
+                            <h3>Items Information</h3>
                             <table border="1">
                               <tr>
                                 <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
@@ -280,22 +331,17 @@
                                 <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                                           box-sizing:border-box;max-height:56px;margin:0;
                                                           padding:10px;overflow:hidden;background-color:#0099FF;">
-                                    <span style="color: white;font-weight: bold;">Unit</span>
+                                    <span style="color: white;font-weight: bold;">UOM</span>
                                 </td>
                                 <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                                           box-sizing:border-box;width:100%;max-height:56px;margin:0;
                                                           padding:10px;overflow:hidden;background-color:#0099FF;">
-                                    <span style="color: white;font-weight: bold;">Batch Id</span>
+                                    <span style="color: white;font-weight: bold;">Batch number</span>
                                 </td>
                                 <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                                           box-sizing:border-box;width:100%;max-height:56px;margin:0;
                                                           padding:10px;overflow:hidden;background-color:#0099FF;">
                                     <span style="color: white;font-weight: bold;">Expiry Date</span>
-                                </td>
-                                <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
-                                                          box-sizing:border-box;width:100%;max-height:56px;margin:0;
-                                                          padding:10px;overflow:hidden;background-color:#0099FF;">
-                                    <span style="color: red;font-weight: bold;">Wastage type</span>
                                 </td>
                               </tr>
                               {% for item in transfer.items.all %}
@@ -325,15 +371,12 @@
                                                box-sizing:border-box;padding:10px;">
                                          {{ item.expiry_date|date:'Y-m-d H:i' }}
                                      </td>
-                                     <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
-                                               box-sizing:border-box;padding:10px;color:red;font-weight:bold;">
-                                         {% if action == 'wastage_checkout' %}{{ item.get_wastage_type_display }}{% else %}{{ transfer.get_transfer_subtype_display }}{% endif %}
-                                     </td>
                                   </tr>
                               {% endfor %}
                           </table>
                             <br/><br/>
-                            Please note that this is an automatically generated message and replies to this email address are not monitored.
+                            Best regards,<br><br>
+                            <h3 style="color:#212121;font-family:sans-serif;line-height:1.4;margin:0;margin-bottom:24px;margin-top:8px;color:#0099FF;font-size:22px;font-weight:normal;">Last Mile Supply Monitoring Solution</h3>
                             {% endblock %}
                       </td>
                     </tr>

@@ -352,15 +352,9 @@ class TransferCheckinSerializer(TransferBaseSerializer):
         validated_data['status'] = models.Transfer.COMPLETED
         validated_data['checked_in_by'] = self.context.get('request').user
         validated_data["destination_point"] = self.context["location"]
-        is_unicef_warehouse = False
-        if instance.origin_point:
-            is_unicef_warehouse = instance.origin_point.name == 'UNICEF Warehouse'
-        if not instance.checked_in_by and is_unicef_warehouse:  # Notify only if is Unicef Shipment
-            # Note : We need to insert into EmailTemplates the new template that is defined on notifications/first_checkin.py
-            notify_first_checkin_transfer.delay(connection.schema_name)
+        is_first_checkin = instance.checked_in_by is None
         if not instance.name and not validated_data.get('name'):
             validated_data['name'] = self.get_transfer_name(validated_data, instance.transfer_type)
-
         if self.partial:
             orig_items_dict = {obj.id: obj for obj in instance.items.all()}
             checkedin_items_ids = [r["id"] for r in checkin_items]
@@ -402,6 +396,17 @@ class TransferCheckinSerializer(TransferBaseSerializer):
             instance = super().update(instance, validated_data)
             instance.items.exclude(material__number__in=settings.RUTF_MATERIALS).update(hidden=True)
             instance.refresh_from_db()
+            is_unicef_warehouse = False
+            if instance.origin_point:
+                is_unicef_warehouse = instance.origin_point.name == 'UNICEF Warehouse'
+            if is_first_checkin and is_unicef_warehouse:  # Notify only if is Unicef Shipment
+                # Note : We need to insert into EmailTemplates the new template that is defined on notifications/first_checkin.py
+                waybill_file = instance.waybill_file.all()
+                print(f"Important things to verify waybill_file: {waybill_file}")
+                waybill_url = ''
+                if waybill_file:
+                    waybill_url = self.context["request"].build_absolute_uri(instance.waybill_file.url if instance.waybill_file else '')
+                notify_first_checkin_transfer.delay(connection.schema_name, instance.pk, waybill_url)
             return instance
 
 
