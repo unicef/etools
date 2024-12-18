@@ -82,7 +82,7 @@ def notify_first_checkin_transfer(tenant_name, transfer_pk):
         send_notification(
             recipients=list(recipients),
             from_address=settings.DEFAULT_FROM_EMAIL,
-            subject=f'Acknowledged by IP',
+            subject='Acknowledged by IP',
             html_content_filename='emails/first_checkin.html',
             context={'transfer': transfer, "waybill_uri": "waybill_url"}
         )
