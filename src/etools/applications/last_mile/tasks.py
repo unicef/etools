@@ -35,7 +35,7 @@ def notify_upload_waybill(tenant_name, destination_pk, waybill_pk, waybill_url):
 
 
 @app.task
-def notify_wastage_transfer(tenant_name, transfer_pk, action='wastage_checkout'):
+def notify_wastage_transfer(tenant_name, transfer_pk, proof_file_pk, based_root, action='wastage_checkout'):
     action_map = {
         'wastage_checkout': 'checked-out as wastage',
         'short_checkin': 'checked-in as short',
@@ -43,7 +43,8 @@ def notify_wastage_transfer(tenant_name, transfer_pk, action='wastage_checkout')
     }
     with schema_context(tenant_name):
         transfer = models.Transfer.objects.get(pk=transfer_pk)
-
+        attachment = Attachment.objects.filter(pk=proof_file_pk).first()
+        proof_full_url = f"{based_root}{attachment.file_link}" if attachment else None
         recipients = User.objects \
             .filter(realms__country__schema_name=tenant_name,
                     realms__is_active=True,
@@ -55,15 +56,14 @@ def notify_wastage_transfer(tenant_name, transfer_pk, action='wastage_checkout')
             from_address=settings.DEFAULT_FROM_EMAIL,
             subject=f'LMSM app: New items {action_map[action]} by {transfer.partner_organization.name}',
             html_content_filename='emails/wastage_transfer.html',
-            context={'transfer': transfer, 'action': action, 'header': action_map[action]}
+            context={'transfer': transfer, 'action': action, 'header': action_map[action], 'proof_full_url': proof_full_url}
         )
 
 
 @app.task
-def notify_first_checkin_transfer(tenant_name, transfer_pk):
+def notify_first_checkin_transfer(tenant_name, transfer_pk, waybill_urls):
     with schema_context(tenant_name):
         transfer = models.Transfer.objects.get(pk=transfer_pk)
-        # waybill_url = request.build_absolute_uri(transfer.waybill.url if transfer.waybill else '')
 
         recipients = User.objects \
             .filter(realms__country__schema_name=tenant_name,
@@ -71,18 +71,11 @@ def notify_first_checkin_transfer(tenant_name, transfer_pk):
                     realms__group__name='LMSM Alert Receipt') \
             .values_list('email', flat=True) \
             .distinct()
-        print(f"Important things to verify : {transfer.partner_organization.organization.name}")
-        print(f"Important things to verify : {transfer.name}")
-        print(f"Important things to verify : {transfer.destination_check_in_at}")
-        print(f"Important things to verify : {transfer.checked_in_by.full_name}")
-        print(f"Important things to verify : {transfer.name}")
-        print(f"Important things to verify : {transfer.destination_point.name}")
-        print(f"Important things to verify : {transfer.destination_point.poi_type.name}")
 
         send_notification(
             recipients=list(recipients),
             from_address=settings.DEFAULT_FROM_EMAIL,
             subject='Acknowledged by IP',
             html_content_filename='emails/first_checkin.html',
-            context={'transfer': transfer, "waybill_uri": "waybill_url"}
+            context={'transfer': transfer, "waybill_urls": waybill_urls}
         )

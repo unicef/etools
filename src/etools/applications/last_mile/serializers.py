@@ -381,7 +381,8 @@ class TransferCheckinSerializer(TransferBaseSerializer):
             checkedin_items_ids = [r["id"] for r in checkin_items]
             original_items_missing = [key for key in orig_items_dict.keys() if key not in checkedin_items_ids]
             checkin_items += [{"id": r, "quantity": 0} for r in original_items_missing]
-
+            based_root = self.context.get('request').build_absolute_uri('/')[:-1]
+            proof_file_pk = self.initial_data.get('proof_file')
             # if it is a partial checkin, create a new wastage transfer with short or surplus subtype
             short_items, surplus_items = self.get_short_surplus_items(orig_items_dict, checkin_items)
             if short_items:
@@ -397,7 +398,7 @@ class TransferCheckinSerializer(TransferBaseSerializer):
                 )
                 short_transfer.save()
                 self.checkin_newtransfer_items(orig_items_dict, short_items, short_transfer)
-                notify_wastage_transfer.delay(connection.schema_name, short_transfer.pk, action='short_checkin')
+                notify_wastage_transfer.delay(connection.schema_name, short_transfer.pk, proof_file_pk, based_root, action='short_checkin')
 
             if surplus_items:
                 surplus_transfer = models.Transfer(
@@ -412,7 +413,7 @@ class TransferCheckinSerializer(TransferBaseSerializer):
                 )
                 surplus_transfer.save()
                 self.checkin_newtransfer_items(orig_items_dict, surplus_items, surplus_transfer)
-                notify_wastage_transfer.delay(connection.schema_name, surplus_transfer.pk, action='surplus_checkin')
+                notify_wastage_transfer.delay(connection.schema_name, surplus_transfer.pk, proof_file_pk, based_root, action='surplus_checkin')
 
             instance = super().update(instance, validated_data)
             instance.items.exclude(material__number__in=settings.RUTF_MATERIALS).update(hidden=True)
@@ -423,11 +424,8 @@ class TransferCheckinSerializer(TransferBaseSerializer):
             if is_first_checkin and is_unicef_warehouse:  # Notify only if is Unicef Shipment
                 # Note : We need to insert into EmailTemplates the new template that is defined on notifications/first_checkin.py
                 waybill_file = instance.waybill_file.all()
-                print(f"Important things to verify waybill_file: {waybill_file}")
-                waybill_url = ''
-                if waybill_file:
-                    waybill_url = self.context["request"].build_absolute_uri(instance.waybill_file.url if instance.waybill_file else '')
-                notify_first_checkin_transfer.delay(connection.schema_name, instance.pk, waybill_url)
+                waybill_urls = [self.context["request"].build_absolute_uri(data.file_link if data else '') for data in waybill_file]
+                notify_first_checkin_transfer.delay(connection.schema_name, instance.pk, waybill_urls)
             return instance
 
 
@@ -543,10 +541,11 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
             self.instance.status = models.Transfer.COMPLETED
 
         self.instance.save()
-
         self.checkout_newtransfer_items(checkout_items)
         if self.instance.transfer_type == models.Transfer.WASTAGE:
-            notify_wastage_transfer.delay(connection.schema_name, self.instance.pk)
+            proof_file_pk = self.initial_data.get('proof_file')
+            based_root = self.context.get('request').build_absolute_uri('/')[:-1]
+            notify_wastage_transfer.delay(connection.schema_name, self.instance.pk, proof_file_pk, based_root)
 
         return self.instance
 

@@ -1,4 +1,5 @@
 {% load static %}
+{% load custom_filters %}
 <!DOCTYPE html>
 <html>
   <head>
@@ -203,31 +204,33 @@
                               <tr >
                                  <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                            box-sizing:border-box;padding:10px;">
-                                     WIP - Shipment Number
+                                     {{transfer.unicef_release_order}}
                                  </td>
                                  <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                            box-sizing:border-box;padding:10px;">
-                                     WIP - Shipment Type
+                                     {{transfer.transfer_type}}
                                  </td>
                                  <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                            box-sizing:border-box;padding:10px;">
-                                     WIP - Document Creation Date
+                                     {{transfer.destination_check_in_at | date:'m/d/Y'}}
                                  </td>
                                  <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                            box-sizing:border-box;padding:10px;">
-                                     WIP - PO Number
+                                     
                                  </td>
                                  <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                            box-sizing:border-box;padding:10px;">
-                                     WIP - Delivery Number
+                                     
                                  </td>
                                  <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                            box-sizing:border-box;padding:10px;">
-                                     {{ transfer.waybill_id }}
+                                     {% if transfer.waybill_id %}{{ transfer.waybill_id }}{% else %}N/A{% endif %}
                                  </td>
                                  <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                            box-sizing:border-box;padding:10px;">
-                                     <a href="{{ waybill_uri }}" target="_blank">{{ waybill_uri }}</a>
+                                    {% for waybill_url in waybill_urls %}
+                                     {% if waybill_url %}<a href="{{ waybill_url }}" target="_blank">{{ waybill_url }}</a>{% else %}N/A{% endif %}<br>
+                                    {% endfor %}
                                  </td>
                               </tr>
                           </table><br/>
@@ -289,7 +292,7 @@
                                </td>
                                <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                          box-sizing:border-box;padding:10px;">
-                                   {{ transfer.destination_check_in_at|date:'Y-m-d H:i' }}
+                                   {{ transfer.destination_check_in_at|date:'d/m/Y' }}
                                </td>
                                <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                          box-sizing:border-box;padding:10px;">
@@ -344,7 +347,7 @@
                                     <span style="color: white;font-weight: bold;">Expiry Date</span>
                                 </td>
                               </tr>
-                              {% for item in transfer.items.all %}
+                              {% for item in transfer|all_items %}
                                   </tr>
                                   <tr >
                                      <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
@@ -369,7 +372,7 @@
                                      </td>
                                      <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                                box-sizing:border-box;padding:10px;">
-                                         {{ item.expiry_date|date:'Y-m-d H:i' }}
+                                         {{ item.expiry_date|date:'d/m/Y' }}
                                      </td>
                                   </tr>
                               {% endfor %}
