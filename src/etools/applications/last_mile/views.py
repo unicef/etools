@@ -300,7 +300,7 @@ class TransferViewSet(
 
         qs = self.get_queryset().filter(status=models.Transfer.COMPLETED).filter(completed_filters)
         if not self.request.query_params.get('transfer_type', None):
-            qs = qs.exclude(transfer_type__in=[models.Transfer.WASTAGE, models.Transfer.DISPENSE])
+            qs = qs.exclude(transfer_type__in=[models.Transfer.WASTAGE])
 
         return self.paginate_response(qs)
 
