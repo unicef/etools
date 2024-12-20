@@ -7,6 +7,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from unicef_attachments.fields import AttachmentSingleFileField
+from unicef_attachments.models import Attachment
 from unicef_attachments.serializers import AttachmentSerializerMixin
 
 from etools.applications.last_mile import models
@@ -374,6 +375,11 @@ class TransferCheckinSerializer(TransferBaseSerializer):
         validated_data['checked_in_by'] = self.context.get('request').user
         validated_data["destination_point"] = self.context["location"]
         is_first_checkin = instance.checked_in_by is None
+        attachment_url = None
+        proof_file_pk = self.initial_data.get('proof_file')
+        if proof_file_pk:
+            attachment = Attachment.objects.get(pk=proof_file_pk)
+            attachment_url = self.context.get('request').build_absolute_uri(attachment.file_link)
         if not instance.name and not validated_data.get('name'):
             validated_data['name'] = self.get_transfer_name(validated_data, instance.transfer_type)
         if self.partial:
@@ -381,8 +387,6 @@ class TransferCheckinSerializer(TransferBaseSerializer):
             checkedin_items_ids = [r["id"] for r in checkin_items]
             original_items_missing = [key for key in orig_items_dict.keys() if key not in checkedin_items_ids]
             checkin_items += [{"id": r, "quantity": 0} for r in original_items_missing]
-            based_root = self.context.get('request').build_absolute_uri('/')[:-1]
-            proof_file_pk = self.initial_data.get('proof_file')
             # if it is a partial checkin, create a new wastage transfer with short or surplus subtype
             short_items, surplus_items = self.get_short_surplus_items(orig_items_dict, checkin_items)
             if short_items:
@@ -398,7 +402,7 @@ class TransferCheckinSerializer(TransferBaseSerializer):
                 )
                 short_transfer.save()
                 self.checkin_newtransfer_items(orig_items_dict, short_items, short_transfer)
-                notify_wastage_transfer.delay(connection.schema_name, short_transfer.pk, proof_file_pk, based_root, action='short_checkin')
+                notify_wastage_transfer.delay(connection.schema_name, short_transfer.pk, attachment_url, action='short_checkin')
 
             if surplus_items:
                 surplus_transfer = models.Transfer(
@@ -413,7 +417,7 @@ class TransferCheckinSerializer(TransferBaseSerializer):
                 )
                 surplus_transfer.save()
                 self.checkin_newtransfer_items(orig_items_dict, surplus_items, surplus_transfer)
-                notify_wastage_transfer.delay(connection.schema_name, surplus_transfer.pk, proof_file_pk, based_root, action='surplus_checkin')
+                notify_wastage_transfer.delay(connection.schema_name, short_transfer.pk, attachment_url, action='surplus_checkin')
 
             instance = super().update(instance, validated_data)
             instance.items.exclude(material__number__in=settings.RUTF_MATERIALS).update(hidden=True)
@@ -423,9 +427,7 @@ class TransferCheckinSerializer(TransferBaseSerializer):
                 is_unicef_warehouse = instance.origin_point.name == 'UNICEF Warehouse'
             if is_first_checkin and is_unicef_warehouse:  # Notify only if is Unicef Shipment
                 # Note : We need to insert into EmailTemplates the new template that is defined on notifications/first_checkin.py
-                waybill_file = instance.waybill_file.all()
-                waybill_urls = [self.context["request"].build_absolute_uri(data.file_link if data else '') for data in waybill_file]
-                notify_first_checkin_transfer.delay(connection.schema_name, instance.pk, waybill_urls)
+                notify_first_checkin_transfer.delay(connection.schema_name, instance.pk, attachment_url)
             return instance
 
 
@@ -544,8 +546,11 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
         self.checkout_newtransfer_items(checkout_items)
         if self.instance.transfer_type == models.Transfer.WASTAGE:
             proof_file_pk = self.initial_data.get('proof_file')
-            based_root = self.context.get('request').build_absolute_uri('/')[:-1]
-            notify_wastage_transfer.delay(connection.schema_name, self.instance.pk, proof_file_pk, based_root)
+            attachment_url = None
+            if proof_file_pk:
+                attachment = Attachment.objects.get(pk=proof_file_pk)
+                attachment_url = self.context.get('request').build_absolute_uri(attachment.file_link)
+            notify_wastage_transfer.delay(connection.schema_name, self.instance.pk, attachment_url)
 
         return self.instance
 

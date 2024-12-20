@@ -216,7 +216,7 @@
                                  </td>
                                  <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                            box-sizing:border-box;padding:10px;">
-                                     
+                                     {{transfer.purchase_order_id}}
                                  </td>
                                  <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                            box-sizing:border-box;padding:10px;">
@@ -228,9 +228,7 @@
                                  </td>
                                  <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                            box-sizing:border-box;padding:10px;">
-                                    {% for waybill_url in waybill_urls %}
-                                     {% if waybill_url %}<a href="{{ waybill_url }}" target="_blank">{{ waybill_url }}</a>{% else %}N/A{% endif %}<br>
-                                    {% endfor %}
+                                     {% if attachment_url %}<a href="{{ attachment_url }}" target="_blank">Download Waybill</a>{% else %}N/A{% endif %}<br>
                                  </td>
                               </tr>
                           </table><br/>
