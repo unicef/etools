@@ -39,25 +39,25 @@ class ActivityValid(CompleteValidation):
         instance.old = self.old
         return super().get_permissions(instance)
 
-    def check_required_fields(self, intervention):
+    def check_required_fields(self, activity):
         required_fields = [f for f in self.permissions['required'] if self.permissions['required'][f]]
-        required_valid, fields = check_required_fields(intervention, required_fields)
+        required_valid, fields = check_required_fields(activity, required_fields)
         if not required_valid:
             raise StateValidationError([_('Required fields not completed in %(status)s: %(fields)s')
-                                        % {'status': intervention.status,
+                                        % {'status': activity.status,
                                            'fields': ', '.join(f for f in fields)
                                            }
                                         ])
 
-    def check_rigid_fields(self, intervention, related=False):
+    def check_rigid_fields(self, activity, related=False):
         # this can be set if running in a task and old_instance is not set
         if self.disable_rigid_check:
             return
         rigid_fields = [f for f in self.permissions['edit'] if not self.permissions['edit'][f]]
-        rigid_valid, field = check_rigid_fields(intervention, rigid_fields, related=related)
+        rigid_valid, field = check_rigid_fields(activity, rigid_fields, old_instance=activity.old, related=related)
         if not rigid_valid:
             raise StateValidationError([_('Cannot change fields while in %(status)s: %(field)s')
-                                        % {'status': intervention.status,
+                                        % {'status': activity.status,
                                            'field': field
                                            }
                                         ])
