@@ -24,7 +24,8 @@ from unicef_restlib.views import QueryStringFilterMixin, SafeTenantViewSetMixin
 from etools.applications.action_points.models import PME
 from etools.applications.audit.models import UNICEFAuditFocalPoint
 from etools.applications.core.permissions import IsUNICEFUser
-from etools.applications.organizations.models import Organization
+from etools.applications.environment.helpers import tenant_switch_is_active
+from etools.applications.organizations.models import Organization, OrganizationType
 from etools.applications.partners.permissions import user_group_permission
 from etools.applications.partners.views.v3 import PMPBaseViewMixin
 from etools.applications.users import views as v1, views_v2 as v2
@@ -352,6 +353,10 @@ class UserRealmViewSet(
                 return self.model.objects.none()
         else:
             organization = self.request.user.profile.organization
+
+        if organization.organization_type == OrganizationType.GOVERNMENT and \
+                not tenant_switch_is_active('amp_government_users'):
+            raise ValidationError(f'User roles operations for Government partners on {connection.tenant.name} is disabled.')
 
         qs_context = {
             "country": connection.tenant,

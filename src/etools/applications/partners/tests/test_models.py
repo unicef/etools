@@ -1336,7 +1336,7 @@ class TestAgreement(BaseTenantTestCase):
                 'true': [{
                     'status': 'signed',
                     'group': 'Partnership Manager',
-                    'condition': 'is type PCA or MOU'
+                    'condition': 'is type PCA or MOU or GTC'
                 }]
             }
         })
