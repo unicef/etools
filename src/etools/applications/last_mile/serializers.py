@@ -417,7 +417,7 @@ class TransferCheckinSerializer(TransferBaseSerializer):
                 )
                 surplus_transfer.save()
                 self.checkin_newtransfer_items(orig_items_dict, surplus_items, surplus_transfer)
-                notify_wastage_transfer.delay(connection.schema_name, short_transfer.pk, attachment_url, action='surplus_checkin')
+                notify_wastage_transfer.delay(connection.schema_name, surplus_transfer.pk, attachment_url, action='surplus_checkin')
 
             instance = super().update(instance, validated_data)
             instance.items.exclude(material__number__in=settings.RUTF_MATERIALS).update(hidden=True)
