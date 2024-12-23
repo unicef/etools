@@ -3,6 +3,7 @@ from copy import copy
 
 from django.contrib.gis.db.models import Collect
 from django.core.exceptions import ValidationError as DjangoValidationError
+from django.db import transaction, IntegrityError
 from django.utils.translation import gettext as _
 
 from rest_framework import serializers
@@ -129,6 +130,11 @@ class QuestionSerializer(QuestionLightSerializer):
         instance.options.exclude(pk__in=updated_pks).delete()
 
 
+class UpdateQuestionOrderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Question
+        fields = ('id', 'order')
+        read_only_fields = ('id',)
 class LocationSiteLightSerializer(serializers.ModelSerializer):
     parent = LocationSerializer(read_only=True)
     is_active = serializers.ChoiceField(choices=(
