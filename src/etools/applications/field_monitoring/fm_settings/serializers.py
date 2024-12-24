@@ -130,11 +130,50 @@ class QuestionSerializer(QuestionLightSerializer):
         instance.options.exclude(pk__in=updated_pks).delete()
 
 
+class BulkOrderUpdateListSerializer(serializers.ListSerializer):
+
+    def update(self, instances, validated_data):
+
+        instance_hash = {index: instance for index, instance in enumerate(instances)}
+
+        result = [
+            self.child.update(instance_hash[index], attrs)
+            for index, attrs in enumerate(validated_data)
+        ]
+
+        writable_fields = [
+            x for x in self.child.Meta.fields
+            if x not in self.child.Meta.read_only_fields
+        ]
+
+        try:
+            self.child.Meta.model.objects.bulk_update(result, writable_fields)
+        except IntegrityError as e:
+            raise ValidationError(e)
+
+        return result
+
+    def to_representation(self, instances):
+        rep_list = []
+        for instance in instances:
+            rep_list.append(
+                dict(
+                    id=instance.id,
+                    order=instance.order,
+                )
+            )
+        return rep_list
+
+
 class UpdateQuestionOrderSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = Question
         fields = ('id', 'order')
         read_only_fields = ('id',)
+        list_serializer_class = BulkOrderUpdateListSerializer
+
+
 class LocationSiteLightSerializer(serializers.ModelSerializer):
     parent = LocationSerializer(read_only=True)
     is_active = serializers.ChoiceField(choices=(
