@@ -7,11 +7,12 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from unicef_attachments.fields import AttachmentSingleFileField
+from unicef_attachments.models import Attachment
 from unicef_attachments.serializers import AttachmentSerializerMixin
 
 from etools.applications.last_mile import models
 from etools.applications.last_mile.models import PartnerMaterial
-from etools.applications.last_mile.tasks import notify_wastage_transfer
+from etools.applications.last_mile.tasks import notify_first_checkin_transfer, notify_wastage_transfer
 from etools.applications.partners.models import Agreement, PartnerOrganization
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.users.serializers import MinimalUserSerializer
@@ -52,9 +53,15 @@ class PointOfInterestLightSerializer(serializers.ModelSerializer):
 
 
 class MaterialSerializer(serializers.ModelSerializer):
+    material_type_translate = serializers.SerializerMethodField()
+
     class Meta:
         model = models.Material
         exclude = ('partner_materials',)
+
+    def get_material_type_translate(self, obj):
+        material_type_translate = "RUTF" if obj.number in settings.RUTF_MATERIALS else "Other"
+        return material_type_translate
 
 
 class TransferListSerializer(serializers.ModelSerializer):
@@ -90,27 +97,42 @@ class TransferMinimalSerializer(serializers.ModelSerializer):
 
 class MaterialItemsSerializer(serializers.ModelSerializer):
     transfer = TransferMinimalSerializer()
+    material_type_translate = serializers.SerializerMethodField()
 
     class Meta:
         model = models.Item
         exclude = ('material', 'transfers_history', 'created', 'modified',)
 
+    def get_material_type_translate(self, obj):
+        material_type_translate = "RUTF" if obj.material.number in settings.RUTF_MATERIALS else "Other"
+        return material_type_translate
+
 
 class MaterialDetailSerializer(serializers.ModelSerializer):
     items = MaterialItemsSerializer(many=True)
     description = serializers.CharField(read_only=True)
+    material_type_translate = serializers.SerializerMethodField()
 
     class Meta:
         model = models.Material
         exclude = ["partner_materials"]
+
+    def get_material_type_translate(self, obj):
+        material_type_translate = "RUTF" if obj.number in settings.RUTF_MATERIALS else "Other"
+        return material_type_translate
 
 
 class MaterialListSerializer(serializers.ModelSerializer):
     description = serializers.CharField(read_only=True)
+    material_type_translate = serializers.SerializerMethodField()
 
     class Meta:
         model = models.Material
         exclude = ["partner_materials"]
+
+    def get_material_type_translate(self, obj):
+        material_type_translate = "RUTF" if obj.number in settings.RUTF_MATERIALS else "Other"
+        return material_type_translate
 
 
 class ItemSerializer(serializers.ModelSerializer):
@@ -349,20 +371,22 @@ class TransferCheckinSerializer(TransferBaseSerializer):
 
         if instance.status == models.Transfer.COMPLETED:
             raise ValidationError(_('The transfer was already checked-in.'))
-
         validated_data['status'] = models.Transfer.COMPLETED
         validated_data['checked_in_by'] = self.context.get('request').user
         validated_data["destination_point"] = self.context["location"]
-
+        is_first_checkin = instance.checked_in_by is None
+        attachment_url = None
+        proof_file_pk = self.initial_data.get('proof_file')
+        if proof_file_pk:
+            attachment = Attachment.objects.get(pk=proof_file_pk)
+            attachment_url = self.context.get('request').build_absolute_uri(attachment.file_link)
         if not instance.name and not validated_data.get('name'):
             validated_data['name'] = self.get_transfer_name(validated_data, instance.transfer_type)
-
         if self.partial:
             orig_items_dict = {obj.id: obj for obj in instance.items.all()}
             checkedin_items_ids = [r["id"] for r in checkin_items]
             original_items_missing = [key for key in orig_items_dict.keys() if key not in checkedin_items_ids]
             checkin_items += [{"id": r, "quantity": 0} for r in original_items_missing]
-
             # if it is a partial checkin, create a new wastage transfer with short or surplus subtype
             short_items, surplus_items = self.get_short_surplus_items(orig_items_dict, checkin_items)
             if short_items:
@@ -378,7 +402,7 @@ class TransferCheckinSerializer(TransferBaseSerializer):
                 )
                 short_transfer.save()
                 self.checkin_newtransfer_items(orig_items_dict, short_items, short_transfer)
-                notify_wastage_transfer.delay(connection.schema_name, short_transfer.pk, action='short_checkin')
+                notify_wastage_transfer.delay(connection.schema_name, short_transfer.pk, attachment_url, action='short_checkin')
 
             if surplus_items:
                 surplus_transfer = models.Transfer(
@@ -393,11 +417,17 @@ class TransferCheckinSerializer(TransferBaseSerializer):
                 )
                 surplus_transfer.save()
                 self.checkin_newtransfer_items(orig_items_dict, surplus_items, surplus_transfer)
-                notify_wastage_transfer.delay(connection.schema_name, surplus_transfer.pk, action='surplus_checkin')
+                notify_wastage_transfer.delay(connection.schema_name, surplus_transfer.pk, attachment_url, action='surplus_checkin')
 
             instance = super().update(instance, validated_data)
             instance.items.exclude(material__number__in=settings.RUTF_MATERIALS).update(hidden=True)
             instance.refresh_from_db()
+            is_unicef_warehouse = False
+            if instance.origin_point:
+                is_unicef_warehouse = instance.origin_point.name == 'UNICEF Warehouse'
+            if is_first_checkin and is_unicef_warehouse:  # Notify only if is Unicef Shipment
+                # Note : We need to insert into EmailTemplates the new template that is defined on notifications/first_checkin.py
+                notify_first_checkin_transfer.delay(connection.schema_name, instance.pk, attachment_url)
             return instance
 
 
@@ -413,7 +443,7 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
     class Meta(TransferBaseSerializer.Meta):
         model = models.Transfer
         fields = TransferBaseSerializer.Meta.fields + (
-            'transfer_type', 'items', 'origin_check_out_at', 'destination_point', 'partner_id'
+            'transfer_type', 'items', 'origin_check_out_at', 'destination_point', 'partner_id', 'dispense_type'
         )
 
     def validate_partner_id(self, value):
@@ -513,10 +543,14 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
             self.instance.status = models.Transfer.COMPLETED
 
         self.instance.save()
-
         self.checkout_newtransfer_items(checkout_items)
         if self.instance.transfer_type == models.Transfer.WASTAGE:
-            notify_wastage_transfer.delay(connection.schema_name, self.instance.pk)
+            proof_file_pk = self.initial_data.get('proof_file')
+            attachment_url = None
+            if proof_file_pk:
+                attachment = Attachment.objects.get(pk=proof_file_pk)
+                attachment_url = self.context.get('request').build_absolute_uri(attachment.file_link)
+            notify_wastage_transfer.delay(connection.schema_name, self.instance.pk, attachment_url)
 
         return self.instance
 

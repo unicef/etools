@@ -61,5 +61,12 @@
       "name": "Waybill Recipient",
       "permissions": []
     }
+  },
+  {
+    "model": "auth.group",
+    "fields": {
+      "name": "LMSM Alert Receipt",
+      "permissions": []
+    }
   }
 ]
