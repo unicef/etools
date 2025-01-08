@@ -929,6 +929,68 @@ class TestQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
             [q.id for q in reversed(questions)]
         )
 
+    def test_bulk_update_order(self):
+        questions = [
+            QuestionFactory(text='a', order=1),
+            QuestionFactory(text='b', order=2),
+            QuestionFactory(text='c', order=3),
+            QuestionFactory(text='d', order=4),
+        ]
+        data = [
+            {'id': questions[0].pk, 'order': 4},
+            {'id': questions[1].pk, 'order': 3},
+            {'id': questions[2].pk, 'order': 2},
+            {'id': questions[3].pk, 'order': 1},
+        ]
+        response = self.forced_auth_req(
+            'patch',
+            reverse('field_monitoring_settings:questions-update-order'),
+            user=self.pme,
+            data=data
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data.reverse()
+        self.assertListEqual(
+            [r['id'] for r in response.data],
+            [q['id'] for q in data]
+        )
+
+    def test_bulk_update_order_duplicate_question(self):
+        questions = [
+            QuestionFactory(text='a', order=1),
+            QuestionFactory(text='b', order=2),
+        ]
+        data = [
+            {'id': questions[0].pk, 'order': 4},
+            {'id': questions[0].pk, 'order': 3},
+        ]
+        response = self.forced_auth_req(
+            'patch',
+            reverse('field_monitoring_settings:questions-update-order'),
+            user=self.pme,
+            data=data
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertTrue('Multiple updates to a single question found' in response.data)
+
+    def test_bulk_update_order_non_existent_question(self):
+        questions = [
+            QuestionFactory(text='a', order=1),
+            QuestionFactory(text='b', order=2),
+        ]
+        data = [
+            {'id': questions[0].pk, 'order': 4},
+            {'id': 1234, 'order': 3},
+        ]
+        response = self.forced_auth_req(
+            'patch',
+            reverse('field_monitoring_settings:questions-update-order'),
+            user=self.pme,
+            data=data
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertTrue('Object with id 1234 not found.' in response.data)
+
     def test_filter_by_methods(self):
         first_method = MethodFactory()
         second_method = MethodFactory()
