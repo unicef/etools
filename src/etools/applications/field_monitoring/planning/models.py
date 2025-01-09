@@ -243,9 +243,8 @@ class MonitoringActivity(
                                    verbose_name=_('Person Responsible'), related_name='+',
                                    on_delete=models.SET_NULL)
 
-    report_reviewer = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True,
-                                        verbose_name=_('Report Reviewer'), related_name='activities_to_review',
-                                        on_delete=models.SET_NULL)
+    report_reviewers = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True, verbose_name=_('Report Reviewers'),
+                                              related_name='activities_to_review')
     reviewed_by = models.ForeignKey(settings.AUTH_USER_MODEL, blank=True, null=True, verbose_name=_('Reviewed By'),
                                     related_name='activities_reviewed', on_delete=models.SET_NULL)
 
@@ -370,8 +369,8 @@ class MonitoringActivity(
     def send_submit_notice(self):
         recipients = set(self.country_pmes)
 
-        if self.report_reviewer:
-            recipients.add(self.report_reviewer)
+        for report_reviewer in self.report_reviewers.all():
+            recipients.add(report_reviewer)
 
         if self.monitor_type == self.MONITOR_TYPE_CHOICES.staff:
             email_template = 'fm/activity/staff-submit'
