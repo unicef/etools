@@ -937,10 +937,10 @@ class TestQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
             QuestionFactory(text='d', order=4),
         ]
         data = [
-            {'id': questions[0].pk, 'order': 4},
-            {'id': questions[1].pk, 'order': 3},
-            {'id': questions[2].pk, 'order': 2},
+            {'id': questions[2].pk, 'order': 0},
             {'id': questions[3].pk, 'order': 1},
+            {'id': questions[1].pk, 'order': 2},
+            {'id': questions[0].pk, 'order': 3},
         ]
         response = self.forced_auth_req(
             'patch',
@@ -949,7 +949,6 @@ class TestQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
             data=data
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        data.reverse()
         self.assertListEqual(
             [r['id'] for r in response.data],
             [q['id'] for q in data]
