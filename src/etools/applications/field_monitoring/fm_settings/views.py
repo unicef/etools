@@ -246,7 +246,7 @@ class QuestionsViewSet(
             return [data]
 
         ids = validate_ids(request.data)
-        instances = self.get_queryset().filter(id__in=ids)
+        instances = self.get_queryset().filter(id__in=ids).order_by('id')
         serializer = self.serializer_class(instances, data=sorted(request.data, key=lambda x: x['id']), partial=True, many=True)
         serializer.is_valid(raise_exception=True)
         serializer.save(**kwargs)

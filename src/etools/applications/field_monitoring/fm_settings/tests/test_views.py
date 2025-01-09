@@ -938,9 +938,9 @@ class TestQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
         ]
         data = [
             {'id': questions[2].pk, 'order': 0},
-            {'id': questions[3].pk, 'order': 1},
+            {'id': questions[0].pk, 'order': 1},
             {'id': questions[1].pk, 'order': 2},
-            {'id': questions[0].pk, 'order': 3},
+            {'id': questions[3].pk, 'order': 3},
         ]
         response = self.forced_auth_req(
             'patch',
