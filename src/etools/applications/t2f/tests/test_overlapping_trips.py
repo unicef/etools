@@ -1,6 +1,7 @@
 import datetime
 import json
 import logging
+from unittest import skip
 
 from django.urls import reverse
 
@@ -22,6 +23,7 @@ from etools.applications.users.tests.factories import UserFactory
 log = logging.getLogger('__name__')
 
 
+@skip('Creation Removed')
 class OverlappingTravelsTest(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
