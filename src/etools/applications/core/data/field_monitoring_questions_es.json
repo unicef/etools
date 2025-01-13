@@ -705,6 +705,230 @@
   }
 },
 {
+  "model": "field_monitoring_settings.question",
+  "fields": {
+    "answer_type": "likert_scale",
+    "choices_size": null,
+    "level": "output",
+    "category": 7,
+    "text": "¿Los suministros clave proporcionados a través de la cooperación con el socio implementador están disponibles en condiciones seguras y utilizables?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      2,
+      3
+    ],
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "fields": {
+    "answer_type": "likert_scale",
+    "choices_size": null,
+    "level": "output",
+    "category": 7,
+    "text": "¿Se entregaron a tiempo los suministros clave proporcionados a través de la cooperación?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      2
+    ],
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "fields": {
+    "answer_type": "likert_scale",
+    "choices_size": null,
+    "level": "output",
+    "category": 7,
+    "text": "¿Se consideró justa y eficaz la distribución de los suministros clave?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      2,
+      3
+    ],
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "fields": {
+    "answer_type": "likert_scale",
+    "choices_size": null,
+    "level": "output",
+    "category": 7,
+    "text": "¿Los suministros clave proporcionados a través de la cooperación cumplen con los estándares de calidad acordados?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      2,
+      3
+    ],
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "fields": {
+    "answer_type": "likert_scale",
+    "choices_size": null,
+    "level": "output",
+    "category": 7,
+    "text": "¿Hay algún indicio de que los suministros proporcionados por el socio implementador se estén utilizando?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      2,
+      3
+    ],
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "fields": {
+    "answer_type": "text",
+    "choices_size": null,
+    "level": "output",
+    "category": 7,
+    "text": "¿Hay algún indicio de la existencia de brechas en la disponibilidad de suministros esenciales para los servicios (no proporcionados por UNICEF)?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      3
+    ],
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "fields": {
+    "answer_type": "likert_scale",
+    "choices_size": null,
+    "level": "partner",
+    "category": 7,
+    "text": "¿Los suministros clave proporcionados a través de la cooperación con el socio implementador están disponibles en condiciones seguras y utilizables?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      2,
+      3
+    ],
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "fields": {
+    "answer_type": "likert_scale",
+    "choices_size": null,
+    "level": "partner",
+    "category": 7,
+    "text": "¿Se entregaron a tiempo los suministros clave proporcionados a través de la cooperación?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      2
+    ],
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "fields": {
+    "answer_type": "likert_scale",
+    "choices_size": null,
+    "level": "partner",
+    "category": 7,
+    "text": "¿Se consideró justa y eficaz la distribución de los suministros clave?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      2,
+      3
+    ],
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "fields": {
+    "answer_type": "likert_scale",
+    "choices_size": null,
+    "level": "partner",
+    "category": 7,
+    "text": "¿Los suministros clave proporcionados a través de la cooperación cumplen con los estándares de calidad acordados?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      2,
+      3
+    ],
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "fields": {
+    "answer_type": "likert_scale",
+    "choices_size": null,
+    "level": "partner",
+    "category": 7,
+    "text": "¿Hay algún indicio de que los suministros proporcionados por el socio implementador se estén utilizando?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      2,
+      3
+    ],
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "fields": {
+    "answer_type": "text",
+    "choices_size": null,
+    "level": "partner",
+    "category": 7,
+    "text": "¿Hay algún indicio de la existencia de brechas en la disponibilidad de suministros esenciales para los servicios (no proporcionados por UNICEF)?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      3
+    ],
+    "sections": []
+  }
+},
+{
   "model": "field_monitoring_settings.option",
   "pk": 1,
   "fields": {
