@@ -1,4 +1,5 @@
 import json
+from unittest import skip
 
 from django.urls import reverse
 
@@ -86,6 +87,7 @@ class TestPermissionMatrix(BaseTenantTestCase):
                                  UserTypes.TRAVEL_ADMINISTRATOR,
                                  UserTypes.REPRESENTATIVE])
 
+    @skip('Creation Removed')
     def test_travel_creation(self):
         dsa_region = PublicsDSARegionFactory()
         currency = PublicsCurrencyFactory()
