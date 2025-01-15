@@ -704,6 +704,231 @@
     "sections": []
   }
 },
+
+{
+  "model": "field_monitoring_settings.question",
+  "fields": {
+    "answer_type": "likert_scale",
+    "choices_size": null,
+    "level": "output",
+    "category": 7,
+    "text": "Les produits essentielles approvisionnées dans le cadre du partenariat sont-elles disponibles dans des conditions sûres, sécurisées et utilisables?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      2,
+      3
+    ],
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "fields": {
+    "answer_type": "likert_scale",
+    "choices_size": null,
+    "level": "output",
+    "category": 7,
+    "text": "Les produits essentielles ont-elles été approvisionnées à temps dans le cadre du partenariat?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      2
+    ],
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "fields": {
+    "answer_type": "likert_scale",
+    "choices_size": null,
+    "level": "output",
+    "category": 7,
+    "text": "La distribution des produits essentielles a-t-elle été jugée équitable et efficace?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      2,
+      3
+    ],
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "fields": {
+    "answer_type": "likert_scale",
+    "choices_size": null,
+    "level": "output",
+    "category": 7,
+    "text": "Les produits essentielles approvisionnées dans le cadre du partenariat répondent-elles aux normes et standards de qualité définis?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      2,
+      3
+    ],
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "fields": {
+    "answer_type": "likert_scale",
+    "choices_size": null,
+    "level": "output",
+    "category": 7,
+    "text": "Existe-t-il des indications que les produits approvisionnées par le biais du partenariat ont été utilisé? ",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      2,
+      3
+    ],
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "fields": {
+    "answer_type": "text",
+    "choices_size": null,
+    "level": "output",
+    "category": 7,
+    "text": "Y a-t-il des indications de lacunes dans la disponibilité des produits essentielles pour les services (non fournies par l'UNICEF)?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      3
+    ],
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "fields": {
+    "answer_type": "likert_scale",
+    "choices_size": null,
+    "level": "partner",
+    "category": 7,
+    "text": "Les produits essentielles approvisionnées dans le cadre du partenariat sont-elles disponibles dans des conditions sûres, sécurisées et utilisables?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      2,
+      3
+    ],
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "fields": {
+    "answer_type": "likert_scale",
+    "choices_size": null,
+    "level": "partner",
+    "category": 7,
+    "text": "Les produits essentielles ont-elles été approvisionnées à temps dans le cadre du partenariat?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      2
+    ],
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "fields": {
+    "answer_type": "likert_scale",
+    "choices_size": null,
+    "level": "partner",
+    "category": 7,
+    "text": "La distribution des produits essentielles a-t-elle été jugée équitable et efficace?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      2,
+      3
+    ],
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "fields": {
+    "answer_type": "likert_scale",
+    "choices_size": null,
+    "level": "partner",
+    "category": 7,
+    "text": "Les produits essentielles approvisionnées dans le cadre du partenariat répondent-elles aux normes et standards de qualité définis?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      2,
+      3
+    ],
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "fields": {
+    "answer_type": "likert_scale",
+    "choices_size": null,
+    "level": "partner",
+    "category": 7,
+    "text": "Existe-t-il des indications que les produits approvisionnées par le biais du partenariat ont été utilisé? ",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      2,
+      3
+    ],
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "fields": {
+    "answer_type": "text",
+    "choices_size": null,
+    "level": "partner",
+    "category": 7,
+    "text": "Y a-t-il des indications de lacunes dans la disponibilité des produits essentielles pour les services (non fournies par l'UNICEF)?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      3
+    ],
+    "sections": []
+  }
+},
 {
   "model": "field_monitoring_settings.option",
   "pk": 1,

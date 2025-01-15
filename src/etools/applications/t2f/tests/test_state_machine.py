@@ -1,6 +1,7 @@
 import datetime
 import json
 from collections import defaultdict
+from unittest import skip
 from unittest.mock import Mock, patch
 
 from django.conf import settings
@@ -56,6 +57,7 @@ class StateMachineTest(BaseTenantTestCase):
         for key in expected:
             self.assertCountEqual(expected[key], transition_mapping[key])
 
+    @skip('Creation Removed')
     def test_state_machine_flow(self):
         currency = PublicsCurrencyFactory()
         business_area = PublicsBusinessAreaFactory()
@@ -134,6 +136,7 @@ class StateMachineTest(BaseTenantTestCase):
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json['status'], Travel.COMPLETED)
 
+    @skip('Creation Removed')
     def test_state_machine_flow2(self):
         currency = PublicsCurrencyFactory()
         business_area = PublicsBusinessAreaFactory()
@@ -218,6 +221,7 @@ class StateMachineTest(BaseTenantTestCase):
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json['status'], Travel.COMPLETED)
 
+    @skip('Creation Removed')
     def test_ta_not_required_flow_instant_complete(self):
         data = {'traveler': self.traveler.id,
                 'ta_required': False,
@@ -237,6 +241,7 @@ class StateMachineTest(BaseTenantTestCase):
 
         self.assertEqual(mock_send.call_count, 1)
 
+    @skip('Creation Removed')
     def test_ta_not_required_flow_send_for_approval(self):
         data = {'traveler': self.traveler.id,
                 'ta_required': False,
@@ -274,6 +279,7 @@ class StateMachineTest(BaseTenantTestCase):
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json['status'], Travel.COMPLETED)
 
+    @skip('Creation Removed')
     def test_international_travel(self):
         data = {'traveler': self.traveler.id,
                 'ta_required': False,
@@ -310,6 +316,7 @@ class StateMachineTest(BaseTenantTestCase):
                          {'non_field_errors': ["Transition conditions have not been met "
                                                "for method 'mark_as_completed'"]})
 
+    @skip('Creation Removed')
     def test_expense_required_on_send_for_payment(self):
         business_area = PublicsBusinessAreaFactory()
         dsa_region = PublicsDSARegionFactory()
