@@ -7,7 +7,7 @@
     "choices_size": null,
     "level": "output",
     "category": 4,
-    "text": "Combien d'enfants peut-on raisonnablement estimer bénéficier directement du soutien de l'UNICEF à cet endroit?",
+    "text": "¿Cuántos NNA se puede estimar razonablemente que se benefician directamente del apoyo de UNICEF en este lugar?",
     "is_hact": false,
     "is_custom": false,
     "is_active": true,
@@ -27,7 +27,7 @@
     "choices_size": null,
     "level": "output",
     "category": 4,
-    "text": "Combien de filles peut-on raisonnablement estimer bénéficier directement du soutien de l'UNICEF à cet endroit?",
+    "text": "¿Cuántas niñas se puede estimar razonablemente que se benefician directamente del apoyo de UNICEF en este lugar?",
     "is_hact": false,
     "is_custom": false,
     "is_active": true,
@@ -47,7 +47,7 @@
     "choices_size": null,
     "level": "output",
     "category": 4,
-    "text": "Combien d'enfants et d'adultes peut-on raisonnablement estimer bénéficier indirectement du soutien de l'UNICEF à cet endroit?",
+    "text": "¿Cuántos NNA y adultos se puede estimar razonablemente que se benefician indirectamente del apoyo de UNICEF en este lugar?",
     "is_hact": false,
     "is_custom": false,
     "is_active": true,
@@ -67,7 +67,7 @@
     "choices_size": null,
     "level": "output",
     "category": 4,
-    "text": "Y a-t-il des preuves d'exclusion ou de marginalisation des enfants handicapés des services ou des informations?",
+    "text": "¿Existe alguna evidencia de exclusión o marginación de NNA con discapacidad de los servicios o la información?",
     "is_hact": false,
     "is_custom": false,
     "is_active": true,
@@ -88,7 +88,7 @@
     "choices_size": null,
     "level": "output",
     "category": 4,
-    "text": "Y a-t-il des preuves d'exclusion ou de marginalisation de groupes spécifiques, y compris les enfants en déplacement, des services ou des informations?",
+    "text": "¿Existe alguna evidencia de exclusión o marginación de grupos específicos, incluidos los NNA en movimiento, de los servicios o la información?",
     "is_hact": false,
     "is_custom": false,
     "is_active": true,
@@ -109,7 +109,7 @@
     "choices_size": null,
     "level": "output",
     "category": 3,
-    "text": "La mise en oeuvre du programme respecte-t-elle les normes programmatiques clés de qualité et d'exhaustivité?",
+    "text": "¿La implementación del programa cumple con los estándares programáticos clave de calidad e integridad?",
     "is_hact": false,
     "is_custom": false,
     "is_active": true,
@@ -129,7 +129,7 @@
     "choices_size": null,
     "level": "output",
     "category": 3,
-    "text": "Existe-t-il des preuves d'effets négatifs involontaires des programmes/services?",
+    "text": "¿Existe alguna evidencia de efectos negativos no deseados de los programas /servicios?",
     "is_hact": false,
     "is_custom": false,
     "is_active": true,
@@ -150,7 +150,7 @@
     "choices_size": null,
     "level": "output",
     "category": 5,
-    "text": "Existe-t-il des preuves de lacunes dans le soutien aux services/programmes? Veuillez préciser à quels acteurs ces lacunes se rapportent (UNICEF, IP, autre)",
+    "text": "¿Hay evidencia de brechas en el apoyo a los servicios/ programas? Especifique con qué actores se relacionan estas brechas (UNICEF, socio, otros).",
     "is_hact": false,
     "is_custom": false,
     "is_active": true,
@@ -170,7 +170,7 @@
     "choices_size": null,
     "level": "output",
     "category": 5,
-    "text": "Existe-t-il des lacunes/défis dans la coordination entre les services?",
+    "text": "¿Existen brechas/desafíos en la coordinación entre servicios?",
     "is_hact": false,
     "is_custom": false,
     "is_active": true,
@@ -190,7 +190,7 @@
     "choices_size": null,
     "level": "output",
     "category": 5,
-    "text": "Existe-t-il une disponibilité/adéquation suffisante du personnel clé (nombre à des niveaux spécifiques) pertinent pour les points de service visités?",
+    "text": "¿Hay suficiente disponibilidad/adecuación del personal clave (número en niveles específicos) relevante para los puntos de servicio visitados?",
     "is_hact": false,
     "is_custom": false,
     "is_active": true,
@@ -210,7 +210,7 @@
     "choices_size": null,
     "level": "output",
     "category": 5,
-    "text": "Les décaissements budgétaires pour les services/programmes sont-ils tels que prévus/affectés?",
+    "text": "¿Los desembolsos presupuestarios para servicios/ programas son según lo planificado/asignado?",
     "is_hact": false,
     "is_custom": false,
     "is_active": true,
@@ -230,7 +230,7 @@
     "choices_size": null,
     "level": "output",
     "category": 5,
-    "text": "Les décaissements budgétaires pour les services/programmes sont-ils opportuns?",
+    "text": "¿Son puntuales los desembolsos presupuestarios para servicios/ programas ?",
     "is_hact": false,
     "is_custom": false,
     "is_active": true,
@@ -250,7 +250,7 @@
     "choices_size": null,
     "level": "output",
     "category": 5,
-    "text": "Y a-t-il des problèmes avec les politiques/procédures qui entravent les services/programmes?",
+    "text": "¿Hay algún problema con las políticas/procedimientos que esté obstaculizando los servicios/ programas ?",
     "is_hact": false,
     "is_custom": false,
     "is_active": true,
@@ -269,7 +269,7 @@
     "choices_size": null,
     "level": "output",
     "category": 6,
-    "text": "Les enfants et les adultes ont-ils accès à un canal sûr pour signaler l'exploitation et les abus sexuels?",
+    "text": "¿Tienen NNA y adultos acceso a un canal seguro y accesible para denunciar la explotación y el abuso sexual?",
     "is_hact": false,
     "is_custom": false,
     "is_active": true,
@@ -289,7 +289,7 @@
     "choices_size": null,
     "level": "output",
     "category": 6,
-    "text": "Les parties prenantes ont-elles une expérience ou une observation des comportements d'EAS lors de la mise en oeuvre du programme? L'expérience ou l'observation a-t-elle été rapportée?",
+    "text": "¿Los actores tienen alguna experiencia u observación de comportamientos de abuso o explotación sexual durante la implementación del programa? ¿Se reportó la experiencia u observación?",
     "is_hact": false,
     "is_custom": false,
     "is_active": true,
@@ -309,7 +309,7 @@
     "choices_size": null,
     "level": "output",
     "category": 1,
-    "text": "Les partenaires fournissent-ils de manière adéquate des informations essentielles sur les pratiques de sauvetage/protection?",
+    "text": "¿Los socios implementadores proporcionan adecuadamente información crítica sobre prácticas de salvamento de vidas/ protección?",
     "is_hact": false,
     "is_custom": false,
     "is_active": true,
@@ -329,7 +329,7 @@
     "choices_size": null,
     "level": "output",
     "category": 1,
-    "text": "Y a-t-il un engagement avec les structures/mécanismes/capacités communautaires existants?",
+    "text": "¿Hay un involucramiento con las estructuras/ mecanismos/ capacidades comunitarias existentes?",
     "is_hact": false,
     "is_custom": false,
     "is_active": true,
@@ -350,7 +350,7 @@
     "choices_size": null,
     "level": "output",
     "category": 1,
-    "text": "Existe-t-il un mécanisme efficace de rétroaction communautaire en place?",
+    "text": "¿Hay algún mecanismo eficaz de retroalimentación de la comunidad?",
     "is_hact": false,
     "is_custom": false,
     "is_active": true,
@@ -370,7 +370,7 @@
     "choices_size": null,
     "level": "output",
     "category": 1,
-    "text": "Dressez la liste des commentaires des communautés et des enfants sur le programme et les services fournis.",
+    "text": "Mencione los comentarios realizados por las comunidades y NNA sobre el programa y los servicios prestados.",
     "is_hact": false,
     "is_custom": false,
     "is_active": true,
@@ -389,7 +389,7 @@
     "choices_size": null,
     "level": "partner",
     "category": 2,
-    "text": "Les activités ont-elles été mises en oeuvre comme planifié et rapportées par le partenaire de mise en oeuvre?",
+    "text": "¿Se han implementado las actividades según lo planificado y reportado por el socio implementador?",
     "is_hact": true,
     "is_custom": false,
     "is_active": true,
@@ -410,7 +410,7 @@
     "choices_size": null,
     "level": "partner",
     "category": 2,
-    "text": "Dressez la liste des activités monitorées et vérifiées lors de la visite programmatique",
+    "text": "Mencione las actividades monitoreadas y verificadas durante la visita programática.",
     "is_hact": false,
     "is_custom": false,
     "is_active": true,
@@ -430,7 +430,7 @@
     "choices_size": null,
     "level": "partner",
     "category": 2,
-    "text": "Dressez la liste de toutes les observations résultant de la visite et toutes les actions convenues avec le partenaire de mise en oeuvre.",
+    "text": "Mencione las observaciones resultantes de la visita y los puntos de acción acordados con el socio implementador.",
     "is_hact": false,
     "is_custom": false,
     "is_active": true,
@@ -450,7 +450,7 @@
     "choices_size": null,
     "level": "intervention",
     "category": 7,
-    "text": "Les produits essentielles approvisionnées dans le cadre du partenariat sont-elles disponibles dans des conditions sûres, sécurisées et utilisables?",
+    "text": "¿Los suministros clave proporcionados a través de la cooperación con el socio implementador están disponibles en condiciones seguras y utilizables?",
     "is_hact": false,
     "is_custom": false,
     "is_active": true,
@@ -471,7 +471,7 @@
     "choices_size": null,
     "level": "intervention",
     "category": 7,
-    "text": "Les produits essentielles ont-elles été approvisionnées à temps dans le cadre du partenariat?",
+    "text": "¿Se entregaron a tiempo los suministros clave proporcionados a través de la cooperación?",
     "is_hact": false,
     "is_custom": false,
     "is_active": true,
@@ -491,7 +491,7 @@
     "choices_size": null,
     "level": "intervention",
     "category": 7,
-    "text": "La distribution des produits essentielles a-t-elle été jugée équitable et efficace?",
+    "text": "¿Se consideró justa y eficaz la distribución de los suministros clave?",
     "is_hact": false,
     "is_custom": false,
     "is_active": true,
@@ -512,7 +512,7 @@
     "choices_size": null,
     "level": "intervention",
     "category": 7,
-    "text": "Les produits essentielles approvisionnées dans le cadre du partenariat répondent-elles aux normes et standards de qualité définis?",
+    "text": "¿Los suministros clave proporcionados a través de la cooperación cumplen con los estándares de calidad acordados?",
     "is_hact": false,
     "is_custom": false,
     "is_active": true,
@@ -533,7 +533,7 @@
     "choices_size": null,
     "level": "intervention",
     "category": 7,
-    "text": "Existe-t-il des indications que les produits approvisionnées par le biais du partenariat ont été utilisé? ",
+    "text": "¿Hay algún indicio de que los suministros proporcionados por el socio implementador se estén utilizando?",
     "is_hact": false,
     "is_custom": false,
     "is_active": true,
@@ -554,7 +554,7 @@
     "choices_size": null,
     "level": "intervention",
     "category": 7,
-    "text": "Y a-t-il des indications de lacunes dans la disponibilité des produits essentielles pour les services (non fournies par l'UNICEF)?",
+    "text": "¿Hay algún indicio de la existencia de brechas en la disponibilidad de suministros esenciales para los servicios (no proporcionados por UNICEF)?",
     "is_hact": false,
     "is_custom": false,
     "is_active": true,
@@ -574,7 +574,7 @@
     "choices_size": null,
     "level": "intervention",
     "category": 8,
-    "text": "Y a-t-il des indications de pratiques/croyances socioculturelles influençant l'accès/l'utilisation/l'adoption (en particulier par les sous-groupes vulnérables)?",
+    "text": "¿Hay algún indicio de prácticas/creencias socioculturales que influyan en el acceso/uso/adopción (especialmente por parte de subgrupos vulnerables)?",
     "is_hact": false,
     "is_custom": false,
     "is_active": true,
@@ -594,7 +594,7 @@
     "choices_size": null,
     "level": "intervention",
     "category": 8,
-    "text": "Y a-t-il des indications d'obstacles de coût empêchant l'accès aux services ou l'adoption de comportements?",
+    "text": "¿Hay algún indicio de barreras de costos que impidan el acceso a los servicios o la adopción de comportamientos?",
     "is_hact": false,
     "is_custom": false,
     "is_active": true,
@@ -614,7 +614,7 @@
     "choices_size": null,
     "level": "intervention",
     "category": 8,
-    "text": "Les principaux utilisateurs visés sont-ils satisfaits des services/interventions du programme?",
+    "text": "¿Están satisfechos los principales usuarios previstos con los servicios/ intervenciones del programa?",
     "is_hact": false,
     "is_custom": false,
     "is_active": true,
@@ -633,7 +633,7 @@
     "choices_size": null,
     "level": "intervention",
     "category": 8,
-    "text": "Y a-t-il une indication de continuité dans l'utilisation des services / adoption durable de la pratique?",
+    "text": "¿Hay algún indicio de continuidad en el uso de los servicios/adopción sostenible de la práctica?",
     "is_hact": false,
     "is_custom": false,
     "is_active": true,
@@ -653,7 +653,7 @@
     "choices_size": null,
     "level": "partner",
     "category": 6,
-    "text": "Les sites du partenaire soutenus par l'UNICEF disposent-ils de supports de communication visibles (affiches, dépliants, brochures) sur la manière de signaler les allégations d'exploitation et abus sexuels?",
+    "text": "¿Los sitios del socio apoyados por UNICEF tienen materiales de comunicación visibles (carteles, panfletos, folletos) sobre cómo hacer denuncias de explotación y abuso sexual?",
     "is_hact": false,
     "is_custom": false,
     "is_active": true,
@@ -672,7 +672,7 @@
     "choices_size": null,
     "level": "partner",
     "category": 6,
-    "text": "Proportion du personnel des partenaires (personnel, consultants, bénévoles, stagiaires, sous-traitants) sur le site ayant reçu une formation sur la PEAS au cours des 12 derniers mois qui répond aux critères minimaux?",
+    "text": "Proporción del personal del socio implementafor (personal, consultores, voluntarios, pasantes, subcontratistas) en el sitio que ha recibido capacitación sobre PEAS en los últimos 12 meses que cumple con los criterios mínimos",
     "is_hact": false,
     "is_custom": false,
     "is_active": true,
@@ -692,7 +692,7 @@
     "choices_size": null,
     "level": "partner",
     "category": 6,
-    "text": "Proportion de bénéficiaires dans le lieu du programme qui peuvent expliquer au moins un canal pour signaler l'EAS (tel que SMS, hotline téléphonique, email, boîte de commentaires, point focal PSEA de l'organisation partenaire)",
+    "text": "Proporción de beneficiarios en el sitio del programa que pueden explicar al menos un canal para denunciar explotación y/o abuso sexual (como SMS, línea telefónica directa, correo electrónico, buzón de comentarios, punto focal de PEAS del socio implementador)",
     "is_hact": false,
     "is_custom": false,
     "is_active": true,
@@ -704,7 +704,6 @@
     "sections": []
   }
 },
-
 {
   "model": "field_monitoring_settings.question",
   "fields": {
@@ -712,7 +711,7 @@
     "choices_size": null,
     "level": "output",
     "category": 7,
-    "text": "Les produits essentielles approvisionnées dans le cadre du partenariat sont-elles disponibles dans des conditions sûres, sécurisées et utilisables?",
+    "text": "¿Los suministros clave proporcionados a través de la cooperación con el socio implementador están disponibles en condiciones seguras y utilizables?",
     "is_hact": false,
     "is_custom": false,
     "is_active": true,
@@ -731,7 +730,7 @@
     "choices_size": null,
     "level": "output",
     "category": 7,
-    "text": "Les produits essentielles ont-elles été approvisionnées à temps dans le cadre du partenariat?",
+    "text": "¿Se entregaron a tiempo los suministros clave proporcionados a través de la cooperación?",
     "is_hact": false,
     "is_custom": false,
     "is_active": true,
@@ -749,7 +748,7 @@
     "choices_size": null,
     "level": "output",
     "category": 7,
-    "text": "La distribution des produits essentielles a-t-elle été jugée équitable et efficace?",
+    "text": "¿Se consideró justa y eficaz la distribución de los suministros clave?",
     "is_hact": false,
     "is_custom": false,
     "is_active": true,
@@ -768,7 +767,7 @@
     "choices_size": null,
     "level": "output",
     "category": 7,
-    "text": "Les produits essentielles approvisionnées dans le cadre du partenariat répondent-elles aux normes et standards de qualité définis?",
+    "text": "¿Los suministros clave proporcionados a través de la cooperación cumplen con los estándares de calidad acordados?",
     "is_hact": false,
     "is_custom": false,
     "is_active": true,
@@ -787,7 +786,7 @@
     "choices_size": null,
     "level": "output",
     "category": 7,
-    "text": "Existe-t-il des indications que les produits approvisionnées par le biais du partenariat ont été utilisé? ",
+    "text": "¿Hay algún indicio de que los suministros proporcionados por el socio implementador se estén utilizando?",
     "is_hact": false,
     "is_custom": false,
     "is_active": true,
@@ -806,7 +805,7 @@
     "choices_size": null,
     "level": "output",
     "category": 7,
-    "text": "Y a-t-il des indications de lacunes dans la disponibilité des produits essentielles pour les services (non fournies par l'UNICEF)?",
+    "text": "¿Hay algún indicio de la existencia de brechas en la disponibilidad de suministros esenciales para los servicios (no proporcionados por UNICEF)?",
     "is_hact": false,
     "is_custom": false,
     "is_active": true,
@@ -824,7 +823,7 @@
     "choices_size": null,
     "level": "partner",
     "category": 7,
-    "text": "Les produits essentielles approvisionnées dans le cadre du partenariat sont-elles disponibles dans des conditions sûres, sécurisées et utilisables?",
+    "text": "¿Los suministros clave proporcionados a través de la cooperación con el socio implementador están disponibles en condiciones seguras y utilizables?",
     "is_hact": false,
     "is_custom": false,
     "is_active": true,
@@ -843,7 +842,7 @@
     "choices_size": null,
     "level": "partner",
     "category": 7,
-    "text": "Les produits essentielles ont-elles été approvisionnées à temps dans le cadre du partenariat?",
+    "text": "¿Se entregaron a tiempo los suministros clave proporcionados a través de la cooperación?",
     "is_hact": false,
     "is_custom": false,
     "is_active": true,
@@ -861,7 +860,7 @@
     "choices_size": null,
     "level": "partner",
     "category": 7,
-    "text": "La distribution des produits essentielles a-t-elle été jugée équitable et efficace?",
+    "text": "¿Se consideró justa y eficaz la distribución de los suministros clave?",
     "is_hact": false,
     "is_custom": false,
     "is_active": true,
@@ -880,7 +879,7 @@
     "choices_size": null,
     "level": "partner",
     "category": 7,
-    "text": "Les produits essentielles approvisionnées dans le cadre du partenariat répondent-elles aux normes et standards de qualité définis?",
+    "text": "¿Los suministros clave proporcionados a través de la cooperación cumplen con los estándares de calidad acordados?",
     "is_hact": false,
     "is_custom": false,
     "is_active": true,
@@ -899,7 +898,7 @@
     "choices_size": null,
     "level": "partner",
     "category": 7,
-    "text": "Existe-t-il des indications que les produits approvisionnées par le biais du partenariat ont été utilisé? ",
+    "text": "¿Hay algún indicio de que los suministros proporcionados por el socio implementador se estén utilizando?",
     "is_hact": false,
     "is_custom": false,
     "is_active": true,
@@ -918,7 +917,7 @@
     "choices_size": null,
     "level": "partner",
     "category": 7,
-    "text": "Y a-t-il des indications de lacunes dans la disponibilité des produits essentielles pour les services (non fournies par l'UNICEF)?",
+    "text": "¿Hay algún indicio de la existencia de brechas en la disponibilidad de suministros esenciales para los servicios (no proporcionados por UNICEF)?",
     "is_hact": false,
     "is_custom": false,
     "is_active": true,
@@ -934,7 +933,7 @@
   "pk": 1,
   "fields": {
     "question": 4,
-    "label": "Preuve claire d'exclusion ou de marginalisation",
+    "label": "Evidencia clara de exclusión o marginación",
     "value": "1"
   }
 },
@@ -943,7 +942,7 @@
   "pk": 2,
   "fields": {
     "question": 4,
-    "label": "Preuve de possible exclusion ou marginalisation",
+    "label": "Posible evidencia de exclusión o marginación",
     "value": "2"
   }
 },
@@ -952,7 +951,7 @@
   "pk": 3,
   "fields": {
     "question": 4,
-    "label": "Aucune preuve d'exclusion ou de marginalisation",
+    "label": "No hay evidencia de exclusión o marginación",
     "value": "3"
   }
 },
@@ -961,7 +960,7 @@
   "pk": 4,
   "fields": {
     "question": 4,
-    "label": "Preuve d'efforts spécifiques d'inclusion",
+    "label": "Evidencia de esfuerzos específicos de inclusión",
     "value": "4"
   }
 },
@@ -970,7 +969,7 @@
   "pk": 5,
   "fields": {
     "question": 4,
-    "label": "Preuve d'efforts effectif d'inclusion",
+    "label": "Evidencia de esfuerzos efectivos de inclusión",
     "value": "5"
   }
 },
@@ -979,7 +978,7 @@
   "pk": 6,
   "fields": {
     "question": 5,
-    "label": "Preuve claire d'exclusion ou de marginalisation",
+    "label": "Evidencia clara de exclusión o marginación",
     "value": "1"
   }
 },
@@ -988,7 +987,7 @@
   "pk": 7,
   "fields": {
     "question": 5,
-    "label": "Preuve de possible exclusion ou marginalisation",
+    "label": "Posible evidencia de exclusión o marginación",
     "value": "2"
   }
 },
@@ -997,7 +996,7 @@
   "pk": 8,
   "fields": {
     "question": 5,
-    "label": "Aucune preuve d'exclusion ou de marginalisation",
+    "label": "No hay evidencia de exclusión o marginación",
     "value": "3"
   }
 },
@@ -1006,7 +1005,7 @@
   "pk": 9,
   "fields": {
     "question": 5,
-    "label": "Preuve d'efforts spécifiques d'inclusion",
+    "label": "Evidencia de esfuerzos específicos de inclusión",
     "value": "4"
   }
 },
@@ -1015,7 +1014,7 @@
   "pk": 10,
   "fields": {
     "question": 5,
-    "label": "Preuve d'efforts effectif d'inclusion",
+    "label": "Evidencia de esfuerzos efectivos de inclusión",
     "value": "5"
   }
 },
@@ -1024,7 +1023,7 @@
   "pk": 11,
   "fields": {
     "question": 6,
-    "label": "Normes clés complètement manquées",
+    "label": "Incumple totalmente los estándares clave",
     "value": "1"
   }
 },
@@ -1033,7 +1032,7 @@
   "pk": 12,
   "fields": {
     "question": 6,
-    "label": "Normes clés la plupart du temps manquées",
+    "label": "Incumple en su mayor parte los estandares clave",
     "value": "2"
   }
 },
@@ -1042,7 +1041,7 @@
   "pk": 13,
   "fields": {
     "question": 6,
-    "label": "Répond partiellement aux normes clés",
+    "label": "Cumple parcialmente con los estándares clave",
     "value": "3"
   }
 },
@@ -1051,7 +1050,7 @@
   "pk": 14,
   "fields": {
     "question": 6,
-    "label": "Répond en grande partie aux normes clés",
+    "label": "Cumple en su mayoría con los estándares clave",
     "value": "4"
   }
 },
@@ -1060,7 +1059,7 @@
   "pk": 15,
   "fields": {
     "question": 6,
-    "label": "Répond pleinement aux normes clés",
+    "label": "Cumple totalmente con los estándares clave",
     "value": "5"
   }
 },
@@ -1069,7 +1068,7 @@
   "pk": 16,
   "fields": {
     "question": 9,
-    "label": "Aucune coordination évidente",
+    "label": "No hay evidencia de coordinación",
     "value": "1"
   }
 },
@@ -1078,7 +1077,7 @@
   "pk": 17,
   "fields": {
     "question": 9,
-    "label": "Faible coordination évidente",
+    "label": "Evidencia de coordinación débil",
     "value": "2"
   }
 },
@@ -1087,7 +1086,7 @@
   "pk": 18,
   "fields": {
     "question": 9,
-    "label": "Coordination en place et effective",
+    "label": "Coordinación implementada y efectiva",
     "value": "3"
   }
 },
@@ -1096,7 +1095,7 @@
   "pk": 19,
   "fields": {
     "question": 10,
-    "label": "Disponibilité très limitée du personnel clé",
+    "label": "Alta limitación en la disponibilidad de personal clave",
     "value": "1"
   }
 },
@@ -1105,7 +1104,7 @@
   "pk": 20,
   "fields": {
     "question": 10,
-    "label": "Quelques contraintes de disponibilité du personnel clé",
+    "label": "Algunas limitaciones en la disponibilidad de personal clave",
     "value": "2"
   }
 },
@@ -1114,7 +1113,7 @@
   "pk": 21,
   "fields": {
     "question": 10,
-    "label": "Nombre suffisant de la plupart du personnel clé à tous les niveaux",
+    "label": "Número suficiente de personal más clave en la mayoría de los niveles",
     "value": "3"
   }
 },
@@ -1123,7 +1122,7 @@
   "pk": 22,
   "fields": {
     "question": 11,
-    "label": "Décaissements très contraints (montants)",
+    "label": "Altamente limitados los desembolsos presupuestarios (montos)",
     "value": "1"
   }
 },
@@ -1132,7 +1131,7 @@
   "pk": 23,
   "fields": {
     "question": 11,
-    "label": "Décaissements limités (montants)",
+    "label": "Desembolsos presupuestarios limitados (montos)",
     "value": "2"
   }
 },
@@ -1141,7 +1140,7 @@
   "pk": 24,
   "fields": {
     "question": 11,
-    "label": "Décaissements suffisants (montants)",
+    "label": "Desembolsos presupuestarios suficientes (montos)",
     "value": "3"
   }
 },
@@ -1150,7 +1149,7 @@
   "pk": 25,
   "fields": {
     "question": 12,
-    "label": "Décaissements très contraints (respect des délais)",
+    "label": "Altamente limitados los desembolsos presupuestarios (puntualidad)",
     "value": "1"
   }
 },
@@ -1159,7 +1158,7 @@
   "pk": 26,
   "fields": {
     "question": 12,
-    "label": "Décaissements limités (respect des délais)",
+    "label": "Desembolsos presupuestarios limitados (puntualidad)",
     "value": "2"
   }
 },
@@ -1168,7 +1167,7 @@
   "pk": 27,
   "fields": {
     "question": 12,
-    "label": "Décaissements suffisants (respect des délais)",
+    "label": "Desembolsos presupuestarios suficientes (puntualidad)",
     "value": "3"
   }
 },
@@ -1177,7 +1176,7 @@
   "pk": 28,
   "fields": {
     "question": 14,
-    "label": "Pas de canal sûr et accessible",
+    "label": "No hay un canal seguro y accesible",
     "value": "1"
   }
 },
@@ -1186,7 +1185,7 @@
   "pk": 29,
   "fields": {
     "question": 14,
-    "label": "Canal disponible mais peu connu",
+    "label": "Canal disponible pero poco conocido",
     "value": "2"
   }
 },
@@ -1195,7 +1194,7 @@
   "pk": 30,
   "fields": {
     "question": 14,
-    "label": "Canal disponible et bien connu",
+    "label": "Canal disponible y bien conocido",
     "value": "3"
   }
 },
@@ -1204,7 +1203,7 @@
   "pk": 31,
   "fields": {
     "question": 16,
-    "label": "Aucune offre",
+    "label": "Sin provisión",
     "value": "1"
   }
 },
@@ -1213,7 +1212,7 @@
   "pk": 32,
   "fields": {
     "question": 16,
-    "label": "Offre insuffisante ou restreinte",
+    "label": "Provisión insuficiente o limitada",
     "value": "2"
   }
 },
@@ -1222,7 +1221,7 @@
   "pk": 33,
   "fields": {
     "question": 16,
-    "label": "Preuve d'une offre appropriée",
+    "label": "Evidencia de provisión adecuada",
     "value": "3"
   }
 },
@@ -1231,7 +1230,7 @@
   "pk": 34,
   "fields": {
     "question": 16,
-    "label": "Offre et compréhension effectives",
+    "label": "Provisión efectiva y entendimiento",
     "value": "4"
   }
 },
@@ -1240,7 +1239,7 @@
   "pk": 35,
   "fields": {
     "question": 16,
-    "label": "Exemple de bonne pratique",
+    "label": "Ejemplo de mejor práctica",
     "value": "5"
   }
 },
@@ -1249,7 +1248,7 @@
   "pk": 36,
   "fields": {
     "question": 17,
-    "label": "Aucun engagement",
+    "label": "Sin compromiso",
     "value": "1"
   }
 },
@@ -1258,7 +1257,7 @@
   "pk": 37,
   "fields": {
     "question": 17,
-    "label": "Engagement insuffisant ou limité",
+    "label": "Compromiso insuficiente o limitado",
     "value": "2"
   }
 },
@@ -1267,7 +1266,7 @@
   "pk": 38,
   "fields": {
     "question": 17,
-    "label": "Preuve d'un engagement approprié",
+    "label": "Evidencia de compromiso adecuado",
     "value": "3"
   }
 },
@@ -1276,7 +1275,7 @@
   "pk": 39,
   "fields": {
     "question": 17,
-    "label": "Engagement et participation effectifs",
+    "label": "Compromiso efectivo y participación",
     "value": "4"
   }
 },
@@ -1285,7 +1284,7 @@
   "pk": 40,
   "fields": {
     "question": 17,
-    "label": "Exemple de bonne pratique",
+    "label": "Ejemplo de mejor práctica",
     "value": "5"
   }
 },
@@ -1294,7 +1293,7 @@
   "pk": 41,
   "fields": {
     "question": 18,
-    "label": "Pas de mécanisme",
+    "label": "Sin mecanismo",
     "value": "1"
   }
 },
@@ -1303,7 +1302,7 @@
   "pk": 42,
   "fields": {
     "question": 18,
-    "label": "Mécanisme en place",
+    "label": "Mecanismo implementado",
     "value": "2"
   }
 },
@@ -1312,7 +1311,7 @@
   "pk": 43,
   "fields": {
     "question": 18,
-    "label": "Mécanisme en place et utilisé",
+    "label": "Mecanismo implementado y utilizado",
     "value": "3"
   }
 },
@@ -1321,7 +1320,7 @@
   "pk": 44,
   "fields": {
     "question": 20,
-    "label": "pas en bonne voie",
+    "label": "Fuera de curso",
     "value": "1"
   }
 },
@@ -1330,7 +1329,7 @@
   "pk": 45,
   "fields": {
     "question": 20,
-    "label": "Limité",
+    "label": "Restringido",
     "value": "2"
   }
 },
@@ -1339,7 +1338,7 @@
   "pk": 46,
   "fields": {
     "question": 20,
-    "label": "En bonne voie",
+    "label": "En curso",
     "value": "3"
   }
 },
@@ -1348,7 +1347,7 @@
   "pk": 47,
   "fields": {
     "question": 23,
-    "label": "Manquant",
+    "label": "Faltante",
     "value": "1"
   }
 },
@@ -1357,7 +1356,7 @@
   "pk": 48,
   "fields": {
     "question": 23,
-    "label": "Endommagé ou insuffisant",
+    "label": "Dañado o insuficiente",
     "value": "2"
   }
 },
@@ -1366,7 +1365,7 @@
   "pk": 49,
   "fields": {
     "question": 23,
-    "label": "Limité",
+    "label": "Restringido",
     "value": "3"
   }
 },
@@ -1375,7 +1374,7 @@
   "pk": 50,
   "fields": {
     "question": 23,
-    "label": "Adéquat / suffisant",
+    "label": "Adecuado/ suficiente",
     "value": "4"
   }
 },
@@ -1384,7 +1383,7 @@
   "pk": 51,
   "fields": {
     "question": 23,
-    "label": "Excédentaire",
+    "label": "Exceso de suministro",
     "value": "5"
   }
 },
@@ -1393,7 +1392,7 @@
   "pk": 52,
   "fields": {
     "question": 24,
-    "label": "Retard critique",
+    "label": "Retraso crítico",
     "value": "1"
   }
 },
@@ -1402,7 +1401,7 @@
   "pk": 53,
   "fields": {
     "question": 24,
-    "label": "Retardé / imprévisible",
+    "label": "Retraso/ impredecible",
     "value": "2"
   }
 },
@@ -1411,7 +1410,7 @@
   "pk": 54,
   "fields": {
     "question": 24,
-    "label": "A l'heure ou en avance",
+    "label": "A tiempo o temprano",
     "value": "3"
   }
 },
@@ -1420,7 +1419,7 @@
   "pk": 55,
   "fields": {
     "question": 25,
-    "label": "Très insatisfait",
+    "label": "Muy insatisfecho",
     "value": "1"
   }
 },
@@ -1429,7 +1428,7 @@
   "pk": 56,
   "fields": {
     "question": 25,
-    "label": "Insatisfait",
+    "label": "Insatisfecho",
     "value": "2"
   }
 },
@@ -1438,7 +1437,7 @@
   "pk": 57,
   "fields": {
     "question": 25,
-    "label": "Neutre",
+    "label": "Neutral",
     "value": "3"
   }
 },
@@ -1447,7 +1446,7 @@
   "pk": 58,
   "fields": {
     "question": 25,
-    "label": "Satisfait",
+    "label": "Satisfecho",
     "value": "4"
   }
 },
@@ -1456,7 +1455,7 @@
   "pk": 59,
   "fields": {
     "question": 25,
-    "label": "Très satisfait",
+    "label": "Muy satisfecho",
     "value": "5"
   }
 },
@@ -1465,7 +1464,7 @@
   "pk": 60,
   "fields": {
     "question": 26,
-    "label": "En dessous des normes",
+    "label": "Por debajo de los estándares",
     "value": "1"
   }
 },
@@ -1474,7 +1473,7 @@
   "pk": 61,
   "fields": {
     "question": 26,
-    "label": "Inconsistant",
+    "label": "Inconsistente",
     "value": "2"
   }
 },
@@ -1483,7 +1482,7 @@
   "pk": 62,
   "fields": {
     "question": 26,
-    "label": "Satisfait ou dépasse les normes",
+    "label": "Cumple o excede los estándares",
     "value": "3"
   }
 },
@@ -1492,7 +1491,7 @@
   "pk": 63,
   "fields": {
     "question": 27,
-    "label": "Refusé par les utilisateurs",
+    "label": "Rechazado por los usuarios",
     "value": "1"
   }
 },
@@ -1501,7 +1500,7 @@
   "pk": 64,
   "fields": {
     "question": 27,
-    "label": "Utilisation médiocre ou inefficace",
+    "label": "Uso deficiente o ineficaz",
     "value": "2"
   }
 },
@@ -1510,7 +1509,7 @@
   "pk": 65,
   "fields": {
     "question": 27,
-    "label": "Adoption limitée ou utilisation effective",
+    "label": "Uso limitado o efectivo",
     "value": "3"
   }
 },
@@ -1519,7 +1518,7 @@
   "pk": 66,
   "fields": {
     "question": 27,
-    "label": "Adoption adéquate et utilisation effective",
+    "label": "Uso adecuado y eficaz",
     "value": "4"
   }
 },
@@ -1528,7 +1527,7 @@
   "pk": 67,
   "fields": {
     "question": 27,
-    "label": "Forte adoption et utilisation effective",
+    "label": "Uso fuerte y eficaz",
     "value": "5"
   }
 },
@@ -1537,7 +1536,7 @@
   "pk": 68,
   "fields": {
     "question": 29,
-    "label": "Très négatif",
+    "label": "Muy negativo",
     "value": "1"
   }
 },
@@ -1546,7 +1545,7 @@
   "pk": 69,
   "fields": {
     "question": 29,
-    "label": "Négatif",
+    "label": "Negativo",
     "value": "2"
   }
 },
@@ -1555,7 +1554,7 @@
   "pk": 70,
   "fields": {
     "question": 29,
-    "label": "Neutre",
+    "label": "Neutral",
     "value": "3"
   }
 },
@@ -1564,7 +1563,7 @@
   "pk": 71,
   "fields": {
     "question": 29,
-    "label": "Positif",
+    "label": "Positivo",
     "value": "4"
   }
 },
@@ -1573,7 +1572,7 @@
   "pk": 72,
   "fields": {
     "question": 29,
-    "label": "Très positif",
+    "label": "Muy positivo",
     "value": "5"
   }
 },
@@ -1582,7 +1581,7 @@
   "pk": 73,
   "fields": {
     "question": 30,
-    "label": "Obstacles aux coûts extrêmement prohibitifs",
+    "label": "Barreras de costo críticamente prohibitivas",
     "value": "1"
   }
 },
@@ -1591,7 +1590,7 @@
   "pk": 74,
   "fields": {
     "question": 30,
-    "label": "Quelques barrières de coûts prohibitifs",
+    "label": "Algunas barreras de costo prohibitivas",
     "value": "2"
   }
 },
@@ -1600,7 +1599,7 @@
   "pk": 75,
   "fields": {
     "question": 30,
-    "label": "Pas ou peu d'obstacles liés aux coûts",
+    "label": "Sin barreras de costo o menores",
     "value": "3"
   }
 },
@@ -1609,7 +1608,7 @@
   "pk": 76,
   "fields": {
     "question": 31,
-    "label": "Très insatisfait",
+    "label": "Muy insatisfecho",
     "value": "1"
   }
 },
@@ -1618,7 +1617,7 @@
   "pk": 77,
   "fields": {
     "question": 31,
-    "label": "Insatisfait",
+    "label": "Insatisfecho",
     "value": "2"
   }
 },
@@ -1627,7 +1626,7 @@
   "pk": 78,
   "fields": {
     "question": 31,
-    "label": "Neutre",
+    "label": "Neutral",
     "value": "3"
   }
 },
@@ -1636,7 +1635,7 @@
   "pk": 79,
   "fields": {
     "question": 31,
-    "label": "Satisfait",
+    "label": "Satisfecho",
     "value": "4"
   }
 },
@@ -1645,7 +1644,7 @@
   "pk": 80,
   "fields": {
     "question": 31,
-    "label": "Très satisfait",
+    "label": "Muy satisfecho",
     "value": "5"
   }
 },
@@ -1654,7 +1653,7 @@
   "pk": 81,
   "fields": {
     "question": 32,
-    "label": "Durabilité limitée pendant la mise en oeuvre du programme",
+    "label": "Sostenibilidad limitada durante la implementación del programa",
     "value": "1"
   }
 },
@@ -1663,7 +1662,7 @@
   "pk": 82,
   "fields": {
     "question": 32,
-    "label": "Durabilité limitée après la fin du programme",
+    "label": "Sostenibilidad limitada después de la salida del programa",
     "value": "2"
   }
 },
@@ -1672,7 +1671,7 @@
   "pk": 83,
   "fields": {
     "question": 32,
-    "label": "Bonne durabilité plausible après la fin du programme",
+    "label": "Sostenibilidad razonable después de la salida del programa",
     "value": "3"
   }
 },
@@ -1681,7 +1680,7 @@
   "pk": 1084,
   "fields": {
     "question": 1033,
-    "label": "Non",
+    "label": "No",
     "value": "1"
   }
 },
@@ -1690,7 +1689,7 @@
   "pk": 1085,
   "fields": {
     "question": 1033,
-    "label": "Oui, comprend certains des éléments nécessaires",
+    "label": "Sí, incluye algunos de los elementos necesarios",
     "value": "2"
   }
 },
@@ -1699,7 +1698,7 @@
   "pk": 1086,
   "fields": {
     "question": 1033,
-    "label": "Oui, comprend tous les éléments nécessaires",
+    "label": "Sí, incluye todos los elementos necesarios",
     "value": "3"
   }
 },
@@ -1708,7 +1707,7 @@
   "pk": 1087,
   "fields": {
     "question": 1034,
-    "label": "Aucun",
+    "label": "Ninguno",
     "value": "1"
   }
 },
@@ -1717,7 +1716,7 @@
   "pk": 1088,
   "fields": {
     "question": 1034,
-    "label": "1-25%  ont reçu une formation",
+    "label": "1-25% han recibido capacitación",
     "value": "2"
   }
 },
@@ -1726,7 +1725,7 @@
   "pk": 1089,
   "fields": {
     "question": 1034,
-    "label": "26%-50% ont reçu une formation",
+    "label": "26%-50% han recibido capacitación",
     "value": "3"
   }
 },
@@ -1735,7 +1734,7 @@
   "pk": 1090,
   "fields": {
     "question": 1034,
-    "label": "51-75% ont reçu une formation",
+    "label": "51%-75% han recibido capacitación",
     "value": "4"
   }
 },
@@ -1744,7 +1743,7 @@
   "pk": 1091,
   "fields": {
     "question": 1034,
-    "label": "76-100% ont reçu une formation",
+    "label": "76%-100% han recibido capacitación",
     "value": "5"
   }
 },
@@ -1753,7 +1752,7 @@
   "pk": 1092,
   "fields": {
     "question": 1035,
-    "label": "Aucun des bénéficiaires n'est au courant",
+    "label": "Ninguno de los beneficiarios está al tanto",
     "value": "1"
   }
 },
@@ -1762,7 +1761,7 @@
   "pk": 1093,
   "fields": {
     "question": 1035,
-    "label": "1-25% des bénéficiaires connaissent",
+    "label": "1-25% de los beneficiarios están al tanto",
     "value": "2"
   }
 },
@@ -1771,7 +1770,7 @@
   "pk": 1094,
   "fields": {
     "question": 1035,
-    "label": "26-50% des bénéficiaires connaissent",
+    "label": "26-50% de los beneficiarios están al tanto",
     "value": "3"
   }
 },
@@ -1780,7 +1779,7 @@
   "pk": 1095,
   "fields": {
     "question": 1035,
-    "label": "51%-75% des bénéficiaires connaissent",
+    "label": "51%-75% de los beneficiarios están al tanto",
     "value": "4"
   }
 },
@@ -1789,7 +1788,7 @@
   "pk": 1096,
   "fields": {
     "question": 1035,
-    "label": "76%-100% des bénéficiaires connaissent",
+    "label": "76%-100% de los beneficiarios están al tanto",
     "value": "5"
   }
 }

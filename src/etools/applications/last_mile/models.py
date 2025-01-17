@@ -100,9 +100,15 @@ class Transfer(TimeStampedModel, models.Model):
     DISTRIBUTION = 'DISTRIBUTION'
     HANDOVER = 'HANDOVER'
     WASTAGE = 'WASTAGE'
+    DISPENSE = 'DISPENSE'
 
     SHORT = 'SHORT'
     SURPLUS = 'SURPLUS'
+
+    PHARMACY = 'PHARMACY'
+    MOBILE_OTP = 'MOBILE_OTP'
+    DISPENSING_UNIT = 'DISPENSING_UNIT'
+    OTHER = 'OTHER'
 
     STATUS = (
         (PENDING, _('Pending')),
@@ -112,16 +118,24 @@ class Transfer(TimeStampedModel, models.Model):
         (DELIVERY, _('Delivery')),
         (DISTRIBUTION, _('Distribution')),
         (HANDOVER, _('Handover')),
-        (WASTAGE, _('Wastage'))
+        (WASTAGE, _('Wastage')),
+        (DISPENSE, _('Dispense'))
     )
     TRANSFER_SUBTYPE = (
         (SHORT, _('Short')),
         (SURPLUS, _('Surplus')),
     )
 
+    DISPENSE_TYPE = (
+        (PHARMACY, _('Pharmacy')),
+        (MOBILE_OTP, _('Mobile OTP')),
+        (DISPENSING_UNIT, _('Dispensing Unit')),
+        (OTHER, _('Other')),
+    )
+
     unicef_release_order = models.CharField(max_length=30, unique=True, null=True)
     name = models.CharField(max_length=255, null=True, blank=True)
-
+    dispense_type = models.CharField(max_length=30, choices=DISPENSE_TYPE, null=True, blank=True)
     transfer_type = models.CharField(max_length=30, choices=TRANSFER_TYPE, null=True, blank=True)
     transfer_subtype = models.CharField(max_length=30, choices=TRANSFER_SUBTYPE, null=True, blank=True)
     status = models.CharField(max_length=30, choices=STATUS, default=PENDING)
@@ -306,13 +320,11 @@ class ItemManager(models.Manager):
 
 class Item(TimeStampedModel, models.Model):
     DAMAGED = 'DAMAGED'
-    STOLEN = 'STOLEN'
     EXPIRED = 'EXPIRED'
     LOST = 'LOST'
 
     WASTAGE_TYPE = (
         (DAMAGED, _('Damaged')),
-        (STOLEN, _('Stolen')),
         (EXPIRED, _('Expired')),
         (LOST, _('Lost')),
     )
