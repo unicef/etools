@@ -5,7 +5,6 @@ from django.db.models import Case, CharField, F, When
 from django.db.transaction import atomic
 
 from rest_framework import mixins, status, viewsets
-from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.parsers import FileUploadParser, FormParser, MultiPartParser
@@ -51,20 +50,19 @@ class TravelListViewSet(mixins.ListModelMixin,
 
     @atomic
     def create(self, request, *args, **kwargs):
-        raise ValidationError('Creation is not allowed')
-        # if 'transition_name' in kwargs:
-        #     transition_name = kwargs['transition_name']
-        #     request.data['transition_name'] = self._transition_name_mapping.get(transition_name, transition_name)
-        #
-        # serializer = TravelDetailsSerializer(data=request.data, context=self.get_serializer_context())
-        # serializer.is_valid(raise_exception=True)
-        # self.perform_create(serializer)
-        # headers = self.get_success_headers(serializer.data)
-        # return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        if 'transition_name' in kwargs:
+            transition_name = kwargs['transition_name']
+            request.data['transition_name'] = self._transition_name_mapping.get(transition_name, transition_name)
 
-    # def perform_create(self, serializer):
-    #     super().perform_create(serializer)
-    #     run_transition(serializer)
+        serializer = TravelDetailsSerializer(data=request.data, context=self.get_serializer_context())
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    def perform_create(self, serializer):
+        super().perform_create(serializer)
+        run_transition(serializer)
 
 
 class TravelDetailsViewSet(mixins.RetrieveModelMixin,

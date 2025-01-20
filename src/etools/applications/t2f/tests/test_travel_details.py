@@ -1,6 +1,5 @@
 import json
 from io import StringIO
-from unittest import skip
 
 from django.urls import reverse
 
@@ -222,7 +221,6 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
         response_json = json.loads(response.rendered_content)
         self.assertIn('id', response_json)
 
-    @skip('Creation Removed')
     def test_airlines(self):
         dsaregion = DSARegion.objects.first()
         airlines_1 = PublicsAirlineCompanyFactory()
@@ -253,7 +251,6 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
         response_json = json.loads(response.rendered_content)
         self.assertEqual(sorted(response_json['itinerary'][0]['airlines']), sorted([airlines_1.id, airlines_3.id]))
 
-    @skip('Creation Removed')
     def test_activity_location(self):
         location = LocationFactory()
         location_2 = LocationFactory()
@@ -264,6 +261,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
                 'is_primary_traveler': True,
                 'locations': [location.id, location_2.id],
                 'date': self.travel.start_date,
+                'travel_type': TravelType.SPOT_CHECK
             }],
             'traveler': self.traveler.id,
         }
@@ -276,6 +274,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
             'locations': [location_3.id],
             'is_primary_traveler': True,
             'date': self.travel.start_date,
+            'travel_type': TravelType.SPOT_CHECK
         })
         response = self.forced_auth_req('patch', reverse('t2f:travels:details:index',
                                                          kwargs={'travel_pk': response_json['id']}),
@@ -287,7 +286,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
 
     def test_activity_patch_no_date(self):
         data = {
-            'activities': [{'is_primary_traveler': True}],
+            'activities': [{'is_primary_traveler': True, 'travel_type': TravelType.SPOT_CHECK}],
             'traveler': self.traveler.pk,
         }
         response = self.forced_auth_req(
@@ -312,7 +311,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
                 'locations': [location.id, location_2.id],
                 'partner': PartnerFactory(organization=OrganizationFactory(
                     organization_type=OrganizationType.GOVERNMENT)).id,
-                'travel_type': TravelType.PROGRAMME_MONITORING,
+                'travel_type': TravelType.SPOT_CHECK,
                 'date': self.travel.start_date,
             }],
             'traveler': self.traveler.id
@@ -321,8 +320,9 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
                                         user=self.traveler)
 
         self.assertEqual(response.status_code, 400)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(response_json, {'activities': [{'result': ['This field is required.']}]})
 
-    @skip('Creation Removed')
     def test_itinerary_dates(self):
         dsaregion = DSARegion.objects.first()
         airlines = PublicsAirlineCompanyFactory()
@@ -350,7 +350,6 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json, {'itinerary': ['Itinerary items have to be ordered by date']})
 
-    @skip('Creation Removed')
     def test_itinerary_submit_fail(self):
         data = {'itinerary': [],
                 'activities': []}
@@ -365,7 +364,6 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json, {'non_field_errors': ['Travel must have at least two itinerary item']})
 
-    @skip('Creation Removed')
     def test_itinerary_origin_destination(self):
         dsaregion = DSARegion.objects.first()
         airlines = PublicsAirlineCompanyFactory()
@@ -394,7 +392,6 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json, {'itinerary': ['Origin should match with the previous destination']})
 
-    @skip('Creation Removed')
     def test_itinerary_dsa_regions(self):
         dsaregion = DSARegion.objects.first()
         airlines = PublicsAirlineCompanyFactory()
@@ -460,10 +457,9 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
                                         data=data, user=self.unicef_staff)
         self.assertEqual(response.status_code, 200)
 
-    @skip('Creation Removed')
     def test_activity_locations(self):
         data = {'itinerary': [],
-                'activities': [{'date': self.travel.start_date}],
+                'activities': [{'date': self.travel.start_date, 'travel_type': TravelType.SPOT_CHECK}],
                 'traveler': self.traveler.id}
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data,
                                         user=self.unicef_staff, expected_status_code=None)
@@ -471,7 +467,6 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json, {'activities': [{'primary_traveler': ['This field is required.']}]})
 
-    @skip('Creation Removed')
     def test_reversed_itinerary_order(self):
         dsa_1 = DSARegion.objects.first()
         dsa_2 = PublicsDSARegionFactory()
@@ -493,6 +488,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
                     'is_primary_traveler': True,
                     'locations': [],
                     'date': self.travel.start_date,
+                    'travel_type': TravelType.SPOT_CHECK
                 }],
                 'action_points': [],
                 'ta_required': True,
@@ -507,7 +503,6 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
         extracted_origin_destination = [(i['origin'], i['destination']) for i in response_json['itinerary']]
         self.assertEqual(extracted_origin_destination, itinerary_origin_destination_expectation)
 
-    @skip('Creation Removed')
     def test_incorrect_itinerary_order(self):
         dsa_1 = DSARegion.objects.first()
         dsa_2 = PublicsDSARegionFactory()
@@ -573,7 +568,9 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, 400)
         response_json = json.loads(response.rendered_content)
-        self.assertEqual(response_json, ['Creation is not allowed'])
+        self.assertEqual(response_json, {
+            'activities': [{'date': ['This field is required.']}]
+        })
 
     def test_ta_not_required(self):
         data = {'itinerary': [],
@@ -581,6 +578,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
                     'is_primary_traveler': True,
                     'locations': [],
                     'date': self.travel.start_date,
+                    'travel_type': TravelType.SPOT_CHECK
                 }],
                 'action_points': [],
                 'ta_required': False,
@@ -588,10 +586,10 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
                 'traveler': self.traveler.id,
                 'mode_of_travel': []}
 
-        # Check only if 400
+        # Check only if 200
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'),
                                         data=data, user=self.unicef_staff)
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, 201)
 
     def test_not_primary_traveler(self):
         primary_traveler = UserFactory()
@@ -601,6 +599,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
                     'is_primary_traveler': False,
                     'locations': [],
                     'date': self.travel.start_date,
+                    'travel_type': TravelType.SPOT_CHECK
                 }],
                 'action_points': [],
                 'ta_required': False,
@@ -611,7 +610,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'),
                                         data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
-        self.assertEqual(response_json, ['Creation is not allowed'])
+        self.assertEqual(response_json, {'activities': [{'primary_traveler': ['This field is required.']}]})
 
         data = {'itinerary': [],
                 'activities': [{
@@ -619,6 +618,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
                     'primary_traveler': primary_traveler.id,
                     'locations': [],
                     'date': self.travel.start_date,
+                    'travel_type': TravelType.SPOT_CHECK
                 }],
                 'action_points': [],
                 'ta_required': False,
@@ -628,9 +628,8 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
 
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'),
                                         data=data, user=self.unicef_staff)
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, 201)
 
-    @skip('Creation Removed')
     def test_ghost_data_existence(self):
         dsa_region = DSARegion.objects.first()
         airline = PublicsAirlineCompanyFactory()
@@ -658,7 +657,6 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json['itinerary'][0]['airlines'], [airline.id])
 
-    @skip('Creation Removed')
     def test_save_with_ghost_data(self):
         dsa_region = DSARegion.objects.first()
         airline = PublicsAirlineCompanyFactory()
