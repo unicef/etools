@@ -1,5 +1,6 @@
 
 import json
+from unittest import skip
 
 from django.urls import reverse
 
@@ -9,6 +10,7 @@ from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.users.tests.factories import UserFactory
 
 
+@skip('Creation Removed')
 class TestReferenceNumber(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):

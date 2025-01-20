@@ -3,6 +3,7 @@ from copy import copy
 
 from django.contrib.gis.db.models import Collect
 from django.core.exceptions import ValidationError as DjangoValidationError
+from django.db import IntegrityError
 from django.utils.translation import gettext as _
 
 from rest_framework import serializers
@@ -127,6 +128,49 @@ class QuestionSerializer(QuestionLightSerializer):
 
         # cleanup, remove unused options
         instance.options.exclude(pk__in=updated_pks).delete()
+
+
+class BulkOrderUpdateListSerializer(serializers.ListSerializer):
+
+    def update(self, instances, validated_data):
+        result = []
+        instance_hash = {index: instance for index, instance in enumerate(instances)}
+        for index, attrs in enumerate(validated_data):
+            if index not in instance_hash:
+                raise ValidationError(f'Object with id {self.initial_data[index]["id"]} not found.')
+            result.append(self.child.update(instance_hash[index], attrs))
+
+        writable_fields = [
+            x for x in self.child.Meta.fields
+            if x not in self.child.Meta.read_only_fields
+        ]
+
+        try:
+            self.child.Meta.model.objects.bulk_update(result, writable_fields)
+        except IntegrityError as e:
+            raise ValidationError(e)
+
+        return result
+
+    def to_representation(self, instances):
+        rep_list = []
+        for instance in instances:
+            rep_list.append(
+                dict(
+                    id=instance.id,
+                    order=instance.order,
+                )
+            )
+        return rep_list
+
+
+class UpdateQuestionOrderSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Question
+        fields = ('id', 'order')
+        read_only_fields = ('id',)
+        list_serializer_class = BulkOrderUpdateListSerializer
 
 
 class LocationSiteLightSerializer(serializers.ModelSerializer):

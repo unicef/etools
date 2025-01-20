@@ -1,5 +1,6 @@
 import json
 import logging
+from unittest import skip
 
 from django.db import connection
 from django.urls import NoReverseMatch, reverse
@@ -253,6 +254,7 @@ class TravelList(URLAssertionMixin, BaseTenantTestCase):
         response_json = json.loads(response.rendered_content)
         self.assertEqual(len(response_json['data']), 1)
 
+    @skip('Creation Removed')
     def test_travel_creation(self):
         dsaregion = DSARegion.objects.first()
         currency = PublicsCurrencyFactory()
