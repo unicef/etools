@@ -1807,13 +1807,12 @@ class GDDRisk(TimeStampedModel):
     RISK_TYPE_STRATEGIC = "strategic"
     RISK_TYPE_SECURITY = "security"
     RISK_TYPE_CHOICES = (
-        (RISK_TYPE_ENVIRONMENTAL, _("Social & Environmental")),
+        (RISK_TYPE_ORGANIZATIONAL, _("Safeguarding")),
+        (RISK_TYPE_ENVIRONMENTAL, _("Social and Environmental")),
         (RISK_TYPE_FINANCIAL, _("Financial")),
         (RISK_TYPE_OPERATIONAL, _("Operational")),
-        (RISK_TYPE_ORGANIZATIONAL, _("Organizational")),
         (RISK_TYPE_POLITICAL, _("Political")),
-        (RISK_TYPE_STRATEGIC, _("Strategic")),
-        (RISK_TYPE_SECURITY, _("Safety & security")),
+        (RISK_TYPE_SECURITY, _("Safety and security")),
     )
 
     gdd = models.ForeignKey(
