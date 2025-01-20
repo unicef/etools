@@ -261,6 +261,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
                 'is_primary_traveler': True,
                 'locations': [location.id, location_2.id],
                 'date': self.travel.start_date,
+                'travel_type': TravelType.SPOT_CHECK
             }],
             'traveler': self.traveler.id,
         }
@@ -273,6 +274,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
             'locations': [location_3.id],
             'is_primary_traveler': True,
             'date': self.travel.start_date,
+            'travel_type': TravelType.SPOT_CHECK
         })
         response = self.forced_auth_req('patch', reverse('t2f:travels:details:index',
                                                          kwargs={'travel_pk': response_json['id']}),
@@ -284,7 +286,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
 
     def test_activity_patch_no_date(self):
         data = {
-            'activities': [{'is_primary_traveler': True}],
+            'activities': [{'is_primary_traveler': True, 'travel_type': TravelType.SPOT_CHECK}],
             'traveler': self.traveler.pk,
         }
         response = self.forced_auth_req(
@@ -309,7 +311,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
                 'locations': [location.id, location_2.id],
                 'partner': PartnerFactory(organization=OrganizationFactory(
                     organization_type=OrganizationType.GOVERNMENT)).id,
-                'travel_type': TravelType.PROGRAMME_MONITORING,
+                'travel_type': TravelType.SPOT_CHECK,
                 'date': self.travel.start_date,
             }],
             'traveler': self.traveler.id
@@ -457,7 +459,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
 
     def test_activity_locations(self):
         data = {'itinerary': [],
-                'activities': [{'date': self.travel.start_date}],
+                'activities': [{'date': self.travel.start_date, 'travel_type': TravelType.SPOT_CHECK}],
                 'traveler': self.traveler.id}
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data,
                                         user=self.unicef_staff, expected_status_code=None)
@@ -486,6 +488,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
                     'is_primary_traveler': True,
                     'locations': [],
                     'date': self.travel.start_date,
+                    'travel_type': TravelType.SPOT_CHECK
                 }],
                 'action_points': [],
                 'ta_required': True,
@@ -575,6 +578,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
                     'is_primary_traveler': True,
                     'locations': [],
                     'date': self.travel.start_date,
+                    'travel_type': TravelType.SPOT_CHECK
                 }],
                 'action_points': [],
                 'ta_required': False,
@@ -595,6 +599,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
                     'is_primary_traveler': False,
                     'locations': [],
                     'date': self.travel.start_date,
+                    'travel_type': TravelType.SPOT_CHECK
                 }],
                 'action_points': [],
                 'ta_required': False,
@@ -613,6 +618,7 @@ class TravelDetails(URLAssertionMixin, BaseTenantTestCase):
                     'primary_traveler': primary_traveler.id,
                     'locations': [],
                     'date': self.travel.start_date,
+                    'travel_type': TravelType.SPOT_CHECK
                 }],
                 'action_points': [],
                 'ta_required': False,
