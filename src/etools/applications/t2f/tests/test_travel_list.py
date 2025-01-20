@@ -272,20 +272,20 @@ class TravelList(URLAssertionMixin, BaseTenantTestCase):
                                'origin': 'a',
                                'destination': 'b',
                                'dsa_region': dsaregion.id,
-                               'departure_date': '2016-12-15T15:02:13+01:00',
-                               'arrival_date': '2016-12-16T15:02:13+01:00',
+                               'departure_date': '2016-12-15',
+                               'arrival_date': '2016-12-16',
                                'mode_of_travel': ModeOfTravel.BOAT}],
                 'activities': [{'is_primary_traveler': True,
                                 'locations': [location.id],
                                 'travel_type': TravelType.ADVOCACY,
-                                'date': '2016-12-15T15:02:13+01:00'}],
+                                'date': '2016-12-15'}],
                 'ta_required': True,
                 'international_travel': False,
                 'mode_of_travel': [ModeOfTravel.BOAT],
                 'traveler': self.traveler.id,
                 'supervisor': self.unicef_staff.id,
-                'start_date': '2016-12-15T15:02:13+01:00',
-                'end_date': '2016-12-16T15:02:13+01:00',
+                'start_date': '2016-12-15',
+                'end_date': '2016-12-16',
                 'estimated_travel_cost': '123',
                 'currency': currency.id,
                 'purpose': 'Purpose',
@@ -294,4 +294,48 @@ class TravelList(URLAssertionMixin, BaseTenantTestCase):
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'),
                                         data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(len(response_json['itinerary']), 1)
+
+    def test_travel_creation_pv_activities_bad_request(self):
+        dsaregion = DSARegion.objects.first()
+        currency = PublicsCurrencyFactory()
+        location = LocationFactory()
+
+        data = {'0': {},
+                '1': {'date': '2016-12-16',
+                      'breakfast': False,
+                      'lunch': False,
+                      'dinner': False,
+                      'no_dsa': False},
+                'itinerary': [{'airlines': [],
+                               'overnight_travel': False,
+                               'origin': 'a',
+                               'destination': 'b',
+                               'dsa_region': dsaregion.id,
+                               'departure_date': '2016-12-15',
+                               'arrival_date': '2016-12-16',
+                               'mode_of_travel': ModeOfTravel.BOAT}],
+                'activities': [{'is_primary_traveler': True,
+                                'locations': [location.id],
+                                'travel_type': TravelType.PROGRAMME_MONITORING,
+                                'date': '2016-12-15'}],
+                'ta_required': True,
+                'international_travel': False,
+                'mode_of_travel': [ModeOfTravel.BOAT],
+                'traveler': self.traveler.id,
+                'supervisor': self.unicef_staff.id,
+                'start_date': '2016-12-15',
+                'end_date': '2016-12-16',
+                'estimated_travel_cost': '123',
+                'currency': currency.id,
+                'purpose': 'Purpose',
+                'additional_note': 'Notes'}
+
+        response = self.forced_auth_req('post', reverse('t2f:travels:list:index'),
+                                        data=data, user=self.unicef_staff)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn(
+            "The capturing of Programmatic Visits in the Trip Management Module has been discontinued. "
+            "Please use the Field Monitoring Module instead.", response.data['activities'][0]['non_field_errors'][0])
