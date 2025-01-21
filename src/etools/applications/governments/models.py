@@ -39,7 +39,6 @@ from etools.applications.partners.models import (
     _get_partner_base_path,
     Agreement,
     FileType,
-    get_default_cash_transfer_modalities,
     PartnerOrganization,
 )
 from etools.applications.reports.models import CountryProgramme, Indicator, Office, Result, Section
@@ -91,6 +90,10 @@ def get_gdd_amendment_file_path(instance, filename):
         str(instance.id),
         filename
     ])
+
+
+def get_default_cash_transfer_modalities():
+    return [GDD.CASH_TRANSFER_DIRECT]
 
 
 class GovernmentEWP(TimeStampedModel):
