@@ -193,12 +193,14 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,risks,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
 ,risks,Partner User,partner_court,Draft,Edit,TRUE
 ,risks,*,,*,Required,False
+,lead_section,Unicef Focal Point,,Draft,Edit,TRUE
+,lead_section,Unicef Focal Point,,Review,Edit,TRUE
+,lead_section,Unicef Focal Point,,pending_approval,Edit,TRUE
+,lead_section,Unicef Focal Point,user_adds_amendment,*,Edit,TRUE
 ,sections,Unicef Focal Point,,Draft,Edit,TRUE
 ,sections,Unicef Focal Point,,Review,Edit,TRUE
 ,sections,Unicef Focal Point,,pending_approval,Edit,TRUE
 ,sections,Unicef Focal Point,user_adds_amendment,*,Edit,TRUE
-,sections_present,UNICEF User,,*,Edit,TRUE
-,sections_present,*,unicef_not_accepted,Draft,Required,FALSE
 ,signed_by_partner_date,*,,Draft,View,FALSE
 ,signed_by_partner_date,Partner User,,pending_approval,Edit,TRUE
 ,signed_by_partner_date,*,,Draft,Required,FALSE

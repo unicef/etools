@@ -101,7 +101,7 @@ class BaseGDDListSerializer(serializers.ModelSerializer):
     total_unicef_budget = serializers.DecimalField(read_only=True, max_digits=20, decimal_places=2)
     total_budget = serializers.DecimalField(read_only=True, max_digits=20, decimal_places=2)
     budget_currency = serializers.CharField(source='planned_budget.currency', read_only=True)
-
+    lead_section_name = serializers.CharField(source='lead_section.name', read_only=True)
     section_names = serializers.SerializerMethodField()
     flagged_sections = serializers.SerializerMethodField()
     cp_outputs = serializers.SerializerMethodField()
@@ -162,6 +162,8 @@ class BaseGDDListSerializer(serializers.ModelSerializer):
             'frs_total_intervention_amt',
             'frs_total_outstanding_amt',
             'id',
+            'lead_section',
+            'lead_section_name',
             'metadata',
             'number',
             'offices',
@@ -270,6 +272,7 @@ class GDDDetailSerializer(
     flagged_sections = serializers.SerializerMethodField(read_only=True)
     frs_details = FRsSerializer(source='frs', read_only=True)
     grants = serializers.SerializerMethodField()
+    lead_section_name = serializers.CharField(source='lead_section.name', read_only=True)
     location_names = serializers.SerializerMethodField()
     location_p_codes = serializers.SerializerMethodField()
     locations = serializers.SerializerMethodField()
@@ -601,6 +604,8 @@ class GDDDetailSerializer(
             "in_amendment",
             "in_amendment_date",
             "ip_program_contribution",
+            "lead_section",
+            "lead_section_name",
             "location_names",
             "location_p_codes",
             "locations",
