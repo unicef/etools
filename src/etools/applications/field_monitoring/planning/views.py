@@ -155,7 +155,7 @@ class MonitoringActivitiesViewSet(
         .annotate(checklists_count=Count('checklists'))\
         .select_related('tpm_partner', 'tpm_partner__organization',
                         'visit_lead', 'location', 'location_site')\
-        .prefetch_related('team_members', 'partners', 'partners__organization',
+        .prefetch_related('team_members', 'partners', 'partners__organization', 'report_reviewers',
                           'interventions', 'cp_outputs')\
         .order_by("-id")
     serializer_class = MonitoringActivitySerializer
@@ -220,6 +220,7 @@ class MonitoringActivitiesViewSet(
     def update(self, request, *args, **kwargs):
         related_fields = []
         nested_related_names = []
+        kwargs.update({'related_non_serialized_fields': ['report_reviewers', 'team_members', 'offices']})
         instance, old_instance, _serializer = self.my_update(
             request,
             related_fields,

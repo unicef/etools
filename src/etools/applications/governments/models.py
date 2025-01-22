@@ -35,13 +35,7 @@ from etools.applications.governments.validation import gdds as gdd_validation
 from etools.applications.locations.models import Location
 from etools.applications.organizations.models import OrganizationType
 from etools.applications.partners.amendment_utils import calculate_difference, copy_instance, merge_instance
-from etools.applications.partners.models import (
-    _get_partner_base_path,
-    Agreement,
-    FileType,
-    get_default_cash_transfer_modalities,
-    PartnerOrganization,
-)
+from etools.applications.partners.models import _get_partner_base_path, Agreement, FileType, PartnerOrganization
 from etools.applications.reports.models import CountryProgramme, Indicator, Office, Result, Section
 from etools.applications.t2f.models import Travel, TravelActivity, TravelType
 from etools.applications.users.models import User
@@ -91,6 +85,10 @@ def get_gdd_amendment_file_path(instance, filename):
         str(instance.id),
         filename
     ])
+
+
+def get_default_cash_transfer_modalities():
+    return [GDD.CASH_TRANSFER_DIRECT]
 
 
 class GovernmentEWP(TimeStampedModel):
@@ -1807,13 +1805,12 @@ class GDDRisk(TimeStampedModel):
     RISK_TYPE_STRATEGIC = "strategic"
     RISK_TYPE_SECURITY = "security"
     RISK_TYPE_CHOICES = (
-        (RISK_TYPE_ENVIRONMENTAL, _("Social & Environmental")),
+        (RISK_TYPE_ORGANIZATIONAL, _("Safeguarding")),
+        (RISK_TYPE_ENVIRONMENTAL, _("Social and Environmental")),
         (RISK_TYPE_FINANCIAL, _("Financial")),
         (RISK_TYPE_OPERATIONAL, _("Operational")),
-        (RISK_TYPE_ORGANIZATIONAL, _("Organizational")),
         (RISK_TYPE_POLITICAL, _("Political")),
-        (RISK_TYPE_STRATEGIC, _("Strategic")),
-        (RISK_TYPE_SECURITY, _("Safety & security")),
+        (RISK_TYPE_SECURITY, _("Safety and security")),
     )
 
     gdd = models.ForeignKey(
