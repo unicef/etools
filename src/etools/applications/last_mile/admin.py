@@ -4,7 +4,7 @@ from django.contrib import admin
 from django.contrib.gis import forms
 from django.contrib.gis.geos import Point
 from django.db import transaction
-from django.db.models import F, Value, CharField
+from django.db.models import CharField, F, Value
 from django.db.models.functions import Coalesce
 from django.urls import reverse
 from django.utils.html import format_html
@@ -171,8 +171,7 @@ class TransferAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
 
     def display_name(self, obj):
         return obj.name or obj.unicef_release_order or obj.id
-    display_name.admin_order_field = 'display_name_annotation'  
-
+    display_name.admin_order_field = 'display_name_annotation'
 
 
 class PartnerMaterialInline(admin.TabularInline):
@@ -213,7 +212,6 @@ class ItemAdmin(XLSXImportMixin, admin.ModelAdmin):
             form.base_fields['uom'].required = False
         if 'conversion_factor' in form.base_fields:
             form.base_fields['conversion_factor'].required = False
-        
         return form
 
     def destination_point_name(self, obj):
