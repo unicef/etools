@@ -35,12 +35,7 @@ from etools.applications.governments.validation import gdds as gdd_validation
 from etools.applications.locations.models import Location
 from etools.applications.organizations.models import OrganizationType
 from etools.applications.partners.amendment_utils import calculate_difference, copy_instance, merge_instance
-from etools.applications.partners.models import (
-    _get_partner_base_path,
-    Agreement,
-    FileType,
-    PartnerOrganization,
-)
+from etools.applications.partners.models import _get_partner_base_path, Agreement, FileType, PartnerOrganization
 from etools.applications.reports.models import CountryProgramme, Indicator, Office, Result, Section
 from etools.applications.t2f.models import Travel, TravelActivity, TravelType
 from etools.applications.users.models import User
