@@ -38,6 +38,11 @@ class GDDExportSerializer(serializers.ModelSerializer):
         label=_("Country Programmes"),
     )
     offices = serializers.SerializerMethodField(label=_("UNICEF Office"))
+    lead_section = serializers.CharField(
+        label=_("Lead Section"),
+        source='lead_section.name',
+        allow_null=True,
+    )
     sectors = serializers.SerializerMethodField(label=_("Sections"))
     locations = serializers.SerializerMethodField(label=_("Locations"))
 

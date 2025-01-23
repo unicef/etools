@@ -304,6 +304,12 @@ def review_was_accepted(i):
     return r.overall_approval if r else False
 
 
+def lead_section_valid(i):
+    if i.lead_section in i.sections.all():
+        return False
+    return True
+
+
 class GDDValid(CompleteValidation):
     VALIDATION_CLASS = 'governments.GDD'
     # validations that will be checked on every object... these functions only take the new instance
@@ -315,6 +321,7 @@ class GDDValid(CompleteValidation):
         rigid_in_amendment_flag,
         locations_valid,
         cp_structure_valid,
+        lead_section_valid
     ]
 
     VALID_ERRORS = {
@@ -327,6 +334,7 @@ class GDDValid(CompleteValidation):
         'rigid_in_amendment_flag': _('Amendment Flag cannot be turned on without adding an amendment'),
         'locations_valid': _("The locations selected on the PD/SPD are not a subset of all locations selected "
                              "for this PD/SPD's indicators"),
+        'lead_section_valid': _('The Lead Section is also selected in Contributing Sections.')
     }
 
     PERMISSIONS_CLASS = GDDPermissions
