@@ -1804,12 +1804,12 @@ class GDDRisk(TimeStampedModel):
     RISK_TYPE_ENVIRONMENTAL = "environment"
     RISK_TYPE_FINANCIAL = "financial"
     RISK_TYPE_OPERATIONAL = "operational"
-    RISK_TYPE_ORGANIZATIONAL = "organizational"
+    RISK_TYPE_SAFEGUARDING = "safeguarding"
     RISK_TYPE_POLITICAL = "political"
     RISK_TYPE_STRATEGIC = "strategic"
     RISK_TYPE_SECURITY = "security"
     RISK_TYPE_CHOICES = (
-        (RISK_TYPE_ORGANIZATIONAL, _("Safeguarding")),
+        (RISK_TYPE_SAFEGUARDING, _("Safeguarding")),
         (RISK_TYPE_ENVIRONMENTAL, _("Social and Environmental")),
         (RISK_TYPE_FINANCIAL, _("Financial")),
         (RISK_TYPE_OPERATIONAL, _("Operational")),
