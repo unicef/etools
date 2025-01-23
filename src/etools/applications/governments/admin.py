@@ -277,12 +277,14 @@ class GDDAdmin(
         'partner__organization__name'
     )
     readonly_fields = (
+        'lead_section',
         'total_budget',
         'attachments_link',
         'prc_review_document',
         'signed_pd_document',
     )
     filter_horizontal = (
+        'lead_section',
         'sections',
         'unicef_focal_points',
         'partner_focal_points',
@@ -303,6 +305,7 @@ class GDDAdmin(
                     'country_programme',
                     'e_workplans',
                     'submission_date',
+                    'lead_section',
                     'sections',
                     'flat_locations',
                     'metadata',
@@ -364,9 +367,12 @@ class GDDAdmin(
     created_date.admin_order_field = '-created'
 
     def section_names(self, obj):
-        return ' '.join([section.name for section in obj.sections.all()])
+        c_sections = ' '.join([section.name for section in obj.sections.all()])
+        if obj.lead_section:
+            return [obj.lead_section.name].extend(c_sections)
+        return c_sections
 
-    section_names.short_description = "Sections"
+    section_names.short_description = "Contributing Sections"
 
     def has_module_permission(self, request):
         return request.user.is_superuser or request.user.groups.filter(name='Country Office Administrator').exists()

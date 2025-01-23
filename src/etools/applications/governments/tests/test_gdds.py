@@ -31,7 +31,7 @@ from etools.applications.organizations.models import OrganizationType
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.reports.models import ResultType
-from etools.applications.reports.tests.factories import CountryProgrammeFactory
+from etools.applications.reports.tests.factories import CountryProgrammeFactory, SectionFactory
 from etools.applications.users.tests.factories import CountryFactory, GroupFactory, RealmFactory, UserFactory
 
 
@@ -660,6 +660,57 @@ class TestCreate(BaseGDDTestCase):
                 ["This field is limited to {0} or less characters.".format(max_length)],
             )
 
+    def test_post_sections(self):
+        lead_section = SectionFactory()
+        sections = [SectionFactory().pk, SectionFactory().pk]
+
+        data = {
+            "title": "PMP GDD",
+            "partner": self.partner.pk,
+            "reference_number_year": timezone.now().year,
+            "budget_owner": self.unicef_user.pk,
+            "start": timezone.now().date(),
+            "end": timezone.now().date() + datetime.timedelta(days=300),
+            "lead_section": lead_section.pk,
+            "sections": sections
+        }
+        response = self.forced_auth_req(
+            "post",
+            reverse('governments:gdd-list'),
+            user=self.unicef_user,
+            data=data
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
+        data = response.data
+        self.assertEqual(data['lead_section'], lead_section.pk)
+        self.assertEqual(data['lead_section_name'], lead_section.name)
+        i = GDD.objects.get(pk=response.data.get("id"))
+        self.assertEqual(i.lead_section, lead_section)
+        self.assertEqual(list(i.sections.all().values_list('id', flat=True)), sections)
+
+    def test_post_sections_bad_request(self):
+        lead_section = SectionFactory()
+        sections = [lead_section.pk, SectionFactory().pk, SectionFactory().pk]
+
+        data = {
+            "title": "PMP GDD",
+            "partner": self.partner.pk,
+            "reference_number_year": timezone.now().year,
+            "budget_owner": self.unicef_user.pk,
+            "start": timezone.now().date(),
+            "end": timezone.now().date() + datetime.timedelta(days=300),
+            "lead_section": lead_section.pk,
+            "sections": sections
+        }
+        response = self.forced_auth_req(
+            "post",
+            reverse('governments:gdd-list'),
+            user=self.unicef_user,
+            data=data
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
+        self.assertIn('The Lead Section is also selected in Contributing Sections.', response.data)
+
 
 class TestUpdate(BaseGDDTestCase):
     def setUp(self):
@@ -684,6 +735,70 @@ class TestUpdate(BaseGDDTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         budget.refresh_from_db()
         self.assertEqual(budget.currency, "PEN")
+
+    def test_patch_lead_section_sections(self):
+        gdd = GDDFactory()
+        gdd.unicef_focal_points.add(self.unicef_user)
+        lead_section = SectionFactory()
+        sections = [SectionFactory().pk, SectionFactory().pk]
+
+        response = self.forced_auth_req(
+            "patch",
+            reverse('governments:gdd-detail', args=[gdd.pk]),
+            user=self.unicef_user,
+            data={'lead_section': lead_section.pk, 'sections': sections}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        gdd.refresh_from_db()
+        self.assertEqual(gdd.lead_section, lead_section)
+        self.assertEqual(list(gdd.sections.all().values_list('id', flat=True)), sections)
+
+    def test_patch_sections_bad_request(self):
+        gdd = GDDFactory()
+        gdd.unicef_focal_points.add(self.unicef_user)
+        lead_section = SectionFactory()
+        sections = [lead_section, SectionFactory(), SectionFactory()]
+
+        response = self.forced_auth_req(
+            "patch",
+            reverse('governments:gdd-detail', args=[gdd.pk]),
+            user=self.unicef_user,
+            data={'lead_section': lead_section.pk, 'sections': [s.pk for s in sections]}
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('The Lead Section is also selected in Contributing Sections.', response.data)
+        gdd.refresh_from_db()
+        self.assertEqual(gdd.lead_section, None)
+        self.assertEqual(gdd.sections.count(), 0)
+
+        gdd.lead_section = lead_section
+        gdd.save(update_fields=['lead_section'])
+        response = self.forced_auth_req(
+            "patch",
+            reverse('governments:gdd-detail', args=[gdd.pk]),
+            user=self.unicef_user,
+            data={'sections': [s.pk for s in sections]}
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('The Lead Section is also selected in Contributing Sections.', response.data)
+        gdd.refresh_from_db()
+        self.assertEqual(gdd.lead_section, lead_section)
+        self.assertEqual(gdd.sections.count(), 0)
+
+        section = SectionFactory()
+        gdd.sections.add(section)
+        gdd.sections.add(SectionFactory())
+        response = self.forced_auth_req(
+            "patch",
+            reverse('governments:gdd-detail', args=[gdd.pk]),
+            user=self.unicef_user,
+            data={'lead_section': section.pk}
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('The Lead Section is also selected in Contributing Sections.', response.data)
+        gdd.refresh_from_db()
+        self.assertEqual(gdd.lead_section, lead_section)
+        self.assertEqual(gdd.sections.count(), 2)
 
     @skip
     def test_patch_frs_prc_secretary(self):

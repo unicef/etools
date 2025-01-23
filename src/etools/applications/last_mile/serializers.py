@@ -401,6 +401,7 @@ class TransferCheckinSerializer(TransferBaseSerializer):
                     **validated_data
                 )
                 short_transfer.save()
+                short_transfer.refresh_from_db()
                 self.checkin_newtransfer_items(orig_items_dict, short_items, short_transfer)
                 notify_wastage_transfer.delay(connection.schema_name, short_transfer.pk, attachment_url, action='short_checkin')
 
@@ -416,6 +417,7 @@ class TransferCheckinSerializer(TransferBaseSerializer):
                     **validated_data
                 )
                 surplus_transfer.save()
+                surplus_transfer.refresh_from_db()
                 self.checkin_newtransfer_items(orig_items_dict, surplus_items, surplus_transfer)
                 notify_wastage_transfer.delay(connection.schema_name, surplus_transfer.pk, attachment_url, action='surplus_checkin')
 
@@ -543,6 +545,7 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
             self.instance.status = models.Transfer.COMPLETED
 
         self.instance.save()
+        self.instance.refresh_from_db()
         self.checkout_newtransfer_items(checkout_items)
         if self.instance.transfer_type == models.Transfer.WASTAGE:
             proof_file_pk = self.initial_data.get('proof_file')
