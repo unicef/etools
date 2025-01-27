@@ -8,6 +8,7 @@ from django.utils import timezone
 
 from rest_framework import status
 from rest_framework.test import APIClient
+from unicef_locations.tests.factories import LocationFactory
 from waffle.utils import get_cache
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
@@ -799,6 +800,31 @@ class TestUpdate(BaseGDDTestCase):
         gdd.refresh_from_db()
         self.assertEqual(gdd.lead_section, lead_section)
         self.assertEqual(gdd.sections.count(), 2)
+
+    def test_flat_locations_update_signal(self):
+        gdd = GDDFactory()
+        gdd.unicef_focal_points.add(self.unicef_user)
+        self.assertEqual(gdd.flat_locations.count(), 0)
+
+        activity = GDDActivityFactory(key_intervention__result_link__gdd=gdd)
+        self.assertEqual(gdd.flat_locations.count(), 1)
+        self.assertEqual(list(gdd.flat_locations.all()), list(activity.locations.all()))
+
+        a_loc = LocationFactory()
+        activity.locations.add(a_loc)
+        self.assertEqual(gdd.flat_locations.count(), 2)
+        self.assertEqual(list(gdd.flat_locations.all()), list(activity.locations.all()))
+
+        activity.locations.remove(a_loc)
+        new_loc = LocationFactory()
+        activity.locations.add(new_loc)
+        self.assertEqual(activity.locations.count(), 2)
+        self.assertEqual(gdd.flat_locations.count(), 2)
+        self.assertEqual(list(gdd.flat_locations.all()), list(activity.locations.all()))
+
+        activity.locations.clear()
+        self.assertEqual(activity.locations.count(), 0)
+        self.assertEqual(gdd.flat_locations.count(), 0)
 
     @skip
     def test_patch_frs_prc_secretary(self):

@@ -85,11 +85,9 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.9.5,final_partnership_review,Unicef Focal Point,,Ended,Edit,TRUE
 3.9.5,date_partnership_review_performed,UNICEF User,,*,View,TRUE
 3.9.5,date_partnership_review_performed,Unicef Focal Point,,Ended,Edit,TRUE
-3.9.5,flat_locations,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
-3.9.6,flat_locations,Partner User,partner_court,Draft,Edit,TRUE
-3.9.6,flat_locations,Unicef Focal Point,user_adds_amendment,Approved,Edit,TRUE
-3.9.7,flat_locations,Unicef Focal Point,user_adds_amendment,Active,Edit,TRUE
-3.9.7,flat_locations,*,unlocked,Draft,Required,False
+3.9.7,flat_locations,*,,*,Required,False
+3.9.5,flat_locations,*,,*,Edit,False
+3.9.5,flat_locations,*,,*,View,TRUE
 3.9.8,frs,UNICEF User,not_in_amendment_mode,*,View,TRUE
 3.9.8,frs,Unicef Focal Point,not_in_amendment_mode,Draft,Edit,TRUE
 3.10.1,frs,Unicef Focal Point,not_in_amendment_mode,Review,Edit,TRUE

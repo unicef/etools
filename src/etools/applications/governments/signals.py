@@ -150,3 +150,17 @@ def recalculate_activities_numbering(instance, **kwargs):
 @receiver(post_delete, sender=GDDActivityItem)
 def recalculate_items_numbering(instance, **kwargs):
     GDDActivityItem.renumber_items_for_activity(instance.activity)
+
+
+@receiver(m2m_changed, sender=GDDActivity.locations.through)
+def update_gdd_flat_locations(instance: GDDActivity, action, reverse, pk_set, *args, **kwargs):
+    try:
+        gdd = GDD.objects.get(result_links__gdd_key_interventions__gdd_activities__id=instance.id)
+        if action == 'post_add':
+            gdd.flat_locations.add(*pk_set)
+        elif action == 'post_remove':
+            gdd.flat_locations.remove(*pk_set)
+        elif action == 'pre_clear':
+            gdd.flat_locations.remove(*set(instance.locations.all()))
+    except GDD.DoesNotExist:
+        pass
