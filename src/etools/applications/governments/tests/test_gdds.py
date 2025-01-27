@@ -487,7 +487,7 @@ class TestDetail(BaseGDDTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertListEqual(
-            ['download_comments', 'export_results', 'export_pdf', 'export_xls'],
+            ['download_comments', 'export_pdf', 'export_xls'],
             response.data["available_actions"],
         )
 
