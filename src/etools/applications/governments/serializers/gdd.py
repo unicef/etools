@@ -278,6 +278,7 @@ class GDDDetailSerializer(
     locations = serializers.SerializerMethodField()
     partner = serializers.CharField(source='partner.name', read_only=True)
     partner_id = serializers.CharField(source='partner.id')
+    organization_id = serializers.CharField(source='partner.organization.id')
     partner_vendor = serializers.CharField(source='partner.vendor_number', read_only=True)
     permissions = serializers.SerializerMethodField(read_only=True)
     planned_budget = GDDBudgetCUSerializer(read_only=True)
@@ -621,6 +622,7 @@ class GDDDetailSerializer(
             "partner_authorized_officer_signatory",
             "partner_focal_points",
             "partner_id",
+            "organization_id",
             "partner_vendor",
             "permissions",
             "planned_budget",
