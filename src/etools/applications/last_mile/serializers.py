@@ -403,7 +403,7 @@ class TransferCheckinSerializer(TransferBaseSerializer):
                 short_transfer.save()
                 short_transfer.refresh_from_db()
                 self.checkin_newtransfer_items(orig_items_dict, short_items, short_transfer)
-                notify_wastage_transfer.delay(connection.schema_name, short_transfer.pk, attachment_url, action='short_checkin')
+                notify_wastage_transfer.delay(connection.schema_name, short_transfer.serialize_notification(), attachment_url, action='short_checkin')
 
             if surplus_items:
                 surplus_transfer = models.Transfer(
@@ -419,7 +419,7 @@ class TransferCheckinSerializer(TransferBaseSerializer):
                 surplus_transfer.save()
                 surplus_transfer.refresh_from_db()
                 self.checkin_newtransfer_items(orig_items_dict, surplus_items, surplus_transfer)
-                notify_wastage_transfer.delay(connection.schema_name, surplus_transfer.pk, attachment_url, action='surplus_checkin')
+                notify_wastage_transfer.delay(connection.schema_name, surplus_transfer.serialize_notification(), attachment_url, action='surplus_checkin')
 
             instance = super().update(instance, validated_data)
             instance.items.exclude(material__number__in=settings.RUTF_MATERIALS).update(hidden=True)
@@ -553,7 +553,7 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
             if proof_file_pk:
                 attachment = Attachment.objects.get(pk=proof_file_pk)
                 attachment_url = self.context.get('request').build_absolute_uri(attachment.file_link)
-            notify_wastage_transfer.delay(connection.schema_name, self.instance.pk, attachment_url)
+            notify_wastage_transfer.delay(connection.schema_name, self.instance.serialize_notification(), attachment_url)
 
         return self.instance
 

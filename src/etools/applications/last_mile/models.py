@@ -203,6 +203,24 @@ class Transfer(TimeStampedModel, models.Model):
     def __str__(self):
         return f'{self.id} {self.partner_organization.name}: {self.name if self.name else self.unicef_release_order}'
 
+    def serialize_notification(self):
+        return {
+            'id': self.id,
+            'name': self.name if self.name else self.unicef_release_order,
+            'partner_organization_name': self.partner_organization.organization.name if self.partner_organization else '',
+            'partner_organization_vendor_number': self.partner_organization.vendor_number if self.partner_organization else '',
+            'destination_check_in_at': self.destination_check_in_at.strftime("%d/%m/%Y") if self.destination_check_in_at else '',
+            'origin_check_out_at': self.origin_check_out_at.strftime("%d/%m/%Y") if self.origin_check_out_at else '',
+            'checked_in_by': True if self.checked_in_by else False,
+            'checked_in_by_full_name': self.checked_in_by.full_name if self.checked_in_by else '',
+            'checked_out_by': True if self.checked_out_by else False,
+            'checked_out_by_full_name': self.checked_out_by.full_name if self.checked_out_by else '',
+            'destination_point_name': self.destination_point.name if self.destination_point else '',
+            'destination_point_parent': self.destination_point.parent.__str__() if self.destination_point else '',
+            'destination_point_parent_name': self.destination_point.parent.name if self.destination_point else '',
+            'items': [item.serialize_notification() for item in self.items.all()],
+        }
+
 
 class TransferEvidence(TimeStampedModel, models.Model):
     comment = models.TextField(null=True, blank=True)
@@ -399,6 +417,19 @@ class Item(TimeStampedModel, models.Model):
 
     def __str__(self):
         return f'{self.material.number}: {self.description} / qty {self.quantity}'
+
+    def serialize_notification(self):
+        return {
+            'material_number': self.material.number if self.material else '',
+            'material_short_description': self.material.short_description if self.material else '',
+            'description': self.description,
+            'quantity': self.quantity,
+            'uom': self.uom,
+            'material_original_uom': self.material.original_uom if self.material else '',
+            'batch_id': self.batch_id,
+            'expiry_date': self.expiry_date.strftime("%d/%m/%Y") if self.expiry_date else '',
+            'wastage_type': self.wastage_type,
+        }
 
 
 class ItemTransferHistory(TimeStampedModel, models.Model):

@@ -35,14 +35,13 @@ def notify_upload_waybill(tenant_name, destination_pk, waybill_pk, waybill_url):
 
 
 @app.task
-def notify_wastage_transfer(tenant_name, transfer_pk, proof_full_url, action='wastage_checkout'):
+def notify_wastage_transfer(tenant_name, transfer, proof_full_url, action='wastage_checkout'):
     action_map = {
         'wastage_checkout': 'checked-out as wastage',
         'short_checkin': 'checked-in as short',
         'surplus_checkin': 'checked-in as surplus'
     }
     with schema_context(tenant_name):
-        transfer = models.Transfer.objects.get(pk=transfer_pk)
         recipients = User.objects \
             .filter(realms__country__schema_name=tenant_name,
                     realms__is_active=True,
@@ -52,7 +51,7 @@ def notify_wastage_transfer(tenant_name, transfer_pk, proof_full_url, action='wa
         send_notification(
             recipients=list(recipients),
             from_address=settings.DEFAULT_FROM_EMAIL,
-            subject=f'LMSM app: New items {action_map[action]} by {transfer.partner_organization.name}',
+            subject=f"LMSM app: New items {action_map[action]} by {transfer.get('partner_organization_name')}",
             html_content_filename='emails/wastage_transfer.html',
             context={'transfer': transfer, 'action': action, 'header': action_map[action], 'proof_full_url': proof_full_url}
         )
