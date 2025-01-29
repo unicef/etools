@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: et-partners2-bk\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-09-24 09:12+0000\n"
+"POT-Creation-Date: 2024-10-28 07:37+0000\n"
 "Language: es\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -994,6 +994,9 @@ msgstr "Orientaciones técnicas"
 msgid "Cancel Justification"
 msgstr "Cancelar Justificación"
 
+msgid "Attachments"
+msgstr "Archivos adjuntos"
+
 msgid "Metadata"
 msgstr "Metadatos"
 
@@ -1463,9 +1466,6 @@ msgstr "Tipo de fijación"
 msgid "N/A"
 msgstr "N/A"
 
-msgid "Attachments"
-msgstr "Archivos adjuntos"
-
 msgid "CSO Contribution"
 msgstr "Contribución de las OSC"
 
@@ -1518,6 +1518,9 @@ msgid ""
 msgstr ""
 "Un archivo adjunto no se puede cambiar en los estados \"Terminado, Cerrado o "
 "Terminado\""
+
+msgid "Unable to find corresponding file type."
+msgstr ""
 
 msgid "An Output cannot be updated for a partner that is blocked in Vision"
 msgstr ""
@@ -1785,11 +1788,11 @@ msgstr "Oficial autorizado de UNICEF"
 msgid "Date Uploaded"
 msgstr "Fecha de carga"
 
-msgid "Document"
-msgstr "Documento"
-
 msgid "Invalid"
 msgstr "INVALID"
+
+msgid "Document"
+msgstr "Documento"
 
 msgid "Review for eTools reference number: "
 msgstr "Revisión del número de referencia de eTools: "
