@@ -367,9 +367,9 @@ class GDDAdmin(
     created_date.admin_order_field = '-created'
 
     def section_names(self, obj):
-        c_sections = ' '.join([section.name for section in obj.sections.all()])
+        c_sections = ', '.join([section.name for section in obj.sections.all()])
         if obj.lead_section:
-            return [obj.lead_section.name].extend(c_sections)
+            return f'{obj.lead_section}(Lead Section), {c_sections}'
         return c_sections
 
     section_names.short_description = "Contributing Sections"
