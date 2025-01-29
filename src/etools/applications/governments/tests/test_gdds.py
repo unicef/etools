@@ -559,6 +559,27 @@ class TestCreate(BaseGDDTestCase):
         self.assertEqual(i.partner.pk.__str__(), response.data['partner_id'])
         self.assertEqual(data.get("budget_owner"), self.user_serialized)
 
+    def test_return_400_when_focal_point_is_the_same_as_owner(self):
+        data = {
+            "title": "PMP GDD",
+            "partner": self.partner.pk,
+            "reference_number_year": timezone.now().year,
+            "budget_owner": self.unicef_user.pk,
+            "unicef_focal_points": [self.unicef_user.pk],
+            "start": timezone.now().date(),
+            "end": timezone.now().date() + datetime.timedelta(days=300)
+        }
+
+        response = self.forced_auth_req(
+            "post",
+            reverse('governments:gdd-list'),
+            user=self.unicef_user,
+            data=data
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
+        self.assertIn('Budget Owner cannot be in the list of UNICEF Focal Points', response.data)
+
     def test_add_intervention_by_partner_member(self):
         partner_user = UserFactory(
             realms__data=['IP Viewer'],
@@ -997,6 +1018,21 @@ class TestUpdate(BaseGDDTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
         self.assertIn('context', response.data)
+
+    def test_return_400_when_focal_point_is_the_same_as_owner(self):
+        gdd = GDDFactory()
+        gdd.unicef_focal_points.add(self.unicef_user)
+        self.assertIsNone(gdd.budget_owner)
+
+        response = self.forced_auth_req(
+            "patch",
+            reverse('governments:gdd-detail', args=[gdd.pk]),
+            user=self.unicef_user,
+            data={'budget_owner': self.unicef_user.pk}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
+        self.assertIn('Budget Owner cannot be in the list of UNICEF Focal Points', response.data)
 
 
 # class TestDelete(BaseGDDTestCase):

@@ -310,6 +310,10 @@ def lead_section_valid(i):
     return True
 
 
+def budget_owner_not_in_focal_points(i):
+    return i.budget_owner not in i.unicef_focal_points.all()
+
+
 class GDDValid(CompleteValidation):
     VALIDATION_CLASS = 'governments.GDD'
     # validations that will be checked on every object... these functions only take the new instance
@@ -321,7 +325,8 @@ class GDDValid(CompleteValidation):
         rigid_in_amendment_flag,
         locations_valid,
         cp_structure_valid,
-        lead_section_valid
+        lead_section_valid,
+        budget_owner_not_in_focal_points
     ]
 
     VALID_ERRORS = {
@@ -334,7 +339,8 @@ class GDDValid(CompleteValidation):
         'rigid_in_amendment_flag': _('Amendment Flag cannot be turned on without adding an amendment'),
         'locations_valid': _("The locations selected on the PD/SPD are not a subset of all locations selected "
                              "for this PD/SPD's indicators"),
-        'lead_section_valid': _('The Lead Section is also selected in Contributing Sections.')
+        'lead_section_valid': _('The Lead Section is also selected in Contributing Sections.'),
+        'budget_owner_not_in_focal_points': _('Budget Owner cannot be in the list of UNICEF Focal Points'),
     }
 
     PERMISSIONS_CLASS = GDDPermissions
