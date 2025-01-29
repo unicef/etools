@@ -189,21 +189,12 @@
       <table class="bordered mt-20">
         <tbody>
         <tr>
-          <td class="b-navy">{% translate "Strategy" %}</td>
-        </tr>
-        <tr>
-          <td class=""><span class="bold">{% translate "Context" %}:</span> {{ gdd.context|escape|linebreaks }}</td>
+          <td class="b-navy">{% translate "Background" %}</td>
         </tr>
         <tr>
           <td class=""><span
-              class="bold">{% translate "Implementation Strategy & Technical Guidance" %}:</span> {{ gdd.implementation_strategy|escape|linebreaks }}
+              class="bold">{% translate "Background" %}:</span> {{ gdd.implementation_strategy|escape|linebreaks }}
           </td>
-        </tr>
-        <tr>
-          <td class=""><span class="bold">{% translate "Other Partners involved" %}:</span> {{ gdd.other_partners_involved|escape|linebreaks }}</td>
-        </tr>
-        <tr>
-          <td class=""><span class="bold">{% translate "Other Document Details" %}:</span> {{ gdd.other_details|escape|linebreaks }}</td>
         </tr>
         <tr>
           <td class=""><span class="bold">{% translate "Gender Rating" %}:</span>{{ gdd.get_gender_rating_display }} <br>
@@ -238,27 +229,18 @@
             <td colspan="6" class="b-navy">{% translate "Workplan Result" %}</td>
           </tr>
           <tr>
-            <td class="b-gray w-p30">{% translate "Result statement" %}</td>
-            <td class="b-gray w-p30">{% translate "Performance indicator/s" %}</td>
+            <td colspan="3" class="b-gray">{% translate "Result statement" %}</td>
+            <td colspan="3" class="b-gray">{% translate "Performance indicator/s" %}</td>
           </tr>
           {% for result_link in gdd.result_links.all %}
             <tr>
-              <td class="b-yellow w-p30">{{ result_link.cp_output.cp_output.name }}</td>
-              <td class="b-yellow w-p30">
+              <td colspan="3" class="b-yellow">{{ result_link.cp_output.cp_output.name }}</td>
+              <td colspan="3" class="b-yellow">
                 {% for indicator in result_link.ram_indicators.all %}
                   <span>{{ indicator.name }}</span><br/>
                 {% endfor %}
               </td>
-              <td class="b-gray w-p20"></td>
-              <td class="b-gray w-p5"></td>
-              <td class="b-gray w-p5"></td>
-              <td class="b-gray w-p10"></td>
             </tr>
-            {% for ki in result_link.gdd_key_interventions.all %}
-            <tr>
-            <td class="w-p30">{{ ki.name }}</td>
-             </tr>
-            {% endfor %}
           {% endfor %}
         <tbody>
       </table>
@@ -266,13 +248,13 @@
       <table class="all-cells-border mt-20">
         <tbody>
           <tr>
-            <td colspan="6" class="b-navy">{% translate "Workplan Budget" %}</td>
+            <td colspan="4" class="b-navy">{% translate "Workplan Budget" %}</td>
           </tr>
           <tr>
             <td class="b-gray w-p30">{% translate "Result Level" %}</td>
             <td class="b-gray w-p40">{% translate "Result/activity" %}</td>
             <td class="b-gray w-p30">{% translate "Timeframe" %}</td>
-            <td class="b-gray w-p10">{% translate "Total (UNICEF)" %}[{{ gdd.planned_budget.currency }}]</td>
+            <td class="b-gray w-p30">{% translate "Total (UNICEF)" %} [{{ gdd.planned_budget.currency }}]</td>
           </tr>
           {% for result_link in gdd.result_links.all %}
             {% for ki in result_link.gdd_key_interventions.all %}
@@ -290,17 +272,11 @@
                   <td>Activity</td>
                   <td>{% if not activity.is_active %} ({% translate 'Inactive' %}) {% endif %}{{ activity.name }}</td>
                   <td>{{ activity.get_time_frames_display }}</td>
-                  <td>{{ activity.cso_cash|add:activity.unicef_cash | currency }}</td>
                   <td>{{ activity.unicef_cash | currency }}</td>
                 </tr>
               {% endfor %}
             {% endfor %}
           {% endfor %}
-          <tr>
-            <td class="b-yellow">{% translate "Prog. Output" %}</td>
-            <td colspan="2" class="b-yellow">{% translate "Effective and efficient programme management" %}</td>
-            <td class="b-yellow">{{ gdd.management_budgets.unicef_total | currency }}</td>
-          </tr>
           <tr>
            <td colspan="3" class="b-blue">{% translate "Sub-total for programme costs" %}</td>
             <td class="b-blue">{{ gdd.planned_budget.total_unicef_cash_local_wo_hq | currency }}</td>
