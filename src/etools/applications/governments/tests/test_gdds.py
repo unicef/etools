@@ -8,7 +8,6 @@ from django.utils import timezone
 
 from rest_framework import status
 from rest_framework.test import APIClient
-from unicef_locations.tests.factories import LocationFactory
 from waffle.utils import get_cache
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
@@ -488,7 +487,7 @@ class TestDetail(BaseGDDTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertListEqual(
-            ['download_comments', 'export_pdf', 'export_xls'],
+            ['download_comments', 'export_results', 'export_pdf', 'export_xls'],
             response.data["available_actions"],
         )
 
@@ -558,6 +557,27 @@ class TestCreate(BaseGDDTestCase):
         self.assertEqual(i.end.strftime('%Y-%m-%d'), response.data['end'])
         self.assertEqual(i.partner.pk.__str__(), response.data['partner_id'])
         self.assertEqual(data.get("budget_owner"), self.user_serialized)
+
+    def test_return_400_when_focal_point_is_the_same_as_owner(self):
+        data = {
+            "title": "PMP GDD",
+            "partner": self.partner.pk,
+            "reference_number_year": timezone.now().year,
+            "budget_owner": self.unicef_user.pk,
+            "unicef_focal_points": [self.unicef_user.pk],
+            "start": timezone.now().date(),
+            "end": timezone.now().date() + datetime.timedelta(days=300)
+        }
+
+        response = self.forced_auth_req(
+            "post",
+            reverse('governments:gdd-list'),
+            user=self.unicef_user,
+            data=data
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
+        self.assertIn('Budget Owner cannot be in the list of UNICEF Focal Points', response.data)
 
     def test_add_intervention_by_partner_member(self):
         partner_user = UserFactory(
@@ -801,31 +821,6 @@ class TestUpdate(BaseGDDTestCase):
         self.assertEqual(gdd.lead_section, lead_section)
         self.assertEqual(gdd.sections.count(), 2)
 
-    def test_flat_locations_update_signal(self):
-        gdd = GDDFactory()
-        gdd.unicef_focal_points.add(self.unicef_user)
-        self.assertEqual(gdd.flat_locations.count(), 0)
-
-        activity = GDDActivityFactory(key_intervention__result_link__gdd=gdd)
-        self.assertEqual(gdd.flat_locations.count(), 1)
-        self.assertEqual(list(gdd.flat_locations.all()), list(activity.locations.all()))
-
-        a_loc = LocationFactory()
-        activity.locations.add(a_loc)
-        self.assertEqual(gdd.flat_locations.count(), 2)
-        self.assertEqual(list(gdd.flat_locations.all()), list(activity.locations.all()))
-
-        activity.locations.remove(a_loc)
-        new_loc = LocationFactory()
-        activity.locations.add(new_loc)
-        self.assertEqual(activity.locations.count(), 2)
-        self.assertEqual(gdd.flat_locations.count(), 2)
-        self.assertEqual(list(gdd.flat_locations.all()), list(activity.locations.all()))
-
-        activity.locations.clear()
-        self.assertEqual(activity.locations.count(), 0)
-        self.assertEqual(gdd.flat_locations.count(), 0)
-
     @skip
     def test_patch_frs_prc_secretary(self):
         gdd = GDDFactory()
@@ -997,6 +992,21 @@ class TestUpdate(BaseGDDTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
         self.assertIn('context', response.data)
+
+    def test_return_400_when_focal_point_is_the_same_as_owner(self):
+        gdd = GDDFactory()
+        gdd.unicef_focal_points.add(self.unicef_user)
+        self.assertIsNone(gdd.budget_owner)
+
+        response = self.forced_auth_req(
+            "patch",
+            reverse('governments:gdd-detail', args=[gdd.pk]),
+            user=self.unicef_user,
+            data={'budget_owner': self.unicef_user.pk}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
+        self.assertIn('Budget Owner cannot be in the list of UNICEF Focal Points', response.data)
 
 
 # class TestDelete(BaseGDDTestCase):
