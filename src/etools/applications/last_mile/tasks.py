@@ -51,7 +51,7 @@ def notify_wastage_transfer(tenant_name, transfer, proof_full_url, action='wasta
         send_notification(
             recipients=list(recipients),
             from_address=settings.DEFAULT_FROM_EMAIL,
-            subject=f"LMSM app: New items {action_map[action]} by {transfer.get('partner_organization_name')}",
+            subject=f"LMSM app: New items {action_map[action]} by {transfer.get('partner_organization',{}).get('name')}",
             html_content_filename='emails/wastage_transfer.html',
             context={'transfer': transfer, 'action': action, 'header': action_map[action], 'proof_full_url': proof_full_url}
         )
