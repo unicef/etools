@@ -37,7 +37,6 @@ class GDDCSVRenderer(r.CSVRenderer):
         "start": _("Start Date"),
         "end": _("End Date"),
         "offices": _("UNICEF Office"),
-        "lead_section": _("Lead Section"),
         "sectors": _("Contributing Sections"),
         "locations": _("Locations"),
         "unicef_focal_points": _("UNICEF Focal Points"),

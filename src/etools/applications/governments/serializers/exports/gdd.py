@@ -38,11 +38,6 @@ class GDDExportSerializer(serializers.ModelSerializer):
         label=_("Country Programmes"),
     )
     offices = serializers.SerializerMethodField(label=_("UNICEF Office"))
-    lead_section = serializers.CharField(
-        label=_("Lead Section"),
-        source='lead_section.name',
-        allow_null=True,
-    )
     sectors = serializers.SerializerMethodField(label=_("Sections"))
     locations = serializers.SerializerMethodField(label=_("Locations"))
 
@@ -177,7 +172,10 @@ class GDDExportSerializer(serializers.ModelSerializer):
         return ', '.join([o.name for o in obj.offices.all()])
 
     def get_sectors(self, obj):
-        return ', '.join([s.name for s in obj.sections.all()])
+        c_sections = ', '.join([section.name for section in obj.sections.all()])
+        if obj.lead_section:
+            return f'{obj.lead_section}(Lead Section), {c_sections}'
+        return c_sections
 
     def get_locations(self, obj):
         return ', '.join([loc.name for loc in obj.flat_locations.all()])
