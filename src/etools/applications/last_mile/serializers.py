@@ -14,7 +14,10 @@ from etools.applications.last_mile import models
 from etools.applications.last_mile.models import PartnerMaterial
 from etools.applications.last_mile.tasks import notify_first_checkin_transfer, notify_wastage_transfer
 from etools.applications.partners.models import Agreement, PartnerOrganization
-from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
+from etools.applications.partners.serializers.partner_organization_v2 import (
+    MinimalPartnerOrganizationListSerializer,
+    PartnerOrganizationListSerializer,
+)
 from etools.applications.users.serializers import MinimalUserSerializer
 
 
@@ -39,6 +42,21 @@ class PointOfInterestSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.PointOfInterest
         exclude = ('partner_organizations', 'point', 'created', 'modified', 'parent', 'other', 'private')
+
+
+class PointOfInterestNotificationSerializer(serializers.ModelSerializer):
+    region = serializers.SerializerMethodField(read_only=True)
+    parent_name = serializers.SerializerMethodField(read_only=True)
+
+    def get_parent_name(self, obj):
+        return obj.parent.__str__() if hasattr(obj, 'parent') else ''
+
+    def get_region(self, obj):
+        return obj.parent.name if hasattr(obj, 'parent') else ''
+
+    class Meta:
+        model = models.PointOfInterest
+        fields = ('parent_name', 'region', 'name')
 
 
 class PointOfInterestLightSerializer(serializers.ModelSerializer):
@@ -403,7 +421,7 @@ class TransferCheckinSerializer(TransferBaseSerializer):
                 short_transfer.save()
                 short_transfer.refresh_from_db()
                 self.checkin_newtransfer_items(orig_items_dict, short_items, short_transfer)
-                notify_wastage_transfer.delay(connection.schema_name, short_transfer.pk, attachment_url, action='short_checkin')
+                notify_wastage_transfer.delay(connection.schema_name, TransferNotificationSerializer(short_transfer).data, attachment_url, action='short_checkin')
 
             if surplus_items:
                 surplus_transfer = models.Transfer(
@@ -419,7 +437,7 @@ class TransferCheckinSerializer(TransferBaseSerializer):
                 surplus_transfer.save()
                 surplus_transfer.refresh_from_db()
                 self.checkin_newtransfer_items(orig_items_dict, surplus_items, surplus_transfer)
-                notify_wastage_transfer.delay(connection.schema_name, surplus_transfer.pk, attachment_url, action='surplus_checkin')
+                notify_wastage_transfer.delay(connection.schema_name, TransferNotificationSerializer(short_transfer).data, attachment_url, action='surplus_checkin')
 
             instance = super().update(instance, validated_data)
             instance.items.exclude(material__number__in=settings.RUTF_MATERIALS).update(hidden=True)
@@ -553,7 +571,7 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
             if proof_file_pk:
                 attachment = Attachment.objects.get(pk=proof_file_pk)
                 attachment_url = self.context.get('request').build_absolute_uri(attachment.file_link)
-            notify_wastage_transfer.delay(connection.schema_name, self.instance.pk, attachment_url)
+            notify_wastage_transfer.delay(connection.schema_name, TransferNotificationSerializer(self.instance).data, attachment_url)
 
         return self.instance
 
@@ -573,3 +591,18 @@ class TransferEvidenceListSerializer(TransferEvidenceSerializer):
     class Meta(TransferEvidenceSerializer.Meta):
         model = models.TransferEvidence
         fields = TransferEvidenceSerializer.Meta.fields + ('id', 'user', 'created')
+
+
+class TransferNotificationSerializer(serializers.ModelSerializer):
+    items = ItemSerializer(many=True)
+    partner_organization = PartnerOrganizationListSerializer()
+    destination_point = PointOfInterestNotificationSerializer()
+    origin_point = PointOfInterestNotificationSerializer()
+    checked_in_by = MinimalUserSerializer()
+    checked_out_by = MinimalUserSerializer()
+
+    class Meta:
+        model = models.Transfer
+        fields = ('name', 'unicef_release_order', 'destination_check_in_at',
+                  'origin_check_out_at', 'checked_in_by', 'checked_out_by', 'items',
+                  'partner_organization', 'destination_point', 'origin_point')
