@@ -535,12 +535,11 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
     @transaction.atomic
     def create(self, validated_data):
         checkout_items = validated_data.pop('items')
-        if not self.initial_data.get('proof_file'):
-            raise ValidationError(_('The proof file is required.'))
 
         validator = TransferCheckOutValidator()
+        validator.validate_proof_file(self.initial_data.get('proof_file'))
         validator.validate_destination_points(validated_data['transfer_type'], validated_data.get('destination_point'))
-        
+
         if validated_data.get('destination_point'):
             validated_data['destination_point_id'] = validated_data.pop('destination_point')
 
