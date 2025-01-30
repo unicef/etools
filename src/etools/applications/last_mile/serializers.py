@@ -13,8 +13,8 @@ from unicef_attachments.serializers import AttachmentSerializerMixin
 from etools.applications.last_mile import models
 from etools.applications.last_mile.models import PartnerMaterial
 from etools.applications.last_mile.tasks import notify_first_checkin_transfer, notify_wastage_transfer
-from etools.applications.partners.models import Agreement, PartnerOrganization
 from etools.applications.last_mile.validators import TransferCheckOutValidator
+from etools.applications.partners.models import Agreement, PartnerOrganization
 from etools.applications.partners.serializers.partner_organization_v2 import (
     MinimalPartnerOrganizationListSerializer,
     PartnerOrganizationListSerializer,
@@ -532,6 +532,19 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
                 new_item.save()
                 new_item.add_transfer_history(original_item.transfer)
 
+    def _extract_partner_id(self, validated_data):
+        if validated_data.get('partner_id'):
+            return validated_data.pop('partner_id')
+        return self.context['request'].user.profile.organization.partner.pk
+
+    def _generate_attachment_url(self):
+        proof_file_pk = self.initial_data.get('proof_file')
+        attachment_url = None
+        if proof_file_pk:
+            attachment = Attachment.objects.get(pk=proof_file_pk)
+            attachment_url = self.context.get('request').build_absolute_uri(attachment.file_link)
+        return attachment_url
+
     @transaction.atomic
     def create(self, validated_data):
         checkout_items = validated_data.pop('items')
@@ -542,13 +555,8 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
 
         if validated_data.get('destination_point'):
             validated_data['destination_point_id'] = validated_data.pop('destination_point')
-
-        if validated_data['transfer_type'] == models.Transfer.HANDOVER:
-            partner_id = validated_data.pop('partner_id', None)
-            if not partner_id:
-                raise ValidationError(_('A Handover to a partner requires a partner id.'))
-        else:
-            partner_id = self.context['request'].user.profile.organization.partner.pk
+        partner_id = self._extract_partner_id(validated_data)
+        validator.validate_handover(validated_data['transfer_type'], partner_id)
 
         if not validated_data.get("name"):
             validated_data['name'] = self.get_transfer_name(validated_data)
@@ -559,20 +567,14 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
             checked_out_by=self.context['request'].user,
             **validated_data)
 
-        if self.instance.transfer_type in [models.Transfer.WASTAGE, models.Transfer.DISPENSE]:
-            self.instance.status = models.Transfer.COMPLETED
+        self.instance.set_checkout_status()
 
         self.instance.save()
         self.instance.refresh_from_db()
         self.checkout_newtransfer_items(checkout_items)
         if self.instance.transfer_type == models.Transfer.WASTAGE:
-            proof_file_pk = self.initial_data.get('proof_file')
-            attachment_url = None
-            if proof_file_pk:
-                attachment = Attachment.objects.get(pk=proof_file_pk)
-                attachment_url = self.context.get('request').build_absolute_uri(attachment.file_link)
+            attachment_url = self._generate_attachment_url()
             notify_wastage_transfer.delay(connection.schema_name, TransferNotificationSerializer(self.instance).data, attachment_url)
-
         return self.instance
 
 

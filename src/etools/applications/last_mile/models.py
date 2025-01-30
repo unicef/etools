@@ -203,6 +203,10 @@ class Transfer(TimeStampedModel, models.Model):
     def __str__(self):
         return f'{self.id} {self.partner_organization.name}: {self.name if self.name else self.unicef_release_order}'
 
+    def set_checkout_status(self):
+        if self.transfer_type in [self.WASTAGE, self.DISPENSE]:
+            self.status = self.COMPLETED
+
 
 class TransferEvidence(TimeStampedModel, models.Model):
     comment = models.TextField(null=True, blank=True)
