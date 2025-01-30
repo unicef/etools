@@ -531,6 +531,11 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
                 new_item.save()
                 new_item.add_transfer_history(original_item.transfer)
 
+    def _create_partner_transfer(self, partner_id: int, validated_data: dict):
+        if validated_data['transfer_type'] == models.Transfer.HANDOVER:
+            validated_data['recipient_partner_organization_id'] = partner_id
+            validated_data['from_partner_organization_id'] = self.context['request'].user.profile.organization.partner.pk
+
     @transaction.atomic
     def create(self, validated_data):
         checkout_items = validated_data.pop('items')
@@ -552,6 +557,8 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
 
         if not validated_data.get("name"):
             validated_data['name'] = self.get_transfer_name(validated_data)
+
+        self._create_partner_transfer(partner_id, validated_data)
 
         self.instance = models.Transfer(
             partner_organization_id=partner_id,

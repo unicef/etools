@@ -88,8 +88,9 @@ def get_annotated_qs(qs):
             latitude=Latitude('point'),
             longitude=Longitude('point'),
             parent_pcode=F('parent__p_code'),
+            vendor_number=F('partner_organizations__organization__vendor_number'),
         ).values('id', 'created', 'modified', 'parent_id', 'name', 'description', 'poi_type_id',
-                 'other', 'private', 'is_active', 'latitude', 'longitude', 'parent_pcode', 'p_code')
+                 'other', 'private', 'is_active', 'latitude', 'longitude', 'parent_pcode', 'p_code', 'vendor_number')
 
     if qs.model == models.Item:
         return qs.annotate(material_number=F('material__number'),

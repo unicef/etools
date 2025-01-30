@@ -143,18 +143,18 @@ class ItemInline(RestrictedEditAdminMixin, admin.TabularInline):
 class TransferAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
     list_display = (
         'display_name', 'partner_organization', 'status', 'transfer_type',
-        'transfer_subtype', 'origin_point', 'destination_point'
+        'transfer_subtype', 'origin_point', 'destination_point', 'from_partner_organization', 'recipient_partner_organization'
     )
     list_filter = ('status', 'transfer_type', 'transfer_subtype')
     search_fields = ('name', 'status')
     raw_id_fields = ('partner_organization', 'checked_in_by', 'checked_out_by',
-                     'origin_point', 'destination_point', 'origin_transfer')
+                     'origin_point', 'destination_point', 'origin_transfer', 'from_partner_organization', 'recipient_partner_organization')
     inlines = (ProofTransferAttachmentInline, ItemInline)
 
     def get_queryset(self, request):
         qs = super(TransferAdmin, self).get_queryset(request)\
             .select_related('partner_organization', 'partner_organization__organization',
-                            'origin_point', 'destination_point')\
+                            'origin_point', 'destination_point', 'from_partner_organization', 'recipient_partner_organization')\
             .prefetch_related('items')
         return qs
 
