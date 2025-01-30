@@ -7,6 +7,7 @@ import django.utils.timezone
 class Migration(migrations.Migration):
 
     dependencies = [
+        ('partners', '0004_interventionreview_authorized_officer_and_more'),
         ('last_mile', '0005_transfer_dispense_type'),
     ]
 
@@ -20,5 +21,15 @@ class Migration(migrations.Migration):
             model_name='transfer',
             name='system_origin_check_out_at',
             field=models.DateTimeField(default=django.utils.timezone.now),
+        ),
+        migrations.AddField(
+            model_name='transfer',
+            name='from_partner_organization',
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='from_transfers', to='partners.partnerorganization'),
+        ),
+        migrations.AddField(
+            model_name='transfer',
+            name='recipient_partner_organization',
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='to_transfers', to='partners.partnerorganization'),
         ),
     ]
