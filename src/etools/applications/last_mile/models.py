@@ -3,6 +3,7 @@ from functools import cached_property
 from django.conf import settings
 from django.contrib.gis.db.models import PointField
 from django.db import models
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from model_utils import FieldTracker
@@ -140,6 +141,18 @@ class Transfer(TimeStampedModel, models.Model):
     transfer_subtype = models.CharField(max_length=30, choices=TRANSFER_SUBTYPE, null=True, blank=True)
     status = models.CharField(max_length=30, choices=STATUS, default=PENDING)
 
+    from_partner_organization = models.ForeignKey(
+        PartnerOrganization,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='from_transfers'
+    )
+    recipient_partner_organization = models.ForeignKey(
+        PartnerOrganization,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='to_transfers'
+    )
     partner_organization = models.ForeignKey(
         PartnerOrganization,
         on_delete=models.CASCADE
@@ -163,6 +176,7 @@ class Transfer(TimeStampedModel, models.Model):
         related_name='origin_transfers'
     )
     origin_check_out_at = models.DateTimeField(null=True, blank=True)
+    system_origin_check_out_at = models.DateTimeField(default=timezone.now)
 
     destination_point = models.ForeignKey(
         PointOfInterest,
@@ -171,6 +185,7 @@ class Transfer(TimeStampedModel, models.Model):
         related_name='destination_transfers'
     )
     destination_check_in_at = models.DateTimeField(null=True, blank=True)
+    system_destination_check_in_at = models.DateTimeField(default=timezone.now)
     origin_transfer = models.ForeignKey(
         'self', null=True, blank=True, on_delete=models.CASCADE, related_name='following_transfers'
     )
