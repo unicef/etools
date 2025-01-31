@@ -545,6 +545,11 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
             attachment_url = self.context.get('request').build_absolute_uri(attachment.file_link)
         return attachment_url
 
+    def _create_partner_transfer(self, partner_id: int, validated_data: dict):
+        if validated_data['transfer_type'] == models.Transfer.HANDOVER:
+            validated_data['recipient_partner_organization_id'] = partner_id
+            validated_data['from_partner_organization_id'] = self.context['request'].user.profile.organization.partner.pk
+
     @transaction.atomic
     def create(self, validated_data):
         checkout_items = validated_data.pop('items')
@@ -561,6 +566,8 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
         if not validated_data.get("name"):
             validated_data['name'] = self.get_transfer_name(validated_data)
 
+        self._create_partner_transfer(partner_id, validated_data)
+
         self.instance = models.Transfer(
             partner_organization_id=partner_id,
             origin_point=self.context['location'],
@@ -575,6 +582,7 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
         if self.instance.transfer_type == models.Transfer.WASTAGE:
             attachment_url = self._generate_attachment_url()
             notify_wastage_transfer.delay(connection.schema_name, TransferNotificationSerializer(self.instance).data, attachment_url)
+
         return self.instance
 
 

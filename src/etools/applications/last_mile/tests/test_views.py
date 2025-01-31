@@ -606,7 +606,8 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(handover_transfer.destination_point, destination)
         self.assertEqual(handover_transfer.items.count(), len(checkout_data['items']))
         self.assertEqual(handover_transfer.items.first().quantity, 9)
-
+        self.assertEqual(handover_transfer.recipient_partner_organization.id, agreement.partner.id)
+        self.assertEqual(handover_transfer.from_partner_organization.id, self.partner.pk)
         self.assertEqual(self.checked_in.items.count(), 2)
         self.assertEqual(self.checked_in.items.get(pk=item_1.pk).quantity, 2)
         self.assertEqual(self.checked_in.items.get(pk=item_2.pk).quantity, 22)
