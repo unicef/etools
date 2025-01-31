@@ -66,15 +66,12 @@ jobs:
           name: Run Tests
           command: |
             pip install tox
-            /etools/__pypackages__/3.12/bin/tox -e d42,report
+            /etools/__pypackages__/3.12/bin/tox -e d42
           no_output_timeout: 30m
       - save_cache:
           key: deps2-{{ .Branch }}--{{ checksum "pdm.lock" }}-{{ checksum ".circleci/config.yml" }}
           paths:
             - ".tox/d42/"
-      - store_artifacts:
-          path: build/coverage
-          destination: coverage
       - run:
           name: Triggering build_and_deploy job
           command: |
