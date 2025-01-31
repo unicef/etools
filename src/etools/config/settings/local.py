@@ -33,7 +33,7 @@ REST_FRAMEWORK['DEFAULT_AUTHENTICATION_CLASSES'] = (  # noqa
 AUTHENTICATION_BACKENDS = (
     # 'social_core.backends.azuread_b2c.AzureADB2COAuth2',
     'etools.applications.core.auth.CustomAzureADBBCOAuth2',
-    'django.contrib.auth.backends.ModelBackend',
+    'etools.applications.core.auth.eToolsModelBackend',
 )
 
 # No Redis for local dev.

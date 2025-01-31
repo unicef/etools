@@ -1,0 +1,2088 @@
+{% extends "easy_pdf/base.html" %}
+{% load humanize %}
+{% load etools %}
+
+{% block style_base %}
+    {% comment %}
+        See DEFAULT_CSS in https://github.com/chrisglass/xhtml2pdf/blob/master/xhtml2pdf/default.py
+        for base style.
+    {% endcomment %}
+
+    {% block layout_style %}
+        <style type="text/css">
+            @page {
+                size: {{ pagesize|default:"letter" }};
+                margin-left: 2.0cm;
+                margin-right: 2.0cm;
+                margin-top: 2.4cm;
+                margin-bottom: 1.8cm;
+                @frame header {
+                    -pdf-frame-content: header_content;
+                    margin-top: 1cm;
+                    margin-right: 2.0cm;
+                    margin-bottom: 0.3cm;
+                    padding-bottom: 3cm;
+                    margin-left: 0cm;
+                    background-color: #0099ff;
+                    height: 2cm;
+                }
+                @frame footer_frame {
+                    /* Static frame */
+                    -pdf-frame-content:footer_content;
+                    left: 50pt; width: 512pt; top: 772pt; height: 20pt;
+                }
+            }
+        </style>
+    {% endblock %}
+    {% block extra_style %}
+        <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+        <style type="text/css">
+          #content {
+            font-size: 11pt;
+            font-family: "Times New roman", serif;
+            text-align: justify;
+          }
+
+          .background-gray {
+            background-color: #d9d9d9;
+          }
+
+          .text-right {
+            text-align: right;
+          }
+
+          .text-center {
+            text-align: center;
+          }
+
+          .text-justify {
+            text-align: justify;
+          }
+
+          .strong {
+            font-weight: bold;
+          }
+
+          .underline {
+            text-decoration: underline;
+          }
+
+          table {
+            line-height: 140%;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            border-collapse: collapse;
+          }
+          table.bordered {
+            border: 0.1pt solid #999999;
+          }
+          tr,
+          td,
+          th {
+            border: none;
+            min-height: 25px;
+          }
+
+          th {
+            font-size: 12pt;
+            padding: 3px 5px;
+            line-height: 1;
+            font-weight: bold;
+          }
+
+          td {
+            font-size: 12pt;
+            vertical-align: middle;
+            padding: 3px 5px;
+            line-height: 1;
+          }
+
+          .bordered td,
+          .bordered th {
+            border: 0.1pt solid #999999;
+          }
+
+          .indent {
+            padding-left: 25px;
+          }
+
+          .indent2 {
+            padding-left: 50px;
+          }
+
+
+          .page-break {
+            page-break-after: always;
+          }
+
+          li {
+            padding-bottom: 10px;
+          }
+
+          .alpha-list {
+            list-style-type: lower-alpha;
+          }
+        </style>
+      {% endblock %}
+    {% endblock %}
+
+{% block content %}
+  {% if error %}
+      PDF could not be generated properly: <br> {{ error }}
+  {% else %}
+    <div id="header_content">
+      <p class="text-right">PCA ref.ª n.º:: {{ agreement.agreement_number }}</p>
+    </div>
+    <div id="content">
+      <p class="text-center strong">ACORDO DE COOPERAÇÃO PROGRAMÁTICA</p>
+      <p class="text-center strong">ENTRE</p>
+      <p class="text-center strong">{{ agreement.partner|upper }}</p>
+      <p class="text-center strong">E O</p>
+      <p class="text-center strong">FUNDO DAS NAÇÕES UNIDAS PARA A INFÂNCIA</p>
+      <p class="text-center strong">RELATIVO À</p>
+      <p class="text-center strong">
+        EXECUÇÃO DO PROGRAMA FINANCIADO PELO UNICEF RESPEITANTE AO PROGRAMA DO
+        UNICEF PARA {{ country|upper }}
+      </p>
+      <p>
+        {{ agreement.partner }} e o Fundo das Nações Unidas para a Infância
+        (referidos conjuntamente como as “Partes” e cada um separadamente como uma
+        “parte”) acordam o seguinte:
+      </p>
+      <p class="strong">1. DEFINIÇÕES</p>
+      <p>No presente Acordo, a expressão:</p>
+      <p>
+        1.1 "<span class="underline">Responsável autorizado</span>" refere-se a um
+        dos seguintes responsáveis do arceiro:
+      </p>
+      <div class="indent">
+        <table class="bordered">
+          <tbody>
+            <tr>
+              <td>Nome completo</td>
+              <td>Cargo</td>
+              <td>Endereço de correio eletrónico</td>
+              <td width="140px">Assinatura exemplificativa</td>
+            </tr>
+            {% for officer in auth_officers %}
+            <tr>
+              <td>{{ officer.first_name }} {{ officer.last_name }}</td>
+              <td>{{ officer.title }}</td>
+              <td>{{ officer.email|text_wrap:20 }}</td>
+              <td width="140px">&nbsp;</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <p>
+        Quaisquer eliminações ou alterações de (ou da lista de) responsável(is)
+        autorizado(s) acima identificado(s) exigem uma alteração por escrito ao
+        presente Acordo em conformidade com o Artigo 20 dos Termos e Condições
+        Gerais dos Acordos de Cooperação Programática.
+      </p>
+      <p>
+        1.2 "<span class="underline">e-FACE</span>" refere-se à funcionalidade de
+        introdução eletrónica de dados do UNICEF relativos às informações contidas
+        nos formulários FACE, quando disponíveis.
+      </p>
+      <p>
+        1.3 "<span class="underline">Formulário FACE</span>" refere-se ao formulário
+        padrão do UNDG de Autorização de Financiamento e Certificado de Despesas,
+        cuja cópia está disponível em
+        <a
+          href="https://unpartnerportalhelpcenter.zendesk.com/hc/article_attachments/7788906095639/7
+                    282-REVISED_FACE_Form.xlsx"
+          >https://unpartnerportalhelpcenter.zendesk.com/hc/article_attachments/7788906095639/7282-REVISED_FACE_Form.xlsx</a
+        >
+        ou em qualquer outro URL que o GDNU possa, periodicamente, determinar.
+      </p>
+      <p>
+        1.4 "<span class="underline">HACT</span>" refere-se à abordagem harmonizada
+        às transferências de dinheiro do Grupo de Desenvolvimento das Nações Unidas
+        (“UNDG – conforme a sigla em inglês”), disponível em
+        <a
+          href="https://undg.org/document/harmonized-approach-to-cash-transfer-framework/"
+          >https://undg.org/document/harmonized-approach-to-cash-transfer-framework/</a
+        >
+        ou em qualquer outro URL que o GDNU possa, periodicamente, determinar.
+      </p>
+      <p>
+        1.5 "<span class="underline">Parceiro Implementador</span>" ou "<span
+          class="underline"
+          >Parceiro</span
+        >" refere-se a {{ agreement.partner }}, {{ agreement.partner.address }}, 
+        {{ agreement.partner.city }}, {{ agreement.partner.country }}.
+      </p>
+      <p>
+        1.6 "<span class="underline">Equipamentos Duradouros</span>" refere-se a
+        qualquer item de valor igual ou superior a cinco mil dólares
+        norte-americanos (5000 USD), incluindo os custos de entrega e manuseamento
+        iniciais, e que tenha uma vida de serviço útil de pelo menos três (3) anos.
+      </p>
+      <p>
+        1.7 "<span class="underline">Programa</span>" refere-se ao plano estratégico
+        ou programa do UNICEF para {{ country }}, aprovado pelo Conselho Executivo
+        do UNICEF para o período {{ cp.from_date|date:"Y" }} to {{ cp.to_date|date:"Y" }}, 
+        incluindo quaisquer prorrogações subsequentes.
+      </p>
+      <p>
+        1.8 "<span class="underline">Documento de programa</span>" refere-se ao
+        documento formal assinado pelas Partes que estabelece os resultados
+        esperados e a forma como são alcançados, incluindo atividades, prazos e
+        orçamento acordados conjuntamente pelas Partes para atividades a realizar
+        pelo Parceiro nos termos do presente PCA. O modelo de Documento de programa
+        está disponível em
+        <a href="https://etools.unicef.org/">https://etools.unicef.org</a>. O
+        Documento de programa constitui a base para a requisição, autorização e
+        desembolso de fundos destinados à realização das atividades planeadas e ao
+        seu acompanhamento e reporte.
+      </p>
+      <p>
+        1.9 "<span class="underline"
+          >Relatório de Progresso do Documento de programa</span
+        >" refere-se ao relatório de progresso descritivo padrão do UNICEF,
+        disponível em
+        <a href="http://www.partnerreportingportal.org/"
+          >www.partnerreportingportal.org</a
+        >.
+      </p>
+      <p>
+        1.10 "<span class="underline"
+          >Custos de Apoio à Capacidade Organizacional</span
+        >" refere-se aos custos incorridos pelo Parceiro para o reforço da
+        capacidade organizacional que não podem ser inequivocamente atribuídos a uma
+        atividade específica executada pelo Parceiro em conformidade com o presente
+        Acordo, incluindo qualquer Documento de programa.
+      </p>
+      <p>
+        1.11 "<span class="underline">Fundo das Nações Unidas para a Infância</span
+        >" ou "<span class="underline">UNICEF</span>" refere-se ao órgão subsidiário
+        das Nações Unidas criado pela Assembleia Geral nos termos da resolução 57(I)
+        de 11 de dezembro de 1946.
+      </p>
+      <p class="strong">2. DOCUMENTOS DO ACORDO</p>
+      <p>2.1 O presente Acordo consiste nos seguintes documentos:</p>
+      <div class="indent">
+        <p>(a) O presente documento;</p>
+        <p>
+          (b) Os Termos e Condições Gerais dos Acordos de Cooperação Programática
+          anexos a este documento ou recursos disponíveis na biblioteca acessíveis em
+          <a href="http://www.unpartnerportal.org/">www.unpartnerportal.org</a>;
+        </p>
+        <p>
+          (c) Quaisquer Documentos de Programa assinados pelas Partes no âmbito do
+          presente Acordo e fazendo referência ao mesmo; e
+        </p>
+        <p>
+          (d) Se aplicável, quaisquer Condições Especiais acordadas entre as Partes
+          relativamente a um determinado programa ou Documento de programa no âmbito
+          do presente Acordo.
+        </p>
+      </div>
+      <p class="strong">3. FINALIDADE E ÂMBITO DE APLICAÇÃO</p>
+      <p>
+        3.1 O presente Acordo rege a execução pelo Parceiro das partes relevantes do
+        programa (incluindo a resposta humanitária) através de um ou vários
+        Documentos de Programa. Descreve a relação entre as Partes e as suas
+        responsabilidades.
+      </p>
+      <p class="strong">4. RESPONSABILIDADES GERAIS DAS PARTES</p>
+      <p>
+        4.1 As Partes deverão trabalhar em conjunto num espírito de cooperação e
+        parceria, com as responsabilidades e obrigações de prestação de contas
+        estabelecidas no presente Acordo, na implementação dos Documentos de
+        Programa na íntegra e de forma ágil, eficiente e eficaz.
+      </p>
+      <p>
+        4.2 As Partes acordam em cumprir as suas respetivas responsabilidades em
+        conformidade com as disposições do presente Acordo, incluindo os Documentos
+        de Programa.
+      </p>
+      <p>
+        4.3 As Partes manter-se-ão mutuamente informadas sobre todas as atividades
+        relevantes relacionadas com a implementação dos Documentos de Programa, bem
+        como realizarão consultas quando qualquer uma delas o considere apropriado,
+        incluindo qualquer circunstância que possa afetar a consecução dos
+        resultados do programa e dos Documentos de Programa.
+      </p>
+      <p>
+        4.4 As Partes deverão cumprir os seus compromissos no pleno respeito pelos
+        termos e condições do presente Acordo e pelos princípios das Nações Unidas.
+      </p>
+      <p class="strong">5. RESPONSABILIDADES DO PARCEIRO</p>
+      <p>
+        5.1 O Parceiro deverá contribuir para a implementação de cada Documento de
+        programa assinado no âmbito do presente Acordo, assumindo as
+        responsabilidades que lhe são atribuídas no presente Acordo, em plena
+        cooperação com o UNICEF. O Parceiro deverá fazê-lo de acordo com o
+        orçamento, calendário de implementação e outros parâmetros estabelecidos em
+        cada Documento de programa, incluindo através:
+      </p>
+      <div class="indent">
+        <p>
+          (a) Da demonstração do mais elevado padrão de conduta para assegurar que
+          os valores fundamentais das Nações Unidas, da Convenção sobre os Direitos
+          da Criança, da Convenção sobre a Eliminação de Todas as Formas de
+          Discriminação Contra as Mulheres e da Convenção sobre os Direitos das
+          Pessoas com Deficiência sejam respeitados;
+        </p>
+        <p>
+          (b) Do início dos trabalhos sobre as responsabilidades que lhe são
+          atribuídas em cada Documento de programa imediatamente após a assinatura
+          do Documento de programa aplicável (mas, em caso algum, antes da
+          assinatura do presente Acordo e do referido Documento de programa) e, se
+          aplicável, após recebimento da primeira parcela do financiamento, dos
+          suprimentos e dos equipamentos que lhe serão transferidos pelo UNICEF;
+        </p>
+        <p>
+          (c) Do cumprimento de suas atribuições relacionadas ao uso do dinheiro,
+          suprimentos, equipamentos, assistência técnica e outros serviços para a
+          implementação do Documento de programa, conforme previsto no presente
+          Acordo e no Documento de programa aplicável;
+        </p>
+        <p>
+          (d) Do cumprimento das suas responsabilidades com diligência e eficiência
+          e em conformidade com os requisitos estabelecidos no Documento de programa
+          aplicável (inclusive no que respeita ao calendário de implementação e
+          orçamento);
+        </p>
+        <p>
+          (e) Da entrega oportuna e satisfatória ao UNICEF dos relatórios exigidos
+          pelo presente Acordo e pelo Documento de programa aplicável, bem como da
+          prestação de todas as demais informações relativas ao Documento de
+          programa e à utilização de qualquer dinheiro, suprimentos e equipamentos
+          que lhe sejam transferidos pelo UNICEF e que o UNICEF possa razoavelmente
+          solicitar;
+        </p>
+        <p>
+          (f) Do exercício dos mais elevados padrões de cuidado na utilização e
+          administração do dinheiro, dos suprimentos e dos equipamentos que lhe são
+          fornecidos pelo UNICEF e assegurar que o seu pessoal se conduza de acordo
+          com os mais elevados padrões de integridade e zelo nesta matéria.
+        </p>
+      </div>
+      <p>5.2 Além das obrigações estabelecidas na Secção 5.1 acima:</p>
+      <div class="indent">
+        <p>
+          (a) O Parceiro deverá tirar o máximo partido de quaisquer isenções fiscais
+          ou isenções de direitos aduaneiros, impostos especiais de consumo ou de
+          importação de que disponha, no que respeita à compra, importação, registro
+          ou utilização de suprimentos e equipamentos adquiridos com fundos
+          disponibilizados pelo UNICEF no âmbito deste Acordo e deverá consultar o
+          UNICEF a esse respeito.
+        </p>
+        <p>
+          (b) O Parceiro deverá estabelecer e manter um sistema de acompanhamento do
+          progresso da implementação de cada Documento de programa, utilizando os
+          resultados definidos, incluindo outputs, indicadores e metas, conforme
+          estabelecido no Documento de programa aplicável.
+        </p>
+        <p>
+          (c) O Parceiro deverá acolher visitas de acompanhamento de representantes
+          de quaisquer doadores que contribuam para os custos de implementação do
+          Documento de programa. O UNICEF dará ao Parceiro um aviso prévio razoável
+          de tais visitas.
+        </p>
+      </div>
+      <p class="strong">6. RESPONSABILIDADES DO UNICEF</p>
+      <p>
+        6.1 O UNICEF contribuirá para a implementação de cada Documento de programa
+        abrangido pelo presente Acordo, assumindo as responsabilidades que lhe são
+        atribuídas no presente Acordo, incluindo através:
+      </p>
+      <div class="indent">
+        <p>
+          (a) Do início e cumprimento atempados das responsabilidades que lhe são
+          atribuídas em cada Documento de programa, desde que receba do Parceiro
+          todos os relatórios e outros documentos necessários;
+        </p>
+        <p>
+          (b) Da realização de transferências de dinheiro, suprimentos e
+          equipamentos em conformidade com as disposições do presente Acordo e do
+          Documento de programa aplicável;
+        </p>
+        <p>
+          (c) Da realização de atividades de acompanhamento, monitoramento,
+          garantia, avaliação e supervisão de cada Documento de programa;
+        </p>
+        <p>
+          (d) Do estabelecimento de coordenação contínua, conforme necessário, com o
+          Governo (se aplicável), outros membros da equipa nacional das Nações
+          Unidas, doadores e outras Partes interessadas;
+        </p>
+        <p>
+          (e) Da prestação de orientações gerais, supervisão, assistência técnica e
+          liderança, conforme apropriado, para a implementação de cada Documento de
+          programa, e da disponibilização para consultas, conforme razoavelmente
+          solicitado; e
+        </p>
+        <p>
+          (f) Da promoção de reuniões periódicas de acompanhamento e revisão
+          conjuntas, a fim de chegar a acordo sobre os apontamentos encontrados e
+          tirar partido das lições aprendidas para melhor servir as necessidades das
+          crianças. As revisões da parceria conjunta terão em conta: (i) o progresso
+          de cada Documento de programa; (ii) a relação de trabalho das Partes;
+          (iii) o cumprimento das obrigações pelas Partes do presente Acordo e de
+          cada Documento de programa; e (iv) o sucesso e os desafios do Parceiro no
+          alcance dos resultados planeados de cada Documento de programa.
+        </p>
+      </div>
+      <p>
+        6.2 A pedido do Parceiro, os Custos de Apoio à Capacidade Organizacional
+        relativos a qualquer Documento de programa e orçamento associado serão
+        reembolsáveis pelo UNICEF ao Parceiro até a uma taxa de sete por cento (7%)
+        das despesas efetivas relacionadas com esse Documento de programa e
+        orçamento associado. Para que seja reembolsável, o Parceiro deverá registar
+        os Custos de Apoio à Capacidade Organizacional nos formulários FACE a enviar
+        à UNICEF em conformidade com os termos do presente Acordo.
+      </p>
+      <p class="strong">7. DOCUMENTOS DE PROGRAMA</p>
+      <p>
+        7.1 As Partes podem assinar um ou mais Documentos de Programa. Cada um
+        desses Documentos de Programa será incorporado no presente Acordo e
+        tornar-se-á válido e vinculativo assim que for assinado pelos responsáveis
+        devidamente autorizados de cada uma das Partes e fizer referência ao
+        presente Acordo.
+      </p>
+      <p>
+        7.2 Os Documentos de Programa só podem ser modificados por acordo escrito
+        entre as Partes.
+      </p>
+      <p class="strong">
+        8. CONTRIBUTOS DO UNICEF PARA A IMPLEMENTAÇÃO DOS DOCUMENTOS DE PROGRAMA
+      </p>
+      <p class="strong">Transferência de dinheiro pelo UNICEF para/em nome do PE</p>
+      <p class="underline">Disposições gerais</p>
+      <p>
+        8.1 O UNICEF prestará assistência financeira ao Parceiro para as atividades,
+        conforme estipulado nos Documentos de Programa (“Transferência em
+        Dinheiro”), sujeito a disponibilidade de fundos e dos termos do presente
+        Acordo. Em relação a cada Documento de programa, a assistência do UNICEF ao
+        Parceiro não excederá o montante incluído no referido Documento de programa.
+      </p>
+      <p>
+        8.2 O UNICEF prestará assistência financeira ao Parceiro seguindo três
+        modalidades de transferência de dinheiro (cada uma designada “modalidade de
+        transferência de dinheiro”):
+      </p>
+      <div class="indent">
+        <p>
+          (a) Pagamento antecipado pelo UNICEF ao Parceiro (referido na HACT como
+          “Transferência Direta de Dinheiro");
+        </p>
+        <p>
+          (b) Reembolso pelo UNICEF ao Parceiro referido na HACT como “Reembolso”);
+          e
+        </p>
+        <p>
+          (c) Pagamento pelo UNICEF em nome do Parceiro ao fornecedor do Parceiro
+          (referido na HACT e no presente Acordo como “Pagamento direto”).
+        </p>
+      </div>
+      <p>
+        8.3 A transferência de dinheiro será efetuada pelo UNICEF em prestações
+        (cada uma designada “Transferência de Dinheiro”), conforme solicitado pelo
+        Parceiro no formulário FACE e de acordo com a respetiva estimativa de custos
+        discriminada que represente as necessidades de dinheiro para realizar as
+        atividades identificadas nos Documentos de Programa ou conforme decidido de
+        outro modo pelo UNICEF.
+      </p>
+      <p class="underline">Procedimentos de transferência de dinheiro</p>
+      <p>8.4 Com respeito a cada Documento de programa:</p>
+      <div class="indent">
+        <p>
+          (a) As prestações da transferência de dinheiro serão transferidas para o
+          Parceiro (ou, quando a modalidade de pagamento direto for utilizada, em
+          nome do Parceiro) apenas para contribuir na implementação do Documento de
+          programa aplicável; e
+        </p>
+        <p>
+          (b) O Parceiro concorda que os fundos assim transferidos serão utilizados
+          exclusivamente para a implementação do referido Documento de programa.
+        </p>
+      </div>
+      <p>
+        8.5 O UNICEF efetuará cada transferência de dinheiro para o Parceiro (ou,
+        quando a modalidade de pagamento direto for utilizada, em nome do Parceiro)
+        em resposta a um pedido, por escrito do Parceiro, de acordo com os seguintes
+        procedimentos:
+      </p>
+      <p class="underline">
+        Procedimentos relativos a pedidos de transferência de dinheiro no âmbito das
+        três modalidades de transferência de dinheiro:
+      </p>
+      <div class="indent">
+        <p>
+          (a) Salvo indicação em contrário por escrito pelo UNICEF, de três em três
+          meses civis durante a vigência do presente Acordo (cada um designado um
+          “trimestre”), o Parceiro deverá apresentar ao UNICEF um pedido por escrito
+          relativo à transferência de dinheiro num montante igual às necessidades do
+          Parceiro para esse trimestre relacionadas com as atividades especificadas
+          no Documento de programa. O Parceiro deverá fazê-lo utilizando o
+          formulário FACE e a estimativa de custos discriminada. O pedido deve ser
+          assinado por um responsável autorizado.
+        </p>
+        <p>
+          (b) O primeiro pedido por escrito utilizando o formulário FACE poderá ser
+          apresentado assim que o presente Acordo e o Documento de programa
+          relevante tiverem sido assinados por ambas as Partes. Se o referido pedido
+          escrito for apresentado de forma adequada e completa, o UNICEF determinará
+          o montante a ser transferido e transferirá esse montante para o Parceiro
+          (ou, quando a modalidade de pagamento direto for utilizada, em nome do
+          Parceiro) dentro de um prazo razoável.
+        </p>
+        <p>
+          (c) Salvo decisão em contrário do UNICEF, o segundo e cada pedido escrito
+          subsequente, utilizando o formulário FACE, exigem que o UNICEF receba um
+          relatório sobre a utilização da primeira transferência de dinheiro antes
+          da disponibilização de uma nova transferência para um período subsequente
+          de três meses. Se esse segundo ou subsequente pedido for recebido
+          atempadamente e for apresentado de forma adequada e completa, o UNICEF
+          determinará o montante a ser transferido e transferirá esse montante para
+          o Parceiro (ou, quando a modalidade de pagamento direto for utilizada, em
+          nome do Parceiro) dentro de um prazo razoável.
+        </p>
+      </div>
+      <p class="underline">
+        Procedimentos adicionais aplicáveis apenas à modalidade de pagamento direto:
+      </p>
+      <div class="indent">
+        <p>
+          (d) O pedido de pagamento direto deve ser apresentado utilizando o
+          formulário FACE e deve, em todos os casos, incluir os dados completos do
+          fornecedor e informações bancárias num formato especificado pelo UNICEF.
+        </p>
+        <p>
+          (e) Tanto para as modalidades de pagamento direto como de reembolso, as
+          despesas solicitadas devem ser previamente autorizadas pelo UNICEF através
+          do formulário FACE.
+        </p>
+      </div>
+      <p class="underline">
+        Termos e condições especiais para transferência de dinheiro:
+      </p>
+      <p>
+        8.6 Qualquer pedido de transferência de dinheiro pelo Parceiro deve
+        preencher os seguintes critérios a contento do UNICEF, sob pena do UNICEF
+        poder decidir não honrar o pedido no todo ou em parte:
+      </p>
+      <div class="indent">
+        <p>
+          (a) O montante e a finalidade do pedido devem corresponder às disposições
+          do Documento de programa, incluindo as respectivas atividades, calendário
+          de implementação e orçamento;
+        </p>
+        <p>
+          (b) O pedido deve ser razoável e justificado segundo os princípios da boa
+          gestão financeira, em particular os princípios da relação custo-benefício
+          e custo- eficácia;
+        </p>
+        <p>
+          (c) Não deverá haver outros motivos para crer que as despesas violam o
+          presente acordo, incluindo o Documento de programa; e
+        </p>
+        <p>
+          (d) Sob reserva do parágrafo 8.5, alínea (c) acima, as transferência de
+          dinheiro anteriores devem ter sido comunicadas a contento do UNICEF, em
+          conformidade com o Artigo 10 do presente Acordo.
+        </p>
+      </div>
+      <p>
+        8.7 O UNICEF pode decidir ajustar o montante de qualquer transferência de
+        dinheiro sempre que tiver razões para o fazer, incluindo:
+      </p>
+      <div class="indent">
+        <p>
+          (a) Os progressos gerais alcançados até à data, no âmbito do Documento de
+          programa;
+        </p>
+        <p>(b) A compensação de qualquer despesa não elegível; ou</p>
+        <p>
+          (c) A compensação de qualquer saldo não gasto ou não comunicado ainda na
+          posse do Parceiro relativo a quaisquer transferência de dinheiro
+          anteriores.
+        </p>
+      </div>
+      <p>
+        8.8 O UNICEF só será obrigado a transferir para o Parceiro ou, quando a
+        modalidade de pagamento direto for utilizada, em nome do Parceiro, o
+        montante que o UNICEF determinar ser devido nos termos do presente Acordo. O
+        Parceiro Implementador concorda que o UNICEF não será responsável perante
+        ele ou perante terceiros, incluindo os fornecedores do Parceiro, por
+        quaisquer montantes que o UNICEF determine não estarem em conformidade com o
+        presente Acordo.
+      </p>
+      <p>
+        8.9 (a) A administração pelo Parceiro da transferência de dinheiro deve ser
+        efetuada nos termos dos seus próprios regulamentos, regras e procedimentos
+        financeiros, que o UNICEF analisou, avaliou e considerou adequados.
+      </p>
+      <div class="indent">
+        <p>
+          (b) Se, em conformidade com a HACT, o UNICEF disponibilizar uma
+          transferência de dinheiro antes da revisão e avaliação dos regulamentos,
+          regras e procedimentos financeiros do Parceiro, caso venha a determinar
+          posteriormente que os regulamentos, regras e procedimentos financeiros do
+          Parceiro não são adequados, o UNICEF notificará por escrito o Parceiro e,
+          nesse caso, poderá exigir a devolução das transferências de dinheiro não
+          gastas já pagas ao Parceiro e poderá decidir implementar diretamente o
+          Documento de programa ou Partes do mesmo (incluindo quaisquer atividades
+          decompras).
+        </p>
+      </div>
+      <p>
+        8.10 Sempre que adquirir bens ou serviços utilizando a transferência de
+        dinheiro, o Parceiro deve fazê-lo levando em consideração os seguintes
+        princípios:
+      </p>
+      <div class="indent">
+        <p>(a) A melhor relação custo-benefício;</p>
+        <p>(b) A equidade, integridade e transparência;</p>
+        <p>(c) A concorrência.</p>
+      </div>
+      <p>
+        8.11 A transferência de dinheiro que não corresponda a pagamentos diretos
+        será efetuada pelo UNICEF para a seguinte conta bancária do Parceiro:
+      </p>
+
+      <div class="indent">
+        {% for bank_detail in bank_details %}
+        <table class="bordered">
+          <tr>
+            <td colspan="2">Conta</td>
+          </tr>
+          <tr>
+            <td style="width: 45%">Nome do banco</td>
+            <td style="width: 55%">{{ bank_detail.bank_name }}</td>
+          </tr>
+          <tr>
+            <td style="width: 45%">Endereço do banco</td>
+            <td style="width: 55%">{{ bank_detail.bank_address }}</td>
+          </tr>
+          <tr>
+            <td style="width: 45%">Título da conta</td>
+            <td style="width: 55%">{{ bank_detail.account_title }}</td>
+          </tr>
+          <tr>
+            <td style="width: 45%">N.º da conta</td>
+            <td style="width: 55%">{{ bank_detail.account_number }}</td>
+          </tr>
+          <tr>
+            <td style="width: 45%">Moeda da conta</td>
+            <td style="width: 55%">{{ bank_detail.account_currency }}</td>
+          </tr>
+          <tr>
+            <td style="width: 45%">Códigos SWIFT/IBAN</td>
+            <td style="width: 55%">{{ bank_detail.routing_details }}</td>
+          </tr>
+          <tr>
+            <td style="width: 45%">Pessoa de contacto no banco</td>
+            <td style="width: 55%">
+              {% firstof bank_detail.bank_contact_person '&nbsp;' %}
+            </td>
+          </tr>
+          {% if bank_detail.tax_number_5 %}
+          <tr>
+            <td style="width: 45%">Detalhes Hawala</td>
+            <td style="width: 55%">{{ bank_detail.tax_number_5 }}</td>
+          </tr>
+          {% endif %}
+        </table>
+        {% endfor %}
+      </div>
+      <p class="strong">
+        Transferência de suprimentos/equipamentos pelo UNICEF ao Parceiro
+      </p>
+      <p>
+        8.12 Os suprimentos e equipamentos transferidos para o Parceiro serão
+        utilizados exclusivamente para a implementação do Documento de programa, a
+        menos que o UNICEF dê o seu acordo a outra utilização.
+      </p>
+      <p>
+        8.13 O Parceiro tornar-se-á proprietário dos suprimentos e equipamentos
+        quando os receber. No caso de o UNICEF concordar em armazenar os suprimentos
+        e os equipamentos para o Parceiro ou detê-los em nome do Parceiro, este
+        tornar-se-á proprietário desses suprimentos e equipamentos conforme o acordo
+        que estabelecer com o UNICEF. A título excepcional, o UNICEF pode decidir
+        por escrito que permanecerá proprietária dos suprimentos e equipamentos por
+        si transferidos para o Parceiro.
+      </p>
+      <p>
+        8.14 O UNICEF pode decidir que os suprimentos e equipamentos já transferidos
+        para o Parceiro devem ser destacados por este para fins de implementação de
+        outro Documento de programa ou realocados. O Parceiro deverá cumprir de
+        imediato a decisão do UNICEF e, neste último caso, o Parceiro concorda que,
+        não obstante o disposto no parágrafo 8.13 acima, deve, mediante instruções
+        escritas do UNICEF, transferir a propriedade dos suprimentos e equipamentos
+        de acordo com as instruções do UNICEF.
+      </p>
+      <p>
+        8.15 O Parceiro deverá exercer o mais elevado padrão de cuidado ao utilizar
+        e administrar tais suprimentos e equipamentos e colocar as marcações do
+        UNICEF nos mesmos, em consulta com o UNICEF.
+      </p>
+      <p>
+        8.16 Os veículos, caso existam, colocados à disposição do Parceiro pelo
+        UNICEF, serão transferidos apenas a título de empréstimo. Os referidos
+        veículos serão disponibilizados ao Parceiro assim que as Partes assinarem o
+        acordo padrão do UNICEF para o empréstimo de veículos, do qual uma cópia
+        será entregue ao Parceiro.
+      </p>
+      <p class="strong">9. CONSERVAÇÃO DE REGISTROS</p>
+      <p>
+        9.1 O Parceiro compromete-se a manter livros e registros contábeis
+        rigorosos, completos e atualizados.
+      </p>
+      <p class="underline">Transferência de dinheiro:</p>
+      <p>
+        9.2 Os livros e registros do Parceiro deverão identificar claramente todas
+        as transferência de dinheiro por si recebidas, bem como os desembolsos por
+        si efetuados no âmbito do presente Acordo, incluindo o montante de quaisquer
+        fundos não gastos. Sem limitar o que precede, o Parceiro é obrigado a
+        manter:
+      </p>
+      <div class="indent">
+        <p>
+          (a) Registros que mostrem quais as transações registradas no seu
+          sistema contabilístico que representam as despesas comunicadas para cada rúbrica
+          nos formulários FACE e quaisquer receitas obtidas pelo Parceiro em relação a
+          pagamentos antecipados (transferências diretas de dinheiro) efetuados pelo
+          UNICEF;
+        </p>
+        <p>
+          (b) Documentação original incluindo contas, faturas, recibos e qualquer
+          outra documentação relevante, que deve ser mantida pelo Parceiro durante um
+          período de cinco (5) anos após a conclusão do último Documento de programa ou o
+          termo do presente Acordo, consoante o que ocorrer mais tarde. Tal documentação
+          incluirá, entre outros, ordens de compra, faturas de fornecedores, contratos, notas
+          de entrega, locações, cupões de pagamento, extratos bancários, bilhetes de avião,
+          cupões de gasolina, registros de salários, contratos de trabalho, listas de presenças,
+          pedidos de reembolso de despesas, recibos de caixa, lançamentos contabilísticos,
+          ficheiros de compras, que documentem uma seleção competitiva e justa, e qualquer
+          outra documentação comprovativa relevante. A menos que previamente acordado
+          com o UNICEF, o Parceiro deverá assegurar que todos os cupões relacionados com a
+          utilização de transferências de dinheiro contenham uma anotação clara mostrando
+          uma referência ao Documento de programa. O Parceiro entende que uma
+          declaração escrita da sua parte de que o dinheiro foi gasto é insuficiente e não pode
+          substituir a documentação original comprovativa das despesas.
+        </p>
+      </div>
+      <p class="underline">Suprimentos/equipamentos:</p>
+      <p>
+        9.3 O Parceiro deverá manter registros dos suprimentos e equipamentos adquiridos
+        com recurso proveniente da transferência de dinheiro ou transferidos para o
+        Parceiro em conformidade com os parágrafos 8.12 a 8.16 do presente Acordo. O
+        Parceiro deverá realizar inventários pormenorizados e mantê-los durante um
+        período de cinco (5) anos após a conclusão do último Documento de programa ou
+        do termo do presente Acordo, consoante o que ocorrer mais tarde.
+      </p>
+      <p class="strong">10. REQUISITOS DE APRESENTAÇÃO DE RELATÓRIOS</p>
+      <p>
+        10.1 O Parceiro deverá entregar ao UNICEF os relatórios indicados Secção
+        adiante. Os relatórios descritivos serão, na medida do possível,
+        apresentados em inglês, francês ou espanhol.
+      </p>
+      <p class="strong">Relatórios financeiros</p>
+      <p class="underline">
+        10.2 Relatórios financeiros utilizando o formulário FACE:
+      </p>
+      <div class="indent">
+        <p>
+          (a) Salvo acordo em contrário entre as Partes por escrito, o Parceiro
+          deverá apresentar os formulários FACE no final de cada trimestre. Caso um
+          formulário FACE não seja apresentado no prazo de seis (6) meses a partir
+          do último trimestre, o UNICEF suspenderá, salvo acordo em contrário,
+          quaisquer outras transferências de dinheiro para o Parceiro ou em nome do
+          Parceiro.
+        </p>
+        <p>
+          (b) O formulário FACE final deverá ser apresentado o mais tardar trinta
+          (30) dias civis após o termo do Documento de programa.
+        </p>
+        <p>(c) O formulário FACE:</p>
+        <div class="indent">
+          <p>
+            (i) só incluirá despesas que sejam identificáveis e verificáveis. (O
+            termo “identificável” pressupõe que as despesas sejam registadas no
+            sistema contabilístico do Parceiro e que o sistema contabilístico
+            indique quais as transações que representam as despesas declaradas para
+            cada linha do formulário FACE. O termo “verificável” pressupõe que as
+            despesas possam ser confirmadas pelos registros referidos no Artigo 9).
+          </p>
+          <p>
+            (ii) só incluirá as despesas diretamente imputáveis à execução das
+            atividades constantes do Documento de programa;
+          </p>
+          <p>
+            (iii) só incluirá despesas que tenham sido efetivamente incorridas e
+            apoiadas pelo Parceiro;
+          </p>
+          <p>
+            (iv) não incluirá despesas não elegíveis para transferências de dinheiro
+            (“despesas não elegíveis”, conforme estipulado no parágrafo 10.2, alínea
+            e), do presente Artigo);
+          </p>
+          <p>
+            (v) incluirá o saldo de quaisquer fundos não gastos remanescentes de
+            quaisquer transferência de dinheiro anteriores; e
+          </p>
+          <p>
+            (vi) incluirá quaisquer reembolsos ou acertos recebidos pelo Parceiro
+            relativos a transferência de dinheiro anteriores.
+          </p>
+        </div>
+        <p>
+          (d) O UNICEF terá acesso, mediante pedido, a todos os documentos e
+          registros que comprovem ou possam ser considerados como comprovativos das
+          informações contidas no formulário FACE.
+        </p>
+        <p class="underline">Despesas não elegíveis:</p>
+        <p>
+          (e) As despesas seguintes não são elegíveis (conforme determinado
+          pelo UNICEF a seu exclusivo critério) e não serão, por conseguinte, incluídas no
+          formulário FACE:
+        </p>
+        <div class="indent">
+          <p>
+            (i) Despesas não efetuadas com atividades ou não necessárias
+            para a execução das atividades, incluídas no Documento de programa;
+          </p>
+          <p>
+            (ii) Despesas com o imposto sobre o valor acrescentado (“IVA”)
+            a menos que o Parceiro possa razoavelmente demonstrar à UNICEF que não
+            pode recuperar o IVA;
+          </p>
+          <p>
+            (iii) Despesas cobertas por outro Documento de programa ou
+            relacionadas com o mesmo;
+          </p>
+          <p>
+            (iv) Despesas pagas ou reembolsadas ao Parceiro por outro
+            doador ou entidade;
+          </p>
+          <p>
+            (v) Despesas em relação às quais o Parceiro tenha recebido
+            uma contribuição em espécie de outro doador ou entidade;
+          </p>
+          <p>
+            (vi) Custos de Apoio à Capacidade Organizacional que excedam
+            a taxa referida noArtigoArtigo 6.2 do presente Acordo;
+          </p>
+          <p>
+            (vii) Despesas não verificáveis através de registros conforme
+            previsto no Artigo 9 do presente Acordo (com exceção dos Custos de Apoio
+            à Capacidade Organizacional referidos no Artigo 6.2 do presente Acordo);
+          </p>
+          <p>
+            (viii) Os salários dos funcionários do Parceiro que excedam as
+            taxas estabelecidas pelo UNICEF para funções comparáveis no posto de
+            trabalho relevante;
+          </p>
+          <p>
+            (ix) As despesas relativas a honorários de consultores
+            individuais retidos pelo Parceiro que excedam os estabelecidos pelo UNICEF
+            por serviços comparáveis prestados por consultores individuais;
+          </p>
+          <p>
+            (x) Despesas de viagem, ajudas de custo e subsídios
+            relacionados para os funcionários ou consultores do Parceiro que excedam
+            os estabelecidos pelo UNICEF para o seu pessoal ou consultores, conforme
+            aplicável;
+          </p>
+          <p>
+            (xi) Montantes que representem acréscimos de custos e não
+            despesas efetivamente incorridas pelo Parceiro;
+          </p>
+          <p>
+            (xii) Despesas que representem meramente transferências
+            financeiras entre unidades administrativas ou locais do Parceiro,
+            designadamente, como pagamento de serviços prestados por uma unidade
+            administrativa do Parceiro a outra;
+          </p>
+          <p>
+            (xiii) Despesas que não sejam razoáveis e justificadas segundo os
+            princípios da boa gestão financeira, em particular os princípios da relação
+            custo-benefício e custo-eficácia;
+          </p>
+          <p>
+            (xiv) Despesas relacionadas com obrigações que foram assumidas
+            após a data final do Documento de programa aplicável;
+          </p>
+          <p>(xv) Dívida e encargos do serviço da dívida;</p>
+          <p>(xvi) Perdas cambiais;</p>
+          <p>
+            (xvii) Multas ou taxas a pagar às autoridades relacionadas com a
+            pontualidade do pagamento do IVA ou dos pagamentos aduaneiros exigidos
+            por lei;
+          </p>
+          <p>
+            (xviii) Despesas afetadas por fraude, de acordo com a definição da
+            Política de Proibição e Combate à Fraude e à Corrupção do UNICEF; e
+          </p>
+          <p>
+            (xx) Despesas duvidosas para as quais o Parceiro não tenha
+            apresentado, na opinião do UNICEF, uma explicação satisfatória;
+          </p>
+          <p>
+            (xxi) Despesas efetuadas em violação de qualquer um dos termos do
+            presente Acordo.
+          </p>
+        </div>
+      </div>
+      <p>
+        10.3 Todos os relatórios financeiros ao UNICEF serão elaborados pelo
+        Parceiro na moeda em que a transferência de dinheiro tenha sido efetuada. O
+        Parceiro não é obrigado a converter as transações em dólares dos Estados
+        Unidos ou em qualquer outra moeda.
+      </p>
+      <p class="indent underline">Utilização da Ferramenta Digital FACE:</p>
+      <p>
+        10.4 Para além da utilização do formulário FACE, o Parceiro pode introduzir
+        a informação contida no formulário FACE na Ferramenta Digital FACE, se o
+        UNICEF assim o solicitar.
+      </p>
+      <p class="strong">Relatórios de progresso</p>
+      <p>
+        10.5 O Parceiro deve apresentar ao UNICEF relatórios de progresso
+        descritivos relativos às atividades planeadas constantes do Documento de
+        programa, utilizando o Relatório de Progresso padrão do Documento de
+        programa, disponível em
+        <a href="http://www.partnerreportingportal.org/"
+          >www.partnerreportingportal.org</a
+        >. A menos que as Partes acordem em contrário por escrito, estes relatórios
+        serão apresentados no final de cada trimestre. O relatório final será
+        apresentado o mais tardar trinta (30) dias civis após o termo do programa,
+        juntamente com o formulário FACE.
+      </p>
+      <p class="strong">Relatórios adicionais</p>
+      <p>
+        10.6 Os requisitos relativos a relatórios adicionais serão especificados no
+        Documento de programa. O Parceiro deverá apresentar os relatórios pontuais
+        que lhe sejam periodicamente solicitados pelo UNICEF. O UNICEF envidará
+        todos os esforços razoáveis para minimizar os pedidos de apresentação de
+        relatórios pontuais.
+      </p>
+
+      <p class="strong">
+        11. AÇÕES APÓS A CONCLUSÃO DAS ATIVIDADES NO ÂMBITO DE UM DOCUMENTO DE
+        PROGRAMA
+      </p>
+      <p>11.1 Para cada Documento de programa:</p>
+      <div class="indent">
+        <p>
+          (a) Uma vez concluídas as suas atividades no âmbito de um Documento de
+          programa, o Parceiro deverá devolver ao UNICEF os saldos não gastos de
+          todas as transferências de dinheiro no âmbito do Documento de programa
+          (que serão comunicados no formulário FACE final apresentado pelo
+          Parceiro), bem como os demais montantes a que não tenha direito.
+        </p>
+        <p>
+          (b) Uma vez concluídas as suas atividades no âmbito de um Documento de
+          programa, o Parceiro deverá devolver ao UNICEF todos os suprimentos e
+          equipamentos não utilizados fornecidos pelo UNICEF para contribuir com a
+          execução do programa, mas não utilizados.
+        </p>
+        <p>
+          (c) Os referidos reembolsos e devoluções serão efetuados o mais tardar
+          noventa (90) dias civis após a data final do Documento de programa em
+          causa ou a data efetiva de cessação das atividades, o que tiver ocorrido
+          primeiro.
+        </p>
+      </div>
+      <p>
+        11.2 Uma vez concluídas as atividades do Parceiro no âmbito de um Documento
+        de programa, as Partes consultar-se-ão a respeito do destino de todos os
+        Equipamentos Duradouros disponibilizados pelo UNICEF ou adquiridos através
+        da transferência de dinheiro (ou, caso tenha sido utilizada a modalidade de
+        pagamento direto, em nome do Parceiro) em relação a esse Documento de
+        programa. O UNICEF pode decidir que esses Equipamentos Duradouros devem ser
+        transferidos para uma utilização diferente. Nesse caso, o Parceiro, mediante
+        instruções escritas do UNICEF, deverá transferir a propriedade desses bens
+        em conformidade.
+      </p>
+      <p class="strong">12. PRIVILÉGIOS E IMUNIDADES; RESOLUÇÃO DE LITÍGIOS</p>
+      <p>
+        12.1 Em conformidade com o Artigo 18º dos Termos e Condições Gerais para
+        Acordos de Cooperação Programática, nada no presente Acordo ou com ele
+        relacionado será considerado como uma renúncia, explícita ou implícita, a
+        qualquer dos privilégios e imunidades das Nações Unidas, incluindo do
+        UNICEF.
+      </p>
+      <p>
+        12.2 As Partes envidarão os seus melhores esforços para resolver
+        amigavelmente qualquer disputa, diferendo ou reclamação decorrente do
+        presente Acordo ou da violação, rescisão ou invalidade do mesmo. Sempre que
+        as Partes desejem procurar uma solução amigável através da conciliação, esta
+        terá lugar em conformidade com as regras de conciliação da Comissão das
+        Nações Unidas para o Direito Comercial Internacional ("<span
+          class="underline"
+          >UNCITRAL – conforme a sigla em inglês</span
+        >") então em vigor ou de acordo com qualquer outro procedimento que possa
+        ser acordado entre as Partes por escrito.
+      </p>
+      <p>
+        12.3 Qualquer disputa, diferendo ou reclamação entre as Partes decorrente do
+        presente Acordo que não seja resolvido no prazo de noventa (90) dias após
+        receção por uma parte de um pedido de resolução amigável da outra parte,
+        poderá ser submetido a arbitragem por qualquer uma das Partes. A arbitragem
+        terá lugar em conformidade com o Regulamento de Arbitragem do UNCITRALI
+        então em vigor. O local da arbitragem será Nova Iorque, Estado de Nova
+        Iorque, EUA. As decisões do tribunal arbitral basear-se-ão nos princípios
+        gerais do direito comercial internacional. O tribunal arbitral não terá
+        autoridade para conceder indemnizações punitivas. Além disso, salvo
+        disposição em contrário expressa no Acordo, o tribunal arbitral não terá
+        autoridade para conceder juros superiores à taxa interbancária oferecida de
+        Londres (“LIBOR”) então vigente e tais juros serão apenas juros simples.
+        Caso a LIBOR deixe de estar disponível, será utilizada a taxa de
+        financiamento noturno garantida (Secured Overnight Financing Rate - SOFR) do
+        Banco de Nova Iorque do Sistema de Reserva Federal dos Estados Unidos então
+        em vigor e tais juros serão apenas juros simples. À luz dos privilégios e
+        imunidades do UNICEF, as referências no Regulamento de Arbitragem do
+        UNCITRAL ao local de arbitragem referir-se-ão apenas ao local efetivo do
+        procedimento arbitral, mas não significarão a “sede” ou a “sede jurídica” ou
+        o “foro jurídico” de tais procedimentos. As Partes ficarão vinculadas por
+        qualquer decisão arbitral proferida em resultado da referida arbitragem como
+        sendo a sentença final de qualquer disputa, diferendo ou reclamação.
+      </p>
+      <p class="strong">13. DISPOSIÇÕES FINAIS</p>
+      <p>
+        13.1 O presente Acordo entrará em vigor na data da sua assinatura por ambas
+        as Partes. Cessará no último dia do programa, a menos que seja rescindido
+        mais cedo em conformidade com o Artigo 13º dos Termos e Condições Gerais dos
+        Acordos de Cooperação Programática..
+      </p>
+      <p>
+        <span class="strong">EM FÉ DO QUE</span>, os signatários, devidamente
+        autorizados pelas respetivas Partes, assinaram o presente Acordo.
+      </p>
+      <table cellspacing="0" cellpadding="0">
+        <tbody>
+          <tr>
+            <td colspan="2">Pelo Parceiro:</td>
+            <td colspan="2">Pelo Fundo das Nações Unidas para a Infância:</td>
+          </tr>
+          <tr>
+            <td>Nome:</td>
+            <td>&nbsp;</td>
+            <td>Nome:</td>
+            <td>&nbsp;</td>
+          </tr>
+          <tr>
+            <td>Cargo:</td>
+            <td>&nbsp;</td>
+            <td>Cargo:</td>
+            <td>&nbsp;</td>
+          </tr>
+          <tr>
+            <td colspan="2">
+              Assinatura: &nbsp;&nbsp;&nbsp;_________________________
+            </td>
+            <td colspan="2">
+              Assinatura: &nbsp;&nbsp;&nbsp;_________________________
+            </td>
+          </tr>
+          <tr>
+            <td>Data:</td>
+            <td>&nbsp;</td>
+            <td>Data:</td>
+            <td>&nbsp;</td>
+          </tr>
+          <tr>
+            <td>Endereço de correio eletrónico:</td>
+            <td>&nbsp;</td>
+            <td>Endereço de correio eletrónico:</td>
+            <td>&nbsp;</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="page-break"></div>
+      <p class="text-center strong">TERMOS E CONDIÇÕES GERAIS</p>
+      <p class="text-center strong">DOS ACORDOS DE COOPERAÇÃO PROGRAMÁTICA</p>
+      <p>
+        1. <span class="strong">ESTATUTO JURÍDICO:</span> considerar-se-á que o
+        Parceiro tem o estatuto jurídico de um contratante independente em relação
+        ao UNICEF. Os funcionários, pessoal e subcontratantes do Parceiro não serão
+        considerados, de modo algum, funcionários ou agentes do UNICEF.
+      </p>
+      <p>
+        2. <span class="strong">CESSÃO:</span> o Parceiro não cederá, transferirá,
+        empenhará ou alienará de outro modo o presente Acordo ou quaisquer Partes do
+        mesmo ou quaisquer dos seus direitos, créditos ou obrigações no âmbito do
+        presente Acordo, exceto com o consentimento prévio por escrito do UNICEF.
+      </p>
+      <p>
+        3. <span class="strong">SUBCONTRATAÇÃO:</span> o Parceiro não poderá
+        utilizar os serviços de subcontratantes a não ser que o UNICEF dê
+        autorização prévia, por escrito, em qualquer caso específico. Se o UNICEF
+        aprovar uma determinada subcontratação de serviços, o Parceiro deverá
+        assegurar que os seus subcontratantes não utilizem outros níveis de
+        subcontratação, incluindo subcontratantes secundários, a menos que o UNICEF
+        tenha dado autorização prévia por escrito em cada caso específico. O recurso
+        por parte do Parceiro a subcontratantes, ou a outros níveis de
+        subcontratantes, não isenta o Parceiro de nenhuma das suas obrigações no
+        âmbito do presente Acordo. Os termos de qualquer subcontrato, subcontrato
+        secundário, etc., estão sujeitos às disposições do presente Acordo, devendo
+        dar-lhes cumprimento e torná-las plenamente eficazes. Em especial, o
+        Parceiro deverá assegurar que qualquer subcontrato ou outros níveis de
+        subcontratos incluam disposições substancialmente idênticas às do Artigo 4º.
+      </p>
+      <p>4. <span class="strong">NORMAS ÉTICAS</span></p>
+      <p>
+        4.1 <span class="strong">Declaração de parceria:</span> o UNICEF exige que
+        um responsável devidamente autorizado do Parceiro preencha e assine uma
+        declaração de parceria antes da assinatura do presente Acordo. A declaração
+        de parceria faz parte integrante do presente Acordo e está inserida no
+        presente Acordo mediante remissão. O Parceiro entende que as afirmações e
+        declarações constantes da declaração de parceria são essenciais para que o
+        UNICEF assine o presente Acordo. O UNICEF tem o direito de rescindir este
+        Acordo com efeito imediato se tomar conhecimento de quaisquer declarações
+        incorretas ou omissões por parte do Parceiro na declaração. O Parceiro
+        obriga-se a informar o UNICEF assim que tiver conhecimento de qualquer
+        incidente ou denúncia que seja inconsistente com as afirmações e declarações
+        fornecidas na declaração de parceria.
+      </p>
+      <p>
+        4.2
+        <span class="strong"
+          >Responsabilidade do Parceiro pelos funcionários, pessoal e
+          subcontratantes:</span
+        >
+        o Parceiro será responsável pela competência profissional e técnica dos seus
+        funcionários, pessoal e subcontratantes e selecionará, para o trabalho no
+        âmbito do presente Acordo, pessoas e entidades de confiança que deverão
+        atuar com eficácia na execução deste Acordo, respeitar as leis e os costumes
+        locais e observar um elevado padrão de conduta moral e ética, o que inclui o
+        dever de salvaguarda. Antes da nomeação, os funcionários e outro pessoal,
+        bem como o pessoal dos subcontratantes, devem ser interrogados, na medida
+        permitida por lei, sobre se foram despedidos por uma entidade patronal
+        anterior por motivos de conduta dolosa ou se deixaram esse emprego durante
+        uma investigação por conduta dolosa e nunca foram ilibados. Na medida
+        permitida por lei, devem igualmente ser obtidas referências e realizadas
+        verificações de antecedentes adequadas. A pedido do UNICEF, o Parceiro
+        revelará se (i) despediu funcionários ou pessoal por violação da política
+        relativa ao dever de salvaguarda de um Parceiro, incluindo exploração e o
+        abuso sexuais, nos últimos 5 anos, e se (ii) funcionários ou pessoal a
+        trabalhar para o Parceiro no âmbito do presente Acordo foram objeto de
+        investigação (e as conclusões da investigação tinham fundamento) e/ou estão
+        a ser objeto de investigação por violações do dever de salvaguarda,
+        incluindo alegações de exploração e abuso sexuais, desde que o Parceiro não
+        seja obrigado a divulgar quaisquer Dados Pessoais.
+      </p>
+      <p>
+        4.3
+        <span class="strong"
+          >Proibição de benefícios a funcionários; restrições à contratação de
+          pessoal do UNICEF; conflito de interesses:</span
+        >
+      </p>
+      <ol class="alpha-list">
+        <li>
+          O Parceiro declara e garante que nenhum funcionário do UNICEF ou de
+          qualquer organização do sistema das Nações Unidas recebeu do Parceiro ou
+          em seu nome, ou lhe será oferecido pelo Parceiro ou em seu nome, qualquer
+          benefício direto ou indireto relacionado com o presente Acordo, incluindo
+          a adjudicação do presente Acordo ao Parceiro. Tal benefício direto e
+          indireto inclui, entre outros, quaisquer presentes, favores ou
+          hospitalidade. O Parceiro aceita que a violação desta disposição constitui
+          uma violação de uma condição essencial do presente Acordo.
+        </li>
+        <li>
+          O Parceiro declara e garante que o seguinte foi cumprido e será cumprido
+          no que respeita a antigos funcionários do UNICEF: (i) durante o período de
+          um ano após a desvinculação de um funcionário do UNICEF, o Parceiro não
+          poderá empregar esse ex-funcionário do UNICEF se este tiver estado,
+          durante os três anos anteriores à desvinculação do UNICEF, envolvido em
+          qualquer aspecto do processo conducente à seleção do Parceiro ou à
+          execução do programa; e (ii) durante o período de dois anos após a
+          desvinculação de um ex-funcionário do UNICEF, o ex-funcionário não pode,
+          direta ou indiretamente em nome do Parceiro, comunicar com o UNICEF ou
+          apresentar ao UNICEF, em nome do Parceiro, quaisquer assuntos abrangidos
+          pelas responsabilidades desse ex- funcionário enquanto trabalhou no
+          UNICEF.
+        </li>
+        <li>
+          O Parceiro declara e garante ainda que, em relação a todos os aspectos do
+          Acordo (incluindo a celebração do Acordo pelo UNICEF e a seleção e
+          adjudicação de subcontratos pelo Parceiro), informou o UNICEF sobre
+          qualquer situação que possa constituir um conflito de interesses real ou
+          potencial ou que possa ser razoavelmente entendida como um conflito de
+          interesses.
+        </li>
+      </ol>
+      <p>
+        4.4
+        <span class="strong"
+          >Combate à fraude, lavagem de dinheiro e financiamento do
+          terrorismo:</span
+        >
+      </p>
+
+      <ol style="list-style-type: none;">
+        <li>
+          a. O Parceiro deverá (a) observar os mais elevados padrões éticos; (b)
+          envidar os seus melhores esforços para proteger o UNICEF contra fraude, na
+          execução do Acordo; e (c) cumprir as disposições aplicáveis da Política de
+          Proibição e Combate à Fraude e à Corrupção do UNICEF, disponível em
+          <a
+            href="https://www.unicef.org/supply/documents/unicefs-policy-prohibiting-and-combatting-fraud-and-corruption"
+            >https://www.unicef.org/supply/documents/unicefs-policy-prohibiting-and-combatting-fraud-and-corruption</a
+          >
+          ou em qualquer outro URL que o UNICEF possa, periodicamente, determinar.
+          Em especial, o Parceiro não deverá envolver-se, e deverá assegurar que o
+          seu pessoal, agentes e subcontratantes não se envolvam, em qualquer
+          conduta corrupta, fraudulenta, coerciva, colusiva ou obstrutiva, de acordo
+          com a definição destes termos na Política de Proibição e Combate à Fraude
+          e à Corrupção do UNICEF e seguidamente descritos.
+        </li>
+        <li>
+          b. O Parceiro declara e garante que nem ele nem nenhuma das suas afiliadas,
+          pessoal ou diretores, está sujeito a qualquer sanção ou suspensão
+          temporária imposta por qualquer organização do sistema das Nações Unidas
+          ou por outra organização intergovernamental internacional. O Parceiro
+          compromete-se a informar imediatamente o UNICEF se ele ou qualquer uma das
+          suas afiliadas, pessoal ou diretores, vier a estar sujeito a qualquer
+          sanção ou suspensão temporária durante o período de vigência do Acordo.
+        </li>
+        <li>
+          c. De acordo com as resoluções do Conselho de Segurança das Nações Unidas
+          relativas ao terrorismo e, em particular, ao financiamento do terrorismo,
+          as Partes procurarão assegurar que os recursos ou qualquer outro apoio
+          recebido no âmbito do Acordo, quer seja numerário ou contribuições em
+          espécie, não sejam utilizados, direta ou indiretamente, para prestar apoio
+          ao terrorismo oua lavagem de dinheiro. O Parceiro concorda em aplicar o
+          mais elevado padrão de diligência razoável para assegurar que o dinheiro,
+          os suprimentos e os equipamentos sob o seu controlo, incluindo,
+          nomeadamente, dinheiro, suprimentos e equipamentos transferidos pelo
+          UNICEF para o Parceiro: (a) não sejam utilizados, direta ou indiretamente,
+          para prestar apoio a indivíduos ou entidades, ou transferidos pelo
+          Parceiro para qualquer indivíduo ou entidade, constante da lista
+          consolidada de sanções do Conselho de Segurança das Nações Unidas,
+          disponível em
+          <a
+            href="https://www.un.org/securitycouncil/content/un-sc-consolidated-list"
+            >https://www.un.org/securitycouncil/content/un-sc-consolidated-list</a
+          >
+          ou em qualquer outra lista aplicável que possa ser periodicamente
+          notificada pelo UNICEF; e b) não sejam utilizados de qualquer outra forma
+          que seja proibida por uma decisão do Conselho de Segurança das Nações
+          Unidas tomada no âmbito do capítulo VII da Carta das Nações Unidas. O
+          Parceiro e os seus funcionários, pessoal e subcontratantes comprometem-se
+          a cumprir as disposições aplicáveis da Política de Combate a lavagem de
+          dinheiro e ao Financiamento do Terrorismo (AML/FT) do UNICEF.
+        </li>
+        <li>
+          d. O Parceiro compromete-se a levar imediatamente à atenção do Representante
+          UNICEF ou do diretor do Gabinete de Auditoria Interna e Investigação do
+          UNICEF (<a href="mailto:integrity1@unicef.org">integrity1@unicef.org</a>)
+          as alegações de conduta corrupta, fraudulenta, colusiva, coerciva ou
+          obstrutiva que surjam em relação ao presente Acordo, das quais o Parceiro
+          tenha sido informado ou tomado de outro modo conhecimento. Para efeitos do
+          presente Acordo, serão aplicáveis as seguintes definições:
+          <div class="indent">
+            <p>
+              (i) "prática corrupta" refere-se à oferta, doação, recebimento ou
+              solicitação, direta ou indiretamente, de algo de valor para
+              influenciar indevidamente as ações de um funcionário público;
+            </p>
+            <p>
+              (ii) "prática fraudulenta" refere-se a qualquer ato ou omissão,
+              incluindo declarações falsas, que, consciente ou imprudentemente,
+              induza em erro, ou tente induzir em erro, uma parte para obter um
+              benefício financeiro ou de outra natureza ou para evitar uma
+              obrigação;
+            </p>
+            <p>
+              (iii) "prática colusiva" refere-se um acordo entre duas ou mais Partes
+              destinado a alcançar uma finalidade imprópria, incluindo influenciar
+              de forma imprópria as ações de outra parte;
+            </p>
+            <p>
+              (iv) "prática coerciva" refere-se a comprometer ou prejudicar, ou a
+              ameaçar comprometer ou prejudicar, direta ou indiretamente, qualquer
+              parte ou os bens dessa parte para influenciar indevidamente as ações
+              de uma parte;
+            </p>
+            <p>
+              (v) "prática obstrutiva" refere-se a atos destinados a impedir
+              materialmente o exercício dos direitos contratuais do UNICEF de
+              auditoria, investigação e acesso à informação, incluindo destruição,
+              falsificação, alteração ou ocultação de meios de prova a uma
+              investigação do UNICEF sobre alegações de fraude e corrupção.
+            </p>
+          </div>
+        </li>
+      </ol>
+      <p>
+        4.5
+        <span class="strong"
+          >Dever de salvaguarda, incluindo proteção contra exploração e abuso
+          sexuais:</span
+        >
+      </p>
+      <div class="indent">
+        a. No presente Acordo, são utilizadas as seguintes definições:
+        <div class="indent2">
+          <p>
+            (i) "<span class="underline">exploração sexual</span>" refere-se a
+            qualquer abuso real ou tentativa de abuso de uma posição de
+            vulnerabilidade, de poder desigual ou de confiança, para fins sexuais,
+            incluindo, nomeadamente, tirar proveito financeiro, social ou político
+            da exploração sexual de outra pessoa;
+          </p>
+          <p>
+            (ii) "<span class="underline">abuso sexual</span>" refere-se a intrusão
+            física real ou a ameaça de intrusão física de natureza sexual, seja pela
+            força ou em condições desiguais ou coercivas. A exploração e o abuso
+            sexuais são estritamente proibidos;
+          </p>
+          <p>
+            (iii) "<span class="underline">criança</span>" refere-se a qualquer
+            pessoa com menos de dezoito (18) anos de idade, independentemente de
+            qualquer lei relativa ao consentimento ou à idade em que uma pessoa se
+            torna legalmente adulta.
+          </p>
+          <p>
+            (iv) "<span class="underline">dever de salvaguarda</span>" refere-se à
+            redução dos riscos de danos resultantes do trabalho, funcionários ou
+            outro pessoal ou subcontratantes de uma parte.
+          </p>
+          <p>
+            (v) "<span class="underline">violação do dever de salvaguarda</span>"
+            refere-se a qualquer conduta dos funcionários, pessoal ou
+            subcontratantes de uma parte que, efetiva ou provavelmente, cause danos
+            a uma pessoa, incluindo qualquer tipo de abuso físico, emocional ou
+            sexual, negligência ou exploração.
+          </p>
+        </div>
+      </div>
+      <div class="indent">
+        b. Além disso, no presente Acordo:
+        <div class="indent2">
+          <p>
+            (i) Qualquer ato sexual que envolva uma pessoa que não pode dar o seu
+            consentimento ou que não dê o seu consentimento nessa ocasião, constitui
+            abuso sexual.
+          </p>
+          <p>
+            (ii) A atividade sexual com uma criança constituirá sempre abuso sexual,
+            mesmo que haja engano a respeito da idade da criança ou a pessoa seja
+            casada com a criança.
+          </p>
+          <p>
+            (iii) A exigência, doação, oferta ou recebimento de algo (dinheiro,
+            emprego, bens, serviços ou outras coisas de valor) para fins de contacto
+            sexual ou de atividades sexuais com qualquer pessoa constitui exploração
+            sexual. Tal inclui o pagamento ou a oferta de dinheiro por sexo com uma
+            prostituta.
+          </p>
+          <p>
+            (iv) Qualquer pessoa em posição de exercer influência sobre quem recebe
+            bens ou serviços não deve ter relações sexuais com ninguém que possa
+            obter essa ajuda. Tal constituirá exploração sexual.
+          </p>
+          <p>
+            (v) A exploração de mão de obra constitui uma preocupação em matéria de
+            dever de salvaguarda. Tal significa que os trabalhadores devem ter
+            direito à livre associação e à negociação coletiva. Os trabalhadores não
+            devem ser forçados ou compelidos a trabalhar. Os trabalhadores não devem
+            ser alvo de discriminação. Os trabalhadores devem dispor de um ambiente
+            de trabalho seguro e saudável.
+          </p>
+          <p>
+            (vi) O trabalho infantil é uma violação do dever de salvaguarda. Tal
+            significa que nenhuma criança com menos de 14 anos deverá trabalhar no
+            âmbito do Acordo. Além disso, qualquer criança que trabalhe deve ter
+            idade superior à que a lei exige para a escolaridade obrigatória e a
+            idade mínima para trabalhar.
+          </p>
+        </div>
+      </div>
+      <p class="indent">
+        c. <span class="underline">Políticas</span>. O Parceiro leu (a) o documento 
+        ST/SGB/2003/13 intitulado “Medidas especiais de proteção contra a exploração
+        e o abuso sexuais”, disponível em
+        <a href="https://undocs.org/ST/SGB/2003/13"
+          >https://undocs.org/ST/SGB/2003/13</a
+        >; e (b) as políticas do UNICEF relacionadas com o dever de salvaguarda,
+        disponíveis em
+        <a href="https://www.unicef.org/supply/documents/safeguarding-policy"
+          >https://www.unicef.org/supply/documents/safeguarding-policy</a
+        >
+        (ou noutro URL comunicado ao Parceiro). O Parceiro deverá adotar a sua
+        própria política/políticas, que sejam pelo menos tão rigorosas como estas
+        políticas, ou aplicar estas políticas. O Parceiro deverá exigir aos seus
+        subcontratantes que procedam do mesmo modo. O Parceiro deverá igualmente
+        dispor de uma política que identifique como conduta dolosa retaliar contra
+        qualquer pessoa por denunciar ou cooperar numa investigação sobre violações
+        do dever de salvaguarda, incluindo a exploração e o abuso sexuais. O
+        Parceiro exigirá que os seus funcionários, bem como outro pessoal e pessoas
+        que trabalhem para subcontratantes, subscrevam um código de conduta que
+        abranja o comportamento no âmbito destas políticas.
+      </p>
+      <div class="indent">
+        d. <span class="underline">Prevenção</span>. O Parceiro deverá tomar todas
+        as medidas adequadas para que os seus funcionários e outro pessoal, bem como
+        os seus subcontratantes, demonstrem uma conduta de salvaguarda proativa,
+        incluindo a proteção contra a exploração e o abuso sexuais. O Parceiro deve
+        assegurar que toma todas as medidas adequadas para que os seus funcionários
+        e outro pessoal, bem como os seus subcontratantes, compreendam as suas
+        obrigações e:
+        <div class="indent2">
+          <p>
+            (i) em que consiste o dever de salvaguarda na programação, a importância
+            das avaliações de risco das atividades, eventos e intervenções previstos
+            para planear medidas de atenuação e refleti-las nos Documentos de
+            Programa relevantes;
+          </p>
+          <p>
+            (ii) os tipos de preocupações em matéria do dever de salvaguarda,
+            incluindo a exploração e o abuso sexuais;
+          </p>
+          <p>
+            (iii) a razão por que é inaceitável qualquer comportamento inseguro ou
+            proibido, tal como descrito na Política relativa ao dever de salvaguarda
+            do UNICEF, incluindo qualquer forma de exploração e abuso sexuais, uma
+            vez que causa danos às pessoas e destrói a confiança no trabalho;
+          </p>
+          <p>
+            (iv) a necessidade de supervisionar devidamente as crianças e os
+            trabalhadores;
+          </p>
+          <p>
+            (v) os requisitos do presente Acordo para comunicar prontamente ao
+            UNICEF as violações do dever de salvaguarda, incluindo a exploração e o
+            abuso sexuais, nos termos do Artigo 4.5, alínea e) abaixo;
+          </p>
+          <p>
+            (vi) como outras preocupações em matéria do dever de salvaguarda devem
+            ser comunicadas pelos funcionários ou outro pessoal ou subcontratantes
+            do Parceiro e tratadas em consulta com o UNICEF; e
+          </p>
+          <p>
+            (vii) os requisitos do presente Acordo para facilitar a assistência às
+            vítimas. Para alcançar este entendimento, o Parceiro deverá, entre
+            outras medidas, assegurar que os seus funcionários, pessoal ou
+            subcontratantes realizem e repitam com sucesso a formação adequada.
+          </p>
+        </div>
+      </div>
+      <p class="indent">
+        e. <span class="underline">Comunicação de alegações ao UNICEF</span>. O
+        Parceiro deve comunicar imediata e confidencialmente, de forma a garantir a
+        segurança de todos os envolvidos, quaisquer alegações de exploração e abuso
+        sexuais e de violações do dever de salvaguarda, que causem ou seja
+        suscetíveis de causar danos significativos a uma criança, decorrentes do
+        presente Acordo, das quais o Parceiro tenha sido informado ou tenha tomado
+        conhecimento e que, na opinião do Parceiro, possa ter um impacto
+        significativo no UNICEF, (i) representante do UNICEF, ou (ii) ao diretor do
+        Gabinete de Auditoria Interna e Investigação do UNICEF
+        <a href="mailto:integrity1@unicef.org">integrity1@unicef.org</a>), ou (iii)
+        a outros canais de participação estabelecidos localmente pelas delegações
+        nacionais do UNICEF e comunicados ao Parceiro. Esta obrigação permanece à
+        despeito do término ou rescisão do Acordo, no que respeita a incidentes
+        ocorridos durante a vigência do presente Acordo.
+      </p>
+      <p class="indent">
+        f. <span class="underline">Assistência</span>. Os alegados sobreviventes de
+        violações do dever de salvaguarda, incluindo a exploração e abuso sexuais,
+        serão imediatamente informados e encaminhados pelo Parceiro para os serviços
+        de assistência profissional disponíveis, mediante consentimento dos alegados
+        sobreviventes. Sempre que seja razoavelmente praticável e com a garantia de
+        que a segurança dos alegados sobreviventes não é comprometida, o Parceiro
+        informará o UNICEF se esse encaminhamento foi ou não efetuado, incluindo os
+        tipos de assistência prestada e, no caso de não ter sido prestada, o motivo
+        geral pelo qual não o foi. Esta obrigação sobrevive ao termo ou rescisão do
+        Acordo, no que respeita a incidentes ocorridos durante a vigência do
+        presente Acordo.
+      </p>
+      <p class="indent">
+        g. <span class="underline">Investigação</span>. O Parceiro deve investigar
+        de forma adequada e sem demora as alegações de violação do dever de
+        salvaguarda, incluindo a exploração e abuso sexuais, pelos seus
+        funcionários, pessoal ou subcontratantes (no caso de os subcontratantes não
+        seguirem os seus próprios processos). O Parceiro deverá manter o UNICEF
+        informado durante a condução da investigação, sem prejuízo do respeito das
+        garantias processuais de quaisquer pessoas envolvidas. O UNICEF pode, com
+        uma fundamentação e justificação claras, exigir que o Parceiro suspenda
+        qualquer indivíduo do trabalho no âmbito do presente Acordo enquanto estiver
+        a ser investigado, desde que a segurança desse indivíduo ou de outros
+        indivíduos envolvidos na investigação não seja comprometida, e sob reserva
+        da lei aplicável. Após a conclusão da investigação pelo Parceiro, este
+        deverá apresentar imediatamente relatórios sobre o resultado da
+        investigação, incluindo quaisquer dados relevantes relacionados com o
+        alegado infrator, na medida legalmente possível. Mediante pedido, o Parceiro
+        deverá facultar provas relevantes ao UNICEF para seu exame e posterior
+        utilização, conforme ao UNICEF, e só o UNICEF, considere necessário. O
+        UNICEF pode decidir que a obrigação do Parceiro descrita nos termos da
+        primeira frase do presente Artigo 4.5, alínea g), de conduzir uma
+        investigação não será aplicável se uma investigação estiver a ser ou tiver
+        sido conduzida por autoridades nacionais competentes. Na eventualidade de
+        autoridades nacionais competentes estarem a conduzir ou terem conduzido a
+        investigação, o Parceiro prestará assistência ao UNICEF e tomará todas as
+        medidas necessárias legalmente possíveis para que o UNICEF obtenha
+        informações sobre a situação e o resultado da investigação. Estas obrigações
+        spermancem à despeito do término ou rescisão do presente Acordo, no que
+        respeita a incidentes ocorridos durante a sua vigência. O Parceiro deverá
+        prestar informações sobre qualquer ação que tenha realizado em resposta ao
+        incidente, com vista a cumprir as normas de salvaguarda e a reduzir a
+        possibilidade de problemas semelhantes no futuro. Subentende-se que o UNICEF
+        espera que as preocupações e as violações do dever de salvaguarda sejam
+        sempre tratadas. Subentende-se ainda que qualquer investigação conduzida
+        pelo Parceiro no âmbito desta cláusula não prejudicará o direito do UNICEF,
+        nos termos do Artigo 15.3, de conduzir investigações.
+      </p>
+      <p>
+        4.6
+        <span class="strong">Normas éticas na produção de provas:</span> em qualquer
+        investigação, avaliação e recolha e análise de dados que envolvam sujeitos
+        humanos ou que examinem dados secundários sensíveis, o Parceiro deverá
+        cumprir a versão atual do Procedimento do UNICEF relativo a normas éticas em
+        matéria de investigação, avaliação e recolha e análise de dados ou
+        equivalente, quando aplicável, incluindo qualquer requisito de uma análise
+        ética independente do trabalho proposto.
+      </p>
+      <p>
+        4.7
+        <span class="strong"
+          >Dever de salvaguarda nas comunicações e outras normas
+          especializadas.</span
+        >
+        Se as atividades do programa no âmbito de um Documento de programa
+        envolverem a produção de imagens, contactos com os meios de
+        comunicação/imprensa, plataformas em linha ou outros problemas de
+        salvaguarda, o UNICEF pode exigir ao Parceiro que cumpra outros
+        procedimentos ou normas que abordem esses riscos, tal como estabelecido no
+        Documento de programa.
+      </p>
+      <p>
+        5.
+        <span class="strong"
+          >RESPONSABILIDADE POR RECLAMAÇÕES E INDEMNIZAÇÕES:</span
+        >
+      </p>
+      <p>
+        5.1 O UNICEF declina toda e qualquer responsabilidade por pedidos de
+        indemnização decorrentes das atividades realizadas pelo Parceiro no âmbito
+        deste Acordo, ou por quaisquer pedidos de indemnização por morte, lesões
+        corporais, incapacidade e danos materiais ou outros riscos que possam afetar
+        os funcionários e pessoal do Parceiro decorrentes do seu trabalho
+        relacionado com o programa. O Parceiro será responsável pela administração
+        de todos os pedidos de indemnização apresentados contra si pelos seus
+        funcionários e pessoal. O Parceiro será também totalmente responsável por
+        seguros médicos e de vida adequados para os seus funcionários e pessoal, bem
+        como pela cobertura de seguro por doença, invalidez ou morte causada no
+        âmbito do exercício da atividade.
+      </p>
+      <p>
+        5.2 O Parceiro deverá indenizar, isentar de responsabilidade e defender, por
+        sua conta e risco, o UNICEF, os seus responsáveis, funcionários, consultores
+        e agentes, contra todo e qualquer processo, reclamação, exigência, perda e
+        responsabilidade seja de que natureza ou espécie for, incluindo os
+        respetivos custos e despesas, da parte de terceiros e decorrentes dos atos
+        ou omissões do Parceiro, ou dos seus funcionários, responsáveis, agentes ou
+        subcontratantes, na execução do presente Acordo. Esta disposição incluirá,
+        entre outros, (a) reclamações e pedidos de indemnização na forma de
+        compensação dos trabalhadores, (b) responsabilidade pelo produto, e (c)
+        qualquer responsabilidade decorrente da utilização de invenções ou
+        dispositivos patenteados, materiais protegidos por direitos de autor ou
+        outra propriedade intelectual disponibilizados ou licenciados ao UNICEF no
+        âmbito do presente Acordo ou utilizados pelo Parceiro, pelos seus
+        funcionários, responsáveis, agentes ou subcontratados na execução do
+        presente Acordo. As obrigações previstas neste Artigo não prescrevem após a
+        cessação do presente Acordo.
+      </p>
+      <p>
+        6. <span class="strong">ÓNUS/DIREITOS DE RETENÇÃO:</span> o Parceiro não
+        causará nem permitirá a inscrição ou a manutenção em processo de qualquer
+        ónus, arresto ou direito de retenção seja por quem for, em nenhum organismo
+        público, contra quantias devidas ou vencidas por trabalho executado,
+        serviços prestados ou materiais, suprimentos ou equipamentos fornecidos nos
+        termos deste Acordo ou por motivo de qualquer outra ação ou demanda contra o
+        Parceiro.
+      </p>
+      <p>7. <span class="strong">PROPRIEDADE INTELECTUAL:</span></p>
+      <p>
+        7.1 Em relação a cada programa no âmbito do presente Acordo, serão
+        aplicáveis as seguintes disposições, a menos que seja efetuada uma alteração
+        específica por escrito desse programa, em conformidade com a Secção 20, que
+        faça referência expressa à presente Secção 7.
+      </p>
+      <p>
+        7.2 Sob reserva do parágrafo 7.3 abaixo, o UNICEF terá todos os direitos de
+        propriedade intelectual e outros direitos de propriedade relativos a
+        análises, relatórios, processos, software, dados, ferramentas, documentos e
+        outros materiais, incluindo quaisquer prestações concretas (coletivamente,
+        os “materiais do programa”), que o Parceiro desenvolva, produza, prepare ou
+        recolha durante a execução do programa. O Parceiro deverá tomar todas as
+        medidas necessárias, executar todos os documentos necessários e, em geral,
+        ajudar a garantir esses direitos de propriedade intelectual e outros
+        direitos de propriedade e a transferi-los ou licenciá-los ao UNICEF em
+        conformidade com os requisitos da legislação aplicável e do presente Acordo.
+      </p>
+      <p>
+        7.3 Nenhuma das Partes terá qualquer direito de propriedade intelectual ou
+        outros direitos de propriedade da outra parte que tenham existido
+        previamente à execução do programa, ou que tenham sido ou sejam
+        desenvolvidos ou adquiridos independentemente da execução do programa (“PI
+        de base”). Na medida em que a PI de base do Parceiro se encontra incorporada
+        nos materiais do programa, o Parceiro concede ao UNICEF a licença não
+        exclusiva, livre de royalties, mundial, perpétua, transferível e
+        sublicenciável para utilizar, reproduzir e adaptar a propriedade intelectual
+        preexistente para fins não comerciais.
+      </p>
+      <p>
+        7.4 As Partes podem utilizar a propriedade intelectual licenciada por
+        terceiros (“PI de terceiros”) para prestar assistência ao desenvolvimento
+        dos materiais do programa. Se a referida PI de terceiros for incorporada nos
+        materiais do programa ou de outra forma essencial para a sua utilização, o
+        Documento de programa deverá refletir tal situação, incluindo quaisquer
+        condições ou restrições relativas à utilização dessa PI de terceiros. As
+        Partes deverão cumprir essas condições e restrições, incluindo os termos
+        relevantes da licença em que a PI de terceiros seja colocada à disposição
+        das Partes.
+      </p>
+      <p>
+        7.5 Sob reserva dos parágrafos 7.1 a 7.4 acima, os materiais do programa
+        serão disponibilizados para utilização ou inspeção pelo UNICEF em datas e
+        locais razoáveis, serão tratados como confidenciais e só serão entregues a
+        responsáveis autorizados do UNICEF após a conclusão das atividades no âmbito
+        de um programa.
+      </p>
+      <p>8. <span class="strong">CONFIDENCIALIDADE:</span></p>
+      <p>
+        8.1 O Parceiro deverá respeitar a confidencialidade de toda a informação que
+        o UNICEF lhe transmita como confidencial e não a tratará com um nível de
+        confidencialidade inferior ao da sua informação mais confidencial. O
+        Parceiro utilizará salvaguardas e controlos (designadamente,
+        infraestruturas, instalações, instrumentos, tecnologias, práticas e outras
+        medidas de proteção de ordem administrativa, técnica, física, processual e
+        de segurança) que sejam necessários e suficientes para cumprir as suas
+        obrigações de confidencialidade previstas no presente Artigo 8.º, tal como
+        se aplicam às informações confidenciais do UNICEF.
+      </p>
+      <p>
+        8.2 Quando o Parceiro for obrigado por lei a divulgar informações
+        confidenciais do UNICEF, deverá notificar o UNICEF com antecedência
+        suficiente relativamente a um pedido de divulgação de informações, a fim de
+        permitir ao UNICEF oportunidades razoáveis para tomar medidas de proteção ou
+        outras ações que possam ser apropriadas antes de qualquer divulgação.
+      </p>
+      <p>
+        8.3 As obrigações de não divulgação acima referidas não se aplicarão às
+        informações recebidas pelo Parceiro, se essas informações: (a) tiverem sido
+        do conhecimento prévio do Parceiro; (b) vierem subsequentemente a tornar-se,
+        por razões não imputáveis ao Parceiro, geralmente disponíveis ao público;
+        (c) tiverem sido recebidas pelo Parceiro de um terceiro não sujeito a uma
+        obrigação de confidencialidade para com o UNICEF; ou (d) tiverem sido
+        desenvolvidas pelo Parceiro independentemente de quaisquer obrigações de não
+        divulgação no âmbito do presente Acordo.
+      </p>
+      <p>
+        8.4 As obrigações previstas neste Artigo não prescrevem após a cessação do
+        presente Acordo.
+      </p>
+      <p>9. <span class="strong">PROTEÇÃO E SEGURANÇA DOS DADOS:</span></p>
+      <p>
+        9.1 O Parceiro confirma que dispõe de uma política de proteção de dados que
+        cumpre todas as normas e requisitos legais de proteção de dados aplicáveis e
+        que aplicará essa política na coleta, utilização, conservação, tratamento,
+        retenção e destruição dos dados por si recebidos ou recolhidos no
+        cumprimento das suas obrigações nos termos do presente Acordo. Em relação a
+        cada programa, o Parceiro concorda em cumprir quaisquer medidas adicionais
+        de proteção e segurança de dados no tratamento dos dados notificados pelo
+        UNICEF para esse programa. O Parceiro só deverá utilizar esses dados para
+        implementar o respectivo Documento de programa. O Parceiro deverá notificar
+        prontamente o UNICEF de qualquer incidente real ou de suspeita ou ameaça de
+        incidente de destruição acidental ou ilícita ou de perda acidental,
+        alteração, divulgação não autorizada ou acidental ou de acesso a tais dados
+        e tomará todas as medidas razoáveis para minimizar tal destruição, perda,
+        alteração, divulgação ou acesso.
+      </p>
+      <p>
+        9.2 Relativamente a cada programa, sempre que a coleta, acesso, utilização e
+        tratamento de dados pessoais fizerem parte das responsabilidades do Parceiro
+        no âmbito de um Documento de programa, o Parceiro deverá assinar o Acordo de
+        Tratamento de Dados do UNICEF como um acordo suplementar ao referido
+        Documento de programa antes do início de qualquer coleta, acesso, utilização
+        e tratamento desses dados pessoais. "Dados Pessoais" refere-se a qualquer
+        informação relativa a uma pessoa identificada ou identificável.
+      </p>
+      <p>
+        10.
+        <span class="strong"
+          >UTILIZAÇÃO DO NOME, LOGÓTIPO E EMBLEMA DO UNICEF E DO PARCEIRO;
+          VISIBILIDADE:</span
+        >
+        Salvo disposição em contrário no presente Acordo, cada uma das Partes é
+        autorizada a utilizar o nome, logótipo e emblema da outra, conforme
+        aplicável, unicamente em relação ao presente Acordo e à implementação dos
+        Documentos de Programa, a menos que a autorização seja retirada em qualquer
+        caso particular por qualquer uma das Partes mediante notificação por escrito
+        à outra parte. Nas suas comunicações a terceiros e/ou ao público em geral, o
+        Parceiro dará visibilidade e identificará e reconhecerá plenamente o apoio
+        do UNICEF, em consonância com as atuais orientações do UNICEF em matéria de
+        marcas. Mediante pedido do UNICEF, o Parceiro também dará visibilidade,
+        conforme especificado pelo UNICEF, aos doadores do UNICEF que estejam a
+        contribuir com fundos para o Acordo. Sempre que tal visibilidade ponha em
+        risco a proteção e segurança do pessoal do Parceiro, este deverá comunicar
+        esta informação ao UNICEF e propor disposições alternativas adequadas.
+      </p>
+      <p>
+        11. <span class="strong">COMPROMISSO DE TRANSPARÊNCIA.</span> O UNICEF e o
+        Parceiro reconhecem o seu compromisso comum para com a transparência. A este
+        respeito, cada uma das Partes pode incluir referências ao presente Acordo e
+        às suas respetivas contribuições para a execução do mesmo nos seus
+        relatórios públicos e noutros materiais, de acordo com os regulamentos,
+        regras, políticas e práticas correspondentes. O UNICEF pode divulgar
+        informações sobre o Parceiro de acordo com as suas políticas, regulamentos,
+        regras e procedimentos, bem como com as resoluções ou regulamentos dos
+        órgãos dirigentes do UNICEF; tal inclui a divulgação pública pelo UNICEF do
+        nome do Parceiro, do montante da transferência de dinheiro efetuada pelo
+        UNICEF para o Parceiro, assim como a localização, objetivo e título das
+        intervenções do programa pode divulgar a outras entidades das Nações Unidas
+        o nome do Parceiro se o presente Acordo for suspenso ou rescindido por justa
+        causa, nomeadamente por incumprimento da obrigação de salvaguarda ou
+        proteção adequada contra a exploração e o abuso sexuais. O UNICEF pode
+        igualmente divulgar publicamente dados não pessoais agregados sobre
+        alegações de violação do dever de salvaguarda, incluindo a exploração e o
+        abuso sexuais.
+      </p>
+      <p>
+        12.
+        <span class="strong">FORÇA MAIOR; OUTRAS ALTERAÇÕES DAS CONDIÇÕES:</span>
+      </p>
+      <p>
+        12.1 Em caso de ocorrência de qualquer causa que constitua força maior (tal
+        como definido abaixo) e imediatamente após a mesma, o Parceiro notificará
+        por escrito o UNICEF de tal ocorrência ou alteração, com explicações
+        circunstanciadas da mesma, se se vir impossibilitado, no todo ou em parte,
+        de cumprir as suas obrigações e responsabilidades no âmbito do presente
+        Acordo. O Parceiro deverá igualmente notificar o UNICEF de quaisquer outras
+        alterações das condições ou da ocorrência de qualquer evento que interfira
+        ou ameace interferir com o seu desempenho do presente Acordo. Ao receber a
+        notificação exigida nos termos deste Artigo, o UNICEF tomará as medidas que
+        considerar, a seu exclusivo critério, adequadas ou necessárias nas
+        circunstâncias, incluindo a concessão ao Parceiro de uma prorrogação
+        razoável do prazo para o cumprimento das suas obrigações nos termos do
+        presente Acordo.
+      </p>
+      <p>
+        12.2 Se o Parceiro for permanentemente impossibilitado de cumprir, no todo
+        ou em parte, as suas obrigações e responsabilidades nos termos do presente
+        Acordo por motivo de força maior, o UNICEF terá o direito de suspender ou
+        rescindir o presente Acordo nos mesmos termos e condições previstos no
+        Artigo 13º, com exceção de que, neste caso, o período de pré-aviso será de
+        sete (7) dias em vez de trinta (30) dias.
+      </p>
+      <p>
+        12.3 O termo “força maior”, tal como utilizado no presente Artigo, significa
+        qualquer ato de natureza imprevisível e irresistível, qualquer ato de guerra
+        (declarada ou não), invasão, revolução, insurreição, terrorismo ou quaisquer
+        outros atos de força ou natureza semelhante, desde que tais atos resultem de
+        causas fora do controlo e não decorrentes de culpa ou negligência da parte
+        em causa.
+      </p>
+      <p>
+        12.4 O Parceiro reconhece e concorda que, relativamente a quaisquer
+        obrigações no âmbito do presente Acordo que lhe incumbam em, ou para,
+        quaisquer zonas em que o UNICEF esteja envolvida ou a preparar-se para se
+        envolver em operações de manutenção da paz, humanitárias ou equivalentes ou
+        das quais esteja em processo de retirada, quaisquer atrasos ou falhas no
+        cumprimento de tais obrigações decorrentes ou relacionadas com condições
+        difíceis nessas zonas ou com quaisquer incidentes de agitação civil que
+        ocorram nessas zonas não constituirão, por si só, casos de força maior.
+      </p>
+      <p>13. <span class="strong">SUSPENSÃO E RESCISÃO:</span></p>
+      <p>
+        13.1 Qualquer uma das Partes pode rescindir o presente Acordo mediante
+        notificação escrita com trinta (30) dias civis de antecedência à outra parte
+        em cada uma das seguintes situações:
+      </p>
+      <div class="indent">
+        <p>
+          a. se concluir que a outra parte violou as suas obrigações no âmbito do
+          presente Acordo, incluindo no escopo de qualquer Documento de programa, e
+          não tiver retificado essa violação após ter sido notificada por escrito
+          com uma antecedência não inferior a catorze (14) dias civis para o fazer,
+          com efeitos a partir de uma data especificada na referida notificação; e
+        </p>
+        <p>
+          b. se concluir que a outra parte não pode cumprir as suas obrigações no
+          âmbito do presente Acordo.
+        </p>
+      </div>
+      <p>
+        13.2 O UNICEF pode igualmente suspender ou rescindir, a seu exclusivo
+        critério, o presente Acordo e quaisquer outros acordos entre o UNICEF e o
+        Parceiro, com efeitos imediatos mediante notificação escrita ao Parceiro em
+        cada uma das seguintes situações:
+      </p>
+      <div class="indent">
+        <p>
+          (a) a implementação de qualquer Documento de programa não teve início
+          dentro de um prazo razoável;
+        </p>
+        <p>
+          (b) se o UNICEF tomar conhecimento de qualquer incidente ou relatório que
+          seja inconsistente com qualquer das disposições previstas no Artigo 4 ou
+          com as disposições equivalentes de qualquer outro acordo entre o UNICEF e
+          o Parceiro, ou se o Parceiro violar qualquer uma dessas disposições; ou
+          (ii) se o Parceiro ou qualquer uma das suas afiliadas, pessoal ou
+          diretores ficar sujeito a qualquer sanção ou suspensão temporária descrita
+          no Artigo 4.4, alínea b), durante a vigência do presente Acordo;
+        </p>
+        <p>
+          (c) se o Parceiro violar qualquer uma das disposições do Artigo 8
+          (Confidencialidade) e do Artigo 9 (Proteção e segurança dos dados);
+        </p>
+        <p>
+          (d) se o mandato do UNICEF aplicável ao cumprimento do Acordo ou o
+          financiamento do UNICEF aplicável ao Acordo for reduzido, restringido ou
+          terminado (no todo ou em parte); ou
+        </p>
+        <p>
+          (e) se o Parceiro (i) for declarado falido, ou for liquidado, ou se tornar
+          insolvente, ou se requerer uma moratória ou suspensão de qualquer
+          obrigação de pagamento ou reembolso, ou se requerer uma declaração de
+          insolvência, (ii) se lhe for concedida uma moratória ou suspensão, ou se
+          for declarado insolvente, (iii) se realizar uma cessão em benefício de um
+          ou mais dos seus credores, (iv) se lhe for designado um liquidatário por
+          motivo de insolvência, (v) se propuser uma concordata em vez da falência
+          ou da administração judicial; ou (vi) se se tiver tornado, no entender
+          razoável do UNICEF, sujeito a uma alteração materialmente adversa da sua
+          posição financeira que ameace afetar substancialmente a sua capacidade
+          para cumprir qualquer uma das suas obrigações no âmbito do presente
+          Acordo. O Parceiro deverá informar imediatamente o UNICEF da ocorrência de
+          qualquer uma das situações descritas no presente parágrafo (e).
+        </p>
+      </div>
+      <p>
+        13.3 A parte que receber uma notificação de suspensão ou rescisão deverá tomar
+          imediatamente todas as medidas necessárias para suspender ou terminar
+          (consoante o caso) as suas atividades de forma ordeira, de modo que as despesas
+          correntes sejam mantidas a um nível mínimo. Em caso de suspensão, se o Parceiro
+          tomar as medidas adequadas para resolver o incidente ou a violação em questão a
+          contento do UNICEF dentro do período estipulado no aviso de suspensão, o UNICEF
+          poderá levantar a suspensão mediante notificação escrita ao Parceiro e o Acordo e
+          todos os outros acordos afetados serão retomados em conformidade com os
+          respetivos termos. Se, contudo, não estiver convencida de que os problemas estão a
+          ser adequadamente tratados pelo Parceiro, o UNICEF pode, a qualquer momento,
+          exercer o seu direito de rescindir o Acordo e qualquer outro acordo entre o UNICEF
+          e o Parceiro. Qualquer suspensão ou rescisão nos termos do presente Artigo 13.º
+          não implica qualquer responsabilidade pela rescisão ou outros encargos ou qualquer
+          outra responsabilidade seja de que natureza for. 
+      </p>
+      <p>
+        13.4 Como alternativa à suspensão ou rescisão, em caso de preocupações em matéria do
+          dever de salvaguarda, o UNICEF pode, com uma fundamentação e justificação claras,
+          solicitar por escrito que o Parceiro substitua um ou mais funcionários ou outro
+          pessoal, bem como pessoal dos subcontratantes, designados a um determinado
+          programa no âmbito do presente Acordo. O UNICEF trabalhará em consulta com o
+          Parceiro para apoiar a substituição do(s) funcionário(s) em causa por pessoal
+          devidamente qualificado. Se o Parceiro não estiver disposto a aceitar um pedido de
+          substituição de um ou mais funcionários ou outro pessoal, bem como pessoal dos
+          subcontratantes, designados a um determinado programa no âmbito do presente
+          Acordo, o UNICEF pode suspender ou rescindir o presente Acordo com efeitos
+          imediatos, mediante notificação escrita ao Parceiro.
+      </p>
+      <p>
+        13.5 Imediatamente após o envio ou receção de uma notificação de rescisão, o UNICEF
+          suspenderá o desembolso de quaisquer fundos no âmbito do presente Acordo e o
+          Parceiro não assumirá quaisquer compromissos, financeiros ou de outra natureza,
+          relacionados com o presente Acordo.
+      </p>
+      <p>
+        13.6 No termo do presente Acordo, em conformidade com o presente Artigo 13.º, o
+        Parceiro (a) deverá transferir para o UNICEF ou de acordo com as instruções do
+        UNICEF o saldo da transferência de dinheiro não gasto na posse do Parceiro e os
+        suprimentos e equipamentos não utilizados fornecidos pelo UNICEF no âmbito do presente Acordo 
+        e qualquer equipamento duradouro fornecido pelo UNICEF no âmbito do presente Acordo ou adquirido 
+        pelo Parceiro utilizando fundos disponibilizados pelo UNICEF no âmbito do presente Acordo, e (b) 
+        transferir para o UNICEF todos os direitos de propriedade intelectual e outros direitos de propriedade 
+        sobre os materiais do programa, incluindo, em caso de rescisão antecipada, quaisquer dados recolhidos 
+        etrabalhos em curso, e (c) devolver à UNICEF todas as informações confidenciais do UNICEF.
+      </p>
+      <p>
+        13.7 Caso exerça o seu direito de rescisão do presente Acordo, o UNICEF terá o direito de exigir ao 
+        Parceiro o reembolso à UNICEF desse montante, até ao montante total pago ao Parceiro pelo UNICEF antes 
+        da data do aviso de rescisão, consoante o UNICEF determinar. Subentende-se que as despesas incorridas 
+        pelo Parceiro no cumprimento do presente Acordo antes da data do aviso de rescisão não terão de ser 
+        reembolsadas. O pagamento devido pelo Parceiro será efetuado imediatamente após a receção do aviso de 
+        pagamento do UNICEF.
+      </p>
+      <p>
+        13.8 Se o UNICEF exercer o seu direito de rescisão do presente Acordo e
+        decidir que o programa deverá ser executado por outra organização ou de
+        acordo com outra modalidade de programação, o Parceiro deverá cooperar
+        imediata e plenamente com o UNICEF na transferência ordeira de todos os
+        suprimentos e equipamentos não utilizados que o UNICEF lhe disponibilizou,
+        aplicando-se as disposições do Artigo 13.6 acima.
+      </p>
+      <p>
+        13.9 A suspensão ou rescisão de um Documento de programa em conformidade com a
+        presente Secção 13 não prejudicará o Acordo de Cooperação Programática e outros
+        Documentos de Programa no âmbito deste Acordo, os quais continuarão em vigor, a
+        menos que o Acordo de Cooperação Programática e outros Documentos de
+        Programa sejam explicitamente suspensos ou rescindidos juntamente com um
+        Documento de programa. A suspensão ou rescisão do Acordo de Cooperação
+        Programática terá como efeito a suspensão ou rescisão automática de todos os
+        Documentos de Programa emitidos no âmbito do mesmo, salvo disposição em
+        contrário na notificação de suspensão ou rescisão.
+      </p>
+
+      <p>
+        14. <span class="strong">AVALIAÇÃO:</span> A avaliação das atividades
+        realizadas no âmbito do presente Acordo está sujeita às disposições da
+        Política de Avaliação do UNICEF, periodicamente aprovada ou alterada pelo
+        Conselho Executivo do UNICEF.
+      </p>
+      <p>15. <span class="strong">ATIVIDADES DE GARANTIA E INVESTIGAÇÕES:</span></p>
+      <p>15.1 <span class="strong">Auditoria:</span></p>
+      <div class="indent">
+        <p>
+          a. Mediante pedido do UNICEF e sempre que o UNICEF, e só o UNICEF, o
+          determine, as atividades do Parceiro no âmbito do presente Acordo serão
+          auditadas. As auditorias serão realizadas nos termos das normas, âmbito,
+          frequência e calendário determinados pelo UNICEF (e podem abranger
+          transações financeiras e controlos internos relacionados com as atividades
+          executadas pelo Parceiro).
+        </p>
+        <p>
+          b. As auditorias previstas na alínea a) do presente Artigo serão realizadas por
+          auditores individuais ou empresariais a designar pelo UNICEF, como, por
+          exemplo, uma empresa de auditoria ou de contabilidade. O Parceiro deverá
+          prestar a sua plena e atempada cooperação com toda e qualquer auditoria.
+          A referida cooperação incluirá, nomeadamente, a obrigação do Parceiro de
+          disponibilizar o seu pessoal e qualquer documentação e registos relevantes
+          para tais fins em momentos e condições razoáveis e de conceder aos
+          auditores acesso às instalações e/ou locais do Parceiro em que o programa é
+          executado em momentos e condições razoáveis no que diz respeito a esse
+          acesso ao pessoal do Parceiro e à documentação e registos relevantes. O
+          Parceiro deverá exigir que os seus agentes, incluindo, entre outros, os seus
+          advogados, contabilistas ou outros consultores, bem como os seus
+          subcontratantes, cooperem razoavelmente com quaisquer auditorias
+          realizadas no âmbito do presente Acordo.
+        </p>
+        <p>
+          c. Caso a auditoria seja conduzida por auditores designados pelo UNICEF, o
+          UNICEF ou os auditores facultarão sem demora uma cópia do relatório final
+          de auditoria ao Parceiro. 
+        </p>
+      </div>
+      <p>
+        15.2
+        <span class="strong">Verificações pontuais e visitas programáticas:</span> o Parceiro concorda que o UNICEF
+          poderá efetuar periodicamente verificações no local (“verificações pontuais” e
+          visitas programáticas), nos termos das normas, âmbito, frequência e calendário
+          determinados pelo UNICEF. O Parceiro deverá prestar a sua cooperação plena e
+          atempada com quaisquer verificações pontuais ou visitas programáticas, que
+          incluirão a obrigação do Parceiro de disponibilizar o seu pessoal e qualquer
+          documentação e registos relevantes para tais fins em momentos e condições
+          razoáveis e de conceder à UNICEF acesso às instalações do Parceiro e/ou locais em
+          que o programa do Parceiro é executado em momentos e condições razoáveis,
+          incluindo a interação com os participantes do programa mediante o seu
+          consentimento. O Parceiro deverá exigir que os seus agentes, incluindo, entre
+          outros, os seus advogados, contabilistas ou outros consultores, bem como os seus
+          subcontratantes, cooperem razoavelmente com quaisquer verificações pontuais
+          realizadas pelo UNICEF no âmbito do presente Acordo. Subentende-se que o UNICEF
+          pode, a seu exclusivo critério, contratar os serviços de uma pessoa singular ou
+          coletiva para realizar verificações pontuais ou visitas programáticas ou pode realizar
+          verificações pontuais ou visitas programáticas com o seu próprio pessoal,
+          funcionários e agentes.
+      </p>
+      <p>
+        15.3 <span class="strong">Investigações:</span> o Parceiro concorda que o UNICEF pode 
+        conduzir investigações, em datas exclusivamente determinadas pelo UNICEF, relativas a 
+        qualquer aspecto do presente Acordo ou da sua adjudicação, sobre as obrigações executadas 
+        no âmbito do Acordo e as operações do Parceiro relacionadas com a execução do presente Acordo. 
+        O direito do UNICEF de conduzir investigações não prescreverá após o termo ou rescisão prévia 
+        do presente Acordo. O Parceiro deverá prestar a sua cooperação plena e atempada com toda e qualquer 
+        investigação deste tipo.  A referida cooperação incluirá, nomeadamente, a obrigação do Parceiro de 
+        disponibilizar o seu pessoal e qualquer documentação e registos relevantes em momentos e condições 
+        razoáveis e de conceder à UNICEF acesso às instalações e/ou locais do Parceiro em que o programa é 
+        executado em momentos e condições razoáveis. O Parceiro deverá exigir que os seus agentes, incluindo, 
+        entre outros, os seus advogados, contabilistas ou outros consultores, bem como os seus subcontratantes, 
+        cooperem razoavelmente com quaisquer investigações realizadas pelo UNICEF no âmbito do presente Acordo. 
+        Subentende-se que o UNICEF pode, a seu exclusivo critério, contratar os serviços de investigação a 
+        uma pessoa singular ou coletiva ou pode conduzir investigações com o seu próprio pessoal, 
+        funcionários e agentes.
+      </p>
+      <p>
+        15.4 O Parceiro consente na divulgação pública pelo UNICEF de relatórios de
+        atividades de garantia e relatórios de investigação a terceiros, quando o
+        UNICEF o considere necessário e coerente com o seu quadro jurídico e
+        político.
+      </p>
+      <p>
+        16. <span class="strong">AVALIAÇÕES:</span> o Parceiro concorda que o UNICEF
+        pode conduzir periodicamente avaliações do Parceiro, incluindo da capacidade
+        do Parceiro para cumprir as suas obrigações enquanto Parceiro Implementador
+        de forma satisfatória para o UNICEF, da capacidade do Parceiro para prevenir
+        e responder a violações do dever de salvaguarda, incluindo a exploração e o
+        abuso sexuais, e do quadro de controlo interno ("avaliações"). O UNICEF pode
+        realizar tais avaliações nos termos das normas, âmbito, frequência e
+        calendário determinados pelo UNICEF, mediante aviso prévio ao Parceiro com
+        uma antecedência razoável. O Parceiro deverá prestar a sua plena e atempada
+        cooperação com toda e qualquer avaliação. A referida cooperação incluirá,
+        nomeadamente, a obrigação do Parceiro de disponibilizar o seu pessoal e
+        qualquer documentação e registros relevantes em momentos e condições
+        razoáveis e de conceder ao UNICEF acesso às instalações e/ou locais do
+        Parceiro em momentos e condições razoáveis. O Parceiro deverá exigir que os
+        seus agentes, incluindo, entre outros, os seus advogados, contabilistas ou
+        outros consultores, bem como os seus subcontratantes, cooperem razoavelmente
+        com quaisquer avaliações realizadas pelo UNICEF no âmbito do presente
+        Acordo. Subentende-se que o UNICEF pode, a seu exclusivo critério, contratar
+        os serviços de uma pessoa singular ou coletiva para conduzir qualquer
+        avaliação ou pode conduzir a avaliação com o seu próprio pessoal,
+        funcionários e agentes. O Parceiro consente na divulgação pública pelo
+        UNICEF das avaliações referidas no presente Artigo 16.º, subentendendo-se a
+        título excepcional que os relatórios de avaliação da capacidade do Parceiro
+        para prevenir e responder a violações do dever de salvaguarda, incluindo a
+        exploração e o abuso sexuais, apenas serão partilhados com a ONU.
+      </p>
+      <p>
+        17. <span class="strong">REEMBOLSO/COMPENSAÇÕES:</span> o UNICEF terá
+        direito a um reembolso por parte do Parceiro ou a efetuar uma compensação
+        contra quaisquer montantes devidos ao Parceiro em relação a quaisquer
+        montantes pagos pelo UNICEF ou utilizados pelo Parceiro que não estejam em
+        conformidade com os termos e condições do presente Acordo, incluindo
+        quaisquer montantes que as auditorias, verificações pontuais ou
+        investigações demonstrem que tenham sido pagos ou utilizados desta forma; a
+        quaisquer montantes pagos pelo UNICEF ou utilizados pelo Parceiro como
+        resultado de o Parceiro ou qualquer um dos seus funcionários ou pessoal ter
+        participado em qualquer prática corrupta, fraudulenta, colusiva, coerciva ou
+        obstrutiva (de acordo com a definição destes termos na cláusula 4.4, alínea
+        d); a quaisquer montantes não gastos; a quaisquer montantes transferidos
+        pelo UNICEF ao Parceiro, mas não incluídos ou devidamente refletidos em
+        qualquer relatório financeiro (utilizando o formulário FACE) ou apoiados por
+        documentação e registos apropriados; a quaisquer montantes pagos pelo UNICEF
+        em relação a uma despesa não elegível; ou a quaisquer montantes sujeitos a
+        reembolso de acordo com os termos do presente Acordo. O Parceiro deverá
+        efetuar o pagamento do referido reembolso imediatamente após receber do
+        UNICEF um pedido escrito para o efeito.
+      </p>
+      <p>
+        18. <span class="strong">PRIVILÉGIOS E IMUNIDADES:</span> nada no presente
+        Acordo ou com ele relacionado será considerado como uma renúncia, explícita
+        ou implícita, a qualquer dos privilégios e imunidades das Nações Unidas,
+        incluindo o UNICEF.
+      </p>
+      <p>
+        19. <span class="strong">CUMPRIMENTO DA LEI:</span> o Parceiro deverá
+        cumprir todas as leis, portarias, regras e regulamentos que se relacionem
+        com o cumprimento das suas obrigações nos termos do presente Acordo.
+      </p>
+      <p>
+        20. <span class="strong">AUTORIDADE PARA MODIFICAR:</span> nenhuma
+        modificação ou alteração do presente Acordo será válida e aplicável contra o
+        UNICEF a menos que esteja prevista numa alteração por escrito do presente
+        Acordo assinada por um responsável do UNICEF devidamente autorizado e por um
+        responsável autorizado do Parceiro.
+      </p>
+    </div>
+    <div id="footer_content" style="text-align: right">
+      <pdf:pagenumber> {# de <pdf:pagenumber />#} </pdf:pagenumber>
+    </div>
+  {% endif %}
+{% endblock %}
