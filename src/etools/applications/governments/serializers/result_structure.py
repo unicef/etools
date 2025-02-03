@@ -386,20 +386,19 @@ class GDDDetailResultsStructureSerializer(serializers.ModelSerializer):
 class EWPSyncActivitySerializer(serializers.ModelSerializer):
     class Meta:
         model = EWPActivity
-        exclude = ("ewp_key_intervention", )
+        fields = ("id", "title", "description")
 
 
 class EWPKeyInterventionSerializer(serializers.ModelSerializer):
-    ewp_key_intervention = serializers.IntegerField(source="id", read_only=True)
     name = serializers.CharField(source="cp_key_intervention.name", read_only=True)
-    activities = EWPSyncActivitySerializer(source="ewp_activity_for_ki", many=True, read_only=True)
+    ewp_activities = EWPSyncActivitySerializer(source="ewp_activity_for_ki", many=True, read_only=True)
 
     class Meta:
         model = EWPKeyIntervention
         fields = (
-            "ewp_key_intervention",
+            "id",
             "name",
-            "activities"
+            "ewp_activities"
         )
 
 
