@@ -405,21 +405,16 @@ class EWPKeyInterventionSerializer(serializers.ModelSerializer):
 class EWPSyncResultSerializer(serializers.ModelSerializer):
     cp_output_name = serializers.CharField(source="cp_output.name", read_only=True)
     ram_indicators = serializers.SerializerMethodField(read_only=True)
-    ram_indicator_names = serializers.SerializerMethodField(read_only=True)
     ewp_key_interventions = EWPKeyInterventionSerializer(many=True)
 
-    def get_ram_indicator_names(self, obj):
-        return [i.light_repr for i in obj.cp_output.indicator_set.all()]
-
     def get_ram_indicators(self, obj):
-        return [i.id for i in obj.cp_output.indicator_set.all()]
+        return [{'id': i.id, 'name': i.name} for i in obj.cp_output.indicator_set.all()]
 
     class Meta:
         model = EWPOutput
         fields = [
-            'cp_output',
+            'id',
             'cp_output_name',
             'ram_indicators',
-            'ram_indicator_names',
             'ewp_key_interventions'
         ]
