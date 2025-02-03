@@ -19,6 +19,7 @@ from rest_framework.generics import (
     get_object_or_404,
     ListCreateAPIView,
     RetrieveAPIView,
+    RetrieveUpdateAPIView,
     RetrieveUpdateDestroyAPIView,
 )
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
@@ -46,6 +47,7 @@ from etools.applications.governments.filters import (
     ShowAmendmentsFilter,
 )
 from etools.applications.governments.models import (
+    EWPOutput,
     GDD,
     GDDActivity,
     GDDAmendment,
@@ -92,6 +94,7 @@ from etools.applications.governments.serializers.helpers import (
     GDDReportingRequirementListSerializer,
 )
 from etools.applications.governments.serializers.result_structure import (
+    EWPSyncResultSerializer,
     GDDActivityCreateSerializer,
     GDDDetailResultsStructureSerializer,
     GDDKeyInterventionCUSerializer,
@@ -450,6 +453,18 @@ class GDDRetrieveResultsStructure(GDDMixin, RetrieveAPIView):
     queryset = GDD.objects.detail_qs()
     serializer_class = GDDDetailResultsStructureSerializer
     permission_classes = (IsAuthenticated, GDDPermission)
+
+
+class GDDSyncResultsStructure(RetrieveUpdateAPIView):
+    queryset = EWPOutput.objects.select_related("workplan", "cp_output")
+    serializer_class = EWPSyncResultSerializer
+    permission_classes = (IsAuthenticated, GDDPermission)
+
+    def get(self, request, *args, **kwargs):
+        self.gdd = get_object_or_404(GDD, pk=self.kwargs.get('pk'))
+        qs = EWPOutput.objects.filter(workplan__in=self.gdd.e_workplans.all())
+        return Response(
+            self.serializer_class(qs, many=True).data)
 
 
 class GDDResultLinkListCreateView(ListCreateAPIView):

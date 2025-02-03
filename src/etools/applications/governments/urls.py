@@ -26,6 +26,7 @@ from etools.applications.governments.views.gdd import (
     GDDSupplyItemListCreateView,
     GDDSupplyItemRetrieveUpdateView,
     GDDSupplyItemUploadView,
+    GDDSyncResultsStructure,
 )
 from etools.applications.governments.views.gdd_actions import (
     GDDAcceptOnBehalfOfPartner,
@@ -105,6 +106,13 @@ urlpatterns = [
             http_method_names=['get'],
         ),
         name='gdd-detail-results-structure',
+    ),
+    path(
+        'gdds/<int:pk>/sync-results-structure/',
+        view=GDDSyncResultsStructure.as_view(
+            http_method_names=['get', 'patch'],
+        ),
+        name='gdd-sync-results-structure',
     ),
     path(
         'gdds/<int:pk>/result-links/',

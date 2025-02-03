@@ -7,6 +7,8 @@ from unicef_locations.serializers import LocationLightSerializer
 
 from etools.applications.governments.models import (
     EWPActivity,
+    EWPKeyIntervention,
+    EWPOutput,
     GDD,
     GDDActivity,
     GDDActivityItem,
@@ -379,3 +381,40 @@ class GDDDetailResultsStructureSerializer(serializers.ModelSerializer):
         fields = (
             "result_links",
         )
+
+
+class EWPSyncActivitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EWPActivity
+        fields = ("id", "title", "description")
+
+
+class EWPKeyInterventionSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(source="cp_key_intervention.name", read_only=True)
+    ewp_activities = EWPSyncActivitySerializer(source="ewp_activity_for_ki", many=True, read_only=True)
+
+    class Meta:
+        model = EWPKeyIntervention
+        fields = (
+            "id",
+            "name",
+            "ewp_activities"
+        )
+
+
+class EWPSyncResultSerializer(serializers.ModelSerializer):
+    cp_output_name = serializers.CharField(source="cp_output.name", read_only=True)
+    ram_indicators = serializers.SerializerMethodField(read_only=True)
+    ewp_key_interventions = EWPKeyInterventionSerializer(many=True)
+
+    def get_ram_indicators(self, obj):
+        return [{'id': i.id, 'name': i.name} for i in obj.cp_output.indicator_set.all()]
+
+    class Meta:
+        model = EWPOutput
+        fields = [
+            'id',
+            'cp_output_name',
+            'ram_indicators',
+            'ewp_key_interventions'
+        ]
