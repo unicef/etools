@@ -2,8 +2,12 @@ from django.urls import reverse
 
 from rest_framework import status
 
-from etools.applications.governments.tests.factories import EWPActivityFactory, GDDFactory, EWPOutputFactory, \
-    EWPKeyInterventionFactory
+from etools.applications.governments.tests.factories import (
+    EWPActivityFactory,
+    EWPKeyInterventionFactory,
+    EWPOutputFactory,
+    GDDFactory,
+)
 from etools.applications.governments.tests.test_gdds import BaseGDDTestCase
 
 
