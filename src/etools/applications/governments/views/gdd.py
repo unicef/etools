@@ -94,7 +94,8 @@ from etools.applications.governments.serializers.helpers import (
     GDDReportingRequirementListSerializer,
 )
 from etools.applications.governments.serializers.result_structure import (
-    EWPSyncResultSerializer,
+    EWPSyncListResultSerializer,
+    EWPSyncUpdateResultSerializer,
     GDDActivityCreateSerializer,
     GDDDetailResultsStructureSerializer,
     GDDKeyInterventionCUSerializer,
@@ -457,14 +458,26 @@ class GDDRetrieveResultsStructure(GDDMixin, RetrieveAPIView):
 
 class GDDSyncResultsStructure(RetrieveUpdateAPIView):
     queryset = EWPOutput.objects.select_related("workplan", "cp_output")
-    serializer_class = EWPSyncResultSerializer
     permission_classes = (IsAuthenticated, GDDPermission)
 
+    def get_serializer_class(self):
+        if self.request.method == "PATCH":
+            return EWPSyncUpdateResultSerializer
+        return EWPSyncListResultSerializer
+
+    def get_object(self):
+        return get_object_or_404(GDD.objects.detail_qs().all(), pk=self.kwargs.get('pk'))
+
     def get(self, request, *args, **kwargs):
-        self.gdd = get_object_or_404(GDD, pk=self.kwargs.get('pk'))
-        qs = EWPOutput.objects.filter(workplan__in=self.gdd.e_workplans.all())
-        return Response(
-            self.serializer_class(qs, many=True).data)
+        qs = EWPOutput.objects.filter(workplan__in=self.get_object().e_workplans.all())
+        return Response(self.get_serializer(qs, many=True).data)
+
+    def update(self, request, *args, **kwargs):
+        serializer = self.get_serializer(instance=self.get_object(), data=request.data, partial=True, many=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        return Response(status=status.HTTP_200_OK)
 
 
 class GDDResultLinkListCreateView(ListCreateAPIView):

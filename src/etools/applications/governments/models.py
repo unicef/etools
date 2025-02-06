@@ -1898,7 +1898,7 @@ class GDDResultLink(TimeStampedModel):
 class GDDKeyIntervention(TimeStampedModel):
     """Lower result is always an output"""
 
-    # link to intermediary model to gdd and cp ouptut
+    # link to intermediary model to gdd and cp output
     result_link = models.ForeignKey(
         GDDResultLink,
         related_name='gdd_key_interventions',
