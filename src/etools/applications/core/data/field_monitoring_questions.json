@@ -705,6 +705,230 @@
   }
 },
 {
+  "model": "field_monitoring_settings.question",
+  "fields": {
+    "answer_type": "likert_scale",
+    "choices_size": null,
+    "level": "partner",
+    "category": 7,
+    "text": "Are key supplies provided through the partnership available in safe, secure and usable condition?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      2,
+      3
+    ],
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "fields": {
+    "answer_type": "likert_scale",
+    "choices_size": null,
+    "level": "partner",
+    "category": 7,
+    "text": "Were key supplies provided through the partnership on time?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      2
+    ],
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "fields": {
+    "answer_type": "likert_scale",
+    "choices_size": null,
+    "level": "partner",
+    "category": 7,
+    "text": "Was the distribution of key supplies seen to be fair and effective?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      2,
+      3
+    ],
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "fields": {
+    "answer_type": "likert_scale",
+    "choices_size": null,
+    "level": "partner",
+    "category": 7,
+    "text": "Do key supplies provided through the partnership meet agreed quality standards?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      2,
+      3
+    ],
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "fields": {
+    "answer_type": "likert_scale",
+    "choices_size": null,
+    "level": "partner",
+    "category": 7,
+    "text": "Is there indication of supplies provided through the partnership being used?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      2,
+      3
+    ],
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "fields": {
+    "answer_type": "text",
+    "choices_size": null,
+    "level": "partner",
+    "category": 7,
+    "text": "Is there indication of gaps in availability of essential supplies for services (not provided by UNICEF)?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      3
+    ],
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "fields": {
+    "answer_type": "likert_scale",
+    "choices_size": null,
+    "level": "output",
+    "category": 7,
+    "text": "Are key supplies provided through the partnership available in safe, secure and usable condition?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      2,
+      3
+    ],
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "fields": {
+    "answer_type": "likert_scale",
+    "choices_size": null,
+    "level": "output",
+    "category": 7,
+    "text": "Were key supplies provided through the partnership on time?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      2
+    ],
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "fields": {
+    "answer_type": "likert_scale",
+    "choices_size": null,
+    "level": "output",
+    "category": 7,
+    "text": "Was the distribution of key supplies seen to be fair and effective?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      2,
+      3
+    ],
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "fields": {
+    "answer_type": "likert_scale",
+    "choices_size": null,
+    "level": "output",
+    "category": 7,
+    "text": "Do key supplies provided through the partnership meet agreed quality standards?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      2,
+      3
+    ],
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "fields": {
+    "answer_type": "likert_scale",
+    "choices_size": null,
+    "level": "output",
+    "category": 7,
+    "text": "Is there indication of supplies provided through the partnership being used?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      2,
+      3
+    ],
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "fields": {
+    "answer_type": "text",
+    "choices_size": null,
+    "level": "output",
+    "category": 7,
+    "text": "Is there indication of gaps in availability of essential supplies for services (not provided by UNICEF)?",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [
+      1,
+      3
+    ],
+    "sections": []
+  }
+},
+{
   "model": "field_monitoring_settings.option",
   "pk": 1,
   "fields": {

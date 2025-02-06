@@ -7,13 +7,18 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from unicef_attachments.fields import AttachmentSingleFileField
+from unicef_attachments.models import Attachment
 from unicef_attachments.serializers import AttachmentSerializerMixin
 
 from etools.applications.last_mile import models
 from etools.applications.last_mile.models import PartnerMaterial
-from etools.applications.last_mile.tasks import notify_wastage_transfer
+from etools.applications.last_mile.tasks import notify_first_checkin_transfer, notify_wastage_transfer
+from etools.applications.last_mile.validators import TransferCheckOutValidator
 from etools.applications.partners.models import Agreement, PartnerOrganization
-from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
+from etools.applications.partners.serializers.partner_organization_v2 import (
+    MinimalPartnerOrganizationListSerializer,
+    PartnerOrganizationListSerializer,
+)
 from etools.applications.users.serializers import MinimalUserSerializer
 
 
@@ -40,6 +45,21 @@ class PointOfInterestSerializer(serializers.ModelSerializer):
         exclude = ('partner_organizations', 'point', 'created', 'modified', 'parent', 'other', 'private')
 
 
+class PointOfInterestNotificationSerializer(serializers.ModelSerializer):
+    region = serializers.SerializerMethodField(read_only=True)
+    parent_name = serializers.SerializerMethodField(read_only=True)
+
+    def get_parent_name(self, obj):
+        return obj.parent.__str__() if hasattr(obj, 'parent') else ''
+
+    def get_region(self, obj):
+        return obj.parent.name if hasattr(obj, 'parent') else ''
+
+    class Meta:
+        model = models.PointOfInterest
+        fields = ('parent_name', 'region', 'name')
+
+
 class PointOfInterestLightSerializer(serializers.ModelSerializer):
     region = serializers.SerializerMethodField()
 
@@ -52,9 +72,15 @@ class PointOfInterestLightSerializer(serializers.ModelSerializer):
 
 
 class MaterialSerializer(serializers.ModelSerializer):
+    material_type_translate = serializers.SerializerMethodField()
+
     class Meta:
         model = models.Material
         exclude = ('partner_materials',)
+
+    def get_material_type_translate(self, obj):
+        material_type_translate = "RUTF" if obj.number in settings.RUTF_MATERIALS else "Other"
+        return material_type_translate
 
 
 class TransferListSerializer(serializers.ModelSerializer):
@@ -90,27 +116,42 @@ class TransferMinimalSerializer(serializers.ModelSerializer):
 
 class MaterialItemsSerializer(serializers.ModelSerializer):
     transfer = TransferMinimalSerializer()
+    material_type_translate = serializers.SerializerMethodField()
 
     class Meta:
         model = models.Item
         exclude = ('material', 'transfers_history', 'created', 'modified',)
 
+    def get_material_type_translate(self, obj):
+        material_type_translate = "RUTF" if obj.material.number in settings.RUTF_MATERIALS else "Other"
+        return material_type_translate
+
 
 class MaterialDetailSerializer(serializers.ModelSerializer):
     items = MaterialItemsSerializer(many=True)
     description = serializers.CharField(read_only=True)
+    material_type_translate = serializers.SerializerMethodField()
 
     class Meta:
         model = models.Material
         exclude = ["partner_materials"]
+
+    def get_material_type_translate(self, obj):
+        material_type_translate = "RUTF" if obj.number in settings.RUTF_MATERIALS else "Other"
+        return material_type_translate
 
 
 class MaterialListSerializer(serializers.ModelSerializer):
     description = serializers.CharField(read_only=True)
+    material_type_translate = serializers.SerializerMethodField()
 
     class Meta:
         model = models.Material
         exclude = ["partner_materials"]
+
+    def get_material_type_translate(self, obj):
+        material_type_translate = "RUTF" if obj.number in settings.RUTF_MATERIALS else "Other"
+        return material_type_translate
 
 
 class ItemSerializer(serializers.ModelSerializer):
@@ -349,20 +390,22 @@ class TransferCheckinSerializer(TransferBaseSerializer):
 
         if instance.status == models.Transfer.COMPLETED:
             raise ValidationError(_('The transfer was already checked-in.'))
-
         validated_data['status'] = models.Transfer.COMPLETED
         validated_data['checked_in_by'] = self.context.get('request').user
         validated_data["destination_point"] = self.context["location"]
-
+        is_first_checkin = instance.checked_in_by is None
+        attachment_url = None
+        proof_file_pk = self.initial_data.get('proof_file')
+        if proof_file_pk:
+            attachment = Attachment.objects.get(pk=proof_file_pk)
+            attachment_url = self.context.get('request').build_absolute_uri(attachment.file_link)
         if not instance.name and not validated_data.get('name'):
             validated_data['name'] = self.get_transfer_name(validated_data, instance.transfer_type)
-
         if self.partial:
             orig_items_dict = {obj.id: obj for obj in instance.items.all()}
             checkedin_items_ids = [r["id"] for r in checkin_items]
             original_items_missing = [key for key in orig_items_dict.keys() if key not in checkedin_items_ids]
             checkin_items += [{"id": r, "quantity": 0} for r in original_items_missing]
-
             # if it is a partial checkin, create a new wastage transfer with short or surplus subtype
             short_items, surplus_items = self.get_short_surplus_items(orig_items_dict, checkin_items)
             if short_items:
@@ -377,8 +420,9 @@ class TransferCheckinSerializer(TransferBaseSerializer):
                     **validated_data
                 )
                 short_transfer.save()
+                short_transfer.refresh_from_db()
                 self.checkin_newtransfer_items(orig_items_dict, short_items, short_transfer)
-                notify_wastage_transfer.delay(connection.schema_name, short_transfer.pk, action='short_checkin')
+                notify_wastage_transfer.delay(connection.schema_name, TransferNotificationSerializer(short_transfer).data, attachment_url, action='short_checkin')
 
             if surplus_items:
                 surplus_transfer = models.Transfer(
@@ -392,12 +436,19 @@ class TransferCheckinSerializer(TransferBaseSerializer):
                     **validated_data
                 )
                 surplus_transfer.save()
+                surplus_transfer.refresh_from_db()
                 self.checkin_newtransfer_items(orig_items_dict, surplus_items, surplus_transfer)
-                notify_wastage_transfer.delay(connection.schema_name, surplus_transfer.pk, action='surplus_checkin')
+                notify_wastage_transfer.delay(connection.schema_name, TransferNotificationSerializer(short_transfer).data, attachment_url, action='surplus_checkin')
 
             instance = super().update(instance, validated_data)
             instance.items.exclude(material__number__in=settings.RUTF_MATERIALS).update(hidden=True)
             instance.refresh_from_db()
+            is_unicef_warehouse = False
+            if instance.origin_point:
+                is_unicef_warehouse = instance.origin_point.name == 'UNICEF Warehouse'
+            if is_first_checkin and is_unicef_warehouse:  # Notify only if is Unicef Shipment
+                # Note : We need to insert into EmailTemplates the new template that is defined on notifications/first_checkin.py
+                notify_first_checkin_transfer.delay(connection.schema_name, instance.pk, attachment_url)
             return instance
 
 
@@ -413,7 +464,7 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
     class Meta(TransferBaseSerializer.Meta):
         model = models.Transfer
         fields = TransferBaseSerializer.Meta.fields + (
-            'transfer_type', 'items', 'origin_check_out_at', 'destination_point', 'partner_id'
+            'transfer_type', 'items', 'origin_check_out_at', 'destination_point', 'partner_id', 'dispense_type'
         )
 
     def validate_partner_id(self, value):
@@ -481,27 +532,41 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
                 new_item.save()
                 new_item.add_transfer_history(original_item.transfer)
 
+    def _extract_partner_id(self, validated_data):
+        if validated_data.get('partner_id'):
+            return validated_data.pop('partner_id')
+        return self.context['request'].user.profile.organization.partner.pk
+
+    def _generate_attachment_url(self):
+        proof_file_pk = self.initial_data.get('proof_file')
+        attachment_url = None
+        if proof_file_pk:
+            attachment = Attachment.objects.get(pk=proof_file_pk)
+            attachment_url = self.context.get('request').build_absolute_uri(attachment.file_link)
+        return attachment_url
+
+    def _create_partner_transfer(self, partner_id: int, validated_data: dict):
+        if validated_data['transfer_type'] == models.Transfer.HANDOVER:
+            validated_data['recipient_partner_organization_id'] = partner_id
+            validated_data['from_partner_organization_id'] = self.context['request'].user.profile.organization.partner.pk
+
     @transaction.atomic
     def create(self, validated_data):
         checkout_items = validated_data.pop('items')
-        if not self.initial_data.get('proof_file'):
-            raise ValidationError(_('The proof file is required.'))
 
-        if validated_data['transfer_type'] not in [models.Transfer.WASTAGE, models.Transfer.DISPENSE, models.Transfer.HANDOVER] \
-                and not validated_data.get('destination_point'):
-            raise ValidationError(_('Destination location is mandatory at checkout.'))
-        elif validated_data.get('destination_point'):
+        validator = TransferCheckOutValidator()
+        validator.validate_proof_file(self.initial_data.get('proof_file'))
+        validator.validate_destination_points(validated_data['transfer_type'], validated_data.get('destination_point'))
+
+        if validated_data.get('destination_point'):
             validated_data['destination_point_id'] = validated_data.pop('destination_point')
-
-        if validated_data['transfer_type'] == models.Transfer.HANDOVER:
-            partner_id = validated_data.pop('partner_id', None)
-            if not partner_id:
-                raise ValidationError(_('A Handover to a partner requires a partner id.'))
-        else:
-            partner_id = self.context['request'].user.profile.organization.partner.pk
+        partner_id = self._extract_partner_id(validated_data)
+        validator.validate_handover(validated_data['transfer_type'], partner_id)
 
         if not validated_data.get("name"):
             validated_data['name'] = self.get_transfer_name(validated_data)
+
+        self._create_partner_transfer(partner_id, validated_data)
 
         self.instance = models.Transfer(
             partner_organization_id=partner_id,
@@ -509,14 +574,14 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
             checked_out_by=self.context['request'].user,
             **validated_data)
 
-        if self.instance.transfer_type in [models.Transfer.WASTAGE, models.Transfer.DISPENSE]:
-            self.instance.status = models.Transfer.COMPLETED
+        self.instance.set_checkout_status()
 
         self.instance.save()
-
+        self.instance.refresh_from_db()
         self.checkout_newtransfer_items(checkout_items)
         if self.instance.transfer_type == models.Transfer.WASTAGE:
-            notify_wastage_transfer.delay(connection.schema_name, self.instance.pk)
+            attachment_url = self._generate_attachment_url()
+            notify_wastage_transfer.delay(connection.schema_name, TransferNotificationSerializer(self.instance).data, attachment_url)
 
         return self.instance
 
@@ -536,3 +601,18 @@ class TransferEvidenceListSerializer(TransferEvidenceSerializer):
     class Meta(TransferEvidenceSerializer.Meta):
         model = models.TransferEvidence
         fields = TransferEvidenceSerializer.Meta.fields + ('id', 'user', 'created')
+
+
+class TransferNotificationSerializer(serializers.ModelSerializer):
+    items = ItemSerializer(many=True)
+    partner_organization = PartnerOrganizationListSerializer()
+    destination_point = PointOfInterestNotificationSerializer()
+    origin_point = PointOfInterestNotificationSerializer()
+    checked_in_by = MinimalUserSerializer()
+    checked_out_by = MinimalUserSerializer()
+
+    class Meta:
+        model = models.Transfer
+        fields = ('name', 'unicef_release_order', 'destination_check_in_at',
+                  'origin_check_out_at', 'checked_in_by', 'checked_out_by', 'items',
+                  'partner_organization', 'destination_point', 'origin_point')
