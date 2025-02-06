@@ -223,8 +223,8 @@ class EWPSynchronizer:
                 remote_activity['ewp_key_intervention'] = self.ewp_key_interventions[ewp_ki_key]
             except KeyError:
                 continue
-            vendor_numbers = remote_activity.pop('partners')
-            p_codes = remote_activity.pop('locations')
+            vendor_numbers = remote_activity.pop('partners', [])
+            p_codes = remote_activity.pop('locations', [])
             new_activities[remote_activity['wbs']], _ = EWPActivity.objects.get_or_create(**remote_activity)
 
             # TODO: here we need to figure out what to do if the partners or locations are not in the workspace
