@@ -2,6 +2,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import connection
 
 from rest_framework import serializers
+from unicef_attachments.fields import AttachmentSingleFileField
 
 from etools.applications.governments.models import GDD, GDDAmendment, GDDKeyIntervention
 from etools.applications.partners.serializers.prp_v1 import (
@@ -76,6 +77,13 @@ class PRPGDDListSerializer(serializers.ModelSerializer):
 
     disbursement_percent = serializers.SerializerMethodField()
 
+    has_signed_document = serializers.SerializerMethodField()
+
+    def get_has_signed_document(self, obj):
+        if obj.signed_pd_attachment:
+            return True
+        return False
+
     def fr_currencies_ok(self, obj):
         return obj.frs__currency__count == 1 if obj.frs__currency__count else None
 
@@ -145,5 +153,14 @@ class PRPGDDListSerializer(serializers.ModelSerializer):
             'unicef_budget_cash',
             'unicef_budget_supplies',
             'disbursement',
-            'disbursement_percent'
+            'disbursement_percent',
+            'has_signed_document'
         )
+
+
+class GDDFileSerializer(serializers.ModelSerializer):
+    signed_pd_document_file = AttachmentSingleFileField(source='signed_pd_attachment', read_only=True)
+
+    class Meta:
+        model = GDD
+        fields = ('signed_pd_document_file',)

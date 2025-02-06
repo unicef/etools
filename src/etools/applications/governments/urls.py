@@ -51,7 +51,7 @@ from etools.applications.governments.views.government import (
     GovernmentOrganizationListAPIView,
     GovernmentStaffMemberListAPIVIew,
 )
-from etools.applications.governments.views.prp import PRPGDDListAPIView
+from etools.applications.governments.views.prp import PRPGDDFileView, PRPGDDListAPIView
 from etools.applications.governments.views.review import (
     GDDOfficerReviewDetailView,
     GDDOfficerReviewListView,
@@ -349,4 +349,8 @@ urlpatterns = [
         'prp-gdds/',
         view=PRPGDDListAPIView.as_view(http_method_names=['get']),
         name='prp-gdd-list'),
+    path(
+        'prp-get-gpd-document/<int:gdd_pk>/',
+        view=PRPGDDFileView.as_view(http_method_names=['get']),
+        name='prp-gpd-document-get'),
 ]

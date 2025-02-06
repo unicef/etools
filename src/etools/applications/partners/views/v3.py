@@ -15,7 +15,7 @@ from unicef_locations.models import GatewayType
 
 from etools.applications.attachments.models import AttachmentFlat
 from etools.applications.funds.models import FundsReservationItem
-from etools.applications.governments.models import GDDAmendment
+from etools.applications.governments.models import GDDAmendment, GDDRisk
 from etools.applications.organizations.models import Organization
 from etools.applications.partners.models import (
     Agreement,
@@ -235,6 +235,9 @@ class PMPDropdownsListApiView(APIView):
                 InterventionRisk.RISK_TYPE_CHOICES,
                 sort_choices=False,
             ),
+            'gpd_risk_types': choices_to_json_ready(
+                GDDRisk.RISK_TYPE_CHOICES,
+                sort_choices=False),
             'cash_transfer_modalities': choices_to_json_ready(
                 Intervention.CASH_TRANSFER_CHOICES,
                 sort_choices=False,

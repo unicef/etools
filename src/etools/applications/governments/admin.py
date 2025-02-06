@@ -277,12 +277,14 @@ class GDDAdmin(
         'partner__organization__name'
     )
     readonly_fields = (
+        'lead_section',
         'total_budget',
         'attachments_link',
         'prc_review_document',
         'signed_pd_document',
     )
     filter_horizontal = (
+        'lead_section',
         'sections',
         'unicef_focal_points',
         'partner_focal_points',
@@ -303,6 +305,7 @@ class GDDAdmin(
                     'country_programme',
                     'e_workplans',
                     'submission_date',
+                    'lead_section',
                     'sections',
                     'flat_locations',
                     'metadata',
@@ -364,9 +367,12 @@ class GDDAdmin(
     created_date.admin_order_field = '-created'
 
     def section_names(self, obj):
-        return ' '.join([section.name for section in obj.sections.all()])
+        c_sections = ', '.join([section.name for section in obj.sections.all()])
+        if obj.lead_section:
+            return f'{obj.lead_section}(Lead Section), {c_sections}'
+        return c_sections
 
-    section_names.short_description = "Sections"
+    section_names.short_description = "Contributing Sections"
 
     def has_module_permission(self, request):
         return request.user.is_superuser or request.user.groups.filter(name='Country Office Administrator').exists()
@@ -438,6 +444,14 @@ class EWPActivityAdmin(RestrictedEditAdmin):
     raw_id_fields = ('partners', 'locations', 'workplan', 'ewp_key_intervention')
 
 
+class GDDReviewAdmin(RestrictedEditAdmin):
+    raw_id_fields = ('prc_officers', 'submitted_by', 'overall_approver', 'authorized_officer')
+
+
+class GDDReviewNotificationAdmin(RestrictedEditAdmin):
+    raw_id_fields = ('user', 'review')
+
+
 admin.site.register(models.GDD, GDDAdmin)
 admin.site.register(models.GDDAmendment, GovernmentAmendmentsAdmin)
 admin.site.register(models.GDDResultLink, GovernmentResultsLinkAdmin)
@@ -452,3 +466,5 @@ admin.site.register(models.EWPActivity, EWPActivityAdmin)
 admin.site.register(models.EWPKeyIntervention)
 admin.site.register(models.EWPOutput)
 admin.site.register(models.GovernmentEWP)
+admin.site.register(models.GDDReview, GDDReviewAdmin)
+admin.site.register(models.GDDReviewNotification, GDDReviewNotificationAdmin)

@@ -72,7 +72,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.5,country_programme,Unicef Focal Point,,Draft,Edit,TRUE
 3.5,country_programme,Unicef Focal Point,user_adds_amendment,*,Edit,TRUE
 3.5,country_programme,*,,*,Required,FALSE
-,e_workplans,Unicef Focal Point,,Draft,Edit,TRUE
+,e_workplans,Unicef Focal Point,unicef_not_accepted,Draft,Edit,TRUE
 ,e_workplans,Unicef Focal Point,user_adds_amendment,*,Edit,TRUE
 ,e_workplans,*,,*,Required,FALSE
 ,document_currency,Unicef Focal Point,unlocked+not_in_amendment_mode,Draft,Edit,TRUE
@@ -85,11 +85,9 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.9.5,final_partnership_review,Unicef Focal Point,,Ended,Edit,TRUE
 3.9.5,date_partnership_review_performed,UNICEF User,,*,View,TRUE
 3.9.5,date_partnership_review_performed,Unicef Focal Point,,Ended,Edit,TRUE
-3.9.5,flat_locations,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
-3.9.6,flat_locations,Partner User,partner_court,Draft,Edit,TRUE
-3.9.6,flat_locations,Unicef Focal Point,user_adds_amendment,Approved,Edit,TRUE
-3.9.7,flat_locations,Unicef Focal Point,user_adds_amendment,Active,Edit,TRUE
-3.9.7,flat_locations,*,unlocked,Draft,Required,False
+3.9.7,flat_locations,*,,*,Required,False
+3.9.5,flat_locations,*,,*,Edit,False
+3.9.5,flat_locations,*,,*,View,TRUE
 3.9.8,frs,UNICEF User,not_in_amendment_mode,*,View,TRUE
 3.9.8,frs,Unicef Focal Point,not_in_amendment_mode,Draft,Edit,TRUE
 3.10.1,frs,Unicef Focal Point,not_in_amendment_mode,Review,Edit,TRUE
@@ -193,12 +191,14 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,risks,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
 ,risks,Partner User,partner_court,Draft,Edit,TRUE
 ,risks,*,,*,Required,False
+,lead_section,Unicef Focal Point,,Draft,Edit,TRUE
+,lead_section,Unicef Focal Point,,Review,Edit,TRUE
+,lead_section,Unicef Focal Point,,pending_approval,Edit,TRUE
+,lead_section,Unicef Focal Point,user_adds_amendment,*,Edit,TRUE
 ,sections,Unicef Focal Point,,Draft,Edit,TRUE
 ,sections,Unicef Focal Point,,Review,Edit,TRUE
 ,sections,Unicef Focal Point,,pending_approval,Edit,TRUE
 ,sections,Unicef Focal Point,user_adds_amendment,*,Edit,TRUE
-,sections_present,UNICEF User,,*,Edit,TRUE
-,sections_present,*,unicef_not_accepted,Draft,Required,FALSE
 ,signed_by_partner_date,*,,Draft,View,FALSE
 ,signed_by_partner_date,Partner User,,pending_approval,Edit,TRUE
 ,signed_by_partner_date,*,,Draft,Required,FALSE

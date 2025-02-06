@@ -35,13 +35,7 @@ from etools.applications.governments.validation import gdds as gdd_validation
 from etools.applications.locations.models import Location
 from etools.applications.organizations.models import OrganizationType
 from etools.applications.partners.amendment_utils import calculate_difference, copy_instance, merge_instance
-from etools.applications.partners.models import (
-    _get_partner_base_path,
-    Agreement,
-    FileType,
-    get_default_cash_transfer_modalities,
-    PartnerOrganization,
-)
+from etools.applications.partners.models import _get_partner_base_path, Agreement, FileType, PartnerOrganization
 from etools.applications.reports.models import CountryProgramme, Indicator, Office, Result, Section
 from etools.applications.t2f.models import Travel, TravelActivity, TravelType
 from etools.applications.users.models import User
@@ -91,6 +85,10 @@ def get_gdd_amendment_file_path(instance, filename):
         str(instance.id),
         filename
     ])
+
+
+def get_default_cash_transfer_modalities():
+    return [GDD.CASH_TRANSFER_DIRECT]
 
 
 class GovernmentEWP(TimeStampedModel):
@@ -158,7 +156,7 @@ class EWPActivity(TimeStampedModel):
 class GDDManager(models.Manager):
 
     def get_queryset(self):
-        return super().get_queryset().select_related('partner').prefetch_related(
+        return super().get_queryset().select_related('partner', 'lead_section').prefetch_related(
             'agreement__partner',
             'agreement__partner__organization',
             'partner__organization',
@@ -171,7 +169,7 @@ class GDDManager(models.Manager):
         ).filter(partner__organization__organization_type=OrganizationType.GOVERNMENT)
 
     def detail_qs(self):
-        qs = super().get_queryset().prefetch_related(
+        qs = super().get_queryset().select_related('lead_section').prefetch_related(
             'agreement__partner',
             'agreement__partner__organization',
             'partner_focal_points',
@@ -480,9 +478,16 @@ class GDD(TimeStampedModel):
         blank=True,
         null=True
     )
+    lead_section = models.ForeignKey(
+        Section,
+        verbose_name=_("Lead Section"),
+        blank=True, null=True,
+        related_name='government_gdds',
+        on_delete=models.PROTECT
+    )
     sections = models.ManyToManyField(
         Section,
-        verbose_name=_("Sections"),
+        verbose_name=_("Contributing Sections"),
         blank=True,
         related_name='gdds',
     )
@@ -758,13 +763,9 @@ class GDD(TimeStampedModel):
         # In the case in which on the pd there are more sections selected then all the indicators
         # the reason for the loops is to avoid creating new db queries
         sections = set(self.sections.all())
+        if self.lead_section:
+            sections = {self.lead_section}.union(sections)
         return sections
-
-    @property
-    def sections_present(self):
-        # for permissions validation. the name of this def needs to remain the same as defined in the permission matrix.
-        # /assets/partner/gdd_permission.csv
-        return True if len(self.combined_sections) > 0 else None
 
     @property
     def unicef_users_involved(self):
@@ -1802,18 +1803,17 @@ class GDDRisk(TimeStampedModel):
     RISK_TYPE_ENVIRONMENTAL = "environment"
     RISK_TYPE_FINANCIAL = "financial"
     RISK_TYPE_OPERATIONAL = "operational"
-    RISK_TYPE_ORGANIZATIONAL = "organizational"
+    RISK_TYPE_SAFEGUARDING = "safeguarding"
     RISK_TYPE_POLITICAL = "political"
     RISK_TYPE_STRATEGIC = "strategic"
     RISK_TYPE_SECURITY = "security"
     RISK_TYPE_CHOICES = (
-        (RISK_TYPE_ENVIRONMENTAL, _("Social & Environmental")),
+        (RISK_TYPE_SAFEGUARDING, _("Safeguarding")),
+        (RISK_TYPE_ENVIRONMENTAL, _("Social and Environmental")),
         (RISK_TYPE_FINANCIAL, _("Financial")),
         (RISK_TYPE_OPERATIONAL, _("Operational")),
-        (RISK_TYPE_ORGANIZATIONAL, _("Organizational")),
         (RISK_TYPE_POLITICAL, _("Political")),
-        (RISK_TYPE_STRATEGIC, _("Strategic")),
-        (RISK_TYPE_SECURITY, _("Safety & security")),
+        (RISK_TYPE_SECURITY, _("Safety and security")),
     )
 
     gdd = models.ForeignKey(

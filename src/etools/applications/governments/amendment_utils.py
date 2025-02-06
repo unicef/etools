@@ -21,6 +21,7 @@ GDD_AMENDMENT_RELATED_FIELDS = {
         'agreement',
         'partner',
         'budget_owner',
+        'lead_section',
 
         # many to many
         'country_programme', 'unicef_focal_points', 'partner_focal_points', 'sites',

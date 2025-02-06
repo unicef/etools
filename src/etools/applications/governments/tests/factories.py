@@ -59,7 +59,6 @@ class GDDFactory(factory.django.DjangoModelFactory):
     start = datetime.date.today()
     end = datetime.date.today() + datetime.timedelta(days=365)
     equity_narrative = "equity_narrative"
-    context = "context"
     gender_narrative = "gender_narrative"
     implementation_strategy = "implementation_strategy"
     ip_program_contribution = "ip_program_contribution"
@@ -198,6 +197,12 @@ class GDDActivityFactory(factory.django.DjangoModelFactory):
     key_intervention = factory.SubFactory(GDDKeyInterventionFactory)
     ewp_activity = factory.SubFactory(EWPActivityFactory)
 
+    @factory.post_generation
+    def locations(self, created, extracted, **kwargs):
+        if extracted:
+            self.locations.add(*extracted)
+        else:
+            self.locations.add(LocationFactory())
 
 # class PlannedEngagementFactory(factory.django.DjangoModelFactory):
 #     class Meta:

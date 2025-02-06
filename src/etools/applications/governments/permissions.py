@@ -99,7 +99,7 @@ class PMPPermissions:
 class GDDPermissions(PMPPermissions):
 
     MODEL_NAME = 'governments.GDD'
-    EXTRA_FIELDS = ['sections_present', 'key_interventions', 'final_partnership_review', 'gdd_prc_reviews', 'document_currency']
+    EXTRA_FIELDS = ['key_interventions', 'final_partnership_review', 'gdd_prc_reviews', 'document_currency']
 
     def __init__(self, **kwargs):
         """

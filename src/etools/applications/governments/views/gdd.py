@@ -225,6 +225,7 @@ class GDDListAPIView(QueryStringFilterMixin, ExportModelMixin, GDDListBaseView):
         ('document_type', 'document_type__in'),
         ('cp_outputs', 'result_links__cp_output__pk__in'),
         ('country_programme', 'country_programme__in'),
+        ('lead_section', 'lead_section__in'),
         ('sections', 'sections__in'),
         # ('cluster', 'result_links__key_interventions__applied_indicators__cluster_indicator_title__icontains'),
         ('status', 'status__in'),
