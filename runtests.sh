@@ -37,8 +37,5 @@ if [[ "$(echo "$RUNNING_UNDER_TOX")" != 1 ]] ; then
     time isort src/ --check-only
 fi
 
-# Run unittests and coverage report
-coverage erase
-time coverage run manage.py test --noinput --keepdb "$@"
-coverage report -m
-coverage html
+# Run tests
+time python manage.py test --noinput --keepdb "$@"
