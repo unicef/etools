@@ -123,10 +123,34 @@ class PointOfInterestAdmin(XLSXImportMixin, admin.ModelAdmin):
 class ItemInline(RestrictedEditAdminMixin, admin.TabularInline):
     extra = 0
     model = models.Item
+    fk_name = 'transfer'
     list_select_related = ('material',)
     fields = ('id', 'batch_id', 'material', 'description', 'expiry_date', 'wastage_type',
               'amount_usd', 'unicef_ro_item', 'purchase_order_item')
     readonly_fields = ('description',)
+    show_change_link = True
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+class TransferInLine(RestrictedEditAdminMixin, admin.TabularInline):
+    extra = 0
+    model = models.Transfer
+    list_select_related = ('material',)
+
+    exclude = (
+        'comment', 'reason', 'proof_file', 'waybill_file', 'pd_number', 'waybill_id',
+        'purchase_order_id', 'is_shipment', 'origin_check_out_at', 'system_origin_check_out_at',
+        'destination_check_in_at', 'system_destination_check_in_at'
+    )
+
     show_change_link = True
 
     def has_add_permission(self, request, obj=None):
@@ -375,6 +399,21 @@ class ItemAdmin(XLSXImportMixin, admin.ModelAdmin):
 class TransferEvidenceAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
     raw_id_fields = ('transfer', 'user')
     inlines = [TransferEvidenceAttachmentInline]
+
+
+@admin.register(models.TransferHistory)
+class TransferHistoryAdmin(admin.ModelAdmin):
+    list_display = ('transfer_name', 'from_partner', 'destination_partner', 'origin_point', 'destination_point', 'comment')
+    search_fields = ('transfer_name', 'from_partner', 'destination_partner', 'origin_point', 'destination_point', 'comment')
+    readonly_fields = ('origin_transfer_id', 'transfer_name', 'from_partner', 'destination_partner', 'origin_point', 'destination_point', 'comment')
+
+    def transfer_name(self, obj):
+        try:
+            return models.Transfer.objects.get(pk=obj.origin_transfer_id).name
+        except models.Transfer.DoesNotExist:
+            return '-'
+
+    inlines = [TransferInLine]
 
 
 admin.site.register(models.PointOfInterestType)

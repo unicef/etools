@@ -309,6 +309,7 @@ class TestTransferView(BaseTenantTestCase):
         loss_item_2 = short_transfer.items.order_by('id').last()
         self.assertEqual(loss_item_2.quantity, 22)
         self.assertIn(self.incoming, loss_item_2.transfers_history.all())
+        self.assertTrue(models.TransferHistory.objects.filter(origin_transfer_id=self.incoming.id).exists())
         self.assertEqual(short_transfer.items.order_by('id').first().quantity, 30)
         self.assertEqual(short_transfer.origin_transfer, self.incoming)
 
@@ -390,6 +391,7 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(self.incoming.items.count(), len(response.data['items']))
         self.assertEqual(self.incoming.items.count(), 1)  # only 1 checked-in item is visible, non RUFT
         self.assertEqual(self.incoming.items.first().id, item_1.pk)
+        self.assertTrue(models.TransferHistory.objects.filter(origin_transfer_id=self.incoming.id).exists())
         item_1.refresh_from_db()
         self.assertEqual(self.incoming.items.first().quantity, item_1.quantity)
 
@@ -492,6 +494,8 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(checkout_transfer.destination_point, self.hospital)
         self.assertEqual(checkout_transfer.items.count(), len(checkout_data['items']))
         self.assertEqual(checkout_transfer.items.get(pk=item_1.pk).quantity, 11)
+        self.assertTrue(models.TransferHistory.objects.filter(origin_transfer_id=checkout_transfer.id).exists())
+
 
         new_item_pk = [item['id'] for item in response.data['items'] if item['id'] != item_1.pk].pop()
         self.assertEqual(checkout_transfer.items.get(pk=new_item_pk).quantity, 3)
