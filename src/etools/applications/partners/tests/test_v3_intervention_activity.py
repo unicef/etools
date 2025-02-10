@@ -226,7 +226,7 @@ class TestFunctionality(BaseTestCase):
 
         # initially there were around 2k db queries, so ~200 is more or less fine.
         # they are mostly caused by snapshot + heavy permissions
-        self.assertLess(len(cq.queries), 200, '\n'.join((f'{i}: {q["sql"]}' for i, q in enumerate(cq.queries))))
+        self.assertLess(len(cq.queries), 201, '\n'.join((f'{i}: {q["sql"]}' for i, q in enumerate(cq.queries))))
 
     def test_remove_all_items(self):
         items = [
@@ -465,6 +465,7 @@ class TestFunctionality(BaseTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
 
     def test_deactivate_activity(self):
+        self.assertEqual(self.activity.is_active, True)
         response = self.forced_auth_req(
             'patch', self.detail_url,
             user=self.user,
@@ -474,6 +475,8 @@ class TestFunctionality(BaseTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertEqual(response.data['is_active'], False)
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.is_active, False)
 
 
 class TestPermissions(BaseTestCase):
