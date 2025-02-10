@@ -496,7 +496,6 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(checkout_transfer.items.get(pk=item_1.pk).quantity, 11)
         self.assertTrue(models.TransferHistory.objects.filter(origin_transfer_id=checkout_transfer.id).exists())
 
-
         new_item_pk = [item['id'] for item in response.data['items'] if item['id'] != item_1.pk].pop()
         self.assertEqual(checkout_transfer.items.get(pk=new_item_pk).quantity, 3)
         for item in checkout_transfer.items.all():
