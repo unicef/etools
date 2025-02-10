@@ -1,4 +1,5 @@
 import datetime
+import random
 
 import factory
 from factory import fuzzy
@@ -37,6 +38,11 @@ class EWPKeyInterventionFactory(factory.django.DjangoModelFactory):
 class EWPActivityFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.EWPActivity
+
+    title = factory.Sequence(lambda n: 'Activity Title {}'.format(n))
+    wpa_id = factory.Sequence(lambda n: 'Activity Id {}'.format(n))
+    wbs = factory.Sequence(lambda n: 'Activity WBS {}'.format(n))
+    total_budget = factory.Sequence(lambda n: '{}'.format(random.uniform(10000, 50000)))
 
     workplan = factory.SubFactory(GovernmentEWPFactory)
     ewp_key_intervention = factory.SubFactory(EWPKeyInterventionFactory)

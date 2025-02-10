@@ -19,6 +19,7 @@ from rest_framework.generics import (
     get_object_or_404,
     ListCreateAPIView,
     RetrieveAPIView,
+    RetrieveUpdateAPIView,
     RetrieveUpdateDestroyAPIView,
 )
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
@@ -46,6 +47,7 @@ from etools.applications.governments.filters import (
     ShowAmendmentsFilter,
 )
 from etools.applications.governments.models import (
+    EWPOutput,
     GDD,
     GDDActivity,
     GDDAmendment,
@@ -92,6 +94,8 @@ from etools.applications.governments.serializers.helpers import (
     GDDReportingRequirementListSerializer,
 )
 from etools.applications.governments.serializers.result_structure import (
+    EWPSyncListResultSerializer,
+    EWPSyncUpdateResultSerializer,
     GDDActivityCreateSerializer,
     GDDDetailResultsStructureSerializer,
     GDDKeyInterventionCUSerializer,
@@ -450,6 +454,30 @@ class GDDRetrieveResultsStructure(GDDMixin, RetrieveAPIView):
     queryset = GDD.objects.detail_qs()
     serializer_class = GDDDetailResultsStructureSerializer
     permission_classes = (IsAuthenticated, GDDPermission)
+
+
+class GDDSyncResultsStructure(RetrieveUpdateAPIView):
+    queryset = EWPOutput.objects.select_related("workplan", "cp_output")
+    permission_classes = (IsAuthenticated, GDDPermission)
+
+    def get_serializer_class(self):
+        if self.request.method == "PATCH":
+            return EWPSyncUpdateResultSerializer
+        return EWPSyncListResultSerializer
+
+    def get_object(self):
+        return get_object_or_404(GDD.objects.detail_qs().all(), pk=self.kwargs.get('pk'))
+
+    def get(self, request, *args, **kwargs):
+        qs = EWPOutput.objects.filter(workplan__in=self.get_object().e_workplans.all())
+        return Response(self.get_serializer(qs, many=True).data)
+
+    def update(self, request, *args, **kwargs):
+        serializer = self.get_serializer(instance=self.get_object(), data=request.data, partial=True, many=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        return Response(status=status.HTTP_200_OK)
 
 
 class GDDResultLinkListCreateView(ListCreateAPIView):

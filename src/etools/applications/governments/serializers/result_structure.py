@@ -7,6 +7,8 @@ from unicef_locations.serializers import LocationLightSerializer
 
 from etools.applications.governments.models import (
     EWPActivity,
+    EWPKeyIntervention,
+    EWPOutput,
     GDD,
     GDDActivity,
     GDDActivityItem,
@@ -379,3 +381,120 @@ class GDDDetailResultsStructureSerializer(serializers.ModelSerializer):
         fields = (
             "result_links",
         )
+
+
+class EWPSyncActivitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EWPActivity
+        fields = ("id", "title", "description")
+
+
+class EWPKeyInterventionSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(source="cp_key_intervention.name", read_only=True)
+    ewp_activities = EWPSyncActivitySerializer(source="ewp_activity_for_ki", many=True, read_only=True)
+
+    class Meta:
+        model = EWPKeyIntervention
+        fields = (
+            "id",
+            "name",
+            "ewp_activities"
+        )
+
+
+class EWPSyncListResultSerializer(serializers.ModelSerializer):
+    cp_output_name = serializers.CharField(source="cp_output.name", read_only=True)
+    ram_indicators = serializers.SerializerMethodField(read_only=True)
+    ewp_key_interventions = EWPKeyInterventionSerializer(many=True)
+
+    def get_ram_indicators(self, obj):
+        return [{'id': i.id, 'name': i.name} for i in obj.cp_output.indicator_set.all()]
+
+    class Meta:
+        model = EWPOutput
+        fields = [
+            'id',
+            'cp_output_name',
+            'ram_indicators',
+            'ewp_key_interventions'
+        ]
+
+
+class BulkSyncResultsSerializer(serializers.ListSerializer):
+    def update(self, instance, validated_data):
+        result_qs = instance.result_links.all()
+        existing_outputs = {r.cp_output.id for r in result_qs}
+
+        outputs_to_create = {r['id'] for r in validated_data if r['id'] not in existing_outputs}
+        outputs_to_update = {r['id'] for r in validated_data if r['id'] in existing_outputs}
+
+        outputs_to_delete = existing_outputs.difference(outputs_to_update)
+        result_qs.filter(cp_output__id__in=outputs_to_delete).delete()
+
+        for result in validated_data:
+            if result['id'] in outputs_to_create:
+                ewp_output = EWPOutput.objects.get(pk=result['id'])
+                gdd_result = GDDResultLink(gdd=instance, cp_output=ewp_output, workplan=ewp_output.workplan)
+                gdd_result.save()
+                gdd_result.ram_indicators.set(result['ram_indicators'])
+
+                for ewp_ki in result['ewp_key_interventions']:
+                    gdd_ki = GDDKeyIntervention(result_link=gdd_result, ewp_key_intervention_id=ewp_ki['id'])
+                    gdd_ki.save()
+                    GDDActivity.objects.bulk_create(
+                        [GDDActivity(key_intervention=gdd_ki, ewp_activity_id=ewp_activity_id)
+                         for ewp_activity_id in ewp_ki['ewp_activities']]
+                    )
+            elif result['id'] in outputs_to_update:
+                gdd_result = result_qs.get(cp_output=result['id'])
+                gdd_result.ram_indicators.set(result['ram_indicators'])
+
+                existing_kis_qs = gdd_result.gdd_key_interventions.all()
+                existing_kis = {ki.ewp_key_intervention.id for ki in existing_kis_qs}
+
+                ki_to_create = {ki['id'] for ki in result['ewp_key_interventions']
+                                if ki['id'] not in existing_kis}
+                ki_to_update = {ki['id'] for ki in result['ewp_key_interventions']
+                                if ki['id'] in existing_kis}
+
+                ki_to_delete = existing_kis.difference(ki_to_update)
+                existing_kis_qs.filter(ewp_key_intervention__id__in=ki_to_delete).delete()
+
+                for ewp_ki in result['ewp_key_interventions']:
+                    if ewp_ki['id'] in ki_to_create:
+                        gdd_ki = GDDKeyIntervention(result_link=gdd_result, ewp_key_intervention_id=ewp_ki['id'])
+                        gdd_ki.save()
+                        GDDActivity.objects.bulk_create(
+                            [GDDActivity(key_intervention=gdd_ki, ewp_activity_id=ewp_activity_id)
+                             for ewp_activity_id in ewp_ki['ewp_activities']]
+                        )
+                    elif ewp_ki['id'] in ki_to_update:
+                        gdd_ki = gdd_result.gdd_key_interventions.get(ewp_key_intervention=ewp_ki['id'])
+                        existing_activities_qs = gdd_ki.gdd_activities.all()
+                        existing_activities = {act.ewp_activity.id for act in existing_activities_qs}
+
+                        activities_to_create = {act for act in ewp_ki['ewp_activities'] if act not in existing_activities}
+                        GDDActivity.objects.bulk_create(
+                            [GDDActivity(key_intervention=gdd_ki, ewp_activity_id=ewp_activity_id)
+                             for ewp_activity_id in activities_to_create]
+                        )
+                        activities_to_update = {act for act in ewp_ki['ewp_activities'] if act in existing_activities}
+                        activities_to_inactivate = existing_activities.difference(activities_to_update)
+                        existing_activities_qs.filter(ewp_activity__id__in=activities_to_inactivate).update(is_active=False)
+
+        return instance
+
+
+class EWPUpdateKeyInterventionSerializer(serializers.Serializer):
+    id = serializers.IntegerField(required=True, allow_null=False)
+    ewp_activities = serializers.ListSerializer(child=serializers.IntegerField())
+
+
+class EWPSyncUpdateResultSerializer(serializers.Serializer):
+    id = serializers.IntegerField(required=True, allow_null=False)
+    ram_indicators = serializers.ListSerializer(child=serializers.IntegerField())
+    ewp_key_interventions = serializers.ListSerializer(
+        child=EWPUpdateKeyInterventionSerializer(required=True, allow_null=False))
+
+    class Meta:
+        list_serializer_class = BulkSyncResultsSerializer
