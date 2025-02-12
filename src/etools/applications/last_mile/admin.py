@@ -130,6 +130,9 @@ class ItemInline(RestrictedEditAdminMixin, admin.TabularInline):
     readonly_fields = ('description',)
     show_change_link = True
 
+    def get_queryset(self, request):
+        return self.model.all_objects.all()
+
     def has_add_permission(self, request, obj=None):
         return False
 
@@ -404,8 +407,8 @@ class TransferEvidenceAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
 @admin.register(models.TransferHistory)
 class TransferHistoryAdmin(admin.ModelAdmin):
     list_display = ('transfer_name', 'from_partner', 'destination_partner', 'origin_point', 'destination_point', 'comment')
-    search_fields = ('transfer_name', 'from_partner', 'destination_partner', 'origin_point', 'destination_point', 'comment')
-    readonly_fields = ('origin_transfer_id', 'transfer_name', 'from_partner', 'destination_partner', 'origin_point', 'destination_point', 'comment')
+    search_fields = ('from_partner__organization__name', 'destination_partner__organization__name', 'origin_point__name', 'destination_point__name')
+    readonly_fields = ('origin_transfer_id', 'from_partner', 'destination_partner', 'origin_point', 'destination_point', 'comment')
 
     def transfer_name(self, obj):
         try:
@@ -413,7 +416,31 @@ class TransferHistoryAdmin(admin.ModelAdmin):
         except models.Transfer.DoesNotExist:
             return '-'
 
+    def get_search_results(self, request, queryset, search_term):
+        queryset, use_distinct = super().get_search_results(request, queryset, search_term)
+        if search_term:
+            matching_transfers = models.Transfer.objects.filter(name__icontains=search_term).values_list('id', flat=True)
+            queryset |= self.model.objects.filter(origin_transfer_id__in=matching_transfers)
+        return queryset, use_distinct
+
     inlines = [TransferInLine]
+
+
+@admin.register(models.ItemTransferHistory)
+class ItemTransferHistoryAdmin(admin.ModelAdmin):
+    list_display = ('item', 'transfer', 'items_count', 'view_items_link')
+    list_filter = ('transfer',)
+    search_fields = ('transfer__name', 'transfer__partner_organization__organization__name', 'transfer__destination_point__name', 'item')
+
+    def items_count(self, obj):
+        return models.ItemTransferHistory.objects.filter(transfer=obj.transfer).count()
+    items_count.short_description = 'Item Count'
+
+    def view_items_link(self, obj):
+        """ Link to the transfer detail page with items listed """
+        url = reverse("admin:last_mile_transfer_change", args=[obj.transfer.id])
+        return format_html(f'<a href="{url}">View Transfer</a>')
+    view_items_link.short_description = "Transfer Details"
 
 
 admin.site.register(models.PointOfInterestType)

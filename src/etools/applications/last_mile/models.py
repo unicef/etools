@@ -93,6 +93,16 @@ class PointOfInterest(TimeStampedModel, models.Model):
         super().save(**kwargs)
 
 
+class TransferHistoryManager(models.Manager):
+    def get_or_build_by_origin_id(self, *origin_id_candidates):
+        origin_id = next((oid for oid in origin_id_candidates if oid is not None), None)
+
+        history = self.filter(origin_transfer_id=origin_id).first()
+        if history is None:
+            history = self.model(origin_transfer_id=origin_id)
+        return history
+
+
 class TransferHistory(TimeStampedModel, models.Model):
     origin_transfer_id = models.IntegerField(unique=True)
     from_partner = models.ForeignKey(
@@ -121,6 +131,7 @@ class TransferHistory(TimeStampedModel, models.Model):
     )
 
     comment = models.TextField(null=True, blank=True)
+    objects = TransferHistoryManager()
 
     class Meta:
         ordering = ("-created",)
@@ -263,13 +274,7 @@ class Transfer(TimeStampedModel, models.Model):
             self.status = self.COMPLETED
 
     def add_transfer_history(self, origin_transfer_pk=None, transfer_pk=None, original_transfer_pk=None):
-        origin_id_candidates = [original_transfer_pk, origin_transfer_pk, transfer_pk, self.id]
-        origin_id = next((id for id in origin_id_candidates if id is not None), None)
-
-        history = TransferHistory.objects.filter(origin_transfer_id=origin_id).first()
-
-        if not history:
-            history = TransferHistory(origin_transfer_id=origin_id)
+        history = TransferHistory.objects.get_or_build_by_origin_id(original_transfer_pk, origin_transfer_pk, transfer_pk, self.id)
 
         history.from_partner = self.from_partner_organization
         history.destination_partner = self.recipient_partner_organization
@@ -279,12 +284,10 @@ class Transfer(TimeStampedModel, models.Model):
         history.save()
         history.refresh_from_db()
 
-        return history
-
-    def set_transfer_history(self, history, save=False):
         self.transfer_history = history
-        if save:
-            self.save(update_fields=['transfer_history'])
+        self.save(update_fields=['transfer_history'])
+
+        return history
 
 
 class TransferEvidence(TimeStampedModel, models.Model):
