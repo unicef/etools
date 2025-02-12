@@ -231,3 +231,11 @@ class GDDRiskFactory(factory.django.DjangoModelFactory):
     gdd = factory.SubFactory(GDDFactory)
     risk_type = fuzzy.FuzzyChoice(choices=dict(models.GDDRisk.RISK_TYPE_CHOICES).keys())
     mitigation_measures = fuzzy.FuzzyText()
+
+
+class GDDSpecialReportingRequirementFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.GDDSpecialReportingRequirement
+
+    due_date = fuzzy.FuzzyDate(datetime.date(2001, 1, 1))
+    description = fuzzy.FuzzyText(length=50)

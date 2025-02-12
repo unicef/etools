@@ -25,6 +25,7 @@ from etools.applications.governments.models import (
     GDDReportingRequirement,
     GDDReview,
     GDDRisk,
+    GDDSpecialReportingRequirement,
     GDDTimeFrame,
 )
 from etools.applications.governments.serializers.gdd_snapshot import FullGDDSnapshotSerializerMixin
@@ -32,6 +33,7 @@ from etools.applications.partners.serializers.interventions_v2 import (
     LocationSiteSerializer,
     PlannedVisitSitesQuarterSerializer,
 )
+from etools.applications.reports.validators import SpecialReportingRequirementUniqueValidator
 from etools.applications.users.serializers_v3 import MinimalUserSerializer
 from etools.libraries.pythonlib.hash import h11
 
@@ -559,6 +561,18 @@ class GDDReportingRequirementCreateSerializer(
 
     def get_gdd(self):
         return self.context['gdd']
+
+
+class GDDSpecialReportingRequirementSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GDDSpecialReportingRequirement
+        fields = "__all__"
+        validators = [
+            SpecialReportingRequirementUniqueValidator(
+                queryset=GDDSpecialReportingRequirement.objects.all(),
+                is_pd=False
+            )
+        ]
 
 
 class GDDPRCOfficerReviewSerializer(FullGDDSnapshotSerializerMixin, serializers.ModelSerializer):

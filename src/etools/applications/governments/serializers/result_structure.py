@@ -302,7 +302,7 @@ class GDDActivityCreateSerializer(
             self.instance = super().update(instance, validated_data)
             self.set_items(self.instance, options)
         self.set_time_frames(self.instance, time_frames)
-        return self.instance
+        return super().update(instance, validated_data)
 
     def set_items(self, instance, items):
         if items is None:

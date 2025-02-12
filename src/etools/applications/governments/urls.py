@@ -23,6 +23,8 @@ from etools.applications.governments.views.gdd import (
     GDDRetrieveResultsStructure,
     GDDRetrieveUpdateView,
     GDDRiskDeleteView,
+    GDDSpecialReportingRequirementListCreateView,
+    GDDSpecialReportingRequirementUpdateDestroyView,
     GDDSupplyItemListCreateView,
     GDDSupplyItemRetrieveUpdateView,
     GDDSupplyItemUploadView,
@@ -99,6 +101,20 @@ urlpatterns = [
             http_method_names=['get', 'post', 'patch', 'delete']
         ),
         name='gdd-reporting-requirements',
+    ),
+    path(
+        'gdds/<int:gdd_pk>/special-reporting-requirements/',
+        view=GDDSpecialReportingRequirementListCreateView.as_view(
+            http_method_names=['get', 'post']
+        ),
+        name='gdd-special-reporting-requirements-list',
+    ),
+    path(
+        'gdds/<int:gdd_pk>/special-reporting-requirements/<int:pk>',
+        view=GDDSpecialReportingRequirementUpdateDestroyView.as_view(
+            http_method_names=['get', 'patch', 'delete']
+        ),
+        name='gdd-special-reporting-requirements-detail',
     ),
     path(
         'gdds/<int:pk>/results-structure/',

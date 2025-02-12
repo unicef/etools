@@ -56,6 +56,7 @@ from etools.applications.governments.models import (
     GDDReportingRequirement,
     GDDResultLink,
     GDDRisk,
+    GDDSpecialReportingRequirement,
     GDDSupplyItem,
 )
 from etools.applications.governments.permissions import (
@@ -92,6 +93,7 @@ from etools.applications.governments.serializers.helpers import (
     GDDPlannedVisitsCUSerializer,
     GDDReportingRequirementCreateSerializer,
     GDDReportingRequirementListSerializer,
+    GDDSpecialReportingRequirementSerializer,
 )
 from etools.applications.governments.serializers.result_structure import (
     EWPSyncListResultSerializer,
@@ -782,6 +784,34 @@ class GDDReportingRequirementView(GDDMixin, APIView):
                 self.serializer_list_class(self.get_data()).data
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class GDDSpecialReportingRequirementListCreateView(ListCreateAPIView):
+    serializer_class = GDDSpecialReportingRequirementSerializer
+    permission_classes = (PartnershipManagerPermission, )
+    renderer_classes = (JSONRenderer, )
+    queryset = GDDSpecialReportingRequirement.objects.all()
+
+    def create(self, request, *args, **kwargs):
+        request.data["gdd"] = kwargs.get('gdd_pk', None)
+        return super().create(request, *args, **kwargs)
+
+    def get_queryset(self):
+        return GDDSpecialReportingRequirement.objects.filter(gdd=self.kwargs.get("gdd_pk"))
+
+
+class GDDSpecialReportingRequirementUpdateDestroyView(RetrieveUpdateDestroyAPIView):
+    serializer_class = GDDSpecialReportingRequirementSerializer
+    permission_classes = (PartnershipManagerPermission,)
+    renderer_classes = (JSONRenderer,)
+    queryset = GDDSpecialReportingRequirement.objects.all()
+
+    def destroy(self, request, *args, **kwargs):
+        if self.get_object().due_date < datetime.date.today():
+            raise ValidationError(
+                _("Cannot delete special reporting requirements in the past.")
+            )
+        return super().destroy(request, *args, **kwargs)
 
 
 class GDDAutoTransitionsMixin:
