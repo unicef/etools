@@ -618,7 +618,8 @@ class GDD(TimeStampedModel):
             max_length=50,
             choices=CASH_TRANSFER_CHOICES,
         ),
-        default=get_default_cash_transfer_modalities,
+        blank=True,
+        default=list,
     )
     unicef_review_type = models.CharField(
         verbose_name=_("UNICEF Review Type"),

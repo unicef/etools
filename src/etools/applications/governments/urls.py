@@ -110,7 +110,7 @@ urlpatterns = [
         name='gdd-special-reporting-requirements-list',
     ),
     path(
-        'gdds/<int:gdd_pk>/special-reporting-requirements/<int:pk>',
+        'gdds/<int:gdd_pk>/special-reporting-requirements/<int:pk>/',
         view=GDDSpecialReportingRequirementUpdateDestroyView.as_view(
             http_method_names=['get', 'patch', 'delete']
         ),

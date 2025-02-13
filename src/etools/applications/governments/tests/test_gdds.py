@@ -553,11 +553,13 @@ class TestCreate(BaseGDDTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
         data = response.data
-        i = GDD.objects.get(pk=response.data.get("id"))
-        self.assertEqual(i.start.strftime('%Y-%m-%d'), response.data['start'])
-        self.assertEqual(i.end.strftime('%Y-%m-%d'), response.data['end'])
-        self.assertEqual(i.partner.pk.__str__(), response.data['partner_id'])
+        i = GDD.objects.get(pk=data.get("id"))
+        self.assertEqual(i.start.strftime('%Y-%m-%d'), data['start'])
+        self.assertEqual(i.end.strftime('%Y-%m-%d'), data['end'])
+        self.assertEqual(i.partner.pk.__str__(), data['partner_id'])
         self.assertEqual(data.get("budget_owner"), self.user_serialized)
+        self.assertEqual(data.get("cash_transfer_modalities"), i.cash_transfer_modalities)
+        self.assertEqual(i.cash_transfer_modalities, [])
 
     def test_return_400_when_focal_point_is_the_same_as_owner(self):
         data = {
