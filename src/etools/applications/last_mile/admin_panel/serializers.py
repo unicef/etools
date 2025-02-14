@@ -5,8 +5,9 @@ from etools.applications.partners.serializers.partner_organization_v2 import (
 )
 from etools.applications.last_mile.serializers import PointOfInterestTypeSerializer
 from etools.applications.last_mile import models
+from etools.applications.partners.models import PartnerOrganization
 from django.contrib.auth import get_user_model
-from etools.applications.users.serializers import SimpleUserSerializer
+from etools.applications.users.serializers import SimpleUserSerializer, UserProfileSerializer, UserCreationSerializer
 
 
 from etools.applications.organizations.models import Organization
@@ -132,9 +133,7 @@ class PointOfInterestAdminSerializer(serializers.ModelSerializer):
     region = serializers.SerializerMethodField(read_only=True)
 
     def get_country(self, obj):
-        # TODO: this will not work on multi country tenants . Not sure we need it at all
-        # Need to to a logic to determine de country, region and so on
-        return str(obj.parent.parent.parent if obj.parent.parent else obj.parent.parent)
+        return str(obj.parent.parent.parent if obj.parent.parent else obj.parent if obj.parent else '')
 
     def get_region(self, obj):
         return obj.parent.name if hasattr(obj, 'parent') else ''
@@ -142,3 +141,28 @@ class PointOfInterestAdminSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.PointOfInterest
         fields = '__all__'
+
+
+class PointOfInterestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.PointOfInterest
+        fields = ('id', 'name', 'description')  # include the fields you need
+
+class PartnerSerializer(serializers.ModelSerializer):
+    # Nest the related points_of_interest
+    points_of_interest = PointOfInterestSerializer(many=True, read_only=True)
+    
+    class Meta:
+        model = PartnerOrganization
+        fields = ('id', 'name', 'points_of_interest')  # add any additional fields as needed
+
+class UserPointOfInterestAdminSerializer(serializers.ModelSerializer):
+
+    # profile = UserProfileSerializer(read_only=True)
+    locations = PartnerSerializer(source='profile.organization.partner', read_only=True)
+    ip_name = serializers.CharField(source='profile.organization.name', read_only=True)
+    ip_number = serializers.CharField(source='profile.organization.vendor_number', read_only=True)
+
+    class Meta:
+        model = get_user_model()
+        fields = ('email', 'ip_name', 'ip_number', 'locations',)

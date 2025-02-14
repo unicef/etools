@@ -5,14 +5,14 @@ from rest_framework.filters import SearchFilter
 from rest_framework.viewsets import GenericViewSet
 
 from etools.applications.last_mile import models
-from etools.applications.last_mile.admin import serializers
 from etools.applications.last_mile.permissions import IsIPLMEditor
 
-from etools.applications.last_mile.admin.serializers import (
+from etools.applications.last_mile.admin_panel.serializers import (
     PointOfInterestAdminSerializer,
     UserAdminCreateSerializer,
     UserAdminSerializer,
     UserAdminUpdateSerializer,
+    UserPointOfInterestAdminSerializer
 )
 from django.contrib.auth import get_user_model
 from rest_framework.generics import ListCreateAPIView
@@ -47,9 +47,22 @@ class UserViewSet(mixins.ListModelMixin,
 
 class LocationsViewSet(mixins.ListModelMixin, GenericViewSet):
     permission_classes = [IsIPLMEditor]
-    serializer_class = serializers.PointOfInterestAdminSerializer
+    serializer_class = PointOfInterestAdminSerializer
     pagination_class = CustomDynamicPageNumberPagination
 
     queryset = models.PointOfInterest.objects.all().order_by('id')
 
-    # filter_backends = (SearchFilter,)
+    filter_backends = (SearchFilter,)
+
+    search_fields = ('name',)
+
+class UserLocationsViewSet(mixins.ListModelMixin, GenericViewSet):
+    permission_classes = [IsIPLMEditor]
+    serializer_class = UserPointOfInterestAdminSerializer
+    pagination_class = CustomDynamicPageNumberPagination
+
+    queryset = get_user_model().objects.all().order_by('id')
+
+    filter_backends = (SearchFilter,)
+
+    search_fields = ('first_name', 'email')
