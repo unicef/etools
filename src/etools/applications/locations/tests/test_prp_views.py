@@ -6,7 +6,7 @@ from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.partners.permissions import READ_ONLY_API_GROUP_NAME
-from etools.applications.users.tests.factories import UserFactory, GroupFactory
+from etools.applications.users.tests.factories import GroupFactory, UserFactory
 
 
 class TestPRPLocationListView(BaseTenantTestCase):
