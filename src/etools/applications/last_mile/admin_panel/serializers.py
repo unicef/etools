@@ -17,6 +17,7 @@ from etools.applications.users.validators import EmailValidator, LowerCaseEmailV
 class UserAdminSerializer(SimpleUserSerializer):
     ip_name = serializers.CharField(source='profile.organization.name', read_only=True)
     ip_number = serializers.CharField(source='profile.organization.vendor_number', read_only=True)
+    organization_id = serializers.CharField(source='profile.organization.id', read_only=True)
     country = serializers.CharField(source='profile.country.name', read_only=True)
     country_id = serializers.CharField(source='profile.country.id', read_only=True)
 
@@ -33,6 +34,7 @@ class UserAdminSerializer(SimpleUserSerializer):
             'ip_number',
             'country',
             'country_id',
+            'organization_id',
         )
 
 
