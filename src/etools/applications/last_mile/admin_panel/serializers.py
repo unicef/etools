@@ -19,7 +19,7 @@ class UserAdminSerializer(SimpleUserSerializer):
     ip_number = serializers.CharField(source='profile.organization.vendor_number', read_only=True)
     country = serializers.CharField(source='profile.country.name', read_only=True)
     country_id = serializers.CharField(source='profile.country.id', read_only=True)
-    
+
     class Meta:
         model = get_user_model()
         fields = (
@@ -35,6 +35,7 @@ class UserAdminSerializer(SimpleUserSerializer):
             'country_id',
         )
 
+
 class UserProfileCreationSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -44,6 +45,7 @@ class UserProfileCreationSerializer(serializers.ModelSerializer):
             'user',
             'country',
         )
+
 
 class UserAdminCreateSerializer(serializers.ModelSerializer):
     id = serializers.CharField(read_only=True)
@@ -79,6 +81,7 @@ class UserAdminCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({'user': force_str(ex)})
 
         return user
+
     class Meta:
         model = get_user_model()
         fields = (
@@ -94,7 +97,8 @@ class UserAdminCreateSerializer(serializers.ModelSerializer):
             'password',
             'profile',
         )
-    
+
+
 class UserAdminUpdateSerializer(serializers.ModelSerializer):
     organization = serializers.PrimaryKeyRelatedField(
         queryset=Organization.objects.all(),
@@ -107,7 +111,7 @@ class UserAdminUpdateSerializer(serializers.ModelSerializer):
         required=False
     )
     password = serializers.CharField(write_only=True, required=False)
-    
+
     class Meta:
         model = get_user_model()
         fields = (
@@ -119,10 +123,10 @@ class UserAdminUpdateSerializer(serializers.ModelSerializer):
             'organization',
             'country',
         )
-    
+
     def update(self, instance, validated_data):
         profile_data = validated_data.pop('profile', {})
-        
+
         for attr, value in validated_data.items():
             if attr == 'password':
                 instance.set_password(value)
@@ -137,7 +141,7 @@ class UserAdminUpdateSerializer(serializers.ModelSerializer):
             if 'country' in profile_data:
                 profile.country = profile_data.get('country')
             profile.save()
-        
+
         return instance
 
 
@@ -163,13 +167,15 @@ class PointOfInterestSerializer(serializers.ModelSerializer):
         model = models.PointOfInterest
         fields = ('id', 'name', 'description')  # include the fields you need
 
+
 class PartnerSerializer(serializers.ModelSerializer):
     # Nest the related points_of_interest
     points_of_interest = PointOfInterestSerializer(many=True, read_only=True)
-    
+
     class Meta:
         model = PartnerOrganization
         fields = ('id', 'name', 'points_of_interest')  # add any additional fields as needed
+
 
 class UserPointOfInterestAdminSerializer(serializers.ModelSerializer):
 
@@ -182,22 +188,16 @@ class UserPointOfInterestAdminSerializer(serializers.ModelSerializer):
         model = get_user_model()
         fields = ('email', 'ip_name', 'ip_number', 'locations',)
 
+
 class AlertNotificationSerializer(serializers.ModelSerializer):
 
-    ALERT_TYPES = {
-        "LMSM Focal Point" : "Wastage Notification",
-        "LMSM Alert Receipt": "Acknowledgement by IP",
-        "Waybill Recipient": "Waybill Recipient"
-    }
-
     alert_type = serializers.SerializerMethodField(read_only=True)
-
 
     def get_alert_type(self, obj):
         list_mapped_groups = []
         for group in obj.groups.all():
-            if group.name in self.ALERT_TYPES:
-                list_mapped_groups.append(self.ALERT_TYPES.get(group.name, group.name))
+            if group.name in self.context['ALERT_TYPES']:
+                list_mapped_groups.append(self.context['ALERT_TYPES'].get(group.name, group.name))
         return list_mapped_groups
 
     class Meta:

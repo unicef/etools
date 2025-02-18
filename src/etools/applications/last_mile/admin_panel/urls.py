@@ -2,7 +2,12 @@ from django.urls import include, path
 
 from rest_framework.routers import DefaultRouter
 
-from etools.applications.last_mile.admin_panel.views import *
+from etools.applications.last_mile.admin_panel.views import (
+    AlertNotificationViewSet,
+    LocationsViewSet,
+    UserLocationsViewSet,
+    UserViewSet,
+)
 
 router = DefaultRouter()
 router.register(r'users', UserViewSet, basename='user')
