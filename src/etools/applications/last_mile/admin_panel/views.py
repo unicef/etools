@@ -1,24 +1,24 @@
+from django.contrib.auth import get_user_model
+from django.db import connection
 from django.utils.translation import gettext as _
 
 from rest_framework import mixins, viewsets
 from rest_framework.filters import SearchFilter
+from rest_framework.generics import ListCreateAPIView
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.viewsets import GenericViewSet
 
 from etools.applications.last_mile import models
-from etools.applications.last_mile.permissions import IsIPLMEditor
-
 from etools.applications.last_mile.admin_panel.serializers import (
+    AlertNotificationSerializer,
     PointOfInterestAdminSerializer,
     UserAdminCreateSerializer,
     UserAdminSerializer,
     UserAdminUpdateSerializer,
     UserPointOfInterestAdminSerializer,
-    AlertNotificationSerializer
 )
-from django.contrib.auth import get_user_model
-from rest_framework.generics import ListCreateAPIView
+from etools.applications.last_mile.permissions import IsIPLMEditor
 
-from rest_framework.pagination import PageNumberPagination
 
 class CustomDynamicPageNumberPagination(PageNumberPagination):
     page_size = 5  
@@ -34,9 +34,17 @@ class UserViewSet(mixins.ListModelMixin,
     pagination_class = CustomDynamicPageNumberPagination
 
     queryset = get_user_model().objects.all().order_by('id')
+    def get_queryset(self):
+        print(connection.tenant.schema_name)
+        return self.queryset
 
     filter_backends = (SearchFilter,)
     search_fields = ('email', 'first_name', 'last_name', 'profile__organization__name', 'profile__organization__vendor_number')
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['country_schema'] = connection.tenant.schema_name
+        return context
 
     def get_serializer_class(self):
 

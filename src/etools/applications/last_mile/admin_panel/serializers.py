@@ -1,22 +1,17 @@
 
-from rest_framework import serializers
-from etools.applications.partners.serializers.partner_organization_v2 import (
-    PartnerOrganizationListSerializer,
-)
-from etools.applications.last_mile.serializers import PointOfInterestTypeSerializer
-from etools.applications.last_mile import models
-from etools.applications.partners.models import PartnerOrganization
 from django.contrib.auth import get_user_model
-from etools.applications.users.serializers import SimpleUserSerializer, UserProfileCreationSerializer
 from django.utils.encoding import force_str
 
+from rest_framework import serializers
 
+from etools.applications.last_mile import models
+from etools.applications.last_mile.serializers import PointOfInterestTypeSerializer
 from etools.applications.organizations.models import Organization
-from etools.applications.users.models import Country, Realm
+from etools.applications.partners.models import PartnerOrganization
+from etools.applications.partners.serializers.partner_organization_v2 import PartnerOrganizationListSerializer
+from etools.applications.users.models import Country, Group, Realm, UserProfile
+from etools.applications.users.serializers import SimpleUserSerializer
 from etools.applications.users.validators import EmailValidator, LowerCaseEmailValidator
-
-
-from etools.applications.organizations.models import Organization
 
 
 class UserAdminSerializer(SimpleUserSerializer):
@@ -40,41 +35,43 @@ class UserAdminSerializer(SimpleUserSerializer):
             'country_id',
         )
 
+class UserProfileCreationSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = UserProfile
+        exclude = (
+            'id',
+            'user',
+            'country',
+        )
+
 class UserAdminCreateSerializer(serializers.ModelSerializer):
     id = serializers.CharField(read_only=True)
-    groups = serializers.SerializerMethodField()
-    user_permissions = serializers.SerializerMethodField()
     profile = UserProfileCreationSerializer()
+    password = serializers.CharField(write_only=True)
     email = serializers.EmailField(validators=[EmailValidator(), LowerCaseEmailValidator()])
-
-    def get_groups(self, user):
-        return [grp.id for grp in user.groups.all()]
-
-    def get_user_permissions(self, user):
-        return [perm.id for perm in user.user_permissions.all()]
 
     def create(self, validated_data):
         user_profile = validated_data.pop('profile', {})
-        groups = validated_data.pop('groups', [])
-        countries = user_profile.pop('countries_available', [])
+        group = Group.objects.get(name="IP LM Editor")
+        password = validated_data.pop('password', None)
+        country_schema = self.context.get('country_schema')
+        country = Country.objects.get(schema_name=country_schema)
 
         try:
             user = get_user_model().objects.create(**validated_data)
-            user.profile.country = user_profile['country']
+            user.set_password(password)
+            user.profile.country = country
             user.profile.organization = user_profile['organization']
             user.profile.job_title = user_profile['job_title']
             user.profile.phone_number = user_profile['phone_number']
             user.profile.country_override = user_profile['country_override']
-            realm_list = []
-            for country in countries:
-                for group in groups:
-                    realm_list.append(Realm(
-                        user=user,
-                        country=country,
-                        organization=user.profile.organization,
-                        group=group
-                    ))
-            Realm.objects.bulk_create(realm_list)
+            Realm.objects.create(
+                user=user,
+                country=user.profile.country,
+                organization=user.profile.organization,
+                group=group
+            )
             user.save()
             user.profile.save()
 
@@ -94,8 +91,7 @@ class UserAdminCreateSerializer(serializers.ModelSerializer):
             'last_name',
             'is_staff',
             'is_active',
-            'groups',
-            'user_permissions',
+            'password',
             'profile',
         )
     
@@ -195,6 +191,7 @@ class AlertNotificationSerializer(serializers.ModelSerializer):
     }
 
     alert_type = serializers.SerializerMethodField(read_only=True)
+
 
     def get_alert_type(self, obj):
         list_mapped_groups = []
