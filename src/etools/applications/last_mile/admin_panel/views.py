@@ -10,6 +10,7 @@ from etools.applications.last_mile import models
 from etools.applications.last_mile.admin_panel.serializers import (
     AlertNotificationSerializer,
     PointOfInterestAdminSerializer,
+    TransferItemSerializer,
     UserAdminCreateSerializer,
     UserAdminSerializer,
     UserAdminUpdateSerializer,
@@ -32,7 +33,7 @@ class UserViewSet(mixins.ListModelMixin,
     permission_classes = [IsIPLMEditor]
     pagination_class = CustomDynamicPageNumberPagination
 
-    queryset = get_user_model().objects.all().order_by('id')
+    queryset = get_user_model().objects.filter(realms__country__schema_name=connection.tenant.schema_name).distinct().order_by('id')
 
     filter_backends = (SearchFilter,)
     search_fields = ('email', 'first_name', 'last_name', 'profile__organization__name', 'profile__organization__vendor_number')
@@ -68,7 +69,7 @@ class UserLocationsViewSet(mixins.ListModelMixin, GenericViewSet):
     serializer_class = UserPointOfInterestAdminSerializer
     pagination_class = CustomDynamicPageNumberPagination
 
-    queryset = get_user_model().objects.all().order_by('id')
+    queryset = get_user_model().objects.filter(realms__country__schema_name=connection.tenant.schema_name).distinct().order_by('id')
 
     filter_backends = (SearchFilter,)
 
@@ -97,3 +98,19 @@ class AlertNotificationViewSet(mixins.ListModelMixin, GenericViewSet):
     filter_backends = (SearchFilter,)
 
     search_fields = ('first_name', 'email')
+
+
+class TransferItemViewSet(mixins.ListModelMixin, GenericViewSet):
+    permission_classes = [IsIPLMEditor]
+    serializer_class = TransferItemSerializer
+    pagination_class = CustomDynamicPageNumberPagination
+
+    def get_queryset(self):
+        poi_id = self.request.query_params.get('poi_id')
+        if poi_id:
+            return models.Transfer.objects.filter(status=models.Transfer.PENDING, origin_point__id=poi_id).order_by('-id')
+        return models.Transfer.objects.none()
+
+    filter_backends = (SearchFilter,)
+
+    search_fields = ('name', 'status')

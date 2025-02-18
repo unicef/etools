@@ -162,6 +162,12 @@ class PointOfInterestAdminSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class SimplePointOfInterestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.PointOfInterest
+        fields = ('id', 'name')
+
+
 class PointOfInterestSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.PointOfInterest
@@ -203,3 +209,32 @@ class AlertNotificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
         fields = ('email', 'alert_type')
+
+
+class MaterialAdminSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = models.Material
+        fields = ('original_uom', 'short_description', 'number')
+
+
+class ItemAdminSerializer(serializers.ModelSerializer):
+    material = MaterialAdminSerializer()
+    description = serializers.SerializerMethodField(read_only=True)
+
+    def get_description(self, obj):
+        return obj.description
+
+    class Meta:
+        model = models.Item
+        fields = ('material', 'quantity', 'modified', 'uom', 'batch_id', 'description')
+
+
+class TransferItemSerializer(serializers.ModelSerializer):
+    items = ItemAdminSerializer(many=True, read_only=True)
+    destination_point = SimplePointOfInterestSerializer(read_only=True)
+    origin_point = SimplePointOfInterestSerializer(read_only=True)
+
+    class Meta:
+        model = models.Transfer
+        fields = ('items', 'destination_point', 'origin_point')
