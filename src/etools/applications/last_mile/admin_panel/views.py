@@ -33,7 +33,8 @@ class UserViewSet(mixins.ListModelMixin,
     permission_classes = [IsIPLMEditor]
     pagination_class = CustomDynamicPageNumberPagination
 
-    queryset = get_user_model().objects.filter(realms__country__schema_name=connection.tenant.schema_name).distinct().order_by('id')
+    def get_queryset(self):
+        return get_user_model().objects.filter(realms__country__schema_name=connection.tenant.schema_name).distinct().order_by('id')
 
     filter_backends = (SearchFilter,)
     search_fields = ('email', 'first_name', 'last_name', 'profile__organization__name', 'profile__organization__vendor_number')
@@ -69,7 +70,8 @@ class UserLocationsViewSet(mixins.ListModelMixin, GenericViewSet):
     serializer_class = UserPointOfInterestAdminSerializer
     pagination_class = CustomDynamicPageNumberPagination
 
-    queryset = get_user_model().objects.filter(realms__country__schema_name=connection.tenant.schema_name).distinct().order_by('id')
+    def get_queryset(self):
+        return get_user_model().objects.filter(realms__country__schema_name=connection.tenant.schema_name).distinct().order_by('id')
 
     filter_backends = (SearchFilter,)
 
