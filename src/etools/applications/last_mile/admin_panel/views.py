@@ -44,7 +44,7 @@ class UserViewSet(mixins.ListModelMixin,
     ordering_fields = [
         'id',
         'email',
-        'status',
+        'is_active',
         'last_login',
         'first_name',
         'last_name',
