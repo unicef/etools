@@ -240,3 +240,9 @@ class TransferItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Transfer
         fields = ('items', 'destination_point', 'origin_point')
+
+
+class OrganizationAdminSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Organization
+        fields = ('name', 'vendor_number', 'id')

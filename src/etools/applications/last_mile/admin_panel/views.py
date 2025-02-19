@@ -1,14 +1,16 @@
 from django.contrib.auth import get_user_model
 from django.db import connection
+from django.db.models import Q
 
 from rest_framework import mixins, viewsets
-from rest_framework.filters import SearchFilter
+from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.viewsets import GenericViewSet
 
 from etools.applications.last_mile import models
 from etools.applications.last_mile.admin_panel.serializers import (
     AlertNotificationSerializer,
+    OrganizationAdminSerializer,
     PointOfInterestAdminSerializer,
     TransferItemSerializer,
     UserAdminCreateSerializer,
@@ -17,6 +19,7 @@ from etools.applications.last_mile.admin_panel.serializers import (
     UserPointOfInterestAdminSerializer,
 )
 from etools.applications.last_mile.permissions import IsIPLMEditor
+from etools.applications.organizations.models import Organization
 
 
 class CustomDynamicPageNumberPagination(PageNumberPagination):
@@ -34,10 +37,24 @@ class UserViewSet(mixins.ListModelMixin,
     pagination_class = CustomDynamicPageNumberPagination
 
     def get_queryset(self):
-        return get_user_model().objects.filter(realms__country__schema_name=connection.tenant.schema_name).distinct().order_by('id')
+        return get_user_model().objects.filter(realms__country__schema_name=connection.tenant.schema_name).distinct()
 
-    filter_backends = (SearchFilter,)
+    filter_backends = (SearchFilter, OrderingFilter)
     search_fields = ('email', 'first_name', 'last_name', 'profile__organization__name', 'profile__organization__vendor_number')
+    ordering_fields = [
+        'id',
+        'email',
+        'status',
+        'last_login',
+        'first_name',
+        'last_name',
+        'profile__organization__name',
+        'profile__organization__vendor_number',
+        'profile__country__name',
+        'profile__country__id',
+    ]
+
+    ordering = ('id',)
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
@@ -60,7 +77,15 @@ class LocationsViewSet(mixins.ListModelMixin, GenericViewSet):
 
     queryset = models.PointOfInterest.objects.all().order_by('id')
 
-    filter_backends = (SearchFilter,)
+    filter_backends = (SearchFilter, OrderingFilter)
+    ordering_fields = [
+        'id',
+        'poi_type',
+        'country',
+        'region',
+        'p_code',
+        'description'
+    ]
 
     search_fields = ('name',)
 
@@ -116,3 +141,25 @@ class TransferItemViewSet(mixins.ListModelMixin, GenericViewSet):
     filter_backends = (SearchFilter,)
 
     search_fields = ('name', 'status')
+
+
+class OrganizationListView(mixins.ListModelMixin, GenericViewSet):
+    serializer_class = OrganizationAdminSerializer
+    permission_classes = [IsIPLMEditor]
+
+    def get_queryset(self):
+        queryset = Organization.objects.all() \
+            .select_related('partner', 'auditorfirm', 'tpmpartner') \
+            .prefetch_related('auditorfirm__purchase_orders', 'tpmpartner__countries')
+
+        q_partner = Q(partner__isnull=False, partner__hidden=False)
+
+        q_audit = Q(auditorfirm__purchase_orders__engagement__isnull=False, auditorfirm__hidden=False)
+
+        q_tpm = Q(tpmpartner__countries=connection.tenant, tpmpartner__hidden=False)
+
+        return queryset.filter(q_partner | q_audit | q_tpm).distinct()
+
+    filter_backends = (SearchFilter,)
+
+    search_fields = ('name', 'vendor_number')
