@@ -1,6 +1,7 @@
 
 from django.contrib.auth import get_user_model
 from django.utils.encoding import force_str
+from django.db import transaction
 
 from rest_framework import serializers
 
@@ -55,6 +56,7 @@ class UserAdminCreateSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
     email = serializers.EmailField(validators=[EmailValidator(), LowerCaseEmailValidator()])
 
+    @transaction.atomic
     def create(self, validated_data):
         user_profile = validated_data.pop('profile', {})
         group = Group.objects.get(name="IP LM Editor")
@@ -125,7 +127,7 @@ class UserAdminUpdateSerializer(serializers.ModelSerializer):
             'organization',
             'country',
         )
-
+    @transaction.atomic
     def update(self, instance, validated_data):
         profile_data = validated_data.pop('profile', {})
 
@@ -136,12 +138,15 @@ class UserAdminUpdateSerializer(serializers.ModelSerializer):
                 setattr(instance, attr, value)
         instance.save()
 
+        country = Country.objects.get(schema_name=self.context.get('country_schema'))
+
         profile = getattr(instance, 'profile', None)
         if profile:
             if 'organization' in profile_data:
                 profile.organization = profile_data.get('organization')
+                Realm.objects.filter(user=instance, country=country).update(organization=profile_data.get('organization'))
             if 'country' in profile_data:
-                profile.country = profile_data.get('country')
+                profile.country = country
             profile.save()
 
         return instance
