@@ -1,12 +1,14 @@
 
 from django.contrib.auth import get_user_model
-from django.utils.encoding import force_str
 from django.db import transaction
+from django.utils.encoding import force_str
 
 from rest_framework import serializers
+from rest_framework_gis.fields import GeometryField
 
 from etools.applications.last_mile import models
 from etools.applications.last_mile.serializers import PointOfInterestTypeSerializer
+from etools.applications.locations.models import Location
 from etools.applications.organizations.models import Organization
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.serializers.partner_organization_v2 import PartnerOrganizationListSerializer
@@ -127,6 +129,7 @@ class UserAdminUpdateSerializer(serializers.ModelSerializer):
             'organization',
             'country',
         )
+
     @transaction.atomic
     def update(self, instance, validated_data):
         profile_data = validated_data.pop('profile', {})
@@ -152,17 +155,58 @@ class UserAdminUpdateSerializer(serializers.ModelSerializer):
         return instance
 
 
+class PointOfInterestCustomSerializer(serializers.ModelSerializer):
+    parent = serializers.PrimaryKeyRelatedField(
+        queryset=Location.objects.all(),
+    )
+    partner_organizations = serializers.PrimaryKeyRelatedField(
+        queryset=PartnerOrganization.objects.all(),
+        many=True,
+    )
+    poi_type = serializers.PrimaryKeyRelatedField(
+        queryset=models.PointOfInterestType.objects.all(),
+    )
+    point = GeometryField(required=False)
+
+    class Meta:
+        model = models.PointOfInterest
+        fields = ('name', 'parent', 'p_code', 'partner_organizations', 'poi_type', 'point')
+
+
 class PointOfInterestAdminSerializer(serializers.ModelSerializer):
     partner_organizations = PartnerOrganizationListSerializer(many=True, read_only=True)
     poi_type = PointOfInterestTypeSerializer(read_only=True)
     country = serializers.SerializerMethodField(read_only=True)
     region = serializers.SerializerMethodField(read_only=True)
+    district = serializers.SerializerMethodField(read_only=True)
+
+    def extract_location_info(self, location_obj):
+        location_data = {"district": None, "region": None, "country": None}
+
+        current = location_obj
+        while current:
+            admin_level = getattr(current, "admin_level_name", None)
+            name = getattr(current, "name", None)
+
+            if admin_level == "District":
+                location_data["district"] = name
+            elif admin_level == "Region":
+                location_data["region"] = name
+            elif admin_level == "Country":
+                location_data["country"] = name
+
+            current = getattr(current, "parent", None)
+
+        return location_data
 
     def get_country(self, obj):
-        return str(obj.parent.parent.parent if obj.parent.parent else obj.parent if obj.parent else '')
+        return self.extract_location_info(obj).get('country')
 
     def get_region(self, obj):
-        return obj.parent.name if hasattr(obj, 'parent') else ''
+        return self.extract_location_info(obj).get('region')
+
+    def get_district(self, obj):
+        return self.extract_location_info(obj).get('district')
 
     class Meta:
         model = models.PointOfInterest
@@ -251,3 +295,22 @@ class OrganizationAdminSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organization
         fields = ('name', 'vendor_number', 'id')
+
+
+class LocationsAdminSerializer(serializers.ModelSerializer):
+    country = serializers.SerializerMethodField(read_only=True)
+    region = serializers.SerializerMethodField(read_only=True)
+    district = serializers.SerializerMethodField(read_only=True)
+
+    def get_country(self, obj):
+        return PointOfInterestAdminSerializer().extract_location_info(obj).get('country')
+
+    def get_region(self, obj):
+        return PointOfInterestAdminSerializer().extract_location_info(obj).get('region')
+
+    def get_district(self, obj):
+        return PointOfInterestAdminSerializer().extract_location_info(obj).get('district')
+
+    class Meta:
+        model = Location
+        fields = ('id', 'country', 'region', 'district')

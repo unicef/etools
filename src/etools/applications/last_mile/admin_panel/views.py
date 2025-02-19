@@ -10,8 +10,10 @@ from rest_framework.viewsets import GenericViewSet
 from etools.applications.last_mile import models
 from etools.applications.last_mile.admin_panel.serializers import (
     AlertNotificationSerializer,
+    LocationsAdminSerializer,
     OrganizationAdminSerializer,
     PointOfInterestAdminSerializer,
+    PointOfInterestCustomSerializer,
     TransferItemSerializer,
     UserAdminCreateSerializer,
     UserAdminSerializer,
@@ -19,6 +21,7 @@ from etools.applications.last_mile.admin_panel.serializers import (
     UserPointOfInterestAdminSerializer,
 )
 from etools.applications.last_mile.permissions import IsIPLMEditor
+from etools.applications.locations.models import Location
 from etools.applications.organizations.models import Organization
 
 
@@ -70,7 +73,24 @@ class UserViewSet(mixins.ListModelMixin,
         return UserAdminSerializer
 
 
-class LocationsViewSet(mixins.ListModelMixin, GenericViewSet):
+class LocationsViewSet(mixins.ListModelMixin,
+                       mixins.CreateModelMixin,
+                       mixins.RetrieveModelMixin,
+                       mixins.UpdateModelMixin,
+                       viewsets.GenericViewSet):
+    """
+    GeoJSON representation of a geographical point.
+
+    This object adheres to the GeoJSON standard, where:
+    - "type" specifies the kind of geometry (e.g., "Point").
+    - "coordinates" is a list containing the longitude and latitude values.
+
+    Example:
+        {
+            "type": "Point",
+            "coordinates": [43.713459135964513, 25.589650059118867]
+        }
+    """
     permission_classes = [IsIPLMEditor]
     serializer_class = PointOfInterestAdminSerializer
     pagination_class = CustomDynamicPageNumberPagination
@@ -88,6 +108,14 @@ class LocationsViewSet(mixins.ListModelMixin, GenericViewSet):
     ]
 
     search_fields = ('name',)
+
+    def get_serializer_class(self):
+
+        if self.action in ['update', 'partial_update']:
+            return PointOfInterestCustomSerializer
+        if self.action == 'create':
+            return PointOfInterestCustomSerializer
+        return PointOfInterestAdminSerializer
 
 
 class UserLocationsViewSet(mixins.ListModelMixin, GenericViewSet):
@@ -163,3 +191,11 @@ class OrganizationListView(mixins.ListModelMixin, GenericViewSet):
     filter_backends = (SearchFilter,)
 
     search_fields = ('name', 'vendor_number')
+
+
+class ParentLocationListView(mixins.ListModelMixin, GenericViewSet):
+    serializer_class = LocationsAdminSerializer
+    permission_classes = [IsIPLMEditor]
+
+    def get_queryset(self):
+        return Location.objects.all().order_by('id')
