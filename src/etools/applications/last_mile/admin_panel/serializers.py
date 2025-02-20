@@ -7,6 +7,7 @@ from rest_framework import serializers
 from rest_framework_gis.fields import GeometryField
 
 from etools.applications.last_mile import models
+from etools.applications.last_mile.admin_panel.validators import AdminPanelValidator
 from etools.applications.last_mile.serializers import PointOfInterestTypeSerializer
 from etools.applications.locations.models import Location
 from etools.applications.organizations.models import Organization
@@ -249,17 +250,69 @@ class UserPointOfInterestAdminSerializer(serializers.ModelSerializer):
 class AlertNotificationSerializer(serializers.ModelSerializer):
 
     alert_type = serializers.SerializerMethodField(read_only=True)
+    email = serializers.EmailField(source='user.email')
 
     def get_alert_type(self, obj):
-        list_mapped_groups = []
-        for group in obj.groups.all():
-            if group.name in self.context['ALERT_TYPES']:
-                list_mapped_groups.append(self.context['ALERT_TYPES'].get(group.name, group.name))
-        return list_mapped_groups
+        return self.context.get('ALERT_TYPES').get(obj.group.name)
 
     class Meta:
-        model = get_user_model()
-        fields = ('email', 'alert_type')
+        model = Realm
+        fields = ('id', 'email', 'alert_type')
+
+
+class AlertNotificationCreateSerializer(serializers.ModelSerializer):
+
+    adminValidator = AdminPanelValidator()
+
+    email = serializers.EmailField(source='user.email')
+    group = serializers.PrimaryKeyRelatedField(
+        queryset=Group.objects.all(),
+    )
+
+    @transaction.atomic
+    def create(self, validated_data):
+        self.adminValidator.validate_input_data(validated_data)
+        self.adminValidator.validate_user_email(validated_data['user']['email'])
+        self.adminValidator.validate_group_name(validated_data['group'], self.context['ALERT_TYPES'].keys())
+        country_schema = self.context.get('country_schema')
+        user = get_user_model().objects.get(email=validated_data['user']['email'])
+        country = Country.objects.get(schema_name=country_schema)
+        self.adminValidator.validate_realm(user, country, validated_data['group'])
+        instance = Realm.objects.create(
+            user=user,
+            country=country,
+            organization=user.profile.organization,
+            group=validated_data['group']
+        )
+        return instance
+
+    class Meta:
+        model = Realm
+        fields = ('email', 'group')
+
+
+class AlertNotificationCustomeSerializer(serializers.ModelSerializer):
+
+    adminValidator = AdminPanelValidator()
+
+    group = serializers.PrimaryKeyRelatedField(
+        queryset=Group.objects.all(),
+    )
+
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        self.adminValidator.validate_group_name(validated_data['group'], self.context['ALERT_TYPES'].keys())
+        instance.group = validated_data['group']
+        instance.save()
+        return instance
+
+    @transaction.atomic
+    def delete(self, instance):
+        instance.delete()
+
+    class Meta:
+        model = Realm
+        fields = ('group', )
 
 
 class MaterialAdminSerializer(serializers.ModelSerializer):
@@ -314,3 +367,28 @@ class LocationsAdminSerializer(serializers.ModelSerializer):
     class Meta:
         model = Location
         fields = ('id', 'country', 'region', 'district')
+
+
+class PointOfInterestTypeAdminSerializer(serializers.ModelSerializer):
+
+    adminValidator = AdminPanelValidator()
+
+    @transaction.atomic
+    def create(self, validated_data):
+        self.adminValidator.validate_poi_type(validated_data['name'])
+        return models.PointOfInterestType.objects.create(**validated_data)
+
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        self.adminValidator.validate_poi_type(validated_data['name'])
+        return models.PointOfInterestType.objects.update(**validated_data)
+
+    class Meta:
+        model = models.PointOfInterestType
+        fields = '__all__'
+
+
+class AlertTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Group
+        fields = ('id', 'name')

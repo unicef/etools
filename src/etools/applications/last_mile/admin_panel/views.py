@@ -9,11 +9,15 @@ from rest_framework.viewsets import GenericViewSet
 
 from etools.applications.last_mile import models
 from etools.applications.last_mile.admin_panel.serializers import (
+    AlertNotificationCreateSerializer,
+    AlertNotificationCustomeSerializer,
     AlertNotificationSerializer,
+    AlertTypeSerializer,
     LocationsAdminSerializer,
     OrganizationAdminSerializer,
     PointOfInterestAdminSerializer,
     PointOfInterestCustomSerializer,
+    PointOfInterestTypeAdminSerializer,
     TransferItemSerializer,
     UserAdminCreateSerializer,
     UserAdminSerializer,
@@ -23,6 +27,13 @@ from etools.applications.last_mile.admin_panel.serializers import (
 from etools.applications.last_mile.permissions import IsIPLMEditor
 from etools.applications.locations.models import Location
 from etools.applications.organizations.models import Organization
+from etools.applications.users.models import Group, Realm
+
+ALERT_TYPES = {
+    "LMSM Focal Point": "Wastage Notification",
+    "LMSM Alert Receipt": "Acknowledgement by IP",
+    "Waybill Recipient": "Waybill Recipient"
+}
 
 
 class CustomDynamicPageNumberPagination(PageNumberPagination):
@@ -111,9 +122,7 @@ class LocationsViewSet(mixins.ListModelMixin,
 
     def get_serializer_class(self):
 
-        if self.action in ['update', 'partial_update']:
-            return PointOfInterestCustomSerializer
-        if self.action == 'create':
+        if self.action in ['update', 'partial_update', 'create']:
             return PointOfInterestCustomSerializer
         return PointOfInterestAdminSerializer
 
@@ -131,12 +140,12 @@ class UserLocationsViewSet(mixins.ListModelMixin, GenericViewSet):
     search_fields = ('first_name', 'email')
 
 
-class AlertNotificationViewSet(mixins.ListModelMixin, GenericViewSet):
-    ALERT_TYPES = {
-        "LMSM Focal Point": "Wastage Notification",
-        "LMSM Alert Receipt": "Acknowledgement by IP",
-        "Waybill Recipient": "Waybill Recipient"
-    }
+class AlertNotificationViewSet(mixins.ListModelMixin,
+                               mixins.CreateModelMixin,
+                               mixins.RetrieveModelMixin,
+                               mixins.UpdateModelMixin,
+                               mixins.DestroyModelMixin,
+                               GenericViewSet):
 
     permission_classes = [IsIPLMEditor]
     serializer_class = AlertNotificationSerializer
@@ -144,15 +153,24 @@ class AlertNotificationViewSet(mixins.ListModelMixin, GenericViewSet):
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
-        context['ALERT_TYPES'] = self.ALERT_TYPES
+        context['ALERT_TYPES'] = ALERT_TYPES
+        context['country_schema'] = connection.tenant.schema_name
         return context
 
+    def get_serializer_class(self):
+
+        if self.action in ['update', 'partial_update', 'delete']:
+            return AlertNotificationCustomeSerializer
+        if self.action == 'create':
+            return AlertNotificationCreateSerializer
+        return AlertNotificationSerializer
+
     def get_queryset(self):
-        return get_user_model().objects.filter(realms__country__schema_name=connection.tenant.schema_name, realms__group__name__in=self.ALERT_TYPES.keys()).distinct().order_by('id')
+        return Realm.objects.filter(country__schema_name=connection.tenant.schema_name, group__name__in=ALERT_TYPES.keys()).distinct().order_by('id')
 
     filter_backends = (SearchFilter,)
 
-    search_fields = ('first_name', 'email')
+    search_fields = ('user__email', 'user__first_name', 'user__last_name')
 
 
 class TransferItemViewSet(mixins.ListModelMixin, GenericViewSet):
@@ -199,3 +217,19 @@ class ParentLocationListView(mixins.ListModelMixin, GenericViewSet):
 
     def get_queryset(self):
         return Location.objects.all().order_by('id')
+
+
+class PointOfInterestTypeListView(mixins.ListModelMixin, mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, GenericViewSet):
+    serializer_class = PointOfInterestTypeAdminSerializer
+    permission_classes = [IsIPLMEditor]
+
+    def get_queryset(self):
+        return models.PointOfInterestType.objects.all().order_by('id')
+
+
+class AlertTypeListView(mixins.ListModelMixin, GenericViewSet):
+    serializer_class = AlertTypeSerializer
+    permission_classes = [IsIPLMEditor]
+
+    def get_queryset(self):
+        return Group.objects.filter(name__in=ALERT_TYPES.keys()).order_by('id')
