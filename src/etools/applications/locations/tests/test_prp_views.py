@@ -5,6 +5,7 @@ from rest_framework import status
 from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.locations.models import Location
 from etools.applications.partners.permissions import READ_ONLY_API_GROUP_NAME
 from etools.applications.users.tests.factories import GroupFactory, UserFactory
 
@@ -16,8 +17,8 @@ class TestPRPLocationListView(BaseTenantTestCase):
         cls.parent = LocationFactory()
         cls.locations = [LocationFactory(parent=cls.parent) for x in range(5)]
         cls.locations.append(cls.parent)
-        cls.expected_keys = sorted(('admin_level', 'admin_level_name', 'id', 'name', 'p_code', 'parent', 'geom',
-                                    'is_active', 'latitude', 'longitude', 'point'))
+        cls.expected_keys = sorted(('id', 'name', 'p_code', 'admin_level', 'admin_level_name',
+                                    'point', 'geom', 'parent_p_code'))
         cls.url = reverse('prp-location-list')
         cls.query_param_data = {'workspace': cls.tenant.business_area_code}
 
@@ -30,12 +31,17 @@ class TestPRPLocationListView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(sorted(response.data[0].keys()), self.expected_keys)
         # sort the expected locations by name, the same way the API results are sorted
-        self.locations.sort(key=lambda location: location.name)
+        expected_locs = Location.simplified_geom.all().order_by('name')
 
-        for i in range(len(self.locations)):
-            location = self.locations[i]
-            data = response.data[i]
-            self.assertEqual(data["name"], location.name)
+        for actual_loc, expected_loc in zip(response.data, expected_locs):
+            for key in self.expected_keys:
+                if key == 'parent_p_code':
+                    self.assertEqual(actual_loc[key], expected_loc.parent_pcode)
+                elif key == 'point':
+                    self.assertEqual(actual_loc[key].__str__().replace(' ', ''),
+                                     expected_loc.point.geojson.__str__().replace(' ', ''))
+                else:
+                    self.assertEqual(actual_loc[key], getattr(expected_loc, key))
 
     def test_get_location_list_forbidden(self):
         """Ensure a non-staff user gets the 403"""
