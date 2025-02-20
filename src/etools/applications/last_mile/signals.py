@@ -21,7 +21,7 @@ def log_transfer(sender, instance, **kwargs):
 
     try:
         transfer.add_transfer_history(
-            origin_transfer_pk=transfer_origin_pk, transfer_pk=transfer.pk, original_transfer_pk=original_transfer_pk
+            origin_transfer_pk=transfer_origin_pk, original_transfer_pk=original_transfer_pk
         )
     except Exception:
         logger.exception("Error adding transfer history")

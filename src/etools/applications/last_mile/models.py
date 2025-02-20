@@ -105,32 +105,6 @@ class TransferHistoryManager(models.Manager):
 
 class TransferHistory(TimeStampedModel, models.Model):
     origin_transfer_id = models.IntegerField(unique=True)
-    from_partner = models.ForeignKey(
-        PartnerOrganization,
-        on_delete=models.SET_NULL,
-        null=True, blank=True,
-        related_name='transfer_history_from_partner'
-    )
-    destination_partner = models.ForeignKey(
-        PartnerOrganization,
-        on_delete=models.SET_NULL,
-        null=True, blank=True,
-        related_name='transfer_history_destination_partner'
-    )
-    origin_point = models.ForeignKey(
-        PointOfInterest,
-        on_delete=models.SET_NULL,
-        null=True, blank=True,
-        related_name='transfer_history_origin_point'
-    )
-    destination_point = models.ForeignKey(
-        PointOfInterest,
-        on_delete=models.SET_NULL,
-        null=True, blank=True,
-        related_name='transfer_history_destination_point'
-    )
-
-    comment = models.TextField(null=True, blank=True)
     objects = TransferHistoryManager()
 
     class Meta:
@@ -273,13 +247,8 @@ class Transfer(TimeStampedModel, models.Model):
         if self.transfer_type in [self.WASTAGE, self.DISPENSE]:
             self.status = self.COMPLETED
 
-    def add_transfer_history(self, origin_transfer_pk=None, transfer_pk=None, original_transfer_pk=None):
-        history = TransferHistory.objects.get_or_build_by_origin_id(original_transfer_pk, origin_transfer_pk, transfer_pk, self.id)
-
-        history.from_partner = self.from_partner_organization
-        history.destination_partner = self.recipient_partner_organization
-        history.origin_point = self.origin_point
-        history.destination_point = self.destination_point
+    def add_transfer_history(self, origin_transfer_pk=None, original_transfer_pk=None):
+        history = TransferHistory.objects.get_or_build_by_origin_id(original_transfer_pk, origin_transfer_pk, self.id)
 
         history.save()
         history.refresh_from_db()

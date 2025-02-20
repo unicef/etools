@@ -406,15 +406,25 @@ class TransferEvidenceAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
 
 @admin.register(models.TransferHistory)
 class TransferHistoryAdmin(admin.ModelAdmin):
-    list_display = ('transfer_name', 'from_partner', 'destination_partner', 'origin_point', 'destination_point', 'comment')
-    search_fields = ('from_partner__organization__name', 'destination_partner__organization__name', 'origin_point__name', 'destination_point__name')
-    readonly_fields = ('origin_transfer_id', 'from_partner', 'destination_partner', 'origin_point', 'destination_point', 'comment')
+    list_display = ('origin_transfer_name', 'list_sub_transfers')
+    readonly_fields = ('origin_transfer_id', 'origin_transfer')
 
-    def transfer_name(self, obj):
+    def origin_transfer_name(self, obj):
         try:
             return models.Transfer.objects.get(pk=obj.origin_transfer_id).name
         except models.Transfer.DoesNotExist:
             return '-'
+
+    def list_sub_transfers(self, obj):
+        transfers = models.Transfer.objects.filter(transfer_history=obj).all().order_by('id')
+        return ", ".join([t.name for t in transfers])
+
+    def origin_transfer(self, obj):
+        if obj.origin_transfer_id:
+            url = reverse('admin:last_mile_transfer_change', args=[obj.origin_transfer_id])
+            return format_html('<a href="{}">{}</a>', url, models.Transfer.objects.get(pk=obj.origin_transfer_id).name)
+        return '-'
+    origin_transfer.short_description = 'Origin Transfer'
 
     def get_search_results(self, request, queryset, search_term):
         queryset, use_distinct = super().get_search_results(request, queryset, search_term)
