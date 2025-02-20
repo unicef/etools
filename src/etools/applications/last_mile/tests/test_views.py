@@ -518,7 +518,9 @@ class TestTransferView(BaseTenantTestCase):
             "origin_check_out_at": timezone.now()
         }
         url = reverse('last_mile:transfers-new-check-out', args=(self.warehouse.pk,))
-        response = self.forced_auth_req('post', url, user=self.partner_staff, data=checkout_data)
+        mock_send = Mock()
+        with patch("etools.applications.last_mile.tasks.send_notification", mock_send):
+            response = self.forced_auth_req('post', url, user=self.partner_staff, data=checkout_data)
 
         self.assertEqual("Other", response.data['items'][0]['material']['material_type_translate'])
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -536,6 +538,8 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(self.checked_in.items.get(pk=item_1.pk).quantity, 2)
         self.assertEqual(self.checked_in.items.get(pk=item_2.pk).quantity, 22)
         self.assertIn(f'W @ {checkout_data["origin_check_out_at"].strftime("%y-%m-%d")}', wastage_transfer.name)
+
+        self.assertEqual(mock_send.call_count, 1)
 
     def test_checkout_dispense(self):
         item_1 = ItemFactory(quantity=11, transfer=self.checked_in)
@@ -602,7 +606,8 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(handover_transfer.destination_point, destination)
         self.assertEqual(handover_transfer.items.count(), len(checkout_data['items']))
         self.assertEqual(handover_transfer.items.first().quantity, 9)
-
+        self.assertEqual(handover_transfer.recipient_partner_organization.id, agreement.partner.id)
+        self.assertEqual(handover_transfer.from_partner_organization.id, self.partner.pk)
         self.assertEqual(self.checked_in.items.count(), 2)
         self.assertEqual(self.checked_in.items.get(pk=item_1.pk).quantity, 2)
         self.assertEqual(self.checked_in.items.get(pk=item_2.pk).quantity, 22)
