@@ -133,7 +133,7 @@ class UserLocationsViewSet(mixins.ListModelMixin, GenericViewSet):
     pagination_class = CustomDynamicPageNumberPagination
 
     def get_queryset(self):
-        return get_user_model().objects.filter(realms__country__schema_name=connection.tenant.schema_name).distinct().order_by('id')
+        return get_user_model().objects.filter(realms__country__schema_name=connection.tenant.schema_name, profile__organization__partner__points_of_interest__isnull=False).distinct().order_by('id')
 
     filter_backends = (SearchFilter,)
 
@@ -181,7 +181,7 @@ class TransferItemViewSet(mixins.ListModelMixin, GenericViewSet):
     def get_queryset(self):
         poi_id = self.request.query_params.get('poi_id')
         if poi_id:
-            return models.Transfer.objects.filter(status=models.Transfer.PENDING, origin_point__id=poi_id).order_by('-id')
+            return models.Transfer.objects.filter(status=models.Transfer.COMPLETED, origin_point__id=poi_id).order_by('-id')
         return models.Transfer.objects.none()
 
     filter_backends = (SearchFilter,)
