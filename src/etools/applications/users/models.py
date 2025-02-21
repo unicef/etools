@@ -25,7 +25,7 @@ from django_tenants.models import TenantMixin
 from model_utils import FieldTracker
 from model_utils.models import TimeStampedModel
 
-from etools.applications.organizations.models import Organization
+from etools.applications.organizations.models import Organization, OrganizationType
 from etools.applications.users.mixins import PARTNER_ACTIVE_GROUPS
 from etools.libraries.djangolib.models import GroupWrapper
 
@@ -461,8 +461,13 @@ class UserProfile(models.Model):
 
     @property
     def organizations_available(self):
+        from etools.applications.environment.helpers import tenant_switch_is_active
+
         current_country_realms = self.user.realms.filter(country=connection.tenant, is_active=True)
-        return Organization.objects.filter(realms__in=current_country_realms).distinct()
+        qs = Organization.objects.filter(realms__in=current_country_realms).distinct()
+        if not tenant_switch_is_active('gpd_enabled'):
+            qs = qs.exclude(organization_type=OrganizationType.GOVERNMENT)
+        return qs
 
     def username(self):
         return self.user.username

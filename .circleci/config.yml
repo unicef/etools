@@ -50,7 +50,7 @@ jobs:
         environment:
           PGHOST: 127.0.0.1
           DATABASE_URL: "postgis://postgres:postgres@localhost:5432/circle_test"
-          DEPLOY_BRANCHES: "develop|staging|master|robdj4.2"
+          DEPLOY_BRANCHES: "develop|staging|master|gddd"
       - image: cimg/postgres:12.9-postgis
         environment:
           POSTGRES_USER: postgres
@@ -66,15 +66,12 @@ jobs:
           name: Run Tests
           command: |
             pip install tox
-            /etools/__pypackages__/3.12/bin/tox -e d42,report
+            /etools/__pypackages__/3.12/bin/tox -e d42
           no_output_timeout: 30m
       - save_cache:
           key: deps2-{{ .Branch }}--{{ checksum "pdm.lock" }}-{{ checksum ".circleci/config.yml" }}
           paths:
             - ".tox/d42/"
-      - store_artifacts:
-          path: build/coverage
-          destination: coverage
       - run:
           name: Triggering build_and_deploy job
           command: |

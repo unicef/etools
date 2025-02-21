@@ -214,15 +214,15 @@
                                  </td>
                                  <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                            box-sizing:border-box;padding:10px;">
-                                     {{ transfer.partner_organization.organization.name }}
+                                     {{ transfer.partner_organization.name }}
                                  </td>
                                  <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                            box-sizing:border-box;padding:10px;">
-                                     {% if transfer.destination_check_in_at %}{{ transfer.destination_check_in_at|date:'d/m/Y' }}{% else %}{{ transfer.origin_check_out_at|date:'d/m/Y' }}{% endif %}
+                                     {% if transfer.destination_check_in_at %}{{ transfer.destination_check_in_at }}{% else %}{{ transfer.origin_check_out_at }}{% endif %}
                                  </td>
                                  <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                            box-sizing:border-box;padding:10px;">
-                                     {% if transfer.checked_in_by %}{{ transfer.checked_in_by.full_name }}{% else %}{{ transfer.checked_out_by.full_name }}{% endif %}
+                                     {% if transfer.checked_in_by %}{{ transfer.checked_in_by.name }}{% else %}{{ transfer.checked_out_by.name }}{% endif %}
                                  </td>
                                  <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                            box-sizing:border-box;padding:10px;">
@@ -230,11 +230,11 @@
                                  </td>
                                  <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                            box-sizing:border-box;padding:10px;">
-                                     {{ transfer.destination_point.parent }}
+                                     {{ transfer.destination_point.parent_name }}
                                  </td>
                                  <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                            box-sizing:border-box;padding:10px;">
-                                    {{ transfer.destination_point.parent.name }} 
+                                    {{ transfer.destination_point.region }} 
                                  </td>
                                  <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                            box-sizing:border-box;padding:10px;">
@@ -282,7 +282,7 @@
                                     <span style="color: white;font-weight: bold;">Reason for Wastage</span>
                                 </td>
                               </tr>
-                              {% for item in transfer|all_items %}
+                              {% for item in transfer.items %}
                                   </tr>
                                   <tr >
                                      <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
@@ -307,7 +307,7 @@
                                      </td>
                                      <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                                box-sizing:border-box;padding:10px;">
-                                         {{ item.expiry_date|date:'d/m/Y' }}
+                                         {{ item.expiry_date }}
                                      </td>
                                      <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                                box-sizing:border-box;padding:10px;">

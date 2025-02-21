@@ -1,0 +1,2134 @@
+{% extends "easy_pdf/base.html" %}
+{% load humanize %}
+{% load etools %}
+
+{% block style_base %}
+    {% comment %}
+        See DEFAULT_CSS in https://github.com/chrisglass/xhtml2pdf/blob/master/xhtml2pdf/default.py
+        for base style.
+    {% endcomment %}
+
+    {% block layout_style %}
+        <style type="text/css">
+            @page {
+                size: {{ pagesize|default:"letter" }};
+                margin-left: 2.0cm;
+                margin-right: 2.0cm;
+                margin-top: 2.4cm;
+                margin-bottom: 1.8cm;
+                @frame header {
+                    -pdf-frame-content: header_content;
+                    margin-top: 1cm;
+                    margin-right: 2.0cm;
+                    margin-bottom: 0.3cm;
+                    padding-bottom: 3cm;
+                    margin-left: 0cm;
+                    background-color: #0099ff;
+                    height: 2cm;
+                }
+                @frame footer_frame {
+                    /* Static frame */
+                    -pdf-frame-content:footer_content;
+                    left: 50pt; width: 512pt; top: 772pt; height: 20pt;
+                }
+            }
+        </style>
+    {% endblock %}
+    {% block extra_style %}
+        <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+        <style type="text/css">
+          #content {
+            font-size: 11pt;
+            font-family: "Times New roman", serif;
+            text-align: justify;
+          }
+
+          .background-gray {
+            background-color: #d9d9d9;
+          }
+
+          .text-right {
+            text-align: right;
+          }
+
+          .text-center {
+            text-align: center;
+          }
+
+          .text-justify {
+            text-align: justify;
+          }
+
+          .strong {
+            font-weight: bold;
+          }
+
+          .underline {
+            text-decoration: underline;
+          }
+
+          table {
+            line-height: 140%;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            border-collapse: collapse;
+          }
+          table.bordered {
+            border: 0.1pt solid #999999;
+          }
+          tr,
+          td,
+          th {
+            border: none;
+            min-height: 25px;
+          }
+
+          th {
+            font-size: 12pt;
+            padding: 3px 5px;
+            line-height: 1;
+            font-weight: bold;
+          }
+
+          td {
+            font-size: 12pt;
+            vertical-align: middle;
+            padding: 3px 5px;
+            line-height: 1;
+          }
+
+          .bordered td,
+          .bordered th {
+            border: 0.1pt solid #999999;
+          }
+
+          .indent {
+            padding-left: 25px;
+          }
+
+          .indent2 {
+            padding-left: 50px;
+          }
+
+
+          .page-break {
+            page-break-after: always;
+          }
+
+          li {
+            padding-bottom: 10px;
+          }
+
+          .alpha-list {
+            list-style-type: lower-alpha;
+          }
+        </style>
+      {% endblock %}
+    {% endblock %}
+
+{% block content %}
+  {% if error %}
+      PDF could not be generated properly: <br> {{ error }}
+  {% else %}
+    <div id="header_content">
+      <p class="text-right">
+        Núm. de referencia del PCA: {{ agreement.agreement_number }}
+      </p>
+    </div>
+    <div id="content">
+      <p class="text-center strong">ACUERDO DE COOPERACIÓN PARA PROGRAMAS</p>
+      <p class="text-center strong">ENTRE</p>
+      <p class="text-center strong">{{ agreement.partner|upper }}</p>
+      <p class="text-center strong">Y EL</p>
+      <p class="text-center strong">
+        FONDO DE LAS NACIONES UNIDAS PARA LA INFANCIA
+      </p>
+      <p class="text-center strong">PARA LA</p>
+      <p class="text-center strong">
+        EJECUCIÓN DEL PROGRAMA FINANCIADO POR UNICEF EN RELACIÓN CON EL PROGRAMA DE
+        UNICEF PARA {{ country|upper }}
+      </p>
+      <p>
+        {{ agreement.partner }} y el Fondo de las Naciones Unidas para la Infancia
+        (denominados conjuntamente las “Partes” y cada uno por separado como
+        “Parte”) acuerdan lo siguiente:
+      </p>
+      <p class="strong">1. DEFINICIONES</p>
+      <p>En el presente Acuerdo, la expresión:</p>
+      <p>
+        1.1 "<span class="underline">Funcionario Autorizado</span>" se refiere a uno
+        de los siguientes funcionarios del Asociado:
+      </p>
+      <div class="indent">
+        <table class="bordered">
+          <tbody>
+            <tr>
+              <td>Nombre y apellidos</td>
+              <td>Cargo</td>
+              <td>Correo electrónico</td>
+              <td width="140px">Firma de muestra</td>
+            </tr>
+            {% for officer in auth_officers %}
+            <tr>
+              <td>{{ officer.first_name }} {{ officer.last_name }}</td>
+              <td>{{ officer.title }}</td>
+              <td>{{ officer.email|text_wrap:20 }}</td>
+              <td width="140px">&nbsp;</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <p>
+        Cualquier remoción o modificación de la lista del/los Funcionario(s)
+        Autorizado(s) indicados anteriormente requerirá una modificación por escrito
+        de este Acuerdo, de conformidad con el artículo 20 de los Términos y
+        Condiciones Generales de los Acuerdos de Cooperación para Programas.
+      </p>
+      <p>
+        1.2 "<span class="underline">e-FACE</span>" se refiere al servicio
+        electrónico de UNICEF de introducción de datos para la información contenida
+        en los formularios FACE, cuando esté disponible.
+      </p>
+      <p>
+        1.3 "<span class="underline">formulario FACE</span>" se refiere al
+        formulario estándar de autorización de financiación y certificado de gastos
+        del Grupo de las Naciones Unidas para el Desarrollo (United Nations
+        Development Group – UNDG), cuya copia está disponible en
+        <a
+          href="https://unpartnerportalhelpcenter.zendesk.com/hc/article_attachments/7788906095639/7282-REVISED_FACE_Form.xlsx"
+          >https://unpartnerportalhelpcenter.zendesk.com/hc/article_attachments/7788906095639/7282-REVISED_FACE_<br />Form.xlsx</a
+        >
+        o en cualquier otra URL en la que UNICEF decida publicarlo.
+      </p>
+      <p>
+        1.4 "<span class="underline">HACT</span>" es el Método Armonizado de
+        Transferencias en Efectivo del UNDG, disponible en
+        <a
+          href="https://undg.org/document/harmonized-approach-to-cash-transfer-framework/"
+          >https://undg.org/document/harmonized-approach-to-cash-transfer-framework/</a
+        >
+        o en cualquier otra URL en la que el UNDG decida publicarlo.
+      </p>
+      <p>
+        1.5 "<span class="underline">Asociado en la Ejecución</span>" o "<span
+          class="underline"
+          >Asociado</span
+        >" se refiere a {{ agreement.partner }}, {{ agreement.partner.address }}, 
+        {{ agreement.partner.city }}, {{ agreement.partner.country }}.
+      </p>
+      <p>
+        1.6 "<span class="underline">equipo no fungible</span>" se refiere a
+        cualquier artículo que cueste cinco mil dólares de los Estados Unidos (5.000
+        USD) o más, incluidos los costos de entrega y manipulación iniciales, y que
+        tenga una vida útil de como mínimo tres (3) años.
+      </p>
+      <p>
+        1.7 "<span class="underline">Programa</span>" se refiere al Plan Estratégico
+        o al programa de UNICEF para {{ country }}, aprobado por la Junta Ejecutiva
+        de UNICEF para el período {{ cp.from_date|date:"Y" }} to {{ cp.to_date|date:"Y" }}, 
+        incluidas las prórrogas posteriores.
+      </p>
+      <p>
+        1.8 "<span class="underline">Documento del Programa</span>" se refiere al
+        documento formal firmado por las Partes que establece los resultados
+        previstos y la forma de lograrlos, incluidas las actividades, los plazos y
+        el presupuesto que hayan acordado conjuntamente las Partes para las
+        actividades que emprenderá el Asociado en virtud de este PCA. El modelo de
+        Documento del Programa está disponible en
+        <a href="https://etools.unicef.org/">https://etools.unicef.org</a>. Este
+        documento se utiliza como base para solicitar, comprometer y desembolsar
+        fondos con el objeto de llevar a cabo las actividades planificadas,
+        supervisarlas y presentar informes al respecto.
+      </p>
+      <p>
+        1.9 "<span class="underline"
+          >Informe sobre los Progresos del Documento del Programa</span
+        >" se refiere al informe descriptivo estándar de UNICEF acerca de los
+        progresos realizados, disponible en
+        <a href="http://www.partnerreportingportal.org/"
+          >www.partnerreportingportal.org</a
+        >.
+      </p>
+      <p>
+        1.10 "<span class="underline"
+          >Gastos de apoyo para el fortalecimiento de la capacidad de la
+          organización</span
+        >" se refiere a los gastos afrontados por el Asociado para el
+        fortalecimiento de la capacidad de la organización y/o el mantenimiento de
+        la capacidad, incluidos los costos de apoyo a la sede, que no puedan
+        atribuirse inequívocamente a una actividad específica ejecutada por el
+        Asociado de conformidad con este Acuerdo, incluidos en cualquier Documento
+        del Programa.
+      </p>
+      <p>
+        1.11 "<span class="underline"
+          >Fondo de las Naciones Unidas para la Infancia</span
+        >" o "<span class="underline">UNICEF</span>" se refiere al órgano
+        subsidiario de las Naciones Unidas establecido por la Asamblea General en
+        virtud de la resolución 57 I) del 11 de diciembre de 1946.
+      </p>
+      <p class="strong">2. DOCUMENTOS DEL ACUERDO</p>
+      <p>2.1 Este Acuerdo consta de los documentos siguientes:</p>
+      <div class="indent">
+        <p>(a) el presente documento;</p>
+        <p>
+          (b) el documento sobre los Términos y Condiciones Generales de los
+          Acuerdos de Cooperación para Programas adjunto al presente documento o
+          disponible en la biblioteca
+          <a href="http://www.unpartnerportal.org/">www.unpartnerportal.org</a>;
+        </p>
+        <p>
+          (c) cualquier Documento del Programa suscrito por las Partes en virtud de
+          este Acuerdo y que haga referencia a este Acuerdo; y
+        </p>
+        <p>
+          (d) si resultan aplicables, las Condiciones Especiales acordadas entre las
+          Partes con respecto a un Programa o Documento del Programa en particular
+          en virtud del presente Acuerdo.
+        </p>
+      </div>
+      <p class="strong">3. PROPÓSITO Y ALCANCE</p>
+      <p>
+        3.1 Este Acuerdo regirá la ejecución por el Asociado de las partes
+        pertinentes del Programa (incluida la respuesta humanitaria) a través de uno
+        o varios Documentos del Programa. Describe la relación entre las Partes y
+        las responsabilidades de las Partes.
+      </p>
+      <p class="strong">4. RESPONSABILIDADES GENERALES DE LAS PARTES</p>
+      <p>
+        4.1 Las Partes trabajarán conjuntamente en un espíritu de cooperación y
+        alianza, con las responsabilidades y las obligaciones en materia de
+        rendición de cuentas establecidas en este Acuerdo, para implementar lo
+        dispuesto en los Documentos del Programa en su totalidad de manera oportuna,
+        eficiente y efectiva.
+      </p>
+      <p>
+        4.2 Las Partes acuerdan cumplir sus responsabilidades respectivas de
+        conformidad con las disposiciones del presente Acuerdo, incluidos los
+        Documentos del Programa.
+      </p>
+      <p>
+        4.3 Las Partes se mantendrán mutuamente informadas de todas las actividades
+        pertinentes relacionadas con la implementación de los Documentos del
+        Programa y llevarán a cabo consultas cuando cualquiera de las Partes lo
+        considere adecuado, incluida cualquier circunstancia que pueda afectar al
+        logro de los resultados del Programa y los Documentos del Programa.
+      </p>
+      <p>
+        4.4 Las Partes cumplirán sus compromisos respetando plenamente los términos
+        y condiciones del presente Acuerdo y los principios de las Naciones Unidas.
+      </p>
+      <p class="strong">5. RESPONSABILIDADES DEL ASOCIADO</p>
+      <p>
+        5.1 El Asociado contribuirá a la implementación de cada Documento del
+        Programa suscrito en virtud de este Acuerdo asumiendo las responsabilidades
+        que se le asignan en este Acuerdo, en plena cooperación con UNICEF, y de
+        acuerdo con el presupuesto, el cronograma y otros detalles establecidos en
+        cada Documento del Programa. A tal fin deberá:
+      </p>
+      <div class="indent">
+        <p>
+          a) observar el máximo nivel de comportamiento para que se respeten los
+          valores fundamentales de las Naciones Unidas, la Convención sobre los
+          Derechos del Niño, la Convención sobre la Eliminación de Todas las Formas
+          de Discriminación contra la Mujer y la Convención sobre los Derechos de
+          las Personas con Discapacidad;
+        </p>
+        <p>
+          b) empezar a trabajar en las responsabilidades que se le asignen en cada
+          Documento del Programa inmediatamente después de firmar el Documento del
+          Programa correspondiente (pero en ningún caso antes de suscribir este
+          Acuerdo y dicho Documento del Programa) y, según proceda, recibir la
+          primera cuota del efectivo, los suministros y equipos que le transferirá
+          UNICEF;
+        </p>
+        <p>
+          c) realizar las contribuciones acordadas de efectivo, suministros,
+          equipos, asistencia técnica y otros servicios para la aplicación del
+          Documento del Programa según lo previsto en el presente Acuerdo [y en el
+          Documento del Programa pertinente];
+        </p>
+        <p>
+          d) cumplir sus responsabilidades con diligencia y eficiencia, y de
+          conformidad con los requisitos establecidos en el Documento del Programa
+          correspondiente (en particular en lo relativo al cronograma y el
+          presupuesto);
+        </p>
+        <p>
+          e) proveer a UNICEF los informes requeridos en virtud del presente Acuerdo
+          y del Documento del Programa pertinente de manera oportuna y
+          satisfactoria, y aportar cualquier otra información que abarque el
+          Documento del Programa y el uso del efectivo, los suministros y los
+          equipos que UNICEF le haya transferido y pueda razonablemente solicitar;
+        </p>
+        <p>
+          f) tener el máximo cuidado al manipular y administrar el efectivo, los
+          suministros y los equipos que le proporciona UNICEF, y asegurarse de que
+          su personal se comporta con el más alto grado de integridad y cuidado a
+          este respecto.
+        </p>
+      </div>
+      <p>5.2 Además de las obligaciones establecidas en la Sección 5.1 anterior:</p>
+      <div class="indent">
+        <p>
+          a) El Asociado maximizará la utilización de cualquier exención fiscal o de
+          derechos aduaneros, impuestos especiales o de importación a su disposición
+          para la compra, la importación, el registro o el uso de los suministros y
+          los equipos adquiridos con fondos proporcionados por UNICEF en virtud de
+          este Acuerdo, y consultará a UNICEF al respecto.
+        </p>
+        <p>
+          b) El Asociado establecerá y mantendrá un sistema de seguimiento de los
+          progresos realizados en la aplicación de cada Documento del Programa
+          utilizando los resultados definidos, incluidos los productos, los
+          indicadores y los objetivos que se plantean en el Documento del Programa
+          correspondiente.
+        </p>
+        <p>
+          c) El Asociado aceptará visitas de seguimiento de los representantes de
+          cualquier donante que contribuya a sufragar los gastos de aplicación del
+          Documento del Programa. UNICEF notificará dichas visitas al Asociado con
+          una antelación razonable.
+        </p>
+      </div>
+      <p class="strong">6. RESPONSABILIDADES DE UNICEF</p>
+      <p>
+        6.1 UNICEF contribuirá a la aplicación de cada Documento del Programa
+        incluido en este Acuerdo asumiendo las responsabilidades que se le asignen
+        en este Acuerdo. A tal fin deberá:
+      </p>
+      <div class="indent">
+        <p>
+          a) empezar a ejecutar y completar las responsabilidades que se le asignan
+          en cada Documento del Programa de manera oportuna, siempre que UNICEF
+          reciba del Asociado todos los informes y otros documentos necesarios;
+        </p>
+        <p>
+          b) transferir el efectivo, los suministros y los equipos de conformidad
+          con las disposiciones del presente Acuerdo y del Documento del Programa
+          correspondiente;
+        </p>
+        <p>
+          c) emprender y completar el seguimiento, la valoración, las actividades de
+          aseguramiento, la evaluación y la supervisión de cada Documento del
+          Programa;
+        </p>
+        <p>
+          d) servir de enlace permanente, según sea necesario, con el Gobierno (en
+          su caso), otros miembros del equipo de las Naciones Unidas en el país, los
+          donantes y otras partes interesadas;
+        </p>
+        <p>
+          e) proporcionar, según corresponda, la orientación general, la
+          supervisión, la asistencia técnica y el liderazgo necesarios para la
+          aplicación de cada Documento del Programa, y ponerse a disposición del
+          Asociado para las consultas que se le soliciten dentro de límites
+          razonables; y
+        </p>
+        <p>
+          f) iniciar reuniones periódicas conjuntas de seguimiento y examen a fin de
+          llegar a un acuerdo sobre la resolución de las conclusiones y aprovechar
+          la experiencia adquirida para atender mejor las necesidades de los niños y
+          niñas. En los exámenes conjuntos de alianzas se tendrán en cuenta: i) el
+          progreso de cada Documento del Programa; ii) la relación de trabajo entre
+          las Partes; iii) el cumplimiento por las Partes del presente Acuerdo y de
+          cada Documento del Programa; y iv) los logros y los problemas a los que se
+          ha enfrentado el Asociado en el cumplimiento de los resultados previstos
+          en cada Documento del Programa.
+        </p>
+      </div>
+      <p>
+        6.2 A petición del Asociado, UNICEF reembolsará al Asociado hasta el siete
+        por ciento (7%) de los gastos de apoyo efectuados efectivamente por el
+        Asociado para el fortalecimiento de la capacidad de la organización en
+        relación con cualquier Documento del Programa y presupuesto conexo. A fin de
+        que sean reembolsables, el Asociado deberá registrar los gastos de apoyo
+        para el fortalecimiento de la capacidad de la organización en los
+        formularios FACE que se presentarán a UNICEF de acuerdo con los términos de
+        este Acuerdo.
+      </p>
+      <p class="strong">7. DOCUMENTOS DEL PROGRAMA</p>
+      <p>
+        7.1 Las Partes pueden suscribir uno o más Documentos del Programa. Cada uno
+        de los mencionados documentos será incorporado a este Acuerdo y será válido
+        y exigible cuando sea firmado por los funcionarios debidamente autorizados
+        de cada una de las Partes y haga referencia a este Acuerdo.
+      </p>
+      <p>
+        7.2 Los Documentos del Programa solo podrán modificarse mediante acuerdo
+        escrito entre las Partes.
+      </p>
+      <p class="strong">
+        8. APORTES DE UNICEF PARA LA IMPLEMENTACIÓN DE LOS DOCUMENTOS DEL PROGRAMA
+      </p>
+      <p class="strong">
+        Transferencia en Efectivo por parte de UNICEF al Asociado en la Ejecución/en
+        nombre de este
+      </p>
+      <p class="underline">Disposiciones generales</p>
+      <p>
+        8.1 UNICEF proporcionará al Asociado asistencia en efectivo para las
+        actividades estipuladas en los Documentos del Programa (la “Transferencia en
+        Efectivo”), con sujeción a la disponibilidad de fondos y a los términos del
+        presente Acuerdo. La asistencia de UNICEF al Asociado con respecto a cada
+        Documento del Programa, no excederá el monto incluido en dicho Documento del
+        Programa.
+      </p>
+      <p>
+        8.2 UNICEF proporcionará la asistencia en efectivo al Asociado mediante tres
+        modalidades de Transferencia en Efectivo (cada una de ellas una “Modalidad
+        de Transferencia en Efectivo”):
+      </p>
+      <div class="indent">
+        <p>
+          (a) pago anticipado de UNICEF al Asociado (denominado “Transferencia
+          Directa en Efectivo” en el HACT);
+        </p>
+        <p>
+          (b) reembolso de UNICEF al Asociado (denominado “Reembolso” en el HACT); y
+        </p>
+        <p>
+          (c) pago de UNICEF en nombre del Asociado al distribuidor o proveedor del
+          Asociado (denominado “Pago Directo” en el HACT y en este Acuerdo).
+        </p>
+      </div>
+      <p>
+        8.3 UNICEF realizará la transferencia en efectivo en cuotas (cada una, una
+        “Cuota de Transferencia en Efectivo”), de acuerdo con lo solicitado por el
+        Asociado en el formulario FACE y conforme a la estimación detallada de los
+        costos que representa las necesidades de efectivo para llevar a cabo las
+        actividades establecidas en los Documentos del Programa o según lo decidido
+        por UNICEF.
+      </p>
+      <p class="underline">Procedimientos de Transferencia en Efectivo</p>
+      <p>8.4 Con respecto a cada Documento del Programa:</p>
+      <div class="indent">
+        <p>
+          (a) las Cuotas de Transferencia en Efectivo se transferirán al Asociado
+          (o, cuando se utilice la modalidad de Pago Directo, en nombre de este)
+          únicamente para contribuir a la aplicación de dicho Documento del
+          Programa; y
+        </p>
+        <p>
+          (b) el Asociado acepta que los fondos transferidos en esas condiciones se
+          utilizarán exclusivamente para la aplicación de dicho Documento del
+          Programa.
+        </p>
+      </div>
+      <p>
+        8.5 UNICEF abonará cada Cuota de Transferencia en Efectivo al Asociado (o,
+        cuando se utilice la modalidad de Pago Directo, en nombre de este) en
+        respuesta a una solicitud por escrito del Asociado, de acuerdo con los
+        procedimientos siguientes:
+      </p>
+      <p class="underline">
+        Procedimientos para solicitar Cuotas de Transferencia en Efectivo conforme a
+        las tres Modalidades de Transferencia en Efectivo:
+      </p>
+      <div class="indent">
+        <p>
+          (a) Salvo que UNICEF indique lo contrario por escrito, durante la vigencia
+          de este Acuerdo el Asociado presentará a UNICEF, cada tres meses naturales
+          (un “Trimestre”), una solicitud por escrito de la Cuota de Transferencia
+          en Efectivo por un monto igual a sus necesidades de efectivo para ese
+          Trimestre relacionadas con las actividades especificadas en el Documento
+          del Programa. Para ello, el Asociado utilizará el formulario FACE y la
+          Estimación Detallada de Costos. La solicitud debe estar firmada por un
+          Funcionario Autorizado.
+        </p>
+        <p>
+          (b) La primera solicitud por escrito mediante el formulario FACE podrá
+          realizarse tan pronto como ambas Partes hayan suscrito el presente Acuerdo
+          y el Documento del Programa pertinente. Si dicha solicitud por escrito se
+          ha presentado en forma adecuada y completa, UNICEF determinará el monto
+          que se transferirá y lo transferirá al Asociado (o, cuando se utilice la
+          modalidad de Pago Directo, en nombre de este) en un plazo razonable.
+        </p>
+        <p>
+          (c) Salvo que UNICEF decida otra cosa, para la segunda solicitud por
+          escrito y en todas las siguientes efectuadas mediante el formulario FACE
+          se requiere que UNICEF haya recibido información sobre el uso de la
+          primera Cuota de Transferencia en Efectivo antes de que se ordene una
+          cuota para el período de tres meses siguiente. Si esa segunda o
+          subsiguiente solicitud se recibe de manera oportuna y se ha presentado en
+          forma adecuada y completa, UNICEF determinará el monto que se transferirá
+          y lo transferirá al Asociado (o, cuando se utilice la modalidad de Pago
+          Directo, en nombre de este) en un plazo razonable.
+        </p>
+        <p class="underline">
+          Procedimientos adicionales aplicables exclusivamente a la modalidad de
+          Pago Directo:
+        </p>
+        <p>
+          (d) La solicitud de Pago Directo debe presentarse utilizando el formulario
+          FACE y, en todos los casos, debe incluir los datos completos del proveedor
+          y la información bancaria en un formato especificado por UNICEF.
+        </p>
+        <p>
+          (e) Tanto en la modalidad de Pago Directo como en la de Reembolso, los
+          gastos solicitados deben haber sido previamente autorizados por UNICEF a
+          través del formulario FACE.
+        </p>
+      </div>
+      <p class="underline">
+        Términos y condiciones especiales para las Cuotas de Transferencia en
+        Efectivo:
+      </p>
+      <p>
+        8.6 Cualquier solicitud de Cuota de Transferencia en Efectivo por parte del
+        Asociado debe cumplir los siguientes criterios a satisfacción de UNICEF. De
+        lo contrario, UNICEF puede decidir no cumplir la solicitud en su totalidad o
+        en parte:
+      </p>
+      <div class="indent">
+        <p>
+          (a) el monto y el propósito de la solicitud deben corresponder a lo
+          dispuesto en el Documento del Programa, incluidas sus actividades, su
+          cronograma y su presupuesto;
+        </p>
+        <p>
+          (b) la solicitud debe ser razonable y estar justificada de acuerdo con los
+          principios de buena gestión financiera, en particular los principios en
+          materia de relación calidad-precio y rentabilidad;
+        </p>
+        <p>
+          (c) no debe haber otros motivos para creer que el gasto es contrario al
+          presente Acuerdo, incluido el Documento del Programa; y
+        </p>
+        <p>
+          (d) sin perjuicio de lo dispuesto en el apartado c) del párrafo 8.5, las
+          Cuotas de Transferencia en Efectivo anteriores deberán haberse notificado
+          a satisfacción de UNICEF, de conformidad con lo establecido en el artículo
+          10 del presente Acuerdo.
+        </p>
+      </div>
+      <p>
+        8.7 UNICEF puede decidir ajustar el monto de cualquier Cuota de
+        Transferencia en Efectivo cuando tenga motivos para hacerlo, en particular a
+        fin de:
+      </p>
+      <div class="indent">
+        <p>
+          (a) considerar los progresos generales realizados hasta la fecha en
+          relación con el Documento del Programa;
+        </p>
+        <p>(b) compensar cualquier Gasto no Admisible; o</p>
+        <p>
+          (c) compensar cualquier saldo restante de cualquier Cuota de Transferencia
+          en Efectivo anterior que el Asociado no haya gastado o declarado.
+        </p>
+      </div>
+      <p>
+        8.8 UNICEF solo deberá transferir al Asociado (o, cuando se utilice la
+        modalidad de Pago Directo, en nombre de este), la cantidad que UNICEF
+        determine que se le adeuda en virtud de los términos de este Acuerdo. El
+        Asociado en la Ejecución acepta que UNICEF no será responsable ante él o
+        cualquier tercero, incluidos sus distribuidores o proveedores, por cualquier
+        monto que UNICEF determine que no cumple este Acuerdo.
+      </p>
+      <p>
+        8.9 (a) El Asociado debe administrar la Transferencia en Efectivo de acuerdo
+        con sus propios reglamentos, normas y procedimientos financieros, los cuales
+        UNICEF habrá revisado, evaluado y considerado apropiados.
+      </p>
+      <div class="indent">
+        <p>
+          (b) Si, de conformidad con el HACT, UNICEF proporciona una Transferencia
+          en Efectivo antes de examinar y evaluar los reglamentos, normas y
+          procedimientos financieros del Asociado, pero posteriormente determina que
+          dichos reglamentos, normas y procedimientos no son apropiados, lo
+          notificará por escrito al Asociado y podrá exigir la devolución de las
+          Transferencias en Efectivo no utilizadas ya facilitadas al Asociado y
+          decidir aplicar el Documento del Programa o cualquiera de sus partes
+          (incluidas las actividades de adquisición)
+        </p>
+      </div>
+      <p>
+        8.10 Cuando el Asociado adquiera bienes o servicios con la Transferencia en
+        Efectivo, debe hacerlo teniendo debidamente en cuenta los principios
+        siguientes:
+      </p>
+      <div class="indent">
+        <p>(a) la mejor relación calidad-precio;</p>
+        <p>(b) equidad, integridad y transparencia;</p>
+        <p>(c) competencia.</p>
+      </div>
+      <p>
+        8.11 UNICEF remitirá las Transferencias en Efectivo que no sean Pagos
+        Directos a la siguiente cuenta bancaria del Asociado:
+      </p>
+      <div class="indent">
+        {% for bank_detail in bank_details %}
+        <table class="bordered">
+          <tr>
+            <td colspan="2">Cuenta</td>
+          </tr>
+          <tr>
+            <td style="width: 45%">Nombre del banco</td>
+            <td style="width: 55%">{{ bank_detail.bank_name }}</td>
+          </tr>
+          <tr>
+            <td style="width: 45%">Domicilio del banco</td>
+            <td style="width: 55%">{{ bank_detail.bank_address }}</td>
+          </tr>
+          <tr>
+            <td style="width: 45%">Denominación de la cuenta</td>
+            <td style="width: 55%">{{ bank_detail.account_title }}</td>
+          </tr>
+          <tr>
+            <td style="width: 45%">Núm. de cuenta</td>
+            <td style="width: 55%">{{ bank_detail.account_number }}</td>
+          </tr>
+          <tr>
+            <td style="width: 45%">Divisa de la cuenta</td>
+            <td style="width: 55%">{{ bank_detail.account_currency }}</td>
+          </tr>
+          <tr>
+            <td style="width: 45%">
+              Código <br />
+              SWIFT/IBAN
+            </td>
+            <td style="width: 55%">{{ bank_detail.routing_details }}</td>
+          </tr>
+          <tr>
+            <td style="width: 45%">Persona de contacto del banco</td>
+            <td style="width: 55%">
+              {% firstof bank_detail.bank_contact_person '&nbsp;' %}
+            </td>
+          </tr>
+          {% if bank_detail.tax_number_5 %}
+          <tr>
+            <td style="width: 45%">Detalles bancarios de Hawala</td>
+            <td style="width: 55%">{{ bank_detail.tax_number_5 }}</td>
+          </tr>
+          {% endif %}
+        </table>
+        {% endfor %}
+      </div>
+      <p class="strong">
+        Transferencia de suministros y equipos por UNICEF al Asociado
+      </p>
+      <p>
+        8.12 Los suministros y equipos transferidos al Asociado por UNICEF se
+        utilizarán exclusivamente para la aplicación del Documento del Programa,
+        salvo que UNICEF acuerde otra cosa.
+      </p>
+      <p>
+        8.13 El Asociado se convertirá en propietario de los suministros y equipos
+        cuando los reciba. En el caso de que UNICEF acepte almacenar los suministros
+        y equipos para el Asociado o guardarlos en su nombre, este último se
+        convertirá en propietario de esos suministros y equipos según lo acordado
+        entre UNICEF y el Asociado. Excepcionalmente, UNICEF podrá decidir por
+        escrito seguir siendo el propietario de los suministros y equipos que le
+        transfirió al Asociado.
+      </p>
+      <p>
+        8.14 UNICEF puede decidir que el Asociado utilice o reasigne los suministros
+        y equipos que ya se le han transferido para aplicar otro Documento del
+        Programa. El Asociado cumplirá sin demora la decisión de UNICEF y, en caso
+        de que se reasignen, acepta que, no obstante lo dispuesto en el párrafo
+        8.13, deberá transferir la propiedad de los suministros y equipos de acuerdo
+        con las instrucciones por escrito de UNICEF.
+      </p>
+      <p>
+        8.15 El Asociado implementará el máximo cuidado al usar y administrar dichos
+        suministros y equipos, y colocará las marcas de UNICEF previa consulta con
+        la organización.
+      </p>
+      <p>
+        8.16 Si fuera el caso, los vehículos puestos a disposición del Asociado por
+        UNICEF se transferirán solo en préstamo. Dichos vehículos se proporcionarán
+        al Asociado una vez que las Partes firmen el acuerdo estándar de préstamo de
+        vehículos de UNICEF, una copia del cual se entregará al Asociado.
+      </p>
+      <p class="strong">9. MANTENIMIENTO DE REGISTROS</p>
+      <p>
+        9.1 El Asociado se compromete a mantener sus libros y registros de forma
+        precisa, completa y actualizada.
+      </p>
+      <p class="underline">Transferencia en Efectivo:</p>
+      <p>
+        9.2 Los libros y registros del Asociado indicarán claramente todas las
+        Cuotas de Transferencia en Efectivo que recibió, así como los desembolsos
+        que realizó en virtud de este Acuerdo, incluido el monto de los fondos no
+        utilizados. Sin perjuicio de lo anterior, el Asociado está obligado a
+        mantener:
+      </p>
+      <div class="indent">
+        <p>
+          (a) registros en los que consten qué transacciones registradas en su
+          sistema contable representan los gastos indicados en cada línea de los
+          formularios FACE, así como los ingresos obtenidos por el Asociado en
+          relación con Pagos Anticipados (Transferencias Directas en Efectivo)
+          realizados por UNICEF;
+        </p>
+        <p>
+          (b) la documentación original, incluidas las facturas, los recibos y
+          cualquier otra documentación pertinente, la cual el Asociado deberá
+          conservar durante un período de cinco (5) años después de la conclusión
+          del último Documento del Programa o de la rescisión de este Acuerdo, en
+          función de lo que ocurra más tarde. Dicha documentación incluirá, entre
+          otros documentos, órdenes de compra, facturas de proveedores, contratos,
+          albaranes, arrendamientos, comprobantes de pago, estados de cuenta
+          bancarios, billetes de avión, cupones de gasolina, registros de nóminas,
+          contratos de trabajo, listas de asistencia, reclamos de gastos, recibos de
+          caja menor, comprobantes del libro diario, archivos de adquisiciones que
+          documenten una selección competitiva y justa, y cualquier otra
+          documentación de respaldo pertinente. Salvo que se acuerde de antemano con
+          UNICEF, el Asociado se asegurará de que en todos los vales relacionados
+          con la utilización de Transferencias en Efectivo se haya anotado
+          claramente la referencia al Documento del Programa. El Asociado entiende
+          que una declaración suya por escrito de que se ha gastado dinero es
+          insuficiente y no puede reemplazar la documentación original que respalda
+          los gastos.
+        </p>
+      </div>
+      <p class="underline">Suministros/equipos:</p>
+      <p>
+        9.3 El Asociado mantendrá registros de los suministros y equipos que haya
+        adquirido mediante la Transferencia en Efectivo o se le hayan transferido de
+        acuerdo con los párrafos 8.12 a 8.16 de este Acuerdo. El Asociado hará
+        inventarios detallados y los mantendrá durante un período de cinco (5) años
+        después de la conclusión del último Documento del Programa o la rescisión de
+        este Acuerdo, en función de lo que ocurra más tarde.
+      </p>
+      <p class="strong">10. REQUISITOS EN MATERIA DE PRESENTACIÓN DE INFORMES</p>
+      <p>
+        10.1 El Asociado entregará a UNICEF los informes que figuran a continuación
+        en esta Sección. Los informes descriptivos se presentarán, si es posible, en
+        inglés, francés o español.
+      </p>
+      <p class="strong">Presentación de información financiera</p>
+      <p class="underline">
+        10.2 Presentación de información financiera mediante el formulario FACE:
+      </p>
+      <div class="indent">
+        <p>
+          (a) Salvo que las Partes acuerden lo contrario por escrito, el Asociado
+          presentará los formularios FACE al final de cada Trimestre, utilizando
+          dicho formulario con tal fin. En caso de que no se envíe el formulario
+          FACE dentro de los seis (6) meses posteriores al último Trimestre, UNICEF,
+          a menos que se acuerde lo contrario, suspenderá cualquier transferencia en
+          efectivo adicional al Asociado o en su nombre.
+        </p>
+        <p>
+          (b) El formulario FACE final se enviará a más tardar treinta (30) días
+          naturales después de la finalización del Documento del Programa.
+        </p>
+        <p>(c) El formulario FACE:</p>
+        <div class="indent">
+          <p>
+            (i) solo incluirá gastos identificables y verificables. (El término
+            “identificable” se refiere a que los gastos se registran en el sistema
+            contable del Asociado y que el sistema contable muestra qué
+            transacciones representan los gastos indicados en cada línea del
+            formulario FACE. El término “verificable” se refiere a que los gastos
+            pueden ser confirmados por los registros mencionados en el artículo 9).
+          </p>
+          <p>
+            (ii) solo incluirá los gastos directamente atribuibles a la ejecución de
+            las actividades establecidas en el Documento del Programa;
+          </p>
+          <p>
+            (iii) solo incluirá los gastos realmente efectuados y asumidos por el
+            Asociado;
+          </p>
+          <p>
+            (iv) no incluirá ningún gasto que no cumpla los requisitos establecidos
+            para las Transferencias en Efectivo (“Gastos no Admisibles”, como se
+            estipula en el párrafo 10.2 e) de este artículo, a continuación);
+          </p>
+          <p>
+            (v) incluirá el saldo de cualquier monto restante de Cuotas de
+            Transferencia en Efectivo anteriores que no se haya utilizado; y
+          </p>
+          <p>
+            (vi) incluirá los reembolsos o ajustes recibidos por el Asociado en
+            relación con cualquier Cuota de Transferencia en Efectivo anterior.
+          </p>
+        </div>
+        <p>
+          (d) UNICEF tendrá acceso, previa solicitud, a todos los documentos y
+          registros que respalden o pueda considerarse que respaldan la información
+          contenida en el formulario FACE.
+        </p>
+        <p class="underline">Gastos no Admisibles:</p>
+        <p>
+          (e) Los siguientes son Gastos no Admisibles (según lo determinado por
+          UNICEF a su entera discreción) y, por tanto, no se incluirán en el
+          formulario FACE:
+        </p>
+        <div class="indent">
+          <p>
+            (i) los gastos no destinados a actividades o innecesarios para la
+            ejecución de las actividades incluidas en el Documento del Programa;
+          </p>
+          <p>
+            (ii) los gastos en concepto de impuesto sobre el valor añadido (“IVA”),
+            a menos que el Asociado pueda demostrar razonablemente a UNICEF que no
+            puede recuperar el IVA;
+          </p>
+          <p>
+            (iii) los gastos cubiertos por otro Documento del Programa o
+            relacionados con él;
+          </p>
+          <p>
+            (iv) los gastos pagados o reembolsados al Asociado por otro donante o
+            entidad;
+          </p>
+          <p>
+            (v) los gastos en relación con los cuales el Asociado ha recibido una
+            contribución en especie de otro donante o entidad;
+          </p>
+          <p>
+            (vi) los gastos de apoyo para el fortalecimiento de la capacidad de la
+            organización que superen el porcentaje indicado en el artículo 6.2 del
+            presente Acuerdo;
+          </p>
+          <p>
+            (vii) los gastos no verificables mediante registros conforme a lo
+            dispuesto en el artículo 9 del presente Acuerdo (distintos de los gastos
+            de apoyo para el fortalecimiento de la capacidad de la organización a
+            que se refiere el artículo 6.2 de este Acuerdo);
+          </p>
+          <p>
+            (viii) los sueldos de los empleados del Asociado que superen los montos
+            que pague UNICEF por funciones comparables prestadas en el lugar de
+            destino correspondiente;
+          </p>
+          <p>
+            (ix) los honorarios de consultores individuales contratados por el
+            Asociado superiores a los que paga UNICEF por servicios comparables
+            prestados por consultores individuales;
+          </p>
+          <p>
+            (x) los gastos de viaje, dietas y prestaciones conexas de los empleados
+            o consultores del Asociado que excedan aquellos que UNICEF paga a sus
+            funcionarios o consultores, según proceda;
+          </p>
+          <p>
+            (xi) los montos que representen devengos de costos y no gastos realmente
+            efectuados por el Asociado;
+          </p>
+          <p>
+            (xii) los gastos que solo representan transferencias financieras entre
+            dependencias administrativas o locales del Asociado, por ejemplo, por el
+            pago de servicios prestados por una dependencia administrativa a otra;
+          </p>
+          <p>
+            (xiii)los gastos no razonables ni justificados de acuerdo con los
+            principios de buena gestión financiera, en particular los principios en
+            materia de relación calidad-precio y rentabilidad;
+          </p>
+          <p>
+            (xiv) los gastos relacionados con las obligaciones contraídas después de
+            la fecha de finalización del Documento del Programa pertinente;
+          </p>
+          <p>(xv) la deuda y los cargos por el servicio de la deuda;</p>
+          <p>(xvi) las pérdidas por fluctuaciones cambiarias;</p>
+          <p>
+            (xvii) las multas o gravámenes pagaderos a las autoridades en relación
+            con la puntualidad del pago del IVA o los pagos aduaneros requeridos por
+            la legislación;
+          </p>
+          <p>
+            (xviii) los gastos relacionados con un fraude, tal como se define en la
+            Política de UNICEF de prohibición y lucha contra el fraude y la
+            corrupción; y
+          </p>
+          <p>
+            (xx) los gastos cuestionables respecto de los cuales, en opinión de
+            UNICEF, el Asociado no ha proporcionado una respuesta satisfactoria;
+          </p>
+          <p>
+            (xxi) los gastos realizados en contravención de cualquiera de los
+            términos de este Acuerdo.
+          </p>
+        </div>
+      </div>
+      <p>
+        10.3 El Asociado presentará a UNICEF todos los informes financieros en la
+        divisa en la que se realizó la Transferencia en Efectivo. El Asociado no
+        está obligado a convertir las transacciones a dólares estadounidenses ni a
+        ninguna otra moneda.
+      </p>
+      <p class="indent underline">Uso de la herramienta electrónica FACE:</p>
+      <p>
+        10.4 Además de utilizar el formulario FACE, el Asociado puede ingresar la
+        información contenida en el formulario FACE en la herramienta electrónica
+        FACE, si así lo solicita UNICEF.
+      </p>
+      <p class="strong">Informes sobre los progresos realizados</p>
+      <p>
+        10.5 El Asociado presentará a UNICEF informes descriptivos sobre el progreso
+        de las actividades planificadas contenidas en el Documento del Programa,
+        utilizando el informe sobre los progresos del Documento del Programa,
+        disponible en
+        <a href="http://www.partnerreportingportal.org/"
+          >www.partnerreportingportal.org</a
+        >. Salvo que las Partes acuerden lo contrario por escrito, estos informes se
+        presentarán al final de cada Trimestre. El informe final se presentará a más
+        tardar treinta (30) días naturales después de la finalización del Programa y
+        se entregará junto con el formulario FACE.
+      </p>
+      <p class="strong">Otros informes</p>
+      <p>
+        10.6 Los informes adicionales requeridos se especificarán en el Documento
+        del Programa. El Asociado presentará informes ad hoc cuando UNICEF lo
+        solicite periódicamente. UNICEF procurará, en la medida de lo razonable,
+        minimizar las solicitudes de informes ad hoc.
+      </p>
+      <p class="strong">
+        11. ACCIONES QUE SE LLEVARÁN A CABO AL FINALIZAR LAS ACTIVIDADES
+        ESTABLECIDAS EN UN DOCUMENTO DEL PROGRAMA
+      </p>
+      <p>11.1 Para cada Documento del Programa:</p>
+      <div class="indent">
+        <p>
+          (a) Una vez completadas las actividades del Asociado incluidas en dicho
+          Documento del Programa, el Asociado reembolsará a UNICEF los saldos no
+          utilizados de todas las Transferencias en Efectivo realizadas en virtud de
+          dicho Documento del Programa (los cuales se notificarán en el formulario
+          FACE final presentado por el Asociado) y todos los demás montos a los que
+          no tenga derecho.
+        </p>
+        <p>
+          (b) Una vez completadas las actividades del Asociado incluidas en dicho
+          Documento del Programa, el Asociado devolverá a UNICEF todos los
+          suministros y equipos no utilizados proporcionados por UNICEF como insumos
+          para la aplicación del programa pero que no se hayan utilizado.
+        </p>
+        <p>
+          (c) Dichos reembolsos y devoluciones se efectuarán a más tardar noventa
+          (90) días naturales después de la fecha de conclusión de dicho Documento
+          del Programa o la fecha del cese efectivo de las actividades, en función
+          de lo que ocurra primero.
+        </p>
+      </div>
+      <p>
+        11.2 Al finalizar las actividades llevadas a cabo por el Asociado en virtud
+        de un Documento del Programa, las Partes consultarán sobre la disposición de
+        todos los equipos no fungibles proporcionados por UNICEF o adquiridos
+        mediante la Transferencia en Efectivo (o, si se utilizó la modalidad de Pago
+        Directo, pagados en nombre del Asociado) con respecto a ese Documento del
+        Programa. UNICEF puede decidir que dichos equipos no fungibles se
+        transfieran para otros usos. En ese caso, el Asociado, siguiendo las
+        instrucciones por escrito de UNICEF, transferirá la propiedad de dichos
+        bienes en consecuencia.
+      </p>
+      <p class="strong">12. PRIVILEGIOS E INMUNIDADES; RESOLUCIÓN DE DISPUTAS</p>
+      <p>
+        12.1 De conformidad con el artículo 18 de los Términos y Condiciones
+        Generales de los Acuerdos de Cooperación para Programas, ninguna disposición
+        de este Acuerdo o relacionada con él se considerará una renuncia, expresa o
+        implícita, a cualquiera de los privilegios e inmunidades de las Naciones
+        Unidas, incluido UNICEF.
+      </p>
+      <p>
+        12.2 Las Partes harán todo lo posible para resolver de manera amistosa
+        cualquier disputa, controversia o reclamo que surja en relación con el
+        presente Acuerdo o con su incumplimiento, rescisión o invalidez. En caso de
+        que las Partes deseen procurar dicha resolución amistosa a través de una
+        conciliación, esta se realizará conforme al Reglamento de Conciliación de la
+        Comisión de las Naciones Unidas para el Derecho Mercantil Internacional
+        (“CNUDMI”) vigente en esa fecha o de conformidad con otros procedimientos
+        que se acuerden por escrito entre las Partes.
+      </p>
+      <p>
+        12.3 Cualquier disputa, controversia o reclamación que surja entre las
+        Partes a raíz de este Acuerdo y no se resuelva dentro de los noventa (90)
+        días posteriores a que una de las Partes reciba una solicitud de solución
+        amistosa de la otra Parte puede ser sometida a arbitraje por cualquiera de
+        las Partes. El arbitraje se llevará a cabo de conformidad con el Reglamento
+        de Arbitraje de la CNUDMI vigente en esa fecha. El arbitraje tendrá lugar en
+        Nueva York (Estados Unidos de América). Las decisiones del tribunal arbitral
+        se basarán en los principios generales del derecho mercantil internacional.
+        El tribunal arbitral no estará facultado para conceder indemnizaciones por
+        daños y perjuicios. Además, salvo que en el Acuerdo se disponga expresamente
+        lo contrario, el tribunal arbitral no estará facultado para ordenar el pago
+        de intereses superiores al tipo de oferta interbancaria de Londres (“LIBOR”)
+        vigente, y dicho interés será únicamente un interés simple. En caso de que
+        el LIBOR ya no esté disponible, se utilizará el tipo de financiación
+        garantizado a un día (SOFR) del Banco de la Reserva Federal de los Estados
+        Unidos en Nueva York, y dicho interés será únicamente un interés simple. En
+        vista de los privilegios e inmunidades de UNICEF, las referencias al lugar
+        de arbitraje que se hagan en el Reglamento de Arbitraje de la CNUDMI
+        connotarán solo el lugar en el que en la práctica se celebrará el arbitraje
+        y no la “sede”, la “sede jurídica” o el “lugar jurídico” de dichos
+        procedimientos. Las Partes quedarán obligadas por el laudo que resulte de
+        ese arbitraje, el cual constituirá la decisión definitiva de ese conflicto,
+        controversia o reclamación.
+      </p>
+      <p class="strong">13. DISPOSICIONES FINALES</p>
+      <p>
+        13.1 El presente Acuerdo entrará en vigor en la fecha en que ambas Partes lo
+        firmen. Vencerá el último día del Programa, salvo que se rescinda antes de
+        conformidad con el artículo 13 de los Términos y Condiciones Generales de
+        los Acuerdos de Cooperación para Programas.
+      </p>
+      <p>
+        EN FE DE LO CUAL, los infrascritos, debidamente autorizados por las Partes
+        respectivas, han firmado el presente Acuerdo.
+      </p>
+      <table cellspacing="0" cellpadding="0">
+        <tbody>
+          <tr>
+            <td colspan="2">En nombre del Asociado:</td>
+            <td colspan="2">
+              En nombre del Fondo de las Naciones Unidas para la Infancia:
+            </td>
+          </tr>
+          <tr>
+            <td>Nombre:</td>
+            <td>&nbsp;</td>
+            <td>Nombre:</td>
+            <td>&nbsp;</td>
+          </tr>
+          <tr>
+            <td>Cargo:</td>
+            <td>&nbsp;</td>
+            <td>Cargo:</td>
+            <td>&nbsp;</td>
+          </tr>
+          <tr>
+            <td colspan="2">Firma: &nbsp;&nbsp;&nbsp;_________________________</td>
+            <td colspan="2">Firma: &nbsp;&nbsp;&nbsp;_________________________</td>
+          </tr>
+          <tr>
+            <td>Fecha:</td>
+            <td>&nbsp;</td>
+            <td>Fecha:</td>
+            <td>&nbsp;</td>
+          </tr>
+          <tr>
+            <td>Correo electrónico:</td>
+            <td>&nbsp;</td>
+            <td>Correo electrónico:</td>
+            <td>&nbsp;</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="page-break"></div>
+      <br/>
+      <br/>
+      <p class="text-center strong">TÉRMINOS Y CONDICIONES GENERALES</p>
+      <p class="text-center strong">
+        PARA LOS ACUERDOS DE COOPERACIÓN PARA PROGRAMAS
+      </p>
+      <p>
+        1. <span class="strong">CONDICIÓN JURÍDICA:</span> Se considerará que el
+        Asociado tiene la condición jurídica de contratista independiente ante
+        UNICEF. Los empleados, el personal y los subcontratistas del Asociado no
+        serán considerados en ningún aspecto como empleados o agentes de UNICEF.
+      </p>
+      <p>
+        2. <span class="strong">CESIÓN:</span> El Asociado no cederá, transferirá,
+        comprometerá, ni dispondrá de ninguna otra manera de este Acuerdo, de parte
+        de él o de cualquiera de los derechos, reclamos u obligaciones a las que
+        está sujeto el Asociado en virtud de este Acuerdo, salvo con el
+        consentimiento previo por escrito de UNICEF.
+      </p>
+      <p>
+        3. <span class="strong">SUBCONTRATACIÓN:</span> El Asociado no podrá
+        utilizar los servicios de subcontratistas salvo que UNICEF le otorgue
+        autorización previa por escrito en un caso en particular. Si UNICEF aprueba
+        una subcontratación de servicios concreta, el Asociado se asegurará de que
+        sus subcontratistas no utilicen subcontratistas u otros niveles de
+        subcontratación, incluidos sub-subcontratistas, salvo que UNICEF le otorgue
+        autorización previa por escrito en cada caso en particular. El uso de
+        subcontratistas o de niveles adicionales de subcontratistas por parte del
+        Asociado no lo eximirá de ninguna de las obligaciones a las que está sujeto
+        en virtud de este Acuerdo. Los términos de cualquier subcontrato,
+        sub-subcontrato, etc., estarán sujetos, se ajustarán y darán pleno efecto a
+        las disposiciones de este Acuerdo. En particular, el Asociado se asegurará
+        de que cualquier subcontrato o niveles adicionales de subcontratos incluyan
+        disposiciones sustancialmente iguales a las del artículo 4.
+      </p>
+      <p>4. <span class="strong">NORMAS ÉTICAS</span></p>
+      <p>
+        4.1 <span class="strong">Declaración del Asociado:</span> UNICEF exige que
+        un funcionario debidamente autorizado del Asociado complete y firme la
+        Declaración del Asociado antes de suscribir este Acuerdo. La Declaración del
+        Asociado es parte integral de este Acuerdo y se incorpora a este Acuerdo por
+        referencia. El Asociado entiende que las manifestaciones incluidas en la
+        Declaración del Asociado son esenciales para que UNICEF celebre este
+        Acuerdo. UNICEF tiene el derecho de rescindir este Acuerdo con efecto
+        inmediato si tuviera conocimiento de cualquier tergiversación u omisión por
+        parte del Asociado en la Declaración. El Asociado informará a UNICEF tan
+        pronto como tenga conocimiento de un incidente o informe incompatible con
+        las manifestaciones proporcionadas en la Declaración del Asociado.
+      </p>
+      <p>
+        4.2
+        <span class="strong"
+          >Responsabilidad del Asociado en lo relativo a los empleados, el personal
+          y los subcontratistas</span
+        >
+        El Asociado será responsable de la competencia profesional y técnica de sus
+        empleados, su personal y sus subcontratistas y seleccionará, para el trabajo
+        dispuesto en este Acuerdo, personas y entidades fiables que se desempeñarán
+        eficazmente en la aplicación de este Acuerdo, respetarán las leyes y
+        costumbres locales y observarán unos estándares elevados de conducta moral y
+        ética, lo que incluye la salvaguardia. Antes de la designación, se les
+        preguntará a los empleados y demás miembros del personal, así como al
+        personal de los subcontratistas, en la medida en que la ley lo permita, si
+        han sido despedidos de un empleador anterior por mala conducta o si
+        abandonaron el empleo mientras estaban siendo investigados por una falta de
+        conducta y nunca se los exculpó. También se verificarán debidamente sus
+        referencias o antecedentes, en la medida en que la ley lo permita. A
+        petición del UNICEF, el Asociado revelará si i) ha despedido a empleados o
+        miembros del personal por vulneraciones de la política de salvaguardia del
+        Asociado, incluida la explotación y los abusos sexuales, en los últimos 5
+        años; y si ii) empleados o miembros del personal que trabajen para el
+        Asociado en virtud de este Acuerdo han sido investigados (y los resultados
+        de la investigación han sido corroborados) y/o estén siendo investigados por
+        vulneraciones de la política de salvaguardia, incluidas las denuncias de
+        explotación y abusos sexuales; siempre que no se exija al Asociado que
+        revele Datos Personales.
+      </p>
+      <p>
+        4.3
+        <span class="strong"
+          >Prohibición de beneficios en favor de los funcionarios; restricciones a
+          la contratación de personal de UNICEF; conflicto de intereses:
+        </span>
+      </p>
+      <ol class="alpha-list">
+        <li>
+          El Asociado declara y garantiza que ningún funcionario de UNICEF o de una
+          organización del sistema de las Naciones Unidas ha recibido del Asociado o
+          en su nombre —y que no ofrecerá ni se ofrecerá en su nombre— ningún
+          beneficio directo o indirecto en relación con este Acuerdo, incluida la
+          adjudicación de este Acuerdo al Asociado. El término “beneficio directo e
+          indirecto” incluye entre otros regalos, favores u hospitalidad. El
+          Asociado acepta que el incumplimiento de esta disposición constituye un
+          incumplimiento de un término esencial de este Acuerdo.
+        </li>
+        <li>
+          El Asociado declara y garantiza que se han cumplido y se cumplirán las
+          siguientes condiciones con respecto a los exfuncionarios de UNICEF: i)
+          durante el período de un año con posterioridad al cese de la relación
+          laboral del funcionario con UNICEF, el Asociado no podrá emplearlo si
+          durante los tres años anteriores a la separación de UNICEF hubiera estado
+          involucrado en cualquier etapa del proceso que condujo a la selección del
+          Asociado o la ejecución del Programa; y ii) durante el período de dos años
+          con posterioridad al cese de la relación laboral del funcionario con
+          UNICEF, el exfuncionario no podrá, directa o indirectamente en nombre del
+          Asociado, comunicarse con UNICEF o plantearle cuestiones en relación con
+          cualquier asunto que estuviera dentro de las responsabilidades de dicho
+          exfuncionario mientras trabajaba en UNICEF.
+        </li>
+        <li>
+          Además, el Asociado declara y garantiza que, con respecto a todos los
+          aspectos del Acuerdo (incluida la formalización del Acuerdo por parte de
+          UNICEF y la selección y adjudicación de subcontratos por parte del
+          Asociado), ha revelado a UNICEF todas las situaciones que pudieran
+          constituir un conflicto de intereses real o potencial o percibirse
+          razonablemente como un conflicto de intereses.
+        </li>
+      </ol>
+      <p>
+        4.4
+        <span class="strong"
+          >Lucha contra el fraude, el blanqueo de dinero y la financiación del
+          terrorismo:</span
+        >
+      </p>
+      <ol style="list-style-type: none;">
+        <li>
+          a. El Asociado a) observará el máximo nivel ético; b) hará todo lo posible,
+          en la ejecución del Acuerdo, para proteger a UNICEF contra el fraude; y c)
+          cumplirá las disposiciones aplicables de la Política de UNICEF de
+          prohibición y lucha contra el fraude y la corrupción, disponible en
+          <a
+            href="https://www.unicef.org/supply/documents/unicefs-policy-prohibiting-and-combatting-fraud-and-corruption"
+            >https://www.unicef.org/supply/documents/unicefs-policy-prohibiting-and-combatting-fraud-and-corruption</a
+          >
+          o en cualquier otra URL en la que UNICEF decida publicarla. En particular,
+          el Asociado no participará —y se asegurará de que su personal, agentes y
+          subcontratistas no participen— en ninguna conducta corrupta, fraudulenta,
+          coercitiva, colusoria u obstructiva, según las definiciones de la Política
+          de UNICEF de prohibición y lucha contra el fraude y la corrupción, como se
+          detalla más abajo.
+        </li>
+        <li>
+          b. El Asociado declara y garantiza que ni él ni ninguna de sus filiales, de
+          los miembros de su personal o de sus directores está sujeto a una sanción
+          o suspensión temporal impuesta por una organización del sistema de las
+          Naciones Unidas u otra organización intergubernamental internacional. El
+          Asociado informará inmediatamente a UNICEF si él o cualquiera de sus
+          filiales, de los miembros de su personal o de sus directores quedan
+          sujetos a una sanción o suspensión temporal durante la vigencia del
+          Acuerdo.
+        </li>
+        <li>
+          c. De conformidad con las resoluciones del Consejo de Seguridad de las
+          Naciones Unidas relativas al terrorismo y, en particular, a la
+          financiación del terrorismo, las Partes se asegurarán de que los recursos
+          o cualquier otro tipo de apoyo recibido en virtud del Acuerdo, ya sea en
+          efectivo o en especie, no se utilicen, directa o indirectamente, para
+          prestar apoyo al terrorismo o al blanqueo de dinero. El Asociado acuerda
+          aplicar la máxima diligencia razonable para garantizar que el efectivo,
+          los suministros y los equipos bajo su control, incluidos, entre otros, el
+          efectivo, los suministros y los equipos transferidos por UNICEF al
+          Asociado: a) no se utilicen, directa o indirectamente, para brindar apoyo
+          a personas o entidades incluidas en la lista consolidada del Consejo de
+          Seguridad de la Naciones Unidas, disponible en
+          <a
+            href="https://www.un.org/securitycouncil/content/un-sc-consolidated-list"
+            >https://www.un.org/securitycouncil/content/un-sc-consolidated-list</a
+          >
+          o en cualquier otra lista aplicable notificada por UNICEF, ni se
+          transfieran a estas personas o entidades; y b) no se utilicen de ninguna
+          otra manera que se prohíba en una decisión del Consejo de Seguridad de las
+          Naciones Unidas adoptada en virtud del capítulo VII de la Carta de las
+          Naciones Unidas. El Asociado y sus empleados, su personal y sus
+          subcontratistas se comprometen a cumplir las disposiciones aplicables de
+          la Política de UNICEF de lucha contra el blanqueo de dinero y la
+          financiación del terrorismo.
+        </li>
+        <li>
+          d. El Asociado acepta presentar sin demora las denuncias de conducta
+          corrupta, fraudulenta, colusoria, coercitiva u obstructiva que surjan en
+          relación con este Acuerdo y de las que haya sido informado o haya tenido
+          conocimiento ante el representante de oficina de UNICEF o el Director de
+          la Oficina de Auditoría Interna e Investigaciones de UNICEF (<a
+            href="mailto:integrity1@unicef.org"
+            >integrity1@unicef.org</a
+          >). A los efectos del presente Acuerdo, se aplicarán las definiciones
+          siguientes:
+          <div class="indent">
+            <p>
+              (i) "Práctica corrupta": ofrecer, dar, recibir o solicitar, directa o
+              indirectamente, cualquier cosa de valor para influir indebidamente en
+              las acciones de un funcionario público.
+            </p>
+            <p>
+              (ii) "Práctica fraudulenta": acto u omisión, incluida la
+              tergiversación, que de manera deliberada o negligente induce a engaño
+              o intenta engañar a otra parte a fin de obtener un beneficio
+              financiero o de otro tipo, o con objeto de evitar el cumplimiento de
+              una obligación.
+            </p>
+            <p>
+              (iii) "Práctica colusoria": acuerdo entre dos o más partes para un fin
+              indebido, incluido influir de forma indebida en las acciones de otra
+              parte.
+            </p>
+            <p>
+              (iv) "Práctica coercitiva": impedir o dañar, o amenazar con impedir o
+              dañar, de forma directa o indirecta, a una parte o a la propiedad de
+              una parte para influir en las acciones de dicha parte.
+            </p>
+            <p>
+              (v) "Práctica obstructiva": actos destinados a impedir materialmente
+              el ejercicio de los derechos contractuales de UNICEF de auditoría,
+              investigación y acceso a la información, incluida la destrucción, la
+              falsificación, la alteración o la ocultación de pruebas necesarias
+              para una investigación de UNICEF sobre denuncias de fraude y
+              corrupción.
+            </p>
+          </div>
+        </li>
+      </ol>
+      <p>
+        4.5
+        <span class="strong"
+          >Salvaguardia, incluida la protección contra la explotación y los abusos
+          sexuales:</span
+        >
+      </p>
+
+      <div class="indent">
+        a. A los efectos del presente Acuerdo, se aplicarán las definiciones
+        siguientes:
+        <div class="indent2">
+          <p>
+            (i) "<span class="underline">Explotación sexual</span>": abuso o intento
+            de abuso de una situación de vulnerabilidad o de una relación de fuerza
+            desigual o de confianza con fines sexuales, a los efectos, entre otros,
+            de aprovecharse material, social o políticamente de la explotación
+            sexual de otra persona.
+          </p>
+          <p>
+            (ii) "<span class="underline">Abuso sexual</span>": toda intrusión o
+            amenaza de intrusión física de carácter sexual, ya sea por la fuerza, en
+            condiciones de desigualdad o con coacción. La explotación y los abusos
+            sexuales están estrictamente prohibidos.
+          </p>
+          <p>
+            (iii) "<span class="underline">Niño</span>": cualquier persona menor de
+            dieciocho (18) años, independientemente de la legislación en materia de
+            consentimiento o de mayoría de edad.
+          </p>
+          <p>
+            (iv) "<span class="underline">Salvaguardia</span>": reducción del riesgo
+            de daños derivados del trabajo, los empleados, otro personal o los
+            subcontratistas de una parte.
+          </p>
+          <p>
+            (v) "<span class="underline"
+              >Vulneración de la política de salvaguardia</span
+            >": conducta de los empleados, el personal o los subcontratistas de una
+            Parte que causa o probablemente causa un daño a una persona, incluido
+            cualquier tipo de abuso físico, emocional o sexual, de negligencia o de
+            explotación.
+          </p>
+        </div>
+      </div>
+
+      <div class="indent">
+        b. Además, en este Acuerdo:
+        <div class="indent2">
+          <p>
+            (i) Cualquier acto sexual que involucre a una persona que no puede dar
+            su consentimiento o no dé su consentimiento en ese momento se
+            considerará abuso sexual.
+          </p>
+          <p>
+            (ii) La actividad sexual con un niño se considerará en todo caso abuso
+            sexual, incluso si hubiera un error en cuanto a la edad del niño o si la
+            persona estuviera casada con el niño.
+          </p>
+          <p>
+            (iii) Solicitar, proporcionar, ofrecer o recibir algo (dinero, empleo,
+            bienes, servicios u otras cosas de valor) a cambio de tocamientos o
+            actividades sexuales con cualquier persona se considerará explotación
+            sexual. Esto incluye el pago o el ofrecimiento de dinero a cambio de
+            relaciones sexuales con una persona que se dedica a la prostitución.
+          </p>
+          <p>
+            (iv) Cualquier persona que pueda influir en quién recibe bienes o
+            servicios no debe mantener relaciones sexuales con nadie que pueda
+            obtener esa ayuda. Se considerará explotación sexual.
+          </p>
+          <p>
+            (v) La explotación laboral atenta contra la política de salvaguardia.
+            Debe permitirse que los trabajadores se asocien libremente y negocien
+            colectivamente. No debe obligarse a los trabajadores a trabajar ni se
+            los debe presionar a tal fin. Los trabajadores no deben ser objeto de
+            discriminación. A los trabajadores se les debe proporcionar un entorno
+            de trabajo seguro y saludable.
+          </p>
+          <p>
+            (vi) El trabajo infantil es una vulneración de la política de
+            salvaguardia. Esto significa que ningún niño menor de 14 años puede
+            trabajar en virtud de este Acuerdo. Además, todo niño que trabaje debe
+            ser mayor de la edad que exige la ley para la escolarización obligatoria
+            y la edad mínima para trabajar.
+          </p>
+        </div>
+      </div>
+
+      <p class="indent">
+        c. <span class="underline">c. Políticas</span>. El Asociado ha leído: a) el
+        documento ST/SGB/2003/13, titulado “Medidas especiales de protección contra
+        la explotación y el abuso sexuales”, el cual puede consultarse en
+        <a href="https://undocs.org/ST/SGB/2003/13"
+          >https://undocs.org/ST/SGB/2003/13</a
+        >; y b) las políticas de UNICEF en materia de salvaguardia, disponibles en
+        <a href="https://www.unicef.org/supply/documents/safeguarding-policy"
+          >https://www.unicef.org/supply/documents/safeguarding-policy</a
+        >
+        (u otra URL facilitada al Asociado). El Asociado, o bien aplicará estas
+        políticas, o bien adoptará las suyas propias, siempre que sean al menos tan
+        estrictas como las políticas mencionadas, y exigirá a los subcontratistas
+        que hagan lo propio. También contará con una política que considere una
+        falta de conducta tomar represalias contra cualquier persona que denuncie
+        una vulneración de la política de salvaguardia, incluida la explotación y
+        los abusos sexuales, o coopere en una investigación de esa índole. El
+        Asociado exigirá a sus empleados, a los demás miembros del personal y a las
+        personas que trabajen para subcontratistas que acepten un código de conducta
+        en el que se incluya el comportamiento exigido en estas políticas.
+      </p>
+
+      <div class="indent">
+        d. <span class="underline">Prevención</span>. El Asociado adoptará todas las
+        medidas apropiadas para que sus empleados, los demás miembros del personal y
+        los subcontratistas demuestren un comportamiento proactivo de protección,
+        incluida la protección contra la explotación y los abusos sexuales. El
+        Asociado debe asegurarse de que los empleados, el resto del personal y los
+        subcontratistas comprendan sus obligaciones y:
+        <div class="indent2">
+          <p>
+            (i) qué significa “salvaguardia” en la programación, y la importancia de
+            evaluar los riesgos de las actividades, eventos e intervenciones
+            previstas para planificar las medidas de mitigación y reflejarlas en los
+            Documentos del Programa pertinentes;
+          </p>
+          <p>
+            (ii) los tipos de preocupaciones en materia de salvaguardia, incluida la
+            explotación y los abusos sexuales;
+          </p>
+          <p>
+            (iii) por qué un comportamiento inseguro o prohibido, como los descritos
+            en la Política de salvaguardia de UNICEF, incluida cualquier forma de
+            explotación y abusos sexuales, es inaceptable, ya que perjudica a las
+            personas y destruye la confianza en el trabajo;
+          </p>
+          <p>
+            (iv) la necesidad de supervisar adecuadamente a los niños y niñas y los
+            trabajadores;
+          </p>
+          <p>
+            (v) el requisito, establecido en este Acuerdo, de informar sin demora a
+            UNICEF de los casos de vulneración de la política de salvaguardia,
+            incluida la explotación y los abusos sexuales, de conformidad con el
+            Artículo 4.5 e) inferior;
+          </p>
+          <p>
+            (vi) la manera en que los empleados, el resto del personal o los
+            subcontratistas del Asociado deben plantear otras preocupaciones en
+            materia de salvaguardia y abordado en consulta con UNICEF;
+          </p>
+          <p>
+            (vii) los requisitos de este Acuerdo para facilitar la asistencia a las
+            víctimas. A tal fin, el Asociado se asegurará, entre otras cosas, de que
+            sus empleados, su personal o sus subcontratistas completen y renueven la
+            capacitación correspondiente.
+          </p>
+        </div>
+      </div>
+      <p class="indent">
+        e. <span class="underline">Presentación de denuncias a UNICEF</span>. El
+        Asociado informará sin demora a las presuntas personas supervivientes de
+        vulneraciones de la política de salvaguardia, incluida la explotación y los
+        abusos sexuales, acerca de los servicios de asistencia profesional
+        disponibles y las remitirá a dichos servicios, siempre que las presuntas
+        supervivientes otorguen consentimiento para ello. Siempre que sea
+        razonablemente factible y garantizando que la seguridad de las presuntas
+        personas supervivientes no se ponga en peligro, el Asociado informará a
+        UNICEF de si dicha remisión se ha efectuado o no, incluyendo los tipos de
+        asistencia prestada y, en caso de que no se haya prestado, la razón general
+        para ello. Esta obligación persiste tras el vencimiento o la rescisión del
+        Acuerdo con respecto a los incidentes que ocurran durante la vigencia de
+        este Acuerdo.
+      </p>
+
+      <p class="indent">
+        f. <span class="underline">Asistencia</span>. El Asociado informará sin
+        demora a las presuntas personas supervivientes de vulneraciones de la
+        política de salvaguardia, incluida la explotación y los abusos sexuales,
+        acerca de los servicios de asistencia profesional disponibles y las remitirá
+        a dichos servicios, siempre que las presuntas personas supervivientes
+        otorguen consentimiento para ello. Siempre que sea razonablemente factible y
+        garantizando que la seguridad de las presuntas personas supervivientes no se
+        ponga en peligro, el Asociado informará a UNICEF de si dicha remisión se ha
+        efectuado o no, incluyendo los tipos de asistencia prestada y, en caso de
+        que no se haya prestado, la razón general para ello. Esta obligación
+        persiste tras el vencimiento o la rescisión del Acuerdo con respecto a los
+        incidentes que ocurran durante la vigencia de este Acuerdo.
+      </p>
+
+      <p class="indent">
+        g. <span class="underline">Investigación</span>. El Asociado investigará
+        debidamente y sin demora las denuncias de vulneraciones de la política de
+        salvaguardia —incluida la explotación y los abusos sexuales— por parte de
+        sus empleados, su personal o sus subcontratistas (en caso de que los
+        subcontratistas no sigan sus propios procesos). El Asociado mantendrá
+        informado a UNICEF durante la investigación, sin perjuicio del derecho al
+        debido proceso de las personas interesadas. UNICEF puede solicitar al
+        Asociado, en los casos que se aporte una justificación clara, que aparte a
+        cualquier persona del trabajo llevado a cabo en virtud de este Acuerdo
+        durante el curso de la investigación, siempre que la seguridad de esa
+        persona u otras personas implicadas en la investigación no se ponga en
+        peligro y de conformidad con la legislación aplicable. Tras concluir su
+        investigación, el Asociado facilitará rápidamente informes sobre el
+        resultado de la investigación, incluida la información pertinente sobre el
+        presunto infractor, en la medida en que sea legalmente posible. El Asociado
+        proporcionará a UNICEF, previa solicitud, las pruebas pertinentes para su
+        examen y utilización ulterior por parte de UNICEF, cuando esté último lo
+        estime necesario. UNICEF podrá decidir que la obligación que tiene el
+        Asociado en virtud de la primera frase del presente artículo 4.5 g) de
+        llevar a cabo una investigación no se aplicará si las autoridades nacionales
+        competentes están llevando o han llevado a cabo una investigación. En el
+        caso de que las autoridades nacionales competentes estén llevando o hayan
+        llevado a cabo la investigación, el Asociado ayudará a UNICEF a obtener
+        información sobre el estado y los resultados de la investigación, y adoptará
+        todas las medidas necesarias, en la medida en que sea legalmente posible,
+        para que UNICEF la obtenga. Estas obligaciones persisten tras el vencimiento
+        o la rescisión del Acuerdo con respecto a los incidentes que ocurran durante
+        la vigencia de este Acuerdo. El Asociado informará a UNICEF de cualquier
+        medida que haya adoptado en respuesta al incidente para cumplir las normas
+        de salvaguardia y reducir la posibilidad de problemas similares en el
+        futuro. Se entiende que UNICEF espera que siempre se responda ante las
+        preocupaciones y vulneraciones en materia de salvaguardia. Además, se
+        entiende que cualquier investigación llevada a cabo por el Asociado en
+        virtud de esta cláusula se hará sin perjuicio del derecho de UNICEF, en
+        virtud del artículo 15.3, a realizar investigaciones.
+      </p>
+      <p>
+        4.6
+        <span class="strong">Normas éticas en la generación de pruebas:</span> En
+        todas las actividades de investigación, evaluación y recopilación y análisis
+        de datos que involucren a sujetos humanos o en las que se analicen datos
+        secundarios sensibles, el Asociado debe cumplir lo establecido en la versión
+        actual del Procedimiento de UNICEF sobre Normas Éticas en la Investigación,
+        la Evaluación y la Recopilación y el Análisis de datos (
+        <a
+          href="https://www.unicef.org/evaluation/documents/unicef-procedure-ethical-standards-research-evaluation-data-collection-and-analysis"
+          >UNICEF Procedure on Ethical Standards in Research, Evaluation, Data
+          Collection and Analysis</a
+        >) o equivalente, si procede, incluida cualquier exigencia de una revisión
+        ética independiente del trabajo propuesto.
+      </p>
+      <p>
+        4.7
+        <span class="strong"
+          >Salvaguardia en las comunicaciones y otras normas especializadas.</span
+        >
+        Si las actividades programáticas llevadas a cabo en el marco de un Documento
+        del Programa implican la generación de imágenes, contactos con los medios de
+        comunicación y la prensa, el uso de plataformas en línea u otras actividades
+        que entrañen riesgos en materia de salvaguardia, UNICEF podrá exigir al
+        Asociado que cumpla procedimientos o normas adicionales para hacer frente a
+        esos riesgos, tal como se establezca en el Documento del Programa.
+      </p>
+      <p>
+        5.
+        <span class="strong"
+          >RESPONSABILIDAD POR RECLAMACIONES E INDEMNIZACIONES:</span
+        >
+      </p>
+      <p>
+        5.1 UNICEF no aceptará ninguna responsabilidad por las reclamaciones que
+        surjan de las actividades realizadas por el Asociado en virtud de este
+        Acuerdo ni por cualquier reclamación por muerte, lesiones corporales,
+        discapacidad, daños a la propiedad u otros perjuicios que sufran los
+        empleados y el personal del Asociado como resultado del trabajo que lleve a
+        cabo en relación con el Programa. El Asociado será responsable de tramitar
+        todas las reclamaciones presentadas contra él por sus empleados y su
+        personal. También será plenamente responsable del seguro médico y de vida
+        adecuado para sus empleados y su personal, así como de la cobertura del
+        seguro por enfermedad, discapacidad o muerte durante el servicio.
+      </p>
+      <p>
+        5.2 El Asociado indemnizará, mantendrá indemne y defenderá, a su costa, a
+        UNICEF y sus funcionarios, empleados, consultores y agentes de toda acción
+        judicial, reclamación, demanda, proceso o responsabilidad de cualquier
+        índole o clase instaurados por terceros —incluidos sus costas y gastos— y
+        derivados de los actos u omisiones del Asociado o sus empleados,
+        funcionarios, agentes o subcontratistas en la ejecución de este Acuerdo.
+        Esta disposición se aplica, entre otras, a las siguientes cuestiones: a) las
+        reclamaciones y la responsabilidad en lo relativo a la compensación de los
+        trabajadores; b) la responsabilidad por el producto; y c) cualquier
+        responsabilidad que surja del uso de invenciones o dispositivos patentados,
+        material con derechos de autor u otra propiedad intelectual proporcionada o
+        licenciada a UNICEF en virtud de este Acuerdo o utilizada por el Asociado o
+        sus empleados, funcionarios, agentes o subcontratistas en la aplicación de
+        este Acuerdo. Las obligaciones derivadas del presente artículo no se
+        extinguen a la rescisión del presente Acuerdo.
+      </p>
+      <p>
+        6. <span class="strong">GRAVÁMENES O DERECHOS DE RETENCIÓN</span> El
+        Asociado no provocará ni permitirá que un derecho de retención, embargo
+        preventivo o gravamen constituido o trabado por alguna persona sea incluido
+        o permanezca en el expediente de cualquier oficina pública para cobrar
+        cualquier deuda monetaria vencida o por vencerse y que se le deba al
+        Asociado en virtud de los trabajos realizados, los servicios prestados o los
+        materiales, suministros o equipos provistos en virtud de este Acuerdo o en
+        razón de cualquier otra demanda o reclamación contra el Asociado.
+      </p>
+      <p>7. <span class="strong">PROPIEDAD INTELECTUAL:</span></p>
+      <p>
+        7.1 Se aplicarán las disposiciones siguientes a cada Programa de este
+        Acuerdo, salvo que, de conformidad con la Sección 20, se realice una
+        modificación específica por escrito de ese Programa que haga referencia
+        expresamente a esta Sección 7.
+      </p>
+      <p>
+        7.2 Con sujeción a lo dispuesto en el párrafo 7.3 infra, UNICEF será titular
+        de todos los derechos de propiedad intelectual y otros derechos de propiedad
+        con respecto a los análisis, los informes, los procesos, los programas
+        informáticos, los datos, las herramientas, los documentos y otros
+        materiales, incluidos los productos (colectivamente, los “Materiales del
+        Programa”) que el Asociado desarrolle, produzca, prepare o recopile durante
+        la ejecución del Programa. El Asociado tomará todas las medidas necesarias,
+        firmará todos los documentos necesarios y, en general, ayudará a garantizar
+        dicha propiedad intelectual y otros derechos de propiedad y los transferirá
+        o licenciará a UNICEF de conformidad con los requisitos de la legislación
+        aplicable y de este Acuerdo.
+      </p>
+      <p>
+        7.3 Ninguna de las Partes será titular de ninguna propiedad intelectual u
+        otros derechos de propiedad de la otra Parte que existieran previamente a la
+        ejecución del Programa, o que se hayan creado o adquirido o se creen o
+        adquieran independientemente de la aplicación del Programa (“Propiedad
+        Intelectual Independiente”). En la medida en que la Propiedad Intelectual
+        Independiente del Asociado se incorpore a los Materiales del Programa, el
+        Asociado otorga a UNICEF la licencia no exclusiva, sin regalías, mundial,
+        perpetua, transferible y sublicenciable para usar, reproducir y adaptar
+        dicha propiedad intelectual preexistente para fines no comerciales.
+      </p>
+      <p>
+        7.4 Las Partes pueden utilizar la propiedad intelectual con licencia de
+        terceros (“Propiedad Intelectual de Terceros”) para contribuir a la
+        elaboración de los Materiales del Programa. Si esa propiedad intelectual de
+        terceros se incorpora a los Materiales del Programa o es esencial para su
+        uso, este hecho se reflejará en el Documento del Programa, incluidas las
+        condiciones o restricciones para el uso de dicha Propiedad Intelectual de
+        Terceros. Las Partes cumplirán dichas condiciones y restricciones, incluidos
+        los términos pertinentes de la licencia en los que la Propiedad Intelectual
+        de Terceros se pone a disposición de las Partes.
+      </p>
+      <p>
+        7.5 Con sujeción a lo dispuesto en los párrafos 7.1 a 7.4, los Materiales
+        del Programa estarán disponibles para su uso o inspección por UNICEF en
+        tiempos y lugares razonables, se tratarán como confidenciales y se
+        entregarán únicamente a los funcionarios autorizados de UNICEF una vez
+        finalizadas las actividades de un Programa.
+      </p>
+      <p>8. <span class="strong">CONFIDENCIALIDAD:</span></p>
+      <p>
+        8.1 El Asociado respetará la confidencialidad de toda la información que,
+        según lo indicado por UNICEF, es confidencial, y la tratará de manera no
+        menos confidencial que la información más confidencial del Asociado. El
+        Asociado utilizará las salvaguardias y los controles (por ejemplo,
+        infraestructuras administrativas, técnicas, físicas, procedimentales y de
+        seguridad, instalaciones, herramientas, tecnologías, prácticas y otras
+        medidas de protección) necesarios y suficientes para cumplir sus
+        obligaciones en materia de confidencialidad establecidas en este artículo 8
+        y que se aplican a la información confidencial de UNICEF.
+      </p>
+      <p>
+        8.2 Cuando el Asociado por ley esté obligado a divulgar información
+        confidencial de UNICEF, notificará a UNICEF con antelación suficiente la
+        solicitud de divulgación de información para que UNICEF, en la medida de lo
+        razonable, tenga la posibilidad de tomar medidas de protección u otras
+        medidas apropiadas antes de que se divulgue la información.
+      </p>
+      <p>
+        8.3 Las obligaciones de no divulgación establecidas anteriormente no se
+        aplicarán a la información recibida por el Asociado en la medida en que
+        dicha información: a) ya estuviera en conocimiento del Asociado; b) a partir
+        de entonces, sin culpa alguna del Asociado, esté en general disponible para
+        el público; c) la haya recibido de un tercero que no esté sujeto a una
+        obligación de confidencialidad con UNICEF; o d) haya sido obtenida por el
+        Asociado independientemente de cualquier obligación de no divulgación
+        contraída en virtud de este Acuerdo.
+      </p>
+      <p>
+        8.4 Las obligaciones derivadas del presente artículo no se extinguen a la
+        rescisión del presente Acuerdo.
+      </p>
+      <p>9. <span class="strong">PROTECCIÓN DE DATOS Y SEGURIDAD:</span></p>
+      <p>
+        9.1 El Asociado confirma que cuenta con una política de protección de datos
+        que cumple todas las normas y los requisitos jurídicos aplicables en materia
+        de protección de datos, y que aplicará dicha política en la recopilación, el
+        uso, el almacenamiento, el procesamiento, la retención y la destrucción de
+        los datos que reciba o recopile en el cumplimiento de las obligaciones
+        contraídas en virtud de este Acuerdo. Con respecto a cada Programa, el
+        Asociado se compromete a cumplir cualquier medida adicional de protección de
+        datos y seguridad necesaria para el procesamiento de los datos notificada
+        por UNICEF para dicho Programa. El Asociado solo utilizará dichos datos para
+        aplicar el Documento del Programa respectivo. El Asociado notificará sin
+        dilación a UNICEF si se registra, se sospecha que se ha registrado o existe
+        la amenaza de que se registre un incidente de destrucción accidental o
+        ilegal o pérdida accidental, de alteración, o de divulgación o acceso no
+        autorizado o accidental a dichos datos, y aplicará todas las medidas
+        razonables para mitigar dicha destrucción, pérdida, alteración, divulgación
+        o acceso.
+      </p>
+      <p>
+        9.2 Con respecto a cada Programa, cuando la recopilación, el acceso, el uso
+        y el procesamiento de Datos Personales formen parte de las responsabilidades
+        contraídas por el Asociado en virtud de un Documento del Programa, el
+        Asociado debe firmar el Acuerdo de Procesamiento de Datos de UNICEF como
+        acuerdo complementario a dicho Documento del Programa antes del inicio de
+        cualquier recopilación, acceso, uso y procesamiento de dichos Datos
+        Personales. El término “Datos Personales” se refiere a cualquier información
+        relacionada con una persona identificada o identificable.
+      </p>
+      <p>
+        10.
+        <span class="strong"
+          >USO DEL NOMBRE, EL LOGOTIPO Y EL EMBLEMA DE UNICEF Y DEL ASOCIADO;
+          VISIBILIDAD:</span
+        >
+        Salvo que se disponga lo contrario en este Acuerdo, cada una de las Partes
+        puede usar el nombre, el logotipo y el emblema de la otra, según proceda,
+        únicamente en relación con este Acuerdo y la aplicación de los Documentos
+        del Programa, a menos que cualquiera de las Partes retire el permiso en un
+        caso en particular y se lo notifique por escrito a la otra Parte. Al
+        informar a terceros o al público en general, el Asociado proporcionará
+        visibilidad e identificará y reconocerá plenamente el apoyo de UNICEF, en
+        consonancia con las directrices actuales sobre la marca UNICEF. A petición
+        de UNICEF y siguiendo sus especificaciones, el Asociado también dará
+        visibilidad a los donantes de UNICEF que aportan fondos para el Acuerdo. Si
+        esta visibilidad pusiera en peligro la seguridad del personal del Asociado,
+        este comunicará esta información a UNICEF y propondrá planes alternativos
+        apropiados.
+      </p>
+      <p>
+        11. <span class="strong">COMPROMISO CON LA TRANSPARENCIA.</span> UNICEF y el
+        Asociado reconocen su compromiso compartido con la transparencia. A este
+        respecto, cada Parte podrá incluir referencias al presente Acuerdo y a sus
+        respectivas contribuciones a su aplicación en sus informes públicos y en
+        otros materiales de conformidad con sus respectivos reglamentos, normas,
+        políticas y prácticas. UNICEF puede divulgar información sobre el Asociado
+        de conformidad con sus políticas, reglamentos, normas y procedimientos y con
+        las resoluciones o reglamentos de los órganos rectores de UNICEF; esto
+        incluye la divulgación pública por UNICEF del nombre del Asociado, el monto
+        de la transferencia en efectivo de UNICEF al Asociado y la ubicación, el
+        propósito y el título de las intervenciones del Programa. UNICEF puede
+        divulgar a otras entidades de las Naciones Unidas el nombre del Asociado si
+        este Acuerdo se suspende o rescinde por motivo justificado, en particular
+        por no salvaguardar o proteger adecuadamente contra la explotación y los
+        abusos sexuales. UNICEF también puede divulgar públicamente datos no
+        personales agregados sobre denuncias de vulneraciones de la política de
+        salvaguardia, incluida la explotación y los abusos sexuales.
+      </p>
+      <p>
+        12.
+        <span class="strong">FUERZA MAYOR Y OTROS CAMBIOS EN LAS CONDICIONES:</span>
+      </p>
+      <p>
+        12.1 En caso de que ocurriera alguna de las causas que constituyen fuerza
+        mayor (como se definen a continuación), el Asociado lo notificará por
+        escrito a UNICEF lo antes posible y le proporcionará los detalles completos
+        de lo ocurrido o del cambio que se ha producido si como consecuencia el
+        Asociado no puede cumplir total o parcialmente las obligaciones y
+        responsabilidades contraídas en virtud de este Acuerdo. El Asociado también
+        notificará a UNICEF cualquier otro cambio en las condiciones o cualquier
+        acontecimiento que interfiera o amenace con interferir en el cumplimiento de
+        este Acuerdo. Al recibir la notificación requerida en este artículo, UNICEF
+        adoptará, a su entera discreción, las medidas que considere apropiadas o
+        necesarias en las circunstancias, incluida la concesión al Asociado de una
+        prórroga razonable del plazo para cumplir las obligaciones a las que está
+        sujeto en virtud de este Acuerdo.
+      </p>
+      <p>
+        12.2 Si por motivos de fuerza mayor el Asociado se viera imposibilitado
+        permanentemente, de forma total o parcial, para cumplir las obligaciones y
+        responsabilidades a las que está sujeto en virtud de este Acuerdo, UNICEF
+        tendrá derecho a suspender o rescindir este Acuerdo en los mismos términos y
+        condiciones que se establecen en el artículo 13, salvo que el período de
+        preaviso será de siete (7) días en lugar de treinta (30) días.
+      </p>
+      <p>
+        12.3 El término “fuerza mayor”, tal como se utiliza en este artículo, se
+        refiere a cualquier acto imprevisible e irresistible de la naturaleza,
+        cualquier acto de guerra (tanto si se ha declarado como si no), invasión,
+        revolución, insurrección, terrorismo o cualquier otro acto de una fuerza o
+        naturaleza similar, siempre que dichos actos obedezcan a causas que se
+        escapen del control de la Parte interesada y que no ocurran por culpa o por
+        negligencia de esta.
+      </p>
+      <p>
+        12.4 El Asociado reconoce y acepta que, con respecto a cualquier obligación
+        contraída en virtud de este Acuerdo que deba cumplir en —o para— una zona en
+        la que UNICEF participa o se prepara para participar en una operación de
+        mantenimiento de la paz, humanitaria o similar, o en —o para— cualquier zona
+        en la que UNICEF se esté retirando de una operación de ese tipo, cualquier
+        retraso o incumplimiento de dichas obligaciones debido a la dureza de las
+        condiciones o a disturbios civiles en dicha zona no constituirá, en sí
+        mismo, fuerza mayor.
+      </p>
+      <p>13. <span class="strong">SUSPENSIÓN Y RESCISIÓN:</span></p>
+      <p>
+        13.1 Cualquiera de las Partes puede rescindir este Acuerdo mediante
+        notificación por escrito a la otra Parte con treinta (30) días naturales de
+        antelación en cada una de las situaciones siguientes:
+      </p>
+      <div class="indent">
+        <p>
+          a. si concluye que la otra Parte ha incumplido las obligaciones a las que
+          está sujeta en virtud de este Acuerdo o de cualquier Documento del
+          Programa, y no ha subsanado ese incumplimiento después de haber recibido,
+          con no menos de catorce (14) días naturales de antelación, una
+          notificación por escrito de que debe hacerlo a partir de una fecha
+          especificada en dicha notificación; y
+        </p>
+        <p>
+          b. si concluye que la otra Parte no puede cumplir las obligaciones a las
+          que está sujeta en virtud de este Acuerdo.
+        </p>
+      </div>
+      <p>
+        13.2 UNICEF también puede suspender o rescindir, a su entera discreción,
+        este Acuerdo y cualquier otro acuerdo entre UNICEF y el Asociado con efecto
+        inmediato, previa notificación por escrito al Asociado, en cada una de las
+        situaciones siguientes:
+      </p>
+      <div class="indent">
+        <p>
+          (a) si un Documento del Programa no ha comenzado a aplicarse dentro de un
+          plazo razonable;
+        </p>
+        <p>
+          (b) si UNICEF tiene conocimiento de cualquier incidente o informe
+          incompatible con las disposiciones previstas en el artículo 4 o las
+          disposiciones equivalentes de cualquier otro acuerdo entre UNICEF y el
+          Asociado, o el Asociado incumple cualquier de esas disposiciones; o (ii)
+          el Asociado o cualquiera de sus filiales, de los miembros de su personal o
+          de sus directores queda sujeto a cualquier sanción o suspensión temporal
+          descrita en el artículo 4.4 b) durante la vigencia de este Acuerdo.
+        </p>
+        <p>
+          (c) si el Asociado incumple cualquiera de las disposiciones del artículo 8
+          (Confidencialidad) y el artículo 9 (Protección de datos y seguridad);
+        </p>
+        <p>
+          (d) si el mandato de UNICEF aplicable a la ejecución del Acuerdo o la
+          financiación de UNICEF aplicable al Acuerdo se reduce, se limita o se
+          extingue (ya sea en su totalidad o en parte); o
+        </p>
+        <p>
+          (e) si el Asociado i) se declara en quiebra, se liquidan sus bienes, se
+          declara insolvente, solicita una moratoria o suspensión de cualquier
+          obligación de pago o reembolso, o solicita ser declarado insolvente, ii)
+          se le otorga una moratoria o una suspensión, o se le declara insolvente,
+          iii) realiza una cesión en beneficio de uno o más de sus acreedores, iv)
+          se le ha asignado un administrador judicial a causa de su insolvencia, v)
+          ofrece un acuerdo en lugar de la quiebra o la administración judicial; o
+          vi) según el criterio razonable de UNICEF, su situación financiera ha
+          sufrido un cambio material adverso que amenaza con afectar sustancialmente
+          su capacidad de cumplir cualquiera de las obligaciones a las que está
+          sujeto en virtud de este Acuerdo. El Asociado informará inmediatamente a
+          UNICEF si ocurriera alguno de los hechos descritos en este párrafo e).
+        </p>
+      </div>
+      <p>
+        13.3 La Parte que reciba una notificación de suspensión o rescisión tomará
+        inmediatamente todas las medidas necesarias para suspender o cesar (según
+        sea el caso) sus actividades de manera ordenada para que los gastos
+        corrientes se mantengan al mínimo. En caso de suspensión, si el Asociado
+        toma las medidas apropiadas para solucionar el incidente o el incumplimiento
+        pertinente a satisfacción de UNICEF dentro del período estipulado en la
+        notificación de suspensión, UNICEF puede levantar la suspensión mediante
+        notificación por escrito al Asociado, y el Acuerdo y todos los demás
+        acuerdos afectados se reanudarán de acuerdo con sus términos. Si, no
+        obstante, UNICEF no está convencido de que el Asociado esté ocupándose
+        adecuadamente de esos asuntos, podrá, en cualquier momento, ejercer su
+        derecho a rescindir el Acuerdo y cualquier otro acuerdo entre UNICEF y el
+        Asociado. Cualquier suspensión o rescisión llevada a cabo en virtud de este
+        artículo 13 tendrá lugar sin ninguna responsabilidad por rescisión o por
+        otros cargos, ni de otra índole.
+      </p>
+      <p>
+        13.4 Como alternativa a la suspensión o rescisión, en caso de cualquier
+        preocupación relacionada con la política de salvaguardia, UNICEF puede,
+        aportando una justificación clara, solicitar por escrito al Asociado que
+        sustituya a uno o más empleados u otros miembros del personal, así como del
+        personal de los subcontratistas, asignados a un Programa concreto en virtud
+        de este Acuerdo. UNICEF trabajará en consulta con el Asociado para apoyar la
+        sustitución del empleado o los empleados en cuestión por personal
+        cualificado adecuado. En caso de que el Asociado no esté dispuesto a aceptar
+        una solicitud para sustituir a uno o más de los empleados u otros miembros
+        del personal o del personal del subcontratista asignados a un Programa
+        concreto en virtud del presente Acuerdo, UNICEF podrá suspender o rescindir
+        el presente Acuerdo con efecto inmediato previa notificación por escrito al
+        Asociado.
+      </p>
+      <p>
+        13.5 Inmediatamente después de enviar o recibir una notificación de
+        rescisión, UNICEF dejará de desembolsar fondos para este Acuerdo y el
+        Asociado no establecerá ningún compromiso a futuro, financiero o de otro
+        tipo, en relación con este Acuerdo
+      </p>
+      <p>
+        13.6 Al rescindirse este Acuerdo de conformidad con este artículo 13, el
+        Asociado a) transferirá a UNICEF, o de acuerdo con las instrucciones de
+        UNICEF, el saldo no gastado de la Transferencia en Efectivo en poder del
+        Asociado, así como los suministros y equipos no utilizados proporcionados
+        por UNICEF en virtud de este Acuerdo y los equipos no fungibles
+        proporcionados por UNICEF en virtud de este Acuerdo o adquiridos por el
+        Asociado con fondos proporcionados por UNICEF en virtud de este Acuerdo; y
+        b) transferirá a UNICEF todos los derechos de propiedad intelectual y de
+        otro tipo sobre los Materiales del Programa, incluso en caso de rescisión
+        anticipada, los datos recopilados y los trabajos en curso; y c) devolverá a
+        UNICEF toda la información confidencial de UNICEF.
+      </p>
+      <p>
+        13.7 Si UNICEF ejerce su derecho a rescindir este Acuerdo, tendrá derecho a
+        exigir al Asociado que le reembolse el monto que UNICEF determine, dentro
+        del total pagado por UNICEF al Asociado antes de la fecha de notificación de
+        la rescisión. Se entiende que no se exigirá el reembolso de los gastos
+        efectuados por el Asociado en cumplimiento de este Acuerdo antes de la fecha
+        de notificación de la rescisión. Tras recibir el requerimiento de pago de
+        UNICEF, el Asociado pagará sin dilación a UNICEF el monto adeudado.
+      </p>
+      <p>
+        13.8 Si UNICEF ejerce su derecho a rescindir este Acuerdo y decide que el
+        Programa será ejecutado por otra organización o mediante otra modalidad de
+        programación, el Asociado prestará a UNICEF, sin demora, su plena
+        cooperación para la transferencia ordenada de todos los suministros y
+        equipos no utilizados que UNICEF hubiera proporcionado al Asociado y se
+        aplicará lo dispuesto en el artículo 13.6 anterior.
+      </p>
+      <p>
+        13.9 La suspensión o revocación de un Documento del Programa de conformidad
+        con la presente Sección 13 se entenderá sin perjuicio del Acuerdo de
+        Cooperación para Programas y otros Documentos del Programa existentes en
+        virtud del presente Acuerdo, los cuales mantendrán su vigencia salvo que el
+        Acuerdo de Cooperación para Programa y otros Documentos del Programa se
+        suspendan o rescindan explícitamente junto con un Documento del Programa. La
+        suspensión o rescisión del Acuerdo de Cooperación para Programas suspenderá
+        o revocará automáticamente todos los Documentos del Programa expedidos en
+        virtud de dicho Acuerdo, salvo que se indique lo contrario en la
+        notificación de suspensión o rescisión.
+      </p>
+      <p>
+        14. <span class="strong">EVALUACIÓN:</span> La evaluación de las actividades
+        realizadas en virtud del presente Acuerdo estará sujeta a las disposiciones
+        de la Política de Evaluación de UNICEF aprobadas o modificadas
+        periódicamente por la Junta Ejecutiva de UNICEF.
+      </p>
+      <p>
+        15.
+        <span class="strong">ACTIVIDADES DE ASEGURAMIENTO E INVESTIGACIONES:</span>
+      </p>
+      <p>15.1 <span class="strong">Auditoría:</span></p>
+      <div class="indent">
+        <p>
+          a. A petición de UNICEF y en los tiempos que determine exclusivamente
+          UNICEF, el Asociado encargará la auditoría de las actividades que lleva a
+          cabo en virtud de este Acuerdo. Las auditorías se llevarán a cabo con
+          sujeción a las normas, el alcance, la frecuencia y el calendario que
+          decida UNICEF (y podrán abarcar las transacciones financieras y los
+          controles internos relacionados con las actividades realizadas por el
+          Asociado).
+        </p>
+        <p>
+          b. Las auditorías previstas en el párrafo a) del presente artículo serán
+          realizadas por auditores individuales o empresariales designados por
+          UNICEF, por ejemplo, una empresa de auditoría o una asesoría contable. El
+          Asociado cooperará plena y oportunamente con cualquier auditoría. Dicha
+          cooperación incluirá, entre otros aspectos, la obligación del Asociado de
+          poner a disposición su personal y la documentación y los registros
+          pertinentes para tal fin en tiempos y condiciones razonables y de
+          proporcionar a los auditores acceso a las instalaciones del Asociado o los
+          lugares en los que se ejecuta el programa en tiempos y condiciones
+          razonables con respecto al mencionado acceso al personal del Asociado y la
+          documentación y los registros pertinentes. El Asociado exigirá que sus
+          agentes, entre ellos sus abogados, contables u otros asesores y sus
+          subcontratistas cooperen razonablemente con cualquier auditoría llevada a
+          cabo en virtud del presente Acuerdo.
+        </p>
+        <p>
+          c. En el caso de que la auditoría la realizara auditores designados por
+          UNICEF, UNICEF o los auditores proporcionarán al Asociado, sin demora, una
+          copia del informe de auditoría final.
+        </p>
+      </div>
+      <p>
+        15.2
+        <span class="strong">Inspecciones puntuales y visitas Programáticas:</span>
+        El Asociado acepta que, cada cierto tiempo, UNICEF pueda realizar exámenes
+        in situ (verificaciones esporádicas y visitas programáticas), con arreglo a
+        las normas, el alcance, la frecuencia y el calendario que decida UNICEF. El
+        Asociado cooperará plena y oportunamente con dichas verificaciones
+        esporádicas o visitas programáticas. Esta cooperación incluye la obligación
+        del Asociado de poner a disposición su personal y la documentación y los
+        registros pertinentes para tal fin en tiempos y condiciones razonables y de
+        proporcionar a UNICEF acceso a las instalaciones del Asociado o los lugares
+        en los que se ejecuta el programa en tiempos y condiciones razonables,
+        incluido el diálogo con los participantes del programa según su
+        consentimiento. El Asociado exigirá que sus agentes, entre ellos sus
+        abogados, contables u otros asesores y sus subcontratistas cooperen
+        razonablemente con cualquier verificación esporádica llevada a cabo por
+        UNICEF en virtud del presente Acuerdo. Se entiende que UNICEF puede, a su
+        entera discreción, realizar las verificaciones esporádicas o visitas
+        programáticas con su propio personal, empleados y agentes o contratar para
+        ello los servicios de una persona física o jurídica.
+      </p>
+      <p>
+        15.3 <span class="strong">Investigaciones:</span> El Asociado acepta que
+        UNICEF puede llevar a cabo, en las fechas que determine, investigaciones
+        sobre cualquier aspecto de este Acuerdo, su adjudicación, las obligaciones
+        ejecutadas en virtud del Acuerdo y las operaciones del Asociado relacionadas
+        con el cumplimiento de este Acuerdo. El derecho de UNICEF a realizar
+        investigaciones no caducará al vencimiento o la rescisión previa de este
+        Acuerdo. El Asociado cooperará plena y oportunamente con esas
+        investigaciones. Dicha cooperación incluirá, entre otros aspectos, la
+        obligación del Asociado de poner a disposición su personal y la
+        documentación y los registros pertinentes en tiempos y condiciones
+        razonables y de proporcionar a UNICEF acceso a las instalaciones del
+        Asociado o los lugares en los que se ejecuta el programa en tiempos y
+        condiciones razonables. El Asociado exigirá que sus agentes, entre ellos sus
+        abogados, contables u otros asesores y sus subcontratistas cooperen
+        razonablemente con cualquier investigación llevada a cabo por UNICEF en
+        virtud del presente Acuerdo. Se entiende que UNICEF puede, a su entera
+        discreción, realizar las investigaciones con su propio personal, empleados y
+        agentes o contratar para ello los servicios de una persona física o
+        jurídica.
+      </p>
+      <p>
+        15.4 El Asociado acepta que UNICEF divulgue públicamente a terceros los
+        informes sobre las actividades de aseguramiento y los informes de
+        investigación, cuando lo considere necesario y de conformidad con el marco
+        jurídico y normativo de UNICEF.
+      </p>
+      <p>
+        16. <span class="strong">EVALUACIONES:</span> El Asociado acepta que UNICEF
+        realice evaluaciones periódicas del Asociado, entre ellas de su capacidad
+        para cumplir sus obligaciones como asociado en la ejecución de una manera
+        satisfactoria para UNICEF y para prevenir las vulneraciones de la política
+        de salvaguardia y responder a ellas, incluida la explotación y los abusos
+        sexuales, así como del marco de control interno (“evaluaciones”). UNICEF
+        podrá llevar a cabo dichas evaluaciones con sujeción a las normas, el
+        alcance, la frecuencia y el calendario que decida UNICEF, avisando al
+        Asociado con una antelación razonable. El Asociado cooperará plena y
+        oportunamente con cualquier evaluación. Dicha cooperación incluirá, entre
+        otros aspectos, la obligación del Asociado de poner a disposición su
+        personal y la documentación y los registros pertinentes en tiempos y
+        condiciones razonables y de proporcionar a UNICEF acceso a las instalaciones
+        del Asociado en tiempos y condiciones razonables. El Asociado exigirá que
+        sus agentes, entre ellos sus abogados, contables u otros asesores y sus
+        subcontratistas cooperen razonablemente con cualquier evaluación llevada a
+        cabo por UNICEF en virtud del presente Acuerdo. Se entiende que UNICEF
+        puede, a su entera discreción, realizar las evaluaciones con su propio
+        personal, empleados y agentes o contratar para tal fin los servicios de una
+        persona física o jurídica. El Asociado autoriza a que UNICEF divulgue
+        públicamente las evaluaciones mencionadas en este artículo 16 y espera que
+        se entienda que los informes de evaluación de la capacidad del Asociado para
+        prevenir las vulneraciones de la política de salvaguardia y responder a
+        ellas, incluida la explotación y los abusos sexuales, solo se compartirán
+        dentro de las Naciones Unidas.
+      </p>
+      <p>
+        17. <span class="strong">REEMBOLSOS/COMPENSACIONES:</span> UNICEF tendrá
+        derecho a que el Asociado le reembolse —o a deducir de los montos pagaderos
+        al Asociado— los montos pagados por UNICEF o utilizados por el Asociado que
+        no estén en consonancia con los términos y condiciones de este Acuerdo,
+        incluidos los montos que, según las auditorías, verificaciones esporádicas o
+        investigaciones, se hayan pagado o utilizado; los montos pagados por UNICEF
+        o utilizados por el Asociado como resultado de que este último o cualquiera
+        de sus empleados o miembros de su personal hayan participado en prácticas
+        corruptas, fraudulentas, colusivas, coercitivas u obstructivas (según la
+        definición de estos términos en la cláusula 4.4 d.); los montos no
+        utilizados; los montos transferidos por UNICEF al Asociado pero no incluidos
+        o reflejados adecuadamente en ningún informe financiero (utilizando el
+        formulario FACE) o no respaldados por la documentación y los registros
+        correspondientes; los montos pagados por UNICEF en relación con un Gasto no
+        Admisible; o los montos sujetos a un reembolso de acuerdo con los términos
+        de este Acuerdo. El Asociado pagará el reembolso inmediatamente después de
+        recibir de UNICEF una solicitud por escrito de reembolso.
+      </p>
+      <p>
+        18. <span class="strong">PRIVILEGIOS E INMUNIDADES:</span> Ninguna
+        disposición de este Acuerdo o relacionada con él se considerará una
+        renuncia, expresa o implícita, a cualquiera de los privilegios e inmunidades
+        de las Naciones Unidas, incluido UNICEF.
+      </p>
+      <p>
+        19. <span class="strong">CUMPLIMIENTO DE LA LEY:</span> El Asociado cumplirá
+        todas las leyes, ordenanzas, reglas y regulaciones relacionadas con el
+        cumplimiento de las obligaciones a las que está sujeto en virtud de los
+        términos de este Acuerdo.
+      </p>
+      <p>
+        20. <span class="strong">AUTORIZACIÓN PARA MODIFICAR:</span> Ninguna
+        modificación o cambio en este Acuerdo tendrá validez ni será exigible ante
+        UNICEF salvo que se presente mediante una modificación por escrito de este
+        Acuerdo firmada por un funcionario de UNICEF debidamente autorizado y un
+        funcionario autorizado del Asociado.
+      </p>
+    </div>
+    <div id="footer_content" style="text-align: right">
+      <pdf:pagenumber> {# de <pdf:pagenumber />#} </pdf:pagenumber>
+    </div>
+  {% endif %} 
+{% endblock %}
