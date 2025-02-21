@@ -321,7 +321,9 @@ class AgreementPermissions(PMPPermissions):
             return not check_rigid_related(instance, 'amendments')
 
         self.condition_map = {
-            'is type PCA or MOU': self.instance.agreement_type in [self.instance.PCA, self.instance.MOU],
+            'is type PCA or MOU or GTC': self.instance.agreement_type in [self.instance.PCA,
+                                                                          self.instance.MOU,
+                                                                          self.instance.GTC],
             'is type PCA or SSFA': self.instance.agreement_type in [self.instance.PCA, self.instance.SSFA],
             'is type SSFA': self.instance.agreement_type == self.instance.SSFA,
             'is type MOU': self.instance.agreement_type == self.instance.MOU,

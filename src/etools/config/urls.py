@@ -143,6 +143,12 @@ urlpatterns = [
     re_path('^social/', include('social_django.urls', namespace='social')),
     re_path(r'^social/unicef-logout/', SocialLogoutView.as_view(), name='social-logout'),
     re_path('^monitoring/', include('etools.libraries.monitoring.urls')),
+
+    # *************** Government Digital Document API ******************
+    re_path(
+        r'^api/gdd/',
+        include('etools.applications.governments.urls', namespace='governments_api'),
+    ),
 ]
 
 

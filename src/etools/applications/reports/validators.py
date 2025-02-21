@@ -50,10 +50,10 @@ class SpecialReportingRequirementUniqueValidator:
     message = _("There is already a special report with this due date.")
     requires_context = True
 
-    def __init__(self, queryset, message=None):
+    def __init__(self, queryset, message=None, is_pd=True):
         self.queryset = queryset
         self.message = message or self.message
-        self.intervention = None
+        self.is_pd = is_pd
 
     def __call__(self, attrs, serializer):
 
@@ -61,10 +61,12 @@ class SpecialReportingRequirementUniqueValidator:
         qs = self.queryset
         if instance:
             qs = qs.exclude(pk=instance.pk)
-        qs = qs.filter(
-            intervention=attrs.get("intervention", getattr(instance, 'intervention', None)),
-            due_date=attrs["due_date"],
-        )
+        if self.is_pd:
+            query = {"intervention": attrs.get("intervention", getattr(instance, 'intervention', None))}
+        else:
+            query = {"gdd": attrs.get("gdd", getattr(instance, 'gdd', None))}
+
+        qs = qs.filter(**query, due_date=attrs["due_date"])
         if qs.exists():
             raise ValidationError({"due_date": self.message}, code='unique')
 

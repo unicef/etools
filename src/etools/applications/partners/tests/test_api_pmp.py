@@ -70,6 +70,7 @@ class TestPMPStaticDropdownsListApiView(BaseTenantTestCase):
                                      'partner_risk_rating',
                                      'sea_risk_ratings',
                                      'gender_equity_sustainability_ratings',
+                                     'gpd_risk_types',
                                      'risk_types',
                                      'cash_transfer_modalities',
                                      ))

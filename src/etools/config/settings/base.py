@@ -245,7 +245,8 @@ TENANT_APPS = (
     'unicef_snapshot',
     'unicef_attachments',
     'unicef_vision',
-    'etools.applications.last_mile'
+    'etools.applications.last_mile',
+    'etools.applications.governments'
 )
 INSTALLED_APPS = ('django_tenants',) + SHARED_APPS + TENANT_APPS
 
