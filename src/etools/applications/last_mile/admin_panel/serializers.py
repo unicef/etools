@@ -1,5 +1,6 @@
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.hashers import make_password
 from django.db import transaction
 from django.utils.encoding import force_str
 
@@ -12,7 +13,6 @@ from etools.applications.last_mile.serializers import PointOfInterestTypeSeriali
 from etools.applications.locations.models import Location
 from etools.applications.organizations.models import Organization
 from etools.applications.partners.models import PartnerOrganization
-from etools.applications.partners.serializers.partner_organization_v2 import PartnerOrganizationListSerializer
 from etools.applications.users.models import Country, Group, Realm, UserProfile
 from etools.applications.users.serializers import SimpleUserSerializer
 from etools.applications.users.validators import EmailValidator, LowerCaseEmailValidator
@@ -63,13 +63,12 @@ class UserAdminCreateSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user_profile = validated_data.pop('profile', {})
         group = Group.objects.get(name="IP LM Editor")
-        password = validated_data.pop('password', None)
+        validated_data['password'] = make_password(validated_data['password'])
         country_schema = self.context.get('country_schema')
         country = Country.objects.get(schema_name=country_schema)
 
         try:
             user = get_user_model().objects.create(**validated_data)
-            user.set_password(password)
             user.profile.country = country
             user.profile.organization = user_profile['organization']
             user.profile.job_title = user_profile['job_title']
@@ -174,8 +173,14 @@ class PointOfInterestCustomSerializer(serializers.ModelSerializer):
         fields = ('name', 'parent', 'p_code', 'partner_organizations', 'poi_type', 'point')
 
 
+class SimplePartnerOrganizationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PartnerOrganization
+        fields = ('id', 'name', 'vendor_number')
+
+
 class PointOfInterestAdminSerializer(serializers.ModelSerializer):
-    partner_organizations = PartnerOrganizationListSerializer(many=True, read_only=True)
+    partner_organizations = SimplePartnerOrganizationSerializer(many=True, read_only=True)
     poi_type = PointOfInterestTypeSerializer(read_only=True)
     country = serializers.SerializerMethodField(read_only=True)
     region = serializers.SerializerMethodField(read_only=True)
@@ -232,19 +237,39 @@ class PartnerSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PartnerOrganization
-        fields = ('id', 'name', 'points_of_interest')  # add any additional fields as needed
+        fields = ('id', 'name', 'vendor_number', 'points_of_interest')  # add any additional fields as needed
 
 
 class UserPointOfInterestAdminSerializer(serializers.ModelSerializer):
 
-    # profile = UserProfileSerializer(read_only=True)
-    locations = PartnerSerializer(source='profile.organization.partner', read_only=True)
-    ip_name = serializers.CharField(source='profile.organization.name', read_only=True)
-    ip_number = serializers.CharField(source='profile.organization.vendor_number', read_only=True)
+    adminValidator = AdminPanelValidator()
+
+    partners = PartnerSerializer(source='profile.organization.partner', read_only=True)
+    point_of_interest = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=models.PointOfInterest.objects.all(),
+        write_only=True
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in ['last_name', 'first_name', 'email']:
+            self.fields[field].read_only = True
+
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        self.adminValidator.validate_profile(instance)
+        poi_list = validated_data.pop('point_of_interest', None)
+        if poi_list is not None:
+            partner = instance.profile.organization.partner
+            partner.points_of_interest.set(poi_list)
+            instance.save()
+
+        return instance
 
     class Meta:
         model = get_user_model()
-        fields = ('email', 'ip_name', 'ip_number', 'locations',)
+        fields = ('id', 'last_name', 'first_name', 'email', 'partners', 'point_of_interest')
 
 
 class AlertNotificationSerializer(serializers.ModelSerializer):

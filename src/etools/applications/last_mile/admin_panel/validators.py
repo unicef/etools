@@ -34,3 +34,9 @@ class AdminPanelValidator:
     def validate_realm(self, user, country, group):
         if Realm.objects.filter(user=user, country=country, group=group, organization=user.profile.organization).exists():
             raise ValidationError({"message": _("Realm already exist")})
+
+    def validate_profile(self, obj):
+        if not getattr(obj.profile, 'organization', None):
+            raise ValidationError({"message": _("Organization not exist")})
+        if not getattr(obj.profile.organization, 'partner', None):
+            raise ValidationError({"message": _("Partner not exist under organization")})

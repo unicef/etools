@@ -127,13 +127,22 @@ class LocationsViewSet(mixins.ListModelMixin,
         return PointOfInterestAdminSerializer
 
 
-class UserLocationsViewSet(mixins.ListModelMixin, GenericViewSet):
+class UserLocationsViewSet(mixins.ListModelMixin,
+                           mixins.RetrieveModelMixin,
+                           mixins.UpdateModelMixin,
+                           GenericViewSet):
     permission_classes = [IsIPLMEditor]
     serializer_class = UserPointOfInterestAdminSerializer
     pagination_class = CustomDynamicPageNumberPagination
 
     def get_queryset(self):
-        return get_user_model().objects.filter(realms__country__schema_name=connection.tenant.schema_name, profile__organization__partner__points_of_interest__isnull=False).distinct().order_by('id')
+        base_qs = get_user_model().objects.filter(
+            realms__country__schema_name=connection.tenant.schema_name
+        ).distinct().order_by('id')
+
+        if self.action not in ['update', 'partial_update', 'retrieve']:
+            return base_qs.filter(profile__organization__partner__points_of_interest__isnull=False)
+        return base_qs
 
     filter_backends = (SearchFilter,)
 
@@ -181,7 +190,7 @@ class TransferItemViewSet(mixins.ListModelMixin, GenericViewSet):
     def get_queryset(self):
         poi_id = self.request.query_params.get('poi_id')
         if poi_id:
-            return models.Transfer.objects.filter(status=models.Transfer.COMPLETED, origin_point__id=poi_id).order_by('-id')
+            return models.Transfer.objects.filter(status=models.Transfer.COMPLETED, origin_point__id=poi_id, items__isnull=False, items__hidden=False).order_by('-id')
         return models.Transfer.objects.none()
 
     filter_backends = (SearchFilter,)
