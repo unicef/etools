@@ -11,6 +11,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied, ValidationError
 
 from etools.applications.audit.models import Auditor
+from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.organizations.models import Organization
 from etools.applications.users.mixins import AUDIT_ACTIVE_GROUPS, GroupEditPermissionMixin
 from etools.applications.users.models import Country, Realm, StagedUser, User, UserProfile
@@ -23,17 +24,6 @@ from etools.applications.users.serializers import (
 )
 from etools.applications.users.tasks import notify_user_on_realm_update, sync_realms_to_prp
 from etools.applications.users.validators import EmailValidator, ExternalUserValidator, LowerCaseEmailValidator
-
-# temporary list of Countries that will use the Auditor Portal Module.
-# Logic be removed once feature gating is in place
-AP_ALLOWED_COUNTRIES = [
-    'UAT',
-    'Lebanon',
-    'Syria',
-    'Indonesia',
-    'Sudan',
-    'Syria Cross Border',
-]
 
 
 # used for user list view
@@ -407,9 +397,10 @@ class ProfileRetrieveUpdateSerializer(serializers.ModelSerializer):
     is_active = serializers.BooleanField(source='user.is_active', read_only=True)
     country = DashboardCountrySerializer(read_only=True)
     organization = OrganizationSerializer(read_only=True)
-    show_ap = serializers.SerializerMethodField()
     is_unicef_user = serializers.SerializerMethodField()
     _partner_staff_member = serializers.SerializerMethodField()
+
+    show_gpd = serializers.SerializerMethodField()
 
     preferences = UserPreferencesSerializer(source="user.preferences", allow_null=False)
 
@@ -417,12 +408,11 @@ class ProfileRetrieveUpdateSerializer(serializers.ModelSerializer):
         model = UserProfile
         exclude = ('id',)
 
-    # TODO remove once feature gating is in place.
-    def get_show_ap(self, obj):
-        """If user is within one of the allowed countries then
-        show_ap is True, otherwise False
+    def get_show_gpd(self, obj):
         """
-        if obj.country and obj.country.name in AP_ALLOWED_COUNTRIES:
+        GPD app is visible only if the current country is selected tenant switch 'gpd_enabled'
+        """
+        if tenant_switch_is_active('gpd_enabled'):
             return True
         return False
 
