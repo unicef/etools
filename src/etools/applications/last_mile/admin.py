@@ -4,6 +4,8 @@ from django.contrib import admin
 from django.contrib.gis import forms
 from django.contrib.gis.geos import Point
 from django.db import transaction
+from django.db.models import CharField, F, Value
+from django.db.models.functions import Coalesce
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
@@ -146,24 +148,30 @@ class TransferAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
         'transfer_subtype', 'origin_point', 'destination_point', 'from_partner_organization', 'recipient_partner_organization'
     )
     list_filter = ('status', 'transfer_type', 'transfer_subtype')
-    search_fields = ('name', 'status')
+    search_fields = ('name', 'status', 'origin_point__name', 'destination_point__name', 'partner_organization__organization__name')
     raw_id_fields = ('partner_organization', 'checked_in_by', 'checked_out_by',
                      'origin_point', 'destination_point', 'origin_transfer', 'from_partner_organization', 'recipient_partner_organization')
     inlines = (ProofTransferAttachmentInline, ItemInline)
 
     def get_queryset(self, request):
-        qs = super(TransferAdmin, self).get_queryset(request)\
-            .select_related('partner_organization', 'partner_organization__organization',
-                            'origin_point', 'destination_point', 'from_partner_organization', 'recipient_partner_organization')\
-            .prefetch_related('items')
+        qs = super(TransferAdmin, self).get_queryset(request)
+        qs = qs.select_related(
+            'partner_organization', 'partner_organization__organization',
+            'origin_point', 'destination_point'
+        ).prefetch_related('items')
+
+        qs = qs.annotate(
+            display_name_annotation=Coalesce(
+                F('name'),
+                F('unicef_release_order'),
+                Value('', output_field=CharField())
+            )
+        )
         return qs
 
     def display_name(self, obj):
-        if obj.name:
-            return obj.name
-        elif obj.unicef_release_order:
-            return obj.unicef_release_order
-        return obj.id
+        return obj.name or obj.unicef_release_order or obj.id
+    display_name.admin_order_field = 'display_name_annotation'
 
 
 class PartnerMaterialInline(admin.TabularInline):
@@ -192,6 +200,19 @@ class ItemAdmin(XLSXImportMixin, admin.ModelAdmin):
     raw_id_fields = ('transfer', 'transfers_history', 'material')
     list_filter = ('wastage_type', 'hidden')
     readonly_fields = ('destination_point_name',)
+
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+
+        if 'transfer' in form.base_fields:
+            form.base_fields['transfer'].required = True
+        if 'wastage_type' in form.base_fields:
+            form.base_fields['wastage_type'].required = False
+        if 'uom' in form.base_fields:
+            form.base_fields['uom'].required = False
+        if 'conversion_factor' in form.base_fields:
+            form.base_fields['conversion_factor'].required = False
+        return form
 
     def destination_point_name(self, obj):
         if obj.transfer and obj.transfer.destination_point:
