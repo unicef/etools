@@ -41,8 +41,19 @@ class ResultFrameworkRenderer(ExportDocxTableRenderer):
                     if is_lowerresult or isinstance(record[key], LowerResult):
                         is_lowerresult = True
                         if key == "Result":
-                            result_previous = record_previous[key]
-                            if isinstance(result_previous, LowerResult):
+                            # Ensure record_previous is valid and has the key
+                            if record_previous and key in record_previous:
+                                result_previous = record_previous[key]
+                            else:
+                                result_previous = None
+
+                            # Check both result_previous and record[key] before accessing .pk
+                            if (
+                                isinstance(result_previous, LowerResult) and
+                                isinstance(record[key], LowerResult) and
+                                result_previous is not None and
+                                record[key] is not None
+                            ):
                                 if result_previous.pk == record[key].pk:
                                     # merge cells
                                     row_previous[i].merge(row[i])
