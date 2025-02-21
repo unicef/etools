@@ -1,3 +1,6 @@
+from django.db import models
+from django.db.models import F
+
 from mptt.managers import TreeManager
 from unicef_locations.models import AbstractLocation
 
@@ -19,5 +22,20 @@ class LocationsManager(TreeManager):
         return super().get_queryset().select_related('parent')
 
 
+class SimplifiedGeomQueryset(models.query.QuerySet):
+    def simplified(self):
+        sql = "SELECT ST_SimplifyVW(geom, 0.125) AS geom"
+        return self.extra(select={'geom': sql})
+
+
+class SimplifiedGeomManager(models.Manager):
+    def get_queryset(self):
+        return SimplifiedGeomQueryset(self.model, using=self._db).annotate(parent_pcode=F('parent__p_code'))
+
+    def simplified(self):
+        return self.get_queryset().simplified()
+
+
 class Location(AbstractLocation):
     objects = LocationsManager()
+    simplified_geom = SimplifiedGeomManager()
