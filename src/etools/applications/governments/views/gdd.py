@@ -47,6 +47,7 @@ from etools.applications.governments.filters import (
     ShowAmendmentsFilter,
 )
 from etools.applications.governments.models import (
+    EWPActivity,
     EWPOutput,
     GDD,
     GDDActivity,
@@ -58,6 +59,7 @@ from etools.applications.governments.models import (
     GDDRisk,
     GDDSpecialReportingRequirement,
     GDDSupplyItem,
+    GovernmentEWP,
 )
 from etools.applications.governments.permissions import (
     AmendmentSessionOnlyDeletePermission,
@@ -471,7 +473,11 @@ class GDDSyncResultsStructure(RetrieveUpdateAPIView):
         return get_object_or_404(GDD.objects.detail_qs().all(), pk=self.kwargs.get('pk'))
 
     def get(self, request, *args, **kwargs):
-        qs = EWPOutput.objects.filter(workplan__in=self.get_object().e_workplans.all())
+        gpd = self.get_object()
+        partner_ewp_activities = EWPActivity.objects.filter(partners__in=[gpd.partner or gpd.agreement.partner])
+        partner_ewps = GovernmentEWP.objects.filter(ewp_activities__in=partner_ewp_activities).distinct()
+
+        qs = EWPOutput.objects.filter(workplan__in=partner_ewps).distinct()
         return Response(self.get_serializer(qs, many=True).data)
 
     def update(self, request, *args, **kwargs):
