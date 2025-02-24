@@ -93,6 +93,24 @@ class PointOfInterest(TimeStampedModel, models.Model):
         super().save(**kwargs)
 
 
+class TransferHistoryManager(models.Manager):
+    def get_or_build_by_origin_id(self, *origin_id_candidates):
+        origin_id = next((oid for oid in origin_id_candidates if oid is not None), None)
+
+        history = self.filter(origin_transfer_id=origin_id).first()
+        if history is None:
+            history = self.model(origin_transfer_id=origin_id)
+        return history
+
+
+class TransferHistory(TimeStampedModel, models.Model):
+    origin_transfer_id = models.IntegerField(unique=True)
+    objects = TransferHistoryManager()
+
+    class Meta:
+        ordering = ("-created",)
+
+
 class Transfer(TimeStampedModel, models.Model):
     PENDING = 'PENDING'
     COMPLETED = 'COMPLETED'
@@ -207,6 +225,13 @@ class Transfer(TimeStampedModel, models.Model):
     )
     is_shipment = models.BooleanField(default=False)
 
+    transfer_history = models.ForeignKey(
+        TransferHistory,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='transfers'
+    )
+
     purchase_order_id = models.CharField(max_length=255, null=True, blank=True)
     waybill_id = models.CharField(max_length=255, null=True, blank=True)
 
@@ -221,6 +246,17 @@ class Transfer(TimeStampedModel, models.Model):
     def set_checkout_status(self):
         if self.transfer_type in [self.WASTAGE, self.DISPENSE]:
             self.status = self.COMPLETED
+
+    def add_transfer_history(self, origin_transfer_pk=None, original_transfer_pk=None):
+        history = TransferHistory.objects.get_or_build_by_origin_id(original_transfer_pk, origin_transfer_pk, self.id)
+
+        history.save()
+        history.refresh_from_db()
+
+        self.transfer_history = history
+        self.save(update_fields=['transfer_history'])
+
+        return history
 
 
 class TransferEvidence(TimeStampedModel, models.Model):
@@ -381,6 +417,13 @@ class Item(TimeStampedModel, models.Model):
         on_delete=models.SET_NULL,
         null=True, blank=True,
         related_name='items'
+    )
+
+    origin_transfer = models.ForeignKey(
+        Transfer,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='origin_items'
     )
     transfers_history = models.ManyToManyField(Transfer, through='ItemTransferHistory')
 
