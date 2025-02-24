@@ -24,4 +24,5 @@ app_name = 'field_monitoring_planning'
 urlpatterns = [
     re_path(r'^', include(activities_api.urls)),
     re_path(r'^', include(root_api.urls)),
+    re_path(r'activities/(?P<activity_pk>\d+)/duplicate/$', views.DuplicateMonitoringActivityView.as_view(), name='duplicate_activity'),
 ]

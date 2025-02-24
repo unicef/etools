@@ -872,6 +872,19 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         self.assertEqual(len(response.data), 24)
 
 
+class TestDuplicateMonitoringActivityView(BaseTenantTestCase):
+    def test_duplicates_activity(self):
+        user = UserFactory(unicef_user=True)
+
+        response = self.forced_auth_req(
+            'post',
+            reverse('field_monitoring_planning:duplicate_activity', kwargs={'activity_pk': 123}),
+            user=user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        # self.assertEqual(len(response.data), 1)
+
 class TestActivityAttachmentsView(FMBaseTestCaseMixin, APIViewSetTestCase):
     base_view = 'field_monitoring_planning:activity_attachments'
 

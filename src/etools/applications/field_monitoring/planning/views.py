@@ -16,6 +16,8 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.response import Response
+from rest_framework.views import APIView
+
 from unicef_restlib.views import NestedViewSetMixin
 from unicef_snapshot.models import Activity as HistoryActivity
 
@@ -280,6 +282,11 @@ class MonitoringActivitiesViewSet(
         return Response(serializer.data, headers={
             'Content-Disposition': 'attachment;filename=monitoring_activities_{}.csv'.format(timezone.now().date())
         })
+
+
+class DuplicateMonitoringActivityView(APIView):
+    def post(self, request, *args, **kwargs):
+        return Response(status=status.HTTP_201_CREATED)
 
 
 class FMUsersViewSet(
