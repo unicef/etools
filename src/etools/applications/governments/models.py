@@ -1685,19 +1685,33 @@ class GDDReviewNotification(TimeStampedModel):
         self.send_notification()
 
     def send_notification(self):
+        formatted_meeting_date = (
+            self.review.meeting_date.strftime('%d-%m-%Y')
+            if self.review.meeting_date
+            else None
+        )
+
         context = {
             'environment': get_environment(),
             'gdd_number': self.review.gdd.reference_number,
-            'meeting_date': self.review.meeting_date.strftime('%d-%m-%Y'),
+            'meeting_date': formatted_meeting_date,
             'user_name': self.user.get_full_name(),
             'url': self.review.gdd.get_frontend_object_url(suffix='review')
         }
 
-        send_notification_with_template(
-            recipients=[self.user.email],
-            template_name='governments/gdd/prc_review_notification',
-            context=context,
-        )
+        if self.review.meeting_date:
+            send_notification_with_template(
+                recipients=[self.user.email],
+                template_name='governments/gdd/prc_review_notification',
+                context=context,
+            )
+        else:
+            tpl = 'governments/gdd/review_notification_authorized_officer'
+            send_notification_with_template(
+                recipients=[self.user.email],
+                template_name=tpl,
+                context=context,
+            )
 
     @classmethod
     def notify_officers_for_review(cls, review: GDDReview):
@@ -1712,6 +1726,15 @@ class GDDReviewNotification(TimeStampedModel):
 
             cls.objects.create(review=review, user=user)
 
+    @classmethod
+    def notify_authorized_officer_for_review(cls, review: GDDReview):
+        notified_users = cls.objects.filter(
+            review=review,
+            created__gt=timezone.now() - datetime.timedelta(days=1),
+        ).values_list('user_id', flat=True)
+
+        if review.authorized_officer.id not in notified_users:
+            cls.objects.create(review=review, user=review.authorized_officer)
 
 class GDDPRCOfficerReview(GDDReviewQuestionnaire, TimeStampedModel):
     user = models.ForeignKey(
