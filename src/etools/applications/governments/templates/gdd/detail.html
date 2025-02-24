@@ -1,0 +1,385 @@
+{% extends "easy_pdf/base.html" %}
+{% load i18n humanize etools %}
+
+{% block style_base %}
+  {% comment %}
+        See DEFAULT_CSS in https://github.com/chrisglass/xhtml2pdf/blob/master/xhtml2pdf/default.py
+        for base style.
+    {% endcomment %}
+
+  {% block layout_style %}
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="UTF-8">
+    <style type="text/css">
+        body {
+            font-size:9pt;
+            font-family: "Times_New_Roman";
+        }
+        @page {
+            size: "landscape";
+            margin-left: 2.0cm;
+            margin-right: 2.0cm;
+            margin-top: 2.4cm;
+            margin-bottom: 1.8cm;
+            @frame header {
+                -pdf-frame-content: header_content;
+                margin-top: 1cm;
+                margin-right: 2.0cm;
+                margin-bottom: 0.3cm;
+                padding-bottom: 3cm;
+                margin-left: 0cm;
+                background-color: #0099ff;
+                height: 2cm;
+            }
+            @frame footer_frame {
+                /* Static frame */
+                -pdf-frame-content:footer_content;
+                right: 50pt; width: 50pt; bottom: 10pt; height: 20pt;
+            }
+        }
+
+        /*https://github.com/xhtml2pdf/xhtml2pdf/issues/129*/
+        /*times new roman*/
+        @font-face {
+            font-family: "Times_New_Roman";
+            src: url("{{font_path}}times_new_roman/Times_New_Roman.ttf");
+        }
+        @font-face {
+            font-family: "Times_New_Roman_Italic";
+            src: url("{{font_path}}times_new_roman/Times_New_Roman_Italic.ttf");
+        }
+        @font-face {
+            font-family: "Times_New_Roman_Bold";
+            src: url("{{font_path}}times_new_roman/Times_New_Roman_Bold.ttf");
+        }
+        @font-face {
+            font-family: "Times_New_Roman_Bold_Italic";
+            src: url("{{font_path}}times_new_roman/Times_New_Roman_Bold_Italic.ttf");
+        }
+    </style>
+  {% endblock %}
+  {% block extra_style %}
+    <style type="text/css">
+        <!--
+          {#body {padding: 40pt}#}
+          table { width: 100%; border-spacing: 0;line-height: 140%;}
+          .just-border, .bordered { border: 2pt solid #A0A0A0; }
+          table.bordered td { border-bottom: 2pt solid #A0A0A0; }
+          table.bordered {border-bottom: none;}
+          .no-border {border: none !important;}
+          table.no-border td {border: none;}
+          table.all-cells-border {
+            border-top: 2pt solid #A0A0A0;
+            border-left: 2pt solid #A0A0A0;
+          }
+          .all-cells-border td {
+            border-bottom: 2pt solid #A0A0A0;
+            border-right: 2pt solid #A0A0A0;
+          }
+          .small-text {
+              font-size:7pt;
+          }
+          td {
+            word-break: break-all;
+            {#weird paddings fix#}
+            margin-left: 5pt;
+            padding-top: 2pt;
+          }
+          tr.bordered td { border-bottom: 2pt solid #A0A0A0;}
+          .p-0 {padding: 0 !important}
+          .mt-20 {margin-top: 20pt}
+          .mb-5 {margin-bottom: 5pt}
+          .w-p4 {width: 4%;}
+          .w-p5 {width: 5%;}
+          .w-p8 {width: 8%;}
+          .w-p10 {width: 10%;}
+          .w-p12 {width: 12.5%;}
+          .w-p13 {width: 13%;}
+          .w-p15 {width: 15%;}
+          .w-p20 {width: 20%}
+          .w-p22 {width: 22%}
+          .w-p25 {width: 25%}
+          .w-p30 {width: 30%}
+          .w-p39 {width: 39%}
+          .w-p40 {width: 40%}
+          .w-p50 {width: 50%;}
+          .w-p62 {width: 62.5%;}
+          .w-100 {width: 100%;}
+          .bold {font-weight: bold;}
+          .b-gray {background-color: #E8E8E8;}
+          .b-navy {background-color: #002060; color: #ffffff}
+          .b-yellow {background-color: #FFE599;}
+          .b-blue {background-color: #BDD6EE;}
+          .p-b-20 {padding-bottom:20pt;}
+          table.padded-bottom td{padding-bottom:20pt;}
+          {#table.padded-top td{padding-top:20pt;}#}
+          {#table.padded-left td{padding-left:20pt;}#}
+          {#table.padded-right td{padding-right:20pt;}#}
+          {#.risk-title {margin-block-start: 0.2rem; font-weight: bold;}#}
+        -->
+    </style>
+  {% endblock %}
+{% endblock %}
+
+{% block content %}
+  {% if error %}
+    {% translate "PDF could not be generated properly" %}: <br> {{ error }}
+  {% else %}
+    <div id="content">
+      <table class="all-cells-border">
+        <tbody>
+        <tr>
+          <td class="b-gray w-p20">{% translate "eTools ref no" %}</td>
+          <td>{{ gdd.number }}</td>
+        </tr>
+        <tr>
+          <td class="b-gray w-p20">{% translate "UNICEF Office" %}</td>
+          <td>{{ gdd_offices|join:", " }}</td>
+        </tr>
+        <tr>
+          <td class="b-gray w-p20">{% translate "Organization Name" %}</td>
+          <td>{{ gdd.partner.name }}</td>
+        </tr>
+        <tr>
+          <td class="b-gray w-p20">{% translate "Programme Title" %}</td>
+          <td>{{ gdd.title }}</td>
+        </tr>
+        <tr>
+          <td class="b-gray w-p20">{% translate "Planned duration" %}</td>
+          <td>
+            <span>{% translate "Start date" %}: {{ gdd.start }}</span><br>
+            <span>{% translate "End date" %}: {{ gdd.end }}</span>
+          </td>
+        </tr>
+        <tr>
+          <td class="b-gray w-p20">{% translate "Geographical coverage" %}</td>
+          <td>{{ gdd_locations|join:", " }}</td>
+        </tr>
+        <tr>
+          <td class="b-gray w-p20">{% translate "Budget" %}</td>
+          <td>
+            <table class="no-border">
+              <tr class="">
+                <td class="w-p12">{% translate "UNICEF Cash" %}:</td>
+                <td class="w-p12">{{ gdd.planned_budget.unicef_cash_local | currency }}</td>
+                <td class="w-p12">{% translate "Supplies" %}:</td>
+                <td class="w-p12">{{ gdd.planned_budget.in_kind_amount_local | currency}}</td>
+                <td class="w-p12">{% translate "Total" %}:</td>
+                <td class="w-p12">{{ gdd.planned_budget.total_unicef_contribution_local | currency }}</td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        <tr>
+          <td class="b-gray w-p20">Total</td>
+          <td>
+            <table class="no-border">
+              <tr>
+                <td class="w-p12">{% translate "Currency" %}:</td>
+                <td class="w-p62">{{ gdd.planned_budget.currency }}</td>
+                <td class="w-p12">{% translate "Total" %}:</td>
+                <td class="w-p12">{{ gdd.planned_budget.total_local | currency }}</td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        <tbody>
+      </table>
+
+      <table class="bordered mt-20">
+        <tbody>
+        <tr>
+          <td class="b-navy">{% translate "Background" %}</td>
+        </tr>
+        <tr>
+          <td class=""><span
+              class="bold">{% translate "Background" %}:</span> {{ gdd.implementation_strategy|escape|linebreaks }}
+          </td>
+        </tr>
+        <tr>
+          <td class=""><span class="bold">{% translate "Gender Rating" %}:</span>{{ gdd.get_gender_rating_display }} <br>
+            {{ gdd.gender_narrative|escape|linebreaks }}
+          </td>
+        </tr>
+        <tr>
+          <td class=""><span class="bold">{% translate "Equity Rating" %}:</span> {{ gdd.get_equity_rating_display }} <br>
+            {{ gdd.equity_narrative|escape|linebreaks }}
+          </td>
+        </tr>
+        <tr>
+          <td class=""><span class="bold">{% translate "Sustainability Rating" %}:</span> {{ gdd.get_sustainability_rating_display }} <br>
+            {{ gdd.sustainability_narrative|escape|linebreaks }}
+          </td>
+        </tr>
+        <tr>
+          <td class="">
+            <span class="bold">{% translate "Risk & Proposed Mitigation Measures" %}:</span><br/>
+            {% for risk in gdd.risks.all %}
+              <span class="">{{ risk.get_risk_type_display }}: {{ risk.mitigation_measures }}</span><br/>
+            {% endfor %}
+          </td>
+        </tr>
+        <tbody>
+      </table>
+
+      <pdf:nextpage />
+      <table class="all-cells-border mt-20">
+        <tbody>
+          <tr>
+            <td colspan="6" class="b-navy">{% translate "Workplan Result" %}</td>
+          </tr>
+          <tr>
+            <td colspan="3" class="b-gray">{% translate "Result statement" %}</td>
+            <td colspan="3" class="b-gray">{% translate "Performance indicator/s" %}</td>
+          </tr>
+          {% for result_link in gdd.result_links.all %}
+            <tr>
+              <td colspan="3" class="b-yellow">{{ result_link.cp_output.cp_output.name }}</td>
+              <td colspan="3" class="b-yellow">
+                {% for indicator in result_link.ram_indicators.all %}
+                  <span>{{ indicator.name }}</span><br/>
+                {% endfor %}
+              </td>
+            </tr>
+          {% endfor %}
+        <tbody>
+      </table>
+
+      <table class="all-cells-border mt-20">
+        <tbody>
+          <tr>
+            <td colspan="4" class="b-navy">{% translate "Workplan Budget" %}</td>
+          </tr>
+          <tr>
+            <td class="b-gray w-p30">{% translate "Result Level" %}</td>
+            <td class="b-gray w-p40">{% translate "Result/activity" %}</td>
+            <td class="b-gray w-p30">{% translate "Timeframe" %}</td>
+            <td class="b-gray w-p30">{% translate "Total (UNICEF)" %} [{{ gdd.planned_budget.currency }}]</td>
+          </tr>
+          {% for result_link in gdd.result_links.all %}
+            {% for ki in result_link.gdd_key_interventions.all %}
+              <tr>
+                <td class="b-yellow">{% translate "Prog. Output" %}</td>
+                <td class="b-yellow" colspan="2">
+                  {{ result_link.cp_output.cp_output.name }}
+                  <br>
+                  {{ ki.ewp_key_intervention.cp_key_intervention.name }}
+                </td>
+                <td class="b-yellow">{{ ki.total | currency }}</td>
+              </tr>
+              {% for activity in ki.gdd_activities.all %}
+                <tr>
+                  <td>Activity</td>
+                  <td>{% if not activity.is_active %} ({% translate 'Inactive' %}) {% endif %}{{ activity.name }}</td>
+                  <td>{{ activity.get_time_frames_display }}</td>
+                  <td>{{ activity.unicef_cash | currency }}</td>
+                </tr>
+              {% endfor %}
+            {% endfor %}
+          {% endfor %}
+          <tr>
+           <td colspan="3" class="b-blue">{% translate "Sub-total for programme costs" %}</td>
+            <td class="b-blue">{{ gdd.planned_budget.total_unicef_cash_local_wo_hq | currency }}</td>
+          </tr>
+          <tr>
+           <td colspan="3" class="b-blue">{% translate "Total Cash budget" %}</td>
+            <td class="b-blue">{{ gdd.planned_budget.unicef_cash_local | currency }}</td>
+          </tr>
+        <tbody>
+      </table>
+
+      <table class="all-cells-border mt-20">
+        <tbody>
+        <tr>
+          <td colspan="5" class="b-navy">{% translate "Supply Contribution Plan" %}</td>
+        </tr>
+        <tr>
+          <td class="bold w-p15">{% translate "Provided by" %}</td>
+          <td class="bold w-p40">{% translate "Item" %}</td>
+          <td class="bold w-p15">{% translate "No. of units" %}</td>
+          <td class="bold w-p15">{% translate "Price/unit" %}</td>
+          <td class="bold w-p15">{% translate "Total Price" %}</td>
+        </tr>
+        {% for supply_item in gdd.supply_items.all %}
+          <tr>
+            <td>{{ supply_item.get_provided_by_display }}</td>
+            <td>{{ supply_item.title }}</td>
+            <td>{{ supply_item.unit_number }}</td>
+            <td>{{ supply_item.unit_price | currency }}</td>
+            <td>{{ supply_item.total_price | currency }}</td>
+          </tr>
+        {% endfor %}
+        <tr>
+          <td class="b-blue" colspan="4">{% translate "Total supply Cost" %}</td>
+          <td class="b-blue">{{ gdd.planned_budget.in_kind_amount_local|add:gdd.planned_budget.partner_supply_local | currency }}</td>
+        </tr>
+        <tbody>
+      </table>
+
+      <table class="bordered mt-20">
+        <tbody>
+        <tr>
+          <td colspan="2" class="b-navy">{% translate "Others" %}</td>
+        </tr>
+        <tr>
+          <td class="b-gray w-p20">{% translate "Partner non-financial contribution" %}</td>
+          <td>{{ gdd.ip_program_contribution|escape|linebreaks }}</td>
+        </tr>
+        <tr>
+          <td class="b-gray w-p20">{% translate "Cash Transfer modality" %}</td>
+          <td>{{ gdd.get_cash_transfer_modalities_display }}</td>
+        </tr>
+        <tr>
+          <td class="b-gray w-p20">{% translate "Activation Protocol" %}</td>
+          <td>{{ gdd.activation_protocol }}</td>
+        </tr>
+        <tbody>
+      </table>
+
+      <table class="just-border mt-20">
+        <tbody>
+          <tr>
+            <td colspan="2" class="b-navy">{% translate "Signatures and date" %}</td>
+          </tr>
+          <tr>
+            <td>
+              <span>{% translate "Government Authorized Officer" %}:</span><br/>
+              <span>{% translate "Signature" %}:</span><br/>
+              <span>{% translate "Date" %}:</span>
+            </td>
+            <td>
+              <span>{% translate "UNICEF Authorized Officer" %}:</span><br/>
+              <span>{% translate "Signature" %}:</span><br/>
+              <span>{% translate "Date" %}:</span>
+            </td>
+          </tr>
+        <tbody>
+      </table>
+
+      <table class="just-border mt-20">
+        <tbody>
+          <tr>
+            <td colspan="4" class="b-navy">{% translate "Signatures and date" %}</td>
+          </tr>
+          <tr>
+            <td class="bold w-p20">{% translate "Date Uploaded" %}</td>
+            <td class="bold w-p30">{% translate "Document Type" %}</td>
+            <td class="bold w-p40">{% translate "Document" %}</td>
+            <td class="bold w-p10">{% translate "Invalid" %}</td>
+          </tr>
+          {% for attachment in gdd.attachments.all %}
+            <tr>
+              <td>{{ attachment.created }}</td>
+              <td>{{ attachment.type.get_name_display }}</td>
+              <td>{% if attachment.attachment_file.last %}{{ domain }}{{ attachment.attachment_file.last.file_link }}{% else %}{{ attachment.attachment.url }}{% endif %}</td>
+              <td>{% if not attachment.active %}{% translate "Yes" %}{% else %}{% translate "No" %}{% endif %}</td>
+            </tr>
+          {% endfor %}
+        <tbody>
+      </table>
+    </div>
+    <div id="footer_content" style="text-align: right">
+      <pdf:pagenumber/>
+    </div>
+  {% endif %}
+{% endblock %}

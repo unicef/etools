@@ -10,6 +10,7 @@ from rest_framework_swagger.renderers import OpenAPIRenderer
 from etools.applications.core.schemas import get_schema_view, get_swagger_view
 from etools.applications.core.urlresolvers import decorator_include
 from etools.applications.core.views import IssueJWTRedirectView, logout_view, MainView, SocialLogoutView
+from etools.applications.locations.prp_views import PRPLocationListAPIView
 from etools.applications.locations.views import (
     CartoDBTablesView,
     LocationQuerySetView,
@@ -70,6 +71,7 @@ urlpatterns = [
     re_path(r'^logout/$', logout_view, name='logout'),
 
     re_path(r'^api/static_data/$', StaticDataView.as_view({'get': 'list'}), name='public_static'),
+    re_path(r'^api/prp-locations/$', PRPLocationListAPIView.as_view(), name='prp-location-list'),
 
     # ***************  API version 1  ********************
     # todo: check if able to remove the next 3 lines
@@ -141,6 +143,12 @@ urlpatterns = [
     re_path('^social/', include('social_django.urls', namespace='social')),
     re_path(r'^social/unicef-logout/', SocialLogoutView.as_view(), name='social-logout'),
     re_path('^monitoring/', include('etools.libraries.monitoring.urls')),
+
+    # *************** Government Digital Document API ******************
+    re_path(
+        r'^api/gdd/',
+        include('etools.applications.governments.urls', namespace='governments_api'),
+    ),
 ]
 
 

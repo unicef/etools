@@ -5,6 +5,7 @@ from celery.utils.log import get_task_logger
 from unicef_vision.exceptions import VisionException
 
 from etools.applications.funds.synchronizers import FundReservationsSynchronizer
+from etools.applications.governments.synchronizers import EWPsSynchronizer
 from etools.applications.partners.synchronizers import DirectCashTransferSynchronizer, PartnerSynchronizer
 from etools.applications.reports.synchronizers import ProgrammeSynchronizer, RAMSynchronizer
 from etools.applications.users.models import Country
@@ -20,6 +21,7 @@ SYNC_HANDLERS = {
     'fund_reservation': FundReservationsSynchronizer,
     # 'fund_commitment': FundCommitmentSynchronizer,
     'dct': DirectCashTransferSynchronizer,
+    'ewp': EWPsSynchronizer,
 }
 
 
