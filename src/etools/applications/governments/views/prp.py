@@ -33,7 +33,6 @@ class PRPGDDListAPIView(QueryStringFilterMixin, ListAPIView):
 
     queryset = GDD.objects.filter(
         Q(status=GDD.DRAFT, date_sent_to_partner__isnull=False) | ~Q(status=GDD.DRAFT),
-        reporting_requirements__isnull=False,
         in_amendment=False,
     ).prefetch_related(
         'result_links__cp_output',
