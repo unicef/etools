@@ -1736,6 +1736,7 @@ class GDDReviewNotification(TimeStampedModel):
         if review.authorized_officer.id not in notified_users:
             cls.objects.create(review=review, user=review.authorized_officer)
 
+
 class GDDPRCOfficerReview(GDDReviewQuestionnaire, TimeStampedModel):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
