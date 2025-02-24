@@ -477,7 +477,7 @@ class GDDSyncResultsStructure(RetrieveUpdateAPIView):
         partner_ewp_activities = EWPActivity.objects.filter(partners__in=[gpd.partner or gpd.agreement.partner])
         partner_ewps = GovernmentEWP.objects.filter(ewp_activities__in=partner_ewp_activities).distinct()
 
-        qs = EWPOutput.objects.filter(workplan__in=partner_ewps)
+        qs = EWPOutput.objects.filter(workplan__in=partner_ewps).distinct()
         return Response(self.get_serializer(qs, many=True).data)
 
     def update(self, request, *args, **kwargs):
