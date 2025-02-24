@@ -51,7 +51,18 @@ class UserViewSet(mixins.ListModelMixin,
     pagination_class = CustomDynamicPageNumberPagination
 
     def get_queryset(self):
-        return get_user_model().objects.filter(realms__country__schema_name=connection.tenant.schema_name).distinct()
+        schema_name = connection.tenant.schema_name
+        User = get_user_model()
+
+        queryset = User.objects.filter(realms__country__schema_name=schema_name)
+
+        has_active_location = self.request.query_params.get('hasActiveLocation')
+        if has_active_location == "1":
+            queryset = queryset.filter(profile__organization__partner__points_of_interest__isnull=False)
+        elif has_active_location == "0":
+            queryset = queryset.filter(profile__organization__partner__points_of_interest__isnull=True)
+
+        return queryset.distinct()
 
     filter_backends = (SearchFilter, OrderingFilter)
     search_fields = ('email', 'first_name', 'last_name', 'profile__organization__name', 'profile__organization__vendor_number')
