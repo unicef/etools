@@ -353,19 +353,21 @@ class TransferCheckinSerializer(TransferBaseSerializer):
             if new_transfer.transfer_subtype == models.Transfer.SHORT:
                 quantity = original_item.quantity - checkin_item['quantity']
                 original_item.quantity = checkin_item['quantity']
-                original_item.save(update_fields=['quantity'])
+                original_item.origin_transfer = original_item.transfer
+                original_item.save(update_fields=['quantity', 'origin_transfer'])
             else:  # is surplus
                 quantity = checkin_item['quantity'] - original_item.quantity
 
             _item = models.Item(
                 transfer=new_transfer,
+                origin_transfer=original_item.transfer,
                 quantity=quantity,
                 material=original_item.material,
                 hidden=original_item.should_be_hidden(),
                 **model_to_dict(
                     original_item,
                     exclude=['id', 'created', 'modified', 'transfer', 'transfers_history', 'quantity',
-                             'material', 'hidden']
+                             'material', 'hidden', 'origin_transfer']
                 )
             )
             _item.save()
@@ -511,7 +513,8 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
                 original_item.transfers_history.add(original_item.transfer)
                 original_item.transfer = self.instance
                 original_item.wastage_type = wastage_type
-                original_item.save(update_fields=['transfer', 'wastage_type'])
+                original_item.origin_transfer = original_item.transfer
+                original_item.save(update_fields=['transfer', 'wastage_type', 'origin_transfer'])
             elif original_item.quantity - checkout_item['quantity'] < 0:
                 raise ValidationError(_('Attempting to checkout more items than available'))
             else:
@@ -520,13 +523,14 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
 
                 new_item = models.Item(
                     transfer=self.instance,
+                    origin_transfer=original_item.transfer,
                     wastage_type=wastage_type,
                     quantity=checkout_item['quantity'],
                     material=original_item.material,
                     **model_to_dict(
                         original_item,
                         exclude=['id', 'created', 'modified', 'transfer', 'wastage_type',
-                                 'transfers_history', 'quantity', 'material']
+                                 'transfers_history', 'quantity', 'material', 'origin_transfer']
                     )
                 )
                 new_item.save()
