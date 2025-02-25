@@ -2,12 +2,20 @@ from django.contrib.auth import get_user_model
 from django.db import connection
 from django.db.models import Q
 
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, viewsets
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.viewsets import GenericViewSet
 
 from etools.applications.last_mile import models
+from etools.applications.last_mile.admin_panel.filters import (
+    ALERT_TYPES,
+    AlertNotificationFilter,
+    LocationsFilter,
+    UserFilter,
+    UserLocationsFilter,
+)
 from etools.applications.last_mile.admin_panel.serializers import (
     AlertNotificationCreateSerializer,
     AlertNotificationCustomeSerializer,
@@ -28,12 +36,6 @@ from etools.applications.last_mile.permissions import IsIPLMEditor
 from etools.applications.locations.models import Location
 from etools.applications.organizations.models import Organization
 from etools.applications.users.models import Group, Realm
-
-ALERT_TYPES = {
-    "LMSM Focal Point": "Wastage Notification",
-    "LMSM Alert Receipt": "Acknowledgement by IP",
-    "Waybill Recipient": "Waybill Recipient"
-}
 
 
 class CustomDynamicPageNumberPagination(PageNumberPagination):
@@ -64,8 +66,9 @@ class UserViewSet(mixins.ListModelMixin,
 
         return queryset.distinct()
 
-    filter_backends = (SearchFilter, OrderingFilter)
+    filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
     search_fields = ('email', 'first_name', 'last_name', 'profile__organization__name', 'profile__organization__vendor_number')
+    filterset_class = UserFilter
     ordering_fields = [
         'id',
         'email',
@@ -119,7 +122,8 @@ class LocationsViewSet(mixins.ListModelMixin,
 
     queryset = models.PointOfInterest.objects.all().order_by('id')
 
-    filter_backends = (SearchFilter, OrderingFilter)
+    filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
+    filterset_class = LocationsFilter
     ordering_fields = [
         'id',
         'poi_type',
@@ -155,9 +159,19 @@ class UserLocationsViewSet(mixins.ListModelMixin,
             return base_qs.filter(profile__organization__partner__points_of_interest__isnull=False)
         return base_qs
 
-    filter_backends = (SearchFilter,)
+    filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
+    filterset_class = UserLocationsFilter
 
-    search_fields = ('first_name', 'email')
+    ordering_fields = [
+        'first_name',
+        'email',
+        'last_name',
+        'profile__organization__name',
+        'profile__organization__vendor_number',
+        'profile__organization__partner__points_of_interest__name'
+    ]
+
+    search_fields = ('first_name', 'email', 'last_name', 'profile__organization__name', 'profile__organization__vendor_number', 'profile__organization__partner__points_of_interest__name')
 
 
 class AlertNotificationViewSet(mixins.ListModelMixin,
@@ -188,7 +202,14 @@ class AlertNotificationViewSet(mixins.ListModelMixin,
     def get_queryset(self):
         return Realm.objects.filter(country__schema_name=connection.tenant.schema_name, group__name__in=ALERT_TYPES.keys()).distinct().order_by('id')
 
-    filter_backends = (SearchFilter,)
+    filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
+    filterset_class = AlertNotificationFilter
+
+    ordering_fields = [
+        'user__email',
+        'user__first_name',
+        'user__last_name',
+    ]
 
     search_fields = ('user__email', 'user__first_name', 'user__last_name')
 
