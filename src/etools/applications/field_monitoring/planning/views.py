@@ -21,6 +21,7 @@ from rest_framework.views import APIView
 from unicef_restlib.views import NestedViewSetMixin
 from unicef_snapshot.models import Activity as HistoryActivity
 
+from applications.field_monitoring.planning.actions.duplicate_monitoring_activity import DuplicateMonitoringActivity
 from etools.applications.audit.models import UNICEFUser
 from etools.applications.field_monitoring.fm_settings.models import Question
 from etools.applications.field_monitoring.fm_settings.serializers import FMCommonAttachmentSerializer
@@ -63,7 +64,7 @@ from etools.applications.field_monitoring.planning.serializers import (
     MonitoringActivitySerializer,
     TemplatedQuestionSerializer,
     TPMConcernSerializer,
-    YearPlanSerializer,
+    YearPlanSerializer, DuplicateMonitoringActivitySerializer,
 )
 from etools.applications.field_monitoring.views import FMBaseViewSet, LinkedAttachmentsViewSet
 from etools.applications.partners.models import Intervention, PartnerOrganization
@@ -285,7 +286,12 @@ class MonitoringActivitiesViewSet(
 
 
 class DuplicateMonitoringActivityView(APIView):
-    def post(self, request, *args, **kwargs):
+    def post(self, request, monitoring_activity_id, *args, **kwargs):
+        serializer = DuplicateMonitoringActivitySerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        DuplicateMonitoringActivity().execute(int(monitoring_activity_id), request.data.get('with_checklist'))
+
         return Response(status=status.HTTP_201_CREATED)
 
 

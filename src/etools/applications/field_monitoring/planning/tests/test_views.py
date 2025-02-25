@@ -1,5 +1,5 @@
 from datetime import date, timedelta
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 
 from django.core import mail
 from django.core.management import call_command
@@ -11,6 +11,8 @@ from rest_framework import status
 from unicef_attachments.models import Attachment, AttachmentLink, FileType
 from unicef_locations.tests.factories import LocationFactory
 
+from applications.field_monitoring.planning.actions.duplicate_monitoring_activity import DuplicateMonitoringActivity, \
+    DuplicateMonitoringActivityParams
 from etools.applications.action_points.tests.factories import ActionPointCategoryFactory
 from etools.applications.attachments.tests.factories import (
     AttachmentFactory,
@@ -873,17 +875,39 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
 
 
 class TestDuplicateMonitoringActivityView(BaseTenantTestCase):
-    def test_duplicates_activity(self):
-        user = UserFactory(unicef_user=True)
-
+    def test_duplicates_activity(self) -> None:
         response = self.forced_auth_req(
             'post',
-            reverse('field_monitoring_planning:duplicate_activity', kwargs={'activity_pk': 123}),
-            user=user
+            reverse('field_monitoring_planning:duplicate_activity', kwargs={'monitoring_activity_id': 123}),
+            user=UserFactory(unicef_user=True),
+            data = {"with_checklist": True}
         )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        # self.assertEqual(len(response.data), 1)
+
+    def test_calls_action(self) -> None:
+        with patch.object(DuplicateMonitoringActivity, "execute") as mock_action:
+            self.forced_auth_req(
+            'post',
+                reverse('field_monitoring_planning:duplicate_activity',
+                        kwargs={'monitoring_activity_id': 123}),
+                user=UserFactory(unicef_user=True),
+                data={"with_checklist": True}
+            )
+
+        mock_action.assert_called_with(123, True)
+
+    def test_returns_400_when_params_are_missing(self) -> None:
+        response = self.forced_auth_req(
+            'post',
+            reverse('field_monitoring_planning:duplicate_activity', kwargs={'monitoring_activity_id': 123}),
+            user=UserFactory(unicef_user=True),
+            data={}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
 
 class TestActivityAttachmentsView(FMBaseTestCaseMixin, APIViewSetTestCase):
     base_view = 'field_monitoring_planning:activity_attachments'
