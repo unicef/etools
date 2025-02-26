@@ -203,8 +203,8 @@ class ProgrammeSynchronizer(VisionDataTenantSynchronizer):
         "SIC_NAME",
         "GIC_CODE",
         "GIC_NAME",
-        "ACTIVITY_FOCUS_CODE",
-        "ACTIVITY_FOCUS_NAME",
+        # "ACTIVITY_FOCUS_CODE",
+        # "ACTIVITY_FOCUS_NAME",
         "GENDER_MARKER_CODE",
         "GENDER_MARKER_NAME",
         "HUMANITARIAN_TAG",
@@ -255,8 +255,8 @@ class ProgrammeSynchronizer(VisionDataTenantSynchronizer):
         ("SIC_NAME", "sic_name"),
         ("GIC_CODE", "gic_code"),
         ("GIC_NAME", "gic_name"),
-        ("ACTIVITY_FOCUS_CODE", "activity_focus_code"),
-        ("ACTIVITY_FOCUS_NAME", "activity_focus_name"),
+        # ("ACTIVITY_FOCUS_CODE", "activity_focus_code"),
+        # ("ACTIVITY_FOCUS_NAME", "activity_focus_name"),
         ("HUMANITARIAN_TAG", "humanitarian_tag"),
     )
 

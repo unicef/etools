@@ -4,6 +4,8 @@ from django.contrib import admin
 from django.contrib.gis import forms
 from django.contrib.gis.geos import Point
 from django.db import transaction
+from django.db.models import CharField, F, Value
+from django.db.models.functions import Coalesce
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
@@ -123,10 +125,37 @@ class PointOfInterestAdmin(XLSXImportMixin, admin.ModelAdmin):
 class ItemInline(RestrictedEditAdminMixin, admin.TabularInline):
     extra = 0
     model = models.Item
+    fk_name = 'transfer'
     list_select_related = ('material',)
     fields = ('id', 'batch_id', 'material', 'description', 'expiry_date', 'wastage_type',
               'amount_usd', 'unicef_ro_item', 'purchase_order_item')
     readonly_fields = ('description',)
+    show_change_link = True
+
+    def get_queryset(self, request):
+        return self.model.all_objects.all()
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+class TransferInLine(RestrictedEditAdminMixin, admin.TabularInline):
+    extra = 0
+    model = models.Transfer
+    list_select_related = ('material',)
+
+    exclude = (
+        'comment', 'reason', 'proof_file', 'waybill_file', 'pd_number', 'waybill_id',
+        'purchase_order_id', 'is_shipment', 'origin_check_out_at', 'system_origin_check_out_at',
+        'destination_check_in_at', 'system_destination_check_in_at'
+    )
+
     show_change_link = True
 
     def has_add_permission(self, request, obj=None):
@@ -146,24 +175,30 @@ class TransferAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
         'transfer_subtype', 'origin_point', 'destination_point', 'from_partner_organization', 'recipient_partner_organization'
     )
     list_filter = ('status', 'transfer_type', 'transfer_subtype')
-    search_fields = ('name', 'status')
+    search_fields = ('name', 'status', 'origin_point__name', 'destination_point__name', 'partner_organization__organization__name')
     raw_id_fields = ('partner_organization', 'checked_in_by', 'checked_out_by',
                      'origin_point', 'destination_point', 'origin_transfer', 'from_partner_organization', 'recipient_partner_organization')
     inlines = (ProofTransferAttachmentInline, ItemInline)
 
     def get_queryset(self, request):
-        qs = super(TransferAdmin, self).get_queryset(request)\
-            .select_related('partner_organization', 'partner_organization__organization',
-                            'origin_point', 'destination_point', 'from_partner_organization', 'recipient_partner_organization')\
-            .prefetch_related('items')
+        qs = super(TransferAdmin, self).get_queryset(request)
+        qs = qs.select_related(
+            'partner_organization', 'partner_organization__organization',
+            'origin_point', 'destination_point'
+        ).prefetch_related('items')
+
+        qs = qs.annotate(
+            display_name_annotation=Coalesce(
+                F('name'),
+                F('unicef_release_order'),
+                Value('', output_field=CharField())
+            )
+        )
         return qs
 
     def display_name(self, obj):
-        if obj.name:
-            return obj.name
-        elif obj.unicef_release_order:
-            return obj.unicef_release_order
-        return obj.id
+        return obj.name or obj.unicef_release_order or obj.id
+    display_name.admin_order_field = 'display_name_annotation'
 
 
 class PartnerMaterialInline(admin.TabularInline):
@@ -192,6 +227,19 @@ class ItemAdmin(XLSXImportMixin, admin.ModelAdmin):
     raw_id_fields = ('transfer', 'transfers_history', 'material')
     list_filter = ('wastage_type', 'hidden')
     readonly_fields = ('destination_point_name',)
+
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+
+        if 'transfer' in form.base_fields:
+            form.base_fields['transfer'].required = True
+        if 'wastage_type' in form.base_fields:
+            form.base_fields['wastage_type'].required = False
+        if 'uom' in form.base_fields:
+            form.base_fields['uom'].required = False
+        if 'conversion_factor' in form.base_fields:
+            form.base_fields['conversion_factor'].required = False
+        return form
 
     def destination_point_name(self, obj):
         if obj.transfer and obj.transfer.destination_point:
@@ -375,6 +423,55 @@ class ItemAdmin(XLSXImportMixin, admin.ModelAdmin):
 class TransferEvidenceAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
     raw_id_fields = ('transfer', 'user')
     inlines = [TransferEvidenceAttachmentInline]
+
+
+@admin.register(models.TransferHistory)
+class TransferHistoryAdmin(admin.ModelAdmin):
+    list_display = ('origin_transfer_name', 'list_sub_transfers')
+    readonly_fields = ('origin_transfer_id', 'origin_transfer')
+
+    def origin_transfer_name(self, obj):
+        try:
+            return models.Transfer.objects.get(pk=obj.origin_transfer_id).name
+        except models.Transfer.DoesNotExist:
+            return '-'
+
+    def list_sub_transfers(self, obj):
+        transfers = models.Transfer.objects.filter(transfer_history=obj).all().order_by('id')
+        return ", ".join([t.name for t in transfers])
+
+    def origin_transfer(self, obj):
+        if obj.origin_transfer_id:
+            url = reverse('admin:last_mile_transfer_change', args=[obj.origin_transfer_id])
+            return format_html('<a href="{}">{}</a>', url, models.Transfer.objects.get(pk=obj.origin_transfer_id).name)
+        return '-'
+    origin_transfer.short_description = 'Origin Transfer'
+
+    def get_search_results(self, request, queryset, search_term):
+        queryset, use_distinct = super().get_search_results(request, queryset, search_term)
+        if search_term:
+            matching_transfers = models.Transfer.objects.filter(name__icontains=search_term).values_list('id', flat=True)
+            queryset |= self.model.objects.filter(origin_transfer_id__in=matching_transfers)
+        return queryset, use_distinct
+
+    inlines = [TransferInLine]
+
+
+@admin.register(models.ItemTransferHistory)
+class ItemTransferHistoryAdmin(admin.ModelAdmin):
+    list_display = ('item', 'transfer', 'items_count', 'view_items_link')
+    list_filter = ('transfer',)
+    search_fields = ('transfer__name', 'transfer__partner_organization__organization__name', 'transfer__destination_point__name', 'item')
+
+    def items_count(self, obj):
+        return models.ItemTransferHistory.objects.filter(transfer=obj.transfer).count()
+    items_count.short_description = 'Item Count'
+
+    def view_items_link(self, obj):
+        """ Link to the transfer detail page with items listed """
+        url = reverse("admin:last_mile_transfer_change", args=[obj.transfer.id])
+        return format_html(f'<a href="{url}">View Transfer</a>')
+    view_items_link.short_description = "Transfer Details"
 
 
 admin.site.register(models.PointOfInterestType)

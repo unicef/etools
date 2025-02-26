@@ -375,8 +375,8 @@ class TestProgrammeSynchronizer(BaseTenantTestCase):
             "SIC_NAME": "",
             "GIC_CODE": "",
             "GIC_NAME": "",
-            "ACTIVITY_FOCUS_CODE": "",
-            "ACTIVITY_FOCUS_NAME": "",
+            # "ACTIVITY_FOCUS_CODE": "",
+            # "ACTIVITY_FOCUS_NAME": "",
             "GENDER_MARKER_CODE": "",
             "GENDER_MARKER_NAME": "",
             "HUMANITARIAN_TAG": "",
@@ -508,8 +508,8 @@ class TestProgrammeSynchronizer(BaseTenantTestCase):
         self.data["SIC_NAME"] = "S_NAME"
         self.data["GIC_CODE"] = "G_CODE"
         self.data["GIC_NAME"] = "G_NAME"
-        self.data["ACTIVITY_FOCUS_CODE"] = "A_FCODE"
-        self.data["ACTIVITY_FOCUS_NAME"] = "A_FNAME"
+        # self.data["ACTIVITY_FOCUS_CODE"] = "A_FCODE"
+        # self.data["ACTIVITY_FOCUS_NAME"] = "A_FNAME"
         self.data["HUMANITARIAN_TAG"] = "H_TAG"
         records = [self.data]
         result = self.adapter._clean_records(records)
@@ -531,8 +531,8 @@ class TestProgrammeSynchronizer(BaseTenantTestCase):
                 "sic_name": "S_NAME",
                 "gic_code": "G_CODE",
                 "gic_name": "G_NAME",
-                "activity_focus_code": "A_FCODE",
-                "activity_focus_name": "A_FNAME",
+                # "activity_focus_code": "A_FCODE",
+                # "activity_focus_name": "A_FNAME",
                 "humanitarian_tag": "H_TAG",
             }}
         })

@@ -14,6 +14,7 @@ from unicef_attachments.models import FileType as AttachmentFileType
 
 from etools.applications.attachments.models import AttachmentFlat
 from etools.applications.funds.models import FundsReservationItem
+from etools.applications.governments.models import GDDRisk
 from etools.applications.locations.models import Location
 from etools.applications.partners.models import (
     Agreement,
@@ -86,6 +87,7 @@ class PMPStaticDropdownsListAPIView(APIView):
         sea_risk_ratings = choices_to_json_ready(PartnerOrganization.ALL_COMBINED_RISK_RATING)
         gender_equity_sustainability_ratings = choices_to_json_ready(Intervention.RATING_CHOICES, sort_choices=False)
         risk_types = choices_to_json_ready(InterventionRisk.RISK_TYPE_CHOICES, sort_choices=False)
+        gpd_risk_types = choices_to_json_ready(GDDRisk.RISK_TYPE_CHOICES, sort_choices=False)
         cash_transfer_modalities = choices_to_json_ready(Intervention.CASH_TRANSFER_CHOICES, sort_choices=False)
 
         local_currency = local_workspace.local_currency.id if local_workspace.local_currency else None
@@ -111,6 +113,7 @@ class PMPStaticDropdownsListAPIView(APIView):
                 'partner_file_types': partner_file_types,
                 'sea_risk_ratings': sea_risk_ratings,
                 'gender_equity_sustainability_ratings': gender_equity_sustainability_ratings,
+                'gpd_risk_types': gpd_risk_types,
                 'risk_types': risk_types,
                 'cash_transfer_modalities': cash_transfer_modalities,
             },
