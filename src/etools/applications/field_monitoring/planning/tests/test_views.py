@@ -11,8 +11,8 @@ from rest_framework import status
 from unicef_attachments.models import Attachment, AttachmentLink, FileType
 from unicef_locations.tests.factories import LocationFactory
 
-from applications.field_monitoring.planning.actions.duplicate_monitoring_activity import DuplicateMonitoringActivity, \
-    DuplicateMonitoringActivityParams
+from etools.applications.field_monitoring.planning.actions.duplicate_monitoring_activity import (DuplicateMonitoringActivity,
+                                                                                          MonitoringActivityNotFound)
 from etools.applications.action_points.tests.factories import ActionPointCategoryFactory
 from etools.applications.attachments.tests.factories import (
     AttachmentFactory,
@@ -876,31 +876,55 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
 
 class TestDuplicateMonitoringActivityView(BaseTenantTestCase):
     def test_duplicates_activity(self) -> None:
+        activity = MonitoringActivityFactory(
+            status=MonitoringActivity.STATUS_DRAFT,
+            monitor_type=MonitoringActivity.MONITOR_TYPE_CHOICES.tpm,
+        )
+
         response = self.forced_auth_req(
             'post',
-            reverse('field_monitoring_planning:duplicate_activity', kwargs={'monitoring_activity_id': 123}),
+            reverse('field_monitoring_planning:activities-duplicate', kwargs={'pk': activity.id}),
             user=UserFactory(unicef_user=True),
             data = {"with_checklist": True}
         )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        duplicate_exists = MonitoringActivity.objects.exclude(id=activity.id).get(
+            status=MonitoringActivity.STATUS_DRAFT,
+            monitor_type=MonitoringActivity.MONITOR_TYPE_CHOICES.tpm
+        )
+        self.assertTrue(duplicate_exists)
 
     def test_calls_action(self) -> None:
         with patch.object(DuplicateMonitoringActivity, "execute") as mock_action:
             self.forced_auth_req(
             'post',
-                reverse('field_monitoring_planning:duplicate_activity',
-                        kwargs={'monitoring_activity_id': 123}),
+                reverse('field_monitoring_planning:activities-duplicate',
+                        kwargs={'pk': 123}),
                 user=UserFactory(unicef_user=True),
                 data={"with_checklist": True}
             )
 
         mock_action.assert_called_with(123, True)
 
+    def test_returns_404_when_activity_does_not_exist(self) -> None:
+        with patch.object(DuplicateMonitoringActivity, "execute") as mock_action:
+            mock_action.side_effect = MonitoringActivityNotFound
+
+            response = self.forced_auth_req(
+            'post',
+                reverse('field_monitoring_planning:activities-duplicate',
+                        kwargs={'pk': 123}),
+                user=UserFactory(unicef_user=True),
+                data={"with_checklist": False}
+            )
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
     def test_returns_400_when_params_are_missing(self) -> None:
         response = self.forced_auth_req(
             'post',
-            reverse('field_monitoring_planning:duplicate_activity', kwargs={'monitoring_activity_id': 123}),
+            reverse('field_monitoring_planning:activities-duplicate', kwargs={'pk': 123}),
             user=UserFactory(unicef_user=True),
             data={}
         )

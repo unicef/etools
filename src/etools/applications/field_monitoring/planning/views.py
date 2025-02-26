@@ -16,12 +16,11 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
 from unicef_restlib.views import NestedViewSetMixin
 from unicef_snapshot.models import Activity as HistoryActivity
 
-from applications.field_monitoring.planning.actions.duplicate_monitoring_activity import DuplicateMonitoringActivity
+from etools.applications.field_monitoring.planning.actions.duplicate_monitoring_activity import DuplicateMonitoringActivity
 from etools.applications.audit.models import UNICEFUser
 from etools.applications.field_monitoring.fm_settings.models import Question
 from etools.applications.field_monitoring.fm_settings.serializers import FMCommonAttachmentSerializer
@@ -36,6 +35,8 @@ from etools.applications.field_monitoring.permissions import (
     IsTeamMember,
     IsVisitLead,
 )
+from etools.applications.field_monitoring.planning.actions.duplicate_monitoring_activity import \
+    MonitoringActivityNotFound
 from etools.applications.field_monitoring.planning.activity_validation.validator import ActivityValid
 from etools.applications.field_monitoring.planning.export.renderers import MonitoringActivityCSVRenderer
 from etools.applications.field_monitoring.planning.export.serializers import MonitoringActivityExportSerializer
@@ -284,13 +285,15 @@ class MonitoringActivitiesViewSet(
             'Content-Disposition': 'attachment;filename=monitoring_activities_{}.csv'.format(timezone.now().date())
         })
 
-
-class DuplicateMonitoringActivityView(APIView):
-    def post(self, request, monitoring_activity_id, *args, **kwargs):
+    @action(detail=True, methods=['post'], url_path='duplicate')
+    def duplicate(self, request, pk, *args, **kwargs):
         serializer = DuplicateMonitoringActivitySerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        DuplicateMonitoringActivity().execute(int(monitoring_activity_id), request.data.get('with_checklist'))
+        try:
+            DuplicateMonitoringActivity().execute(int(pk), request.data.get('with_checklist'))
+        except MonitoringActivityNotFound:
+            return Response(status=status.HTTP_404_NOT_FOUND, data={'detail': 'Monitoring Activity not found'})
 
         return Response(status=status.HTTP_201_CREATED)
 
