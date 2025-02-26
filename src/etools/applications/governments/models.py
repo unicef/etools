@@ -1735,6 +1735,9 @@ class GDDReviewNotification(TimeStampedModel):
 
         if review.authorized_officer.id not in notified_users:
             cls.objects.create(review=review, user=review.authorized_officer)
+            return True
+        
+        return False
 
 
 class GDDPRCOfficerReview(GDDReviewQuestionnaire, TimeStampedModel):
