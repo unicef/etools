@@ -1,11 +1,12 @@
 from django.contrib.auth import get_user_model
 from django.db import connection
-from django.db.models import Q
+from django.db.models import OuterRef, Q, Subquery
 
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, viewsets
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from etools.applications.last_mile import models
@@ -13,6 +14,7 @@ from etools.applications.last_mile.admin_panel.constants import ALERT_TYPES
 from etools.applications.last_mile.admin_panel.filters import (
     AlertNotificationFilter,
     LocationsFilter,
+    TransferHistoryFilter,
     UserFilter,
     UserLocationsFilter,
 )
@@ -28,6 +30,7 @@ from etools.applications.last_mile.admin_panel.serializers import (
     PointOfInterestTypeAdminSerializer,
     TransferHistoryAdminSerializer,
     TransferItemSerializer,
+    TransferLogAdminSerializer,
     UserAdminCreateSerializer,
     UserAdminSerializer,
     UserAdminUpdateSerializer,
@@ -282,5 +285,43 @@ class TransferHistoryListView(mixins.ListModelMixin, GenericViewSet):
     pagination_class = CustomDynamicPageNumberPagination
     permission_classes = [IsIPLMEditor]
 
+    filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
+
+    filterset_class = TransferHistoryFilter
+
+    ordering_fields = ['unicef_release_order', 'transfer_name', 'transfer_type', 'status', 'partner_organization', 'destination_point', 'origin_point']
+    search_fields = ['unicef_release_order', 'transfer_name', 'transfer_type', 'status', 'partner_organization', 'destination_point', 'origin_point']
+
     def get_queryset(self):
-        return models.TransferHistory.objects.all().order_by('-id')
+        transfer_subquery = models.Transfer.objects.filter(
+            id=OuterRef('origin_transfer_id')
+        )
+        qs = models.TransferHistory.objects.all().order_by('-id').annotate(
+            unicef_release_order=Subquery(transfer_subquery.values('unicef_release_order')[:1]),
+            transfer_name=Subquery(transfer_subquery.values('name')[:1]),
+            transfer_type=Subquery(transfer_subquery.values('transfer_type')[:1]),
+            status=Subquery(transfer_subquery.values('status')[:1]),
+            partner_organization=Subquery(transfer_subquery.values('partner_organization__organization__name')[:1]),
+            destination_point=Subquery(transfer_subquery.values('destination_point__name')[:1]),
+            origin_point=Subquery(transfer_subquery.values('origin_point__name')[:1]),
+        )
+        return qs
+
+
+class TransferEvidenceListView(mixins.RetrieveModelMixin, GenericViewSet):
+    permission_classes = [IsIPLMEditor]
+    serializer_class = TransferLogAdminSerializer
+    lookup_field = 'transfer_history_id'
+
+    def get_queryset(self):
+        return models.Transfer.objects.all()
+
+    def retrieve(self, request, *args, **kwargs):
+        transfer_history_id = self.kwargs.get(self.lookup_field)
+        queryset = models.Transfer.objects.filter(transfer_history_id=transfer_history_id)
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    class Meta:
+        model = models.Transfer
+        lookup_field = 'origin_transfer_id'

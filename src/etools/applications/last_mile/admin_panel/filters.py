@@ -5,7 +5,7 @@ from django_filters import rest_framework as filters
 
 from etools.applications.last_mile.admin_panel.constants import ALERT_TYPES
 from etools.applications.last_mile.admin_panel.serializers import PointOfInterestAdminSerializer
-from etools.applications.last_mile.models import PointOfInterest
+from etools.applications.last_mile.models import PointOfInterest, TransferHistory
 from etools.applications.users.models import Realm
 
 
@@ -115,3 +115,31 @@ class AlertNotificationFilter(filters.FilterSet):
     class Meta:
         model = Realm
         fields = ('email',)
+
+
+class TransferHistoryFilter(filters.FilterSet):
+    unicef_release_order = filters.CharFilter(
+        field_name='unicef_release_order', lookup_expr='icontains', label='UNICEF Release Order'
+    )
+    transfer_name = filters.CharFilter(
+        field_name='transfer_name', lookup_expr='icontains', label='Transfer Name'
+    )
+    transfer_type = filters.CharFilter(
+        field_name='transfer_type', lookup_expr='icontains', label='Transfer Type'
+    )
+    status = filters.CharFilter(
+        field_name='status', lookup_expr='icontains', label='Status'
+    )
+    partner_organization = filters.CharFilter(
+        field_name='partner_organization_name', lookup_expr='icontains', label='Partner Organization'
+    )
+    origin_point = filters.CharFilter(
+        field_name='origin_point_name', lookup_expr='icontains', label='Origin Point'
+    )
+    destination_point = filters.CharFilter(
+        field_name='destination_point_name', lookup_expr='icontains', label='Destination Point'
+    )
+
+    class Meta:
+        model = TransferHistory
+        fields = []

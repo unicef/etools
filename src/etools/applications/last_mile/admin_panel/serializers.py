@@ -432,7 +432,24 @@ class BaseTransferSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Transfer
-        fields = ('id', 'unicef_release_order', 'name', 'transfer_type', 'status', 'partner_organization', 'destination_point', 'origin_point')
+        fields = ('unicef_release_order', 'name', 'transfer_type', 'status', 'partner_organization', 'destination_point', 'origin_point')
+
+
+class TransferLogAdminSerializer(serializers.ModelSerializer):
+    from_partner_organization = serializers.SerializerMethodField()
+    recipient_partner_organization = serializers.SerializerMethodField()
+    origin_point = serializers.CharField(source='origin_point.name')
+    destination_point = serializers.CharField(source='destination_point.name')
+
+    def get_from_partner_organization(self, obj):
+        return obj.from_partner_organization.name if obj.from_partner_organization else None
+
+    def get_recipient_partner_organization(self, obj):
+        return obj.recipient_partner_organization.name if obj.recipient_partner_organization else None
+
+    class Meta:
+        model = models.Transfer
+        fields = ('id', 'created', 'modified', 'unicef_release_order', 'name', 'transfer_type', 'transfer_subtype', 'status', 'origin_point', 'destination_point', 'from_partner_organization', 'recipient_partner_organization')
 
 
 class TransferHistoryAdminSerializer(serializers.ModelSerializer):
