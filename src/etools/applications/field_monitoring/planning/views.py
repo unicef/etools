@@ -291,11 +291,12 @@ class MonitoringActivitiesViewSet(
         serializer.is_valid(raise_exception=True)
 
         try:
-            DuplicateMonitoringActivity().execute(int(pk), request.data.get('with_checklist'))
+            duplicated_monitoring_activity = DuplicateMonitoringActivity().execute(int(pk), request.data.get('with_checklist'), user=request.user)
         except MonitoringActivityNotFound:
             return Response(status=status.HTTP_404_NOT_FOUND, data={'detail': 'Monitoring Activity not found'})
 
-        return Response(status=status.HTTP_201_CREATED)
+        return Response(self.get_serializer_class()(duplicated_monitoring_activity, context=self.get_serializer_context()).data,
+                        status=status.HTTP_201_CREATED)
 
 
 class FMUsersViewSet(

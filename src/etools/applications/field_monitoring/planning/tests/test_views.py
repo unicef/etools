@@ -1,5 +1,5 @@
 from datetime import date, timedelta
-from unittest.mock import patch, Mock
+from unittest.mock import patch, Mock, ANY
 
 from django.core import mail
 from django.core.management import call_command
@@ -889,14 +889,18 @@ class TestDuplicateMonitoringActivityView(BaseTenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        duplicate_exists = MonitoringActivity.objects.exclude(id=activity.id).get(
-            status=MonitoringActivity.STATUS_DRAFT,
+        duplicated_activity = MonitoringActivity.objects.exclude(id=activity.id).get(
+            status=MonitoringActivity.STATUS_CHECKLIST,
             monitor_type=MonitoringActivity.MONITOR_TYPE_CHOICES.tpm
         )
-        self.assertTrue(duplicate_exists)
+        self.assertTrue(duplicated_activity)
+        self.assertEqual(response.data["id"], duplicated_activity.id)
+        self.assertEqual(response.data["status"], duplicated_activity.status)
+        self.assertEqual(response.data["monitor_type"], "tpm")
 
     def test_calls_action(self) -> None:
         with patch.object(DuplicateMonitoringActivity, "execute") as mock_action:
+            mock_action.return_value = MonitoringActivityFactory()
             self.forced_auth_req(
             'post',
                 reverse('field_monitoring_planning:activities-duplicate',

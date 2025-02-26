@@ -57,7 +57,7 @@ class TestDuplicateMonitoringActivity(BaseTenantTestCase):
         self.assertFalse(duplicated_activity.questions.exists())
 
     def test_duplicates_activity_with_checklist(self):
-        duplicated_activity = DuplicateMonitoringActivity().execute(self.activity.id, with_checklist=True)
+        duplicated_activity = DuplicateMonitoringActivity().execute(self.activity.id, with_checklist=True, user=UserFactory())
 
         self.assertNotEqual(duplicated_activity.id, self.activity.id)
         self.assertEqual(duplicated_activity.status, MonitoringActivity.STATUS_CHECKLIST)
