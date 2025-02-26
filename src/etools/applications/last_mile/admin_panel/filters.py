@@ -3,15 +3,10 @@ from django.db.models import CharField, F, Func, Q
 
 from django_filters import rest_framework as filters
 
+from etools.applications.last_mile.admin_panel.constants import ALERT_TYPES
 from etools.applications.last_mile.admin_panel.serializers import PointOfInterestAdminSerializer
 from etools.applications.last_mile.models import PointOfInterest
 from etools.applications.users.models import Realm
-
-ALERT_TYPES = {
-    "LMSM Focal Point": "Wastage Notification",
-    "LMSM Alert Receipt": "Acknowledgement by IP",
-    "Waybill Recipient": "Waybill Recipient"
-}
 
 
 class UserFilter(filters.FilterSet):

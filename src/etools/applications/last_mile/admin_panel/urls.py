@@ -9,6 +9,7 @@ from etools.applications.last_mile.admin_panel.views import (
     OrganizationListView,
     ParentLocationListView,
     PointOfInterestTypeListView,
+    TransferHistoryListView,
     TransferItemViewSet,
     UserLocationsViewSet,
     UserViewSet,
@@ -24,6 +25,7 @@ router.register(r'alert-notifications', AlertNotificationViewSet, basename='aler
 router.register(r'stock-management', TransferItemViewSet, basename='stock-management')
 router.register(r'organizations', OrganizationListView, basename='organizations-admin')
 router.register(r'parent-locations', ParentLocationListView, basename='parent-locations')
+router.register(r'reversal-of-partner-transactions', TransferHistoryListView, basename='transfer-history')
 
 app_name = "last_mile_admin"
 

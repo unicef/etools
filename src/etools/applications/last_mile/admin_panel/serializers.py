@@ -8,6 +8,7 @@ from rest_framework import serializers
 from rest_framework_gis.fields import GeometryField
 
 from etools.applications.last_mile import models
+from etools.applications.last_mile.admin_panel.constants import ALERT_TYPES
 from etools.applications.last_mile.admin_panel.validators import AdminPanelValidator
 from etools.applications.last_mile.serializers import PointOfInterestTypeSerializer
 from etools.applications.locations.models import Location
@@ -414,6 +415,32 @@ class PointOfInterestTypeAdminSerializer(serializers.ModelSerializer):
 
 
 class AlertTypeSerializer(serializers.ModelSerializer):
+    name = serializers.SerializerMethodField()
+
+    def get_name(self, obj):
+        return ALERT_TYPES.get(obj.name, obj.name)
+
     class Meta:
         model = Group
         fields = ('id', 'name')
+
+
+class BaseTransferSerializer(serializers.ModelSerializer):
+    partner_organization = serializers.CharField(source='partner_organization.name')
+    origin_point = serializers.CharField(source='origin_point.name')
+    destination_point = serializers.CharField(source='destination_point.name')
+
+    class Meta:
+        model = models.Transfer
+        fields = ('id', 'unicef_release_order', 'name', 'transfer_type', 'status', 'partner_organization', 'destination_point', 'origin_point')
+
+
+class TransferHistoryAdminSerializer(serializers.ModelSerializer):
+    primary_transfer = serializers.SerializerMethodField()
+
+    def get_primary_transfer(self, obj):
+        return BaseTransferSerializer(models.Transfer.objects.filter(id=obj.origin_transfer_id).first()).data
+
+    class Meta:
+        model = models.TransferHistory
+        fields = ('id', 'created', 'modified', 'primary_transfer')

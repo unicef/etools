@@ -9,8 +9,8 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.viewsets import GenericViewSet
 
 from etools.applications.last_mile import models
+from etools.applications.last_mile.admin_panel.constants import ALERT_TYPES
 from etools.applications.last_mile.admin_panel.filters import (
-    ALERT_TYPES,
     AlertNotificationFilter,
     LocationsFilter,
     UserFilter,
@@ -26,6 +26,7 @@ from etools.applications.last_mile.admin_panel.serializers import (
     PointOfInterestAdminSerializer,
     PointOfInterestCustomSerializer,
     PointOfInterestTypeAdminSerializer,
+    TransferHistoryAdminSerializer,
     TransferItemSerializer,
     UserAdminCreateSerializer,
     UserAdminSerializer,
@@ -274,3 +275,12 @@ class AlertTypeListView(mixins.ListModelMixin, GenericViewSet):
 
     def get_queryset(self):
         return Group.objects.filter(name__in=ALERT_TYPES.keys()).order_by('id')
+
+
+class TransferHistoryListView(mixins.ListModelMixin, GenericViewSet):
+    serializer_class = TransferHistoryAdminSerializer
+    pagination_class = CustomDynamicPageNumberPagination
+    permission_classes = [IsIPLMEditor]
+
+    def get_queryset(self):
+        return models.TransferHistory.objects.all().order_by('-id')
