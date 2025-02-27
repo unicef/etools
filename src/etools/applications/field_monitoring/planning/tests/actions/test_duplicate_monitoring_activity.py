@@ -1,18 +1,17 @@
-from threading import active_count
-
 from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.field_monitoring.data_collection.tests.factories import ActivityQuestionFactory
 from etools.applications.field_monitoring.fm_settings.tests.factories import LocationSiteFactory, QuestionFactory
-from etools.applications.field_monitoring.planning.actions.duplicate_monitoring_activity import \
-    DuplicateMonitoringActivity
+from etools.applications.field_monitoring.planning.actions.duplicate_monitoring_activity import (
+    DuplicateMonitoringActivity,
+)
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
 from etools.applications.field_monitoring.planning.tests.factories import MonitoringActivityFactory
 from etools.applications.field_monitoring.tests.factories import UserFactory
 from etools.applications.organizations.tests.factories import OrganizationFactory
-from etools.applications.partners.tests.factories import PartnerFactory, InterventionFactory, AgreementFactory
-from etools.applications.reports.tests.factories import ResultFactory, OfficeFactory, SectionFactory
+from etools.applications.partners.tests.factories import AgreementFactory, InterventionFactory, PartnerFactory
+from etools.applications.reports.tests.factories import OfficeFactory, ResultFactory, SectionFactory
 
 
 class TestDuplicateMonitoringActivity(BaseTenantTestCase):

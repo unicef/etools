@@ -16,11 +16,9 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.response import Response
-
 from unicef_restlib.views import NestedViewSetMixin
 from unicef_snapshot.models import Activity as HistoryActivity
 
-from etools.applications.field_monitoring.planning.actions.duplicate_monitoring_activity import DuplicateMonitoringActivity
 from etools.applications.audit.models import UNICEFUser
 from etools.applications.field_monitoring.fm_settings.models import Question
 from etools.applications.field_monitoring.fm_settings.serializers import FMCommonAttachmentSerializer
@@ -35,8 +33,10 @@ from etools.applications.field_monitoring.permissions import (
     IsTeamMember,
     IsVisitLead,
 )
-from etools.applications.field_monitoring.planning.actions.duplicate_monitoring_activity import \
-    MonitoringActivityNotFound
+from etools.applications.field_monitoring.planning.actions.duplicate_monitoring_activity import (
+    DuplicateMonitoringActivity,
+    MonitoringActivityNotFound,
+)
 from etools.applications.field_monitoring.planning.activity_validation.validator import ActivityValid
 from etools.applications.field_monitoring.planning.export.renderers import MonitoringActivityCSVRenderer
 from etools.applications.field_monitoring.planning.export.serializers import MonitoringActivityExportSerializer
@@ -58,6 +58,7 @@ from etools.applications.field_monitoring.planning.models import (
 )
 from etools.applications.field_monitoring.planning.serializers import (
     CPOutputListSerializer,
+    DuplicateMonitoringActivitySerializer,
     FMUserSerializer,
     InterventionWithLinkedInstancesSerializer,
     MonitoringActivityActionPointSerializer,
@@ -65,7 +66,7 @@ from etools.applications.field_monitoring.planning.serializers import (
     MonitoringActivitySerializer,
     TemplatedQuestionSerializer,
     TPMConcernSerializer,
-    YearPlanSerializer, DuplicateMonitoringActivitySerializer,
+    YearPlanSerializer,
 )
 from etools.applications.field_monitoring.views import FMBaseViewSet, LinkedAttachmentsViewSet
 from etools.applications.partners.models import Intervention, PartnerOrganization
