@@ -28,6 +28,10 @@ from etools.applications.field_monitoring.data_collection.tests.factories import
 )
 from etools.applications.field_monitoring.fm_settings.models import Question
 from etools.applications.field_monitoring.fm_settings.tests.factories import QuestionFactory
+from etools.applications.field_monitoring.planning.actions.duplicate_monitoring_activity import (
+    DuplicateMonitoringActivity,
+    MonitoringActivityNotFound,
+)
 from etools.applications.field_monitoring.planning.models import MonitoringActivity, YearPlan
 from etools.applications.field_monitoring.planning.tests.factories import (
     MonitoringActivityActionPointFactory,
@@ -870,6 +874,70 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('Content-Disposition', response.headers)
         self.assertEqual(len(response.data), 24)
+
+
+class TestDuplicateMonitoringActivityView(BaseTenantTestCase):
+    def test_duplicates_activity(self) -> None:
+        activity = MonitoringActivityFactory(
+            status=MonitoringActivity.STATUS_DRAFT,
+            monitor_type=MonitoringActivity.MONITOR_TYPE_CHOICES.tpm,
+            partners=[PartnerFactory()]
+        )
+
+        response = self.forced_auth_req(
+            'post',
+            reverse('field_monitoring_planning:activities-duplicate', kwargs={'pk': activity.id}),
+            user=UserFactory(unicef_user=True),
+            data={'with_checklist': True}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        duplicated_activity = MonitoringActivity.objects.exclude(id=activity.id).get(
+            status=MonitoringActivity.STATUS_CHECKLIST,
+            monitor_type=MonitoringActivity.MONITOR_TYPE_CHOICES.tpm
+        )
+        self.assertTrue(duplicated_activity)
+        self.assertEqual(response.data['id'], duplicated_activity.id)
+        self.assertEqual(response.data['status'], duplicated_activity.status)
+        self.assertEqual(response.data['monitor_type'], 'tpm')
+
+    def test_calls_action(self) -> None:
+        user = UserFactory(unicef_user=True)
+        with patch.object(DuplicateMonitoringActivity, "execute") as mock_action:
+            mock_action.return_value = MonitoringActivityFactory()
+            self.forced_auth_req(
+                'post',
+                reverse('field_monitoring_planning:activities-duplicate',
+                        kwargs={'pk': 123}),
+                user=user,
+                data={"with_checklist": True}
+            )
+
+        mock_action.assert_called_with(123, True, user)
+
+    def test_returns_404_when_activity_does_not_exist(self) -> None:
+        with patch.object(DuplicateMonitoringActivity, "execute") as mock_action:
+            mock_action.side_effect = MonitoringActivityNotFound
+
+            response = self.forced_auth_req(
+                'post',
+                reverse('field_monitoring_planning:activities-duplicate',
+                        kwargs={'pk': 123}),
+                user=UserFactory(unicef_user=True),
+                data={"with_checklist": False}
+            )
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_returns_400_when_params_are_missing(self) -> None:
+        response = self.forced_auth_req(
+            'post',
+            reverse('field_monitoring_planning:activities-duplicate', kwargs={'pk': 123}),
+            user=UserFactory(unicef_user=True),
+            data={}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
 class TestActivityAttachmentsView(FMBaseTestCaseMixin, APIViewSetTestCase):
