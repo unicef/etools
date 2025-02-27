@@ -1,13 +1,18 @@
 from django.contrib.auth import get_user_model
 from django.db import connection
 from django.db.models import OuterRef, Q, Subquery
+from django.utils import timezone
 
+import tablib
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, viewsets
+from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
+from unicef_rest_export.renderers import ExportCSVRenderer
+from unicef_rest_export.views import ExportMixin
 
 from etools.applications.last_mile import models
 from etools.applications.last_mile.admin_panel.constants import ALERT_TYPES
@@ -27,14 +32,17 @@ from etools.applications.last_mile.admin_panel.serializers import (
     OrganizationAdminSerializer,
     PointOfInterestAdminSerializer,
     PointOfInterestCustomSerializer,
+    PointOfInterestExportSerializer,
     PointOfInterestTypeAdminSerializer,
     TransferHistoryAdminSerializer,
     TransferItemSerializer,
     TransferLogAdminSerializer,
     UserAdminCreateSerializer,
+    UserAdminExportSerializer,
     UserAdminSerializer,
     UserAdminUpdateSerializer,
     UserPointOfInterestAdminSerializer,
+    UserPointOfInterestExportSerializer,
 )
 from etools.applications.last_mile.permissions import IsIPLMEditor
 from etools.applications.locations.models import Location
@@ -48,7 +56,8 @@ class CustomDynamicPageNumberPagination(PageNumberPagination):
     max_page_size = 100
 
 
-class UserViewSet(mixins.ListModelMixin,
+class UserViewSet(ExportMixin,
+                  mixins.ListModelMixin,
                   mixins.CreateModelMixin,
                   mixins.RetrieveModelMixin,
                   mixins.UpdateModelMixin,
@@ -99,7 +108,31 @@ class UserViewSet(mixins.ListModelMixin,
             return UserAdminUpdateSerializer
         if self.action == 'create':
             return UserAdminCreateSerializer
+        if self.action == 'list_export_csv':
+            return UserAdminExportSerializer
         return UserAdminSerializer
+
+    @action(
+        detail=False,
+        methods=['get'],
+        url_path='export/csv',
+        renderer_classes=(ExportCSVRenderer,),
+    )
+    def list_export_csv(self, request, *args, **kwargs):
+        users = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(users, many=True)
+        data = serializer.data
+        dataset = tablib.Dataset()
+        if data:
+            headers = list(data[0].keys())
+            dataset.headers = headers
+            for item in data:
+                dataset.append([item.get(h) for h in headers])
+        return Response(dataset, headers={
+            'Content-Disposition': 'attachment;filename=users_{}.csv'.format(
+                timezone.now().date(),
+            )
+        })
 
 
 class LocationsViewSet(mixins.ListModelMixin,
@@ -143,7 +176,31 @@ class LocationsViewSet(mixins.ListModelMixin,
 
         if self.action in ['update', 'partial_update', 'create']:
             return PointOfInterestCustomSerializer
+        if self.action == 'list_export_csv':
+            return PointOfInterestExportSerializer
         return PointOfInterestAdminSerializer
+
+    @action(
+        detail=False,
+        methods=['get'],
+        url_path='export/csv',
+        renderer_classes=(ExportCSVRenderer,),
+    )
+    def list_export_csv(self, request, *args, **kwargs):
+        users = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(users, many=True)
+        data = serializer.data
+        dataset = tablib.Dataset()
+        if data:
+            headers = list(data[0].keys())
+            dataset.headers = headers
+            for item in data:
+                dataset.append([item.get(h) for h in headers])
+        return Response(dataset, headers={
+            'Content-Disposition': 'attachment;filename=locations_{}.csv'.format(
+                timezone.now().date(),
+            )
+        })
 
 
 class UserLocationsViewSet(mixins.ListModelMixin,
@@ -175,7 +232,33 @@ class UserLocationsViewSet(mixins.ListModelMixin,
         'profile__organization__partner__points_of_interest__name'
     ]
 
+    def get_serializer_class(self):
+        if self.action == 'list_export_csv':
+            return UserPointOfInterestExportSerializer
+
     search_fields = ('first_name', 'email', 'last_name', 'profile__organization__name', 'profile__organization__vendor_number', 'profile__organization__partner__points_of_interest__name')
+
+    @action(
+        detail=False,
+        methods=['get'],
+        url_path='export/csv',
+        renderer_classes=(ExportCSVRenderer,),
+    )
+    def list_export_csv(self, request, *args, **kwargs):
+        users = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(users, many=True)
+        data = serializer.data
+        dataset = tablib.Dataset()
+        if data:
+            headers = list(data[0].keys())
+            dataset.headers = headers
+            for item in data:
+                dataset.append([item.get(h) for h in headers])
+        return Response(dataset, headers={
+            'Content-Disposition': 'attachment;filename=user_locations_{}.csv'.format(
+                timezone.now().date(),
+            )
+        })
 
 
 class AlertNotificationViewSet(mixins.ListModelMixin,

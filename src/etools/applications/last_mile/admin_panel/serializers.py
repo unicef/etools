@@ -43,6 +43,30 @@ class UserAdminSerializer(SimpleUserSerializer):
         )
 
 
+class UserAdminExportSerializer(serializers.ModelSerializer):
+    implementing_partner = serializers.SerializerMethodField(read_only=True)
+    country = serializers.CharField(source='profile.country.name', read_only=True)
+    status = serializers.SerializerMethodField(read_only=True)
+
+    def get_status(self, obj):
+        return "Active" if obj.is_active else "Inactive"
+
+    def get_implementing_partner(self, obj):
+        return f"{obj.profile.organization.vendor_number if obj.profile.organization else '-'} - {obj.profile.organization.name if obj.profile.organization else '-'}"
+
+    class Meta:
+        model = get_user_model()
+        fields = (
+            'first_name',
+            'last_name',
+            'email',
+            'implementing_partner',
+            'country',
+            'is_active',
+            'last_login',
+        )
+
+
 class UserProfileCreationSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -220,6 +244,65 @@ class PointOfInterestAdminSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class PointOfInterestListSerializer(serializers.ListSerializer):
+    def to_representation(self, data):
+        ret = []
+        for poi in data:
+            poi_data = self.child.to_representation(poi)
+            partners = poi_data.pop('implementing_partner', [])
+            if partners:
+                partner_split = partners.split(",")
+                for partner in partner_split:
+                    poi_row = poi_data.copy()
+                    poi_row['implementing_partner'] = partner
+                    ret.append(poi_row)
+            else:
+                poi_data['implementing_partner'] = ""
+                ret.append(poi_data)
+        return ret
+
+
+class PointOfInterestExportSerializer(serializers.ModelSerializer):
+    state = serializers.SerializerMethodField()
+    region = serializers.SerializerMethodField()
+    district = serializers.SerializerMethodField()
+    primary_type = serializers.SerializerMethodField()
+    implementing_partner = serializers.SerializerMethodField()
+    lat = serializers.SerializerMethodField()
+    lng = serializers.SerializerMethodField()
+    status = serializers.SerializerMethodField()
+
+    def get_status(self, obj):
+        return "Active" if obj.is_active else "Inactive"
+
+    def get_state(self, obj):
+        return PointOfInterestAdminSerializer().extract_location_info(obj).get('country')
+
+    def get_region(self, obj):
+        return PointOfInterestAdminSerializer().extract_location_info(obj).get('region')
+
+    def get_district(self, obj):
+        return PointOfInterestAdminSerializer().extract_location_info(obj).get('district')
+
+    def get_primary_type(self, obj):
+        return obj.poi_type.name
+
+    def get_implementing_partner(self, obj):
+        partners = obj.partner_organizations.all()
+        return ",".join([f"{partner.organization.vendor_number} - {partner.organization.name}" if partner.organization else partner.name if partner.name else "-" for partner in partners])
+
+    def get_lat(self, obj):
+        return obj.point.y if obj.point else None
+
+    def get_lng(self, obj):
+        return obj.point.x if obj.point else None
+
+    class Meta:
+        model = models.PointOfInterest
+        fields = ('id', 'name', 'state', 'region', 'district', 'primary_type', 'p_code', 'lat', 'lng', 'status', 'implementing_partner')
+        list_serializer_class = PointOfInterestListSerializer
+
+
 class SimplePointOfInterestSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.PointOfInterest
@@ -271,6 +354,22 @@ class UserPointOfInterestAdminSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
         fields = ('id', 'last_name', 'first_name', 'email', 'partners', 'point_of_interest')
+
+
+class UserPointOfInterestExportSerializer(serializers.ModelSerializer):
+
+    location = serializers.SerializerMethodField()
+    implementing_partner = serializers.SerializerMethodField()
+
+    def get_implementing_partner(self, obj):
+        return f"{obj.profile.organization.vendor_number if obj.profile.organization else '-'} - {obj.profile.organization.name if obj.profile.organization else '-'}"
+
+    def get_location(self, obj):
+        return ", ".join([location.name for location in obj.profile.organization.partner.points_of_interest.all()])
+
+    class Meta:
+        model = get_user_model()
+        fields = ('id', 'first_name', 'last_name', 'email', 'implementing_partner', 'location')
 
 
 class AlertNotificationSerializer(serializers.ModelSerializer):
