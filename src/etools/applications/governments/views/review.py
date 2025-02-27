@@ -130,3 +130,14 @@ class GDDReviewNotifyView(GDDReviewMixin, GenericAPIView):
 
         GDDReviewNotification.notify_officers_for_review(review)
         return Response({})
+
+
+class GDDReviewNotifyAuthorizedOfficerView(GDDReviewMixin, GenericAPIView):
+    def post(self, request, *args, **kwargs):
+        review = self.get_object()
+
+        sent = GDDReviewNotification.notify_authorized_officer_for_review(review)
+        if not sent:
+            return Response({"already_sent_today": True}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({"success": True})

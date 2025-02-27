@@ -404,6 +404,7 @@ class EWPKeyInterventionSerializer(serializers.ModelSerializer):
 
 class EWPSyncListResultSerializer(serializers.ModelSerializer):
     cp_output_name = serializers.CharField(source="cp_output.name", read_only=True)
+    workplan_name = serializers.CharField(source="workplan.name", read_only=True)
     ram_indicators = serializers.SerializerMethodField(read_only=True)
     ewp_key_interventions = EWPKeyInterventionSerializer(many=True)
 
@@ -414,6 +415,7 @@ class EWPSyncListResultSerializer(serializers.ModelSerializer):
         model = EWPOutput
         fields = [
             'id',
+            'workplan_name',
             'cp_output_name',
             'ram_indicators',
             'ewp_key_interventions'
@@ -421,6 +423,8 @@ class EWPSyncListResultSerializer(serializers.ModelSerializer):
 
 
 class BulkSyncResultsSerializer(serializers.ListSerializer):
+
+    @transaction.atomic
     def update(self, instance, validated_data):
         result_qs = instance.result_links.all()
         existing_outputs = {r.cp_output.id for r in result_qs}
@@ -431,12 +435,15 @@ class BulkSyncResultsSerializer(serializers.ListSerializer):
         outputs_to_delete = existing_outputs.difference(outputs_to_update)
         result_qs.filter(cp_output__id__in=outputs_to_delete).delete()
 
+        instance.e_workplans.clear()
+
         for result in validated_data:
             if result['id'] in outputs_to_create:
                 ewp_output = EWPOutput.objects.get(pk=result['id'])
                 gdd_result = GDDResultLink(gdd=instance, cp_output=ewp_output, workplan=ewp_output.workplan)
                 gdd_result.save()
                 gdd_result.ram_indicators.set(result['ram_indicators'])
+                instance.e_workplans.add(ewp_output.workplan.id)
 
                 for ewp_ki in result['ewp_key_interventions']:
                     gdd_ki = GDDKeyIntervention(result_link=gdd_result, ewp_key_intervention_id=ewp_ki['id'])
