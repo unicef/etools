@@ -292,7 +292,7 @@ class MonitoringActivitiesViewSet(
         serializer.is_valid(raise_exception=True)
 
         try:
-            duplicated_monitoring_activity = DuplicateMonitoringActivity().execute(int(pk), request.data.get('with_checklist'), user=request.user)
+            duplicated_monitoring_activity = DuplicateMonitoringActivity().execute(int(pk), request.data.get('with_checklist'), request.user)
         except MonitoringActivityNotFound:
             return Response(status=status.HTTP_404_NOT_FOUND, data={'detail': 'Monitoring Activity not found'})
 

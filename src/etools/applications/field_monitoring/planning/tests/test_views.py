@@ -881,6 +881,7 @@ class TestDuplicateMonitoringActivityView(BaseTenantTestCase):
         activity = MonitoringActivityFactory(
             status=MonitoringActivity.STATUS_DRAFT,
             monitor_type=MonitoringActivity.MONITOR_TYPE_CHOICES.tpm,
+            partners=[PartnerFactory()]
         )
 
         response = self.forced_auth_req(
@@ -901,17 +902,18 @@ class TestDuplicateMonitoringActivityView(BaseTenantTestCase):
         self.assertEqual(response.data['monitor_type'], 'tpm')
 
     def test_calls_action(self) -> None:
+        user = UserFactory(unicef_user=True)
         with patch.object(DuplicateMonitoringActivity, "execute") as mock_action:
             mock_action.return_value = MonitoringActivityFactory()
             self.forced_auth_req(
                 'post',
                 reverse('field_monitoring_planning:activities-duplicate',
                         kwargs={'pk': 123}),
-                user=UserFactory(unicef_user=True),
+                user=user,
                 data={"with_checklist": True}
             )
 
-        mock_action.assert_called_with(123, True)
+        mock_action.assert_called_with(123, True, user)
 
     def test_returns_404_when_activity_does_not_exist(self) -> None:
         with patch.object(DuplicateMonitoringActivity, "execute") as mock_action:
