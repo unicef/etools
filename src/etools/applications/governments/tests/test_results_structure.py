@@ -22,11 +22,13 @@ class TestSyncResultsStructure(BaseGDDTestCase):
         self.key_intervention_1 = EWPKeyInterventionFactory(ewp_output=self.ewp_output_1)
         self.ewp_activity_1 = EWPActivityFactory(
             ewp_key_intervention=self.key_intervention_1, workplan=self.ewp_output_1.workplan)
+        self.ewp_activity_1.partners.add(self.gdd.partner)
 
         self.ewp_output_2 = EWPOutputFactory()
         self.key_intervention_2 = EWPKeyInterventionFactory(ewp_output=self.ewp_output_2)
         self.ewp_activity_2 = EWPActivityFactory(
             ewp_key_intervention=self.key_intervention_2, workplan=self.ewp_output_2.workplan)
+        self.ewp_activity_2.partners.add(self.gdd.partner)
 
         self.gdd.e_workplans.set([self.ewp_activity_1.workplan.id, self.ewp_activity_2.workplan.id])
 
