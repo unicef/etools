@@ -29,12 +29,14 @@ from etools.applications.last_mile.admin_panel.serializers import (
     AlertNotificationSerializer,
     AlertTypeSerializer,
     LocationsAdminSerializer,
+    MaterialAdminSerializer,
     OrganizationAdminSerializer,
     PointOfInterestAdminSerializer,
     PointOfInterestCustomSerializer,
     PointOfInterestExportSerializer,
     PointOfInterestTypeAdminSerializer,
     TransferHistoryAdminSerializer,
+    TransferItemCreateSerializer,
     TransferItemSerializer,
     TransferLogAdminSerializer,
     UserAdminCreateSerializer,
@@ -301,7 +303,7 @@ class AlertNotificationViewSet(mixins.ListModelMixin,
     search_fields = ('user__email', 'user__first_name', 'user__last_name')
 
 
-class TransferItemViewSet(mixins.ListModelMixin, GenericViewSet):
+class TransferItemViewSet(mixins.ListModelMixin, GenericViewSet, mixins.CreateModelMixin):
     permission_classes = [IsIPLMEditor]
     serializer_class = TransferItemSerializer
     pagination_class = CustomDynamicPageNumberPagination
@@ -311,6 +313,11 @@ class TransferItemViewSet(mixins.ListModelMixin, GenericViewSet):
         if poi_id:
             return models.Transfer.objects.filter(status=models.Transfer.COMPLETED, origin_point__id=poi_id, items__isnull=False, items__hidden=False).order_by('-id')
         return models.Transfer.objects.none()
+
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return TransferItemCreateSerializer
+        return TransferItemSerializer
 
     filter_backends = (SearchFilter,)
 
@@ -353,6 +360,28 @@ class PointOfInterestTypeListView(mixins.ListModelMixin, mixins.CreateModelMixin
 
     def get_queryset(self):
         return models.PointOfInterestType.objects.all().order_by('id')
+
+    @action(
+        detail=False,
+        methods=['get'],
+        url_path='export/csv',
+        renderer_classes=(ExportCSVRenderer,),
+    )
+    def list_export_csv(self, request, *args, **kwargs):
+        users = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(users, many=True)
+        data = serializer.data
+        dataset = tablib.Dataset()
+        if data:
+            headers = list(data[0].keys())
+            dataset.headers = headers
+            for item in data:
+                dataset.append([item.get(h) for h in headers])
+        return Response(dataset, headers={
+            'Content-Disposition': 'attachment;filename=locations_type_{}.csv'.format(
+                timezone.now().date(),
+            )
+        })
 
 
 class AlertTypeListView(mixins.ListModelMixin, GenericViewSet):
@@ -408,3 +437,11 @@ class TransferEvidenceListView(mixins.RetrieveModelMixin, GenericViewSet):
     class Meta:
         model = models.Transfer
         lookup_field = 'origin_transfer_id'
+
+
+class MaterialListView(mixins.ListModelMixin, GenericViewSet):
+    serializer_class = MaterialAdminSerializer
+    permission_classes = [IsIPLMEditor]
+
+    def get_queryset(self):
+        return models.Material.objects.all().order_by('id')

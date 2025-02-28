@@ -2,13 +2,14 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password
 from django.db import transaction
+from django.utils import timezone
 from django.utils.encoding import force_str
 
 from rest_framework import serializers
 from rest_framework_gis.fields import GeometryField
 
 from etools.applications.last_mile import models
-from etools.applications.last_mile.admin_panel.constants import ALERT_TYPES
+from etools.applications.last_mile.admin_panel.constants import ALERT_TYPES, TRANSFER_MANUL_CREATION_NAME
 from etools.applications.last_mile.admin_panel.validators import AdminPanelValidator
 from etools.applications.last_mile.serializers import PointOfInterestTypeSerializer
 from etools.applications.locations.models import Location
@@ -444,7 +445,7 @@ class MaterialAdminSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Material
-        fields = ('original_uom', 'short_description', 'number')
+        fields = ('id', 'original_uom', 'short_description', 'number')
 
 
 class ItemAdminSerializer(serializers.ModelSerializer):
@@ -467,6 +468,63 @@ class TransferItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Transfer
         fields = ('items', 'destination_point', 'origin_point')
+
+
+class TransferItemDetailSerializer(serializers.Serializer):
+    item_name = serializers.CharField(required=True)
+    material = serializers.PrimaryKeyRelatedField(
+        queryset=models.Material.objects.all(),
+        required=True
+    )
+    quantity = serializers.IntegerField(required=True)
+    uom = serializers.CharField(required=True)
+
+
+class TransferItemCreateSerializer(serializers.ModelSerializer):
+
+    partner_organization = serializers.PrimaryKeyRelatedField(
+        queryset=PartnerOrganization.objects.all(),
+        write_only=True,
+        required=True
+    )
+    location = serializers.PrimaryKeyRelatedField(
+        queryset=models.PointOfInterest.objects.all(),
+        write_only=True,
+        required=True
+    )
+    items = TransferItemDetailSerializer(many=True, write_only=True, required=True)
+
+    adminValidator = AdminPanelValidator()
+
+    @transaction.atomic
+    def create(self, validated_data):
+        self.adminValidator.validate_items(validated_data.get('items', []))
+        self.adminValidator.validate_partner_location(validated_data.get('location'), validated_data.get('partner_organization'))
+        items = validated_data.pop('items', [])
+        instance = models.Transfer.objects.create(
+            unicef_release_order=f"{TRANSFER_MANUL_CREATION_NAME} {timezone.now().strftime('%d-%m-%Y %H:%M:%S')}",
+            partner_organization=validated_data.get('partner_organization'),
+            origin_point=models.PointOfInterest.objects.get(pk=1),  # Unicef warehouse
+            destination_point=validated_data.get('location'),
+            transfer_type=models.Transfer.DELIVERY,
+        )
+        items_to_create = []
+        for item in items:
+            items_to_create.append(
+                models.Item(
+                    transfer=instance,
+                    material=item.get('material'),
+                    quantity=item.get('quantity'),
+                    uom=item.get('uom'),
+                    batch_id=item.get('item_name'),
+                )
+            )
+        models.Item.objects.bulk_create(items_to_create)
+        return instance
+
+    class Meta:
+        model = models.Transfer
+        fields = ('id', 'items', 'partner_organization', 'location')
 
 
 class OrganizationAdminSerializer(serializers.ModelSerializer):

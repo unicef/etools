@@ -3,7 +3,8 @@ from django.utils.translation import gettext_lazy as _
 
 from rest_framework.exceptions import ValidationError
 
-from etools.applications.last_mile.models import PointOfInterestType
+from etools.applications.last_mile.models import Material, PointOfInterest, PointOfInterestType
+from etools.applications.partners.models import PartnerOrganization
 from etools.applications.users.models import Group, Realm
 
 
@@ -40,3 +41,20 @@ class AdminPanelValidator:
             raise ValidationError({"message": _("Organization not exist")})
         if not getattr(obj.profile.organization, 'partner', None):
             raise ValidationError({"message": _("Partner not exist under organization")})
+
+    def validate_items(self, items: list):
+        uom_types = [uom[0] for uom in Material.UOM]
+        if not items:
+            raise ValidationError({"message": _("Items not sent")})
+        for item in items:
+            if item.get('quantity', 0) < 1:
+                raise ValidationError({"message": _("Quantity must be greater than 0")})
+            uom = item.get('uom')
+            if not uom:
+                raise ValidationError({"message": _("UOM not sent")})
+            if uom not in uom_types:
+                raise ValidationError({"message": _("UOM not valid")})
+
+    def validate_partner_location(self, location: PointOfInterest, partner: PartnerOrganization):
+        if partner not in location.partner_organizations.all():
+            raise ValidationError({"message": _("Partner not exist under location")})
