@@ -3,6 +3,7 @@ from functools import cached_property
 from django.conf import settings
 from django.contrib.gis.db.models import PointField
 from django.db import models
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from model_utils import FieldTracker
@@ -92,6 +93,24 @@ class PointOfInterest(TimeStampedModel, models.Model):
         super().save(**kwargs)
 
 
+class TransferHistoryManager(models.Manager):
+    def get_or_build_by_origin_id(self, *origin_id_candidates):
+        origin_id = next((oid for oid in origin_id_candidates if oid is not None), None)
+
+        history = self.filter(origin_transfer_id=origin_id).first()
+        if history is None:
+            history = self.model(origin_transfer_id=origin_id)
+        return history
+
+
+class TransferHistory(TimeStampedModel, models.Model):
+    origin_transfer_id = models.IntegerField(unique=True)
+    objects = TransferHistoryManager()
+
+    class Meta:
+        ordering = ("-created",)
+
+
 class Transfer(TimeStampedModel, models.Model):
     PENDING = 'PENDING'
     COMPLETED = 'COMPLETED'
@@ -140,6 +159,18 @@ class Transfer(TimeStampedModel, models.Model):
     transfer_subtype = models.CharField(max_length=30, choices=TRANSFER_SUBTYPE, null=True, blank=True)
     status = models.CharField(max_length=30, choices=STATUS, default=PENDING)
 
+    from_partner_organization = models.ForeignKey(
+        PartnerOrganization,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='from_transfers'
+    )
+    recipient_partner_organization = models.ForeignKey(
+        PartnerOrganization,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='to_transfers'
+    )
     partner_organization = models.ForeignKey(
         PartnerOrganization,
         on_delete=models.CASCADE
@@ -163,6 +194,7 @@ class Transfer(TimeStampedModel, models.Model):
         related_name='origin_transfers'
     )
     origin_check_out_at = models.DateTimeField(null=True, blank=True)
+    system_origin_check_out_at = models.DateTimeField(default=timezone.now)
 
     destination_point = models.ForeignKey(
         PointOfInterest,
@@ -171,6 +203,7 @@ class Transfer(TimeStampedModel, models.Model):
         related_name='destination_transfers'
     )
     destination_check_in_at = models.DateTimeField(null=True, blank=True)
+    system_destination_check_in_at = models.DateTimeField(default=timezone.now)
     origin_transfer = models.ForeignKey(
         'self', null=True, blank=True, on_delete=models.CASCADE, related_name='following_transfers'
     )
@@ -192,6 +225,13 @@ class Transfer(TimeStampedModel, models.Model):
     )
     is_shipment = models.BooleanField(default=False)
 
+    transfer_history = models.ForeignKey(
+        TransferHistory,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='transfers'
+    )
+
     purchase_order_id = models.CharField(max_length=255, null=True, blank=True)
     waybill_id = models.CharField(max_length=255, null=True, blank=True)
 
@@ -202,6 +242,21 @@ class Transfer(TimeStampedModel, models.Model):
 
     def __str__(self):
         return f'{self.id} {self.partner_organization.name}: {self.name if self.name else self.unicef_release_order}'
+
+    def set_checkout_status(self):
+        if self.transfer_type in [self.WASTAGE, self.DISPENSE]:
+            self.status = self.COMPLETED
+
+    def add_transfer_history(self, origin_transfer_pk=None, original_transfer_pk=None):
+        history = TransferHistory.objects.get_or_build_by_origin_id(original_transfer_pk, origin_transfer_pk, self.id)
+
+        history.save()
+        history.refresh_from_db()
+
+        self.transfer_history = history
+        self.save(update_fields=['transfer_history'])
+
+        return history
 
 
 class TransferEvidence(TimeStampedModel, models.Model):
@@ -362,6 +417,13 @@ class Item(TimeStampedModel, models.Model):
         on_delete=models.SET_NULL,
         null=True, blank=True,
         related_name='items'
+    )
+
+    origin_transfer = models.ForeignKey(
+        Transfer,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='origin_items'
     )
     transfers_history = models.ManyToManyField(Transfer, through='ItemTransferHistory')
 
