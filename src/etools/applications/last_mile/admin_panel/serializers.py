@@ -76,6 +76,7 @@ class UserProfileCreationSerializer(serializers.ModelSerializer):
             'id',
             'user',
             'country',
+            'country_override',
         )
 
 
@@ -84,6 +85,8 @@ class UserAdminCreateSerializer(serializers.ModelSerializer):
     profile = UserProfileCreationSerializer()
     password = serializers.CharField(write_only=True)
     email = serializers.EmailField(validators=[EmailValidator(), LowerCaseEmailValidator()])
+    first_name = serializers.CharField(required=True)
+    last_name = serializers.CharField(required=True)
 
     @transaction.atomic
     def create(self, validated_data):
@@ -99,7 +102,6 @@ class UserAdminCreateSerializer(serializers.ModelSerializer):
             user.profile.organization = user_profile['organization']
             user.profile.job_title = user_profile['job_title']
             user.profile.phone_number = user_profile['phone_number']
-            user.profile.country_override = user_profile['country_override']
             Realm.objects.create(
                 user=user,
                 country=user.profile.country,
