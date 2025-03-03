@@ -38,7 +38,7 @@ class PointOfInterestSerializer(serializers.ModelSerializer):
         return connection.tenant.name
 
     def get_region(self, obj):
-        return obj.parent.name if hasattr(obj, 'parent') else ''
+        return obj.parent.name if hasattr(obj, 'parent') and obj.parent else ''
 
     class Meta:
         model = models.PointOfInterest
@@ -50,10 +50,10 @@ class PointOfInterestNotificationSerializer(serializers.ModelSerializer):
     parent_name = serializers.SerializerMethodField(read_only=True)
 
     def get_parent_name(self, obj):
-        return obj.parent.__str__() if hasattr(obj, 'parent') else ''
+        return obj.parent.__str__() if hasattr(obj, 'parent') and obj.parent else ''
 
     def get_region(self, obj):
-        return obj.parent.name if hasattr(obj, 'parent') else ''
+        return obj.parent.name if hasattr(obj, 'parent') and obj.parent else ''
 
     class Meta:
         model = models.PointOfInterest
@@ -440,7 +440,7 @@ class TransferCheckinSerializer(TransferBaseSerializer):
                 surplus_transfer.save()
                 surplus_transfer.refresh_from_db()
                 self.checkin_newtransfer_items(orig_items_dict, surplus_items, surplus_transfer)
-                notify_wastage_transfer.delay(connection.schema_name, TransferNotificationSerializer(short_transfer).data, attachment_url, action='surplus_checkin')
+                notify_wastage_transfer.delay(connection.schema_name, TransferNotificationSerializer(surplus_transfer).data, attachment_url, action='surplus_checkin')
 
             instance = super().update(instance, validated_data)
             instance.items.exclude(material__number__in=settings.RUTF_MATERIALS).update(hidden=True)

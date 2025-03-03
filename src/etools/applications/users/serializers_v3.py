@@ -13,7 +13,7 @@ from rest_framework.exceptions import PermissionDenied, ValidationError
 from etools.applications.audit.models import Auditor
 from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.organizations.models import Organization
-from etools.applications.users.mixins import AUDIT_ACTIVE_GROUPS, GroupEditPermissionMixin
+from etools.applications.users.mixins import AUDIT_ACTIVE_GROUPS, GroupEditPermissionMixin, PARTNER_PD_ACTIVE_GROUPS
 from etools.applications.users.models import Country, Realm, StagedUser, User, UserProfile
 from etools.applications.users.serializers import (
     GroupSerializer,
@@ -410,9 +410,10 @@ class ProfileRetrieveUpdateSerializer(serializers.ModelSerializer):
 
     def get_show_gpd(self, obj):
         """
-        GPD app is visible only if the current country is selected tenant switch 'gpd_enabled'
+        GPD app is visible only if the current country is selected tenant in 'gpd_enabled' switch
+        and has any of the partner groups, as users can have realms for Government orgs in LMSM with specific groups
         """
-        if tenant_switch_is_active('gpd_enabled'):
+        if tenant_switch_is_active('gpd_enabled') and obj.user.groups.filter(name__in=PARTNER_PD_ACTIVE_GROUPS).exists():
             return True
         return False
 
