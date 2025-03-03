@@ -465,8 +465,7 @@ class UserProfile(models.Model):
 
         current_country_realms = self.user.realms.filter(country=connection.tenant, is_active=True)
         qs = Organization.objects.filter(realms__in=current_country_realms).distinct()
-        if not tenant_switch_is_active('gpd_enabled'):
-            qs = qs.exclude(organization_type=OrganizationType.GOVERNMENT)
+
         return qs
 
     def username(self):
