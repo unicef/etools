@@ -237,6 +237,7 @@ class UserLocationsViewSet(mixins.ListModelMixin,
     def get_serializer_class(self):
         if self.action == 'list_export_csv':
             return UserPointOfInterestExportSerializer
+        return UserPointOfInterestAdminSerializer
 
     search_fields = ('first_name', 'email', 'last_name', 'profile__organization__name', 'profile__organization__vendor_number', 'profile__organization__partner__points_of_interest__name')
 

@@ -288,7 +288,7 @@ class PointOfInterestExportSerializer(serializers.ModelSerializer):
         return PointOfInterestAdminSerializer().extract_location_info(obj).get('district')
 
     def get_primary_type(self, obj):
-        return obj.poi_type.name
+        return obj.poi_type.name if obj.poi_type else None
 
     def get_implementing_partner(self, obj):
         partners = obj.partner_organizations.all()
