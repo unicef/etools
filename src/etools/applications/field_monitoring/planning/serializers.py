@@ -313,3 +313,7 @@ class TPMConcernSerializer(UserContextSerializerMixin, SnapshotModelSerializer, 
         })
 
         return super().create(validated_data)
+
+
+class DuplicateMonitoringActivitySerializer(serializers.Serializer):
+    with_checklist = serializers.BooleanField(required=True)
