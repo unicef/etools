@@ -6,9 +6,15 @@ from rest_framework import status
 from rest_framework.reverse import reverse
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.last_mile.admin_panel.constants import (
+    ALERT_NOTIFICATIONS_ADMIN_PANEL_PERMISSION,
+    LOCATIONS_ADMIN_PANEL_PERMISSION,
+    USER_ADMIN_PANEL_PERMISSION,
+)
+from etools.applications.last_mile.tests.factories import PointOfInterestFactory, PointOfInterestTypeFactory
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.tests.factories import PartnerFactory
-from etools.applications.users.tests.factories import SimpleUserFactory, UserFactory
+from etools.applications.users.tests.factories import GroupFactory, SimpleUserFactory, UserPermissionFactory
 
 
 class TestManageUsersView(BaseTenantTestCase):
@@ -17,15 +23,23 @@ class TestManageUsersView(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.partner = PartnerFactory(organization=OrganizationFactory(name='Partner'))
         cls.organization = OrganizationFactory(name='Update Organization')
-        cls.partner_staff = UserFactory(
-            realms__data=['IP LM Editor'],
+        cls.group = GroupFactory(name="IP LM Editor")
+        cls.partner_staff = UserPermissionFactory(
+            realms__data=['LMSM Admin Panel'],
             profile__organization=cls.partner.organization,
+            perms=[USER_ADMIN_PANEL_PERMISSION]
         )
-        cls.partner_staff_2 = UserFactory(
-            realms__data=['IP LM Editor'],
+        cls.partner_staff_2 = UserPermissionFactory(
+            realms__data=['LMSM Admin Panel'],
             profile__organization=cls.partner.organization,
+            perms=[USER_ADMIN_PANEL_PERMISSION]
         )
         cls.base_user = SimpleUserFactory()
+        cls.partner_staff_without_correct_permissions = UserPermissionFactory(
+            realms__data=['LMSM Admin Panel'],
+            profile__organization=cls.partner.organization,
+            perms=[ALERT_NOTIFICATIONS_ADMIN_PANEL_PERMISSION]
+        )
 
         cls.valid_data = {
             'first_name': 'John',
@@ -46,7 +60,7 @@ class TestManageUsersView(BaseTenantTestCase):
     def test_get_users(self):
         response = self.forced_auth_req('get', self.url, user=self.partner_staff)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data.get('count'), 2)
+        self.assertEqual(response.data.get('count'), 3)
 
     def test_get_specific_user(self):
         url_with_param = self.url + f"{self.partner_staff.pk}/"
@@ -85,6 +99,10 @@ class TestManageUsersView(BaseTenantTestCase):
 
     def test_get_users_unauthorized(self):
         response = self.forced_auth_req('get', self.url, user=self.base_user)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_get_users_without_correct_permissions(self):
+        response = self.forced_auth_req('get', self.url, user=self.partner_staff_without_correct_permissions)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_create_user(self):
@@ -249,3 +267,89 @@ class TestManageUsersView(BaseTenantTestCase):
         response = self.forced_auth_req('put', url_with_param, user=self.partner_staff, data=data)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('email', response.data)
+
+
+class TestManageLocationsView(BaseTenantTestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.partner = PartnerFactory(organization=OrganizationFactory(name='Partner'))
+        cls.partner_2 = PartnerFactory(organization=OrganizationFactory(name='Partner 2'))
+        cls.partner_3 = PartnerFactory(organization=OrganizationFactory(name='Partner 3'))
+        cls.partner_4 = PartnerFactory(organization=OrganizationFactory(name='Partner 4'))
+        cls.organization = OrganizationFactory(name='Update Organization')
+        cls.partner_staff = UserPermissionFactory(
+            realms__data=['LMSM Admin Panel'],
+            profile__organization=cls.partner.organization,
+            perms=[LOCATIONS_ADMIN_PANEL_PERMISSION]
+        )
+        cls.simple_user = SimpleUserFactory()
+        cls.poi_type = PointOfInterestTypeFactory(name='School', category='school')
+        cls.poi_type_2 = PointOfInterestTypeFactory(name='Hospital', category='hospital')
+        cls.poi_type_3 = PointOfInterestTypeFactory(name='Warehouse', category='warehouse')
+        cls.poi_partner_1 = PointOfInterestFactory(partner_organizations=[cls.partner], private=True, poi_type_id=cls.poi_type.id)
+        cls.poi_partner_2 = PointOfInterestFactory(partner_organizations=[cls.partner_2], private=True, poi_type_id=cls.poi_type_2.id)
+        cls.poi_partner_3 = PointOfInterestFactory(partner_organizations=[cls.partner_3], private=True, poi_type_id=cls.poi_type_3.id)
+        cls.poi_partner_4 = PointOfInterestFactory(partner_organizations=[cls.partner_4], private=True, poi_type_id=cls.poi_type_3.id)
+        cls.url = reverse('last_mile_admin:locations-admin-panel-list')
+
+    def test_get_locations(self):
+        response = self.forced_auth_req('get', self.url, user=self.partner_staff)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('count'), 4)
+
+    def test_get_locations_unauthorized(self):
+        response = self.forced_auth_req('get', self.url, user=self.simple_user)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_get_specific_location(self):
+        url_with_param = self.url + f"{self.poi_partner_1.pk}/"
+        response = self.forced_auth_req('get', url_with_param, user=self.partner_staff)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('name'), self.poi_partner_1.name)
+        self.assertEqual(response.data.get('private'), self.poi_partner_1.private)
+        self.assertEqual(response.data.get('poi_type').get('name'), self.poi_type.name)
+        self.assertEqual(response.data.get('poi_type').get('category'), self.poi_type.category)
+        self.assertEqual(response.data.get('partner_organizations')[0].get('name'), self.partner.name)
+        self.assertEqual(response.data.get('partner_organizations')[0].get('vendor_number'), self.partner.vendor_number)
+        self.assertEqual(response.data.get('is_active'), self.poi_partner_1.is_active)
+
+    def test_get_specific_locations_unauthorized(self):
+        url_with_param = self.url + f"{self.poi_partner_1.pk}/"
+        response = self.forced_auth_req('get', url_with_param, user=self.simple_user)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
+class TestManageLocationsTypesView(BaseTenantTestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.partner = PartnerFactory(organization=OrganizationFactory(name='Partner'))
+        cls.organization = OrganizationFactory(name='Update Organization')
+        cls.partner_staff = UserPermissionFactory(
+            realms__data=['LMSM Admin Panel'],
+            profile__organization=cls.partner.organization,
+            perms=[LOCATIONS_ADMIN_PANEL_PERMISSION]
+        )
+        cls.partner_staff_without_correct_permissions = UserPermissionFactory(
+            realms__data=['LMSM Admin Panel'],
+            profile__organization=cls.partner.organization,
+            perms=[ALERT_NOTIFICATIONS_ADMIN_PANEL_PERMISSION]
+        )
+        cls.simple_user = SimpleUserFactory()
+
+        cls.poi_type = PointOfInterestTypeFactory(name='School', category='school')
+        cls.poi_type_2 = PointOfInterestTypeFactory(name='Hospital', category='hospital')
+        cls.url = reverse('last_mile_admin:location-type-admin-panel-list')
+
+    def test_get_locations_types(self):
+        response = self.forced_auth_req('get', self.url, user=self.partner_staff)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_get_locations_types_unauthorized(self):
+        response = self.forced_auth_req('get', self.url, user=self.simple_user)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_get_locations_types_without_correct_permissions(self):
+        response = self.forced_auth_req('get', self.url, user=self.partner_staff_without_correct_permissions)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

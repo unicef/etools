@@ -65,6 +65,7 @@ class UserAdminExportSerializer(serializers.ModelSerializer):
             'country',
             'is_active',
             'last_login',
+            'status',
         )
 
 

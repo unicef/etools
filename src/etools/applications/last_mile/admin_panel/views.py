@@ -9,6 +9,7 @@ from rest_framework import mixins, viewsets
 from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 from unicef_rest_export.renderers import ExportCSVRenderer
@@ -46,7 +47,7 @@ from etools.applications.last_mile.admin_panel.serializers import (
     UserPointOfInterestAdminSerializer,
     UserPointOfInterestExportSerializer,
 )
-from etools.applications.last_mile.permissions import IsIPLMEditor
+from etools.applications.last_mile.permissions import IsLMSMAdmin
 from etools.applications.locations.models import Location
 from etools.applications.organizations.models import Organization
 from etools.applications.users.models import Group, Realm
@@ -64,7 +65,7 @@ class UserViewSet(ExportMixin,
                   mixins.RetrieveModelMixin,
                   mixins.UpdateModelMixin,
                   viewsets.GenericViewSet):
-    permission_classes = [IsIPLMEditor]
+    permission_classes = [IsLMSMAdmin]
     pagination_class = CustomDynamicPageNumberPagination
 
     def get_queryset(self):
@@ -155,7 +156,7 @@ class LocationsViewSet(mixins.ListModelMixin,
             "coordinates": [43.713459135964513, 25.589650059118867]
         }
     """
-    permission_classes = [IsIPLMEditor]
+    permission_classes = [IsLMSMAdmin]
     serializer_class = PointOfInterestAdminSerializer
     pagination_class = CustomDynamicPageNumberPagination
 
@@ -209,7 +210,7 @@ class UserLocationsViewSet(mixins.ListModelMixin,
                            mixins.RetrieveModelMixin,
                            mixins.UpdateModelMixin,
                            GenericViewSet):
-    permission_classes = [IsIPLMEditor]
+    permission_classes = [IsLMSMAdmin]
     serializer_class = UserPointOfInterestAdminSerializer
     pagination_class = CustomDynamicPageNumberPagination
 
@@ -271,7 +272,7 @@ class AlertNotificationViewSet(mixins.ListModelMixin,
                                mixins.DestroyModelMixin,
                                GenericViewSet):
 
-    permission_classes = [IsIPLMEditor]
+    permission_classes = [IsLMSMAdmin]
     serializer_class = AlertNotificationSerializer
     pagination_class = CustomDynamicPageNumberPagination
 
@@ -305,7 +306,7 @@ class AlertNotificationViewSet(mixins.ListModelMixin,
 
 
 class TransferItemViewSet(mixins.ListModelMixin, GenericViewSet, mixins.CreateModelMixin):
-    permission_classes = [IsIPLMEditor]
+    permission_classes = [IsLMSMAdmin]
     serializer_class = TransferItemSerializer
     pagination_class = CustomDynamicPageNumberPagination
 
@@ -327,7 +328,7 @@ class TransferItemViewSet(mixins.ListModelMixin, GenericViewSet, mixins.CreateMo
 
 class OrganizationListView(mixins.ListModelMixin, GenericViewSet):
     serializer_class = OrganizationAdminSerializer
-    permission_classes = [IsIPLMEditor]
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         queryset = Organization.objects.all() \
@@ -349,7 +350,7 @@ class OrganizationListView(mixins.ListModelMixin, GenericViewSet):
 
 class ParentLocationListView(mixins.ListModelMixin, GenericViewSet):
     serializer_class = LocationsAdminSerializer
-    permission_classes = [IsIPLMEditor]
+    permission_classes = [IsLMSMAdmin]
 
     def get_queryset(self):
         return Location.objects.all().order_by('id')
@@ -357,7 +358,7 @@ class ParentLocationListView(mixins.ListModelMixin, GenericViewSet):
 
 class PointOfInterestTypeListView(mixins.ListModelMixin, mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, GenericViewSet):
     serializer_class = PointOfInterestTypeAdminSerializer
-    permission_classes = [IsIPLMEditor]
+    permission_classes = [IsLMSMAdmin]
 
     def get_queryset(self):
         return models.PointOfInterestType.objects.all().order_by('id')
@@ -387,7 +388,7 @@ class PointOfInterestTypeListView(mixins.ListModelMixin, mixins.CreateModelMixin
 
 class AlertTypeListView(mixins.ListModelMixin, GenericViewSet):
     serializer_class = AlertTypeSerializer
-    permission_classes = [IsIPLMEditor]
+    permission_classes = [IsLMSMAdmin]
 
     def get_queryset(self):
         return Group.objects.filter(name__in=ALERT_TYPES.keys()).order_by('id')
@@ -396,7 +397,7 @@ class AlertTypeListView(mixins.ListModelMixin, GenericViewSet):
 class TransferHistoryListView(mixins.ListModelMixin, GenericViewSet):
     serializer_class = TransferHistoryAdminSerializer
     pagination_class = CustomDynamicPageNumberPagination
-    permission_classes = [IsIPLMEditor]
+    permission_classes = [IsLMSMAdmin]
 
     filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
 
@@ -422,7 +423,7 @@ class TransferHistoryListView(mixins.ListModelMixin, GenericViewSet):
 
 
 class TransferEvidenceListView(mixins.RetrieveModelMixin, GenericViewSet):
-    permission_classes = [IsIPLMEditor]
+    permission_classes = [IsLMSMAdmin]
     serializer_class = TransferLogAdminSerializer
     lookup_field = 'transfer_history_id'
 
@@ -442,7 +443,7 @@ class TransferEvidenceListView(mixins.RetrieveModelMixin, GenericViewSet):
 
 class MaterialListView(mixins.ListModelMixin, GenericViewSet):
     serializer_class = MaterialAdminSerializer
-    permission_classes = [IsIPLMEditor]
+    permission_classes = [IsLMSMAdmin]
 
     def get_queryset(self):
         return models.Material.objects.all().order_by('id')
