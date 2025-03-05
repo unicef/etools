@@ -32,7 +32,7 @@ router.register(r'reversal-of-partner-transactions', TransferHistoryListView, ba
 router.register(r'transfer-evidence', TransferEvidenceListView, basename=TRANSFER_EVIDENCE_ADMIN_PANEL)
 router.register(r'materials', MaterialListView, basename=STOCK_MANAGEMENT_MATERIALS_ADMIN_PANEL)
 
-app_name = "last_mile_admin"
+app_name = ADMIN_PANEL_APP_NAME
 
 urlpatterns = [
     path('', include(router.urls)),

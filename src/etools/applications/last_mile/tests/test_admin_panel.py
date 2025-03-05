@@ -6,11 +6,7 @@ from rest_framework import status
 from rest_framework.reverse import reverse
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
-from etools.applications.last_mile.admin_panel.constants import (
-    ALERT_NOTIFICATIONS_ADMIN_PANEL_PERMISSION,
-    LOCATIONS_ADMIN_PANEL_PERMISSION,
-    USER_ADMIN_PANEL_PERMISSION,
-)
+from etools.applications.last_mile.admin_panel.constants import *  # NOQA
 from etools.applications.last_mile.tests.factories import PointOfInterestFactory, PointOfInterestTypeFactory
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.tests.factories import PartnerFactory
@@ -55,7 +51,7 @@ class TestManageUsersView(BaseTenantTestCase):
             }
         }
 
-        cls.url = reverse('last_mile_admin:users-admin-panel-list')
+        cls.url = reverse(f'{ADMIN_PANEL_APP_NAME}:{USER_ADMIN_PANEL}-list')
 
     def test_get_users(self):
         response = self.forced_auth_req('get', self.url, user=self.partner_staff)
@@ -291,7 +287,7 @@ class TestManageLocationsView(BaseTenantTestCase):
         cls.poi_partner_2 = PointOfInterestFactory(partner_organizations=[cls.partner_2], private=True, poi_type_id=cls.poi_type_2.id)
         cls.poi_partner_3 = PointOfInterestFactory(partner_organizations=[cls.partner_3], private=True, poi_type_id=cls.poi_type_3.id)
         cls.poi_partner_4 = PointOfInterestFactory(partner_organizations=[cls.partner_4], private=True, poi_type_id=cls.poi_type_3.id)
-        cls.url = reverse('last_mile_admin:locations-admin-panel-list')
+        cls.url = reverse(f'{ADMIN_PANEL_APP_NAME}:{LOCATIONS_ADMIN_PANEL}-list')
 
     def test_get_locations(self):
         response = self.forced_auth_req('get', self.url, user=self.partner_staff)
@@ -340,7 +336,7 @@ class TestManageLocationsTypesView(BaseTenantTestCase):
 
         cls.poi_type = PointOfInterestTypeFactory(name='School', category='school')
         cls.poi_type_2 = PointOfInterestTypeFactory(name='Hospital', category='hospital')
-        cls.url = reverse('last_mile_admin:location-type-admin-panel-list')
+        cls.url = reverse(f'{ADMIN_PANEL_APP_NAME}:{LOCATIONS_TYPE_ADMIN_PANEL}-list')
 
     def test_get_locations_types(self):
         response = self.forced_auth_req('get', self.url, user=self.partner_staff)
@@ -353,3 +349,38 @@ class TestManageLocationsTypesView(BaseTenantTestCase):
     def test_get_locations_types_without_correct_permissions(self):
         response = self.forced_auth_req('get', self.url, user=self.partner_staff_without_correct_permissions)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
+class TestManageUserLocationView(BaseTenantTestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.partner = PartnerFactory(organization=OrganizationFactory(name='Partner'))
+        cls.partner_staff = UserPermissionFactory(
+            realms__data=['LMSM Admin Panel'],
+            profile__organization=cls.partner.organization,
+            perms=[USER_LOCATIONS_ADMIN_PANEL_PERMISSION]
+        )
+        cls.url = reverse(f'{ADMIN_PANEL_APP_NAME}:{USER_LOCATIONS_ADMIN_PANEL}-list')
+        cls.url_locations = reverse(f'{ADMIN_PANEL_APP_NAME}:{LOCATIONS_ADMIN_PANEL}-list')
+        cls.url_users = reverse(f'{ADMIN_PANEL_APP_NAME}:{USER_ADMIN_PANEL}-list')
+
+    def test_get_user_locations(self):
+        response = self.forced_auth_req('get', self.url, user=self.partner_staff)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_post_new_user_forbidden(self):
+        response = self.forced_auth_req('post', self.url_users, user=self.partner_staff)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_update_user_forbidden(self):
+        response = self.forced_auth_req('put', self.url_users + f"{self.partner_staff.pk}/", user=self.partner_staff)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_get_locations(self):
+        response = self.forced_auth_req('get', self.url_locations, user=self.partner_staff)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_get_users(self):
+        response = self.forced_auth_req('get', self.url_users, user=self.partner_staff)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)

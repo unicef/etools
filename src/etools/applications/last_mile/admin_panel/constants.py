@@ -1,3 +1,5 @@
+ADMIN_PANEL_APP_NAME = 'last_mile_admin'
+
 ALERT_TYPES = {
     "LMSM Focal Point": "Wastage Notification",
     "LMSM Alert Receipt": "Acknowledgement by IP",
