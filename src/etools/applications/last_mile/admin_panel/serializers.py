@@ -567,7 +567,8 @@ class PointOfInterestTypeAdminSerializer(serializers.ModelSerializer):
     @transaction.atomic
     def update(self, instance, validated_data):
         self.adminValidator.validate_poi_type(validated_data['name'])
-        return models.PointOfInterestType.objects.update(**validated_data)
+        instance = super().update(instance, validated_data)
+        return instance
 
     class Meta:
         model = models.PointOfInterestType
