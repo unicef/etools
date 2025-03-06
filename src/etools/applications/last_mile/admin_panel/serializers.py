@@ -622,3 +622,18 @@ class TransferHistoryAdminSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.TransferHistory
         fields = ('id', 'created', 'modified', 'primary_transfer')
+
+
+class PartnerOrganizationAdminSerializer(serializers.ModelSerializer):
+    name = serializers.SerializerMethodField()
+    vendor_number = serializers.SerializerMethodField()
+
+    def get_name(self, obj):
+        return obj.organization.name if obj.organization else "-"
+
+    def get_vendor_number(self, obj):
+        return obj.organization.vendor_number if obj.organization else "-"
+
+    class Meta:
+        model = PartnerOrganization
+        fields = ('id', 'name', 'vendor_number')

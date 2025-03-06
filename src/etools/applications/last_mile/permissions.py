@@ -56,6 +56,9 @@ class IsLMSMAdmin(IsAuthenticated):
         TRANSFER_EVIDENCE_ADMIN_PANEL: [
             TRANSFER_HISTORY_ADMIN_PANEL_PERMISSION,
         ],
+        PARTNER_ORGANIZATIONS_ADMIN_PANEL: [
+            LOCATIONS_ADMIN_PANEL_PERMISSION,
+        ]
     }
 
     def get_required_permissions(self, view_basename: str) -> set:

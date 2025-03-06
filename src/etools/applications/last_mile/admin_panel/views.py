@@ -32,6 +32,7 @@ from etools.applications.last_mile.admin_panel.serializers import (
     LocationsAdminSerializer,
     MaterialAdminSerializer,
     OrganizationAdminSerializer,
+    PartnerOrganizationAdminSerializer,
     PointOfInterestAdminSerializer,
     PointOfInterestCustomSerializer,
     PointOfInterestExportSerializer,
@@ -50,6 +51,7 @@ from etools.applications.last_mile.admin_panel.serializers import (
 from etools.applications.last_mile.permissions import IsLMSMAdmin
 from etools.applications.locations.models import Location
 from etools.applications.organizations.models import Organization
+from etools.applications.partners.models import PartnerOrganization
 from etools.applications.users.models import Group, Realm
 
 
@@ -447,3 +449,11 @@ class MaterialListView(mixins.ListModelMixin, GenericViewSet):
 
     def get_queryset(self):
         return models.Material.objects.all().order_by('id')
+
+
+class PartnerOrganizationListView(mixins.ListModelMixin, GenericViewSet):
+    serializer_class = PartnerOrganizationAdminSerializer
+    permission_classes = [IsLMSMAdmin]
+
+    def get_queryset(self):
+        return PartnerOrganization.objects.all().order_by('id')
