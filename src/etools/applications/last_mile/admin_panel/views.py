@@ -29,6 +29,7 @@ from etools.applications.last_mile.admin_panel.serializers import (
     AlertNotificationCustomeSerializer,
     AlertNotificationSerializer,
     AlertTypeSerializer,
+    AuthUserPermsDetailSerializer,
     LocationsAdminSerializer,
     MaterialAdminSerializer,
     OrganizationAdminSerializer,
@@ -457,3 +458,11 @@ class PartnerOrganizationListView(mixins.ListModelMixin, GenericViewSet):
 
     def get_queryset(self):
         return PartnerOrganization.objects.all().order_by('id')
+
+
+class UserPermissionsListView(mixins.ListModelMixin, GenericViewSet):
+    serializer_class = AuthUserPermsDetailSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return get_user_model().objects.filter(pk=self.request.user.pk)

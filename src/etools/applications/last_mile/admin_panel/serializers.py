@@ -9,7 +9,16 @@ from rest_framework import serializers
 from rest_framework_gis.fields import GeometryField
 
 from etools.applications.last_mile import models
-from etools.applications.last_mile.admin_panel.constants import ALERT_TYPES, TRANSFER_MANUL_CREATION_NAME
+from etools.applications.last_mile.admin_panel.constants import (
+    ALERT_NOTIFICATIONS_ADMIN_PANEL_PERMISSION,
+    ALERT_TYPES,
+    LOCATIONS_ADMIN_PANEL_PERMISSION,
+    STOCK_MANAGEMENT_ADMIN_PANEL_PERMISSION,
+    TRANSFER_HISTORY_ADMIN_PANEL_PERMISSION,
+    TRANSFER_MANUL_CREATION_NAME,
+    USER_ADMIN_PANEL_PERMISSION,
+    USER_LOCATIONS_ADMIN_PANEL_PERMISSION,
+)
 from etools.applications.last_mile.admin_panel.validators import AdminPanelValidator
 from etools.applications.last_mile.serializers import PointOfInterestTypeSerializer
 from etools.applications.locations.models import Location
@@ -637,3 +646,21 @@ class PartnerOrganizationAdminSerializer(serializers.ModelSerializer):
     class Meta:
         model = PartnerOrganization
         fields = ('id', 'name', 'vendor_number')
+
+
+class AuthUserPermsDetailSerializer(serializers.ModelSerializer):
+    admin_perms = serializers.SerializerMethodField()
+
+    def get_admin_perms(self, obj):
+        if obj.is_superuser:
+            return [USER_ADMIN_PANEL_PERMISSION,
+                    STOCK_MANAGEMENT_ADMIN_PANEL_PERMISSION,
+                    TRANSFER_HISTORY_ADMIN_PANEL_PERMISSION,
+                    ALERT_NOTIFICATIONS_ADMIN_PANEL_PERMISSION,
+                    LOCATIONS_ADMIN_PANEL_PERMISSION,
+                    USER_LOCATIONS_ADMIN_PANEL_PERMISSION]
+        return [perm.codename for perm in obj.user_permissions.all()]
+
+    class Meta:
+        model = get_user_model()
+        fields = ('admin_perms',)
