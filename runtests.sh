@@ -38,4 +38,4 @@ if [[ "$(echo "$RUNNING_UNDER_TOX")" != 1 ]] ; then
 fi
 
 # Run tests
-time python manage.py test --noinput --keepdb --parallel 4 "$@"
+time python manage.py test --noinput --keepdb --parallel 6 "$@"
