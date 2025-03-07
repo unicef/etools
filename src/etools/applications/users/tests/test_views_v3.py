@@ -4,6 +4,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.db import connection
+from django.test import override_settings
 from django.urls import reverse
 
 from rest_framework import status
@@ -17,6 +18,7 @@ from etools.applications.audit.tests.factories import (
     EngagementFactory,
 )
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.environment.tests.factories import TenantSwitchFactory
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, UNICEF_USER
 from etools.applications.partners.tests.factories import PartnerFactory
@@ -358,6 +360,7 @@ class TestUsersListAPIView(BaseTenantTestCase):
         self.assertEqual(response.data[0]["id"], partner_user.pk)
 
 
+@override_settings(UNICEF_USER_EMAIL="@example.com")
 class TestMyProfileAPIView(BaseTenantTestCase):
     def setUp(self):
         super().setUp()
@@ -377,6 +380,63 @@ class TestMyProfileAPIView(BaseTenantTestCase):
             self.unicef_staff.get_full_name()
         )
         self.assertEqual(response.data["is_superuser"], False)
+
+    def test_get_gpd_enabled_for_unicef(self):
+        response = self.forced_auth_req(
+            "get",
+            self.url,
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertFalse(response.data["show_gpd"])
+
+        switch = TenantSwitchFactory(name='gpd_enabled', countries=[connection.tenant], active=True)
+        switch.flush()
+        self.assertTrue(switch.active)
+        response = self.forced_auth_req(
+            "get",
+            self.url,
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data["show_gpd"])
+
+    def test_get_gpd_enabled_for_partner(self):
+        partner_user = UserFactory(realms__data=['Audit'], email="name@partner.com")
+        response = self.forced_auth_req(
+            "get",
+            self.url,
+            user=partner_user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # 'show_gpd' switch is not enabled
+        self.assertFalse(response.data["show_gpd"])
+
+        switch = TenantSwitchFactory(name='gpd_enabled', countries=[connection.tenant], active=True)
+        switch.flush()
+        self.assertTrue(switch.active)
+        response = self.forced_auth_req(
+            "get",
+            self.url,
+            user=partner_user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # the user has only Audit group, gPD is only shown for IP* groups
+        self.assertFalse(response.data["show_gpd"])
+
+        RealmFactory(
+            user=partner_user,
+            country=connection.tenant,
+            organization=partner_user.profile.organization,
+            group=GroupFactory(name='IP Viewer'),
+        )
+        response = self.forced_auth_req(
+            "get",
+            self.url,
+            user=partner_user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data["show_gpd"])
 
     def test_get_no_profile(self):
         """Ensure profile is created for user, if it does not exist"""
