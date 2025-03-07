@@ -360,7 +360,6 @@ class TestUsersListAPIView(BaseTenantTestCase):
         self.assertEqual(response.data[0]["id"], partner_user.pk)
 
 
-@override_settings(UNICEF_USER_EMAIL="@example.com")
 class TestMyProfileAPIView(BaseTenantTestCase):
     def setUp(self):
         super().setUp()
@@ -382,6 +381,8 @@ class TestMyProfileAPIView(BaseTenantTestCase):
         self.assertEqual(response.data["is_superuser"], False)
 
     def test_get_gpd_enabled_for_unicef(self):
+        switch = TenantSwitchFactory(name='gpd_enabled', countries=[connection.tenant], active=False)
+        switch.flush()
         response = self.forced_auth_req(
             "get",
             self.url,
@@ -390,7 +391,8 @@ class TestMyProfileAPIView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertFalse(response.data["show_gpd"])
 
-        switch = TenantSwitchFactory(name='gpd_enabled', countries=[connection.tenant], active=True)
+        switch.active = True
+        switch.save()
         switch.flush()
         self.assertTrue(switch.active)
         response = self.forced_auth_req(
