@@ -11,6 +11,14 @@ from model_utils.models import TimeStampedModel
 from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CodedGenericRelation
 
+from etools.applications.last_mile.admin_panel.constants import (
+    ALERT_NOTIFICATIONS_ADMIN_PANEL_PERMISSION,
+    LOCATIONS_ADMIN_PANEL_PERMISSION,
+    STOCK_MANAGEMENT_ADMIN_PANEL_PERMISSION,
+    TRANSFER_HISTORY_ADMIN_PANEL_PERMISSION,
+    USER_ADMIN_PANEL_PERMISSION,
+    USER_LOCATIONS_ADMIN_PANEL_PERMISSION,
+)
 from etools.applications.locations.models import Location
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.users.models import User
@@ -469,3 +477,17 @@ class ItemTransferHistory(TimeStampedModel, models.Model):
 
     class Meta:
         unique_together = ('transfer', 'item')
+
+
+class AdminPanelPermission(models.Model):
+    class Meta:
+        managed = False  # Django won't create a table for this model
+        db_table = 'admin_panel_dummy'
+        permissions = (
+            (USER_ADMIN_PANEL_PERMISSION, "Can manage users in the admin panel"),
+            (LOCATIONS_ADMIN_PANEL_PERMISSION, "Can manage locations in the admin panel"),
+            (USER_LOCATIONS_ADMIN_PANEL_PERMISSION, "Can manage users locations in the admin panel"),
+            (ALERT_NOTIFICATIONS_ADMIN_PANEL_PERMISSION, "Can manage email alerts in the admin panel"),
+            (STOCK_MANAGEMENT_ADMIN_PANEL_PERMISSION, "Can manage stock management in the admin panel"),
+            (TRANSFER_HISTORY_ADMIN_PANEL_PERMISSION, "Can manage transfer history in the admin panel"),
+        )
