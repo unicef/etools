@@ -1,5 +1,6 @@
 import datetime
 import logging
+from copy import copy
 
 from django.db import transaction
 
@@ -345,16 +346,22 @@ class RAMSynchronizer(VisionDataTenantSynchronizer):
         mapped_records = {}
         for r in records:
             a = r['WBS_ELEMENT_CODE']
+            wbs = '/'.join([a[0:4], a[4:6], a[6:8], a[8:11], a[11:14]])
             code = str(r['INDICATOR_CODE'])
-            mapped_records[code] = {
-                'name': r['INDICATOR_DESCRIPTION'][:1024],
-                'baseline': r['INDICATOR_BASELINE'][:255] if r['INDICATOR_BASELINE'] else '',
-                'code': code,
-                'target': r['INDICATOR_TARGET'][:255] if r['INDICATOR_TARGET'] else '',
-                'ram_indicator': True,
-                'result__wbs': '/'.join([a[0:4], a[4:6], a[6:8], a[8:11], a[11:14]])
-            }
-            wbss.append(mapped_records[code]['result__wbs'])
+
+            if code not in mapped_records:
+                mapped_records[code] = {
+                    'name': r['INDICATOR_DESCRIPTION'][:1024],
+                    'baseline': r['INDICATOR_BASELINE'][:255] if r['INDICATOR_BASELINE'] else '',
+                    'code': code,
+                    'target': r['INDICATOR_TARGET'][:255] if r['INDICATOR_TARGET'] else '',
+                    'ram_indicator': True,
+                    'result__wbs': [wbs],
+                }
+            else:
+                mapped_records[code]['result__wbs'].append(wbs)
+
+            wbss.append(wbs)
         return mapped_records, wbss
 
     def process_indicators(self, records):
@@ -366,62 +373,77 @@ class RAMSynchronizer(VisionDataTenantSynchronizer):
         # get all the indicators that are present in our db:
         records, wbss = self._clean_records(records)
 
-        results = Result.objects.filter(result_type__name='Output', wbs__in=wbss).all()
-        result_map = dict([(r.wbs, r) for r in results])
-
-        existing_records = Indicator.objects.filter(code__in=records.keys()).prefetch_related('result').all()
-
-        for er in existing_records:
-            # remote record:
-            rr = records[er.code]
-            record_needs_saving = False
-            for field in fields_that_can_change:
-                if field == 'result__wbs':
-                    if not er.result:
-                        try:
-                            missing_result = Result.objects.get(wbs=rr[field])
-                        except Result.DoesNotExist:
-                            logger.error('Indicator missing result {}'.format(er.id))
-                            break
-                        else:
-                            er.result = missing_result
-                            record_needs_saving = True
-                            continue
-                    if er.result.wbs != rr[field]:
-                        try:
-                            er.result = result_map[rr[field]]
-                        except KeyError:
-                            skipped_update += 1
-                            logger.error('Result not found for wbs {} for indicator with code {}'.format(rr[field],
-                                                                                                         er.code))
-                        else:
-                            record_needs_saving = True
-                elif getattr(er, field) != rr[field]:
-                    setattr(er, field, rr[field])
-                    record_needs_saving = True
-            if record_needs_saving:
-                updated += 1
-                er.save()
-
-        list_of_existing_codes = [er.code for er in existing_records]
+        existing_results = {
+            r.wbs: r
+            for r in Result.objects.filter(result_type__name='Output', wbs__in=wbss)
+        }
 
         records_to_create = []
-        for r in records.items():
-            if r[0] in list_of_existing_codes:
-                continue
-            try:
-                r[1]['result'] = result_map[r[1].pop('result__wbs', None)]
-            except KeyError:
-                skipped_creation += 1
-                logger.error('Result not found for non-existent indicator with code {}'.format(r[1]['code']))
-            else:
-                records_to_create.append(r[1])
+
+        # remote record
+        for rr in records.values():
+            # search for all existing indicators for given code
+            existing_records = {
+                er.result.wbs if er.result else None: er
+                for er in Indicator.objects.filter(code=rr['code']).prefetch_related('result')
+            }
+            updated_records = []
+
+            # update existing records & create missing
+            for wbs in rr['result__wbs']:
+                if wbs in existing_records or (
+                        # catch the case where we have only one record with different wbs
+                        wbs not in existing_records and
+                        len(existing_records) == 1 and
+                        len(rr['result__wbs']) == 1
+                ):
+                    # update
+                    if wbs not in existing_results:
+                        skipped_update += 1
+                        logger.error(f'Result not found for indicator with code {rr["code"]}')
+                        continue
+
+                    if wbs in existing_records:
+                        er = existing_records[wbs]
+                    else:
+                        # if we have only one record even with different wbs, it's safe to update
+                        er = existing_records[list(existing_records.keys())[0]]
+
+                    record_needs_saving = False
+
+                    # update the record
+                    for field in fields_that_can_change:
+                        if field == 'result__wbs':
+                            if not er.result or (er.result and er.result.wbs != wbs):
+                                er.result = existing_results[wbs]
+                                record_needs_saving = True
+                        elif getattr(er, field) != rr[field]:
+                            setattr(er, field, rr[field])
+                            record_needs_saving = True
+                    if record_needs_saving:
+                        updated += 1
+                        er.save()
+
+                    updated_records.append(er.pk)
+                else:
+                    # create the record
+                    if wbs not in existing_results:
+                        skipped_creation += 1
+                        logger.error(f'Result not found for indicator with code {rr["code"]}')
+                        continue
+
+                    nr = copy(rr)
+                    nr.pop('result__wbs')
+                    nr['result'] = existing_results[wbs]
+                    records_to_create.append(nr)
 
         created = Indicator.objects.bulk_create([Indicator(**r) for r in records_to_create])
 
+        # activate inactive indicators that are in the records
         indicators_activated = Indicator.objects.filter(code__in=records.keys()).filter(active=False).update(
             active=True)
 
+        # deactivate active indicators that are not in the records
         indicators_deactivated = Indicator.objects.exclude(code__in=records.keys()).exclude(active=False).update(
             active=False)
 
