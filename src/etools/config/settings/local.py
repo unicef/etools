@@ -152,4 +152,3 @@ if os.path.isfile(join(CONFIG_ROOT, 'keys/jwt/key.pem')):  # noqa
 PCA_SKIP_FINANCIAL_DATA = True
 RESTRICTED_ADMIN = False
 ADMIN_EDIT_EMAILS = 'your_email@unicef.org'
-
