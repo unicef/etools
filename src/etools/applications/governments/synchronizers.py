@@ -89,7 +89,7 @@ class EWPSynchronizer:
     def _update_activity_changes(self, local, remote):
         updated = False
         for k in remote:
-            match k:
+            match k:  # noqa: E999
                 case 'workplan':
 
                     local_wp = self.workplans.get(remote[k])
