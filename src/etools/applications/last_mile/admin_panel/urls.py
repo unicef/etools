@@ -21,13 +21,13 @@ from etools.applications.last_mile.admin_panel.views import (
 )
 
 router = DefaultRouter()
-router.register(r'users', UserViewSet, basename=USER_ADMIN_PANEL)
-router.register(r'alert-types', AlertTypeListView, basename=ALERT_TYPES_ADMIN_PANEL)
-router.register(r'locations', LocationsViewSet, basename=LOCATIONS_ADMIN_PANEL)
-router.register(r'locations-type', PointOfInterestTypeListView, basename=LOCATIONS_TYPE_ADMIN_PANEL)
-router.register(r'user-locations', UserLocationsViewSet, basename=USER_LOCATIONS_ADMIN_PANEL)
-router.register(r'alert-notifications', AlertNotificationViewSet, basename=ALERT_NOTIFICATIONS_ADMIN_PANEL)
-router.register(r'stock-management', TransferItemViewSet, basename=STOCK_MANAGEMENT_ADMIN_PANEL)
+router.register(r'users', UserViewSet, basename=USER_ADMIN_PANEL)  # Test done
+router.register(r'alert-types', AlertTypeListView, basename=ALERT_TYPES_ADMIN_PANEL)  # Test done
+router.register(r'locations', LocationsViewSet, basename=LOCATIONS_ADMIN_PANEL)  # Test done
+router.register(r'locations-type', PointOfInterestTypeListView, basename=LOCATIONS_TYPE_ADMIN_PANEL)  # Test done
+router.register(r'user-locations', UserLocationsViewSet, basename=USER_LOCATIONS_ADMIN_PANEL)  # Test done
+router.register(r'alert-notifications', AlertNotificationViewSet, basename=ALERT_NOTIFICATIONS_ADMIN_PANEL)  # Test done
+router.register(r'stock-management', TransferItemViewSet, basename=STOCK_MANAGEMENT_ADMIN_PANEL)  # Test Done
 router.register(r'organizations', OrganizationListView, basename='organizations-admin')
 router.register(r'user-permissions', UserPermissionsListView, basename='user-permissions')
 router.register(r'parent-locations', ParentLocationListView, basename=PARENT_LOCATIONS_ADMIN_PANEL)

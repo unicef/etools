@@ -330,7 +330,11 @@ class PointOfInterestSerializer(serializers.ModelSerializer):
 
 class PartnerSerializer(serializers.ModelSerializer):
     # Nest the related points_of_interest
-    points_of_interest = PointOfInterestSerializer(many=True, read_only=True)
+    points_of_interest = serializers.SerializerMethodField()
+
+    def get_points_of_interest(self, obj):
+        points = obj.points_of_interest.all().order_by('id')
+        return PointOfInterestSerializer(points, many=True).data
 
     class Meta:
         model = PartnerOrganization

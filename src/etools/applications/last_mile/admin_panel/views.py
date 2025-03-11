@@ -326,7 +326,7 @@ class TransferItemViewSet(mixins.ListModelMixin, GenericViewSet, mixins.CreateMo
 
     filter_backends = (SearchFilter,)
 
-    search_fields = ('name', 'status')
+    search_fields = ('name', 'status', 'unicef_release_order')
 
 
 class OrganizationListView(mixins.ListModelMixin, GenericViewSet):
