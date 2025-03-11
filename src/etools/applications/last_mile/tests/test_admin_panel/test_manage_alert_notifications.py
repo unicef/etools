@@ -23,14 +23,16 @@ class TestManageAlertNotificationsView(BaseTenantTestCase):
         cls.partner_staff = UserPermissionFactory(
             realms__data=['LMSM Admin Panel'],
             profile__organization=cls.partner.organization,
-            perms=[ALERT_NOTIFICATIONS_ADMIN_PANEL_PERMISSION]
+            perms=[ALERT_NOTIFICATIONS_ADMIN_PANEL_PERMISSION],
+            email='k35hsjkfsg@example.com'
         )
         cls.partner_staff_without_correct_permissions = UserPermissionFactory(
             realms__data=['LMSM Admin Panel'],
             profile__organization=cls.partner.organization,
-            perms=[USER_ADMIN_PANEL_PERMISSION]
+            perms=[USER_ADMIN_PANEL_PERMISSION],
+            email='dfg65jlkd@example.com'
         )
-        cls.simple_user = SimpleUserFactory()
+        cls.simple_user = SimpleUserFactory(email='kll564jhnls@example.com')
 
         cls.url = reverse(f'{ADMIN_PANEL_APP_NAME}:{ALERT_NOTIFICATIONS_ADMIN_PANEL}-list')
         valid_group_name = list(ALERT_TYPES.keys())
