@@ -413,7 +413,8 @@ class ProfileRetrieveUpdateSerializer(serializers.ModelSerializer):
         GPD app is visible only if the current country is selected tenant in 'gpd_enabled' switch
         and has any of the partner groups, as users can have realms for Government orgs in LMSM with specific groups
         """
-        if tenant_switch_is_active('gpd_enabled') and obj.user.groups.filter(name__in=PARTNER_PD_ACTIVE_GROUPS).exists():
+        if tenant_switch_is_active('gpd_enabled') and (
+                obj.user.is_unicef_user() or obj.user.groups.filter(name__in=PARTNER_PD_ACTIVE_GROUPS).exists()):
             return True
         return False
 
