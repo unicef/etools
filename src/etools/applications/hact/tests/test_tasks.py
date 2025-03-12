@@ -3,8 +3,12 @@ from unittest.mock import Mock, patch
 from etools.applications.audit.models import UNICEFAuditFocalPoint
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.hact.models import AggregateHact
-from etools.applications.hact.tasks import update_aggregate_hact_values, update_hact_for_country, update_hact_values, \
-    notify_hact_update
+from etools.applications.hact.tasks import (
+    notify_hact_update,
+    update_aggregate_hact_values,
+    update_hact_for_country,
+    update_hact_values,
+)
 from etools.applications.hact.tests.factories import AggregateHactFactory
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.permissions import UNICEF_USER
