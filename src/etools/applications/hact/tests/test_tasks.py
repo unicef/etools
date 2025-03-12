@@ -3,11 +3,13 @@ from unittest.mock import Mock, patch
 from etools.applications.audit.models import UNICEFAuditFocalPoint
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.hact.models import AggregateHact
-from etools.applications.hact.tasks import update_aggregate_hact_values, update_hact_for_country, update_hact_values
+from etools.applications.hact.tasks import update_aggregate_hact_values, update_hact_for_country, update_hact_values, \
+    notify_hact_update
 from etools.applications.hact.tests.factories import AggregateHactFactory
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.permissions import UNICEF_USER
 from etools.applications.partners.tests.factories import PartnerFactory
+from etools.applications.users.models import Country
 from etools.applications.users.tests.factories import UserFactory
 from etools.applications.vision.models import VisionSyncLog
 
@@ -117,6 +119,7 @@ class TestUpdateHactValues(BaseTenantTestCase):
             update_hact_values()
         self.assertEqual(mock_send.call_count, 1)
 
+
 class TestNotifyHactUpdate(BaseTenantTestCase):
 
     def test_notify_hact_update(self):
@@ -188,7 +191,7 @@ class TestNotifyHactUpdate(BaseTenantTestCase):
 
         mock_send = Mock()
         with patch("etools.applications.hact.tasks.send_notification_with_template", mock_send):
-            update_hact_for_country(self.tenant.business_area_code)
+            notify_hact_update(["Partner XYZ"], Country.objects.get(business_area_code=self.tenant.business_area_code).id)
         self.assertEqual(mock_send.call_count, 1)
 
         expected_recipients = list([active_unicef_focal_user2.email, active_unicef_focal_user.email])
