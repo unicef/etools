@@ -291,7 +291,35 @@
                     {%  if not forloop.first %}
                         <td><span> </span></td>
                     {% endif %}
-                      <td class="w-p30">{% if not indicator.is_active %} ({% translate 'Inactive' %}){% endif %} {{ indicator.indicator.title }}</td>
+                    {% with variable="" %}
+                        {% if indicator.indicator.unit == "number" %}
+                            {% with variable="#" %}
+                                <td class="w-p30">
+                                    {% if not indicator.is_active %} ({{ _('Inactive') }}){% endif %}
+                                    {{ variable }} {{ indicator.indicator.title }}
+                                </td>
+                            {% endwith %}
+                        {% elif indicator.indicator.unit == "percentage" and indicator.indicator.display_type == "percentage" %}
+                            {% with variable="%" %}
+                                <td class="w-p30">
+                                    {% if not indicator.is_active %} ({{ _('Inactive') }}){% endif %}
+                                    {{ variable }} {{ indicator.indicator.title }}
+                                </td>
+                            {% endwith %}
+                        {% elif indicator.indicator.unit == "percentage" and indicator.indicator.display_type == "ratio" %}
+                            {% with variable="÷" %}
+                                <td class="w-p30">
+                                    {% if not indicator.is_active %} ({{ _('Inactive') }}){% endif %}
+                                    {{ variable }} {{ indicator.indicator.title }}
+                                </td>
+                            {% endwith %}
+                        {% else %}
+                            <td class="w-p30">
+                                {% if not indicator.is_active %} ({{ _('Inactive') }}){% endif %}
+                                {{ indicator.indicator.title }}
+                            </td>
+                        {% endif %}
+                    {% endwith %}
                       <td class="w-p20">
                         {% for location in indicator.locations.all %}
                           <span class="small-text">{{ location.name }}{%  if not forloop.last %}, {% endif %}
