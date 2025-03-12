@@ -14,7 +14,7 @@ from etools.applications.users.tests.factories import (
 )
 
 
-class TestManageAlertNotificationsView(BaseTenantTestCase):
+class TestAlertNotificationsViewSet(BaseTenantTestCase):
 
     @classmethod
     def setUpTestData(cls):
@@ -41,9 +41,14 @@ class TestManageAlertNotificationsView(BaseTenantTestCase):
         cls.waybill = GroupFactory(name=valid_group_name[2])
         cls.invalid_group = GroupFactory(name="Invalid Group")
 
+        RealmFactory(user=cls.partner_staff, group=cls.wastage_notification, country=cls.country)
+        RealmFactory(user=cls.partner_staff, group=cls.acknowledgement, country=cls.country)
+        RealmFactory(user=cls.partner_staff, group=cls.waybill, country=cls.country)
+
     def test_get_alert_notifications(self):
         response = self.forced_auth_req('get', self.url, user=self.partner_staff)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('count'), 3)
 
     def test_get_alert_notifications_unauthorized(self):
         response = self.forced_auth_req('get', self.url, user=self.simple_user)
@@ -108,7 +113,7 @@ class TestManageAlertNotificationsView(BaseTenantTestCase):
         }
         response = self.forced_auth_req('post', self.url, user=self.partner_staff, data=payload)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("User not exist", str(response.data))
+        self.assertIn(USER_DOES_NOT_EXIST, str(response.data))
 
     def test_create_alert_notification_invalid_group(self):
         payload = {
@@ -117,7 +122,7 @@ class TestManageAlertNotificationsView(BaseTenantTestCase):
         }
         response = self.forced_auth_req('post', self.url, user=self.partner_staff, data=payload)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("Group not available", str(response.data))
+        self.assertIn(GROUP_NOT_AVAILABLE, str(response.data))
 
     def test_create_alert_notification_duplicate_realm(self):
         # Pre-create a Realm with the same user, country, group, and organization.
@@ -133,7 +138,7 @@ class TestManageAlertNotificationsView(BaseTenantTestCase):
         }
         response = self.forced_auth_req('post', self.url, user=self.partner_staff, data=payload)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("Realm already exist", str(response.data))
+        self.assertIn(REALM_ALREADY_EXISTS, str(response.data))
 
     def test_create_alert_notification_unauthorized(self):
         payload = {
@@ -176,7 +181,7 @@ class TestManageAlertNotificationsView(BaseTenantTestCase):
         }
         response = self.forced_auth_req('patch', detail_url, user=self.partner_staff, data=payload)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("Group not available", str(response.data))
+        self.assertIn(GROUP_NOT_AVAILABLE, str(response.data))
 
     def test_update_alert_notification_unauthorized(self):
         realm = RealmFactory(
@@ -318,7 +323,7 @@ class TestManageAlertNotificationsView(BaseTenantTestCase):
         response = self.forced_auth_req('get', self.url, user=self.partner_staff, data=payload)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         results = response.data.get("results", [])
-        self.assertEqual(len(results), 1)
+        self.assertEqual(len(results), 2)
         self.assertEqual(results[0]["email"], self.partner_staff.email)
 
     def test_filter_no_params_returns_all(self):

@@ -8,12 +8,13 @@ from rest_framework.reverse import reverse
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.last_mile.admin_panel.constants import *  # NOQA
+from etools.applications.last_mile.tests.factories import PointOfInterestFactory
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.users.tests.factories import GroupFactory, SimpleUserFactory, UserPermissionFactory
 
 
-class TestManageUsersView(BaseTenantTestCase):
+class TestUsersViewSet(BaseTenantTestCase):
 
     @classmethod
     def setUpTestData(cls):
@@ -36,6 +37,7 @@ class TestManageUsersView(BaseTenantTestCase):
             profile__organization=cls.partner.organization,
             perms=[ALERT_NOTIFICATIONS_ADMIN_PANEL_PERMISSION]
         )
+        cls.active_location = PointOfInterestFactory(partner_organizations=[cls.partner], private=True)
 
         cls.valid_data = {
             'first_name': 'John',

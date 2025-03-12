@@ -15,7 +15,7 @@ from etools.applications.last_mile.admin_panel.constants import (
     LOCATIONS_ADMIN_PANEL_PERMISSION,
     STOCK_MANAGEMENT_ADMIN_PANEL_PERMISSION,
     TRANSFER_HISTORY_ADMIN_PANEL_PERMISSION,
-    TRANSFER_MANUL_CREATION_NAME,
+    TRANSFER_MANUAL_CREATION_NAME,
     USER_ADMIN_PANEL_PERMISSION,
     USER_LOCATIONS_ADMIN_PANEL_PERMISSION,
 )
@@ -301,7 +301,7 @@ class PointOfInterestExportSerializer(serializers.ModelSerializer):
         return obj.poi_type.name if obj.poi_type else None
 
     def get_implementing_partner(self, obj):
-        partners = obj.partner_organizations.all()
+        partners = obj.partner_organizations.all().prefetch_related('organization')
         return ",".join([f"{partner.organization.vendor_number} - {partner.organization.name}" if partner.organization else partner.name if partner.name else "-" for partner in partners])
 
     def get_lat(self, obj):
@@ -346,16 +346,14 @@ class UserPointOfInterestAdminSerializer(serializers.ModelSerializer):
     adminValidator = AdminPanelValidator()
 
     partners = PartnerSerializer(source='profile.organization.partner', read_only=True)
+    last_name = serializers.CharField(read_only=True)
+    first_name = serializers.CharField(read_only=True)
+    email = serializers.CharField(read_only=True)
     point_of_interest = serializers.PrimaryKeyRelatedField(
         many=True,
         queryset=models.PointOfInterest.objects.all(),
         write_only=True
     )
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        for field in ['last_name', 'first_name', 'email']:
-            self.fields[field].read_only = True
 
     @transaction.atomic
     def update(self, instance, validated_data):
@@ -517,12 +515,11 @@ class TransferItemCreateSerializer(serializers.ModelSerializer):
         self.adminValidator.validate_items(validated_data.get('items', []))
         self.adminValidator.validate_partner_location(validated_data.get('location'), validated_data.get('partner_organization'))
         items = validated_data.pop('items', [])
+        validated_data['unicef_release_order'] = f"{TRANSFER_MANUAL_CREATION_NAME} {timezone.now().strftime('%d-%m-%Y %H:%M:%S')}"
+        validated_data['transfer_type'] = models.Transfer.DELIVERY
+        validated_data['destination_point'] = validated_data.pop('location')
         instance = models.Transfer.objects.create(
-            unicef_release_order=f"{TRANSFER_MANUL_CREATION_NAME} {timezone.now().strftime('%d-%m-%Y %H:%M:%S')}",
-            partner_organization=validated_data.get('partner_organization'),
-            origin_point=models.PointOfInterest.objects.get(pk=1),  # Unicef warehouse
-            destination_point=validated_data.get('location'),
-            transfer_type=models.Transfer.DELIVERY,
+            **validated_data
         )
         items_to_create = []
         for item in items:
@@ -572,14 +569,16 @@ class PointOfInterestTypeAdminSerializer(serializers.ModelSerializer):
 
     adminValidator = AdminPanelValidator()
 
+    def validate_name(self, value):
+        self.adminValidator.validate_poi_type(value)
+        return value
+
     @transaction.atomic
     def create(self, validated_data):
-        self.adminValidator.validate_poi_type(validated_data['name'])
         return models.PointOfInterestType.objects.create(**validated_data)
 
     @transaction.atomic
     def update(self, instance, validated_data):
-        self.adminValidator.validate_poi_type(validated_data['name'])
         instance = super().update(instance, validated_data)
         return instance
 

@@ -37,6 +37,9 @@ class PointOfInterestManager(models.Manager):
     def get_queryset(self):
         return super().get_queryset().defer("point").select_related("parent")
 
+    def get_unicef_warehouses(self):
+        return self.get_queryset().get(pk=1)  # Unicef warehouse
+
 
 class PointOfInterest(TimeStampedModel, models.Model):
     partner_organizations = models.ManyToManyField(

@@ -9,7 +9,7 @@ from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.users.tests.factories import SimpleUserFactory, UserPermissionFactory
 
 
-class TestManageTransferHistoryView(BaseTenantTestCase):
+class TestTransferHistoryViewSet(BaseTenantTestCase):
 
     @classmethod
     def setUpTestData(cls):

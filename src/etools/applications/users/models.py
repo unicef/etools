@@ -106,7 +106,18 @@ class PermissionsMixin(models.Model):
         return _user_has_module_perms(self, app_label)
 
 
-class UsersManager(UserManager):
+class UserQuerySet(models.QuerySet):
+    def for_schema(self, schema_name):
+        return self.filter(realms__country__schema_name=schema_name)
+
+    def with_points_of_interest(self):
+        return self.filter(profile__organization__partner__points_of_interest__isnull=False)
+
+    def without_points_of_interest(self):
+        return self.filter(profile__organization__partner__points_of_interest__isnull=True)
+
+
+class UsersManager(UserManager.from_queryset(UserQuerySet)):
 
     def get_queryset(self):
         return super().get_queryset() \

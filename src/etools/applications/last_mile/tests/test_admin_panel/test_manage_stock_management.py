@@ -15,7 +15,7 @@ from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.users.tests.factories import CountryFactory, SimpleUserFactory, UserPermissionFactory
 
 
-class TestManageStockManagementView(BaseTenantTestCase):
+class TestStockManagementViewSet(BaseTenantTestCase):
 
     @classmethod
     def setUpTestData(cls):
@@ -168,7 +168,7 @@ class TestManageStockManagementView(BaseTenantTestCase):
         }
         response = self.forced_auth_req('post', self.url, user=self.partner_staff, data=payload)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("Items not sent", str(response.data))
+        self.assertIn(ITEMS_NOT_PROVIDED, str(response.data))
 
     def test_create_transfer_item_invalid_items(self):
         destination = PointOfInterestFactory(name="Destination POI Invalid Items")
@@ -205,7 +205,7 @@ class TestManageStockManagementView(BaseTenantTestCase):
         }
         response = self.forced_auth_req('post', self.url, user=self.partner_staff, data=payload)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("partner not exist under location", str(response.data).lower())
+        self.assertIn(PARTNER_NOT_UNDER_LOCATION, str(response.data))
 
     def test_create_transfer_item_missing_location(self):
         material = MaterialFactory()

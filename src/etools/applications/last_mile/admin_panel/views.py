@@ -75,13 +75,13 @@ class UserViewSet(ExportMixin,
         schema_name = connection.tenant.schema_name
         User = get_user_model()
 
-        queryset = User.objects.filter(realms__country__schema_name=schema_name)
+        queryset = User.objects.for_schema(schema_name)
 
         has_active_location = self.request.query_params.get('hasActiveLocation')
         if has_active_location == "1":
-            queryset = queryset.filter(profile__organization__partner__points_of_interest__isnull=False)
+            queryset = queryset.with_points_of_interest()
         elif has_active_location == "0":
-            queryset = queryset.filter(profile__organization__partner__points_of_interest__isnull=True)
+            queryset = queryset.without_points_of_interest()
 
         return queryset.distinct()
 
@@ -218,9 +218,7 @@ class UserLocationsViewSet(mixins.ListModelMixin,
     pagination_class = CustomDynamicPageNumberPagination
 
     def get_queryset(self):
-        base_qs = get_user_model().objects.filter(
-            realms__country__schema_name=connection.tenant.schema_name
-        ).distinct().order_by('id')
+        base_qs = get_user_model().objects.for_schema(connection.tenant.schema_name).distinct().order_by('id')
 
         if self.action not in ['update', 'partial_update', 'retrieve']:
             return base_qs.filter(profile__organization__partner__points_of_interest__isnull=False)
@@ -338,13 +336,13 @@ class OrganizationListView(mixins.ListModelMixin, GenericViewSet):
             .select_related('partner', 'auditorfirm', 'tpmpartner') \
             .prefetch_related('auditorfirm__purchase_orders', 'tpmpartner__countries')
 
-        q_partner = Q(partner__isnull=False, partner__hidden=False)
+        with_partner = Q(partner__isnull=False, partner__hidden=False)
 
-        q_audit = Q(auditorfirm__purchase_orders__engagement__isnull=False, auditorfirm__hidden=False)
+        with_audit = Q(auditorfirm__purchase_orders__engagement__isnull=False, auditorfirm__hidden=False)
 
-        q_tpm = Q(tpmpartner__countries=connection.tenant, tpmpartner__hidden=False)
+        with_tpm = Q(tpmpartner__countries=connection.tenant, tpmpartner__hidden=False)
 
-        return queryset.filter(q_partner | q_audit | q_tpm).distinct()
+        return queryset.filter(with_partner | with_audit | with_tpm).distinct()
 
     filter_backends = (SearchFilter,)
 

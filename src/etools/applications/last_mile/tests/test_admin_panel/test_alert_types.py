@@ -8,7 +8,7 @@ from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.users.tests.factories import GroupFactory, UserPermissionFactory
 
 
-class TestManageLocationsTypesView(BaseTenantTestCase):
+class TestLocationsTypesViewSet(BaseTenantTestCase):
 
     @classmethod
     def setUpTestData(cls):

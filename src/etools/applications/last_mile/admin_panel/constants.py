@@ -6,7 +6,7 @@ ALERT_TYPES = {
     "Waybill Recipient": "Waybill Recipient"
 }
 
-TRANSFER_MANUL_CREATION_NAME = "MT @"
+TRANSFER_MANUAL_CREATION_NAME = "MT @"
 
 USER_ADMIN_PANEL = 'users-admin-panel'
 USER_ADMIN_PANEL_PERMISSION = 'lmsm_admin_panel_manage_users'
@@ -31,3 +31,20 @@ STOCK_MANAGEMENT_ADMIN_PANEL_PERMISSION = 'lmsm_admin_panel_manage_stock_managem
 TRANSFER_HISTORY_ADMIN_PANEL = 'transfer-history'
 TRANSFER_EVIDENCE_ADMIN_PANEL = 'transfer-evidence'
 TRANSFER_HISTORY_ADMIN_PANEL_PERMISSION = 'lmsm_admin_panel_manage_transfer_history'
+
+# Error messages
+POI_TYPE_ALREADY_EXISTS = "The point of interest type already exists."
+USER_DOES_NOT_EXIST = "The user does not exist."
+GROUP_NOT_AVAILABLE = "The group is not available."
+GROUP_DOES_NOT_EXIST = "The group does not exist."
+USER_NOT_PROVIDED = "The user was not provided."
+GROUP_NOT_PROVIDED = "The group was not provided."
+EMAIL_NOT_PROVIDED = "The email was not provided."
+REALM_ALREADY_EXISTS = "The realm already exists."
+ORGANIZATION_DOES_NOT_EXIST = "The organization does not exist."
+PARTNER_NOT_UNDER_ORGANIZATION = "The partner does not exist under the organization."
+ITEMS_NOT_PROVIDED = "No items were provided."
+INVALID_QUANTITY = "The quantity must be greater than 0."
+UOM_NOT_PROVIDED = "The unit of measurement (UOM) was not provided."
+UOM_NOT_VALID = "The unit of measurement (UOM) is not valid."
+PARTNER_NOT_UNDER_LOCATION = "The partner does not exist under the location."

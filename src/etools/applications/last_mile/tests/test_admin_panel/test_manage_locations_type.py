@@ -10,7 +10,7 @@ from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.users.tests.factories import SimpleUserFactory, UserPermissionFactory
 
 
-class TestManageLocationsTypesView(BaseTenantTestCase):
+class TestLocationsTypesViewSet(BaseTenantTestCase):
 
     @classmethod
     def setUpTestData(cls):
@@ -49,6 +49,12 @@ class TestManageLocationsTypesView(BaseTenantTestCase):
         response = self.forced_auth_req('post', self.url, data=data, user=self.partner_staff)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertTrue(PointOfInterestType.objects.filter(name="Park").exists())
+
+    def test_create_location_type_duplicate_name(self):
+        data = {"name": "School", "category": "recreational"}
+        response = self.forced_auth_req('post', self.url, data=data, user=self.partner_staff)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn(POI_TYPE_ALREADY_EXISTS, str(response.data.get('name')))
 
     def test_create_location_type_unauthorized(self):
         data = {"name": "Park", "category": "recreational"}
