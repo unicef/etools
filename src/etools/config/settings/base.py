@@ -667,7 +667,7 @@ ECN_API_ENDPOINT = get_from_secrets_or_env('ECN_API_ENDPOINT', '')  # example: h
 RESTRICTED_ADMIN = str2bool(get_from_secrets_or_env('RESTRICTED_ADMIN', 'True'))
 
 # Emails allowed to edit admin models in Partners and Reports apps if RESTRICTED_ADMIN is enabled
-ADMIN_EDIT_EMAILS = get_from_secrets_or_env('ADMIN_EDIT_EMAILS', 'root@unicef.org')
+ADMIN_EDIT_EMAILS = get_from_secrets_or_env('ADMIN_EDIT_EMAILS', '')
 
 
 # Stale non-UNICEF users deactivation threshold
@@ -678,7 +678,7 @@ STALE_USERS_DEACTIVATION_THRESHOLD_DAYS = int(
 WAYBILL_EMAILS = get_from_secrets_or_env('WAYBILL_EMAILS', '')
 
 
-RUTF_MATERIALS = get_from_secrets_or_env('RUTF_MATERIALS', 'SBMATERIAL004,SBMATERIAL005').split(',')
+RUTF_MATERIALS = get_from_secrets_or_env('RUTF_MATERIALS', '').split(',')
 
 READ_ONLY_EXCLUDED_PATHS = [
     "/login",
