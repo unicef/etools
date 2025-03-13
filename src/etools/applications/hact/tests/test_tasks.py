@@ -196,13 +196,14 @@ class TestNotifyHactUpdate(BaseTenantTestCase):
         mock_send = Mock()
         with patch("etools.applications.hact.tasks.send_notification_with_template", mock_send):
             notify_hact_update(["Partner XYZ"], Country.objects.get(business_area_code=self.tenant.business_area_code).id)
-        self.assertEqual(mock_send.call_count, 1)
 
-        expected_recipients = list([active_unicef_focal_user2.email, active_unicef_focal_user.email])
+        expected_recipients = [active_unicef_focal_user.email, active_unicef_focal_user2.email]
 
-        actual_call_args = mock_send.call_args[1]
-        assert set(actual_call_args["recipients"]) == set(expected_recipients), \
-            f"Expected {expected_recipients}, got {actual_call_args['recipients']}"
+        mock_send.assert_called_once_with(
+            recipients=sorted(list(expected_recipients)),
+            template_name='partners/hact_updated',
+            context={'partners': ['Partner XYZ'], 'environment': ''}
+        )
 
         log = logs.first()
         self.assertEqual(log.total_records, 1)
