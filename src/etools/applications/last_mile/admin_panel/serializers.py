@@ -9,17 +9,9 @@ from rest_framework import serializers
 from rest_framework_gis.fields import GeometryField
 
 from etools.applications.last_mile import models
-from etools.applications.last_mile.admin_panel.constants import (
-    ALERT_NOTIFICATIONS_ADMIN_PANEL_PERMISSION,
-    ALERT_TYPES,
-    LOCATIONS_ADMIN_PANEL_PERMISSION,
-    STOCK_MANAGEMENT_ADMIN_PANEL_PERMISSION,
-    TRANSFER_HISTORY_ADMIN_PANEL_PERMISSION,
-    TRANSFER_MANUAL_CREATION_NAME,
-    USER_ADMIN_PANEL_PERMISSION,
-    USER_LOCATIONS_ADMIN_PANEL_PERMISSION,
-)
+from etools.applications.last_mile.admin_panel.constants import ALERT_TYPES, TRANSFER_MANUAL_CREATION_NAME
 from etools.applications.last_mile.admin_panel.validators import AdminPanelValidator
+from etools.applications.last_mile.permissions import LastMileUserPermissionRetriever
 from etools.applications.last_mile.serializers import PointOfInterestTypeSerializer
 from etools.applications.locations.models import Location
 from etools.applications.organizations.models import Organization
@@ -27,7 +19,6 @@ from etools.applications.partners.models import PartnerOrganization
 from etools.applications.users.models import Country, Group, Realm, UserProfile
 from etools.applications.users.serializers import SimpleUserSerializer
 from etools.applications.users.validators import EmailValidator, LowerCaseEmailValidator
-from etools.applications.last_mile.permissions import LastMileUserPermissionRetriever
 
 
 class UserAdminSerializer(SimpleUserSerializer):
@@ -217,6 +208,7 @@ class SimplePartnerOrganizationSerializer(serializers.ModelSerializer):
         model = PartnerOrganization
         fields = ('id', 'name', 'vendor_number')
 
+
 class ParentLocationsSerializer(serializers.Serializer):
     country = serializers.CharField(read_only=True)
     region = serializers.CharField(read_only=True)
@@ -240,13 +232,13 @@ class PointOfInterestAdminSerializer(serializers.ModelSerializer):
     country = serializers.CharField(read_only=True)
     region = serializers.CharField(read_only=True)
     district = serializers.CharField(read_only=True)
-    
+
     def to_representation(self, instance):
         data = super().to_representation(instance)
         parent_locations = ParentLocationsSerializer(instance.parent).data
         data.update(parent_locations)
         return data
-    
+
     class Meta:
         model = models.PointOfInterest
         fields = '__all__'
@@ -282,7 +274,7 @@ class PointOfInterestExportSerializer(serializers.ModelSerializer):
 
     def get_status(self, obj):
         return "Active" if obj.is_active else "Inactive"
-    
+
     def to_representation(self, instance):
         data = super().to_representation(instance)
         parent_locations = ParentLocationsSerializer(instance.parent).data

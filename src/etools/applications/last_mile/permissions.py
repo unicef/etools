@@ -93,6 +93,7 @@ class LMSMAPIPermission(IsAuthenticated):
         """
         return request.user.is_staff or is_user_in_groups(request.user, ['LMSMApi'])
 
+
 class LastMileUserPermissionRetriever():
 
     def get_permissions(self, user):

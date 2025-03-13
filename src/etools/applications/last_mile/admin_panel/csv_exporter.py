@@ -1,7 +1,8 @@
 import tablib
 
+
 class CsvExporter:
-    
+
     def export(self, rows):
         dataset = tablib.Dataset()
         if not rows:

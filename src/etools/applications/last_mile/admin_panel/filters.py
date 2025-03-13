@@ -4,7 +4,7 @@ from django.db.models import CharField, F, Func, Q
 from django_filters import rest_framework as filters
 
 from etools.applications.last_mile.admin_panel.constants import ALERT_TYPES
-from etools.applications.last_mile.admin_panel.serializers import PointOfInterestAdminSerializer
+from etools.applications.last_mile.admin_panel.serializers import ParentLocationsSerializer
 from etools.applications.last_mile.models import PointOfInterest, TransferHistory
 from etools.applications.users.models import Realm
 
@@ -38,7 +38,7 @@ class LocationsFilter(filters.FilterSet):
         matching_ids = []
         for poi in queryset:
             location_obj = getattr(poi, 'parent', poi)
-            loc_info = PointOfInterestAdminSerializer().extract_location_info(location_obj)
+            loc_info = ParentLocationsSerializer(location_obj).data
             if loc_info.get('district') and value.lower() in loc_info.get('district').lower():
                 matching_ids.append(poi.pk)
         return queryset.filter(pk__in=matching_ids)
@@ -47,7 +47,7 @@ class LocationsFilter(filters.FilterSet):
         matching_ids = []
         for poi in queryset:
             location_obj = getattr(poi, 'parent', poi)
-            loc_info = PointOfInterestAdminSerializer().extract_location_info(location_obj)
+            loc_info = ParentLocationsSerializer(location_obj).data
             if loc_info.get('region') and value.lower() in loc_info.get('region').lower():
                 matching_ids.append(poi.pk)
         return queryset.filter(pk__in=matching_ids)
@@ -56,7 +56,7 @@ class LocationsFilter(filters.FilterSet):
         matching_ids = []
         for poi in queryset:
             location_obj = getattr(poi, 'parent', poi)
-            loc_info = PointOfInterestAdminSerializer().extract_location_info(location_obj)
+            loc_info = ParentLocationsSerializer(location_obj).data
             if loc_info.get('country') and value.lower() in loc_info.get('country').lower():
                 matching_ids.append(poi.pk)
         return queryset.filter(pk__in=matching_ids)

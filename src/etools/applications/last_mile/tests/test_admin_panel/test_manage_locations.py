@@ -34,10 +34,14 @@ class TestLocationsViewSet(BaseTenantTestCase):
         cls.poi_partner_2 = PointOfInterestFactory(partner_organizations=[cls.partner_2], private=True, poi_type_id=cls.poi_type_2.id)
         cls.poi_partner_3 = PointOfInterestFactory(partner_organizations=[cls.partner_3], private=True, poi_type_id=cls.poi_type_3.id)
         cls.poi_partner_4 = PointOfInterestFactory(partner_organizations=[cls.partner_4], private=True, poi_type_id=cls.poi_type_3.id)
+        cls.parent_location_1 = LocationFactory(name="Somalia", admin_level=0)
+        cls.parent_location_2 = LocationFactory(name="Some Region", admin_level=1, parent=cls.parent_location_1)
+        cls.parent_location_3 = LocationFactory(name="Some District", admin_level=2, parent=cls.parent_location_2)
         cls.poi = PointOfInterestFactory(
             partner_organizations=[cls.partner],
             private=True,
-            poi_type_id=cls.poi_type.id
+            poi_type_id=cls.poi_type.id,
+            parent=cls.parent_location_1,
         )
         cls.poi_filter_1 = PointOfInterestFactory(
             partner_organizations=[cls.partner],
@@ -46,7 +50,8 @@ class TestLocationsViewSet(BaseTenantTestCase):
             name="Filter Location A",
             p_code="F001",
             description="Filter Desc A",
-            point=GEOSGeometry("POINT(54.21342 25.432432)")
+            point=GEOSGeometry("POINT(54.21342 25.432432)"),
+            parent=cls.parent_location_2,
         )
         cls.poi_filter_2 = PointOfInterestFactory(
             partner_organizations=[cls.partner],
@@ -55,7 +60,8 @@ class TestLocationsViewSet(BaseTenantTestCase):
             name="Filter Location B",
             p_code="F002",
             description="Filter Desc B",
-            point=GEOSGeometry("POINT(43.2323 34.123213)")
+            point=GEOSGeometry("POINT(43.2323 34.123213)"),
+            parent=cls.parent_location_3,
         )
         cls.poi_filter_3 = PointOfInterestFactory(
             partner_organizations=[cls.partner],
@@ -267,6 +273,36 @@ class TestLocationsViewSet(BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data.get('count'), 2)
+
+    def test_filter_by_country(self):
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            data={'country': 'Somalia'},
+            user=self.partner_staff
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('count'), 3)
+
+    def test_filter_by_region(self):
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            data={'region': 'Some Region'},
+            user=self.partner_staff
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('count'), 2)
+
+    def test_filter_by_district(self):
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            data={'district': 'Some District'},
+            user=self.partner_staff
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('count'), 1)
 
     def test_filter_by_is_active(self):
         response = self.forced_auth_req(
