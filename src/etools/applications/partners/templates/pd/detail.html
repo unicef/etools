@@ -295,27 +295,27 @@
                         {% if indicator.indicator.unit == "number" %}
                             {% with variable="#" %}
                                 <td class="w-p30">
-                                    {% if not indicator.is_active %} ({ translate 'Inactive' }){% endif %}
+                                    {% if not indicator.is_active %} ({% translate 'Inactive' %}){% endif %}
                                     {{ variable }} {{ indicator.indicator.title }}
                                 </td>
                             {% endwith %}
                         {% elif indicator.indicator.unit == "percentage" and indicator.indicator.display_type == "percentage" %}
                             {% with variable="%" %}
                                 <td class="w-p30">
-                                    {% if not indicator.is_active %} ({ translate 'Inactive' }){% endif %}
+                                    {% if not indicator.is_active %} ({% translate 'Inactive' %}){% endif %}
                                     {{ variable }} {{ indicator.indicator.title }}
                                 </td>
                             {% endwith %}
                         {% elif indicator.indicator.unit == "percentage" and indicator.indicator.display_type == "ratio" %}
                             {% with variable="÷" %}
                                 <td class="w-p30">
-                                    {% if not indicator.is_active %} ({ translate 'Inactive' }){% endif %}
+                                    {% if not indicator.is_active %} ({% translate 'Inactive' %}){% endif %}
                                     {{ variable }} {{ indicator.indicator.title }}
                                 </td>
                             {% endwith %}
                         {% else %}
                             <td class="w-p30">
-                                {% if not indicator.is_active %} ({ translate 'Inactive' }){% endif %}
+                                {% if not indicator.is_active %} ({% translate 'Inactive' %}){% endif %}
                                 {{ indicator.indicator.title }}
                             </td>
                         {% endif %}
