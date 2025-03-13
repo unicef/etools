@@ -27,6 +27,7 @@ from etools.applications.partners.models import PartnerOrganization
 from etools.applications.users.models import Country, Group, Realm, UserProfile
 from etools.applications.users.serializers import SimpleUserSerializer
 from etools.applications.users.validators import EmailValidator, LowerCaseEmailValidator
+from etools.applications.last_mile.permissions import LastMileUserPermissionRetriever
 
 
 class UserAdminSerializer(SimpleUserSerializer):
@@ -639,18 +640,11 @@ class PartnerOrganizationAdminSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'vendor_number')
 
 
-class AuthUserPermsDetailSerializer(serializers.ModelSerializer):
+class AuthUserPermissionsDetailSerializer(serializers.ModelSerializer):
     admin_perms = serializers.SerializerMethodField()
 
     def get_admin_perms(self, obj):
-        if obj.is_superuser:
-            return [USER_ADMIN_PANEL_PERMISSION,
-                    STOCK_MANAGEMENT_ADMIN_PANEL_PERMISSION,
-                    TRANSFER_HISTORY_ADMIN_PANEL_PERMISSION,
-                    ALERT_NOTIFICATIONS_ADMIN_PANEL_PERMISSION,
-                    LOCATIONS_ADMIN_PANEL_PERMISSION,
-                    USER_LOCATIONS_ADMIN_PANEL_PERMISSION]
-        return [perm.codename for perm in obj.user_permissions.all()]
+        return LastMileUserPermissionRetriever().get_permissions(obj)
 
     class Meta:
         model = get_user_model()

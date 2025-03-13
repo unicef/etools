@@ -29,7 +29,7 @@ from etools.applications.last_mile.admin_panel.serializers import (
     AlertNotificationCustomeSerializer,
     AlertNotificationSerializer,
     AlertTypeSerializer,
-    AuthUserPermsDetailSerializer,
+    AuthUserPermissionsDetailSerializer,
     LocationsAdminSerializer,
     MaterialAdminSerializer,
     OrganizationAdminSerializer,
@@ -49,6 +49,7 @@ from etools.applications.last_mile.admin_panel.serializers import (
     UserPointOfInterestAdminSerializer,
     UserPointOfInterestExportSerializer,
 )
+from etools.applications.last_mile.admin_panel.csv_exporter import CsvExporter
 from etools.applications.last_mile.permissions import IsLMSMAdmin
 from etools.applications.locations.models import Location
 from etools.applications.organizations.models import Organization
@@ -128,12 +129,7 @@ class UserViewSet(ExportMixin,
         users = self.filter_queryset(self.get_queryset())
         serializer = self.get_serializer(users, many=True)
         data = serializer.data
-        dataset = tablib.Dataset()
-        if data:
-            headers = list(data[0].keys())
-            dataset.headers = headers
-            for item in data:
-                dataset.append([item.get(h) for h in headers])
+        dataset = CsvExporter().export(data)
         return Response(dataset, headers={
             'Content-Disposition': 'attachment;filename=users_{}.csv'.format(
                 timezone.now().date(),
@@ -196,12 +192,7 @@ class LocationsViewSet(mixins.ListModelMixin,
         users = self.filter_queryset(self.get_queryset())
         serializer = self.get_serializer(users, many=True)
         data = serializer.data
-        dataset = tablib.Dataset()
-        if data:
-            headers = list(data[0].keys())
-            dataset.headers = headers
-            for item in data:
-                dataset.append([item.get(h) for h in headers])
+        dataset = CsvExporter().export(data)
         return Response(dataset, headers={
             'Content-Disposition': 'attachment;filename=locations_{}.csv'.format(
                 timezone.now().date(),
@@ -253,12 +244,7 @@ class UserLocationsViewSet(mixins.ListModelMixin,
         users = self.filter_queryset(self.get_queryset())
         serializer = self.get_serializer(users, many=True)
         data = serializer.data
-        dataset = tablib.Dataset()
-        if data:
-            headers = list(data[0].keys())
-            dataset.headers = headers
-            for item in data:
-                dataset.append([item.get(h) for h in headers])
+        dataset = CsvExporter().export(data)
         return Response(dataset, headers={
             'Content-Disposition': 'attachment;filename=user_locations_{}.csv'.format(
                 timezone.now().date(),
@@ -374,12 +360,7 @@ class PointOfInterestTypeListView(mixins.ListModelMixin, mixins.CreateModelMixin
         users = self.filter_queryset(self.get_queryset())
         serializer = self.get_serializer(users, many=True)
         data = serializer.data
-        dataset = tablib.Dataset()
-        if data:
-            headers = list(data[0].keys())
-            dataset.headers = headers
-            for item in data:
-                dataset.append([item.get(h) for h in headers])
+        dataset = CsvExporter().export(data)
         return Response(dataset, headers={
             'Content-Disposition': 'attachment;filename=locations_type_{}.csv'.format(
                 timezone.now().date(),
@@ -459,7 +440,7 @@ class PartnerOrganizationListView(mixins.ListModelMixin, GenericViewSet):
 
 
 class UserPermissionsListView(mixins.ListModelMixin, GenericViewSet):
-    serializer_class = AuthUserPermsDetailSerializer
+    serializer_class = AuthUserPermissionsDetailSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
