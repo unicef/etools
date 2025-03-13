@@ -216,42 +216,36 @@ class SimplePartnerOrganizationSerializer(serializers.ModelSerializer):
         model = PartnerOrganization
         fields = ('id', 'name', 'vendor_number')
 
+class ParentLocationsSerializer(serializers.Serializer):
+    country = serializers.CharField(read_only=True)
+    region = serializers.CharField(read_only=True)
+    district = serializers.CharField(read_only=True)
+
+    def to_representation(self, instance):
+        location_data = {"country": None, "region": None, "district": None}
+        parent_locations = instance.get_parent_locations()
+        if instance.FIRST_ADMIN_LEVEL in parent_locations:
+            location_data["country"] = parent_locations.get(instance.FIRST_ADMIN_LEVEL).name
+        if instance.SECOND_ADMIN_LEVEL in parent_locations:
+            location_data["region"] = parent_locations.get(instance.SECOND_ADMIN_LEVEL).name
+        if instance.THIRD_ADMIN_LEVEL in parent_locations:
+            location_data["district"] = parent_locations.get(instance.THIRD_ADMIN_LEVEL).name
+        return location_data
+
 
 class PointOfInterestAdminSerializer(serializers.ModelSerializer):
     partner_organizations = SimplePartnerOrganizationSerializer(many=True, read_only=True)
     poi_type = PointOfInterestTypeSerializer(read_only=True)
-    country = serializers.SerializerMethodField(read_only=True)
-    region = serializers.SerializerMethodField(read_only=True)
-    district = serializers.SerializerMethodField(read_only=True)
-
-    def extract_location_info(self, location_obj):
-        location_data = {"district": None, "region": None, "country": None}
-
-        current = location_obj
-        while current:
-            admin_level = getattr(current, "admin_level_name", None)
-            name = getattr(current, "name", None)
-
-            if admin_level == "District":
-                location_data["district"] = name
-            elif admin_level == "Region":
-                location_data["region"] = name
-            elif admin_level == "Country":
-                location_data["country"] = name
-
-            current = getattr(current, "parent", None)
-
-        return location_data
-
-    def get_country(self, obj):
-        return self.extract_location_info(obj).get('country')
-
-    def get_region(self, obj):
-        return self.extract_location_info(obj).get('region')
-
-    def get_district(self, obj):
-        return self.extract_location_info(obj).get('district')
-
+    country = serializers.CharField(read_only=True)
+    region = serializers.CharField(read_only=True)
+    district = serializers.CharField(read_only=True)
+    
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        parent_locations = ParentLocationsSerializer(instance.parent).data
+        data.update(parent_locations)
+        return data
+    
     class Meta:
         model = models.PointOfInterest
         fields = '__all__'
@@ -276,9 +270,9 @@ class PointOfInterestListSerializer(serializers.ListSerializer):
 
 
 class PointOfInterestExportSerializer(serializers.ModelSerializer):
-    state = serializers.SerializerMethodField()
-    region = serializers.SerializerMethodField()
-    district = serializers.SerializerMethodField()
+    country = serializers.CharField(read_only=True)
+    region = serializers.CharField(read_only=True)
+    district = serializers.CharField(read_only=True)
     primary_type = serializers.SerializerMethodField()
     implementing_partner = serializers.SerializerMethodField()
     lat = serializers.SerializerMethodField()
@@ -287,15 +281,12 @@ class PointOfInterestExportSerializer(serializers.ModelSerializer):
 
     def get_status(self, obj):
         return "Active" if obj.is_active else "Inactive"
-
-    def get_state(self, obj):
-        return PointOfInterestAdminSerializer().extract_location_info(obj).get('country')
-
-    def get_region(self, obj):
-        return PointOfInterestAdminSerializer().extract_location_info(obj).get('region')
-
-    def get_district(self, obj):
-        return PointOfInterestAdminSerializer().extract_location_info(obj).get('district')
+    
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        parent_locations = ParentLocationsSerializer(instance.parent).data
+        data.update(parent_locations)
+        return data
 
     def get_primary_type(self, obj):
         return obj.poi_type.name if obj.poi_type else None
@@ -312,7 +303,7 @@ class PointOfInterestExportSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.PointOfInterest
-        fields = ('id', 'name', 'state', 'region', 'district', 'primary_type', 'p_code', 'lat', 'lng', 'status', 'implementing_partner')
+        fields = ('id', 'name', 'primary_type', 'p_code', 'lat', 'lng', 'status', 'implementing_partner', 'region', 'district', 'country')
         list_serializer_class = PointOfInterestListSerializer
 
 
@@ -547,18 +538,15 @@ class OrganizationAdminSerializer(serializers.ModelSerializer):
 
 
 class LocationsAdminSerializer(serializers.ModelSerializer):
-    country = serializers.SerializerMethodField(read_only=True)
-    region = serializers.SerializerMethodField(read_only=True)
-    district = serializers.SerializerMethodField(read_only=True)
+    country = serializers.CharField(read_only=True)
+    region = serializers.CharField(read_only=True)
+    district = serializers.CharField(read_only=True)
 
-    def get_country(self, obj):
-        return PointOfInterestAdminSerializer().extract_location_info(obj).get('country')
-
-    def get_region(self, obj):
-        return PointOfInterestAdminSerializer().extract_location_info(obj).get('region')
-
-    def get_district(self, obj):
-        return PointOfInterestAdminSerializer().extract_location_info(obj).get('district')
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        parent_locations = ParentLocationsSerializer(instance).data
+        data.update(parent_locations)
+        return data
 
     class Meta:
         model = Location

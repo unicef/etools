@@ -21,11 +21,11 @@ class TestCommonViewSet(BaseTenantTestCase):
         cls.partner_organization_2 = PartnerFactory(organization=OrganizationFactory(name='Organization 2'))
         cls.partner_organization_3 = PartnerFactory(organization=OrganizationFactory(name='Organization 3'), hidden=True)
         # Location Configuration
-        cls.location_1 = LocationFactory(admin_level_name='Country', name="Country 1")
-        cls.location_2 = LocationFactory(admin_level_name='District', name="District 1")
-        cls.location_3 = LocationFactory(admin_level_name='Region', name="Region 1")
-        cls.location_4 = LocationFactory(admin_level_name='District', name="District Country", parent=cls.location_1)
-        cls.location_5 = LocationFactory(admin_level_name='Region', name="Region Country", parent=cls.location_4)
+        cls.location_1 = LocationFactory(admin_level_name='Country', name="Country 1", admin_level=0)
+        cls.location_2 = LocationFactory(admin_level_name='Region', name="Region 1", admin_level=1)
+        cls.location_3 = LocationFactory(admin_level_name='District', name="District 1", admin_level=2)
+        cls.location_4 = LocationFactory(admin_level_name='Region', name="Region Country", parent=cls.location_1, admin_level=1)
+        cls.location_5 = LocationFactory(admin_level_name='District', name="District Country", parent=cls.location_4, admin_level=2)
         # Material Configuration
         cls.material_1 = MaterialFactory()
         cls.material_2 = MaterialFactory()
@@ -83,16 +83,16 @@ class TestCommonViewSet(BaseTenantTestCase):
         self.assertEqual(response.data[0].get('district'), None)
 
         self.assertEqual(response.data[1].get('country'), None)
-        self.assertEqual(response.data[1].get('region'), None)
-        self.assertEqual(response.data[1].get('district'), "District 1")
+        self.assertEqual(response.data[1].get('region'), "Region 1")
+        self.assertEqual(response.data[1].get('district'), None)
 
         self.assertEqual(response.data[2].get('country'), None)
-        self.assertEqual(response.data[2].get('region'), "Region 1")
-        self.assertEqual(response.data[2].get('district'), None)
+        self.assertEqual(response.data[2].get('region'), None)
+        self.assertEqual(response.data[2].get('district'), "District 1")
 
         self.assertEqual(response.data[3].get('country'), "Country 1")
-        self.assertEqual(response.data[3].get('region'), None)
-        self.assertEqual(response.data[3].get('district'), "District Country")
+        self.assertEqual(response.data[3].get('region'), "Region Country")
+        self.assertEqual(response.data[3].get('district'), None)
 
         self.assertEqual(response.data[4].get('country'), "Country 1")
         self.assertEqual(response.data[4].get('region'), "Region Country")

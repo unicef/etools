@@ -37,5 +37,20 @@ class SimplifiedGeomManager(models.Manager):
 
 
 class Location(AbstractLocation):
+
+    FIRST_ADMIN_LEVEL = 0  # Country
+    SECOND_ADMIN_LEVEL = 1  # Region or Province or County or ...
+    THIRD_ADMIN_LEVEL = 2  # Everything under a region
+    FOURTH_ADMIN_LEVEL = 3 
+
     objects = LocationsManager()
     simplified_geom = SimplifiedGeomManager()
+
+    def get_parent_locations(self):
+        location_data = {}
+        current = self
+        while current:
+            location_data[current.admin_level] = current
+            current = current.parent
+
+        return location_data
