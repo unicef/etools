@@ -103,10 +103,11 @@ def notify_hact_update(partner_list, country_id):
     recipients = get_user_model().objects.filter(
         realms__group=UNICEFAuditFocalPoint.as_group(),
         realms__country__id=country_id,
+        realms__is_active=True,
         is_superuser=False,
     ).values_list('email', flat=True).distinct()
     send_notification_with_template(
-        recipients=list(recipients),
+        recipients=sorted(list(recipients)),
         template_name='partners/hact_updated',
         context=email_context
     )
