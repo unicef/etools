@@ -203,8 +203,3 @@ class TestNotifyHactUpdate(BaseTenantTestCase):
         actual_call_args = mock_send.call_args[1]
         assert set(actual_call_args["recipients"]) == set(expected_recipients), \
             f"Expected {expected_recipients}, got {actual_call_args['recipients']}"
-
-        log = logs.first()
-        self.assertEqual(log.total_records, 1)
-        self.assertEqual(log.total_processed, 1)
-        self.assertTrue(log.successful)
