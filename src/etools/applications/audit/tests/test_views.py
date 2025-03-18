@@ -34,7 +34,7 @@ from etools.applications.audit.tests.factories import (
     StaffSpotCheckFactory,
     UserFactory,
 )
-from etools.applications.audit.tests.test_transitions import MATransitionsTestCaseMixin
+from etools.applications.audit.tests.test_transitions import MATransitionsTestCaseMixin, SCTransitionsTestCaseMixin
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.organizations.models import OrganizationType
 from etools.applications.organizations.tests.factories import OrganizationFactory
@@ -998,6 +998,34 @@ class TestEngagementActionPointViewSet(EngagementTransitionsTestCaseMixin, BaseT
         action_point = ActionPointFactory(engagement=self.engagement, status='completed')
 
         self._test_action_point_editable(action_point, self.unicef_focal_point, editable=False)
+
+
+class TestSpotCheckDetail(SCTransitionsTestCaseMixin, BaseTenantTestCase):
+    engagement_factory = SpotCheckFactory
+
+    def test_detail_pending_unsupported_amount(self):
+        self._fill_sc_specified_fields()
+        self.engagement.total_amount_tested = 1000
+        self.engagement.total_amount_of_ineligible_expenditure = 300
+        self.engagement.amount_refunded = 100
+        self.engagement.additional_supporting_documentation_provided = 25
+        self.engagement.justification_provided_and_accepted = 75
+        self.engagement.writeoff = 50
+        self.engagement.save()
+        self._init_finalized_engagement()
+
+        response = self.forced_auth_req(
+            'get',
+            reverse('audit:spot-checks-detail', args=[self.engagement.pk]),
+            user=self.unicef_focal_point,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        expected_amount = (
+            self.engagement.total_amount_of_ineligible_expenditure - self.engagement.additional_supporting_documentation_provided -
+            self.engagement.justification_provided_and_accepted - self.engagement.write_off_required - self.engagement.amount_refunded
+        )
+        self.assertEqual(expected_amount, float(response.data['pending_unsupported_amount']))
+        self.assertEqual(expected_amount, self.engagement.pending_unsupported_amount)
 
 
 class TestStaffSpotCheck(AuditTestCaseMixin, BaseTenantTestCase):
