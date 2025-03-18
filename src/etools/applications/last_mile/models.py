@@ -115,11 +115,32 @@ class TransferHistoryManager(models.Manager):
 
 
 class TransferHistory(TimeStampedModel, models.Model):
-    origin_transfer_id = models.IntegerField(unique=True)
+    origin_transfer = models.ForeignKey(
+        'Transfer',
+        verbose_name=_("Origin Transfer"),
+        related_name='history',
+        on_delete=models.SET_NULL,
+        null=True
+    )
     objects = TransferHistoryManager()
 
     class Meta:
         ordering = ("-created",)
+
+
+class TransferQuerySet(models.QuerySet):
+    def with_status_completed(self):
+        return self.filter(status=Transfer.COMPLETED)
+
+    def with_origin_point(self, poi_id):
+        return self.filter(origin_point__id=poi_id)
+
+    def with_items(self):
+        return self.filter(items__isnull=False, items__hidden=False)
+
+
+class TransferManager(models.Manager.from_queryset(TransferQuerySet)):
+    pass
 
 
 class Transfer(TimeStampedModel, models.Model):
@@ -247,6 +268,8 @@ class Transfer(TimeStampedModel, models.Model):
     waybill_id = models.CharField(max_length=255, null=True, blank=True)
 
     pd_number = models.CharField(max_length=255, null=True, blank=True)
+
+    objects = TransferManager()
 
     class Meta:
         ordering = ("-id",)
@@ -455,7 +478,7 @@ class Item(TimeStampedModel, models.Model):
     @cached_property
     def description(self):
         try:
-            partner_material = PartnerMaterial.objects.get(
+            partner_material = PartnerMaterial.objects.only('description').get(
                 partner_organization=self.transfer.partner_organization, material=self.material)
             return partner_material.description
         except PartnerMaterial.DoesNotExist:

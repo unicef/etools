@@ -592,14 +592,20 @@ class BaseTransferSerializer(serializers.ModelSerializer):
 class TransferLogAdminSerializer(serializers.ModelSerializer):
     from_partner_organization = serializers.SerializerMethodField()
     recipient_partner_organization = serializers.SerializerMethodField()
-    origin_point = serializers.CharField(source='origin_point.name')
-    destination_point = serializers.CharField(source='destination_point.name')
+    origin_point = serializers.SerializerMethodField()
+    destination_point = serializers.SerializerMethodField()
+
+    def get_origin_point(self, obj):
+        return obj.origin_point.name if obj.origin_point else None
+
+    def get_destination_point(self, obj):
+        return obj.destination_point.name if obj.destination_point else None
 
     def get_from_partner_organization(self, obj):
-        return obj.from_partner_organization.name if obj.from_partner_organization else None
+        return obj.from_partner_organization.organization.name if obj.from_partner_organization else None
 
     def get_recipient_partner_organization(self, obj):
-        return obj.recipient_partner_organization.name if obj.recipient_partner_organization else None
+        return obj.recipient_partner_organization.organization.name if obj.recipient_partner_organization else None
 
     class Meta:
         model = models.Transfer
@@ -610,7 +616,7 @@ class TransferHistoryAdminSerializer(serializers.ModelSerializer):
     primary_transfer = serializers.SerializerMethodField()
 
     def get_primary_transfer(self, obj):
-        return BaseTransferSerializer(models.Transfer.objects.filter(id=obj.origin_transfer_id).first()).data
+        return BaseTransferSerializer(obj.origin_transfer).data
 
     class Meta:
         model = models.TransferHistory

@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.db import connection
-from django.db.models import OuterRef, Q, Subquery
+from django.db.models import F, Q
 from django.utils import timezone
 
 from django_filters.rest_framework import DjangoFilterBackend
@@ -158,7 +158,7 @@ class LocationsViewSet(mixins.ListModelMixin,
     serializer_class = PointOfInterestAdminSerializer
     pagination_class = CustomDynamicPageNumberPagination
 
-    queryset = models.PointOfInterest.objects.all().order_by('id')
+    queryset = models.PointOfInterest.objects.select_related("parent", "poi_type").prefetch_related('partner_organizations').all().order_by('id')
 
     filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
     filterset_class = LocationsFilter
@@ -299,7 +299,13 @@ class TransferItemViewSet(mixins.ListModelMixin, GenericViewSet, mixins.CreateMo
     def get_queryset(self):
         poi_id = self.request.query_params.get('poi_id')
         if poi_id:
-            return models.Transfer.objects.filter(status=models.Transfer.COMPLETED, origin_point__id=poi_id, items__isnull=False, items__hidden=False).order_by('-id')
+            return models.Transfer.objects.select_related(
+                'destination_point',
+                'origin_point',
+            ).prefetch_related(
+                'items',
+                'items__material'
+            ).with_status_completed().with_origin_point(poi_id).with_items().order_by('-id')
         return models.Transfer.objects.none()
 
     def get_serializer_class(self):
@@ -388,18 +394,33 @@ class TransferHistoryListView(mixins.ListModelMixin, GenericViewSet):
     search_fields = ['unicef_release_order', 'transfer_name', 'transfer_type', 'status', 'partner_organization', 'destination_point', 'origin_point']
 
     def get_queryset(self):
-        transfer_subquery = models.Transfer.objects.filter(
-            id=OuterRef('origin_transfer_id')
+        qs = models.TransferHistory.objects.select_related(
+            'origin_transfer',
+            'origin_transfer__partner_organization__organization',
+            'origin_transfer__destination_point',
+            'origin_transfer__origin_point'
+        ).order_by('-created').annotate(
+            unicef_release_order=F('origin_transfer__unicef_release_order'),
+            transfer_name=F('origin_transfer__name'),
+            transfer_type=F('origin_transfer__transfer_type'),
+            status=F('origin_transfer__status'),
+            partner_organization=F('origin_transfer__partner_organization__organization__name'),
+            destination_point=F('origin_transfer__destination_point__name'),
+            origin_point=F('origin_transfer__origin_point__name')
+        ).only(
+            'id',
+            'origin_transfer__unicef_release_order',
+            'origin_transfer__name',
+            'origin_transfer__transfer_type',
+            'origin_transfer__status',
+            'origin_transfer__partner_organization__organization__name',
+            'origin_transfer__destination_point__name',
+            'origin_transfer__origin_point__name',
+            'origin_transfer',
+            'created',
+            'modified',
         )
-        qs = models.TransferHistory.objects.all().order_by('-id').annotate(
-            unicef_release_order=Subquery(transfer_subquery.values('unicef_release_order')[:1]),
-            transfer_name=Subquery(transfer_subquery.values('name')[:1]),
-            transfer_type=Subquery(transfer_subquery.values('transfer_type')[:1]),
-            status=Subquery(transfer_subquery.values('status')[:1]),
-            partner_organization=Subquery(transfer_subquery.values('partner_organization__organization__name')[:1]),
-            destination_point=Subquery(transfer_subquery.values('destination_point__name')[:1]),
-            origin_point=Subquery(transfer_subquery.values('origin_point__name')[:1]),
-        )
+
         return qs
 
 
@@ -413,7 +434,27 @@ class TransferEvidenceListView(mixins.RetrieveModelMixin, GenericViewSet):
 
     def retrieve(self, request, *args, **kwargs):
         transfer_history_id = self.kwargs.get(self.lookup_field)
-        queryset = models.Transfer.objects.filter(transfer_history_id=transfer_history_id)
+        queryset = models.Transfer.objects.select_related(
+            'from_partner_organization__organization',
+            'recipient_partner_organization__organization',
+            'origin_point',
+            'destination_point'
+        ).filter(transfer_history_id=transfer_history_id).only(
+            'id',
+            'created',
+            'modified',
+            'unicef_release_order',
+            'name',
+            'transfer_type',
+            'transfer_subtype',
+            'status',
+            'origin_point__name',
+            'origin_point',
+            'destination_point__name',
+            'destination_point',
+            'from_partner_organization__organization__name',
+            'recipient_partner_organization__organization__name',
+        )
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 

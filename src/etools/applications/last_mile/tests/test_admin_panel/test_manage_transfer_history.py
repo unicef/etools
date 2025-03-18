@@ -31,15 +31,16 @@ class TestTransferHistoryViewSet(BaseTenantTestCase):
         cls.url = reverse(f'{ADMIN_PANEL_APP_NAME}:{TRANSFER_HISTORY_ADMIN_PANEL}-list')
 
     def test_get_transfer_history(self):
-        response = self.forced_auth_req('get', self.url, user=self.partner_staff)
+        with self.assertNumQueries(4):
+            response = self.forced_auth_req('get', self.url, user=self.partner_staff)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data.get('count'), 1)
         transfer_2 = TransferFactory(unicef_release_order="Test Order#2", transfer_history_id=response.data.get('results')[0].get('id'))
         transfer_3 = TransferFactory(unicef_release_order="Test Order#3", transfer_history_id=response.data.get('results')[0].get('id'))
         ItemFactory(transfer=transfer_2, origin_transfer=self.transfer_1, batch_id="test_itm_2")
         ItemFactory(transfer=transfer_3, origin_transfer=self.transfer_1, batch_id="test_itm_3")
-
-        response = self.forced_auth_req('get', reverse(f'{ADMIN_PANEL_APP_NAME}:{TRANSFER_EVIDENCE_ADMIN_PANEL}-detail', kwargs={'transfer_history_id': response.data.get('results')[0].get('id')}), user=self.partner_staff)
+        with self.assertNumQueries(3):
+            response = self.forced_auth_req('get', reverse(f'{ADMIN_PANEL_APP_NAME}:{TRANSFER_EVIDENCE_ADMIN_PANEL}-detail', kwargs={'transfer_history_id': response.data.get('results')[0].get('id')}), user=self.partner_staff)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 3)
         self.assertEqual(response.data[0]['unicef_release_order'], transfer_3.unicef_release_order)
