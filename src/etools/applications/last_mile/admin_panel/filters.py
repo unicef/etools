@@ -4,8 +4,8 @@ from django.db.models import CharField, F, Func, Q
 from django_filters import rest_framework as filters
 
 from etools.applications.last_mile.admin_panel.constants import ALERT_TYPES
-from etools.applications.last_mile.admin_panel.serializers import ParentLocationsSerializer
 from etools.applications.last_mile.models import PointOfInterest, TransferHistory
+from etools.applications.locations.models import Location
 from etools.applications.users.models import Realm
 
 
@@ -34,32 +34,31 @@ class LocationsFilter(filters.FilterSet):
     latitude = filters.CharFilter(method='filter_latitude', label='Latitude')
     longitude = filters.CharFilter(method='filter_longitude', label='Longitude')
 
+    def filter_by_admin_level(self, queryset, name, value, admin_level):
+        locations = Location.objects.filter(
+            admin_level=admin_level,
+            name__icontains=value
+        )
+        if not locations.exists():
+            return queryset.none()
+
+        q_filter = Q()
+        for loc in locations:
+            q_filter |= Q(
+                parent__tree_id=loc.tree_id,
+                parent__lft__gte=loc.lft,
+                parent__rght__lte=loc.rght,
+            )
+        return queryset.filter(q_filter)
+
     def filter_district(self, queryset, name, value):
-        matching_ids = []
-        for poi in queryset:
-            location_obj = getattr(poi, 'parent', poi)
-            loc_info = ParentLocationsSerializer(location_obj).data
-            if loc_info.get('district') and value.lower() in loc_info.get('district').lower():
-                matching_ids.append(poi.pk)
-        return queryset.filter(pk__in=matching_ids)
+        return self.filter_by_admin_level(queryset, name, value, Location.THIRD_ADMIN_LEVEL)
 
     def filter_region(self, queryset, name, value):
-        matching_ids = []
-        for poi in queryset:
-            location_obj = getattr(poi, 'parent', poi)
-            loc_info = ParentLocationsSerializer(location_obj).data
-            if loc_info.get('region') and value.lower() in loc_info.get('region').lower():
-                matching_ids.append(poi.pk)
-        return queryset.filter(pk__in=matching_ids)
+        return self.filter_by_admin_level(queryset, name, value, Location.SECOND_ADMIN_LEVEL)
 
     def filter_country(self, queryset, name, value):
-        matching_ids = []
-        for poi in queryset:
-            location_obj = getattr(poi, 'parent', poi)
-            loc_info = ParentLocationsSerializer(location_obj).data
-            if loc_info.get('country') and value.lower() in loc_info.get('country').lower():
-                matching_ids.append(poi.pk)
-        return queryset.filter(pk__in=matching_ids)
+        return self.filter_by_admin_level(queryset, name, value, Location.FIRST_ADMIN_LEVEL)
 
     def filter_partner_organization(self, queryset, name, value):
         return queryset.filter(

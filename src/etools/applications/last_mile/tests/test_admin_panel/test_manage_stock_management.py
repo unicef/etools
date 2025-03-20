@@ -168,7 +168,7 @@ class TestStockManagementViewSet(BaseTenantTestCase):
         }
         response = self.forced_auth_req('post', self.url, user=self.partner_staff, data=payload)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn(ITEMS_NOT_PROVIDED, str(response.data))
+        self.assertIn("No items were provided", str(response.data))
 
     def test_create_transfer_item_invalid_items(self):
         destination = PointOfInterestFactory(name="Destination POI Invalid Items")
@@ -205,7 +205,7 @@ class TestStockManagementViewSet(BaseTenantTestCase):
         }
         response = self.forced_auth_req('post', self.url, user=self.partner_staff, data=payload)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn(PARTNER_NOT_UNDER_LOCATION, str(response.data))
+        self.assertIn("The partner does not exist under the location.", str(response.data))
 
     def test_create_transfer_item_missing_location(self):
         material = MaterialFactory()

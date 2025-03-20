@@ -35,6 +35,10 @@ class TestLocationsTypesViewSet(BaseTenantTestCase):
     def test_get_locations_types(self):
         response = self.forced_auth_req('get', self.url, user=self.partner_staff)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data[0].get('name'), self.poi_type.name)
+        self.assertEqual(response.data[0].get('category'), self.poi_type.category)
+        self.assertEqual(response.data[1].get('name'), self.poi_type_2.name)
+        self.assertEqual(response.data[1].get('category'), self.poi_type_2.category)
 
     def test_get_locations_types_unauthorized(self):
         response = self.forced_auth_req('get', self.url, user=self.simple_user)
@@ -54,7 +58,7 @@ class TestLocationsTypesViewSet(BaseTenantTestCase):
         data = {"name": "School", "category": "recreational"}
         response = self.forced_auth_req('post', self.url, data=data, user=self.partner_staff)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn(POI_TYPE_ALREADY_EXISTS, str(response.data.get('name')))
+        self.assertIn("The point of interest type already exists.", str(response.data.get('name')))
 
     def test_create_location_type_unauthorized(self):
         data = {"name": "Park", "category": "recreational"}

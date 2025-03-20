@@ -66,9 +66,9 @@ class TestCommonViewSet(BaseTenantTestCase):
         response = self.forced_auth_req('get', reverse(self.url_user_permissions), user=self.partner_staff)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data[0].get('admin_perms')), 3)
-        self.assertIn(USER_ADMIN_PANEL_PERMISSION, response.data[0].get('admin_perms'))
-        self.assertIn(LOCATIONS_ADMIN_PANEL_PERMISSION, response.data[0].get('admin_perms'))
-        self.assertIn(STOCK_MANAGEMENT_ADMIN_PANEL_PERMISSION, response.data[0].get('admin_perms'))
+        self.assertIn("lmsm_admin_panel_manage_users", response.data[0].get('admin_perms'))
+        self.assertIn("lmsm_admin_panel_manage_locations", response.data[0].get('admin_perms'))
+        self.assertIn("lmsm_admin_panel_manage_stock_management", response.data[0].get('admin_perms'))
 
     def test_get_user_permissions_unauthorized(self):
         response = self.forced_auth_req('get', reverse(self.url_user_permissions), user=self.simple_user)
