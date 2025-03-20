@@ -17,6 +17,7 @@ class TestPRPLocationListView(BaseTenantTestCase):
         cls.parent = LocationFactory()
         cls.locations = [LocationFactory(parent=cls.parent) for x in range(5)]
         cls.locations.append(cls.parent)
+        cls.inactive_location = LocationFactory(is_active=False, parent=cls.parent)
         cls.expected_keys = sorted(('id', 'name', 'p_code', 'admin_level', 'admin_level_name',
                                     'point', 'geom', 'parent_p_code'))
         cls.url = reverse('prp-location-list')
@@ -30,10 +31,13 @@ class TestPRPLocationListView(BaseTenantTestCase):
         response = self.forced_auth_req('get', self.url, user=self.unicef_staff, data=self.query_param_data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(sorted(response.data[0].keys()), self.expected_keys)
-        # sort the expected locations by name, the same way the API results are sorted
-        expected_locs = Location.simplified_geom.all().order_by('name')
 
-        for actual_loc, expected_loc in zip(response.data, expected_locs):
+        # sort the expected locations by name, the same way the API results are sorted
+        expected_active_locs = Location.simplified_geom.filter(is_active=True).order_by('name')
+        self.assertNotIn(self.inactive_location, expected_active_locs)
+
+        for actual_loc, expected_loc in zip(response.data, expected_active_locs):
+            self.assertTrue(expected_loc.is_active)
             for key in self.expected_keys:
                 if key == 'parent_p_code':
                     self.assertEqual(actual_loc[key], expected_loc.parent_pcode)

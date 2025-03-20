@@ -207,7 +207,10 @@ class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
     @cached_property
     def groups(self):
         current_country_realms = self.realms.filter(
-            country=connection.tenant, organization=self.profile.organization, is_active=True)
+            country_id=getattr(connection.tenant, "id", None),
+            organization=self.profile.organization,
+            is_active=True
+        )
         return Group.objects.filter(realms__in=current_country_realms).distinct()
 
     def get_groups_for_organization_id(self, organization_id, **extra_filters):

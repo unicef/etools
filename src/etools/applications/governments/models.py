@@ -697,7 +697,7 @@ class GDD(TimeStampedModel):
 
     def get_frontend_object_url(self, to_unicef=True, suffix='strategy'):
         host = settings.HOST if "https://" in settings.HOST else f'https://{settings.HOST}'
-        return f'{host}/gdd/gdds/{self.pk}/{suffix}'
+        return f'{host}/{"pmp" if to_unicef else "government"}/gpd-interventions/{self.pk}/{suffix}'
 
     def get_object_url(self):
         return reverse("governments_api:gdd-detail", args=[self.pk])
