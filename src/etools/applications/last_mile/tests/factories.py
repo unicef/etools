@@ -60,3 +60,9 @@ class ItemFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = models.Item
+
+
+class TransferHistoryFactory(factory.django.DjangoModelFactory):
+
+    class Meta:
+        model = models.TransferHistory
