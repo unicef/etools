@@ -462,10 +462,11 @@ class TransferItemSerializer(serializers.ModelSerializer):
     items = ItemAdminSerializer(many=True, read_only=True)
     destination_point = SimplePointOfInterestSerializer(read_only=True)
     origin_point = SimplePointOfInterestSerializer(read_only=True)
+    status = serializers.CharField(read_only=True)
 
     class Meta:
         model = models.Transfer
-        fields = ('items', 'destination_point', 'origin_point')
+        fields = ('items', 'destination_point', 'origin_point', 'status')
 
 
 class TransferItemDetailSerializer(serializers.Serializer):
@@ -501,6 +502,8 @@ class TransferItemCreateSerializer(serializers.ModelSerializer):
         items = validated_data.pop('items', [])
         validated_data['unicef_release_order'] = f"{TRANSFER_MANUAL_CREATION_NAME} {timezone.now().strftime('%d-%m-%Y %H:%M:%S')}"
         validated_data['transfer_type'] = models.Transfer.DELIVERY
+        validated_data['status'] = models.Transfer.PENDING
+        validated_data['origin_point'] = models.PointOfInterest.objects.get_unicef_warehouses()
         validated_data['destination_point'] = validated_data.pop('location')
         instance = models.Transfer.objects.create(
             **validated_data

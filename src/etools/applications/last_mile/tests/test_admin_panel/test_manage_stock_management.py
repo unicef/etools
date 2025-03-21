@@ -260,22 +260,27 @@ class TestStockManagementViewSet(BaseTenantTestCase):
         response = self.forced_auth_req('post', self.url, user=self.simple_user, data=payload)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_list_transfer_items_non_completed(self):
+    def test_list_transfer_items_completed(self):
         # Create a POI.
-        poi = PointOfInterestFactory(name="Non-Completed POI")
-        # Create a transfer with a status other than COMPLETED.
+        poi = PointOfInterestFactory(name="Completed POI")
         transfer = TransferFactory(
             origin_point=poi,
-            status=Transfer.PENDING,  # Assuming "PENDING" is a non-completed status.
+            status=Transfer.PENDING,
             partner_organization=self.partner,
             destination_point=poi
         )
+        transfer1 = TransferFactory(
+            origin_point=poi,
+            status=Transfer.COMPLETED,
+            partner_organization=self.partner,
+            destination_point=poi
+        )
+        ItemFactory(transfer=transfer1, hidden=False)
         ItemFactory(transfer=transfer, hidden=False)
         payload = {"poi_id": poi.id}
         response = self.forced_auth_req('get', self.url, user=self.partner_staff, data=payload)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        # Ensure that non-completed transfers are not returned.
-        self.assertEqual(len(response.data.get("results", [])), 0)
+        self.assertEqual(len(response.data.get("results", [])), 2)
 
     def test_list_transfer_items_with_mixed_item_visibility(self):
         # Create a POI.

@@ -135,6 +135,9 @@ class TransferQuerySet(models.QuerySet):
     def with_origin_point(self, poi_id):
         return self.filter(origin_point__id=poi_id)
 
+    def with_destination_point(self, poi_id):
+        return self.filter(destination_point__id=poi_id)
+
     def with_items(self):
         return self.filter(items__isnull=False, items__hidden=False)
 

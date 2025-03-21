@@ -305,7 +305,7 @@ class TransferItemViewSet(mixins.ListModelMixin, GenericViewSet, mixins.CreateMo
             ).prefetch_related(
                 'items',
                 'items__material'
-            ).with_status_completed().with_origin_point(poi_id).with_items().order_by('-id')
+            ).with_destination_point(poi_id).with_items().order_by('-id')
         return models.Transfer.objects.none()
 
     def get_serializer_class(self):

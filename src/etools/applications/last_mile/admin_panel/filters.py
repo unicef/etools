@@ -130,13 +130,13 @@ class TransferHistoryFilter(filters.FilterSet):
         field_name='status', lookup_expr='icontains', label='Status'
     )
     partner_organization = filters.CharFilter(
-        field_name='partner_organization_name', lookup_expr='icontains', label='Partner Organization'
+        field_name='partner_organization', lookup_expr='icontains', label='Partner Organization'
     )
     origin_point = filters.CharFilter(
-        field_name='origin_point_name', lookup_expr='icontains', label='Origin Point'
+        field_name='origin_point', lookup_expr='icontains', label='Origin Point'
     )
     destination_point = filters.CharFilter(
-        field_name='destination_point_name', lookup_expr='icontains', label='Destination Point'
+        field_name='destination_point', lookup_expr='icontains', label='Destination Point'
     )
 
     class Meta:
