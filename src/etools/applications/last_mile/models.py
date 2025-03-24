@@ -480,12 +480,19 @@ class Item(TimeStampedModel, models.Model):
 
     @cached_property
     def description(self):
-        try:
-            partner_material = PartnerMaterial.objects.only('description').get(
-                partner_organization=self.transfer.partner_organization, material=self.material)
-            return partner_material.description
-        except PartnerMaterial.DoesNotExist:
+        partner_material_cached = getattr(self.material, '_partner_material', None)
+        if partner_material_cached:
+            for partner_material in partner_material_cached:
+                if partner_material.partner_organization == self.transfer.partner_organization and partner_material.material == self.material:
+                    return partner_material.description
             return self.material.short_description
+        else:
+            try:
+                partner_material = PartnerMaterial.objects.only('description').get(
+                    partner_organization=self.transfer.partner_organization, material=self.material)
+                return partner_material.description
+            except PartnerMaterial.DoesNotExist:
+                return self.material.short_description
 
     def should_be_hidden(self):
         return self.material.number not in settings.RUTF_MATERIALS
