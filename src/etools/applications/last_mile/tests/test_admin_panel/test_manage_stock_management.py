@@ -16,12 +16,12 @@ from etools.applications.users.tests.factories import CountryFactory, SimpleUser
 
 
 class TestStockManagementViewSet(BaseTenantTestCase):
+    fixtures = ('poi_type.json', 'unicef_warehouse.json',)
 
     @classmethod
     def setUpTestData(cls):
         cls.country = CountryFactory()
         cls.partner = PartnerFactory(organization=OrganizationFactory(name='Partner'))
-        cls.unicef_warehouse = PointOfInterestFactory(id=1, name="Unicef Warehouse")
         cls.partner_staff = UserPermissionFactory(
             realms__data=['LMSM Admin Panel'],
             profile__organization=cls.partner.organization,
