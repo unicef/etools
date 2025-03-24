@@ -11,6 +11,14 @@ from model_utils.models import TimeStampedModel
 from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CodedGenericRelation
 
+from etools.applications.last_mile.admin_panel.constants import (
+    ALERT_NOTIFICATIONS_ADMIN_PANEL_PERMISSION,
+    LOCATIONS_ADMIN_PANEL_PERMISSION,
+    STOCK_MANAGEMENT_ADMIN_PANEL_PERMISSION,
+    TRANSFER_HISTORY_ADMIN_PANEL_PERMISSION,
+    USER_ADMIN_PANEL_PERMISSION,
+    USER_LOCATIONS_ADMIN_PANEL_PERMISSION,
+)
 from etools.applications.locations.models import Location
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.users.models import User
@@ -28,6 +36,9 @@ class PointOfInterestType(TimeStampedModel, models.Model):
 class PointOfInterestManager(models.Manager):
     def get_queryset(self):
         return super().get_queryset().defer("point").select_related("parent")
+
+    def get_unicef_warehouses(self):
+        return self.get_queryset().get(pk=1)  # Unicef warehouse
 
 
 class PointOfInterest(TimeStampedModel, models.Model):
@@ -104,11 +115,35 @@ class TransferHistoryManager(models.Manager):
 
 
 class TransferHistory(TimeStampedModel, models.Model):
-    origin_transfer_id = models.IntegerField(unique=True)
+    origin_transfer = models.ForeignKey(
+        'Transfer',
+        verbose_name=_("Origin Transfer"),
+        related_name='history',
+        on_delete=models.SET_NULL,
+        null=True
+    )
     objects = TransferHistoryManager()
 
     class Meta:
         ordering = ("-created",)
+
+
+class TransferQuerySet(models.QuerySet):
+    def with_status_completed(self):
+        return self.filter(status=Transfer.COMPLETED)
+
+    def with_origin_point(self, poi_id):
+        return self.filter(origin_point__id=poi_id)
+
+    def with_destination_point(self, poi_id):
+        return self.filter(destination_point__id=poi_id)
+
+    def with_items(self):
+        return self.filter(items__isnull=False, items__hidden=False)
+
+
+class TransferManager(models.Manager.from_queryset(TransferQuerySet)):
+    pass
 
 
 class Transfer(TimeStampedModel, models.Model):
@@ -236,6 +271,8 @@ class Transfer(TimeStampedModel, models.Model):
     waybill_id = models.CharField(max_length=255, null=True, blank=True)
 
     pd_number = models.CharField(max_length=255, null=True, blank=True)
+
+    objects = TransferManager()
 
     class Meta:
         ordering = ("-id",)
@@ -444,7 +481,7 @@ class Item(TimeStampedModel, models.Model):
     @cached_property
     def description(self):
         try:
-            partner_material = PartnerMaterial.objects.get(
+            partner_material = PartnerMaterial.objects.only('description').get(
                 partner_organization=self.transfer.partner_organization, material=self.material)
             return partner_material.description
         except PartnerMaterial.DoesNotExist:
@@ -469,3 +506,17 @@ class ItemTransferHistory(TimeStampedModel, models.Model):
 
     class Meta:
         unique_together = ('transfer', 'item')
+
+
+class AdminPanelPermission(models.Model):
+    class Meta:
+        managed = False  # Django won't create a table for this model
+        db_table = 'admin_panel_dummy'
+        permissions = (
+            (USER_ADMIN_PANEL_PERMISSION, "Can manage users in the admin panel"),
+            (LOCATIONS_ADMIN_PANEL_PERMISSION, "Can manage locations in the admin panel"),
+            (USER_LOCATIONS_ADMIN_PANEL_PERMISSION, "Can manage users locations in the admin panel"),
+            (ALERT_NOTIFICATIONS_ADMIN_PANEL_PERMISSION, "Can manage email alerts in the admin panel"),
+            (STOCK_MANAGEMENT_ADMIN_PANEL_PERMISSION, "Can manage stock management in the admin panel"),
+            (TRANSFER_HISTORY_ADMIN_PANEL_PERMISSION, "Can manage transfer history in the admin panel"),
+        )
