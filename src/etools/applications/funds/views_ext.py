@@ -11,10 +11,10 @@ from unicef_restlib.views import SafeTenantViewSetMixin
 from etools.applications.core.auth import eToolsEZHactTokenAuth
 from etools.applications.funds.serializers import ExternalFundsReservationSerializer
 from etools.applications.partners.models import Intervention
-from etools.applications.partners.validation.interventions import InterventionValid
+from etools.applications.partners.views.interventions_v3 import InterventionAutoTransitionsMixin
 
 
-class ExternalReservationAPIView(SafeTenantViewSetMixin, CreateAPIView):
+class ExternalReservationAPIView(SafeTenantViewSetMixin, CreateAPIView, InterventionAutoTransitionsMixin):
     """
     External endpoint that creates FundsReservation header and items for a given pd reference number
     """
@@ -29,12 +29,7 @@ class ExternalReservationAPIView(SafeTenantViewSetMixin, CreateAPIView):
         intervention = get_object_or_404(Intervention, number=serializer.validated_data.get('pd_reference_number'))
         serializer.save(intervention=intervention)
 
-        old_status = intervention.status
         admin_user = get_object_or_404(get_user_model(), username=settings.TASK_ADMIN_USER)
-        with transaction.atomic():
-            validator = InterventionValid(intervention, user=admin_user, disable_rigid_check=True)
-            if validator.is_valid:
-                if intervention.status != old_status:
-                    intervention.save(update_fields=['status'])
+        self.perform_auto_transitions(intervention=intervention, user=admin_user)
 
         return Response(status=status.HTTP_201_CREATED)

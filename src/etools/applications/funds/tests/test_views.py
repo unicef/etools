@@ -13,9 +13,7 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
-from unicef_locations.tests.factories import LocationFactory
 
-from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.environment.tests.factories import TenantSwitchFactory
 from etools.applications.funds.tests.factories import (
@@ -29,16 +27,8 @@ from etools.applications.partners.models import Agreement, Intervention
 from etools.applications.partners.tests.factories import (
     AgreementFactory,
     InterventionFactory,
-    InterventionResultLinkFactory,
     PartnerFactory,
-)
-from etools.applications.reports.models import ResultType
-from etools.applications.reports.tests.factories import (
-    InterventionActivityFactory,
-    LowerResultFactory,
-    OfficeFactory,
-    ReportingRequirementFactory,
-    SectionFactory,
+    SignedInterventionFactory,
 )
 from etools.applications.users.tests.factories import UserFactory
 from etools.libraries.tests.vcrpy import VCR
@@ -476,38 +466,14 @@ class TestExternalReservationAPIView(BaseTenantTestCase):
             realms__data=['IP Viewer'],
             profile__organization=self.partner.organization
         )
-        signed_intervention = InterventionFactory(
+        signed_intervention = SignedInterventionFactory(
             agreement=self.agreement,
-            title='Active Intervention',
-            document_type=Intervention.PD,
-            start=date.today() - timedelta(days=1),
-            end=date.today() + timedelta(days=365),
-            status=Intervention.SIGNED,
             budget_owner=unicef_staff,
-            date_sent_to_partner=date.today() - timedelta(days=1),
-            signed_by_unicef_date=date.today() - timedelta(days=1),
-            signed_by_partner_date=date.today() - timedelta(days=1),
             unicef_signatory=unicef_staff,
             partner_authorized_officer_signatory=self.partner.active_staff_members.all().first(),
-            cash_transfer_modalities=[Intervention.CASH_TRANSFER_DIRECT],
+            partner_focal_points=[partner_user],
+            unicef_focal_points=[unicef_staff]
         )
-        signed_intervention.flat_locations.add(LocationFactory())
-        signed_intervention.partner_focal_points.add(partner_user)
-        signed_intervention.unicef_focal_points.add(unicef_staff)
-        signed_intervention.offices.add(OfficeFactory())
-        signed_intervention.sections.add(SectionFactory())
-        ReportingRequirementFactory(intervention=signed_intervention)
-        AttachmentFactory(
-            code='partners_intervention_signed_pd',
-            content_object=signed_intervention,
-        )
-        result_link = InterventionResultLinkFactory(
-            intervention=signed_intervention,
-            cp_output__result_type__name=ResultType.OUTPUT,
-        )
-        pd_output = LowerResultFactory(result_link=result_link)
-        activity = InterventionActivityFactory(result=pd_output)
-        activity.time_frames.add(signed_intervention.quarters.first())
 
         self.assertEqual(signed_intervention.status, Intervention.SIGNED)
 
