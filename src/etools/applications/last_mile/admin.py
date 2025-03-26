@@ -4,7 +4,7 @@ from django.contrib import admin
 from django.contrib.gis import forms
 from django.contrib.gis.geos import Point
 from django.db import transaction
-from django.db.models import CharField, F, Value
+from django.db.models import CharField, Count, F, Prefetch, Value
 from django.db.models.functions import Coalesce
 from django.urls import reverse
 from django.utils.html import format_html
@@ -68,6 +68,9 @@ class PointOfInterestAdmin(XLSXImportMixin, admin.ModelAdmin):
         return format_html('<br>'.join(p_names))
     partner_names.short_description = 'Partner Names'
     partner_names.admin_order_field = 'name'
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related("poi_type")
 
     def has_import_permission(self, request):
         return is_user_in_groups(request.user, ['Country Office Administrator'])
@@ -183,8 +186,8 @@ class TransferAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
     def get_queryset(self, request):
         qs = super(TransferAdmin, self).get_queryset(request)
         qs = qs.select_related(
-            'partner_organization', 'partner_organization__organization',
-            'origin_point', 'destination_point'
+            'partner_organization', 'partner_organization__organization', 'origin_transfer',
+            'origin_point', 'destination_point', 'from_partner_organization__organization', 'recipient_partner_organization__organization',
         ).prefetch_related('items')
 
         qs = qs.annotate(
@@ -252,9 +255,21 @@ class ItemAdmin(XLSXImportMixin, admin.ModelAdmin):
 
     def get_queryset(self, request):
         qs = models.Item.all_objects\
-            .select_related('transfer', 'material')\
+            .select_related(
+                'transfer',
+                'transfer__partner_organization',
+                'transfer__partner_organization__organization',
+                'material',
+            )\
             .prefetch_related('transfers_history', 'material__partner_material')
         return qs
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name in ["transfer", "origin_transfer"]:
+            kwargs["queryset"] = models.Transfer.objects.select_related(
+                "partner_organization", "partner_organization__organization"
+            )
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     search_fields = (
         'batch_id', 'material__short_description', 'transfer__unicef_release_order',
@@ -428,44 +443,86 @@ class TransferEvidenceAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
 @admin.register(models.TransferHistory)
 class TransferHistoryAdmin(admin.ModelAdmin):
     list_display = ('origin_transfer_name', 'list_sub_transfers')
-    readonly_fields = ('origin_transfer_id', 'origin_transfer')
+    readonly_fields = ('origin_transfer_id', 'origin_transfer_link')
+    search_fields = ('origin_transfer__name',)
+    inlines = [TransferInLine]
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        qs = qs.select_related('origin_transfer')
+        qs = qs.prefetch_related(
+            Prefetch('transfers', queryset=models.Transfer.objects.order_by('id'))
+        )
+        return qs
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "origin_transfer":
+            kwargs["queryset"] = models.Transfer.objects.select_related(
+                "partner_organization", "partner_organization__organization", "origin_point", "destination_point", "from_partner_organization",
+                "recipient_partner_organization", "checked_in_by", "checked_out_by"
+            )
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     def origin_transfer_name(self, obj):
-        try:
-            return models.Transfer.objects.get(pk=obj.origin_transfer_id).name
-        except models.Transfer.DoesNotExist:
-            return '-'
+        return obj.origin_transfer.name if obj.origin_transfer else '-'
 
     def list_sub_transfers(self, obj):
-        transfers = models.Transfer.objects.filter(transfer_history=obj).all().order_by('id')
-        return ", ".join([t.name for t in transfers])
+        return ", ".join([t.name for t in obj.transfers.all()])
 
-    def origin_transfer(self, obj):
-        if obj.origin_transfer_id:
-            url = reverse('admin:last_mile_transfer_change', args=[obj.origin_transfer_id])
-            return format_html('<a href="{}">{}</a>', url, models.Transfer.objects.get(pk=obj.origin_transfer_id).name)
+    def origin_transfer_link(self, obj):
+        if obj.origin_transfer:
+            url = reverse('admin:last_mile_transfer_change', args=[obj.origin_transfer.pk])
+            return format_html('<a href="{}">{}</a>', url, obj.origin_transfer.name)
         return '-'
-    origin_transfer.short_description = 'Origin Transfer'
+    origin_transfer_link.short_description = 'Origin Transfer'
 
     def get_search_results(self, request, queryset, search_term):
         queryset, use_distinct = super().get_search_results(request, queryset, search_term)
         if search_term:
-            matching_transfers = models.Transfer.objects.filter(name__icontains=search_term).values_list('id', flat=True)
-            queryset |= self.model.objects.filter(origin_transfer_id__in=matching_transfers)
+            queryset |= self.model.objects.filter(origin_transfer__name__icontains=search_term)
         return queryset, use_distinct
-
-    inlines = [TransferInLine]
 
 
 @admin.register(models.ItemTransferHistory)
 class ItemTransferHistoryAdmin(admin.ModelAdmin):
-    list_display = ('item', 'transfer', 'items_count', 'view_items_link')
-    list_filter = ('transfer',)
-    search_fields = ('transfer__name', 'transfer__partner_organization__organization__name', 'transfer__destination_point__name', 'item')
+    list_display = ('item_batch_id', 'transfer_unicef_release_order', 'transfer_count', 'view_items_link')
+    list_filter = ('transfer__name',)
+    search_fields = ('transfer__name', 'transfer__partner_organization__organization__name', 'transfer__destination_point__name', 'item__batch_id')
 
-    def items_count(self, obj):
-        return models.ItemTransferHistory.objects.filter(transfer=obj.transfer).count()
-    items_count.short_description = 'Item Count'
+    def transfer_unicef_release_order(self, obj):
+        return obj.unicef_release_order
+    transfer_unicef_release_order.short_description = "UNICEF Release Order"
+
+    def item_batch_id(self, obj):
+        return obj.batch_id
+    item_batch_id.short_description = "Batch ID"
+
+    def transfer_count(self, obj):
+        return obj.item_count
+    transfer_count.short_description = 'Transfers Count'
+
+    def get_queryset(self, request):
+        qs = models.ItemTransferHistory.objects.select_related(
+            "transfer__partner_organization__organization",
+        ).annotate(
+            item_count=Count('transfer__itemtransferhistory'),
+            unicef_release_order=F('transfer__unicef_release_order'),
+            batch_id=F('item__batch_id')
+        )
+        return qs
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "transfer":
+            kwargs["queryset"] = models.Transfer.objects.select_related(
+                "partner_organization__organization",
+            )
+        if db_field.name == "item":
+            kwargs["queryset"] = models.Item.objects.select_related(
+                "transfer__partner_organization", 'material'
+            ).prefetch_related(
+                Prefetch('material__partner_materials', queryset=models.PartnerMaterial.objects.select_related('material', 'partner_organization'), to_attr='_partner_material')
+            )
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     def view_items_link(self, obj):
         """ Link to the transfer detail page with items listed """
@@ -475,3 +532,4 @@ class ItemTransferHistoryAdmin(admin.ModelAdmin):
 
 
 admin.site.register(models.PointOfInterestType)
+admin.site.register(models.PartnerMaterial)
