@@ -2,13 +2,23 @@ import datetime
 
 import factory
 from factory import fuzzy
+from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.field_monitoring.fm_settings.tests.factories import LocationSiteFactory
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners import models
-from etools.applications.partners.models import InterventionManagementBudgetItem
-from etools.applications.reports.tests.factories import CountryProgrammeFactory, ResultFactory
+from etools.applications.partners.models import Intervention, InterventionManagementBudgetItem
+from etools.applications.reports.models import ResultType
+from etools.applications.reports.tests.factories import (
+    CountryProgrammeFactory,
+    InterventionActivityFactory,
+    LowerResultFactory,
+    OfficeFactory,
+    ReportingRequirementFactory,
+    ResultFactory,
+    SectionFactory,
+)
 from etools.applications.users.tests.factories import UserFactory
 
 
@@ -285,3 +295,47 @@ class InterventionManagementBudgetItemFactory(factory.django.DjangoModelFactory)
     unit = factory.fuzzy.FuzzyText()
     unit_price = factory.fuzzy.FuzzyDecimal(1)
     no_units = factory.fuzzy.FuzzyDecimal(0.1)
+
+
+class SignedInterventionFactory(InterventionFactory):
+    status = Intervention.SIGNED
+    document_type = Intervention.PD
+    date_sent_to_partner = datetime.date.today() - datetime.timedelta(days=1)
+    signed_by_unicef_date = datetime.date.today() - datetime.timedelta(days=1)
+    signed_by_partner_date = datetime.date.today() - datetime.timedelta(days=1)
+
+    @classmethod
+    def _create(cls, model_class, *args, **kwargs):
+        """Create an instance of the model, and save it to the database."""
+        if cls._meta.django_get_or_create:
+            return cls._get_or_create(model_class, *args, **kwargs)
+
+        manager = cls._get_manager(model_class)
+        instance = manager.create(*args, **kwargs)
+
+        instance.flat_locations.add(LocationFactory())
+        instance.offices.add(OfficeFactory())
+        instance.sections.add(SectionFactory())
+        ReportingRequirementFactory(intervention=instance)
+        AttachmentFactory(
+            code='partners_intervention_signed_pd',
+            content_object=instance,
+        )
+        result_link = InterventionResultLinkFactory(
+            intervention=instance,
+            cp_output__result_type__name=ResultType.OUTPUT,
+        )
+        pd_output = LowerResultFactory(result_link=result_link)
+        activity = InterventionActivityFactory(result=pd_output)
+        activity.time_frames.add(instance.quarters.first())
+        return instance
+
+    @factory.post_generation
+    def partner_focal_points(self, create, extracted, **kwargs):
+        if extracted:
+            self.partner_focal_points.add(*extracted)
+
+    @factory.post_generation
+    def unicef_focal_points(self, create, extracted, **kwargs):
+        if extracted:
+            self.unicef_focal_points.add(*extracted)
