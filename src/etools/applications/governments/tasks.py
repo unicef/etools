@@ -91,7 +91,7 @@ def send_gdd_to_vision(tenant_name: str, gdd_pk: int, retry_counter=0):
 
 @app.task
 def send_gdd_amendment_added_notification(schema_name, gdd):
-    """Email to focal point(s) if gdd amendment is added"""
+    """Email to focal point(s) if gpd amendment is added"""
     with schema_context(schema_name):
         recipients = [
             fp.email for fp in gdd.partner_focal_points.all()

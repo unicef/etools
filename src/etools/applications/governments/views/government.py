@@ -50,7 +50,7 @@ class GovernmentEWPListView(ListAPIView):
 
 class EWPOutputListView(ListAPIView):
     """
-    Returns a list of all EWPOutputs which have Workplans associated to a gdd given a query param.
+    Returns a list of all EWPOutputs which have Workplans associated to a gpd given a query param.
     """
     queryset = EWPOutput.objects.all()
     serializer_class = EWPOutputSerializer

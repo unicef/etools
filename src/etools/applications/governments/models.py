@@ -244,7 +244,7 @@ class GDDManager(models.Manager):
 
 class GDD(TimeStampedModel):
     """
-    Represents a government gdd.
+    Represents a government gpd.
     """
 
     DRAFT = 'draft'
@@ -956,7 +956,7 @@ class GDD(TimeStampedModel):
     @property
     def reference_number(self):
         """
-        if gdd is in amendment, replace id part from reference number to original one
+        if gpd is in amendment, replace id part from reference number to original one
         and add postfix to keep it unique
         """
         if self.in_amendment:

@@ -79,9 +79,9 @@ class GDDAcceptView(GDDActionView):
             if not self.is_partner_focal_point(gdd):
                 raise ValidationError(_("You need to be a focal point in order to perform this action"))
             if gdd.partner_accepted:
-                raise ValidationError(_("Partner has already accepted this GDD."))
+                raise ValidationError(_("Partner has already accepted this GPD."))
             if gdd.unicef_court:
-                raise ValidationError(_("You cannot perform this action while the GDD "
+                raise ValidationError(_("You cannot perform this action while the GPD "
                                       "is not available for partner to edit"))
             # When accepting on behalf of the partner since there is no further action, it will automatically
             # be sent to unicef
@@ -97,11 +97,11 @@ class GDDAcceptView(GDDActionView):
             template_name = 'governments/gdd/partner_accepted'
         else:
             if not gdd.unicef_court:
-                raise ValidationError(_("You cannot perform this action while the GDD "
+                raise ValidationError(_("You cannot perform this action while the GPD "
                                       "is not available for UNICEF to edit"))
 
             if gdd.unicef_accepted:
-                raise ValidationError(_("UNICEF has already accepted this GDD."))
+                raise ValidationError(_("UNICEF has already accepted this GPD."))
 
             if self.request.user not in gdd.unicef_focal_points.all() and self.request.user != gdd.budget_owner:
                 raise ValidationError(_("Only focal points or budget owners can accept"))
@@ -139,7 +139,7 @@ class GDDAcceptOnBehalfOfPartner(GDDActionView):
             raise ValidationError(_("Only focal points can accept"))
 
         if gdd.partner_accepted:
-            raise ValidationError(_("Partner has already accepted this GDD."))
+            raise ValidationError(_("Partner has already accepted this GPD."))
 
         request.data.update({
             "partner_accepted": True,
@@ -191,9 +191,9 @@ class GDDRejectReviewView(GDDActionView):
             return HttpResponseForbidden()
         gdd = self.get_object()
         if gdd.status != GDD.REVIEW:
-            raise ValidationError(_("GDD needs to be in Review state"))
+            raise ValidationError(_("GPD needs to be in Review state"))
         if not gdd.review:
-            raise ValidationError(_("GDD review is missing"))
+            raise ValidationError(_("GPD review is missing"))
         if gdd.review.overall_approver_id != request.user.pk:
             raise ValidationError(_("Only overall approver can reject review."))
 
@@ -243,11 +243,11 @@ class GDDSendBackViewReview(GDDActionView):
     def update(self, request, *args, **kwargs):
         gdd = self.get_object()
         if gdd.status != GDD.REVIEW:
-            raise ValidationError(_("GDD needs to be in Review state"))
+            raise ValidationError(_("GPD needs to be in Review state"))
         if not gdd.review:
-            raise ValidationError(_("GDD review is missing"))
+            raise ValidationError(_("GPD review is missing"))
         if gdd.review.overall_approval is not None:
-            raise ValidationError(_("GDD review already approved"))
+            raise ValidationError(_("GPD review already approved"))
 
         serializer = GDDReviewSendBackSerializer(data=request.data, instance=gdd.review)
         serializer.is_valid(raise_exception=True)
@@ -288,7 +288,7 @@ class GDDReviewView(GDDActionView):
             return HttpResponseForbidden()
         gdd = self.get_object()
         if gdd.status == GDD.REVIEW:
-            raise ValidationError(_("GDD is already in Review status."))
+            raise ValidationError(_("GPD is already in Review status."))
 
         if gdd.in_amendment:
             serializer = AmendedGDDReviewActionSerializer(data=request.data)
@@ -370,7 +370,7 @@ class GDDCancelView(GDDActionView):
             return HttpResponseForbidden()
         gdd = self.get_object()
         if gdd.status == GDD.CANCELLED:
-            raise ValidationError(_("GDD has already been cancelled."))
+            raise ValidationError(_("GPD has already been cancelled."))
 
         if not request.user.groups.filter(name=PRC_SECRETARY).exists():
             raise ValidationError(_("Only PRC Secretary can cancel"))
@@ -406,7 +406,7 @@ class GDDTerminateView(GDDActionView):
             return HttpResponseForbidden()
         gdd = self.get_object()
         if gdd.status == GDD.TERMINATED:
-            raise ValidationError(_("GDD has already been terminated."))
+            raise ValidationError(_("GPD has already been terminated."))
 
         if self.request.user not in gdd.unicef_focal_points.all() and self.request.user != gdd.budget_owner:
             raise ValidationError(_("Only focal points or budget owners can terminate"))
@@ -442,7 +442,7 @@ class GDDSuspendView(GDDActionView):
             return HttpResponseForbidden()
         gdd = self.get_object()
         if gdd.status == GDD.SUSPENDED:
-            raise ValidationError(_("GDD has already been suspended."))
+            raise ValidationError(_("GPD has already been suspended."))
 
         if self.request.user not in gdd.unicef_focal_points.all() and self.request.user != gdd.budget_owner:
             raise ValidationError(_("Only focal points or budget owners can suspend"))
@@ -478,7 +478,7 @@ class GDDUnsuspendView(GDDActionView):
             return HttpResponseForbidden()
         gdd = self.get_object()
         if gdd.status != GDD.SUSPENDED:
-            raise ValidationError(_("GDD is not suspended."))
+            raise ValidationError(_("GPD is not suspended."))
 
         if self.request.user not in gdd.unicef_focal_points.all() and self.request.user != gdd.budget_owner:
             raise ValidationError(_("Only focal points or budget owners can unsuspend"))
@@ -515,9 +515,9 @@ class GDDSignatureView(GDDActionView):
             return HttpResponseForbidden()
         gdd = self.get_object()
         if gdd.status == GDD.PENDING_APPROVAL:
-            raise ValidationError(_("GDD is already in Pending Approval status."))
+            raise ValidationError(_("GPD is already in Pending Approval status."))
         if not gdd.review:
-            raise ValidationError(_("GDD review is missing"))
+            raise ValidationError(_("GPD review is missing"))
         if gdd.review.authorized_officer_id != request.user.pk:
             raise ValidationError(_("Only authorized officer can accept review."))
 
@@ -557,7 +557,7 @@ class GDDUnlockView(GDDActionView):
         gdd = self.get_object()
         request.data.clear()
         if not gdd.locked:
-            raise ValidationError(_("GDD is already unlocked."))
+            raise ValidationError(_("GPD is already unlocked."))
 
         if self.is_partner_staff():
             recipients = [u.email for u in gdd.unicef_focal_points.all()]
@@ -592,7 +592,7 @@ class GDDSendToPartnerView(GDDActionView):
             raise ValidationError(_("At least one CP Output is required before sending it to the Partner"))
 
         if not gdd.unicef_court:
-            raise ValidationError(_("GDD is currently with Partner"))
+            raise ValidationError(_("GPD is currently with Partner"))
 
         if self.request.user not in gdd.unicef_focal_points.all() and self.request.user != gdd.budget_owner:
             raise ValidationError(_("Only focal points or budget owners can send to partner"))
@@ -627,7 +627,7 @@ class GDDSendToUNICEFView(GDDActionView):
     def update(self, request, *args, **kwargs):
         gdd = self.get_object()
         if gdd.unicef_court:
-            raise ValidationError(_("GDD is currently with UNICEF"))
+            raise ValidationError(_("GPD is currently with UNICEF"))
 
         if not self.is_partner_focal_point(gdd):
             raise ValidationError(_("Only partner focal points can send to UNICEF"))
@@ -668,20 +668,20 @@ class PMPAmendedGDDMerge(GDDRetrieveUpdateView):
     def update(self, request, *args, **kwargs):
         gdd = self.get_object()
         if not gdd.in_amendment:
-            raise ValidationError(_('Only amended gdds can be merged'))
+            raise ValidationError(_('Only amended GPDs can be merged'))
         if not gdd.status == GDD.APPROVED:
             raise ValidationError(_('Amendment cannot be merged yet'))
         try:
             amendment = gdd.amendment
         except GDDAmendment.DoesNotExist:
-            raise ValidationError(_('Amendment does not exist for thisgdd'))
+            raise ValidationError(_('Amendment does not exist for this GPD'))
 
         try:
             amendment.merge_amendment()
         except MergeError as ex:
             raise ValidationError(
                 _('Merge Error: Amended field was already changed (%(field)s at %(instance)s). '
-                  'This can be caused by parallel merged amendment or changed original gdd. '
+                  'This can be caused by parallel merged amendment or changed original GPD. '
                   'Amendment should be re-created.') % {'field': ex.field, 'instance': ex.instance}
             )
 

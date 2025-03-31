@@ -350,8 +350,8 @@ class ReadOnlyAPIUser(permissions.BasePermission):
 def gdd_field_is_editable_permission(field):
     """
     Check the user is able to edit selected monitoring activity field.
-    View should either implement get_root_object to return instance of GDD (if view is nested),
-    or return GDD instance via get_object (can be used for detail actions).
+    View should either implement get_root_object to return instance of GPD (if view is nested),
+    or return GPD instance via get_object (can be used for detail actions).
     """
 
     from etools.applications.governments.models import GDD

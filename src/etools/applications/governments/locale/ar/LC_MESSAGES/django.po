@@ -1,0 +1,1469 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-03-31 18:56+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 "
+"&& n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
+
+msgid "Signed Attachment"
+msgstr "مرفق موقع"
+
+msgid "PRC Reviewed Attachment"
+msgstr "مرفق محضر لجنة مراجعة الشراكات "
+
+msgid "Attachment"
+msgstr "المرفق"
+
+msgid "Review Document by PRC"
+msgstr "مراجعة الوثيقة من قبل لجنة مراجعة الشراكات"
+
+msgid "Signed PD Document"
+msgstr "وثيقة البرامج الموقعة"
+
+msgid "GPD Details"
+msgstr ""
+
+msgid "Dates and Signatures"
+msgstr "التواريخ والتوقيعات"
+
+msgid "ePD"
+msgstr "ePD"
+
+msgid "Capacity Strengthening Costs"
+msgstr "تكاليف تعزيز القدرات"
+
+msgid "Partner"
+msgstr "شريك"
+
+msgid "Vendor no."
+msgstr "البائع لا."
+
+msgid "Status"
+msgstr "حالة"
+
+msgid "Partner Type"
+msgstr "نوع الشريك"
+
+msgid "Agreement"
+msgstr "اتفاق"
+
+msgid "Country Programme"
+msgstr "البرنامج القطري"
+
+msgid "Reference Number"
+msgstr "رقم المرجع"
+
+msgid "Document Title"
+msgstr "عنوان الوثيقة"
+
+msgid "Start Date"
+msgstr "تاريخ البدء"
+
+msgid "End Date"
+msgstr "تاريخ الانتهاء"
+
+msgid "UNICEF Office"
+msgstr "مكتب اليونيسف"
+
+msgid "Contributing Sections"
+msgstr ""
+
+msgid "Locations"
+msgstr "المواقع"
+
+msgid "UNICEF Focal Points"
+msgstr "نقاط اتصال اليونيسف"
+
+msgid "Government Authorized Officials"
+msgstr ""
+
+msgid "Budget Currency"
+msgstr "عملة الميزانية"
+
+msgid "UNICEF Cash (USD)"
+msgstr "اليونيسف النقدية (بالدولار الأمريكي)"
+
+msgid "UNICEF Supply (USD)"
+msgstr "إمدادات اليونيسف (دولار أمريكي)"
+
+msgid "Total GPD Budget (USD)"
+msgstr ""
+
+msgid "FR Number(s)"
+msgstr "رقم (أرقام) الحجز النقدي"
+
+msgid "FR Currency"
+msgstr "عملة الحجز النقدي"
+
+msgid "FR Posting Date"
+msgstr "تاريخ نشر الحجز النقدي"
+
+msgid "FR Amount"
+msgstr "مبلغ الحجز النقدي"
+
+msgid "FR Actual CT"
+msgstr "التحويل الفعلي من الحجز النقدي"
+
+msgid "Outstanding DCT"
+msgstr "مبالغ التحويل النقدي المباشر المعلقة"
+
+msgid "Planned Programmatic Visits"
+msgstr "الزيارات البرامجية المخططة"
+
+msgid "Planned Spot Checks"
+msgstr "زيارة رقابية مفاجئة"
+
+msgid "Planned Audits"
+msgstr "عمليات تدقيق الحسابات المخطط لها"
+
+msgid "Document Submission Date by Government"
+msgstr ""
+
+msgid "Submission Date to PRC"
+msgstr "تاريخ التقديم إلى لجنة مراجعة الشراكات"
+
+msgid "Review Date by PRC"
+msgstr "تاريخ المراجعة من قبل لجنة مراجعة الشراكات"
+
+msgid "Signed by Partner"
+msgstr "وقعه الشريك"
+
+msgid "Signed by Partner Date"
+msgstr "تاريخ التوقيع الشريك"
+
+msgid "Signed by UNICEF"
+msgstr "وقعه اليونيسف"
+
+msgid "Signed by UNICEF Date"
+msgstr "موقعة من قبل اليونيسف التاريخ"
+
+msgid "Days from Submission to Approved"
+msgstr ""
+
+msgid "Days from Review to Approved"
+msgstr ""
+
+msgid "Total no. of amendments"
+msgstr "مجموع لا. من التعديلات"
+
+msgid "Last amendment date"
+msgstr "تاريخ آخر تعديل"
+
+msgid "Attachment Type"
+msgstr "نوع المرفق"
+
+msgid "# of attachments"
+msgstr "# من المرفقات"
+
+msgid "CP Outputs"
+msgstr "مخرجات البرنامج القطري"
+
+msgid "CP output"
+msgstr "مخرج البرنامج القطري"
+
+msgid "Name of UNICEF Focal Point"
+msgstr "اسم منسق اليونيسف"
+
+msgid "Hyperlink"
+msgstr "ارتباط تشعبي"
+
+msgid "Location"
+msgstr "موقع"
+
+msgid "Vendor Number"
+msgstr "رقم البائع"
+
+msgid "PD Ref Number"
+msgstr "رقم مرجع  وثيقة البرامج"
+
+msgid "Section"
+msgstr "الجزء"
+
+msgid "Start date"
+msgstr "تاريخ البدء"
+
+#, python-format
+msgid "Currency %(currency)s"
+msgstr "%(currency)s العملة"
+
+msgid "Vendor #: "
+msgstr "بائع #:"
+
+msgid "End date"
+msgstr "تاريخ الانتهاء"
+
+msgid "GPD Reference"
+msgstr ""
+
+msgid "Duration"
+msgstr "مدة"
+
+msgid "Total GPD Budget"
+msgstr ""
+
+msgid "UNICEF Contribution"
+msgstr "مساهمة اليونيسف"
+
+msgid "Total Cash"
+msgstr "مجموع المبالغ النقدية"
+
+msgid "Supplies in-kind"
+msgstr "التوريدات العينية"
+
+msgid "GPD Output/ GPD Activity"
+msgstr ""
+
+#, python-format
+msgid "Total (%s)"
+msgstr "الإجمالي (%s)"
+
+msgid "UNICEF"
+msgstr "اليونيسف"
+
+msgid "contribution"
+msgstr "مساهمة"
+
+msgid "GPD Quarters"
+msgstr ""
+
+msgid "Result Level"
+msgstr "مستوى النتيجة"
+
+msgid "CP Output "
+msgstr "مخرج البرنامج القطري"
+
+msgid "GPD Output"
+msgstr ""
+
+msgid "Subtotal for the programme costs"
+msgstr "المجموع الفرعي لتكاليف البرنامج"
+
+msgid "Total GPD budget cash"
+msgstr ""
+
+msgid "No."
+msgstr "لا."
+
+msgid "GPD Output/ GPD Activity / Item Description"
+msgstr ""
+
+msgid "Unit Type"
+msgstr "نوع الوحدة"
+
+msgid "Number of Units"
+msgstr "عدد الوحدات"
+
+msgid "Price/Unit"
+msgstr "السعر / الوحدة"
+
+msgid "Total"
+msgstr "المجموع"
+
+msgid "Other Notes"
+msgstr "الملاحظات الأخرى"
+
+msgid "GPD OUTPUT "
+msgstr ""
+
+msgid "Activity"
+msgstr "نشاط"
+
+msgid "Total Cost for all outputs"
+msgstr "التكلفة الإجمالية لجميع النواتج"
+
+msgid "Item"
+msgstr "العنصر"
+
+msgid "Price/unit"
+msgstr "السعر / الوحدة"
+
+msgid "Total Price"
+msgstr "السعر الكلي"
+
+msgid "Provided By"
+msgstr "مقدمة من"
+
+msgid "CP Output"
+msgstr "مخرج البرنامج القطري"
+
+msgid "Other Mentions"
+msgstr "إشارات أخرى"
+
+msgid "UNICEF Product Number"
+msgstr "رقم منتج اليونيسف"
+
+msgid "Total Value"
+msgstr "القيمة الإجمالية"
+
+msgid "Partner non-financial contribution:"
+msgstr "مساهمة الشريك غير المالية:"
+
+msgid "Budget Summary"
+msgstr "ملخص الميزانية"
+
+msgid "Activity Budget"
+msgstr "ميزانية النشاط"
+
+msgid "Detailed Budget"
+msgstr "الميزانية التفصيلية"
+
+msgid "Supply Cost"
+msgstr "تكلفة التوريد"
+
+msgid "Workplan Budget"
+msgstr "ميزانية خطة العمل"
+
+msgid "Detailed Workplan Budget"
+msgstr "ميزانية خطة العمل التفصيلية"
+
+msgid "Supply Contribution (Planned)"
+msgstr "مساهمة التوريد (مخطط لها)"
+
+msgid "Workplan Name"
+msgstr ""
+
+msgid "Workplan ID"
+msgstr ""
+
+msgid "Workplan WBS"
+msgstr ""
+
+msgid "Cost Center Code"
+msgstr ""
+
+msgid "Cost Center Name"
+msgstr ""
+
+msgid "Plan Type"
+msgstr ""
+
+msgid "Plan Category Type"
+msgstr ""
+
+msgid "Workplan Start Date"
+msgstr ""
+
+msgid "Workplan End Date"
+msgstr ""
+
+msgid "Other"
+msgstr "آخر"
+
+msgid "Workplan"
+msgstr ""
+
+msgid "Workplan Activity ID"
+msgstr ""
+
+msgid "Workplan Activity WBS"
+msgstr ""
+
+msgid "WPA Title"
+msgstr ""
+
+msgid "WPA Description"
+msgstr ""
+
+msgid "Total budget"
+msgstr ""
+
+msgid "Activity Start Date"
+msgstr ""
+
+msgid "Activity End Date"
+msgstr ""
+
+msgid "Development"
+msgstr "تطوير"
+
+msgid "Review"
+msgstr "المراجعة"
+
+msgid "Pending Approval"
+msgstr ""
+
+msgid "Approved"
+msgstr "موافقة"
+
+msgid "Active"
+msgstr "نشيط"
+
+msgid "Cancelled"
+msgstr "ألغيت"
+
+msgid "Ended"
+msgstr "انتهى"
+
+msgid "Closed"
+msgstr "مغلق"
+
+msgid "Suspended"
+msgstr "معلق"
+
+msgid "Terminated"
+msgstr "تم إنهاؤه"
+
+msgid "Expired"
+msgstr "منتهي الصلاحية"
+
+msgid "None"
+msgstr "لا أحد"
+
+msgid "Marginal"
+msgstr "هامش"
+
+msgid "Significant"
+msgstr "بارِز"
+
+msgid "Principal"
+msgstr "رئيسي"
+
+msgid "Direct Payment"
+msgstr "دفع مباشر"
+
+msgid "Reimbursement"
+msgstr "السداد"
+
+msgid "Direct Cash Transfer"
+msgstr "التحويل النقدي المباشر"
+
+msgid "Government"
+msgstr ""
+
+msgid "Country Programmes"
+msgstr "البرامج القطرية"
+
+msgid "Government eWorkplans"
+msgstr ""
+
+msgid "Date Final Partnership Review Performed"
+msgstr "تاريخ إجراء مراجعة الشراكة النهائية"
+
+msgid "Final Review Approved"
+msgstr "تمت الموافقة على المراجعة النهائية"
+
+msgid "Contingency PD"
+msgstr "وثيقة برامج الطوارئ "
+
+msgid "Activation Document for Contingency PDs"
+msgstr "وثيقة التفعيل لحالات الطوارئ PDs"
+
+msgid "Activation Protocol"
+msgstr "بروتوكول التنشيط"
+
+msgid "Termination document for PDs"
+msgstr "مستند الإنهاء لوثيقة البرامج"
+
+msgid "Lead Section"
+msgstr "القسم الرئيسي"
+
+msgid "Office"
+msgstr "مكتب. مقر. مركز"
+
+msgid "Sites"
+msgstr "المواقع"
+
+msgid "Population Focus"
+msgstr "التركيز السكاني"
+
+msgid "Amendment Open"
+msgstr "التعديل مفتوح"
+
+msgid "Humanitarian"
+msgstr "إنساني"
+
+msgid "Date first sent to Partner"
+msgstr "تاريخ الإرسال الأول إلى الشريك"
+
+msgid "UNPP Number"
+msgstr "رقم UNPP"
+
+msgid "Context"
+msgstr "سياق"
+
+msgid "Implementation Strategy"
+msgstr "استراتيجية التنفيذ"
+
+msgid "Gender Rating"
+msgstr "تصنيف الجنس"
+
+msgid "Gender Narrative"
+msgstr "سرد الجنس"
+
+msgid "Equity Rating"
+msgstr "تصنيف حقوق الملكية"
+
+msgid "Equity Narrative"
+msgstr "سرد الأسهم"
+
+msgid "Sustainability Rating"
+msgstr "تقييم الاستدامة"
+
+msgid "Sustainability Narrative"
+msgstr "سرد الاستدامة"
+
+msgid "Partner Non-Financial Contribution to Programme"
+msgstr "مساهمة الشريك غير المالية في البرنامج"
+
+msgid "Budget Owner"
+msgstr "مالك الميزانية"
+
+msgid "HQ Support Cost"
+msgstr "تكلفة دعم المقر الرئيسي"
+
+msgid "Cash Transfer Modalities"
+msgstr "طرق التحويل النقدي"
+
+msgid "UNICEF Review Type"
+msgstr "نوع مراجعة اليونيسف"
+
+msgid "Capacity Development"
+msgstr "تنمية القدرات"
+
+msgid "Other Info"
+msgstr "معلومات اخرى"
+
+msgid "Other Document Details"
+msgstr "تفاصيل الاتفاقية"
+
+msgid "Other Partners Involved"
+msgstr "شركاء آخرون منخرطون"
+
+msgid "Technical Guidance"
+msgstr "التوجيه الفني"
+
+msgid "Cancel Justification"
+msgstr "إلغاء التبرير"
+
+msgid "Data Processing Agreement"
+msgstr "اتفاقية معالجة البيانات"
+
+msgid "Activities involving children and young people"
+msgstr "الأنشطة التي يشارك فيها الأطفال والشباب"
+
+msgid "Special Conditions for Construction Works by Implementing Partners"
+msgstr "الشروط الخاصة بأعمال البناء من قبل الشركاء المنفذين"
+
+msgid "Metadata"
+msgstr "البيانات الوصفية"
+
+msgid "Confidential"
+msgstr "سري"
+
+msgid "Signature Required"
+msgstr ""
+
+msgid "Unknown"
+msgstr "غير معروف"
+
+msgid "Type 1: Administrative error (correction)"
+msgstr "النوع 1: خطأ إداري (تصحيح)"
+
+msgid "Type 2: Budget <= 20%"
+msgstr "النوع 2: الميزانية &lt;= 20٪"
+
+msgid "Type 3: Budget > 20%"
+msgstr "النوع 3: الميزانية&gt; 20٪"
+
+msgid "Type 4: Changes to planned results"
+msgstr "النوع 4: التغييرات على النتائج المخطط لها"
+
+msgid "Type 5: No cost extension"
+msgstr "النوع 5: بدون تمديد للتكلفة"
+
+msgid "Type 6: Other"
+msgstr "النوع 6: أخرى"
+
+msgid "Normal"
+msgstr "طبيعي"
+
+msgid "Contingency"
+msgstr "طارئ"
+
+msgid "Kind"
+msgstr "رمزي"
+
+msgid "Types"
+msgstr "أنواع"
+
+msgid "Description"
+msgstr "وصف"
+
+msgid "Signed Date"
+msgstr "تاريخ التوقيع"
+
+msgid "Number"
+msgstr "عدد"
+
+msgid "Amendment Document"
+msgstr "وثيقة التعديل"
+
+msgid "Internal PRC Review"
+msgstr "المراجعة الداخلية لجمعية الصين الشعبية"
+
+msgid "Amended GDD"
+msgstr ""
+
+msgid "Amendment"
+msgstr "تعديل"
+
+msgid "GDD amendments"
+msgstr ""
+
+msgid "Q1"
+msgstr ""
+
+msgid "Q2"
+msgstr "الربع الثاني"
+
+msgid "Q3"
+msgstr "الربع الثالث"
+
+msgid "Q4"
+msgstr "الربع الرابع"
+
+msgid "GDD"
+msgstr ""
+
+msgid "Year"
+msgstr "عام"
+
+msgid "Programmatic Q1"
+msgstr "برمجي Q1"
+
+msgid "Programmatic Q2"
+msgstr "برمجي Q2"
+
+msgid "Programmatic Q3"
+msgstr "برمجي Q3"
+
+msgid "Programmatic Q4"
+msgstr "برمجي Q4"
+
+msgid "GDD Planned Visits"
+msgstr ""
+
+msgid "Partner Contribution"
+msgstr "مساهمة الشريك"
+
+msgid "Unicef Cash"
+msgstr "يونيسيف كاش"
+
+msgid "UNICEF Supplies"
+msgstr "لوازم اليونيسف"
+
+msgid "Partner Contribution Local"
+msgstr "مساهمة الشريك بالعملة المحلية"
+
+msgid "Partner Supplies Local"
+msgstr "مساهمة الشريك بالإمدادات بالعملة المحلية"
+
+msgid "Total Partner Contribution"
+msgstr "إجمالي مساهمة الشريك"
+
+msgid "Total HQ Cash Local"
+msgstr "إجمالي النقد المحلي للمقر الرئيسي"
+
+msgid "Unicef Cash Local"
+msgstr "منظمة اليونيسف النقدية المحلية"
+
+msgid "UNICEF Supplies Local"
+msgstr "مستلزمات اليونيسف محلية"
+
+msgid "Currency"
+msgstr "عملة"
+
+msgid "Total Local"
+msgstr "إجمالي محلي"
+
+msgid "Programme Effectiveness (%)"
+msgstr "فعالية البرنامج (%)"
+
+msgid "GDD budget"
+msgstr ""
+
+msgid "Not decided yet"
+msgstr "لم اقرر بعد"
+
+msgid "Yes, strongly agree"
+msgstr "نعم ، أوافق بشدة"
+
+msgid "Yes, agree"
+msgstr "نعم أوافق"
+
+msgid "No, disagree"
+msgstr "لا ، غير موافق"
+
+msgid "No, strongly disagree"
+msgstr "لا ، أعارض بشدة"
+
+msgid ""
+"The proposed relationship is best represented and regulated by partnership "
+"(as opposed to procurement), with both UNICEF and the Government making "
+"clear contributions to the GDD"
+msgstr ""
+
+msgid ""
+"The partner selection evidences the Government’s comparative advantage and "
+"value for money in relation to the planned results"
+msgstr ""
+
+msgid ""
+"Previous UNICEF/UN relationships with the proposed Government have been "
+"positive"
+msgstr ""
+
+msgid ""
+"The proposed GDD is relevant to achieving results in the country programme "
+"document, the relevant sector workplan and or humanitarian response plan"
+msgstr ""
+
+msgid ""
+"The results framework of the proposed GDD has been guided by M&E feedback "
+"during the drafting process"
+msgstr ""
+
+msgid ""
+"Gender, equity and sustainability have been considered in the programme "
+"design process"
+msgstr ""
+"تم أخذ قضايا الجنسين والإنصاف والاستدامة في الاعتبار في عملية تصميم البرنامج"
+
+msgid ""
+"The budget of the proposed GDD is aligned with the principles of value for "
+"money with the effective and efficient programme management costs adhering "
+"to office defined limits"
+msgstr ""
+
+msgid "The relevant supply issues have been duly considered"
+msgstr "تم النظر على النحو الواجب في قضايا التوريد ذات الصلة"
+
+msgid "PRC Review"
+msgstr "محضر لجنة مراجعة الشراكات"
+
+msgid "Non-PRC Review"
+msgstr "من غير مراجعة لجنة مراجعة الشراكات"
+
+msgid "No Review Required"
+msgstr "لا حاجة للمراجعة"
+
+msgid "Actions List"
+msgstr "قائمة الإجراءات"
+
+msgid "PRC Submitted By"
+msgstr "المقدم لدى لجنة مراجعة الشراكات"
+
+msgid "Review Date"
+msgstr "تاريخ المراجعة"
+
+msgid "Meeting Date"
+msgstr "تاريخ الاجتماع"
+
+msgid "PRC Officers"
+msgstr "عضو لجنة مراجعة الشراكات"
+
+msgid "Overall Approver"
+msgstr "الموافق العام"
+
+msgid "Authorized Officer"
+msgstr ""
+
+msgid "Recommend for Approval"
+msgstr ""
+
+msgid "Sent Back by Secretary Comment"
+msgstr "تم الإرسال مرة أخرى بسبب تعليق السكرتير"
+
+msgid "User"
+msgstr "مستخدم"
+
+msgid "Type"
+msgstr "اكتب"
+
+msgid "GDD Attachment"
+msgstr ""
+
+msgid "Safeguarding"
+msgstr ""
+
+msgid "Social and Environmental"
+msgstr ""
+
+msgid "Financial"
+msgstr "الأمور المالية"
+
+msgid "Operational"
+msgstr "التشغيل"
+
+msgid "Political"
+msgstr "سياسي"
+
+msgid "Safety and security"
+msgstr ""
+
+msgid "Risk Type"
+msgstr "نوع الخطر"
+
+msgid "Code"
+msgstr "رمز"
+
+msgid "RAM Indicators"
+msgstr "مؤشرات RAM"
+
+msgid "Result Link"
+msgstr ""
+
+msgid "CP Key Intervention"
+msgstr ""
+
+msgid "Key Intervention"
+msgstr ""
+
+msgid "eWP Activity"
+msgstr ""
+
+msgid "Context Details"
+msgstr ""
+
+msgid "UNICEF Cash"
+msgstr "يونيسيف كاش"
+
+msgid "Government Cash"
+msgstr ""
+
+msgid "Time Frames Enabled"
+msgstr ""
+
+msgid "Is Active"
+msgstr ""
+
+msgid "GDD Activity"
+msgstr ""
+
+msgid "GDD Activities"
+msgstr ""
+
+msgid "Name"
+msgstr "اسم"
+
+msgid "Unit"
+msgstr "وحدة"
+
+msgid "Unit Price"
+msgstr "سعر الوحدة"
+
+msgid "Units Number"
+msgstr "عدد الوحدات"
+
+msgid "GDD Activity Item"
+msgstr ""
+
+msgid "GDD Activity Items"
+msgstr ""
+
+msgid "Title"
+msgstr "عنوان"
+
+msgid "Unit Number"
+msgstr "رقم الوحدة"
+
+msgid "Result"
+msgstr "نتيجة"
+
+msgid "Standard Quarterly Progress Report"
+msgstr ""
+
+msgid "Humanitarian Report"
+msgstr ""
+
+msgid "Due Date"
+msgstr ""
+
+msgid "Accessing this item is not allowed."
+msgstr "الوصول إلى هذا العنصر غير مسموح به."
+
+msgid ""
+"Cannot add a new amendment while another amendment of same kind is in "
+"progress."
+msgstr "لا يمكن إضافة تعديل جديد أثناء إجراء تعديل آخر من نفس النوع."
+
+msgid "Date cannot be in the future!"
+msgstr "لا يمكن أن يكون التاريخ في المستقبل!"
+
+msgid "Cannot add a new amendment while the partner is blocked in Vision."
+msgstr "لا يمكن إضافة تعديل جديد أثناء حظر الشريك في Vision."
+
+msgid "Other description required, if type 'Other' selected."
+msgstr "مطلوب وصف آخر ، إذا تم تحديد نوع \"أخرى\"."
+
+msgid "Sections"
+msgstr "الأقسام"
+
+msgid "UNICEF Supply"
+msgstr "إمدادات اليونيسف"
+
+msgid "Total PD/SPD Budget"
+msgstr "إجمالي الميزانية وثيقة البرامج/البرامج المبسطة"
+
+msgid "URL"
+msgstr "عنوان Url"
+
+msgid "Attachment type"
+msgstr "نوع المرفق"
+
+msgid "Attachments"
+msgstr "المرفقات"
+
+msgid "In Kind Amount"
+msgstr "المبلغ العيني"
+
+msgid "UNICEF Cash (Local)"
+msgstr "اليونيسف النقدية (محلي)"
+
+msgid "In Kind Amount (Local)"
+msgstr "مبلغ عيني (محلي)"
+
+msgid "Result Type"
+msgstr "نوع النتيجة"
+
+msgid "From Date"
+msgstr "من التاريخ"
+
+msgid "To Date"
+msgstr "الى تاريخ"
+
+msgid "Parent"
+msgstr "الأبوين"
+
+msgid "WBS"
+msgstr "WBS"
+
+msgid "VISION ID"
+msgstr "معرف الرؤية"
+
+msgid "GIC Code"
+msgstr "رمز التدخل العام (GIC)"
+
+msgid "GIC Name"
+msgstr "اسم  رمز التدخل العام (GIC)"
+
+msgid "SIC Code"
+msgstr "رموز التدخل المحددة"
+
+msgid "SIC Name"
+msgstr "اسم رموز التدخل المحددة"
+
+msgid "Activity Focus Code"
+msgstr "رمز تركيز النشاط"
+
+msgid "Activity Focus Name"
+msgstr "اسم تركيز النشاط"
+
+#, python-format
+msgid "This field is limited to %d or less characters."
+msgstr "هذا الحقل محدد بـ %d أو أقل من الأحرف."
+
+#, python-format
+msgid "One or more of the FRs selected is related to a different PD/SPD, %s"
+msgstr "يرتبط واحد أو أكثر من FRs المحددة بـ PD / SPD مختلفة ،%s"
+
+#, python-format
+msgid ""
+"Please adjust activities to not use the quarters to be removed (%(names)s)."
+msgstr ""
+".(%(names)s) يُرجى ضبط الأنشطة بحيث لا تستخدم أرباع العمل المراد إزالتها "
+
+msgid "An Output cannot be updated for a government that is blocked in Vision"
+msgstr ""
+
+msgid "Invalid CP Output provided."
+msgstr "تم توفير مخرج برنامج قطري غير صالح."
+
+msgid "Authorized officer cannot be the same as overall approver."
+msgstr ""
+
+msgid ""
+"An attachment cannot be changed in statuses \"Ended, Closed or Terminated\""
+msgstr "لا يمكن تغيير المرفق في الحالات \"منتهي أو مغلق أو منتهي\""
+
+msgid "Planned Visit cannot be set for Terminated GPDs"
+msgstr ""
+
+msgid "Start date needs to be on or after GPD start date."
+msgstr ""
+
+msgid "End date needs to be on or before GPD end date."
+msgstr ""
+
+msgid "End date needs to be after the start date."
+msgstr "يجب أن يكون تاريخ الانتهاء بعد تاريخ البدء."
+
+msgid "Next start date needs to be one day after previous end date."
+msgstr "يجب أن يكون تاريخ البدء التالي بعد يوم واحد من تاريخ الانتهاء السابق."
+
+msgid "Changes not allowed when the GPD is terminated."
+msgstr ""
+
+msgid "Changes not allowed when GPD is not in amendment state."
+msgstr ""
+
+msgid "The GPD needs to have a start date."
+msgstr ""
+
+msgid "This field cannot be empty."
+msgstr "هذا الحقل لا يمكن ان يكون فارغا."
+
+msgid "Requirement ID passed in does not exist"
+msgstr "معرف المتطلبات الذي تم تمريره غير موجود"
+
+msgid "Requirement ID passed in belongs to a different gdd"
+msgstr ""
+
+msgid "You're trying to delete a record that has a start date in the past"
+msgstr "أنت تحاول حذف سجل له تاريخ بدء في الماضي"
+
+msgid ""
+"A record that starts in the passed cannot be modified on a non-draft GDD"
+msgstr ""
+
+msgid ""
+"Invalid budget data. Total cash should be equal to items number * price per "
+"item."
+msgstr ""
+"بيانات الميزانية غير صالحة. يجب أن يكون إجمالي النقد مساويًا لرقم العناصر * "
+"السعر لكل عنصر."
+
+msgid "Unable to find item for id: {}"
+msgstr ""
+
+msgid "Unable to find items: {}"
+msgstr ""
+
+msgid "Unknown GPD."
+msgstr ""
+
+msgid "Results cannot be changed in this status"
+msgstr "لا يمكن تغيير النتائج في هذه الحالة"
+
+msgid "lower_result has an id but cannot be found in the db"
+msgstr "low_result لها معرف ولكن لا يمكن العثور عليها في db"
+
+msgid "New activities are not able to be added in this status"
+msgstr ""
+
+msgid "PDF could not be generated properly"
+msgstr "لا يمكن إنشاء PDF بشكل صحيح"
+
+msgid "eTools ref no"
+msgstr "eTools المرجع لا"
+
+msgid "Organization Name"
+msgstr "اسم المنظمة"
+
+msgid "Programme Title"
+msgstr "عنوان البرنامج"
+
+msgid "Planned duration"
+msgstr "المدة المقررة"
+
+msgid "Geographical coverage"
+msgstr "التغطية الجغرافية"
+
+msgid "Budget"
+msgstr "ميزانية"
+
+msgid "Supplies"
+msgstr "التوريدات"
+
+msgid "Background"
+msgstr ""
+
+msgid "Risk & Proposed Mitigation Measures"
+msgstr "المخاطر وإجراءات التخفيف المقترحة"
+
+msgid "Workplan Result"
+msgstr "نتيجة خطة العمل"
+
+msgid "Result statement"
+msgstr "بيان النتيجة"
+
+msgid "Performance indicator/s"
+msgstr "مؤشرات الأداء"
+
+msgid "Result/activity"
+msgstr "النتيجة / النشاط"
+
+msgid "Timeframe"
+msgstr "إطار زمني"
+
+msgid "Total (UNICEF)"
+msgstr ""
+
+msgid "Prog. Output"
+msgstr "مخرجات البرامج"
+
+msgid "Inactive"
+msgstr "غير نشط"
+
+msgid "Sub-total for programme costs"
+msgstr "المجموع الفرعي لتكاليف البرنامج"
+
+msgid "Total Cash budget"
+msgstr "إجمالي الميزانية النقدية"
+
+msgid "Supply Contribution Plan"
+msgstr "خطة مساهمة التوريد"
+
+msgid "Provided by"
+msgstr "مقدمة من"
+
+msgid "No. of units"
+msgstr "عدد الوحدات"
+
+msgid "Total supply Cost"
+msgstr "إجمالي تكلفة التوريد"
+
+msgid "Others"
+msgstr "آحرون"
+
+msgid "Partner non-financial contribution"
+msgstr "مساهمة الشريك غير المالية"
+
+msgid "Cash Transfer modality"
+msgstr "طريقة التحويل النقدي"
+
+msgid "Signatures and date"
+msgstr "التوقيعات والتاريخ"
+
+msgid "Government Authorized Officer"
+msgstr ""
+
+msgid "Signature"
+msgstr "التوقيع"
+
+msgid "Date"
+msgstr "تاريخ"
+
+msgid "UNICEF Authorized Officer"
+msgstr "مسؤول اليونيسف المعتمد"
+
+msgid "Date Uploaded"
+msgstr "تاريخ الرفع"
+
+msgid "Document Type"
+msgstr "نوع الوثيقة"
+
+msgid "Document"
+msgstr "وثيقة"
+
+msgid "Invalid"
+msgstr "غير صالح"
+
+msgid "Yes"
+msgstr "نعم"
+
+msgid "No"
+msgstr "لا"
+
+msgid "Review for eTools reference number: "
+msgstr ""
+
+msgid "Submitted By"
+msgstr "مقدم بواسطة"
+
+msgid "Date of submission for review"
+msgstr "تاريخ التقديم للمراجعة"
+
+msgid "Overall Comment"
+msgstr "التعليق العام"
+
+msgid "Overall Approval"
+msgstr "الموافقة الشاملة"
+
+msgid "Overall Review"
+msgstr "نظرة شاملة"
+
+msgid "PRC Member Reviews"
+msgstr "تقييمات الأعضاء"
+
+msgid "PRC Member Name"
+msgstr "اسم عضو"
+
+msgid "Approval comment"
+msgstr "تعليق الموافقة"
+
+msgid "Review date"
+msgstr "تاريخ المراجعة"
+
+msgid "Only Partnership Managers can execute this transition"
+msgstr "يمكن لمديري الشراكة فقط تنفيذ هذا النقل"
+
+msgid "End date is in the future"
+msgstr "تاريخ الانتهاء في المستقبل"
+
+msgid "Total Outstanding DCTs need to equal to 0"
+msgstr "يجب أن يساوي إجمالي المبالغ المحولة مباشرة المعلقة 0"
+
+msgid ""
+"Total FR amount needs to equal total actual amount, and Total Outstanding "
+"DCTs need to equal to 0"
+msgstr ""
+"يجب ان يساوي إجمالي الحجز النقدي المبلغ الإجمالي الفعلي، و يكون قيمة المبالغ "
+"المعلقة 0"
+
+msgid "Final Review must be approved"
+msgstr "يجب الموافقة على المراجعة النهائية"
+
+msgid "Cannot Transition status while adding an amendment"
+msgstr "لا يمكن نقل الحالة أثناء إضافة تعديل"
+
+msgid "PD cannot be closed if the Partner is Blocked in Vision"
+msgstr "لا يمكن إغلاق وثيقة البرامج إذا كان الشريك محظورًا في برنامج الفيجين"
+
+msgid "Cannot Transition without termination doc attached"
+msgstr "لا يمكن الانتقال بدون إرفاق مستند الإنهاء"
+
+msgid "Cannot Transition to ended if termination_doc attached"
+msgstr "لا يمكن الانتقال إلى إنهاء إذا تم إرفاق وثيقة الانهاء"
+
+msgid "PD cannot transition to ended if the Partner is Blocked in Vision"
+msgstr ""
+"لا يمكن أن انتقال حالة وثيقة البرامج إلى منتهي إذا كان الشريك محظورًا في "
+"برنامج فيجين"
+
+msgid "PD cannot be suspended if the Partner is Blocked in Vision"
+msgstr "لا يمكن تعليق وثيقة البرامج إذا كان الشريك محظورًا في برنامج فيجين"
+
+msgid "Justification required for cancellation"
+msgstr "التبرير المطلوب للإلغاء"
+
+msgid "PD cannot transition to approved if the Partner is Blocked in Vision"
+msgstr ""
+
+msgid "Cannot Transition to active if termination_doc attached"
+msgstr ""
+
+msgid "PD cannot be activated if the Partner is Blocked in Vision"
+msgstr "لا يمكن تنشيط وثيقة البرامج إذا كان الشريك محظورًا في برنامج فيجين"
+
+msgid ""
+"State suspended cannot be modified since the end date of the gdd surpasses "
+"today"
+msgstr ""
+
+msgid "Start date must precede end date"
+msgstr "يجب أن يسبق تاريخ البدء تاريخ الانتهاء"
+
+msgid "Signatures cannot be dated in the future"
+msgstr "لا يمكن تأريخ التوقيعات في المستقبل"
+
+msgid "The start date cannot be before the later of signature dates."
+msgstr "لا يمكن أن يكون تاريخ البدء قبل تاريخ لاحق للتوقيع."
+
+msgid "PD start date cannot be earlier than the Start Date of the related PCA"
+msgstr ""
+"لا يمكن أن يكون تاريخ بدء وثيقة البرامج قبل تاريخ بدء اتفاقية التعاون في "
+"البرامج ذات الصلة"
+
+msgid "Amendment Flag cannot be turned on without adding an amendment"
+msgstr "لا يمكن تشغيل علامة التعديل بدون إضافة تعديل"
+
+msgid ""
+"The locations selected on the PD/SPD are not a subset of all locations "
+"selected for this PD/SPD's indicators"
+msgstr ""
+"المواقع المحددة في وثيقة البرامج ليست مجموعة فرعية من جميع المواقع المحددة "
+"لمؤشرات وثيقة البرامج/البرامج المبسطة"
+
+msgid "The Lead Section is also selected in Contributing Sections."
+msgstr ""
+
+msgid "Budget Owner cannot be in the list of UNICEF Focal Points"
+msgstr ""
+
+#, python-format
+msgid "Required fields not completed in %(status)s: %(fields)s"
+msgstr "الحقول المطلوبة غير مكتملة في %(status)s: %(fields)s "
+
+#, python-format
+msgid "Cannot change fields while in %(status)s: %(field)s"
+msgstr "لا يمكن تغيير الحقول أثناء وجود %(status)s: %(field)s"
+
+msgid "All activities must have at least one time frame"
+msgstr "يجب أن يكون لجميع الأنشطة إطار زمني واحد على الأقل"
+
+msgid "Results section is empty"
+msgstr "قسم النتائج فارغ"
+
+msgid "Total UNICEF Contribution must be greater than 0"
+msgstr "يجب أن يكون إجمالي مساهمة اليونيسف أكبر من 0"
+
+msgid "All PD Outputs need to be associated to a CP Output"
+msgstr "يجب ربط جميع مخرجات وثيقة البرامج بمخرجات البرنامج القطري"
+
+msgid "Unicef and Partner both need to accept"
+msgstr "يجب أن تقبل كل من اليونيسف والشريك"
+
+msgid "Review needs to be approved"
+msgstr "يجب الموافقة على المراجعة"
+
+msgid "Only original PD can be active"
+msgstr "يمكن فقط تنشيط وثيقة البرامج الأصلية"
+
+msgid "Today is not after the start date"
+msgstr "اليوم ليس بعد تاريخ البدء"
+
+msgid "UNICEF Cash $ or UNICEF Supplies $ should not be 0"
+msgstr ""
+"لا يجب أن تكون قيمة أموال اليونيسف النقدية بالدولار أو لوازم اليونيسف صفرًا"
+
+msgid "Today is not after the end date"
+msgstr "اليوم ليس بعد تاريخ الانتهاء"
+
+msgid "ID values must be integers"
+msgstr "يجب أن تكون قيم المعرفات أعدادًا صحيحة"
+
+msgid ""
+"This CP Output cannot be removed from this GDD because there are nested "
+"Results, please remove all Document Results to continue"
+msgstr ""
+
+msgid "No valid data found in the file."
+msgstr ""
+
+msgid "Cannot delete special reporting requirements in the past."
+msgstr ""
+
+msgid "Deleting an attachment can only be done in Draft status"
+msgstr "لا يمكن حذف المرفق إلا في حالة المسودة"
+
+msgid "Action is not allowed"
+msgstr "الإجراء غير مسموح به"
+
+msgid "You need to be a focal point in order to perform this action"
+msgstr "يجب أن تكون نقطة محورية من أجل تنفيذ هذا الإجراء"
+
+msgid "Partner has already accepted this GPD."
+msgstr ""
+
+msgid ""
+"You cannot perform this action while the GPD is not available for partner to "
+"edit"
+msgstr ""
+
+msgid ""
+"You cannot perform this action while the GPD is not available for UNICEF to "
+"edit"
+msgstr ""
+
+msgid "UNICEF has already accepted this GPD."
+msgstr ""
+
+msgid "Only focal points or budget owners can accept"
+msgstr "يمكن فقط قبول جهات الاتصال أو مالكي الميزانية"
+
+msgid "Only focal points can accept"
+msgstr "يمكن فقط قبول النقاط المحورية"
+
+msgid "GPD needs to be in Review state"
+msgstr ""
+
+msgid "GPD review is missing"
+msgstr ""
+
+msgid "Only overall approver can reject review."
+msgstr "يمكن للموافق العام فقط رفض المراجعة."
+
+msgid "GPD review already approved"
+msgstr ""
+
+msgid "GPD is already in Review status."
+msgstr ""
+
+#, python-format
+msgid ""
+"Merge Error: Amended field was already changed (%(field)s at %(instance)s). "
+"This can be caused by parallel merged amendment or changed original gdd. "
+"Amendment should be re-created."
+msgstr ""
+
+msgid "GPD has already been cancelled."
+msgstr ""
+
+msgid "Only PRC Secretary can cancel"
+msgstr ""
+
+msgid "GPD has already been terminated."
+msgstr ""
+
+msgid "Only focal points or budget owners can terminate"
+msgstr "يمكن فقط لجهات الاتصال أو مالكي الميزانية إنهاء الخدمة"
+
+msgid "GPD has already been suspended."
+msgstr ""
+
+msgid "Only focal points or budget owners can suspend"
+msgstr "فقط نقاط الاتصال أو مالكو الميزانية يمكنهم التعليق"
+
+msgid "GPD is not suspended."
+msgstr ""
+
+msgid "Only focal points or budget owners can unsuspend"
+msgstr "يمكن فقط لجهات الاتصال أو مالكي الميزانية إلغاء التعليق"
+
+msgid "GPD is already in Pending Approval status."
+msgstr ""
+
+msgid "Only authorized officer can accept review."
+msgstr ""
+
+msgid "GPD is already unlocked."
+msgstr ""
+
+msgid "At least one CP Output is required before sending it to the Partner"
+msgstr ""
+
+msgid "GPD is currently with Partner"
+msgstr ""
+
+msgid "Only focal points or budget owners can send to partner"
+msgstr "يمكن فقط لنقاط الاتصال أو مالكي الميزانية الإرسال إلى الشريك"
+
+msgid "GPD is currently with UNICEF"
+msgstr ""
+
+msgid "Only partner focal points can send to UNICEF"
+msgstr "يمكن لنقاط الاتصال الشريكة فقط الإرسال إلى اليونيسف"
+
+msgid "Only amended GPDs can be merged"
+msgstr ""
+
+msgid "Amendment cannot be merged yet"
+msgstr "لا يمكن دمج التعديل حتى الآن"
+
+msgid "Amendment does not exist for this GPD"
+msgstr ""
+
+#, python-format
+msgid ""
+"Merge Error: Amended field was already changed (%(field)s at %(instance)s). "
+"This can be caused by parallel merged amendment or changed original GPD. "
+"Amendment should be re-created."
+msgstr ""
+
+msgid "Meeting date is not available."
+msgstr "تاريخ الاجتماع غير متاح."
