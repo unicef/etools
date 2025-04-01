@@ -36,6 +36,7 @@ jobs:
       - run:
           name: Triggering test workflow
           command: |
+            # Launch the test job from here, it needs the BASE_TAG value to pull the docker image
             BASE_TAG="$(md5sum pdm.lock | cut -c1-6)$(md5sum Dockerfile-base | cut -c1-6)"
             curl --user ${CIRCLE_TOKEN}: \
                 --data build_parameters[CIRCLE_JOB]=test \
