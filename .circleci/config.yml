@@ -114,7 +114,9 @@ workflows:
   run-tests-on-pr:
     jobs:
       - setup
-      - test
+      - test:
+          requires:
+            - setup
 
   # Build only on merges to develop, staging and master. Don't run the tests here.
   deploy-on-merge:
