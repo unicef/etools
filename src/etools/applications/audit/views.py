@@ -105,7 +105,10 @@ from etools.applications.audit.serializers.export import (
 )
 from etools.applications.organizations.models import Organization
 from etools.applications.partners.models import PartnerOrganization
-from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
+from etools.applications.partners.serializers.partner_organization_v2 import (
+    FaceReportPartnerSerializer,
+    MinimalPartnerOrganizationListSerializer,
+)
 from etools.applications.permissions2.conditions import ObjectStatusCondition
 from etools.applications.permissions2.drf_permissions import get_permission_for_targets, NestedPermission
 from etools.applications.permissions2.metadata import BaseMetadata, PermissionBasedMetadata
@@ -511,6 +514,20 @@ class SpecialAuditViewSet(EngagementManagementMixin, EngagementViewSet):
     @action(detail=True, methods=['get'], url_path='csv', renderer_classes=[SpecialAuditDetailCSVRenderer])
     def export_csv(self, request, *args, **kwargs):
         return super().export_csv(request, *args, **kwargs)
+
+
+class FacereportViewSet(
+    mixins.RetrieveModelMixin,
+    viewsets.GenericViewSet
+):
+    queryset = PartnerOrganization.objects.filter(hidden=False)
+    serializer_class = FaceReportPartnerSerializer
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['businessarea'] = self.request.user.profile.country.business_area_code
+        context['country_currency'] = self.request.user.profile.country.local_currency
+        return context
 
 
 class AuditorStaffMembersViewSet(
