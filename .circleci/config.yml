@@ -1,4 +1,4 @@
-version: 2.1
+version: 2
 
 parameters:
   base-tag:
@@ -33,6 +33,15 @@ jobs:
                 echo "Not a followed branch not pushing latest"
               fi
             fi
+      - run:
+          name: Triggering test workflow
+          command: |
+            BASE_TAG="$(md5sum pdm.lock | cut -c1-6)$(md5sum Dockerfile-base | cut -c1-6)"
+            curl --user ${CIRCLE_TOKEN}: \
+                --data build_parameters[CIRCLE_JOB]=test \
+                --data build_parameters[BASE_TAG]=${BASE_TAG} \
+                --data revision=$CIRCLE_SHA1 \
+                https://circleci.com/api/v1.1/project/github/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/tree/$CIRCLE_BRANCH
   test:
     working_directory: ~/code
     # The primary container is an instance of the first list image listed. Your build commands run in this container.
