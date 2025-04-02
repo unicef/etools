@@ -1,3 +1,4 @@
+import datetime
 from copy import copy
 
 from django.db import connection
@@ -650,6 +651,19 @@ class RowSerializer(serializers.Serializer):
     wbs_element_ex = serializers.CharField(source='WBS_ELEMENT_EX')
     grant_ref = serializers.CharField(source='GRANT_REF')
     donor_name = serializers.CharField(source='DONOR_NAME')
-    expiry_date = serializers.CharField(source='EXPIRY_DATE')
+    end_date = serializers.SerializerMethodField()
     commitment_ref = serializers.CharField(source='COMMITMENT_REF')
     dct_amt_usd = serializers.CharField(source='DCT_AMT_USD')
+    start_date = serializers.SerializerMethodField()
+
+    def get_end_date(self, obj):
+        if not obj['EXPIRY_DATE']:
+            return ""
+        dt = datetime.datetime.strptime(obj['EXPIRY_DATE'], "%d-%b-%y")
+        return dt.strftime("%Y-%m-%d")
+
+    def get_start_date(self, obj):
+        # Hardcoded until we get the data
+        import random
+        return datetime.date(random.randint(2000, 2020), random.randint(1, 12), random.randint(1, 28)).strftime("%Y-%m-%d")
+
