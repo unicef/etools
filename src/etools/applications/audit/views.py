@@ -87,12 +87,12 @@ from etools.applications.audit.serializers.engagement import (
     EngagementListSerializer,
     EngagementSerializer,
     MicroAssessmentSerializer,
+    PartnerFaceFormSerializer,
     ReportAttachmentSerializer,
     SpecialAuditSerializer,
     SpotCheckSerializer,
     StaffSpotCheckListSerializer,
     StaffSpotCheckSerializer,
-    PartnerFaceFormSerializer,
 )
 from etools.applications.audit.serializers.export import (
     AuditDetailCSVSerializer,
@@ -106,9 +106,7 @@ from etools.applications.audit.serializers.export import (
 )
 from etools.applications.organizations.models import Organization
 from etools.applications.partners.models import PartnerOrganization
-from etools.applications.partners.serializers.partner_organization_v2 import (
-    MinimalPartnerOrganizationListSerializer,
-)
+from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.permissions2.conditions import ObjectStatusCondition
 from etools.applications.permissions2.drf_permissions import get_permission_for_targets, NestedPermission
 from etools.applications.permissions2.metadata import BaseMetadata, PermissionBasedMetadata

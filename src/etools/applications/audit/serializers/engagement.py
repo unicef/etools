@@ -8,9 +8,9 @@ from rest_framework import serializers
 from unicef_attachments.fields import AttachmentSingleFileField, FileTypeModelChoiceField
 from unicef_attachments.models import Attachment, FileType
 from unicef_attachments.serializers import AttachmentSerializerMixin
-from unicef_vision.utils import get_data_from_insight
 from unicef_restlib.fields import SeparatedReadWriteField
 from unicef_restlib.serializers import WritableNestedParentSerializerMixin, WritableNestedSerializerMixin
+from unicef_vision.utils import get_data_from_insight
 
 from etools.applications.action_points.categories.models import Category
 from etools.applications.action_points.categories.serializers import CategoryModelChoiceField
@@ -30,7 +30,6 @@ from etools.applications.audit.models import (
     SpecificProcedure,
     SpotCheck,
 )
-from etools.applications.partners.models import PartnerOrganization
 from etools.applications.audit.purchase_order.models import PurchaseOrder
 from etools.applications.audit.serializers.auditor import (
     AuditorStaffMemberRealmSerializer,
@@ -43,6 +42,7 @@ from etools.applications.audit.serializers.risks import (
     KeyInternalWeaknessSerializer,
     RiskRootSerializer,
 )
+from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.serializers.interventions_v2 import BaseInterventionListSerializer
 from etools.applications.partners.serializers.partner_organization_v2 import (
     MinimalPartnerOrganizationListSerializer,
@@ -616,11 +616,11 @@ class SpecialAuditSerializer(EngagementSerializer):
             'end_date': {'required': False},
             'total_value': {'required': False},
         })
- 
- 
+
+
 class PartnerFaceFormSerializer(serializers.ModelSerializer):
     rows = serializers.SerializerMethodField()
-    
+
     def get_vision_data(self, obj):
         if not hasattr(self, '_vision_data'):
             valid_response, response = get_data_from_insight(
@@ -632,11 +632,10 @@ class PartnerFaceFormSerializer(serializers.ModelSerializer):
             )
             self._vision_data = response
         return self._vision_data['ROWSET']['ROW']
-    
+
     def get_rows(self, obj):
         return RowSerializer(self.get_vision_data(obj), many=True).data
-    
-    
+
     class Meta:
         model = PartnerOrganization
         fields = (
@@ -646,13 +645,11 @@ class PartnerFaceFormSerializer(serializers.ModelSerializer):
             "rows",
         )
 
- 
-  
+
 class RowSerializer(serializers.Serializer):
     wbs_element_ex = serializers.CharField(source='WBS_ELEMENT_EX')
     grant_ref = serializers.CharField(source='GRANT_REF')
     donor_name = serializers.CharField(source='DONOR_NAME')
-    expiry_date = serializers.CharField(source='EXPIRY_DATE')  
+    expiry_date = serializers.CharField(source='EXPIRY_DATE')
     commitment_ref = serializers.CharField(source='COMMITMENT_REF')
-    dct_amt_usd = serializers.CharField(source='DCT_AMT_USD')  
-
+    dct_amt_usd = serializers.CharField(source='DCT_AMT_USD')
