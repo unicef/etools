@@ -92,6 +92,7 @@ from etools.applications.audit.serializers.engagement import (
     SpotCheckSerializer,
     StaffSpotCheckListSerializer,
     StaffSpotCheckSerializer,
+    PartnerFaceFormSerializer,
 )
 from etools.applications.audit.serializers.export import (
     AuditDetailCSVSerializer,
@@ -106,7 +107,6 @@ from etools.applications.audit.serializers.export import (
 from etools.applications.organizations.models import Organization
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.serializers.partner_organization_v2 import (
-    FaceReportPartnerSerializer,
     MinimalPartnerOrganizationListSerializer,
 )
 from etools.applications.permissions2.conditions import ObjectStatusCondition
@@ -520,8 +520,9 @@ class FacereportViewSet(
     mixins.RetrieveModelMixin,
     viewsets.GenericViewSet
 ):
+    permission_classes = [IsAuthenticated, ]
     queryset = PartnerOrganization.objects.filter(hidden=False)
-    serializer_class = FaceReportPartnerSerializer
+    serializer_class = PartnerFaceFormSerializer
 
     def get_serializer_context(self):
         context = super().get_serializer_context()

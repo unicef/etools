@@ -10,7 +10,6 @@ from rest_framework.exceptions import ValidationError
 from unicef_attachments.fields import AttachmentSingleFileField
 from unicef_attachments.serializers import AttachmentSerializerMixin
 from unicef_snapshot.serializers import SnapshotModelSerializer
-from unicef_vision.utils import get_data_from_insight
 
 from etools.applications.field_monitoring.planning.models import MonitoringActivity, MonitoringActivityGroup
 from etools.applications.partners.models import (
@@ -170,92 +169,6 @@ class MinimalPartnerOrganizationListSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "name",
-        )
-
-
-class FaceReportPartnerSerializer(serializers.ModelSerializer):
-    start_date = serializers.SerializerMethodField(read_only=True)
-    end_date = serializers.SerializerMethodField(read_only=True)
-    total_face_value_usd = serializers.SerializerMethodField(read_only=True)
-    total_face_value_local_currency = serializers.SerializerMethodField(read_only=True)
-    currency_local_name = serializers.SerializerMethodField(read_only=True)
-    currency_local_code = serializers.SerializerMethodField(read_only=True)
-
-    def get_currency_local_name(self, obj):
-        return self.context.get('country_currency').name
-
-    def get_currency_local_code(self, obj):
-        return self.context.get('country_currency').code
-
-    def get_total_face_value_local_currency(self, obj):
-        vision_data = self.get_vision_currency_conversion()
-        for currency in vision_data['ROWSET']['ROW']:
-            if currency['CURRENCY_CODE'] == self.context.get('country_currency').code:
-                return self.get_total_value_face_form(obj) * float(currency['X_RATE'])
-        return 0
-
-    def get_vision_data(self, obj):
-        if not hasattr(self, '_vision_data'):
-            valid_response, response = get_data_from_insight(
-                f'dcts/?vendor={obj.vendor_number}',
-                {
-                    "vendor_code": obj.vendor_number,
-                    "businessarea": self.context.get('businessarea')
-                }
-            )
-            self._vision_data = response
-        return self._vision_data
-
-    def get_vision_currency_conversion(self):
-        if not hasattr(self, '_vision_currency_conversion'):
-            valid_response, response = get_data_from_insight(
-                '/exchangerates/'
-            )
-            self._vision_currency_conversion = response
-        return self._vision_currency_conversion
-
-    def get_total_value_face_form(self, obj):
-        vision_data = self.get_vision_data(obj)
-        return sum([float(r['DCT_AMT_USD']) for r in vision_data['ROWSET']['ROW']])
-
-    def get_total_face_value_usd(self, obj):
-        return self.get_total_value_face_form(obj)
-
-    def get_record_with_latest_expiry(self, records):
-        def parse_expiry_date(record):
-            expiry_str = record.get("EXPIRY_DATE", "")
-            return datetime.datetime.strptime(expiry_str, "%d-%b-%y") if expiry_str else datetime.datetime.min
-
-        return max(records, key=parse_expiry_date)
-
-    def get_higher_expiry_date(self, obj):
-        vision_data = self.get_vision_data(obj)
-        max_record = self.get_record_with_latest_expiry(vision_data['ROWSET']['ROW'])
-        if max_record:
-            expiry_date_str = max_record.get("EXPIRY_DATE")
-            dt = datetime.datetime.strptime(expiry_date_str, "%d-%b-%y")
-            return dt.strftime("%Y-%m-%d")
-        return None
-
-    def get_start_date(self, obj):
-        audit = obj.engagement_set.filter(start_date__isnull=False).order_by('-start_date').first()
-        return audit.start_date if audit else None
-
-    def get_end_date(self, obj):
-        return self.get_higher_expiry_date(obj)
-
-    class Meta:
-        model = PartnerOrganization
-        fields = (
-            "id",
-            "name",
-            "vendor_number",
-            "start_date",
-            "end_date",
-            "total_face_value_usd",
-            "currency_local_name",
-            "currency_local_code",
-            "total_face_value_local_currency"
         )
 
 
