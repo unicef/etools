@@ -148,8 +148,4 @@ workflows:
   # Temporary, only to debug
   debug_env_vars:
     jobs:
-      - print_env:
-          filters:
-            branches:
-              only:
-                - develop
+      - print_env
