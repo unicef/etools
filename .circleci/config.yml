@@ -117,16 +117,26 @@ jobs:
               echo "PR detected. Skipping build_and_upload job."
             fi
 
+  print_env:
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - run:
+          name: Print All CircleCI Environment Variables
+          command: |
+            echo "🔍 CircleCI Environment Variables:"
+            env | sort
+
 workflows:
   version: 2.1
 
   #Run tests on all PRs always but not on merges.
-  run-tests-on-pr:
+  run_tests_on_pr:
     jobs:
       - setup
 
   # Build only on merges to develop, staging and master. Don't run the tests here.
-  deploy-on-merge:
+  build_on_merge:
     jobs:
       - build_and_upload:
           filters:
@@ -135,3 +145,8 @@ workflows:
                 - develop
                 - staging
                 - master
+
+  # Temporary, only to debug
+  debug_env_vars:
+    jobs:
+      - print_env
