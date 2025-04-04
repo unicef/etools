@@ -66,12 +66,8 @@ jobs:
       - run:
           name: Run Tests
           command: |
-            if [ ! -z "$CIRCLE_PULL_REQUEST" ]; then  #Only run tests on PRs
-              pip install tox
-              /etools/__pypackages__/3.12/bin/tox -e d42
-            else
-              echo "Not a pull request. Skipping test job trigger."
-            fi
+            pip install tox
+            /etools/__pypackages__/3.12/bin/tox -e d42
           no_output_timeout: 30m
       - save_cache:
           key: deps2-{{ .Branch }}--{{ checksum "pdm.lock" }}-{{ checksum ".circleci/config.yml" }}
@@ -85,57 +81,38 @@ jobs:
       - run:
           name: Building the image
           command: |
-            if [ -z "$CIRCLE_PULL_REQUEST" ]; then  #Only run if it's a push, not a PR
-              docker login -u $DOCKER_USER -p $DOCKER_PASS
-              BASE_TAG="$(md5sum pdm.lock | cut -c1-6)$(md5sum Dockerfile-base | cut -c1-6)"
-              TAG=${CIRCLE_BRANCH}
-              (docker pull unicef/etools-base:${BASE_TAG}) ||
-              (docker build -t unicef/etools-base:${BASE_TAG} -f Dockerfile-base . && docker push unicef/etools-base:${BASE_TAG})
-              docker build --build-arg BASE_TAG=${BASE_TAG} -t unicef/etools:$TAG .
-            else
-              echo "PR detected. Skipping build_and_upload job."
-            fi
+            docker login -u $DOCKER_USER -p $DOCKER_PASS
+            BASE_TAG="$(md5sum pdm.lock | cut -c1-6)$(md5sum Dockerfile-base | cut -c1-6)"
+            TAG=${CIRCLE_BRANCH}
+            (docker pull unicef/etools-base:${BASE_TAG}) ||
+            (docker build -t unicef/etools-base:${BASE_TAG} -f Dockerfile-base . && docker push unicef/etools-base:${BASE_TAG})
+            docker build --build-arg BASE_TAG=${BASE_TAG} -t unicef/etools:$TAG .
       - run:
           name: Pushing to Docker Hub
           command: |
-            if [ -z "$CIRCLE_PULL_REQUEST" ]; then  #Only run if it's a push, not a PR
-
-              TAG=${CIRCLE_BRANCH}
-              BASE_TAG="$(md5sum pdm.lock | cut -c1-6)$(md5sum Dockerfile-base | cut -c1-6)"
-              docker login -u $DOCKER_USER -p $DOCKER_PASS
-              docker push unicef/etools:$TAG
-              if (echo "develop" | grep -q "$CIRCLE_BRANCH"); then
-                docker tag unicef/etools-base:${BASE_TAG} unicef/etools-base:latestet
-                docker push unicef/etools-base:latestet
-              elif (echo "master" | grep -q "$CIRCLE_BRANCH"); then
-                docker tag unicef/etools-base:${BASE_TAG} unicef/etools-base:latest_prodet
-                docker push unicef/etools-base:latest_prodet
-              else
-                echo "Not a followed branch not pushing latest"
-              fi
+            TAG=${CIRCLE_BRANCH}
+            BASE_TAG="$(md5sum pdm.lock | cut -c1-6)$(md5sum Dockerfile-base | cut -c1-6)"
+            docker login -u $DOCKER_USER -p $DOCKER_PASS
+            docker push unicef/etools:$TAG
+            if (echo "develop" | grep -q "$CIRCLE_BRANCH"); then
+              docker tag unicef/etools-base:${BASE_TAG} unicef/etools-base:latestet
+              docker push unicef/etools-base:latestet
+            elif (echo "master" | grep -q "$CIRCLE_BRANCH"); then
+              docker tag unicef/etools-base:${BASE_TAG} unicef/etools-base:latest_prodet
+              docker push unicef/etools-base:latest_prodet
             else
-              echo "PR detected. Skipping build_and_upload job."
+              echo "Not a followed branch not pushing latest"
             fi
-
-  print_env:
-    docker:
-      - image: cimg/base:stable
-    steps:
-      - run:
-          name: Print All CircleCI Environment Variables
-          command: |
-            echo "🔍 CircleCI Environment Variables:"
-            env | sort
 
 workflows:
   version: 2.1
 
-  #Run tests on all PRs always but not on merges.
-  run_tests_on_pr:
+  #Run tests
+  run_tests:
     jobs:
       - setup
 
-  # Build only on merges to develop, staging and master. Don't run the tests here.
+  # Build only when merging/pushing to develop, staging and master. No need to wait for tests.
   build_on_merge:
     jobs:
       - build_and_upload:
@@ -145,8 +122,3 @@ workflows:
                 - develop
                 - staging
                 - master
-
-  # Temporary, only to debug
-  debug_env_vars:
-    jobs:
-      - print_env
