@@ -134,8 +134,8 @@ class AmendmentTestCase(BaseTenantTestCase):
         amendment.merge_amendment()
 
         self.assertListEqual(
-            list(self.active_intervention.sections.values_list('id', flat=True)),
-            [first_section.id, third_section.id],
+            sorted(list(self.active_intervention.sections.values_list('id', flat=True))),
+            sorted([first_section.id, third_section.id],)
         )
 
     def test_quarters_update(self):
