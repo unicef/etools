@@ -107,13 +107,13 @@ jobs:
 workflows:
   version: 2.1
 
-  #Run tests on all PRs
-  run-tests-on-pr:
+  #Run tests
+  run_tests:
     jobs:
       - setup
 
-  # Build only on merges to develop, staging and master. No need to wait for tests.
-  deploy-on-merge:
+  # Build only when merging/pushing to develop, staging and master. No need to wait for tests.
+  build_on_merge:
     jobs:
       - build_and_upload:
           filters:
