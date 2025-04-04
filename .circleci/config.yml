@@ -66,7 +66,7 @@ jobs:
       - run:
           name: Run Tests
           command: |
-            if [[ "$CIRCLE_COMPARE_URL" == *pull/* ]]; then #Only run tests on PRs
+            if [ ! -z "$CIRCLE_PULL_REQUEST" ]; then  #Only run tests on PRs
               pip install tox
               /etools/__pypackages__/3.12/bin/tox -e d42
             else
@@ -85,7 +85,7 @@ jobs:
       - run:
           name: Building the image
           command: |
-            if [[ ! "$CIRCLE_COMPARE_URL" == *pull/* ]]; then #Only run if it's a push, not a PR
+            if [ -z "$CIRCLE_PULL_REQUEST" ]; then  #Only run if it's a push, not a PR
               docker login -u $DOCKER_USER -p $DOCKER_PASS
               BASE_TAG="$(md5sum pdm.lock | cut -c1-6)$(md5sum Dockerfile-base | cut -c1-6)"
               TAG=${CIRCLE_BRANCH}
@@ -98,7 +98,8 @@ jobs:
       - run:
           name: Pushing to Docker Hub
           command: |
-            if [[ ! "$CIRCLE_COMPARE_URL" == *pull/* ]]; then #Only run if it's a push, not a PR
+            if [ -z "$CIRCLE_PULL_REQUEST" ]; then  #Only run if it's a push, not a PR
+
               TAG=${CIRCLE_BRANCH}
               BASE_TAG="$(md5sum pdm.lock | cut -c1-6)$(md5sum Dockerfile-base | cut -c1-6)"
               docker login -u $DOCKER_USER -p $DOCKER_PASS
