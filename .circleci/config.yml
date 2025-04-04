@@ -107,12 +107,12 @@ jobs:
 workflows:
   version: 2.1
 
-  #Run tests on all PRs always but not on merges.
+  #Run tests on all PRs
   run-tests-on-pr:
     jobs:
       - setup
 
-  # Build only on merges to develop, staging and master. Don't run the tests here.
+  # Build only on merges to develop, staging and master. No need to wait for tests.
   deploy-on-merge:
     jobs:
       - build_and_upload:
