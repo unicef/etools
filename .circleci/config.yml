@@ -108,7 +108,7 @@ workflows:
   version: 2.1
 
   #Run tests
-  run_tests:
+  launch_tests:
     jobs:
       - setup
 
