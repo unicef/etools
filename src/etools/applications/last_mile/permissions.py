@@ -97,11 +97,4 @@ class LMSMAPIPermission(IsAuthenticated):
 class LastMileUserPermissionRetriever():
 
     def get_permissions(self, user):
-        if user.is_superuser:
-            return [USER_ADMIN_PANEL_PERMISSION,
-                    STOCK_MANAGEMENT_ADMIN_PANEL_PERMISSION,
-                    TRANSFER_HISTORY_ADMIN_PANEL_PERMISSION,
-                    ALERT_NOTIFICATIONS_ADMIN_PANEL_PERMISSION,
-                    LOCATIONS_ADMIN_PANEL_PERMISSION,
-                    USER_LOCATIONS_ADMIN_PANEL_PERMISSION]
         return [permission.codename for permission in user.user_permissions.all()]

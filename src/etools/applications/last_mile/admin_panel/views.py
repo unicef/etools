@@ -13,6 +13,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 from unicef_rest_export.renderers import ExportCSVRenderer
 from unicef_rest_export.views import ExportMixin
+from unicef_restlib.pagination import DynamicPageNumberPagination
 
 from etools.applications.last_mile import models
 from etools.applications.last_mile.admin_panel.constants import ALERT_TYPES
@@ -156,7 +157,7 @@ class LocationsViewSet(mixins.ListModelMixin,
     """
     permission_classes = [IsLMSMAdmin]
     serializer_class = PointOfInterestAdminSerializer
-    pagination_class = CustomDynamicPageNumberPagination
+    pagination_class = DynamicPageNumberPagination
 
     queryset = models.PointOfInterest.objects.select_related("parent", "poi_type").prefetch_related('partner_organizations').all().order_by('id')
 
