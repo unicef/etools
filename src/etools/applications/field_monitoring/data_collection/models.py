@@ -54,6 +54,7 @@ class ActivityQuestion(QuestionTargetMixin, models.Model):
             is_enabled=self.is_enabled,
             cp_output=self.cp_output,
             partner=self.partner,
+            intervention=self.intervention
         )
 
 
