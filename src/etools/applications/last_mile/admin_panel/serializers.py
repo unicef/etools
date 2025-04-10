@@ -244,6 +244,22 @@ class PointOfInterestAdminSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class PointOfInterestWithCoordinatesSerializer(PointOfInterestAdminSerializer):
+
+    borders = serializers.SerializerMethodField(read_only=True)
+
+    def get_borders(self, obj):
+        parent_locations_with_borders = obj.parent.get_parent_locations_with_borders()
+        data = {}
+        if obj.parent.FIRST_ADMIN_LEVEL in parent_locations_with_borders:
+            data['country'] = parent_locations_with_borders[obj.parent.FIRST_ADMIN_LEVEL]
+        if obj.parent.SECOND_ADMIN_LEVEL in parent_locations_with_borders:
+            data['region'] = parent_locations_with_borders[obj.parent.SECOND_ADMIN_LEVEL]
+        if obj.parent.THIRD_ADMIN_LEVEL in parent_locations_with_borders:
+            data['district'] = parent_locations_with_borders[obj.parent.THIRD_ADMIN_LEVEL]
+        return data
+
+
 class PointOfInterestListSerializer(serializers.ListSerializer):
     def to_representation(self, data):
         ret = []
@@ -650,3 +666,21 @@ class AuthUserPermissionsDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
         fields = ('admin_perms',)
+
+
+class PointOfInterestCoordinateAdminSerializer(serializers.ModelSerializer):
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        parent_locations_with_borders = instance.parent.get_parent_locations_with_borders()
+        if instance.parent.FIRST_ADMIN_LEVEL in parent_locations_with_borders:
+            data['country'] = parent_locations_with_borders[instance.parent.FIRST_ADMIN_LEVEL]
+        if instance.parent.SECOND_ADMIN_LEVEL in parent_locations_with_borders:
+            data['region'] = parent_locations_with_borders[instance.parent.SECOND_ADMIN_LEVEL]
+        if instance.parent.THIRD_ADMIN_LEVEL in parent_locations_with_borders:
+            data['district'] = parent_locations_with_borders[instance.parent.THIRD_ADMIN_LEVEL]
+        return data
+
+    class Meta:
+        model = models.PointOfInterest
+        fields = ('id',)

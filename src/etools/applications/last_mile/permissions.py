@@ -31,6 +31,9 @@ class IsLMSMAdmin(IsAuthenticated):
         PARENT_LOCATIONS_ADMIN_PANEL: [
             LOCATIONS_ADMIN_PANEL_PERMISSION,
         ],
+        GEOPOINT_LOCATIONS: [
+            LOCATIONS_ADMIN_PANEL_PERMISSION,
+        ],
         # Manage Users linked to Locations Perms
         USER_LOCATIONS_ADMIN_PANEL: [
             USER_LOCATIONS_ADMIN_PANEL_PERMISSION,

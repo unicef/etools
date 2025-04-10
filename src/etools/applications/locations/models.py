@@ -54,3 +54,15 @@ class Location(AbstractLocation):
             current = current.parent
 
         return location_data
+
+    def get_parent_locations_with_borders(self):
+        location_data = {}
+        tolerance = 0.01
+        current = self
+        while current:
+            simplified_geom = current.geom.simplify(tolerance, preserve_topology=True)
+
+            location_data[current.admin_level] = {"location": current.name, "borders": list(simplified_geom.coords)}
+            current = current.parent
+
+        return location_data

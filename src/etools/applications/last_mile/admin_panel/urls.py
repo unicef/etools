@@ -11,6 +11,7 @@ from etools.applications.last_mile.admin_panel.views import (
     OrganizationListView,
     ParentLocationListView,
     PartnerOrganizationListView,
+    PointOfInterestCoordinateListView,
     PointOfInterestTypeListView,
     TransferEvidenceListView,
     TransferHistoryListView,
@@ -24,6 +25,7 @@ router = DefaultRouter()
 router.register(r'users', UserViewSet, basename=USER_ADMIN_PANEL)
 router.register(r'alert-types', AlertTypeListView, basename=ALERT_TYPES_ADMIN_PANEL)
 router.register(r'locations', LocationsViewSet, basename=LOCATIONS_ADMIN_PANEL)
+router.register(r'coordinates', PointOfInterestCoordinateListView, basename=GEOPOINT_LOCATIONS)
 router.register(r'locations-type', PointOfInterestTypeListView, basename=LOCATIONS_TYPE_ADMIN_PANEL)
 router.register(r'user-locations', UserLocationsViewSet, basename=USER_LOCATIONS_ADMIN_PANEL)
 router.register(r'alert-notifications', AlertNotificationViewSet, basename=ALERT_NOTIFICATIONS_ADMIN_PANEL)

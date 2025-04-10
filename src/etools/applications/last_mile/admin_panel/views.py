@@ -36,9 +36,11 @@ from etools.applications.last_mile.admin_panel.serializers import (
     OrganizationAdminSerializer,
     PartnerOrganizationAdminSerializer,
     PointOfInterestAdminSerializer,
+    PointOfInterestCoordinateAdminSerializer,
     PointOfInterestCustomSerializer,
     PointOfInterestExportSerializer,
     PointOfInterestTypeAdminSerializer,
+    PointOfInterestWithCoordinatesSerializer,
     TransferHistoryAdminSerializer,
     TransferItemCreateSerializer,
     TransferItemSerializer,
@@ -175,9 +177,10 @@ class LocationsViewSet(mixins.ListModelMixin,
     search_fields = ('name',)
 
     def get_serializer_class(self):
-
         if self.action in ['update', 'partial_update', 'create']:
             return PointOfInterestCustomSerializer
+        if self.request.query_params.get('with_coordinates') is not None:
+            return PointOfInterestWithCoordinatesSerializer
         if self.action == 'list_export_csv':
             return PointOfInterestExportSerializer
         return PointOfInterestAdminSerializer
@@ -372,6 +375,14 @@ class PointOfInterestTypeListView(mixins.ListModelMixin, mixins.CreateModelMixin
                 timezone.now().date(),
             )
         })
+
+
+class PointOfInterestCoordinateListView(mixins.RetrieveModelMixin, mixins.ListModelMixin, GenericViewSet):
+    serializer_class = PointOfInterestCoordinateAdminSerializer
+    permission_classes = [IsLMSMAdmin]
+
+    def get_queryset(self):
+        return models.PointOfInterest.objects.all().order_by('id')
 
 
 class AlertTypeListView(mixins.ListModelMixin, GenericViewSet):
