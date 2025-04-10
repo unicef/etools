@@ -541,6 +541,11 @@ class AuditSerializer(ActivePDValidationMixin, RiskCategoriesUpdateMixin, Engage
 
     pending_unsupported_amount = serializers.DecimalField(20, 2, label=_('Pending Unsupported Amount'), read_only=True)
     percent_of_audited_expenditure = serializers.DecimalField(20, 1, label=_('% Of Audited Expenditure'), read_only=True)
+    
+    test = serializers.SerializerMethodField()
+    
+    def get_test(self, obj):
+        return "Test12321231"
 
     class Meta(EngagementSerializer.Meta):
         model = Audit
@@ -550,7 +555,7 @@ class AuditSerializer(ActivePDValidationMixin, RiskCategoriesUpdateMixin, Engage
             'financial_finding_set', 'percent_of_audited_expenditure', 'audit_opinion', 'number_of_financial_findings',
             'key_internal_weakness', 'key_internal_controls', 'amount_refunded',
             'additional_supporting_documentation_provided', 'justification_provided_and_accepted', 'write_off_required',
-            'pending_unsupported_amount', 'explanation_for_additional_information',
+            'pending_unsupported_amount', 'explanation_for_additional_information', 'test'
         ]
         fields.remove('specific_procedures')
         extra_kwargs = EngagementSerializer.Meta.extra_kwargs.copy()
