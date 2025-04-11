@@ -17,7 +17,7 @@ dependencies = [
     'cryptography==42.0.7',
     'dj-database-url==2.1.0',
     'dj-static==0.0.6',
-    'Django==4.2.15',
+    'Django==4.2.3',
     'django-admin-extra-urls==4.1.1',
     'django-appconf==1.0.6',
     'django-celery-beat==2.6.0',
