@@ -1283,6 +1283,16 @@ files = [
 ]
 
 [[package]]
+name = "gdal"
+version = "3.8.5"
+requires_python = ">=3.6.0"
+summary = "GDAL: Geospatial Data Abstraction Library"
+groups = ["default"]
+files = [
+    {file = "GDAL-3.8.5.tar.gz", hash = "sha256:ad8addd58ba9c62aefc7f65d345c168736798f137e5c8f247af76fcf4862d371"},
+]
+
+[[package]]
 name = "gunicorn"
 version = "22.0.0"
 requires_python = ">=3.7"
