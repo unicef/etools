@@ -367,7 +367,7 @@ class EngagementSerializer(
         return [{"id": o.pk, "name": o.name} for o in obj.all()]
 
     def get_face_forms(self, obj):
-        return [{"id": f.pk, "name": f.commitment_ref} for f in obj.all()]
+        return [{"id": f.pk, "commitment_ref": f.commitment_ref} for f in obj.all()]
 
     def validate(self, data):
         validated_data = super().validate(data)
