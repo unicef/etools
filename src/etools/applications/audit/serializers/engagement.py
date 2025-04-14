@@ -225,7 +225,7 @@ class EngagementLightSerializer(serializers.ModelSerializer):
 
     offices = OfficeLightSerializer(many=True)
     sections = SectionSerializer(many=True)
-    face_forms = FaceFormsListSerializer(many=True)
+    face_forms = FaceFormsListSerializer(many=True, required=False)
 
     class Meta:
         model = Engagement
@@ -315,7 +315,7 @@ class EngagementSerializer(
     )
     face_forms = SeparatedReadWriteField(
         read_field=serializers.SerializerMethodField(),
-        write_field=FaceFormRelatedField(many=True),
+        write_field=FaceFormRelatedField(many=True, required=False),
         label=_("Face Form(s)"),
     )
 
