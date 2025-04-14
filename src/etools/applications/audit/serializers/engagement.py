@@ -21,6 +21,7 @@ from etools.applications.audit.models import (
     DetailedFindingInfo,
     Engagement,
     EngagementActionPoint,
+    FaceForm,
     FinancialFinding,
     Finding,
     KeyInternalControl,
@@ -70,6 +71,12 @@ class PartnerOrganizationLightSerializer(PartnerOrganizationListSerializer):
                 'label': _('Phone Number'),
             },
         }
+
+
+class FaceFormsListSerializer(BaseInterventionListSerializer):
+    class Meta:
+        model = FaceForm
+        fields = ('id', 'commitment_ref')
 
 
 class AttachmentField(serializers.Field):
@@ -218,12 +225,13 @@ class EngagementLightSerializer(serializers.ModelSerializer):
 
     offices = OfficeLightSerializer(many=True)
     sections = SectionSerializer(many=True)
+    face_forms = FaceFormsListSerializer(many=True)
 
     class Meta:
         model = Engagement
         fields = [
             'id', 'reference_number', 'agreement', 'po_item', 'related_agreement', 'partner',
-            'engagement_type', 'status', 'status_date', 'total_value', 'offices', 'sections'
+            'engagement_type', 'status', 'status_date', 'total_value', 'offices', 'sections', 'face_forms'
         ]
 
     def validate(self, attrs):
@@ -290,6 +298,10 @@ class EngagementSerializer(
         read_field=serializers.SerializerMethodField(),
         label=_("Offices"),
     )
+    face_forms = SeparatedReadWriteField(
+        read_field=serializers.SerializerMethodField(),
+        label=_("Face Form(s)"),
+    )
 
     class Meta(EngagementListSerializer.Meta):
         fields = EngagementListSerializer.Meta.fields + [
@@ -305,6 +317,7 @@ class EngagementSerializer(
             'final_report',
             'sections',
             'offices',
+            'face_forms',
         ]
         extra_kwargs = {
             field: {'required': True} for field in [
@@ -336,6 +349,9 @@ class EngagementSerializer(
 
     def get_offices(self, obj):
         return [{"id": o.pk, "name": o.name} for o in obj.all()]
+
+    def get_face_forms(self, obj):
+        return [{"id": f.pk, "name": f.commitment_ref} for f in obj.all()]
 
     def validate(self, data):
         validated_data = super().validate(data)
@@ -501,6 +517,7 @@ class MicroAssessmentSerializer(ActivePDValidationMixin, RiskCategoriesUpdateMix
         fields.remove('currency_of_report')
         fields.remove('sections')
         fields.remove('offices')
+        fields.remove('face_forms')
         extra_kwargs = EngagementSerializer.Meta.extra_kwargs.copy()
         extra_kwargs.update({
             'engagement_type': {'read_only': True},
@@ -541,11 +558,6 @@ class AuditSerializer(ActivePDValidationMixin, RiskCategoriesUpdateMixin, Engage
 
     pending_unsupported_amount = serializers.DecimalField(20, 2, label=_('Pending Unsupported Amount'), read_only=True)
     percent_of_audited_expenditure = serializers.DecimalField(20, 1, label=_('% Of Audited Expenditure'), read_only=True)
-    
-    test = serializers.SerializerMethodField()
-    
-    def get_test(self, obj):
-        return "Test12321231"
 
     class Meta(EngagementSerializer.Meta):
         model = Audit
@@ -555,7 +567,7 @@ class AuditSerializer(ActivePDValidationMixin, RiskCategoriesUpdateMixin, Engage
             'financial_finding_set', 'percent_of_audited_expenditure', 'audit_opinion', 'number_of_financial_findings',
             'key_internal_weakness', 'key_internal_controls', 'amount_refunded',
             'additional_supporting_documentation_provided', 'justification_provided_and_accepted', 'write_off_required',
-            'pending_unsupported_amount', 'explanation_for_additional_information', 'test'
+            'pending_unsupported_amount', 'explanation_for_additional_information', 'face_forms'
         ]
         fields.remove('specific_procedures')
         extra_kwargs = EngagementSerializer.Meta.extra_kwargs.copy()
@@ -671,4 +683,3 @@ class RowSerializer(serializers.Serializer):
         # Hardcoded until we get the data
         import random
         return datetime.date(random.randint(2000, 2020), random.randint(1, 12), random.randint(1, 28)).strftime("%Y-%m-%d")
-

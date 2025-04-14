@@ -141,9 +141,9 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
     date_of_comments_by_unicef = models.DateField(
         verbose_name=_('Date Comments Received from UNICEF'), null=True, blank=True
     )
-    
+
     face_forms = models.ManyToManyField(
-        'audit.FaceForm', verbose_name=_('Face Forms'), blank=True
+        'audit.FaceForm', verbose_name=_('Face Forms'), blank=True, related_name='engagements',
     )
 
     date_of_report_submit = models.DateField(verbose_name=_('Date Report Submitted'), null=True, blank=True)
@@ -924,13 +924,14 @@ Auditor = GroupWrapper(code='auditor',
 UNICEFUser = GroupWrapper(code='unicef_user',
                           name='UNICEF User')
 
+
 class FaceForm(TimeStampedModel, models.Model):
-    
+
     commitment_ref = models.CharField(max_length=255, verbose_name=_('Commitment Reference'))
 
     class Meta:
         verbose_name = _('Face Form')
         verbose_name_plural = _('Face Forms')
-        
+
     def __str__(self):
         return self.commitment_ref

@@ -80,6 +80,7 @@ class Command(BaseCommand):
         'audit.engagement.related_agreement',
         'audit.engagement.sections',
         'audit.engagement.offices',
+        'audit.engagement.face_forms',
     ]
 
     engagement_status_editable_date_fields = [
