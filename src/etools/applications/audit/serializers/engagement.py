@@ -262,6 +262,21 @@ class SpecificProcedureSerializer(WritableNestedSerializerMixin,
         ]
 
 
+class FaceFormRelatedField(serializers.RelatedField):
+    def get_queryset(self):
+        return FaceForm.objects.all()
+
+    def to_internal_value(self, data):
+        if not isinstance(data, str):
+            raise serializers.ValidationError("Expected a string for commitment_ref.")
+
+        face_form, created = FaceForm.objects.get_or_create(commitment_ref=data)
+        return face_form
+
+    def to_representation(self, value):
+        return value.commitment_ref
+
+
 class EngagementSerializer(
         AttachmentSerializerMixin,
         EngagementDatesValidation,
@@ -300,6 +315,7 @@ class EngagementSerializer(
     )
     face_forms = SeparatedReadWriteField(
         read_field=serializers.SerializerMethodField(),
+        write_field=FaceFormRelatedField(many=True),
         label=_("Face Form(s)"),
     )
 
