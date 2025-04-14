@@ -372,22 +372,28 @@ class EngagementHactSerializer(EngagementLightSerializer):
     object_url = serializers.ReadOnlyField(source='get_object_url')
 
     def get_amount_tested(self, obj):
-        if obj.engagement_type == 'audit':
+        if obj.engagement_type == Engagement.TYPE_AUDIT:
             return obj.audited_expenditure or 0
-        elif obj.engagement_type == 'sc':
+        elif obj.engagement_type == Engagement.TYPE_SPOT_CHECK:
             return obj.total_amount_tested or 0
         else:
             return 0
 
     def get_outstanding_findings(self, obj):
-        if obj.engagement_type in ['audit', 'sc']:
+        if obj.engagement_type == Engagement.TYPE_AUDIT:
+            return obj.financial_findings or 0
+        else:
+            return 0
+
+    def get_pending_unsupported_amount(self, obj):
+        if obj.engagement_type in [Engagement.TYPE_AUDIT, Engagement.TYPE_SPOT_CHECK]:
             return obj.pending_unsupported_amount or 0
         else:
             return 0
 
     class Meta(EngagementLightSerializer.Meta):
         fields = EngagementLightSerializer.Meta.fields + [
-            "amount_tested", "outstanding_findings", "object_url"
+            "amount_tested", "outstanding_findings", "pending_unsupported_amount", "object_url"
         ]
 
 
