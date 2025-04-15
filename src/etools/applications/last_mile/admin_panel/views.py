@@ -59,12 +59,6 @@ from etools.applications.partners.models import PartnerOrganization
 from etools.applications.users.models import Group, Realm
 
 
-class CustomDynamicPageNumberPagination(PageNumberPagination):
-    page_size = 5
-    page_size_query_param = 'page_size'
-    max_page_size = 100
-
-
 class UserViewSet(ExportMixin,
                   mixins.ListModelMixin,
                   mixins.CreateModelMixin,
@@ -72,7 +66,7 @@ class UserViewSet(ExportMixin,
                   mixins.UpdateModelMixin,
                   viewsets.GenericViewSet):
     permission_classes = [IsLMSMAdmin]
-    pagination_class = CustomDynamicPageNumberPagination
+    pagination_class = DynamicPageNumberPagination
 
     def get_queryset(self):
         schema_name = connection.tenant.schema_name
@@ -209,7 +203,7 @@ class UserLocationsViewSet(mixins.ListModelMixin,
                            GenericViewSet):
     permission_classes = [IsLMSMAdmin]
     serializer_class = UserPointOfInterestAdminSerializer
-    pagination_class = CustomDynamicPageNumberPagination
+    pagination_class = DynamicPageNumberPagination
 
     def get_queryset(self):
         base_qs = get_user_model().objects.for_schema(connection.tenant.schema_name).distinct().order_by('id')
@@ -264,7 +258,7 @@ class AlertNotificationViewSet(mixins.ListModelMixin,
 
     permission_classes = [IsLMSMAdmin]
     serializer_class = AlertNotificationSerializer
-    pagination_class = CustomDynamicPageNumberPagination
+    pagination_class = DynamicPageNumberPagination
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
@@ -298,7 +292,7 @@ class AlertNotificationViewSet(mixins.ListModelMixin,
 class TransferItemViewSet(mixins.ListModelMixin, GenericViewSet, mixins.CreateModelMixin):
     permission_classes = [IsLMSMAdmin]
     serializer_class = TransferItemSerializer
-    pagination_class = CustomDynamicPageNumberPagination
+    pagination_class = DynamicPageNumberPagination
 
     def get_queryset(self):
         poi_id = self.request.query_params.get('poi_id')
@@ -395,7 +389,7 @@ class AlertTypeListView(mixins.ListModelMixin, GenericViewSet):
 
 class TransferHistoryListView(mixins.ListModelMixin, GenericViewSet):
     serializer_class = TransferHistoryAdminSerializer
-    pagination_class = CustomDynamicPageNumberPagination
+    pagination_class = DynamicPageNumberPagination
     permission_classes = [IsLMSMAdmin]
 
     filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)

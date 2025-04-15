@@ -249,15 +249,7 @@ class PointOfInterestWithCoordinatesSerializer(PointOfInterestAdminSerializer):
     borders = serializers.SerializerMethodField(read_only=True)
 
     def get_borders(self, obj):
-        parent_locations_with_borders = obj.parent.get_parent_locations_with_borders()
-        data = {}
-        if obj.parent.FIRST_ADMIN_LEVEL in parent_locations_with_borders:
-            data['country'] = parent_locations_with_borders[obj.parent.FIRST_ADMIN_LEVEL]
-        if obj.parent.SECOND_ADMIN_LEVEL in parent_locations_with_borders:
-            data['region'] = parent_locations_with_borders[obj.parent.SECOND_ADMIN_LEVEL]
-        if obj.parent.THIRD_ADMIN_LEVEL in parent_locations_with_borders:
-            data['district'] = parent_locations_with_borders[obj.parent.THIRD_ADMIN_LEVEL]
-        return data
+        return PointOfInterestCoordinateAdminSerializer(obj).data
 
 
 class PointOfInterestListSerializer(serializers.ListSerializer):
