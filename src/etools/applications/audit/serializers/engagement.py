@@ -369,6 +369,7 @@ class ActivePDValidationMixin:
 class EngagementHactSerializer(EngagementLightSerializer):
     amount_tested = serializers.SerializerMethodField()
     outstanding_findings = serializers.SerializerMethodField()
+    pending_unsupported_amount = serializers.SerializerMethodField()
     object_url = serializers.ReadOnlyField(source='get_object_url')
 
     def get_amount_tested(self, obj):
@@ -382,14 +383,12 @@ class EngagementHactSerializer(EngagementLightSerializer):
     def get_outstanding_findings(self, obj):
         if obj.engagement_type == Engagement.TYPE_AUDIT:
             return obj.financial_findings or 0
-        else:
-            return 0
+        return 0
 
     def get_pending_unsupported_amount(self, obj):
         if obj.engagement_type in [Engagement.TYPE_AUDIT, Engagement.TYPE_SPOT_CHECK]:
             return obj.pending_unsupported_amount or 0
-        else:
-            return 0
+        return 0
 
     class Meta(EngagementLightSerializer.Meta):
         fields = EngagementLightSerializer.Meta.fields + [
