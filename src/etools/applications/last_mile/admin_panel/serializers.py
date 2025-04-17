@@ -379,6 +379,19 @@ class UserPointOfInterestExportSerializer(serializers.ModelSerializer):
         fields = ('id', 'first_name', 'last_name', 'email', 'implementing_partner', 'location')
 
 
+class PointOfInterestLightSerializer(serializers.ModelSerializer):
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        parent_locations = ParentLocationsSerializer(instance.parent).data
+        data.update(parent_locations)
+        return data
+
+    class Meta:
+        model = models.PointOfInterest
+        fields = ('id', 'name', "point")
+
+
 class AlertNotificationSerializer(serializers.ModelSerializer):
 
     alert_type = serializers.SerializerMethodField(read_only=True)

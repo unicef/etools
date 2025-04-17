@@ -38,6 +38,7 @@ from etools.applications.last_mile.admin_panel.serializers import (
     PointOfInterestCoordinateAdminSerializer,
     PointOfInterestCustomSerializer,
     PointOfInterestExportSerializer,
+    PointOfInterestLightSerializer,
     PointOfInterestTypeAdminSerializer,
     PointOfInterestWithCoordinatesSerializer,
     TransferHistoryAdminSerializer,
@@ -194,6 +195,16 @@ class LocationsViewSet(mixins.ListModelMixin,
                 timezone.now().date(),
             )
         })
+
+
+class PointOfInterestsLightViewSet(mixins.ListModelMixin,
+                                   mixins.RetrieveModelMixin,
+                                   viewsets.GenericViewSet):
+    permission_classes = [IsLMSMAdmin]
+    serializer_class = PointOfInterestLightSerializer
+    pagination_class = DynamicPageNumberPagination
+
+    queryset = models.PointOfInterest.objects.select_related("parent", "poi_type").prefetch_related('partner_organizations').all().order_by('id')
 
 
 class UserLocationsViewSet(mixins.ListModelMixin,

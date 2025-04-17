@@ -15,6 +15,7 @@ LOCATIONS_ADMIN_PANEL = 'locations-admin-panel'
 LOCATIONS_TYPE_ADMIN_PANEL = 'location-type-admin-panel'
 PARENT_LOCATIONS_ADMIN_PANEL = 'parent-locations'
 PARTNER_ORGANIZATIONS_ADMIN_PANEL = 'partner-organizations-admin'
+POINT_OF_INTERESTS_LIGHT_DATA = 'point-of-interests-light-data'
 GEOPOINT_LOCATIONS = 'geopoint-locations'
 LOCATIONS_ADMIN_PANEL_PERMISSION = 'lmsm_admin_panel_manage_locations'
 
