@@ -1,4 +1,7 @@
+from datetime import timedelta
+
 from django.db.models import CharField, Count, OuterRef, Q, Subquery, Sum
+from django.utils.timezone import now
 
 from rest_framework.generics import get_object_or_404, ListAPIView
 from rest_framework.pagination import LimitOffsetPagination
@@ -54,11 +57,17 @@ class PRPInterventionListAPIView(QueryStringFilterMixin, ListAPIView):
         intervention=OuterRef("pk")
     ).order_by().values("intervention")
 
-    queryset = Intervention.objects.filter(
+    queryset = (Intervention.objects.filter(
         Q(status=Intervention.DRAFT, date_sent_to_partner__isnull=False) | ~Q(status=Intervention.DRAFT),
         result_links__ll_results__applied_indicators__isnull=False,
         reporting_requirements__isnull=False,
-        in_amendment=False,
+        in_amendment=False
+    ).exclude(
+        Q(status__in=[Intervention.ENDED,
+                      Intervention.CANCELLED,
+                      Intervention.CLOSED,
+                      Intervention.TERMINATED,
+                      Intervention.EXPIRED]) & Q(modified__lt=now() - timedelta(days=365))
     ).prefetch_related(
         'result_links__cp_output',
         'result_links__ll_results',
@@ -82,7 +91,7 @@ class PRPInterventionListAPIView(QueryStringFilterMixin, ListAPIView):
             frs_query.annotate(total=Count("currency", distinct=True)).values("total")[:1]
         ),
         max_fr_currency=MaxDistinct("frs__currency", output_field=CharField(), distinct=True),
-    )
+    ))
 
     filters = (
         ('id', 'id'),
