@@ -68,5 +68,26 @@
       "name": "LMSM Alert Receipt",
       "permissions": []
     }
+  },
+  {
+    "model": "auth.group",
+    "fields": {
+      "name": "LMSMApi",
+      "permissions": []
+    }
+  },
+  {
+    "model": "auth.group",
+    "fields": {
+      "name": "LMSM Focal Point",
+      "permissions": []
+    }
+  },
+  {
+    "model": "auth.group",
+    "fields": {
+      "name": "LMSM Admin Panel",
+      "permissions": []
+    }
   }
 ]
