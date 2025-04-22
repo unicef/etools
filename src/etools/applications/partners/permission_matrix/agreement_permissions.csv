@@ -27,7 +27,6 @@ Field no,Verbose Name,Field Name,Group,Condition,Status,Action,Allowed
 2.2.9,Signed By UNICEF Date,signed_by_unicef_date,Partnership Manager,is type PCA or MOU or GTC,Signed,Required,TRUE
 2.2.10,Signed Agreement (Attachment),attachment,Partnership Manager,is type PCA or MOU or GTC,Signed,Required,TRUE
 2.3.1,Authorized Officer,authorized_officers,Partnership Manager,is type PCA or SSFA,Signed,Required,TRUE
-2.2.8,Signed By UNICEF,signed_by,Partnership Manager,is type PCA or MOU or GTC,*,View,TRUE
 3.7,r number,reference_number_year,UNICEF User,,*,View,TRUE
 3.7,r number,reference_number_year,UNICEF User,,Draft,Edit,TRUE
 3.7,r number,reference_number_year,UNICEF User,,*,Required,TRUE
