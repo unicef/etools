@@ -41,12 +41,17 @@ class PMPPermissions:
     def __init__(self, user, instance, permission_structure, **kwargs):
         self.MODEL = apps.get_model(self.MODEL_NAME)
         self.user = user
-        self.user_groups = list(self.user.groups.values_list('name', flat=True))
+        self.user_groups = self.get_user_groups()
         self.instance = instance
         self.condition_group_valid = lru_cache(maxsize=16)(self.condition_group_valid)
         self.permission_structure = permission_structure
         self.all_model_fields = get_all_field_names(self.MODEL)
         self.all_model_fields += self.EXTRA_FIELDS
+
+    def get_user_groups(self):
+        if self.user.email == settings.TASK_ADMIN_USER:
+            return [UNICEF_USER]
+        return list(self.user.groups.values_list('name', flat=True))
 
     def condition_group_valid(self, condition_group):
         if condition_group['status'] and condition_group['status'] != '*':
