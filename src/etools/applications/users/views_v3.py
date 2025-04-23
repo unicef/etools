@@ -43,7 +43,6 @@ from etools.applications.users.models import (
     PartnershipManager,
     Realm,
     StagedUser,
-    UNICEFRepresentative,
     User,
     UserReviewer,
 )
@@ -507,13 +506,7 @@ class UnicefRepresentativeListAPIView(ListAPIView):
         user_group_permission(PartnershipManager.name, )
     )
     model = get_user_model()
-    queryset = get_user_model().objects.base_qs().all()
     serializer_class = MinimalUserSerializer
 
     def get_queryset(self, pk=None):
-        return super().get_queryset().filter(
-            realms__country=connection.tenant,
-            realms__organization=Organization.objects.get(id=1),  # Unicef Org
-            realms__group=UNICEFRepresentative.as_group(),
-            realms__is_active=True
-        )
+        return get_user_model().objects.unicef_representatives()

@@ -134,6 +134,14 @@ class UsersManager(UserManager.from_queryset(UserQuerySet)):
             'email'
         )
 
+    def unicef_representatives(self):
+        return self.base_qs().filter(
+            realms__country=connection.tenant,
+            realms__organization=Organization.objects.get(id=1),  # Unicef Org
+            realms__group=UNICEFRepresentative.as_group(),
+            realms__is_active=True
+        )
+
 
 class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = "username"
