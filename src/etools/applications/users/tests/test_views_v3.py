@@ -696,7 +696,6 @@ class TestUserRealmView(BaseTenantTestCase):
         cls.ip_viewer_inactive = UserFactory(realms__data=[IPViewer.name], profile__organization=cls.organization)
         cls.ip_viewer_inactive.realms.update(is_active=False)
 
-
         cls.partnership_manager = UserFactory(is_staff=True, realms__data=[UNICEF_USER, PartnershipManager.name])
         cls.audit_focal_point = AuditFocalPointUserFactory(is_staff=True)
         cls.pme = PMEUserFactory(is_staff=True)
