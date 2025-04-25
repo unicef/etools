@@ -25,6 +25,7 @@ REPRESENTATIVE_OFFICE_GROUP = 'Representative Office'
 PRC_SECRETARY = 'PRC Secretary'
 COUNTRY_OFFICE_ADMINISTRATOR = 'Country Office Administrator'
 RSS = 'RSS'
+UNICEF_REPRESENTATIVE = 'UNICEF Representative'
 
 
 class PMPPermissions:
