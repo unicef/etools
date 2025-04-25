@@ -61,7 +61,7 @@ class PRPInterventionListAPIView(QueryStringFilterMixin, ListAPIView):
         Q(status=Intervention.DRAFT, date_sent_to_partner__isnull=False) | ~Q(status=Intervention.DRAFT),
         result_links__ll_results__applied_indicators__isnull=False,
         reporting_requirements__isnull=False,
-        in_amendment=False
+        in_amendment=False,
     ).exclude(
         Q(status__in=[Intervention.ENDED,
                       Intervention.CANCELLED,

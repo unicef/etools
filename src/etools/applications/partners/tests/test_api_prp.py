@@ -11,10 +11,11 @@ from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.core.tests.mixins import WorkspaceRequiredAPITestMixIn
-from etools.applications.partners.models import InterventionResultLink, PartnerOrganization
+from etools.applications.partners.models import InterventionResultLink, PartnerOrganization, Intervention
 from etools.applications.partners.permissions import READ_ONLY_API_GROUP_NAME
 from etools.applications.partners.tests.factories import InterventionFactory
-from etools.applications.partners.tests.test_utils import setup_intervention_test_data
+from etools.applications.partners.tests.test_utils import setup_intervention_test_data, \
+    setup_filtered_intervention_test_data
 from etools.applications.reports.models import AppliedIndicator, IndicatorBlueprint, LowerResult
 from etools.applications.reports.tests.factories import ResultFactory
 from etools.applications.users.tests.factories import GroupFactory, UserFactory
@@ -24,6 +25,8 @@ class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, BaseTenantTestCase):
     def setUp(self):
         super().setUp()
         setup_intervention_test_data(self, include_results_and_indicators=True)
+
+        setup_filtered_intervention_test_data(self, include_results_and_indicators=True)
 
     def run_prp_v1(self, user=None, method='get', data=None):
         response = self.forced_auth_req(
@@ -42,6 +45,14 @@ class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, BaseTenantTestCase):
             data=data,
         )
         return response.status_code, json.loads(response.rendered_content)
+
+    def test_prp_api_filter(self):
+        status_code, response = self.run_prp_v1(
+            user=self.unicef_staff, method='get'
+        )
+        self.assertEqual(status_code, status.HTTP_200_OK)
+        response = response['results']
+        self.assertEqual(len(response), 1)
 
     def test_prp_api(self):
         status_code, response = self.run_prp_v1(
@@ -106,7 +117,7 @@ class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, BaseTenantTestCase):
         )
         self.assertEqual(status_code, status.HTTP_200_OK)
         response = response['results']
-        self.assertEqual(len(response), 2)
+        self.assertEqual(len(response), 4)
 
     def test_prp_api_modified_queries(self):
         yesterday = (timezone.now() - datetime.timedelta(days=1)).isoformat()
