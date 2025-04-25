@@ -173,7 +173,7 @@ def setup_filtered_intervention_test_data(test_case, include_results_and_indicat
         test_case.result_link_2 = InterventionResultLink.objects.create(
             intervention=test_case.active_intervention_2, cp_output=test_case.result_2)
         test_case.lower_result_2 = LowerResult.objects.create(result_link=test_case.result_link_2,
-                                                            name='Lower Result 1')
+                                                              name='Lower Result 1')
         test_case.indicator_blueprint_2 = IndicatorBlueprint.objects.create(
             title='The Blueprint'
         )

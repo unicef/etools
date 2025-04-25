@@ -11,7 +11,7 @@ from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.core.tests.mixins import WorkspaceRequiredAPITestMixIn
-from etools.applications.partners.models import Intervention, InterventionResultLink, PartnerOrganization
+from etools.applications.partners.models import InterventionResultLink, PartnerOrganization
 from etools.applications.partners.permissions import READ_ONLY_API_GROUP_NAME
 from etools.applications.partners.tests.factories import InterventionFactory
 from etools.applications.partners.tests.test_utils import (
