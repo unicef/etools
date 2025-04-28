@@ -32,11 +32,15 @@ class UserRoleFilter(BaseFilterBackend):
                 query = query.replace('INNER JOIN "users_realm" ' + alias_for_user_realm_table +
                                       ' ON ("auth_user"."id" = ' + alias_for_user_realm_table + '."user_id")', ""
                                       ).replace(alias_for_user_realm_table, '"users_realm"')
+
                 query = query.replace(' AND ' + alias_for_auth_group_table + '."name" IN '
                                                                              '(IP Viewer, IP Editor, IP Authorized Officer, IP Admin, IP LM Editor)', "")
+
                 query = query.replace(' AND ' + alias_for_auth_group_table + '."name" IN '
                                                                              '(IP Viewer, IP Editor, IP Authorized Officer, IP Admin, IP LM Editor)', "")
+
                 cursor.execute(query)
+
                 user_ids = [row[0] for row in cursor.fetchall()]
 
             return queryset.filter(id__in=user_ids).distinct()
