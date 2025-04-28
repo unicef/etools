@@ -9,17 +9,17 @@ from rest_framework import status
 from rest_framework.test import APIRequestFactory
 from unicef_locations.tests.factories import LocationFactory
 
+from etools.applications.attachments.tests.factories import AttachmentFileTypeFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.core.tests.mixins import WorkspaceRequiredAPITestMixIn
-from etools.applications.partners.models import InterventionResultLink, PartnerOrganization
-from etools.applications.partners.permissions import READ_ONLY_API_GROUP_NAME
-from etools.applications.partners.tests.factories import InterventionFactory
-from etools.applications.partners.tests.test_utils import (
-    setup_filtered_intervention_test_data,
-    setup_intervention_test_data,
-)
-from etools.applications.reports.models import AppliedIndicator, IndicatorBlueprint, LowerResult
-from etools.applications.reports.tests.factories import ResultFactory
+from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
+from etools.applications.organizations.tests.factories import OrganizationFactory
+from etools.applications.partners.models import Intervention, InterventionResultLink, PartnerOrganization
+from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, READ_ONLY_API_GROUP_NAME, UNICEF_USER
+from etools.applications.partners.tests.factories import AgreementFactory, InterventionFactory, PartnerFactory
+from etools.applications.partners.tests.test_utils import setup_intervention_test_data
+from etools.applications.reports.models import AppliedIndicator, IndicatorBlueprint, LowerResult, ResultType
+from etools.applications.reports.tests.factories import ReportingRequirementFactory, ResultFactory
 from etools.applications.users.tests.factories import GroupFactory, UserFactory
 
 
@@ -28,7 +28,75 @@ class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, BaseTenantTestCase):
         super().setUp()
         setup_intervention_test_data(self, include_results_and_indicators=True)
 
-        setup_filtered_intervention_test_data(self, include_results_and_indicators=True)
+        self.setup_intervention_doomed_to_be_filtered_out_test_data()
+
+    def setup_intervention_doomed_to_be_filtered_out_test_data(self):
+        today = datetime.date.today()
+        self.unicef_staff_2 = UserFactory(is_staff=True)
+        self.partnership_manager_user_2 = UserFactory(
+            is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]
+        )
+        self.partner_2 = PartnerFactory(organization=OrganizationFactory(name='Partner 3', vendor_number="VP2"))
+        self.partner1_2 = PartnerFactory(organization=OrganizationFactory(name='Partner 4'))
+        self.agreement_2 = AgreementFactory(partner=self.partner_2,
+                                                 signed_by_unicef_date=datetime.date.today())
+
+        self.active_agreement_2 = AgreementFactory(
+            partner=self.partner1_2,
+            status='active',
+            signed_by_unicef_date=datetime.date.today(),
+            signed_by_partner_date=datetime.date.today()
+        )
+
+        self.intervention_2 = InterventionFactory(
+            agreement=self.agreement_2,
+            title='Intervention 1',
+            status=Intervention.DRAFT,
+        )
+        self.intervention_2.unicef_focal_points.add(self.partnership_manager_user_2)
+        self.intervention_2_2 = InterventionFactory(
+            agreement=self.agreement_2,
+            title='Intervention 2',
+            document_type=Intervention.PD,
+            status=Intervention.DRAFT,
+        )
+        self.intervention_2_2.unicef_focal_points.add(self.partnership_manager_user_2)
+        self.active_intervention_2 = InterventionFactory(
+            agreement=self.active_agreement_2,
+            title='Active Intervention',
+            document_type=Intervention.PD,
+            start=today - datetime.timedelta(days=740),
+            end=today - datetime.timedelta(days=735),
+            status=Intervention.CLOSED,
+            date_sent_to_partner=today - datetime.timedelta(days=740),
+            signed_by_unicef_date=today - datetime.timedelta(days=740),
+            signed_by_partner_date=today - datetime.timedelta(days=740),
+            unicef_signatory=self.unicef_staff_2,
+            partner_authorized_officer_signatory=self.partner1_2.active_staff_members.all().first()
+        )
+        Intervention.objects.filter(id=self.active_intervention_2.id).update(
+            modified=today - datetime.timedelta(days=730))
+        self.active_intervention_2.unicef_focal_points.add(self.partnership_manager_user_2)
+        self.reporting_requirement_2 = ReportingRequirementFactory(intervention=self.active_intervention_2)
+        self.result_type_2 = ResultType.objects.get_or_create(name=ResultType.OUTPUT)[0]
+        self.result_2 = ResultFactory(result_type=self.result_type_2)
+
+        self.management_budget_2 = self.intervention_2.management_budgets
+        self.partnership_budget_2 = self.intervention_2.planned_budget
+
+        # set up two frs not connected to any interventions
+        self.fr_1_2 = FundsReservationHeaderFactory(intervention=None, currency='USD')
+        self.fr_2_2 = FundsReservationHeaderFactory(intervention=None, currency='USD')
+
+        self.file_type_attachment_2 = AttachmentFileTypeFactory(
+            code="partners_intervention_attachment"
+        )
+        self.file_type_prc_2 = AttachmentFileTypeFactory(
+            code="partners_intervention_prc_review"
+        )
+        self.file_type_pd_2 = AttachmentFileTypeFactory(
+            code="partners_intervention_signed_pd"
+        )
 
     def run_prp_v1(self, user=None, method='get', data=None):
         response = self.forced_auth_req(
