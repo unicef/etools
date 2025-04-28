@@ -15,7 +15,7 @@ from etools.applications.core.tests.mixins import URLAssertionMixin
 from etools.applications.organizations.models import OrganizationType
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.models import Agreement, AgreementAmendment, Intervention
-from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, UNICEF_USER
+from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, UNICEF_REPRESENTATIVE, UNICEF_USER
 from etools.applications.partners.tests.factories import AgreementFactory, InterventionFactory, PartnerFactory
 from etools.applications.reports.tests.factories import CountryProgrammeFactory
 from etools.applications.users.tests.factories import UserFactory
@@ -38,6 +38,8 @@ class URLsTestCase(URLAssertionMixin, SimpleTestCase):
 
 
 class TestAgreementsAPI(BaseTenantTestCase):
+    fixtures = ['groups', 'organizations']
+
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
@@ -150,6 +152,36 @@ class TestAgreementsAPI(BaseTenantTestCase):
             attachment_updated.code,
             self.file_type_agreement.code
         )
+
+    def test_add_new_PCA_with_signed_by(self):
+        unicef_rep = UserFactory(realms__data=[UNICEF_USER, UNICEF_REPRESENTATIVE])
+        data = {
+            "agreement_type": Agreement.PCA,
+            "partner": self.partner1.id,
+            "country_programme": self.country_programme.id,
+            "reference_number_year": datetime.date.today().year,
+            "signed_by": unicef_rep.id
+        }
+        status_code, response = self.run_request_list_ep(data)
+
+        self.assertEqual(status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response['agreement_type'], Agreement.PCA)
+        self.assertEqual(response['signed_by']['id'], unicef_rep.id)
+
+    def test_fail_add_new_PCA_with_signed_by_invalid(self):
+        inactive_representative = UserFactory(realms__data=[UNICEF_USER, UNICEF_REPRESENTATIVE])
+        inactive_representative.realms.update(is_active=False)
+        data = {
+            "agreement_type": Agreement.PCA,
+            "partner": self.partner1.id,
+            "country_programme": self.country_programme.id,
+            "reference_number_year": datetime.date.today().year,
+            "signed_by": inactive_representative.id
+        }
+        status_code, response = self.run_request_list_ep(data)
+
+        self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response['signed_by'], ['The UNICEF Representative assigned is not valid.'])
 
     def test_fail_add_new_PCA_without_agreement_type(self):
         self.assertFalse(Activity.objects.exists())
@@ -468,6 +500,47 @@ class TestAgreementsAPI(BaseTenantTestCase):
         )
         agreement_updated = Agreement.objects.get(pk=agreement.pk)
         self.assertEqual(agreement_updated.attachment.last(), attachment_new)
+
+    def test_patch_agreement_replace_signed_by(self):
+        existing_unicef_representative = UserFactory(realms__data=[UNICEF_USER, UNICEF_REPRESENTATIVE])
+        agreement = AgreementFactory(
+            partner=self.partner1,
+            status=Agreement.DRAFT,
+            signed_by=existing_unicef_representative
+        )
+        self.assertEqual(agreement.signed_by, existing_unicef_representative)
+
+        new_unicef_representative = UserFactory(realms__data=[UNICEF_USER, UNICEF_REPRESENTATIVE])
+
+        data = {
+            "signed_by": new_unicef_representative.pk
+        }
+        status_code, response = self.run_request(agreement.pk, data, method="patch")
+
+        self.assertEqual(status_code, status.HTTP_200_OK)
+        self.assertEqual(response["signed_by"]["id"], new_unicef_representative.pk)
+        agreement_updated = Agreement.objects.get(pk=agreement.pk)
+        self.assertEqual(agreement_updated.signed_by, new_unicef_representative)
+
+    def test_fail_patch_agreement_replace_signed_by(self):
+        existing_unicef_representative = UserFactory(realms__data=[UNICEF_USER, UNICEF_REPRESENTATIVE])
+        agreement = AgreementFactory(
+            partner=self.partner1,
+            status=Agreement.DRAFT,
+            signed_by=existing_unicef_representative
+        )
+        self.assertEqual(agreement.signed_by, existing_unicef_representative)
+
+        non_unicef_representative = UserFactory(realms__data=[UNICEF_USER])
+        data = {
+            "signed_by": non_unicef_representative.pk
+        }
+        status_code, response = self.run_request(agreement.pk, data, method="patch")
+
+        self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response["signed_by"], ['The UNICEF Representative assigned is not valid.'])
+        agreement.refresh_from_db(())
+        self.assertEqual(agreement.signed_by, existing_unicef_representative)
 
     def test_patch_agreement_suspended(self):
         agreement = AgreementFactory(
