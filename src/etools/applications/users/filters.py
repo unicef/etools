@@ -44,7 +44,6 @@ class UserRoleFilter(BaseFilterBackend):
         return queryset
 
 
-
 class UserStatusFilter(BaseFilterBackend):
     def filter_queryset(self, request, queryset, view):
         if queryset and 'status' in request.query_params and request.query_params['status']:
