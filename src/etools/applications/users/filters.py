@@ -1,5 +1,4 @@
-from django.db import connection, models
-from django.db.models import Q
+from django.db import models
 
 from django_filters import rest_framework as filters
 from rest_framework.filters import BaseFilterBackend
@@ -10,38 +9,10 @@ from etools.applications.organizations.models import Organization
 class UserRoleFilter(BaseFilterBackend):
     def filter_queryset(self, request, queryset, view):
         if 'roles' in request.query_params and request.query_params['roles']:
-            filter_q = Q()
-            for role in request.query_params['roles'].split(','):
-                filter_l = Q(realms__group__id=role, realms__is_active=True)
-                filter_q |= filter_l
-            queryset = queryset.filter(filter_q)
-
-            query = str(queryset.query)
-            search_text = 'INNER JOIN "users_realm"'
-            search = query.rfind(search_text) + len(search_text) + 1
-            alias_for_user_realm_table = query[search:search + 2]
-
-            search_text = 'INNER JOIN "auth_group"'
-            search = query.rfind(search_text) + len(search_text) + 1
-            alias_for_auth_group_table = query[search:search + 2]
-
-            with (connection.cursor() as cursor):
-                query = query.replace('INNER JOIN "users_realm" ' + alias_for_user_realm_table +
-                                      ' ON ("auth_user"."id" = ' + alias_for_user_realm_table + '."user_id")', ""
-                                      ).replace(alias_for_user_realm_table, '"users_realm"')
-
-                query = query.replace(' AND ' + alias_for_auth_group_table + '."name" IN '
-                                                                             '(IP Viewer, IP Editor, IP Authorized Officer, IP Admin, IP LM Editor)', "")
-
-                query = query.replace(' AND ' + alias_for_auth_group_table + '."name" IN '
-                                                                             '(IP Viewer, IP Editor, IP Authorized Officer, IP Admin, IP LM Editor)', "")
-
-                cursor.execute(query)
-
-                user_ids = [row[0] for row in cursor.fetchall()]
-
-            return queryset.filter(id__in=user_ids).distinct()
-
+            return (queryset
+                    .filter(realms__group__id__in=request.query_params['roles'].split(','),
+                            realms__is_active=True)
+                    .distinct())
         return queryset
 
 

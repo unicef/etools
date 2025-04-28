@@ -347,7 +347,8 @@ class UserRealmViewSet(
                 if (self.request.method == 'GET' and relationship_type is None) or \
                         (relationship_type and relationship_type not in organization.relationship_types) or \
                         not organization.relationship_types:
-                    logger.error(f"The provided organization id {organization_id} and type {relationship_type} do not match.")
+                    logger.error(
+                        f"The provided organization id {organization_id} and type {relationship_type} do not match.")
                     return self.model.objects.none()
             else:
                 return self.model.objects.none()
@@ -356,23 +357,13 @@ class UserRealmViewSet(
 
         if organization.organization_type == OrganizationType.GOVERNMENT and \
                 not tenant_switch_is_active('amp_government_users'):
-            raise ValidationError(f'User roles operations for Government partners on {connection.tenant.name} is disabled.')
+            raise ValidationError(
+                f'User roles operations for Government partners on {connection.tenant.name} is disabled.')
 
-        qs_context = {
-            "country": connection.tenant,
-            "organization": organization,
-        }
-        group_names = ORGANIZATION_GROUP_MAP.get(relationship_type) if relationship_type else \
-            [group for _type in organization.relationship_types for group in ORGANIZATION_GROUP_MAP.get(_type)]
-        qs_context.update({"group__name__in": group_names})
-
-        context_realms_qs = Realm.objects.filter(**qs_context).select_related('group')
-
-        return self.model.objects \
-            .filter(realms__in=context_realms_qs) \
-            .prefetch_related(Prefetch('realms', queryset=context_realms_qs)) \
-            .annotate(has_active_realm=Exists(context_realms_qs.filter(user=OuterRef('pk'), is_active=True))) \
-            .distinct()
+        return self.model.objects.filter(
+            realms__organization=organization,
+            realms__country=connection.tenant
+        ).distinct()
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):
