@@ -38,8 +38,7 @@ class TestInterventionsAPI(WorkspaceRequiredAPITestMixIn, BaseTenantTestCase):
         )
         self.partner_2 = PartnerFactory(organization=OrganizationFactory(name='Partner 3', vendor_number="VP2"))
         self.partner1_2 = PartnerFactory(organization=OrganizationFactory(name='Partner 4'))
-        self.agreement_2 = AgreementFactory(partner=self.partner_2,
-                                                 signed_by_unicef_date=datetime.date.today())
+        self.agreement_2 = AgreementFactory(partner=self.partner_2, signed_by_unicef_date=datetime.date.today())
 
         self.active_agreement_2 = AgreementFactory(
             partner=self.partner1_2,
