@@ -10,7 +10,6 @@ from etools.applications.organizations.models import Organization
 class UserRoleFilter(BaseFilterBackend):
     def filter_queryset(self, request, queryset, view):
         if 'roles' in request.query_params and request.query_params['roles']:
-
             filter_q = Q()
 
             for role in request.query_params['roles'].split(','):
