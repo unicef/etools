@@ -4,7 +4,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError as DjangoValidationError
-from django.db import connection, transaction
+from django.db import connection, transaction, models
 from django.db.models import Exists, OuterRef, Prefetch, Q, Subquery
 from django.http import HttpResponseForbidden, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
@@ -360,10 +360,18 @@ class UserRealmViewSet(
             raise ValidationError(
                 f'User roles operations for Government partners on {connection.tenant.name} is disabled.')
 
+        context_realms_qs = Realm.objects.filter(
+            organization=organization,
+            country=connection.tenant
+        )
+
         return self.model.objects.filter(
-            realms__organization=organization,
-            realms__country=connection.tenant
+            profile__organization=organization,
+            profile__country=connection.tenant
+        ).annotate(
+            has_active_realm=models.Exists(context_realms_qs.filter(user=models.OuterRef('pk'), is_active=True))
         ).distinct()
+
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):
