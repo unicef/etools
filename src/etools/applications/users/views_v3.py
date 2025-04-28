@@ -498,3 +498,15 @@ class ExternalUserViewSet(
         )
 
         return qs
+
+
+class UnicefRepresentativeListAPIView(ListAPIView):
+    permission_classes = (
+        IsAuthenticated,
+        user_group_permission(PartnershipManager.name, )
+    )
+    model = get_user_model()
+    serializer_class = MinimalUserSerializer
+
+    def get_queryset(self, pk=None):
+        return get_user_model().objects.unicef_representatives()

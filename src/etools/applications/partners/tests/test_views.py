@@ -380,7 +380,7 @@ class TestAPIPartnerOrganizationListView(BaseTenantTestCase):
     def test_search_short_name(self):
         """Test that short name search matches substrings and is case-independent"""
         # Make another partner that should be excluded from the search results.
-        PartnerFactory(organization=OrganizationFactory(short_name="foo"))
+        PartnerFactory(organization=OrganizationFactory(short_name="foo", name='FOO'))
         response = self.forced_auth_req(
             'get',
             self.url,

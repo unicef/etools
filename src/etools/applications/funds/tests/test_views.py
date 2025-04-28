@@ -3,6 +3,8 @@ from datetime import date, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
 
+from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.db import connection
 from django.test import override_settings
 from django.urls import reverse
@@ -21,7 +23,13 @@ from etools.applications.funds.tests.factories import (
     GrantFactory,
 )
 from etools.applications.organizations.tests.factories import OrganizationFactory
-from etools.applications.partners.tests.factories import AgreementFactory, InterventionFactory, PartnerFactory
+from etools.applications.partners.models import Agreement, Intervention
+from etools.applications.partners.tests.factories import (
+    AgreementFactory,
+    InterventionFactory,
+    PartnerFactory,
+    SignedInterventionFactory,
+)
 from etools.applications.users.tests.factories import UserFactory
 from etools.libraries.tests.vcrpy import VCR
 
@@ -339,16 +347,21 @@ class TestExternalReservationAPIView(BaseTenantTestCase):
         cls.client = APIClient()
 
         cls.partner = PartnerFactory(organization=OrganizationFactory())
-        agreement = AgreementFactory(partner=cls.partner)
-        cls.intervention = InterventionFactory(agreement=agreement)
+        cls.agreement = AgreementFactory(
+            partner=cls.partner,
+            status=Agreement.SIGNED,
+            signed_by_unicef_date=date.today() - timedelta(days=2),
+            signed_by_partner_date=date.today() - timedelta(days=2),
+            start=date.today() - timedelta(days=2),
+        )
+        cls.intervention = InterventionFactory(agreement=cls.agreement)
 
-    @override_settings(ETOOLS_EZHACT_EMAIL='test@example.com', ETOOLS_EZHACT_TOKEN='testkey')
-    def test_post_201(self):
-        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token.key)
-        tenant_switch = TenantSwitchFactory(name="ezhact_external_fr_disabled")
-        tenant_switch.countries.add(connection.tenant)
-        self.assertTrue(tenant_switch.is_active())
-        data = {
+        try:
+            cls.admin_user = get_user_model().objects.get(username=settings.TASK_ADMIN_USER)
+        except get_user_model().DoesNotExist:
+            cls.admin_user = UserFactory(username=settings.TASK_ADMIN_USER)
+
+        cls.data = {
             "fr_items": [
                 {
                     "fr_ref_number": "ref1",
@@ -377,9 +390,9 @@ class TestExternalReservationAPIView(BaseTenantTestCase):
                     "line_item_text": "LEGAL AID TO CHILDREN IN CONFLICT WITH LAW"
                 }
             ],
-            "business_area_code": self.tenant.business_area_code,
-            "pd_reference_number": self.intervention.number,
-            "vendor_code": self.partner.vendor_number,
+            "business_area_code": cls.tenant.business_area_code,
+            "pd_reference_number": cls.intervention.number,
+            "vendor_code": cls.partner.vendor_number,
             "fr_number": "040000056770",
             "document_date": "2024-07-08",
             "fr_type": "Programme Document Against PCA",
@@ -398,30 +411,84 @@ class TestExternalReservationAPIView(BaseTenantTestCase):
             "completed_flag": False,
             "delegated": False
         }
-        response = self.client.post(reverse('funds:external-funds-reservation'), data, format='json')
-        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
-        self.assertEqual(self.intervention.frs.count(), 1)
-        funds_reservation = self.intervention.frs.first()
 
-        def get_instance_str(value):
-            if isinstance(value, date):
-                return value.strftime('%Y-%m-%d')
-            if isinstance(value, Decimal):
-                return str(value)
-            return value
+    @staticmethod
+    def get_instance_str(value):
+        if isinstance(value, date):
+            return value.strftime('%Y-%m-%d')
+        if isinstance(value, Decimal):
+            return str(value)
+        return value
 
+    def _assert_payload(self, funds_reservation, data):
         for field in ['vendor_code', 'fr_number', 'document_date', 'fr_type', 'currency', 'document_text',
                       'intervention_amt', 'total_amt', 'total_amt_local', 'actual_amt', 'actual_amt_local',
                       'outstanding_amt', 'outstanding_amt_local', 'start_date', 'end_date', 'multi_curr_flag',
                       'completed_flag', 'delegated']:
             actual_value = getattr(funds_reservation, field)
-            self.assertEqual(get_instance_str(actual_value), data[field])
+            self.assertEqual(self.get_instance_str(actual_value), data[field])
 
         self.assertEqual(funds_reservation.fr_items.count(), len(data['fr_items']))
         for actual_item, expected_item in zip(funds_reservation.fr_items.all(), data['fr_items']):
             for field in data['fr_items'][0].keys():
                 actual_value = getattr(actual_item, field)
-                self.assertEqual(get_instance_str(actual_value), expected_item[field])
+                self.assertEqual(self.get_instance_str(actual_value), expected_item[field])
+
+    @override_settings(ETOOLS_EZHACT_EMAIL='test@example.com', ETOOLS_EZHACT_TOKEN='testkey')
+    def test_post_201_auto_transition_conditions_not_met(self):
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token.key)
+        tenant_switch = TenantSwitchFactory(name="ezhact_external_fr_disabled")
+        tenant_switch.countries.add(connection.tenant)
+        self.assertTrue(tenant_switch.is_active())
+
+        self.assertEqual(self.intervention.status, Intervention.DRAFT)
+
+        self.data["pd_reference_number"] = self.intervention.number
+
+        response = self.client.post(reverse('funds:external-funds-reservation'), self.data, format='json')
+        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+
+        self.assertEqual(self.intervention.frs.count(), 1)
+        funds_reservation = self.intervention.frs.first()
+        self.intervention.refresh_from_db()
+        self.assertEqual(self.intervention.status, Intervention.DRAFT)
+        self._assert_payload(funds_reservation, self.data)
+
+    @override_settings(ETOOLS_EZHACT_EMAIL='test@example.com', ETOOLS_EZHACT_TOKEN='testkey')
+    def test_post_201_auto_transition_conditions_met(self):
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token.key)
+        tenant_switch = TenantSwitchFactory(name="ezhact_external_fr_disabled")
+        tenant_switch.countries.add(connection.tenant)
+        self.assertTrue(tenant_switch.is_active())
+
+        unicef_staff = UserFactory(is_staff=True)
+        partner_user = UserFactory(
+            realms__data=['IP Viewer'],
+            profile__organization=self.partner.organization
+        )
+        signed_intervention = SignedInterventionFactory(
+            agreement=self.agreement,
+            budget_owner=unicef_staff,
+            unicef_signatory=unicef_staff,
+            partner_authorized_officer_signatory=self.partner.active_staff_members.all().first(),
+            partner_focal_points=[partner_user],
+            unicef_focal_points=[unicef_staff]
+        )
+
+        self.assertEqual(signed_intervention.status, Intervention.SIGNED)
+
+        self.data["pd_reference_number"] = signed_intervention.number
+
+        response = self.client.post(reverse('funds:external-funds-reservation'), self.data, format='json')
+        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+        self.assertEqual(signed_intervention.frs.count(), 1)
+
+        signed_intervention.refresh_from_db()
+        self.assertEqual(signed_intervention.status, Intervention.ACTIVE)
+
+        funds_reservation = signed_intervention.frs.first()
+
+        self._assert_payload(funds_reservation, self.data)
 
     def test_post_unauthorized_401(self):
         tenant_switch = TenantSwitchFactory(name="ezhact_external_fr_disabled")
