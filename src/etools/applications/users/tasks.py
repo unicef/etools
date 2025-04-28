@@ -185,7 +185,7 @@ class AzureUserMapper:
                 modified = modified or attr_modified
 
         if modified:
-            logger.debug(f'Updated User: {user}')
+            logger.info(f'User {user} updated with {record}')
             user.save()
 
         return modified

@@ -106,7 +106,18 @@ class PermissionsMixin(models.Model):
         return _user_has_module_perms(self, app_label)
 
 
-class UsersManager(UserManager):
+class UserQuerySet(models.QuerySet):
+    def for_schema(self, schema_name):
+        return self.filter(realms__country__schema_name=schema_name)
+
+    def with_points_of_interest(self):
+        return self.filter(profile__organization__partner__points_of_interest__isnull=False)
+
+    def without_points_of_interest(self):
+        return self.filter(profile__organization__partner__points_of_interest__isnull=True)
+
+
+class UsersManager(UserManager.from_queryset(UserQuerySet)):
 
     def get_queryset(self):
         return super().get_queryset() \
@@ -121,6 +132,14 @@ class UsersManager(UserManager):
             'middle_name',
             'is_active',
             'email'
+        )
+
+    def unicef_representatives(self):
+        return self.base_qs().filter(
+            realms__country=connection.tenant,
+            realms__organization=Organization.objects.get(id=1),  # Unicef Org
+            realms__group=UNICEFRepresentative.as_group(),
+            realms__is_active=True
         )
 
 
@@ -613,3 +632,4 @@ IPAdmin = GroupWrapper(code='ip_admin', name='IP Admin')
 IPAuthorizedOfficer = GroupWrapper(code='ip_authorized_officer', name='IP Authorized Officer')
 PartnershipManager = GroupWrapper(code='partnership_manager', name='Partnership Manager')
 UserReviewer = GroupWrapper(code='partnership_manager', name='User Reviewer')
+UNICEFRepresentative = GroupWrapper(code='unicef_representative', name='UNICEF Representative')
