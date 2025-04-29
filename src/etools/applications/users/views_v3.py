@@ -4,8 +4,8 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError as DjangoValidationError
-from django.db import connection, transaction, models
-from django.db.models import Exists, OuterRef, Prefetch, Q, Subquery
+from django.db import connection, models, transaction
+from django.db.models import OuterRef, Prefetch, Q, Subquery
 from django.http import HttpResponseForbidden, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 
@@ -29,7 +29,7 @@ from etools.applications.organizations.models import Organization, OrganizationT
 from etools.applications.partners.permissions import user_group_permission
 from etools.applications.partners.views.v3 import PMPBaseViewMixin
 from etools.applications.users import views as v1, views_v2 as v2
-from etools.applications.users.filters import OrganizationFilter, UserStatusFilter
+from etools.applications.users.filters import OrganizationFilter, UserRoleFilter, UserStatusFilter
 from etools.applications.users.mixins import (
     AUDIT_ACTIVE_GROUPS,
     GroupEditPermissionMixin,
@@ -302,11 +302,13 @@ class UserRealmViewSet(
     serializer_class = UserRealmRetrieveSerializer
 
     pagination_class = DynamicPageNumberPagination
-    filter_backends = (SearchFilter, DjangoFilterBackend, OrderingFilter, UserStatusFilter)
+    filter_backends = (SearchFilter, DjangoFilterBackend, OrderingFilter, UserRoleFilter, UserStatusFilter)
 
     search_fields = ('first_name', 'last_name', 'email', 'profile__job_title')
     filterset_fields = ('is_active', )
     ordering_fields = ('first_name', 'last_name', 'email', 'last_login')
+
+    qs_context = None
 
     def get_permissions(self):
         if self.action == "list":
@@ -370,22 +372,17 @@ class UserRealmViewSet(
             [group for _type in organization.relationship_types for group in ORGANIZATION_GROUP_MAP.get(_type)]
         qs_context.update({"group__name__in": group_names})
 
-        roles = request.query_params.get('roles')
-        if roles:
-            qs_context["group_id__in"] = [int(role_id) for role_id in roles.split(',')]
-            qs_context["is_active"] = True
+        self.qs_context = qs_context
 
         context_realms_qs = Realm.objects.filter(**qs_context).select_related('group')
 
-        return self.model.objects \
-            .filter(realms__in=context_realms_qs) \
-            .prefetch_related(Prefetch('realms', queryset=context_realms_qs)) \
-            .annotate(
-            has_active_realm=models.Exists(
-                context_realms_qs.filter(user=models.OuterRef('pk'), is_active=True)
-            )
-        ) \
-            .distinct()
+        queryset = (self.model.objects
+                    .filter(realms__in=context_realms_qs)
+                    .prefetch_related(Prefetch('realms', queryset=context_realms_qs))
+                    .annotate(has_active_realm=models.Exists(context_realms_qs.filter(user=models.OuterRef('pk'), is_active=True)))
+                    .distinct())
+
+        return queryset
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):
