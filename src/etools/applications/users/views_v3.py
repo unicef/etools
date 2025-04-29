@@ -4,7 +4,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError as DjangoValidationError
-from django.db import connection, transaction
+from django.db import connection, transaction, models
 from django.db.models import Exists, OuterRef, Prefetch, Q, Subquery
 from django.http import HttpResponseForbidden, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
@@ -29,7 +29,7 @@ from etools.applications.organizations.models import Organization, OrganizationT
 from etools.applications.partners.permissions import user_group_permission
 from etools.applications.partners.views.v3 import PMPBaseViewMixin
 from etools.applications.users import views as v1, views_v2 as v2
-from etools.applications.users.filters import OrganizationFilter, UserRoleFilter, UserStatusFilter
+from etools.applications.users.filters import OrganizationFilter, UserStatusFilter
 from etools.applications.users.mixins import (
     AUDIT_ACTIVE_GROUPS,
     GroupEditPermissionMixin,
@@ -302,7 +302,7 @@ class UserRealmViewSet(
     serializer_class = UserRealmRetrieveSerializer
 
     pagination_class = DynamicPageNumberPagination
-    filter_backends = (SearchFilter, DjangoFilterBackend, OrderingFilter, UserRoleFilter, UserStatusFilter)
+    filter_backends = (SearchFilter, DjangoFilterBackend, OrderingFilter, UserStatusFilter)
 
     search_fields = ('first_name', 'last_name', 'email', 'profile__job_title')
     filterset_fields = ('is_active', )
@@ -336,15 +336,16 @@ class UserRealmViewSet(
         return super().get_serializer_class()
 
     def get_queryset(self):
-        organization_id = self.request.query_params.get('organization_id') or self.request.data.get('organization')
-        relationship_type = self.request.query_params.get('organization_type')
+        request = self.request
+        organization_id = request.query_params.get('organization_id') or request.data.get('organization')
+        relationship_type = request.query_params.get('organization_type')
 
-        if self.request.user.is_unicef_user():
+        if request.user.is_unicef_user():
             if organization_id:
                 organization = get_object_or_404(
                     Organization.objects.all().select_related('partner', 'auditorfirm', 'tpmpartner'),
                     pk=organization_id)
-                if (self.request.method == 'GET' and relationship_type is None) or \
+                if (request.method == 'GET' and relationship_type is None) or \
                         (relationship_type and relationship_type not in organization.relationship_types) or \
                         not organization.relationship_types:
                     logger.error(
@@ -353,7 +354,7 @@ class UserRealmViewSet(
             else:
                 return self.model.objects.none()
         else:
-            organization = self.request.user.profile.organization
+            organization = request.user.profile.organization
 
         if organization.organization_type == OrganizationType.GOVERNMENT and \
                 not tenant_switch_is_active('amp_government_users'):
@@ -364,16 +365,26 @@ class UserRealmViewSet(
             "country": connection.tenant,
             "organization": organization,
         }
+
         group_names = ORGANIZATION_GROUP_MAP.get(relationship_type) if relationship_type else \
             [group for _type in organization.relationship_types for group in ORGANIZATION_GROUP_MAP.get(_type)]
         qs_context.update({"group__name__in": group_names})
+
+        roles = request.query_params.get('roles')
+        if roles:
+            qs_context["group_id__in"] = [int(role_id) for role_id in roles.split(',')]
+            qs_context["is_active"] = True
 
         context_realms_qs = Realm.objects.filter(**qs_context).select_related('group')
 
         return self.model.objects \
             .filter(realms__in=context_realms_qs) \
             .prefetch_related(Prefetch('realms', queryset=context_realms_qs)) \
-            .annotate(has_active_realm=Exists(context_realms_qs.filter(user=OuterRef('pk'), is_active=True))) \
+            .annotate(
+            has_active_realm=models.Exists(
+                context_realms_qs.filter(user=models.OuterRef('pk'), is_active=True)
+            )
+        ) \
             .distinct()
 
     @transaction.atomic
