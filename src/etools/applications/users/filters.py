@@ -9,7 +9,9 @@ from etools.applications.organizations.models import Organization
 class UserRoleFilter(BaseFilterBackend):
     def filter_queryset(self, request, queryset, view):
         if 'roles' in request.query_params and request.query_params['roles']:
-            return queryset.filter(realms__group__id__in=request.query_params['roles'].split(',')).distinct()
+            return (queryset
+                    .filter(realms__group__id__in=request.query_params['roles'].split(','))
+                    .exclude(realms__is_active=False).distinct())
         return queryset
 
 
