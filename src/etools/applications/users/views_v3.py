@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import connection, models, transaction
-from django.db.models import OuterRef, Q, Subquery
+from django.db.models import OuterRef, Q, Subquery, Prefetch, Exists
 from django.http import HttpResponseForbidden, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 
@@ -360,17 +360,21 @@ class UserRealmViewSet(
             raise ValidationError(
                 f'User roles operations for Government partners on {connection.tenant.name} is disabled.')
 
-        context_realms_qs = Realm.objects.filter(
-            organization=organization,
-            country=connection.tenant
-        )
+        qs_context = {
+            "country": connection.tenant,
+            "organization": organization,
+        }
+        group_names = ORGANIZATION_GROUP_MAP.get(relationship_type) if relationship_type else \
+            [group for _type in organization.relationship_types for group in ORGANIZATION_GROUP_MAP.get(_type)]
+        qs_context.update({"group__name__in": group_names})
 
-        return self.model.objects.filter(
-            profile__organization=organization,
-            profile__country=connection.tenant
-        ).annotate(
-            has_active_realm=models.Exists(context_realms_qs.filter(user=models.OuterRef('pk'), is_active=True))
-        ).distinct()
+        context_realms_qs = Realm.objects.filter(**qs_context).select_related('group')
+
+        return self.model.objects \
+            .filter(realms__in=context_realms_qs) \
+            .prefetch_related(Prefetch('realms', queryset=context_realms_qs)) \
+            .annotate(has_active_realm=Exists(context_realms_qs.filter(user=OuterRef('pk'), is_active=True))) \
+            .distinct()
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):
