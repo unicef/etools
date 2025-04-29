@@ -89,5 +89,12 @@
       "name": "LMSM Admin Panel",
       "permissions": []
     }
+  },
+  {
+    "model": "auth.group",
+    "fields": {
+      "name": "LMSM User Creation Report",
+      "permissions": []
+    }
   }
 ]

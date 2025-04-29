@@ -139,9 +139,9 @@ class UserAdminCreateSerializer(serializers.ModelSerializer):
             user.profile.phone_number = user_profile['phone_number']
             Realm.objects.create(
                 user=user,
-                country=user.profile.country,
-                organization=user.profile.organization,
-                group=group
+                country=country,
+                organization=user_profile['organization'],
+                group=group,
             )
             user.is_active = False
             user.save()
@@ -790,3 +790,17 @@ class LastMileUserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
         fields = ('id', 'status', 'approved_by', 'approved_on', 'review_notes')
+
+
+class LastMileProfileReportSerializer(serializers.ModelSerializer):
+    first_name = serializers.CharField(source='user.first_name', read_only=True)
+    last_name = serializers.CharField(source='user.last_name', read_only=True)
+    email = serializers.CharField(source='user.email', read_only=True)
+    ip_name = serializers.CharField(source='user.profile.organization.name', read_only=True)
+    ip_number = serializers.CharField(source='user.profile.organization.vendor_number', read_only=True)
+    created_by = MinimalUserSerializer(read_only=True)
+    approved_by = MinimalUserSerializer(read_only=True)
+
+    class Meta:
+        model = models.Profile
+        fields = ('id', 'first_name', 'last_name', 'email', 'ip_name', 'ip_number', 'created_by', 'approved_by', 'created_on', 'approved_on')

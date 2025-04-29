@@ -3,7 +3,8 @@ ADMIN_PANEL_APP_NAME = 'last_mile_admin'
 ALERT_TYPES = {
     "LMSM Focal Point": "Wastage Notification",
     "LMSM Alert Receipt": "Acknowledgement by IP",
-    "Waybill Recipient": "Waybill Recipient"
+    "Waybill Recipient": "Waybill Recipient",
+    "LMSM User Creation Report": "LMSM User Creation Report"
 }
 
 TRANSFER_MANUAL_CREATION_NAME = "MT @"
@@ -55,3 +56,14 @@ UOM_NOT_VALID = "The unit of measurement (UOM) is not valid."
 PARTNER_NOT_UNDER_LOCATION = "The partner does not exist under the location."
 LAST_MILE_PROFILE_NOT_FOUND = "The last mile profile was not found."
 STATUS_NOT_CRRECT = "The status should be in 'approved' or 'rejected'."
+
+LIST_INTERESTED_LASTMILE_PERMS = [
+    USER_ADMIN_PANEL_PERMISSION,
+    LOCATIONS_ADMIN_PANEL_PERMISSION,
+    APPROVE_USERS_ADMIN_PANEL_PERMISSION,
+    STOCK_MANAGEMENT_ADMIN_PANEL_PERMISSION,
+    TRANSFER_HISTORY_ADMIN_PANEL_PERMISSION,
+    APPROVE_LOCATIONS_ADMIN_PANEL_PERMISSION,
+    ALERT_NOTIFICATIONS_ADMIN_PANEL_PERMISSION,
+    APPROVE_STOCK_MANAGEMENT_ADMIN_PANEL_PERMISSION,
+]

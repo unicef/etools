@@ -105,4 +105,4 @@ class LMSMAPIPermission(IsAuthenticated):
 class LastMileUserPermissionRetriever():
 
     def get_permissions(self, user):
-        return [permission.codename for permission in user.user_permissions.all()]
+        return [permission.codename for permission in user.user_permissions.all() if permission.codename in LIST_INTERESTED_LASTMILE_PERMS]

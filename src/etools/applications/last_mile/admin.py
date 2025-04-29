@@ -226,7 +226,7 @@ class MaterialAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
 
 @admin.register(models.Profile)
 class ProfileAdmin(admin.ModelAdmin):
-    list_display = ('user', 'status', 'created_by', 'approved_by')
+    list_display = ('user', 'status', 'created_by', 'created_on', 'approved_by')
     raw_id_fields = ('user', 'created_by', 'approved_by')
     list_filter = ('status',)
     search_fields = ('user__username', 'user__email', 'user__first_name', 'user__last_name', 'status')
