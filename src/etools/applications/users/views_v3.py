@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import connection, transaction
-from django.db.models import OuterRef, Q, Subquery, Prefetch, Exists
+from django.db.models import Exists, OuterRef, Prefetch, Q, Subquery
 from django.http import HttpResponseForbidden, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 
