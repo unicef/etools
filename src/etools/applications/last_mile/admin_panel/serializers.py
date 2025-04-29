@@ -17,8 +17,24 @@ from etools.applications.locations.models import Location
 from etools.applications.organizations.models import Organization
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.users.models import Country, Group, Realm, UserProfile
-from etools.applications.users.serializers import SimpleUserSerializer
+from etools.applications.users.serializers import MinimalUserSerializer, SimpleUserSerializer
 from etools.applications.users.validators import EmailValidator, LowerCaseEmailValidator
+
+
+class SimplePointOfInterestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.PointOfInterest
+        fields = ('id', 'name')
+
+
+class LastMileProfileSerializer(serializers.ModelSerializer):
+    created_by = MinimalUserSerializer(read_only=True)
+    approved_by = MinimalUserSerializer(read_only=True)
+    user = MinimalUserSerializer(read_only=True)
+
+    class Meta:
+        model = models.Profile
+        fields = ('id', 'user', 'status', 'created_by', 'approved_by', 'created_on', 'approved_on', 'review_notes')
 
 
 class UserAdminSerializer(SimpleUserSerializer):
@@ -27,6 +43,13 @@ class UserAdminSerializer(SimpleUserSerializer):
     organization_id = serializers.CharField(source='profile.organization.id', read_only=True)
     country = serializers.CharField(source='profile.country.name', read_only=True)
     country_id = serializers.CharField(source='profile.country.id', read_only=True)
+    last_mile_profile = serializers.CharField(source='profile.id', read_only=True)
+    point_of_interests = SimplePointOfInterestSerializer(
+        source='profile.organization.partner.points_of_interest',
+        many=True,
+        read_only=True
+    )
+    last_mile_profile = LastMileProfileSerializer(read_only=True)
 
     class Meta:
         model = get_user_model()
@@ -41,7 +64,10 @@ class UserAdminSerializer(SimpleUserSerializer):
             'ip_number',
             'country',
             'country_id',
+            'last_login',
             'organization_id',
+            'point_of_interests',
+            'last_mile_profile',
         )
 
 
@@ -87,12 +113,19 @@ class UserAdminCreateSerializer(serializers.ModelSerializer):
     profile = UserProfileCreationSerializer()
     password = serializers.CharField(write_only=True)
     email = serializers.EmailField(validators=[EmailValidator(), LowerCaseEmailValidator()])
+    is_active = serializers.BooleanField(read_only=True)
     first_name = serializers.CharField(required=True)
     last_name = serializers.CharField(required=True)
+    point_of_interests = serializers.PrimaryKeyRelatedField(many=True,
+                                                            queryset=models.PointOfInterest.objects.all(),
+                                                            write_only=True
+                                                            )
+    last_mile_profile = LastMileProfileSerializer(read_only=True)
 
     @transaction.atomic
     def create(self, validated_data):
         user_profile = validated_data.pop('profile', {})
+        point_of_interests = validated_data.pop('point_of_interests', None)
         group = Group.objects.get(name="IP LM Editor")
         validated_data['password'] = make_password(validated_data['password'])
         country_schema = self.context.get('country_schema')
@@ -110,8 +143,14 @@ class UserAdminCreateSerializer(serializers.ModelSerializer):
                 organization=user.profile.organization,
                 group=group
             )
+            user.is_active = False
             user.save()
             user.profile.save()
+            user.profile.organization.partner.points_of_interest.set(point_of_interests)
+            models.Profile.objects.create(
+                user=user,
+                created_by=self.context['request'].user
+            )
 
         except Exception as ex:
             raise serializers.ValidationError({'user': force_str(ex)})
@@ -132,10 +171,20 @@ class UserAdminCreateSerializer(serializers.ModelSerializer):
             'is_active',
             'password',
             'profile',
+            'point_of_interests',
+            'last_mile_profile',
         )
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['point_of_interests'] = [poi.id for poi in instance.profile.organization.partner.points_of_interest.all()]
+        return data
 
 
 class UserAdminUpdateSerializer(serializers.ModelSerializer):
+
+    adminValidator = AdminPanelValidator()
+
     organization = serializers.PrimaryKeyRelatedField(
         queryset=Organization.objects.all(),
         source='profile.organization',
@@ -144,6 +193,12 @@ class UserAdminUpdateSerializer(serializers.ModelSerializer):
     country = serializers.PrimaryKeyRelatedField(
         queryset=Country.objects.all(),
         source='profile.country',
+        required=False
+    )
+    point_of_interests = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=models.PointOfInterest.objects.all(),
+        write_only=True,
         required=False
     )
     password = serializers.CharField(write_only=True, required=False)
@@ -158,11 +213,20 @@ class UserAdminUpdateSerializer(serializers.ModelSerializer):
             'password',
             'organization',
             'country',
+            'point_of_interests',
         )
 
     @transaction.atomic
     def update(self, instance, validated_data):
+        self.adminValidator.validate_profile(instance)
+
         profile_data = validated_data.pop('profile', {})
+
+        point_of_interests = validated_data.pop('point_of_interests', None)
+        if point_of_interests is not None:
+            partner = instance.profile.organization.partner
+            partner.points_of_interest.set(point_of_interests)
+            instance.save()
 
         for attr, value in validated_data.items():
             if attr == 'password':
@@ -183,6 +247,11 @@ class UserAdminUpdateSerializer(serializers.ModelSerializer):
             profile.save()
 
         return instance
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['point_of_interests'] = [poi.id for poi in instance.profile.organization.partner.points_of_interest.all()]
+        return data
 
 
 class PointOfInterestCustomSerializer(serializers.ModelSerializer):
@@ -306,12 +375,6 @@ class PointOfInterestExportSerializer(serializers.ModelSerializer):
         model = models.PointOfInterest
         fields = ('id', 'name', 'primary_type', 'p_code', 'lat', 'lng', 'status', 'implementing_partner', 'region', 'district', 'country')
         list_serializer_class = PointOfInterestListSerializer
-
-
-class SimplePointOfInterestSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.PointOfInterest
-        fields = ('id', 'name')
 
 
 class PointOfInterestSerializer(serializers.ModelSerializer):
@@ -689,3 +752,41 @@ class PointOfInterestCoordinateAdminSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.PointOfInterest
         fields = ('id',)
+
+
+class LastMileUserProfileUpdateAdminSerializer(serializers.ModelSerializer):
+
+    admin_validator = AdminPanelValidator()
+
+    class Meta:
+        model = models.Profile
+        fields = ('id', 'status', 'review_notes')
+
+    def update(self, instance, validated_data):
+        self.admin_validator.validate_last_mile_profile(instance)
+        last_mile_profile = instance.last_mile_profile
+        status = validated_data.pop('status', None)
+        self.admin_validator.validate_status(status)
+        review_notes = validated_data.pop('review_notes', None)
+        user = self.context['request'].user
+        if status == models.Profile.ApprovalStatus.APPROVED:
+            last_mile_profile.approve(user, review_notes)
+            instance.is_active = True
+            instance.save(update_fields=['is_active'])
+        elif status == models.Profile.ApprovalStatus.REJECTED:
+            last_mile_profile.reject(user, review_notes)
+            instance.is_active = False
+            instance.save(update_fields=['is_active'])
+        return last_mile_profile
+
+
+class LastMileUserProfileSerializer(serializers.ModelSerializer):
+    id = serializers.CharField(source='last_mile_profile.id', read_only=True)
+    status = serializers.CharField(source='last_mile_profile.status', read_only=True)
+    approved_by = MinimalUserSerializer(source='last_mile_profile.approved_by', read_only=True)
+    approved_on = serializers.DateTimeField(source='last_mile_profile.approved_on', read_only=True)
+    review_notes = serializers.CharField(source='last_mile_profile.review_notes', read_only=True)
+
+    class Meta:
+        model = get_user_model()
+        fields = ('id', 'status', 'approved_by', 'approved_on', 'review_notes')

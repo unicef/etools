@@ -9,6 +9,8 @@ ALERT_TYPES = {
 TRANSFER_MANUAL_CREATION_NAME = "MT @"
 
 USER_ADMIN_PANEL = 'users-admin-panel'
+UPDATE_USER_PROFILE_ADMIN_PANEL = 'update-user-profile-admin-panel'
+USER_LOCATIONS_ADMIN_PANEL = 'user-location-admin-panel'
 USER_ADMIN_PANEL_PERMISSION = 'lmsm_admin_panel_manage_users'
 
 LOCATIONS_ADMIN_PANEL = 'locations-admin-panel'
@@ -18,9 +20,6 @@ PARTNER_ORGANIZATIONS_ADMIN_PANEL = 'partner-organizations-admin'
 POINT_OF_INTERESTS_LIGHT_DATA = 'point-of-interests-light-data'
 GEOPOINT_LOCATIONS = 'geopoint-locations'
 LOCATIONS_ADMIN_PANEL_PERMISSION = 'lmsm_admin_panel_manage_locations'
-
-USER_LOCATIONS_ADMIN_PANEL = 'user-location-admin-panel'
-USER_LOCATIONS_ADMIN_PANEL_PERMISSION = 'lmsm_admin_panel_manage_users_locations'
 
 ALERT_NOTIFICATIONS_ADMIN_PANEL = 'alert-notification'
 ALERT_TYPES_ADMIN_PANEL = 'alert-type'
@@ -33,6 +32,10 @@ STOCK_MANAGEMENT_ADMIN_PANEL_PERMISSION = 'lmsm_admin_panel_manage_stock_managem
 TRANSFER_HISTORY_ADMIN_PANEL = 'transfer-history'
 TRANSFER_EVIDENCE_ADMIN_PANEL = 'transfer-evidence'
 TRANSFER_HISTORY_ADMIN_PANEL_PERMISSION = 'lmsm_admin_panel_manage_transfer_history'
+
+APPROVE_USERS_ADMIN_PANEL_PERMISSION = 'lmsm_admin_panel_approve_users'
+APPROVE_LOCATIONS_ADMIN_PANEL_PERMISSION = 'lmsm_admin_panel_approve_locations'
+APPROVE_STOCK_MANAGEMENT_ADMIN_PANEL_PERMISSION = 'lmsm_admin_panel_approve_stock_management'
 
 # Error messages
 POI_TYPE_ALREADY_EXISTS = "The point of interest type already exists."
@@ -50,3 +53,5 @@ INVALID_QUANTITY = "The quantity must be greater than 0."
 UOM_NOT_PROVIDED = "The unit of measurement (UOM) was not provided."
 UOM_NOT_VALID = "The unit of measurement (UOM) is not valid."
 PARTNER_NOT_UNDER_LOCATION = "The partner does not exist under the location."
+LAST_MILE_PROFILE_NOT_FOUND = "The last mile profile was not found."
+STATUS_NOT_CRRECT = "The status should be in 'approved' or 'rejected'."

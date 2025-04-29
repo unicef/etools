@@ -17,7 +17,7 @@ class TestUserLocationViewSet(BaseTenantTestCase):
         cls.partner_staff = UserPermissionFactory(
             realms__data=['LMSM Admin Panel'],
             profile__organization=cls.partner.organization,
-            perms=[USER_LOCATIONS_ADMIN_PANEL_PERMISSION]
+            perms=[USER_ADMIN_PANEL_PERMISSION]
         )
         cls.poi_type = PointOfInterestTypeFactory(name='School', category='school')
         cls.poi_location_1 = PointOfInterestFactory(name="location1", partner_organizations=[cls.partner], private=True, poi_type_id=cls.poi_type.id)
@@ -33,10 +33,12 @@ class TestUserLocationViewSet(BaseTenantTestCase):
         self.assertEqual(len(response.data.get('results')[0].get('partners').get('points_of_interest')), 2)
 
     def test_post_new_user_forbidden(self):
+        self.partner_staff.user_permissions.clear()
         response = self.forced_auth_req('post', self.url_users, user=self.partner_staff)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_update_user_forbidden(self):
+        self.partner_staff.user_permissions.clear()
         response = self.forced_auth_req('put', self.url_users + f"{self.partner_staff.pk}/", user=self.partner_staff)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
@@ -129,7 +131,7 @@ class TestUserLocationViewSet(BaseTenantTestCase):
         UserPermissionFactory(
             realms__data=['LMSM Admin Panel'],
             profile__organization=self.partner.organization,
-            perms=[USER_LOCATIONS_ADMIN_PANEL_PERMISSION],
+            perms=[USER_ADMIN_PANEL_PERMISSION],
             first_name="Aaron"
         )
         data = {"ordering": "first_name"}

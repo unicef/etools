@@ -50,7 +50,8 @@ class TestUsersViewSet(BaseTenantTestCase):
                 'organization': cls.partner.organization.id,
                 'job_title': 'Developer',
                 'phone_number': '1234567890',
-            }
+            },
+            'point_of_interests': [cls.active_location.id]
         }
 
         cls.url = reverse(f'{ADMIN_PANEL_APP_NAME}:{USER_ADMIN_PANEL}-list')
@@ -110,7 +111,8 @@ class TestUsersViewSet(BaseTenantTestCase):
         self.assertEqual(response.data.get('last_name'), 'Doe')
         self.assertEqual(response.data.get('email'), '2xk6x@example.com')
         self.assertEqual(response.data.get('username'), 'johndoe')
-        self.assertEqual(response.data.get('is_active'), True)
+        self.assertEqual(response.data.get('is_active'), False)
+        self.assertEqual(response.data.get('last_mile_profile', {}).get('status'), 'PENDING')
 
         profile = response.data.get('profile')
         self.assertEqual(profile.get('organization'), self.partner.organization.id)

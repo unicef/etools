@@ -30,6 +30,8 @@ from etools.applications.last_mile.admin_panel.serializers import (
     AlertNotificationSerializer,
     AlertTypeSerializer,
     AuthUserPermissionsDetailSerializer,
+    LastMileUserProfileSerializer,
+    LastMileUserProfileUpdateAdminSerializer,
     LocationsAdminSerializer,
     MaterialAdminSerializer,
     OrganizationAdminSerializer,
@@ -83,7 +85,7 @@ class UserViewSet(ExportMixin,
         return queryset.distinct()
 
     filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
-    search_fields = ('email', 'first_name', 'last_name', 'profile__organization__name', 'profile__organization__vendor_number')
+    search_fields = ('email', 'first_name', 'last_name', 'profile__organization__name', 'profile__organization__vendor_number', "profile__organization__partner__points_of_interest__name")
     filterset_class = UserFilter
     ordering_fields = [
         'id',
@@ -96,6 +98,7 @@ class UserViewSet(ExportMixin,
         'profile__organization__vendor_number',
         'profile__country__name',
         'profile__country__id',
+        'profile__organization__partner__points_of_interest__name'
     ]
 
     ordering = ('id',)
@@ -131,6 +134,28 @@ class UserViewSet(ExportMixin,
                 timezone.now().date(),
             )
         })
+
+
+class UpdateUserProfileViewSet(mixins.RetrieveModelMixin,
+                               mixins.UpdateModelMixin,
+                               viewsets.GenericViewSet):
+    permission_classes = [IsLMSMAdmin]
+
+    def get_serializer_class(self):
+
+        if self.action in ['update', 'partial_update']:
+            return LastMileUserProfileUpdateAdminSerializer
+        return LastMileUserProfileSerializer
+
+    def get_queryset(self):
+        schema_name = connection.tenant.schema_name
+        User = get_user_model()
+        return User.objects.for_schema(schema_name)
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['country_schema'] = connection.tenant.schema_name
+        return context
 
 
 class LocationsViewSet(mixins.ListModelMixin,

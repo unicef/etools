@@ -17,6 +17,7 @@ from etools.applications.last_mile.admin_panel.views import (
     TransferEvidenceListView,
     TransferHistoryListView,
     TransferItemViewSet,
+    UpdateUserProfileViewSet,
     UserLocationsViewSet,
     UserPermissionsListView,
     UserViewSet,
@@ -24,6 +25,7 @@ from etools.applications.last_mile.admin_panel.views import (
 
 router = DefaultRouter()
 router.register(r'users', UserViewSet, basename=USER_ADMIN_PANEL)
+router.register(r'update-user-profile', UpdateUserProfileViewSet, basename=UPDATE_USER_PROFILE_ADMIN_PANEL)
 router.register(r'alert-types', AlertTypeListView, basename=ALERT_TYPES_ADMIN_PANEL)
 router.register(r'locations', LocationsViewSet, basename=LOCATIONS_ADMIN_PANEL)
 router.register(r'coordinates', PointOfInterestCoordinateListView, basename=GEOPOINT_LOCATIONS)
