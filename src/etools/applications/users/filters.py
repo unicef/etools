@@ -1,17 +1,31 @@
 from django.db import models
+from django.db.models import Q
 
 from django_filters import rest_framework as filters
 from rest_framework.filters import BaseFilterBackend
 
 from etools.applications.organizations.models import Organization
+from etools.applications.users.models import Realm
 
 
 class UserRoleFilter(BaseFilterBackend):
     def filter_queryset(self, request, queryset, view):
         if 'roles' in request.query_params and request.query_params['roles']:
-            return (queryset
-                    .filter(realms__group__id__in=request.query_params['roles'].split(','))
-                    .exclude(realms__is_active=False).distinct())
+            filter_q = Q()
+            for role in request.query_params['roles'].split(','):
+                filter_l = Q(group__id=role, is_active=True)
+                filter_q |= filter_l
+
+            qs_context = getattr(view, 'qs_context', None)
+
+            realm_ids = list(
+                Realm.objects.filter(**qs_context).filter(filter_q)
+                .select_related('group')
+                .values_list('id', flat=True)
+            )
+
+            return queryset.filter(realms__id__in=realm_ids)
+
         return queryset
 
 
