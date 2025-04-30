@@ -4,6 +4,7 @@ import random
 from copy import copy
 from unittest.mock import Mock, patch
 
+from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.core.management import call_command
 from django.db import connection
@@ -888,6 +889,28 @@ class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenan
         })
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('date_of_comments_by_unicef', response.data)
+
+    def test_date_of_final_report_after_skip_date_ip_contacted_at_validation(self):
+        self.engagement.date_of_final_report = settings.FAM_SKIP_IP_CONTACTED_VALIDATION_DATE + datetime.timedelta(days=1)
+        self.engagement.partner_contacted_at = self.engagement.end_date + datetime.timedelta(days=-1)
+        self.engagement.save()
+        response = self._do_update(self.auditor, {
+            'amount_refunded': 123,
+        })
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('partner_contacted_at', response.data)
+
+    def test_date_of_final_report_before_skip_date_ip_contacted_at_validation(self):
+        self.engagement.date_of_final_report = settings.FAM_SKIP_IP_CONTACTED_VALIDATION_DATE + datetime.timedelta(days=-1)
+        self.engagement.partner_contacted_at = self.engagement.end_date + datetime.timedelta(days=-1)
+        self.engagement.save()
+        response = self._do_update(self.auditor, {
+            'amount_refunded': 123,
+        })
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('partner_contacted_at', response.data)
 
     def test_dates_update_ok(self):
         self.engagement.partner_contacted_at = self.engagement.end_date + datetime.timedelta(days=1)
