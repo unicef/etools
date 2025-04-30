@@ -1,4 +1,4 @@
-
+from django.conf import settings
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
@@ -58,11 +58,15 @@ class EngagementDatesValidation:
         date_of_comments_by_ip = validated_data.get('date_of_comments_by_ip', self.instance.date_of_comments_by_ip if self.instance else None)
         date_of_draft_report_to_unicef = validated_data.get('date_of_draft_report_to_unicef', self.instance.date_of_draft_report_to_unicef if self.instance else None)
         date_of_comments_by_unicef = validated_data.get('date_of_comments_by_unicef', self.instance.date_of_comments_by_unicef if self.instance else None)
+        date_of_final_report = validated_data.get('date_of_final_report', self.instance.date_of_final_report if self.instance else None)
 
         if start_date and end_date and end_date < start_date:
             errors['end_date'] = _('This date should be after Period Start Date.')
-        if end_date and partner_contacted_at and partner_contacted_at < end_date:
-            errors['partner_contacted_at'] = _('This date should be after Period End Date.')
+
+        # Hotfix: partner_contacted_at validation is skipped for all Engagements update with a 'date_of_final_report' before 1 August 2024.
+        if date_of_final_report and date_of_final_report > settings.FAM_SKIP_IP_CONTACTED_VALIDATION_DATE or not self.instance:
+            if end_date and partner_contacted_at and partner_contacted_at < end_date:
+                errors['partner_contacted_at'] = _('This date should be after Period End Date.')
 
         if partner_contacted_at and date_of_field_visit and date_of_field_visit < partner_contacted_at:
             errors['date_of_field_visit'] = _('This date should be after Date IP was contacted.')
