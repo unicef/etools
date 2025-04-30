@@ -122,7 +122,6 @@ class UserAdminCreateSerializer(serializers.ModelSerializer):
                                                             )
     last_mile_profile = LastMileProfileSerializer(read_only=True)
 
-    @transaction.atomic
     def create(self, validated_data):
         user_profile = validated_data.pop('profile', {})
         point_of_interests = validated_data.pop('point_of_interests', None)
@@ -132,25 +131,26 @@ class UserAdminCreateSerializer(serializers.ModelSerializer):
         country = Country.objects.get(schema_name=country_schema)
 
         try:
-            user = get_user_model().objects.create(**validated_data)
-            user.profile.country = country
-            user.profile.organization = user_profile['organization']
-            user.profile.job_title = user_profile['job_title']
-            user.profile.phone_number = user_profile['phone_number']
-            Realm.objects.create(
-                user=user,
-                country=country,
-                organization=user_profile['organization'],
-                group=group,
-            )
-            user.is_active = False
-            user.save()
-            user.profile.save()
-            user.profile.organization.partner.points_of_interest.set(point_of_interests)
-            models.Profile.objects.create(
-                user=user,
-                created_by=self.context['request'].user
-            )
+            with transaction.atomic():
+                user = get_user_model().objects.create(**validated_data)
+                user.profile.country = country
+                user.profile.organization = user_profile['organization']
+                user.profile.job_title = user_profile['job_title']
+                user.profile.phone_number = user_profile['phone_number']
+                Realm.objects.create(
+                    user=user,
+                    country=country,
+                    organization=user_profile['organization'],
+                    group=group,
+                )
+                user.is_active = False
+                user.save()
+                user.profile.save()
+                user.profile.organization.partner.points_of_interest.set(point_of_interests)
+                models.Profile.objects.create(
+                    user=user,
+                    created_by=self.context['request'].user
+                )
 
         except Exception as ex:
             raise serializers.ValidationError({'user': force_str(ex)})
@@ -780,6 +780,44 @@ class LastMileUserProfileUpdateAdminSerializer(serializers.ModelSerializer):
         return last_mile_profile
 
 
+class ImportFileSerializer(serializers.Serializer):
+    file = serializers.FileField()
+
+
+class BulkUpdateLastMileProfileStatusSerializer(serializers.Serializer):
+    status = serializers.ChoiceField(choices=LastMileUserProfileUpdateAdminSerializer.Meta.model.ApprovalStatus.choices)
+    user_ids = serializers.PrimaryKeyRelatedField(queryset=get_user_model().objects.all(), many=True, write_only=True)
+    review_notes = serializers.CharField(required=False)
+
+    admin_validator = AdminPanelValidator()
+
+    def validate_status(self, value):
+        self.admin_validator = AdminPanelValidator()
+        self.admin_validator.validate_status(value)
+        return value
+
+    @transaction.atomic
+    def update(self, validated_data, approver_user):
+        status = validated_data.get('status', None)
+        review_notes = validated_data.get('review_notes', None)
+        users = validated_data.get('user_ids', None)
+        list_profile_bulk_update = []
+        list_user_bulk_update = []
+        for user in users:
+            self.admin_validator.validate_last_mile_profile(user)
+            user.is_active = status == models.Profile.ApprovalStatus.APPROVED
+            last_mile_profile = user.last_mile_profile
+            last_mile_profile.status = status
+            last_mile_profile.review_notes = review_notes
+            last_mile_profile.approved_by = approver_user
+            last_mile_profile.approved_on = timezone.now()
+            list_profile_bulk_update.append(last_mile_profile)
+            list_user_bulk_update.append(user)
+        models.Profile.objects.bulk_update(list_profile_bulk_update, ['status', 'review_notes', 'approved_by', 'approved_on'])
+        get_user_model().objects.bulk_update(list_user_bulk_update, ['is_active'])
+        return validated_data
+
+
 class LastMileUserProfileSerializer(serializers.ModelSerializer):
     id = serializers.CharField(source='last_mile_profile.id', read_only=True)
     status = serializers.CharField(source='last_mile_profile.status', read_only=True)
@@ -804,3 +842,69 @@ class LastMileProfileReportSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Profile
         fields = ('id', 'first_name', 'last_name', 'email', 'ip_name', 'ip_number', 'created_by', 'approved_by', 'created_on', 'approved_on')
+
+
+class UserImportSerializer(serializers.Serializer):
+    email = serializers.EmailField(validators=[EmailValidator(), LowerCaseEmailValidator()])
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+    ip_name = serializers.CharField()
+    ip_number = serializers.CharField()
+    point_of_interests = serializers.PrimaryKeyRelatedField(many=True,
+                                                            queryset=models.PointOfInterest.objects.all(),
+                                                            write_only=True,
+                                                            required=False,
+                                                            allow_null=True,
+                                                            )
+
+    def validate_ip_number(self, value):
+        print(value)
+        try:
+            return Organization.objects.get(vendor_number=value)
+        except Organization.DoesNotExist:
+            raise serializers.ValidationError("Organization not found by vendor number")
+
+    def validate_ip_name(self, value):
+        try:
+            return Organization.objects.get(name=value)
+        except Organization.DoesNotExist:
+            raise serializers.ValidationError("Organization not found by name")
+
+    def create(self, validated_data, country_schema, created_by):
+        point_of_interests = validated_data.pop('point_of_interests', None)
+        group = Group.objects.get(name="IP LM Editor")
+        validated_data['password'] = make_password("test_pass")
+        country = Country.objects.get(schema_name=country_schema)
+
+        try:
+            with transaction.atomic():
+                user = get_user_model().objects.create(
+                    username=validated_data['email'],
+                    email=validated_data['email'],
+                    first_name=validated_data['first_name'],
+                    last_name=validated_data['last_name'],
+                    password=validated_data['password'],
+                )
+                user.profile.country = country
+                user.profile.organization = validated_data['ip_name']
+                user.profile.job_title = ""
+                user.profile.phone_number = ""
+                Realm.objects.create(
+                    user=user,
+                    country=country,
+                    organization=validated_data['ip_name'],
+                    group=group,
+                )
+                user.is_active = False
+                user.save()
+                user.profile.save()
+                user.profile.organization.partner.points_of_interest.set(point_of_interests)
+                models.Profile.objects.create(
+                    user=user,
+                    created_by=created_by
+                )
+
+        except Exception as ex:
+            return False, str(ex)
+
+        return True, user

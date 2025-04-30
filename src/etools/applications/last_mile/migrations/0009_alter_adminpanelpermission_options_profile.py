@@ -5,7 +5,23 @@ from django.db import migrations, models
 import django.db.models.deletion
 import django.utils.timezone
 import model_utils.fields
+from django.db import transaction, connection
 
+
+@transaction.atomic
+def create_last_mile_profiles(apps, schema_editor):
+    schema = connection.schema_name
+    Profile = apps.get_model('last_mile', 'Profile')
+    Users = apps.get_model(settings.AUTH_USER_MODEL)
+    last_mile_users = Users.objects.for_schema(schema).only_lmsm_users().distinct()
+    for user in last_mile_users:
+        status = "APPROVED" if user.is_active else "REJECTED"
+        review_notes = "Profile created automatically by migration"
+        profile = Profile.objects.create(user=user, status=status, review_notes=review_notes)
+        profile.created_on = user.date_joined
+        profile.created = user.date_joined
+        profile.save()
+        
 
 class Migration(migrations.Migration):
 
@@ -37,4 +53,5 @@ class Migration(migrations.Migration):
                 'abstract': False,
             },
         ),
+        migrations.RunPython(create_last_mile_profiles, reverse_code=migrations.RunPython.noop),
     ]

@@ -1,12 +1,14 @@
 from django.contrib.auth import get_user_model
 from django.db import connection
 from django.db.models import F, Q
+from django.http import HttpResponse
 from django.utils import timezone
 
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import mixins, viewsets
+from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter, SearchFilter
+from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
@@ -17,6 +19,7 @@ from unicef_restlib.pagination import DynamicPageNumberPagination
 from etools.applications.last_mile import models
 from etools.applications.last_mile.admin_panel.constants import ALERT_TYPES
 from etools.applications.last_mile.admin_panel.csv_exporter import CsvExporter
+from etools.applications.last_mile.admin_panel.csv_importer import CsvImporter
 from etools.applications.last_mile.admin_panel.filters import (
     AlertNotificationFilter,
     LocationsFilter,
@@ -30,6 +33,8 @@ from etools.applications.last_mile.admin_panel.serializers import (
     AlertNotificationSerializer,
     AlertTypeSerializer,
     AuthUserPermissionsDetailSerializer,
+    BulkUpdateLastMileProfileStatusSerializer,
+    ImportFileSerializer,
     LastMileUserProfileSerializer,
     LastMileUserProfileUpdateAdminSerializer,
     LocationsAdminSerializer,
@@ -74,7 +79,7 @@ class UserViewSet(ExportMixin,
         schema_name = connection.tenant.schema_name
         User = get_user_model()
 
-        queryset = User.objects.for_schema(schema_name)
+        queryset = User.objects.for_schema(schema_name).only_lmsm_users()
 
         has_active_location = self.request.query_params.get('hasActiveLocation')
         if has_active_location == "1":
@@ -85,6 +90,7 @@ class UserViewSet(ExportMixin,
         return queryset.distinct()
 
     filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
+    parser_classes = [MultiPartParser, FormParser]
     search_fields = ('email', 'first_name', 'last_name', 'profile__organization__name', 'profile__organization__vendor_number', "profile__organization__partner__points_of_interest__name")
     filterset_class = UserFilter
     ordering_fields = [
@@ -116,6 +122,8 @@ class UserViewSet(ExportMixin,
             return UserAdminCreateSerializer
         if self.action == 'list_export_csv':
             return UserAdminExportSerializer
+        if self.action == '_import_file':
+            return ImportFileSerializer
         return UserAdminSerializer
 
     @action(
@@ -134,6 +142,19 @@ class UserViewSet(ExportMixin,
                 timezone.now().date(),
             )
         })
+
+    @action(detail=False, methods=['post'], url_path='import')
+    def _import_file(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        f = serializer.validated_data['file']
+        excel_file = serializer.validated_data['file']
+        valid, out = CsvImporter().import_users(excel_file, connection.tenant.schema_name, request.user)
+        if not valid:
+            resp = HttpResponse(out.getvalue(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            resp['Content-Disposition'] = f'attachment; filename="checked_{f.name}"'
+            return resp
+        return Response(status=status.HTTP_200_OK)
 
 
 class UpdateUserProfileViewSet(mixins.RetrieveModelMixin,
@@ -156,6 +177,13 @@ class UpdateUserProfileViewSet(mixins.RetrieveModelMixin,
         context = super().get_serializer_context()
         context['country_schema'] = connection.tenant.schema_name
         return context
+
+    @action(detail=False, methods=['patch'], url_path='bulk')
+    def bulk_update(self, request, *args, **kwargs):
+        serializer_data = BulkUpdateLastMileProfileStatusSerializer(data=request.data)
+        serializer_data.is_valid(raise_exception=True)
+        serializer_data.update(serializer_data.validated_data, request.user)
+        return Response(serializer_data.data, status=status.HTTP_200_OK)
 
 
 class LocationsViewSet(mixins.ListModelMixin,
