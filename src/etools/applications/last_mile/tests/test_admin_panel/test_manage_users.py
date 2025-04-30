@@ -22,18 +22,18 @@ class TestUsersViewSet(BaseTenantTestCase):
         cls.organization = OrganizationFactory(name='Update Organization')
         cls.group = GroupFactory(name="IP LM Editor")
         cls.partner_staff = UserPermissionFactory(
-            realms__data=['LMSM Admin Panel'],
+            realms__data=['LMSM Admin Panel', 'IP LM Editor'],
             profile__organization=cls.partner.organization,
             perms=[USER_ADMIN_PANEL_PERMISSION]
         )
         cls.partner_staff_2 = UserPermissionFactory(
-            realms__data=['LMSM Admin Panel'],
+            realms__data=['LMSM Admin Panel', 'IP LM Editor'],
             profile__organization=cls.partner.organization,
             perms=[USER_ADMIN_PANEL_PERMISSION]
         )
         cls.base_user = SimpleUserFactory()
         cls.partner_staff_without_correct_permissions = UserPermissionFactory(
-            realms__data=['LMSM Admin Panel'],
+            realms__data=['LMSM Admin Panel', 'IP LM Editor'],
             profile__organization=cls.partner.organization,
             perms=[ALERT_NOTIFICATIONS_ADMIN_PANEL_PERMISSION]
         )
@@ -45,7 +45,6 @@ class TestUsersViewSet(BaseTenantTestCase):
             'email': '2xk6x@example.com',
             'username': 'johndoe',
             'password': 'password',
-            'is_active': True,
             'profile': {
                 'organization': cls.partner.organization.id,
                 'job_title': 'Developer',

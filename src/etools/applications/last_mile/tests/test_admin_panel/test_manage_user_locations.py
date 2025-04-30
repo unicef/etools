@@ -15,7 +15,7 @@ class TestUserLocationViewSet(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.partner = PartnerFactory(organization=OrganizationFactory(name='Partner'))
         cls.partner_staff = UserPermissionFactory(
-            realms__data=['LMSM Admin Panel'],
+            realms__data=['LMSM Admin Panel', 'IP LM Editor'],
             profile__organization=cls.partner.organization,
             perms=[USER_ADMIN_PANEL_PERMISSION]
         )

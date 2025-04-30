@@ -8,7 +8,6 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter, SearchFilter
-from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
@@ -90,7 +89,6 @@ class UserViewSet(ExportMixin,
         return queryset.distinct()
 
     filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
-    parser_classes = [MultiPartParser, FormParser]
     search_fields = ('email', 'first_name', 'last_name', 'profile__organization__name', 'profile__organization__vendor_number', "profile__organization__partner__points_of_interest__name")
     filterset_class = UserFilter
     ordering_fields = [
@@ -143,7 +141,7 @@ class UserViewSet(ExportMixin,
             )
         })
 
-    @action(detail=False, methods=['post'], url_path='import')
+    @action(detail=False, methods=['post'], url_path='import/xlsx')
     def _import_file(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
