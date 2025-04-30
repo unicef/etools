@@ -21,6 +21,7 @@ from etools.applications.partners.tests.factories import (
     PlannedEngagementFactory,
 )
 from etools.applications.reports.tests.factories import CountryProgrammeFactory
+from etools.applications.users.models import Realm
 from etools.applications.users.tests.factories import UserFactory
 
 _ALL_AGREEMENT_TYPES = [agreement_type[0] for agreement_type in Agreement.AGREEMENT_TYPES]
@@ -346,11 +347,20 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
 
     def test_create_ok_and_fail_due_to_signatures_non_SSFA(self):
         """Ensure signature validation works correctly for non-SSFA types"""
+        print("BEFORE")
+        for realm in Realm.objects.all():
+            print(
+                f"User: {realm.user}, Group: {realm.group.name}, Active: {realm.is_active}")
+
         signatory = UserFactory(realms__data=[UNICEF_USER, UNICEF_REPRESENTATIVE])
         partner_signatory = UserFactory(
             profile__organization=self.partner.organization,
             realms__data=['IP Viewer']
         )
+        print("AFTER")
+        for realm in Realm.objects.all():
+            print(
+                f"User: {realm.user}, Group: {realm.group.name}, Active: {realm.is_active}")
 
         # This should succeed; it's OK to have only one set of signatures (UNICEF)
         data = {
