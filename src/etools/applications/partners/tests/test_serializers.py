@@ -28,7 +28,6 @@ _ALL_AGREEMENT_TYPES = [agreement_type[0] for agreement_type in Agreement.AGREEM
 
 class AgreementCreateUpdateSerializerBase(BaseTenantTestCase):
     """Base class for testing AgreementCreateUpdateSerializer"""
-    fixtures = ['groups', 'organizations']
 
     @classmethod
     def setUpTestData(cls):
@@ -99,6 +98,7 @@ class AgreementCreateUpdateSerializerBase(BaseTenantTestCase):
 
 class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
     """Exercise the AgreementCreateUpdateSerializer."""
+    fixtures = ['groups', 'organizations']
 
     def test_simple_create(self):
         data = {
