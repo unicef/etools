@@ -64,22 +64,23 @@ class EngagementDatesValidation:
             errors['end_date'] = _('This date should be after Period Start Date.')
 
         # Hotfix: partner_contacted_at validation is skipped for all Engagements update with a 'date_of_final_report' before 1 August 2024.
-        if date_of_final_report and date_of_final_report > settings.FAM_SKIP_IP_CONTACTED_VALIDATION_DATE or not self.instance:
+        if (date_of_final_report and date_of_final_report > settings.FAM_SKIP_IP_CONTACTED_VALIDATION_DATE or
+                not self.instance or self.instance and not date_of_final_report):
             if end_date and partner_contacted_at and partner_contacted_at < end_date:
                 errors['partner_contacted_at'] = _('This date should be after Period End Date.')
 
-        if partner_contacted_at and date_of_field_visit and date_of_field_visit < partner_contacted_at:
-            errors['date_of_field_visit'] = _('This date should be after Date IP was contacted.')
+            if partner_contacted_at and date_of_field_visit and date_of_field_visit < partner_contacted_at:
+                errors['date_of_field_visit'] = _('This date should be after Date IP was contacted.')
 
-        if date_of_field_visit and date_of_draft_report_to_ip and date_of_draft_report_to_ip < date_of_field_visit:
-            # date of field visit is editable even if date of draft report is readonly, map error to field visit date
-            errors['date_of_field_visit'] = _('This date should be before Date Draft Report Issued to IP.')
-        if date_of_draft_report_to_ip and date_of_comments_by_ip and date_of_comments_by_ip < date_of_draft_report_to_ip:
-            errors['date_of_comments_by_ip'] = _('This date should be after Date Draft Report Issued to UNICEF.')
-        if date_of_comments_by_ip and date_of_draft_report_to_unicef and date_of_draft_report_to_unicef < date_of_comments_by_ip:
-            errors['date_of_draft_report_to_unicef'] = _('This date should be after Date Comments Received from IP.')
-        if date_of_draft_report_to_unicef and date_of_comments_by_unicef and date_of_comments_by_unicef < date_of_draft_report_to_unicef:
-            errors['date_of_comments_by_unicef'] = _('This date should be after Date Draft Report Issued to UNICEF.')
+            if date_of_field_visit and date_of_draft_report_to_ip and date_of_draft_report_to_ip < date_of_field_visit:
+                # date of field visit is editable even if date of draft report is readonly, map error to field visit date
+                errors['date_of_field_visit'] = _('This date should be before Date Draft Report Issued to IP.')
+            if date_of_draft_report_to_ip and date_of_comments_by_ip and date_of_comments_by_ip < date_of_draft_report_to_ip:
+                errors['date_of_comments_by_ip'] = _('This date should be after Date Draft Report Issued to UNICEF.')
+            if date_of_comments_by_ip and date_of_draft_report_to_unicef and date_of_draft_report_to_unicef < date_of_comments_by_ip:
+                errors['date_of_draft_report_to_unicef'] = _('This date should be after Date Comments Received from IP.')
+            if date_of_draft_report_to_unicef and date_of_comments_by_unicef and date_of_comments_by_unicef < date_of_draft_report_to_unicef:
+                errors['date_of_comments_by_unicef'] = _('This date should be after Date Draft Report Issued to UNICEF.')
 
         if errors:
             raise serializers.ValidationError(errors)
