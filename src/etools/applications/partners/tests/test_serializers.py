@@ -358,6 +358,7 @@ class TestAgreementCreateUpdateSerializer(AgreementCreateUpdateSerializerBase):
                 f"User: {realm.user}, Group: {realm.group.name}, Active: {realm.is_active}")
 
         signatory = UserFactory(realms__data=[UNICEF_USER, UNICEF_REPRESENTATIVE])
+
         partner_signatory = UserFactory(
             profile__organization=self.partner.organization,
             realms__data=['IP Viewer']
