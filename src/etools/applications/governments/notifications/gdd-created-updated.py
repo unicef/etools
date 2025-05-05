@@ -1,11 +1,11 @@
 name = 'partners/partnership/created/updated'
 defaults = {
-    'description': 'The email that is sent when a GDD is added or is updated',
-    'subject': 'GDD {{number}} has been {{state}}',
+    'description': 'The email that is sent when a GPD is added or is updated',
+    'subject': 'GPD {{number}} has been {{state}}',
     'content': """
     Dear Colleague,
 
-    GDD {{number}} has been {{state}} here:
+    GPD {{number}} has been {{state}} here:
 
     {{url}}
 
@@ -14,7 +14,7 @@ defaults = {
     'html_content': """
     Dear Colleague,
     <br/>
-    GDD {{number}} has been {{state}} here:
+    GPD {{number}} has been {{state}} here:
     <br/>
     {{url}}
     <br/>

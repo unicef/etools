@@ -1,11 +1,11 @@
 name = "governments/gdd/unicef_pending_approval"
 defaults = {
-    "description": "UNICEF Pending Approval GDD",
-    "subject": "[eTools] UNICEF Pending Approval GDD",
+    "description": "UNICEF Pending Approval GPD",
+    "subject": "[eTools] UNICEF Pending Approval GPD",
     "content": """
     Dear Colleague,
 
-    GDD {{reference_number}} is ready to be approved. Please download it at the following link and share it with the relevant authorized officers for pending approval:
+    GPD {{reference_number}} is ready to be approved. Please download it at the following link and share it with the relevant authorized officers for pending approval:
 
     {{gdd_link}}
 
@@ -16,7 +16,7 @@ defaults = {
     {% block content %}
     Dear Colleague,<br /><br />
 
-    GDD {{reference_number}} is ready to be approved. Please download it at the following link and share it with the relevant authorized officers for pending approval:<br />
+    GPD {{reference_number}} is ready to be approved. Please download it at the following link and share it with the relevant authorized officers for pending approval:<br />
 
     {{gdd_link}}<br />
 
