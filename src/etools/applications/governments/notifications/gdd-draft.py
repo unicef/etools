@@ -1,11 +1,11 @@
 name = 'governments/gdd/draft'
 defaults = {
     'description': 'Intervention in Draft status.',
-    'subject': 'eTools GDD Draft Notification',
+    'subject': 'eTools GPD Draft Notification',
     'content': """
     Dear Colleague,
 
-    You are the focal point for GDD {{ reference_number }} {{ title }}. The document has been in a draft status for some time now. Please complete the appropriate fields in eTools to send the document for review.
+    You are the focal point for GPD {{ reference_number }} {{ title }}. The document has been in a draft status for some time now. Please complete the appropriate fields in eTools to send the document for review.
 
     If the document is no longer needed, please delete it (you can do so by clicking on the arrow next to the save button and then selecting "delete").
 
