@@ -208,6 +208,10 @@ class PMPDropdownsListApiView(APIView):
             'gdd_amendment_types': choices_to_json_ready(
                 GDDAmendment.AMENDMENT_TYPES,
             ),
+            'gpd_status': choices_to_json_ready(
+                Intervention.INTERVENTION_STATUS,
+                sort_choices=False,
+            ),
             'currencies': choices_to_json_ready(CURRENCIES),
             'local_currency': self.get_local_currency(),
             'location_types': GatewayType.objects.values(

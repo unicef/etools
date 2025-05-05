@@ -31,6 +31,7 @@ class TestPMPDropdownsListApiView(BaseTenantTestCase):
             'cash_transfer_modalities',
             'cp_outputs',
             'cso_types',
+            'gpd_status',
             'currencies',
             'file_types',
             'gdd_amendment_types',
