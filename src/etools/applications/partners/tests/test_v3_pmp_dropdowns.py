@@ -20,6 +20,7 @@ class TestPMPDropdownsListApiView(BaseTenantTestCase):
             profile__organization=cls.organization
         )
         cls.url = reverse('pmp_v3:dropdown-dynamic-list')
+
         cls.default_elements = [
             'agency_choices',
             'agreement_amendment_types',
