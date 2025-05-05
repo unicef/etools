@@ -1,13 +1,13 @@
 name = "governments/gdd/unicef_unsuspended"
 defaults = {
-    "description": "UNICEF has unsuspended a GDD",
-    "subject": "[eTools] UNICEF has unsuspended a GDD",
+    "description": "UNICEF has unsuspended a GPD",
+    "subject": "[eTools] UNICEF has unsuspended a GPD",
     "content": """
     Dear Colleague,
 
-    GDD {{reference_number}} has been unsuspended by UNICEF.
+    GPD {{reference_number}} has been unsuspended by UNICEF.
 
-    Please reach out to the GDD focal point for details on the GDD.
+    Please reach out to the GPD focal point for details on the GPD.
 
     {{gdd_link}}
 
@@ -18,9 +18,9 @@ defaults = {
     {% block content %}
     Dear Colleague,<br /><br />
 
-    GDD {{reference_number}} has been unsuspended by UNICEF.<br />
+    GPD {{reference_number}} has been unsuspended by UNICEF.<br />
 
-    Please reach out to the GDD focal point for details on the GDD.<br />
+    Please reach out to the GPD focal point for details on the GPD.<br />
 
     {{gdd_link}}<br />
 

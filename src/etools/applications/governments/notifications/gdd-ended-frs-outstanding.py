@@ -1,6 +1,6 @@
 name = 'partners/partnership/ended/frs/outstanding'
 defaults = {
-    'description': 'GDD Status ended And FR Amount does not equal the Actual Amount.',
+    'description': 'GPD Status ended And FR Amount does not equal the Actual Amount.',
     'subject': 'eTools Partnership {{ number }} Fund Reservations',
     'content': """
     Dear Colleague,
