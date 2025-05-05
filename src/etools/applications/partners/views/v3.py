@@ -208,7 +208,7 @@ class PMPDropdownsListApiView(APIView):
             'gdd_amendment_types': choices_to_json_ready(
                 GDDAmendment.AMENDMENT_TYPES,
             ),
-            'gpd_status': choices_to_json_ready(
+            'gpd_statuses': choices_to_json_ready(
                 Intervention.INTERVENTION_STATUS,
                 sort_choices=False,
             ),
