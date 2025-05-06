@@ -1,11 +1,11 @@
 name = "governments/gdd/unicef_sent_for_review"
 defaults = {
-    "description": "UNICEF Sent GDD for Review",
-    "subject": "[eTools] GDD was sent for review",
+    "description": "UNICEF Sent GPD for Review",
+    "subject": "[eTools] GPD was sent for review",
     "content": """
     Dear Colleague,
 
-    GDD {{reference_number}} has been sent for review by UNICEF budget owner: {{budget_owner_name}}
+    GPD {{reference_number}} has been sent for review by UNICEF budget owner: {{budget_owner_name}}
 
     {{gdd_link}}
 
@@ -16,7 +16,7 @@ defaults = {
     {% block content %}
     Dear Colleague,<br /><br />
 
-    GDD {{reference_number}} has been sent for review by UNICEF budget owner: {{budget_owner_name}}
+    GPD {{reference_number}} has been sent for review by UNICEF budget owner: {{budget_owner_name}}
 
     {{gdd_link}}<br />
 
