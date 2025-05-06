@@ -437,11 +437,16 @@ class UserIsNotPartnerStaffMemberPermission(BasePermission):
 
 
 class UserIsObjectPartnerStaffMember(UserIsPartnerStaffMemberPermission):
-    def has_object_permission(self, request, view, obj):
-        if not hasattr(obj, 'partner'):
-            return False
+    def has_permission(self, request, view):
+        if hasattr(view, 'get_root_object'):
+            obj = view.get_root_object()
+            if not hasattr(obj, 'partner'):
+                return False
 
-        return obj.partner.user_is_staff_member(request.user)
+            return obj.partner.user_is_staff_member(request.user)
+
+    def has_object_permission(self, request, view, obj):
+        return self.has_permission(request, view)
 
 
 class UserIsStaffPermission(BasePermission):
@@ -526,7 +531,7 @@ class IsGDDBudgetOwnerPermission(BasePermission):
     def has_object_permission(self, request, view, obj):
         if hasattr(view, 'get_root_object'):
             obj = view.get_root_object()
-        return obj.budget_owner and obj.budget_owner == request.user
+            return obj.budget_owner and obj.budget_owner == request.user
 
 
 class AmendmentSessionOnlyDeletePermission(BasePermission):
@@ -557,10 +562,13 @@ class GDDAmendmentIsNotCompleted(BasePermission):
 
 
 class UserIsUnicefFocalPoint(BasePermission):
-    def has_object_permission(self, request, view, obj):
+    def has_permission(self, request, view):
         if hasattr(view, 'get_root_object'):
             obj = view.get_root_object()
         return request.user in obj.unicef_focal_points.all()
+
+    def has_object_permission(self, request, view, obj):
+        return self.has_permission(request, view)
 
 
 class UserIsReviewOverallApprover(BasePermission):
