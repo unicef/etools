@@ -60,9 +60,12 @@ class Location(AbstractLocation):
         tolerance = 0.01
         current = self
         while current:
-            simplified_geom = current.geom.simplify(tolerance, preserve_topology=True)
+            simplified_geom = None
+            if current.geom:
+                simplified_geom = current.geom.simplify(tolerance, preserve_topology=True)
 
-            location_data[current.admin_level] = {"location": current.name, "borders": list(simplified_geom.coords)}
+            location_data[current.admin_level] = {"location": current.name, "borders": list(simplified_geom.coords) if simplified_geom else []}
+
             current = current.parent
 
         return location_data

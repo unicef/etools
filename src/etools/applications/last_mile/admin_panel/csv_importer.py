@@ -23,7 +23,7 @@ class CsvImporter:
                 valid = True
                 error_message = ''
 
-                ip_number, ip_name, first_name, last_name, email, point_of_interests, *_ = row
+                ip_number, first_name, last_name, email, point_of_interests, *_ = row
                 if point_of_interests:
                     try:
                         point_of_interests = json.loads(point_of_interests)
@@ -33,7 +33,6 @@ class CsvImporter:
 
                 data = {
                     'ip_number': ip_number,
-                    'ip_name': ip_name,
                     'first_name': first_name,
                     'last_name': last_name,
                     'email': email,

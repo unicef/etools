@@ -848,27 +848,22 @@ class UserImportSerializer(serializers.Serializer):
     email = serializers.EmailField(validators=[EmailValidator(), LowerCaseEmailValidator()])
     first_name = serializers.CharField()
     last_name = serializers.CharField()
-    ip_name = serializers.CharField()
     ip_number = serializers.CharField()
-    point_of_interests = serializers.PrimaryKeyRelatedField(many=True,
-                                                            queryset=models.PointOfInterest.objects.all(),
-                                                            write_only=True,
-                                                            required=False,
-                                                            allow_null=True,
-                                                            )
+    point_of_interests = serializers.SlugRelatedField(
+        slug_field='p_code',
+        many=True,
+        queryset=models.PointOfInterest.objects.all(),
+        write_only=True,
+        required=False,
+        allow_null=True,
+        allow_empty=True
+    )
 
     def validate_ip_number(self, value):
-        print(value)
         try:
             return Organization.objects.get(vendor_number=value)
         except Organization.DoesNotExist:
             raise serializers.ValidationError("Organization not found by vendor number")
-
-    def validate_ip_name(self, value):
-        try:
-            return Organization.objects.get(name=value)
-        except Organization.DoesNotExist:
-            raise serializers.ValidationError("Organization not found by name")
 
     def create(self, validated_data, country_schema, created_by):
         point_of_interests = validated_data.pop('point_of_interests', None)
@@ -886,13 +881,13 @@ class UserImportSerializer(serializers.Serializer):
                     password=validated_data['password'],
                 )
                 user.profile.country = country
-                user.profile.organization = validated_data['ip_name']
+                user.profile.organization = validated_data['ip_number']
                 user.profile.job_title = ""
                 user.profile.phone_number = ""
                 Realm.objects.create(
                     user=user,
                     country=country,
-                    organization=validated_data['ip_name'],
+                    organization=validated_data['ip_number'],
                     group=group,
                 )
                 user.is_active = False

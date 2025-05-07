@@ -435,6 +435,7 @@ class PointOfInterestTypeListView(mixins.ListModelMixin, mixins.CreateModelMixin
 class PointOfInterestCoordinateListView(mixins.RetrieveModelMixin, mixins.ListModelMixin, GenericViewSet):
     serializer_class = PointOfInterestCoordinateAdminSerializer
     permission_classes = [IsLMSMAdmin]
+    pagination_class = DynamicPageNumberPagination
 
     def get_queryset(self):
         return models.PointOfInterest.objects.all().order_by('id')
