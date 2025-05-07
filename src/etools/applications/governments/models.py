@@ -269,7 +269,7 @@ class GDD(TimeStampedModel):
         ENDED: [CLOSED]
     }
 
-    INTERVENTION_STATUS = (
+    GDD_STATUS = (
         (DRAFT, _("Development")),
         (REVIEW, _("Review")),
         (PENDING_APPROVAL, _("Pending Approval")),
@@ -359,7 +359,7 @@ class GDD(TimeStampedModel):
         verbose_name=_("Status"),
         max_length=32,
         blank=True,
-        choices=INTERVENTION_STATUS,
+        choices=GDD_STATUS,
         default=DRAFT,
     )
     # dates
