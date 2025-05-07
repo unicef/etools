@@ -1,4 +1,5 @@
 import datetime
+from unittest import mock
 
 from django.core.management import call_command
 from django.urls import reverse
@@ -16,6 +17,7 @@ from etools.applications.governments.tests.factories import (
     GDDAmendmentFactory,
     GDDFactory,
     GDDReportingRequirementFactory,
+    GDDReviewFactory,
     PartnerFactory,
 )
 from etools.applications.partners.tests.factories import AgreementFactory
@@ -33,7 +35,7 @@ class BaseTestGDDAmendments:
     def setUp(self):
         super().setUp()
         today = timezone.now().date()
-        self.unicef_staff = UserFactory(is_staff=True, realms__data=[UNICEF_USER])
+        self.unicef_staff = UserFactory(is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP])
         self.pme = UserFactory(is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP])
         self.partner = PartnerFactory()
         self.partner_staff = UserFactory(
@@ -202,7 +204,7 @@ class TestGDDAmendments(BaseTestGDDAmendments, BaseTenantTestCase):
         self.assertFalse(response.data['permissions']['view']['partner_focal_points'])
         self.assertFalse(response.data['permissions']['edit']['partner_focal_points'])
         self.assertFalse(response.data['permissions']['view']['unicef_focal_points'])
-        self.assertFalse(response.data['permissions']['edit']['unicef_focal_points'])
+        self.assertTrue(response.data['permissions']['edit']['unicef_focal_points'])
         self.assertFalse(response.data['permissions']['view']['planned_visits'])
         self.assertFalse(response.data['permissions']['edit']['planned_visits'])
         self.assertFalse(response.data['permissions']['view']['frs'])
@@ -257,7 +259,7 @@ class TestGDDAmendments(BaseTestGDDAmendments, BaseTenantTestCase):
             self.unicef_staff,
             data={"document_currency": "RON"}
         )
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         gpd.refresh_from_db()
         self.assertEqual(gpd.document_currency, 'USD')
 
@@ -333,3 +335,94 @@ class TestGDDAmendmentDeleteView(BaseTenantTestCase):
             user=UserFactory(is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
+class TestGDDAmendmentsMerge(BaseTestGDDAmendments, BaseTenantTestCase):
+    def setUp(self):
+        super().setUp()
+        self.amendment = GDDAmendmentFactory(gdd=self.active_gdd, types=[GDDAmendment.TYPE_ADMIN_ERROR])
+        self.amended_gdd = self.amendment.amended_gdd
+        response = self.forced_auth_req(
+            'patch',
+            reverse('governments:gdd-detail', args=[self.amended_gdd.pk]),
+            self.unicef_staff,
+            data={
+                'start': timezone.now().date() + datetime.timedelta(days=2),
+            },
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.amended_gdd.refresh_from_db()
+        self.assertEqual(self.amended_gdd.start, timezone.now().date() + datetime.timedelta(days=2))
+
+        self.amended_gdd.unicef_accepted = True
+        self.amended_gdd.partner_accepted = True
+        self.amended_gdd.date_sent_to_partner = timezone.now().date()
+        self.amended_gdd.save()
+        review = GDDReviewFactory(
+            gdd=self.amended_gdd, overall_approval=True,
+            overall_approver=UserFactory(is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
+            authorized_officer=UserFactory(is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]),
+        )
+        response = self.forced_auth_req(
+            'patch',
+            reverse('governments:gdd-signature', args=[self.amended_gdd.pk]),
+            review.authorized_officer,
+            data={}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.amended_gdd.refresh_from_db()
+        self.assertEqual('approved', response.data['status'])
+
+    @mock.patch("etools.applications.governments.tasks.send_gdd_to_vision.delay")
+    def test_amend_gdd_budget_owner(self, send_to_vision_mock):
+        with self.captureOnCommitCallbacks(execute=True) as commit_callbacks:
+            response = self.forced_auth_req(
+                'patch',
+                reverse('governments:gdd-amendment-merge', args=[self.amended_gdd.pk]),
+                self.unicef_staff,
+                data={}
+            )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(response.data['id'], self.active_gdd.id)
+
+        self.active_gdd.refresh_from_db()
+        self.assertEqual(self.active_gdd.start, timezone.now().date() + datetime.timedelta(days=2))
+        send_to_vision_mock.assert_called()
+        self.assertEqual(len(commit_callbacks), 1)
+
+    def test_amend_gdd_focal_point(self):
+        response = self.forced_auth_req(
+            'patch',
+            reverse('governments:gdd-amendment-merge', args=[self.amended_gdd.pk]),
+            self.unicef_staff,
+            data={}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.active_gdd.refresh_from_db()
+        self.assertEqual(self.active_gdd.start, timezone.now().date() + datetime.timedelta(days=2))
+        self.assertEqual(self.active_gdd.amendments.count(), 1)
+        self.assertEqual(self.amendment.signed_date, timezone.now().date())
+
+    def test_merge_error(self):
+        first_amendment = GDDAmendmentFactory(
+            gdd=self.active_gdd, kind=GDDAmendment.KIND_NORMAL,
+        )
+        second_amendment = GDDAmendmentFactory(
+            gdd=self.active_gdd, kind=GDDAmendment.KIND_CONTINGENCY,
+        )
+        second_amendment.amended_gdd.start = timezone.now().date() - datetime.timedelta(days=15)
+        second_amendment.amended_gdd.save()
+        second_amendment.merge_amendment()
+
+        first_amendment.amended_gdd.start = timezone.now().date() - datetime.timedelta(days=14)
+        first_amendment.amended_gdd.status = GDD.APPROVED
+        first_amendment.amended_gdd.save()
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse('governments:gdd-amendment-merge', args=[first_amendment.amended_gdd.pk]),
+            self.unicef_staff,
+            data={}
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('Merge Error', response.data[0])
