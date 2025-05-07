@@ -1241,6 +1241,7 @@ class GDDAmendment(TimeStampedModel):
             pd_attachment.content_object = self
             pd_attachment.save()
 
+        self.signed_date = timezone.now().date()
         self.signed_by_unicef_date = self.amended_gdd.signed_by_unicef_date
         self.signed_by_partner_date = self.amended_gdd.signed_by_partner_date
         self.unicef_signatory = self.amended_gdd.unicef_signatory
