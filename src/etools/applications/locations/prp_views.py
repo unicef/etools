@@ -17,7 +17,7 @@ class PRPLocationListAPIView(QueryStringFilterMixin, ListAPIView):
     permission_classes = (ListCreateAPIMixedPermission, )
     filter_backends = (PartnerScopeFilter,)
     pagination_class = LimitOffsetPagination
-    queryset = Location.simplified_geom.filter(is_active=True)
+    queryset = Location.simplified_geom.filter(intervention_flat_locations__isnull=False)
 
     filters = (
         ('admin_level', 'admin_level'),
