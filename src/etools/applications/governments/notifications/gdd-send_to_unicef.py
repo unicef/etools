@@ -1,12 +1,12 @@
 name = "governments/gdd/send_to_unicef"
 defaults = {
-    "description": "GDD sent to UNICEF",
-    "subject": "[eTools] GDD sent to UNICEF",
+    "description": "GPD sent to UNICEF",
+    "subject": "[eTools] GPD sent to UNICEF",
     "content": """
     Dear Colleague,
 
-    GDD {{reference_number}} has been sent to UNICEF.
-    Please follow the link below to start the GDD development.
+    GPD {{reference_number}} has been sent to UNICEF.
+    Please follow the link below to start the GPD development.
 
     {{gdd_link}}
 
@@ -18,8 +18,8 @@ defaults = {
     {% block content %}
     Dear Colleague,<br /><br />
 
-    GDD {{reference_number}} has been sent to UNICEF.<br />
-    Please follow the link below to start the GDD development.<br />
+    GPD {{reference_number}} has been sent to UNICEF.<br />
+    Please follow the link below to start the GPD development.<br />
 
     {{gdd_link}}<br />
 

@@ -71,8 +71,7 @@ class ProfileInline(admin.StackedInline):
         'user',
         'country',
     )
-
-    autocomplete_fields = (
+    raw_id_fields = (
         'organization',
     )
 
