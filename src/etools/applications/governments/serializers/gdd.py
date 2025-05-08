@@ -537,7 +537,7 @@ class GDDDetailSerializer(
         else:
             status_list = post_approved_statuses
 
-        return [s for s in obj.INTERVENTION_STATUS if s[0] in status_list]
+        return [s for s in obj.GDD_STATUS if s[0] in status_list]
 
     def get_quarters(self, obj: GDD):
         return [
