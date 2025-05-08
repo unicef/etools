@@ -1,0 +1,1498 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-03-31 18:56+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n==0 || n==1) ? 0 : 1;\n"
+
+msgid "Signed Attachment"
+msgstr "Pièce jointe signée"
+
+msgid "PRC Reviewed Attachment"
+msgstr "Pièce jointe examinée par la CRP"
+
+msgid "Attachment"
+msgstr "Pièce jointe"
+
+msgid "Review Document by PRC"
+msgstr "Document d'examen par la PRC"
+
+msgid "Signed PD Document"
+msgstr "Document PD signé"
+
+msgid "GPD Details"
+msgstr ""
+
+msgid "Dates and Signatures"
+msgstr "Dates et signatures"
+
+msgid "ePD"
+msgstr "ePD"
+
+msgid "Capacity Strengthening Costs"
+msgstr "Coûts de renforcement des capacités"
+
+msgid "Partner"
+msgstr "Partenaire"
+
+msgid "Vendor no."
+msgstr "Numéro de vendeur."
+
+msgid "Status"
+msgstr "Statut"
+
+msgid "Partner Type"
+msgstr "Type de partenaire"
+
+msgid "Agreement"
+msgstr "Accord"
+
+msgid "Country Programme"
+msgstr "Programme national"
+
+msgid "Reference Number"
+msgstr "Numéro de référence"
+
+msgid "Document Title"
+msgstr "Titre du document"
+
+msgid "Start Date"
+msgstr "Date de début"
+
+msgid "End Date"
+msgstr "Date de fin"
+
+msgid "UNICEF Office"
+msgstr "Bureau de l'UNICEF"
+
+msgid "Contributing Sections"
+msgstr ""
+
+msgid "Locations"
+msgstr "Sites"
+
+msgid "UNICEF Focal Points"
+msgstr "Points focaux de l'UNICEF"
+
+msgid "Government Authorized Officials"
+msgstr ""
+
+msgid "Budget Currency"
+msgstr "Devise du budget"
+
+msgid "UNICEF Cash (USD)"
+msgstr "UNICEF Cash (USD)"
+
+msgid "UNICEF Supply (USD)"
+msgstr "Fourniture de l'UNICEF (USD)"
+
+msgid "Total GPD Budget (USD)"
+msgstr ""
+
+msgid "FR Number(s)"
+msgstr "Numéro(s) FR"
+
+msgid "FR Currency"
+msgstr "FR Monnaie"
+
+msgid "FR Posting Date"
+msgstr "FR Date d'affichage"
+
+msgid "FR Amount"
+msgstr "Montant FR"
+
+msgid "FR Actual CT"
+msgstr "FR Réel CT"
+
+msgid "Outstanding DCT"
+msgstr "DCT exceptionnel"
+
+msgid "Planned Programmatic Visits"
+msgstr "Visites programmées"
+
+msgid "Planned Spot Checks"
+msgstr "Contrôles ponctuels planifiés"
+
+msgid "Planned Audits"
+msgstr "Audits planifiés"
+
+msgid "Document Submission Date by Government"
+msgstr ""
+
+msgid "Submission Date to PRC"
+msgstr "Date de soumission à la PRC"
+
+msgid "Review Date by PRC"
+msgstr "Date de révision par la PRC"
+
+msgid "Signed by Partner"
+msgstr "Signé par le partenaire"
+
+msgid "Signed by Partner Date"
+msgstr "Signé par le partenaire Date"
+
+msgid "Signed by UNICEF"
+msgstr "Signé par l'UNICEF"
+
+msgid "Signed by UNICEF Date"
+msgstr "Signé par l'UNICEF Date"
+
+msgid "Days from Submission to Approved"
+msgstr ""
+
+msgid "Days from Review to Approved"
+msgstr ""
+
+msgid "Total no. of amendments"
+msgstr "Nombre total d'amendements"
+
+msgid "Last amendment date"
+msgstr "Date de la dernière modification"
+
+msgid "Attachment Type"
+msgstr "Type de pièce jointe"
+
+msgid "# of attachments"
+msgstr "# Nombre de pièces jointes"
+
+msgid "CP Outputs"
+msgstr "Sorties CP"
+
+msgid "CP output"
+msgstr "Sortie CP"
+
+msgid "Name of UNICEF Focal Point"
+msgstr "Nom du point focal de l'UNICEF"
+
+msgid "Hyperlink"
+msgstr "Hyperlien"
+
+msgid "Location"
+msgstr "Localisation"
+
+msgid "Vendor Number"
+msgstr "Numéro du vendeur"
+
+msgid "PD Ref Number"
+msgstr "Numéro de référence PD"
+
+msgid "Section"
+msgstr "Section"
+
+msgid "Start date"
+msgstr "Date de début"
+
+#, python-format
+msgid "Currency %(currency)s"
+msgstr "Devise %(currency)s"
+
+msgid "Vendor #: "
+msgstr "Numéro de vendeur :"
+
+msgid "End date"
+msgstr "Date de fin"
+
+msgid "GPD Reference"
+msgstr ""
+
+msgid "Duration"
+msgstr "Durée"
+
+msgid "Total GPD Budget"
+msgstr ""
+
+msgid "UNICEF Contribution"
+msgstr "Contribution de l'UNICEF"
+
+msgid "Total Cash"
+msgstr "Total des liquidités"
+
+msgid "Supplies in-kind"
+msgstr "Fournitures en nature"
+
+msgid "GPD Output/ GPD Activity"
+msgstr ""
+
+#, python-format
+msgid "Total (%s)"
+msgstr "Total (%s)"
+
+msgid "UNICEF"
+msgstr "UNICEF"
+
+msgid "contribution"
+msgstr "Contribution"
+
+msgid "GPD Quarters"
+msgstr ""
+
+msgid "Result Level"
+msgstr "Niveau de résultat"
+
+msgid "CP Output "
+msgstr "Sortie CP"
+
+msgid "GPD Output"
+msgstr ""
+
+msgid "Subtotal for the programme costs"
+msgstr "Sous-total pour les coûts du programme"
+
+msgid "Total GPD budget cash"
+msgstr ""
+
+msgid "No."
+msgstr "Non."
+
+msgid "GPD Output/ GPD Activity / Item Description"
+msgstr ""
+
+msgid "Unit Type"
+msgstr "Type d'unité"
+
+msgid "Number of Units"
+msgstr "Nombre d'unités"
+
+msgid "Price/Unit"
+msgstr "Prix/Unité"
+
+msgid "Total"
+msgstr "TOTAL"
+
+msgid "Other Notes"
+msgstr "Autres notes"
+
+msgid "GPD OUTPUT "
+msgstr ""
+
+msgid "Activity"
+msgstr "Activité"
+
+msgid "Total Cost for all outputs"
+msgstr "Coût total pour tous les produits"
+
+msgid "Item"
+msgstr "Article"
+
+msgid "Price/unit"
+msgstr "Prix/Unité"
+
+msgid "Total Price"
+msgstr "Prix total"
+
+msgid "Provided By"
+msgstr "Fourni par"
+
+msgid "CP Output"
+msgstr "Sortie CP"
+
+msgid "Other Mentions"
+msgstr "Autres mentions"
+
+msgid "UNICEF Product Number"
+msgstr "Numéro de produit de l'UNICEF"
+
+msgid "Total Value"
+msgstr "Valeur totale"
+
+msgid "Partner non-financial contribution:"
+msgstr "Contribution non-financière du partenaire :"
+
+msgid "Budget Summary"
+msgstr "Résumé du budget"
+
+msgid "Activity Budget"
+msgstr "Budget des activités"
+
+msgid "Detailed Budget"
+msgstr "Budget détaillé"
+
+msgid "Supply Cost"
+msgstr "Coût de l'approvisionnement"
+
+msgid "Workplan Budget"
+msgstr "Plan de travail Budget"
+
+msgid "Detailed Workplan Budget"
+msgstr "Plan de travail détaillé Budget"
+
+msgid "Supply Contribution (Planned)"
+msgstr "Contribution à l'offre (prévue)"
+
+msgid "Workplan Name"
+msgstr ""
+
+msgid "Workplan ID"
+msgstr ""
+
+msgid "Workplan WBS"
+msgstr ""
+
+msgid "Cost Center Code"
+msgstr ""
+
+msgid "Cost Center Name"
+msgstr ""
+
+msgid "Plan Type"
+msgstr ""
+
+msgid "Plan Category Type"
+msgstr ""
+
+msgid "Workplan Start Date"
+msgstr ""
+
+msgid "Workplan End Date"
+msgstr ""
+
+msgid "Other"
+msgstr "Autre"
+
+msgid "Workplan"
+msgstr ""
+
+msgid "Workplan Activity ID"
+msgstr ""
+
+msgid "Workplan Activity WBS"
+msgstr ""
+
+msgid "WPA Title"
+msgstr ""
+
+msgid "WPA Description"
+msgstr ""
+
+msgid "Total budget"
+msgstr ""
+
+msgid "Activity Start Date"
+msgstr ""
+
+msgid "Activity End Date"
+msgstr ""
+
+msgid "Development"
+msgstr "Développement"
+
+msgid "Review"
+msgstr "Consultez le site"
+
+msgid "Pending Approval"
+msgstr ""
+
+msgid "Approved"
+msgstr "Approuvée"
+
+msgid "Active"
+msgstr "Actif"
+
+msgid "Cancelled"
+msgstr "Annulé"
+
+msgid "Ended"
+msgstr "Fini"
+
+msgid "Closed"
+msgstr "Fermé"
+
+msgid "Suspended"
+msgstr "Suspendu"
+
+msgid "Terminated"
+msgstr "Terminé"
+
+msgid "Expired"
+msgstr "Expiré"
+
+msgid "None"
+msgstr "Aucun"
+
+msgid "Marginal"
+msgstr "Marginal"
+
+msgid "Significant"
+msgstr "Significatif"
+
+msgid "Principal"
+msgstr "Principal"
+
+msgid "Direct Payment"
+msgstr "Paiement direct"
+
+msgid "Reimbursement"
+msgstr "Remboursement"
+
+msgid "Direct Cash Transfer"
+msgstr "Transfert direct en espèces"
+
+msgid "Government"
+msgstr ""
+
+msgid "Country Programmes"
+msgstr "Programmes nationaux"
+
+msgid "Government eWorkplans"
+msgstr ""
+
+msgid "Date Final Partnership Review Performed"
+msgstr "Date de la révision finale du partenariat"
+
+msgid "Final Review Approved"
+msgstr "Révision finale approuvée"
+
+msgid "Contingency PD"
+msgstr "PD pour imprévus"
+
+msgid "Activation Document for Contingency PDs"
+msgstr "Document d'activation pour les DP de contingence"
+
+msgid "Activation Protocol"
+msgstr "Protocole d'activation"
+
+msgid "Termination document for PDs"
+msgstr "Document de fin de contrat pour les PD"
+
+msgid "Lead Section"
+msgstr "Section principale"
+
+msgid "Office"
+msgstr "Bureau"
+
+msgid "Sites"
+msgstr "Sites"
+
+msgid "Population Focus"
+msgstr "Focus sur la population"
+
+msgid "Amendment Open"
+msgstr "Amendement ouvert"
+
+msgid "Humanitarian"
+msgstr "Humanitaire"
+
+msgid "Date first sent to Partner"
+msgstr "Date du premier envoi au partenaire"
+
+msgid "UNPP Number"
+msgstr "Numéro UNPP"
+
+msgid "Context"
+msgstr "Contexte"
+
+msgid "Implementation Strategy"
+msgstr "Stratégie de mise en œuvre"
+
+msgid "Gender Rating"
+msgstr "Classement par sexe"
+
+msgid "Gender Narrative"
+msgstr "Récit de genre"
+
+msgid "Equity Rating"
+msgstr "Notation des actions"
+
+msgid "Equity Narrative"
+msgstr "Equity Narrative"
+
+msgid "Sustainability Rating"
+msgstr "Évaluation de la durabilité"
+
+msgid "Sustainability Narrative"
+msgstr "Narration sur la durabilité"
+
+msgid "Partner Non-Financial Contribution to Programme"
+msgstr "Partenaire Contribution non financière au programme"
+
+msgid "Budget Owner"
+msgstr "Propriétaire du budget"
+
+msgid "HQ Support Cost"
+msgstr "Coût du soutien du QG"
+
+msgid "Cash Transfer Modalities"
+msgstr "Modalités de transfert de fonds"
+
+msgid "UNICEF Review Type"
+msgstr "UNICEF Type d'examen"
+
+msgid "Capacity Development"
+msgstr "Développement des capacités"
+
+msgid "Other Info"
+msgstr "Autres informations"
+
+msgid "Other Document Details"
+msgstr "Autres détails du document"
+
+msgid "Other Partners Involved"
+msgstr "Autres partenaires impliqués"
+
+msgid "Technical Guidance"
+msgstr "Conseils techniques"
+
+msgid "Cancel Justification"
+msgstr "Justification de l'annulation"
+
+msgid "Data Processing Agreement"
+msgstr "Accord sur le traitement des données"
+
+msgid "Activities involving children and young people"
+msgstr "Activités impliquant des enfants et des jeunes"
+
+msgid "Special Conditions for Construction Works by Implementing Partners"
+msgstr ""
+"Conditions spéciales pour les travaux de construction par les partenaires de "
+"mise en œuvre"
+
+msgid "Metadata"
+msgstr "Métadonnées"
+
+msgid "Confidential"
+msgstr "Confidentiel"
+
+msgid "Signature Required"
+msgstr ""
+
+msgid "Unknown"
+msgstr "Inconnu"
+
+msgid "Type 1: Administrative error (correction)"
+msgstr "Type 1 : erreur administrative (correction)"
+
+msgid "Type 2: Budget <= 20%"
+msgstr "Type 2 : Budget <= 20"
+
+msgid "Type 3: Budget > 20%"
+msgstr "Type 3 : Budget > 20"
+
+msgid "Type 4: Changes to planned results"
+msgstr "Type 4 : modifications des résultats planifiés"
+
+msgid "Type 5: No cost extension"
+msgstr "Type 5 : Extension sans frais"
+
+msgid "Type 6: Other"
+msgstr "Type 6 : Autre"
+
+msgid "Normal"
+msgstr "Normal"
+
+msgid "Contingency"
+msgstr "Contingence"
+
+msgid "Kind"
+msgstr "Kind"
+
+msgid "Types"
+msgstr "Types"
+
+msgid "Description"
+msgstr "Description"
+
+msgid "Signed Date"
+msgstr "Signé Date"
+
+msgid "Number"
+msgstr "Numéro"
+
+msgid "Amendment Document"
+msgstr "Document d'amendement"
+
+msgid "Internal PRC Review"
+msgstr "Examen interne du CEP"
+
+msgid "Amended GDD"
+msgstr ""
+
+msgid "Amendment"
+msgstr "Amendement"
+
+msgid "GDD amendments"
+msgstr ""
+
+msgid "Q1"
+msgstr ""
+
+msgid "Q2"
+msgstr "Q2"
+
+msgid "Q3"
+msgstr "Q3"
+
+msgid "Q4"
+msgstr "Q4"
+
+msgid "GDD"
+msgstr ""
+
+msgid "Year"
+msgstr "Année"
+
+msgid "Programmatic Q1"
+msgstr "Programmation Q1"
+
+msgid "Programmatic Q2"
+msgstr "Programmatique Q2"
+
+msgid "Programmatic Q3"
+msgstr "Programmatique Q3"
+
+msgid "Programmatic Q4"
+msgstr "Programmatique Q4"
+
+msgid "GDD Planned Visits"
+msgstr ""
+
+msgid "Partner Contribution"
+msgstr "Contribution des partenaires"
+
+msgid "Unicef Cash"
+msgstr "Unicef Cash"
+
+msgid "UNICEF Supplies"
+msgstr "Fournitures de l'UNICEF"
+
+msgid "Partner Contribution Local"
+msgstr "Contribution du partenaire Local"
+
+msgid "Partner Supplies Local"
+msgstr "Fournitures des partenaires locaux"
+
+msgid "Total Partner Contribution"
+msgstr "Contribution totale des partenaires"
+
+msgid "Total HQ Cash Local"
+msgstr "Total HQ Cash Local"
+
+msgid "Unicef Cash Local"
+msgstr "Unicef Cash Local"
+
+msgid "UNICEF Supplies Local"
+msgstr "Fournitures UNICEF locales"
+
+msgid "Currency"
+msgstr "Monnaie"
+
+msgid "Total Local"
+msgstr "Total Local"
+
+msgid "Programme Effectiveness (%)"
+msgstr "Efficacité du programme (%)"
+
+msgid "GDD budget"
+msgstr ""
+
+msgid "Not decided yet"
+msgstr "Pas encore décidé"
+
+msgid "Yes, strongly agree"
+msgstr "Oui, tout à fait d'accord"
+
+msgid "Yes, agree"
+msgstr "Oui, d'accord"
+
+msgid "No, disagree"
+msgstr "Non, pas d'accord"
+
+msgid "No, strongly disagree"
+msgstr "Non, pas du tout d'accord"
+
+msgid ""
+"The proposed relationship is best represented and regulated by partnership "
+"(as opposed to procurement), with both UNICEF and the Government making "
+"clear contributions to the GDD"
+msgstr ""
+
+msgid ""
+"The partner selection evidences the Government’s comparative advantage and "
+"value for money in relation to the planned results"
+msgstr ""
+
+msgid ""
+"Previous UNICEF/UN relationships with the proposed Government have been "
+"positive"
+msgstr ""
+
+msgid ""
+"The proposed GDD is relevant to achieving results in the country programme "
+"document, the relevant sector workplan and or humanitarian response plan"
+msgstr ""
+
+msgid ""
+"The results framework of the proposed GDD has been guided by M&E feedback "
+"during the drafting process"
+msgstr ""
+
+msgid ""
+"Gender, equity and sustainability have been considered in the programme "
+"design process"
+msgstr ""
+"Le genre, l'équité et la durabilité ont été pris en compte dans le processus "
+"de conception du programme."
+
+msgid ""
+"The budget of the proposed GDD is aligned with the principles of value for "
+"money with the effective and efficient programme management costs adhering "
+"to office defined limits"
+msgstr ""
+
+msgid "The relevant supply issues have been duly considered"
+msgstr ""
+"Les questions d'approvisionnement pertinentes ont été dûment prises en compte"
+
+msgid "PRC Review"
+msgstr "Examen de la CRP"
+
+msgid "Non-PRC Review"
+msgstr "Examen hors CRP"
+
+msgid "No Review Required"
+msgstr "Aucun examen requis"
+
+msgid "Actions List"
+msgstr "Liste des actions"
+
+msgid "PRC Submitted By"
+msgstr "PRC Présenté par"
+
+msgid "Review Date"
+msgstr "Date de révision"
+
+msgid "Meeting Date"
+msgstr "Date de la réunion"
+
+msgid "PRC Officers"
+msgstr "Agents de la RPC"
+
+msgid "Overall Approver"
+msgstr "Approbation générale"
+
+msgid "Authorized Officer"
+msgstr ""
+
+msgid "Recommend for Approval"
+msgstr ""
+
+msgid "Sent Back by Secretary Comment"
+msgstr "Renvoyé par le secrétaire Commentaire"
+
+msgid "User"
+msgstr "Utilisateur"
+
+msgid "Type"
+msgstr "Tapez"
+
+msgid "GDD Attachment"
+msgstr ""
+
+msgid "Safeguarding"
+msgstr ""
+
+msgid "Social and Environmental"
+msgstr ""
+
+msgid "Financial"
+msgstr "Financier"
+
+msgid "Operational"
+msgstr "Opérationnel"
+
+msgid "Political"
+msgstr "Politique"
+
+msgid "Safety and security"
+msgstr ""
+
+msgid "Risk Type"
+msgstr "Type de risque"
+
+msgid "Code"
+msgstr "Code"
+
+msgid "RAM Indicators"
+msgstr "Indicateurs de la RAM"
+
+msgid "Result Link"
+msgstr ""
+
+msgid "CP Key Intervention"
+msgstr ""
+
+msgid "Key Intervention"
+msgstr ""
+
+msgid "eWP Activity"
+msgstr ""
+
+msgid "Context Details"
+msgstr ""
+
+msgid "UNICEF Cash"
+msgstr "Unicef Cash"
+
+msgid "Government Cash"
+msgstr ""
+
+msgid "Time Frames Enabled"
+msgstr ""
+
+msgid "Is Active"
+msgstr ""
+
+msgid "GDD Activity"
+msgstr ""
+
+msgid "GDD Activities"
+msgstr ""
+
+msgid "Name"
+msgstr "Nom"
+
+msgid "Unit"
+msgstr "Unité"
+
+msgid "Unit Price"
+msgstr "Prix unitaire"
+
+msgid "Units Number"
+msgstr "Nombre d'unités"
+
+msgid "GDD Activity Item"
+msgstr ""
+
+msgid "GDD Activity Items"
+msgstr ""
+
+msgid "Title"
+msgstr "Titre"
+
+msgid "Unit Number"
+msgstr "Numéro d'unité"
+
+msgid "Result"
+msgstr "Résultat"
+
+msgid "Standard Quarterly Progress Report"
+msgstr ""
+
+msgid "Humanitarian Report"
+msgstr ""
+
+msgid "Due Date"
+msgstr ""
+
+msgid "Accessing this item is not allowed."
+msgstr "L'accès à cet élément n'est pas autorisé."
+
+msgid ""
+"Cannot add a new amendment while another amendment of same kind is in "
+"progress."
+msgstr ""
+"On ne peut pas ajouter un nouvel amendement alors qu'un autre amendement du "
+"même type est en cours."
+
+msgid "Date cannot be in the future!"
+msgstr "La date ne peut pas être dans le futur!"
+
+msgid "Cannot add a new amendment while the partner is blocked in Vision."
+msgstr ""
+"Impossible d'ajouter un nouvel amendement tant que le partenaire est bloqué "
+"dans Vision."
+
+msgid "Other description required, if type 'Other' selected."
+msgstr "Autre description requise, si le type \"Autre\" est sélectionné."
+
+msgid "Sections"
+msgstr "Sections"
+
+msgid "UNICEF Supply"
+msgstr "Approvisionnement de l'UNICEF"
+
+msgid "Total PD/SPD Budget"
+msgstr "Budget total PD/SPD"
+
+msgid "URL"
+msgstr "URL"
+
+msgid "Attachment type"
+msgstr "Type de pièce jointe"
+
+msgid "Attachments"
+msgstr "Pièces jointes"
+
+msgid "In Kind Amount"
+msgstr "Montant en nature"
+
+msgid "UNICEF Cash (Local)"
+msgstr "UNICEF Cash (Local)"
+
+msgid "In Kind Amount (Local)"
+msgstr "Montant en nature (local)"
+
+msgid "Result Type"
+msgstr "Type de résultat"
+
+msgid "From Date"
+msgstr "De la date"
+
+msgid "To Date"
+msgstr "A ce jour"
+
+msgid "Parent"
+msgstr "Parent"
+
+msgid "WBS"
+msgstr "WBS"
+
+msgid "VISION ID"
+msgstr "VISION ID"
+
+msgid "GIC Code"
+msgstr "Code CPG"
+
+msgid "GIC Name"
+msgstr "Nom du CPG"
+
+msgid "SIC Code"
+msgstr "Code SIC"
+
+msgid "SIC Name"
+msgstr "Nom du SIC"
+
+msgid "Activity Focus Code"
+msgstr "Code de l'activité principale"
+
+msgid "Activity Focus Name"
+msgstr "Nom du centre d'intérêt de l'activité"
+
+#, python-format
+msgid "This field is limited to %d or less characters."
+msgstr "Ce champ est limité à %d caractères ou moins."
+
+#, python-format
+msgid "One or more of the FRs selected is related to a different PD/SPD, %s"
+msgstr ""
+"Un ou plusieurs des FR sélectionnés sont liés à un PD/SPD différent, %s"
+
+#, python-format
+msgid ""
+"Please adjust activities to not use the quarters to be removed (%(names)s)."
+msgstr ""
+"Veuillez adapter les activités afin de ne pas utiliser les trimestres à "
+"supprimer (%(names)s)."
+
+msgid "An Output cannot be updated for a government that is blocked in Vision"
+msgstr ""
+
+msgid "Invalid CP Output provided."
+msgstr "Sortie CP invalide fournie."
+
+msgid "Authorized officer cannot be the same as overall approver."
+msgstr ""
+
+msgid ""
+"An attachment cannot be changed in statuses \"Ended, Closed or Terminated\""
+msgstr ""
+"Une pièce jointe ne peut pas être modifiée dans les statuts \"Terminé, Fermé "
+"ou Terminé\""
+
+msgid "Planned Visit cannot be set for Terminated GPDs"
+msgstr ""
+
+msgid "Start date needs to be on or after GPD start date."
+msgstr ""
+
+msgid "End date needs to be on or before GPD end date."
+msgstr ""
+
+msgid "End date needs to be after the start date."
+msgstr "La date de fin doit être postérieure à la date de début."
+
+msgid "Next start date needs to be one day after previous end date."
+msgstr ""
+"La date de début suivante doit être un jour après la date de fin précédente."
+
+msgid "Changes not allowed when the GPD is terminated."
+msgstr ""
+
+msgid "Changes not allowed when GPD is not in amendment state."
+msgstr ""
+
+msgid "The GPD needs to have a start date."
+msgstr ""
+
+msgid "This field cannot be empty."
+msgstr "Ce champ ne peut pas être vide."
+
+msgid "Requirement ID passed in does not exist"
+msgstr "L'ID d'exigence transmis n'existe pas"
+
+msgid "Requirement ID passed in belongs to a different gdd"
+msgstr ""
+
+msgid "You're trying to delete a record that has a start date in the past"
+msgstr ""
+"Vous essayez de supprimer un enregistrement dont la date de début est située "
+"dans le passé"
+
+msgid ""
+"A record that starts in the passed cannot be modified on a non-draft GDD"
+msgstr ""
+
+msgid ""
+"Invalid budget data. Total cash should be equal to items number * price per "
+"item."
+msgstr ""
+"Données budgétaires non valides. Le total des liquidités doit être égal au "
+"nombre d'articles * prix par article."
+
+msgid "Unable to find item for id: {}"
+msgstr ""
+
+msgid "Unable to find items: {}"
+msgstr ""
+
+msgid "Unknown GPD."
+msgstr ""
+
+msgid "Results cannot be changed in this status"
+msgstr "Les résultats ne peuvent pas être modifiés dans cet état"
+
+msgid "lower_result has an id but cannot be found in the db"
+msgstr ""
+"lower_result a un identifiant mais est introuvable dans la base de données"
+
+msgid "New activities are not able to be added in this status"
+msgstr ""
+
+msgid "PDF could not be generated properly"
+msgstr "Le PDF n'a pas pu être généré correctement"
+
+msgid "eTools ref no"
+msgstr "eTools ref no"
+
+msgid "Organization Name"
+msgstr "Nom de l'organisation"
+
+msgid "Programme Title"
+msgstr "Titre du programme"
+
+msgid "Planned duration"
+msgstr "Durée prévue"
+
+msgid "Geographical coverage"
+msgstr "Couverture géographique"
+
+msgid "Budget"
+msgstr "Budget"
+
+msgid "Supplies"
+msgstr "Fournitures"
+
+msgid "Background"
+msgstr ""
+
+msgid "Risk & Proposed Mitigation Measures"
+msgstr "Risque et mesures d'atténuation proposées"
+
+msgid "Workplan Result"
+msgstr "Résultat du plan de travail"
+
+msgid "Result statement"
+msgstr "Déclaration de résultat"
+
+msgid "Performance indicator/s"
+msgstr "Indicateur(s) de performance"
+
+msgid "Result/activity"
+msgstr "Résultat/activité"
+
+msgid "Timeframe"
+msgstr "Cadre temporel"
+
+msgid "Total (UNICEF)"
+msgstr ""
+
+msgid "Prog. Output"
+msgstr "Prog. Sortie"
+
+msgid "Inactive"
+msgstr "Inactif"
+
+msgid "Sub-total for programme costs"
+msgstr "Sous-total pour les coûts du programme"
+
+msgid "Total Cash budget"
+msgstr "Budget de trésorerie total"
+
+msgid "Supply Contribution Plan"
+msgstr "Plan de contribution à l'approvisionnement"
+
+msgid "Provided by"
+msgstr "Fourni par"
+
+msgid "No. of units"
+msgstr "Nombre d'unités"
+
+msgid "Total supply Cost"
+msgstr "Coût total de l'approvisionnement"
+
+msgid "Others"
+msgstr "Autres"
+
+msgid "Partner non-financial contribution"
+msgstr "Contribution non-financière du partenaire"
+
+msgid "Cash Transfer modality"
+msgstr "Modalité de transfert d'argent"
+
+msgid "Signatures and date"
+msgstr "Signatures et date"
+
+msgid "Government Authorized Officer"
+msgstr ""
+
+msgid "Signature"
+msgstr "Signature"
+
+msgid "Date"
+msgstr "Date"
+
+msgid "UNICEF Authorized Officer"
+msgstr "Agent autorisé de l'UNICEF"
+
+msgid "Date Uploaded"
+msgstr "Date du téléchargement"
+
+msgid "Document Type"
+msgstr "Type de document"
+
+msgid "Document"
+msgstr "Document"
+
+msgid "Invalid"
+msgstr "Invalide"
+
+msgid "Yes"
+msgstr "Oui"
+
+msgid "No"
+msgstr "Non"
+
+msgid "Review for eTools reference number: "
+msgstr "Revue du numéro de référence eTools:"
+
+msgid "Submitted By"
+msgstr "Présenté par"
+
+msgid "Date of submission for review"
+msgstr "Date de soumission pour revue"
+
+msgid "Overall Comment"
+msgstr "Commentaire général"
+
+msgid "Overall Approval"
+msgstr "Approbation générale"
+
+msgid "Overall Review"
+msgstr "Revue global"
+
+msgid "PRC Member Reviews"
+msgstr "Avis des membres du CRP"
+
+msgid "PRC Member Name"
+msgstr "Nom du membre du CRP"
+
+msgid "Approval comment"
+msgstr "Commentaire d'approbation"
+
+msgid "Review date"
+msgstr "Date de révision"
+
+msgid "Only Partnership Managers can execute this transition"
+msgstr ""
+"Seuls les gestionnaires de partenariat peuvent exécuter cette transition"
+
+msgid "End date is in the future"
+msgstr "La date de fin est dans le futur"
+
+msgid "Total Outstanding DCTs need to equal to 0"
+msgstr "Le nombre total de DCT en suspens doit être égal à 0."
+
+msgid ""
+"Total FR amount needs to equal total actual amount, and Total Outstanding "
+"DCTs need to equal to 0"
+msgstr ""
+"Le montant total du FR doit être égal au montant réel total, et le total des "
+"DCT en suspens doit être égal à 0."
+
+msgid "Final Review must be approved"
+msgstr "L'examen final doit être approuvé"
+
+msgid "Cannot Transition status while adding an amendment"
+msgstr "Impossible de changer de statut en ajoutant un amendement"
+
+msgid "PD cannot be closed if the Partner is Blocked in Vision"
+msgstr "Le DP ne peut être fermé si le partenaire est bloqué dans la vision."
+
+msgid "Cannot Transition without termination doc attached"
+msgstr "Impossible de faire la transition sans document de résiliation joint"
+
+msgid "Cannot Transition to ended if termination_doc attached"
+msgstr ""
+"Impossible de faire la transition vers la fin si le document de fin de "
+"contrat est joint."
+
+msgid "PD cannot transition to ended if the Partner is Blocked in Vision"
+msgstr ""
+"Le DP ne peut pas passer à la fin si le partenaire est bloqué en vision."
+
+msgid "PD cannot be suspended if the Partner is Blocked in Vision"
+msgstr ""
+"Le DP ne peut être suspendu si le partenaire est bloqué dans la vision."
+
+msgid "Justification required for cancellation"
+msgstr "Justification requise pour l'annulation"
+
+msgid "PD cannot transition to approved if the Partner is Blocked in Vision"
+msgstr ""
+
+msgid "Cannot Transition to active if termination_doc attached"
+msgstr ""
+
+msgid "PD cannot be activated if the Partner is Blocked in Vision"
+msgstr "Le DP ne peut pas être activé si le partenaire est bloqué en vision."
+
+msgid ""
+"State suspended cannot be modified since the end date of the gdd surpasses "
+"today"
+msgstr ""
+
+msgid "Start date must precede end date"
+msgstr "La date de début doit précéder la date de fin"
+
+msgid "Signatures cannot be dated in the future"
+msgstr "Les signatures ne peuvent pas être datées dans le futur"
+
+msgid "The start date cannot be before the later of signature dates."
+msgstr ""
+"La date de début ne peut être antérieure à la dernière des dates de "
+"signature."
+
+msgid "PD start date cannot be earlier than the Start Date of the related PCA"
+msgstr ""
+"La date de début du DP ne peut être antérieure à la date de début de l'APC "
+"correspondant."
+
+msgid "Amendment Flag cannot be turned on without adding an amendment"
+msgstr ""
+"Le drapeau d'amendement ne peut pas être activé sans ajouter un amendement."
+
+msgid ""
+"The locations selected on the PD/SPD are not a subset of all locations "
+"selected for this PD/SPD's indicators"
+msgstr ""
+"Les lieux sélectionnés sur le DP/SPD ne sont pas un sous-ensemble de tous "
+"les lieux sélectionnés pour les indicateurs de ce DP/SPD."
+
+msgid "The Lead Section is also selected in Contributing Sections."
+msgstr ""
+
+msgid "Budget Owner cannot be in the list of UNICEF Focal Points"
+msgstr ""
+
+#, python-format
+msgid "Required fields not completed in %(status)s: %(fields)s"
+msgstr "Champs obligatoires non remplis dans %(status)s : %(fields)s"
+
+#, python-format
+msgid "Cannot change fields while in %(status)s: %(field)s"
+msgstr "Impossible de modifier les champs en %(status)s : %(field)s"
+
+msgid "All activities must have at least one time frame"
+msgstr "Toutes les activités doivent avoir au moins un délai"
+
+msgid "Results section is empty"
+msgstr "La section des résultats est vide"
+
+msgid "Total UNICEF Contribution must be greater than 0"
+msgstr "La contribution totale de l'UNICEF doit être supérieure à 0"
+
+msgid "All PD Outputs need to be associated to a CP Output"
+msgstr "Toutes les sorties PD doivent être associées à une sortie CP."
+
+msgid "Unicef and Partner both need to accept"
+msgstr "L'Unicef et Partner doivent tous deux accepter"
+
+msgid "Review needs to be approved"
+msgstr "La révision doit être approuvée"
+
+msgid "Only original PD can be active"
+msgstr "Seul le DP d'origine peut être actif"
+
+msgid "Today is not after the start date"
+msgstr "La date d'aujourd'hui n'est pas postérieure à la date de début"
+
+msgid "UNICEF Cash $ or UNICEF Supplies $ should not be 0"
+msgstr "UNICEF Cash $ ou UNICEF Supplies $ ne doit pas être 0"
+
+msgid "Today is not after the end date"
+msgstr "Aujourd'hui n'est pas après la date de fin"
+
+msgid "ID values must be integers"
+msgstr "Les valeurs d'ID doivent être des nombres entiers"
+
+msgid ""
+"This CP Output cannot be removed from this GDD because there are nested "
+"Results, please remove all Document Results to continue"
+msgstr ""
+
+msgid "No valid data found in the file."
+msgstr ""
+
+msgid "Cannot delete special reporting requirements in the past."
+msgstr ""
+
+msgid "Deleting an attachment can only be done in Draft status"
+msgstr ""
+"La suppression d'une pièce jointe ne peut être effectuée qu'en état "
+"Développement"
+
+msgid "Action is not allowed"
+msgstr "L'action n'est pas autorisée"
+
+msgid "You need to be a focal point in order to perform this action"
+msgstr "Vous devez être un point focal pour effectuer cette action"
+
+msgid "Partner has already accepted this GPD."
+msgstr ""
+
+msgid ""
+"You cannot perform this action while the GPD is not available for partner to "
+"edit"
+msgstr ""
+
+msgid ""
+"You cannot perform this action while the GPD is not available for UNICEF to "
+"edit"
+msgstr ""
+
+msgid "UNICEF has already accepted this GPD."
+msgstr ""
+
+msgid "Only focal points or budget owners can accept"
+msgstr ""
+"Seuls les points focaux ou les propriétaires de budget peuvent accepter"
+
+msgid "Only focal points can accept"
+msgstr "Seuls les points focaux peuvent accepter"
+
+msgid "GPD needs to be in Review state"
+msgstr ""
+
+msgid "GPD review is missing"
+msgstr ""
+
+msgid "Only overall approver can reject review."
+msgstr "Seul l'approbateur général peut rejeter la révision."
+
+msgid "GPD review already approved"
+msgstr ""
+
+msgid "GPD is already in Review status."
+msgstr ""
+
+#, python-format
+msgid ""
+"Merge Error: Amended field was already changed (%(field)s at %(instance)s). "
+"This can be caused by parallel merged amendment or changed original gdd. "
+"Amendment should be re-created."
+msgstr ""
+
+msgid "GPD has already been cancelled."
+msgstr ""
+
+msgid "Only PRC Secretary can cancel"
+msgstr ""
+
+msgid "GPD has already been terminated."
+msgstr ""
+
+msgid "Only focal points or budget owners can terminate"
+msgstr ""
+"Seuls les points focaux ou les propriétaires de budget peuvent résilier"
+
+msgid "GPD has already been suspended."
+msgstr ""
+
+msgid "Only focal points or budget owners can suspend"
+msgstr ""
+"Seuls les points focaux ou les propriétaires de budget peuvent suspendre"
+
+msgid "GPD is not suspended."
+msgstr ""
+
+msgid "Only focal points or budget owners can unsuspend"
+msgstr ""
+"Seuls les points focaux ou les propriétaires de budget peuvent lever la "
+"suspension"
+
+msgid "GPD is already in Pending Approval status."
+msgstr ""
+
+msgid "Only authorized officer can accept review."
+msgstr ""
+
+msgid "GPD is already unlocked."
+msgstr ""
+
+msgid "At least one CP Output is required before sending it to the Partner"
+msgstr ""
+
+msgid "GPD is currently with Partner"
+msgstr ""
+
+msgid "Only focal points or budget owners can send to partner"
+msgstr ""
+"Seuls les points focaux ou les propriétaires de budget peuvent envoyer au "
+"partenaire"
+
+msgid "GPD is currently with UNICEF"
+msgstr ""
+
+msgid "Only partner focal points can send to UNICEF"
+msgstr "Seuls les points focaux partenaires peuvent envoyer à l'UNICEF"
+
+msgid "Only amended GPDs can be merged"
+msgstr ""
+
+msgid "Amendment cannot be merged yet"
+msgstr "L'amendement ne peut pas encore être fusionné"
+
+msgid "Amendment does not exist for this GPD"
+msgstr ""
+
+#, python-format
+msgid ""
+"Merge Error: Amended field was already changed (%(field)s at %(instance)s). "
+"This can be caused by parallel merged amendment or changed original GPD. "
+"Amendment should be re-created."
+msgstr ""
+
+msgid "Meeting date is not available."
+msgstr "La date de la réunion n'est pas disponible."

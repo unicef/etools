@@ -44,7 +44,7 @@ class GDDCSVRenderer(r.CSVRenderer):
         "budget_currency": _("Budget Currency"),
         "unicef_budget": _("UNICEF Cash (USD)"),
         "unicef_supply": _("UNICEF Supply (USD)"),
-        "total_planned_budget": _("Total GDD Budget (USD)"),
+        "total_planned_budget": _("Total GPD Budget (USD)"),
         "fr_numbers": _("FR Number(s)"),
         "fr_currency": _("FR Currency"),
         "fr_posting_date": _("FR Posting Date"),
@@ -211,7 +211,7 @@ class GDDXLSRenderer:
             _('End date'), self.gdd.end.strftime('%d-%b-%y') if self.gdd.end else ''
         ])
         worksheet.append([
-            _('GDD Reference'),
+            _('GPD Reference'),
             self.gdd.number,
             _('Duration'),
             self.td_format(self.gdd.end - self.gdd.start)
@@ -233,7 +233,7 @@ class GDDXLSRenderer:
         supplies_p = budget.in_kind_amount_local / unicef_contribution * 100 \
             if unicef_contribution else 0
 
-        worksheet.append([_('Total GDD Budget'), currency_format(budget.total_local), '%'])
+        worksheet.append([_('Total GPD Budget'), currency_format(budget.total_local), '%'])
         self.apply_styles_to_cells(
             worksheet, worksheet.max_row, 1, worksheet.max_row, 3, [self.fill_blue, self.font_white]
         )
@@ -274,10 +274,10 @@ class GDDXLSRenderer:
     def render_workplan_budget(self, worksheet):
         worksheet.append([
             '',
-            _('GDD Output/ GDD Activity'),
+            _('GPD Output/ GPD Activity'),
             _('Total (%s)') % self.gdd.planned_budget.currency + '\n' + '(UNICEF)',
             _('UNICEF') + '\n' + _('contribution'),
-            _('GDD Quarters')
+            _('GPD Quarters')
         ])
         quarters = get_quarters_range(self.gdd.start, self.gdd.end)
         start_column = 6
@@ -320,7 +320,7 @@ class GDDXLSRenderer:
             )
             for ki in result_link.gdd_key_interventions.all():
                 worksheet.append([
-                    _("GDD Output") + "\n" + ki.code + ":",
+                    _("GPD Output") + "\n" + ki.code + ":",
                     ki.name,
                     currency_format(ki.total()),
                     currency_format(ki.total_unicef()),
@@ -478,7 +478,7 @@ class GDDXLSRenderer:
         #     start_row=worksheet.max_row, start_column=6, end_row=worksheet.max_row, end_column=total_columns
         # )
         worksheet.append([
-            _('Total PD budget cash'), '',
+            _('Total GPD budget cash'), '',
             currency_format(self.gdd.planned_budget.total_cash_local()),
             currency_format(self.gdd.planned_budget.unicef_cash_local),
         ])
@@ -504,13 +504,13 @@ class GDDXLSRenderer:
         quarters = get_quarters_range(self.gdd.start, self.gdd.end)
         worksheet.append([
             _('No.'),
-            _('GDD Output/ GDD Activity / Item Description'),
+            _('GPD Output/ GPD Activity / Item Description'),
             _('Unit Type'),
             _('Number of Units'),
             _('Price/Unit'),
             _('UNICEF') + '\n' + _('contribution'),
             _('Total'),
-            _('GDD Quarters'),
+            _('GPD Quarters'),
         ] + [''] * (len(quarters) - 1) + [_('Other Notes')])
 
         start_column = 9
@@ -559,7 +559,7 @@ class GDDXLSRenderer:
             for ki in result_link.gdd_key_interventions.all():
                 worksheet.append([
                     ki.code,
-                    _("GDD OUTPUT ") + ki.code + ": " + ki.name,
+                    _("GPD OUTPUT ") + ki.code + ": " + ki.name,
                     '',
                     '',
                     '',

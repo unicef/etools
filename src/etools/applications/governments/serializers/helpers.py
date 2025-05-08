@@ -269,7 +269,7 @@ class GDDPlannedVisitsCUSerializer(serializers.ModelSerializer):
                 pk=self.initial_data.get("id"),
             )
             if self.instance.gdd.status == GDD.TERMINATED:
-                raise ValidationError(_("Planned Visit cannot be set for Terminated gdds"))
+                raise ValidationError(_("Planned Visit cannot be set for Terminated GPDs"))
 
         except self.Meta.model.DoesNotExist:
             self.instance = None
@@ -360,7 +360,7 @@ class GDDReportingRequirementCreateSerializer(
             raise serializers.ValidationError({
                 "reporting_requirements": {
                     "start_date": _(
-                        _("Start date needs to be on or after GDD start date.")
+                        _("Start date needs to be on or after GPD start date.")
                     )
                 }
             })
@@ -372,7 +372,7 @@ class GDDReportingRequirementCreateSerializer(
             raise serializers.ValidationError({
                 "reporting_requirements": {
                     "end_date": _(
-                        _("End date needs to be on or before GDD end date.")
+                        _("End date needs to be on or before GPD end date.")
                     )
                 }
             })
@@ -474,7 +474,7 @@ class GDDReportingRequirementCreateSerializer(
                 ended = self.gdd.end < datetime.now().date() if self.gdd.end else True
                 if ended:
                     raise serializers.ValidationError(
-                        _("Changes not allowed when GDD is terminated.")
+                        _("Changes not allowed when the GPD is terminated.")
                     )
             # TODO: [e4] remove this whenever a better validation is decided on.
             # This is out of place but needed as a hotfix, can edit should be checked at the view level consistently
@@ -483,12 +483,12 @@ class GDDReportingRequirementCreateSerializer(
             else:
                 if not self.gdd.in_amendment and not self.gdd.termination_doc_attachment.exists():
                     raise serializers.ValidationError(
-                        _("Changes not allowed when GDD not in amendment state.")
+                        _("Changes not allowed when GPD is not in amendment state.")
                     )
 
         if not self.gdd.start:
             raise serializers.ValidationError(
-                _("GDD needs to have a start date.")
+                _("The GPD needs to have a start date.")
             )
 
         # Validate reporting requirements first

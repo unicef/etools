@@ -175,7 +175,7 @@ class GDDKeyInterventionCUSerializer(
 
     def save(self, **kwargs):
         if not self.gdd:
-            raise ValidationError(_('Unknown gdd.'))
+            raise ValidationError(_('Unknown GPD.'))
         return super().save(**kwargs)
 
     def validate(self, attrs):
