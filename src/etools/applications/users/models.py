@@ -137,6 +137,14 @@ class UsersManager(UserManager.from_queryset(UserQuerySet)):
             'email'
         )
 
+    def unicef_representatives(self):
+        return self.base_qs().filter(
+            realms__country=connection.tenant,
+            realms__organization=Organization.objects.get(name='UNICEF', vendor_number='000'),
+            realms__group=UNICEFRepresentative.as_group(),
+            realms__is_active=True
+        )
+
 
 class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = "username"
@@ -627,3 +635,4 @@ IPAdmin = GroupWrapper(code='ip_admin', name='IP Admin')
 IPAuthorizedOfficer = GroupWrapper(code='ip_authorized_officer', name='IP Authorized Officer')
 PartnershipManager = GroupWrapper(code='partnership_manager', name='Partnership Manager')
 UserReviewer = GroupWrapper(code='partnership_manager', name='User Reviewer')
+UNICEFRepresentative = GroupWrapper(code='unicef_representative', name='UNICEF Representative')

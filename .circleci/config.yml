@@ -1,4 +1,4 @@
-version: 2
+version: 2.1
 
 parameters:
   base-tag:
@@ -8,8 +8,8 @@ parameters:
 
 jobs:
   setup:
-    machine: true
-    docker_layer_caching: true
+    machine:
+      docker_layer_caching: true
     steps:
       - checkout
       - run:
@@ -36,6 +36,7 @@ jobs:
       - run:
           name: Triggering test workflow
           command: |
+            # Launch the test job from here, it needs the BASE_TAG value to pull the docker image
             BASE_TAG="$(md5sum pdm.lock | cut -c1-6)$(md5sum Dockerfile-base | cut -c1-6)"
             curl --user ${CIRCLE_TOKEN}: \
                 --data build_parameters[CIRCLE_JOB]=test \
@@ -72,17 +73,6 @@ jobs:
           key: deps2-{{ .Branch }}--{{ checksum "pdm.lock" }}-{{ checksum ".circleci/config.yml" }}
           paths:
             - ".tox/d42/"
-      - run:
-          name: Triggering build_and_deploy job
-          command: |
-            if (echo "$DEPLOY_BRANCHES" | grep -q "$CIRCLE_BRANCH"); then
-              curl --user ${CIRCLE_TOKEN}: \
-                --data build_parameters[CIRCLE_JOB]=build_and_upload \
-                --data revision=$CIRCLE_SHA1 \
-                https://circleci.com/api/v1.1/project/github/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/tree/$CIRCLE_BRANCH
-            else
-              echo "not triggered - '$CIRCLE_BRANCH' is not a deployable branch: '$DEPLOY_BRANCHES'"
-            fi
 
   build_and_upload:
     machine: true
@@ -113,15 +103,22 @@ jobs:
             else
               echo "Not a followed branch not pushing latest"
             fi
-      - run:
-          name: trigger redeploy?
-          command: |
-            pip install requests
-            python utils/trigger_redeploy.py --loglevel=INFO
-
 
 workflows:
-  version: 2
-  tests_start:
+  version: 2.1
+
+  #Run tests
+  launch_tests:
     jobs:
       - setup
+
+  # Build only when merging/pushing to develop, staging and master. No need to wait for tests.
+  build_on_merge:
+    jobs:
+      - build_and_upload:
+          filters:
+            branches:
+              only:
+                - develop
+                - staging
+                - master

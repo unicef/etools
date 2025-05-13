@@ -93,6 +93,13 @@
   {
     "model": "auth.group",
     "fields": {
+      "name": "UNICEF Representative",
+      "permissions": []
+    }
+  },
+  {
+    "model": "auth.group",
+    "fields": {
       "name": "LMSM User Creation Report",
       "permissions": []
     }

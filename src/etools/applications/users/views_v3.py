@@ -4,8 +4,8 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError as DjangoValidationError
-from django.db import connection, transaction
-from django.db.models import Exists, OuterRef, Prefetch, Q, Subquery
+from django.db import connection, models, transaction
+from django.db.models import OuterRef, Prefetch, Q, Subquery
 from django.http import HttpResponseForbidden, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 
@@ -308,6 +308,8 @@ class UserRealmViewSet(
     filterset_fields = ('is_active', )
     ordering_fields = ('first_name', 'last_name', 'email', 'last_login')
 
+    qs_context = None
+
     def get_permissions(self):
         if self.action == "list":
             self.permission_classes = (
@@ -336,43 +338,51 @@ class UserRealmViewSet(
         return super().get_serializer_class()
 
     def get_queryset(self):
-        organization_id = self.request.query_params.get('organization_id') or self.request.data.get('organization')
-        relationship_type = self.request.query_params.get('organization_type')
+        request = self.request
+        organization_id = request.query_params.get('organization_id') or request.data.get('organization')
+        relationship_type = request.query_params.get('organization_type')
 
-        if self.request.user.is_unicef_user():
+        if request.user.is_unicef_user():
             if organization_id:
                 organization = get_object_or_404(
                     Organization.objects.all().select_related('partner', 'auditorfirm', 'tpmpartner'),
                     pk=organization_id)
-                if (self.request.method == 'GET' and relationship_type is None) or \
+                if (request.method == 'GET' and relationship_type is None) or \
                         (relationship_type and relationship_type not in organization.relationship_types) or \
                         not organization.relationship_types:
-                    logger.error(f"The provided organization id {organization_id} and type {relationship_type} do not match.")
+                    logger.error(
+                        f"The provided organization id {organization_id} and type {relationship_type} do not match.")
                     return self.model.objects.none()
             else:
                 return self.model.objects.none()
         else:
-            organization = self.request.user.profile.organization
+            organization = request.user.profile.organization
 
         if organization.organization_type == OrganizationType.GOVERNMENT and \
                 not tenant_switch_is_active('amp_government_users'):
-            raise ValidationError(f'User roles operations for Government partners on {connection.tenant.name} is disabled.')
+            raise ValidationError(
+                f'User roles operations for Government partners on {connection.tenant.name} is disabled.')
 
         qs_context = {
             "country": connection.tenant,
             "organization": organization,
         }
+
         group_names = ORGANIZATION_GROUP_MAP.get(relationship_type) if relationship_type else \
             [group for _type in organization.relationship_types for group in ORGANIZATION_GROUP_MAP.get(_type)]
         qs_context.update({"group__name__in": group_names})
 
+        self.qs_context = qs_context
+
         context_realms_qs = Realm.objects.filter(**qs_context).select_related('group')
 
-        return self.model.objects \
-            .filter(realms__in=context_realms_qs) \
-            .prefetch_related(Prefetch('realms', queryset=context_realms_qs)) \
-            .annotate(has_active_realm=Exists(context_realms_qs.filter(user=OuterRef('pk'), is_active=True))) \
-            .distinct()
+        queryset = (self.model.objects
+                    .filter(realms__in=context_realms_qs)
+                    .prefetch_related(Prefetch('realms', queryset=context_realms_qs))
+                    .annotate(has_active_realm=models.Exists(context_realms_qs.filter(user=models.OuterRef('pk'), is_active=True)))
+                    .distinct())
+
+        return queryset
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):
@@ -498,3 +508,15 @@ class ExternalUserViewSet(
         )
 
         return qs
+
+
+class UnicefRepresentativeListAPIView(ListAPIView):
+    permission_classes = (
+        IsAuthenticated,
+        user_group_permission(PartnershipManager.name, )
+    )
+    model = get_user_model()
+    serializer_class = MinimalUserSerializer
+
+    def get_queryset(self, pk=None):
+        return get_user_model().objects.unicef_representatives()

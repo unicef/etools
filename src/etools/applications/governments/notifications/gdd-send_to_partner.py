@@ -1,12 +1,12 @@
 name = "governments/gdd/send_to_partner"
 defaults = {
-    "description": "GDD sent to Partner",
-    "subject": "[eTools] GDD sent to Partner",
+    "description": "GPD sent to Partner",
+    "subject": "[eTools] GPD sent to Partner",
     "content": """
     Dear Colleague,
 
-    GDD {{reference_number}} has been sent to you, {{ partner_name }}.
-    Please follow the link below to start the GDD development.
+    GPD {{reference_number}} has been sent to you, {{ partner_name }}.
+    Please follow the link below to start the GPD development.
 
     {{gdd_link}}
 
@@ -18,8 +18,8 @@ defaults = {
     {% block content %}
     Dear Colleague,<br /><br />
 
-    GDD {{reference_number}} has been sent to you, {{ partner_name }}.<br />
-    Please follow the link below to start the GDD development.<br />
+    GPD {{reference_number}} has been sent to you, {{ partner_name }}.<br />
+    Please follow the link below to start the GPD development.<br />
 
     {{gdd_link}}<br />
 
