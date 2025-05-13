@@ -21,14 +21,14 @@ class CsvImporter:
         with transaction.atomic():
             for row in ws.iter_rows(min_row=3, max_row=ws.max_row, values_only=True):
                 valid = True
-                error_message = ''
+                status_message = ''
 
                 ip_number, first_name, last_name, email, point_of_interests, *_ = row
                 if point_of_interests:
                     try:
                         point_of_interests = json.loads(point_of_interests)
                     except ValueError:
-                        error_message += "Invalid point of interest format"
+                        status_message += "Invalid point of interest format"
                         valid = False
 
                 data = {
@@ -40,16 +40,16 @@ class CsvImporter:
                 }
                 serializer = UserImportSerializer(data=data)
                 if not serializer.is_valid():
-                    error_message += str(serializer.errors)
+                    status_message += str(serializer.errors)
                     valid = False
                 if valid:
                     created, object_data = serializer.create(serializer.validated_data, country_schema, user)
                     if not created:
-                        error_message += object_data
+                        status_message += object_data
                         valid = False
                 if valid:
-                    error_message = 'Success'
-                ws.cell(row=index, column=error_col, value=error_message)
+                    status_message = 'Success'
+                ws.cell(row=index, column=error_col, value=status_message)
                 index += 1
 
         out = io.BytesIO()

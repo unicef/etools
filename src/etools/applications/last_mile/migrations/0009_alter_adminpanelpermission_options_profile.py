@@ -14,13 +14,13 @@ def create_last_mile_profiles(apps, schema_editor):
     Profile = apps.get_model('last_mile', 'Profile')
     Users = apps.get_model(settings.AUTH_USER_MODEL)
     last_mile_users = Users.objects.for_schema(schema).only_lmsm_users().distinct()
+    list_profile_to_create = []
     for user in last_mile_users:
         status = "APPROVED" if user.is_active else "REJECTED"
         review_notes = "Profile created automatically by migration"
-        profile = Profile.objects.create(user=user, status=status, review_notes=review_notes)
-        profile.created_on = user.date_joined
-        profile.created = user.date_joined
-        profile.save()
+        profile = Profile(user=user, status=status, review_notes=review_notes, created_on=user.date_joined, created=user.date_joined)
+        list_profile_to_create.append(profile)
+    Profile.objects.bulk_create(list_profile_to_create, ignore_conflicts=True)
         
 
 class Migration(migrations.Migration):

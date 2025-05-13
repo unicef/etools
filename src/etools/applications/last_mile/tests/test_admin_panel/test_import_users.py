@@ -17,7 +17,6 @@ from etools.applications.last_mile.tests.factories import PointOfInterestFactory
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.users.models import Realm
-# Assuming the last_mile profile for approval is this:
 from etools.applications.users.tests.factories import UserPermissionFactory
 
 User = get_user_model()

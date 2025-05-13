@@ -145,12 +145,11 @@ class UserViewSet(ExportMixin,
     def _import_file(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        f = serializer.validated_data['file']
         excel_file = serializer.validated_data['file']
         valid, out = CsvImporter().import_users(excel_file, connection.tenant.schema_name, request.user)
         if not valid:
             resp = HttpResponse(out.getvalue(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-            resp['Content-Disposition'] = f'attachment; filename="checked_{f.name}"'
+            resp['Content-Disposition'] = f'attachment; filename="checked_{excel_file.name}"'
             return resp
         return Response(status=status.HTTP_200_OK)
 

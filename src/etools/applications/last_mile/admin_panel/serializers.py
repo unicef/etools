@@ -10,6 +10,8 @@ from rest_framework_gis.fields import GeometryField
 
 from etools.applications.last_mile import models
 from etools.applications.last_mile.admin_panel.constants import ALERT_TYPES, TRANSFER_MANUAL_CREATION_NAME
+from etools.applications.last_mile.admin_panel.services.LMProfileStatusUpdater import LMProfileStatusUpdater
+from etools.applications.last_mile.admin_panel.services.LMUserCreator import LMUserCreator
 from etools.applications.last_mile.admin_panel.validators import AdminPanelValidator
 from etools.applications.last_mile.permissions import LastMileUserPermissionRetriever
 from etools.applications.last_mile.serializers import PointOfInterestTypeSerializer
@@ -123,35 +125,10 @@ class UserAdminCreateSerializer(serializers.ModelSerializer):
     last_mile_profile = LastMileProfileSerializer(read_only=True)
 
     def create(self, validated_data):
-        user_profile = validated_data.pop('profile', {})
-        point_of_interests = validated_data.pop('point_of_interests', None)
-        group = Group.objects.get(name="IP LM Editor")
-        validated_data['password'] = make_password(validated_data['password'])
-        country_schema = self.context.get('country_schema')
-        country = Country.objects.get(schema_name=country_schema)
-
+        validated_data['country_schema'] = self.context.get('country_schema')
+        validated_data['created_by'] = self.context['request'].user
         try:
-            with transaction.atomic():
-                user = get_user_model().objects.create(**validated_data)
-                user.profile.country = country
-                user.profile.organization = user_profile['organization']
-                user.profile.job_title = user_profile['job_title']
-                user.profile.phone_number = user_profile['phone_number']
-                Realm.objects.create(
-                    user=user,
-                    country=country,
-                    organization=user_profile['organization'],
-                    group=group,
-                )
-                user.is_active = False
-                user.save()
-                user.profile.save()
-                user.profile.organization.partner.points_of_interest.set(point_of_interests)
-                models.Profile.objects.create(
-                    user=user,
-                    created_by=self.context['request'].user
-                )
-
+            user = LMUserCreator().create(validated_data)
         except Exception as ex:
             raise serializers.ValidationError({'user': force_str(ex)})
 
@@ -736,17 +713,25 @@ class AuthUserPermissionsDetailSerializer(serializers.ModelSerializer):
         fields = ('admin_perms',)
 
 
+class LocationWithBordersSerializer(serializers.Serializer):
+    location = serializers.CharField(source='name')
+    borders = serializers.SerializerMethodField()
+
+    def get_borders(self, obj):
+        return obj.get_borders()
+
+
 class PointOfInterestCoordinateAdminSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        parent_locations_with_borders = instance.parent.get_parent_locations_with_borders()
-        if instance.parent.FIRST_ADMIN_LEVEL in parent_locations_with_borders:
-            data['country'] = parent_locations_with_borders[instance.parent.FIRST_ADMIN_LEVEL]
-        if instance.parent.SECOND_ADMIN_LEVEL in parent_locations_with_borders:
-            data['region'] = parent_locations_with_borders[instance.parent.SECOND_ADMIN_LEVEL]
-        if instance.parent.THIRD_ADMIN_LEVEL in parent_locations_with_borders:
-            data['district'] = parent_locations_with_borders[instance.parent.THIRD_ADMIN_LEVEL]
+        parent_locations = instance.parent.get_parent_locations()
+        if instance.parent.FIRST_ADMIN_LEVEL in parent_locations:
+            data['country'] = LocationWithBordersSerializer(parent_locations[instance.parent.FIRST_ADMIN_LEVEL]).data
+        if instance.parent.SECOND_ADMIN_LEVEL in parent_locations:
+            data['region'] = LocationWithBordersSerializer(parent_locations[instance.parent.FIRST_ADMIN_LEVEL]).data
+        if instance.parent.THIRD_ADMIN_LEVEL in parent_locations:
+            data['district'] = LocationWithBordersSerializer(parent_locations[instance.parent.FIRST_ADMIN_LEVEL]).data
         return data
 
     class Meta:
@@ -763,20 +748,7 @@ class LastMileUserProfileUpdateAdminSerializer(serializers.ModelSerializer):
         fields = ('id', 'status', 'review_notes')
 
     def update(self, instance, validated_data):
-        self.admin_validator.validate_last_mile_profile(instance)
-        last_mile_profile = instance.last_mile_profile
-        status = validated_data.pop('status', None)
-        self.admin_validator.validate_status(status)
-        review_notes = validated_data.pop('review_notes', None)
-        user = self.context['request'].user
-        if status == models.Profile.ApprovalStatus.APPROVED:
-            last_mile_profile.approve(user, review_notes)
-            instance.is_active = True
-            instance.save(update_fields=['is_active'])
-        elif status == models.Profile.ApprovalStatus.REJECTED:
-            last_mile_profile.reject(user, review_notes)
-            instance.is_active = False
-            instance.save(update_fields=['is_active'])
+        last_mile_profile = LMProfileStatusUpdater(self.admin_validator).update(instance, validated_data, self.context['request'].user)
         return last_mile_profile
 
 
@@ -798,23 +770,7 @@ class BulkUpdateLastMileProfileStatusSerializer(serializers.Serializer):
 
     @transaction.atomic
     def update(self, validated_data, approver_user):
-        status = validated_data.get('status', None)
-        review_notes = validated_data.get('review_notes', None)
-        users = validated_data.get('user_ids', None)
-        list_profile_bulk_update = []
-        list_user_bulk_update = []
-        for user in users:
-            self.admin_validator.validate_last_mile_profile(user)
-            user.is_active = status == models.Profile.ApprovalStatus.APPROVED
-            last_mile_profile = user.last_mile_profile
-            last_mile_profile.status = status
-            last_mile_profile.review_notes = review_notes
-            last_mile_profile.approved_by = approver_user
-            last_mile_profile.approved_on = timezone.now()
-            list_profile_bulk_update.append(last_mile_profile)
-            list_user_bulk_update.append(user)
-        models.Profile.objects.bulk_update(list_profile_bulk_update, ['status', 'review_notes', 'approved_by', 'approved_on'])
-        get_user_model().objects.bulk_update(list_user_bulk_update, ['is_active'])
+        validated_data = LMProfileStatusUpdater(self.admin_validator).bulk_update(validated_data, approver_user)
         return validated_data
 
 
@@ -866,40 +822,16 @@ class UserImportSerializer(serializers.Serializer):
             raise serializers.ValidationError("Organization not found by vendor number")
 
     def create(self, validated_data, country_schema, created_by):
-        point_of_interests = validated_data.pop('point_of_interests', None)
-        group = Group.objects.get(name="IP LM Editor")
-        validated_data['password'] = make_password("test_pass")
-        country = Country.objects.get(schema_name=country_schema)
-
+        validated_data['country_schema'] = country_schema
+        validated_data['created_by'] = created_by
+        validated_data['profile'] = {}
+        validated_data['profile']['organization'] = validated_data.pop('ip_number')
+        validated_data['profile']['job_title'] = ""
+        validated_data['profile']['phone_number'] = ""
+        validated_data['password'] = make_password('test_pass')
+        validated_data['username'] = validated_data['email']
         try:
-            with transaction.atomic():
-                user = get_user_model().objects.create(
-                    username=validated_data['email'],
-                    email=validated_data['email'],
-                    first_name=validated_data['first_name'],
-                    last_name=validated_data['last_name'],
-                    password=validated_data['password'],
-                )
-                user.profile.country = country
-                user.profile.organization = validated_data['ip_number']
-                user.profile.job_title = ""
-                user.profile.phone_number = ""
-                Realm.objects.create(
-                    user=user,
-                    country=country,
-                    organization=validated_data['ip_number'],
-                    group=group,
-                )
-                user.is_active = False
-                user.save()
-                user.profile.save()
-                user.profile.organization.partner.points_of_interest.set(point_of_interests)
-                models.Profile.objects.create(
-                    user=user,
-                    created_by=created_by
-                )
-
+            user = LMUserCreator().create(validated_data)
         except Exception as ex:
             return False, str(ex)
-
         return True, user
