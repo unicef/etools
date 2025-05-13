@@ -39,6 +39,7 @@ from etools.applications.governments.views.gdd_actions import (
     GDDSendBackViewReview,
     GDDSendToPartnerView,
     GDDSendToUNICEFView,
+    GDDReturnToUNICEFView,
     GDDSignatureView,
     GDDSuspendView,
     GDDTerminateView,
@@ -273,6 +274,13 @@ urlpatterns = [
             http_method_names=['patch'],
         ),
         name='gdd-send-unicef',
+    ),
+    path(
+        'gdds/<int:pk>/return_to_unicef/',
+        view=GDDReturnToUNICEFView.as_view(
+            http_method_names=['patch'],
+        ),
+        name='gdd-return-unicef',
     ),
     path(
         'gdds/<int:gdd_pk>/amendments/',
