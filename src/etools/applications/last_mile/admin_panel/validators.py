@@ -10,17 +10,19 @@ from etools.applications.last_mile.admin_panel.constants import (
     GROUP_NOT_PROVIDED,
     INVALID_QUANTITY,
     ITEMS_NOT_PROVIDED,
+    LAST_MILE_PROFILE_NOT_FOUND,
     ORGANIZATION_DOES_NOT_EXIST,
     PARTNER_NOT_UNDER_LOCATION,
     PARTNER_NOT_UNDER_ORGANIZATION,
     POI_TYPE_ALREADY_EXISTS,
     REALM_ALREADY_EXISTS,
+    STATUS_NOT_CRRECT,
     UOM_NOT_PROVIDED,
     UOM_NOT_VALID,
     USER_DOES_NOT_EXIST,
     USER_NOT_PROVIDED,
 )
-from etools.applications.last_mile.models import Material, PointOfInterest, PointOfInterestType
+from etools.applications.last_mile.models import Material, PointOfInterest, PointOfInterestType, Profile
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.users.models import Country, Group, Realm, User
 
@@ -58,6 +60,14 @@ class AdminPanelValidator:
             raise ValidationError(_(ORGANIZATION_DOES_NOT_EXIST))
         if not getattr(user.profile.organization, 'partner', None):
             raise ValidationError(_(PARTNER_NOT_UNDER_ORGANIZATION))
+
+    def validate_last_mile_profile(self, user: User) -> None:
+        if not getattr(user, 'last_mile_profile', None):
+            raise ValidationError(_(LAST_MILE_PROFILE_NOT_FOUND))
+
+    def validate_status(self, status: str) -> None:
+        if status not in [Profile.ApprovalStatus.APPROVED, Profile.ApprovalStatus.REJECTED]:
+            raise ValidationError(_(STATUS_NOT_CRRECT))
 
     def validate_items(self, items: list):
         uom_types = [uom[0] for uom in Material.UOM]

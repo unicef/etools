@@ -1,22 +1,24 @@
 from django.contrib.auth import get_user_model
 from django.db import connection
 from django.db.models import F, Q
+from django.http import HttpResponse
 from django.utils import timezone
 
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import mixins, viewsets
+from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter, SearchFilter
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 from unicef_rest_export.renderers import ExportCSVRenderer
 from unicef_rest_export.views import ExportMixin
+from unicef_restlib.pagination import DynamicPageNumberPagination
 
 from etools.applications.last_mile import models
 from etools.applications.last_mile.admin_panel.constants import ALERT_TYPES
 from etools.applications.last_mile.admin_panel.csv_exporter import CsvExporter
+from etools.applications.last_mile.admin_panel.csv_importer import CsvImporter
 from etools.applications.last_mile.admin_panel.filters import (
     AlertNotificationFilter,
     LocationsFilter,
@@ -30,14 +32,21 @@ from etools.applications.last_mile.admin_panel.serializers import (
     AlertNotificationSerializer,
     AlertTypeSerializer,
     AuthUserPermissionsDetailSerializer,
+    BulkUpdateLastMileProfileStatusSerializer,
+    ImportFileSerializer,
+    LastMileUserProfileSerializer,
+    LastMileUserProfileUpdateAdminSerializer,
     LocationsAdminSerializer,
     MaterialAdminSerializer,
     OrganizationAdminSerializer,
     PartnerOrganizationAdminSerializer,
     PointOfInterestAdminSerializer,
+    PointOfInterestCoordinateAdminSerializer,
     PointOfInterestCustomSerializer,
     PointOfInterestExportSerializer,
+    PointOfInterestLightSerializer,
     PointOfInterestTypeAdminSerializer,
+    PointOfInterestWithCoordinatesSerializer,
     TransferHistoryAdminSerializer,
     TransferItemCreateSerializer,
     TransferItemSerializer,
@@ -56,12 +65,6 @@ from etools.applications.partners.models import PartnerOrganization
 from etools.applications.users.models import Group, Realm
 
 
-class CustomDynamicPageNumberPagination(PageNumberPagination):
-    page_size = 5
-    page_size_query_param = 'page_size'
-    max_page_size = 100
-
-
 class UserViewSet(ExportMixin,
                   mixins.ListModelMixin,
                   mixins.CreateModelMixin,
@@ -69,13 +72,13 @@ class UserViewSet(ExportMixin,
                   mixins.UpdateModelMixin,
                   viewsets.GenericViewSet):
     permission_classes = [IsLMSMAdmin]
-    pagination_class = CustomDynamicPageNumberPagination
+    pagination_class = DynamicPageNumberPagination
 
     def get_queryset(self):
         schema_name = connection.tenant.schema_name
         User = get_user_model()
 
-        queryset = User.objects.for_schema(schema_name)
+        queryset = User.objects.for_schema(schema_name).only_lmsm_users()
 
         has_active_location = self.request.query_params.get('hasActiveLocation')
         if has_active_location == "1":
@@ -86,7 +89,7 @@ class UserViewSet(ExportMixin,
         return queryset.distinct()
 
     filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
-    search_fields = ('email', 'first_name', 'last_name', 'profile__organization__name', 'profile__organization__vendor_number')
+    search_fields = ('email', 'first_name', 'last_name', 'profile__organization__name', 'profile__organization__vendor_number', "profile__organization__partner__points_of_interest__name")
     filterset_class = UserFilter
     ordering_fields = [
         'id',
@@ -99,6 +102,7 @@ class UserViewSet(ExportMixin,
         'profile__organization__vendor_number',
         'profile__country__name',
         'profile__country__id',
+        'profile__organization__partner__points_of_interest__name'
     ]
 
     ordering = ('id',)
@@ -116,6 +120,8 @@ class UserViewSet(ExportMixin,
             return UserAdminCreateSerializer
         if self.action == 'list_export_csv':
             return UserAdminExportSerializer
+        if self.action == '_import_file':
+            return ImportFileSerializer
         return UserAdminSerializer
 
     @action(
@@ -134,6 +140,47 @@ class UserViewSet(ExportMixin,
                 timezone.now().date(),
             )
         })
+
+    @action(detail=False, methods=['post'], url_path='import/xlsx')
+    def _import_file(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        excel_file = serializer.validated_data['file']
+        valid, out = CsvImporter().import_users(excel_file, connection.tenant.schema_name, request.user)
+        if not valid:
+            resp = HttpResponse(out.getvalue(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            resp['Content-Disposition'] = f'attachment; filename="checked_{excel_file.name}"'
+            return resp
+        return Response(status=status.HTTP_200_OK)
+
+
+class UpdateUserProfileViewSet(mixins.RetrieveModelMixin,
+                               mixins.UpdateModelMixin,
+                               viewsets.GenericViewSet):
+    permission_classes = [IsLMSMAdmin]
+
+    def get_serializer_class(self):
+
+        if self.action in ['update', 'partial_update']:
+            return LastMileUserProfileUpdateAdminSerializer
+        return LastMileUserProfileSerializer
+
+    def get_queryset(self):
+        schema_name = connection.tenant.schema_name
+        User = get_user_model()
+        return User.objects.for_schema(schema_name)
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['country_schema'] = connection.tenant.schema_name
+        return context
+
+    @action(detail=False, methods=['patch'], url_path='bulk')
+    def bulk_update(self, request, *args, **kwargs):
+        serializer_data = BulkUpdateLastMileProfileStatusSerializer(data=request.data)
+        serializer_data.is_valid(raise_exception=True)
+        serializer_data.update(serializer_data.validated_data, request.user)
+        return Response(serializer_data.data, status=status.HTTP_200_OK)
 
 
 class LocationsViewSet(mixins.ListModelMixin,
@@ -156,7 +203,7 @@ class LocationsViewSet(mixins.ListModelMixin,
     """
     permission_classes = [IsLMSMAdmin]
     serializer_class = PointOfInterestAdminSerializer
-    pagination_class = CustomDynamicPageNumberPagination
+    pagination_class = DynamicPageNumberPagination
 
     queryset = models.PointOfInterest.objects.select_related("parent", "poi_type").prefetch_related('partner_organizations').all().order_by('id')
 
@@ -174,9 +221,10 @@ class LocationsViewSet(mixins.ListModelMixin,
     search_fields = ('name',)
 
     def get_serializer_class(self):
-
         if self.action in ['update', 'partial_update', 'create']:
             return PointOfInterestCustomSerializer
+        if self.request.query_params.get('with_coordinates') is not None:
+            return PointOfInterestWithCoordinatesSerializer
         if self.action == 'list_export_csv':
             return PointOfInterestExportSerializer
         return PointOfInterestAdminSerializer
@@ -199,13 +247,23 @@ class LocationsViewSet(mixins.ListModelMixin,
         })
 
 
+class PointOfInterestsLightViewSet(mixins.ListModelMixin,
+                                   mixins.RetrieveModelMixin,
+                                   viewsets.GenericViewSet):
+    permission_classes = [IsLMSMAdmin]
+    serializer_class = PointOfInterestLightSerializer
+    pagination_class = DynamicPageNumberPagination
+
+    queryset = models.PointOfInterest.objects.select_related("parent", "poi_type").prefetch_related('partner_organizations').all().order_by('id')
+
+
 class UserLocationsViewSet(mixins.ListModelMixin,
                            mixins.RetrieveModelMixin,
                            mixins.UpdateModelMixin,
                            GenericViewSet):
     permission_classes = [IsLMSMAdmin]
     serializer_class = UserPointOfInterestAdminSerializer
-    pagination_class = CustomDynamicPageNumberPagination
+    pagination_class = DynamicPageNumberPagination
 
     def get_queryset(self):
         base_qs = get_user_model().objects.for_schema(connection.tenant.schema_name).distinct().order_by('id')
@@ -260,7 +318,7 @@ class AlertNotificationViewSet(mixins.ListModelMixin,
 
     permission_classes = [IsLMSMAdmin]
     serializer_class = AlertNotificationSerializer
-    pagination_class = CustomDynamicPageNumberPagination
+    pagination_class = DynamicPageNumberPagination
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
@@ -294,7 +352,7 @@ class AlertNotificationViewSet(mixins.ListModelMixin,
 class TransferItemViewSet(mixins.ListModelMixin, GenericViewSet, mixins.CreateModelMixin):
     permission_classes = [IsLMSMAdmin]
     serializer_class = TransferItemSerializer
-    pagination_class = CustomDynamicPageNumberPagination
+    pagination_class = DynamicPageNumberPagination
 
     def get_queryset(self):
         poi_id = self.request.query_params.get('poi_id')
@@ -373,6 +431,15 @@ class PointOfInterestTypeListView(mixins.ListModelMixin, mixins.CreateModelMixin
         })
 
 
+class PointOfInterestCoordinateListView(mixins.RetrieveModelMixin, mixins.ListModelMixin, GenericViewSet):
+    serializer_class = PointOfInterestCoordinateAdminSerializer
+    permission_classes = [IsLMSMAdmin]
+    pagination_class = DynamicPageNumberPagination
+
+    def get_queryset(self):
+        return models.PointOfInterest.objects.all().order_by('id')
+
+
 class AlertTypeListView(mixins.ListModelMixin, GenericViewSet):
     serializer_class = AlertTypeSerializer
     permission_classes = [IsLMSMAdmin]
@@ -383,7 +450,7 @@ class AlertTypeListView(mixins.ListModelMixin, GenericViewSet):
 
 class TransferHistoryListView(mixins.ListModelMixin, GenericViewSet):
     serializer_class = TransferHistoryAdminSerializer
-    pagination_class = CustomDynamicPageNumberPagination
+    pagination_class = DynamicPageNumberPagination
     permission_classes = [IsLMSMAdmin]
 
     filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)

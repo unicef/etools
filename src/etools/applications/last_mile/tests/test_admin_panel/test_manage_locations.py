@@ -34,9 +34,9 @@ class TestLocationsViewSet(BaseTenantTestCase):
         cls.poi_partner_2 = PointOfInterestFactory(partner_organizations=[cls.partner_2], private=True, poi_type_id=cls.poi_type_2.id)
         cls.poi_partner_3 = PointOfInterestFactory(partner_organizations=[cls.partner_3], private=True, poi_type_id=cls.poi_type_3.id)
         cls.poi_partner_4 = PointOfInterestFactory(partner_organizations=[cls.partner_4], private=True, poi_type_id=cls.poi_type_3.id)
-        cls.parent_location_1 = LocationFactory(name="Somalia", admin_level=0)
-        cls.parent_location_2 = LocationFactory(name="Some Region", admin_level=1, parent=cls.parent_location_1)
-        cls.parent_location_3 = LocationFactory(name="Some District", admin_level=2, parent=cls.parent_location_2)
+        cls.parent_location_1 = LocationFactory(name="Somalia", admin_level=0, geom="MultiPolygon(((10 10, 10 20, 20 20, 20 15, 10 10)), ((10 10, 10 20, 20 20, 20 15, 10 10)))")
+        cls.parent_location_2 = LocationFactory(name="Some Region", admin_level=1, parent=cls.parent_location_1, geom="MultiPolygon(((10 10, 10 20, 20 20, 20 15, 10 10)), ((10 10, 10 20, 20 20, 20 15, 10 10)))")
+        cls.parent_location_3 = LocationFactory(name="Some District", admin_level=2, parent=cls.parent_location_2, geom="MultiPolygon(((10 10, 10 20, 20 20, 20 15, 10 10)), ((10 10, 10 20, 20 20, 20 15, 10 10)))")
         cls.poi = PointOfInterestFactory(
             partner_organizations=[cls.partner],
             private=True,
@@ -74,9 +74,51 @@ class TestLocationsViewSet(BaseTenantTestCase):
         )
         cls.parent_location = LocationFactory()
         cls.url = reverse(f'{ADMIN_PANEL_APP_NAME}:{LOCATIONS_ADMIN_PANEL}-list')
+        cls.url_coordinates = reverse(f'{ADMIN_PANEL_APP_NAME}:{GEOPOINT_LOCATIONS}-list')
 
     def test_get_locations(self):
         response = self.forced_auth_req('get', self.url, user=self.partner_staff)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('count'), 8)
+
+    def test_get_location_with_coordinates(self):
+        data = {'with_coordinates': True}
+        response = self.forced_auth_req('get', self.url, user=self.partner_staff, data=data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('count'), 8)
+
+    def test_get_locations_with_coordinates_data(self):
+        data = {'with_coordinates': True}
+        response = self.forced_auth_req('get', self.url, user=self.partner_staff, data=data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('count'), 8)
+        result = response.data.get('results')
+        borders_count = 0
+        for location in result:
+            borders = location.get('borders', {}).get('country', {}).get('borders')
+            if borders:
+                self.assertEqual(len(borders), 2)
+                borders_count += 1
+        self.assertEqual(borders_count, 3)
+
+    def test_get_locations_empty_borders(self):
+        url_with_param = self.url + f"{self.poi_partner_1.pk}/"
+        data = {'with_coordinates': True}
+        response = self.forced_auth_req('get', url_with_param, user=self.partner_staff, data=data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        border = response.data.get('borders', {}).get('country', {}).get('borders')
+        self.assertEqual(border, [])
+
+    def test_get_specific_location_with_border(self):
+        url_with_param = self.url + f"{self.poi_filter_1.pk}/"
+        data = {'with_coordinates': True}
+        response = self.forced_auth_req('get', url_with_param, user=self.partner_staff, data=data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        border = response.data.get('borders', {}).get('country', {}).get('borders')
+        self.assertEqual(border, [(((10.0, 10.0), (10.0, 20.0), (20.0, 20.0), (20.0, 15.0), (10.0, 10.0)),), (((10.0, 10.0), (10.0, 20.0), (20.0, 20.0), (20.0, 15.0), (10.0, 10.0)),)])
+
+    def test_get_only_coordinates(self):
+        response = self.forced_auth_req('get', self.url_coordinates, user=self.partner_staff)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data.get('count'), 8)
 
