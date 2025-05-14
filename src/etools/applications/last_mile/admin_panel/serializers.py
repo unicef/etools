@@ -10,8 +10,8 @@ from rest_framework_gis.fields import GeometryField
 
 from etools.applications.last_mile import models
 from etools.applications.last_mile.admin_panel.constants import ALERT_TYPES, TRANSFER_MANUAL_CREATION_NAME
-from etools.applications.last_mile.admin_panel.services.LMProfileStatusUpdater import LMProfileStatusUpdater
-from etools.applications.last_mile.admin_panel.services.LMUserCreator import LMUserCreator
+from etools.applications.last_mile.admin_panel.services.lm_profile_status_updater import LMProfileStatusUpdater
+from etools.applications.last_mile.admin_panel.services.lm_user_creator import LMUserCreator
 from etools.applications.last_mile.admin_panel.validators import AdminPanelValidator
 from etools.applications.last_mile.permissions import LastMileUserPermissionRetriever
 from etools.applications.last_mile.serializers import PointOfInterestTypeSerializer

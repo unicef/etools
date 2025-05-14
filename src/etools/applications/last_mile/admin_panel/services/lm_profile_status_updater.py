@@ -29,18 +29,18 @@ class LMProfileStatusUpdater:
         get_user_model().objects.bulk_update(list_user_bulk_update, ['is_active'])
         return validated_data
 
-    def update(self, instance, validated_data, user):
+    def update(self, instance, validated_data, approver_user):
         self.admin_validator.validate_last_mile_profile(instance)
         last_mile_profile = instance.last_mile_profile
         status = validated_data.pop('status', None)
         self.admin_validator.validate_status(status)
         review_notes = validated_data.pop('review_notes', None)
         if status == models.Profile.ApprovalStatus.APPROVED:
-            last_mile_profile.approve(user, review_notes)
+            last_mile_profile.approve(approver_user, review_notes)
             instance.is_active = True
             instance.save(update_fields=['is_active'])
         elif status == models.Profile.ApprovalStatus.REJECTED:
-            last_mile_profile.reject(user, review_notes)
+            last_mile_profile.reject(approver_user, review_notes)
             instance.is_active = False
             instance.save(update_fields=['is_active'])
         return last_mile_profile

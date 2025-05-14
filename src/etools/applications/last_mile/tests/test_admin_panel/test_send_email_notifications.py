@@ -8,8 +8,8 @@ from freezegun import freeze_time
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.last_mile.admin_panel.constants import *  # NOQA
-from etools.applications.last_mile.admin_panel.services.MonthlyUsersReportGenerator import MonthlyUsersReportGenerator
-from etools.applications.last_mile.admin_panel.services.MonthlyUsersReportNotificator import (
+from etools.applications.last_mile.admin_panel.services.monthly_user_report_generator import MonthlyUsersReportGenerator
+from etools.applications.last_mile.admin_panel.services.monthly_user_report_notificator import (
     MonthlyUsersReportNotificator,
 )
 from etools.applications.last_mile.models import Profile
@@ -18,8 +18,8 @@ from etools.applications.organizations.tests.factories import OrganizationFactor
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.users.tests.factories import CountryFactory, UserPermissionFactory
 
-MOCK_REPORT_GENERATOR_PATH = "etools.applications.last_mile.admin_panel.services.MonthlyUsersReportNotificator.MonthlyUsersReportGenerator"
-MOCK_SEND_NOTIFICATION_PATH = "etools.applications.last_mile.admin_panel.services.MonthlyUsersReportNotificator.send_notification"
+MOCK_REPORT_GENERATOR_PATH = "etools.applications.last_mile.admin_panel.services.monthly_user_report_notificator.MonthlyUsersReportGenerator"
+MOCK_SEND_NOTIFICATION_PATH = "etools.applications.last_mile.admin_panel.services.monthly_user_report_notificator.send_notification"
 current_test_date_str = "2023-07-15"
 
 

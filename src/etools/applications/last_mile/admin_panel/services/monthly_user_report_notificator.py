@@ -2,7 +2,7 @@ from django.conf import settings
 
 from unicef_notification.utils import send_notification
 
-from etools.applications.last_mile.admin_panel.services.MonthlyUsersReportGenerator import MonthlyUsersReportGenerator
+from etools.applications.last_mile.admin_panel.services.monthly_user_report_generator import MonthlyUsersReportGenerator
 from etools.applications.users.models import User
 
 
