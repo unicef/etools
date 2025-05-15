@@ -16,6 +16,7 @@ class UserFilter(filters.FilterSet):
     organization_name = filters.CharFilter(field_name="profile__organization__name", lookup_expr="icontains")
     country_name = filters.CharFilter(field_name="profile__country__name", lookup_expr="icontains")
     is_active = filters.BooleanFilter(field_name="is_active")
+    prfile_status = filters.CharFilter(field_name="last_mile_profile__status", lookup_expr="icontains")
 
     class Meta:
         model = get_user_model()
