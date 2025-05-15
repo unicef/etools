@@ -110,6 +110,9 @@ class UserQuerySet(models.QuerySet):
     def for_schema(self, schema_name):
         return self.filter(realms__country__schema_name=schema_name)
 
+    def only_lmsm_users(self):
+        return self.filter(realms__group__name='IP LM Editor')
+
     def with_points_of_interest(self):
         return self.filter(profile__organization__partner__points_of_interest__isnull=False)
 
