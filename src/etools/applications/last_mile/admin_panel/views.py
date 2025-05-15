@@ -78,7 +78,14 @@ class UserViewSet(ExportMixin,
         schema_name = connection.tenant.schema_name
         User = get_user_model()
 
-        queryset = User.objects.for_schema(schema_name).only_lmsm_users()
+        queryset = User.objects.select_related('profile',
+                                               'profile__country',
+                                               'profile__organization',
+                                               'profile__organization__partner',
+                                               'last_mile_profile',
+                                               'last_mile_profile__created_by',
+                                               'last_mile_profile__approved_by',
+                                               ).prefetch_related('profile__organization__partner__points_of_interest',).for_schema(schema_name).only_lmsm_users()
 
         has_active_location = self.request.query_params.get('hasActiveLocation')
         if has_active_location == "1":
@@ -151,7 +158,7 @@ class UserViewSet(ExportMixin,
             resp = HttpResponse(out.getvalue(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
             resp['Content-Disposition'] = f'attachment; filename="checked_{excel_file.name}"'
             return resp
-        return Response(status=status.HTTP_200_OK)
+        return Response({"valid": valid}, status=status.HTTP_200_OK)
 
 
 class UpdateUserProfileViewSet(mixins.RetrieveModelMixin,

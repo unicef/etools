@@ -84,7 +84,7 @@ class TestUserAdminViewSetImport(BaseTenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIsNone(response.data)
+        self.assertEqual(response.data, {"valid": True})
 
         self.assertEqual(User.objects.count(), 1 + 3)
 
@@ -237,7 +237,7 @@ class TestUserAdminViewSetImport(BaseTenantTestCase):
             request_format='multipart'
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIsNone(response.data)
+        self.assertEqual(response.data, {"valid": True})
 
         user = User.objects.get(email="emptypoi.string@example.com")
         self.assertEqual(user.profile.organization.partner.points_of_interest.count(), 0)
