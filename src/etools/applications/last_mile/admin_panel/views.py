@@ -151,7 +151,7 @@ class UserViewSet(ExportMixin,
             resp = HttpResponse(out.getvalue(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
             resp['Content-Disposition'] = f'attachment; filename="checked_{excel_file.name}"'
             return resp
-        return Response(status=status.HTTP_200_OK)
+        return Response({"valid": valid},status=status.HTTP_200_OK)
 
 
 class UpdateUserProfileViewSet(mixins.RetrieveModelMixin,

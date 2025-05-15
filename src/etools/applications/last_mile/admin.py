@@ -240,6 +240,13 @@ class ProfileAdmin(admin.ModelAdmin):
                            "approved_by__profile__country",
                            "approved_by__profile__organization"
                            )
+    
+@admin.register(models.UserPointsOfInterest)
+class UserPointsOfInterestAdmin(admin.ModelAdmin):
+    list_display = ('user', 'point_of_interest')
+    raw_id_fields = ('user', 'point_of_interest')
+    search_fields = ('user__username', 'user__email', 'user__first_name', 'user__last_name', 'point_of_interest__pcode', 'point_of_interest__name')
+    list_select_related = ('user', 'point_of_interest')
 
 
 @admin.register(models.Item)

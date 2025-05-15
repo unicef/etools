@@ -5,11 +5,13 @@ from django.contrib.gis.db.models import PointField
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from django.core.exceptions import ValidationError
 
 from model_utils import FieldTracker
 from model_utils.models import TimeStampedModel
 from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CodedGenericRelation
+from rest_framework.exceptions import ValidationError
 
 from etools.applications.last_mile.admin_panel.constants import (
     ALERT_NOTIFICATIONS_ADMIN_PANEL_PERMISSION,
@@ -607,3 +609,19 @@ class Profile(TimeStampedModel, models.Model):
 
     def is_pending_approval(self):
         return self.status == self.ApprovalStatus.PENDING
+
+class UserPointsOfInterest(TimeStampedModel, models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='points_of_interest')
+    point_of_interest = models.ForeignKey(PointOfInterest, on_delete=models.CASCADE, related_name='users')
+
+    def clean(self):
+        partner = self.user.partner
+        allowed_points_of_interest = list(partner.points_of_interest.all().values_list('id', flat=True)) + list(PointOfInterest.objects.filter(partner_organizations__isnull=True, is_active=True).exclude(name="UNICEF Warehouse").values_list('id', flat=True))
+        if self.point_of_interest.id not in allowed_points_of_interest:
+            raise ValidationError(_('User does not have access to this point of interest'))
+        return super().clean()
+
+    class Meta:
+        unique_together = ('user', 'point_of_interest')
+        verbose_name = _('User Point of Interest')
+        verbose_name_plural = _('User Points of Interest')
