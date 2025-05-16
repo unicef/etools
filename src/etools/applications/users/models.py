@@ -113,7 +113,7 @@ class UserQuerySet(models.QuerySet):
     def only_lmsm_users(self):
         try:
             group = Group.objects.get(name='IP LM Editor')
-            return self.filter(realms__group__id=group.id)
+            return self.filter(realms__group_id=group.id)
         except Group.DoesNotExist:
             return self.none()
 
