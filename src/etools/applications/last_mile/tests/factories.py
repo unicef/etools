@@ -5,6 +5,7 @@ from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.last_mile import models
 from etools.applications.partners.tests.factories import PartnerFactory
+from etools.applications.users.tests.factories import UserFactory
 
 
 class PointOfInterestTypeFactory(factory.django.DjangoModelFactory):
@@ -60,6 +61,15 @@ class ItemFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = models.Item
+
+
+class LastMileProfileFactory(factory.django.DjangoModelFactory):
+    user = factory.SubFactory(UserFactory)
+    status = models.Profile.ApprovalStatus.APPROVED
+    review_notes = factory.Sequence(lambda n: 'Review notes {}'.format(n))
+
+    class Meta:
+        model = models.Profile
 
 
 class TransferHistoryFactory(factory.django.DjangoModelFactory):

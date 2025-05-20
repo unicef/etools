@@ -13,11 +13,13 @@ from unicef_djangolib.fields import CodedGenericRelation
 
 from etools.applications.last_mile.admin_panel.constants import (
     ALERT_NOTIFICATIONS_ADMIN_PANEL_PERMISSION,
+    APPROVE_LOCATIONS_ADMIN_PANEL_PERMISSION,
+    APPROVE_STOCK_MANAGEMENT_ADMIN_PANEL_PERMISSION,
+    APPROVE_USERS_ADMIN_PANEL_PERMISSION,
     LOCATIONS_ADMIN_PANEL_PERMISSION,
     STOCK_MANAGEMENT_ADMIN_PANEL_PERMISSION,
     TRANSFER_HISTORY_ADMIN_PANEL_PERMISSION,
     USER_ADMIN_PANEL_PERMISSION,
-    USER_LOCATIONS_ADMIN_PANEL_PERMISSION,
 )
 from etools.applications.locations.models import Location
 from etools.applications.partners.models import PartnerOrganization
@@ -522,8 +524,86 @@ class AdminPanelPermission(models.Model):
         permissions = (
             (USER_ADMIN_PANEL_PERMISSION, "Can manage users in the admin panel"),
             (LOCATIONS_ADMIN_PANEL_PERMISSION, "Can manage locations in the admin panel"),
-            (USER_LOCATIONS_ADMIN_PANEL_PERMISSION, "Can manage users locations in the admin panel"),
             (ALERT_NOTIFICATIONS_ADMIN_PANEL_PERMISSION, "Can manage email alerts in the admin panel"),
             (STOCK_MANAGEMENT_ADMIN_PANEL_PERMISSION, "Can manage stock management in the admin panel"),
             (TRANSFER_HISTORY_ADMIN_PANEL_PERMISSION, "Can manage transfer history in the admin panel"),
+            (APPROVE_USERS_ADMIN_PANEL_PERMISSION, "Can approve users in the admin panel"),
+            (APPROVE_LOCATIONS_ADMIN_PANEL_PERMISSION, "Can approve locations in the admin panel"),
+            (APPROVE_STOCK_MANAGEMENT_ADMIN_PANEL_PERMISSION, "Can approve stock management in the admin panel"),
         )
+
+
+class Profile(TimeStampedModel, models.Model):
+
+    class ApprovalStatus(models.TextChoices):
+        PENDING = 'PENDING', _('Pending Approval')
+        APPROVED = 'APPROVED', _('Approved')
+        REJECTED = 'REJECTED', _('Rejected')
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='last_mile_profile')
+    status = models.CharField(
+        _('Approval Status'),
+        max_length=10,
+        choices=ApprovalStatus.choices,
+        default=ApprovalStatus.PENDING,
+        db_index=True,
+        help_text=_('The current approval status of this profile.')
+    )
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='created_last_mile_profiles'
+    )
+    created_on = models.DateTimeField(auto_now_add=True)
+    approved_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='approved_last_mile_profiles'
+    )
+    approved_on = models.DateTimeField(null=True, blank=True)
+    review_notes = models.TextField(
+        _('Review Notes'),
+        null=True,
+        blank=True,
+        help_text=_('Optional notes from the reviewer regarding approval or rejection.')
+    )
+
+    def __str__(self):
+        try:
+            if self.user:
+                name = self.user.get_full_name() or self.user.username
+                return f'{name} ({self.get_status_display()})'
+            return f'Profile {self.pk} (No User)'
+        except AttributeError:
+            return f'Profile {self.pk} (User Missing)'
+
+    def approve(self, approver_user, notes=None):
+        if self.status != self.ApprovalStatus.APPROVED:
+            self.status = self.ApprovalStatus.APPROVED
+            self.approved_by = approver_user
+            self.approved_on = timezone.now()
+            if notes:
+                self.review_notes = notes
+            self.save(update_fields=['status', 'approved_by', 'approved_on', 'review_notes'])
+
+    def reject(self, reviewer_user, notes=None):
+        if self.status != self.ApprovalStatus.REJECTED:
+            self.status = self.ApprovalStatus.REJECTED
+            self.approved_by = reviewer_user
+            self.approved_on = timezone.now()
+            if notes:
+                self.review_notes = notes
+            self.save(update_fields=['status', 'approved_by', 'approved_on', 'review_notes'])
+
+    def reset_approval(self):
+        self.status = self.ApprovalStatus.PENDING
+        self.approved_by = None
+        self.approved_on = None
+        self.save(update_fields=['status', 'approved_by', 'approved_on'])
+
+    def is_pending_approval(self):
+        return self.status == self.ApprovalStatus.PENDING
