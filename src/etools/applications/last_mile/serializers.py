@@ -443,7 +443,7 @@ class TransferCheckinSerializer(TransferBaseSerializer):
                 notify_wastage_transfer.delay(connection.schema_name, TransferNotificationSerializer(surplus_transfer).data, attachment_url, action='surplus_checkin')
 
             instance = super().update(instance, validated_data)
-            instance.items.exclude(material__number__in=settings.RUTF_MATERIALS).update(hidden=True)
+            # instance.items.exclude(material__number__in=settings.RUTF_MATERIALS).update(hidden=True)
             instance.refresh_from_db()
             is_unicef_warehouse = False
             if instance.origin_point:

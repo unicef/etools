@@ -497,7 +497,7 @@ class Item(TimeStampedModel, models.Model):
                 return self.material.short_description
 
     def should_be_hidden(self):
-        return self.material.number not in settings.RUTF_MATERIALS
+        return False
 
     def add_transfer_history(self, transfer):
         ItemTransferHistory.objects.create(

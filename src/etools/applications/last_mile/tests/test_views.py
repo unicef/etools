@@ -389,21 +389,21 @@ class TestTransferView(BaseTenantTestCase):
         self.assertIn(response.data['proof_file'], self.attachment.file.path)
         self.assertEqual(self.incoming.name, checkin_data['name'])
         self.assertEqual(self.incoming.items.count(), len(response.data['items']))
-        self.assertEqual(self.incoming.items.count(), 1)  # only 1 checked-in item is visible, non RUFT
+        self.assertEqual(self.incoming.items.count(), 2)  # only 1 checked-in item is visible, non RUFT
         self.assertEqual(self.incoming.items.first().id, item_1.pk)
         self.assertTrue(models.TransferHistory.objects.filter(origin_transfer_id=self.incoming.id).exists())
         item_1.refresh_from_db()
         self.assertEqual(self.incoming.items.first().quantity, item_1.quantity)
 
-        hidden_item = models.Item.all_objects.get(pk=item_3.pk)
-        self.assertEqual(hidden_item.hidden, True)
-        self.assertEqual(hidden_item.quantity, 3)
+        not_hidden_item = models.Item.all_objects.get(pk=item_3.pk)
+        self.assertEqual(not_hidden_item.hidden, False)
+        self.assertEqual(not_hidden_item.quantity, 3)
 
         self.assertEqual(self.incoming.items.get(pk=item_1.pk).quantity, 5)
 
         short_transfer = models.Transfer.objects.filter(transfer_type=models.Transfer.WASTAGE).first()
         self.assertEqual(models.Item.all_objects.filter(transfer=short_transfer).count(), 3)  # 3 items on transfer
-        self.assertEqual(short_transfer.items.count(), 1)  # only 1 visible item
+        self.assertEqual(short_transfer.items.count(), 3)
 
         loss_item_2 = short_transfer.items.first()
         self.assertEqual(loss_item_2.quantity, 6)
