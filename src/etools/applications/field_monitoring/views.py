@@ -36,7 +36,7 @@ class AttachmentFileTypesViewMixin:
         if 'file_type' not in declared_fields:
             raise Http404
 
-        if re.compile(r'/(\d+)/attachments/file-types/').search(str(request)):
+        if re.compile(r'/(\d+)/attachments/file-types/').search(str(request)) or '/settings/attachments/file-types/' in str(request):
             return Response(
                 data=declared_fields['file_type'].queryset.filter(~Q(label__in=["SOP", "Other"])).values('id', 'label'))
         else:
