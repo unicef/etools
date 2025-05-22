@@ -400,7 +400,7 @@ class TestTransferView(BaseTenantTestCase):
         self.assertIn(response.data['proof_file'], self.attachment.file.path)
         self.assertEqual(self.incoming.name, checkin_data['name'])
         self.assertEqual(self.incoming.items.count(), len(response.data['items']))
-        self.assertEqual(self.incoming.items.count(), 2)  # only 1 checked-in item is visible, non RUFT
+        self.assertEqual(self.incoming.items.count(), 2)
         self.assertEqual(self.incoming.items.first().id, item_1.pk)
         self.assertTrue(models.TransferHistory.objects.filter(origin_transfer_id=self.incoming.id).exists())
         item_1.refresh_from_db()

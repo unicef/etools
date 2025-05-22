@@ -499,15 +499,10 @@ class Item(TimeStampedModel, models.Model):
             except PartnerMaterial.DoesNotExist:
                 return self.material.short_description
 
-    def should_be_hidden(self):
-        return self.material.number not in settings.RUTF_MATERIALS
-
+    @cached_property
     def should_be_hidden_for_partner(self):
-        cache_attr_name = '_hidden_for_current_partner_cache'
-
-        cached_should_hide = getattr(self.material, cache_attr_name, None)
-        if cached_should_hide is not None:
-            return cached_should_hide
+        if not self.transfer or not self.transfer.partner_organization:
+            return True
 
         partner_material_exists = PartnerMaterial.objects.filter(
             partner_organization=self.transfer.partner_organization,
@@ -515,7 +510,6 @@ class Item(TimeStampedModel, models.Model):
         ).exists()
 
         should_hide = not partner_material_exists
-        setattr(self.material, cache_attr_name, should_hide)
         return should_hide
 
     def add_transfer_history(self, transfer):
