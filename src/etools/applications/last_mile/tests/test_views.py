@@ -16,6 +16,7 @@ from etools.applications.last_mile import models
 from etools.applications.last_mile.tests.factories import (
     ItemFactory,
     MaterialFactory,
+    PartnerMaterialFactory,
     PointOfInterestFactory,
     TransferFactory,
 )
@@ -240,6 +241,8 @@ class TestTransferView(BaseTenantTestCase):
         item_2 = ItemFactory(quantity=22, transfer=self.incoming, material=self.material)
         item_3 = ItemFactory(quantity=33, transfer=self.incoming, material=self.material)
 
+        PartnerMaterialFactory(material=self.material, partner_organization=self.partner)
+
         checkin_data = {
             "name": "checked in transfer",
             "comment": "",
@@ -277,6 +280,8 @@ class TestTransferView(BaseTenantTestCase):
         item_1 = ItemFactory(quantity=11, transfer=self.incoming, material=self.material)
         ItemFactory(quantity=22, transfer=self.incoming, material=self.material)
         item_3 = ItemFactory(quantity=33, transfer=self.incoming, material=self.material)
+
+        PartnerMaterialFactory(material=self.material, partner_organization=self.partner)
 
         checkin_data = {
             "comment": "",
@@ -318,6 +323,8 @@ class TestTransferView(BaseTenantTestCase):
         item_1 = ItemFactory(quantity=11, transfer=self.incoming, material=self.material)
         item_2 = ItemFactory(quantity=22, transfer=self.incoming, material=self.material)
         item_3 = ItemFactory(quantity=33, transfer=self.incoming, material=self.material)
+
+        PartnerMaterialFactory(material=self.material, partner_organization=self.partner)
 
         checkin_data = {
             "name": "checked in transfer",
@@ -365,8 +372,12 @@ class TestTransferView(BaseTenantTestCase):
     @override_settings(RUTF_MATERIALS=['1234'])
     def test_partial_checkin_RUFT_material(self):
         item_1 = ItemFactory(quantity=11, transfer=self.incoming, material=self.material)
-        ItemFactory(quantity=22, transfer=self.incoming)
+        item_2 = ItemFactory(quantity=22, transfer=self.incoming)
         item_3 = ItemFactory(quantity=33, transfer=self.incoming)
+
+        PartnerMaterialFactory(material=self.material, partner_organization=self.partner)
+        PartnerMaterialFactory(material=item_2.material, partner_organization=self.partner)
+        PartnerMaterialFactory(material=item_3.material, partner_organization=self.partner)
 
         checkin_data = {
             "name": "checked in transfer",

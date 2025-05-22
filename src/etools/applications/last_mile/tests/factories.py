@@ -76,3 +76,11 @@ class TransferHistoryFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = models.TransferHistory
+
+
+class PartnerMaterialFactory(factory.django.DjangoModelFactory):
+    material = factory.SubFactory(MaterialFactory)
+    partner_organization = factory.SubFactory(PartnerFactory)
+
+    class Meta:
+        model = models.PartnerMaterial
