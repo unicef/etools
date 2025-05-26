@@ -15,7 +15,7 @@ from unicef_locations.models import GatewayType
 
 from etools.applications.attachments.models import AttachmentFlat
 from etools.applications.funds.models import FundsReservationItem
-from etools.applications.governments.models import GDDAmendment, GDDRisk
+from etools.applications.governments.models import GDD, GDDAmendment, GDDRisk
 from etools.applications.organizations.models import Organization
 from etools.applications.partners.models import (
     Agreement,
@@ -207,6 +207,10 @@ class PMPDropdownsListApiView(APIView):
             ),
             'gdd_amendment_types': choices_to_json_ready(
                 GDDAmendment.AMENDMENT_TYPES,
+            ),
+            'gpd_status': choices_to_json_ready(
+                GDD.GDD_STATUS,
+                sort_choices=False,
             ),
             'currencies': choices_to_json_ready(CURRENCIES),
             'local_currency': self.get_local_currency(),

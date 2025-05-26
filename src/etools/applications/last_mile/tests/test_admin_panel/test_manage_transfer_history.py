@@ -16,7 +16,7 @@ class TestTransferHistoryViewSet(BaseTenantTestCase):
         cls.organization = OrganizationFactory(name='Organization')
         cls.partner = PartnerFactory(organization=cls.organization)
         cls.partner_staff = UserPermissionFactory(
-            realms__data=['LMSM Admin Panel'],
+            realms__data=['LMSM Admin Panel', 'IP LM Editor'],
             profile__organization=cls.partner.organization,
             perms=[TRANSFER_HISTORY_ADMIN_PANEL_PERMISSION]
         )

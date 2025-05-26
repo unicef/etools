@@ -131,7 +131,7 @@ class ItemInline(RestrictedEditAdminMixin, admin.TabularInline):
     fk_name = 'transfer'
     list_select_related = ('material',)
     fields = ('id', 'batch_id', 'material', 'description', 'expiry_date', 'wastage_type',
-              'amount_usd', 'unicef_ro_item', 'purchase_order_item')
+              'amount_usd', 'unicef_ro_item', 'purchase_order_item', 'hidden')
     readonly_fields = ('description',)
     show_change_link = True
 
@@ -212,7 +212,7 @@ class PartnerMaterialInline(admin.TabularInline):
 
 
 @admin.register(models.Material)
-class MaterialAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
+class MaterialAdmin(admin.ModelAdmin):
     list_display = (
         'number', 'short_description', 'original_uom'
     )
@@ -222,6 +222,24 @@ class MaterialAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
         'material_type_description', 'group', 'group_description'
     )
     inlines = (PartnerMaterialInline,)
+
+
+@admin.register(models.Profile)
+class ProfileAdmin(admin.ModelAdmin):
+    list_display = ('user', 'status', 'created_by', 'created_on', 'approved_by')
+    raw_id_fields = ('user', 'created_by', 'approved_by')
+    list_filter = ('status',)
+    search_fields = ('user__username', 'user__email', 'user__first_name', 'user__last_name', 'status')
+    list_select_related = ('user',
+                           'created_by',
+                           'approved_by',
+                           "user__profile__country",
+                           "user__profile__organization",
+                           "created_by__profile__country",
+                           "created_by__profile__organization",
+                           "approved_by__profile__country",
+                           "approved_by__profile__organization"
+                           )
 
 
 @admin.register(models.Item)
@@ -531,5 +549,11 @@ class ItemTransferHistoryAdmin(admin.ModelAdmin):
     view_items_link.short_description = "Transfer Details"
 
 
+@admin.register(models.PartnerMaterial)
+class PartnerMaterialAdmin(admin.ModelAdmin):
+    list_display = ('material', 'partner_organization', 'description')
+    search_fields = ('material__short_description', 'partner_organization__organization__name', 'description')
+    list_filter = ('material',)
+
+
 admin.site.register(models.PointOfInterestType)
-admin.site.register(models.PartnerMaterial)

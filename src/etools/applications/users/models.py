@@ -110,6 +110,13 @@ class UserQuerySet(models.QuerySet):
     def for_schema(self, schema_name):
         return self.filter(realms__country__schema_name=schema_name)
 
+    def only_lmsm_users(self):
+        try:
+            group = Group.objects.get(name='IP LM Editor')
+            return self.filter(realms__group_id=group.id)
+        except Group.DoesNotExist:
+            return self.none()
+
     def with_points_of_interest(self):
         return self.filter(profile__organization__partner__points_of_interest__isnull=False)
 
@@ -137,7 +144,7 @@ class UsersManager(UserManager.from_queryset(UserQuerySet)):
     def unicef_representatives(self):
         return self.base_qs().filter(
             realms__country=connection.tenant,
-            realms__organization=Organization.objects.get(id=1),  # Unicef Org
+            realms__organization=Organization.objects.get(name='UNICEF', vendor_number='000'),
             realms__group=UNICEFRepresentative.as_group(),
             realms__is_active=True
         )

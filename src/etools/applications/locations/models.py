@@ -54,3 +54,9 @@ class Location(AbstractLocation):
             current = current.parent
 
         return location_data
+
+    def get_borders(self, tolerance=0.01):
+        simplified_geom = None
+        if self.geom:
+            simplified_geom = self.geom.simplify(tolerance, preserve_topology=True)
+        return list(simplified_geom.coords) if simplified_geom else []
