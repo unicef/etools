@@ -1390,7 +1390,7 @@ class TestInterventionViews(BaseTenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(list(response.data[0].keys()), ["id", "title", "number"])
+        self.assertEqual(list(response.data[0].keys()), ["id", "title", "number", "modified_date"])
 
     def test_intervention_create(self):
         data = {
