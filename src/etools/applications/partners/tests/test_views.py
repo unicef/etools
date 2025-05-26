@@ -246,7 +246,7 @@ class TestAPIPartnerOrganizationListView(BaseTenantTestCase):
             data={"verbosity": "minimal"},
             user=self.unicef_user
         )
-        self.assertResponseFundamentals(response, sorted(("id", "name")))
+        self.assertResponseFundamentals(response, sorted(("id", "name", "modified_date")))
 
     def test_verbosity_other(self):
         """Exercise behavior when verbosity != minimal. ('minimal' is the only accepted value for verbosity;
