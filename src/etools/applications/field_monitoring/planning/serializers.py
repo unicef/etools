@@ -147,7 +147,7 @@ class MonitoringActivityLightSerializer(serializers.ModelSerializer):
                                     hour=0, minute=0, second=0, microsecond=0)
 
         end_of_year = now.replace(month=12, day=31,
-                                    hour=23, minute=59, second=59, microsecond=0)
+                                  hour=23, minute=59, second=59, microsecond=0)
 
         return {
             "partners": MinimalPartnerOrganizationListSerializer(
