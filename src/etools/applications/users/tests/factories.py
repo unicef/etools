@@ -141,6 +141,8 @@ class StagedUserFactory(factory.django.DjangoModelFactory):
 
 
 class UserPermissionFactory(UserFactory):
+    is_active = True
+
     @factory.post_generation
     def perms(self, create, extracted, **kwargs):
         if not create:

@@ -160,7 +160,6 @@ class FundsReservationHeader(TimeStampedModel):
         max_digits=20,
         decimal_places=2,
     )
-
     start_date = models.DateField(
         verbose_name=_("Start Date"),
         null=True,
