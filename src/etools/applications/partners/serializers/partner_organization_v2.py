@@ -163,14 +163,12 @@ class PartnerOrgPSEADetailsSerializer(serializers.ModelSerializer):
 
 
 class MinimalPartnerOrganizationListSerializer(serializers.ModelSerializer):
-    modified_date = serializers.DateTimeField(source="modified", read_only=True)
 
     class Meta:
         model = PartnerOrganization
         fields = (
             "id",
             "name",
-            "modified_date",
         )
 
 
