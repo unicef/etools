@@ -149,24 +149,22 @@ class MonitoringActivityLightSerializer(serializers.ModelSerializer):
         end_of_year = now.replace(month=12, day=31,
                                   hour=23, minute=59, second=59, microsecond=0)
 
+        def in_this_year(instances):
+            return [
+                inst
+                for inst in instances
+                if start_of_year <= inst.modified <= end_of_year
+            ]
+
         return {
             "partners": MinimalPartnerOrganizationListSerializer(
-                obj.partners.filter(
-                    modified__gte=start_of_year,
-                    modified__lte=end_of_year
-                ), many=True
+                in_this_year(obj.partners.all()), many=True
             ).data,
             "interventions": MinimalInterventionListSerializer(
-                obj.interventions.filter(
-                    modified__gte=start_of_year,
-                    modified__lte=end_of_year
-                ), many=True
+                in_this_year(obj.interventions.all()), many=True
             ).data,
             "cp_outputs": MinimalOutputListSerializer(
-                obj.cp_outputs.filter(
-                    modified__gte=start_of_year,
-                    modified__lte=end_of_year
-                ), many=True
+                in_this_year(obj.cp_outputs.all()), many=True
             ).data,
         }
 
