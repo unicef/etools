@@ -1,5 +1,6 @@
 from copy import copy
 
+from django.utils import timezone
 from django.utils.translation import gettext as _
 
 from rest_framework import serializers
@@ -119,6 +120,8 @@ class MonitoringActivityLightSerializer(serializers.ModelSerializer):
     cp_outputs = SeparatedReadWriteField(read_field=MinimalOutputListSerializer(many=True))
     sections = SeparatedReadWriteField(read_field=SectionSerializer(many=True), required=False)
 
+    updated_entities = serializers.SerializerMethodField(read_only=True)
+
     checklists_count = serializers.ReadOnlyField()
 
     class Meta:
@@ -134,7 +137,38 @@ class MonitoringActivityLightSerializer(serializers.ModelSerializer):
             'reject_reason', 'report_reject_reason', 'cancel_reason',
             'status',
             'sections',
+            'updated_entities',
         )
+
+    def get_updated_entities(self, obj):
+        now = timezone.now()
+
+        start_of_year = now.replace(month=1, day=1,
+                                    hour=0, minute=0, second=0, microsecond=0)
+
+        end_of_year = now.replace(month=12, day=31,
+                                    hour=23, minute=59, second=59, microsecond=0)
+
+        return {
+            "partners": MinimalPartnerOrganizationListSerializer(
+                obj.partners.filter(
+                    modified__gte=start_of_year,
+                    modified__lte=end_of_year
+                ), many=True
+            ).data,
+            "interventions": MinimalInterventionListSerializer(
+                obj.interventions.filter(
+                    modified__gte=start_of_year,
+                    modified__lte=end_of_year
+                ), many=True
+            ).data,
+            "cp_outputs": MinimalOutputListSerializer(
+                obj.cp_outputs.filter(
+                    modified__gte=start_of_year,
+                    modified__lte=end_of_year
+                ), many=True
+            ).data,
+        }
 
 
 class MonitoringActivitySerializer(UserContextSerializerMixin, MonitoringActivityLightSerializer):

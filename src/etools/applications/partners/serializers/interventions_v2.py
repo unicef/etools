@@ -476,6 +476,7 @@ class InterventionListSerializer(BaseInterventionListSerializer):
 
 
 class MinimalInterventionListSerializer(serializers.ModelSerializer):
+    modified_date = serializers.DateTimeField(source="modified", read_only=True)
 
     class Meta:
         model = Intervention
@@ -483,6 +484,7 @@ class MinimalInterventionListSerializer(serializers.ModelSerializer):
             'id',
             'title',
             'number',
+            'modified_date',
         )
 
 
