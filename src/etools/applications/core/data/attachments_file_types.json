@@ -751,5 +751,35 @@
             "code": "special_audit_final_report",
             "group": ["special_audit_final_report"]
         }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 2104,
+        "fields": {
+            "order": 1,
+            "label": "Progress evidence (documentation, photos, etc.)",
+            "name": "Progress evidence (documentation, photos, etc.)",
+            "code": "fm_common"
+        }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 2105,
+        "fields": {
+            "order": 1,
+            "label": "Bottleneck and Challenges",
+            "name": "Bottleneck and Challenges",
+            "code": "fm_common"
+        }
+    },
+    {
+        "model": "unicef_attachments.filetype",
+        "pk": 2106,
+        "fields": {
+            "order": 1,
+            "label": "Reference documents (related SOP, Sitrep, partner reports, programme related doc, security reports)",
+            "name": "Reference documents (related SOP, Sitrep, partner reports, programme related doc, security reports)",
+            "code": "fm_common"
+        }
     }
 ]
