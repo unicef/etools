@@ -1,5 +1,5 @@
 from copy import copy
-from datetime import datetime, date
+from datetime import date, datetime
 
 from django.utils import timezone
 from django.utils.translation import gettext as _
