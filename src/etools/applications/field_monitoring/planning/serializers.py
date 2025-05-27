@@ -146,11 +146,7 @@ class MonitoringActivityLightSerializer(serializers.ModelSerializer):
         if request is None or request.method != "PATCH":
             return None
 
-        def _parse(s):
-            try:
-                return datetime.strptime(s, "%Y-%m-%d").date() if s else None
-            except Exception:
-                return None
+        _parse = lambda s: datetime.strptime(s, "%Y-%m-%d").date() if s else None
 
         effective_start = _parse(request.GET.get("start_date")) or obj.start_date
         effective_end = _parse(request.GET.get("end_date")) or obj.end_date

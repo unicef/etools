@@ -1341,8 +1341,8 @@ class MonitoringActivityActionPointsViewTestCase(FMBaseTestCaseMixin, APIViewSet
         self.cp_output = ResultFactory(result_type__name=ResultType.OUTPUT)
 
         year = timezone.now().year
-        start_this = str(year) + '-04-04'
-        end_this = str(year) + '-12-04'
+        start_this = date(year, 4, 4)
+        end_this = date(year, 12, 4)
 
         self.activity2 = MonitoringActivityFactory(
             start_date=start_this, end_date=end_this, status="draft"
@@ -1351,8 +1351,8 @@ class MonitoringActivityActionPointsViewTestCase(FMBaseTestCaseMixin, APIViewSet
         self.activity2.interventions.add(self.intervention)
         self.activity2.cp_outputs.add(self.cp_output)
 
-        covering_start = str(year) + '-01-01'
-        covering_end = str(year) + '-12-31'
+        covering_start = date(year, 1, 1)
+        covering_end = date(year, 12, 31)
 
         self.other_activity = MonitoringActivityFactory(
             number="COVER/1",
