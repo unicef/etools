@@ -1,5 +1,5 @@
 from copy import copy
-from datetime import datetime
+from datetime import datetime, date
 
 from django.utils import timezone
 from django.utils.translation import gettext as _
@@ -146,18 +146,32 @@ class MonitoringActivityLightSerializer(serializers.ModelSerializer):
         if request is None or request.method != "PATCH":
             return None
 
-        effective_start = None
-        effective_end = None
+        def _to_date(v):
+            if v is None:
+                return None
+            if isinstance(v, date) and not isinstance(v, datetime):
+                return v
+            if isinstance(v, datetime):
+                return v.date()
+            if isinstance(v, str):
+                try:
+                    return date.fromisoformat(v)
+                except ValueError:
+                    return None
+            return None
 
         try:
-            effective_start = datetime.strptime(request.query_params.get("start_date"), "%Y-%m-%d").date()
-        except (AttributeError, TypeError):
-            effective_start = obj.start_date
+            start_q = request.query_params.get("start_date") if request else None
+        except AttributeError:
+            start_q = None
 
         try:
-            effective_end = datetime.strptime(request.query_params.get("end_date"), "%Y-%m-%d").date()
-        except (AttributeError, TypeError):
-            effective_end = obj.end_date
+            end_q = request.query_params.get("end_date") if request else None
+        except AttributeError:
+            end_q = None
+
+        effective_start = _to_date(start_q) or _to_date(obj.start_date)
+        effective_end = _to_date(end_q) or _to_date(obj.end_date)
 
         today_year = timezone.now().year
         if (effective_start and today_year < effective_start.year) or \
