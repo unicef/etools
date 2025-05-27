@@ -1,5 +1,7 @@
 from copy import copy
+from datetime import date
 
+from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
@@ -26,9 +28,10 @@ from etools.applications.field_monitoring.planning.models import (
     YearPlan,
 )
 from etools.applications.field_monitoring.utils.fsm import get_available_transitions
+from etools.applications.partners.models import PartnerOrganization, Intervention
 from etools.applications.partners.serializers.interventions_v2 import MinimalInterventionListSerializer
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
-from etools.applications.reports.models import ResultType
+from etools.applications.reports.models import ResultType, Result
 from etools.applications.reports.serializers.v1 import SectionSerializer
 from etools.applications.reports.serializers.v2 import MinimalOutputListSerializer, OfficeSerializer
 from etools.applications.tpm.tpmpartners.models import TPMPartner
@@ -141,30 +144,41 @@ class MonitoringActivityLightSerializer(serializers.ModelSerializer):
         )
 
     def get_updated_entities(self, obj):
-        now = timezone.now()
+        cur_start_year = (obj.start_date or timezone.now().date()).year
+        cur_end_year = (obj.end_date or obj.start_date or timezone.now().date()).year
 
-        start_of_year = now.replace(month=1, day=1,
-                                    hour=0, minute=0, second=0, microsecond=0)
+        year_start_boundary = date(cur_start_year, 1, 1)
+        year_end_boundary = date(cur_end_year, 12, 31)
 
-        end_of_year = now.replace(month=12, day=31,
-                                  hour=23, minute=59, second=59, microsecond=0)
+        covering_acts = (
+            MonitoringActivity.objects
+            .filter(
+                start_date__lte=year_start_boundary,
+                end_date__gte=year_end_boundary
+            )
+            .prefetch_related("partners", "interventions", "cp_outputs")
+        )
 
-        def in_this_year(instances):
-            return [
-                inst
-                for inst in instances
-                if start_of_year <= inst.modified <= end_of_year
-            ]
+        partner_ids, intervention_ids, cp_output_ids = set(), set(), set()
+
+        for act in covering_acts:
+            partner_ids.update(act.partners.values_list("id", flat=True))
+            intervention_ids.update(act.interventions.values_list("id", flat=True))
+            cp_output_ids.update(act.cp_outputs.values_list("id", flat=True))
+
+        partners_qs = PartnerOrganization.objects.filter(id__in=partner_ids)
+        interventions_qs = Intervention.objects.filter(id__in=intervention_ids)
+        cp_outputs_qs = Result.objects.filter(id__in=cp_output_ids)
 
         return {
             "partners": MinimalPartnerOrganizationListSerializer(
-                in_this_year(obj.partners.all()), many=True
+                partners_qs, many=True
             ).data,
             "interventions": MinimalInterventionListSerializer(
-                in_this_year(obj.interventions.all()), many=True
+                interventions_qs, many=True
             ).data,
             "cp_outputs": MinimalOutputListSerializer(
-                in_this_year(obj.cp_outputs.all()), many=True
+                cp_outputs_qs, many=True
             ).data,
         }
 
