@@ -150,12 +150,12 @@ class MonitoringActivityLightSerializer(serializers.ModelSerializer):
         effective_end = None
 
         try:
-            effective_start = datetime.strptime(request.query_params.get("start_date"), "%Y-%m-%d")
+            effective_start = datetime.strptime(request.query_params.get("start_date"), "%Y-%m-%d").date()
         except (AttributeError, TypeError):
             effective_start = obj.start_date
 
         try:
-            effective_end = datetime.strptime(request.query_params.get("end_date"), "%Y-%m-%d")
+            effective_end = datetime.strptime(request.query_params.get("end_date"), "%Y-%m-%d").date()
         except (AttributeError, TypeError):
             effective_end = obj.end_date
 
