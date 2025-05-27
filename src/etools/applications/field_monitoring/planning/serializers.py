@@ -1,7 +1,7 @@
 from copy import copy
-from datetime import date
+from datetime import datetime
 
-from django.db.models import Q
+
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
@@ -28,7 +28,6 @@ from etools.applications.field_monitoring.planning.models import (
     YearPlan,
 )
 from etools.applications.field_monitoring.utils.fsm import get_available_transitions
-from etools.applications.partners.models import Intervention, PartnerOrganization
 from etools.applications.partners.serializers.interventions_v2 import MinimalInterventionListSerializer
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.reports.models import Result, ResultType
@@ -145,16 +144,25 @@ class MonitoringActivityLightSerializer(serializers.ModelSerializer):
 
     def get_overlapping_entities(self, obj):
         request = self.context.get("request")
-        if request and request.method != "PATCH":
+        if request is None or request.method != "PATCH":
             return None
 
-        current_year = timezone.now().year
+        _parse = lambda s: datetime.strptime(s, "%Y-%m-%d").date() if s else None
+
+        effective_start = _parse(request.query_params.get("start_date")) or obj.start_date
+        effective_end = _parse(request.query_params.get("end_date")) or obj.end_date
+
+
+        today_year = timezone.now().year
+        if (effective_start and today_year < effective_start.year) or \
+                (effective_end and today_year > effective_end.year):
+            return None
 
         covering_acts = (
             MonitoringActivity.objects
             .filter(
-                start_date__year__lte=current_year,
-                end_date__year__gte=current_year
+                start_date__year__lte=today_year,
+                end_date__year__gte=today_year
             )
             .prefetch_related("partners", "interventions", "cp_outputs")
         )
