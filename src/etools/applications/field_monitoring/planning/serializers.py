@@ -152,8 +152,8 @@ class MonitoringActivityLightSerializer(serializers.ModelSerializer):
             except Exception:
                 return None
 
-        effective_start = request.GET.get("start_date") or obj.start_date
-        effective_end = request.GET.get("end_date") or obj.end_date
+        effective_start = _parse(request.GET.get("start_date")) or obj.start_date
+        effective_end = _parse(request.GET.get("end_date")) or obj.end_date
 
         today_year = timezone.now().year
         if (effective_start and today_year < effective_start.year) or \
