@@ -1,6 +1,5 @@
 from copy import copy
-from datetime import datetime
-
+from datetime import date, datetime
 
 from django.utils import timezone
 from django.utils.translation import gettext as _
@@ -30,7 +29,7 @@ from etools.applications.field_monitoring.planning.models import (
 from etools.applications.field_monitoring.utils.fsm import get_available_transitions
 from etools.applications.partners.serializers.interventions_v2 import MinimalInterventionListSerializer
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
-from etools.applications.reports.models import Result, ResultType
+from etools.applications.reports.models import ResultType
 from etools.applications.reports.serializers.v1 import SectionSerializer
 from etools.applications.reports.serializers.v2 import MinimalOutputListSerializer, OfficeSerializer
 from etools.applications.tpm.tpmpartners.models import TPMPartner
