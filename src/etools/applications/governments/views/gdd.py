@@ -794,9 +794,19 @@ class GDDReportingRequirementView(GDDMixin, APIView):
 
 class GDDSpecialReportingRequirementListCreateView(ListCreateAPIView):
     serializer_class = GDDSpecialReportingRequirementSerializer
-    permission_classes = (PartnershipManagerPermission, )
+    permission_classes = [
+        IsAuthenticated,
+        IsReadAction | (IsEditAction & gdd_field_is_editable_permission('reporting_requirements')),
+    ]
     renderer_classes = (JSONRenderer, )
     queryset = GDDSpecialReportingRequirement.objects.all()
+
+    @functools.cache
+    def get_gdd(self):
+        return GDD.objects.filter(pk=self.kwargs.get('gdd_pk')).first()
+
+    def get_root_object(self):
+        return self.get_gdd()
 
     def create(self, request, *args, **kwargs):
         request.data["gdd"] = kwargs.get('gdd_pk', None)
@@ -808,9 +818,19 @@ class GDDSpecialReportingRequirementListCreateView(ListCreateAPIView):
 
 class GDDSpecialReportingRequirementUpdateDestroyView(RetrieveUpdateDestroyAPIView):
     serializer_class = GDDSpecialReportingRequirementSerializer
-    permission_classes = (PartnershipManagerPermission,)
+    permission_classes = [
+        IsAuthenticated,
+        IsReadAction | (IsEditAction & gdd_field_is_editable_permission('reporting_requirements')),
+    ]
     renderer_classes = (JSONRenderer,)
     queryset = GDDSpecialReportingRequirement.objects.all()
+
+    @functools.cache
+    def get_gdd(self):
+        return GDD.objects.filter(pk=self.kwargs.get('gdd_pk')).first()
+
+    def get_root_object(self):
+        return self.get_gdd()
 
     def destroy(self, request, *args, **kwargs):
         if self.get_object().due_date < datetime.date.today():
