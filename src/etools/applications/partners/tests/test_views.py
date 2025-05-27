@@ -246,7 +246,7 @@ class TestAPIPartnerOrganizationListView(BaseTenantTestCase):
             data={"verbosity": "minimal"},
             user=self.unicef_user
         )
-        self.assertResponseFundamentals(response, sorted(("id", "name", "modified_date")))
+        self.assertResponseFundamentals(response, sorted(("id", "name")))
 
     def test_verbosity_other(self):
         """Exercise behavior when verbosity != minimal. ('minimal' is the only accepted value for verbosity;
@@ -1390,7 +1390,7 @@ class TestInterventionViews(BaseTenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(list(response.data[0].keys()), ["id", "title", "number", "modified_date"])
+        self.assertEqual(list(response.data[0].keys()), ["id", "title", "number"])
 
     def test_intervention_create(self):
         data = {

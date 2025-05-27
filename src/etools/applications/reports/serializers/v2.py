@@ -33,14 +33,12 @@ from etools.applications.reports.validators import (
 
 class MinimalOutputListSerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField()
-    modified_date = serializers.DateTimeField(source="modified", read_only=True)
 
     class Meta:
         model = Result
         fields = (
             "id",
             "name",
-            "modified_date",
         )
 
     def get_name(self, obj):

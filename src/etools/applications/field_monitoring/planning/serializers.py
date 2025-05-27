@@ -28,10 +28,10 @@ from etools.applications.field_monitoring.planning.models import (
     YearPlan,
 )
 from etools.applications.field_monitoring.utils.fsm import get_available_transitions
-from etools.applications.partners.models import PartnerOrganization, Intervention
+from etools.applications.partners.models import Intervention, PartnerOrganization
 from etools.applications.partners.serializers.interventions_v2 import MinimalInterventionListSerializer
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
-from etools.applications.reports.models import ResultType, Result
+from etools.applications.reports.models import Result, ResultType
 from etools.applications.reports.serializers.v1 import SectionSerializer
 from etools.applications.reports.serializers.v2 import MinimalOutputListSerializer, OfficeSerializer
 from etools.applications.tpm.tpmpartners.models import TPMPartner
@@ -123,7 +123,7 @@ class MonitoringActivityLightSerializer(serializers.ModelSerializer):
     cp_outputs = SeparatedReadWriteField(read_field=MinimalOutputListSerializer(many=True))
     sections = SeparatedReadWriteField(read_field=SectionSerializer(many=True), required=False)
 
-    updated_entities = serializers.SerializerMethodField(read_only=True)
+    overlapping_entities = serializers.SerializerMethodField(read_only=True)
 
     checklists_count = serializers.ReadOnlyField()
 
@@ -140,46 +140,68 @@ class MonitoringActivityLightSerializer(serializers.ModelSerializer):
             'reject_reason', 'report_reject_reason', 'cancel_reason',
             'status',
             'sections',
-            'updated_entities',
+            'overlapping_entities',
         )
 
-    def get_updated_entities(self, obj):
-        cur_start_year = (obj.start_date or timezone.now().date()).year
-        cur_end_year = (obj.end_date or obj.start_date or timezone.now().date()).year
+    def get_overlapping_entities(self, obj):
+        request = self.context.get("request")
+        if request and request.method != "PATCH":
+            return None
 
-        year_start_boundary = date(cur_start_year, 1, 1)
-        year_end_boundary = date(cur_end_year, 12, 31)
+        current_year = timezone.now().year
 
         covering_acts = (
             MonitoringActivity.objects
             .filter(
-                start_date__lte=year_start_boundary,
-                end_date__gte=year_end_boundary
+                start_date__year__lte=current_year,
+                end_date__year__gte=current_year
             )
             .prefetch_related("partners", "interventions", "cp_outputs")
         )
 
-        partner_ids, intervention_ids, cp_output_ids = set(), set(), set()
+        partner_sources = {}
+        intervention_sources = {}
+        cp_output_sources = {}
 
         for act in covering_acts:
-            partner_ids.update(act.partners.values_list("id", flat=True))
-            intervention_ids.update(act.interventions.values_list("id", flat=True))
-            cp_output_ids.update(act.cp_outputs.values_list("id", flat=True))
+            if act.pk == obj.pk:
+                continue
 
-        partners_qs = PartnerOrganization.objects.filter(id__in=partner_ids)
-        interventions_qs = Intervention.objects.filter(id__in=intervention_ids)
-        cp_outputs_qs = Result.objects.filter(id__in=cp_output_ids)
+            for partner in act.partners.all():
+                partner_sources.setdefault(partner.id, set()).add(act.number)
+
+            for intervention in act.interventions.all():
+                intervention_sources.setdefault(intervention.id, set()).add(act.number)
+
+            for cp_output in act.cp_outputs.all():
+                cp_output_sources.setdefault(cp_output.id, set()).add(act.number)
+
+        overlapping_partners = obj.partners.filter(id__in=partner_sources.keys())
+        overlapping_interventions = obj.interventions.filter(id__in=intervention_sources.keys())
+        overlapping_cp_outputs = obj.cp_outputs.filter(id__in=cp_output_sources.keys())
 
         return {
-            "partners": MinimalPartnerOrganizationListSerializer(
-                partners_qs, many=True
-            ).data,
-            "interventions": MinimalInterventionListSerializer(
-                interventions_qs, many=True
-            ).data,
-            "cp_outputs": MinimalOutputListSerializer(
-                cp_outputs_qs, many=True
-            ).data,
+            "partners": list(map(
+                lambda item: {
+                    **MinimalPartnerOrganizationListSerializer(item).data,
+                    "source_activity_numbers": sorted(list(partner_sources.get(item.id, [])))
+                },
+                overlapping_partners
+            )),
+            "interventions": list(map(
+                lambda item: {
+                    **MinimalInterventionListSerializer(item).data,
+                    "source_activity_numbers": sorted(list(intervention_sources.get(item.id, [])))
+                },
+                overlapping_interventions
+            )),
+            "cp_outputs": list(map(
+                lambda item: {
+                    **MinimalOutputListSerializer(item).data,
+                    "source_activity_numbers": sorted(list(cp_output_sources.get(item.id, [])))
+                },
+                overlapping_cp_outputs
+            )),
         }
 
 

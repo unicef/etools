@@ -159,7 +159,7 @@ class TestOutputListAPIView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         first_response = sorted(response.data, key=itemgetter("id"))[0]
         keys = sorted(first_response.keys())
-        self.assertCountEqual(keys, ['id', 'name', 'modified_date'])
+        self.assertCountEqual(keys, ['id', 'name'])
 
     def test_current_cp(self):
         response = self.forced_auth_req('get', self.url)
