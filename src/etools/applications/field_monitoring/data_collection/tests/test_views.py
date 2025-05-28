@@ -133,6 +133,15 @@ class TestActivityReportAttachmentsView(FMBaseTestCaseMixin, APIViewSetTestCase)
         self.assertIn(file_type.id, [d['id'] for d in response.data])
         self.assertNotIn(wrong_file_type.id, [d['id'] for d in response.data])
 
+    def test_SOP_and_Other_file_types(self):
+        file_type = AttachmentFileTypeFactory(code='fm_common', label='SOP')
+        file_type2 = AttachmentFileTypeFactory(code='fm_common', label='Other')
+
+        response = self.make_request_to_viewset(self.unicef_user, action='file-types')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertNotIn(file_type.id, [d['id'] for d in response.data])
+        self.assertNotIn(file_type2.id, [d['id'] for d in response.data])
+
 
 class TestActivityQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
     @classmethod
