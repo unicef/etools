@@ -44,7 +44,7 @@ class LinkedAttachmentsViewSet(
     AttachmentFileTypesViewMixin,
     ModelViewSet,
 ):
-    queryset = Attachment.objects.select_related('uploaded_by')
+    queryset = Attachment.objects.select_related("uploaded_by", "file_type")
     serializer_class = LinkedAttachmentBaseSerializer
     attachment_code = ''  # fill `code` field in attachment to deal with coded generics
     filter_backends = (DjangoFilterBackend,)
