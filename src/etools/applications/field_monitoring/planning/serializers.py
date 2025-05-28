@@ -1,5 +1,7 @@
 from copy import copy
+from datetime import datetime
 
+from django.utils import timezone
 from django.utils.translation import gettext as _
 
 from rest_framework import serializers
@@ -119,6 +121,8 @@ class MonitoringActivityLightSerializer(serializers.ModelSerializer):
     cp_outputs = SeparatedReadWriteField(read_field=MinimalOutputListSerializer(many=True))
     sections = SeparatedReadWriteField(read_field=SectionSerializer(many=True), required=False)
 
+    overlapping_entities = serializers.SerializerMethodField(read_only=True)
+
     checklists_count = serializers.ReadOnlyField()
 
     class Meta:
@@ -134,7 +138,81 @@ class MonitoringActivityLightSerializer(serializers.ModelSerializer):
             'reject_reason', 'report_reject_reason', 'cancel_reason',
             'status',
             'sections',
+            'overlapping_entities',
         )
+
+    def get_overlapping_entities(self, obj):
+        request = self.context.get("request")
+        if request is None or request.method != "PATCH":
+            return None
+
+        def _parse(s):
+            try:
+                return datetime.strptime(s, "%Y-%m-%d").date() if s else None
+            except Exception:
+                return None
+
+        effective_start = _parse(request.GET.get("start_date")) or obj.start_date
+        effective_end = _parse(request.GET.get("end_date")) or obj.end_date
+
+        today_year = timezone.now().year
+        if (effective_start and today_year < effective_start.year) or \
+                (effective_end and today_year > effective_end.year):
+            return None
+
+        covering_acts = (
+            MonitoringActivity.objects
+            .filter(
+                start_date__year__lte=today_year,
+                end_date__year__gte=today_year
+            )
+            .prefetch_related("partners", "interventions", "cp_outputs")
+        )
+
+        partner_sources = {}
+        intervention_sources = {}
+        cp_output_sources = {}
+
+        for act in covering_acts:
+            if act.pk == obj.pk:
+                continue
+
+            for partner in act.partners.all():
+                partner_sources.setdefault(partner.id, set()).add(act.number)
+
+            for intervention in act.interventions.all():
+                intervention_sources.setdefault(intervention.id, set()).add(act.number)
+
+            for cp_output in act.cp_outputs.all():
+                cp_output_sources.setdefault(cp_output.id, set()).add(act.number)
+
+        overlapping_partners = obj.partners.filter(id__in=partner_sources.keys())
+        overlapping_interventions = obj.interventions.filter(id__in=intervention_sources.keys())
+        overlapping_cp_outputs = obj.cp_outputs.filter(id__in=cp_output_sources.keys())
+
+        return {
+            "partners": list(map(
+                lambda item: {
+                    **MinimalPartnerOrganizationListSerializer(item).data,
+                    "source_activity_numbers": sorted(list(partner_sources.get(item.id, [])))
+                },
+                overlapping_partners
+            )),
+            "interventions": list(map(
+                lambda item: {
+                    **MinimalInterventionListSerializer(item).data,
+                    "source_activity_numbers": sorted(list(intervention_sources.get(item.id, [])))
+                },
+                overlapping_interventions
+            )),
+            "cp_outputs": list(map(
+                lambda item: {
+                    **MinimalOutputListSerializer(item).data,
+                    "source_activity_numbers": sorted(list(cp_output_sources.get(item.id, [])))
+                },
+                overlapping_cp_outputs
+            )),
+        }
 
 
 class MonitoringActivitySerializer(UserContextSerializerMixin, MonitoringActivityLightSerializer):

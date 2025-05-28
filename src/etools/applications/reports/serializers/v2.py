@@ -38,7 +38,7 @@ class MinimalOutputListSerializer(serializers.ModelSerializer):
         model = Result
         fields = (
             "id",
-            "name"
+            "name",
         )
 
     def get_name(self, obj):
