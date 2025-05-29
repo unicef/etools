@@ -8,7 +8,6 @@ from rest_framework import permissions
 from rest_framework.permissions import BasePermission
 
 from etools.applications.environment.helpers import tenant_switch_is_active
-from etools.applications.governments.models import GDD
 from etools.libraries.djangolib.utils import get_all_field_names, is_user_in_groups
 from etools.libraries.pythonlib.collections import HashableDict
 
@@ -227,6 +226,7 @@ class PartnershipManagerPermission(permissions.BasePermission):
     message = _('Accessing this item is not allowed.')
 
     def _is_partner_staff_for_gdd(self, request, view) -> bool:
+        from etools.applications.governments.models import GDD
         """
         True if the route has gdd_pk and the user is staff for that GDD's
         partner.  Safe: one indexed SELECT; returns False on any error.
