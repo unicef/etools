@@ -8,6 +8,7 @@ from rest_framework import permissions
 from rest_framework.permissions import BasePermission
 
 from etools.applications.environment.helpers import tenant_switch_is_active
+from etools.applications.governments.models import GDD
 from etools.libraries.djangolib.utils import get_all_field_names, is_user_in_groups
 from etools.libraries.pythonlib.collections import HashableDict
 
@@ -225,6 +226,22 @@ class PartnershipManagerPermission(permissions.BasePermission):
     """
     message = _('Accessing this item is not allowed.')
 
+    def _is_partner_staff_for_gdd(self, request, view) -> bool:
+        """
+        True if the route has gdd_pk and the user is staff for that GDD's
+        partner.  Safe: one indexed SELECT; returns False on any error.
+        """
+        gdd_pk = view.kwargs.get("gdd_pk") or view.kwargs.get("pk")
+        if not gdd_pk:
+            return False
+
+        try:
+            gdd = GDD.objects.only("partner").select_related("partner").get(pk=gdd_pk)
+        except GDD.DoesNotExist:
+            return False
+
+        return gdd.partner.user_is_staff_member(request.user)
+
     def _has_access_permissions(self, user, obj):
         """True if --
               - user is staff OR
@@ -244,7 +261,9 @@ class PartnershipManagerPermission(permissions.BasePermission):
         """
         if request.method in permissions.SAFE_METHODS:
             # Check permissions for read-only request
-            return request.user.is_staff or is_user_in_groups(request.user, [PARTNERSHIP_MANAGER_GROUP])
+            return (request.user.is_staff or
+                    is_user_in_groups(request.user, [PARTNERSHIP_MANAGER_GROUP]) or
+                    self._is_partner_staff_for_gdd(request, view))
         else:
             return is_user_in_groups(request.user, [PARTNERSHIP_MANAGER_GROUP])
 
