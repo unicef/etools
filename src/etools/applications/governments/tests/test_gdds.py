@@ -906,6 +906,21 @@ class TestUpdate(BaseGDDTestCase):
         self.assertTrue(e_workplan_1 in gdd.e_workplans.all())
         self.assertTrue(e_workplan_2 in gdd.e_workplans.all())
 
+    def test_available_actions_return_to_unicef(self):
+        gdd = GDDFactory()
+        gdd.date_sent_to_partner = datetime.date.today()
+        gdd.unicef_court = False
+        gdd.budget_owner = self.unicef_user
+        gdd.save()
+
+        response = self.forced_auth_req(
+            "patch",
+            reverse('governments:gdd-return-unicef', args=[gdd.pk]),
+            user=self.unicef_user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("send_to_partner", response.data["available_actions"])
+
     # def test_update_hq_cash_local(self):
     #     gdd = GDDFactory()
     #     gdd.unicef_focal_points.add(self.unicef_user)
