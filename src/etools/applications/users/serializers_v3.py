@@ -144,7 +144,7 @@ class UserRealmRetrieveSerializer(serializers.ModelSerializer):
 class UserRealmBaseSerializer(GroupEditPermissionMixin, serializers.ModelSerializer):
     organization = serializers.IntegerField(required=False, allow_null=False, write_only=True)
     groups = serializers.ListField(child=serializers.IntegerField(), required=True, allow_null=False, write_only=True)
-    job_title = serializers.CharField(required=False, allow_blank=True, write_only=True)
+    job_title = serializers.CharField(required=False, allow_blank=True, allow_null=True, write_only=True)
 
     class Meta:
         model = get_user_model()
@@ -306,8 +306,8 @@ class UserRealmUpdateSerializer(UserRealmBaseSerializer):
         # clean up profile organization if no realm is active for context country and organization
         if not instance.realms.filter(is_active=True, **context_qs_params).exists():
             instance.profile.organization = None
-        if validated_data.get('job_title'):
-            instance.profile.job_title = validated_data.get('job_title')
+
+        instance.profile.job_title = validated_data.get('job_title')
 
         instance.profile.save(update_fields=['organization', 'job_title'])
 

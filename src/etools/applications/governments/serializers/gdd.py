@@ -407,6 +407,7 @@ class GDDDetailSerializer(
             "send_to_partner",
             "accept",
             "accept_on_behalf_of_partner",
+            "return_to_unicef",
             "individual_review",
             "review",
             "sign",
@@ -501,6 +502,8 @@ class GDDDetailSerializer(
                     available_actions.append("unlock")
                 if not obj.partner_accepted:
                     available_actions.append("accept")
+            if budget_owner_or_focal_point:
+                available_actions.append("return_to_unicef")
 
         return [action for action in default_ordering if action in available_actions]
 
@@ -537,7 +540,7 @@ class GDDDetailSerializer(
         else:
             status_list = post_approved_statuses
 
-        return [s for s in obj.INTERVENTION_STATUS if s[0] in status_list]
+        return [s for s in obj.GDD_STATUS if s[0] in status_list]
 
     def get_quarters(self, obj: GDD):
         return [

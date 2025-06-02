@@ -16,6 +16,7 @@ from etools.applications.last_mile import models
 from etools.applications.last_mile.tests.factories import (
     ItemFactory,
     MaterialFactory,
+    PartnerMaterialFactory,
     PointOfInterestFactory,
     TransferFactory,
 )
@@ -240,6 +241,8 @@ class TestTransferView(BaseTenantTestCase):
         item_2 = ItemFactory(quantity=22, transfer=self.incoming, material=self.material)
         item_3 = ItemFactory(quantity=33, transfer=self.incoming, material=self.material)
 
+        PartnerMaterialFactory(material=self.material, partner_organization=self.partner)
+
         checkin_data = {
             "name": "checked in transfer",
             "comment": "",
@@ -277,6 +280,8 @@ class TestTransferView(BaseTenantTestCase):
         item_1 = ItemFactory(quantity=11, transfer=self.incoming, material=self.material)
         ItemFactory(quantity=22, transfer=self.incoming, material=self.material)
         item_3 = ItemFactory(quantity=33, transfer=self.incoming, material=self.material)
+
+        PartnerMaterialFactory(material=self.material, partner_organization=self.partner)
 
         checkin_data = {
             "comment": "",
@@ -318,6 +323,8 @@ class TestTransferView(BaseTenantTestCase):
         item_1 = ItemFactory(quantity=11, transfer=self.incoming, material=self.material)
         item_2 = ItemFactory(quantity=22, transfer=self.incoming, material=self.material)
         item_3 = ItemFactory(quantity=33, transfer=self.incoming, material=self.material)
+
+        PartnerMaterialFactory(material=self.material, partner_organization=self.partner)
 
         checkin_data = {
             "name": "checked in transfer",
@@ -365,8 +372,12 @@ class TestTransferView(BaseTenantTestCase):
     @override_settings(RUTF_MATERIALS=['1234'])
     def test_partial_checkin_RUFT_material(self):
         item_1 = ItemFactory(quantity=11, transfer=self.incoming, material=self.material)
-        ItemFactory(quantity=22, transfer=self.incoming)
+        item_2 = ItemFactory(quantity=22, transfer=self.incoming)
         item_3 = ItemFactory(quantity=33, transfer=self.incoming)
+
+        PartnerMaterialFactory(material=self.material, partner_organization=self.partner)
+        PartnerMaterialFactory(material=item_2.material, partner_organization=self.partner)
+        PartnerMaterialFactory(material=item_3.material, partner_organization=self.partner)
 
         checkin_data = {
             "name": "checked in transfer",
@@ -389,21 +400,21 @@ class TestTransferView(BaseTenantTestCase):
         self.assertIn(response.data['proof_file'], self.attachment.file.path)
         self.assertEqual(self.incoming.name, checkin_data['name'])
         self.assertEqual(self.incoming.items.count(), len(response.data['items']))
-        self.assertEqual(self.incoming.items.count(), 1)  # only 1 checked-in item is visible, non RUFT
+        self.assertEqual(self.incoming.items.count(), 2)
         self.assertEqual(self.incoming.items.first().id, item_1.pk)
         self.assertTrue(models.TransferHistory.objects.filter(origin_transfer_id=self.incoming.id).exists())
         item_1.refresh_from_db()
         self.assertEqual(self.incoming.items.first().quantity, item_1.quantity)
 
-        hidden_item = models.Item.all_objects.get(pk=item_3.pk)
-        self.assertEqual(hidden_item.hidden, True)
-        self.assertEqual(hidden_item.quantity, 3)
+        not_hidden_item = models.Item.all_objects.get(pk=item_3.pk)
+        self.assertEqual(not_hidden_item.hidden, False)
+        self.assertEqual(not_hidden_item.quantity, 3)
 
         self.assertEqual(self.incoming.items.get(pk=item_1.pk).quantity, 5)
 
         short_transfer = models.Transfer.objects.filter(transfer_type=models.Transfer.WASTAGE).first()
         self.assertEqual(models.Item.all_objects.filter(transfer=short_transfer).count(), 3)  # 3 items on transfer
-        self.assertEqual(short_transfer.items.count(), 1)  # only 1 visible item
+        self.assertEqual(short_transfer.items.count(), 3)
 
         loss_item_2 = short_transfer.items.first()
         self.assertEqual(loss_item_2.quantity, 6)

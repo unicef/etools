@@ -1,18 +1,18 @@
 name = 'governments/gdd/amendment/added'
 defaults = {
-    'description': 'The email that is sent when a Government Digital Document amendment is added',
+    'description': 'The email that is sent when a Government Programme Document amendment is added',
     'subject': '[UNICEF Reporting] New Amendment Added',
     'content': """
     Dear Partner,
 
-    Please note that the UNICEF focal point has initiated an amendment to the Government Digital Document with your organization.
+    Please note that the UNICEF focal point has initiated an amendment to the Government Programme Document with your organization.
     The details are as follows:
 
-    Government Digital Document Title: {{title}}
+    Government Programme Document Title: {{title}}
     Reference Number: {{reference_number}}
     Amendment Type: {{amendment_type}}
 
-    Depending on the amendment type selected, changes can be made to the strategy, workplan (results structure, budget and supply plan) and GDD timing including reporting and PV requirements of the GDD.
+    Depending on the amendment type selected, changes can be made to the strategy, workplan (results structure, budget and supply plan) and GPD timing including reporting and PV requirements of the GPD.
 
     Please note that this is an automatically generated email and any replies are not monitored.
 
@@ -20,14 +20,14 @@ defaults = {
     'html_content': """
         Dear Partner,
 
-    Please note that the UNICEF focal point has initiated an amendment to the Government Digital Document with your organization.<br />
+    Please note that the UNICEF focal point has initiated an amendment to the Government Programme Document with your organization.<br />
     The details are as follows:
 
-    Government Digital Document Title: {{title}}
+    Government Programme Document Title: {{title}}
     Reference Number: {{reference_number}}
     Amendment Type: {{amendment_type}}
 
-    Depending on the amendment type selected, changes can be made to the strategy, workplan (results structure, budget and supply plan) and GDD timing including reporting and PV requirements of the GDD.<br />
+    Depending on the amendment type selected, changes can be made to the strategy, workplan (results structure, budget and supply plan) and GPD timing including reporting and PV requirements of the GPD.<br />
 
     Please note that this is an automatically generated email and any replies are not monitored.
 

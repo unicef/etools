@@ -1,9 +1,4 @@
-# SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the PACKAGE package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
@@ -16,59 +11,58 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 "
-"&& n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
+"Plural-Forms: nplurals=4; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || (n%100>=11 && n%100<=14)? 2 : 3);\n"
 
 msgid "Bilateral / Multilateral"
-msgstr ""
+msgstr "ثنائي / متعدد الأطراف"
 
 msgid "Civil Society Organization"
-msgstr ""
+msgstr "منظمة المجتمع المدني"
 
 msgid "Government"
-msgstr ""
+msgstr "حكومة"
 
 msgid "UN Agency"
-msgstr ""
+msgstr "وكالة الأمم المتحدة"
 
 msgid "International"
-msgstr ""
+msgstr "دولي"
 
 msgid "National"
-msgstr ""
+msgstr "وطني"
 
 msgid "Community Based Organization"
-msgstr ""
+msgstr "منظمة المجتمع"
 
 msgid "Academic Institution"
-msgstr ""
+msgstr "المؤسسة الأكاديمية"
 
 msgid "Red Cross/Red Crescent National Societies"
-msgstr ""
+msgstr "الصليب الأحمر/المجتمعات الوطنية الصليب الأحمر"
 
 msgid "Parent Organization"
-msgstr ""
+msgstr "منظمة الوالدين"
 
 msgid "Vendor Name"
-msgstr ""
+msgstr "اسم البائع"
 
 msgid "Vendor Number"
-msgstr ""
+msgstr "رقم البائع"
 
 msgid "Organization Type"
-msgstr ""
+msgstr "نوع المنظمة"
 
 msgid "CSO Type"
-msgstr ""
+msgstr "نوع منظمات المجتمع المدني"
 
 msgid "Short Name"
-msgstr ""
+msgstr "اسم قصير"
 
 msgid "Other Details"
-msgstr ""
+msgstr "تفاصيل أخرى"
 
 msgid "Organization"
-msgstr ""
+msgstr "منظمة"
 
 msgid "Organizations"
-msgstr ""
+msgstr "المنظمات"
