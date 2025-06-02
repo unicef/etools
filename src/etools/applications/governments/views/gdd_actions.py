@@ -629,8 +629,8 @@ class GDDSendToUNICEFView(GDDActionView):
         if gdd.unicef_court:
             raise ValidationError(_("GDD is currently with UNICEF"))
 
-        if not self.is_partner_focal_point(gdd):
-            raise ValidationError(_("Only partner focal points can send to UNICEF"))
+        if not self.is_partner_focal_point(gdd) and not request.user.is_unicef:
+            raise ValidationError(_("Only partner focal points or unicef can send to UNICEF"))
 
         request.data.clear()
         request.data.update({"unicef_court": True})
@@ -652,6 +652,41 @@ class GDDSendToUNICEFView(GDDActionView):
                 gdd,
                 recipients=recipients,
                 template_name='governments/gdd/send_to_unicef',
+                context=context
+            )
+
+        return response
+
+
+class GDDReturnToUNICEFView(GDDActionView):
+    def update(self, request, *args, **kwargs):
+        gdd = self.get_object()
+        if gdd.unicef_court:
+            raise ValidationError(_("GDD is currently with UNICEF"))
+
+        if request.user not in gdd.unicef_focal_points.all() and request.user != gdd.budget_owner:
+            raise ValidationError(_("Only focal points or budget owners can return to UNICEF"))
+
+        request.data.clear()
+        request.data.update({"unicef_court": True})
+        if not gdd.submission_date:
+            request.data.update({
+                "submission_date": timezone.now().strftime("%Y-%m-%d"),
+            })
+
+        response = super().update(request, *args, **kwargs)
+
+        if response.status_code == 200:
+            # notify unicef
+            recipients = [u.email for u in gdd.partner_focal_points.all()]
+            context = {
+                "reference_number": gdd.reference_number,
+                "partner_name": str(gdd.partner)
+            }
+            self.send_notification(
+                gdd,
+                recipients=recipients,
+                template_name='governments/gdd/return_to_unicef',
                 context=context
             )
 
