@@ -111,7 +111,11 @@ class UserQuerySet(models.QuerySet):
         return self.filter(realms__country__schema_name=schema_name)
 
     def only_lmsm_users(self):
-        return self.filter(realms__group__name='IP LM Editor')
+        try:
+            group = Group.objects.get(name='IP LM Editor')
+            return self.filter(realms__group_id=group.id)
+        except Group.DoesNotExist:
+            return self.none()
 
     def with_points_of_interest(self):
         return self.filter(profile__organization__partner__points_of_interest__isnull=False)

@@ -66,7 +66,7 @@ class TestFRHeaderView(BaseTenantTestCase):
         self.assertEqual(status_code, status.HTTP_200_OK)
         self.assertEqual(len(result['frs']), 1)
         self.assertEqual(result['total_actual_amt'], float(self.fr_1.actual_amt_local))
-        self.assertEqual(result['total_outstanding_amt'], float(self.fr_1.outstanding_amt_local))
+        self.assertEqual(result['total_outstanding_amt'], float(self.fr_1.outstanding_amt))
         self.assertEqual(result['total_frs_amt'], float(self.fr_1.total_amt_local))
         self.assertEqual(result['total_intervention_amt'], float(self.fr_1.intervention_amt))
 
@@ -84,7 +84,7 @@ class TestFRHeaderView(BaseTenantTestCase):
         self.assertEqual(result['total_actual_amt'],
                          float(sum([self.fr_1.actual_amt_local, self.fr_2.actual_amt_local])))
         self.assertEqual(result['total_outstanding_amt'],
-                         float(sum([self.fr_1.outstanding_amt_local, self.fr_2.outstanding_amt_local])))
+                         float(sum([self.fr_1.outstanding_amt, self.fr_2.outstanding_amt])))
         self.assertEqual(result['total_frs_amt'],
                          float(sum([self.fr_1.total_amt_local, self.fr_2.total_amt_local])))
         self.assertEqual(result['total_intervention_amt'],
@@ -194,7 +194,7 @@ class TestFRHeaderView(BaseTenantTestCase):
         self.assertEqual(result['total_actual_amt'], float(sum([self.fr_1.actual_amt_local,
                                                                 self.fr_2.actual_amt_local])))
         self.assertEqual(result['total_outstanding_amt'],
-                         float(sum([self.fr_1.outstanding_amt_local, self.fr_2.outstanding_amt_local])))
+                         float(sum([self.fr_1.outstanding_amt, self.fr_2.outstanding_amt])))
         self.assertEqual(result['total_frs_amt'],
                          float(sum([self.fr_1.total_amt_local, self.fr_2.total_amt_local])))
         self.assertEqual(result['total_intervention_amt'],

@@ -2,6 +2,7 @@ from copy import copy
 
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
+from django.db.models import Q
 from django.http import Http404, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404
 
@@ -34,7 +35,7 @@ class AttachmentFileTypesViewMixin:
         if 'file_type' not in declared_fields:
             raise Http404
 
-        return Response(data=declared_fields['file_type'].queryset.values('id', 'label'))
+        return Response(data=declared_fields['file_type'].queryset.filter(~Q(label__in=["SOP", "Other"])).values('id', 'label'))
 
 
 class LinkedAttachmentsViewSet(

@@ -8,6 +8,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from rest_framework import status
+from rest_framework.test import APIRequestFactory
 from unicef_attachments.models import Attachment, AttachmentLink, FileType
 from unicef_locations.tests.factories import LocationFactory
 
@@ -33,6 +34,7 @@ from etools.applications.field_monitoring.planning.actions.duplicate_monitoring_
     MonitoringActivityNotFound,
 )
 from etools.applications.field_monitoring.planning.models import MonitoringActivity, YearPlan
+from etools.applications.field_monitoring.planning.serializers import MonitoringActivityLightSerializer
 from etools.applications.field_monitoring.planning.tests.factories import (
     MonitoringActivityActionPointFactory,
     MonitoringActivityFactory,
@@ -1331,6 +1333,48 @@ class InterventionsViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTen
 class MonitoringActivityActionPointsViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenantTestCase):
     base_view = 'field_monitoring_planning:activity_action_points'
 
+    def setUp(self):
+        super().setUp()
+
+        self.partner = PartnerFactory()
+        self.intervention = InterventionFactory()
+        self.cp_output = ResultFactory(result_type__name=ResultType.OUTPUT)
+
+        year = timezone.now().year
+        start_this = date(year, 4, 4)
+        end_this = date(year, 12, 4)
+
+        self.activity2 = MonitoringActivityFactory(
+            start_date=start_this, end_date=end_this, status="draft"
+        )
+        self.activity2.partners.add(self.partner)
+        self.activity2.interventions.add(self.intervention)
+        self.activity2.cp_outputs.add(self.cp_output)
+
+        covering_start = date(year, 1, 1)
+        covering_end = date(year, 12, 31)
+
+        self.other_activity = MonitoringActivityFactory(
+            number="COVER/1",
+            start_date=covering_start,
+            end_date=covering_end,
+            status="completed",
+        )
+        self.other_activity.partners.add(self.partner)
+        self.other_activity.interventions.add(self.intervention)
+        self.other_activity.cp_outputs.add(self.cp_output)
+
+        noise_partner = PartnerFactory()
+        noise_act = MonitoringActivityFactory(
+            number="NOISE/1",
+            start_date=start_this,
+            end_date=end_this,
+            status="completed",
+        )
+        noise_act.partners.add(noise_partner)
+
+        self.rf = APIRequestFactory()
+
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
@@ -1350,6 +1394,38 @@ class MonitoringActivityActionPointsViewTestCase(FMBaseTestCaseMixin, APIViewSet
 
     def get_list_args(self):
         return [self.activity.pk]
+
+    def test_non_patch_request_returns_null(self):
+        request = self.rf.get("/fake/")
+        ser = MonitoringActivityLightSerializer(
+            instance=self.activity2, context={"request": request}
+        )
+        assert ser.data["overlapping_entities"] is None
+
+    def test_patch_request_returns_shared_entities_with_sources(self):
+        request = self.rf.patch("/fake/")
+        ser = MonitoringActivityLightSerializer(
+            instance=self.activity2, context={"request": request}
+        )
+        data = ser.data
+        ov = data["overlapping_entities"]
+
+        # partners / interventions / cp_outputs must be present
+        assert len(ov["partners"]) == 1
+        assert len(ov["interventions"]) == 1
+        assert len(ov["cp_outputs"]) == 1
+
+        partner_block = ov["partners"][0]
+        assert partner_block["id"] == self.partner.id
+        assert partner_block["source_activity_numbers"] == [self.other_activity.number]
+
+        int_block = ov["interventions"][0]
+        assert int_block["id"] == self.intervention.id
+        assert int_block["source_activity_numbers"] == [self.other_activity.number]
+
+        out_block = ov["cp_outputs"][0]
+        assert out_block["id"] == self.cp_output.id
+        assert out_block["source_activity_numbers"] == [self.other_activity.number]
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_list(self):
