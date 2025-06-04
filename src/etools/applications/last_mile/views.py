@@ -36,12 +36,11 @@ class PointOfInterestTypeViewSet(ReadOnlyModelViewSet):
 class POIQuerysetMixin:
     def get_poi_queryset(self, exclude_partner_prefetch=False):
         partner = self.request.user.partner
-        print(f"request.user : {self.request.user}")
         if partner:
             qs = (models.PointOfInterest.objects
                   .filter(Q(partner_organizations=partner) | Q(partner_organizations__isnull=True))
                   .filter(is_active=True)
-                  .filter(users__user__id=self.request.user.id)
+                  .filter(Q(users__user__id=self.request.user.id) | Q(users__isnull=True))
                   .exclude(name="UNICEF Warehouse")  # exclude UNICEF Warehouse
                   .select_related('parent').defer('parent__point', 'parent__geom', 'point')
                   .select_related('poi_type')

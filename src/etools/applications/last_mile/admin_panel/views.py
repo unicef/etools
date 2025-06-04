@@ -32,6 +32,7 @@ from etools.applications.last_mile.admin_panel.serializers import (
     AlertNotificationSerializer,
     AlertTypeSerializer,
     AuthUserPermissionsDetailSerializer,
+    BulkReviewPointOfInterestSerializer,
     BulkUpdateLastMileProfileStatusSerializer,
     ImportFileSerializer,
     LastMileUserProfileSerializer,
@@ -234,6 +235,8 @@ class LocationsViewSet(mixins.ListModelMixin,
             return PointOfInterestWithCoordinatesSerializer
         if self.action == 'list_export_csv':
             return PointOfInterestExportSerializer
+        if self.action == 'bulk_review':
+            return BulkReviewPointOfInterestSerializer
         return PointOfInterestAdminSerializer
 
     @action(
@@ -252,6 +255,13 @@ class LocationsViewSet(mixins.ListModelMixin,
                 timezone.now().date(),
             )
         })
+
+    @action(detail=False, methods=['put'], url_path='bulk-review')
+    def bulk_review(self, request, *args, **kwargs):
+        serializer_data = BulkReviewPointOfInterestSerializer(data=request.data)
+        serializer_data.is_valid(raise_exception=True)
+        serializer_data.update(serializer_data.validated_data, request.user)
+        return Response(serializer_data.data, status=status.HTTP_200_OK)
 
 
 class PointOfInterestsLightViewSet(mixins.ListModelMixin,
