@@ -38,7 +38,7 @@ class MinimalOutputListSerializer(serializers.ModelSerializer):
         model = Result
         fields = (
             "id",
-            "name"
+            "name",
         )
 
     def get_name(self, obj):
@@ -62,7 +62,7 @@ class IndicatorBlueprintCUSerializer(serializers.ModelSerializer):
     class Meta:
         model = IndicatorBlueprint
         fields = '__all__'
-        # remove the unique validator as we're doing a get_por_create
+        # remove the unique validator as we're doing a get_or_create
         extra_kwargs = {
             'code': {'validators': []},
         }

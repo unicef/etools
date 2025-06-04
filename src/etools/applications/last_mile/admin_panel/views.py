@@ -78,7 +78,14 @@ class UserViewSet(ExportMixin,
         schema_name = connection.tenant.schema_name
         User = get_user_model()
 
-        queryset = User.objects.for_schema(schema_name).only_lmsm_users()
+        queryset = User.objects.select_related('profile',
+                                               'profile__country',
+                                               'profile__organization',
+                                               'profile__organization__partner',
+                                               'last_mile_profile',
+                                               'last_mile_profile__created_by',
+                                               'last_mile_profile__approved_by',
+                                               ).prefetch_related('profile__organization__partner__points_of_interest',).for_schema(schema_name).only_lmsm_users()
 
         has_active_location = self.request.query_params.get('hasActiveLocation')
         if has_active_location == "1":
@@ -89,7 +96,7 @@ class UserViewSet(ExportMixin,
         return queryset.distinct()
 
     filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
-    search_fields = ('email', 'first_name', 'last_name', 'profile__organization__name', 'profile__organization__vendor_number', "profile__organization__partner__points_of_interest__name")
+    search_fields = ('email', 'first_name', 'last_name', 'profile__organization__name', 'profile__organization__vendor_number')
     filterset_class = UserFilter
     ordering_fields = [
         'id',
@@ -151,7 +158,7 @@ class UserViewSet(ExportMixin,
             resp = HttpResponse(out.getvalue(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
             resp['Content-Disposition'] = f'attachment; filename="checked_{excel_file.name}"'
             return resp
-        return Response({"valid": valid},status=status.HTTP_200_OK)
+        return Response({"valid": valid}, status=status.HTTP_200_OK)
 
 
 class UpdateUserProfileViewSet(mixins.RetrieveModelMixin,
@@ -205,7 +212,7 @@ class LocationsViewSet(mixins.ListModelMixin,
     serializer_class = PointOfInterestAdminSerializer
     pagination_class = DynamicPageNumberPagination
 
-    queryset = models.PointOfInterest.objects.select_related("parent", "poi_type").prefetch_related('partner_organizations').all().order_by('id')
+    queryset = models.PointOfInterest.all_objects.select_related("parent", "poi_type", "parent__parent", "parent__parent__parent", "parent__parent__parent__parent").prefetch_related('partner_organizations').all().order_by('id')
 
     filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
     filterset_class = LocationsFilter

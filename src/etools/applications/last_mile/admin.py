@@ -131,7 +131,7 @@ class ItemInline(RestrictedEditAdminMixin, admin.TabularInline):
     fk_name = 'transfer'
     list_select_related = ('material',)
     fields = ('id', 'batch_id', 'material', 'description', 'expiry_date', 'wastage_type',
-              'amount_usd', 'unicef_ro_item', 'purchase_order_item')
+              'amount_usd', 'unicef_ro_item', 'purchase_order_item', 'hidden')
     readonly_fields = ('description',)
     show_change_link = True
 
@@ -212,7 +212,7 @@ class PartnerMaterialInline(admin.TabularInline):
 
 
 @admin.register(models.Material)
-class MaterialAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
+class MaterialAdmin(admin.ModelAdmin):
     list_display = (
         'number', 'short_description', 'original_uom'
     )
@@ -556,5 +556,11 @@ class ItemTransferHistoryAdmin(admin.ModelAdmin):
     view_items_link.short_description = "Transfer Details"
 
 
+@admin.register(models.PartnerMaterial)
+class PartnerMaterialAdmin(admin.ModelAdmin):
+    list_display = ('material', 'partner_organization', 'description')
+    search_fields = ('material__short_description', 'partner_organization__organization__name', 'description')
+    list_filter = ('material',)
+
+
 admin.site.register(models.PointOfInterestType)
-admin.site.register(models.PartnerMaterial)

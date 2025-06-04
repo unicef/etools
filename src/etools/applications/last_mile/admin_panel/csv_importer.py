@@ -18,9 +18,9 @@ class CsvImporter:
         error_col = ws.max_column + 1
         ws.cell(row=1, column=error_col, value='Errors')
         index = 3
+        valid = True
         with transaction.atomic():
             for row in ws.iter_rows(min_row=3, max_row=ws.max_row, values_only=True):
-                valid = True
                 status_message = ''
 
                 ip_number, first_name, last_name, email, point_of_interests, *_ = row

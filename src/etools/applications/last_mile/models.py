@@ -404,6 +404,9 @@ class PartnerMaterial(TimeStampedModel, models.Model):
     )
     description = models.CharField(max_length=255)
 
+    def __str__(self):
+        return f'{self.partner_organization.name}: {self.material.short_description} with description: {self.description}'
+
     class Meta:
         unique_together = ('partner_organization', 'material')
 
@@ -498,8 +501,18 @@ class Item(TimeStampedModel, models.Model):
             except PartnerMaterial.DoesNotExist:
                 return self.material.short_description
 
-    def should_be_hidden(self):
-        return self.material.number not in settings.RUTF_MATERIALS
+    @cached_property
+    def should_be_hidden_for_partner(self):
+        if not self.transfer or not self.transfer.partner_organization:
+            return True
+
+        partner_material_exists = PartnerMaterial.objects.filter(
+            partner_organization=self.transfer.partner_organization,
+            material=self.material
+        ).exists()
+
+        should_hide = not partner_material_exists
+        return should_hide
 
     def add_transfer_history(self, transfer):
         ItemTransferHistory.objects.create(
