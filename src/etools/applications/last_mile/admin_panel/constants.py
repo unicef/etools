@@ -21,6 +21,7 @@ PARTNER_ORGANIZATIONS_ADMIN_PANEL = 'partner-organizations-admin'
 POINT_OF_INTERESTS_LIGHT_DATA = 'point-of-interests-light-data'
 GEOPOINT_LOCATIONS = 'geopoint-locations'
 LOCATIONS_ADMIN_PANEL_PERMISSION = 'lmsm_admin_panel_manage_locations'
+LOCATIONS_BULK_REVIEW_ADMIN_PANEL = 'locations-bulk-review'
 
 ALERT_NOTIFICATIONS_ADMIN_PANEL = 'alert-notification'
 ALERT_TYPES_ADMIN_PANEL = 'alert-type'

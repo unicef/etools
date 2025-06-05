@@ -1,6 +1,7 @@
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password
+from django.contrib.gis.geos import Point
 from django.db import transaction
 from django.utils import timezone
 from django.utils.encoding import force_str
@@ -801,7 +802,6 @@ class BulkReviewPointOfInterestSerializer(serializers.Serializer):
 
     @transaction.atomic
     def update(self, validated_data, approver_user):
-        print(f"validated_data : {validated_data}")
         points_of_interest = validated_data.pop('points_of_interest')
         status = validated_data.get('status')
         for poi in points_of_interest:
@@ -873,3 +873,80 @@ class UserImportSerializer(serializers.Serializer):
         except Exception as ex:
             return False, str(ex)
         return True, user
+
+
+class LocationImportSerializer(serializers.Serializer):
+    p_code_location = serializers.CharField()
+    location_name = serializers.CharField()
+    primary_type_name = serializers.CharField()
+    latitude = serializers.CharField()
+    longitude = serializers.CharField()
+    ip_numbers = serializers.SlugRelatedField(
+        slug_field='organization__vendor_number',
+        many=True,
+        queryset=PartnerOrganization.objects.all(),
+        write_only=True,
+        required=False,
+        allow_null=True,
+        allow_empty=True
+    )
+
+    def validate_p_code_location(self, value):
+        try:
+            data = models.PointOfInterest.objects.get(p_code=value)
+            if data:
+                raise serializers.ValidationError("Point of interest already exists")
+        except models.PointOfInterest.DoesNotExist:
+            return value
+
+    def validate_location_name(self, value):
+        try:
+            data = models.PointOfInterest.objects.get(name=value)
+            if data:
+                raise serializers.ValidationError("Point of interest already exists")
+            if not value:
+                raise serializers.ValidationError("Point of interest name is required")
+            if len(value) < 1:
+                raise serializers.ValidationError("Point of interest name is required")
+        except models.PointOfInterest.DoesNotExist:
+            return value
+
+    def validate_primary_type_name(self, value):
+        poi_type = models.PointOfInterestType.objects.filter(name=value).first()
+        if not poi_type:
+            raise serializers.ValidationError("Point of interest type does not exist")
+        return poi_type
+
+    def validate_latitude(self, value):
+        try:
+            return float(value)
+        except ValueError:
+            raise serializers.ValidationError("Invalid latitude")
+
+    def validate_longitude(self, value):
+        try:
+            return float(value)
+        except ValueError:
+            raise serializers.ValidationError("Invalid longitude")
+
+    def create(self, validated_data, created_by):
+        partner_organizations = validated_data.pop('ip_numbers')
+        p_code_location = validated_data.pop('p_code_location')
+        location_name = validated_data.pop('location_name')
+        primary_type_name = validated_data.pop('primary_type_name')
+        latitude = validated_data.pop('latitude')
+        longitude = validated_data.pop('longitude')
+        try:
+            with transaction.atomic():
+                point_of_interest = models.PointOfInterest.objects.create(
+                    p_code=p_code_location,
+                    name=location_name,
+                    poi_type=primary_type_name,
+                    point=Point(longitude, latitude),
+                    created_by=created_by,
+                    is_active=False,
+                )
+                point_of_interest.partner_organizations.set(partner_organizations)
+        except Exception as ex:
+            return False, str(ex)
+        return True, point_of_interest

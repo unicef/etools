@@ -237,6 +237,8 @@ class LocationsViewSet(mixins.ListModelMixin,
             return PointOfInterestExportSerializer
         if self.action == 'bulk_review':
             return BulkReviewPointOfInterestSerializer
+        if self.action == '_import_file':
+            return ImportFileSerializer
         return PointOfInterestAdminSerializer
 
     @action(
@@ -255,6 +257,18 @@ class LocationsViewSet(mixins.ListModelMixin,
                 timezone.now().date(),
             )
         })
+
+    @action(detail=False, methods=['post'], url_path='import/xlsx')
+    def _import_file(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        excel_file = serializer.validated_data['file']
+        valid, out = CsvImporter().import_locations(excel_file, request.user)
+        if not valid:
+            resp = HttpResponse(out.getvalue(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            resp['Content-Disposition'] = f'attachment; filename="checked_{excel_file.name}"'
+            return resp
+        return Response({"valid": valid}, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['put'], url_path='bulk-review')
     def bulk_review(self, request, *args, **kwargs):
