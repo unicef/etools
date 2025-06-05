@@ -39,6 +39,9 @@ class TestUsersViewSet(BaseTenantTestCase):
             perms=[ALERT_NOTIFICATIONS_ADMIN_PANEL_PERMISSION]
         )
         cls.active_location = PointOfInterestFactory(partner_organizations=[cls.partner], private=True)
+        cls.active_location_1 = PointOfInterestFactory()
+        cls.active_location_2 = PointOfInterestFactory(partner_organizations=[cls.partner])
+        cls.active_location_3 = PointOfInterestFactory(partner_organizations=[cls.partner])
 
         cls.valid_data = {
             'first_name': 'John',
@@ -168,6 +171,13 @@ class TestUsersViewSet(BaseTenantTestCase):
         self.assertEqual(response.data.get('username'), 'johndoe')
         self.assertEqual(response.data.get('is_active'), False)
         self.assertEqual(response.data.get('last_mile_profile', {}).get('status'), 'PENDING')
+        user_created = get_user_model().objects.get(username=self.valid_data['username'])
+        self.assertEqual(user_created.first_name, 'John')
+        self.assertEqual(user_created.last_name, 'Doe')
+        self.assertEqual(user_created.email, '2xk6x@example.com')
+        self.assertEqual(user_created.username, 'johndoe')
+
+        self.assertEqual(user_created.points_of_interest.count(), 1)
 
         profile = response.data.get('profile')
         self.assertEqual(profile.get('organization'), self.partner.organization.id)
@@ -232,12 +242,14 @@ class TestUsersViewSet(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_update_user(self):
+        self.assertEqual(self.partner_staff.points_of_interest.count(), 0)
         url_with_param = self.url + f"{self.partner_staff.pk}/"
         data = {
             'first_name': 'John',
             'last_name': 'Doe',
             'email': '2xk6x@example.com',
             'is_active': True,
+            'point_of_interests': [self.active_location_2.id],
             'profile': {
                 'organization': self.organization.id,
             }
@@ -251,6 +263,7 @@ class TestUsersViewSet(BaseTenantTestCase):
         self.assertEqual(self.partner_staff.is_active, response.data.get('is_active'))
         self.assertEqual(self.partner_staff.profile.organization.id, response.data.get('organization'))
         self.assertEqual(self.partner_staff.profile.country.id, response.data.get('country'))
+        self.assertEqual(self.partner_staff.points_of_interest.count(), 1)
 
     def test_partial_update_user(self):
         url_with_param = self.url + f"{self.partner_staff.pk}/"
@@ -266,6 +279,84 @@ class TestUsersViewSet(BaseTenantTestCase):
         self.assertEqual(self.partner_staff.email, response.data.get('email'))
         self.assertEqual(self.partner_staff.is_active, response.data.get('is_active'))
         self.assertEqual(self.partner_staff.profile.organization.id, response.data.get('organization'))
+
+    def test_update_user_location(self):
+        url_with_param = self.url + f"{self.partner_staff.pk}/"
+        data = {
+            'point_of_interests': [self.active_location_2.id],
+        }
+        response = self.forced_auth_req('patch', url_with_param, user=self.partner_staff, data=data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(self.partner_staff.points_of_interest.count(), 1)
+
+    def test_clear_user_location(self):
+        url_with_param = self.url + f"{self.partner_staff.pk}/"
+        data = {
+            'point_of_interests': [],
+        }
+        response = self.forced_auth_req('patch', url_with_param, user=self.partner_staff, data=data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(self.partner_staff.points_of_interest.count(), 0)
+
+    def test_add_multiple_locations(self):
+        url_with_param = self.url + f"{self.partner_staff.pk}/"
+        data = {
+            'point_of_interests': [self.active_location_3.id, self.active_location_2.id],
+        }
+        response = self.forced_auth_req('patch', url_with_param, user=self.partner_staff, data=data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(self.partner_staff.points_of_interest.count(), 2)
+
+    def test_not_allowed_location_update(self):
+        url_with_param = self.url + f"{self.partner_staff.pk}/"
+        data = {
+            'point_of_interests': [self.active_location_1.id],
+        }
+        response = self.forced_auth_req('patch', url_with_param, user=self.partner_staff, data=data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("User does not have access to this point of interest", str(response.data))
+
+    def test_keep_old_user_locations_on_update(self):
+        url_with_param = self.url + f"{self.partner_staff.pk}/"
+        data = {
+            'point_of_interests': [self.active_location_2.id],
+        }
+        response = self.forced_auth_req('patch', url_with_param, user=self.partner_staff, data=data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(self.partner_staff.points_of_interest.count(), 1)
+
+        data = {
+            'point_of_interests': [self.active_location_2.id, self.active_location_3.id],
+        }
+        response = self.forced_auth_req('patch', url_with_param, user=self.partner_staff, data=data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(self.partner_staff.points_of_interest.count(), 2)
+
+    def test_assign_same_location_multiple_users(self):
+        url_with_param = self.url + f"{self.partner_staff.pk}/"
+        data = {
+            'point_of_interests': [self.active_location_2.id],
+        }
+        response = self.forced_auth_req('patch', url_with_param, user=self.partner_staff, data=data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(self.partner_staff.points_of_interest.count(), 1)
+
+        url_with_param = self.url + f"{self.partner_staff_2.pk}/"
+        data = {
+            'point_of_interests': [self.active_location_2.id],
+        }
+        response = self.forced_auth_req('patch', url_with_param, user=self.partner_staff_2, data=data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(self.partner_staff_2.points_of_interest.count(), 1)
+
+    def test_update_user_location_invalid_location(self):
+        url_with_param = self.url + f"{self.partner_staff.pk}/"
+        data = {
+            'point_of_interests': [99999],
+        }
+        response = self.forced_auth_req('patch', url_with_param, user=self.partner_staff, data=data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("does_not_exist", str(response.data))
 
     def test_update_user_unauthorized(self):
         url_with_param = f"{self.url}{self.partner_staff.pk}/"
