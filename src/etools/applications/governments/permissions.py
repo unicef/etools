@@ -227,16 +227,13 @@ class PartnershipManagerPermission(permissions.BasePermission):
 
     def _is_partner_staff_for_gdd(self, request, view) -> bool:
         from etools.applications.governments.models import GDD
-        """
-        True if the route has gdd_pk and the user is staff for that GDD's
-        partner.  Safe: one indexed SELECT; returns False on any error.
-        """
+
         gdd_pk = view.kwargs.get("gdd_pk") or view.kwargs.get("pk")
         if not gdd_pk:
             return False
 
         try:
-            gdd = GDD.objects.only("partner").select_related("partner").get(pk=gdd_pk)
+            gdd = GDD.objects.only("partner", "lead_section").select_related("partner").get(pk=gdd_pk)
         except GDD.DoesNotExist:
             return False
 
