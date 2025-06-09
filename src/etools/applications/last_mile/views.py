@@ -40,6 +40,7 @@ class POIQuerysetMixin:
             qs = (models.PointOfInterest.objects
                   .filter(Q(partner_organizations=partner) | Q(partner_organizations__isnull=True))
                   .filter(is_active=True)
+                  .filter(Q(users__user__id=self.request.user.id) | Q(users__isnull=True))
                   .exclude(name="UNICEF Warehouse")  # exclude UNICEF Warehouse
                   .select_related('parent').defer('parent__point', 'parent__geom', 'point')
                   .select_related('poi_type')
@@ -61,7 +62,7 @@ class PointOfInterestViewSet(POIQuerysetMixin, ModelViewSet):
 
     def get_queryset(self):
         return self.get_poi_queryset(exclude_partner_prefetch=True).only(
-            'parent__name', 'p_code', 'name', 'is_active', 'description', 'poi_type'
+            'parent__name', 'p_code', 'name', 'is_active', 'description', 'poi_type', 'status', 'created_on', 'approved_on', 'review_notes', 'created_by_id', 'approved_by_id'
         )
 
     @action(detail=True, methods=['post'], url_path='upload-waybill',
