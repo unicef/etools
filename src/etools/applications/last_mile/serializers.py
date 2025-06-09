@@ -86,6 +86,10 @@ class MaterialSerializer(serializers.ModelSerializer):
 class TransferListSerializer(serializers.ModelSerializer):
     origin_point = PointOfInterestLightSerializer(read_only=True)
     destination_point = PointOfInterestLightSerializer(read_only=True)
+    shipment_date = serializers.SerializerMethodField()
+
+    def get_shipment_date(self, obj):
+        return obj.created
 
     class Meta:
         model = models.Transfer
@@ -94,7 +98,7 @@ class TransferListSerializer(serializers.ModelSerializer):
             'origin_point', 'destination_point', 'waybill_id',
             'checked_in_by', 'checked_out_by', 'unicef_release_order',
             "purchase_order_id", "origin_check_out_at", "is_shipment",
-            "destination_check_in_at"
+            "destination_check_in_at", "shipment_date"
         )
 
 
