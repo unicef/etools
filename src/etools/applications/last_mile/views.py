@@ -323,7 +323,7 @@ class TransferViewSet(
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-        return Response(serializers.TransferSerializer(transfer, context={'request': request}).data, status=status.HTTP_200_OK)
+        return Response(serializers.TransferSerializer(serializer.instance, context={'request': request}).data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['patch'], url_path='mark-complete')
     def mark_complete(self, request, pk=None, **kwargs):
