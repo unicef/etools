@@ -439,6 +439,7 @@ class Item(TimeStampedModel, models.Model):
     conversion_factor = models.DecimalField(max_digits=10, decimal_places=2, null=True)
 
     quantity = models.IntegerField()
+    base_quantity = models.IntegerField(default=0)
     batch_id = models.CharField(max_length=255, null=True, blank=True)
     expiry_date = models.DateTimeField(null=True, blank=True)
     comment = models.TextField(null=True, blank=True)

@@ -270,16 +270,18 @@ class ItemSplitSerializer(serializers.ModelSerializer):
         _item = models.Item(
             transfer=self.instance.transfer,
             material=self.instance.material,
+            base_quantity=self.instance.base_quantity if self.instance.base_quantity else self.instance.quantity,
             quantity=self.validated_data['quantities'].pop(),
             **model_to_dict(
                 self.instance,
-                exclude=['id', 'created', 'modified', 'transfer', 'material', 'transfers_history', 'quantity'])
+                exclude=['id', 'created', 'modified', 'transfer', 'material', 'transfers_history', 'quantity', 'base_quantity'])
         )
         _item.save()
         _item.transfers_history.add(self.instance.transfer)
-
+        if not self.instance.base_quantity:
+            self.instance.base_quantity = self.instance.quantity
         self.instance.quantity = self.validated_data['quantities'].pop()
-        self.instance.save(update_fields=['quantity'])
+        self.instance.save(update_fields=['quantity', 'base_quantity'])
 
 
 class TransferSerializer(serializers.ModelSerializer):
@@ -360,24 +362,29 @@ class TransferCheckinSerializer(TransferBaseSerializer):
         for checkin_item in checkin_items:
             # this get should never fail, if it does Sentry should explode
             original_item = orig_items_dict[checkin_item['id']]
+            base_quantity = original_item.quantity
             if new_transfer.transfer_subtype == models.Transfer.SHORT:
                 quantity = original_item.quantity - checkin_item['quantity']
                 original_item.quantity = checkin_item['quantity']
+                original_item.base_quantity = base_quantity
                 original_item.origin_transfer = original_item.transfer
-                original_item.save(update_fields=['quantity', 'origin_transfer'])
+                original_item.save(update_fields=['quantity', 'origin_transfer', 'base_quantity'])
             else:  # is surplus
+                original_item.base_quantity = base_quantity
+                original_item.save(update_fields=['base_quantity'])
                 quantity = checkin_item['quantity'] - original_item.quantity
 
             _item = models.Item(
                 transfer=new_transfer,
                 origin_transfer=original_item.transfer,
                 quantity=quantity,
+                base_quantity=base_quantity,
                 material=original_item.material,
                 hidden=original_item.should_be_hidden_for_partner,
                 **model_to_dict(
                     original_item,
                     exclude=['id', 'created', 'modified', 'transfer', 'transfers_history', 'quantity',
-                             'material', 'hidden', 'origin_transfer']
+                             'material', 'hidden', 'origin_transfer', 'base_quantity']
                 )
             )
             _item.save()
@@ -395,6 +402,11 @@ class TransferCheckinSerializer(TransferBaseSerializer):
             elif checkin_item['quantity'] > original_item.quantity:
                 surplus.append(checkin_item)
         return short, surplus
+
+    def update_base_quantity(self, items):
+        for item in items:
+            item.base_quantity = item.quantity
+            item.save(update_fields=['base_quantity'])
 
     @transaction.atomic
     def update(self, instance, validated_data):
@@ -454,6 +466,8 @@ class TransferCheckinSerializer(TransferBaseSerializer):
 
             instance = super().update(instance, validated_data)
             instance.items.exclude(material__partner_material__partner_organization=instance.partner_organization).update(hidden=True)
+            if not surplus_items and not short_items:
+                self.update_base_quantity(instance.items.all())
             instance.refresh_from_db()
             is_unicef_warehouse = False
             if instance.origin_point:
@@ -536,11 +550,12 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
                     origin_transfer=original_item.transfer,
                     wastage_type=wastage_type,
                     quantity=checkout_item['quantity'],
+                    base_quantity=checkout_item['quantity'],
                     material=original_item.material,
                     **model_to_dict(
                         original_item,
                         exclude=['id', 'created', 'modified', 'transfer', 'wastage_type',
-                                 'transfers_history', 'quantity', 'material', 'origin_transfer']
+                                 'transfers_history', 'quantity', 'material', 'origin_transfer', 'base_quantity']
                     )
                 )
                 new_item.save()

@@ -379,6 +379,7 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(short_transfer.items.count(), 1)
         short_item_3 = short_transfer.items.last()
         self.assertEqual(short_item_3.quantity, 30)
+        self.assertEqual(short_item_3.base_quantity, 33)
         self.assertIn(self.incoming, short_item_3.transfers_history.all())
 
         surplus_transfer = models.Transfer.objects.filter(
@@ -388,6 +389,7 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(short_transfer.items.count(), 1)
         surplus_item_2 = surplus_transfer.items.last()
         self.assertEqual(surplus_item_2.quantity, 1)
+        self.assertEqual(surplus_item_2.base_quantity, 22)
         self.assertIn(self.incoming, surplus_item_2.transfers_history.all())
 
     @override_settings(RUTF_MATERIALS=['1234'])
@@ -423,6 +425,7 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(self.incoming.items.count(), len(response.data['items']))
         self.assertEqual(self.incoming.items.count(), 2)
         self.assertEqual(self.incoming.items.first().id, item_1.pk)
+        self.assertEqual(self.incoming.items.first().base_quantity, 11)
         self.assertTrue(models.TransferHistory.objects.filter(origin_transfer_id=self.incoming.id).exists())
         item_1.refresh_from_db()
         self.assertEqual(self.incoming.items.first().quantity, item_1.quantity)
@@ -909,7 +912,9 @@ class TestItemUpdateViewSet(BaseTenantTestCase):
         self.assertEqual(self.transfer.items.count(), 2)
         item.refresh_from_db()
         self.assertEqual(item.quantity, 76)
+        self.assertEqual(item.base_quantity, 100)
         self.assertEqual(self.transfer.items.exclude(pk=item.pk).first().quantity, 24)
+        self.assertEqual(self.transfer.items.exclude(pk=item.pk).first().base_quantity, 100)
 
     def test_post_split_validation(self):
         item = ItemFactory(transfer=self.transfer, material=self.material, quantity=100)
