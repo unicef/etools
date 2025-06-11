@@ -69,7 +69,7 @@ class PointOfInterestViewSet(POIQuerysetMixin, ModelViewSet):
     def upload_waybill(self, request, pk=None):
         destination_point = get_object_or_404(models.PointOfInterest, pk=pk)
 
-        serializer = self.serializer_class(data=request.data, context={'request': request})
+        serializer = self.serializer_class(data=request.data, context={'partner': request.user.partner})
         serializer.is_valid(raise_exception=True)
         waybill_file = serializer.validated_data['waybill_file']
         waybill_url = request.build_absolute_uri(waybill_file.url)
@@ -271,7 +271,7 @@ class TransferViewSet(
             serializer_class=serializers.TransferSerializer)
     def details(self, request, *args, **kwargs):
         transfer = self.get_object()
-        serializer = self.serializer_class(transfer, context={'request': request})
+        serializer = self.serializer_class(transfer, context={'partner': request.user.partner})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['get'], url_path='checked-in')
@@ -323,7 +323,7 @@ class TransferViewSet(
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-        return Response(serializers.TransferSerializer(serializer.instance, context={'request': request}).data, status=status.HTTP_200_OK)
+        return Response(serializers.TransferSerializer(serializer.instance, context={'partner': request.user.partner}).data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['patch'], url_path='mark-complete')
     def mark_complete(self, request, pk=None, **kwargs):
@@ -349,7 +349,7 @@ class TransferViewSet(
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-        return Response(serializers.TransferSerializer(serializer.instance, context={'request': request}).data, status=status.HTTP_200_OK)
+        return Response(serializers.TransferSerializer(serializer.instance, context={'partner': request.user.partner}).data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['post'], url_path='upload-evidence',
             serializer_class=serializers.TransferEvidenceSerializer)

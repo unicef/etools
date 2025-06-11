@@ -293,7 +293,7 @@ class TransferSerializer(serializers.ModelSerializer):
     items = serializers.SerializerMethodField()
 
     def get_items(self, obj):
-        partner = self.context['request'].user.partner
+        partner = self.context.get('partner')
         if obj.transfer_type == obj.HANDOVER and obj.from_partner_organization == partner:
             return obj.initial_items if obj.initial_items else ItemSerializer(obj.items.all(), many=True).data
         return ItemSerializer(obj.items.all(), many=True).data
