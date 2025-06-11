@@ -274,6 +274,13 @@ class Transfer(TimeStampedModel, models.Model):
 
     pd_number = models.CharField(max_length=255, null=True, blank=True)
 
+    initial_items = models.JSONField(
+        verbose_name=_("Initial Items"),
+        null=True,
+        blank=True,
+        db_index=True
+    )
+
     objects = TransferManager()
 
     class Meta:
