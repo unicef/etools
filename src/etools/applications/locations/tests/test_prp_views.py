@@ -15,12 +15,13 @@ class TestPRPLocationListView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
-        cls.intervention = InterventionFactory()
+        cls.intervention_1 = InterventionFactory()
         cls.parent = LocationFactory()
-        cls.intervention.flat_locations.add(cls.parent)
+        cls.intervention_1.flat_locations.add(cls.parent)
         for x in range(5):
-            cls.intervention.flat_locations.add(LocationFactory(parent=cls.parent))
-
+            cls.intervention_1.flat_locations.add(LocationFactory(parent=cls.parent))
+        cls.intervention_2 = InterventionFactory()
+        cls.intervention_2.flat_locations.add(cls.parent)
         cls.inactive_location = LocationFactory(is_active=False, parent=cls.parent)
         cls.expected_keys = sorted(('id', 'name', 'p_code', 'admin_level', 'admin_level_name',
                                     'point', 'geom', 'parent_p_code'))
@@ -37,9 +38,9 @@ class TestPRPLocationListView(BaseTenantTestCase):
         self.assertEqual(sorted(response.data[0].keys()), self.expected_keys)
 
         # sort the expected locations by name, the same way the API results are sorted
-        expected_locs = Location.simplified_geom.filter(intervention_flat_locations__isnull=False).order_by('id')
+        expected_locs = Location.simplified_geom.filter(intervention_flat_locations__isnull=False).order_by('id').distinct()
         self.assertEqual(
-            list(self.intervention.flat_locations.order_by('id').values_list('id', flat=True)),
+            list(self.intervention_1.flat_locations.order_by('id').values_list('id', flat=True)),
             list(expected_locs.values_list('id', flat=True)))
         self.assertNotIn(self.inactive_location, expected_locs)
 
