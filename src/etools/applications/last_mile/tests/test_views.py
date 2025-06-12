@@ -280,6 +280,13 @@ class TestTransferView(BaseTenantTestCase):
                                       sorted(checkin_data['items'], key=lambda x: x['id'])):
             self.assertEqual(existing.quantity, expected['quantity'])
 
+        item_1.refresh_from_db()
+        item_2.refresh_from_db()
+        item_3.refresh_from_db()
+        self.assertEqual(item_1.base_quantity, item_1.quantity)
+        self.assertEqual(item_2.base_quantity, item_2.quantity)
+        self.assertEqual(item_3.base_quantity, item_3.quantity)
+
         self.assertFalse(models.Transfer.objects.filter(transfer_type=models.Transfer.WASTAGE).exists())
 
         # test new checkin of an already checked-in transfer

@@ -278,7 +278,6 @@ class Transfer(TimeStampedModel, models.Model):
         verbose_name=_("Initial Items"),
         null=True,
         blank=True,
-        db_index=True
     )
 
     objects = TransferManager()

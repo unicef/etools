@@ -264,7 +264,7 @@ class TransferViewSet(
         else:
             qs = qs.filter(destination_point=location)
 
-        qs = qs.exclude(origin_point=location).select_related("destination_point__parent", "origin_point__parent")
+        qs = qs.exclude(origin_point=location).select_related("destination_point__parent", "origin_point__parent").order_by("-created")
         return self.paginate_response(qs)
 
     @action(detail=True, methods=['get'], url_path='details',

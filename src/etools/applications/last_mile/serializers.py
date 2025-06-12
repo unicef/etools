@@ -378,13 +378,12 @@ class TransferCheckinSerializer(TransferBaseSerializer):
                 transfer=new_transfer,
                 origin_transfer=original_item.transfer,
                 quantity=quantity,
-                base_quantity=base_quantity,
                 material=original_item.material,
                 hidden=original_item.should_be_hidden_for_partner,
                 **model_to_dict(
                     original_item,
                     exclude=['id', 'created', 'modified', 'transfer', 'transfers_history', 'quantity',
-                             'material', 'hidden', 'origin_transfer', 'base_quantity']
+                             'material', 'hidden', 'origin_transfer']
                 )
             )
             _item.save()
