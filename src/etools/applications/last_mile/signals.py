@@ -17,17 +17,11 @@ def log_transfer(sender, instance, **kwargs):
         return  # No transfer available, exit early
 
     if transfer.status == transfer.PENDING and instance.quantity > 0:
-        should_add = True
-        if transfer.initial_items:
-            for item in transfer.initial_items:
-                if item["id"] == instance.pk:
-                    should_add = False
-                    break
-            if should_add:
-                transfer.initial_items.append(ItemSerializer(instance).data)
-        else:
-            transfer.initial_items = [ItemSerializer(instance).data]
-        transfer.save(update_fields=["initial_items"])
+        item_exists = any(item['id'] == instance.pk for item in transfer.initial_items or [])
+
+        if not item_exists:
+            transfer.initial_items = (transfer.initial_items or []) + [ItemSerializer(instance).data]
+            transfer.save(update_fields=["initial_items"])
 
     transfer_origin_pk = getattr(transfer.origin_transfer, "pk", None)
     original_transfer = getattr(instance, "origin_transfer", None)

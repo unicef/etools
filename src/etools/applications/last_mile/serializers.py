@@ -270,11 +270,12 @@ class ItemSplitSerializer(serializers.ModelSerializer):
         _item = models.Item(
             transfer=self.instance.transfer,
             material=self.instance.material,
+            origin_transfer=self.instance.origin_transfer,
             base_quantity=self.instance.base_quantity if self.instance.base_quantity else self.instance.quantity,
             quantity=self.validated_data['quantities'].pop(),
             **model_to_dict(
                 self.instance,
-                exclude=['id', 'created', 'modified', 'transfer', 'material', 'transfers_history', 'quantity', 'base_quantity'])
+                exclude=['id', 'created', 'modified', 'transfer', 'material', 'transfers_history', 'quantity', 'base_quantity', 'origin_transfer'])
         )
         _item.save()
         _item.transfers_history.add(self.instance.transfer)
@@ -296,8 +297,8 @@ class TransferSerializer(serializers.ModelSerializer):
 
     def get_items(self, obj):
         partner = self.context.get('partner')
-        if obj.transfer_type == obj.HANDOVER and obj.from_partner_organization == partner:
-            return obj.initial_items if obj.initial_items else ItemSerializer(obj.items.all(), many=True).data
+        if obj.transfer_type == obj.HANDOVER and obj.from_partner_organization == partner and obj.initial_items:
+            return obj.initial_items
         return ItemSerializer(obj.items.all(), many=True).data
 
     class Meta:
@@ -403,9 +404,11 @@ class TransferCheckinSerializer(TransferBaseSerializer):
         return short, surplus
 
     def update_base_quantity(self, items):
+        list_items_update = []
         for item in items:
             item.base_quantity = item.quantity
-            item.save(update_fields=['base_quantity'])
+            list_items_update.append(item)
+        models.Item.objects.bulk_update(list_items_update, ['base_quantity'])
 
     @transaction.atomic
     def update(self, instance, validated_data):
