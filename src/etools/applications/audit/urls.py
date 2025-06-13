@@ -14,6 +14,7 @@ root_api.register(r'spot-checks', views.SpotCheckViewSet, basename='spot-checks'
 root_api.register(r'staff-spot-checks', views.StaffSpotCheckViewSet, basename='staff-spot-checks')
 root_api.register(r'audits', views.AuditViewSet, basename='audits')
 root_api.register(r'special-audits', views.SpecialAuditViewSet, basename='special-audits')
+root_api.register(r'face-reports', views.FacereportViewSet, basename='facereports')
 
 auditor_staffmember_api = NestedComplexRouter(root_api, r'audit-firms', lookup='auditor_firm')
 auditor_staffmember_api.register(r'staff-members', views.AuditorStaffMembersViewSet, basename='auditorstaffmembers')
