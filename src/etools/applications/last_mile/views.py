@@ -286,7 +286,7 @@ class TransferViewSet(
         location = self.get_parent_poi()
         qs = self.get_queryset()\
             .filter(status=models.Transfer.PENDING, origin_point=location)\
-            .exclude(destination_point=location)
+            .exclude(destination_point=location).order_by("-created")
 
         return self.paginate_response(qs)
 
