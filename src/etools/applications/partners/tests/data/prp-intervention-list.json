@@ -23,7 +23,8 @@
                 "admin_level": 0,
                 "p_code": "a-p-code",
                 "name": "A Location",
-                "admin_level_name": "A Gateway"
+                "admin_level_name": "A Gateway",
+                "parent_pcode": null
               }
             ],
             "cluster_indicator_id": null,
@@ -59,7 +60,6 @@
     "number": "/PCA2017394/PD2017642",
     "start_date": "2017-09-13",
     "focal_points": [],
-    "locations": [],
     "offices": [],
     "partner_org": {
       "id": 0,
