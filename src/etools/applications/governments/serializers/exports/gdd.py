@@ -61,6 +61,13 @@ class GDDExportSerializer(serializers.ModelSerializer):
         source="planned_budget.currency",
         allow_null=True,
     )
+    cso_contribution = serializers.DecimalField(
+        label=_("Total Government Contribution"),
+        source='total_partner_contribution',
+        read_only=True,
+        max_digits=20,
+        decimal_places=2,
+    )
     unicef_budget = serializers.DecimalField(
         label=_("UNICEF Cash"),
         source='total_unicef_cash',
@@ -134,7 +141,7 @@ class GDDExportSerializer(serializers.ModelSerializer):
             "unicef_focal_points",
             "partner_focal_points",
             "budget_currency",
-            # "cso_contribution",
+            "cso_contribution",
             "unicef_budget",
             "unicef_supply",
             "total_planned_budget",
@@ -251,12 +258,12 @@ class GDDExportFlatSerializer(ExportSerializerMixin, GDDExportSerializer):
         read_only=True,
         allow_null=True,
     )
-    # partner_contribution = serializers.CharField(
-    #     label=_("CSO Contribution"),
-    #     source='planned_budget.partner_contribution',
-    #     read_only=True,
-    #     allow_null=True,
-    # )
+    partner_contribution = serializers.CharField(
+        label=_("Government Contribution"),
+        source='planned_budget.partner_contribution',
+        read_only=True,
+        allow_null=True,
+    )
     unicef_cash = serializers.CharField(
         label=_("UNICEF Cash"),
         source='planned_budget.unicef_cash',
@@ -269,12 +276,12 @@ class GDDExportFlatSerializer(ExportSerializerMixin, GDDExportSerializer):
         read_only=True,
         allow_null=True,
     )
-    # partner_contribution_local = serializers.CharField(
-    #     label=_("CSO Contribution (Local)"),
-    #     source='planned_budget.partner_contribution_local',
-    #     read_only=True,
-    #     allow_null=True,
-    # )
+    partner_contribution_local = serializers.CharField(
+        label=_("Government Contribution (Local)"),
+        source='planned_budget.partner_contribution_local',
+        read_only=True,
+        allow_null=True,
+    )
     unicef_cash_local = serializers.CharField(
         label=_("UNICEF Cash (Local)"),
         source='planned_budget.unicef_cash_local',
