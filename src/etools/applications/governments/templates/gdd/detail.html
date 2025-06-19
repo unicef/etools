@@ -163,7 +163,7 @@
                 <td class="w-p12">{% translate "UNICEF Cash" %}:</td>
                 <td class="w-p12">{{ gdd.planned_budget.unicef_cash_local | currency }}</td>
                 <td class="w-p12">{% translate "Supplies" %}:</td>
-                <td class="w-p12">{{ gdd.planned_budget.in_kind_amount_local | currency}}</td>
+                <td class="w-p12" colspan="3">{{ gdd.planned_budget.in_kind_amount_local | currency}}</td>
                 <td class="w-p12">{% translate "Total" %}:</td>
                 <td class="w-p12">{{ gdd.planned_budget.total_unicef_contribution_local | currency }}</td>
               </tr>
