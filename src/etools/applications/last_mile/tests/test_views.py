@@ -827,7 +827,9 @@ class TestItemUpdateViewSet(BaseTenantTestCase):
         item.refresh_from_db()
         self.assertEqual(item.mapped_description, 'updated description')
         self.assertEqual(item.description, 'updated description')
-
+        data = {
+            'description': 'updated description12',
+        }
         response = self.forced_auth_req('patch', url, user=self.partner_staff, data=data)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("The description cannot be modified. A value is already present", str(response.data))
