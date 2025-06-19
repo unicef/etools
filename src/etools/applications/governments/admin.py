@@ -292,7 +292,7 @@ class GDDAdmin(
     )
     country_office_admin_editable = ('unicef_court', )
     fieldsets = (
-        (_('GDD Details'), {
+        (_('GPD Details'), {
             'fields':
                 (
                     'agreement',
