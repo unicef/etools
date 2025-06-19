@@ -225,10 +225,10 @@ class ItemUpdateSerializer(serializers.ModelSerializer):
         return validated_data
 
     def save(self, **kwargs):
-        if self.instance.mapped_description:
-            raise ValidationError(_('The description cannot be modified. A value is already present.'))
         if 'description' in self.validated_data:
             description = self.validated_data.pop('description')
+            if self.instance.mapped_description and self.instance.mapped_description != description:
+                raise ValidationError(_('The description cannot be modified. A value is already present.'))
             if description:
                 self.instance.mapped_description = description
         super().save(**kwargs)
