@@ -406,10 +406,9 @@ class PartnerMaterial(TimeStampedModel, models.Model):
         on_delete=models.CASCADE,
         related_name='partner_material'
     )
-    description = models.CharField(max_length=255)
 
     def __str__(self):
-        return f'{self.partner_organization.name}: {self.material.short_description} with description: {self.description}'
+        return f'{self.partner_organization.name}: {self.material.short_description}'
 
     class Meta:
         unique_together = ('partner_organization', 'material')
@@ -476,6 +475,8 @@ class Item(TimeStampedModel, models.Model):
     )
     transfers_history = models.ManyToManyField(Transfer, through='ItemTransferHistory')
 
+    mapped_description = models.CharField(max_length=255, null=True, blank=True)
+
     material = models.ForeignKey(
         Material,
         on_delete=models.CASCADE,
@@ -492,19 +493,9 @@ class Item(TimeStampedModel, models.Model):
 
     @cached_property
     def description(self):
-        partner_material_cached = getattr(self.material, '_partner_material', None)
-        if partner_material_cached:
-            for partner_material in partner_material_cached:
-                if partner_material.partner_organization == self.transfer.partner_organization and partner_material.material == self.material:
-                    return partner_material.description
-            return self.material.short_description
-        else:
-            try:
-                partner_material = PartnerMaterial.objects.only('description').get(
-                    partner_organization=self.transfer.partner_organization, material=self.material)
-                return partner_material.description
-            except PartnerMaterial.DoesNotExist:
-                return self.material.short_description
+        if self.mapped_description:
+            return self.mapped_description
+        return self.material.short_description
 
     @cached_property
     def should_be_hidden_for_partner(self):

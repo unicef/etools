@@ -10,7 +10,6 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from etools.applications.core.util_scripts import set_country
 from etools.applications.last_mile import models
 from etools.applications.last_mile.permissions import LMSMAPIPermission
 from etools.applications.organizations.models import Organization
@@ -38,7 +37,6 @@ class VisionIngestMaterialsApiView(APIView):
     }
 
     def post(self, request):
-        set_country('somalia')
         materials_to_create = []
         for material in request.data:
             model_dict = {}
@@ -103,7 +101,6 @@ class VisionLMSMExport(APIView):
     permission_classes = (LMSMAPIPermission,)
 
     def get(self, request, *args, **kwargs):
-        set_country('somalia')
         model_param = request.query_params.get('type')
         model_manager_map = {
             "transfer": models.Transfer.objects,
@@ -226,12 +223,14 @@ class VisionIngestTransfersApiView(APIView):
                     except models.Item.DoesNotExist:
                         item_dict['transfer'] = transfer
                         item_dict['base_quantity'] = item_dict['quantity']
+                        if not item_dict.get('batch_id'):
+                            item_dict['conversion_factor'] = 1.0
+                            item_dict['uom'] = "EA"
                         items_to_create.append(models.Item(**item_dict))
 
         models.Item.objects.bulk_create(items_to_create)
 
     def post(self, request):
-        set_country('somalia')
         transfers_to_create = []
         transfer_items = {}
         for row in request.data:
