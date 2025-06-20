@@ -38,7 +38,7 @@ class MinimalOutputListSerializer(serializers.ModelSerializer):
         model = Result
         fields = (
             "id",
-            "name"
+            "name",
         )
 
     def get_name(self, obj):
@@ -62,7 +62,7 @@ class IndicatorBlueprintCUSerializer(serializers.ModelSerializer):
     class Meta:
         model = IndicatorBlueprint
         fields = '__all__'
-        # remove the unique validator as we're doing a get_por_create
+        # remove the unique validator as we're doing a get_or_create
         extra_kwargs = {
             'code': {'validators': []},
         }
@@ -713,7 +713,7 @@ class InterventionActivityDetailSerializer(
             self.instance = super().update(instance, validated_data)
             self.set_items(self.instance, options)
         self.set_time_frames(self.instance, time_frames)
-        return self.instance
+        return super().update(instance, validated_data)
 
     def set_items(self, instance, items):
         if items is None:

@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model
 from django.utils.translation import gettext as _
 
 from rest_framework import serializers
@@ -67,7 +68,7 @@ class AgreementDetailSerializer(serializers.ModelSerializer):
     partner_name = serializers.CharField(source='partner.name', read_only=True)
     authorized_officers = MinimalUserSerializer(many=True, read_only=True)
     amendments = AgreementAmendmentCreateUpdateSerializer(many=True, read_only=True)
-    unicef_signatory = SimpleUserSerializer(source='signed_by')
+    signed_by = MinimalUserSerializer(read_only=True)
     partner_signatory = PartnerManagerSerializer(source='partner_manager')
     attached_agreement_file = serializers.FileField(source="attached_agreement", read_only=True)
     attachment = AttachmentSingleFileField(read_only=True)
@@ -91,7 +92,9 @@ class AgreementCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotModelSe
     partner_name = serializers.CharField(source='partner.name', read_only=True)
     agreement_type = serializers.CharField(required=True)
     amendments = AgreementAmendmentCreateUpdateSerializer(many=True, read_only=True)
-    signed_by = serializers.CharField(read_only=True, allow_null=True)
+    signed_by = serializers.PrimaryKeyRelatedField(
+        queryset=get_user_model().objects.base_qs(), required=False, allow_null=True
+    )
     country_programme = serializers.PrimaryKeyRelatedField(queryset=CountryProgramme.objects.all(), required=False,
                                                            allow_null=True)
     unicef_signatory = SimpleUserSerializer(source='signed_by', read_only=True)
@@ -104,6 +107,11 @@ class AgreementCreateUpdateSerializer(AttachmentSerializerMixin, SnapshotModelSe
     class Meta:
         model = Agreement
         fields = "__all__"
+
+    def validate_signed_by(self, value):
+        if value not in get_user_model().objects.unicef_representatives():
+            raise ValidationError(_('The UNICEF Representative assigned is not valid.'))
+        return value
 
     def validate(self, data):
         data = super().validate(data)

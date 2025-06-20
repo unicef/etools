@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, Permission
 from django.db.models import signals
 
 import factory
@@ -138,3 +138,26 @@ class StagedUserFactory(factory.django.DjangoModelFactory):
     reviewer = factory.SubFactory('etools.applications.users.tests.factories.UserFactory')
     country = factory.SubFactory(CountryFactory)
     organization = factory.SubFactory(OrganizationFactory)
+
+
+class UserPermissionFactory(UserFactory):
+    is_active = True
+
+    @factory.post_generation
+    def perms(self, create, extracted, **kwargs):
+        if not create:
+            return
+
+        if extracted:
+            for perm in extracted:
+                if isinstance(perm, str):
+                    try:
+                        perm_obj = Permission.objects.get(codename=perm)
+                    except Permission.DoesNotExist:
+                        raise ValueError(
+                            'Permission {} does not exist'.format(perm)
+                        )
+                else:
+                    perm_obj = perm
+
+                self.user_permissions.add(perm_obj)

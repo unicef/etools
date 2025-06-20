@@ -245,7 +245,8 @@ TENANT_APPS = (
     'unicef_snapshot',
     'unicef_attachments',
     'unicef_vision',
-    'etools.applications.last_mile'
+    'etools.applications.last_mile',
+    'etools.applications.governments'
 )
 INSTALLED_APPS = ('django_tenants',) + SHARED_APPS + TENANT_APPS
 
@@ -704,3 +705,6 @@ PBI_CONFIG = {
     "SCOPE_BASE": ['https://analysis.windows.net/powerbi/api/.default'],
     "AUTHORITY_URL": f"https://login.microsoftonline.com/{get_from_secrets_or_env('PBI_LMSM_TENANT_ID', '')}"
 }
+
+FAM_SKIP_IP_CONTACTED_VALIDATION_DATE = get_from_secrets_or_env('FAM_SKIP_IP_CONTACTED_VALIDATION_DATE', '2024-08-01')
+FAM_SKIP_IP_CONTACTED_VALIDATION_DATE = datetime.datetime.strptime(FAM_SKIP_IP_CONTACTED_VALIDATION_DATE, '%Y-%m-%d').date()

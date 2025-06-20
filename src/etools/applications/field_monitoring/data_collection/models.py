@@ -44,6 +44,19 @@ class ActivityQuestion(QuestionTargetMixin, models.Model):
     def __str__(self):
         return '{}: {}'.format(self.monitoring_activity, self.question)
 
+    def duplicate(self):
+        return ActivityQuestion(
+            monitoring_activity=self.monitoring_activity,
+            question=self.question,
+            text=self.text,
+            is_hact=self.is_hact,
+            specific_details=self.specific_details,
+            is_enabled=self.is_enabled,
+            cp_output=self.cp_output,
+            partner=self.partner,
+            intervention=self.intervention
+        )
+
 
 class StartedChecklist(models.Model):
     monitoring_activity = models.ForeignKey(MonitoringActivity, related_name='checklists', verbose_name=_('Activity'),

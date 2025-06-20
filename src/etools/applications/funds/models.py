@@ -71,6 +71,14 @@ class FundsReservationHeader(TimeStampedModel):
         null=True,
         on_delete=models.CASCADE,
     )
+    gdd = models.ForeignKey(
+        'governments.GDD',
+        verbose_name=_("Government Digital Document"),
+        related_name='frs',
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+    )
     vendor_code = models.CharField(
         verbose_name=_("Vendor Code"),
         max_length=20,
@@ -152,7 +160,6 @@ class FundsReservationHeader(TimeStampedModel):
         max_digits=20,
         decimal_places=2,
     )
-
     start_date = models.DateField(
         verbose_name=_("Start Date"),
         null=True,

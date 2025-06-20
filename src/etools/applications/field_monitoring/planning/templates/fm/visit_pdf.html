@@ -162,7 +162,7 @@
                     </div>
                     {% for finding in finding.list %}
                         <div class="value">
-                            {{ finding.narrative_finding|default:"-"|linebreaks }}
+                            {{ finding.narrative_finding|safe|default:"-"|linebreaks }}
                         </div>
                     {% endfor %}
                 {% endfor %}
@@ -211,7 +211,7 @@
                                 </div>
                                 <div>
                                     <span class="label">Overall Finding:</span>
-                                    <span class="value">{{ overall.narrative_finding }}</span>
+                                    <span class="value">{{ overall.narrative_finding|safe|default:"-"|linebreaks }}</span>
                                 </div>
                                 <table border="1">
                                 {% for finding in overall.findings %}

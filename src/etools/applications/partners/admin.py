@@ -507,7 +507,7 @@ class PartnerAdmin(ExtraUrlMixin, ExportMixin, RestrictedEditAdmin):
         'organization__vendor_number',
         'organization__short_name'
     )
-    autocomplete_fields = ('lead_office', 'lead_section')
+    raw_id_fields = ('lead_office', 'lead_section')
     list_filter = (
         'organization__organization_type',
         'rating',

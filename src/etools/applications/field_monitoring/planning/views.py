@@ -33,6 +33,10 @@ from etools.applications.field_monitoring.permissions import (
     IsTeamMember,
     IsVisitLead,
 )
+from etools.applications.field_monitoring.planning.actions.duplicate_monitoring_activity import (
+    DuplicateMonitoringActivity,
+    MonitoringActivityNotFound,
+)
 from etools.applications.field_monitoring.planning.activity_validation.validator import ActivityValid
 from etools.applications.field_monitoring.planning.export.renderers import MonitoringActivityCSVRenderer
 from etools.applications.field_monitoring.planning.export.serializers import MonitoringActivityExportSerializer
@@ -54,6 +58,7 @@ from etools.applications.field_monitoring.planning.models import (
 )
 from etools.applications.field_monitoring.planning.serializers import (
     CPOutputListSerializer,
+    DuplicateMonitoringActivitySerializer,
     FMUserSerializer,
     InterventionWithLinkedInstancesSerializer,
     MonitoringActivityActionPointSerializer,
@@ -155,7 +160,7 @@ class MonitoringActivitiesViewSet(
         .annotate(checklists_count=Count('checklists'))\
         .select_related('tpm_partner', 'tpm_partner__organization',
                         'visit_lead', 'location', 'location_site')\
-        .prefetch_related('team_members', 'partners', 'partners__organization',
+        .prefetch_related('team_members', 'partners', 'partners__organization', 'report_reviewers',
                           'interventions', 'cp_outputs')\
         .order_by("-id")
     serializer_class = MonitoringActivitySerializer
@@ -220,6 +225,7 @@ class MonitoringActivitiesViewSet(
     def update(self, request, *args, **kwargs):
         related_fields = []
         nested_related_names = []
+        kwargs.update({'related_non_serialized_fields': ['report_reviewers', 'team_members', 'offices']})
         instance, old_instance, _serializer = self.my_update(
             request,
             related_fields,
@@ -279,6 +285,19 @@ class MonitoringActivitiesViewSet(
         return Response(serializer.data, headers={
             'Content-Disposition': 'attachment;filename=monitoring_activities_{}.csv'.format(timezone.now().date())
         })
+
+    @action(detail=True, methods=['post'], url_path='duplicate')
+    def duplicate(self, request, pk, *args, **kwargs):
+        serializer = DuplicateMonitoringActivitySerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        try:
+            duplicated_monitoring_activity = DuplicateMonitoringActivity().execute(int(pk), request.data.get('with_checklist'), request.user)
+        except MonitoringActivityNotFound:
+            return Response(status=status.HTTP_404_NOT_FOUND, data={'detail': 'Monitoring Activity not found'})
+
+        return Response(self.get_serializer_class()(duplicated_monitoring_activity, context=self.get_serializer_context()).data,
+                        status=status.HTTP_201_CREATED)
 
 
 class FMUsersViewSet(

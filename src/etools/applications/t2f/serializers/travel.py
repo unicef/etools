@@ -102,6 +102,11 @@ class TravelActivitySerializer(PermissionBasedModelSerializer):
                   'primary_traveler', 'date', 'is_primary_traveler', 'action_points')
 
     def validate(self, attrs):
+        if 'travel_type' in attrs and attrs['travel_type'] == TravelType.PROGRAMME_MONITORING or \
+                'travel_type' not in attrs:
+            raise ValidationError(
+                "The capturing of Programmatic Visits in the Trip Management Module has been discontinued. "
+                "Please use the Field Monitoring Module instead.")
         if 'id' not in attrs:
             if not attrs.get('is_primary_traveler'):
                 if not attrs.get('primary_traveler'):
@@ -115,7 +120,7 @@ class TravelActivitySerializer(PermissionBasedModelSerializer):
         travel_type = attrs.get('travel_type', getattr(self.instance, 'travel_type', None))
 
         if partner and partner.partner_type == OrganizationType.GOVERNMENT and \
-                travel_type in [TravelType.PROGRAMME_MONITORING, TravelType.SPOT_CHECK] and \
+                travel_type in [TravelType.SPOT_CHECK] and \
                 'result' not in attrs:
             raise ValidationError({'result': serializers.Field.default_error_messages['required']})
 

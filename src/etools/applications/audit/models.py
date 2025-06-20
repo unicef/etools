@@ -450,7 +450,7 @@ class SpotCheck(Engagement):
     @property
     def pending_unsupported_amount(self):
         return self.total_amount_of_ineligible_expenditure - self.additional_supporting_documentation_provided \
-            - self.justification_provided_and_accepted - self.write_off_required
+            - self.justification_provided_and_accepted - self.write_off_required - self.amount_refunded
 
     def save(self, *args, **kwargs):
         self.engagement_type = Engagement.TYPES.sc

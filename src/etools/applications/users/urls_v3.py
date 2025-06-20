@@ -13,6 +13,7 @@ from etools.applications.users.views_v3 import (
     MyProfileAPIView,
     OrganizationListView,
     StagedUserViewSet,
+    UnicefRepresentativeListAPIView,
     UserRealmViewSet,
     UsersDetailAPIView,
     UsersListAPIView,
@@ -45,4 +46,7 @@ urlpatterns = (
 
     re_path(r'^', include(root_api.urls)),
     re_path(r'^$', UsersListAPIView.as_view(), name="users-list"),
+    re_path(r'^unicef-representatives/$',
+            UnicefRepresentativeListAPIView.as_view(http_method_names=['get', ]),
+            name="unicef-representative-list"),
 )

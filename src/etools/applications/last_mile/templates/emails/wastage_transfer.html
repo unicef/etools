@@ -1,4 +1,5 @@
 {% load static %}
+{% load custom_filters %}
 <!DOCTYPE html>
 <html>
   <head>
@@ -102,6 +103,10 @@
   <body style="background-color:#EEEEEE;font-family:sans-serif;-webkit-font-smoothing:antialiased;
                font-size:14px;line-height:1.4;margin:0;padding:0;-ms-text-size-adjust:100%;
                -webkit-text-size-adjust:100%;">
+
+<h1 style="color:#212121;font-family:sans-serif;line-height:1.4;margin:0;margin-bottom:24px;margin-top:8px;color:#0099FF;font-size:22px;font-weight:normal;">Last Mile Supply Monitoring Solution</h1>
+<p style="font-family:sans-serif;font-size:14px;font-weight:normal;margin:0;margin-bottom:24px;"><strong style="font-weight:bold;white-space:nowrap;">Dear colleague, </strong><br><br>This is to inform you that an Implementing Partner has reported a wastage.<br>A copy of the supporting documentation is included in the first table below, in the Wastage Document section.</p> 
+    
     <table border="0" cellpadding="0" cellspacing="0" class="body"
            style="border-collapse:separate;mso-table-lspace:0pt;mso-table-rspace:0pt;
            background-color:#EEEEEE;width:100%;">
@@ -163,33 +168,21 @@
                                                           box-sizing:border-box;max-height:56px;margin:0;
                                                           padding:10px;overflow:hidden;
                                                           background-color:#0099FF;">
-                                    <span style="color: white;font-weight: bold;">Wastage ID</span>
+                                    <span style="color: white;font-weight: bold;">IP Name</span>
                                 </td>
                                 <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                                           box-sizing:border-box;width:100%;max-height:56px;margin:0;
                                                           padding:10px;overflow:hidden;
                                                           background-color:#0099FF;">
-                                    <span style="color: white;font-weight: bold;">Checked In Date</span>
+                                    <span style="color: white;font-weight: bold;">Wastage Reporting Date</span>
                                 </td>
                                 <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                                           box-sizing:border-box;width:100%;max-height:56px;margin:0;
                                                           padding:10px;overflow:hidden;
                                                           background-color:#0099FF;">
-                                    <span style="color: white;font-weight: bold;">Checked In By</span>
+                                    <span style="color: white;font-weight: bold;">Reported In By</span>
                                 </td>
                                 <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
-                                                          box-sizing:border-box;width:100%;max-height:56px;margin:0;
-                                                          padding:10px;overflow:hidden;
-                                                          background-color:#0099FF;">
-                                    <span style="color: white;font-weight: bold;">Checked Out Date</span>
-                                </td>
-                                <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
-                                                          box-sizing:border-box;width:100%;max-height:56px;margin:0;
-                                                          padding:10px;overflow:hidden;
-                                                          background-color:#0099FF;">
-                                    <span style="color: white;font-weight: bold;">Checked Out By</span>
-                                </td>
-                                  <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                                           box-sizing:border-box;width:100%;max-height:56px;margin:0;
                                                           padding:10px;overflow:hidden;
                                                           background-color:#0099FF;">
@@ -199,19 +192,19 @@
                                                           box-sizing:border-box;width:100%;max-height:56px;margin:0;
                                                           padding:10px;overflow:hidden;
                                                           background-color:#0099FF;">
-                                    <span style="color: white;font-weight: bold;">Location Region</span>
+                                    <span style="color: white;font-weight: bold;">District</span>
+                                </td>
+                                  <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                                          box-sizing:border-box;width:100%;max-height:56px;margin:0;
+                                                          padding:10px;overflow:hidden;
+                                                          background-color:#0099FF;">
+                                    <span style="color: white;font-weight: bold;">State</span>
                                 </td>
                                 <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                                           box-sizing:border-box;width:100%;max-height:56px;margin:0;
                                                           padding:10px;overflow:hidden;
                                                           background-color:#0099FF;">
-                                    <span style="color: white;font-weight: bold;">Location Type</span>
-                                </td>
-                                <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
-                                                          box-sizing:border-box;width:100%;max-height:56px;margin:0;
-                                                          padding:10px;overflow:hidden;
-                                                          background-color:#0099FF;">
-                                    <span style="color: white;font-weight: bold;">Transfer Created</span>
+                                    <span style="color: white;font-weight: bold;">Wastage Document</span>
                                 </td>
                               </tr>
                               <tr >
@@ -221,39 +214,31 @@
                                  </td>
                                  <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                            box-sizing:border-box;padding:10px;">
-                                     {{ transfer.id }}
+                                     {{ transfer.partner_organization.name }}
                                  </td>
                                  <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                            box-sizing:border-box;padding:10px;">
-                                     {{ transfer.destination_check_in_at|date:'Y-m-d H:i' }}
+                                     {% if transfer.destination_check_in_at %}{{ transfer.destination_check_in_at }}{% else %}{{ transfer.origin_check_out_at }}{% endif %}
                                  </td>
                                  <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                            box-sizing:border-box;padding:10px;">
-                                     {{ transfer.checked_in_by.full_name }}
+                                     {% if transfer.checked_in_by %}{{ transfer.checked_in_by.name }}{% else %}{{ transfer.checked_out_by.name }}{% endif %}
                                  </td>
                                  <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                            box-sizing:border-box;padding:10px;">
-                                     {{ transfer.origin_check_out_at|date:'Y-m-d H:i' }}
+                                    {{ transfer.destination_point.name }}
                                  </td>
                                  <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                            box-sizing:border-box;padding:10px;">
-                                     {{ transfer.checked_out_by.full_name }}
+                                     {{ transfer.destination_point.parent_name }}
                                  </td>
                                  <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                            box-sizing:border-box;padding:10px;">
-                                     {{ transfer.destination_point.name }}
+                                    {{ transfer.destination_point.region }} 
                                  </td>
                                  <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                            box-sizing:border-box;padding:10px;">
-                                     {{ transfer.destination_point.parent }}
-                                 </td>
-                                 <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
-                                           box-sizing:border-box;padding:10px;">
-                                     {{ transfer.destination_point.poi_type.name }}
-                                 </td>
-                                 <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
-                                           box-sizing:border-box;padding:10px;">
-                                     {{ transfer.created|date:'Y-m-d H:i' }}
+                                     <a href="{{ proof_full_url }}" target="_blank">Download wastage document</a>
                                  </td>
                               </tr>
                           </table><br/>
@@ -279,12 +264,12 @@
                                 <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                                           box-sizing:border-box;max-height:56px;margin:0;
                                                           padding:10px;overflow:hidden;background-color:#0099FF;">
-                                    <span style="color: white;font-weight: bold;">Unit</span>
+                                    <span style="color: white;font-weight: bold;">UOM</span>
                                 </td>
                                 <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                                           box-sizing:border-box;width:100%;max-height:56px;margin:0;
                                                           padding:10px;overflow:hidden;background-color:#0099FF;">
-                                    <span style="color: white;font-weight: bold;">Batch Id</span>
+                                    <span style="color: white;font-weight: bold;">Batch Number</span>
                                 </td>
                                 <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                                           box-sizing:border-box;width:100%;max-height:56px;margin:0;
@@ -294,10 +279,10 @@
                                 <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                                           box-sizing:border-box;width:100%;max-height:56px;margin:0;
                                                           padding:10px;overflow:hidden;background-color:#0099FF;">
-                                    <span style="color: red;font-weight: bold;">Wastage type</span>
+                                    <span style="color: white;font-weight: bold;">Reason for Wastage</span>
                                 </td>
                               </tr>
-                              {% for item in transfer.items.all %}
+                              {% for item in transfer.items %}
                                   </tr>
                                   <tr >
                                      <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
@@ -314,7 +299,7 @@
                                      </td>
                                      <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                                box-sizing:border-box;padding:10px;">
-                                         {% if item.unit %}{{ item.uom }}{% else %}{{ item.material.original_uom }}{% endif %}
+                                         {% if item.uom %}{{ item.uom }}{% else %}{{ item.material.original_uom }}{% endif %}
                                      </td>
                                      <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                                box-sizing:border-box;padding:10px;">
@@ -322,11 +307,11 @@
                                      </td>
                                      <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                                box-sizing:border-box;padding:10px;">
-                                         {{ item.expiry_date|date:'Y-m-d H:i' }}
+                                         {{ item.expiry_date }}
                                      </td>
                                      <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
-                                               box-sizing:border-box;padding:10px;color:red;font-weight:bold;">
-                                         {% if action == 'wastage_checkout' %}{{ item.get_wastage_type_display }}{% else %}{{ transfer.get_transfer_subtype_display }}{% endif %}
+                                               box-sizing:border-box;padding:10px;">
+                                         {{ item.wastage_type }}
                                      </td>
                                   </tr>
                               {% endfor %}

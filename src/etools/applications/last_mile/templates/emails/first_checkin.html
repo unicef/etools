@@ -1,0 +1,426 @@
+{% load static %}
+{% load custom_filters %}
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>{% block title %}{% endblock %}</title>
+    <style type="text/css">
+      /* -------------------------------------
+          RESPONSIVE AND MOBILE FRIENDLY STYLES
+      ------------------------------------- */
+      @media only screen and (max-width: 620px) {
+        table[class=body] p,
+        table[class=body] ul,
+        table[class=body] ol,
+        table[class=body] td,
+        table[class=body] span,
+        table[class=body] a {}
+        table[class=body] .wrapper,
+        table[class=body] .article {
+          padding: 16px !important; }
+        table[class=body] .content {
+          padding: 10px !important; }
+        table[class=body] .container {
+          padding: 0 !important;
+          width: 100% !important; }
+        table[class=body] .main {
+          border-left-width: 0 !important;
+          border-radius: 0 !important;
+          border-right-width: 0 !important; }
+        table[class=body] .header,
+        table[class=body] .footer {
+          padding-left: 16px !important;
+          padding-right: 16px !important; }
+        table[class=body] .footer td {
+          vertical-align: bottom !important; }
+        table[class=body] .footer .links .br {
+          display: inline !important; }
+        table[class=body] .img-responsive {
+          height: auto !important;
+          max-width: 100% !important;
+          width: auto !important; }
+      }
+      @media only screen and (max-width: 480px) {
+        table[class=data-table] {
+          margin: 0 !important;
+          background-color: #F2F2F2;
+        }
+        table[class=data-table] .dt,
+        table[class=data-table] .df {
+          display: block !important;
+          width: 100% !important; }
+        table[class=data-table] .dt {
+          font-size: 12px !important;
+          padding: 8px 8px 4px !important;
+          background-color: transparent !important;
+          border-bottom: 0 !important; }
+        table[class=data-table] .df {
+          font-size: 14px !important;
+          padding: 0 8px 6px !important; }
+      }
+      @media only screen and (max-width: 320px) {
+        table[class=body] h1 {
+          font-size: 18px !important; }
+        table[class=body] .btn table {
+          width: 100% !important; }
+        table[class=body] .btn a {
+          width: 100% !important; }
+        table[class=data-table] .dt {
+          font-size: 11px !important; }
+        table[class=data-table] .df {
+          font-size: 13px !important; }
+      }
+      /* -------------------------------------
+          PRESERVE THESE STYLES IN THE HEAD
+      ------------------------------------- */
+      @media all {
+        .ExternalClass {
+          width: 100%; }
+        .ExternalClass,
+        .ExternalClass p,
+        .ExternalClass span,
+        .ExternalClass font,
+        .ExternalClass td,
+        .ExternalClass div {
+          line-height: 100%; }
+        .apple-link a {
+          color: inherit !important;
+          font-family: inherit !important;
+          font-size: inherit !important;
+          font-weight: inherit !important;
+          line-height: inherit !important;
+          text-decoration: none !important; }
+        .btn-primary table td:hover {
+          background-color: #0099FF !important; }
+        .btn-primary a:hover {
+          background-color: #0099FF !important;
+          border-color: #0099FF !important; }
+      }
+    </style>
+  </head>
+  <body style="background-color:#EEEEEE;font-family:sans-serif;-webkit-font-smoothing:antialiased;
+               font-size:14px;line-height:1.4;margin:0;padding:0;-ms-text-size-adjust:100%;
+               -webkit-text-size-adjust:100%;">
+
+    <h1 style="color:#212121;font-family:sans-serif;line-height:1.4;margin:0;margin-bottom:24px;margin-top:8px;color:#0099FF;font-size:22px;font-weight:normal;">Last Mile Supply Monitoring Solution</h1>
+    <p style="font-family:sans-serif;font-size:14px;font-weight:normal;margin:0;margin-bottom:24px;"><strong style="font-weight:bold;white-space:nowrap;">Dear colleague, </strong><br> This is to inform you that an Implementing Partner has checked in a shipment in one of its storage facilities. An electronic copy of the waybill signed by the partner during the handover can be accessed in the first table below in the Waybill Document section. </p>
+        
+    <table border="0" cellpadding="0" cellspacing="0" class="body"
+           style="border-collapse:separate;mso-table-lspace:0pt;mso-table-rspace:0pt;
+           background-color:#EEEEEE;width:100%;">
+      <tr>
+        <td style="font-family:sans-serif;font-size:14px;vertical-align:top;">&nbsp;</td>
+        <td class="container" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                     display:block;max-width:580px;padding:10px;width:580px;
+                                     margin:0 auto !important;width:auto !important;">
+          <!-- START CENTERED WHITE CONTAINER -->
+          <div class="content" style="box-sizing:border-box;display:block;margin:0 auto;
+                                      max-width:580px;padding:10px 0;">
+            <!-- START MAIN CONTENT AREA -->
+            <table border="0" cellpadding="0" cellspacing="0" class="main"
+                   style="border-collapse:separate;mso-table-lspace:0pt;mso-table-rspace:0pt;
+                   background:#FFFFFF;border-radius:3px;width:100%;
+                   box-shadow:0 0 2px rgba(0,0,0,.12), 0 2px 2px rgba(0,0,0,.24);">
+              <!-- START HEADER -->
+              <tr>
+                <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                          box-sizing:border-box;width:100%;max-height:56px;margin:0;
+                                          padding:16px 20px 12px;overflow:hidden;
+                                          background-color:#233944;border-radius:3px 3px 0 0;">
+                  <table border="0" cellpadding="0" cellspacing="0"
+                         style="border-collapse:separate;mso-table-lspace:0pt;
+                         mso-table-rspace:0pt;width:100%;">
+                    <tr>
+                      <td style="font-family:sans-serif;font-size:14px;vertical-align:top;">
+                        <!-- TODO: update image link with global -->
+                        <a href="https://etools.unicef.org" target="_blank"
+                           style="color:#0099FF;text-decoration:none;">
+                          <span style="color: white;text-decoration: none;">eTools</span>
+                        </a>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              <!-- END HEADER -->
+              <!-- START CONTENT -->
+              <tr>
+                <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                           box-sizing:border-box;padding:20px;">
+                  <table border="0" cellpadding="0" cellspacing="0"
+                         style="border-collapse:separate;mso-table-lspace:0pt;
+                         mso-table-rspace:0pt;width:100%;">
+                    <tr>
+                      <td style="font-family:sans-serif;font-size:14px;vertical-align:top;">
+                          {% block content %}
+                            <h3>UNICEF Shipment Information</h3>
+                            <table border="1">
+                              <tr>
+                                <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                                          box-sizing:border-box;max-height:56px;margin:0;
+                                                          padding:10px;overflow:hidden;
+                                                          background-color:#0099FF;">
+                                    <span style="color: white;font-weight: bold;">Shipment Number</span>
+                                </td>
+                                <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                                          box-sizing:border-box;max-height:56px;margin:0;
+                                                          padding:10px;overflow:hidden;
+                                                          background-color:#0099FF;">
+                                    <span style="color: white;font-weight: bold;">Shipment Type</span>
+                                </td>
+                                <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                                          box-sizing:border-box;width:100%;max-height:56px;margin:0;
+                                                          padding:10px;overflow:hidden;
+                                                          background-color:#0099FF;">
+                                    <span style="color: white;font-weight: bold;">Document Creation Date</span>
+                                </td>
+                                <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                                          box-sizing:border-box;width:100%;max-height:56px;margin:0;
+                                                          padding:10px;overflow:hidden;
+                                                          background-color:#0099FF;">
+                                    <span style="color: white;font-weight: bold;">PO Number</span>
+                                </td>
+                                <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                                          box-sizing:border-box;width:100%;max-height:56px;margin:0;
+                                                          padding:10px;overflow:hidden;
+                                                          background-color:#0099FF;">
+                                    <span style="color: white;font-weight: bold;">Delivery Number</span>
+                                </td>
+                                <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                                          box-sizing:border-box;width:100%;max-height:56px;margin:0;
+                                                          padding:10px;overflow:hidden;
+                                                          background-color:#0099FF;">
+                                    <span style="color: white;font-weight: bold;">Waybill Number</span>
+                                </td>
+                                  <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                                          box-sizing:border-box;width:100%;max-height:56px;margin:0;
+                                                          padding:10px;overflow:hidden;
+                                                          background-color:#0099FF;">
+                                    <span style="color: white;font-weight: bold;">Waybill Document</span>
+                                </td>
+                              </tr>
+                              <tr >
+                                 <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                           box-sizing:border-box;padding:10px;">
+                                     {{transfer.unicef_release_order}}
+                                 </td>
+                                 <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                           box-sizing:border-box;padding:10px;">
+                                     {{transfer.transfer_type}}
+                                 </td>
+                                 <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                           box-sizing:border-box;padding:10px;">
+                                     {{transfer.destination_check_in_at | date:'m/d/Y'}}
+                                 </td>
+                                 <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                           box-sizing:border-box;padding:10px;">
+                                     {{transfer.purchase_order_id}}
+                                 </td>
+                                 <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                           box-sizing:border-box;padding:10px;">
+                                     
+                                 </td>
+                                 <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                           box-sizing:border-box;padding:10px;">
+                                     {% if transfer.waybill_id %}{{ transfer.waybill_id }}{% else %}N/A{% endif %}
+                                 </td>
+                                 <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                           box-sizing:border-box;padding:10px;">
+                                     {% if attachment_url %}<a href="{{ attachment_url }}" target="_blank">Download Waybill</a>{% else %}N/A{% endif %}<br>
+                                 </td>
+                              </tr>
+                          </table><br/>
+
+                          <h3>Implementing Partner check-in Information</h3>
+                          <table border="1">
+                            <tr>
+                              <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                                        box-sizing:border-box;max-height:56px;margin:0;
+                                                        padding:10px;overflow:hidden;
+                                                        background-color:#0099FF;">
+                                  <span style="color: white;font-weight: bold;">Implementing Partner Name</span>
+                              </td>
+                              <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                                        box-sizing:border-box;max-height:56px;margin:0;
+                                                        padding:10px;overflow:hidden;
+                                                        background-color:#0099FF;">
+                                  <span style="color: white;font-weight: bold;">Transfer Name</span>
+                              </td>
+                              <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                                        box-sizing:border-box;width:100%;max-height:56px;margin:0;
+                                                        padding:10px;overflow:hidden;
+                                                        background-color:#0099FF;">
+                                  <span style="color: white;font-weight: bold;">Checked In Date</span>
+                              </td>
+                              <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                                        box-sizing:border-box;width:100%;max-height:56px;margin:0;
+                                                        padding:10px;overflow:hidden;
+                                                        background-color:#0099FF;">
+                                  <span style="color: white;font-weight: bold;">Checked In By</span>
+                              </td>
+                              <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                                        box-sizing:border-box;width:100%;max-height:56px;margin:0;
+                                                        padding:10px;overflow:hidden;
+                                                        background-color:#0099FF;">
+                                  <span style="color: white;font-weight: bold;">Location Name</span>
+                              </td>
+                              <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                                        box-sizing:border-box;width:100%;max-height:56px;margin:0;
+                                                        padding:10px;overflow:hidden;
+                                                        background-color:#0099FF;">
+                                  <span style="color: white;font-weight: bold;">District</span>
+                              </td>
+                                <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                                        box-sizing:border-box;width:100%;max-height:56px;margin:0;
+                                                        padding:10px;overflow:hidden;
+                                                        background-color:#0099FF;">
+                                  <span style="color: white;font-weight: bold;">Location Type</span>
+                              </td>
+                            </tr>
+                            <tr >
+                               <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                         box-sizing:border-box;padding:10px;">
+                                   {{ transfer.partner_organization.organization.name }}
+                               </td>
+                               <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                         box-sizing:border-box;padding:10px;">
+                                   {{ transfer.name }}
+                               </td>
+                               <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                         box-sizing:border-box;padding:10px;">
+                                   {{ transfer.destination_check_in_at|date:'d/m/Y' }}
+                               </td>
+                               <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                         box-sizing:border-box;padding:10px;">
+                                   {{ transfer.checked_in_by.full_name }}
+                               </td>
+                               <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                         box-sizing:border-box;padding:10px;">
+                                   {{ transfer.destination_point.name }}
+                               </td>
+                               <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                         box-sizing:border-box;padding:10px;">
+                                   {{ transfer.destination_point.parent.name }} ({{ transfer.destination_point.parent.admin_level_name }} : {{ transfer.destination_point.parent.p_code }})
+                               </td>
+                               <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                         box-sizing:border-box;padding:10px;">
+                                   {{ transfer.destination_point.poi_type.name }}
+                               </td>
+                            </tr>
+                        </table><br/>
+
+                            <h3>Items Information</h3>
+                            <table border="1">
+                              <tr>
+                                <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                                          box-sizing:border-box;max-height:56px;margin:0;
+                                                          padding:10px;overflow:hidden;background-color:#0099FF;">
+                                    <span style="color: white;font-weight: bold;">Material Number</span>
+                                </td>
+                                <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                                          box-sizing:border-box;width:100%;max-height:56px;margin:0;
+                                                          padding:10px;overflow:hidden;background-color:#0099FF;">
+                                    <span style="color: white;font-weight: bold;">Material Description</span>
+                                </td>
+                                <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                                          box-sizing:border-box;max-height:56px;margin:0;
+                                                          padding:10px;overflow:hidden;background-color:#0099FF;">
+                                    <span style="color: white;font-weight: bold;">Quantity</span>
+                                </td>
+                                <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                                          box-sizing:border-box;max-height:56px;margin:0;
+                                                          padding:10px;overflow:hidden;background-color:#0099FF;">
+                                    <span style="color: white;font-weight: bold;">UOM</span>
+                                </td>
+                                <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                                          box-sizing:border-box;width:100%;max-height:56px;margin:0;
+                                                          padding:10px;overflow:hidden;background-color:#0099FF;">
+                                    <span style="color: white;font-weight: bold;">Batch number</span>
+                                </td>
+                                <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                                          box-sizing:border-box;width:100%;max-height:56px;margin:0;
+                                                          padding:10px;overflow:hidden;background-color:#0099FF;">
+                                    <span style="color: white;font-weight: bold;">Expiry Date</span>
+                                </td>
+                              </tr>
+                              {% for item in transfer|all_items %}
+                                  </tr>
+                                  <tr >
+                                     <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                               box-sizing:border-box;padding:10px;">
+                                         {{ item.material.number }}
+                                     </td>
+                                     <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                               box-sizing:border-box;padding:10px;">
+                                         {% if item.description %}{{ item.description }}{% else %}{{ item.material.short_description }}{% endif %}
+                                     </td>
+                                     <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                               box-sizing:border-box;padding:10px;">
+                                         {{ item.quantity }}
+                                     </td>
+                                     <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                               box-sizing:border-box;padding:10px;">
+                                         {% if item.uom %}{{ item.uom }}{% else %}{{ item.material.original_uom }}{% endif %}
+                                     </td>
+                                     <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                               box-sizing:border-box;padding:10px;">
+                                         {{ item.batch_id }}
+                                     </td>
+                                     <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                               box-sizing:border-box;padding:10px;">
+                                         {{ item.expiry_date|date:'d/m/Y' }}
+                                     </td>
+                                  </tr>
+                              {% endfor %}
+                          </table>
+                            <br/><br/>
+                            Best regards,<br><br>
+                            <h3 style="color:#212121;font-family:sans-serif;line-height:1.4;margin:0;margin-bottom:24px;margin-top:8px;color:#0099FF;font-size:22px;font-weight:normal;">Last Mile Supply Monitoring Solution</h3>
+                            {% endblock %}
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              <!-- END CONTENT -->
+              <tr>
+                <td class="footer"
+                    style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                    box-sizing:border-box;width:100%;max-height:56px;padding:14px 20px 14px;
+                    overflow:hidden;background-color:#E5F4FF;border-radius:0 0 3px 3px;">
+                  <table border="0" cellpadding="0" cellspacing="0"
+                         style="border-collapse:separate;mso-table-lspace:0pt;
+                         mso-table-rspace:0pt;width:100%;">
+                    <tr>
+                      <td style="font-family:sans-serif;font-size:14px;vertical-align:top;">
+                        <!-- TODO: update image link with global -->
+                        <a href="https://unicef.org" target="_blank"
+                           style="color:#0099FF;text-decoration:underline;">
+
+                           <img src='https://etools.unicef.org/pmp/images/UNICEF_logo.png'
+                                alt="Unicef" class="logo-unicef" width="101" height="24"
+                                style="border:none;-ms-interpolation-mode:bicubic;max-width:100%;
+                                       display:block;margin:0;padding:0;width:101px;height:24px;"/>
+                       </a>
+                      </td>
+                      <td class="links" style="font-family:sans-serif;font-size:14px;
+                                               vertical-align:top;text-align:right;">
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              <!-- START FOOTER -->
+              <!-- END FOOTER -->
+            </table>
+            <!-- END MAIN CONTENT AREA -->
+          </div>
+          <!-- END CENTERED WHITE CONTAINER -->
+        </td>
+        <td style="font-family:sans-serif;font-size:14px;vertical-align:top;">&nbsp;</td>
+      </tr>
+    </table>
+  </body>
+</html>

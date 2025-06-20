@@ -71,8 +71,7 @@ class ProfileInline(admin.StackedInline):
         'user',
         'country',
     )
-
-    autocomplete_fields = (
+    raw_id_fields = (
         'organization',
     )
 
@@ -375,6 +374,10 @@ class CountryAdmin(ExtraUrlMixin, TenantAdminMixin, admin.ModelAdmin):
     @button()
     def sync_dct(self, request, pk):
         return self.execute_sync(pk, 'dct', request)
+
+    @button()
+    def sync_ewp(self, request, pk):
+        return self.execute_sync(pk, 'ewp', request)
 
     @staticmethod
     def execute_sync(country_pk, synchronizer, request):

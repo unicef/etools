@@ -33,7 +33,7 @@ REST_FRAMEWORK['DEFAULT_AUTHENTICATION_CLASSES'] = (  # noqa
 AUTHENTICATION_BACKENDS = (
     # 'social_core.backends.azuread_b2c.AzureADB2COAuth2',
     'etools.applications.core.auth.CustomAzureADBBCOAuth2',
-    'django.contrib.auth.backends.ModelBackend',
+    'etools.applications.core.auth.eToolsModelBackend',
 )
 
 # No Redis for local dev.
@@ -150,3 +150,5 @@ if os.path.isfile(join(CONFIG_ROOT, 'keys/jwt/key.pem')):  # noqa
 
 # Skip request for bank information on PCA template
 PCA_SKIP_FINANCIAL_DATA = True
+RESTRICTED_ADMIN = False
+ADMIN_EDIT_EMAILS = 'your_email@unicef.org'

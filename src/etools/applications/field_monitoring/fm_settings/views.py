@@ -4,8 +4,9 @@ from django.utils.translation import gettext as _
 from django.views.decorators.cache import cache_control, cache_page
 
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import generics, mixins, views, viewsets
+from rest_framework import generics, mixins, status, views, viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
@@ -44,6 +45,7 @@ from etools.applications.field_monitoring.fm_settings.serializers import (
     MethodSerializer,
     QuestionSerializer,
     ResultSerializer,
+    UpdateQuestionOrderSerializer,
 )
 from etools.applications.field_monitoring.permissions import IsEditAction, IsFieldMonitor, IsPME, IsReadAction
 from etools.applications.field_monitoring.views import FMBaseViewSet, LinkedAttachmentsViewSet
@@ -229,3 +231,24 @@ class QuestionsViewSet(
     ordering_fields = (
         'text', 'level', 'answer_type', 'category__name', 'is_active', 'is_hact'
     )
+
+    @action(detail=False, methods=['patch'], url_path='update-order',
+            serializer_class=UpdateQuestionOrderSerializer)
+    def update_order(self, request, **kwargs):
+
+        def validate_ids(data, field="id", unique=True):
+            if isinstance(data, list):
+                id_list = [int(x[field]) for x in data]
+                if unique and len(id_list) != len(set(id_list)):
+                    raise ValidationError(_("Multiple updates to a single question found"))
+                return id_list
+
+            return [data]
+
+        ids = validate_ids(request.data)
+        instances = self.get_queryset().filter(id__in=ids).order_by('id')
+        serializer = self.serializer_class(instances, data=sorted(request.data, key=lambda x: x['id']), partial=True, many=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(**kwargs)
+
+        return Response(QuestionSerializer(self.get_queryset(), many=True).data, status=status.HTTP_200_OK)

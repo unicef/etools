@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-09-24 09:12+0000\n"
+"POT-Creation-Date: 2025-04-24 05:52+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -805,6 +805,9 @@ msgstr "اتفاقية التمويل الصغير الحجم"
 msgid "Memorandum of Understanding"
 msgstr "مذكرة تفاهم"
 
+msgid "General Terms and Conditions"
+msgstr ""
+
 msgid "Draft"
 msgstr "مسودة"
 
@@ -1397,6 +1400,9 @@ msgstr "مساهمة منظمة المجتمع المدني النقدية"
 
 msgid "Accessing this item is not allowed."
 msgstr "الوصول إلى هذا العنصر غير مسموح به."
+
+msgid "The UNICEF Representative assigned is not valid."
+msgstr ""
 
 msgid "Country Programme is required for PCAs!"
 msgstr "البرنامج القطري مطلوب من أجل PCAs!"

@@ -8,6 +8,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from rest_framework import status
+from rest_framework.test import APIRequestFactory
 from unicef_attachments.models import Attachment, AttachmentLink, FileType
 from unicef_locations.tests.factories import LocationFactory
 
@@ -28,7 +29,12 @@ from etools.applications.field_monitoring.data_collection.tests.factories import
 )
 from etools.applications.field_monitoring.fm_settings.models import Question
 from etools.applications.field_monitoring.fm_settings.tests.factories import QuestionFactory
+from etools.applications.field_monitoring.planning.actions.duplicate_monitoring_activity import (
+    DuplicateMonitoringActivity,
+    MonitoringActivityNotFound,
+)
 from etools.applications.field_monitoring.planning.models import MonitoringActivity, YearPlan
+from etools.applications.field_monitoring.planning.serializers import MonitoringActivityLightSerializer
 from etools.applications.field_monitoring.planning.tests.factories import (
     MonitoringActivityActionPointFactory,
     MonitoringActivityFactory,
@@ -122,7 +128,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             MonitoringActivityFactory(monitor_type='staff'),
         ]
 
-        with self.assertNumQueries(9):
+        with self.assertNumQueries(10):
             self._test_list(self.unicef_user, activities, data={'page': 1, 'page_size': 10})
 
     def test_list_as_tpm_user(self):
@@ -137,7 +143,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             MonitoringActivityFactory(
                 monitor_type='staff', status='assigned')
         ]
-        with self.assertNumQueries(7):
+        with self.assertNumQueries(8):
             self._test_list(tpm_staff, [activities[0]], data={'page': 1, 'page_size': 10})
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
@@ -270,7 +276,8 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         self._test_update(
             self.fm_user, activity,
             data={'team_members': [tpm_staff_1.pk, tpm_staff_2.pk, tpm_staff_3.pk]},
-            expected_status=status.HTTP_200_OK
+            expected_status=status.HTTP_400_BAD_REQUEST,
+            basic_errors=['Cannot change fields while in assigned: team_members'],
         )
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
@@ -397,7 +404,8 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         self._test_update(
             self.fm_user, activity,
             data={'team_members': [m.pk for m in team_members]},
-            expected_status=status.HTTP_200_OK,
+            expected_status=status.HTTP_400_BAD_REQUEST,
+            basic_errors=['Cannot change fields while in data_collection: team_members'],
         )
         olc_update_mock.assert_called()
 
@@ -428,7 +436,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             status=MonitoringActivity.STATUSES.review,
             team_members=team_members,
             visit_lead=UserFactory(unicef_user=True),
-            report_reviewer=UserFactory(unicef_user=True),
+            report_reviewers=[UserFactory(unicef_user=True)],
         )
 
         response = self._test_update(self.fm_user, activity, data={'status': 'assigned'})
@@ -494,7 +502,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         ActivityOverallFinding.objects.create(monitoring_activity=activity, narrative_finding='test')
         goto('data_collection', visit_lead)
         goto('report_finalization', visit_lead)
-        goto('submitted', visit_lead, {'report_reviewer': UserFactory(report_reviewer=True).id},
+        goto('submitted', visit_lead, {'report_reviewers': [UserFactory(report_reviewer=True).id]},
              mail_count=activity.country_pmes.count() + 1)  # +1: send to report reviewer if set
         goto('report_finalization', self.pme, mail_count=1)
         goto('submitted', visit_lead, mail_count=activity.country_pmes.count() + 1)  # +1: send to report reviewer if set
@@ -561,26 +569,31 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_assign_tpm_report_reviewer_required(self):
-        activity = MonitoringActivityFactory(monitor_type='tpm', report_reviewer=None, status='pre_assigned')
-
+        activity = MonitoringActivityFactory(
+            monitor_type='tpm', tpm_partner=SimpleTPMPartnerFactory(),
+            report_reviewers__count=0, status='pre_assigned'
+        )
         self._test_update(
             self.fm_user,
             activity,
             {'status': 'assigned'},
             expected_status=status.HTTP_400_BAD_REQUEST,
-            basic_errors=['Required fields not completed in assigned: report_reviewer'],
+            basic_errors=['Required fields not completed in assigned: report_reviewers'],
         )
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_assigned_tpm_report_reviewer_not_editable(self):
-        activity = MonitoringActivityFactory(monitor_type='tpm', status='assigned')
+        activity = MonitoringActivityFactory(
+            monitor_type='tpm', tpm_partner=SimpleTPMPartnerFactory(), status='assigned'
+        )
+        usr = UserFactory(pme=True)
 
         self._test_update(
             self.fm_user,
             activity,
-            {'report_reviewer': UserFactory(pme=True).id},
+            {'report_reviewers': [usr.id]},
             expected_status=status.HTTP_400_BAD_REQUEST,
-            basic_errors=['Cannot change fields while in assigned: report_reviewer'],
+            basic_errors=['Cannot change fields while in assigned: report_reviewers'],
         )
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
@@ -588,7 +601,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         tpm_partner = SimpleTPMPartnerFactory()
         visit_lead = TPMUserFactory(tpm_partner=tpm_partner)
         activity = MonitoringActivityFactory(
-            monitor_type='tpm', report_reviewer=None, status='report_finalization',
+            monitor_type='tpm', status='report_finalization',
             visit_lead=visit_lead, team_members=[visit_lead], tpm_partner=tpm_partner,
         )
         ActivityOverallFinding.objects.create(monitoring_activity=activity, narrative_finding='test')
@@ -600,66 +613,69 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             expected_status=status.HTTP_200_OK,
         )
         activity.refresh_from_db()
-        self.assertIsNone(activity.report_reviewer)
+        self.assertEqual(activity.report_reviewers.count(), 1)
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_submit_staff_report_reviewer_required(self):
-        activity = MonitoringActivityFactory(monitor_type='staff', report_reviewer=None, status='report_finalization')
+        activity = MonitoringActivityFactory(
+            monitor_type='staff', status='report_finalization', report_reviewers__count=0)
+        ActivityOverallFinding.objects.create(monitoring_activity=activity, narrative_finding='test')
 
         self._test_update(
             activity.visit_lead,
             activity,
             {'status': 'submitted'},
             expected_status=status.HTTP_400_BAD_REQUEST,
-            basic_errors=['Required fields not completed in submitted: report_reviewer'],
+            basic_errors=['Required fields not completed in submitted: report_reviewers'],
         )
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_submit_report_reviewer_unicef_user_ok(self):
-        activity = MonitoringActivityFactory(monitor_type='staff', report_reviewer=None, status='report_finalization')
+        activity = MonitoringActivityFactory(monitor_type='staff', status='report_finalization')
         ActivityOverallFinding.objects.create(monitoring_activity=activity, narrative_finding='test')
 
         self._test_update(
             activity.visit_lead,
             activity,
-            {'status': 'submitted', 'report_reviewer': UserFactory(unicef_user=True).id},
+            {'status': 'submitted', 'report_reviewers': [UserFactory(unicef_user=True).id]},
             expected_status=status.HTTP_200_OK,
         )
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_submit_report_reviewer_pme_ok(self):
-        activity = MonitoringActivityFactory(monitor_type='staff', report_reviewer=None, status='report_finalization')
+        activity = MonitoringActivityFactory(monitor_type='staff', status='report_finalization')
         ActivityOverallFinding.objects.create(monitoring_activity=activity, narrative_finding='test')
 
         self._test_update(
             activity.visit_lead,
             activity,
-            {'status': 'submitted', 'report_reviewer': UserFactory(pme=True).id},
+            {'status': 'submitted', 'report_reviewers': [UserFactory(pme=True).id]},
             expected_status=status.HTTP_200_OK,
         )
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_submit_report_reviewer_group_ok(self):
-        activity = MonitoringActivityFactory(monitor_type='staff', report_reviewer=None, status='report_finalization')
+        activity = MonitoringActivityFactory(monitor_type='staff', status='report_finalization')
         ActivityOverallFinding.objects.create(monitoring_activity=activity, narrative_finding='test')
 
         self._test_update(
             activity.visit_lead,
             activity,
-            {'status': 'submitted', 'report_reviewer': UserFactory(report_reviewer=True).id},
+            {'status': 'submitted', 'report_reviewers': [UserFactory(report_reviewer=True).id]},
             expected_status=status.HTTP_200_OK,
         )
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_submitted_staff_report_reviewer_not_editable(self):
         activity = MonitoringActivityFactory(monitor_type='staff', status='submitted')
+        ActivityOverallFinding.objects.create(monitoring_activity=activity, narrative_finding='test')
 
         self._test_update(
             activity.visit_lead,
             activity,
-            {'report_reviewer': UserFactory(pme=True).id},
+            {'report_reviewers': [UserFactory(pme=True).id]},
             expected_status=status.HTTP_400_BAD_REQUEST,
-            basic_errors=['Cannot change fields while in submitted: report_reviewer'],
+            basic_errors=['Cannot change fields while in submitted: report_reviewers'],
         )
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
@@ -681,7 +697,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_complete_by_report_reviewer(self):
         report_reviewer = UserFactory(unicef_user=True)
-        activity = MonitoringActivityFactory(monitor_type='staff', status='submitted', report_reviewer=report_reviewer)
+        activity = MonitoringActivityFactory(monitor_type='staff', status='submitted', report_reviewers=[report_reviewer])
 
         response = self._test_retrieve(report_reviewer, activity)
         # check transitions exists
@@ -712,7 +728,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_report_reject_by_report_reviewer(self):
         report_reviewer = UserFactory(unicef_user=True)
-        activity = MonitoringActivityFactory(monitor_type='staff', status='submitted', report_reviewer=report_reviewer)
+        activity = MonitoringActivityFactory(monitor_type='staff', status='submitted', report_reviewers=[report_reviewer])
         StartedChecklistFactory(monitoring_activity=activity)
         ActivityOverallFinding.objects.create(monitoring_activity=activity, narrative_finding='narrative')
 
@@ -855,11 +871,75 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             for _ in range(20)
         ]
 
-        with self.assertNumQueries(15):
+        with self.assertNumQueries(16):
             response = self.make_request_to_viewset(self.unicef_user, action='export', method='get', data={'page': 1, 'page_size': 100})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('Content-Disposition', response.headers)
         self.assertEqual(len(response.data), 24)
+
+
+class TestDuplicateMonitoringActivityView(BaseTenantTestCase):
+    def test_duplicates_activity(self) -> None:
+        activity = MonitoringActivityFactory(
+            status=MonitoringActivity.STATUS_DRAFT,
+            monitor_type=MonitoringActivity.MONITOR_TYPE_CHOICES.tpm,
+            partners=[PartnerFactory()]
+        )
+
+        response = self.forced_auth_req(
+            'post',
+            reverse('field_monitoring_planning:activities-duplicate', kwargs={'pk': activity.id}),
+            user=UserFactory(unicef_user=True),
+            data={'with_checklist': True}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        duplicated_activity = MonitoringActivity.objects.exclude(id=activity.id).get(
+            status=MonitoringActivity.STATUS_CHECKLIST,
+            monitor_type=MonitoringActivity.MONITOR_TYPE_CHOICES.tpm
+        )
+        self.assertTrue(duplicated_activity)
+        self.assertEqual(response.data['id'], duplicated_activity.id)
+        self.assertEqual(response.data['status'], duplicated_activity.status)
+        self.assertEqual(response.data['monitor_type'], 'tpm')
+
+    def test_calls_action(self) -> None:
+        user = UserFactory(unicef_user=True)
+        with patch.object(DuplicateMonitoringActivity, "execute") as mock_action:
+            mock_action.return_value = MonitoringActivityFactory()
+            self.forced_auth_req(
+                'post',
+                reverse('field_monitoring_planning:activities-duplicate',
+                        kwargs={'pk': 123}),
+                user=user,
+                data={"with_checklist": True}
+            )
+
+        mock_action.assert_called_with(123, True, user)
+
+    def test_returns_404_when_activity_does_not_exist(self) -> None:
+        with patch.object(DuplicateMonitoringActivity, "execute") as mock_action:
+            mock_action.side_effect = MonitoringActivityNotFound
+
+            response = self.forced_auth_req(
+                'post',
+                reverse('field_monitoring_planning:activities-duplicate',
+                        kwargs={'pk': 123}),
+                user=UserFactory(unicef_user=True),
+                data={"with_checklist": False}
+            )
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_returns_400_when_params_are_missing(self) -> None:
+        response = self.forced_auth_req(
+            'post',
+            reverse('field_monitoring_planning:activities-duplicate', kwargs={'pk': 123}),
+            user=UserFactory(unicef_user=True),
+            data={}
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
 class TestActivityAttachmentsView(FMBaseTestCaseMixin, APIViewSetTestCase):
@@ -1253,6 +1333,48 @@ class InterventionsViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTen
 class MonitoringActivityActionPointsViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenantTestCase):
     base_view = 'field_monitoring_planning:activity_action_points'
 
+    def setUp(self):
+        super().setUp()
+
+        self.partner = PartnerFactory()
+        self.intervention = InterventionFactory()
+        self.cp_output = ResultFactory(result_type__name=ResultType.OUTPUT)
+
+        year = timezone.now().year
+        start_this = date(year, 4, 4)
+        end_this = date(year, 12, 4)
+
+        self.activity2 = MonitoringActivityFactory(
+            start_date=start_this, end_date=end_this, status="draft"
+        )
+        self.activity2.partners.add(self.partner)
+        self.activity2.interventions.add(self.intervention)
+        self.activity2.cp_outputs.add(self.cp_output)
+
+        covering_start = date(year, 1, 1)
+        covering_end = date(year, 12, 31)
+
+        self.other_activity = MonitoringActivityFactory(
+            number="COVER/1",
+            start_date=covering_start,
+            end_date=covering_end,
+            status="completed",
+        )
+        self.other_activity.partners.add(self.partner)
+        self.other_activity.interventions.add(self.intervention)
+        self.other_activity.cp_outputs.add(self.cp_output)
+
+        noise_partner = PartnerFactory()
+        noise_act = MonitoringActivityFactory(
+            number="NOISE/1",
+            start_date=start_this,
+            end_date=end_this,
+            status="completed",
+        )
+        noise_act.partners.add(noise_partner)
+
+        self.rf = APIRequestFactory()
+
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
@@ -1272,6 +1394,38 @@ class MonitoringActivityActionPointsViewTestCase(FMBaseTestCaseMixin, APIViewSet
 
     def get_list_args(self):
         return [self.activity.pk]
+
+    def test_non_patch_request_returns_null(self):
+        request = self.rf.get("/fake/")
+        ser = MonitoringActivityLightSerializer(
+            instance=self.activity2, context={"request": request}
+        )
+        assert ser.data["overlapping_entities"] is None
+
+    def test_patch_request_returns_shared_entities_with_sources(self):
+        request = self.rf.patch("/fake/")
+        ser = MonitoringActivityLightSerializer(
+            instance=self.activity2, context={"request": request}
+        )
+        data = ser.data
+        ov = data["overlapping_entities"]
+
+        # partners / interventions / cp_outputs must be present
+        assert len(ov["partners"]) == 1
+        assert len(ov["interventions"]) == 1
+        assert len(ov["cp_outputs"]) == 1
+
+        partner_block = ov["partners"][0]
+        assert partner_block["id"] == self.partner.id
+        assert partner_block["source_activity_numbers"] == [self.other_activity.number]
+
+        int_block = ov["interventions"][0]
+        assert int_block["id"] == self.intervention.id
+        assert int_block["source_activity_numbers"] == [self.other_activity.number]
+
+        out_block = ov["cp_outputs"][0]
+        assert out_block["id"] == self.cp_output.id
+        assert out_block["source_activity_numbers"] == [self.other_activity.number]
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_list(self):

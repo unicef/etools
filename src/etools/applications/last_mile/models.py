@@ -3,6 +3,7 @@ from functools import cached_property
 from django.conf import settings
 from django.contrib.gis.db.models import PointField
 from django.db import models
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from model_utils import FieldTracker
@@ -10,6 +11,16 @@ from model_utils.models import TimeStampedModel
 from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CodedGenericRelation
 
+from etools.applications.last_mile.admin_panel.constants import (
+    ALERT_NOTIFICATIONS_ADMIN_PANEL_PERMISSION,
+    APPROVE_LOCATIONS_ADMIN_PANEL_PERMISSION,
+    APPROVE_STOCK_MANAGEMENT_ADMIN_PANEL_PERMISSION,
+    APPROVE_USERS_ADMIN_PANEL_PERMISSION,
+    LOCATIONS_ADMIN_PANEL_PERMISSION,
+    STOCK_MANAGEMENT_ADMIN_PANEL_PERMISSION,
+    TRANSFER_HISTORY_ADMIN_PANEL_PERMISSION,
+    USER_ADMIN_PANEL_PERMISSION,
+)
 from etools.applications.locations.models import Location
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.users.models import User
@@ -27,6 +38,9 @@ class PointOfInterestType(TimeStampedModel, models.Model):
 class PointOfInterestManager(models.Manager):
     def get_queryset(self):
         return super().get_queryset().defer("point").select_related("parent")
+
+    def get_unicef_warehouses(self):
+        return self.get_queryset().get(pk=1)  # Unicef warehouse
 
 
 class PointOfInterest(TimeStampedModel, models.Model):
@@ -92,6 +106,48 @@ class PointOfInterest(TimeStampedModel, models.Model):
         super().save(**kwargs)
 
 
+class TransferHistoryManager(models.Manager):
+    def get_or_build_by_origin_id(self, *origin_id_candidates):
+        origin_id = next((oid for oid in origin_id_candidates if oid is not None), None)
+
+        history = self.filter(origin_transfer_id=origin_id).first()
+        if history is None:
+            history = self.model(origin_transfer_id=origin_id)
+        return history
+
+
+class TransferHistory(TimeStampedModel, models.Model):
+    origin_transfer = models.ForeignKey(
+        'Transfer',
+        verbose_name=_("Origin Transfer"),
+        related_name='history',
+        on_delete=models.SET_NULL,
+        null=True
+    )
+    objects = TransferHistoryManager()
+
+    class Meta:
+        ordering = ("-created",)
+
+
+class TransferQuerySet(models.QuerySet):
+    def with_status_completed(self):
+        return self.filter(status=Transfer.COMPLETED)
+
+    def with_origin_point(self, poi_id):
+        return self.filter(origin_point__id=poi_id)
+
+    def with_destination_point(self, poi_id):
+        return self.filter(destination_point__id=poi_id)
+
+    def with_items(self):
+        return self.filter(items__isnull=False, items__hidden=False)
+
+
+class TransferManager(models.Manager.from_queryset(TransferQuerySet)):
+    pass
+
+
 class Transfer(TimeStampedModel, models.Model):
     PENDING = 'PENDING'
     COMPLETED = 'COMPLETED'
@@ -140,6 +196,18 @@ class Transfer(TimeStampedModel, models.Model):
     transfer_subtype = models.CharField(max_length=30, choices=TRANSFER_SUBTYPE, null=True, blank=True)
     status = models.CharField(max_length=30, choices=STATUS, default=PENDING)
 
+    from_partner_organization = models.ForeignKey(
+        PartnerOrganization,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='from_transfers'
+    )
+    recipient_partner_organization = models.ForeignKey(
+        PartnerOrganization,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='to_transfers'
+    )
     partner_organization = models.ForeignKey(
         PartnerOrganization,
         on_delete=models.CASCADE
@@ -163,6 +231,7 @@ class Transfer(TimeStampedModel, models.Model):
         related_name='origin_transfers'
     )
     origin_check_out_at = models.DateTimeField(null=True, blank=True)
+    system_origin_check_out_at = models.DateTimeField(default=timezone.now)
 
     destination_point = models.ForeignKey(
         PointOfInterest,
@@ -171,6 +240,7 @@ class Transfer(TimeStampedModel, models.Model):
         related_name='destination_transfers'
     )
     destination_check_in_at = models.DateTimeField(null=True, blank=True)
+    system_destination_check_in_at = models.DateTimeField(default=timezone.now)
     origin_transfer = models.ForeignKey(
         'self', null=True, blank=True, on_delete=models.CASCADE, related_name='following_transfers'
     )
@@ -192,16 +262,40 @@ class Transfer(TimeStampedModel, models.Model):
     )
     is_shipment = models.BooleanField(default=False)
 
+    transfer_history = models.ForeignKey(
+        TransferHistory,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='transfers'
+    )
+
     purchase_order_id = models.CharField(max_length=255, null=True, blank=True)
     waybill_id = models.CharField(max_length=255, null=True, blank=True)
 
     pd_number = models.CharField(max_length=255, null=True, blank=True)
+
+    objects = TransferManager()
 
     class Meta:
         ordering = ("-id",)
 
     def __str__(self):
         return f'{self.id} {self.partner_organization.name}: {self.name if self.name else self.unicef_release_order}'
+
+    def set_checkout_status(self):
+        if self.transfer_type in [self.WASTAGE, self.DISPENSE]:
+            self.status = self.COMPLETED
+
+    def add_transfer_history(self, origin_transfer_pk=None, original_transfer_pk=None):
+        history = TransferHistory.objects.get_or_build_by_origin_id(original_transfer_pk, origin_transfer_pk, self.id)
+
+        history.save()
+        history.refresh_from_db()
+
+        self.transfer_history = history
+        self.save(update_fields=['transfer_history'])
+
+        return history
 
 
 class TransferEvidence(TimeStampedModel, models.Model):
@@ -306,7 +400,9 @@ class PartnerMaterial(TimeStampedModel, models.Model):
         on_delete=models.CASCADE,
         related_name='partner_material'
     )
-    description = models.CharField(max_length=255)
+
+    def __str__(self):
+        return f'{self.partner_organization.name}: {self.material.short_description}'
 
     class Meta:
         unique_together = ('partner_organization', 'material')
@@ -363,7 +459,16 @@ class Item(TimeStampedModel, models.Model):
         null=True, blank=True,
         related_name='items'
     )
+
+    origin_transfer = models.ForeignKey(
+        Transfer,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='origin_items'
+    )
     transfers_history = models.ManyToManyField(Transfer, through='ItemTransferHistory')
+
+    mapped_description = models.CharField(max_length=255, null=True, blank=True)
 
     material = models.ForeignKey(
         Material,
@@ -381,15 +486,22 @@ class Item(TimeStampedModel, models.Model):
 
     @cached_property
     def description(self):
-        try:
-            partner_material = PartnerMaterial.objects.get(
-                partner_organization=self.transfer.partner_organization, material=self.material)
-            return partner_material.description
-        except PartnerMaterial.DoesNotExist:
-            return self.material.short_description
+        if self.mapped_description:
+            return self.mapped_description
+        return self.material.short_description
 
-    def should_be_hidden(self):
-        return self.material.number not in settings.RUTF_MATERIALS
+    @cached_property
+    def should_be_hidden_for_partner(self):
+        if not self.transfer or not self.transfer.partner_organization:
+            return True
+
+        partner_material_exists = PartnerMaterial.objects.filter(
+            partner_organization=self.transfer.partner_organization,
+            material=self.material
+        ).exists()
+
+        should_hide = not partner_material_exists
+        return should_hide
 
     def add_transfer_history(self, transfer):
         ItemTransferHistory.objects.create(
@@ -407,3 +519,95 @@ class ItemTransferHistory(TimeStampedModel, models.Model):
 
     class Meta:
         unique_together = ('transfer', 'item')
+
+
+class AdminPanelPermission(models.Model):
+    class Meta:
+        managed = False  # Django won't create a table for this model
+        db_table = 'admin_panel_dummy'
+        permissions = (
+            (USER_ADMIN_PANEL_PERMISSION, "Can manage users in the admin panel"),
+            (LOCATIONS_ADMIN_PANEL_PERMISSION, "Can manage locations in the admin panel"),
+            (ALERT_NOTIFICATIONS_ADMIN_PANEL_PERMISSION, "Can manage email alerts in the admin panel"),
+            (STOCK_MANAGEMENT_ADMIN_PANEL_PERMISSION, "Can manage stock management in the admin panel"),
+            (TRANSFER_HISTORY_ADMIN_PANEL_PERMISSION, "Can manage transfer history in the admin panel"),
+            (APPROVE_USERS_ADMIN_PANEL_PERMISSION, "Can approve users in the admin panel"),
+            (APPROVE_LOCATIONS_ADMIN_PANEL_PERMISSION, "Can approve locations in the admin panel"),
+            (APPROVE_STOCK_MANAGEMENT_ADMIN_PANEL_PERMISSION, "Can approve stock management in the admin panel"),
+        )
+
+
+class Profile(TimeStampedModel, models.Model):
+
+    class ApprovalStatus(models.TextChoices):
+        PENDING = 'PENDING', _('Pending Approval')
+        APPROVED = 'APPROVED', _('Approved')
+        REJECTED = 'REJECTED', _('Rejected')
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='last_mile_profile')
+    status = models.CharField(
+        _('Approval Status'),
+        max_length=10,
+        choices=ApprovalStatus.choices,
+        default=ApprovalStatus.PENDING,
+        db_index=True,
+        help_text=_('The current approval status of this profile.')
+    )
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='created_last_mile_profiles'
+    )
+    created_on = models.DateTimeField(auto_now_add=True)
+    approved_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='approved_last_mile_profiles'
+    )
+    approved_on = models.DateTimeField(null=True, blank=True)
+    review_notes = models.TextField(
+        _('Review Notes'),
+        null=True,
+        blank=True,
+        help_text=_('Optional notes from the reviewer regarding approval or rejection.')
+    )
+
+    def __str__(self):
+        try:
+            if self.user:
+                name = self.user.get_full_name() or self.user.username
+                return f'{name} ({self.get_status_display()})'
+            return f'Profile {self.pk} (No User)'
+        except AttributeError:
+            return f'Profile {self.pk} (User Missing)'
+
+    def approve(self, approver_user, notes=None):
+        if self.status != self.ApprovalStatus.APPROVED:
+            self.status = self.ApprovalStatus.APPROVED
+            self.approved_by = approver_user
+            self.approved_on = timezone.now()
+            if notes:
+                self.review_notes = notes
+            self.save(update_fields=['status', 'approved_by', 'approved_on', 'review_notes'])
+
+    def reject(self, reviewer_user, notes=None):
+        if self.status != self.ApprovalStatus.REJECTED:
+            self.status = self.ApprovalStatus.REJECTED
+            self.approved_by = reviewer_user
+            self.approved_on = timezone.now()
+            if notes:
+                self.review_notes = notes
+            self.save(update_fields=['status', 'approved_by', 'approved_on', 'review_notes'])
+
+    def reset_approval(self):
+        self.status = self.ApprovalStatus.PENDING
+        self.approved_by = None
+        self.approved_on = None
+        self.save(update_fields=['status', 'approved_by', 'approved_on'])
+
+    def is_pending_approval(self):
+        return self.status == self.ApprovalStatus.PENDING

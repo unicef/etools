@@ -11,8 +11,9 @@ from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied, ValidationError
 
 from etools.applications.audit.models import Auditor
+from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.organizations.models import Organization
-from etools.applications.users.mixins import AUDIT_ACTIVE_GROUPS, GroupEditPermissionMixin
+from etools.applications.users.mixins import AUDIT_ACTIVE_GROUPS, GroupEditPermissionMixin, PARTNER_PD_ACTIVE_GROUPS
 from etools.applications.users.models import Country, Realm, StagedUser, User, UserProfile
 from etools.applications.users.serializers import (
     GroupSerializer,
@@ -23,17 +24,6 @@ from etools.applications.users.serializers import (
 )
 from etools.applications.users.tasks import notify_user_on_realm_update, sync_realms_to_prp
 from etools.applications.users.validators import EmailValidator, ExternalUserValidator, LowerCaseEmailValidator
-
-# temporary list of Countries that will use the Auditor Portal Module.
-# Logic be removed once feature gating is in place
-AP_ALLOWED_COUNTRIES = [
-    'UAT',
-    'Lebanon',
-    'Syria',
-    'Indonesia',
-    'Sudan',
-    'Syria Cross Border',
-]
 
 
 # used for user list view
@@ -154,7 +144,7 @@ class UserRealmRetrieveSerializer(serializers.ModelSerializer):
 class UserRealmBaseSerializer(GroupEditPermissionMixin, serializers.ModelSerializer):
     organization = serializers.IntegerField(required=False, allow_null=False, write_only=True)
     groups = serializers.ListField(child=serializers.IntegerField(), required=True, allow_null=False, write_only=True)
-    job_title = serializers.CharField(required=False, allow_blank=True, write_only=True)
+    job_title = serializers.CharField(required=False, allow_blank=True, allow_null=True, write_only=True)
 
     class Meta:
         model = get_user_model()
@@ -316,8 +306,8 @@ class UserRealmUpdateSerializer(UserRealmBaseSerializer):
         # clean up profile organization if no realm is active for context country and organization
         if not instance.realms.filter(is_active=True, **context_qs_params).exists():
             instance.profile.organization = None
-        if validated_data.get('job_title'):
-            instance.profile.job_title = validated_data.get('job_title')
+
+        instance.profile.job_title = validated_data.get('job_title')
 
         instance.profile.save(update_fields=['organization', 'job_title'])
 
@@ -407,9 +397,10 @@ class ProfileRetrieveUpdateSerializer(serializers.ModelSerializer):
     is_active = serializers.BooleanField(source='user.is_active', read_only=True)
     country = DashboardCountrySerializer(read_only=True)
     organization = OrganizationSerializer(read_only=True)
-    show_ap = serializers.SerializerMethodField()
     is_unicef_user = serializers.SerializerMethodField()
     _partner_staff_member = serializers.SerializerMethodField()
+
+    show_gpd = serializers.SerializerMethodField()
 
     preferences = UserPreferencesSerializer(source="user.preferences", allow_null=False)
 
@@ -417,12 +408,13 @@ class ProfileRetrieveUpdateSerializer(serializers.ModelSerializer):
         model = UserProfile
         exclude = ('id',)
 
-    # TODO remove once feature gating is in place.
-    def get_show_ap(self, obj):
-        """If user is within one of the allowed countries then
-        show_ap is True, otherwise False
+    def get_show_gpd(self, obj):
         """
-        if obj.country and obj.country.name in AP_ALLOWED_COUNTRIES:
+        GPD app is visible only if the current country is selected tenant in 'gpd_enabled' switch
+        and has any of the partner groups, as users can have realms for Government orgs in LMSM with specific groups
+        """
+        if tenant_switch_is_active('gpd_enabled') and (
+                obj.user.is_unicef_user() or obj.user.groups.filter(name__in=PARTNER_PD_ACTIVE_GROUPS).exists()):
             return True
         return False
 

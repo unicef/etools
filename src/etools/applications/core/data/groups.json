@@ -61,5 +61,47 @@
       "name": "Waybill Recipient",
       "permissions": []
     }
+  },
+  {
+    "model": "auth.group",
+    "fields": {
+      "name": "LMSM Alert Receipt",
+      "permissions": []
+    }
+  },
+  {
+    "model": "auth.group",
+    "fields": {
+      "name": "LMSMApi",
+      "permissions": []
+    }
+  },
+  {
+    "model": "auth.group",
+    "fields": {
+      "name": "LMSM Focal Point",
+      "permissions": []
+    }
+  },
+  {
+    "model": "auth.group",
+    "fields": {
+      "name": "LMSM Admin Panel",
+      "permissions": []
+    }
+  },
+  {
+    "model": "auth.group",
+    "fields": {
+      "name": "UNICEF Representative",
+      "permissions": []
+    }
+  },
+  {
+    "model": "auth.group",
+    "fields": {
+      "name": "LMSM User Creation Report",
+      "permissions": []
+    }
   }
 ]

@@ -4,6 +4,8 @@ from django.contrib import admin
 from django.contrib.gis import forms
 from django.contrib.gis.geos import Point
 from django.db import transaction
+from django.db.models import CharField, Count, F, Prefetch, Value
+from django.db.models.functions import Coalesce
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
@@ -67,6 +69,9 @@ class PointOfInterestAdmin(XLSXImportMixin, admin.ModelAdmin):
     partner_names.short_description = 'Partner Names'
     partner_names.admin_order_field = 'name'
 
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related("poi_type")
+
     def has_import_permission(self, request):
         return is_user_in_groups(request.user, ['Country Office Administrator'])
 
@@ -123,10 +128,37 @@ class PointOfInterestAdmin(XLSXImportMixin, admin.ModelAdmin):
 class ItemInline(RestrictedEditAdminMixin, admin.TabularInline):
     extra = 0
     model = models.Item
+    fk_name = 'transfer'
     list_select_related = ('material',)
     fields = ('id', 'batch_id', 'material', 'description', 'expiry_date', 'wastage_type',
-              'amount_usd', 'unicef_ro_item', 'purchase_order_item')
+              'amount_usd', 'unicef_ro_item', 'purchase_order_item', 'hidden')
     readonly_fields = ('description',)
+    show_change_link = True
+
+    def get_queryset(self, request):
+        return self.model.all_objects.all()
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+class TransferInLine(RestrictedEditAdminMixin, admin.TabularInline):
+    extra = 0
+    model = models.Transfer
+    list_select_related = ('material',)
+
+    exclude = (
+        'comment', 'reason', 'proof_file', 'waybill_file', 'pd_number', 'waybill_id',
+        'purchase_order_id', 'is_shipment', 'origin_check_out_at', 'system_origin_check_out_at',
+        'destination_check_in_at', 'system_destination_check_in_at'
+    )
+
     show_change_link = True
 
     def has_add_permission(self, request, obj=None):
@@ -143,38 +175,44 @@ class ItemInline(RestrictedEditAdminMixin, admin.TabularInline):
 class TransferAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
     list_display = (
         'display_name', 'partner_organization', 'status', 'transfer_type',
-        'transfer_subtype', 'origin_point', 'destination_point'
+        'transfer_subtype', 'origin_point', 'destination_point', 'from_partner_organization', 'recipient_partner_organization'
     )
     list_filter = ('status', 'transfer_type', 'transfer_subtype')
-    search_fields = ('name', 'status')
+    search_fields = ('name', 'status', 'origin_point__name', 'destination_point__name', 'partner_organization__organization__name')
     raw_id_fields = ('partner_organization', 'checked_in_by', 'checked_out_by',
-                     'origin_point', 'destination_point', 'origin_transfer')
+                     'origin_point', 'destination_point', 'origin_transfer', 'from_partner_organization', 'recipient_partner_organization')
     inlines = (ProofTransferAttachmentInline, ItemInline)
 
     def get_queryset(self, request):
-        qs = super(TransferAdmin, self).get_queryset(request)\
-            .select_related('partner_organization', 'partner_organization__organization',
-                            'origin_point', 'destination_point')\
-            .prefetch_related('items')
+        qs = super(TransferAdmin, self).get_queryset(request)
+        qs = qs.select_related(
+            'partner_organization', 'partner_organization__organization', 'origin_transfer',
+            'origin_point', 'destination_point', 'from_partner_organization__organization', 'recipient_partner_organization__organization',
+        ).prefetch_related('items')
+
+        qs = qs.annotate(
+            display_name_annotation=Coalesce(
+                F('name'),
+                F('unicef_release_order'),
+                Value('', output_field=CharField())
+            )
+        )
         return qs
 
     def display_name(self, obj):
-        if obj.name:
-            return obj.name
-        elif obj.unicef_release_order:
-            return obj.unicef_release_order
-        return obj.id
+        return obj.name or obj.unicef_release_order or obj.id
+    display_name.admin_order_field = 'display_name_annotation'
 
 
 class PartnerMaterialInline(admin.TabularInline):
     extra = 0
     model = models.PartnerMaterial
     list_select_related = ('material', 'partner_organization')
-    fields = ('material', 'partner_organization', 'description')
+    fields = ('material', 'partner_organization',)
 
 
 @admin.register(models.Material)
-class MaterialAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
+class MaterialAdmin(admin.ModelAdmin):
     list_display = (
         'number', 'short_description', 'original_uom'
     )
@@ -186,12 +224,43 @@ class MaterialAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
     inlines = (PartnerMaterialInline,)
 
 
+@admin.register(models.Profile)
+class ProfileAdmin(admin.ModelAdmin):
+    list_display = ('user', 'status', 'created_by', 'created_on', 'approved_by')
+    raw_id_fields = ('user', 'created_by', 'approved_by')
+    list_filter = ('status',)
+    search_fields = ('user__username', 'user__email', 'user__first_name', 'user__last_name', 'status')
+    list_select_related = ('user',
+                           'created_by',
+                           'approved_by',
+                           "user__profile__country",
+                           "user__profile__organization",
+                           "created_by__profile__country",
+                           "created_by__profile__organization",
+                           "approved_by__profile__country",
+                           "approved_by__profile__organization"
+                           )
+
+
 @admin.register(models.Item)
 class ItemAdmin(XLSXImportMixin, admin.ModelAdmin):
     list_display = ('batch_id', 'material', 'wastage_type', 'transfer')
     raw_id_fields = ('transfer', 'transfers_history', 'material')
     list_filter = ('wastage_type', 'hidden')
     readonly_fields = ('destination_point_name',)
+
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+
+        if 'transfer' in form.base_fields:
+            form.base_fields['transfer'].required = True
+        if 'wastage_type' in form.base_fields:
+            form.base_fields['wastage_type'].required = False
+        if 'uom' in form.base_fields:
+            form.base_fields['uom'].required = False
+        if 'conversion_factor' in form.base_fields:
+            form.base_fields['conversion_factor'].required = False
+        return form
 
     def destination_point_name(self, obj):
         if obj.transfer and obj.transfer.destination_point:
@@ -204,9 +273,21 @@ class ItemAdmin(XLSXImportMixin, admin.ModelAdmin):
 
     def get_queryset(self, request):
         qs = models.Item.all_objects\
-            .select_related('transfer', 'material')\
+            .select_related(
+                'transfer',
+                'transfer__partner_organization',
+                'transfer__partner_organization__organization',
+                'material',
+            )\
             .prefetch_related('transfers_history', 'material__partner_material')
         return qs
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name in ["transfer", "origin_transfer"]:
+            kwargs["queryset"] = models.Transfer.objects.select_related(
+                "partner_organization", "partner_organization__organization"
+            )
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     search_fields = (
         'batch_id', 'material__short_description', 'transfer__unicef_release_order',
@@ -346,11 +427,7 @@ class ItemAdmin(XLSXImportMixin, admin.ModelAdmin):
 
             mat_desc = imp_r.pop('partner_material__description')
             if mat_desc and mat_desc != material.short_description:
-                models.PartnerMaterial.objects.update_or_create(
-                    material=material,
-                    partner_organization=partner,
-                    defaults={'description': mat_desc}
-                )
+                imp_r['mapped_description'] = mat_desc
 
             transfer = get_or_create_transfer(dict(
                 name="Initial Imports",
@@ -375,6 +452,102 @@ class ItemAdmin(XLSXImportMixin, admin.ModelAdmin):
 class TransferEvidenceAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
     raw_id_fields = ('transfer', 'user')
     inlines = [TransferEvidenceAttachmentInline]
+
+
+@admin.register(models.TransferHistory)
+class TransferHistoryAdmin(admin.ModelAdmin):
+    list_display = ('origin_transfer_name', 'list_sub_transfers')
+    readonly_fields = ('origin_transfer_id', 'origin_transfer_link')
+    search_fields = ('origin_transfer__name',)
+    inlines = [TransferInLine]
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        qs = qs.select_related('origin_transfer')
+        qs = qs.prefetch_related(
+            Prefetch('transfers', queryset=models.Transfer.objects.order_by('id'))
+        )
+        return qs
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "origin_transfer":
+            kwargs["queryset"] = models.Transfer.objects.select_related(
+                "partner_organization", "partner_organization__organization", "origin_point", "destination_point", "from_partner_organization",
+                "recipient_partner_organization", "checked_in_by", "checked_out_by"
+            )
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+    def origin_transfer_name(self, obj):
+        return obj.origin_transfer.name if obj.origin_transfer else '-'
+
+    def list_sub_transfers(self, obj):
+        return ", ".join([t.name for t in obj.transfers.all()])
+
+    def origin_transfer_link(self, obj):
+        if obj.origin_transfer:
+            url = reverse('admin:last_mile_transfer_change', args=[obj.origin_transfer.pk])
+            return format_html('<a href="{}">{}</a>', url, obj.origin_transfer.name)
+        return '-'
+    origin_transfer_link.short_description = 'Origin Transfer'
+
+    def get_search_results(self, request, queryset, search_term):
+        queryset, use_distinct = super().get_search_results(request, queryset, search_term)
+        if search_term:
+            queryset |= self.model.objects.filter(origin_transfer__name__icontains=search_term)
+        return queryset, use_distinct
+
+
+@admin.register(models.ItemTransferHistory)
+class ItemTransferHistoryAdmin(admin.ModelAdmin):
+    list_display = ('item_batch_id', 'transfer_unicef_release_order', 'transfer_count', 'view_items_link')
+    list_filter = ('transfer__name',)
+    search_fields = ('transfer__name', 'transfer__partner_organization__organization__name', 'transfer__destination_point__name', 'item__batch_id')
+
+    def transfer_unicef_release_order(self, obj):
+        return obj.unicef_release_order
+    transfer_unicef_release_order.short_description = "UNICEF Release Order"
+
+    def item_batch_id(self, obj):
+        return obj.batch_id
+    item_batch_id.short_description = "Batch ID"
+
+    def transfer_count(self, obj):
+        return obj.item_count
+    transfer_count.short_description = 'Transfers Count'
+
+    def get_queryset(self, request):
+        qs = models.ItemTransferHistory.objects.select_related(
+            "transfer__partner_organization__organization",
+        ).annotate(
+            item_count=Count('transfer__itemtransferhistory'),
+            unicef_release_order=F('transfer__unicef_release_order'),
+            batch_id=F('item__batch_id')
+        )
+        return qs
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "transfer":
+            kwargs["queryset"] = models.Transfer.objects.select_related(
+                "partner_organization__organization",
+            )
+        if db_field.name == "item":
+            kwargs["queryset"] = models.Item.objects.select_related(
+                "transfer__partner_organization", 'material'
+            )
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+    def view_items_link(self, obj):
+        """ Link to the transfer detail page with items listed """
+        url = reverse("admin:last_mile_transfer_change", args=[obj.transfer.id])
+        return format_html(f'<a href="{url}">View Transfer</a>')
+    view_items_link.short_description = "Transfer Details"
+
+
+@admin.register(models.PartnerMaterial)
+class PartnerMaterialAdmin(admin.ModelAdmin):
+    list_display = ('material', 'partner_organization')
+    search_fields = ('material__short_description', 'partner_organization__organization__name')
+    list_filter = ('material',)
 
 
 admin.site.register(models.PointOfInterestType)

@@ -20,6 +20,7 @@ class TestPMPDropdownsListApiView(BaseTenantTestCase):
             profile__organization=cls.organization
         )
         cls.url = reverse('pmp_v3:dropdown-dynamic-list')
+
         cls.default_elements = [
             'agency_choices',
             'agreement_amendment_types',
@@ -31,8 +32,10 @@ class TestPMPDropdownsListApiView(BaseTenantTestCase):
             'cash_transfer_modalities',
             'cp_outputs',
             'cso_types',
+            'gpd_status',
             'currencies',
             'file_types',
+            'gdd_amendment_types',
             'gender_equity_sustainability_ratings',
             'intervention_amendment_types',
             'intervention_doc_type',
@@ -43,6 +46,7 @@ class TestPMPDropdownsListApiView(BaseTenantTestCase):
             'partner_risk_rating',
             'partner_types',
             'risk_types',
+            'gpd_risk_types',
             'sea_risk_ratings',
             'supply_item_provided_by',
             'review_types',
