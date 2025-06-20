@@ -83,7 +83,7 @@ class GDDExportSerializer(serializers.ModelSerializer):
         decimal_places=2,
     )
     total_planned_budget = serializers.DecimalField(
-        label=_("Total PD/SPD Budget"),
+        label=_("Total GPD Budget"),
         source='total_budget',
         read_only=True,
         max_digits=20,
