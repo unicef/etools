@@ -11,7 +11,6 @@ from unicef_attachments.models import Attachment
 from unicef_attachments.serializers import AttachmentSerializerMixin
 
 from etools.applications.last_mile import models
-from etools.applications.last_mile.models import PartnerMaterial
 from etools.applications.last_mile.tasks import notify_first_checkin_transfer, notify_wastage_transfer
 from etools.applications.last_mile.validators import TransferCheckOutValidator
 from etools.applications.partners.models import Agreement, PartnerOrganization
@@ -228,13 +227,10 @@ class ItemUpdateSerializer(serializers.ModelSerializer):
     def save(self, **kwargs):
         if 'description' in self.validated_data:
             description = self.validated_data.pop('description')
-            # If no text is sent (like an update for another field) skip
+            if self.instance.mapped_description and self.instance.mapped_description != description:
+                raise ValidationError(_('The description cannot be modified. A value is already present.'))
             if description:
-                PartnerMaterial.objects.update_or_create(
-                    partner_organization=self.instance.partner_organization,
-                    material=self.instance.material,
-                    defaults={'description': description}
-                )
+                self.instance.mapped_description = description
         super().save(**kwargs)
 
 

@@ -812,8 +812,27 @@ class TestItemUpdateViewSet(BaseTenantTestCase):
         item.refresh_from_db()
         self.assertEqual(item.description, 'updated description')
         self.assertEqual(response.data['description'], 'updated description')
+        self.assertEqual(item.mapped_description, 'updated description')
         self.assertEqual(item.uom, 'KG')
         self.assertEqual(response.data['uom'], 'KG')
+
+    def test_patch_already_updated_description(self):
+        item = ItemFactory(transfer=self.transfer)
+        url = reverse('last_mile:item-update-detail', args=(item.pk,))
+        data = {
+            'description': 'updated description',
+        }
+        response = self.forced_auth_req('patch', url, user=self.partner_staff, data=data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        item.refresh_from_db()
+        self.assertEqual(item.mapped_description, 'updated description')
+        self.assertEqual(item.description, 'updated description')
+        data = {
+            'description': 'updated description12',
+        }
+        response = self.forced_auth_req('patch', url, user=self.partner_staff, data=data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("The description cannot be modified. A value is already present", str(response.data))
 
     def test_patch_uom_mappings(self):
         item = ItemFactory(transfer=self.transfer, material=self.material, quantity=100)
@@ -831,6 +850,7 @@ class TestItemUpdateViewSet(BaseTenantTestCase):
         self.assertEqual(float(item.conversion_factor), 10 / 50)
         self.assertEqual(item.quantity, 20)
         self.assertEqual(item.uom, 'CAR')
+        self.assertEqual(item.mapped_description, None)
 
     def test_patch_no_uom_map(self):
         item = ItemFactory(transfer=self.transfer, material=self.material, quantity=100)
