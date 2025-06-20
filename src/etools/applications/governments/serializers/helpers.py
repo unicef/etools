@@ -137,6 +137,7 @@ class GDDBudgetCUSerializer(
     in_kind_amount_local = serializers.DecimalField(max_digits=20, decimal_places=2)
 
     unicef_cash_local = serializers.DecimalField(max_digits=20, decimal_places=2)
+    partner_contribution_percent = serializers.DecimalField(max_digits=20, decimal_places=2)
     total_unicef_contribution_local = serializers.DecimalField(max_digits=20, decimal_places=2)
     total_cash_local = serializers.DecimalField(max_digits=20, decimal_places=2)
     total_local = serializers.DecimalField(max_digits=20, decimal_places=2)

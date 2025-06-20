@@ -84,9 +84,19 @@ class TestGDDBudget(BaseTenantTestCase):
         gdd = GDDFactory()
         budget = gdd.planned_budget
 
-        budget.partner_contribution_local = 10
-        budget.unicef_cash_local = 20
-        budget.save()
+        result = EWPOutputFactory(cp_output__result_type__name=ResultType.OUTPUT)
+        link = GDDResultLinkFactory(cp_output=result, gdd=gdd, workplan=result.workplan)
+        key_intervention = GDDKeyInterventionFactory(result_link=link)
+        GDDActivityFactory(
+            key_intervention=key_intervention,
+            ewp_activity=EWPActivityFactory(),
+            unicef_cash=10,
+            cso_cash=20)
+        GDDActivityFactory(
+            key_intervention=key_intervention,
+            ewp_activity=EWPActivityFactory(),
+            unicef_cash=100,
+            cso_cash=200)
 
         GDDSupplyItemFactory(
             gdd=gdd,
@@ -100,17 +110,17 @@ class TestGDDBudget(BaseTenantTestCase):
             unit_price=4,
             provided_by=GDDSupplyItem.PROVIDED_BY_PARTNER
         )
-        self.assertEqual(budget.in_kind_amount_local, 30)
-        self.assertEqual(budget.partner_supply_local, 40)
+        self.assertEqual(budget.in_kind_amount_local, 3 * 10)
+        self.assertEqual(budget.partner_supply_local, 4 * 10)
         self.assertEqual(budget.total_supply, 30 + 40)
-        self.assertEqual(budget.total_partner_contribution_local, 10 * 4)
-        self.assertEqual(budget.total_local, 40 + 30)
+        self.assertEqual(budget.total_partner_contribution_local, 200 + 20 + 4 * 10, "Partner total is 260")
+        self.assertEqual(budget.total_local, 200 + 20 + 4 * 10 + 100 + 3 * 10 + 10, 'Partner and unicef total is 400')
         self.assertEqual(
             "{:0.2f}".format(budget.partner_contribution_percent),
-            "{:0.2f}".format(40 / (30 + 40) * 100),
+            "{:0.2f}".format(260 / 400 * 100),
         )
-        self.assertEqual(budget.total_cash_local(), 0)
-        self.assertEqual(budget.total_unicef_contribution_local(), 30)
+        self.assertEqual(budget.total_cash_local(), 110 + 220)
+        self.assertEqual(budget.total_unicef_contribution_local(), 110 + 3 * 10)
 
     def test_calc_totals_db_queries(self):
         gdd = GDDFactory()
