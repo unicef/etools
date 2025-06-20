@@ -2,7 +2,7 @@ from functools import cache
 
 from django.conf import settings
 from django.db import connection
-from django.db.models import CharField, OuterRef, Prefetch, Q, Subquery
+from django.db.models import F, Prefetch, Q
 from django.shortcuts import get_object_or_404
 from django.utils.functional import cached_property
 from django.utils.translation import gettext as _
@@ -124,9 +124,7 @@ class InventoryItemListView(POIQuerysetMixin, ListAPIView):
                                    'transfer__checked_in_by',
                                    'transfer__checked_out_by')
 
-            qs = qs.annotate(description=Subquery(models.PartnerMaterial.objects.filter(
-                partner_organization=partner,
-                material=OuterRef('material')).values('description'), output_field=CharField()))
+            qs = qs.annotate(description=F('material__short_description'))
             return qs
         return self.queryset.none()
 
@@ -174,8 +172,7 @@ class InventoryMaterialsViewSet(POIQuerysetMixin, mixins.ListModelMixin, Generic
         qs = models.Material.objects\
             .filter(items__in=items_qs)\
             .prefetch_related(Prefetch('items', queryset=items_qs)) \
-            .annotate(description=Subquery(models.PartnerMaterial.objects.filter(
-                partner_organization=partner, material=OuterRef('id')).values('description')[:1], output_field=CharField()))\
+            .annotate(description=F('short_description'))\
             .distinct()\
             .order_by('id', 'short_description')
 
@@ -232,9 +229,7 @@ class TransferViewSet(
                 'items', models.Item.objects
                 .select_related('material')
                 .prefetch_related('transfers_history')
-                .annotate(description=Subquery(models.PartnerMaterial.objects.filter(
-                    partner_organization=self.request.user.partner,
-                    material=OuterRef('material')).values('description'), output_field=CharField())))
+                .annotate(description=F('material__short_description')))
         )
 
     @cache
