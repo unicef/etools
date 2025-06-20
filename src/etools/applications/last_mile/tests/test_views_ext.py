@@ -1,19 +1,16 @@
 from decimal import Decimal
-from unittest.mock import patch
 
+from django.db import connection
 from django.urls import reverse
 
 from rest_framework import status
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
-from etools.applications.core.util_scripts import set_country as real_set_country
 from etools.applications.last_mile import models
 from etools.applications.last_mile.tests.factories import MaterialFactory, PointOfInterestFactory, TransferFactory
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.users.tests.factories import UserFactory
-
-PATH_TO_PATCH = 'etools.applications.last_mile.views_ext.set_country'
 
 
 class VisionIngestTransfersApiViewTest(BaseTenantTestCase):
@@ -38,16 +35,9 @@ class VisionIngestTransfersApiViewTest(BaseTenantTestCase):
         cls.material1 = MaterialFactory(number='MAT-001', short_description="Biscuits")
         cls.material2 = MaterialFactory(number='MAT-002', short_description="Water Tablets")
 
-    def setUp(self):
-        super().setUp()
-
-        patcher = patch(PATH_TO_PATCH)
-
-        self.mock_set_country = patcher.start()
-
-        self.mock_set_country.side_effect = lambda _: real_set_country('test')
-
-        self.addCleanup(patcher.stop)
+    def test_correct_tenant(self):
+        self.assertEqual(self.api_user.profile.country.schema_name, "test")
+        self.assertEqual(connection.tenant.schema_name, "test")
 
     def test_unauthenticated_request_fails(self):
         payload = [
