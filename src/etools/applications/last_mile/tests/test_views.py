@@ -856,6 +856,8 @@ class TestItemUpdateViewSet(BaseTenantTestCase):
         }
         response = self.forced_auth_req('patch', url, user=self.partner_staff, data=data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        del item.__dict__['mapped_description']  # Clear the cached_property
+        del item.__dict__['description']
         item.refresh_from_db()
         self.assertEqual(item.mapped_description, 'updated description')
         self.assertEqual(item.description, 'updated description')
