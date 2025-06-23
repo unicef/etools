@@ -163,9 +163,17 @@
                 <td class="w-p12">{% translate "UNICEF Cash" %}:</td>
                 <td class="w-p12">{{ gdd.planned_budget.unicef_cash_local | currency }}</td>
                 <td class="w-p12">{% translate "Supplies" %}:</td>
-                <td class="w-p12">{{ gdd.planned_budget.in_kind_amount_local | currency}}</td>
+                <td class="w-p12" colspan="3">{{ gdd.planned_budget.in_kind_amount_local | currency}}</td>
                 <td class="w-p12">{% translate "Total" %}:</td>
                 <td class="w-p12">{{ gdd.planned_budget.total_unicef_contribution_local | currency }}</td>
+              </tr>
+              <tr>
+                <td>{% translate "Partner Cash" %}:</td>
+                <td>{{ gdd.planned_budget.partner_contribution_local | currency }}</td>
+                <td>{% translate "Supplies:" %}</td>
+                <td colspan="3">{{ gdd.planned_budget.partner_supply_local | currency }}</td>
+                <td>{% translate "Total:" %}</td>
+                <td>{{ gdd.planned_budget.total_partner_contribution_local | currency }}</td>
               </tr>
             </table>
           </td>
@@ -254,8 +262,10 @@
             <td class="b-gray w-p30">{% translate "Result Level" %}</td>
             <td class="b-gray w-p40">{% translate "Result/activity" %}</td>
             <td class="b-gray w-p30">{% translate "Timeframe" %}</td>
-            <td class="b-gray w-p30">{% translate "Total (UNICEF)" %} [{{ gdd.planned_budget.currency }}]</td>
-          </tr>
+            <td class="b-gray w-p10">{% translate "Total (CSO + UNICEF)" %}[{{ gdd.planned_budget.currency }}]</td>
+            <td class="b-gray w-p10">{% translate "CSO contribution" %}</td>
+            <td class="b-gray w-p10">{% translate "UNICEF contribution" %}</td>
+         </tr>
           {% for result_link in gdd.result_links.all %}
             {% for ki in result_link.gdd_key_interventions.all %}
               <tr>
@@ -266,12 +276,16 @@
                   {{ ki.ewp_key_intervention.cp_key_intervention.name }}
                 </td>
                 <td class="b-yellow">{{ ki.total | currency }}</td>
-              </tr>
+                <td class="b-yellow">{{ ki.total_cso | currency }}</td>
+                <td class="b-yellow">{{ ki.total_unicef | currency }}</td>
+         </tr>
               {% for activity in ki.gdd_activities.all %}
                 <tr>
                   <td>Activity</td>
                   <td>{% if not activity.is_active %} ({% translate 'Inactive' %}) {% endif %}{{ activity.name }}</td>
                   <td>{{ activity.get_time_frames_display }}</td>
+                  <td>{{ activity.cso_cash|add:activity.unicef_cash | currency }}</td>
+                  <td>{{ activity.cso_cash | currency }}</td>
                   <td>{{ activity.unicef_cash | currency }}</td>
                 </tr>
               {% endfor %}
@@ -280,11 +294,15 @@
           <tr>
            <td colspan="3" class="b-blue">{% translate "Sub-total for programme costs" %}</td>
             <td class="b-blue">{{ gdd.planned_budget.total_unicef_cash_local_wo_hq | currency }}</td>
+            <td class="b-blue">{{ gdd.planned_budget.partner_contribution_local | currency }}</td>
+            <td class="b-blue">{{ gdd.planned_budget.total_unicef_cash_local_wo_hq | currency }}</td>
           </tr>
           <tr>
            <td colspan="3" class="b-blue">{% translate "Total Cash budget" %}</td>
+            <td class="b-blue">{{ gdd.planned_budget.total_cash_local | currency }}</td>
+            <td class="b-blue">{{ gdd.planned_budget.partner_contribution_local | currency }}</td>
             <td class="b-blue">{{ gdd.planned_budget.unicef_cash_local | currency }}</td>
-          </tr>
+         </tr>
         <tbody>
       </table>
 
