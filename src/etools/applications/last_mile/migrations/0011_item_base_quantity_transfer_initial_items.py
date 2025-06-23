@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('last_mile', '0009_alter_adminpanelpermission_options_profile'),
+        ('last_mile', '0010_remove_partnermaterial_description_and_more'),
     ]
 
     operations = [
