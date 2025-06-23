@@ -173,6 +173,7 @@ class TestTransferView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.partner = PartnerFactory(organization=OrganizationFactory(name='Partner'))
+        cls.partner_receive_handover = PartnerFactory(organization=OrganizationFactory(name='Partner Receive Handover'))
         cls.partner_staff = UserFactory(
             realms__data=['IP LM Editor'],
             profile__organization=cls.partner.organization,
@@ -199,6 +200,13 @@ class TestTransferView(BaseTenantTestCase):
             partner_organization=cls.partner,
             status=models.Transfer.COMPLETED,
             origin_point=cls.warehouse
+        )
+        cls.handover = TransferFactory(
+            status=models.Transfer.PENDING,
+            origin_point=cls.warehouse,
+            transfer_type=models.Transfer.HANDOVER,
+            from_partner_organization=cls.partner,
+            partner_organization=cls.partner_receive_handover
         )
         cls.attachment = AttachmentFactory(
             file=SimpleUploadedFile('proof_file.pdf', b'Proof File'), code='proof_of_transfer')
@@ -232,8 +240,9 @@ class TestTransferView(BaseTenantTestCase):
         url = reverse('last_mile:transfers-completed', args=(self.warehouse.pk,))
         response = self.forced_auth_req('get', url, user=self.partner_staff)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data['results']), 1)
+        self.assertEqual(len(response.data['results']), 2)  # Include also the Handover Transfer
         self.assertEqual(self.completed.pk, response.data['results'][0]['id'])
+        self.assertEqual(self.handover.pk, response.data['results'][1]['id'])
 
     @override_settings(RUTF_MATERIALS=['1234'])
     def test_full_checkin(self):
@@ -264,9 +273,19 @@ class TestTransferView(BaseTenantTestCase):
         self.assertIn(self.attachment.filename, response.data['proof_file'])
         self.assertEqual(self.incoming.name, checkin_data['name'])
         self.assertEqual(self.incoming.items.count(), len(response.data['items']))
+        self.assertEqual(self.incoming.initial_items[0]['quantity'], item_1.quantity)
+        self.assertEqual(self.incoming.initial_items[1]['quantity'], item_2.quantity)
+        self.assertEqual(self.incoming.initial_items[2]['quantity'], item_3.quantity)
         for existing, expected in zip(self.incoming.items.all().order_by('id'),
                                       sorted(checkin_data['items'], key=lambda x: x['id'])):
             self.assertEqual(existing.quantity, expected['quantity'])
+
+        item_1.refresh_from_db()
+        item_2.refresh_from_db()
+        item_3.refresh_from_db()
+        self.assertEqual(item_1.base_quantity, item_1.quantity)
+        self.assertEqual(item_2.base_quantity, item_2.quantity)
+        self.assertEqual(item_3.base_quantity, item_3.quantity)
 
         self.assertFalse(models.Transfer.objects.filter(transfer_type=models.Transfer.WASTAGE).exists())
 
@@ -277,9 +296,15 @@ class TestTransferView(BaseTenantTestCase):
 
     @override_settings(RUTF_MATERIALS=['1234'])
     def test_partial_checkin_with_short(self):
-        item_1 = ItemFactory(quantity=11, transfer=self.incoming, material=self.material)
-        ItemFactory(quantity=22, transfer=self.incoming, material=self.material)
-        item_3 = ItemFactory(quantity=33, transfer=self.incoming, material=self.material)
+        incoming = TransferFactory(
+            partner_organization=self.partner,
+            destination_point=self.warehouse,
+            transfer_type=models.Transfer.DELIVERY,
+            status=models.Transfer.PENDING
+        )
+        item_1 = ItemFactory(quantity=11, transfer=incoming, material=self.material)
+        item_2 = ItemFactory(quantity=22, transfer=incoming, material=self.material)
+        item_3 = ItemFactory(quantity=33, transfer=incoming, material=self.material)
 
         PartnerMaterialFactory(material=self.material, partner_organization=self.partner)
 
@@ -292,19 +317,23 @@ class TestTransferView(BaseTenantTestCase):
             ],
             "destination_check_in_at": timezone.now()
         }
-        url = reverse('last_mile:transfers-new-check-in', args=(self.warehouse.pk, self.incoming.pk))
+        url = reverse('last_mile:transfers-new-check-in', args=(self.warehouse.pk, incoming.pk))
         response = self.forced_auth_req('patch', url, user=self.partner_staff, data=checkin_data)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.incoming.refresh_from_db()
-        self.assertEqual(self.incoming.status, models.Transfer.COMPLETED)
+        incoming.refresh_from_db()
+        self.assertEqual(incoming.initial_items[0]['quantity'], item_1.quantity)
+        self.assertEqual(incoming.initial_items[1]['quantity'], item_2.quantity)
+        self.assertEqual(incoming.initial_items[2]['quantity'], item_3.quantity)
+        self.assertEqual(incoming.status, models.Transfer.COMPLETED)
         self.assertEqual("RUTF", response.data['items'][0]['material']['material_type_translate'])
         self.assertIn(response.data['proof_file'], self.attachment.file.path)
 
-        self.assertIn(f'DW @ {checkin_data["destination_check_in_at"].strftime("%y-%m-%d")}', self.incoming.name)
-        self.assertEqual(self.incoming.items.count(), len(response.data['items']))
-        self.assertEqual(self.incoming.items.get(pk=item_1.pk).quantity, 11)
-        self.assertEqual(self.incoming.items.get(pk=item_3.pk).quantity, 3)
+        self.assertIn(f'DW @ {checkin_data["destination_check_in_at"].strftime("%y-%m-%d")}', incoming.name)
+        self.assertEqual(incoming.items.count(), len(response.data['items']))
+        self.assertEqual(incoming.items.get(pk=item_1.pk).quantity, 11)
+        self.assertEqual(incoming.items.get(pk=item_3.pk).quantity, 3)
+        self.assertEqual(len(incoming.initial_items), 3)
 
         short_transfer = models.Transfer.objects.filter(transfer_type=models.Transfer.WASTAGE).first()
         self.assertEqual(short_transfer.status, models.Transfer.COMPLETED)
@@ -313,10 +342,10 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(short_transfer.items.count(), 2)
         loss_item_2 = short_transfer.items.order_by('id').last()
         self.assertEqual(loss_item_2.quantity, 22)
-        self.assertIn(self.incoming, loss_item_2.transfers_history.all())
-        self.assertTrue(models.TransferHistory.objects.filter(origin_transfer_id=self.incoming.id).exists())
+        self.assertIn(incoming, loss_item_2.transfers_history.all())
+        self.assertTrue(models.TransferHistory.objects.filter(origin_transfer_id=incoming.id).exists())
         self.assertEqual(short_transfer.items.order_by('id').first().quantity, 30)
-        self.assertEqual(short_transfer.origin_transfer, self.incoming)
+        self.assertEqual(short_transfer.origin_transfer, incoming)
 
     @override_settings(RUTF_MATERIALS=['1234'])
     def test_partial_checkin_with_short_surplus(self):
@@ -325,7 +354,6 @@ class TestTransferView(BaseTenantTestCase):
         item_3 = ItemFactory(quantity=33, transfer=self.incoming, material=self.material)
 
         PartnerMaterialFactory(material=self.material, partner_organization=self.partner)
-
         checkin_data = {
             "name": "checked in transfer",
             "comment": "",
@@ -358,6 +386,7 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(short_transfer.items.count(), 1)
         short_item_3 = short_transfer.items.last()
         self.assertEqual(short_item_3.quantity, 30)
+        self.assertEqual(short_item_3.base_quantity, 33)
         self.assertIn(self.incoming, short_item_3.transfers_history.all())
 
         surplus_transfer = models.Transfer.objects.filter(
@@ -367,6 +396,7 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(short_transfer.items.count(), 1)
         surplus_item_2 = surplus_transfer.items.last()
         self.assertEqual(surplus_item_2.quantity, 1)
+        self.assertEqual(surplus_item_2.base_quantity, 22)
         self.assertIn(self.incoming, surplus_item_2.transfers_history.all())
 
     @override_settings(RUTF_MATERIALS=['1234'])
@@ -402,6 +432,7 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(self.incoming.items.count(), len(response.data['items']))
         self.assertEqual(self.incoming.items.count(), 2)
         self.assertEqual(self.incoming.items.first().id, item_1.pk)
+        self.assertEqual(self.incoming.items.first().base_quantity, 11)
         self.assertTrue(models.TransferHistory.objects.filter(origin_transfer_id=self.incoming.id).exists())
         item_1.refresh_from_db()
         self.assertEqual(self.incoming.items.first().quantity, item_1.quantity)
@@ -622,6 +653,7 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(handover_transfer.items.first().quantity, 9)
         self.assertEqual(handover_transfer.recipient_partner_organization.id, agreement.partner.id)
         self.assertEqual(handover_transfer.from_partner_organization.id, self.partner.pk)
+        self.assertEqual(len(handover_transfer.initial_items), 1)
         self.assertEqual(self.checked_in.items.count(), 2)
         self.assertEqual(self.checked_in.items.get(pk=item_1.pk).quantity, 2)
         self.assertEqual(self.checked_in.items.get(pk=item_2.pk).quantity, 22)
@@ -809,7 +841,7 @@ class TestItemUpdateViewSet(BaseTenantTestCase):
         }
         response = self.forced_auth_req('patch', url, user=self.partner_staff, data=data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        item.refresh_from_db()
+        item = models.Item.objects.get(pk=item.pk)
         self.assertEqual(item.description, 'updated description')
         self.assertEqual(response.data['description'], 'updated description')
         self.assertEqual(item.mapped_description, 'updated description')
@@ -824,6 +856,8 @@ class TestItemUpdateViewSet(BaseTenantTestCase):
         }
         response = self.forced_auth_req('patch', url, user=self.partner_staff, data=data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        del item.__dict__['mapped_description']  # Clear the cached_property
+        del item.__dict__['description']
         item.refresh_from_db()
         self.assertEqual(item.mapped_description, 'updated description')
         self.assertEqual(item.description, 'updated description')
@@ -907,7 +941,9 @@ class TestItemUpdateViewSet(BaseTenantTestCase):
         self.assertEqual(self.transfer.items.count(), 2)
         item.refresh_from_db()
         self.assertEqual(item.quantity, 76)
+        self.assertEqual(item.base_quantity, 100)
         self.assertEqual(self.transfer.items.exclude(pk=item.pk).first().quantity, 24)
+        self.assertEqual(self.transfer.items.exclude(pk=item.pk).first().base_quantity, 100)
 
     def test_post_split_validation(self):
         item = ItemFactory(transfer=self.transfer, material=self.material, quantity=100)

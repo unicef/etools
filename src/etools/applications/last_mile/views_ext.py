@@ -222,6 +222,7 @@ class VisionIngestTransfersApiView(APIView):
                             transfer__unicef_release_order=unicef_ro, unicef_ro_item=item_dict['unicef_ro_item'])
                     except models.Item.DoesNotExist:
                         item_dict['transfer'] = transfer
+                        item_dict['base_quantity'] = item_dict['quantity']
                         if not item_dict.get('batch_id'):
                             item_dict['conversion_factor'] = 1.0
                             item_dict['uom'] = "EA"

@@ -69,7 +69,7 @@ class PointOfInterestViewSet(POIQuerysetMixin, ModelViewSet):
     def upload_waybill(self, request, pk=None):
         destination_point = get_object_or_404(models.PointOfInterest, pk=pk)
 
-        serializer = self.serializer_class(data=request.data)
+        serializer = self.serializer_class(data=request.data, context={'partner': request.user.partner})
         serializer.is_valid(raise_exception=True)
         waybill_file = serializer.validated_data['waybill_file']
         waybill_url = request.build_absolute_uri(waybill_file.url)
@@ -203,7 +203,7 @@ class TransferViewSet(
     search_fields = ('name', 'partner_organization__organization__name',
                      'comment', 'pd_number', 'unicef_release_order', 'waybill_id')
 
-    def get_queryset(self):
+    def get_queryset(self, handover=False):
         partner = self.request.user.partner
         if not partner:
             return models.Transfer.objects.none()
@@ -211,7 +211,6 @@ class TransferViewSet(
               .select_related('destination_point', 'origin_point',
                               'destination_point__parent', 'origin_point__parent',
                               'checked_in_by', 'checked_out_by', 'origin_transfer',)
-              .filter(partner_organization=partner)
               .defer("partner_organization",
                      "destination_point__point",
                      "destination_point__parent__parent",
@@ -221,10 +220,12 @@ class TransferViewSet(
                      "origin_point__parent__parent",
                      "origin_point__parent__geom",
                      "origin_point__parent__point"))
+        if not handover:
+            qs = qs.filter(partner_organization=partner)
         return qs
 
     def detail_qs(self):
-        return self.get_queryset().prefetch_related(
+        return self.get_queryset(handover=True).prefetch_related(
             Prefetch(
                 'items', models.Item.objects
                 .select_related('material')
@@ -258,14 +259,15 @@ class TransferViewSet(
         else:
             qs = qs.filter(destination_point=location)
 
-        qs = qs.exclude(origin_point=location).select_related("destination_point__parent", "origin_point__parent")
+        qs = qs.exclude(origin_point=location).select_related("destination_point__parent", "origin_point__parent").order_by("-created")
         return self.paginate_response(qs)
 
     @action(detail=True, methods=['get'], url_path='details',
             serializer_class=serializers.TransferSerializer)
     def details(self, request, *args, **kwargs):
         transfer = self.get_object()
-        return Response(serializers.TransferSerializer(transfer).data, status=status.HTTP_200_OK)
+        serializer = self.serializer_class(transfer, context={'partner': request.user.partner})
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['get'], url_path='checked-in')
     def checked_in(self, request, *args, **kwargs):
@@ -287,13 +289,16 @@ class TransferViewSet(
 
     @action(detail=False, methods=['get'], url_path='completed')
     def completed(self, request, *args, **kwargs):
+        partner = self.request.user.partner
         location = self.get_parent_poi()
         completed_filters = Q()
         completed_filters |= Q(Q(origin_point=location) & ~Q(destination_point=location))
         completed_filters |= Q(destination_point=location,
                                transfer_type__in=[models.Transfer.WASTAGE, models.Transfer.DISPENSE])
-
-        qs = self.get_queryset().filter(status=models.Transfer.COMPLETED).filter(completed_filters)
+        completed_filters |= Q(origin_point=location, transfer_type=models.Transfer.HANDOVER)
+        qs = self.get_queryset(handover=True).filter(Q(status=models.Transfer.COMPLETED) | Q(from_partner_organization=partner)).filter(completed_filters).filter(
+            Q(partner_organization=partner) | Q(from_partner_organization=partner)
+        )
         if not self.request.query_params.get('transfer_type', None):
             qs = qs.exclude(transfer_type__in=[models.Transfer.WASTAGE])
 
@@ -313,7 +318,7 @@ class TransferViewSet(
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-        return Response(serializers.TransferSerializer(serializer.instance).data, status=status.HTTP_200_OK)
+        return Response(serializers.TransferSerializer(serializer.instance, context={'partner': request.user.partner}).data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['patch'], url_path='mark-complete')
     def mark_complete(self, request, pk=None, **kwargs):
@@ -339,7 +344,7 @@ class TransferViewSet(
         serializer.is_valid(raise_exception=True)
         serializer.save()
 
-        return Response(serializers.TransferSerializer(serializer.instance).data, status=status.HTTP_200_OK)
+        return Response(serializers.TransferSerializer(serializer.instance, context={'partner': request.user.partner}).data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['post'], url_path='upload-evidence',
             serializer_class=serializers.TransferEvidenceSerializer)
