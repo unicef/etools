@@ -12,6 +12,7 @@ from rest_framework.views import APIView
 
 from etools.applications.last_mile import models
 from etools.applications.last_mile.permissions import LMSMAPIPermission
+from etools.applications.last_mile.serializers_ext import MaterialIngestSerializer
 from etools.applications.organizations.models import Organization
 from etools.libraries.pythonlib.encoders import CustomJSONEncoder
 
@@ -19,38 +20,52 @@ from etools.libraries.pythonlib.encoders import CustomJSONEncoder
 class VisionIngestMaterialsApiView(APIView):
     permission_classes = (LMSMAPIPermission,)
 
-    mapping = {
-        'MaterialNumber': 'number',
-        'ShortDescription': 'short_description',
-        'UnitOfMeasurement': 'original_uom',
-        'MaterialType': 'material_type',
-        'MaterialTypeDescription': 'material_type_description',
-        'MaterialGroup': 'group',
-        'MaterialGroupDescription': 'group_description',
-        'PurchasingGroup': 'purchase_group',
-        'PurchasingGroupDescription': 'purchase_group_description',
-        'HazardousGoods': 'hazardous_goods',
-        'HazardousGoodsDescription': 'hazardous_goods_description',
-        'TempConditions': 'temperature_conditions',
-        'TempDescription': 'temperature_group',
-        'PurchasingText': 'purchasing_text'
-    }
-
     def post(self, request):
+        serializer = MaterialIngestSerializer(data=request.data, many=True)
+
+        serializer.is_valid(raise_exception=True)
+
+        validated_data = serializer.validated_data
+
+        incoming_numbers = {item['number'] for item in validated_data}
+
+        existing_numbers = set(
+            models.Material.objects.filter(number__in=incoming_numbers).values_list('number', flat=True)
+        )
+
         materials_to_create = []
-        for material in request.data:
-            model_dict = {}
-            for k, v in material.items():
-                if k in self.mapping:
-                    model_dict[self.mapping[k]] = strip_tags(v)  # strip text that has html tags
-            try:
-                models.Material.objects.get(number=model_dict['number'])
-            except models.Material.DoesNotExist:
-                materials_to_create.append(models.Material(**model_dict))
+        processed_numbers = set()
+        skipped_due_to_db_duplicate = []
+        skipped_due_to_payload_duplicate = []
 
-        models.Material.objects.bulk_create(materials_to_create)
+        for material_data in validated_data:
+            number = material_data['number']
 
-        return Response(status=status.HTTP_200_OK)
+            if number in existing_numbers:
+                skipped_due_to_db_duplicate.append(number)
+                continue
+
+            if number in processed_numbers:
+                skipped_due_to_payload_duplicate.append(number)
+                continue
+
+            materials_to_create.append(models.Material(**material_data))
+            processed_numbers.add(number)
+
+        if materials_to_create:
+            models.Material.objects.bulk_create(materials_to_create)
+
+        response_data = {
+            "status": "Completed",
+            "created_count": len(materials_to_create),
+            "skipped_count": len(skipped_due_to_db_duplicate) + len(skipped_due_to_payload_duplicate),
+            "details": {
+                "skipped_existing_in_db": skipped_due_to_db_duplicate,
+                "skipped_duplicate_in_payload": skipped_due_to_payload_duplicate
+            }
+        }
+
+        return Response(response_data, status=status.HTTP_200_OK)
 
 
 class GeometryPointFunc(Func):
