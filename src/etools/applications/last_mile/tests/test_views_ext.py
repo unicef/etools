@@ -24,7 +24,7 @@ from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.users.tests.factories import UserFactory
 
 
-class VisionIngestTransfersApiViewTest(BaseTenantTestCase):
+class TestVisionIngestTransfersApiView(BaseTenantTestCase):
     url = reverse('last_mile:vision-ingest-transfers')
 
     @classmethod
@@ -391,7 +391,7 @@ class VisionIngestTransfersApiViewTest(BaseTenantTestCase):
         self.assertEqual(item.amount_usd, Decimal("350.55"))
 
 
-class VisionIngestMaterialsApiViewTest(BaseTenantTestCase):
+class TestVisionIngestMaterialsApiView(BaseTenantTestCase):
 
     url = reverse('last_mile:vision-ingest-materials')
 
@@ -538,7 +538,7 @@ class VisionIngestMaterialsApiViewTest(BaseTenantTestCase):
         self.assertIn("Invalid data. Expected a dictionary, but got str", str(response.data[1]))
 
 
-class VisionLMSMExportTest(BaseTenantTestCase):
+class TestVisionLMSMExport(BaseTenantTestCase):
     url = reverse('last_mile:vision-export-data')
 
     @classmethod
