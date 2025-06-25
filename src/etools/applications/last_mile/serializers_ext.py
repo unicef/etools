@@ -25,3 +25,18 @@ class MaterialIngestSerializer(serializers.Serializer):
             if isinstance(value, str):
                 ret[key] = strip_tags(value)
         return ret
+
+
+class IngestDetailsSerializer(serializers.Serializer):
+    skipped_existing_in_db = serializers.ListField(child=serializers.CharField())
+    skipped_duplicate_in_payload = serializers.ListField(child=serializers.CharField())
+
+
+class MaterialIngestResultSerializer(serializers.Serializer):
+    status = serializers.CharField(default="Completed")
+    created_count = serializers.IntegerField()
+    skipped_count = serializers.SerializerMethodField()
+    details = IngestDetailsSerializer(source='*')
+
+    def get_skipped_count(self, obj) -> int:
+        return len(obj.skipped_existing_in_db) + len(obj.skipped_duplicate_in_payload)
