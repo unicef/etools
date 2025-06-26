@@ -19,4 +19,14 @@ class Migration(migrations.Migration):
             name='mapped_description',
             field=models.CharField(blank=True, max_length=255, null=True),
         ),
+        migrations.AddField(
+            model_name='item',
+            name='base_quantity',
+            field=models.IntegerField(null=True),
+        ),
+        migrations.AddField(
+            model_name='transfer',
+            name='initial_items',
+            field=models.JSONField(blank=True, null=True, verbose_name='Initial Items'),
+        ),
     ]
