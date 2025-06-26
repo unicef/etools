@@ -525,7 +525,7 @@ class TestVisionIngestTransfersApiView(BaseTenantTestCase):
         self.assertEqual(len(response.data['details']['skipped_items']), 1)
 
         skipped_report = response.data['details']['skipped_items'][0]
-        self.assertEqual(skipped_report['reason'], "Duplicate item found in database.")
+        self.assertEqual(skipped_report['reason'], "Duplicate item found within the same payload.")
         self.assertEqual(skipped_report['item']['unicef_ro_item'], '10')
 
     def test_payload_with_conflicting_partners_for_same_release_order(self):

@@ -208,11 +208,24 @@ class TransferIngestService:
 
             self.items_by_release_order.setdefault(release_order, []).append(item_data)
 
-    def _prepare_items(self):
+    def _prepare_items(self) -> List[models.Item]:
         items_to_create = []
         all_transfers = {t.unicef_release_order: t for t in models.Transfer.objects.filter(unicef_release_order__in=self.items_by_release_order.keys())}
         all_material_numbers = {item['material_number'] for items in self.items_by_release_order.values() for item in items}
         all_materials = {m.number: m for m in models.Material.objects.filter(number__in=all_material_numbers)}
+
+        all_incoming_item_ids = {
+            item.get('other', {}).get('itemid')
+            for items in self.items_by_release_order.values()
+            for item in items
+            if item.get('other', {}).get('itemid')
+        }
+
+        existing_item_ids_in_db = set(
+            models.Item.objects.filter(other__itemid__in=all_incoming_item_ids).values_list('other__itemid', flat=True)
+        )
+
+        processed_item_ids_in_this_run = set()
 
         for release_order, items in self.items_by_release_order.items():
             transfer = all_transfers.get(release_order)
@@ -228,13 +241,17 @@ class TransferIngestService:
                     continue
 
                 item_id = item_data.get('other', {}).get('itemid')
-                if models.Item.objects.filter(other__itemid=item_id).exists() or \
-                   models.Item.objects.filter(transfer=transfer, unicef_ro_item=item_data.get('unicef_ro_item')).exists():
+
+                if item_id in existing_item_ids_in_db:
                     self.report.skipped_items.append({"item": item_data, "reason": "Duplicate item found in database."})
                     continue
 
+                if item_id in processed_item_ids_in_this_run:
+                    self.report.skipped_items.append({"item": item_data, "reason": "Duplicate item found within the same payload."})
+                    continue
+
                 item_data.pop('material_number', None)
-                item_data.pop('description', None)  # Maybe changed with mapped_description?
+                item_data.pop('description', None)
                 if item_data.get('uom') == material.original_uom:
                     item_data.pop('uom', None)
 
@@ -248,5 +265,8 @@ class TransferIngestService:
                     item_data['uom'] = "EA"
 
                 items_to_create.append(models.Item(**item_data))
+
+                if item_id:
+                    processed_item_ids_in_this_run.add(item_id)
 
         return items_to_create
