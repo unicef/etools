@@ -1,10 +1,11 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Dict, List
 
 from django.db.models import F, FloatField, Func, QuerySet
 
 from etools.applications.last_mile import models
+from etools.applications.organizations.models import Organization
 
 
 @dataclass
@@ -141,3 +142,111 @@ class DataExportService:
                 raise InvalidDateFormatError("Invalid ISO 8601 format for 'last_modified'.")
 
         return preparer_func(queryset)
+
+
+@dataclass
+class IngestReportDTO:
+    transfers_created: int = 0
+    items_created: int = 0
+    skipped_transfers: List[Dict[str, Any]] = field(default_factory=list)
+    skipped_items: List[Dict[str, Any]] = field(default_factory=list)
+
+
+class TransferIngestService:
+    def __init__(self):
+        self.report = IngestReportDTO()
+        self.transfers_to_create = []
+        self.processed_release_orders = set()
+        self.items_by_release_order = {}
+
+    def ingest_validated_data(self, validated_data: List[Dict[str, Any]]) -> IngestReportDTO:
+        self._prepare_transfers_and_group_items(validated_data)
+
+        if self.transfers_to_create:
+            created_transfers = models.Transfer.objects.bulk_create(self.transfers_to_create)
+            self.report.transfers_created = len(created_transfers)
+
+        items_to_create = self._prepare_items()
+        if items_to_create:
+            created_items = models.Item.objects.bulk_create(items_to_create)
+            self.report.items_created = len(created_items)
+
+        return self.report
+
+    def _prepare_transfers_and_group_items(self, validated_data: List[Dict[str, Any]]):
+        for row in validated_data:
+            transfer_data = row['transfer_data']
+            item_data = row['item_data']
+            release_order = transfer_data.get('unicef_release_order')
+
+            vendor_number = transfer_data.pop('vendor_number')
+            try:
+                organization = Organization.objects.select_related('partner').get(vendor_number=vendor_number)
+                if not hasattr(organization, 'partner'):
+                    raise ValueError(f"No partner available for vendor {vendor_number}")
+                transfer_data['partner_organization'] = organization.partner
+            except (Organization.DoesNotExist, ValueError) as e:
+                self.report.skipped_transfers.append({"release_order": release_order, "reason": str(e)})
+                continue
+            try:
+                origin_poi = models.PointOfInterest.objects.get_unicef_warehouses()
+            except models.PointOfInterest.DoesNotExist:
+                self.report.skipped_transfers.append({"release_order": release_order, "reason": "No Unicef Warehouse Defined"})
+                continue
+
+            if release_order not in self.processed_release_orders:
+                try:
+                    models.Transfer.objects.get(unicef_release_order=release_order)
+                except models.Transfer.DoesNotExist:
+                    transfer_data.update({
+                        'transfer_type': models.Transfer.DELIVERY,
+                        'origin_point': origin_poi,  # Unicef Warehouse
+                    })
+                    self.transfers_to_create.append(models.Transfer(**transfer_data))
+
+                self.processed_release_orders.add(release_order)
+
+            self.items_by_release_order.setdefault(release_order, []).append(item_data)
+
+    def _prepare_items(self):
+        items_to_create = []
+        all_transfers = {t.unicef_release_order: t for t in models.Transfer.objects.filter(unicef_release_order__in=self.items_by_release_order.keys())}
+        all_material_numbers = {item['material_number'] for items in self.items_by_release_order.values() for item in items}
+        all_materials = {m.number: m for m in models.Material.objects.filter(number__in=all_material_numbers)}
+
+        for release_order, items in self.items_by_release_order.items():
+            transfer = all_transfers.get(release_order)
+            if not transfer:
+                self.report.skipped_items.extend([{"item": item, "reason": f"Parent transfer {release_order} not found or created."} for item in items])
+                continue
+
+            for item_data in items:
+                material_number = item_data.get('material_number')
+                material = all_materials.get(material_number)
+                if not material:
+                    self.report.skipped_items.append({"item": item_data, "reason": f"Material number '{material_number}' not found."})
+                    continue
+
+                item_id = item_data.get('other', {}).get('itemid')
+                if models.Item.objects.filter(other__itemid=item_id).exists() or \
+                   models.Item.objects.filter(transfer=transfer, unicef_ro_item=item_data.get('unicef_ro_item')).exists():
+                    self.report.skipped_items.append({"item": item_data, "reason": "Duplicate item found in database."})
+                    continue
+
+                item_data.pop('material_number', None)
+                item_data.pop('description', None)  # Maybe changed with mapped_description?
+                if item_data.get('uom') == material.original_uom:
+                    item_data.pop('uom', None)
+
+                item_data.update({
+                    'material': material,
+                    'transfer': transfer,
+                    'base_quantity': item_data.get('quantity'),
+                })
+                if not item_data.get('batch_id'):
+                    item_data['conversion_factor'] = 1.0
+                    item_data['uom'] = "EA"
+
+                items_to_create.append(models.Item(**item_data))
+
+        return items_to_create

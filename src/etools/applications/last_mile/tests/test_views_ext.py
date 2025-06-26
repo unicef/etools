@@ -390,6 +390,225 @@ class TestVisionIngestTransfersApiView(BaseTenantTestCase):
         self.assertEqual(item.quantity, 150)
         self.assertEqual(item.amount_usd, Decimal("350.55"))
 
+    def test_validation_error_on_missing_required_field(self):
+        payload = [{
+            # "ReleaseOrder": "RO-MISSING",  <-- Missing required field
+            "Event": "LD",
+            "ImplementingPartner": "IP12345",
+            "MaterialNumber": "MAT-001",
+            "ReleaseOrderItem": "10",
+            "Quantity": 10,
+            "BatchNumber": "B1",
+            "UOM": "EA",
+            "ItemDescription": "description"
+        }]
+
+        response = self.forced_auth_req(method="post", url=self.url, data=payload, user=self.api_user)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('ReleaseOrder', response.data[0])
+        self.assertEqual(response.data[0]['ReleaseOrder'][0].code, 'required')
+        self.assertEqual(models.Transfer.objects.count(), 0)
+        self.assertEqual(models.Item.objects.count(), 0)
+
+    def test_validation_error_on_malformed_data(self):
+        payload = [{
+            "Event": "LD",
+            "ReleaseOrder": "RO-BAD-DATA",
+            "ImplementingPartner": "IP12345",
+            "MaterialNumber": "MAT-001",
+            "ReleaseOrderItem": "10",
+            "Quantity": "this-is-not-a-number",
+            "BatchNumber": "B1",
+            "UOM": "EA",
+            "ItemDescription": "description"
+        }]
+
+        response = self.forced_auth_req(method="post", url=self.url, data=payload, user=self.api_user)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('Quantity', response.data[0])
+        self.assertEqual(response.data[0]['Quantity'][0].code, 'invalid')
+        self.assertEqual(models.Item.objects.count(), 0)
+
+    def test_response_structure_on_full_success(self):
+        payload = [
+            {"Event": "LD", "ReleaseOrder": "RO-A1", "ImplementingPartner": "IP12345", "MaterialNumber": "MAT-001", "ReleaseOrderItem": "10", "Quantity": 100, "BatchNumber": "B1", "UOM": "EA", "ItemDescription": "d"},
+            {"Event": "LD", "ReleaseOrder": "RO-A1", "ImplementingPartner": "IP12345", "MaterialNumber": "MAT-002", "ReleaseOrderItem": "20", "Quantity": 200, "BatchNumber": "B2", "UOM": "EA", "ItemDescription": "d"},
+        ]
+
+        response = self.forced_auth_req(method="post", url=self.url, data=payload, user=self.api_user)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        expected_response = {
+            "status": "Completed",
+            "transfers_created": 1,
+            "items_created": 2,
+            "skipped_count": 0,
+            "details": {
+                "skipped_transfers": [],
+                "skipped_items": []
+            }
+        }
+        self.assertEqual(response.data, expected_response)
+
+    def test_partial_ingest_with_skipped_items_reported_in_response(self):
+        payload = [
+            {"Event": "LD", "ReleaseOrder": "RO-PARTIAL", "ImplementingPartner": "IP12345", "MaterialNumber": "MAT-001", "ReleaseOrderItem": "10", "Quantity": 100, "BatchNumber": "B1", "UOM": "EA", "ItemDescription": "d"},
+            {"Event": "LD", "ReleaseOrder": "RO-PARTIAL", "ImplementingPartner": "IP12345", "MaterialNumber": "INVALID-MATERIAL", "ReleaseOrderItem": "20", "Quantity": 200, "BatchNumber": "B2", "UOM": "EA", "ItemDescription": "d"},
+        ]
+
+        response = self.forced_auth_req(method="post", url=self.url, data=payload, user=self.api_user)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(models.Transfer.objects.count(), 1)
+        self.assertEqual(models.Item.objects.count(), 1)
+
+        self.assertEqual(response.data['transfers_created'], 1)
+        self.assertEqual(response.data['items_created'], 1)
+        self.assertEqual(response.data['skipped_count'], 1)
+        self.assertEqual(len(response.data['details']['skipped_items']), 1)
+
+        skipped_report = response.data['details']['skipped_items'][0]
+        self.assertEqual(skipped_report['reason'], "Material number 'INVALID-MATERIAL' not found.")
+        self.assertEqual(skipped_report['item']['material_number'], 'INVALID-MATERIAL')
+
+    def test_idempotency_reports_skipped_items_on_second_run(self):
+        payload = [{"Event": "LD", "ReleaseOrder": "RO-IDEMPOTENT", "ImplementingPartner": "IP12345", "MaterialNumber": "MAT-001", "ReleaseOrderItem": "10", "Quantity": 10, "BatchNumber": "B1", "UOM": "EA", "ItemDescription": "d"}]
+
+        first_response = self.forced_auth_req(method="post", url=self.url, data=payload, user=self.api_user)
+        self.assertEqual(first_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(first_response.data['items_created'], 1)
+        self.assertEqual(first_response.data['skipped_count'], 0)
+        self.assertEqual(models.Item.objects.count(), 1)
+
+        second_response = self.forced_auth_req(method="post", url=self.url, data=payload, user=self.api_user)
+        self.assertEqual(second_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(models.Item.objects.count(), 1)
+
+        self.assertEqual(second_response.data['items_created'], 0)
+        self.assertEqual(second_response.data['skipped_count'], 1)
+        self.assertEqual(len(second_response.data['details']['skipped_items']), 1)
+        self.assertEqual(second_response.data['details']['skipped_items'][0]['reason'], "Duplicate item found in database.")
+
+    def test_multiple_new_transfers_in_one_payload(self):
+        payload = [
+            {"Event": "LD", "ReleaseOrder": "RO-MULTI-1", "ImplementingPartner": "IP12345", "MaterialNumber": "MAT-001", "ReleaseOrderItem": "10", "Quantity": 10, "BatchNumber": "B1", "UOM": "EA", "ItemDescription": "d"},
+            {"Event": "LD", "ReleaseOrder": "RO-MULTI-2", "ImplementingPartner": "IP67890", "MaterialNumber": "MAT-002", "ReleaseOrderItem": "10", "Quantity": 20, "BatchNumber": "B2", "UOM": "EA", "ItemDescription": "d"},
+        ]
+
+        response = self.forced_auth_req(method="post", url=self.url, data=payload, user=self.api_user)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(models.Transfer.objects.count(), 2)
+        self.assertEqual(models.Item.objects.count(), 2)
+
+        self.assertEqual(response.data['transfers_created'], 2)
+        self.assertEqual(response.data['items_created'], 2)
+        self.assertEqual(response.data['skipped_count'], 0)
+
+    def test_duplicate_item_within_payload_is_skipped_and_reported(self):
+        payload = [
+            {"Event": "LD", "ReleaseOrder": "RO-DUP-ITEM", "ImplementingPartner": "IP12345", "MaterialNumber": "MAT-001", "ReleaseOrderItem": "10", "Quantity": 100, "BatchNumber": "B1", "UOM": "EA", "ItemDescription": "d"},
+            {"Event": "LD", "ReleaseOrder": "RO-DUP-ITEM", "ImplementingPartner": "IP12345", "MaterialNumber": "MAT-002", "ReleaseOrderItem": "10", "Quantity": 200, "BatchNumber": "B2", "UOM": "EA", "ItemDescription": "d"},
+        ]
+
+        response = self.forced_auth_req(method="post", url=self.url, data=payload, user=self.api_user)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(models.Transfer.objects.count(), 1)
+        self.assertEqual(models.Item.objects.count(), 1)
+
+        self.assertEqual(response.data['items_created'], 1)
+        self.assertEqual(response.data['skipped_count'], 1)
+        self.assertEqual(len(response.data['details']['skipped_items']), 1)
+
+        skipped_report = response.data['details']['skipped_items'][0]
+        self.assertEqual(skipped_report['reason'], "Duplicate item found in database.")
+        self.assertEqual(skipped_report['item']['unicef_ro_item'], '10')
+
+    def test_payload_with_conflicting_partners_for_same_release_order(self):
+        """
+        Tests that if a payload contains conflicting ImplementingPartners for the same
+        ReleaseOrder, the system creates only ONE transfer using the first partner it
+        encounters and adds all items to it.
+        """
+        payload = [
+            {"Event": "LD", "ReleaseOrder": "RO-CONFLICT", "ImplementingPartner": "IP12345", "MaterialNumber": "MAT-001", "ReleaseOrderItem": "10", "Quantity": 10, "BatchNumber": "B1", "UOM": "EA", "ItemDescription": "d"},
+            {"Event": "LD", "ReleaseOrder": "RO-CONFLICT", "ImplementingPartner": "IP67890", "MaterialNumber": "MAT-002", "ReleaseOrderItem": "20", "Quantity": 20, "BatchNumber": "B2", "UOM": "EA", "ItemDescription": "d"},
+        ]
+
+        response = self.forced_auth_req(method="post", url=self.url, data=payload, user=self.api_user)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(models.Transfer.objects.count(), 1)
+        self.assertEqual(models.Item.objects.count(), 2)
+
+        transfer = models.Transfer.objects.first()
+        self.assertEqual(transfer.partner_organization, self.partner1)
+        self.assertEqual(transfer.items.count(), 2)
+
+        self.assertEqual(response.data['transfers_created'], 1)
+        self.assertEqual(response.data['items_created'], 2)
+        self.assertEqual(response.data['skipped_count'], 0)
+
+    def test_all_transfers_fail_no_items_are_created(self):
+        payload = [
+            {"Event": "LD", "ReleaseOrder": "RO-FAIL-1", "ImplementingPartner": "BAD_IP_1", "MaterialNumber": "MAT-001", "ReleaseOrderItem": "10", "Quantity": 10, "BatchNumber": "B1", "UOM": "EA", "ItemDescription": "d"},
+            {"Event": "LD", "ReleaseOrder": "RO-FAIL-2", "ImplementingPartner": "BAD_IP_2", "MaterialNumber": "MAT-002", "ReleaseOrderItem": "20", "Quantity": 20, "BatchNumber": "B2", "UOM": "EA", "ItemDescription": "d"},
+        ]
+
+        response = self.forced_auth_req(method="post", url=self.url, data=payload, user=self.api_user)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(models.Transfer.objects.count(), 0)
+        self.assertEqual(models.Item.objects.count(), 0)
+
+        self.assertEqual(response.data['transfers_created'], 0)
+        self.assertEqual(response.data['items_created'], 0)
+        self.assertEqual(response.data['skipped_count'], 2)
+        self.assertEqual(len(response.data['details']['skipped_transfers']), 2)
+        self.assertEqual(len(response.data['details']['skipped_items']), 0)
+        self.assertIn("RO-FAIL-1", str(response.data['details']['skipped_transfers']))
+        self.assertIn("RO-FAIL-2", str(response.data['details']['skipped_transfers']))
+
+    def test_graceful_handling_of_payload_with_no_ld_events(self):
+        payload = [
+            {"Event": "AR", "ReleaseOrder": "RO-IGNORE-1", "ImplementingPartner": "IP12345", "MaterialNumber": "MAT-001", "ReleaseOrderItem": "10", "Quantity": 10, "BatchNumber": "B1", "UOM": "EA", "ItemDescription": "d"},
+            {"Event": "GR", "ReleaseOrder": "RO-IGNORE-2", "ImplementingPartner": "IP12345", "MaterialNumber": "MAT-002", "ReleaseOrderItem": "20", "Quantity": 20, "BatchNumber": "B2", "UOM": "EA", "ItemDescription": "d"},
+        ]
+
+        response = self.forced_auth_req(method="post", url=self.url, data=payload, user=self.api_user)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(models.Transfer.objects.count(), 0)
+        self.assertEqual(response.data['detail'], "No rows with Event 'LD' found in the payload.")
+
+    def test_mixed_payload_creates_new_and_adds_to_existing_transfer(self):
+        existing_transfer = TransferFactory(unicef_release_order="RO-EXISTING", partner_organization=self.partner1)
+        self.assertEqual(models.Transfer.objects.count(), 1)
+
+        payload = [
+            {"Event": "LD", "ReleaseOrder": "RO-EXISTING", "ImplementingPartner": "IP12345", "MaterialNumber": "MAT-001", "ReleaseOrderItem": "10", "Quantity": 10, "BatchNumber": "B1", "UOM": "EA", "ItemDescription": "d"},
+            {"Event": "LD", "ReleaseOrder": "RO-NEW", "ImplementingPartner": "IP67890", "MaterialNumber": "MAT-002", "ReleaseOrderItem": "10", "Quantity": 20, "BatchNumber": "B2", "UOM": "EA", "ItemDescription": "d"},
+        ]
+
+        response = self.forced_auth_req(method="post", url=self.url, data=payload, user=self.api_user)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(models.Transfer.objects.count(), 2)
+        self.assertEqual(models.Item.objects.count(), 2)
+
+        self.assertEqual(response.data['transfers_created'], 1)
+        self.assertEqual(response.data['items_created'], 2)
+        self.assertEqual(response.data['skipped_count'], 0)
+
+        self.assertEqual(existing_transfer.items.count(), 1)
+        new_transfer = models.Transfer.objects.get(unicef_release_order="RO-NEW")
+        self.assertEqual(new_transfer.items.count(), 1)
+        self.assertEqual(new_transfer.partner_organization, self.partner2)
+
 
 class TestVisionIngestMaterialsApiView(BaseTenantTestCase):
 
