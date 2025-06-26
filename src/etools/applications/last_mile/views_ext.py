@@ -12,6 +12,8 @@ from rest_framework.views import APIView
 
 from etools.applications.last_mile import models
 from etools.applications.last_mile.permissions import LMSMAPIPermission
+from etools.applications.last_mile.serializers_ext import MaterialIngestResultSerializer, MaterialIngestSerializer
+from etools.applications.last_mile.services_ext import MaterialIngestService
 from etools.applications.organizations.models import Organization
 from etools.libraries.pythonlib.encoders import CustomJSONEncoder
 
@@ -19,38 +21,17 @@ from etools.libraries.pythonlib.encoders import CustomJSONEncoder
 class VisionIngestMaterialsApiView(APIView):
     permission_classes = (LMSMAPIPermission,)
 
-    mapping = {
-        'MaterialNumber': 'number',
-        'ShortDescription': 'short_description',
-        'UnitOfMeasurement': 'original_uom',
-        'MaterialType': 'material_type',
-        'MaterialTypeDescription': 'material_type_description',
-        'MaterialGroup': 'group',
-        'MaterialGroupDescription': 'group_description',
-        'PurchasingGroup': 'purchase_group',
-        'PurchasingGroupDescription': 'purchase_group_description',
-        'HazardousGoods': 'hazardous_goods',
-        'HazardousGoodsDescription': 'hazardous_goods_description',
-        'TempConditions': 'temperature_conditions',
-        'TempDescription': 'temperature_group',
-        'PurchasingText': 'purchasing_text'
-    }
-
     def post(self, request):
-        materials_to_create = []
-        for material in request.data:
-            model_dict = {}
-            for k, v in material.items():
-                if k in self.mapping:
-                    model_dict[self.mapping[k]] = strip_tags(v)  # strip text that has html tags
-            try:
-                models.Material.objects.get(number=model_dict['number'])
-            except models.Material.DoesNotExist:
-                materials_to_create.append(models.Material(**model_dict))
+        input_serializer = MaterialIngestSerializer(data=request.data, many=True)
+        input_serializer.is_valid(raise_exception=True)
 
-        models.Material.objects.bulk_create(materials_to_create)
+        ingest_result = MaterialIngestService().ingest_materials(
+            validated_data=input_serializer.validated_data
+        )
 
-        return Response(status=status.HTTP_200_OK)
+        output_serializer = MaterialIngestResultSerializer(ingest_result)
+
+        return Response(output_serializer.data, status=status.HTTP_200_OK)
 
 
 class GeometryPointFunc(Func):

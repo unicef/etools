@@ -161,11 +161,13 @@ class PRPIndicatorSerializer(serializers.ModelSerializer):
             "p_code",
             "admin_level_name",
             "admin_level",
-        )
+            "parent__p_code"
+        ).order_by('-id')
         for loc in location_qs:
             loc["p_code"] = loc.pop("p_code")
             loc["admin_level_name"] = loc.pop("admin_level_name")
             loc["admin_level"] = loc.pop("admin_level")
+            loc["parent_pcode"] = loc.pop("parent__p_code")
         return list(location_qs)
 
     class Meta:
@@ -263,7 +265,6 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
     special_reports = SpecialReportingRequirementsSerializer(source="special_reporting_requirements",
                                                              many=True, read_only=True)
     sections = SectionSerializer(many=True, read_only=True)
-    locations = PRPLocationSerializer(source="flat_locations", many=True, read_only=True)
 
     disbursement = serializers.DecimalField(source='frs__actual_amt_local__sum', read_only=True,
                                             max_digits=20,
@@ -330,7 +331,6 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
             'expected_results',
             'update_date',
             'amendments',
-            'locations',
             'unicef_budget_cash',
             'unicef_budget_supplies',
             'disbursement',

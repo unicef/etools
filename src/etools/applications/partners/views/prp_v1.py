@@ -81,7 +81,6 @@ class PRPInterventionListAPIView(QueryStringFilterMixin, ListAPIView):
         'agreement__authorized_officers',
         'agreement__partner',
         'amendments',
-        'flat_locations',
         'sections'
     ).annotate(
         frs__actual_amt_local__sum=Subquery(
