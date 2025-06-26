@@ -3583,6 +3583,18 @@ class InterventionManagementBudget(TimeStampedModel):
     def total(self):
         return self.partner_total + self.unicef_total
 
+    @property
+    def act1_total(self):
+        return self.act1_unicef + self.act1_partner
+
+    @property
+    def act2_total(self):
+        return self.act2_unicef + self.act2_partner
+
+    @property
+    def act3_total(self):
+        return self.act3_unicef + self.act3_partner
+
     def save(self, *args, **kwargs):
         create = not self.pk
         super().save(*args, **kwargs)
