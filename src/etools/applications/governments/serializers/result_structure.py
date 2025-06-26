@@ -35,7 +35,7 @@ class GDDActivityItemSerializer(serializers.ModelSerializer):
             'unit_price',
             'no_units',
             'unicef_cash',
-            # 'cso_cash',
+            'cso_cash',
         )
 
     def validate(self, attrs):
@@ -44,10 +44,10 @@ class GDDActivityItemSerializer(serializers.ModelSerializer):
         unit_price = attrs.get('unit_price', self.instance.unit_price if self.instance else 0)
         no_units = attrs.get('no_units', self.instance.no_units if self.instance else 0)
         unicef_cash = attrs.get('unicef_cash', self.instance.unicef_cash if self.instance else 0)
-        # cso_cash = attrs.get('cso_cash', self.instance.cso_cash if self.instance else 0)
+        cso_cash = attrs.get('cso_cash', self.instance.cso_cash if self.instance else 0)
 
         # unit_price * no_units can contain more decimal places than we're able to save
-        if abs((unit_price * no_units) - unicef_cash) > 0.01:
+        if abs((unit_price * no_units) - (unicef_cash + cso_cash)) > 0.01:
             self.fail('invalid_budget')
 
         return attrs
@@ -256,7 +256,7 @@ class GDDActivityCreateSerializer(
             'created',
             'context_details',
             'unicef_cash',
-            # 'cso_cash',
+            'cso_cash',
             'items',
             'time_frames',
             'locations',
@@ -331,7 +331,7 @@ class GDDActivityDetailSerializer(serializers.ModelSerializer):
         model = GDDActivity
         fields = (
             'id', 'ewp_activity', 'code', 'context_details',
-            'unicef_cash', 'time_frames', 'is_active', 'created', 'items', 'locations', 'name'
+            'unicef_cash', 'cso_cash', 'time_frames', 'is_active', 'created', 'items', 'locations', 'name'
         )
         read_only_fields = ['code']
 

@@ -124,8 +124,8 @@ class AmendmentTestCase(BaseTenantTestCase):
         amendment = InterventionAmendmentFactory(intervention=self.active_intervention)
 
         self.assertListEqual(
-            list(amendment.amended_intervention.sections.values_list('id', flat=True)),
-            [first_section.id, second_section.id],
+            sorted(list(amendment.amended_intervention.sections.values_list('id', flat=True))),
+            sorted([first_section.id, second_section.id]),
         )
 
         amendment.amended_intervention.sections.remove(second_section)

@@ -393,21 +393,21 @@
           <tr>
             <td class="b-gray">{% translate "Activity" %}</td>
             <td colspan="2">{% translate "In-country management & support" %}</td>
-            <td>{{ pd.management_budgets.act1_unicef|add:pd.management_budgets.act1_partner }}</td>
-            <td>{{ pd.management_budgets.act1_partner }}</td>
-            <td>{{ pd.management_budgets.act1_unicef }}</td>
+            <td>{{ pd.management_budgets.act1_total | currency}}</td>
+            <td>{{ pd.management_budgets.act1_partner | currency}}</td>
+            <td>{{ pd.management_budgets.act1_unicef | currency}}</td>
           </tr>
           <tr>
             <td class="b-gray">{% translate "Activity" %}</td>
             <td colspan="2">{% translate "Operational costs" %}</td>
-            <td>{{ pd.management_budgets.act2_unicef|add:pd.management_budgets.act2_partner | currency }}</td>
+            <td>{{ pd.management_budgets.act2_total | currency }}</td>
             <td>{{ pd.management_budgets.act2_partner | currency }}</td>
             <td>{{ pd.management_budgets.act2_unicef | currency }}</td>
           </tr>
           <tr>
             <td class="b-gray">{% translate "Activity" %}</td>
             <td colspan="2">{% translate "Planning, monitoring, evaluation, and communication" %}</td>
-            <td>{{ pd.management_budgets.act3_unicef|add:pd.management_budgets.act3_partner | currency }}</td>
+            <td>{{ pd.management_budgets.act3_total | currency }}</td>
             <td>{{ pd.management_budgets.act3_partner | currency }}</td>
             <td>{{ pd.management_budgets.act3_unicef | currency }}</td>
           </tr>

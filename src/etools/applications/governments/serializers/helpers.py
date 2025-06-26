@@ -133,7 +133,11 @@ class GDDBudgetCUSerializer(
     FullGDDSnapshotSerializerMixin,
     serializers.ModelSerializer,
 ):
+    partner_contribution_local = serializers.DecimalField(max_digits=20, decimal_places=2)
+    in_kind_amount_local = serializers.DecimalField(max_digits=20, decimal_places=2)
+
     unicef_cash_local = serializers.DecimalField(max_digits=20, decimal_places=2)
+    partner_contribution_percent = serializers.DecimalField(max_digits=20, decimal_places=2)
     total_unicef_contribution_local = serializers.DecimalField(max_digits=20, decimal_places=2)
     total_cash_local = serializers.DecimalField(max_digits=20, decimal_places=2)
     total_local = serializers.DecimalField(max_digits=20, decimal_places=2)
@@ -144,9 +148,14 @@ class GDDBudgetCUSerializer(
         fields = (
             "id",
             "gdd",
+            "partner_contribution_local",
             "unicef_cash_local",
+            "in_kind_amount_local",
+            "partner_supply_local",
             "currency",
+            "total_partner_contribution_local",
             "total_local",
+            "partner_contribution_percent",
             "total_unicef_contribution_local",
             "total_cash_local",
             "total_supply"
@@ -154,6 +163,8 @@ class GDDBudgetCUSerializer(
         read_only_fields = (
             "total_local",
             "total_cash_local",
+            "partner_supply_local",
+            "total_partner_contribution_local",
             "total_supply"
         )
 
