@@ -1,8 +1,5 @@
-import json
 import logging
-from datetime import datetime
 
-from django.db.models import F, FloatField, Func
 from django.http import StreamingHttpResponse
 from django.utils.html import strip_tags
 
@@ -13,9 +10,14 @@ from rest_framework.views import APIView
 from etools.applications.last_mile import models
 from etools.applications.last_mile.permissions import LMSMAPIPermission
 from etools.applications.last_mile.serializers_ext import MaterialIngestResultSerializer, MaterialIngestSerializer
-from etools.applications.last_mile.services_ext import MaterialIngestService
+from etools.applications.last_mile.services_ext import (
+    DataExportService,
+    InvalidDateFormatError,
+    InvalidModelTypeError,
+    MaterialIngestService,
+)
+from etools.applications.last_mile.utils_ext import stream_queryset_as_json
 from etools.applications.organizations.models import Organization
-from etools.libraries.pythonlib.encoders import CustomJSONEncoder
 
 
 class VisionIngestMaterialsApiView(APIView):
@@ -34,90 +36,33 @@ class VisionIngestMaterialsApiView(APIView):
         return Response(output_serializer.data, status=status.HTTP_200_OK)
 
 
-class GeometryPointFunc(Func):
-    template = "%(function)s(%(expressions)s::geometry)"
-
-    def __init__(self, expression):
-        super().__init__(expression, output_field=FloatField())
-
-
-class Latitude(GeometryPointFunc):
-    function = 'ST_Y'
-
-
-class Longitude(GeometryPointFunc):
-    function = 'ST_X'
-
-
-def get_annotated_qs(qs):
-    if qs.model == models.Transfer:
-        return qs.annotate(vendor_number=F('partner_organization__organization__vendor_number'),
-                           checked_out_by_email=F('checked_out_by__email'),
-                           checked_out_by_first_name=F('checked_out_by__first_name'),
-                           checked_out_by_last_name=F('checked_out_by__last_name'),
-                           checked_in_by_email=F('checked_in_by__email'),
-                           checked_in_by_last_name=F('checked_in_by__last_name'),
-                           checked_in_by_first_name=F('checked_in_by__first_name'),
-                           origin_name=F('origin_point__name'),
-                           destination_name=F('destination_point__name'),
-                           ).values()
-
-    if qs.model == models.PointOfInterest:
-        return qs.prefetch_related('parent', 'poi_type').annotate(
-            latitude=Latitude('point'),
-            longitude=Longitude('point'),
-            parent_pcode=F('parent__p_code'),
-            vendor_number=F('partner_organizations__organization__vendor_number'),
-        ).values('id', 'created', 'modified', 'parent_id', 'name', 'description', 'poi_type_id',
-                 'other', 'private', 'is_active', 'latitude', 'longitude', 'parent_pcode', 'p_code', 'vendor_number')
-
-    if qs.model == models.Item:
-        return qs.annotate(material_number=F('material__number'),
-                           material_description=F('material__short_description'),
-                           ).values()
-    return qs.values()
-
-
 class VisionLMSMExport(APIView):
     permission_classes = (LMSMAPIPermission,)
 
     def get(self, request, *args, **kwargs):
-        model_param = request.query_params.get('type')
-        model_manager_map = {
-            "transfer": models.Transfer.objects,
-            "poi": models.PointOfInterest.all_objects,
-            "item": models.Item.objects,
-            "item_history": models.ItemTransferHistory.objects,
-            "poi_type": models.PointOfInterestType.objects,
-        }
-        queryset = model_manager_map.get(model_param)
-        if not queryset:
-            return Response({"type": "invalid data model"}, status=status.HTTP_400_BAD_REQUEST)
+        model_type = request.query_params.get('type')
+        last_modified = request.query_params.get('last_modified')
 
-        last_modified_param = request.query_params.get('last_modified', None)
+        if not model_type:
+            return Response({"type": "This field is required."}, status=status.HTTP_400_BAD_REQUEST)
 
-        if last_modified_param:
-            try:
-                gte_dt = datetime.fromisoformat(last_modified_param)
-            except ValueError:
-                return Response({"last_modified": "invalid format"}, status=status.HTTP_400_BAD_REQUEST)
-            else:
-                queryset = queryset.filter(modified__gte=gte_dt)
+        try:
+            service = DataExportService()
+            queryset = service.get_export_queryset(
+                model_type=model_type,
+                last_modified=last_modified
+            )
 
-        queryset = get_annotated_qs(queryset)
+        except InvalidModelTypeError as e:
+            return Response({"type": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except InvalidDateFormatError as e:
+            return Response({"last_modified": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-        def data_stream(qs):
-            yield '['  # Start of JSON array
-            first = True
-            for obj in qs.iterator():
-                if not first:
-                    yield ','
-                else:
-                    first = False
-                yield json.dumps(obj, cls=CustomJSONEncoder)
-            yield ']'  # End of JSON array
+        response = StreamingHttpResponse(
+            stream_queryset_as_json(queryset),
+            content_type='application/json'
+        )
 
-        response = StreamingHttpResponse(data_stream(queryset), content_type='application/json')
         return response
 
 

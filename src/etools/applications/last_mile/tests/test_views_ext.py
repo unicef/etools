@@ -581,18 +581,18 @@ class TestVisionLMSMExport(BaseTenantTestCase):
     def test_request_fails_if_type_param_is_missing(self):
         response = self.forced_auth_req(method="get", url=self.url, data={}, user=self.api_user)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data, {"type": "invalid data model"})
+        self.assertEqual(response.data, {'type': 'This field is required.'})
 
     def test_request_fails_if_type_param_is_invalid(self):
         response = self.forced_auth_req(method="get", url=self.url, data={'type': 'invalid_model'}, user=self.api_user)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data, {"type": "invalid data model"})
+        self.assertEqual(response.data, {'type': "'invalid_model' is not a valid data model type."})
 
     def test_request_fails_for_invalid_last_modified_format(self):
         params = {'type': 'transfer', 'last_modified': 'not-a-valid-date'}
         response = self.forced_auth_req(method="get", url=self.url, data=params, user=self.api_user)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(response.data, {"last_modified": "invalid format"})
+        self.assertEqual(response.data, {'last_modified': "Invalid ISO 8601 format for 'last_modified'."})
 
     def test_export_all_transfers(self):
         response = self.forced_auth_req(method="get", url=self.url, data={'type': 'transfer'}, user=self.api_user)
