@@ -17,7 +17,7 @@ class GDDCSVRenderer(r.CSVRenderer):
     header = [
         "partner_name", "vendor_number", "status", "partner_type", "agreement_number", "country_programme",
         "number", "title", "start", "end", "offices", "sectors", "locations",
-        "unicef_focal_points", "partner_focal_points", "budget_currency",
+        "unicef_focal_points", "partner_focal_points", "budget_currency", "cso_contribution",
         "unicef_budget", "unicef_supply", "total_planned_budget", "fr_numbers", "fr_currency", "fr_posting_date",
         "fr_amount", "fr_actual_amount", "fr_outstanding_amt", "planned_visits", "submission_date",
         "submission_date_prc", "review_date_prc", "partner_authorized_officer_signatory", "signed_by_partner_date",
@@ -42,9 +42,10 @@ class GDDCSVRenderer(r.CSVRenderer):
         "unicef_focal_points": _("UNICEF Focal Points"),
         "partner_focal_points": _("Government Authorized Officials"),
         "budget_currency": _("Budget Currency"),
+        "cso_contribution": _("Total Government Budget (USD)"),
         "unicef_budget": _("UNICEF Cash (USD)"),
         "unicef_supply": _("UNICEF Supply (USD)"),
-        "total_planned_budget": _("Total GDD Budget (USD)"),
+        "total_planned_budget": _("Total GPD Budget (USD)"),
         "fr_numbers": _("FR Number(s)"),
         "fr_currency": _("FR Currency"),
         "fr_posting_date": _("FR Posting Date"),
@@ -211,7 +212,7 @@ class GDDXLSRenderer:
             _('End date'), self.gdd.end.strftime('%d-%b-%y') if self.gdd.end else ''
         ])
         worksheet.append([
-            _('GDD Reference'),
+            _('GPD Reference'),
             self.gdd.number,
             _('Duration'),
             self.td_format(self.gdd.end - self.gdd.start)
@@ -227,13 +228,18 @@ class GDDXLSRenderer:
     def budget_summary(self, worksheet):
         budget = self.gdd.planned_budget
         unicef_contribution = budget.total_unicef_contribution_local()
+        partner_contribution = budget.total_partner_contribution_local
         unicef_contribution_p = unicef_contribution / budget.total_local * 100 if budget.total_local else 0
         total_cash_p = budget.total_unicef_cash_local_wo_hq / unicef_contribution * 100 \
             if unicef_contribution else 0
         supplies_p = budget.in_kind_amount_local / unicef_contribution * 100 \
             if unicef_contribution else 0
+        partner_supplies_p = budget.partner_supply_local / partner_contribution * 100 \
+            if partner_contribution else 0
+        partner_total_cash = budget.partner_contribution_local / partner_contribution * 100 \
+            if partner_contribution else 0
 
-        worksheet.append([_('Total GDD Budget'), currency_format(budget.total_local), '%'])
+        worksheet.append([_('Total GPD Budget'), currency_format(budget.total_local), '%'])
         self.apply_styles_to_cells(
             worksheet, worksheet.max_row, 1, worksheet.max_row, 3, [self.fill_blue, self.font_white]
         )
@@ -260,6 +266,28 @@ class GDDXLSRenderer:
         self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, 3, [self.fill_yellow_light])
         self.apply_styles_to_cells(worksheet, worksheet.max_row - 4, 3, worksheet.max_row, 3, [self.font_italic])
 
+        worksheet.append([
+            _('Partner Contribution'),
+            currency_format(partner_contribution),
+            '{:.2f}'.format(budget.partner_contribution_percent)
+        ])
+        self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, 3, [self.fill_blue_pale])
+        self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, 2, [self.font_bold])
+        self.apply_styles_to_cells(worksheet, worksheet.max_row, 3, worksheet.max_row, 3, [self.font_italic])
+        worksheet.append([
+            _('Total Cash'),
+            currency_format(budget.partner_contribution_local),
+            '{:.2f}'.format(partner_total_cash)
+        ])
+        worksheet.append([
+            _('Supplies in-kind'),
+            currency_format(budget.partner_supply_local),
+            '{:.2f}'.format(partner_supplies_p)
+        ])
+        self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, 3, [self.fill_yellow_light])
+        self.apply_styles_to_cells(worksheet, worksheet.max_row - 1, 3, worksheet.max_row, 3, [self.font_italic])
+        self.apply_styles_to_cells(worksheet, worksheet.max_row - 9, 2, worksheet.max_row, 3, [self.align_right])
+
         self.apply_styles_to_cells(worksheet, 7, 2, worksheet.max_row, 3, [self.border_black_top_right])
         self.apply_styles_to_cells(worksheet, 7, 1, worksheet.max_row, 1, [self.border_black_top_left_right])
         self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, 3, [self.border_black_all])
@@ -274,10 +302,11 @@ class GDDXLSRenderer:
     def render_workplan_budget(self, worksheet):
         worksheet.append([
             '',
-            _('GDD Output/ GDD Activity'),
-            _('Total (%s)') % self.gdd.planned_budget.currency + '\n' + '(UNICEF)',
+            _('GPD Output/ GPD Activity'),
+            _('Total (%s)') % self.gdd.planned_budget.currency + '\n' + '(Government + UNICEF)',
+            _('Government') + '\n' + _('contribution'),
             _('UNICEF') + '\n' + _('contribution'),
-            _('GDD Quarters')
+            _('GPD Quarters')
         ])
         quarters = get_quarters_range(self.gdd.start, self.gdd.end)
         start_column = 6
@@ -320,9 +349,10 @@ class GDDXLSRenderer:
             )
             for ki in result_link.gdd_key_interventions.all():
                 worksheet.append([
-                    _("GDD Output") + "\n" + ki.code + ":",
+                    _("GPD Output") + "\n" + ki.code + ":",
                     ki.name,
                     currency_format(ki.total()),
+                    currency_format(ki.total_cso()),
                     currency_format(ki.total_unicef()),
                 ])
                 self.apply_styles_to_cells(
@@ -378,69 +408,11 @@ class GDDXLSRenderer:
                             [self.border_black_all]
                         )
 
-        # worksheet.append([
-        #     _('EEPM'), _('Effective and efficient programme management'),
-        #     currency_format(self.gdd.management_budgets.total),
-        #     currency_format(self.gdd.management_budgets.partner_total),
-        #     currency_format(self.gdd.management_budgets.unicef_total),
-        # ])
-        # self.apply_styles_to_cells(
-        #     worksheet,
-        #     worksheet.max_row,
-        #     1,
-        #     worksheet.max_row,
-        #     total_columns,
-        #     [self.fill_blue_pale_light, self.border_black_top_right]
-        # )
-        # self.apply_styles_to_cells(
-        #     worksheet, worksheet.max_row, 1, worksheet.max_row, 1, [self.border_black_top_left_right]
-        # )
-        # self.apply_styles_to_cells(
-        #     worksheet, worksheet.max_row, 3, worksheet.max_row, total_columns, [self.font_bold]
-        # )
-        # worksheet.merge_cells(
-        #     start_row=worksheet.max_row, start_column=6, end_row=worksheet.max_row, end_column=total_columns
-        # )
-        #
-        # worksheet.append([
-        #     _('EEPM.1'), _('In-country management & support'),
-        #     currency_format(self.gdd.management_budgets.act1_unicef +
-        #                     self.gdd.management_budgets.act1_partner),
-        #     currency_format(self.gdd.management_budgets.act1_partner),
-        #     currency_format(self.gdd.management_budgets.act1_unicef),
-        # ])
-        # self.apply_styles_to_cells(
-        #     worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns, [self.border_black_top_right]
-        # )
-        # self.apply_styles_to_cells(
-        #     worksheet, worksheet.max_row, 1, worksheet.max_row, 1, [self.border_black_top_left_right]
-        # )
-        # worksheet.append([
-        #     _('EEPM.2'), _('Operational costs'),
-        #     currency_format(self.gdd.management_budgets.act2_unicef +
-        #                     self.gdd.management_budgets.act2_partner),
-        #     currency_format(self.gdd.management_budgets.act2_partner),
-        #     currency_format(self.gdd.management_budgets.act2_unicef),
-        # ])
-        # self.apply_styles_to_cells(
-        #     worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns, [self.border_black_top_right]
-        # )
-        # self.apply_styles_to_cells(
-        #     worksheet, worksheet.max_row, 1, worksheet.max_row, 1, [self.border_black_top_left_right]
-        # )
-        # worksheet.append([
-        #     _('EEPM.3'), _('Planning, monitoring, evaluation, and communication'),
-        #     currency_format(self.gdd.management_budgets.act3_unicef +
-        #                     self.gdd.management_budgets.act3_partner),
-        #     currency_format(self.gdd.management_budgets.act3_partner),
-        #     currency_format(self.gdd.management_budgets.act3_unicef),
-        # ])
-        # self.apply_styles_to_cells(
-        #     worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns, [self.border_black_all]
-        # )
         worksheet.append([
             _('Subtotal for the programme costs'), '',
-            currency_format(self.gdd.planned_budget.total_unicef_cash_local_wo_hq),
+            currency_format(self.gdd.planned_budget.partner_contribution_local +
+                            self.gdd.planned_budget.total_unicef_cash_local_wo_hq),
+            currency_format(self.gdd.planned_budget.partner_contribution_local),
             currency_format(self.gdd.planned_budget.total_unicef_cash_local_wo_hq),
         ])
         self.apply_styles_to_cells(
@@ -457,28 +429,9 @@ class GDDXLSRenderer:
         worksheet.merge_cells(
             start_row=worksheet.max_row, start_column=6, end_row=worksheet.max_row, end_column=total_columns
         )
-        # worksheet.append([
-        #     _('Capacity Strengthening Costs ({%(cost)d}%% of UNICEF the cash component)')
-        #     % {'cost': self.gdd.hq_support_cost},
-        #     '', '', '',
-        #     currency_format(self.gdd.planned_budget.total_hq_cash_local),
-        # ])
-        # self.apply_styles_to_cells(
-        #     worksheet,
-        #     worksheet.max_row,
-        #     1,
-        #     worksheet.max_row,
-        #     total_columns,
-        #     [self.fill_blue_pale_light, self.border_black_top_right, self.font_bold]
-        # )
-        # self.apply_styles_to_cells(
-        #     worksheet, worksheet.max_row, 1, worksheet.max_row, 1, [self.border_black_top_left_right]
-        # )
-        # worksheet.merge_cells(
-        #     start_row=worksheet.max_row, start_column=6, end_row=worksheet.max_row, end_column=total_columns
-        # )
+
         worksheet.append([
-            _('Total PD budget cash'), '',
+            _('Total GPD budget cash'), '',
             currency_format(self.gdd.planned_budget.total_cash_local()),
             currency_format(self.gdd.planned_budget.unicef_cash_local),
         ])
@@ -504,13 +457,14 @@ class GDDXLSRenderer:
         quarters = get_quarters_range(self.gdd.start, self.gdd.end)
         worksheet.append([
             _('No.'),
-            _('GDD Output/ GDD Activity / Item Description'),
+            _('GPD Output/ GPD Activity / Item Description'),
             _('Unit Type'),
             _('Number of Units'),
             _('Price/Unit'),
+            _('Government') + '\n' + _('contribution'),
             _('UNICEF') + '\n' + _('contribution'),
             _('Total'),
-            _('GDD Quarters'),
+            _('GPD Quarters'),
         ] + [''] * (len(quarters) - 1) + [_('Other Notes')])
 
         start_column = 9
@@ -559,10 +513,11 @@ class GDDXLSRenderer:
             for ki in result_link.gdd_key_interventions.all():
                 worksheet.append([
                     ki.code,
-                    _("GDD OUTPUT ") + ki.code + ": " + ki.name,
+                    _("GPD OUTPUT ") + ki.code + ": " + ki.name,
                     '',
                     '',
                     '',
+                    currency_format(ki.total_cso()),
                     currency_format(ki.total_unicef()),
                     currency_format(ki.total())
                 ])
@@ -588,6 +543,7 @@ class GDDXLSRenderer:
                             '',
                             '',
                             '',
+                            currency_format(activity.cso_cash),
                             currency_format(activity.unicef_cash),
                             currency_format(activity.total)
                         ] +
@@ -614,7 +570,10 @@ class GDDXLSRenderer:
                             item.unit,
                             item.no_units,
                             item.unit_price,
+                            currency_format(item.cso_cash),
                             currency_format(item.unicef_cash),
+                            currency_format(item.unicef_cash + item.cso_cash),
+
                         ])
                         self.apply_styles_to_cells(
                             worksheet, worksheet.max_row, 1, worksheet.max_row, total_columns, []
@@ -683,6 +642,9 @@ class GDDXLSRenderer:
         )
         worksheet.append(
             [_('UNICEF Contribution'), '', '', currency_format(self.gdd.planned_budget.in_kind_amount_local)]
+        )
+        worksheet.append(
+            [_('Partner Contribution'), '', '', currency_format(self.gdd.planned_budget.partner_supply_local)]
         )
 
         self.apply_styles_to_cells(

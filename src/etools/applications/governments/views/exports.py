@@ -32,11 +32,11 @@ class GDDResultsExportView(QueryStringFilterMixin, ListAPIView):
             'partner': 'Partner Name',
             'vendor_number': 'Vendor Number',
             'vendor': 'Vendor',
-            'int_status': 'GDD status',
-            'int_start_date': 'GDD start date',
-            'int_end_date': 'GDD end date',
+            'int_status': 'GPD status',
+            'int_start_date': 'GPD start date',
+            'int_end_date': 'GPD end date',
             'country_programme': 'Country Programme',
-            'int_ref': 'GDD ref',
+            'int_ref': 'GPD ref',
             'int_locations': 'Locations',
             'ind_result': 'CP Output',
             'ind_key_interventions': 'Key Interventions',
@@ -45,7 +45,7 @@ class GDDResultsExportView(QueryStringFilterMixin, ListAPIView):
 
         today = '{:%Y_%m_%d}'.format(datetime.date.today())
         country_code = self.request.tenant.country_short_code
-        filename = f'GDD_result_as_of_{today}_{country_code}'
+        filename = f'GPD_result_as_of_{today}_{country_code}'
 
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = f'attachment; filename="{filename}.csv"'
@@ -175,7 +175,7 @@ class GDDLocationsExportView(QueryStringFilterMixin, ListAPIView):
         if query_params.get("format") == 'csv':
             country = Country.objects.get(schema_name=connection.schema_name)
             today = '{:%Y_%m_%d}'.format(datetime.date.today())
-            filename = f"GDD_locations_as_of_{today}_{country.country_short_code}"
+            filename = f"GPD_locations_as_of_{today}_{country.country_short_code}"
             response['Content-Disposition'] = "attachment;filename=%s.csv" % filename
 
         return response

@@ -510,15 +510,15 @@ class TestDetail(BaseGDDTestCase):
         for __ in range(count):
             GDDSupplyItemFactory(
                 gdd=self.gdd,
-                unit_number=1,
-                unit_price=1,
+                unit_number=2,
+                unit_price=10,
                 provided_by=GDDSupplyItem.PROVIDED_BY_PARTNER
             )
         for __ in range(count):
             GDDSupplyItemFactory(
                 gdd=self.gdd,
-                unit_number=1,
-                unit_price=2,
+                unit_number=5,
+                unit_price=5,
                 provided_by=GDDSupplyItem.PROVIDED_BY_UNICEF
             )
         response = self.forced_auth_req(
@@ -526,13 +526,31 @@ class TestDetail(BaseGDDTestCase):
             reverse('governments:gdd-detail', args=[self.gdd.pk]),
             user=self.unicef_user
         )
+        budget = self.gdd.planned_budget
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('planned_budget', response.data)
-        self.assertEqual(response.data['planned_budget']['total_supply'],
-                         str(self.gdd.planned_budget.total_supply))
-        self.assertEqual(response.data['planned_budget']['total_supply'],
-                         str(self.gdd.planned_budget.in_kind_amount_local +
-                             self.gdd.planned_budget.partner_supply_local))
+        self.assertEqual(
+            response.data['planned_budget']['total_supply'], str(budget.total_supply))
+        self.assertEqual(
+            response.data['planned_budget']['total_supply'],
+            str(budget.in_kind_amount_local + budget.partner_supply_local))
+        self.assertEqual(
+            response.data['planned_budget']['total_supply'], '225.00', '2 * 10 * 5 + 5 * 5 * 5')
+        self.assertEqual(
+            response.data['planned_budget']['partner_supply_local'], '100.00', '2 * 10 * 5')
+        self.assertEqual(
+            response.data['planned_budget']['in_kind_amount_local'], '125.00', '5 * 5 * 5')
+        self.assertEqual(
+            response.data['planned_budget']['total_partner_contribution_local'], '100.00', '2 * 10 * 5')
+        self.assertEqual(
+            response.data['planned_budget']['total_local'],
+            str(budget.unicef_cash_local + budget.in_kind_amount_local + budget.partner_contribution_local + budget.partner_supply_local))
+        self.assertEqual(
+            response.data['planned_budget']['partner_contribution_percent'],
+            "{:0.2f}".format(100 / 235 * 100),
+        )
+        self.assertEqual(response.data['planned_budget']['total_cash_local'], '10.00')
+        self.assertEqual(response.data['planned_budget']['total_unicef_contribution_local'], '135.00', '125 + 10')
 
 
 class TestCreate(BaseGDDTestCase):
