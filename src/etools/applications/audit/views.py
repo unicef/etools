@@ -87,6 +87,7 @@ from etools.applications.audit.serializers.engagement import (
     EngagementListSerializer,
     EngagementSerializer,
     MicroAssessmentSerializer,
+    PartnerFaceFormSerializer,
     ReportAttachmentSerializer,
     SpecialAuditSerializer,
     SpotCheckSerializer,
@@ -511,6 +512,21 @@ class SpecialAuditViewSet(EngagementManagementMixin, EngagementViewSet):
     @action(detail=True, methods=['get'], url_path='csv', renderer_classes=[SpecialAuditDetailCSVRenderer])
     def export_csv(self, request, *args, **kwargs):
         return super().export_csv(request, *args, **kwargs)
+
+
+class FacereportViewSet(
+    mixins.RetrieveModelMixin,
+    viewsets.GenericViewSet
+):
+    permission_classes = [IsAuthenticated, ]
+    queryset = PartnerOrganization.objects.filter(hidden=False)
+    serializer_class = PartnerFaceFormSerializer
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['businessarea'] = self.request.user.profile.country.business_area_code
+        context['country_currency'] = self.request.user.profile.country.local_currency
+        return context
 
 
 class AuditorStaffMembersViewSet(
