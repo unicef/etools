@@ -325,8 +325,8 @@ class GDDValid(CompleteValidation):
         rigid_in_amendment_flag,
         locations_valid,
         cp_structure_valid,
-        lead_section_valid,
-        budget_owner_not_in_focal_points
+        lead_section_valid
+        # budget_owner_not_in_focal_points
     ]
 
     VALID_ERRORS = {
