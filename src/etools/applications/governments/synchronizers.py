@@ -227,7 +227,6 @@ class EWPSynchronizer:
             p_codes = remote_activity.pop('locations', [])
             new_activities[remote_activity['wbs']], _ = EWPActivity.objects.get_or_create(**remote_activity)
 
-            # TODO: here we need to figure out what to do if the partners or locations are not in the workspace
             new_activities[remote_activity['wbs']].partners.set(
                 [self.partners.get(v) for v in vendor_numbers if self.partners.get(v) is not None]
             )
@@ -356,17 +355,23 @@ class EWPsSynchronizer(VisionDataTenantSynchronizer):
                 for item in self.ACTIVITY_MAP:
                     remote_key = item[0]
                     local_prop = item[1]
+
                     if local_prop == 'locations':
                         if not r[remote_key]:
                             # if no locations were provided, set the default to the country location
                             country_location = Location.objects.active().filter(admin_level=0).first()
-                            location_p_codes.update({local_prop: [country_location.p_code]})
+                            result[local_prop] = [country_location.p_code]
                         elif isinstance(r[remote_key], dict):
-                            if r[remote_key].get('GEOLOCATION', None):
-                                loc_list = r[remote_key]['GEOLOCATION']
-                                if loc_list and isinstance(loc_list, list):
-                                    result[local_prop] = [loc['P_CODE'] for loc in loc_list]
-                                    location_p_codes.update(result[local_prop])
+                            if 'GEOLOCATION' in r[remote_key]:
+                                locs = r[remote_key]['GEOLOCATION']
+                                if locs:
+                                    if isinstance(locs, list):
+                                        result[local_prop] = [loc['P_CODE'] for loc in locs]
+                                    elif isinstance(locs, dict):
+                                        result[local_prop] = [locs['P_CODE']]
+
+                        location_p_codes.update(result[local_prop])
+
                     elif local_prop == 'partners':
                         if isinstance(r[remote_key], dict) and r[remote_key].get('IMPL_PARTNER', None):
                             remote_partners = r[remote_key]['IMPL_PARTNER']
