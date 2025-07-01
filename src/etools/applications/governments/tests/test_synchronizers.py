@@ -3,6 +3,7 @@ import datetime
 from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.governments.models import EWPActivity, EWPKeyIntervention, EWPOutput, GovernmentEWP
 from etools.applications.governments.synchronizers import EWPsSynchronizer, EWPSynchronizer
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.tests.factories import PartnerFactory
@@ -96,6 +97,107 @@ class TestEWPSynchronizer(BaseTenantTestCase):
         self.assertEqual(sync.locations['L0'], self.location)
         self.assertEqual(sync.partners['VENDOR001'], self.partner)
 
+    def test_update_workplans(self):
+        sync = EWPSynchronizer(self.sample_data)
+
+        total_data, total_updated, total_new = sync.update_workplans()
+
+        self.assertEqual(total_data, 1)
+        self.assertEqual(total_updated, 0)
+        self.assertEqual(total_new, 1)
+
+        workplan = GovernmentEWP.objects.get(wbs='WP/0060A007/000143/01')
+        self.assertEqual(workplan.name, 'Child Protection Annual Workplan 2025 CO')
+        self.assertEqual(workplan.country_programme, self.country_programme)
+
+        # Second run with same data - should detect no changes
+        sync = EWPSynchronizer(self.sample_data)
+        total_data, total_updated, total_new = sync.update_workplans()
+        self.assertEqual(total_data, 1)
+        self.assertEqual(total_updated, 0)
+        self.assertEqual(total_new, 0)
+
+        # Test with modified data
+        modified_data = self.sample_data.copy()
+        modified_data['remote_ewps']['WP/0060A007/000143/01']['name'] = 'Updated Name'
+
+        sync = EWPSynchronizer(modified_data)
+        total_data, total_updated, total_new = sync.update_workplans()
+        self.assertEqual(total_data, 1)
+        self.assertEqual(total_updated, 1)
+        self.assertEqual(total_new, 0)
+
+        workplan.refresh_from_db()
+        self.assertEqual(workplan.name, 'Updated Name')
+
+    def test_update_ewp_outputs(self):
+        sync = EWPSynchronizer(self.sample_data)
+
+        # Need workplan first
+        sync.update_workplans()
+
+        total_data, total_updated, total_new = sync.update_ewp_outputs()
+
+        self.assertEqual(total_data, 1)
+        self.assertEqual(total_updated, 0)
+        self.assertEqual(total_new, 1)
+
+        output = EWPOutput.objects.get(
+            cp_output=self.output,
+            workplan__wbs='WP/0060A007/000143/01'
+        )
+        self.assertEqual(output.cp_output, self.output)
+
+    def test_update_kis(self):
+        sync = EWPSynchronizer(self.sample_data)
+
+        sync.update_workplans()
+        sync.update_ewp_outputs()
+
+        total_data, total_updated, total_new = sync.update_kis()
+
+        self.assertEqual(total_data, 1)
+        self.assertEqual(total_updated, 0)
+        self.assertEqual(total_new, 1)
+
+        ki = EWPKeyIntervention.objects.get(
+            cp_key_intervention=self.key_intervention,
+            ewp_output__cp_output=self.output
+        )
+        self.assertEqual(ki.cp_key_intervention, self.key_intervention)
+
+    def test_update_activities(self):
+        sync = EWPSynchronizer(self.sample_data)
+
+        # Need all prerequisite data
+        sync.update_workplans()
+        sync.update_ewp_outputs()
+        sync.update_kis()
+
+        total_data, total_updated, total_new = sync.update_activities()
+
+        self.assertEqual(total_data, 1)
+        self.assertEqual(total_updated, 0)
+        self.assertEqual(total_new, 1)
+
+        activity = EWPActivity.objects.get(wbs='0060/A0/07/885/006/001/WPA0001')
+        self.assertEqual(activity.title, 'KI-ACO : STAFF COSTS')
+        self.assertEqual(activity.locations.first(), self.location)
+        self.assertEqual(activity.partners.first(), self.partner)
+
+    def test_full_update(self):
+        sync = EWPSynchronizer(self.sample_data)
+        result = sync.update()
+
+        self.assertEqual(result['total_records'], 4)  # 1 workplan, 1 output, 1 KI, 1 activity
+        self.assertEqual(result['processed'], 4)  # All should be new
+
+        # Verify all objects were created
+        self.assertEqual(GovernmentEWP.objects.count(), 1)
+        self.assertEqual(EWPOutput.objects.count(), 1)
+        self.assertEqual(EWPKeyIntervention.objects.count(), 1)
+        self.assertEqual(EWPActivity.objects.count(), 1)
+
 
 class TestEWPsSynchronizer(BaseTenantTestCase):
 
@@ -113,7 +215,7 @@ class TestEWPsSynchronizer(BaseTenantTestCase):
                     'WP_GID': 'WP/0060A007/000143/01',
                     'WP_NAME': 'Test Workplan',
                     'WP_STATUS': 'Signed',
-                    'WPA_GEOLOCATIONS': {'GEOLOCATION': {'P_CODE': 'AF'}},
+                    'WPA_GEOLOCATIONS': {'GEOLOCATION': {'P_CODE': 'LO', "AREA_NAME": "Location"}},
                     "WPA_ID": "191865",
                     "WPA_TITLE": "KI-ER 2024: SOCIAL AND BEHAVIOR CHANGE AND COMMUNICATION",
                     "WPA_DESCRIPTION": "KI-ER 2024: Social and behavior change and communication",
@@ -157,7 +259,7 @@ class TestEWPsSynchronizer(BaseTenantTestCase):
             'WP_GID': 'WP/0060A007/000143/01',
             'WP_NAME': 'Test Workplan',
             'WP_STATUS': 'Signed',
-            'WPA_GEOLOCATIONS': {'GEOLOCATION': {'P_CODE': 'AF'}},
+            'WPA_GEOLOCATIONS': {'GEOLOCATION': {'P_CODE': 'LO', "AREA_NAME": "Location"}},
             "WPA_ID": "191865",
             "WPA_TITLE": "KI-ER 2024: SOCIAL AND BEHAVIOR CHANGE AND COMMUNICATION",
             "WPA_DESCRIPTION": "KI-ER 2024: Social and behavior change and communication",
