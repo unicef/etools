@@ -375,8 +375,11 @@ class EWPsSynchronizer(VisionDataTenantSynchronizer):
                     elif local_prop == 'partners':
                         if isinstance(r[remote_key], dict) and r[remote_key].get('IMPL_PARTNER', None):
                             remote_partners = r[remote_key]['IMPL_PARTNER']
-                            if remote_partners and isinstance(remote_partners, list):
-                                result[local_prop] = [p['IMPLEMENTING_PARTNER_CODE'] for p in remote_partners]
+                            if remote_partners:
+                                if isinstance(remote_partners, list):
+                                    result[local_prop] = [p['IMPLEMENTING_PARTNER_CODE'] for p in remote_partners]
+                                elif isinstance(remote_partners, dict):
+                                    result[local_prop] = [remote_partners['IMPLEMENTING_PARTNER_CODE']]
                                 partner_vendor_numbers.update(result[local_prop])
                     else:
                         result[local_prop] = r[remote_key]

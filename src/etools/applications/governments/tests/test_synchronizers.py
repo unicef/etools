@@ -1,4 +1,5 @@
 import datetime
+from copy import deepcopy
 
 from unicef_locations.tests.factories import LocationFactory
 
@@ -19,32 +20,27 @@ class TestEWPSynchronizer(BaseTenantTestCase):
             wbs='0060/A0/07',
             name='Country Programme'
         )
-
         cls.output = ResultFactory(
             wbs='0060/A0/07/885/006',
             name='Output 1',
             result_type=ResultTypeFactory(name=ResultType.OUTPUT)
         )
-
         cls.key_intervention = ResultFactory(
             wbs='0060/A0/07/885/006/001',
             name='Key Intervention 1',
             result_type=ResultTypeFactory(name=ResultType.ACTIVITY)
         )
-
         cls.location = LocationFactory(
-            p_code='L0',
+            p_code='LO',
             name='Location 0',
             admin_level=0
         )
-
         cls.partner = PartnerFactory(
             organization=OrganizationFactory(
                 name='Test Partner',
                 vendor_number='VENDOR001'
             )
         )
-
         cls.sample_data = {
             "remote_cps": ['0060/A0/07'],
             "remote_outputs": [{
@@ -57,7 +53,7 @@ class TestEWPSynchronizer(BaseTenantTestCase):
                 "workplan": "WP/0060A007/000143/01"
             }],
             "remote_partners": ['VENDOR001'],
-            "remote_locations": ['L0'],
+            "remote_locations": ['LO'],
             "remote_ewps": {
                 "WP/0060A007/000143/01": {
                     "ewp_id": "152539",
@@ -80,7 +76,7 @@ class TestEWPSynchronizer(BaseTenantTestCase):
                     "title": "KI-ACO : STAFF COSTS",
                     "description": "KI WR 2024: Strengthen Birth Registration services...",
                     "total_budget": 2370684.0,
-                    "locations": ['L0'],
+                    "locations": ['LO'],
                     "partners": ['VENDOR001'],
                     "ewp_key_intervention": "0060/A0/07/885/006/001",
                     "workplan": "WP/0060A007/000143/01"
@@ -94,8 +90,13 @@ class TestEWPSynchronizer(BaseTenantTestCase):
         self.assertEqual(sync.cps['0060/A0/07'], self.country_programme)
         self.assertEqual(sync.outputs['0060/A0/07/885/006'], self.output)
         self.assertEqual(sync.kis['0060/A0/07/885/006/001'], self.key_intervention)
-        self.assertEqual(sync.locations['L0'], self.location)
+        self.assertEqual(sync.locations['LO'], self.location)
         self.assertEqual(sync.partners['VENDOR001'], self.partner)
+        # no existing data for the below
+        self.assertEqual(sync.workplans, {})
+        self.assertEqual(sync.ewp_outputs, {})
+        self.assertEqual(sync.ewp_key_interventions, {})
+        self.assertEqual(sync.activities, {})
 
     def test_update_workplans(self):
         sync = EWPSynchronizer(self.sample_data)
@@ -111,17 +112,18 @@ class TestEWPSynchronizer(BaseTenantTestCase):
         self.assertEqual(workplan.country_programme, self.country_programme)
 
         # Second run with same data - should detect no changes
-        sync = EWPSynchronizer(self.sample_data)
+        sample_copy = deepcopy(self.sample_data)
+
+        sync = EWPSynchronizer(sample_copy)
         total_data, total_updated, total_new = sync.update_workplans()
         self.assertEqual(total_data, 1)
         self.assertEqual(total_updated, 0)
         self.assertEqual(total_new, 0)
 
         # Test with modified data
-        modified_data = self.sample_data.copy()
-        modified_data['remote_ewps']['WP/0060A007/000143/01']['name'] = 'Updated Name'
+        self.sample_data['remote_ewps']['WP/0060A007/000143/01']['name'] = 'Updated Name'
 
-        sync = EWPSynchronizer(modified_data)
+        sync = EWPSynchronizer(self.sample_data)
         total_data, total_updated, total_new = sync.update_workplans()
         self.assertEqual(total_data, 1)
         self.assertEqual(total_updated, 1)
@@ -200,15 +202,19 @@ class TestEWPSynchronizer(BaseTenantTestCase):
 
 
 class TestEWPsSynchronizer(BaseTenantTestCase):
-
-    def test_convert_records(self):
-        synchronizer = EWPsSynchronizer(business_area_code=self.tenant.business_area_code)
-
-        sample_input = {
+    @classmethod
+    def setUp(cls):
+        cls.partner = PartnerFactory(
+            organization=OrganizationFactory(
+                name='Test Partner',
+                vendor_number='VENDOR001'
+            )
+        )
+        cls.sample_input = {
             'ROWSET': {
                 'ROW': [{
-                    'BUSINESS_AREA_CODE': self.tenant.business_area_code,
-                    "BUSINESS_AREA_NAME": self.tenant.name,
+                    'BUSINESS_AREA_CODE': cls.tenant.business_area_code,
+                    "BUSINESS_AREA_NAME": cls.tenant.name,
                     'CP_WBS': '0060/A0/07',
                     'VISION_ACTIVITY_WBS': '0060/A0/07/885/006/001',
                     'WPA_GID': '0060/A0/07/885/006/001/WPA0001',
@@ -222,11 +228,11 @@ class TestEWPsSynchronizer(BaseTenantTestCase):
                     "WP_ID": "147813",
                     "WPA_START_DATE": "01-JAN-24",
                     "WPA_END_DATE": "31-DEC-24",
-                    "TOTAL_BUDGET": None,
+                    "TOTAL_BUDGET": "1234",
                     "WPA_IMPLEMENTING_PARTNERS": {
                         "IMPL_PARTNER": {
-                            "IMPLEMENTING_PARTNER_CODE": "2500200677",
-                            "IMPLEMENTING_PARTNER_NAME": "Test Partner"
+                            "IMPLEMENTING_PARTNER_CODE": cls.partner.vendor_number,
+                            "IMPLEMENTING_PARTNER_NAME": cls.partner.name,
                         },
                     },
                     "COST_CENTER_CODE": "0060H00000",
@@ -238,49 +244,41 @@ class TestEWPsSynchronizer(BaseTenantTestCase):
             }
         }
 
-        result = synchronizer._convert_records(sample_input)
+    def test_convert_records(self):
+        synchronizer = EWPsSynchronizer(business_area_code=self.tenant.business_area_code)
+        result = synchronizer._convert_records(self.sample_input)
 
         self.assertEqual(len(result), 7)
         self.assertIn('0060/A0/07', result['remote_cps'])
-        self.assertEqual(result['remote_partners'], set())
-        self.assertFalse(result['remote_locations'], set())
+        self.assertEqual(result['remote_partners'], {self.partner.vendor_number})
+        self.assertEqual(result['remote_locations'], {'LO'})
+        for key, map_key in zip(
+                ['description', 'title', 'total_budget', 'ewp_key_intervention', 'workplan', 'wpa_id', 'wbs'],
+                ['WPA_DESCRIPTION', 'WPA_TITLE', 'TOTAL_BUDGET', 'VISION_ACTIVITY_WBS', 'WP_GID', 'WPA_ID', 'WPA_GID']):
+            self.assertEqual(
+                result['activities']['0060/A0/07/885/006/001/WPA0001'][key],
+                self.sample_input['ROWSET']['ROW'][0][map_key])
+
+        for key, map_key in zip(
+                ['category_type', 'cost_center_code', 'cost_center_name', 'country_programme', 'ewp_id', 'name', 'plan_type', 'status'],
+                ['PLAN_CATEGORY_TYPE', 'COST_CENTER_CODE', 'COST_CENTER_NAME', 'CP_WBS', 'WP_ID', 'WP_NAME', 'PLAN_TYPE', 'WP_STATUS']):
+            self.assertEqual(
+                result['remote_ewps']['WP/0060A007/000143/01'][key],
+                self.sample_input['ROWSET']['ROW'][0][map_key])
+
+        for key, map_key in zip(['wbs', 'workplan'], ['VISION_ACTIVITY_WBS', 'WP_GID']):
+            self.assertEqual(
+                result['remote_kis'][0][key],
+                self.sample_input['ROWSET']['ROW'][0][map_key])
+
+        self.assertEqual(
+            result['remote_outputs'][0]['workplan'],
+            self.sample_input['ROWSET']['ROW'][0]['WP_GID'])
 
     def test_clean_records(self):
         synchronizer = EWPsSynchronizer(business_area_code=self.tenant.business_area_code)
 
-        CountryProgrammeFactory(wbs='0060/A0/07', name='Test CP')
-
-        sample_records = [{
-            'BUSINESS_AREA_CODE': self.tenant.business_area_code,
-            "BUSINESS_AREA_NAME": self.tenant.name,
-            'CP_WBS': '0060/A0/07',
-            'VISION_ACTIVITY_WBS': '0060/A0/07/885/006/001',
-            'WPA_GID': '0060/A0/07/885/006/001/WPA0001',
-            'WP_GID': 'WP/0060A007/000143/01',
-            'WP_NAME': 'Test Workplan',
-            'WP_STATUS': 'Signed',
-            'WPA_GEOLOCATIONS': {'GEOLOCATION': {'P_CODE': 'LO', "AREA_NAME": "Location"}},
-            "WPA_ID": "191865",
-            "WPA_TITLE": "KI-ER 2024: SOCIAL AND BEHAVIOR CHANGE AND COMMUNICATION",
-            "WPA_DESCRIPTION": "KI-ER 2024: Social and behavior change and communication",
-            "WP_ID": "147813",
-            "WPA_START_DATE": "01-JAN-24",
-            "WPA_END_DATE": "31-DEC-24",
-            "TOTAL_BUDGET": None,
-            "WPA_IMPLEMENTING_PARTNERS": {
-                "IMPL_PARTNER": {
-                    "IMPLEMENTING_PARTNER_CODE": "2500200677",
-                    "IMPLEMENTING_PARTNER_NAME": "Test Partner"
-                },
-            },
-            "COST_CENTER_CODE": "0060H00000",
-            "COST_CENTER_NAME": "Jalalabad, Eastern",
-            "PLAN_CATEGORY_TYPE": "Section",
-            "PLAN_TYPE": "Annual",
-            "PLAN_AT_KI_LEVEL": "No",
-        }]
-
-        result = synchronizer._clean_records(sample_records)
+        result = synchronizer._clean_records(self.sample_input['ROWSET']['ROW'])
 
         self.assertIn('0060/A0/07', result['remote_cps'])
         self.assertEqual(len(result['remote_ewps']), 1)
