@@ -100,7 +100,7 @@ class InventoryItemListView(POIQuerysetMixin, ListAPIView):
     search_fields = (
         'description', 'batch_id', 'transfer__name',
         'material__short_description', 'material__group_description',
-        'material__purchase_group', 'material__purchase_group_description', 'material__temperature_group'
+        'material__purchase_group', 'material__purchase_group_description', 'material__temperature_group', 'mapped_description'
     )
 
     def get_queryset(self):
@@ -274,7 +274,7 @@ class TransferViewSet(
         location = self.get_parent_poi()
         qs = self.get_queryset()\
             .filter(status=models.Transfer.COMPLETED, destination_point=location)\
-            .exclude(origin_point=location)
+            .exclude(origin_point=location).order_by("-created")
 
         return self.paginate_response(qs)
 
@@ -301,7 +301,7 @@ class TransferViewSet(
         )
         if not self.request.query_params.get('transfer_type', None):
             qs = qs.exclude(transfer_type__in=[models.Transfer.WASTAGE])
-
+        qs = qs.order_by("-created")
         return self.paginate_response(qs)
 
     @action(detail=True, methods=['patch'], url_path='new-check-in',
