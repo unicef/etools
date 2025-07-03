@@ -15,7 +15,6 @@ from unicef_vision.utils import get_data_from_insight
 
 from etools.applications.action_points.categories.models import Category
 from etools.applications.action_points.categories.serializers import CategoryModelChoiceField
-from etools.applications.action_points.models import ActionPoint
 from etools.applications.action_points.serializers import ActionPointBaseSerializer, HistorySerializer
 from etools.applications.audit.models import (
     Audit,
