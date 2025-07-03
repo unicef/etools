@@ -1,4 +1,5 @@
 from decimal import DivisionByZero, InvalidOperation
+from functools import cached_property
 
 from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields import ArrayField
@@ -231,6 +232,10 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
             return self.DISPLAY_STATUSES.field_visit
 
         return self.status
+
+    @cached_property
+    def count_open_high_priority(self):
+        return self.action_points.filter(status=ActionPoint.STATUS_OPEN, high_priority=True).count()
 
     @property
     def displayed_status_date(self):

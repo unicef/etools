@@ -458,6 +458,22 @@ class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, BaseTenantT
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
         self.assertNotEqual(response.data[0], {})
+        self.assertEqual(response.data[0]['open_high_priority_count'], 0)
+
+    def test_hact_view_open_high_priority_count(self):
+        self._init_finalized_engagement()
+        ActionPointFactory(engagement=self.engagement, status='open', high_priority=True)
+
+        response = self.forced_auth_req(
+            'get',
+            '/api/audit/engagements/hact/',
+            data={'partner': self.engagement.partner.id},
+            user=self.unicef_user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertNotEqual(response.data[0], {})
+        self.assertEqual(response.data[0]['open_high_priority_count'], 1)
 
     def test_csv_view(self):
         AuditFactory()
