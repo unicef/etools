@@ -7,6 +7,7 @@ from unicef_locations.tests.factories import LocationFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.locations.models import Location
 from etools.applications.partners.permissions import READ_ONLY_API_GROUP_NAME
+from etools.applications.partners.tests.factories import InterventionFactory
 from etools.applications.users.tests.factories import GroupFactory, UserFactory
 
 
@@ -14,9 +15,13 @@ class TestPRPLocationListView(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         cls.unicef_staff = UserFactory(is_staff=True)
+        cls.intervention_1 = InterventionFactory()
         cls.parent = LocationFactory()
-        cls.locations = [LocationFactory(parent=cls.parent) for x in range(5)]
-        cls.locations.append(cls.parent)
+        cls.intervention_1.flat_locations.add(cls.parent)
+        for x in range(5):
+            cls.intervention_1.flat_locations.add(LocationFactory(parent=cls.parent))
+        cls.intervention_2 = InterventionFactory()
+        cls.intervention_2.flat_locations.add(cls.parent)
         cls.inactive_location = LocationFactory(is_active=False, parent=cls.parent)
         cls.expected_keys = sorted(('id', 'name', 'p_code', 'admin_level', 'admin_level_name',
                                     'point', 'geom', 'parent_p_code'))
@@ -33,10 +38,13 @@ class TestPRPLocationListView(BaseTenantTestCase):
         self.assertEqual(sorted(response.data[0].keys()), self.expected_keys)
 
         # sort the expected locations by name, the same way the API results are sorted
-        expected_active_locs = Location.simplified_geom.filter(is_active=True).order_by('name')
-        self.assertNotIn(self.inactive_location, expected_active_locs)
+        expected_locs = Location.simplified_geom.filter(intervention_flat_locations__isnull=False).order_by('id').distinct()
+        self.assertEqual(
+            list(self.intervention_1.flat_locations.order_by('id').values_list('id', flat=True)),
+            list(expected_locs.values_list('id', flat=True)))
+        self.assertNotIn(self.inactive_location, expected_locs)
 
-        for actual_loc, expected_loc in zip(response.data, expected_active_locs):
+        for actual_loc, expected_loc in zip(response.data, expected_locs):
             self.assertTrue(expected_loc.is_active)
             for key in self.expected_keys:
                 if key == 'parent_p_code':

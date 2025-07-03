@@ -10,9 +10,10 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from etools.applications.core.util_scripts import set_country
 from etools.applications.last_mile import models
 from etools.applications.last_mile.permissions import LMSMAPIPermission
+from etools.applications.last_mile.serializers_ext import MaterialIngestResultSerializer, MaterialIngestSerializer
+from etools.applications.last_mile.services_ext import MaterialIngestService
 from etools.applications.organizations.models import Organization
 from etools.libraries.pythonlib.encoders import CustomJSONEncoder
 
@@ -20,39 +21,17 @@ from etools.libraries.pythonlib.encoders import CustomJSONEncoder
 class VisionIngestMaterialsApiView(APIView):
     permission_classes = (LMSMAPIPermission,)
 
-    mapping = {
-        'MaterialNumber': 'number',
-        'ShortDescription': 'short_description',
-        'UnitOfMeasurement': 'original_uom',
-        'MaterialType': 'material_type',
-        'MaterialTypeDescription': 'material_type_description',
-        'MaterialGroup': 'group',
-        'MaterialGroupDescription': 'group_description',
-        'PurchasingGroup': 'purchase_group',
-        'PurchasingGroupDescription': 'purchase_group_description',
-        'HazardousGoods': 'hazardous_goods',
-        'HazardousGoodsDescription': 'hazardous_goods_description',
-        'TempConditions': 'temperature_conditions',
-        'TempDescription': 'temperature_group',
-        'PurchasingText': 'purchasing_text'
-    }
-
     def post(self, request):
-        set_country('somalia')
-        materials_to_create = []
-        for material in request.data:
-            model_dict = {}
-            for k, v in material.items():
-                if k in self.mapping:
-                    model_dict[self.mapping[k]] = strip_tags(v)  # strip text that has html tags
-            try:
-                models.Material.objects.get(number=model_dict['number'])
-            except models.Material.DoesNotExist:
-                materials_to_create.append(models.Material(**model_dict))
+        input_serializer = MaterialIngestSerializer(data=request.data, many=True)
+        input_serializer.is_valid(raise_exception=True)
 
-        models.Material.objects.bulk_create(materials_to_create)
+        ingest_result = MaterialIngestService().ingest_materials(
+            validated_data=input_serializer.validated_data
+        )
 
-        return Response(status=status.HTTP_200_OK)
+        output_serializer = MaterialIngestResultSerializer(ingest_result)
+
+        return Response(output_serializer.data, status=status.HTTP_200_OK)
 
 
 class GeometryPointFunc(Func):
@@ -103,7 +82,6 @@ class VisionLMSMExport(APIView):
     permission_classes = (LMSMAPIPermission,)
 
     def get(self, request, *args, **kwargs):
-        set_country('somalia')
         model_param = request.query_params.get('type')
         model_manager_map = {
             "transfer": models.Transfer.objects,
@@ -225,12 +203,15 @@ class VisionIngestTransfersApiView(APIView):
                             transfer__unicef_release_order=unicef_ro, unicef_ro_item=item_dict['unicef_ro_item'])
                     except models.Item.DoesNotExist:
                         item_dict['transfer'] = transfer
+                        item_dict['base_quantity'] = item_dict['quantity']
+                        if not item_dict.get('batch_id'):
+                            item_dict['conversion_factor'] = 1.0
+                            item_dict['uom'] = "EA"
                         items_to_create.append(models.Item(**item_dict))
 
         models.Item.objects.bulk_create(items_to_create)
 
     def post(self, request):
-        set_country('somalia')
         transfers_to_create = []
         transfer_items = {}
         for row in request.data:

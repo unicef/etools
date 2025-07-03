@@ -17,13 +17,15 @@ class IsLMSMAdmin(IsAuthenticated):
         # Manage Users Perms
         USER_ADMIN_PANEL: [
             USER_ADMIN_PANEL_PERMISSION,
-            USER_LOCATIONS_ADMIN_PANEL_PERMISSION,
             STOCK_MANAGEMENT_ADMIN_PANEL_PERMISSION,
+        ],
+        USER_LOCATIONS_ADMIN_PANEL: [
+            USER_ADMIN_PANEL_PERMISSION,
         ],
         # Manage Locations Perms
         LOCATIONS_ADMIN_PANEL: [
             LOCATIONS_ADMIN_PANEL_PERMISSION,
-            USER_LOCATIONS_ADMIN_PANEL_PERMISSION,
+            USER_ADMIN_PANEL_PERMISSION,
         ],
         LOCATIONS_TYPE_ADMIN_PANEL: [
             LOCATIONS_ADMIN_PANEL_PERMISSION,
@@ -31,9 +33,11 @@ class IsLMSMAdmin(IsAuthenticated):
         PARENT_LOCATIONS_ADMIN_PANEL: [
             LOCATIONS_ADMIN_PANEL_PERMISSION,
         ],
-        # Manage Users linked to Locations Perms
-        USER_LOCATIONS_ADMIN_PANEL: [
-            USER_LOCATIONS_ADMIN_PANEL_PERMISSION,
+        GEOPOINT_LOCATIONS: [
+            LOCATIONS_ADMIN_PANEL_PERMISSION,
+        ],
+        POINT_OF_INTERESTS_LIGHT_DATA: [
+            LOCATIONS_ADMIN_PANEL_PERMISSION,
         ],
         # Manage Email Alerts Perms
         ALERT_NOTIFICATIONS_ADMIN_PANEL: [
@@ -58,7 +62,11 @@ class IsLMSMAdmin(IsAuthenticated):
         ],
         PARTNER_ORGANIZATIONS_ADMIN_PANEL: [
             LOCATIONS_ADMIN_PANEL_PERMISSION,
-        ]
+        ],
+        # Can approve users
+        UPDATE_USER_PROFILE_ADMIN_PANEL: [
+            APPROVE_USERS_ADMIN_PANEL_PERMISSION
+        ],
     }
 
     def get_required_permissions(self, view_basename: str) -> set:
@@ -97,11 +105,4 @@ class LMSMAPIPermission(IsAuthenticated):
 class LastMileUserPermissionRetriever():
 
     def get_permissions(self, user):
-        if user.is_superuser:
-            return [USER_ADMIN_PANEL_PERMISSION,
-                    STOCK_MANAGEMENT_ADMIN_PANEL_PERMISSION,
-                    TRANSFER_HISTORY_ADMIN_PANEL_PERMISSION,
-                    ALERT_NOTIFICATIONS_ADMIN_PANEL_PERMISSION,
-                    LOCATIONS_ADMIN_PANEL_PERMISSION,
-                    USER_LOCATIONS_ADMIN_PANEL_PERMISSION]
-        return [permission.codename for permission in user.user_permissions.all()]
+        return [permission.codename for permission in user.user_permissions.all() if permission.codename in LIST_INTERESTED_LASTMILE_PERMS]

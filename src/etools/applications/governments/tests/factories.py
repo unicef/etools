@@ -210,6 +210,20 @@ class GDDActivityFactory(factory.django.DjangoModelFactory):
         else:
             self.locations.add(LocationFactory())
 
+
+class GDDActivityItemFactory(factory.django.DjangoModelFactory):
+    activity = factory.SubFactory(GDDActivityFactory)
+    name = fuzzy.FuzzyText()
+    unit = fuzzy.FuzzyText()
+    no_units = fuzzy.FuzzyInteger(10)
+    unit_price = fuzzy.FuzzyDecimal(1000)
+    unicef_cash = fuzzy.FuzzyDecimal(1000)
+    cso_cash = fuzzy.FuzzyDecimal(1000)
+
+    class Meta:
+        model = models.GDDActivityItem
+
+
 # class PlannedEngagementFactory(factory.django.DjangoModelFactory):
 #     class Meta:
 #         model = models.PlannedEngagement
@@ -239,3 +253,13 @@ class GDDSpecialReportingRequirementFactory(factory.django.DjangoModelFactory):
 
     due_date = fuzzy.FuzzyDate(datetime.date(2001, 1, 1))
     description = fuzzy.FuzzyText(length=50)
+
+
+class GDDReportingRequirementFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = models.GDDReportingRequirement
+
+    report_type = fuzzy.FuzzyChoice(models.GDDReportingRequirement.TYPE_CHOICES)
+    end_date = fuzzy.FuzzyDate(datetime.date(2001, 1, 1))
+    due_date = fuzzy.FuzzyDate(datetime.date(2001, 1, 1))
+    start_date = fuzzy.FuzzyDate(datetime.date(2001, 1, 1))

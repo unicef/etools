@@ -186,9 +186,9 @@ class InterventionManagementBudgetSerializer(
     serializers.ModelSerializer,
 ):
     items = InterventionManagementBudgetItemSerializer(many=True, required=False)
-    act1_total = serializers.SerializerMethodField()
-    act2_total = serializers.SerializerMethodField()
-    act3_total = serializers.SerializerMethodField()
+    act1_total = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True)
+    act2_total = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True)
+    act3_total = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True)
     partner_total = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True)
     unicef_total = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True)
     total = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True)
@@ -210,15 +210,6 @@ class InterventionManagementBudgetSerializer(
             "unicef_total",
             "total",
         )
-
-    def get_act1_total(self, obj):
-        return str(obj.act1_unicef + obj.act1_partner)
-
-    def get_act2_total(self, obj):
-        return str(obj.act2_unicef + obj.act2_partner)
-
-    def get_act3_total(self, obj):
-        return str(obj.act3_unicef + obj.act3_partner)
 
     @transaction.atomic
     def update(self, instance, validated_data):

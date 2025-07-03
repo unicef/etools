@@ -131,7 +131,7 @@ class ItemInline(RestrictedEditAdminMixin, admin.TabularInline):
     fk_name = 'transfer'
     list_select_related = ('material',)
     fields = ('id', 'batch_id', 'material', 'description', 'expiry_date', 'wastage_type',
-              'amount_usd', 'unicef_ro_item', 'purchase_order_item')
+              'amount_usd', 'unicef_ro_item', 'purchase_order_item', 'hidden')
     readonly_fields = ('description',)
     show_change_link = True
 
@@ -208,11 +208,11 @@ class PartnerMaterialInline(admin.TabularInline):
     extra = 0
     model = models.PartnerMaterial
     list_select_related = ('material', 'partner_organization')
-    fields = ('material', 'partner_organization', 'description')
+    fields = ('material', 'partner_organization',)
 
 
 @admin.register(models.Material)
-class MaterialAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
+class MaterialAdmin(admin.ModelAdmin):
     list_display = (
         'number', 'short_description', 'original_uom'
     )
@@ -222,6 +222,24 @@ class MaterialAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
         'material_type_description', 'group', 'group_description'
     )
     inlines = (PartnerMaterialInline,)
+
+
+@admin.register(models.Profile)
+class ProfileAdmin(admin.ModelAdmin):
+    list_display = ('user', 'status', 'created_by', 'created_on', 'approved_by')
+    raw_id_fields = ('user', 'created_by', 'approved_by')
+    list_filter = ('status',)
+    search_fields = ('user__username', 'user__email', 'user__first_name', 'user__last_name', 'status')
+    list_select_related = ('user',
+                           'created_by',
+                           'approved_by',
+                           "user__profile__country",
+                           "user__profile__organization",
+                           "created_by__profile__country",
+                           "created_by__profile__organization",
+                           "approved_by__profile__country",
+                           "approved_by__profile__organization"
+                           )
 
 
 @admin.register(models.Item)
@@ -409,11 +427,7 @@ class ItemAdmin(XLSXImportMixin, admin.ModelAdmin):
 
             mat_desc = imp_r.pop('partner_material__description')
             if mat_desc and mat_desc != material.short_description:
-                models.PartnerMaterial.objects.update_or_create(
-                    material=material,
-                    partner_organization=partner,
-                    defaults={'description': mat_desc}
-                )
+                imp_r['mapped_description'] = mat_desc
 
             transfer = get_or_create_transfer(dict(
                 name="Initial Imports",
@@ -519,8 +533,6 @@ class ItemTransferHistoryAdmin(admin.ModelAdmin):
         if db_field.name == "item":
             kwargs["queryset"] = models.Item.objects.select_related(
                 "transfer__partner_organization", 'material'
-            ).prefetch_related(
-                Prefetch('material__partner_materials', queryset=models.PartnerMaterial.objects.select_related('material', 'partner_organization'), to_attr='_partner_material')
             )
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
@@ -531,5 +543,11 @@ class ItemTransferHistoryAdmin(admin.ModelAdmin):
     view_items_link.short_description = "Transfer Details"
 
 
+@admin.register(models.PartnerMaterial)
+class PartnerMaterialAdmin(admin.ModelAdmin):
+    list_display = ('material', 'partner_organization')
+    search_fields = ('material__short_description', 'partner_organization__organization__name')
+    list_filter = ('material',)
+
+
 admin.site.register(models.PointOfInterestType)
-admin.site.register(models.PartnerMaterial)

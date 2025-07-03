@@ -1,12 +1,12 @@
 name = "governments/gdd/unicef_unlocked"
 defaults = {
-    "description": "UNICEF Unlocked GDD",
-    "subject": "[eTools] UNICEF Unlocked GDD",
+    "description": "UNICEF Unlocked GPD",
+    "subject": "[eTools] UNICEF Unlocked GPD",
     "content": """
     Dear Colleague,
 
-    GDD {{reference_number}} has been unlocked by UNICEF,
-    The previously accepted GDD has been moved back to Development and will need to be accepted again after desired
+    GPD {{reference_number}} has been unlocked by UNICEF,
+    The previously accepted GPD has been moved back to Development and will need to be accepted again after desired
     modifications have been completed.
 
     {{gdd_link}}
@@ -18,8 +18,8 @@ defaults = {
     {% block content %}
     Dear Colleague,<br /><br />
 
-    GDD {{reference_number}} has been unlocked by UNICEF,<br />
-    The previously accepted GDD has been moved back to Development and will need to be accepted again after desired
+    GPD {{reference_number}} has been unlocked by UNICEF,<br />
+    The previously accepted GPD has been moved back to Development and will need to be accepted again after desired
     modifications have been completed.
 
     {{gdd_link}}<br />

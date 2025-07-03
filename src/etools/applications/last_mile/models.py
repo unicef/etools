@@ -13,11 +13,13 @@ from unicef_djangolib.fields import CodedGenericRelation
 
 from etools.applications.last_mile.admin_panel.constants import (
     ALERT_NOTIFICATIONS_ADMIN_PANEL_PERMISSION,
+    APPROVE_LOCATIONS_ADMIN_PANEL_PERMISSION,
+    APPROVE_STOCK_MANAGEMENT_ADMIN_PANEL_PERMISSION,
+    APPROVE_USERS_ADMIN_PANEL_PERMISSION,
     LOCATIONS_ADMIN_PANEL_PERMISSION,
     STOCK_MANAGEMENT_ADMIN_PANEL_PERMISSION,
     TRANSFER_HISTORY_ADMIN_PANEL_PERMISSION,
     USER_ADMIN_PANEL_PERMISSION,
-    USER_LOCATIONS_ADMIN_PANEL_PERMISSION,
 )
 from etools.applications.locations.models import Location
 from etools.applications.partners.models import PartnerOrganization
@@ -162,6 +164,7 @@ class Transfer(TimeStampedModel, models.Model):
     PHARMACY = 'PHARMACY'
     MOBILE_OTP = 'MOBILE_OTP'
     DISPENSING_UNIT = 'DISPENSING_UNIT'
+    HOUSEHOLD_MOBILE_TEAM = 'HOUSEHOLD_MOBILE_TEAM'
     OTHER = 'OTHER'
 
     STATUS = (
@@ -184,6 +187,7 @@ class Transfer(TimeStampedModel, models.Model):
         (PHARMACY, _('Pharmacy')),
         (MOBILE_OTP, _('Mobile OTP')),
         (DISPENSING_UNIT, _('Dispensing Unit')),
+        (HOUSEHOLD_MOBILE_TEAM, _('Household Mobile Team')),
         (OTHER, _('Other')),
     )
 
@@ -271,6 +275,12 @@ class Transfer(TimeStampedModel, models.Model):
     waybill_id = models.CharField(max_length=255, null=True, blank=True)
 
     pd_number = models.CharField(max_length=255, null=True, blank=True)
+
+    initial_items = models.JSONField(
+        verbose_name=_("Initial Items"),
+        null=True,
+        blank=True,
+    )
 
     objects = TransferManager()
 
@@ -398,7 +408,9 @@ class PartnerMaterial(TimeStampedModel, models.Model):
         on_delete=models.CASCADE,
         related_name='partner_material'
     )
-    description = models.CharField(max_length=255)
+
+    def __str__(self):
+        return f'{self.partner_organization.name}: {self.material.short_description}'
 
     class Meta:
         unique_together = ('partner_organization', 'material')
@@ -427,6 +439,7 @@ class Item(TimeStampedModel, models.Model):
     conversion_factor = models.DecimalField(max_digits=10, decimal_places=2, null=True)
 
     quantity = models.IntegerField()
+    base_quantity = models.IntegerField(null=True)
     batch_id = models.CharField(max_length=255, null=True, blank=True)
     expiry_date = models.DateTimeField(null=True, blank=True)
     comment = models.TextField(null=True, blank=True)
@@ -464,6 +477,8 @@ class Item(TimeStampedModel, models.Model):
     )
     transfers_history = models.ManyToManyField(Transfer, through='ItemTransferHistory')
 
+    mapped_description = models.CharField(max_length=255, null=True, blank=True)
+
     material = models.ForeignKey(
         Material,
         on_delete=models.CASCADE,
@@ -480,22 +495,22 @@ class Item(TimeStampedModel, models.Model):
 
     @cached_property
     def description(self):
-        partner_material_cached = getattr(self.material, '_partner_material', None)
-        if partner_material_cached:
-            for partner_material in partner_material_cached:
-                if partner_material.partner_organization == self.transfer.partner_organization and partner_material.material == self.material:
-                    return partner_material.description
-            return self.material.short_description
-        else:
-            try:
-                partner_material = PartnerMaterial.objects.only('description').get(
-                    partner_organization=self.transfer.partner_organization, material=self.material)
-                return partner_material.description
-            except PartnerMaterial.DoesNotExist:
-                return self.material.short_description
+        if self.mapped_description:
+            return self.mapped_description
+        return self.material.short_description
 
-    def should_be_hidden(self):
-        return self.material.number not in settings.RUTF_MATERIALS
+    @cached_property
+    def should_be_hidden_for_partner(self):
+        if not self.transfer or not self.transfer.partner_organization:
+            return True
+
+        partner_material_exists = PartnerMaterial.objects.filter(
+            partner_organization=self.transfer.partner_organization,
+            material=self.material
+        ).exists()
+
+        should_hide = not partner_material_exists
+        return should_hide
 
     def add_transfer_history(self, transfer):
         ItemTransferHistory.objects.create(
@@ -522,8 +537,86 @@ class AdminPanelPermission(models.Model):
         permissions = (
             (USER_ADMIN_PANEL_PERMISSION, "Can manage users in the admin panel"),
             (LOCATIONS_ADMIN_PANEL_PERMISSION, "Can manage locations in the admin panel"),
-            (USER_LOCATIONS_ADMIN_PANEL_PERMISSION, "Can manage users locations in the admin panel"),
             (ALERT_NOTIFICATIONS_ADMIN_PANEL_PERMISSION, "Can manage email alerts in the admin panel"),
             (STOCK_MANAGEMENT_ADMIN_PANEL_PERMISSION, "Can manage stock management in the admin panel"),
             (TRANSFER_HISTORY_ADMIN_PANEL_PERMISSION, "Can manage transfer history in the admin panel"),
+            (APPROVE_USERS_ADMIN_PANEL_PERMISSION, "Can approve users in the admin panel"),
+            (APPROVE_LOCATIONS_ADMIN_PANEL_PERMISSION, "Can approve locations in the admin panel"),
+            (APPROVE_STOCK_MANAGEMENT_ADMIN_PANEL_PERMISSION, "Can approve stock management in the admin panel"),
         )
+
+
+class Profile(TimeStampedModel, models.Model):
+
+    class ApprovalStatus(models.TextChoices):
+        PENDING = 'PENDING', _('Pending Approval')
+        APPROVED = 'APPROVED', _('Approved')
+        REJECTED = 'REJECTED', _('Rejected')
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='last_mile_profile')
+    status = models.CharField(
+        _('Approval Status'),
+        max_length=10,
+        choices=ApprovalStatus.choices,
+        default=ApprovalStatus.PENDING,
+        db_index=True,
+        help_text=_('The current approval status of this profile.')
+    )
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='created_last_mile_profiles'
+    )
+    created_on = models.DateTimeField(auto_now_add=True)
+    approved_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='approved_last_mile_profiles'
+    )
+    approved_on = models.DateTimeField(null=True, blank=True)
+    review_notes = models.TextField(
+        _('Review Notes'),
+        null=True,
+        blank=True,
+        help_text=_('Optional notes from the reviewer regarding approval or rejection.')
+    )
+
+    def __str__(self):
+        try:
+            if self.user:
+                name = self.user.get_full_name() or self.user.username
+                return f'{name} ({self.get_status_display()})'
+            return f'Profile {self.pk} (No User)'
+        except AttributeError:
+            return f'Profile {self.pk} (User Missing)'
+
+    def approve(self, approver_user, notes=None):
+        if self.status != self.ApprovalStatus.APPROVED:
+            self.status = self.ApprovalStatus.APPROVED
+            self.approved_by = approver_user
+            self.approved_on = timezone.now()
+            if notes:
+                self.review_notes = notes
+            self.save(update_fields=['status', 'approved_by', 'approved_on', 'review_notes'])
+
+    def reject(self, reviewer_user, notes=None):
+        if self.status != self.ApprovalStatus.REJECTED:
+            self.status = self.ApprovalStatus.REJECTED
+            self.approved_by = reviewer_user
+            self.approved_on = timezone.now()
+            if notes:
+                self.review_notes = notes
+            self.save(update_fields=['status', 'approved_by', 'approved_on', 'review_notes'])
+
+    def reset_approval(self):
+        self.status = self.ApprovalStatus.PENDING
+        self.approved_by = None
+        self.approved_on = None
+        self.save(update_fields=['status', 'approved_by', 'approved_on'])
+
+    def is_pending_approval(self):
+        return self.status == self.ApprovalStatus.PENDING
