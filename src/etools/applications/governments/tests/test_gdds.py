@@ -34,7 +34,7 @@ from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.reports.models import ResultType
 from etools.applications.reports.tests.factories import CountryProgrammeFactory, SectionFactory
 from etools.applications.users.tests.factories import CountryFactory, GroupFactory, RealmFactory, UserFactory
-
+from etools.libraries.djangolib.utils import get_environment
 
 class BaseGDDTestCase(BaseTenantTestCase):
     def setUp(self):
@@ -579,26 +579,29 @@ class TestCreate(BaseGDDTestCase):
         self.assertEqual(data.get("cash_transfer_modalities"), i.cash_transfer_modalities)
         self.assertEqual(i.cash_transfer_modalities, [])
 
-    # def test_return_400_when_focal_point_is_the_same_as_owner(self):
-    #     data = {
-    #         "title": "PMP GDD",
-    #         "partner": self.partner.pk,
-    #         "reference_number_year": timezone.now().year,
-    #         "budget_owner": self.unicef_user.pk,
-    #         "unicef_focal_points": [self.unicef_user.pk],
-    #         "start": timezone.now().date(),
-    #         "end": timezone.now().date() + datetime.timedelta(days=300)
-    #     }
+    def test_return_400_when_focal_point_is_the_same_as_owner(self):
+        data = {
+            "title": "PMP GDD",
+            "partner": self.partner.pk,
+            "reference_number_year": timezone.now().year,
+            "budget_owner": self.unicef_user.pk,
+            "unicef_focal_points": [self.unicef_user.pk],
+            "start": timezone.now().date(),
+            "end": timezone.now().date() + datetime.timedelta(days=300)
+        }
 
-    #     response = self.forced_auth_req(
-    #         "post",
-    #         reverse('governments:gdd-list'),
-    #         user=self.unicef_user,
-    #         data=data
-    #     )
+        response = self.forced_auth_req(
+            "post",
+            reverse('governments:gdd-list'),
+            user=self.unicef_user,
+            data=data
+        )
 
-    #     self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
-    #     self.assertIn('Budget Owner cannot be in the list of UNICEF Focal Points', response.data)
+        if get_environment() != 'DEMO':
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
+            self.assertIn('Budget Owner cannot be in the list of UNICEF Focal Points', response.data)
+        else:
+            self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
 
     def test_add_intervention_by_partner_member(self):
         partner_user = UserFactory(
@@ -1054,20 +1057,23 @@ class TestUpdate(BaseGDDTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
         self.assertIn('context', response.data)
 
-    # def test_return_400_when_focal_point_is_the_same_as_owner(self):
-    #     gdd = GDDFactory()
-    #     gdd.unicef_focal_points.add(self.unicef_user)
-    #     self.assertIsNone(gdd.budget_owner)
+    def test_return_400_when_focal_point_is_the_same_as_owner(self):
+        gdd = GDDFactory()
+        gdd.unicef_focal_points.add(self.unicef_user)
+        self.assertIsNone(gdd.budget_owner)
 
-    #     response = self.forced_auth_req(
-    #         "patch",
-    #         reverse('governments:gdd-detail', args=[gdd.pk]),
-    #         user=self.unicef_user,
-    #         data={'budget_owner': self.unicef_user.pk}
-    #     )
+        response = self.forced_auth_req(
+            "patch",
+            reverse('governments:gdd-detail', args=[gdd.pk]),
+            user=self.unicef_user,
+            data={'budget_owner': self.unicef_user.pk}
+        )
 
-    #     self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
-    #     self.assertIn('Budget Owner cannot be in the list of UNICEF Focal Points', response.data)
+        if get_environment() != 'DEMO':
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
+            self.assertIn('Budget Owner cannot be in the list of UNICEF Focal Points', response.data)
+        else:
+            self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
 
 
 # class TestDelete(BaseGDDTestCase):
