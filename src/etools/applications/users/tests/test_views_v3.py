@@ -19,7 +19,7 @@ from etools.applications.audit.tests.factories import (
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.environment.tests.factories import TenantSwitchFactory
 from etools.applications.organizations.tests.factories import OrganizationFactory
-from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, UNICEF_USER
+from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, UNICEF_REPRESENTATIVE, UNICEF_USER
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.tpm.models import ThirdPartyMonitor
 from etools.applications.tpm.tests.factories import (
@@ -693,6 +693,8 @@ class TestUserRealmView(BaseTenantTestCase):
         cls.ip_editor = UserFactory(realms__data=[IPEditor.name], profile__organization=cls.organization)
         cls.ip_admin = UserFactory(realms__data=[IPAdmin.name], profile__organization=cls.organization)
         cls.ip_auth_officer = UserFactory(realms__data=[IPAuthorizedOfficer.name], profile__organization=cls.organization)
+        cls.ip_viewer_inactive = UserFactory(realms__data=[IPViewer.name], profile__organization=cls.organization)
+        cls.ip_viewer_inactive.realms.update(is_active=False)
 
         cls.partnership_manager = UserFactory(is_staff=True, realms__data=[UNICEF_USER, PartnershipManager.name])
         cls.audit_focal_point = AuditFocalPointUserFactory(is_staff=True)
@@ -729,7 +731,14 @@ class TestUserRealmView(BaseTenantTestCase):
                           self.ip_auth_officer]:
             response = self.make_request_list(auth_user, method='get', data=data)
             self.assertEqual(response.status_code, status.HTTP_200_OK)
+
             self.assertEqual(response.data['count'], 2, "Number of IP Viewers and Editors")
+
+    def test_get_list_filter_by_roles_inactive(self):
+        data = {"roles": f"{IPViewer.as_group().pk}"}
+        for auth_user in [self.ip_viewer_inactive]:
+            response = self.make_request_list(auth_user, method='get', data=data)
+            self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_get_list_for_partner_users(self):
         # uses profile.organization = self.organization
@@ -738,7 +747,7 @@ class TestUserRealmView(BaseTenantTestCase):
             with self.assertNumQueries(3):
                 response = self.make_request_list(auth_user, method='get')
             self.assertEqual(response.status_code, status.HTTP_200_OK)
-            self.assertEqual(response.data['count'], 4, "Number of users in realm")
+            self.assertEqual(response.data['count'], 5, "Number of users in realm")
 
     def test_get_list_for_unicef_users(self):
         for auth_user in [self.unicef_user, self.partnership_manager, self.audit_focal_point]:
@@ -749,7 +758,7 @@ class TestUserRealmView(BaseTenantTestCase):
             with self.assertNumQueries(4):
                 response = self.make_request_list(auth_user, method='get', data=data)
             self.assertEqual(response.status_code, status.HTTP_200_OK)
-            self.assertEqual(response.data['count'], 4)
+            self.assertEqual(response.data['count'], 5)
 
     def test_get_empty_list_organization_not_found(self):
         data = {"organization_id": 12345}
@@ -1152,3 +1161,49 @@ class TestExternalUserAPIView(BaseTenantTestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+
+class TestUnicefRepresentativesListAPIView(BaseTenantTestCase):
+    fixtures = ['groups', 'organizations']
+
+    def setUp(self):
+        self.unicef_staff = UserFactory(is_staff=True)
+        self.partnership_manager_user = UserFactory(
+            is_staff=True, realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP]
+        )
+        self.url = reverse("users_v3:unicef-representative-list")
+
+    def test_get_unicef_staff_forbidden(self):
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_get_partner_user_forbidden(self):
+        partner = PartnerFactory()
+        partner_user = UserFactory(
+            realms__data=['IP Viewer'], profile__organization=partner.organization
+        )
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            user=partner_user
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_get_partnership_manager_allowed(self):
+        # create 4 UNICEF Representatives with active realm
+        for i in range(4):
+            UserFactory(realms__data=[UNICEF_USER, UNICEF_REPRESENTATIVE])
+
+        # create 1 UNICEF Representatives with inactive realm
+        inactive_representative = UserFactory(realms__data=[UNICEF_USER, UNICEF_REPRESENTATIVE])
+        inactive_representative.realms.update(is_active=False)
+
+        with self.assertNumQueries(4):
+            response = self.forced_auth_req('get', self.url, user=self.partnership_manager_user)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 4)

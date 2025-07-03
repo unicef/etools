@@ -41,7 +41,7 @@ urlpatterns = [
     path(
         'pbi-data/',
         view=views.PowerBIDataView.as_view(http_method_names=['get'],),
-        name="vision-export-data"
+        name="vision-export-data-pbi"
     ),
     path(
         'points-of-interest/<int:poi_pk>/items/',

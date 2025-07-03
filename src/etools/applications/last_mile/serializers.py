@@ -11,8 +11,11 @@ from unicef_attachments.models import Attachment
 from unicef_attachments.serializers import AttachmentSerializerMixin
 
 from etools.applications.last_mile import models
-from etools.applications.last_mile.models import PartnerMaterial
-from etools.applications.last_mile.tasks import notify_first_checkin_transfer, notify_wastage_transfer
+from etools.applications.last_mile.tasks import (
+    notify_dispensing_transfer,
+    notify_first_checkin_transfer,
+    notify_wastage_transfer,
+)
 from etools.applications.last_mile.validators import TransferCheckOutValidator
 from etools.applications.partners.models import Agreement, PartnerOrganization
 from etools.applications.partners.serializers.partner_organization_v2 import (
@@ -50,10 +53,18 @@ class PointOfInterestNotificationSerializer(serializers.ModelSerializer):
     parent_name = serializers.SerializerMethodField(read_only=True)
 
     def get_parent_name(self, obj):
-        return obj.parent.__str__() if hasattr(obj, 'parent') and obj.parent else ''
+        parent_locations = obj.parent.get_parent_locations()
+        district = parent_locations.get(2)
+        if not district or not hasattr(district, 'name'):
+            return obj.parent.__str__() if hasattr(obj, 'parent') and obj.parent else ''
+        return f"{district.name} ({district.p_code})"
 
     def get_region(self, obj):
-        return obj.parent.name if hasattr(obj, 'parent') and obj.parent else ''
+        parent_locations = obj.parent.get_parent_locations()
+        state = parent_locations.get(1)
+        if not state or not hasattr(state, 'name'):
+            return obj.parent.name if hasattr(obj, 'parent') and obj.parent else ''
+        return state.name
 
     class Meta:
         model = models.PointOfInterest
@@ -86,6 +97,10 @@ class MaterialSerializer(serializers.ModelSerializer):
 class TransferListSerializer(serializers.ModelSerializer):
     origin_point = PointOfInterestLightSerializer(read_only=True)
     destination_point = PointOfInterestLightSerializer(read_only=True)
+    shipment_date = serializers.SerializerMethodField()
+
+    def get_shipment_date(self, obj):
+        return obj.created
 
     class Meta:
         model = models.Transfer
@@ -94,7 +109,7 @@ class TransferListSerializer(serializers.ModelSerializer):
             'origin_point', 'destination_point', 'waybill_id',
             'checked_in_by', 'checked_out_by', 'unicef_release_order',
             "purchase_order_id", "origin_check_out_at", "is_shipment",
-            "destination_check_in_at"
+            "destination_check_in_at", "shipment_date"
         )
 
 
@@ -224,13 +239,10 @@ class ItemUpdateSerializer(serializers.ModelSerializer):
     def save(self, **kwargs):
         if 'description' in self.validated_data:
             description = self.validated_data.pop('description')
-            # If no text is sent (like an update for another field) skip
-            if description:
-                PartnerMaterial.objects.update_or_create(
-                    partner_organization=self.instance.partner_organization,
-                    material=self.instance.material,
-                    defaults={'description': description}
-                )
+            if self.instance.mapped_description and self.instance.mapped_description != description:
+                raise ValidationError(_('The description cannot be modified. A value is already present.'))
+            if description and description != self.instance.description:
+                self.instance.mapped_description = description
         super().save(**kwargs)
 
 
@@ -266,16 +278,19 @@ class ItemSplitSerializer(serializers.ModelSerializer):
         _item = models.Item(
             transfer=self.instance.transfer,
             material=self.instance.material,
+            origin_transfer=self.instance.origin_transfer,
+            base_quantity=self.instance.base_quantity if self.instance.base_quantity else self.instance.quantity,
             quantity=self.validated_data['quantities'].pop(),
             **model_to_dict(
                 self.instance,
-                exclude=['id', 'created', 'modified', 'transfer', 'material', 'transfers_history', 'quantity'])
+                exclude=['id', 'created', 'modified', 'transfer', 'material', 'transfers_history', 'quantity', 'base_quantity', 'origin_transfer'])
         )
         _item.save()
         _item.transfers_history.add(self.instance.transfer)
-
+        if not self.instance.base_quantity:
+            self.instance.base_quantity = self.instance.quantity
         self.instance.quantity = self.validated_data['quantities'].pop()
-        self.instance.save(update_fields=['quantity'])
+        self.instance.save(update_fields=['quantity', 'base_quantity'])
 
 
 class TransferSerializer(serializers.ModelSerializer):
@@ -286,7 +301,13 @@ class TransferSerializer(serializers.ModelSerializer):
     checked_in_by = MinimalUserSerializer(read_only=True)
     checked_out_by = MinimalUserSerializer(read_only=True)
     partner_organization = MinimalPartnerOrganizationListSerializer(read_only=True)
-    items = ItemSerializer(many=True)
+    items = serializers.SerializerMethodField()
+
+    def get_items(self, obj):
+        partner = self.context.get('partner')
+        if obj.transfer_type == obj.HANDOVER and obj.from_partner_organization == partner and obj.initial_items:
+            return obj.initial_items
+        return ItemSerializer(obj.items.all(), many=True).data
 
     class Meta:
         model = models.Transfer
@@ -350,12 +371,16 @@ class TransferCheckinSerializer(TransferBaseSerializer):
         for checkin_item in checkin_items:
             # this get should never fail, if it does Sentry should explode
             original_item = orig_items_dict[checkin_item['id']]
+            base_quantity = original_item.quantity
             if new_transfer.transfer_subtype == models.Transfer.SHORT:
                 quantity = original_item.quantity - checkin_item['quantity']
                 original_item.quantity = checkin_item['quantity']
+                original_item.base_quantity = base_quantity
                 original_item.origin_transfer = original_item.transfer
-                original_item.save(update_fields=['quantity', 'origin_transfer'])
+                original_item.save(update_fields=['quantity', 'origin_transfer', 'base_quantity'])
             else:  # is surplus
+                original_item.base_quantity = base_quantity
+                original_item.save(update_fields=['base_quantity'])
                 quantity = checkin_item['quantity'] - original_item.quantity
 
             _item = models.Item(
@@ -363,7 +388,7 @@ class TransferCheckinSerializer(TransferBaseSerializer):
                 origin_transfer=original_item.transfer,
                 quantity=quantity,
                 material=original_item.material,
-                hidden=original_item.should_be_hidden(),
+                hidden=original_item.should_be_hidden_for_partner,
                 **model_to_dict(
                     original_item,
                     exclude=['id', 'created', 'modified', 'transfer', 'transfers_history', 'quantity',
@@ -385,6 +410,13 @@ class TransferCheckinSerializer(TransferBaseSerializer):
             elif checkin_item['quantity'] > original_item.quantity:
                 surplus.append(checkin_item)
         return short, surplus
+
+    def update_base_quantity(self, items):
+        list_items_update = []
+        for item in items:
+            item.base_quantity = item.quantity
+            list_items_update.append(item)
+        models.Item.objects.bulk_update(list_items_update, ['base_quantity'])
 
     @transaction.atomic
     def update(self, instance, validated_data):
@@ -443,7 +475,9 @@ class TransferCheckinSerializer(TransferBaseSerializer):
                 notify_wastage_transfer.delay(connection.schema_name, TransferNotificationSerializer(surplus_transfer).data, attachment_url, action='surplus_checkin')
 
             instance = super().update(instance, validated_data)
-            instance.items.exclude(material__number__in=settings.RUTF_MATERIALS).update(hidden=True)
+            instance.items.exclude(material__partner_material__partner_organization=instance.partner_organization).update(hidden=True)
+            if not surplus_items and not short_items:
+                self.update_base_quantity(instance.items.all())
             instance.refresh_from_db()
             is_unicef_warehouse = False
             if instance.origin_point:
@@ -526,11 +560,12 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
                     origin_transfer=original_item.transfer,
                     wastage_type=wastage_type,
                     quantity=checkout_item['quantity'],
+                    base_quantity=checkout_item['quantity'],
                     material=original_item.material,
                     **model_to_dict(
                         original_item,
                         exclude=['id', 'created', 'modified', 'transfer', 'wastage_type',
-                                 'transfers_history', 'quantity', 'material', 'origin_transfer']
+                                 'transfers_history', 'quantity', 'material', 'origin_transfer', 'base_quantity']
                     )
                 )
                 new_item.save()
@@ -583,9 +618,11 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
         self.instance.save()
         self.instance.refresh_from_db()
         self.checkout_newtransfer_items(checkout_items)
+        attachment_url = self._generate_attachment_url()
         if self.instance.transfer_type == models.Transfer.WASTAGE:
-            attachment_url = self._generate_attachment_url()
             notify_wastage_transfer.delay(connection.schema_name, TransferNotificationSerializer(self.instance).data, attachment_url)
+        if self.instance.transfer_type == models.Transfer.DISPENSE:
+            notify_dispensing_transfer.delay(connection.schema_name, TransferNotificationSerializer(self.instance).data, attachment_url)
 
         return self.instance
 
@@ -619,4 +656,4 @@ class TransferNotificationSerializer(serializers.ModelSerializer):
         model = models.Transfer
         fields = ('name', 'unicef_release_order', 'destination_check_in_at',
                   'origin_check_out_at', 'checked_in_by', 'checked_out_by', 'items',
-                  'partner_organization', 'destination_point', 'origin_point')
+                  'partner_organization', 'destination_point', 'origin_point', 'dispense_type')

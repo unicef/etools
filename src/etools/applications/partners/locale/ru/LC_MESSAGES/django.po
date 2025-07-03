@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-12 11:55+0000\n"
+"POT-Creation-Date: 2025-04-24 05:52+0000\n"
 "Language: ru\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -1406,6 +1406,9 @@ msgstr "Денежный взнос ОГО (в местной валюте)"
 
 msgid "Accessing this item is not allowed."
 msgstr "Доступ к этому элементу запрещен."
+
+msgid "The UNICEF Representative assigned is not valid."
+msgstr ""
 
 msgid "Country Programme is required for PCAs!"
 msgstr "Страновая программа обязательна для СПС!"

@@ -1,11 +1,11 @@
 name = "governments/gdd/unicef_accepted_reviewed"
 defaults = {
-    "description": "UNICEF Accepted and Reviewed GDD",
-    "subject": "[eTools] UNICEF Accepted and Reviewed GDD",
+    "description": "UNICEF Accepted and Reviewed GPD",
+    "subject": "[eTools] UNICEF Accepted and Reviewed GPD",
     "content": """
     Dear Colleague,
 
-    GDD {{reference_number}} has been accepted and reviewed by UNICEF
+    GPD {{reference_number}} has been accepted and reviewed by UNICEF
 
     {{gdd_link}}
 
@@ -16,7 +16,7 @@ defaults = {
     {% block content %}
     Dear Colleague,<br /><br />
 
-    GDD {{reference_number}} has been accepted and reviewed by UNICEF
+    GPD {{reference_number}} has been accepted and reviewed by UNICEF
 
     {{gdd_link}}<br />
 

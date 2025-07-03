@@ -269,7 +269,7 @@ class GDD(TimeStampedModel):
         ENDED: [CLOSED]
     }
 
-    INTERVENTION_STATUS = (
+    GDD_STATUS = (
         (DRAFT, _("Development")),
         (REVIEW, _("Review")),
         (PENDING_APPROVAL, _("Pending Approval")),
@@ -359,7 +359,7 @@ class GDD(TimeStampedModel):
         verbose_name=_("Status"),
         max_length=32,
         blank=True,
-        choices=INTERVENTION_STATUS,
+        choices=GDD_STATUS,
         default=DRAFT,
     )
     # dates
@@ -1241,6 +1241,7 @@ class GDDAmendment(TimeStampedModel):
             pd_attachment.content_object = self
             pd_attachment.save()
 
+        self.signed_date = timezone.now().date()
         self.signed_by_unicef_date = self.amended_gdd.signed_by_unicef_date
         self.signed_by_partner_date = self.amended_gdd.signed_by_partner_date
         self.unicef_signatory = self.amended_gdd.unicef_signatory
@@ -1942,12 +1943,9 @@ class GDDKeyIntervention(TimeStampedModel):
 
     def __str__(self):
         if not self.code:
-            return self.name
+            return self.id
 
-        return '{}: {}'.format(
-            self.code,
-            self.ewp_key_intervention.cp_key_intervention.name
-        )
+        return f'{self.code}: {str(self.ewp_key_intervention)}'
 
     class Meta:
         unique_together = (('result_link', 'code'),)

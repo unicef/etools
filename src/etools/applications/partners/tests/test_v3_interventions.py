@@ -1097,27 +1097,27 @@ class TestManagementBudget(BaseInterventionTestCase):
             ),
             user=self.unicef_user,
             data={
-                "act1_unicef": 1000,
-                "act1_partner": 2000,
-                "act2_unicef": 3000,
-                "act2_partner": 4000,
-                "act3_unicef": 5000,
-                "act3_partner": 6000,
+                "act1_unicef": 1000.11,
+                "act1_partner": 2000.22,
+                "act2_unicef": 3000.33,
+                "act2_partner": 4000.44,
+                "act3_unicef": 5000.55,
+                "act3_partner": 6000.66,
             }
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.data
         self.assertIsNotNone(intervention.management_budgets)
-        self.assertEqual(data["act1_unicef"], "1000.00")
-        self.assertEqual(data["act1_partner"], "2000.00")
-        self.assertEqual(data["act1_total"], "3000.00")
-        self.assertEqual(data["act2_unicef"], "3000.00")
-        self.assertEqual(data["act2_partner"], "4000.00")
-        self.assertEqual(data["act2_total"], "7000.00")
-        self.assertEqual(data["act3_unicef"], "5000.00")
-        self.assertEqual(data["act3_partner"], "6000.00")
-        self.assertEqual(data["act3_total"], "11000.00")
-        self.assertEqual(data["total"], "21000.00")
+        self.assertEqual(data["act1_unicef"], "1000.11")
+        self.assertEqual(data["act1_partner"], "2000.22")
+        self.assertEqual(data["act1_total"], "3000.33")
+        self.assertEqual(data["act2_unicef"], "3000.33")
+        self.assertEqual(data["act2_partner"], "4000.44")
+        self.assertEqual(data["act2_total"], "7000.77")
+        self.assertEqual(data["act3_unicef"], "5000.55")
+        self.assertEqual(data["act3_partner"], "6000.66")
+        self.assertEqual(data["act3_total"], "11001.21")
+        self.assertEqual(data["total"], "21002.31")
         self.assertIn('intervention', response.data)
 
     def test_patch(self):
