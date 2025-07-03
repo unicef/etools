@@ -1,3 +1,4 @@
+import datetime
 from copy import copy
 
 from django.db import connection
@@ -10,6 +11,7 @@ from unicef_attachments.models import Attachment, FileType
 from unicef_attachments.serializers import AttachmentSerializerMixin
 from unicef_restlib.fields import SeparatedReadWriteField
 from unicef_restlib.serializers import WritableNestedParentSerializerMixin, WritableNestedSerializerMixin
+from unicef_vision.utils import get_data_from_insight
 
 from etools.applications.action_points.categories.models import Category
 from etools.applications.action_points.categories.serializers import CategoryModelChoiceField
@@ -19,6 +21,7 @@ from etools.applications.audit.models import (
     DetailedFindingInfo,
     Engagement,
     EngagementActionPoint,
+    FaceForm,
     FinancialFinding,
     Finding,
     KeyInternalControl,
@@ -41,6 +44,7 @@ from etools.applications.audit.serializers.risks import (
     KeyInternalWeaknessSerializer,
     RiskRootSerializer,
 )
+from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.serializers.interventions_v2 import BaseInterventionListSerializer
 from etools.applications.partners.serializers.partner_organization_v2 import (
     MinimalPartnerOrganizationListSerializer,
@@ -67,6 +71,12 @@ class PartnerOrganizationLightSerializer(PartnerOrganizationListSerializer):
                 'label': _('Phone Number'),
             },
         }
+
+
+class FaceFormsListSerializer(BaseInterventionListSerializer):
+    class Meta:
+        model = FaceForm
+        fields = ('id', 'commitment_ref')
 
 
 class AttachmentField(serializers.Field):
@@ -215,12 +225,13 @@ class EngagementLightSerializer(serializers.ModelSerializer):
 
     offices = OfficeLightSerializer(many=True)
     sections = SectionSerializer(many=True)
+    face_forms = FaceFormsListSerializer(many=True, required=False)
 
     class Meta:
         model = Engagement
         fields = [
             'id', 'reference_number', 'agreement', 'po_item', 'related_agreement', 'partner',
-            'engagement_type', 'status', 'status_date', 'total_value', 'offices', 'sections'
+            'engagement_type', 'status', 'status_date', 'total_value', 'offices', 'sections', 'face_forms'
         ]
 
     def validate(self, attrs):
@@ -249,6 +260,21 @@ class SpecificProcedureSerializer(WritableNestedSerializerMixin,
         fields = [
             'id', 'description', 'finding',
         ]
+
+
+class FaceFormRelatedField(serializers.RelatedField):
+    def get_queryset(self):
+        return FaceForm.objects.all()
+
+    def to_internal_value(self, data):
+        if not isinstance(data, str):
+            raise serializers.ValidationError("Expected a string for commitment_ref.")
+
+        face_form, created = FaceForm.objects.get_or_create(commitment_ref=data)
+        return face_form
+
+    def to_representation(self, value):
+        return value.commitment_ref
 
 
 class EngagementSerializer(
@@ -287,6 +313,11 @@ class EngagementSerializer(
         read_field=serializers.SerializerMethodField(),
         label=_("Offices"),
     )
+    face_forms = SeparatedReadWriteField(
+        read_field=serializers.SerializerMethodField(),
+        write_field=FaceFormRelatedField(many=True, required=False),
+        label=_("Face Form(s)"),
+    )
 
     class Meta(EngagementListSerializer.Meta):
         fields = EngagementListSerializer.Meta.fields + [
@@ -302,6 +333,7 @@ class EngagementSerializer(
             'final_report',
             'sections',
             'offices',
+            'face_forms',
         ]
         extra_kwargs = {
             field: {'required': True} for field in [
@@ -333,6 +365,9 @@ class EngagementSerializer(
 
     def get_offices(self, obj):
         return [{"id": o.pk, "name": o.name} for o in obj.all()]
+
+    def get_face_forms(self, obj):
+        return [f.commitment_ref for f in obj.all()]
 
     def validate(self, data):
         validated_data = super().validate(data)
@@ -503,6 +538,7 @@ class MicroAssessmentSerializer(ActivePDValidationMixin, RiskCategoriesUpdateMix
         fields.remove('currency_of_report')
         fields.remove('sections')
         fields.remove('offices')
+        fields.remove('face_forms')
         extra_kwargs = EngagementSerializer.Meta.extra_kwargs.copy()
         extra_kwargs.update({
             'engagement_type': {'read_only': True},
@@ -552,7 +588,7 @@ class AuditSerializer(ActivePDValidationMixin, RiskCategoriesUpdateMixin, Engage
             'financial_finding_set', 'percent_of_audited_expenditure', 'audit_opinion', 'number_of_financial_findings',
             'key_internal_weakness', 'key_internal_controls', 'amount_refunded',
             'additional_supporting_documentation_provided', 'justification_provided_and_accepted', 'write_off_required',
-            'pending_unsupported_amount', 'explanation_for_additional_information',
+            'pending_unsupported_amount', 'explanation_for_additional_information', 'face_forms'
         ]
         fields.remove('specific_procedures')
         extra_kwargs = EngagementSerializer.Meta.extra_kwargs.copy()
@@ -619,3 +655,52 @@ class SpecialAuditSerializer(EngagementSerializer):
             'end_date': {'required': False},
             'total_value': {'required': False},
         })
+
+
+class PartnerFaceFormSerializer(serializers.ModelSerializer):
+    rows = serializers.SerializerMethodField()
+
+    def get_vision_data(self, obj):
+        if not hasattr(self, '_vision_data'):
+            valid_response, response = get_data_from_insight(
+                f'dcts/?vendor={obj.vendor_number}',
+                {
+                    "vendor_code": obj.vendor_number,
+                    "businessarea": self.context.get('businessarea')
+                }
+            )
+            self._vision_data = response
+        return self._vision_data['ROWSET']['ROW']
+
+    def get_rows(self, obj):
+        return RowSerializer(self.get_vision_data(obj), many=True).data
+
+    class Meta:
+        model = PartnerOrganization
+        fields = (
+            "id",
+            "name",
+            "vendor_number",
+            "rows",
+        )
+
+
+class RowSerializer(serializers.Serializer):
+    wbs_element_ex = serializers.CharField(source='WBS_ELEMENT_EX')
+    grant_ref = serializers.CharField(source='GRANT_REF')
+    donor_name = serializers.CharField(source='DONOR_NAME')
+    end_date = serializers.SerializerMethodField()
+    commitment_ref = serializers.CharField(source='COMMITMENT_REF')
+    dct_amt_usd = serializers.CharField(source='DCT_AMT_USD')
+    start_date = serializers.SerializerMethodField()
+
+    def get_end_date(self, obj):
+        if not obj['EXPIRY_DATE']:
+            return ""
+        dt = datetime.datetime.strptime(obj['EXPIRY_DATE'], "%d-%b-%y")
+        return dt.strftime("%Y-%m-%d")
+
+    def get_start_date(self, obj):
+        # Hardcoded until we get the data
+        import random
+        return datetime.date(random.randint(2000, 2020), random.randint(1, 12), random.randint(1, 28)).strftime("%Y-%m-%d")
