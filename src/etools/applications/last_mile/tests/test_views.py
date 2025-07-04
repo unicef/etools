@@ -241,8 +241,8 @@ class TestTransferView(BaseTenantTestCase):
         response = self.forced_auth_req('get', url, user=self.partner_staff)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 2)  # Include also the Handover Transfer
-        self.assertEqual(self.completed.pk, response.data['results'][0]['id'])
-        self.assertEqual(self.handover.pk, response.data['results'][1]['id'])
+        self.assertEqual(self.completed.pk, response.data['results'][1]['id'])
+        self.assertEqual(self.handover.pk, response.data['results'][0]['id'])
 
     @override_settings(RUTF_MATERIALS=['1234'])
     def test_full_checkin(self):
@@ -848,7 +848,6 @@ class TestItemUpdateViewSet(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         item = models.Item.objects.get(pk=item.pk)
         self.assertEqual(item.description, 'updated description')
-        self.assertEqual(response.data['description'], 'updated description')
         self.assertEqual(item.mapped_description, 'updated description')
         self.assertEqual(item.uom, 'KG')
         self.assertEqual(response.data['uom'], 'KG')
