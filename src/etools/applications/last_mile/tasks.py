@@ -58,6 +58,24 @@ def notify_wastage_transfer(tenant_name, transfer, proof_full_url, action='wasta
 
 
 @app.task
+def notify_dispensing_transfer(tenant_name, transfer, proof_full_url):
+    with schema_context(tenant_name):
+        recipients = User.objects \
+            .filter(realms__country__schema_name=tenant_name,
+                    realms__is_active=True,
+                    realms__group__name='LMSM Dispensing Notification') \
+            .values_list('email', flat=True) \
+            .distinct()
+        send_notification(
+            recipients=list(recipients),
+            from_address=settings.DEFAULT_FROM_EMAIL,
+            subject=f"LMSM app: New items checkout-out as dispensing by {transfer.get('partner_organization', {}).get('name')}",
+            html_content_filename='emails/dispense_transfer.html',
+            context={'transfer': transfer, 'proof_full_url': proof_full_url}
+        )
+
+
+@app.task
 def notify_first_checkin_transfer(tenant_name, transfer_pk, attachment_url):
     with schema_context(tenant_name):
         transfer = models.Transfer.objects.get(pk=transfer_pk)

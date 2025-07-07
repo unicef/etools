@@ -602,7 +602,12 @@ class TestTransferView(BaseTenantTestCase):
             "origin_check_out_at": timezone.now()
         }
         url = reverse('last_mile:transfers-new-check-out', args=(self.warehouse.pk,))
-        response = self.forced_auth_req('post', url, user=self.partner_staff, data=checkout_data)
+
+        mock_send = Mock()
+        with patch("etools.applications.last_mile.tasks.send_notification", mock_send):
+            response = self.forced_auth_req('post', url, user=self.partner_staff, data=checkout_data)
+
+        self.assertEqual(mock_send.call_count, 1)
 
         self.assertEqual("Other", response.data['items'][0]['material']['material_type_translate'])
         self.assertEqual(response.status_code, status.HTTP_200_OK)
