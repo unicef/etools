@@ -1,8 +1,16 @@
 from django.utils.html import strip_tags
 
 from rest_framework import serializers
+from rest_framework.exceptions import APIException
 
+from etools.applications.last_mile.models import PointOfInterest
 from etools.applications.last_mile.services_ext import IngestReportDTO
+
+
+class UnicefWarehouseNotDefined(APIException):
+    status_code = 500
+    default_detail = {"PointOfInterestType": "Unicef Warehouse not defined"}
+    default_code = "unicef_warehouse_not_defined"
 
 
 class MaterialIngestSerializer(serializers.Serializer):
@@ -54,8 +62,16 @@ class IngestRowSerializer(serializers.Serializer):
     Plant = serializers.CharField(required=False, allow_blank=True)
     PurchaseOrderType = serializers.CharField(required=False, allow_blank=True)
 
+    def _validate_poi_type(self):
+        try:
+            PointOfInterest.objects.get_unicef_warehouses()
+        except PointOfInterest.DoesNotExist:
+            raise UnicefWarehouseNotDefined()
+
     def to_internal_value(self, data):
         cleaned_data = {key: strip_tags(value) if isinstance(value, str) else value for key, value in data.items()}
+
+        self._validate_poi_type()
 
         validated_data = super().to_internal_value(cleaned_data)
 

@@ -2,10 +2,10 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Dict, List
 
-from django.db.models import F, FloatField, Func, QuerySet
+from django.db.models import QuerySet
 
 from etools.applications.last_mile import models
-from etools.applications.organizations.models import Organization
+from etools.applications.last_mile.validator_ext import ItemValidator, ValidatorEXT
 
 
 @dataclass
@@ -52,21 +52,6 @@ class MaterialIngestService:
         )
 
 
-class GeometryPointFunc(Func):
-    template = "%(function)s(%(expressions)s::geometry)"
-
-    def __init__(self, expression):
-        super().__init__(expression, output_field=FloatField())
-
-
-class Latitude(GeometryPointFunc):
-    function = 'ST_Y'
-
-
-class Longitude(GeometryPointFunc):
-    function = 'ST_X'
-
-
 class ExportError(Exception):
     pass
 
@@ -79,69 +64,31 @@ class InvalidDateFormatError(ExportError, ValueError):
     pass
 
 
-def _prepare_transfer_qs(qs: QuerySet) -> QuerySet:
-    return qs.annotate(
-        vendor_number=F('partner_organization__organization__vendor_number'),
-        checked_out_by_email=F('checked_out_by__email'),
-        checked_out_by_first_name=F('checked_out_by__first_name'),
-        checked_out_by_last_name=F('checked_out_by__last_name'),
-        checked_in_by_email=F('checked_in_by__email'),
-        checked_in_by_last_name=F('checked_in_by__last_name'),
-        checked_in_by_first_name=F('checked_in_by__first_name'),
-        origin_name=F('origin_point__name'),
-        destination_name=F('destination_point__name'),
-    ).values()
-
-
-def _prepare_poi_qs(qs: QuerySet) -> QuerySet:
-    return qs.prefetch_related('parent', 'poi_type').annotate(
-        latitude=Latitude('point'),
-        longitude=Longitude('point'),
-        parent_pcode=F('parent__p_code'),
-        vendor_number=F('partner_organizations__organization__vendor_number'),
-    ).values(
-        'id', 'created', 'modified', 'parent_id', 'name', 'description', 'poi_type_id',
-        'other', 'private', 'is_active', 'latitude', 'longitude', 'parent_pcode',
-        'p_code', 'vendor_number'
-    )
-
-
-def _prepare_item_qs(qs: QuerySet) -> QuerySet:
-    return qs.annotate(
-        material_number=F('material__number'),
-        material_description=F('material__short_description'),
-    ).values()
-
-
-def _prepare_default_qs(qs: QuerySet) -> QuerySet:
-    return qs.values()
-
-
 class DataExportService:
 
     MODEL_CONFIG = {
-        "transfer": (models.Transfer.objects, _prepare_transfer_qs),
-        "poi": (models.PointOfInterest.all_objects, _prepare_poi_qs),
-        "item": (models.Item.objects, _prepare_item_qs),
-        "item_history": (models.ItemTransferHistory.objects, _prepare_default_qs),
-        "poi_type": (models.PointOfInterestType.objects, _prepare_default_qs),
+        "transfer": models.Transfer.objects,
+        "poi": models.PointOfInterest.export_objects,
+        "item": models.Item.objects,
+        "item_history": models.ItemTransferHistory.objects,
+        "poi_type": models.PointOfInterestType.objects,
     }
 
     def get_export_queryset(self, model_type: str, last_modified: str = None) -> QuerySet:
         if model_type not in self.MODEL_CONFIG:
             raise InvalidModelTypeError(f"'{model_type}' is not a valid data model type.")
 
-        manager, preparer_func = self.MODEL_CONFIG[model_type]
+        manager = self.MODEL_CONFIG[model_type]
         queryset = manager.all()
 
         if last_modified:
             try:
-                gte_dt = datetime.fromisoformat(last_modified)
+                gte_dt = datetime.fromisoformat(last_modified.replace('Z', '+00:00'))
                 queryset = queryset.filter(modified__gte=gte_dt)
-            except ValueError:
+            except (ValueError, TypeError):
                 raise InvalidDateFormatError("Invalid ISO 8601 format for 'last_modified'.")
 
-        return preparer_func(queryset)
+        return queryset.prepare_for_lm_export()
 
 
 @dataclass
@@ -158,6 +105,7 @@ class TransferIngestService:
         self.transfers_to_create = []
         self.processed_release_orders = set()
         self.items_by_release_order = {}
+        self.validator_ext = ValidatorEXT()
 
     def ingest_validated_data(self, validated_data: List[Dict[str, Any]]) -> IngestReportDTO:
         self._prepare_transfers_and_group_items(validated_data)
@@ -181,18 +129,13 @@ class TransferIngestService:
 
             vendor_number = transfer_data.pop('vendor_number')
             try:
-                organization = Organization.objects.select_related('partner').get(vendor_number=vendor_number)
-                if not hasattr(organization, 'partner'):
-                    raise ValueError(f"No partner available for vendor {vendor_number}")
+                organization = self.validator_ext.validate_organization(vendor_number)
                 transfer_data['partner_organization'] = organization.partner
-            except (Organization.DoesNotExist, ValueError) as e:
+            except ValueError as e:
                 self.report.skipped_transfers.append({"release_order": release_order, "reason": str(e)})
                 continue
-            try:
-                origin_poi = models.PointOfInterest.objects.get_unicef_warehouses()
-            except models.PointOfInterest.DoesNotExist:
-                self.report.skipped_transfers.append({"release_order": release_order, "reason": "No Unicef Warehouse Defined"})
-                continue
+
+            origin_poi = models.PointOfInterest.objects.get_unicef_warehouses()
 
             if release_order not in self.processed_release_orders:
                 try:
@@ -207,6 +150,37 @@ class TransferIngestService:
                 self.processed_release_orders.add(release_order)
 
             self.items_by_release_order.setdefault(release_order, []).append(item_data)
+
+    def _build_item_instance(
+        self,
+        validated_data: dict,
+        material: models.Material,
+        transfer: models.Transfer
+    ) -> models.Item:
+
+        other_data = {
+            'HandoverNumber': validated_data.get('other', {}).get('HandoverNumber'),
+            'HandoverItem': validated_data.get('other', {}).get('HandoverItem'),
+            'HandoverYear': validated_data.get('other', {}).get('HandoverYear'),
+            'Plant': validated_data.get('other', {}).get('Plant'),
+            'PurchaseOrderType': validated_data.get('other', {}).get('PurchaseOrderType'),
+            'itemid': validated_data.get('other', {}).get('itemid'),
+        }
+
+        return models.Item(
+            material=material,
+            transfer=transfer,
+            unicef_ro_item=validated_data.get('unicef_ro_item'),
+            quantity=validated_data.get('quantity'),
+            batch_id=validated_data.get('batch_id'),
+            expiry_date=validated_data.get('expiry_date'),
+            purchase_order_item=validated_data.get('purchase_order_item'),
+            amount_usd=validated_data.get('amount_usd'),
+            uom=validated_data.get('uom'),
+            conversion_factor=validated_data.get('conversion_factor'),
+            base_quantity=validated_data.get('quantity'),
+            other=other_data
+        )
 
     def _prepare_items(self) -> List[models.Item]:
         items_to_create = []
@@ -226,7 +200,7 @@ class TransferIngestService:
         )
 
         processed_item_ids_in_this_run = set()
-
+        itemValidator = ItemValidator(all_materials, existing_item_ids_in_db)
         for release_order, items in self.items_by_release_order.items():
             transfer = all_transfers.get(release_order)
             if not transfer:
@@ -234,37 +208,23 @@ class TransferIngestService:
                 continue
 
             for item_data in items:
-                material_number = item_data.get('material_number')
-                material = all_materials.get(material_number)
-                if not material:
-                    self.report.skipped_items.append({"item": item_data, "reason": f"Material number '{material_number}' not found."})
+                material, reason = itemValidator.validate(item_data, processed_item_ids_in_this_run)
+
+                if reason:
+                    self.report.skipped_items.append({"item": item_data, "reason": reason})
                     continue
 
                 item_id = item_data.get('other', {}).get('itemid')
 
-                if item_id in existing_item_ids_in_db:
-                    self.report.skipped_items.append({"item": item_data, "reason": "Duplicate item found in database."})
-                    continue
-
-                if item_id in processed_item_ids_in_this_run:
-                    self.report.skipped_items.append({"item": item_data, "reason": "Duplicate item found within the same payload."})
-                    continue
-
-                item_data.pop('material_number', None)
-                item_data.pop('description', None)
                 if item_data.get('uom') == material.original_uom:
                     item_data.pop('uom', None)
 
-                item_data.update({
-                    'material': material,
-                    'transfer': transfer,
-                    'base_quantity': item_data.get('quantity'),
-                })
                 if not item_data.get('batch_id'):
                     item_data['conversion_factor'] = 1.0
                     item_data['uom'] = "EA"
 
-                items_to_create.append(models.Item(**item_data))
+                item = self._build_item_instance(item_data, material, transfer)
+                items_to_create.append(item)
 
                 if item_id:
                     processed_item_ids_in_this_run.add(item_id)
