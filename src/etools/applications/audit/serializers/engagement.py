@@ -405,6 +405,7 @@ class EngagementHactSerializer(EngagementLightSerializer):
     amount_tested = serializers.SerializerMethodField()
     outstanding_findings = serializers.SerializerMethodField()
     pending_unsupported_amount = serializers.SerializerMethodField()
+    open_high_priority_count = serializers.IntegerField(source='count_open_high_priority')
     object_url = serializers.ReadOnlyField(source='get_object_url')
 
     def get_amount_tested(self, obj):
@@ -427,7 +428,7 @@ class EngagementHactSerializer(EngagementLightSerializer):
 
     class Meta(EngagementLightSerializer.Meta):
         fields = EngagementLightSerializer.Meta.fields + [
-            "amount_tested", "outstanding_findings", "pending_unsupported_amount", "object_url"
+            "amount_tested", "outstanding_findings", "pending_unsupported_amount", "object_url", "open_high_priority_count"
         ]
 
 
