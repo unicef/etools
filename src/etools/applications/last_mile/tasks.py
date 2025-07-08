@@ -22,10 +22,7 @@ def notify_upload_waybill(tenant_name, destination_pk, waybill_pk, waybill_url):
             'destination': f'{destination.__str__()} / {tenant_name.capitalize()}',
             'waybill_url': waybill_url
         }
-        recipients = User.objects\
-            .filter(realms__country__schema_name=tenant_name, realms__group__name='Waybill Recipient')\
-            .values_list('email', flat=True)\
-            .distinct()
+        recipients = User.objects.get_email_recipients_with_group('Waybill Recipient', tenant_name)
 
         send_notification_with_template(
             recipients=list(recipients),
@@ -42,12 +39,7 @@ def notify_wastage_transfer(tenant_name, transfer, proof_full_url, action='wasta
         'surplus_checkin': 'checked-in as surplus'
     }
     with schema_context(tenant_name):
-        recipients = User.objects \
-            .filter(realms__country__schema_name=tenant_name,
-                    realms__is_active=True,
-                    realms__group__name='LMSM Focal Point') \
-            .values_list('email', flat=True) \
-            .distinct()
+        recipients = User.objects.get_email_recipients_with_group('LMSM Focal Point', tenant_name)
         send_notification(
             recipients=list(recipients),
             from_address=settings.DEFAULT_FROM_EMAIL,
@@ -58,16 +50,24 @@ def notify_wastage_transfer(tenant_name, transfer, proof_full_url, action='wasta
 
 
 @app.task
+def notify_dispensing_transfer(tenant_name, transfer, proof_full_url):
+    with schema_context(tenant_name):
+        recipients = User.objects.get_email_recipients_with_group('LMSM Dispensing Notification', tenant_name)
+        send_notification(
+            recipients=list(recipients),
+            from_address=settings.DEFAULT_FROM_EMAIL,
+            subject=f"LMSM app: New items checkout-out as dispensing by {transfer.get('partner_organization', {}).get('name')}",
+            html_content_filename='emails/dispense_transfer.html',
+            context={'transfer': transfer, 'proof_full_url': proof_full_url}
+        )
+
+
+@app.task
 def notify_first_checkin_transfer(tenant_name, transfer_pk, attachment_url):
     with schema_context(tenant_name):
         transfer = models.Transfer.objects.get(pk=transfer_pk)
 
-        recipients = User.objects \
-            .filter(realms__country__schema_name=tenant_name,
-                    realms__is_active=True,
-                    realms__group__name='LMSM Alert Receipt') \
-            .values_list('email', flat=True) \
-            .distinct()
+        recipients = User.objects.get_email_recipients_with_group('LMSM Alert Receipt', tenant_name)
 
         send_notification(
             recipients=list(recipients),

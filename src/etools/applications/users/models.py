@@ -149,6 +149,14 @@ class UsersManager(UserManager.from_queryset(UserQuerySet)):
             realms__is_active=True
         )
 
+    def get_email_recipients_with_group(self, group_name, tenant_name):
+        return self.get_queryset().filter(
+            realms__country__schema_name=tenant_name,
+            realms__is_active=True,
+            realms__group__name=group_name) \
+            .values_list('email', flat=True) \
+            .distinct()
+
 
 class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = "username"
