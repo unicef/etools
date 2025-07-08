@@ -265,7 +265,7 @@ class MonitoringActivitiesViewSet(
             "team_members": ', '.join([member.full_name for member in ma.team_members.all()]),
             "cp_outputs": ', '.join([cp_out.name for cp_out in ma.cp_outputs.all()]),
             "interventions": ', '.join([str(intervention) for intervention in ma.interventions.all()]),
-            "overall_findings": list(ma.activity_overall_findings().values('entity_name', 'narrative_finding')),
+            "overall_findings": list(ma.activity_overall_findings().values('entity_name', 'narrative_finding', 'on_track')),
             "summary_findings": ma.get_export_activity_questions_overall_findings(),
             "data_collected": ma.get_export_checklist_findings()
         }

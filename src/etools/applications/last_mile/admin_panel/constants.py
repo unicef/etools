@@ -4,7 +4,8 @@ ALERT_TYPES = {
     "LMSM Focal Point": "Wastage Notification",
     "LMSM Alert Receipt": "Acknowledgement by IP",
     "Waybill Recipient": "Waybill Recipient",
-    "LMSM User Creation Report": "LMSM User Creation Report"
+    "LMSM User Creation Report": "LMSM User Creation Report",
+    "LMSM Dispensing Notification": "Dispensing Notification"
 }
 
 TRANSFER_MANUAL_CREATION_NAME = "MT @"

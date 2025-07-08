@@ -221,6 +221,7 @@ class Transfer(TimeStampedModel, models.Model):
     PHARMACY = 'PHARMACY'
     MOBILE_OTP = 'MOBILE_OTP'
     DISPENSING_UNIT = 'DISPENSING_UNIT'
+    HOUSEHOLD_MOBILE_TEAM = 'HOUSEHOLD_MOBILE_TEAM'
     OTHER = 'OTHER'
 
     STATUS = (
@@ -243,6 +244,7 @@ class Transfer(TimeStampedModel, models.Model):
         (PHARMACY, _('Pharmacy')),
         (MOBILE_OTP, _('Mobile OTP')),
         (DISPENSING_UNIT, _('Dispensing Unit')),
+        (HOUSEHOLD_MOBILE_TEAM, _('Household Mobile Team')),
         (OTHER, _('Other')),
     )
 
