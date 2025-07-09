@@ -646,7 +646,10 @@ class AlertTypeSerializer(serializers.ModelSerializer):
 class BaseTransferSerializer(serializers.ModelSerializer):
     partner_organization = serializers.CharField(source='partner_organization.name')
     origin_point = serializers.CharField(source='origin_point.name')
-    destination_point = serializers.CharField(source='destination_point.name')
+    destination_point = serializers.SerializerMethodField()
+
+    def get_destination_point(self, obj):
+        return obj.destination_point.name if obj.destination_point else None
 
     class Meta:
         model = models.Transfer
