@@ -838,3 +838,28 @@ class UserImportSerializer(serializers.Serializer):
         except Exception as ex:
             return False, str(ex)
         return True, user
+
+
+class MaterialsLightSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Material
+        fields = ('id', 'number')
+
+
+class ItemTransferRevertSerializer(serializers.ModelSerializer):
+    material = MaterialsLightSerializer(read_only=True)
+
+    class Meta:
+        model = models.Item
+        fields = ('material', 'quantity', 'modified', 'batch_id', 'description', 'mapped_description')
+
+
+class TransferItemAdminSerializer(serializers.ModelSerializer):
+    items = ItemTransferRevertSerializer(many=True, read_only=True)
+    origin_point = serializers.CharField(source='origin_point.name', read_only=True)
+    destination_point = serializers.CharField(source='destination_point.name', read_only=True)
+    partner_organization = serializers.CharField(source='partner_organization.name', read_only=True)
+
+    class Meta:
+        model = models.Transfer
+        fields = ("id", "created", "modified", "unicef_release_order", "name", "transfer_type", "status", "partner_organization", "destination_point", "origin_point", "items")

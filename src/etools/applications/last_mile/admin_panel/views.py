@@ -48,6 +48,7 @@ from etools.applications.last_mile.admin_panel.serializers import (
     PointOfInterestTypeAdminSerializer,
     PointOfInterestWithCoordinatesSerializer,
     TransferHistoryAdminSerializer,
+    TransferItemAdminSerializer,
     TransferItemCreateSerializer,
     TransferItemSerializer,
     TransferLogAdminSerializer,
@@ -559,3 +560,17 @@ class UserPermissionsListView(mixins.ListModelMixin, GenericViewSet):
 
     def get_queryset(self):
         return get_user_model().objects.filter(pk=self.request.user.pk)
+
+
+class TransferItemsListView(mixins.ListModelMixin, GenericViewSet):
+    serializer_class = TransferItemAdminSerializer
+    permission_classes = [IsLMSMAdmin]
+
+    def get_queryset(self):
+
+        transfer_id = self.kwargs.get('transfer_id')
+        if transfer_id:
+            return models.Transfer.objects.filter(pk=transfer_id).prefetch_related(
+                'items__material',)
+
+        return models.Transfer.objects.none()

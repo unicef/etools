@@ -33,6 +33,7 @@ STOCK_MANAGEMENT_ADMIN_PANEL_PERMISSION = 'lmsm_admin_panel_manage_stock_managem
 
 TRANSFER_HISTORY_ADMIN_PANEL = 'transfer-history'
 TRANSFER_EVIDENCE_ADMIN_PANEL = 'transfer-evidence'
+TRANSFER_ITEMS_ADMIN_PANEL = 'transfer-items'
 TRANSFER_HISTORY_ADMIN_PANEL_PERMISSION = 'lmsm_admin_panel_manage_transfer_history'
 
 APPROVE_USERS_ADMIN_PANEL_PERMISSION = 'lmsm_admin_panel_approve_users'
