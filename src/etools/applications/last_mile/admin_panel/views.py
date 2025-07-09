@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.db import connection
 from django.db.models import F, Q
 from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
 
 from django_filters.rest_framework import DjangoFilterBackend
@@ -52,6 +53,7 @@ from etools.applications.last_mile.admin_panel.serializers import (
     TransferItemCreateSerializer,
     TransferItemSerializer,
     TransferLogAdminSerializer,
+    TransferReverseAdminSerializer,
     UserAdminCreateSerializer,
     UserAdminExportSerializer,
     UserAdminSerializer,
@@ -514,7 +516,7 @@ class TransferEvidenceListView(mixins.RetrieveModelMixin, GenericViewSet):
             'recipient_partner_organization__organization',
             'origin_point',
             'destination_point'
-        ).filter(transfer_history_id=transfer_history_id).only(
+        ).filter(transfer_history_id=transfer_history_id, items__isnull=False).only(
             'id',
             'created',
             'modified',
@@ -529,7 +531,7 @@ class TransferEvidenceListView(mixins.RetrieveModelMixin, GenericViewSet):
             'destination_point',
             'from_partner_organization__organization__name',
             'recipient_partner_organization__organization__name',
-        )
+        ).distinct()
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
@@ -562,15 +564,33 @@ class UserPermissionsListView(mixins.ListModelMixin, GenericViewSet):
         return get_user_model().objects.filter(pk=self.request.user.pk)
 
 
-class TransferItemsListView(mixins.ListModelMixin, GenericViewSet):
+class TransferReverseView(mixins.ListModelMixin, GenericViewSet):
     serializer_class = TransferItemAdminSerializer
+    serializer_class_reverse = TransferReverseAdminSerializer
     permission_classes = [IsLMSMAdmin]
 
     def get_queryset(self):
+        return models.Transfer.objects.prefetch_related("items__material").all()
 
-        transfer_id = self.kwargs.get('transfer_id')
-        if transfer_id:
-            return models.Transfer.objects.filter(pk=transfer_id).prefetch_related(
-                'items__material',)
+    def get_object(self):
+        transfer_id = self.kwargs.get('pk')
+        return get_object_or_404(self.get_queryset(), pk=transfer_id)
 
-        return models.Transfer.objects.none()
+    def get_serializer_class(self):
+        if self.action == 'reverse':
+            return self.serializer_class_reverse
+        return self.serializer_class
+
+    @action(detail=True, methods=['get'], url_path='details')
+    def details(self, request, *args, **kwargs):
+        transfer = self.get_object()
+        serializer = self.serializer_class(transfer)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['put'], url_path='reverse')
+    def reverse(self, request, pk=None):
+        transfer = self.get_object()
+        serializer = self.get_serializer(transfer, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)

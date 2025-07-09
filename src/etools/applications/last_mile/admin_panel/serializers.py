@@ -863,3 +863,17 @@ class TransferItemAdminSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Transfer
         fields = ("id", "created", "modified", "unicef_release_order", "name", "transfer_type", "status", "partner_organization", "destination_point", "origin_point", "items")
+
+
+class TransferReverseAdminSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = models.Transfer
+        fields = ("id",)
+
+    def update(self, instance, validated_data):
+        items = instance.items.all()
+        print(items)
+        print(f"validated_data : {validated_data}")
+        print(f"instance : {instance}")
+        return instance
