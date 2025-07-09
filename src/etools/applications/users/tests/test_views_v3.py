@@ -1085,6 +1085,24 @@ class TestStagedUserViewSet(BaseTenantTestCase):
         response = self.make_request_detail(self.user_reviewer, staged_user.pk, action='accept')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+    def test_accept_invalid_organization_forbidden(self):
+        new_user_email = "TEST@test.com"
+        staged_user = StagedUserFactory(
+            user_json={
+                "email": new_user_email,
+                "groups": [GroupFactory(name=IPViewer.name).pk],
+                "username": new_user_email,
+                "last_name": "First Name",
+                "first_name": "Last Name"
+            },
+            organization=self.organization,
+            requester=self.ip_admin
+        )
+        self.user_reviewer.profile.organization = None
+        self.user_reviewer.profile.save()
+        response = self.make_request_detail(self.user_reviewer, staged_user.pk, action='accept')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
     def test_decline_forbidden(self):
         staged_user = StagedUserFactory(
             user_json={

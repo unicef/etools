@@ -157,6 +157,10 @@ class UserRealmBaseSerializer(GroupEditPermissionMixin, serializers.ModelSeriali
     def validate_organization(self, value):
         organization_id = value
         auth_user = self.context['request'].user
+
+        if auth_user.profile.organization is None:
+            raise PermissionDenied(detail=_('User has no organization selected.'))
+
         if organization_id:
             if not auth_user.is_unicef_user() and organization_id != auth_user.profile.organization.id:
                 raise PermissionDenied(
