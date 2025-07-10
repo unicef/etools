@@ -36,6 +36,7 @@ from etools.applications.reports.tests.factories import CountryProgrammeFactory,
 from etools.applications.users.tests.factories import CountryFactory, GroupFactory, RealmFactory, UserFactory
 from etools.libraries.djangolib.utils import get_environment
 
+
 class BaseGDDTestCase(BaseTenantTestCase):
     def setUp(self):
         super().setUp()
