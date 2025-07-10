@@ -208,7 +208,7 @@ class PartnerMaterialInline(admin.TabularInline):
     extra = 0
     model = models.PartnerMaterial
     list_select_related = ('material', 'partner_organization')
-    fields = ('material', 'partner_organization', 'description')
+    fields = ('material', 'partner_organization',)
 
 
 @admin.register(models.Material)
@@ -435,11 +435,7 @@ class ItemAdmin(XLSXImportMixin, admin.ModelAdmin):
 
             mat_desc = imp_r.pop('partner_material__description')
             if mat_desc and mat_desc != material.short_description:
-                models.PartnerMaterial.objects.update_or_create(
-                    material=material,
-                    partner_organization=partner,
-                    defaults={'description': mat_desc}
-                )
+                imp_r['mapped_description'] = mat_desc
 
             transfer = get_or_create_transfer(dict(
                 name="Initial Imports",
@@ -545,8 +541,6 @@ class ItemTransferHistoryAdmin(admin.ModelAdmin):
         if db_field.name == "item":
             kwargs["queryset"] = models.Item.objects.select_related(
                 "transfer__partner_organization", 'material'
-            ).prefetch_related(
-                Prefetch('material__partner_materials', queryset=models.PartnerMaterial.objects.select_related('material', 'partner_organization'), to_attr='_partner_material')
             )
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
@@ -559,8 +553,8 @@ class ItemTransferHistoryAdmin(admin.ModelAdmin):
 
 @admin.register(models.PartnerMaterial)
 class PartnerMaterialAdmin(admin.ModelAdmin):
-    list_display = ('material', 'partner_organization', 'description')
-    search_fields = ('material__short_description', 'partner_organization__organization__name', 'description')
+    list_display = ('material', 'partner_organization')
+    search_fields = ('material__short_description', 'partner_organization__organization__name')
     list_filter = ('material',)
 
 

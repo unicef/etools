@@ -28,12 +28,50 @@ from etools.applications.users.models import User
 from etools.applications.utils.validators import JSONSchemaValidator
 
 
+class GeometryPointFunc(models.Func):
+    template = "%(function)s(%(expressions)s::geometry)"
+
+    def __init__(self, expression):
+        super().__init__(expression, output_field=models.FloatField())
+
+
+class Latitude(GeometryPointFunc):
+    function = 'ST_Y'
+
+
+class Longitude(GeometryPointFunc):
+    function = 'ST_X'
+
+
+class BaseExportQuerySet(models.QuerySet):
+
+    def prepare_for_lm_export(self) -> models.QuerySet:
+        return self.values()
+
+
 class PointOfInterestType(TimeStampedModel, models.Model):
     name = models.CharField(verbose_name=_("Poi Type Name"), max_length=32)
     category = models.CharField(verbose_name=_("Poi Category"), max_length=32)
 
     def __str__(self):
         return self.name
+
+    objects = BaseExportQuerySet.as_manager()
+
+
+class PointOfInterestQuerySet(models.QuerySet):
+
+    def prepare_for_lm_export(self) -> models.QuerySet:
+        return self.prefetch_related('parent', 'poi_type').annotate(
+            latitude=Latitude('point'),
+            longitude=Longitude('point'),
+            parent_pcode=models.F('parent__p_code'),
+            vendor_number=models.F('partner_organizations__organization__vendor_number'),
+        ).values(
+            'id', 'created', 'modified', 'parent_id', 'name', 'description', 'poi_type_id',
+            'other', 'private', 'is_active', 'p_code', 'vendor_number', 'parent_pcode',
+            'latitude', 'longitude',
+        )
 
 
 class PointOfInterestManager(models.Manager):
@@ -42,6 +80,11 @@ class PointOfInterestManager(models.Manager):
 
     def get_unicef_warehouses(self):
         return self.get_queryset().get(pk=1)  # Unicef warehouse
+
+
+class PointOfInteresetLMExportManager(models.Manager):
+    def get_queryset(self):
+        return PointOfInterestQuerySet(self.model, using=self._db)
 
 
 class PointOfInterest(TimeStampedModel, models.Model):
@@ -115,6 +158,7 @@ class PointOfInterest(TimeStampedModel, models.Model):
 
     objects = PointOfInterestManager()
     all_objects = models.Manager()
+    export_objects = PointOfInteresetLMExportManager()
 
     class Meta:
         verbose_name = _('Point of Interest')
@@ -201,6 +245,19 @@ class TransferQuerySet(models.QuerySet):
     def with_items(self):
         return self.filter(items__isnull=False, items__hidden=False)
 
+    def prepare_for_lm_export(self) -> models.QuerySet:
+        return self.annotate(
+            vendor_number=models.F('partner_organization__organization__vendor_number'),
+            checked_out_by_email=models.F('checked_out_by__email'),
+            checked_out_by_first_name=models.F('checked_out_by__first_name'),
+            checked_out_by_last_name=models.F('checked_out_by__last_name'),
+            checked_in_by_email=models.F('checked_in_by__email'),
+            checked_in_by_last_name=models.F('checked_in_by__last_name'),
+            checked_in_by_first_name=models.F('checked_in_by__first_name'),
+            origin_name=models.F('origin_point__name'),
+            destination_name=models.F('destination_point__name'),
+        ).values()
+
 
 class TransferManager(models.Manager.from_queryset(TransferQuerySet)):
     pass
@@ -222,6 +279,7 @@ class Transfer(TimeStampedModel, models.Model):
     PHARMACY = 'PHARMACY'
     MOBILE_OTP = 'MOBILE_OTP'
     DISPENSING_UNIT = 'DISPENSING_UNIT'
+    HOUSEHOLD_MOBILE_TEAM = 'HOUSEHOLD_MOBILE_TEAM'
     OTHER = 'OTHER'
 
     STATUS = (
@@ -244,6 +302,7 @@ class Transfer(TimeStampedModel, models.Model):
         (PHARMACY, _('Pharmacy')),
         (MOBILE_OTP, _('Mobile OTP')),
         (DISPENSING_UNIT, _('Dispensing Unit')),
+        (HOUSEHOLD_MOBILE_TEAM, _('Household Mobile Team')),
         (OTHER, _('Other')),
     )
 
@@ -331,6 +390,12 @@ class Transfer(TimeStampedModel, models.Model):
     waybill_id = models.CharField(max_length=255, null=True, blank=True)
 
     pd_number = models.CharField(max_length=255, null=True, blank=True)
+
+    initial_items = models.JSONField(
+        verbose_name=_("Initial Items"),
+        null=True,
+        blank=True,
+    )
 
     objects = TransferManager()
 
@@ -458,19 +523,25 @@ class PartnerMaterial(TimeStampedModel, models.Model):
         on_delete=models.CASCADE,
         related_name='partner_material'
     )
-    description = models.CharField(max_length=255)
 
     def __str__(self):
-        return f'{self.partner_organization.name}: {self.material.short_description} with description: {self.description}'
+        return f'{self.partner_organization.name}: {self.material.short_description}'
 
     class Meta:
         unique_together = ('partner_organization', 'material')
 
 
-class ItemManager(models.Manager):
+class ItemQuerySet(models.QuerySet):
+    def prepare_for_lm_export(self) -> models.QuerySet:
+        return self.annotate(
+            material_number=models.F('material__number'),
+            material_description=models.F('material__short_description'),
+        ).values()
 
+
+class ItemManager(models.Manager):
     def get_queryset(self):
-        return super().get_queryset().filter(hidden=False)
+        return ItemQuerySet(self.model, using=self._db).filter(hidden=False)
 
 
 class Item(TimeStampedModel, models.Model):
@@ -490,6 +561,7 @@ class Item(TimeStampedModel, models.Model):
     conversion_factor = models.DecimalField(max_digits=10, decimal_places=2, null=True)
 
     quantity = models.IntegerField()
+    base_quantity = models.IntegerField(null=True)
     batch_id = models.CharField(max_length=255, null=True, blank=True)
     expiry_date = models.DateTimeField(null=True, blank=True)
     comment = models.TextField(null=True, blank=True)
@@ -527,6 +599,8 @@ class Item(TimeStampedModel, models.Model):
     )
     transfers_history = models.ManyToManyField(Transfer, through='ItemTransferHistory')
 
+    mapped_description = models.CharField(max_length=255, null=True, blank=True)
+
     material = models.ForeignKey(
         Material,
         on_delete=models.CASCADE,
@@ -543,19 +617,9 @@ class Item(TimeStampedModel, models.Model):
 
     @cached_property
     def description(self):
-        partner_material_cached = getattr(self.material, '_partner_material', None)
-        if partner_material_cached:
-            for partner_material in partner_material_cached:
-                if partner_material.partner_organization == self.transfer.partner_organization and partner_material.material == self.material:
-                    return partner_material.description
-            return self.material.short_description
-        else:
-            try:
-                partner_material = PartnerMaterial.objects.only('description').get(
-                    partner_organization=self.transfer.partner_organization, material=self.material)
-                return partner_material.description
-            except PartnerMaterial.DoesNotExist:
-                return self.material.short_description
+        if self.mapped_description:
+            return self.mapped_description
+        return self.material.short_description
 
     @cached_property
     def should_be_hidden_for_partner(self):
@@ -583,6 +647,8 @@ class Item(TimeStampedModel, models.Model):
 class ItemTransferHistory(TimeStampedModel, models.Model):
     transfer = models.ForeignKey(Transfer, on_delete=models.CASCADE)
     item = models.ForeignKey(Item, on_delete=models.CASCADE)
+
+    objects = BaseExportQuerySet.as_manager()
 
     class Meta:
         unique_together = ('transfer', 'item')

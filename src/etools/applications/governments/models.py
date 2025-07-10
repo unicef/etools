@@ -1943,12 +1943,9 @@ class GDDKeyIntervention(TimeStampedModel):
 
     def __str__(self):
         if not self.code:
-            return self.name
+            return self.id
 
-        return '{}: {}'.format(
-            self.code,
-            self.ewp_key_intervention.cp_key_intervention.name
-        )
+        return f'{self.code}: {str(self.ewp_key_intervention)}'
 
     class Meta:
         unique_together = (('result_link', 'code'),)
