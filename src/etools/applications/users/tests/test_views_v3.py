@@ -991,7 +991,7 @@ class TestUserRealmView(BaseTenantTestCase):
 
 class TestStagedUserViewSet(BaseTenantTestCase):
     @classmethod
-    def setUpTestData(cls):
+    def setUp(cls):
         # clearing groups cache
         GroupWrapper.invalidate_instances()
 
