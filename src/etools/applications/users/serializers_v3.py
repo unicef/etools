@@ -159,16 +159,16 @@ class UserRealmBaseSerializer(GroupEditPermissionMixin, serializers.ModelSeriali
         auth_user = self.context['request'].user
 
         if auth_user.profile.organization is None:
-            raise PermissionDenied(detail=_('User has no organization selected.'))
+            raise ValidationError(_('User has no organization selected.'))
 
         if organization_id:
             if not auth_user.is_unicef_user() and organization_id != auth_user.profile.organization.id:
-                raise PermissionDenied(
+                raise ValidationError(
                     _('You do not have permission to set roles for organization with id %(id)s.'
                       % {'id': organization_id}))
             organization = get_object_or_404(Organization, pk=organization_id)
             if not organization.relationship_types:
-                raise PermissionDenied(
+                raise ValidationError(
                     _('You cannot set roles for %(name)s organization without a partner type.'
                       % {'name': organization.name}))
 
@@ -186,7 +186,7 @@ class UserRealmBaseSerializer(GroupEditPermissionMixin, serializers.ModelSeriali
             ).values_list('id', flat=True)
         )
         if not allowed_group_ids:
-            raise PermissionDenied(
+            raise ValidationError(
                 _('You do not have permissions to change groups for %(name)s organization.'
                   % {'name': organization.name}))
 
@@ -194,7 +194,7 @@ class UserRealmBaseSerializer(GroupEditPermissionMixin, serializers.ModelSeriali
             return data
 
         if not group_ids.issubset(allowed_group_ids):
-            raise PermissionDenied(
+            raise ValidationError(
                 _('Permission denied. Only %(groups)s roles can be assigned.'
                   % {'groups': ', '.join(Group.objects.filter(id__in=allowed_group_ids).values_list('name', flat=True))})
             )
@@ -295,7 +295,7 @@ class UserRealmUpdateSerializer(UserRealmBaseSerializer):
                 not _to_add.issubset(allowed_group_ids) or \
                 not _to_deactivate.issubset(allowed_group_ids) or \
                 not _to_reactivate.issubset(allowed_group_ids):
-            raise PermissionDenied(
+            raise ValidationError(
                 _('Permission denied. Only %(groups)s roles can be assigned.'
                   % {'groups': ', '.join(Group.objects.filter(id__in=allowed_group_ids).values_list('name', flat=True))})
             )
