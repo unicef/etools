@@ -21,6 +21,7 @@ from etools.applications.partners.models import PartnerOrganization
 from etools.applications.users.models import Country, Group, Realm, UserProfile
 from etools.applications.users.serializers import MinimalUserSerializer, SimpleUserSerializer
 from etools.applications.users.validators import EmailValidator, LowerCaseEmailValidator
+from etools.applications.last_mile.admin_panel.services.reverse_transfer import TransferReverse
 
 
 class SimplePointOfInterestSerializer(serializers.ModelSerializer):
@@ -872,8 +873,5 @@ class TransferReverseAdminSerializer(serializers.ModelSerializer):
         fields = ("id",)
 
     def update(self, instance, validated_data):
-        items = instance.items.all()
-        print(items)
-        print(f"validated_data : {validated_data}")
-        print(f"instance : {instance}")
-        return instance
+        reversed_transfer = TransferReverse(transfer_id=instance.id).reverse()
+        return reversed_transfer

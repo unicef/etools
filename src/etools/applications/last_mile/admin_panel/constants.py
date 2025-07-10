@@ -58,6 +58,8 @@ UOM_NOT_VALID = "The unit of measurement (UOM) is not valid."
 PARTNER_NOT_UNDER_LOCATION = "The partner does not exist under the location."
 LAST_MILE_PROFILE_NOT_FOUND = "The last mile profile was not found."
 STATUS_NOT_CRRECT = "The status should be in 'approved' or 'rejected'."
+TRANSFER_NOT_FOUND_FOR_REVERSE = "The transfer was not found for reverse."
+TRANSFER_HAS_NO_ITEMS = "The transfer has no items. Cannot reverse."
 
 LIST_INTERESTED_LASTMILE_PERMS = [
     USER_ADMIN_PANEL_PERMISSION,

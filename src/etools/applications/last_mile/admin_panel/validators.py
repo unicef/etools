@@ -17,12 +17,14 @@ from etools.applications.last_mile.admin_panel.constants import (
     POI_TYPE_ALREADY_EXISTS,
     REALM_ALREADY_EXISTS,
     STATUS_NOT_CRRECT,
+    TRANSFER_HAS_NO_ITEMS,
+    TRANSFER_NOT_FOUND_FOR_REVERSE,
     UOM_NOT_PROVIDED,
     UOM_NOT_VALID,
     USER_DOES_NOT_EXIST,
     USER_NOT_PROVIDED,
 )
-from etools.applications.last_mile.models import Material, PointOfInterest, PointOfInterestType, Profile
+from etools.applications.last_mile.models import Item, Material, PointOfInterest, PointOfInterestType, Profile, Transfer
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.users.models import Country, Group, Realm, User
 
@@ -85,3 +87,12 @@ class AdminPanelValidator:
     def validate_partner_location(self, location: PointOfInterest, partner: PartnerOrganization):
         if partner not in location.partner_organizations.all():
             raise ValidationError(_(PARTNER_NOT_UNDER_LOCATION))
+
+    def validate_reverse_transfer(self, transfer: Transfer | None):
+        if not transfer:
+            raise ValidationError(_(TRANSFER_NOT_FOUND_FOR_REVERSE))
+
+    def validate_transfer_items(self, transfer: Transfer):
+        items = Item.all_objects.filter(transfer=transfer)
+        if not items:
+            raise ValidationError(_(TRANSFER_HAS_NO_ITEMS))
