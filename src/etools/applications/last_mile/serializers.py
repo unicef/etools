@@ -11,7 +11,11 @@ from unicef_attachments.models import Attachment
 from unicef_attachments.serializers import AttachmentSerializerMixin
 
 from etools.applications.last_mile import models
-from etools.applications.last_mile.tasks import notify_first_checkin_transfer, notify_wastage_transfer
+from etools.applications.last_mile.tasks import (
+    notify_dispensing_transfer,
+    notify_first_checkin_transfer,
+    notify_wastage_transfer,
+)
 from etools.applications.last_mile.validators import TransferCheckOutValidator
 from etools.applications.partners.models import Agreement, PartnerOrganization
 from etools.applications.partners.serializers.partner_organization_v2 import (
@@ -49,10 +53,18 @@ class PointOfInterestNotificationSerializer(serializers.ModelSerializer):
     parent_name = serializers.SerializerMethodField(read_only=True)
 
     def get_parent_name(self, obj):
-        return obj.parent.__str__() if hasattr(obj, 'parent') and obj.parent else ''
+        parent_locations = obj.parent.get_parent_locations()
+        district = parent_locations.get(2)
+        if not district or not hasattr(district, 'name'):
+            return obj.parent.__str__() if hasattr(obj, 'parent') and obj.parent else ''
+        return f"{district.name} ({district.p_code})"
 
     def get_region(self, obj):
-        return obj.parent.name if hasattr(obj, 'parent') and obj.parent else ''
+        parent_locations = obj.parent.get_parent_locations()
+        state = parent_locations.get(1)
+        if not state or not hasattr(state, 'name'):
+            return obj.parent.name if hasattr(obj, 'parent') and obj.parent else ''
+        return state.name
 
     class Meta:
         model = models.PointOfInterest
@@ -229,7 +241,7 @@ class ItemUpdateSerializer(serializers.ModelSerializer):
             description = self.validated_data.pop('description')
             if self.instance.mapped_description and self.instance.mapped_description != description:
                 raise ValidationError(_('The description cannot be modified. A value is already present.'))
-            if description:
+            if description and description != self.instance.description:
                 self.instance.mapped_description = description
         super().save(**kwargs)
 
@@ -606,9 +618,11 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
         self.instance.save()
         self.instance.refresh_from_db()
         self.checkout_newtransfer_items(checkout_items)
+        attachment_url = self._generate_attachment_url()
         if self.instance.transfer_type == models.Transfer.WASTAGE:
-            attachment_url = self._generate_attachment_url()
             notify_wastage_transfer.delay(connection.schema_name, TransferNotificationSerializer(self.instance).data, attachment_url)
+        if self.instance.transfer_type == models.Transfer.DISPENSE:
+            notify_dispensing_transfer.delay(connection.schema_name, TransferNotificationSerializer(self.instance).data, attachment_url)
 
         return self.instance
 
@@ -642,4 +656,4 @@ class TransferNotificationSerializer(serializers.ModelSerializer):
         model = models.Transfer
         fields = ('name', 'unicef_release_order', 'destination_check_in_at',
                   'origin_check_out_at', 'checked_in_by', 'checked_out_by', 'items',
-                  'partner_organization', 'destination_point', 'origin_point')
+                  'partner_organization', 'destination_point', 'origin_point', 'dispense_type')

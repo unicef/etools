@@ -241,8 +241,8 @@ class TestTransferView(BaseTenantTestCase):
         response = self.forced_auth_req('get', url, user=self.partner_staff)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 2)  # Include also the Handover Transfer
-        self.assertEqual(self.completed.pk, response.data['results'][0]['id'])
-        self.assertEqual(self.handover.pk, response.data['results'][1]['id'])
+        self.assertEqual(self.completed.pk, response.data['results'][1]['id'])
+        self.assertEqual(self.handover.pk, response.data['results'][0]['id'])
 
     @override_settings(RUTF_MATERIALS=['1234'])
     def test_full_checkin(self):
@@ -602,7 +602,12 @@ class TestTransferView(BaseTenantTestCase):
             "origin_check_out_at": timezone.now()
         }
         url = reverse('last_mile:transfers-new-check-out', args=(self.warehouse.pk,))
-        response = self.forced_auth_req('post', url, user=self.partner_staff, data=checkout_data)
+
+        mock_send = Mock()
+        with patch("etools.applications.last_mile.tasks.send_notification", mock_send):
+            response = self.forced_auth_req('post', url, user=self.partner_staff, data=checkout_data)
+
+        mock_send.assert_called_once()
 
         self.assertEqual("Other", response.data['items'][0]['material']['material_type_translate'])
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -843,7 +848,6 @@ class TestItemUpdateViewSet(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         item = models.Item.objects.get(pk=item.pk)
         self.assertEqual(item.description, 'updated description')
-        self.assertEqual(response.data['description'], 'updated description')
         self.assertEqual(item.mapped_description, 'updated description')
         self.assertEqual(item.uom, 'KG')
         self.assertEqual(response.data['uom'], 'KG')

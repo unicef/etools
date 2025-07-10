@@ -103,5 +103,12 @@
       "name": "LMSM User Creation Report",
       "permissions": []
     }
+  },
+  {
+    "model": "auth.group",
+    "fields": {
+      "name": "LMSM Dispensing Notification",
+      "permissions": []
+    }
   }
 ]
