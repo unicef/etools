@@ -46,6 +46,14 @@ class QuestionAdmin(admin.ModelAdmin):
     methods_list.short_description = _('Methods')
 
 
+def get_pcode(_split, name):
+    p_code = _split[1].strip()
+    if not p_code or p_code == "None":
+        # generate a pcode if it doesn't exist:
+        return generate_hash(name, 12)
+    return p_code
+
+
 @admin.register(LocationSite)
 class LocationSiteAdmin(XLSXImportMixin, admin.ModelAdmin):
     list_display = ('parent', 'name', 'p_code', 'is_active',)
@@ -73,16 +81,14 @@ class LocationSiteAdmin(XLSXImportMixin, admin.ModelAdmin):
                     continue
                 loc_site_dict[self.import_field_mapping[col[0].value]] = str(col[row].value).strip()
 
+            if 'name' not in loc_site_dict or not loc_site_dict['name'] or loc_site_dict['name'] == 'None':
+                continue
             # extract name and p_code from xls name e.g.LOC: Bir El Hait_LBN34041:
-            if 'name' and loc_site_dict['name']:
-                _split = loc_site_dict['name'].split('_')
-                loc_site_dict['name'] = _split[0].split(':')[1].strip()
-                p_code = _split[1].strip()
-                if not p_code or p_code == "None":
-                    # add a pcode if it doesn't exist:
-                    loc_site_dict['p_code'] = generate_hash(loc_site_dict['name'], 12)
-                else:
-                    loc_site_dict['p_code'] = p_code
+            _split = loc_site_dict['name'].split('_')
+            loc_site_dict['name'] = _split[0].split(':')[1].strip()
+
+            loc_site_dict['p_code'] = get_pcode(_split, loc_site_dict['name'])
+
             long = loc_site_dict.pop('longitude')
             lat = loc_site_dict.pop('latitude')
             try:

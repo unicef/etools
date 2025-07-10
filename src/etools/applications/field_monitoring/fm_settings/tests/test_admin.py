@@ -49,6 +49,7 @@ class TestLocationSiteAdmin(BaseTenantTestCase):
         ws.append(['LOC: Mjaydel_LBN62079', '33.517090', '35.440041'])
         ws.append(['LOC: Majdel el Koura_LBN54029', '34.252449', '35.792671'])
         ws.append(['LOC: Kousba_LBN54044', '34.298401', '35.850361'])
+        ws.append(['', '34.298401', '35.850361'])  # invalid row, no name, will be skipped
         ws.append(['LOC: Meftah es Sellom_LBN34165', '34.99e', '33.517090'])  # invalid Coordinates, will be skipped
 
         buffer = BytesIO()
