@@ -812,6 +812,24 @@ class TestUserRealmView(BaseTenantTestCase):
         }
         response = self.make_request_list(self.ip_admin, data=data)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('Email needs to be lower case.', response.data['email'])
+
+    def test_post_organization_validation(self):
+        data = {
+            "first_name": "First Name",
+            "last_name": "Test Last Name",
+            "email": "test@test.com",
+            "groups": [GroupFactory(name=IPViewer.name).pk],
+        }
+        self.ip_admin.profile.organization = OrganizationFactory()
+        self.ip_admin.profile.save()
+        response = self.make_request_list(self.ip_admin, data=data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        self.assertIn('You do not have permissions to change groups for', response.data['non_field_errors'][0])
+
+        self.ip_admin.profile.organization = self.organization
+        self.ip_admin.profile.save()
 
     def test_post_new_partner_user(self):
         for auth_user, group in zip(
@@ -991,7 +1009,7 @@ class TestUserRealmView(BaseTenantTestCase):
 
 class TestStagedUserViewSet(BaseTenantTestCase):
     @classmethod
-    def setUpTestData(cls):
+    def setUp(cls):
         # clearing groups cache
         GroupWrapper.invalidate_instances()
 
@@ -1042,7 +1060,7 @@ class TestStagedUserViewSet(BaseTenantTestCase):
             "first_name": "Last Name",
         })
         response = self.make_request_detail(self.ip_admin, staged_user.pk, action='accept')
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, 'IP Admin cannot accept')
         staged_user.refresh_from_db()
         self.assertEqual(staged_user.request_state, StagedUser.PENDING)
 
@@ -1084,6 +1102,24 @@ class TestStagedUserViewSet(BaseTenantTestCase):
         )
         response = self.make_request_detail(self.user_reviewer, staged_user.pk, action='accept')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('Email needs to be lower case.', response.data['email'])
+
+    def test_accept_invalid_organization_forbidden(self):
+        staged_user = StagedUserFactory(
+            user_json={
+                "email": 'test@test.com',
+                "groups": [GroupFactory(name=IPViewer.name).pk],
+                "username": 'test@test.com',
+                "last_name": "First Name",
+                "first_name": "Last Name"
+            },
+            organization=self.organization,
+            requester=self.ip_admin
+        )
+        self.user_reviewer.profile.organization = None
+        self.user_reviewer.profile.save()
+        response = self.make_request_detail(self.user_reviewer, staged_user.pk, action='accept')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, '403 from the view permission classes')
 
     def test_decline_forbidden(self):
         staged_user = StagedUserFactory(
