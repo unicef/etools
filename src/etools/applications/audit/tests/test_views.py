@@ -924,6 +924,24 @@ class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenan
         })
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
+    def test_staff_members_update(self):
+        self.assertEqual(self.engagement.staff_members.count(), 2)
+        new_auditor = AuditorUserFactory(partner_firm=self.auditor_firm)
+
+        staff_list = list(self.engagement.staff_members.values_list('id', flat=True))
+        staff_list.append(new_auditor.pk)
+        response = self._do_update(self.auditor, {
+            'staff_members': staff_list
+        })
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(self.engagement.staff_members.count(), 3)
+
+        new_auditor.realms.all().update(is_active=False)
+        response = self._do_update(self.auditor, {
+            'staff_members': staff_list
+        })
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
 
 class TestEngagementActionPointViewSet(EngagementTransitionsTestCaseMixin, BaseTenantTestCase):
     engagement_factory = MicroAssessmentFactory
