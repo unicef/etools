@@ -8,6 +8,7 @@ from etools.applications.audit.models import (
     Audit,
     Engagement,
     EngagementActionPoint,
+    FaceForm,
     FinancialFinding,
     Finding,
     MicroAssessment,
@@ -16,7 +17,7 @@ from etools.applications.audit.models import (
     RiskCategory,
     SpecialAuditRecommendation,
     SpecificProcedure,
-    SpotCheck, FaceForm,
+    SpotCheck,
 )
 
 

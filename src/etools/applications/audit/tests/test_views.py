@@ -17,7 +17,7 @@ from unicef_attachments.models import Attachment
 
 from etools.applications.action_points.tests.factories import ActionPointCategoryFactory, ActionPointFactory
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
-from etools.applications.audit.models import Auditor, Engagement, Risk, SpotCheck, UNICEFUser
+from etools.applications.audit.models import Audit, Auditor, Engagement, Risk, SpotCheck, UNICEFUser
 from etools.applications.audit.tests.base import AuditTestCaseMixin, EngagementTransitionsTestCaseMixin
 from etools.applications.audit.tests.factories import (
     AuditFactory,
@@ -660,6 +660,25 @@ class TestAuditCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEngage
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('partner_contacted_at', response.data)
 
+    def test_with_face_forms(self):
+        data = copy(self.create_data)
+        data['face_forms'] = [
+            {
+                "commitment_ref": "123",
+                "start_date": "2025-07-11",
+                "end_date": "2025-07-11",
+                "dct_amt_usd": "321.00",
+                "dct_amt_local": "222.00"
+            }
+        ]
+        response = self._do_create(self.unicef_focal_point, data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        audit = Audit.objects.get(pk=response.data['id'])
+        self.assertEqual(audit.face_forms.count(), response.data['face_forms'].__len__())
+        self.assertEqual(audit.face_forms.first().commitment_ref, response.data['face_forms'][0]['commitment_ref'])
+        self.assertEqual(audit.face_forms.first().dct_amt_usd.__str__(), response.data['face_forms'][0]['dct_amt_usd'])
+        self.assertEqual(audit.face_forms.first().dct_amt_local.__str__(), response.data['face_forms'][0]['dct_amt_local'])
+
 
 class TestSpotCheckCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEngagementsCreateViewSet,
                                  BaseTenantTestCase):
@@ -957,24 +976,6 @@ class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenan
             'staff_members': staff_list
         })
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-    def test_face_forms_update_ok(self):
-        self.assertEqual(self.engagement.face_forms.count(), 0)
-
-        response = self._do_update(self.auditor, {
-            "face_forms": [
-                {
-                    "commitment_ref": "123",
-                    "start_date": "2025-07-11",
-                    "end_date": "2025-07-11",
-                    "dct_amt_usd": "321.00",
-                    "dct_amt_local": "222.00"
-                }
-            ]
-        })
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        self.assertEqual(self.engagement.face_forms.count(), 1)
 
 
 class TestEngagementActionPointViewSet(EngagementTransitionsTestCaseMixin, BaseTenantTestCase):

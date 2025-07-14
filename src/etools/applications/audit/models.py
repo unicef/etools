@@ -948,7 +948,6 @@ class FaceForm(TimeStampedModel, models.Model):
         verbose_name=_('Direct Cash Transfer Amount (local)'), default=0, decimal_places=2, max_digits=20
     )
 
-
     class Meta:
         verbose_name = _('Face Form')
         verbose_name_plural = _('Face Forms')

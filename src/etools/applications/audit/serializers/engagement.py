@@ -1,14 +1,12 @@
-from decimal import Decimal
-
 import datetime
 from copy import copy
+from decimal import Decimal
 
-from django.db import connection, transaction
+from django.db import connection
 from django.db.models import Exists, OuterRef
 from django.utils.translation import gettext as _
 
 from rest_framework import serializers
-from rest_framework.serializers import ListSerializer
 from unicef_attachments.fields import AttachmentSingleFileField, FileTypeModelChoiceField
 from unicef_attachments.models import Attachment, FileType
 from unicef_attachments.serializers import AttachmentSerializerMixin
@@ -76,16 +74,6 @@ class PartnerOrganizationLightSerializer(PartnerOrganizationListSerializer):
         }
 
 
-# class BulkFaceFormSerializer(serializers.ListSerializer):
-#     @transaction.atomic
-#     def update(self, instance, validated_data):
-#         import ipdb; ipdb.set_trace()
-#
-#     @transaction.atomic
-#     def create(self, validated_data):
-#         import ipdb; ipdb.set_trace()
-
-
 class FaceFormSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(required=False)
     commitment_ref = serializers.CharField(required=True)
@@ -93,7 +81,6 @@ class FaceFormSerializer(serializers.ModelSerializer):
     end_date = serializers.DateField(required=False)
     dct_amt_usd = serializers.CharField(required=False)
     dct_amt_local = serializers.CharField(required=False)
-
 
     class Meta:
         model = FaceForm
@@ -246,13 +233,12 @@ class EngagementLightSerializer(serializers.ModelSerializer):
 
     offices = OfficeLightSerializer(many=True)
     sections = SectionSerializer(many=True)
-    face_forms = FaceFormSerializer(many=True, required=False, read_only=True)
 
     class Meta:
         model = Engagement
         fields = [
             'id', 'reference_number', 'agreement', 'po_item', 'related_agreement', 'partner',
-            'engagement_type', 'status', 'status_date', 'total_value', 'offices', 'sections', 'face_forms'
+            'engagement_type', 'status', 'status_date', 'total_value', 'offices', 'sections'
         ]
 
     def validate(self, attrs):
@@ -288,10 +274,14 @@ class FaceFormRelatedField(serializers.RelatedField):
         return FaceForm.objects.all()
 
     def to_internal_value(self, data):
-        if not isinstance(data, str):
-            raise serializers.ValidationError("Expected a string for commitment_ref.")
+        if not isinstance(data, dict):
+            raise serializers.ValidationError("Expected a dict for face form data.")
 
-        face_form, created = FaceForm.objects.get_or_create(commitment_ref=data)
+        commitment_ref = data.pop('commitment_ref')
+        face_form, created = FaceForm.objects.update_or_create(
+            commitment_ref=commitment_ref,
+            defaults={**data}
+        )
         return face_form
 
     def to_representation(self, value):
@@ -301,7 +291,7 @@ class FaceFormRelatedField(serializers.RelatedField):
 class EngagementSerializer(
         AttachmentSerializerMixin,
         EngagementDatesValidation,
-        # WritableNestedParentSerializerMixin,
+        WritableNestedParentSerializerMixin,
         EngagementListSerializer
 ):
     face_form_start_date = serializers.DateField(label='FACE Form(s) Start Date', read_only=True, source='start_date')
@@ -335,7 +325,11 @@ class EngagementSerializer(
         label=_("Offices"),
     )
 
-    face_forms = FaceFormSerializer(many=True, required=False)
+    face_forms = SeparatedReadWriteField(
+        read_field=FaceFormSerializer(many=True),
+        write_field=FaceFormRelatedField(many=True, required=False),
+        required=False,
+    )
 
     class Meta(EngagementListSerializer.Meta):
         fields = EngagementListSerializer.Meta.fields + [
@@ -351,7 +345,7 @@ class EngagementSerializer(
             'final_report',
             'sections',
             'offices',
-            'face_forms',
+            'face_forms'
         ]
         extra_kwargs = {
             field: {'required': True} for field in [
@@ -386,7 +380,6 @@ class EngagementSerializer(
 
     def validate(self, data):
         validated_data = super().validate(data)
-        print(validated_data)
         staff_members = validated_data.get('staff_members', [])
         validated_data.pop('related_agreement', None)
         agreement = validated_data.get('agreement', None) or self.instance.agreement if self.instance else None
