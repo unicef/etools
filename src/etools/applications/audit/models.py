@@ -1,11 +1,11 @@
 from decimal import DivisionByZero, InvalidOperation
-from django.db.models import Sum
 from functools import cached_property
 
 from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
 from django.db import connection, models
+from django.db.models import Sum
 from django.db.transaction import atomic
 from django.utils import timezone
 from django.utils.encoding import force_str
