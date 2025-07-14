@@ -716,9 +716,9 @@ class Audit(Engagement):
                                              decimal_places=2, max_digits=20)
     # local currency
     audited_expenditure_local = models.DecimalField(verbose_name=_('Audited Expenditure Local Currency'),
-                                                    blank=True, null=True, decimal_places=2, max_digits=20)
+                                                    blank=True, default=0, decimal_places=2, max_digits=20)
     financial_findings_local = models.DecimalField(verbose_name=_('Financial Findings Local Currency'),
-                                                   blank=True, null=True, decimal_places=2, max_digits=20)
+                                                   blank=True, default=0, decimal_places=2, max_digits=20)
     audit_opinion = models.CharField(
         verbose_name=_('Audit Opinion'), max_length=20, choices=OPTIONS, default='', blank=True,
     )
