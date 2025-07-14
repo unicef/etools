@@ -554,6 +554,16 @@ class BaseTestEngagementsCreateViewSet(EngagementTransitionsTestCaseMixin):
             'active_pd': self.engagement.active_pd.values_list('id', flat=True),
             'shared_ip_with': self.engagement.shared_ip_with,
         }
+        if self.create_data['engagement_type'] in [Engagement.TYPE_AUDIT, Engagement.TYPE_SPOT_CHECK]:
+            self.create_data['face_forms'] = [
+                {
+                    "commitment_ref": "123",
+                    "start_date": "2025-07-11",
+                    "end_date": "2025-07-11",
+                    "dct_amt_usd": "321.00",
+                    "dct_amt_local": "222.00"
+                }
+            ]
 
     def _do_create(self, user, data):
         data = data or {}
@@ -660,6 +670,13 @@ class TestAuditCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEngage
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('partner_contacted_at', response.data)
 
+    def test_face_form_validation(self):
+        data = copy(self.create_data)
+        data['face_forms'] = []
+        response = self._do_create(self.unicef_focal_point, data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('You must specify at least one FACE Form.', response.data['non_field_errors'])
+
     def test_with_face_forms(self):
         data = copy(self.create_data)
         data['face_forms'] = [
@@ -765,6 +782,13 @@ class TestSpotCheckCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEn
         response = self._do_create(self.unicef_focal_point, data)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('end_date', response.data)
+
+    def test_face_form_validation(self):
+        data = copy(self.create_data)
+        data['face_forms'] = []
+        response = self._do_create(self.unicef_focal_point, data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('You must specify at least one FACE Form.', response.data['non_field_errors'])
 
     def test_partner_contacted_at_validation(self):
         data = copy(self.create_data)

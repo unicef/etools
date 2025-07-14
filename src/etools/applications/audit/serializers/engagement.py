@@ -329,6 +329,7 @@ class EngagementSerializer(
         read_field=FaceFormSerializer(many=True),
         write_field=FaceFormRelatedField(many=True, required=False),
         required=False,
+        label=_("FACE Forms")
     )
 
     class Meta(EngagementListSerializer.Meta):
@@ -380,6 +381,11 @@ class EngagementSerializer(
 
     def validate(self, data):
         validated_data = super().validate(data)
+
+        if (not self.instance and 'engagement_type' in self.initial_data and self.initial_data['engagement_type'] in
+                [Engagement.TYPE_AUDIT, Engagement.TYPE_SPOT_CHECK] and not validated_data.get('face_forms', None)):
+            raise serializers.ValidationError(_('You must specify at least one FACE Form.'))
+
         staff_members = validated_data.get('staff_members', [])
         validated_data.pop('related_agreement', None)
         agreement = validated_data.get('agreement', None) or self.instance.agreement if self.instance else None
