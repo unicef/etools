@@ -704,7 +704,7 @@ class TestAuditCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEngage
         self.assertEqual(audit.face_forms.first().dct_amt_local.__str__(), response.data['face_forms'][0]['dct_amt_local'])
         self.assertEqual(audit.total_value, 300)
         self.assertEqual(audit.total_value_local, 33)
-        self.assertEqual(audit.exchange_rate.__str__(), round(200/22, 2).__str__())
+        self.assertEqual(audit.exchange_rate.__str__(), round(200 / 22, 2).__str__())
 
 
 class TestSpotCheckCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEngagementsCreateViewSet,

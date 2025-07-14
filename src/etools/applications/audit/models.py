@@ -466,19 +466,18 @@ class Risk(models.Model):
 
 
 class SpotCheck(Engagement):
-    total_amount_tested = models.DecimalField(verbose_name=_('Total Amount Tested ($)'), blank=True, default=0,
-                                              decimal_places=2, max_digits=20)
+    total_amount_tested = models.DecimalField(
+        verbose_name=_('Total Amount Tested ($)'), blank=True, default=0,
+        decimal_places=2, max_digits=20)
     total_amount_of_ineligible_expenditure = models.DecimalField(
         verbose_name=_('Total Amount of Ineligible Expenditure ($)'), default=0, blank=True,
-        decimal_places=2, max_digits=20,
-    )
-
-    total_amount_tested_local = models.DecimalField(verbose_name=_('Total Amount Tested (local)'), blank=True, default=0,
-                                              decimal_places=2, max_digits=20)
+        decimal_places=2, max_digits=20)
+    total_amount_tested_local = models.DecimalField(
+        verbose_name=_('Total Amount Tested (local)'), blank=True, default=0,
+        decimal_places=2, max_digits=20)
     total_amount_of_ineligible_expenditure_local = models.DecimalField(
         verbose_name=_('Total Amount of Ineligible Expenditure (local)'), default=0, blank=True,
-        decimal_places=2, max_digits=20,
-    )
+        decimal_places=2, max_digits=20)
 
     internal_controls = models.TextField(verbose_name=_('Internal Controls'), blank=True)
     final_report = CodedGenericRelation(
@@ -1002,6 +1001,3 @@ class FaceForm(TimeStampedModel, models.Model):
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-
-
-
