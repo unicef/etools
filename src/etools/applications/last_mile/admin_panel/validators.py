@@ -19,6 +19,7 @@ from etools.applications.last_mile.admin_panel.constants import (
     STATUS_NOT_CRRECT,
     TRANSFER_HAS_NO_ITEMS,
     TRANSFER_NOT_FOUND_FOR_REVERSE,
+    TRANSFER_TYPE_HANDOVER_NOT_ALLOWED,
     UOM_NOT_PROVIDED,
     UOM_NOT_VALID,
     USER_DOES_NOT_EXIST,
@@ -96,3 +97,7 @@ class AdminPanelValidator:
         items = Item.all_objects.filter(transfer=transfer)
         if not items:
             raise ValidationError(_(TRANSFER_HAS_NO_ITEMS))
+
+    def validate_transfer_type(self, transfer: Transfer):
+        if transfer.transfer_type == Transfer.HANDOVER:
+            raise ValidationError(_(TRANSFER_TYPE_HANDOVER_NOT_ALLOWED))

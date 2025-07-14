@@ -12,6 +12,7 @@ from etools.applications.last_mile import models
 from etools.applications.last_mile.admin_panel.constants import ALERT_TYPES, TRANSFER_MANUAL_CREATION_NAME
 from etools.applications.last_mile.admin_panel.services.lm_profile_status_updater import LMProfileStatusUpdater
 from etools.applications.last_mile.admin_panel.services.lm_user_creator import LMUserCreator
+from etools.applications.last_mile.admin_panel.services.reverse_transfer import TransferReverse
 from etools.applications.last_mile.admin_panel.validators import AdminPanelValidator
 from etools.applications.last_mile.permissions import LastMileUserPermissionRetriever
 from etools.applications.last_mile.serializers import PointOfInterestTypeSerializer
@@ -21,7 +22,6 @@ from etools.applications.partners.models import PartnerOrganization
 from etools.applications.users.models import Country, Group, Realm, UserProfile
 from etools.applications.users.serializers import MinimalUserSerializer, SimpleUserSerializer
 from etools.applications.users.validators import EmailValidator, LowerCaseEmailValidator
-from etools.applications.last_mile.admin_panel.services.reverse_transfer import TransferReverse
 
 
 class SimplePointOfInterestSerializer(serializers.ModelSerializer):

@@ -17,8 +17,7 @@ class TransferReverse:
         new_status = Transfer.PENDING
         new_type = Transfer.DELIVERY
         new_partner_organization = old_transfer.partner_organization
-        if old_transfer.transfer_type == Transfer.HANDOVER:
-            new_partner_organization = old_transfer.from_partner_organization
+        reversed_unicef_release_order = f"{old_transfer.unicef_release_order}_reversed"
         new_transfer = Transfer.objects.create(
             transfer_type=new_type,
             name=new_transfer_name,
@@ -28,7 +27,7 @@ class TransferReverse:
             origin_point=old_transfer.destination_point,
             destination_point=old_transfer.origin_point,
             partner_organization=new_partner_organization,
-            unicef_release_order=old_transfer.unicef_release_order,
+            unicef_release_order=reversed_unicef_release_order[:29],  # To not overload the max_length of the field
             origin_transfer=old_transfer,
             reason=old_transfer.reason,
             comment=old_transfer.comment,
@@ -45,5 +44,6 @@ class TransferReverse:
         old_transfer = self.transfer
         self.adminValidator.validate_reverse_transfer(old_transfer)
         self.adminValidator.validate_transfer_items(old_transfer)
+        self.adminValidator.validate_transfer_type(old_transfer)
         new_transfer = self._create_new_transfer(old_transfer)
         return new_transfer
