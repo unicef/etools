@@ -17,7 +17,7 @@ from unicef_attachments.models import Attachment
 
 from etools.applications.action_points.tests.factories import ActionPointCategoryFactory, ActionPointFactory
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
-from etools.applications.audit.models import Audit, Auditor, Engagement, Risk, SpotCheck, UNICEFUser
+from etools.applications.audit.models import Audit, Auditor, Engagement, Risk, SpecialAudit, SpotCheck, UNICEFUser
 from etools.applications.audit.tests.base import AuditTestCaseMixin, EngagementTransitionsTestCaseMixin
 from etools.applications.audit.tests.factories import (
     AuditFactory,
@@ -808,7 +808,7 @@ class TestSpotCheckCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEn
         self.assertIn('partner_contacted_at', response.data)
 
 
-class SpecialAuditCreateViewSet(BaseTestEngagementsCreateViewSet, BaseTenantTestCase):
+class TestSpecialAuditCreateViewSet(BaseTestEngagementsCreateViewSet, BaseTenantTestCase):
     engagement_factory = SpecialAuditFactory
 
     def setUp(self):
@@ -845,6 +845,32 @@ class SpecialAuditCreateViewSet(BaseTestEngagementsCreateViewSet, BaseTenantTest
         response = self._do_create(self.unicef_focal_point, data)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('partner_contacted_at', response.data)
+
+    def test_face_forms_with_total(self):
+        data = copy(self.create_data)
+        data['face_forms'] = [
+            {
+                "commitment_ref": "123",
+                "start_date": "2025-07-11",
+                "end_date": "2025-07-11",
+                "dct_amt_usd": "321.00",
+                "dct_amt_local": "222.00"
+            }
+        ]
+        data['total_value'] = '333'
+        data['total_value_local'] = '444'
+
+        response = self._do_create(self.unicef_focal_point, data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        sp_audit = SpecialAudit.objects.get(pk=response.data['id'])
+        self.assertEqual(sp_audit.face_forms.count(), response.data['face_forms'].__len__())
+        self.assertEqual(sp_audit.face_forms.first().commitment_ref, response.data['face_forms'][0]['commitment_ref'])
+        self.assertEqual(sp_audit.face_forms.first().dct_amt_usd.__str__(), response.data['face_forms'][0]['dct_amt_usd'])
+        self.assertEqual(sp_audit.face_forms.first().dct_amt_local.__str__(), response.data['face_forms'][0]['dct_amt_local'])
+        self.assertEqual(sp_audit.total_value, 333)
+        self.assertEqual(sp_audit.total_value_local, 444)
+        self.assertEqual(sp_audit.exchange_rate.__str__(), round(333 / 444, 2).__str__())
 
 
 class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenantTestCase):

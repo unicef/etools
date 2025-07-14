@@ -382,9 +382,13 @@ class EngagementSerializer(
     def validate(self, data):
         validated_data = super().validate(data)
 
-        if (not self.instance and 'engagement_type' in self.initial_data and self.initial_data['engagement_type'] in
-                [Engagement.TYPE_AUDIT, Engagement.TYPE_SPOT_CHECK] and not validated_data.get('face_forms', None)):
-            raise serializers.ValidationError(_('You must specify at least one FACE Form.'))
+        if not self.instance and 'engagement_type' in self.initial_data:
+            if self.initial_data['engagement_type'] == Engagement.TYPE_SPECIAL_AUDIT:
+                validated_data['total_value'] = Decimal(self.initial_data.get('total_value', 0))
+                validated_data['total_value_local'] = Decimal(self.initial_data.get('total_value_local', 0))
+            elif (self.initial_data['engagement_type'] in [Engagement.TYPE_AUDIT, Engagement.TYPE_SPOT_CHECK] and
+                  not validated_data.get('face_forms', None)):
+                raise serializers.ValidationError(_('You must specify at least one FACE Form.'))
 
         staff_members = validated_data.get('staff_members', [])
         validated_data.pop('related_agreement', None)
@@ -677,9 +681,8 @@ class SpecialAuditSerializer(EngagementSerializer):
     class Meta(EngagementSerializer.Meta):
         model = SpecialAudit
         fields = EngagementSerializer.Meta.fields + [
-            'other_recommendations',
+            'other_recommendations', 'total_value', 'total_value_local'
         ]
-        fields.remove('exchange_rate')
         fields.remove('currency_of_report')
         extra_kwargs = EngagementSerializer.Meta.extra_kwargs.copy()
         extra_kwargs.update({
