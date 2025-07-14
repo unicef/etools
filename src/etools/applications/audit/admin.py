@@ -16,7 +16,7 @@ from etools.applications.audit.models import (
     RiskCategory,
     SpecialAuditRecommendation,
     SpecificProcedure,
-    SpotCheck,
+    SpotCheck, FaceForm,
 )
 
 
@@ -31,7 +31,7 @@ class EngagementAdmin(admin.ModelAdmin):
     ]
     search_fields = 'partner__organization__name', 'agreement__auditor_firm__organization__name',
     filter_horizontal = ('authorized_officers', 'active_pd', 'staff_members', 'users_notified', 'sections', 'offices')
-    raw_id_fields = ('po_item', 'partner', 'active_pd', 'staff_members', 'authorized_officers', 'users_notified', )
+    raw_id_fields = ('po_item', 'partner', 'active_pd', 'staff_members', 'authorized_officers', 'users_notified', 'face_forms')
 
 
 @admin.register(RiskCategory)
@@ -62,6 +62,11 @@ class RiskAdmin(admin.ModelAdmin):
 
 @admin.register(SpotCheck)
 class SpotCheckAdmin(EngagementAdmin):
+    pass
+
+
+@admin.register(FaceForm)
+class FaceFormAdmin(admin.ModelAdmin):
     pass
 
 

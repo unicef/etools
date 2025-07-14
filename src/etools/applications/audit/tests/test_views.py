@@ -958,6 +958,24 @@ class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenan
         })
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
+    def test_face_forms_update_ok(self):
+        self.assertEqual(self.engagement.face_forms.count(), 0)
+
+        response = self._do_update(self.auditor, {
+            "face_forms": [
+                {
+                    "commitment_ref": "123",
+                    "start_date": "2025-07-11",
+                    "end_date": "2025-07-11",
+                    "dct_amt_usd": "321.00",
+                    "dct_amt_local": "222.00"
+                }
+            ]
+        })
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertEqual(self.engagement.face_forms.count(), 1)
+
 
 class TestEngagementActionPointViewSet(EngagementTransitionsTestCaseMixin, BaseTenantTestCase):
     engagement_factory = MicroAssessmentFactory

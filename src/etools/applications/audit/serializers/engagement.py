@@ -1,11 +1,14 @@
+from decimal import Decimal
+
 import datetime
 from copy import copy
 
-from django.db import connection
+from django.db import connection, transaction
 from django.db.models import Exists, OuterRef
 from django.utils.translation import gettext as _
 
 from rest_framework import serializers
+from rest_framework.serializers import ListSerializer
 from unicef_attachments.fields import AttachmentSingleFileField, FileTypeModelChoiceField
 from unicef_attachments.models import Attachment, FileType
 from unicef_attachments.serializers import AttachmentSerializerMixin
@@ -73,10 +76,28 @@ class PartnerOrganizationLightSerializer(PartnerOrganizationListSerializer):
         }
 
 
-class FaceFormsListSerializer(BaseInterventionListSerializer):
+# class BulkFaceFormSerializer(serializers.ListSerializer):
+#     @transaction.atomic
+#     def update(self, instance, validated_data):
+#         import ipdb; ipdb.set_trace()
+#
+#     @transaction.atomic
+#     def create(self, validated_data):
+#         import ipdb; ipdb.set_trace()
+
+
+class FaceFormSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(required=False)
+    commitment_ref = serializers.CharField(required=True)
+    start_date = serializers.DateField(required=False)
+    end_date = serializers.DateField(required=False)
+    dct_amt_usd = serializers.CharField(required=False)
+    dct_amt_local = serializers.CharField(required=False)
+
+
     class Meta:
         model = FaceForm
-        fields = ('id', 'commitment_ref')
+        fields = ('id', 'commitment_ref', 'start_date', 'end_date', 'dct_amt_usd', 'dct_amt_local')
 
 
 class AttachmentField(serializers.Field):
@@ -225,7 +246,7 @@ class EngagementLightSerializer(serializers.ModelSerializer):
 
     offices = OfficeLightSerializer(many=True)
     sections = SectionSerializer(many=True)
-    face_forms = FaceFormsListSerializer(many=True, required=False)
+    face_forms = FaceFormSerializer(many=True, required=False, read_only=True)
 
     class Meta:
         model = Engagement
@@ -280,7 +301,7 @@ class FaceFormRelatedField(serializers.RelatedField):
 class EngagementSerializer(
         AttachmentSerializerMixin,
         EngagementDatesValidation,
-        WritableNestedParentSerializerMixin,
+        # WritableNestedParentSerializerMixin,
         EngagementListSerializer
 ):
     face_form_start_date = serializers.DateField(label='FACE Form(s) Start Date', read_only=True, source='start_date')
@@ -313,11 +334,8 @@ class EngagementSerializer(
         read_field=serializers.SerializerMethodField(),
         label=_("Offices"),
     )
-    face_forms = SeparatedReadWriteField(
-        read_field=serializers.SerializerMethodField(),
-        write_field=FaceFormRelatedField(many=True, required=False),
-        label=_("Face Form(s)"),
-    )
+
+    face_forms = FaceFormSerializer(many=True, required=False)
 
     class Meta(EngagementListSerializer.Meta):
         fields = EngagementListSerializer.Meta.fields + [
@@ -366,11 +384,9 @@ class EngagementSerializer(
     def get_offices(self, obj):
         return [{"id": o.pk, "name": o.name} for o in obj.all()]
 
-    def get_face_forms(self, obj):
-        return [f.commitment_ref for f in obj.all()]
-
     def validate(self, data):
         validated_data = super().validate(data)
+        print(validated_data)
         staff_members = validated_data.get('staff_members', [])
         validated_data.pop('related_agreement', None)
         agreement = validated_data.get('agreement', None) or self.instance.agreement if self.instance else None
@@ -589,7 +605,7 @@ class AuditSerializer(ActivePDValidationMixin, RiskCategoriesUpdateMixin, Engage
             'financial_finding_set', 'percent_of_audited_expenditure', 'audit_opinion', 'number_of_financial_findings',
             'key_internal_weakness', 'key_internal_controls', 'amount_refunded',
             'additional_supporting_documentation_provided', 'justification_provided_and_accepted', 'write_off_required',
-            'pending_unsupported_amount', 'explanation_for_additional_information', 'face_forms'
+            'pending_unsupported_amount', 'explanation_for_additional_information'
         ]
         fields.remove('specific_procedures')
         extra_kwargs = EngagementSerializer.Meta.extra_kwargs.copy()
@@ -693,6 +709,7 @@ class RowSerializer(serializers.Serializer):
     end_date = serializers.SerializerMethodField()
     commitment_ref = serializers.CharField(source='COMMITMENT_REF')
     dct_amt_usd = serializers.CharField(source='DCT_AMT_USD')
+    dct_amt_local = serializers.SerializerMethodField()
     start_date = serializers.SerializerMethodField()
 
     def get_end_date(self, obj):
@@ -700,6 +717,10 @@ class RowSerializer(serializers.Serializer):
             return ""
         dt = datetime.datetime.strptime(obj['EXPIRY_DATE'], "%d-%b-%y")
         return dt.strftime("%Y-%m-%d")
+
+    def get_dct_amt_local(self, obj):
+        # Hardcoded until we get the data
+        return '{0:.2f}'.format((Decimal(obj['DCT_AMT_USD']) * Decimal(0.8)))
 
     def get_start_date(self, obj):
         # Hardcoded until we get the data

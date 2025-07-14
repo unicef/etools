@@ -117,6 +117,9 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
     total_value = models.DecimalField(
         verbose_name=_('Total value of selected FACE form(s)'), default=0, decimal_places=2, max_digits=20
     )
+    total_value_local = models.DecimalField(
+        verbose_name=_('Total value of selected FACE form(s)'), default=0, decimal_places=2, max_digits=20
+    )
     exchange_rate = models.DecimalField(
         verbose_name=_('Exchange Rate'), default=0, decimal_places=2, max_digits=20
     )
@@ -931,8 +934,20 @@ UNICEFUser = GroupWrapper(code='unicef_user',
 
 
 class FaceForm(TimeStampedModel, models.Model):
-
     commitment_ref = models.CharField(max_length=255, verbose_name=_('Commitment Reference'))
+
+    wbs_element_ex = models.CharField(max_length=255, null=True, blank=True, verbose_name=_('WBS Element Ex'))
+    grant_ref = models.CharField(max_length=255, null=True, blank=True, verbose_name=_('Grant Reference'))
+    start_date = models.DateField(null=True, blank=True, verbose_name=_('Start Date'))
+    end_date = models.DateField(null=True, blank=True, verbose_name=_('End Date'))
+
+    dct_amt_usd = models.DecimalField(
+        verbose_name=_('Direct Cash Transfer Amount ($)'), default=0, decimal_places=2, max_digits=20
+    )
+    dct_amt_local = models.DecimalField(
+        verbose_name=_('Direct Cash Transfer Amount (local)'), default=0, decimal_places=2, max_digits=20
+    )
+
 
     class Meta:
         verbose_name = _('Face Form')
