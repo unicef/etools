@@ -73,7 +73,8 @@ class Command(BaseCommand):
         'audit.engagement.engagement_type',
         'audit.engagement.start_date',
         'audit.engagement.end_date',
-        'audit.engagement.total_value',
+        # 'audit.engagement.total_value',
+        # 'audit.engagement.total_value_local',
         'audit.engagement.joint_audit',
         'audit.engagement.year_of_audit',
         'audit.engagement.shared_ip_with',
@@ -123,15 +124,22 @@ class Command(BaseCommand):
     follow_up_editable_page = [
         'audit.engagement.amount_refunded',
         'audit.engagement.additional_supporting_documentation_provided',
-        'audit.engagement.explanation_for_additional_information',
         'audit.engagement.justification_provided_and_accepted',
         'audit.engagement.write_off_required',
+        'audit.engagement.amount_refunded_local',
+        'audit.engagement.additional_supporting_documentation_provided_local',
+        'audit.engagement.justification_provided_and_accepted_local',
+        'audit.engagement.write_off_required_local',
         'audit.engagement.pending_unsupported_amount',
+        'audit.engagement.pending_unsupported_amount_local',
+        'audit.engagement.explanation_for_additional_information',
     ]
 
     follow_up_page = follow_up_editable_page + [
         'audit.spotcheck.total_amount_tested',
         'audit.spotcheck.total_amount_of_ineligible_expenditure',
+        'audit.spotcheck.total_amount_tested_local',
+        'audit.spotcheck.total_amount_of_ineligible_expenditure_local',
     ]
 
     engagement_overview_editable_page = (engagement_overview_editable_block + special_audit_block +
@@ -171,6 +179,8 @@ class Command(BaseCommand):
         'audit.spotcheck.internal_controls',
         'audit.spotcheck.total_amount_of_ineligible_expenditure',
         'audit.spotcheck.total_amount_tested',
+        'audit.spotcheck.total_amount_of_ineligible_expenditure_local',
+        'audit.spotcheck.total_amount_tested_local',
         'audit.spotcheck.exchange_rate',
         'audit.spotcheck.currency_of_report',
     ]
@@ -184,6 +194,7 @@ class Command(BaseCommand):
         'audit.audit.percent_of_audited_expenditure',
         'audit.audit.number_of_financial_findings',
         'audit.audit.pending_unsupported_amount',
+        'audit.audit.pending_unsupported_amount_local',
     ]
 
     report_editable_block = (microassessment_report_block + audit_report_block + spot_check_report_block +

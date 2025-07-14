@@ -684,8 +684,15 @@ class TestAuditCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEngage
                 "commitment_ref": "123",
                 "start_date": "2025-07-11",
                 "end_date": "2025-07-11",
-                "dct_amt_usd": "321.00",
-                "dct_amt_local": "222.00"
+                "dct_amt_usd": "100.00",
+                "dct_amt_local": "11.00"
+            },
+            {
+                "commitment_ref": "1234",
+                "start_date": "2025-07-11",
+                "end_date": "2025-09-11",
+                "dct_amt_usd": "200.00",
+                "dct_amt_local": "22.00"
             }
         ]
         response = self._do_create(self.unicef_focal_point, data)
@@ -695,6 +702,9 @@ class TestAuditCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEngage
         self.assertEqual(audit.face_forms.first().commitment_ref, response.data['face_forms'][0]['commitment_ref'])
         self.assertEqual(audit.face_forms.first().dct_amt_usd.__str__(), response.data['face_forms'][0]['dct_amt_usd'])
         self.assertEqual(audit.face_forms.first().dct_amt_local.__str__(), response.data['face_forms'][0]['dct_amt_local'])
+        self.assertEqual(audit.total_value, 300)
+        self.assertEqual(audit.total_value_local, 33)
+        self.assertEqual(audit.exchange_rate.__str__(), round(200/22, 2).__str__())
 
 
 class TestSpotCheckCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEngagementsCreateViewSet,

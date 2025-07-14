@@ -238,7 +238,7 @@ class EngagementLightSerializer(serializers.ModelSerializer):
         model = Engagement
         fields = [
             'id', 'reference_number', 'agreement', 'po_item', 'related_agreement', 'partner',
-            'engagement_type', 'status', 'status_date', 'total_value', 'offices', 'sections'
+            'engagement_type', 'status', 'status_date', 'total_value', 'total_value_local', 'offices', 'sections'
         ]
 
     def validate(self, attrs):
@@ -335,7 +335,7 @@ class EngagementSerializer(
     class Meta(EngagementListSerializer.Meta):
         fields = EngagementListSerializer.Meta.fields + [
             'face_form_start_date', 'face_form_end_date',
-            'total_value', 'staff_members', 'active_pd', 'authorized_officers', 'users_notified',
+            'total_value', 'total_value_local', 'staff_members', 'active_pd', 'authorized_officers', 'users_notified',
             'joint_audit', 'year_of_audit', 'shared_ip_with', 'exchange_rate', 'currency_of_report',
             'start_date', 'end_date', 'partner_contacted_at', 'date_of_field_visit', 'date_of_draft_report_to_ip',
             'date_of_comments_by_ip', 'date_of_draft_report_to_unicef', 'date_of_comments_by_unicef',
@@ -350,7 +350,7 @@ class EngagementSerializer(
         ]
         extra_kwargs = {
             field: {'required': True} for field in [
-                'start_date', 'end_date', 'total_value',
+                'start_date', 'end_date',
                 'partner_contacted_at',
                 'date_of_field_visit',
                 'date_of_draft_report_to_ip',
@@ -400,6 +400,11 @@ class EngagementSerializer(
                 })
 
         return validated_data
+
+    def create(self, validated_data):
+        instance = super().create(validated_data)
+        instance.update_totals()
+        return instance
 
 
 class ActivePDValidationMixin:
@@ -459,15 +464,20 @@ class FindingSerializer(WritableNestedSerializerMixin, serializers.ModelSerializ
 class SpotCheckSerializer(ActivePDValidationMixin, EngagementSerializer):
     findings = FindingSerializer(many=True, required=False)
 
-    pending_unsupported_amount = serializers.DecimalField(20, 2, label=_('Pending Unsupported Amount'), read_only=True)
+    pending_unsupported_amount = serializers.DecimalField(20, 2, label=_('Pending Unsupported Amount ($)'), read_only=True)
+    pending_unsupported_amount_local = serializers.DecimalField(20, 2, label=_('Pending Unsupported Amount (Local)'), read_only=True)
 
     class Meta(EngagementSerializer.Meta):
         model = SpotCheck
         fields = EngagementSerializer.Meta.fields + [
             'total_amount_tested', 'total_amount_of_ineligible_expenditure',
+            'total_amount_tested_local', 'total_amount_of_ineligible_expenditure_local',
             'internal_controls', 'findings',
             'amount_refunded', 'additional_supporting_documentation_provided',
-            'justification_provided_and_accepted', 'write_off_required', 'pending_unsupported_amount',
+            'justification_provided_and_accepted', 'write_off_required',
+            'amount_refunded_local', 'additional_supporting_documentation_provided_local',
+            'justification_provided_and_accepted_local', 'write_off_required_local',
+            'pending_unsupported_amount', 'pending_unsupported_amount_local',
             'explanation_for_additional_information'
         ]
         fields.remove('joint_audit')
@@ -561,6 +571,7 @@ class MicroAssessmentSerializer(ActivePDValidationMixin, RiskCategoriesUpdateMix
             'start_date': {'required': False},
             'end_date': {'required': False},
             'total_value': {'required': False},
+            'total_value_local': {'required': False}
         })
 
 
@@ -593,7 +604,8 @@ class AuditSerializer(ActivePDValidationMixin, RiskCategoriesUpdateMixin, Engage
 
     number_of_financial_findings = serializers.SerializerMethodField(label=_('No. of Financial Findings'))
 
-    pending_unsupported_amount = serializers.DecimalField(20, 2, label=_('Pending Unsupported Amount'), read_only=True)
+    pending_unsupported_amount = serializers.DecimalField(20, 2, label=_('Pending Unsupported Amount ($)'), read_only=True)
+    pending_unsupported_amount_local = serializers.DecimalField(20, 2, label=_('Pending Unsupported Amount (Local)'), read_only=True)
     percent_of_audited_expenditure = serializers.DecimalField(20, 1, label=_('% Of Audited Expenditure'), read_only=True)
 
     class Meta(EngagementSerializer.Meta):
@@ -602,9 +614,13 @@ class AuditSerializer(ActivePDValidationMixin, RiskCategoriesUpdateMixin, Engage
         fields = EngagementSerializer.Meta.fields + [
             'audited_expenditure', 'audited_expenditure_local', 'financial_findings', 'financial_findings_local',
             'financial_finding_set', 'percent_of_audited_expenditure', 'audit_opinion', 'number_of_financial_findings',
-            'key_internal_weakness', 'key_internal_controls', 'amount_refunded',
-            'additional_supporting_documentation_provided', 'justification_provided_and_accepted', 'write_off_required',
-            'pending_unsupported_amount', 'explanation_for_additional_information'
+            'key_internal_weakness', 'key_internal_controls',
+            'amount_refunded', 'additional_supporting_documentation_provided', 'justification_provided_and_accepted',
+            'write_off_required', 'pending_unsupported_amount',
+            'amount_refunded_local', 'additional_supporting_documentation_provided_local',
+            'justification_provided_and_accepted_local', 'write_off_required_local',
+            'pending_unsupported_amount_local',
+            'explanation_for_additional_information',
         ]
         fields.remove('specific_procedures')
         extra_kwargs = EngagementSerializer.Meta.extra_kwargs.copy()
@@ -670,6 +686,7 @@ class SpecialAuditSerializer(EngagementSerializer):
             'start_date': {'required': False},
             'end_date': {'required': False},
             'total_value': {'required': False},
+            'total_value_local': {'required': False}
         })
 
 

@@ -1,4 +1,5 @@
 from decimal import DivisionByZero, InvalidOperation
+from django.db.models import Sum
 from functools import cached_property
 
 from django.contrib.auth import get_user_model
@@ -153,20 +154,35 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
     date_of_report_submit = models.DateField(verbose_name=_('Date Report Submitted'), null=True, blank=True)
     date_of_final_report = models.DateField(verbose_name=_('Date Report Finalized'), null=True, blank=True)
     date_of_cancel = models.DateField(verbose_name=_('Date Report Cancelled'), null=True, blank=True)
-
+    # USD currency
     amount_refunded = models.DecimalField(
-        verbose_name=_('Amount Refunded'), blank=True, default=0, decimal_places=2, max_digits=20
+        verbose_name=_('Amount Refunded ($)'), blank=True, default=0, decimal_places=2, max_digits=20
     )
     additional_supporting_documentation_provided = models.DecimalField(
-        verbose_name=_('Additional Supporting Documentation Provided'), blank=True, default=0,
+        verbose_name=_('Additional Supporting Documentation Provided ($)'), blank=True, default=0,
         decimal_places=2, max_digits=20
     )
     justification_provided_and_accepted = models.DecimalField(
-        verbose_name=_('Justification Provided and Accepted'), blank=True, default=0, decimal_places=2, max_digits=20
+        verbose_name=_('Justification Provided and Accepted ($)'), blank=True, default=0, decimal_places=2, max_digits=20
     )
     write_off_required = models.DecimalField(
-        verbose_name=_('Impairment'), blank=True, default=0, decimal_places=2, max_digits=20
+        verbose_name=_('Impairment ($)'), blank=True, default=0, decimal_places=2, max_digits=20
     )
+    # local currency
+    amount_refunded_local = models.DecimalField(
+        verbose_name=_('Amount Refunded (local)'), blank=True, default=0, decimal_places=2, max_digits=20
+    )
+    additional_supporting_documentation_provided_local = models.DecimalField(
+        verbose_name=_('Additional Supporting Documentation Provided (local)'), blank=True, default=0,
+        decimal_places=2, max_digits=20
+    )
+    justification_provided_and_accepted_local = models.DecimalField(
+        verbose_name=_('Justification Provided and Accepted (local)'), blank=True, default=0, decimal_places=2, max_digits=20
+    )
+    write_off_required_local = models.DecimalField(
+        verbose_name=_('Impairment (Local)'), blank=True, default=0, decimal_places=2, max_digits=20
+    )
+
     explanation_for_additional_information = models.TextField(
         verbose_name=_('Provide explanation for additional information received from the IP or add attachments'),
         blank=True
@@ -217,6 +233,18 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
 
     def __str__(self):
         return '{} {}'.format(self.get_engagement_type_display(), self.reference_number)
+
+    def update_totals(self):
+        face_form_qs = self.face_forms.all()
+        if face_form_qs.count() == 0:
+            return
+
+        self.total_value = face_form_qs.aggregate(Sum("dct_amt_usd"))['dct_amt_usd__sum']
+        self.total_value_local = face_form_qs.aggregate(Sum("dct_amt_local"))['dct_amt_local__sum']
+        # TBD which are the criteria for recently reported face
+        latest_face = face_form_qs.order_by('-end_date').first()
+        self.exchange_rate = latest_face.dct_amt_usd / latest_face.dct_amt_local
+        self.save(update_fields=['total_value', 'total_value_local', 'exchange_rate'])
 
     @property
     def displayed_status(self):
@@ -438,12 +466,20 @@ class Risk(models.Model):
 
 
 class SpotCheck(Engagement):
-    total_amount_tested = models.DecimalField(verbose_name=_('Total Amount Tested'), blank=True, default=0,
+    total_amount_tested = models.DecimalField(verbose_name=_('Total Amount Tested ($)'), blank=True, default=0,
                                               decimal_places=2, max_digits=20)
     total_amount_of_ineligible_expenditure = models.DecimalField(
-        verbose_name=_('Total Amount of Ineligible Expenditure'), default=0, blank=True,
+        verbose_name=_('Total Amount of Ineligible Expenditure ($)'), default=0, blank=True,
         decimal_places=2, max_digits=20,
     )
+
+    total_amount_tested_local = models.DecimalField(verbose_name=_('Total Amount Tested (local)'), blank=True, default=0,
+                                              decimal_places=2, max_digits=20)
+    total_amount_of_ineligible_expenditure_local = models.DecimalField(
+        verbose_name=_('Total Amount of Ineligible Expenditure (local)'), default=0, blank=True,
+        decimal_places=2, max_digits=20,
+    )
+
     internal_controls = models.TextField(verbose_name=_('Internal Controls'), blank=True)
     final_report = CodedGenericRelation(
         Attachment,
@@ -463,6 +499,11 @@ class SpotCheck(Engagement):
     def pending_unsupported_amount(self):
         return self.total_amount_of_ineligible_expenditure - self.additional_supporting_documentation_provided \
             - self.justification_provided_and_accepted - self.write_off_required - self.amount_refunded
+
+    @property
+    def pending_unsupported_amount_local(self):
+        return self.total_amount_of_ineligible_expenditure_local - self.additional_supporting_documentation_provided_local \
+            - self.justification_provided_and_accepted_local - self.write_off_required_local - self.amount_refunded_local
 
     def save(self, *args, **kwargs):
         self.engagement_type = Engagement.TYPES.sc
@@ -707,6 +748,12 @@ class Audit(Engagement):
             - self.justification_provided_and_accepted - self.write_off_required
 
     @property
+    def pending_unsupported_amount_local(self):
+        return self.financial_findings_local - self.amount_refunded_local \
+            - self.additional_supporting_documentation_provided_local \
+            - self.justification_provided_and_accepted_local - self.write_off_required_local
+
+    @property
     def percent_of_audited_expenditure(self):
         try:
             return 100 * self.financial_findings / self.audited_expenditure
@@ -936,8 +983,6 @@ UNICEFUser = GroupWrapper(code='unicef_user',
 class FaceForm(TimeStampedModel, models.Model):
     commitment_ref = models.CharField(max_length=255, verbose_name=_('Commitment Reference'))
 
-    wbs_element_ex = models.CharField(max_length=255, null=True, blank=True, verbose_name=_('WBS Element Ex'))
-    grant_ref = models.CharField(max_length=255, null=True, blank=True, verbose_name=_('Grant Reference'))
     start_date = models.DateField(null=True, blank=True, verbose_name=_('Start Date'))
     end_date = models.DateField(null=True, blank=True, verbose_name=_('End Date'))
 
@@ -954,3 +999,9 @@ class FaceForm(TimeStampedModel, models.Model):
 
     def __str__(self):
         return self.commitment_ref
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
+
+
