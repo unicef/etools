@@ -116,10 +116,10 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
     start_date = models.DateField(verbose_name=_('Start date of first reporting FACE'), blank=True, null=True)
     end_date = models.DateField(verbose_name=_('End date of last reporting FACE'), blank=True, null=True)
     total_value = models.DecimalField(
-        verbose_name=_('Total value of selected FACE form(s)'), default=0, decimal_places=2, max_digits=20
+        verbose_name=_('Total value of selected FACE form(s) ($)'), default=0, decimal_places=2, max_digits=20
     )
     total_value_local = models.DecimalField(
-        verbose_name=_('Total value of selected FACE form(s)'), default=0, decimal_places=2, max_digits=20
+        verbose_name=_('Total value of selected FACE form(s) (local)'), default=0, decimal_places=2, max_digits=20
     )
     exchange_rate = models.DecimalField(
         verbose_name=_('Exchange Rate'), default=0, decimal_places=2, max_digits=20

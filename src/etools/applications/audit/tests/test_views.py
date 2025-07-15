@@ -2,6 +2,7 @@ import datetime
 import json
 import random
 from copy import copy
+from decimal import Decimal
 from unittest.mock import Mock, patch
 
 from django.conf import settings
@@ -705,6 +706,8 @@ class TestAuditCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEngage
         self.assertEqual(audit.total_value, 300)
         self.assertEqual(audit.total_value_local, 33)
         self.assertEqual(audit.exchange_rate.__str__(), round(200 / 22, 2).__str__())
+        self.assertEqual(audit.total_value, Decimal(response.data['total_value']))
+        self.assertEqual(audit.total_value_local, Decimal(response.data['total_value_local']))
 
 
 class TestSpotCheckCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEngagementsCreateViewSet,
@@ -871,6 +874,8 @@ class TestSpecialAuditCreateViewSet(BaseTestEngagementsCreateViewSet, BaseTenant
         self.assertEqual(sp_audit.total_value, 333)
         self.assertEqual(sp_audit.total_value_local, 444)
         self.assertEqual(sp_audit.exchange_rate.__str__(), round(333 / 444, 2).__str__())
+        self.assertEqual(data['total_value'], response.data['total_value'])
+        self.assertEqual(data['total_value_local'], response.data['total_value_local'])
 
 
 class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenantTestCase):

@@ -238,7 +238,7 @@ class EngagementLightSerializer(serializers.ModelSerializer):
         model = Engagement
         fields = [
             'id', 'reference_number', 'agreement', 'po_item', 'related_agreement', 'partner',
-            'engagement_type', 'status', 'status_date', 'total_value', 'total_value_local', 'offices', 'sections'
+            'engagement_type', 'status', 'status_date', 'offices', 'sections'
         ]
 
     def validate(self, attrs):
@@ -331,6 +331,8 @@ class EngagementSerializer(
         required=False,
         label=_("FACE Forms")
     )
+    total_value = serializers.CharField(read_only=True)
+    total_value_local = serializers.CharField(read_only=True)
 
     class Meta(EngagementListSerializer.Meta):
         fields = EngagementListSerializer.Meta.fields + [
