@@ -314,7 +314,7 @@ class TestUsersViewSet(BaseTenantTestCase):
         }
         response = self.forced_auth_req('patch', url_with_param, user=self.partner_staff, data=data)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("User does not have access to this point of interest", str(response.data))
+        self.assertIn("User does not have access to the following Points of Interest:", str(response.data))
 
     def test_keep_old_user_locations_on_update(self):
         url_with_param = self.url + f"{self.partner_staff.pk}/"

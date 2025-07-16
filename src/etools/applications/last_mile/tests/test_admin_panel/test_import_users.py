@@ -165,7 +165,7 @@ class TestUserAdminViewSetImport(BaseTenantTestCase):
         self.assertEqual(sheet.cell(row=3, column=errors_col_idx).value, "Success")
         self.assertIn("Organization not found by vendor number", sheet.cell(row=4, column=errors_col_idx).value)
         self.assertIn("Enter a valid email address.", sheet.cell(row=5, column=errors_col_idx).value)
-        self.assertIn("Invalid point of interest format", sheet.cell(row=6, column=errors_col_idx).value)
+        self.assertIn("Invalid 'Point of Interests' format. Must be a valid JSON list.", sheet.cell(row=6, column=errors_col_idx).value)
         self.assertIn("does not exist", sheet.cell(row=7, column=errors_col_idx).value)
 
     def test_import_users_all_rows_invalid_returns_error_file(self):

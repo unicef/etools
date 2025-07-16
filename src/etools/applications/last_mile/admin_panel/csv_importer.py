@@ -1,5 +1,6 @@
 import io
 import json
+from functools import partial
 
 from django.db import transaction
 
@@ -8,102 +9,107 @@ import openpyxl
 from etools.applications.last_mile.admin_panel.serializers import LocationImportSerializer, UserImportSerializer
 
 
+class CsvReportHandler:
+    def __init__(self, file_bytes):
+        stream = io.BytesIO(file_bytes)
+        self.wb = openpyxl.load_workbook(stream)
+        self.ws = self.wb.active
+        self.status_col = self.ws.max_column + 1
+        self.ws.cell(row=1, column=self.status_col, value='Import Status')
+
+    def get_rows(self):
+        for index, row in enumerate(self.ws.iter_rows(min_row=3, values_only=True), start=3):
+            if not any(row):
+                continue
+            yield index, row
+
+    def write_status(self, row_index, message):
+        self.ws.cell(row=row_index, column=self.status_col, value=message)
+
+    def get_processed_file(self):
+        out = io.BytesIO()
+        self.wb.save(out)
+        out.seek(0)
+        return out
+
+
 class CsvImporter:
+    def _process_user_row(self, row_data, country_schema, user):
+        ip_number, first_name, last_name, email, poi_str, *_ = row_data
+
+        try:
+            point_of_interests = json.loads(poi_str) if poi_str else []
+        except (ValueError, TypeError):
+            return False, "Invalid 'Point of Interests' format. Must be a valid JSON list."
+
+        data = {
+            'ip_number': ip_number,
+            'first_name': first_name,
+            'last_name': last_name,
+            'email': email,
+            'point_of_interests': point_of_interests,
+        }
+        serializer = UserImportSerializer(data=data)
+
+        if not serializer.is_valid():
+            return False, str(serializer.errors)
+
+        created, object_data = serializer.create(serializer.validated_data, country_schema, user)
+        if not created:
+            return False, object_data
+
+        return True, "Success"
+
+    def _process_location_row(self, row_data, user):
+        ip_numbers_str, location_name, primary_type_name, latitude, longitude, p_code_location, *_ = row_data
+
+        try:
+            ip_numbers = json.loads(ip_numbers_str) if ip_numbers_str else []
+        except (ValueError, TypeError):
+            return False, "Invalid 'IP Numbers' format. Must be a valid JSON list."
+
+        data = {
+            'ip_numbers': ip_numbers,
+            'location_name': location_name,
+            'primary_type_name': primary_type_name,
+            'latitude': latitude,
+            'longitude': longitude,
+            'p_code_location': p_code_location,
+        }
+        serializer = LocationImportSerializer(data=data)
+
+        if not serializer.is_valid():
+            return False, str(serializer.errors)
+
+        created, object_data = serializer.create(serializer.validated_data, user)
+        if not created:
+            return False, object_data
+
+        return True, "Success"
+
+    def _perform_import(self, file, row_processor):
+        file_handler = CsvReportHandler(file.read())
+        import_is_fully_successful = True
+
+        with transaction.atomic():
+            for index, row_data in file_handler.get_rows():
+                is_valid, status_message = row_processor(row_data)
+
+                if not is_valid:
+                    import_is_fully_successful = False
+
+                file_handler.write_status(index, status_message)
+
+        processed_file = file_handler.get_processed_file()
+        return import_is_fully_successful, processed_file
 
     def import_users(self, file, country_schema, user):
-        data = file.read()
-        stream = io.BytesIO(data)
-        wb = openpyxl.load_workbook(stream)
-        ws = wb.active
-        error_col = ws.max_column + 1
-        ws.cell(row=1, column=error_col, value='Errors')
-        index = 3
-        valid = True
-        with transaction.atomic():
-            for row in ws.iter_rows(min_row=3, max_row=ws.max_row, values_only=True):
-                status_message = ''
-
-                ip_number, first_name, last_name, email, point_of_interests, *_ = row
-                if point_of_interests:
-                    try:
-                        point_of_interests = json.loads(point_of_interests)
-                    except ValueError:
-                        status_message += "Invalid point of interest format"
-                        valid = False
-
-                data = {
-                    'ip_number': ip_number,
-                    'first_name': first_name,
-                    'last_name': last_name,
-                    'email': email,
-                    'point_of_interests': [] if not point_of_interests else point_of_interests,
-                }
-                serializer = UserImportSerializer(data=data)
-                if not serializer.is_valid():
-                    status_message += str(serializer.errors)
-                    valid = False
-                if valid:
-                    created, object_data = serializer.create(serializer.validated_data, country_schema, user)
-                    if not created:
-                        status_message += object_data
-                        valid = False
-                if valid:
-                    status_message = 'Success'
-                ws.cell(row=index, column=error_col, value=status_message)
-                index += 1
-
-        out = io.BytesIO()
-        wb.save(out)
-        out.seek(0)
-        return valid, out
+        processor = partial(self._process_user_row, country_schema=country_schema, user=user)
+        return self._perform_import(file, processor)
 
     def import_locations(self, file, user):
-        data = file.read()
-        stream = io.BytesIO(data)
-        wb = openpyxl.load_workbook(stream)
-        ws = wb.active
-        error_col = ws.max_column + 1
-        ws.cell(row=1, column=error_col, value='Errors')
-        index = 3
-        valid = True
-        with transaction.atomic():
-            for row in ws.iter_rows(min_row=3, max_row=ws.max_row, values_only=True):
-                status_message = ''
-
-                ip_numbers, location_name, primary_type_name, latitude, longitude, p_code_location, *_ = row
-                if ip_numbers:
-                    try:
-                        ip_numbers = json.loads(ip_numbers)
-                    except ValueError:
-                        status_message += "Invalid IP Numbers format"
-                        valid = False
-
-                data = {
-                    'ip_numbers': [] if not ip_numbers else ip_numbers,
-                    'location_name': location_name,
-                    'primary_type_name': primary_type_name,
-                    'latitude': latitude,
-                    'longitude': longitude,
-                    'p_code_location': p_code_location
-                }
-                serializer = LocationImportSerializer(data=data)
-                if not serializer.is_valid():
-                    status_message += str(serializer.errors)
-                    valid = False
-                if valid:
-                    created, object_data = serializer.create(serializer.validated_data, user)
-                    if not created:
-                        status_message += object_data
-                        valid = False
-                if valid:
-                    status_message = 'Success'
-                ws.cell(row=index, column=error_col, value=status_message)
-                index += 1
-
-        out = io.BytesIO()
-        wb.save(out)
-        out.seek(0)
-        return valid, out
+        processor = partial(self._process_location_row, user=user)
+        return self._perform_import(file, processor)
 
     def import_stock(self, file):
         print(f"file : {file}")

@@ -168,7 +168,7 @@ class TestLocationAdminViewSetImport(BaseTenantTestCase):
         self.assertIn("Point of interest already exists", sheet.cell(row=5, column=errors_col_idx).value)
         self.assertIn("Point of interest type does not exist", sheet.cell(row=6, column=errors_col_idx).value)
         self.assertIn("Invalid latitude", sheet.cell(row=7, column=errors_col_idx).value)
-        self.assertIn("Expected a list of items but got type", sheet.cell(row=8, column=errors_col_idx).value)
+        self.assertIn("Invalid 'IP Numbers' format. Must be a valid JSON list.", sheet.cell(row=8, column=errors_col_idx).value)
         self.assertIn("Object with organization__vendor_number=NON_EXISTENT_VN does not exist", sheet.cell(row=9, column=errors_col_idx).value)
 
     def test_import_empty_file_is_valid(self):

@@ -8,7 +8,6 @@ from django.utils.translation import gettext_lazy as _
 
 from model_utils import FieldTracker
 from model_utils.models import TimeStampedModel
-from rest_framework.exceptions import ValidationError
 from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CodedGenericRelation
 
@@ -749,18 +748,6 @@ class Profile(TimeStampedModel, models.Model):
 class UserPointsOfInterest(TimeStampedModel, models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='points_of_interest')
     point_of_interest = models.ForeignKey(PointOfInterest, on_delete=models.CASCADE, related_name='users')
-
-    def save(self, *args, **kwargs):
-        partner = self.user.partner
-        if not partner:
-            partner = self.user.profile.organization.partner if self.user.profile.organization else None
-        partner_poi = []
-        if partner:
-            partner_poi = list(partner.points_of_interest.all().values_list('id', flat=True))
-        allowed_points_of_interest = partner_poi + list(PointOfInterest.objects.filter(partner_organizations__isnull=True, is_active=True).exclude(name="UNICEF Warehouse").values_list('id', flat=True))
-        if self.point_of_interest.id not in allowed_points_of_interest:
-            raise ValidationError(_(f'User does not have access to this point of interest : {self.point_of_interest.name}'))
-        return super().save(*args, **kwargs)
 
     class Meta:
         unique_together = ('user', 'point_of_interest')

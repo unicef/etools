@@ -33,11 +33,13 @@ class LMUserCreator:
             user.is_active = False
             user.save()
             user.profile.save()
+            list_user_pois = []
             for poi_id in point_of_interests:
-                models.UserPointsOfInterest.objects.create(
+                list_user_pois.append(models.UserPointsOfInterest(
                     user=user,
                     point_of_interest_id=poi_id.id if isinstance(poi_id, models.PointOfInterest) else poi_id
-                )
+                ))
+            models.UserPointsOfInterest.objects.bulk_create(list_user_pois)
             models.Profile.objects.create(
                 user=user,
                 created_by=created_by

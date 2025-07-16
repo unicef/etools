@@ -7,6 +7,7 @@ from django.utils import timezone
 from django.utils.encoding import force_str
 
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 from rest_framework_gis.fields import GeometryField
 
 from etools.applications.last_mile import models
@@ -195,24 +196,55 @@ class UserAdminUpdateSerializer(serializers.ModelSerializer):
             'point_of_interests',
         )
 
+    def _validate_pois_for_user(self, user, points_of_interest):
+        partner = user.partner
+        if not partner:
+            partner = user.profile.organization.partner if user.profile.organization else None
+
+        allowed_poi_ids = set()
+        if partner:
+            partner_poi_ids = partner.points_of_interest.values_list('id', flat=True)
+            allowed_poi_ids.update(partner_poi_ids)
+
+        global_poi_ids = models.PointOfInterest.objects.filter(
+            partner_organizations__isnull=True, is_active=True
+        ).exclude(name="UNICEF Warehouse").values_list('id', flat=True)
+        allowed_poi_ids.update(global_poi_ids)
+        new_poi_ids = {poi.id for poi in points_of_interest}
+
+        if not new_poi_ids.issubset(allowed_poi_ids):
+            invalid_ids = new_poi_ids - allowed_poi_ids
+            invalid_pois = models.PointOfInterest.objects.filter(id__in=invalid_ids)
+            invalid_names = ", ".join([poi.name for poi in invalid_pois])
+            raise ValidationError(
+                f'User does not have access to the following Points of Interest: {invalid_names}s'
+            )
+
     @transaction.atomic
     def update(self, instance, validated_data):
         self.adminValidator.validate_profile(instance)
 
         profile_data = validated_data.pop('profile', {})
 
-        point_of_interests = validated_data.pop('point_of_interests', None)
-        point_of_interests_ids = [poi.id for poi in point_of_interests] if point_of_interests is not None else []
-        if not point_of_interests_ids:
-            models.UserPointsOfInterest.objects.filter(user=instance).delete()
-        if point_of_interests is not None:
-            models.UserPointsOfInterest.objects.filter(user=instance).exclude(point_of_interest_id__in=point_of_interests_ids).delete()
-            for poi in point_of_interests:
-                models.UserPointsOfInterest.objects.get_or_create(
-                    user=instance,
-                    point_of_interest_id=poi.id
-                )
-            instance.save()
+        if 'point_of_interests' in validated_data:
+            point_of_interests = validated_data.pop('point_of_interests')
+            self._validate_pois_for_user(instance, point_of_interests)
+            new_poi_ids = {poi.id for poi in point_of_interests}
+            models.UserPointsOfInterest.objects.filter(user=instance).exclude(
+                point_of_interest_id__in=new_poi_ids
+            ).delete()
+            existing_poi_ids = set(
+                models.UserPointsOfInterest.objects.filter(
+                    user=instance
+                ).values_list('point_of_interest_id', flat=True)
+            )
+            ids_to_create = new_poi_ids - existing_poi_ids
+            if ids_to_create:
+                new_relations = [
+                    models.UserPointsOfInterest(user=instance, point_of_interest_id=poi_id)
+                    for poi_id in ids_to_create
+                ]
+                models.UserPointsOfInterest.objects.bulk_create(new_relations)
 
         for attr, value in validated_data.items():
             if attr == 'password':
