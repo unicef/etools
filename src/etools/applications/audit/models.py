@@ -743,7 +743,18 @@ class Audit(Engagement):
 
     def save(self, *args, **kwargs):
         self.engagement_type = Engagement.TYPES.audit
+
+        if self.exchange_rate and self.audited_expenditure_local:
+            self.audited_expenditure = self.audited_expenditure_local * self.exchange_rate
+
         return super().save(*args, **kwargs)
+
+    def update_financial_findings(self):
+        findings = self.financial_finding_set.aggregate(usd=Sum('amount'), local=Sum('local_amount'))
+        self.financial_findings = findings['usd']
+        self.financial_findings_local = findings['local']
+
+        self.save(update_fields=['financial_findings', 'financial_findings_local'])
 
     @property
     def pending_unsupported_amount(self):
@@ -838,6 +849,10 @@ class FinancialFinding(models.Model):
             self.audit.reference_number,
             self.get_title_display(),
         )
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self.audit.update_financial_findings()
 
 
 class KeyInternalControl(models.Model):

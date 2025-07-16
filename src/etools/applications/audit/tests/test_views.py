@@ -900,30 +900,33 @@ class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenan
         )
         return response
 
-    def test_percent_of_audited_expenditure_invalid(self):
-        response = self._do_update(self.auditor, {
-            'audited_expenditure': 1,
-            'financial_findings': 2
-        })
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(len(response.data), 1)
-        self.assertIn('financial_findings', response.data)
-
-    def test_percent_of_audited_expenditure_local_invalid(self):
+    def test_audited_expenditure_invalid(self):
+        self.engagement.financial_findings_local = 2
+        self.engagement.save(update_fields=['financial_findings_local'])
         response = self._do_update(self.auditor, {
             'audited_expenditure_local': 1,
-            'financial_findings_local': 2
         })
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(len(response.data), 1)
-        self.assertIn('financial_findings_local', response.data)
+        self.assertIn('audited_expenditure_local', response.data)
 
-    def test_percent_of_audited_expenditure_valid(self):
+    def test_audited_expenditure_valid(self):
+        self.engagement.financial_findings_local = 2
+        self.engagement.save(update_fields=['financial_findings_local'])
         response = self._do_update(self.auditor, {
-            'audited_expenditure': 2,
-            'financial_findings': 1
+            'audited_expenditure_local': 10,
         })
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['audited_expenditure_local'], '10.00')
+
+    def test_calculate_audited_expenditure(self):
+        self.engagement.exchange_rate = 1.5
+        self.engagement.save(update_fields=['exchange_rate'])
+        response = self._do_update(self.auditor, {
+            'audited_expenditure_local': 10,
+        })
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['audited_expenditure'], '15.00')
 
     def test_date_of_field_visit_after_partner_contacted_at_validation(self):
         self.engagement.partner_contacted_at = self.engagement.end_date + datetime.timedelta(days=1)

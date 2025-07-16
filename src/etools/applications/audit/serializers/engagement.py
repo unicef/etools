@@ -610,6 +610,9 @@ class AuditSerializer(ActivePDValidationMixin, RiskCategoriesUpdateMixin, Engage
 
     number_of_financial_findings = serializers.SerializerMethodField(label=_('No. of Financial Findings'))
 
+    financial_findings = serializers.DecimalField(20, 2, label=_('Financial Findings ($)'), read_only=True)
+    financial_findings_local = serializers.DecimalField(20, 2, label=_('Financial Findings (Local)'), read_only=True)
+
     pending_unsupported_amount = serializers.DecimalField(20, 2, label=_('Pending Unsupported Amount ($)'), read_only=True)
     pending_unsupported_amount_local = serializers.DecimalField(20, 2, label=_('Pending Unsupported Amount (Local)'), read_only=True)
     percent_of_audited_expenditure = serializers.DecimalField(20, 1, label=_('% Of Audited Expenditure'), read_only=True)
@@ -638,33 +641,19 @@ class AuditSerializer(ActivePDValidationMixin, RiskCategoriesUpdateMixin, Engage
     def get_number_of_financial_findings(self, obj):
         return obj.financial_finding_set.count()
 
-    def _validate_financial_findings(self, validated_data):
-        financial_findings = validated_data.get('financial_findings')
-        audited_expenditure = validated_data.get('audited_expenditure')
-        financial_findings_local = validated_data.get('financial_findings_local')
+    def _validate_audited_expenditure_local(self, validated_data):
         audited_expenditure_local = validated_data.get('audited_expenditure_local')
-        if not (financial_findings or audited_expenditure) and not (financial_findings_local or audited_expenditure_local):
+        if not audited_expenditure_local:
             return
 
-        if not financial_findings:
-            financial_findings = self.instance.financial_findings if self.instance else None
-        if not audited_expenditure:
-            audited_expenditure = self.instance.audited_expenditure if self.instance else None
-
-        if audited_expenditure and financial_findings and financial_findings >= audited_expenditure:
-            raise serializers.ValidationError({'financial_findings': _('Cannot exceed Audited Expenditure')})
-
-        if not financial_findings_local:
-            financial_findings_local = self.instance.financial_findings_local if self.instance else None
-        if not audited_expenditure_local:
-            audited_expenditure_local = self.instance.audited_expenditure_local if self.instance else None
+        financial_findings_local = self.instance.financial_findings_local if self.instance else None
 
         if audited_expenditure_local and financial_findings_local and financial_findings_local >= audited_expenditure_local:
-            raise serializers.ValidationError({'financial_findings_local': _('Cannot exceed Audited Expenditure Local')})
+            raise serializers.ValidationError({'audited_expenditure_local': _('Cannot be lower than Financial Findings Local')})
 
     def validate(self, validated_data):
         validated_data = super().validate(validated_data)
-        self._validate_financial_findings(validated_data)
+        self._validate_audited_expenditure_local(validated_data)
         return validated_data
 
 
