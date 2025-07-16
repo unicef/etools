@@ -489,7 +489,12 @@ class TransferHistoryAdmin(admin.ModelAdmin):
         return obj.origin_transfer.name if obj.origin_transfer else '-'
 
     def list_sub_transfers(self, obj):
-        return ", ".join([t.name for t in obj.transfers.all()])
+        all_transfer = obj.transfers.all()
+        if not all_transfer:
+            return '-'
+        return ", ".join([t.name if t.name else "Transfer Name Missing" for t in all_transfer])
+
+    list_sub_transfers.short_description = 'Sub Transfers'
 
     def origin_transfer_link(self, obj):
         if obj.origin_transfer:

@@ -17,6 +17,7 @@ from etools.applications.last_mile.admin_panel.views import (
     TransferEvidenceListView,
     TransferHistoryListView,
     TransferItemViewSet,
+    TransferReverseView,
     UpdateUserProfileViewSet,
     UserLocationsViewSet,
     UserPermissionsListView,
@@ -41,6 +42,7 @@ router.register(r'transfer-evidence', TransferEvidenceListView, basename=TRANSFE
 router.register(r'materials', MaterialListView, basename=STOCK_MANAGEMENT_MATERIALS_ADMIN_PANEL)
 router.register(r'partner-organizations', PartnerOrganizationListView, basename=PARTNER_ORGANIZATIONS_ADMIN_PANEL)
 router.register(r'point-of-interests', PointOfInterestsLightViewSet, basename=POINT_OF_INTERESTS_LIGHT_DATA)
+router.register(r'transfer', TransferReverseView, basename=TRANSFER_REVERSE_ADMIN_PANEL)
 
 app_name = ADMIN_PANEL_APP_NAME
 
