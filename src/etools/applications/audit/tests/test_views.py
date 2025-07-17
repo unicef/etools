@@ -874,8 +874,8 @@ class TestSpecialAuditCreateViewSet(BaseTestEngagementsCreateViewSet, BaseTenant
         self.assertEqual(sp_audit.total_value, 333)
         self.assertEqual(sp_audit.total_value_local, 444)
         self.assertEqual(sp_audit.exchange_rate.__str__(), round(333 / 444, 2).__str__())
-        self.assertEqual(data['total_value'], response.data['total_value'])
-        self.assertEqual(data['total_value_local'], response.data['total_value_local'])
+        self.assertEqual(Decimal(data['total_value']), Decimal(response.data['total_value']))
+        self.assertEqual(Decimal(data['total_value_local']), Decimal(response.data['total_value_local']))
 
 
 class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenantTestCase):
@@ -1044,6 +1044,27 @@ class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenan
             'staff_members': staff_list
         })
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_update_financial_finding_set(self):
+        self.assertEqual(self.engagement.financial_finding_set.count(), 0)
+        self.assertEqual(self.engagement.financial_findings, 0)
+        self.assertEqual(self.engagement.financial_findings_local, 0)
+        response = self._do_update(self.auditor, {"financial_finding_set": [
+            {
+                "title": "vat-incorrectly-claimed",
+                "local_amount": "96533.00",
+                "amount": "1253.67",
+                "description": "During the audit process..",
+                "recommendation": "We recommend proper control procedures",
+                "ip_comments": "payments accordingly"
+            }
+        ]})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.engagement.refresh_from_db()
+        self.assertEqual(self.engagement.financial_findings, Decimal('1253.67'))
+        self.assertEqual(self.engagement.financial_findings_local, Decimal('96533.00'))
+        self.assertEqual(response.data['financial_findings'], '1253.67')
+        self.assertEqual(response.data['financial_findings_local'], '96533.00')
 
 
 class TestEngagementActionPointViewSet(EngagementTransitionsTestCaseMixin, BaseTenantTestCase):

@@ -412,6 +412,10 @@ class EngagementSerializer(
         instance.update_totals()
         return instance
 
+    def to_representation(self, instance):
+        instance.refresh_from_db()
+        return super().to_representation(instance)
+
 
 class ActivePDValidationMixin:
     def validate(self, data):
