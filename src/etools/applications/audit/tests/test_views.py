@@ -1171,16 +1171,16 @@ class TestSpotCheckDetail(SCTransitionsTestCaseMixin, BaseTenantTestCase):
     def test_detail_pending_unsupported_amount(self):
         self._fill_sc_specified_fields()
 
-        self.engagement.amount_refunded = 100
-        self.engagement.additional_supporting_documentation_provided = 25
-        self.engagement.justification_provided_and_accepted = 75
-        self.engagement.writeoff = 50
         self.engagement.save()
         self._init_finalized_engagement()
 
         self.engagement.total_amount_tested_local = 1000
         self.engagement.total_amount_of_ineligible_expenditure_local = 300
         self.engagement.exchange_rate = 2
+        self.engagement.amount_refunded_local = 100
+        self.engagement.additional_supporting_documentation_provided_local = 25
+        self.engagement.justification_provided_and_accepted_local = 75
+        self.engagement.write_off_required_local = 50
         self.engagement.save()
 
         response = self.forced_auth_req(
@@ -1197,6 +1197,11 @@ class TestSpotCheckDetail(SCTransitionsTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(expected_amount, self.engagement.pending_unsupported_amount)
         self.assertEqual(float(response.data['total_amount_tested']), 2000.00)
         self.assertEqual(float(response.data['total_amount_of_ineligible_expenditure']), 600.00)
+
+        self.assertEqual(float(response.data['amount_refunded']), 200.00)
+        self.assertEqual(float(response.data['additional_supporting_documentation_provided']), 50.00)
+        self.assertEqual(float(response.data['justification_provided_and_accepted']), 150.00)
+        self.assertEqual(float(response.data['write_off_required']), 100.00)
 
 
 class TestStaffSpotCheck(AuditTestCaseMixin, BaseTenantTestCase):

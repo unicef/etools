@@ -354,6 +354,12 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
         return build_frontend_url('ap', 'engagements', self.id, 'overview', **kwargs)
 
     def save(self, *args, **kwargs):
+        if self.exchange_rate:
+            self.amount_refunded = self.amount_refunded_local * self.exchange_rate if self.amount_refunded_local else 0
+            self.additional_supporting_documentation_provided = self.additional_supporting_documentation_provided_local * self.exchange_rate  if self.additional_supporting_documentation_provided_local else 0
+            self.justification_provided_and_accepted = self.justification_provided_and_accepted_local * self.exchange_rate if self.justification_provided_and_accepted_local else 0
+            self.write_off_required = self.write_off_required_local * self.exchange_rate if self.write_off_required_local else 0
+
         super().save(*args, **kwargs)
         if not self.reference_number:
             self.reference_number = self.get_reference_number()

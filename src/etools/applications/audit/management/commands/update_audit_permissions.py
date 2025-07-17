@@ -122,10 +122,6 @@ class Command(BaseCommand):
     ]
 
     follow_up_editable_page = [
-        'audit.engagement.amount_refunded',
-        'audit.engagement.additional_supporting_documentation_provided',
-        'audit.engagement.justification_provided_and_accepted',
-        'audit.engagement.write_off_required',
         'audit.engagement.amount_refunded_local',
         'audit.engagement.additional_supporting_documentation_provided_local',
         'audit.engagement.justification_provided_and_accepted_local',
@@ -163,12 +159,10 @@ class Command(BaseCommand):
 
     audit_report_block = [
         'audit.audit.audit_opinion',
-        'audit.audit.audited_expenditure',
         'audit.audit.audited_expenditure_local',
         'audit.audit.financial_finding_set',
         'audit.audit.key_internal_controls',
         'audit.audit.key_internal_weakness',
-        'audit.audit.exchange_rate',
         'audit.audit.currency_of_report',
     ]
 
@@ -177,7 +171,6 @@ class Command(BaseCommand):
         'audit.spotcheck.internal_controls',
         'audit.spotcheck.total_amount_of_ineligible_expenditure_local',
         'audit.spotcheck.total_amount_tested_local',
-        'audit.spotcheck.exchange_rate',
         'audit.spotcheck.currency_of_report',
     ]
 
@@ -187,6 +180,12 @@ class Command(BaseCommand):
     ]
 
     report_readonly_block = [
+        'audit.engagement.amount_refunded',
+        'audit.engagement.additional_supporting_documentation_provided',
+        'audit.engagement.justification_provided_and_accepted',
+        'audit.engagement.write_off_required',
+        'audit.audit.audited_expenditure',
+        'audit.audit.exchange_rate',
         'audit.audit.percent_of_audited_expenditure',
         'audit.audit.number_of_financial_findings',
         'audit.audit.pending_unsupported_amount',
@@ -195,6 +194,7 @@ class Command(BaseCommand):
         'audit.audit.financial_findings_local',
         'audit.spotcheck.total_amount_of_ineligible_expenditure',
         'audit.spotcheck.total_amount_tested',
+        'audit.spotcheck.percent_of_audited_expenditure'
     ]
 
     report_editable_block = (microassessment_report_block + audit_report_block + spot_check_report_block +
