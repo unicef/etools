@@ -9,10 +9,12 @@ from django.utils import timezone
 
 from rest_framework import status
 from rest_framework.reverse import reverse
+from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.last_mile import models
+from etools.applications.last_mile.serializers import PointOfInterestNotificationSerializer
 from etools.applications.last_mile.tests.factories import (
     ItemFactory,
     MaterialFactory,
@@ -211,6 +213,20 @@ class TestTransferView(BaseTenantTestCase):
         cls.attachment = AttachmentFactory(
             file=SimpleUploadedFile('proof_file.pdf', b'Proof File'), code='proof_of_transfer')
         cls.material = MaterialFactory(number='1234')
+
+    def test_get_parent_locations(self):
+        serializer = PointOfInterestNotificationSerializer(self.warehouse).data
+        self.assertEqual(serializer.get('parent_name'), str(self.warehouse.parent))
+        self.assertEqual(serializer.get('region'), str(self.warehouse.parent.name))
+
+        location_with_multiple_parents = PointOfInterestFactory(partner_organizations=[self.partner], private=True, poi_type_id=3)
+        location_with_multiple_parents.parent = LocationFactory(admin_level=0, name='Country')
+        location_with_multiple_parents.parent.parent = LocationFactory(admin_level=1, name='Region')
+        location_with_multiple_parents.parent.parent.parent = LocationFactory(admin_level=2, name='State or Under')
+        location_with_multiple_parents.save()
+        serializer_with_multiple_parents = PointOfInterestNotificationSerializer(location_with_multiple_parents).data
+        self.assertEqual(serializer_with_multiple_parents.get('parent_name'), f"{location_with_multiple_parents.parent.parent.parent.name} ({location_with_multiple_parents.parent.parent.parent.p_code})")
+        self.assertEqual(serializer_with_multiple_parents.get('region'), location_with_multiple_parents.parent.parent.name)
 
     def test_incoming(self):
         url = reverse("last_mile:transfers-incoming", args=(self.warehouse.pk,))

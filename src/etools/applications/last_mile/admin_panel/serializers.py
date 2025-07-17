@@ -12,6 +12,7 @@ from etools.applications.last_mile import models
 from etools.applications.last_mile.admin_panel.constants import ALERT_TYPES, TRANSFER_MANUAL_CREATION_NAME
 from etools.applications.last_mile.admin_panel.services.lm_profile_status_updater import LMProfileStatusUpdater
 from etools.applications.last_mile.admin_panel.services.lm_user_creator import LMUserCreator
+from etools.applications.last_mile.admin_panel.services.reverse_transfer import TransferReverse
 from etools.applications.last_mile.admin_panel.validators import AdminPanelValidator
 from etools.applications.last_mile.permissions import LastMileUserPermissionRetriever
 from etools.applications.last_mile.serializers import PointOfInterestTypeSerializer
@@ -646,7 +647,10 @@ class AlertTypeSerializer(serializers.ModelSerializer):
 class BaseTransferSerializer(serializers.ModelSerializer):
     partner_organization = serializers.CharField(source='partner_organization.name')
     origin_point = serializers.CharField(source='origin_point.name')
-    destination_point = serializers.CharField(source='destination_point.name')
+    destination_point = serializers.SerializerMethodField()
+
+    def get_destination_point(self, obj):
+        return obj.destination_point.name if obj.destination_point else None
 
     class Meta:
         model = models.Transfer
@@ -835,3 +839,39 @@ class UserImportSerializer(serializers.Serializer):
         except Exception as ex:
             return False, str(ex)
         return True, user
+
+
+class MaterialsLightSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Material
+        fields = ('id', 'number')
+
+
+class ItemTransferRevertSerializer(serializers.ModelSerializer):
+    material = MaterialsLightSerializer(read_only=True)
+
+    class Meta:
+        model = models.Item
+        fields = ('material', 'quantity', 'modified', 'batch_id', 'description', 'mapped_description')
+
+
+class TransferItemAdminSerializer(serializers.ModelSerializer):
+    items = ItemTransferRevertSerializer(many=True, read_only=True)
+    origin_point = serializers.CharField(source='origin_point.name', read_only=True)
+    destination_point = serializers.CharField(source='destination_point.name', read_only=True)
+    partner_organization = serializers.CharField(source='partner_organization.name', read_only=True)
+
+    class Meta:
+        model = models.Transfer
+        fields = ("id", "created", "modified", "unicef_release_order", "name", "transfer_type", "status", "partner_organization", "destination_point", "origin_point", "items")
+
+
+class TransferReverseAdminSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = models.Transfer
+        fields = ("id",)
+
+    def update(self, instance, validated_data):
+        reversed_transfer = TransferReverse(transfer_id=instance.id).reverse()
+        return reversed_transfer
