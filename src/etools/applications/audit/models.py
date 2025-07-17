@@ -242,7 +242,7 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
         if self.engagement_type in [self.TYPE_AUDIT, self.TYPE_SPOT_CHECK]:
             self.total_value = face_form_qs.aggregate(Sum("dct_amt_usd"))['dct_amt_usd__sum']
             self.total_value_local = face_form_qs.aggregate(Sum("dct_amt_local"))['dct_amt_local__sum']
-            # TBD which are the criteria for recently reported face
+
             latest_face = face_form_qs.order_by('-end_date').first()
             self.exchange_rate = latest_face.dct_amt_usd / latest_face.dct_amt_local
 
@@ -511,6 +511,12 @@ class SpotCheck(Engagement):
 
     def save(self, *args, **kwargs):
         self.engagement_type = Engagement.TYPES.sc
+
+        if self.exchange_rate:
+            self.total_amount_tested = self.total_amount_tested_local * self.exchange_rate \
+                if self.total_amount_tested_local else 0
+            self.total_amount_of_ineligible_expenditure = self.total_amount_of_ineligible_expenditure_local * self.exchange_rate \
+                if self.total_amount_of_ineligible_expenditure_local else 0
         return super().save(*args, **kwargs)
 
     @transition(

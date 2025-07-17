@@ -473,6 +473,9 @@ class SpotCheckSerializer(ActivePDValidationMixin, EngagementSerializer):
     pending_unsupported_amount = serializers.DecimalField(20, 2, label=_('Pending Unsupported Amount ($)'), read_only=True)
     pending_unsupported_amount_local = serializers.DecimalField(20, 2, label=_('Pending Unsupported Amount (Local)'), read_only=True)
 
+    total_amount_tested = serializers.DecimalField(20, 2, label=_('Total Amount Tested ($)'), read_only=True)
+    total_amount_of_ineligible_expenditure = serializers.DecimalField(20, 2, label=_('Total Amount of Ineligible Expenditure ($)'), read_only=True)
+
     class Meta(EngagementSerializer.Meta):
         model = SpotCheck
         fields = EngagementSerializer.Meta.fields + [
@@ -494,9 +497,7 @@ class SpotCheckSerializer(ActivePDValidationMixin, EngagementSerializer):
             'engagement_type': {'read_only': True}
         })
         extra_kwargs.update({
-            field: {'required': True} for field in [
-                'total_amount_tested', 'total_amount_of_ineligible_expenditure', 'internal_controls',
-            ]
+            'internal_controls': {'required': True}
         })
 
     def create(self, validated_data):
@@ -615,7 +616,7 @@ class AuditSerializer(ActivePDValidationMixin, RiskCategoriesUpdateMixin, Engage
 
     pending_unsupported_amount = serializers.DecimalField(20, 2, label=_('Pending Unsupported Amount ($)'), read_only=True)
     pending_unsupported_amount_local = serializers.DecimalField(20, 2, label=_('Pending Unsupported Amount (Local)'), read_only=True)
-    percent_of_audited_expenditure = serializers.DecimalField(20, 1, label=_('% Of Audited Expenditure'), read_only=True)
+    percent_of_audited_expenditure = serializers.DecimalField(20, 2, label=_('% Of Audited Expenditure'), read_only=True)
 
     class Meta(EngagementSerializer.Meta):
         model = Audit

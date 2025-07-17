@@ -175,8 +175,6 @@ class Command(BaseCommand):
     spot_check_report_block = [
         'audit.spotcheck.findings',
         'audit.spotcheck.internal_controls',
-        'audit.spotcheck.total_amount_of_ineligible_expenditure',
-        'audit.spotcheck.total_amount_tested',
         'audit.spotcheck.total_amount_of_ineligible_expenditure_local',
         'audit.spotcheck.total_amount_tested_local',
         'audit.spotcheck.exchange_rate',
@@ -195,6 +193,8 @@ class Command(BaseCommand):
         'audit.audit.pending_unsupported_amount_local',
         'audit.audit.financial_findings',
         'audit.audit.financial_findings_local',
+        'audit.spotcheck.total_amount_of_ineligible_expenditure',
+        'audit.spotcheck.total_amount_tested',
     ]
 
     report_editable_block = (microassessment_report_block + audit_report_block + spot_check_report_block +
