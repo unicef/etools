@@ -67,8 +67,8 @@ class AuditTransitionsTestCaseMixin(EngagementTransitionsTestCaseMixin):
     endpoint = 'audits'
 
     def _fill_audit_specified_fields(self):
-        self.engagement.audited_expenditure = random.randint(1, 22)
-        self.engagement.financial_findings = random.randint(1, 22)
+        self.engagement.audited_expenditure_local = random.randint(1, 22)
+        self.engagement.financial_findings_local = random.randint(1, 22)
         self.engagement.audit_opinion = fuzzy.FuzzyText(length=20).fuzz()
         self.engagement.exchange_rate = fuzzy.FuzzyDecimal(0.5, 400).fuzz()
         self.engagement.currency_of_report = 'USD'
