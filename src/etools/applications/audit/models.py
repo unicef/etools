@@ -356,7 +356,7 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
     def save(self, *args, **kwargs):
         if self.exchange_rate:
             self.amount_refunded = self.amount_refunded_local * self.exchange_rate if self.amount_refunded_local else 0
-            self.additional_supporting_documentation_provided = self.additional_supporting_documentation_provided_local * self.exchange_rate  if self.additional_supporting_documentation_provided_local else 0
+            self.additional_supporting_documentation_provided = self.additional_supporting_documentation_provided_local * self.exchange_rate if self.additional_supporting_documentation_provided_local else 0
             self.justification_provided_and_accepted = self.justification_provided_and_accepted_local * self.exchange_rate if self.justification_provided_and_accepted_local else 0
             self.write_off_required = self.write_off_required_local * self.exchange_rate if self.write_off_required_local else 0
 
@@ -514,6 +514,13 @@ class SpotCheck(Engagement):
     def pending_unsupported_amount_local(self):
         return self.total_amount_of_ineligible_expenditure_local - self.additional_supporting_documentation_provided_local \
             - self.justification_provided_and_accepted_local - self.write_off_required_local - self.amount_refunded_local
+
+    @property
+    def percent_of_audited_expenditure(self):
+        try:
+            return 100 * self.total_amount_of_ineligible_expenditure_local / self.total_amount_tested_local
+        except (TypeError, DivisionByZero, InvalidOperation):
+            return 0
 
     def save(self, *args, **kwargs):
         self.engagement_type = Engagement.TYPES.sc

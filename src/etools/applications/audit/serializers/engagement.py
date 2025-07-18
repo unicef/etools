@@ -487,6 +487,8 @@ class SpotCheckSerializer(ActivePDValidationMixin, EngagementSerializer):
     total_amount_tested = serializers.DecimalField(20, 2, label=_('Total Amount Tested ($)'), read_only=True)
     total_amount_of_ineligible_expenditure = serializers.DecimalField(20, 2, label=_('Total Amount of Ineligible Expenditure ($)'), read_only=True)
 
+    percent_of_audited_expenditure = serializers.DecimalField(20, 2, label=_('% Of Audited Expenditure'), read_only=True)
+
     class Meta(EngagementSerializer.Meta):
         model = SpotCheck
         fields = EngagementSerializer.Meta.fields + [
@@ -498,7 +500,8 @@ class SpotCheckSerializer(ActivePDValidationMixin, EngagementSerializer):
             'amount_refunded_local', 'additional_supporting_documentation_provided_local',
             'justification_provided_and_accepted_local', 'write_off_required_local',
             'pending_unsupported_amount', 'pending_unsupported_amount_local',
-            'explanation_for_additional_information'
+            'explanation_for_additional_information',
+            'percent_of_audited_expenditure'
         ]
         fields.remove('joint_audit')
         fields.remove('shared_ip_with')

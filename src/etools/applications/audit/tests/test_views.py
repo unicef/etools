@@ -1202,6 +1202,10 @@ class TestSpotCheckDetail(SCTransitionsTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(float(response.data['additional_supporting_documentation_provided']), 50.00)
         self.assertEqual(float(response.data['justification_provided_and_accepted']), 150.00)
         self.assertEqual(float(response.data['write_off_required']), 100.00)
+        self.assertEqual(
+            float(response.data['percent_of_audited_expenditure']),
+            100 * self.engagement.total_amount_of_ineligible_expenditure_local / self.engagement.total_amount_tested_local
+        )
 
 
 class TestStaffSpotCheck(AuditTestCaseMixin, BaseTenantTestCase):
