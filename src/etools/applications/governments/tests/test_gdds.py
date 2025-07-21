@@ -34,6 +34,7 @@ from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.reports.models import ResultType
 from etools.applications.reports.tests.factories import CountryProgrammeFactory, SectionFactory
 from etools.applications.users.tests.factories import CountryFactory, GroupFactory, RealmFactory, UserFactory
+from etools.libraries.djangolib.utils import get_environment
 
 
 class BaseGDDTestCase(BaseTenantTestCase):
@@ -597,8 +598,11 @@ class TestCreate(BaseGDDTestCase):
             data=data
         )
 
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
-        self.assertIn('Budget Owner cannot be in the list of UNICEF Focal Points', response.data)
+        if get_environment() != 'DEMO':
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
+            self.assertIn('Budget Owner cannot be in the list of UNICEF Focal Points', response.data)
+        else:
+            self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
 
     def test_add_intervention_by_partner_member(self):
         partner_user = UserFactory(
@@ -1066,8 +1070,11 @@ class TestUpdate(BaseGDDTestCase):
             data={'budget_owner': self.unicef_user.pk}
         )
 
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
-        self.assertIn('Budget Owner cannot be in the list of UNICEF Focal Points', response.data)
+        if get_environment() != 'DEMO':
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
+            self.assertIn('Budget Owner cannot be in the list of UNICEF Focal Points', response.data)
+        else:
+            self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
 
 
 # class TestDelete(BaseGDDTestCase):

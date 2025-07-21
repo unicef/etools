@@ -8,6 +8,7 @@ from etools_validator.utils import check_required_fields, check_rigid_fields
 from etools_validator.validation import CompleteValidation
 
 from etools.applications.governments.permissions import GDDPermissions
+from etools.libraries.djangolib.utils import get_environment
 
 logger = logging.getLogger('governments.gdd.validation')
 
@@ -326,7 +327,6 @@ class GDDValid(CompleteValidation):
         locations_valid,
         cp_structure_valid,
         lead_section_valid,
-        budget_owner_not_in_focal_points
     ]
 
     VALID_ERRORS = {
@@ -340,8 +340,11 @@ class GDDValid(CompleteValidation):
         'locations_valid': _("The locations selected on the PD/SPD are not a subset of all locations selected "
                              "for this PD/SPD's indicators"),
         'lead_section_valid': _('The Lead Section is also selected in Contributing Sections.'),
-        'budget_owner_not_in_focal_points': _('Budget Owner cannot be in the list of UNICEF Focal Points'),
     }
+
+    if get_environment() != 'DEMO':
+        BASIC_VALIDATIONS.append(budget_owner_not_in_focal_points)
+        VALID_ERRORS['budget_owner_not_in_focal_points'] = _('Budget Owner cannot be in the list of UNICEF Focal Points')
 
     PERMISSIONS_CLASS = GDDPermissions
 
