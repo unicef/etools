@@ -1198,6 +1198,8 @@ class TestSpotCheckDetail(SCTransitionsTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(float(response.data['total_amount_tested']), 2000.00)
         self.assertEqual(float(response.data['total_amount_of_ineligible_expenditure']), 600.00)
 
+        self.assertEqual(float(response.data['exchange_rate']), 2.00)
+
         self.assertEqual(float(response.data['amount_refunded']), 200.00)
         self.assertEqual(float(response.data['additional_supporting_documentation_provided']), 50.00)
         self.assertEqual(float(response.data['justification_provided_and_accepted']), 150.00)
@@ -1254,7 +1256,10 @@ class TestStaffSpotCheck(AuditTestCaseMixin, BaseTenantTestCase):
         inactive_unicef_focal_point = AuditFocalPointUserFactory()
         inactive_unicef_focal_point.realms.update(is_active=False)
 
-        spot_check = SpotCheckFactory(staff_members=active_staff_list + [inactive_unicef_focal_point])
+        spot_check = SpotCheckFactory(
+            staff_members=active_staff_list + [inactive_unicef_focal_point],
+            exchange_rate=2
+        )
 
         response = self.forced_auth_req(
             'get',
@@ -1263,6 +1268,8 @@ class TestStaffSpotCheck(AuditTestCaseMixin, BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['staff_members']), spot_check.staff_members.count())
+
+        self.assertEqual(response.data['exchange_rate'], 2.00)
         self.assertEqual(
             [inactive_unicef_focal_point.pk],
             [staff['id'] for staff in response.data['staff_members'] if not staff['has_active_realm']]

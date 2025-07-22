@@ -61,6 +61,7 @@ class Command(BaseCommand):
 
         'audit.engagement.status',
         'audit.engagement.status_date',
+        'audit.engagement.exchange_rate',
 
         'purchase_order.purchaseorder.*',
         'purchase_order.auditorfirm.*',
@@ -185,7 +186,6 @@ class Command(BaseCommand):
         'audit.engagement.justification_provided_and_accepted',
         'audit.engagement.write_off_required',
         'audit.audit.audited_expenditure',
-        'audit.audit.exchange_rate',
         'audit.audit.percent_of_audited_expenditure',
         'audit.audit.number_of_financial_findings',
         'audit.audit.pending_unsupported_amount',
