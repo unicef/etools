@@ -18,6 +18,7 @@ from etools.applications.audit.models import (
     SpecialAuditRecommendation,
     SpecificProcedure,
     SpotCheck,
+    SpotCheckFinancialFinding,
 )
 
 
@@ -97,6 +98,16 @@ class FinancialFindingAdmin(admin.ModelAdmin):
     list_display = [
         'title', 'audit', 'description', 'amount', 'local_amount',
     ]
+    raw_id_fields = ('audit',)
+    search_fields = ['title', ]
+
+
+@admin.register(SpotCheckFinancialFinding)
+class SpotCheckFinancialFindingAdmin(admin.ModelAdmin):
+    list_display = [
+        'title', 'spot_check', 'description', 'amount', 'local_amount',
+    ]
+    raw_id_fields = ('spot_check', )
     search_fields = ['title', ]
 
 

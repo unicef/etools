@@ -169,6 +169,7 @@ class Command(BaseCommand):
 
     spot_check_report_block = [
         'audit.spotcheck.findings',
+        'audit.spotcheck.financial_finding_set',
         'audit.spotcheck.internal_controls',
         'audit.spotcheck.total_amount_of_ineligible_expenditure_local',
         'audit.spotcheck.total_amount_tested_local',

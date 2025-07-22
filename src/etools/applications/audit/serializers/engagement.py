@@ -32,6 +32,7 @@ from etools.applications.audit.models import (
     SpecialAuditRecommendation,
     SpecificProcedure,
     SpotCheck,
+    SpotCheckFinancialFinding,
 )
 from etools.applications.audit.purchase_order.models import PurchaseOrder
 from etools.applications.audit.serializers.auditor import (
@@ -469,6 +470,16 @@ class EngagementHactSerializer(EngagementLightSerializer):
         ]
 
 
+class SpotCheckFinancialFindingSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):
+    class Meta(WritableNestedSerializerMixin.Meta):
+        model = SpotCheckFinancialFinding
+        fields = [
+            'id', 'title',
+            'local_amount', 'amount',
+            'description', 'recommendation', 'ip_comments'
+        ]
+
+
 class FindingSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):
     class Meta(WritableNestedSerializerMixin.Meta):
         model = Finding
@@ -480,6 +491,7 @@ class FindingSerializer(WritableNestedSerializerMixin, serializers.ModelSerializ
 
 class SpotCheckSerializer(ActivePDValidationMixin, EngagementSerializer):
     findings = FindingSerializer(many=True, required=False)
+    financial_finding_set = SpotCheckFinancialFindingSerializer(many=True, required=False, label=_('Financial Findings'))
 
     pending_unsupported_amount = serializers.DecimalField(20, 2, label=_('Pending Unsupported Amount ($)'), read_only=True)
     pending_unsupported_amount_local = serializers.DecimalField(20, 2, label=_('Pending Unsupported Amount (Local)'), read_only=True)
@@ -494,7 +506,7 @@ class SpotCheckSerializer(ActivePDValidationMixin, EngagementSerializer):
         fields = EngagementSerializer.Meta.fields + [
             'total_amount_tested', 'total_amount_of_ineligible_expenditure',
             'total_amount_tested_local', 'total_amount_of_ineligible_expenditure_local',
-            'internal_controls', 'findings',
+            'internal_controls', 'findings', 'financial_finding_set',
             'amount_refunded', 'additional_supporting_documentation_provided',
             'justification_provided_and_accepted', 'write_off_required',
             'amount_refunded_local', 'additional_supporting_documentation_provided_local',

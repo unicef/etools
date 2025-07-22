@@ -522,14 +522,19 @@ class SpotCheck(Engagement):
         except (TypeError, DivisionByZero, InvalidOperation):
             return 0
 
+    def update_financial_findings(self):
+        findings = self.financial_finding_set.aggregate(usd=Sum('amount'), local=Sum('local_amount'))
+        self.total_amount_of_ineligible_expenditure = findings['usd']
+        self.total_amount_of_ineligible_expenditure_local = findings['local']
+
+        self.save(update_fields=['total_amount_of_ineligible_expenditure', 'total_amount_of_ineligible_expenditure_local'])
+
     def save(self, *args, **kwargs):
         self.engagement_type = Engagement.TYPES.sc
 
         if self.exchange_rate:
             self.total_amount_tested = self.total_amount_tested_local * self.exchange_rate \
                 if self.total_amount_tested_local else 0
-            self.total_amount_of_ineligible_expenditure = self.total_amount_of_ineligible_expenditure_local * self.exchange_rate \
-                if self.total_amount_of_ineligible_expenditure_local else 0
         return super().save(*args, **kwargs)
 
     @transition(
@@ -872,6 +877,34 @@ class FinancialFinding(models.Model):
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
         self.audit.update_financial_findings()
+
+
+class SpotCheckFinancialFinding(models.Model):
+    spot_check = models.ForeignKey(
+        SpotCheck, verbose_name=_('SpotCheck'), related_name='financial_finding_set',
+        on_delete=models.CASCADE,
+    )
+
+    title = models.CharField(verbose_name=_('Title (Category)'), max_length=255, choices=FinancialFinding.TITLE_CHOICES)
+    local_amount = models.DecimalField(verbose_name=_('Amount (local)'), decimal_places=2, max_digits=20)
+    amount = models.DecimalField(verbose_name=_('Amount (USD)'), decimal_places=2, max_digits=20)
+    description = models.TextField(verbose_name=_('Description'))
+    recommendation = models.TextField(verbose_name=_('Recommendation'), blank=True)
+    ip_comments = models.TextField(verbose_name=_('IP Comments'), blank=True)
+
+    class Meta:
+        ordering = ('id', )
+
+    def __str__(self):
+        return '{}: {}'.format(
+            self.spot_check.reference_number,
+            self.get_title_display(),
+        )
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
+        self.spot_check.update_financial_findings()
 
 
 class KeyInternalControl(models.Model):
