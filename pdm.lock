@@ -5,7 +5,7 @@
 groups = ["default", "dev"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:51985dbd323cdc57ec72b7be11fced8074c8580b1bd5a73839b724343fa98fcd"
+content_hash = "sha256:e33ba16cc1ef53b7c8c5d8efc00760ceecb244fe73d885a974eae62a0a680154"
 
 [[metadata.targets]]
 requires_python = ">=3.12"
@@ -593,7 +593,7 @@ files = [
 
 [[package]]
 name = "django"
-version = "4.2.15"
+version = "4.2.23"
 requires_python = ">=3.8"
 summary = "A high-level Python web framework that encourages rapid development and clean, pragmatic design."
 groups = ["default"]
@@ -604,8 +604,8 @@ dependencies = [
     "tzdata; sys_platform == \"win32\"",
 ]
 files = [
-    {file = "Django-4.2.15-py3-none-any.whl", hash = "sha256:61ee4a130efb8c451ef3467c67ca99fdce400fedd768634efc86a68c18d80d30"},
-    {file = "Django-4.2.15.tar.gz", hash = "sha256:c77f926b81129493961e19c0e02188f8d07c112a1162df69bfab178ae447f94a"},
+    {file = "django-4.2.23-py3-none-any.whl", hash = "sha256:dafbfaf52c2f289bd65f4ab935791cb4fb9a198f2a5ba9faf35d7338a77e9803"},
+    {file = "django-4.2.23.tar.gz", hash = "sha256:42fdeaba6e6449d88d4f66de47871015097dc6f1b87910db00a91946295cfae4"},
 ]
 
 [[package]]
@@ -1284,12 +1284,12 @@ files = [
 
 [[package]]
 name = "gdal"
-version = "3.8.5"
+version = "3.8.4"
 requires_python = ">=3.6.0"
 summary = "GDAL: Geospatial Data Abstraction Library"
 groups = ["default"]
 files = [
-    {file = "GDAL-3.8.5.tar.gz", hash = "sha256:ad8addd58ba9c62aefc7f65d345c168736798f137e5c8f247af76fcf4862d371"},
+    {file = "GDAL-3.8.4.tar.gz", hash = "sha256:7c51e0ae7a7ccf43ad9e4bf435176baa9276653dfa16fd167c3632f6e7275207"},
 ]
 
 [[package]]
