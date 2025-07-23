@@ -1196,7 +1196,7 @@ class TestSpotCheckDetail(SCTransitionsTestCaseMixin, BaseTenantTestCase):
         self.assertEqual("{:.2f}".format(expected_amount), response.data['pending_unsupported_amount'])
         self.assertEqual(expected_amount, self.engagement.pending_unsupported_amount)
         self.assertEqual(float(response.data['total_amount_tested']), 2000.00)
-        self.assertEqual(float(response.data['total_amount_of_ineligible_expenditure']), 600.00)
+        self.assertEqual(float(response.data['total_amount_of_ineligible_expenditure']), 0.00)
 
         self.assertEqual(float(response.data['exchange_rate']), 2.00)
 
@@ -1269,7 +1269,7 @@ class TestStaffSpotCheck(AuditTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['staff_members']), spot_check.staff_members.count())
 
-        self.assertEqual(response.data['exchange_rate'], 2.00)
+        self.assertEqual(response.data['exchange_rate'], '2.00')
         self.assertEqual(
             [inactive_unicef_focal_point.pk],
             [staff['id'] for staff in response.data['staff_members'] if not staff['has_active_realm']]
@@ -1320,6 +1320,54 @@ class TestStaffSpotCheck(AuditTestCaseMixin, BaseTenantTestCase):
             user=self.unicef_focal_point,
         )
         self.assertEqual(attachments_response.status_code, status.HTTP_200_OK)
+
+    def test_update_financial_finding_set(self):
+        auditor_firm = AuditPartnerFactory(unicef_users_allowed=True)
+        auditor = AuditorUserFactory(partner_firm=auditor_firm, realms__data=[UNICEFUser.name, Auditor.name])
+
+        staff_spot_check = SpotCheckFactory(staff_members=[auditor], status='partner_contacted')
+        staff_spot_check.exchange_rate = 2
+        staff_spot_check.save(update_fields=['exchange_rate'])
+
+        staff_spot_check.agreement.auditor_firm.unicef_users_allowed = True
+        staff_spot_check.agreement.auditor_firm.save(update_fields=['unicef_users_allowed'])
+
+        self.assertEqual(staff_spot_check.financial_finding_set.count(), 0)
+        self.assertEqual(staff_spot_check.total_amount_of_ineligible_expenditure_local, 0)
+        self.assertEqual(staff_spot_check.total_amount_of_ineligible_expenditure, 0)
+
+        response = self.forced_auth_req(
+            'options',
+            reverse('audit:staff-spot-checks-detail', args=[staff_spot_check.pk]),
+            user=auditor
+        )
+        self.assertIn('financial_finding_set', response.data['actions']['PUT'])
+        self.assertNotIn('total_amount_of_ineligible_expenditure_local', response.data['actions']['PUT'])
+
+        data = {
+            "financial_finding_set": [
+                {
+                    "title": "vat-incorrectly-claimed",
+                    "local_amount": "96533.00",
+                    "amount": "1253.67",
+                    "description": "During the audit process..",
+                    "recommendation": "We recommend proper control procedures",
+                    "ip_comm`ents": "payments accordingly"
+                }
+            ]
+        }
+        response = self.forced_auth_req(
+            'patch',
+            reverse('audit:staff-spot-checks-detail', args=[staff_spot_check.pk]),
+            user=auditor, data=data
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        staff_spot_check.refresh_from_db()
+        self.assertEqual(staff_spot_check.total_amount_of_ineligible_expenditure, Decimal('1253.67'))
+        self.assertEqual(staff_spot_check.total_amount_of_ineligible_expenditure_local, Decimal('96533.00'))
+        self.assertEqual(response.data['total_amount_of_ineligible_expenditure'], '1253.67')
+        self.assertEqual(response.data['total_amount_of_ineligible_expenditure_local'], '96533.00')
 
 
 class TestMetadataDetailViewSet(EngagementTransitionsTestCaseMixin):
