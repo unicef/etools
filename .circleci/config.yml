@@ -122,3 +122,4 @@ workflows:
                 - develop
                 - staging
                 - master
+                - ch39409-backend
