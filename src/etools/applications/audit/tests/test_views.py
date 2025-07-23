@@ -1209,6 +1209,39 @@ class TestSpotCheckDetail(SCTransitionsTestCaseMixin, BaseTenantTestCase):
             100 * self.engagement.total_amount_of_ineligible_expenditure_local / self.engagement.total_amount_tested_local
         )
 
+    def test_update_financial_finding_set(self):
+        self.engagement.exchange_rate = 2
+        self.engagement.save(update_fields=['exchange_rate'])
+
+        self.assertEqual(self.engagement.financial_finding_set.count(), 0)
+        self.assertEqual(self.engagement.total_amount_of_ineligible_expenditure_local, 0)
+        self.assertEqual(self.engagement.total_amount_of_ineligible_expenditure, 0)
+
+        data = {
+            "financial_finding_set": [
+                {
+                    "title": "vat-incorrectly-claimed",
+                    "local_amount": "96533.00",
+                    "amount": "1253.67",
+                    "description": "During the audit process..",
+                    "recommendation": "We recommend proper control procedures",
+                    "ip_comm`ents": "payments accordingly"
+                }
+            ]
+        }
+        response = self.forced_auth_req(
+            'patch',
+            '/api/audit/spot-checks/{}/'.format(self.engagement.id),
+            user=self.auditor, data=data
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.engagement.refresh_from_db()
+        self.assertEqual(self.engagement.total_amount_of_ineligible_expenditure, Decimal('1253.67'))
+        self.assertEqual(self.engagement.total_amount_of_ineligible_expenditure_local, Decimal('96533.00'))
+        self.assertEqual(response.data['total_amount_of_ineligible_expenditure'], '1253.67')
+        self.assertEqual(response.data['total_amount_of_ineligible_expenditure_local'], '96533.00')
+
 
 class TestStaffSpotCheck(AuditTestCaseMixin, BaseTenantTestCase):
     fixtures = ('audit_staff_organization',)

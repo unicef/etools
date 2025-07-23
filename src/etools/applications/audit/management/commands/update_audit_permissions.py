@@ -127,12 +127,12 @@ class Command(BaseCommand):
         'audit.engagement.additional_supporting_documentation_provided_local',
         'audit.engagement.justification_provided_and_accepted_local',
         'audit.engagement.write_off_required_local',
-        'audit.engagement.pending_unsupported_amount',
-        'audit.engagement.pending_unsupported_amount_local',
         'audit.engagement.explanation_for_additional_information',
     ]
 
     follow_up_page = follow_up_editable_page + [
+        'audit.engagement.pending_unsupported_amount',
+        'audit.engagement.pending_unsupported_amount_local',
         'audit.spotcheck.total_amount_tested',
         'audit.spotcheck.total_amount_of_ineligible_expenditure',
         'audit.spotcheck.total_amount_tested_local',
@@ -160,6 +160,7 @@ class Command(BaseCommand):
 
     audit_report_block = [
         'audit.audit.audit_opinion',
+        'audit.audit.audited_expenditure',
         'audit.audit.audited_expenditure_local',
         'audit.audit.financial_finding_set',
         'audit.audit.key_internal_controls',
@@ -171,6 +172,7 @@ class Command(BaseCommand):
         'audit.spotcheck.findings',
         'audit.spotcheck.financial_finding_set',
         'audit.spotcheck.internal_controls',
+        'audit.spotcheck.total_amount_tested',
         'audit.spotcheck.total_amount_tested_local',
         'audit.spotcheck.currency_of_report',
     ]
