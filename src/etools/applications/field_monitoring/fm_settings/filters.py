@@ -67,6 +67,7 @@ class QuestionsFilterSet(filters.FilterSet):
             'answer_type': ['exact', 'in'],
             'is_hact': ['exact'],
             'is_active': ['exact'],
+            'is_custom': ['exact'],
             'methods': ['in'],
             'sections': ['in'],
         }

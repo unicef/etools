@@ -19,6 +19,7 @@ from etools.applications.audit.models import (
     SpecificProcedure,
     SpotCheck,
     SpotCheckFinancialFinding,
+    TestSubjectAreas,
 )
 
 
@@ -125,3 +126,23 @@ class SpecialAuditRecommendationAdmin(admin.ModelAdmin):
 class EngagementActionPointAdmin(ActionPointAdmin):
     form = EngagementActionPointAdminForm
     list_display = ('engagement', ) + ActionPointAdmin.list_display
+
+
+@admin.register(TestSubjectAreas)
+class TestSubjectAreasAdmin(admin.ModelAdmin):
+    list_display = [
+        'engagement_reference_number', 'blueprint_header', 'value',
+    ]
+    list_filter = ['value', ]
+    search_fields = ['engagement__reference_number', ]
+    readonly_fields = ['engagement', 'blueprint']
+
+    def get_queryset(self, request):
+        qs = super(TestSubjectAreasAdmin, self).get_queryset(request)
+        return qs.filter(blueprint__category__code__in=['ma_subject_areas', 'ma_subject_areas_v2'])
+
+    def engagement_reference_number(self, obj):
+        return obj.engagement.reference_number if obj else None
+
+    def blueprint_header(self, obj):
+        return obj.blueprint.header if obj else None

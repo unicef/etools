@@ -476,6 +476,14 @@ class Risk(models.Model):
         ordering = ('id', )
 
 
+class TestSubjectAreas(Risk):
+    class Meta(OrderedModel.Meta):
+        verbose_name = _('Test Subject Areas')
+        verbose_name_plural = _('Test Subject Areas')
+        ordering = ('id',)
+        proxy = True
+
+
 class SpotCheck(Engagement):
     total_amount_tested = models.DecimalField(
         verbose_name=_('Total Amount Tested ($)'), blank=True, default=0,
