@@ -171,7 +171,6 @@ class Command(BaseCommand):
         'audit.spotcheck.findings',
         'audit.spotcheck.financial_finding_set',
         'audit.spotcheck.internal_controls',
-        'audit.spotcheck.total_amount_of_ineligible_expenditure_local',
         'audit.spotcheck.total_amount_tested_local',
         'audit.spotcheck.currency_of_report',
     ]
@@ -194,6 +193,7 @@ class Command(BaseCommand):
         'audit.audit.financial_findings',
         'audit.audit.financial_findings_local',
         'audit.spotcheck.total_amount_of_ineligible_expenditure',
+        'audit.spotcheck.total_amount_of_ineligible_expenditure_local',
         'audit.spotcheck.total_amount_tested',
         'audit.spotcheck.percent_of_audited_expenditure'
     ]
