@@ -23,7 +23,7 @@ msgid "Methods"
 msgstr "طرق"
 
 msgid "Import LocationSites"
-msgstr ""
+msgstr "استيراد المواقع"
 
 msgid "Site ID"
 msgstr "معرف المكان"
@@ -70,13 +70,11 @@ msgstr "المرفقات"
 msgid "Question"
 msgstr "السؤال"
 
-#, fuzzy
-#| msgid "Question Text"
 msgid "Question Target Level"
 msgstr "نص السؤال"
 
 msgid "Collection Methods"
-msgstr ""
+msgstr "طرق الجمع"
 
 msgid "Sections"
 msgstr "الأقسام"
@@ -85,33 +83,25 @@ msgid "Answer Type"
 msgstr "نوع الإجابة"
 
 msgid "Group"
-msgstr ""
+msgstr "مجموعة"
 
-#, fuzzy
-#| msgid "Option"
 msgid "Options"
-msgstr "الخيار"
+msgstr "خيارات"
 
-#, fuzzy
-#| msgid "Is Active"
 msgid "Is Active ?"
-msgstr "فعال"
+msgstr "هل هو نشط؟"
 
-#, fuzzy
-#| msgid "Count as HACT"
 msgid "Count as HACT ?"
-msgstr "HACTتحسب نحو"
+msgstr "تعتبر كـ HACT؟"
 
-#, fuzzy
-#| msgid "Is Custom"
 msgid "Is Custom ?"
-msgstr "مخصص"
+msgstr "هل هو مخصص ؟"
 
 msgid "Yes"
-msgstr ""
+msgstr "نعم"
 
 msgid "No"
-msgstr ""
+msgstr "لا"
 
 msgid "Global Attachments"
 msgstr "المرفقات العالمية"
@@ -180,7 +170,7 @@ msgid "Is Active"
 msgstr "فعال"
 
 msgid "Other details"
-msgstr ""
+msgstr "تفاصيل أخرى"
 
 msgid "Questions"
 msgstr "الأسئلة"
@@ -258,4 +248,4 @@ msgid "Site Specific Locations"
 msgstr "مكان المواقع المحددة"
 
 msgid "Multiple updates to a single question found"
-msgstr ""
+msgstr "تم العثور على تحديثات متعددة لسؤال واحد"

@@ -50,18 +50,24 @@ class LogIssueCSVRenderer(CSVRenderer):
 
 
 class QuestionCSVRenderer(CSVRenderer):
-    labels = {
-        'text': _('Question'),
-        'level': _('Question Target Level'),
-        'methods': _('Collection Methods'),
-        'sections': _('Sections'),
-        'answer_type': _('Answer Type'),
-        'category': _('Group'),
-        'options': _('Options'),
-        'is_active': _('Is Active ?'),
-        'is_hact': _('Count as HACT ?'),
-        'is_custom': _('Is Custom ?')
-    }
+    def __init__(self, *args, **kwargs):
+        self.max_admin_level = kwargs.pop('max_admin_level', 1)
+        super().__init__(*args, **kwargs)
+
+    @property
+    def labels(self):
+        return {
+            'text': _('Question'),
+            'level': _('Question Target Level'),
+            'methods': _('Collection Methods'),
+            'sections': _('Sections'),
+            'answer_type': _('Answer Type'),
+            'category': _('Group'),
+            'options': _('Options'),
+            'is_active': _('Is Active ?'),
+            'is_hact': _('Count as HACT ?'),
+            'is_custom': _('Is Custom ?')
+        }
 
     @property
     def header(self):

@@ -24,7 +24,7 @@ msgid "Methods"
 msgstr "Методы"
 
 msgid "Import LocationSites"
-msgstr ""
+msgstr "Импорт LocationSites"
 
 msgid "Site ID"
 msgstr "Идентификатор сайта"
@@ -71,13 +71,11 @@ msgstr "Вложения"
 msgid "Question"
 msgstr "Вопрос"
 
-#, fuzzy
-#| msgid "Question Text"
 msgid "Question Target Level"
-msgstr "Текст вопроса"
+msgstr "Вопрос Целевой Уровень"
 
 msgid "Collection Methods"
-msgstr ""
+msgstr "Методы сбора"
 
 msgid "Sections"
 msgstr "Разделы"
@@ -86,33 +84,25 @@ msgid "Answer Type"
 msgstr "Тип ответа"
 
 msgid "Group"
-msgstr ""
+msgstr "Группа"
 
-#, fuzzy
-#| msgid "Option"
 msgid "Options"
-msgstr "Вариант"
+msgstr "Параметры"
 
-#, fuzzy
-#| msgid "Is Active"
 msgid "Is Active ?"
-msgstr "Активен"
+msgstr "Активен?"
 
-#, fuzzy
-#| msgid "Count as HACT"
 msgid "Count as HACT ?"
-msgstr "Считать как HACT"
+msgstr "Считать как HACT?"
 
-#, fuzzy
-#| msgid "Is Custom"
 msgid "Is Custom ?"
-msgstr "Пользовательский"
+msgstr "Это индивидуальный заказ?"
 
 msgid "Yes"
-msgstr ""
+msgstr "Да"
 
 msgid "No"
-msgstr ""
+msgstr "Нет"
 
 msgid "Global Attachments"
 msgstr "Глобальные вложения"
@@ -181,7 +171,7 @@ msgid "Is Active"
 msgstr "Активен"
 
 msgid "Other details"
-msgstr ""
+msgstr "Другие детали"
 
 msgid "Questions"
 msgstr "Вопросы"
@@ -260,4 +250,4 @@ msgid "Site Specific Locations"
 msgstr "Места, специфичные для сайта"
 
 msgid "Multiple updates to a single question found"
-msgstr ""
+msgstr "Найдено несколько обновлений для одного вопроса"

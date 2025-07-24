@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-07-24 08:57+0000\n"
+"POT-Creation-Date: 2025-07-24 10:35+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -22,7 +22,7 @@ msgid "Methods"
 msgstr "Métodos"
 
 msgid "Import LocationSites"
-msgstr ""
+msgstr "Importar sitios de ubicación"
 
 msgid "Site ID"
 msgstr "ID del sitio"
@@ -69,13 +69,11 @@ msgstr "Archivo adjunto"
 msgid "Question"
 msgstr "Pregunta"
 
-#, fuzzy
-#| msgid "Question Text"
 msgid "Question Target Level"
-msgstr "Texto de la pregunta"
+msgstr "Nivel objetivo de la pregunta"
 
 msgid "Collection Methods"
-msgstr ""
+msgstr "Métodos de recolección"
 
 msgid "Sections"
 msgstr "Secciones"
@@ -86,31 +84,23 @@ msgstr "Tipo de respuesta"
 msgid "Group"
 msgstr ""
 
-#, fuzzy
-#| msgid "Option"
 msgid "Options"
-msgstr "Opción"
+msgstr "Opciones"
 
-#, fuzzy
-#| msgid "Is Active"
 msgid "Is Active ?"
-msgstr "Está Activo"
+msgstr "¿Es activo?"
 
-#, fuzzy
-#| msgid "Count as HACT"
 msgid "Count as HACT ?"
-msgstr "Cuenta como HACT"
+msgstr "¿Cuenta como HACT?"
 
-#, fuzzy
-#| msgid "Is Custom"
 msgid "Is Custom ?"
-msgstr "Es personalizada"
+msgstr "¿Es personalizado?"
 
 msgid "Yes"
-msgstr ""
+msgstr "Sí"
 
 msgid "No"
-msgstr ""
+msgstr "No"
 
 msgid "Global Attachments"
 msgstr "Adjuntos globales"
@@ -179,7 +169,7 @@ msgid "Is Active"
 msgstr "Está Activo"
 
 msgid "Other details"
-msgstr ""
+msgstr "Otros detalles"
 
 msgid "Questions"
 msgstr "Preguntas"
@@ -259,4 +249,4 @@ msgid "Site Specific Locations"
 msgstr "Ubicaciones Específicas del Sitio"
 
 msgid "Multiple updates to a single question found"
-msgstr ""
+msgstr "Se encontraron múltiples actualizaciones para una sola pregunta"

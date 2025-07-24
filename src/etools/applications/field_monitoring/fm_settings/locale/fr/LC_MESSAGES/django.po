@@ -22,7 +22,7 @@ msgid "Methods"
 msgstr "Méthodes"
 
 msgid "Import LocationSites"
-msgstr ""
+msgstr "Importer des sites de localisation"
 
 msgid "Site ID"
 msgstr "ID du Site"
@@ -69,13 +69,11 @@ msgstr "Pièces jointes"
 msgid "Question"
 msgstr "Question"
 
-#, fuzzy
-#| msgid "Question Text"
 msgid "Question Target Level"
-msgstr "Texte des questions"
+msgstr "Niveau cible de la question"
 
 msgid "Collection Methods"
-msgstr ""
+msgstr "Méthodes de collecte"
 
 msgid "Sections"
 msgstr "Sections"
@@ -84,33 +82,25 @@ msgid "Answer Type"
 msgstr "Type de réponse"
 
 msgid "Group"
-msgstr ""
+msgstr "Groupe"
 
-#, fuzzy
-#| msgid "Option"
 msgid "Options"
-msgstr "Option"
+msgstr "Options"
 
-#, fuzzy
-#| msgid "Is Active"
 msgid "Is Active ?"
-msgstr "Est actif"
+msgstr "Est-ce actif ?"
 
-#, fuzzy
-#| msgid "Count as HACT"
 msgid "Count as HACT ?"
-msgstr "Compter comme HACT"
+msgstr "Compter comme HACT ?"
 
-#, fuzzy
-#| msgid "Is Custom"
 msgid "Is Custom ?"
-msgstr "Est personnalisé"
+msgstr "Est-ce personnalisé ?"
 
 msgid "Yes"
-msgstr ""
+msgstr "Oui"
 
 msgid "No"
-msgstr ""
+msgstr "Non"
 
 msgid "Global Attachments"
 msgstr "Pièces jointes globales"
@@ -179,7 +169,7 @@ msgid "Is Active"
 msgstr "Est actif"
 
 msgid "Other details"
-msgstr ""
+msgstr "Autres détails"
 
 msgid "Questions"
 msgstr "Questions"
@@ -259,4 +249,4 @@ msgid "Site Specific Locations"
 msgstr "Sites spécifiques"
 
 msgid "Multiple updates to a single question found"
-msgstr ""
+msgstr "Plusieurs mises à jour trouvées sur une seule question"
