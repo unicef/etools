@@ -105,7 +105,6 @@ urlpatterns = [
     re_path(r'^api/tpm/', include('etools.applications.tpm.urls')),
     re_path(r'^api/audit/', include('etools.applications.audit.urls')),
     re_path(r'^api/action-points/', include('etools.applications.action_points.urls')),
-    re_path(r'^api/psea/', include('etools.applications.psea.urls')),
     re_path(r'^api/travel/', include('etools.applications.travel.urls')),
     re_path(r'^api/v2/reports/', include('etools.applications.reports.urls_v2')),
     re_path(r'^api/v2/', include('etools.applications.partners.urls_v2', namespace='partners_api')),
