@@ -90,7 +90,8 @@ DATABASE_ROUTERS = (
 )
 
 # DJANGO: DEBUGGING
-DEBUG = str2bool(get_from_secrets_or_env('DJANGO_DEBUG'))
+DEBUG = False
+#  str2bool(get_from_secrets_or_env('DJANGO_DEBUG'))
 
 # user that can update other user credentials via api
 SERVICE_NOW_USER = get_from_secrets_or_env('SERVICE_NOW_USER', 'api_servicenow_etools@unicef.org')
@@ -141,6 +142,7 @@ MIDDLEWARE = (
     'etools.applications.core.middleware.EToolsLocaleMiddleware',
     'etools.applications.core.middleware.CheckReadOnlyMiddleware',
     'etools.applications.core.middleware.ExternalAccessControlMiddleware',
+    'django.middleware.gzip.GZipMiddleware',
 )
 WSGI_APPLICATION = 'etools.config.wsgi.application'
 
@@ -252,7 +254,7 @@ INSTALLED_APPS = ('django_tenants',) + SHARED_APPS + TENANT_APPS
 
 # DJANGO: SECURITY
 ALLOWED_HOSTS = [
-    get_from_secrets_or_env('DJANGO_ALLOWED_HOST', '127.0.0.1'), '0.0.0.0',
+    get_from_secrets_or_env('DJANGO_ALLOWED_HOST', '127.0.0.1'), '0.0.0.0', '172.23.0.1', 'prp.localhost'
 ]
 SECRET_KEY = r"j8%#f%3t@9)el9jh4f0ug4*mm346+wwwti#6(^@_ksf@&k^ob1"  # only used locally
 
@@ -415,7 +417,7 @@ REST_FRAMEWORK = {
 }
 
 # django-cors-headers: https://github.com/ottoyiu/django-cors-headers
-CORS_ORIGIN_ALLOW_ALL = False
+CORS_ORIGIN_ALLOW_ALL = True
 
 # django-rest-swagger: http://django-rest-swagger.readthedocs.io/en/latest/settings/
 SWAGGER_SETTINGS = {
@@ -503,9 +505,11 @@ SLACK_URL = get_from_secrets_or_env('SLACK_URL')
 TASK_ADMIN_USER = get_from_secrets_or_env('TASK_ADMIN_USER', 'etools_task_admin@unicef.org')
 
 INSIGHT_LOGGER_MODEL = "vision.VisionSyncLog"
-INSIGHT_SUB_KEY = get_from_secrets_or_env('INSIGHT_SUB_KEY', 'invalid_key')
-INSIGHT_URL = get_from_secrets_or_env('INSIGHT_URL', 'http://invalid_vision_url')
+INSIGHT_SUB_KEY = get_from_secrets_or_env('INSIGHT_SUB_KEY', 'fe2c01e9f54f4693bafe8d16ea5f974b')
+INSIGHT_URL = get_from_secrets_or_env('INSIGHT_URL', 'https://uniapis.unicef.org/biapi/v1/')
 INSIGHT_BANK_KEY = get_from_secrets_or_env('INSIGHT_BANK_KEY', None)
+
+
 
 # Vision data uploader
 EZHACT_PD_VISION_URL = get_from_secrets_or_env('EZHACT_PD_VISION_URL', '')  # example: http://172.18.0.1:8083/upload/pd/
@@ -520,7 +524,7 @@ ETOOLS_EZHACT_TOKEN = get_from_secrets_or_env('ETOOLS_EZHACT_TOKEN', '')
 ETOOLS_EZHACT_EMAIL = get_from_secrets_or_env('ETOOLS_EZHACT_EMAIL', '')
 
 # ALLOW BASIC AUTH FOR DEMO SITE
-ALLOW_BASIC_AUTH = get_from_secrets_or_env('ALLOW_BASIC_AUTH', False)
+ALLOW_BASIC_AUTH = get_from_secrets_or_env('ALLOW_BASIC_AUTH', True)
 if ALLOW_BASIC_AUTH:
     REST_FRAMEWORK['DEFAULT_AUTHENTICATION_CLASSES'] += (
         'etools.applications.core.auth.DRFBasicAuthMixin',
@@ -648,8 +652,8 @@ UNICEF_LOCATIONS_MODEL = 'locations.Location'
 
 # PRP Integration
 # https://github.com/unicef/etools-partner-reporting-portal
-PRP_API_ENDPOINT = get_from_secrets_or_env('PRP_API_ENDPOINT', '')  # example: http://172.18.0.1:8083/api
-PRP_API_USER = get_from_secrets_or_env('PRP_API_USER', '')
+PRP_API_ENDPOINT = get_from_secrets_or_env('PRP_API_ENDPOINT', 'http://prp.localhost:8081/api')  # example: http://172.18.0.1:8083/api
+PRP_API_USER = get_from_secrets_or_env('PRP_API_USER', 'emil.mercea@unicef.org')
 PRP_USER_SYNC_DELAY = int(get_from_secrets_or_env('PRP_USER_SYNC_DELAY', 5))
 
 
@@ -664,10 +668,10 @@ ECN_API_ENDPOINT = get_from_secrets_or_env('ECN_API_ENDPOINT', '')  # example: h
 
 # This variable prevents certain admin sections from being edited by superusers unless
 # their user emails are in the ADMIN_EDIT_EMAILS variable below
-RESTRICTED_ADMIN = str2bool(get_from_secrets_or_env('RESTRICTED_ADMIN', 'True'))
+RESTRICTED_ADMIN = get_from_secrets_or_env('RESTRICTED_ADMIN', False)
 
 # Emails allowed to edit admin models in Partners and Reports apps if RESTRICTED_ADMIN is enabled
-ADMIN_EDIT_EMAILS = get_from_secrets_or_env('ADMIN_EDIT_EMAILS', '')
+ADMIN_EDIT_EMAILS = get_from_secrets_or_env('ADMIN_EDIT_EMAILS', 'emil.mercea@unicef.org')
 
 
 # Stale non-UNICEF users deactivation threshold

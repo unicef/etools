@@ -1,0 +1,355 @@
+[
+{
+    "model": "last_mile.material",
+    "pk": 1,
+    "fields": {
+        "short_description": "Syringe,disp Generic",
+        "basic_description": "Z06 PS Services/ Consumable",
+        "group_description": "Syringes/Needles/Cannulae",
+        "original_uom": "PC",
+        "purchase_group": "mat pur grup",
+        "purchase_group_description": "Purchase group description",
+        "temperature_group": null
+    }
+},
+{
+    "model": "last_mile.material",
+    "pk": 2,
+    "fields": {
+        "short_description": "Coat, lab work",
+        "basic_description": "Z06 PS Services/ Consumable",
+        "group_description": "Safety supplies",
+        "original_uom": "PC",
+        "purchase_group": "mat pur grup",
+        "purchase_group_description": "Purchase group description",
+        "temperature_group": null
+    }
+},
+{
+    "model": "last_mile.material",
+    "pk": 3,
+    "fields": {
+        "short_description": "Net treatment kit,Iconet**",
+        "basic_description": "Z9 PS Services/ Consumable",
+        "group_description": "Insecticides",
+        "original_uom": "EA",
+        "purchase_group": "MALARIA PREV/DIAG",
+        "purchase_group_description": "Purchase group description",
+        "temperature_group": null
+    }
+},
+{
+    "model": "last_mile.material",
+    "pk": 4,
+    "fields": {
+        "short_description": "Pneumococcal Generic Vaccine",
+        "basic_description": "Z2 PS Services/Consumable",
+        "group_description": "Z10103 Non-EPI vaccines",
+        "original_uom": "DS",
+        "purchase_group": "VACCINES",
+        "purchase_group_description": "Purchase group description",
+        "temperature_group": null
+    }
+},
+{
+    "model": "last_mile.item",
+    "pk": 1,
+    "fields": {
+        "created": "2024-02-15T07:49:24.346Z",
+        "modified": "2024-02-15T07:49:24.346Z",
+        "description": null,
+        "conversion_factor": 1,
+        "quantity": 11,
+        "batch_id": "b111",
+        "expiry_date": "2024-05-01T07:43:36Z",
+        "comment": "",
+        "is_prepositioned": false,
+        "preposition_qty": null,
+        "amount_usd": 987,
+        "transfer": 1,
+        "material": 1
+    }
+},
+{
+    "model": "last_mile.item",
+    "pk": 2,
+    "fields": {
+        "created": "2024-02-15T07:49:24.346Z",
+        "modified": "2024-02-15T07:49:24.346Z",
+        "description": "an alternative description",
+        "conversion_factor": null,
+        "quantity": 22,
+        "batch_id": "222",
+        "expiry_date": "2024-05-01T07:43:36Z",
+        "comment": "",
+        "is_prepositioned": false,
+        "preposition_qty": null,
+        "amount_usd": 789,
+        "transfer": 1,
+        "material": 2
+    }
+},
+{
+    "model": "last_mile.item",
+    "pk": 3,
+    "fields": {
+        "created": "2024-02-15T07:49:24.346Z",
+        "modified": "2024-02-15T07:49:24.346Z",
+        "description": "an alternative description",
+        "conversion_factor": null,
+        "quantity": 33,
+        "batch_id": "b333",
+        "expiry_date": "2024-05-01T07:43:36Z",
+        "comment": "",
+        "is_prepositioned": false,
+        "preposition_qty": null,
+        "amount_usd": 200,
+        "transfer": 1,
+        "material": 3
+    }
+},
+{
+    "model": "last_mile.item",
+    "pk": 4,
+    "fields": {
+        "created": "2024-02-15T07:49:24.346Z",
+        "modified": "2024-02-15T07:49:24.346Z",
+        "description": null,
+        "conversion_factor": null,
+        "quantity": 4,
+        "batch_id": "b44",
+        "expiry_date": "2024-05-01T07:43:36Z",
+        "comment": "comment item 4",
+        "is_prepositioned": false,
+        "preposition_qty": null,
+        "amount_usd": 567,
+        "transfer": 2,
+        "material": 4
+    }
+},
+{
+    "model": "last_mile.item",
+    "pk": 5,
+    "fields": {
+        "created": "2024-02-15T07:49:24.346Z",
+        "modified": "2024-02-15T07:49:24.346Z",
+        "description": null,
+        "conversion_factor": null,
+        "quantity": 123,
+        "batch_id": "b123",
+        "expiry_date": "2024-05-01T07:43:36Z",
+        "comment": "comment item 4",
+        "is_prepositioned": false,
+        "preposition_qty": null,
+        "amount_usd": 30,
+        "transfer": 2,
+        "material": 2
+    }
+},
+{
+"model": "last_mile.pointofinteresttype",
+"pk": 1,
+"fields": {
+  "name": "Warehouse",
+  "category": "warehouse"
+}
+},
+{
+"model": "last_mile.pointofinteresttype",
+"pk": 2,
+"fields": {
+  "name": "Distribution Point",
+  "category": "distribution_point"
+}
+},
+{
+"model": "last_mile.pointofinteresttype",
+"pk": 3,
+"fields": {
+  "name": "Hospital",
+  "category": "hospital"
+}
+},
+{
+"model": "last_mile.pointofinteresttype",
+"pk": 4,
+"fields": {
+  "name": "School",
+  "category": "school"
+}
+},
+{
+"model": "last_mile.pointofinteresttype",
+"pk": 5,
+"fields": {
+  "name": "Government Office",
+  "category": "government_office"
+}
+},
+{
+"model": "last_mile.pointofinteresttype",
+"pk": 6,
+"fields": {
+  "name": "Refugee Camp",
+  "category": "refugee_camp"
+}
+},
+{
+"model": "last_mile.pointofinteresttype",
+"pk": 7,
+"fields": {
+  "name": "Installation Point",
+  "category": "installation_point"
+}
+},
+{
+"model": "last_mile.pointofinteresttype",
+"pk": 8,
+"fields": {
+  "name": "Medical Mission",
+  "category": "medical_mission"
+}
+},
+{
+"model": "last_mile.pointofinteresttype",
+"pk": 9,
+"fields": {
+  "name": "Private House",
+  "category": "private_house"
+}
+},
+{
+"model": "last_mile.pointofinteresttype",
+"pk": 10,
+"fields": {
+  "name": "Other",
+  "category": "other"
+}
+},
+{
+    "model": "last_mile.pointofinterest",
+    "pk": 1,
+    "fields": {
+        "parent": 1,
+        "name": "warehouse 1",
+        "p_code": "",
+        "description": "warehouse 1 description",
+        "poi_type": 1,
+        "other": null,
+        "point": "SRID=4326;POINT (35.33203125000001 -1.933226826477123)",
+        "private": true,
+        "is_active": true,
+        "partner_organizations": [
+            16
+        ]
+    }
+},
+{
+    "model": "last_mile.pointofinterest",
+    "pk": 2,
+    "fields": {
+        "parent": 1,
+        "name": "Distrib location",
+        "p_code": "",
+        "description": "Distrib location description",
+        "poi_type": 2,
+        "other": null,
+        "point": "SRID=4326;POINT (35.33203125000001 -3.16245553023786)",
+        "private": true,
+        "is_active": true,
+        "partner_organizations": [
+            16
+        ]
+    }
+},
+{
+    "model": "last_mile.pointofinterest",
+    "pk": 3,
+    "fields": {
+        "parent": 1,
+        "name": "hospital kigali",
+        "p_code": "",
+        "description": "hospital description",
+        "poi_type": 3,
+        "other": null,
+        "point": "SRID=4326;POINT (35.33203125000001 -3.16245553023786)",
+        "private": true,
+        "is_active": true,
+        "partner_organizations": [
+            16
+        ]
+    }
+},
+{
+    "model": "last_mile.transfer",
+    "pk": 1,
+    "fields": {
+        "created": "2024-02-15T07:42:44.011Z",
+        "modified": "2024-02-15T07:42:44.011Z",
+        "name": "hospital distribution transfer",
+        "partner_organization": 16,
+        "status": "PENDING",
+        "transfer_type": "DISTRIBUTION",
+        "checked_in_by": null,
+        "checked_out_by": null,
+        "origin_point": null,
+        "destination_point": 1,
+        "destination_check_in_at": null,
+        "purchase_order_id": null,
+        "delivery_id": null,
+        "delivery_item_id": null,
+        "waybill_id": null,
+        "e_tools_reference": null,
+        "reason": null,
+        "comment": ""
+    }
+},
+{
+    "model": "last_mile.transfer",
+    "pk": 2,
+    "fields": {
+        "created": "2024-02-15T07:43:12.105Z",
+        "modified": "2024-02-15T07:43:12.105Z",
+        "name": "warehouse delivery transfer",
+        "partner_organization": 16,
+        "status": "PENDING",
+        "transfer_type": "DELIVERY",
+        "checked_in_by": null,
+        "checked_out_by": null,
+        "origin_point": null,
+        "destination_point": 1,
+        "destination_check_in_at": null,
+        "purchase_order_id": null,
+        "delivery_id": null,
+        "delivery_item_id": null,
+        "waybill_id": null,
+        "e_tools_reference": null,
+        "reason": null,
+        "comment": ""
+    }
+},
+{
+    "model": "last_mile.transfer",
+    "pk": 3,
+    "fields": {
+        "created": "2024-02-15T07:43:12.105Z",
+        "modified": "2024-02-15T07:43:12.105Z",
+        "name": "warehouse delivery transfer",
+        "partner_organization": 16,
+        "status": "COMPLETED",
+        "transfer_type": "DELIVERY",
+        "checked_in_by": null,
+        "checked_out_by": null,
+        "origin_point": null,
+        "destination_point": 1,
+        "destination_check_in_at": "2024-02-15T07:43:12.105Z",
+        "purchase_order_id": null,
+        "delivery_id": null,
+        "delivery_item_id": null,
+        "waybill_id": null,
+        "e_tools_reference": null,
+        "reason": null,
+        "comment": ""
+    }
+}
+]

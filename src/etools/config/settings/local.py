@@ -2,6 +2,10 @@ import logging
 import sys
 
 from etools.config.settings.base import *  # noqa: F403
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import serialization
+from cryptography.x509 import load_pem_x509_certificate
+
 
 ALLOWED_HOSTS = ['*']
 DEBUG = True
@@ -89,13 +93,13 @@ elif 'runserver' in sys.argv or 'shell_plus' in sys.argv:
     if DEBUG:
         # https://stackoverflow.com/questions/26898597/django-debug-toolbar-and-docker
         INTERNAL_IPS = type(str('c'), (), {'__contains__': lambda *a: True})()
-        MIDDLEWARE += (  # noqa
-            'debug_toolbar.middleware.DebugToolbarMiddleware',
-        )
+        # MIDDLEWARE += (  # noqa
+        #     'debug_toolbar.middleware.DebugToolbarMiddleware',
+        # )
         def show_toolbar(request): # noqa
             return True
 
-        SHARED_APPS += ('debug_toolbar',)  # noqa
+        # SHARED_APPS += ('debug_toolbar',)  # noqa
         INSTALLED_APPS = ('django_tenants',) + SHARED_APPS + TENANT_APPS  # noqa
         REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"] += ('rest_framework.renderers.BrowsableAPIRenderer',)  # noqa
         DEBUG_TOOLBAR_CONFIG = {
@@ -125,25 +129,46 @@ LOGGING['handlers']['console']['formatter'] = 'tenant_context'
 
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 10240
 
-if os.path.isfile(join(CONFIG_ROOT, 'keys/jwt/key.pem')):  # noqa
-    from cryptography.hazmat.backends import default_backend
-    from cryptography.hazmat.primitives import serialization
-    from cryptography.x509 import load_pem_x509_certificate
-    private_key_bytes = open(join(CONFIG_ROOT, 'keys/jwt/key.pem'), 'rb').read()  # noqa: F405
-    public_key_bytes = open(join(CONFIG_ROOT, 'keys/jwt/certificate.pem'), 'rb').read()  # noqa: F405
+# if os.path.isfile(join(CONFIG_ROOT, 'keys/jwt/key.pem')):  # noqa
+#     from cryptography.hazmat.backends import default_backend
+#     from cryptography.hazmat.primitives import serialization
+#     from cryptography.x509 import load_pem_x509_certificate
+#     private_key_bytes = open(join(CONFIG_ROOT, 'keys/jwt/key.pem'), 'rb').read()  # noqa: F405
+#     public_key_bytes = open(join(CONFIG_ROOT, 'keys/jwt/certificate.pem'), 'rb').read()  # noqa: F405
 
-    JWT_PRIVATE_KEY = serialization.load_pem_private_key(private_key_bytes, password=None,
-                                                         backend=default_backend())
+#     JWT_PRIVATE_KEY = serialization.load_pem_private_key(private_key_bytes, password=None,
+#                                                          backend=default_backend())
 
-    certificate = load_pem_x509_certificate(public_key_bytes, default_backend())
-    JWT_PUBLIC_KEY = certificate.public_key()
+#     certificate = load_pem_x509_certificate(public_key_bytes, default_backend())
+#     JWT_PUBLIC_KEY = certificate.public_key()
 
-    SIMPLE_JWT.update({  # noqa: F405
-        'SIGNING_KEY': JWT_PRIVATE_KEY,
-        'VERIFYING_KEY': JWT_PUBLIC_KEY,
-        'AUDIENCE': 'https://etools.unicef.org/',
-        'ALGORITHM': 'RS256',
-    })
+#     SIMPLE_JWT.update({  # noqa: F405
+#         'SIGNING_KEY': JWT_PRIVATE_KEY,
+#         'VERIFYING_KEY': JWT_PUBLIC_KEY,
+#         'AUDIENCE': 'https://etools.unicef.org/',
+#         'ALGORITHM': 'RS256',
+#     })
+
+if not get_from_secrets_or_env('DISABLE_JWT_LOGIN', False):
+    if os.path.isfile(join(CONFIG_ROOT, 'keys/jwt/key.pem')):  # noqa
+        from cryptography.hazmat.backends import default_backend
+        from cryptography.hazmat.primitives import serialization
+        from cryptography.x509 import load_pem_x509_certificate
+        private_key_bytes = open(join(CONFIG_ROOT, 'keys/jwt/key.pem'), 'rb').read()  # noqa: F405
+        public_key_bytes = open(join(CONFIG_ROOT, 'keys/jwt/certificate.pem'), 'rb').read()  # noqa: F405
+
+        JWT_PRIVATE_KEY = serialization.load_pem_private_key(private_key_bytes, password=None,
+                                                            backend=default_backend())
+
+        certificate = load_pem_x509_certificate(public_key_bytes, default_backend())
+        JWT_PUBLIC_KEY = certificate.public_key()
+
+        SIMPLE_JWT.update({  # noqa: F405
+            'SIGNING_KEY': JWT_PRIVATE_KEY,
+            'VERIFYING_KEY': JWT_PUBLIC_KEY,
+            'AUDIENCE': 'https://etools.unicef.org/',
+            'ALGORITHM': 'RS256',
+        })
 
 # Optional for debugging db queries
 # MIDDLEWARE += ('etools.applications.core.middleware.QueryCountDebugMiddleware',)
@@ -151,4 +176,4 @@ if os.path.isfile(join(CONFIG_ROOT, 'keys/jwt/key.pem')):  # noqa
 # Skip request for bank information on PCA template
 PCA_SKIP_FINANCIAL_DATA = True
 RESTRICTED_ADMIN = False
-ADMIN_EDIT_EMAILS = 'your_email@unicef.org'
+ADMIN_EDIT_EMAILS = 'emil.mercea@unicef.org'

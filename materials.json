@@ -1,0 +1,5306 @@
+[
+  {
+    "model": "last_mile.material",
+    "pk": 6,
+    "fields": {
+      "short_description": "Syringe,disp Generic 6",
+      "basic_description": "Z06 PS Services/ Consumable 6",
+      "group_description": "Syringes/Needles/Cannulae 6",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 6",
+      "purchase_group_description": "Purchase group description 6",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 7,
+    "fields": {
+      "short_description": "Syringe,disp Generic 7",
+      "basic_description": "Z06 PS Services/ Consumable 7",
+      "group_description": "Syringes/Needles/Cannulae 7",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 7",
+      "purchase_group_description": "Purchase group description 7",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 8,
+    "fields": {
+      "short_description": "Syringe,disp Generic 8",
+      "basic_description": "Z06 PS Services/ Consumable 8",
+      "group_description": "Syringes/Needles/Cannulae 8",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 8",
+      "purchase_group_description": "Purchase group description 8",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 9,
+    "fields": {
+      "short_description": "Syringe,disp Generic 9",
+      "basic_description": "Z06 PS Services/ Consumable 9",
+      "group_description": "Syringes/Needles/Cannulae 9",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 9",
+      "purchase_group_description": "Purchase group description 9",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 10,
+    "fields": {
+      "short_description": "Syringe,disp Generic 10",
+      "basic_description": "Z06 PS Services/ Consumable 10",
+      "group_description": "Syringes/Needles/Cannulae 10",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 10",
+      "purchase_group_description": "Purchase group description 10",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 11,
+    "fields": {
+      "short_description": "Syringe,disp Generic 11",
+      "basic_description": "Z06 PS Services/ Consumable 11",
+      "group_description": "Syringes/Needles/Cannulae 11",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 11",
+      "purchase_group_description": "Purchase group description 11",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 12,
+    "fields": {
+      "short_description": "Syringe,disp Generic 12",
+      "basic_description": "Z06 PS Services/ Consumable 12",
+      "group_description": "Syringes/Needles/Cannulae 12",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 12",
+      "purchase_group_description": "Purchase group description 12",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 13,
+    "fields": {
+      "short_description": "Syringe,disp Generic 13",
+      "basic_description": "Z06 PS Services/ Consumable 13",
+      "group_description": "Syringes/Needles/Cannulae 13",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 13",
+      "purchase_group_description": "Purchase group description 13",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 14,
+    "fields": {
+      "short_description": "Syringe,disp Generic 14",
+      "basic_description": "Z06 PS Services/ Consumable 14",
+      "group_description": "Syringes/Needles/Cannulae 14",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 14",
+      "purchase_group_description": "Purchase group description 14",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 15,
+    "fields": {
+      "short_description": "Syringe,disp Generic 15",
+      "basic_description": "Z06 PS Services/ Consumable 15",
+      "group_description": "Syringes/Needles/Cannulae 15",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 15",
+      "purchase_group_description": "Purchase group description 15",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 16,
+    "fields": {
+      "short_description": "Syringe,disp Generic 16",
+      "basic_description": "Z06 PS Services/ Consumable 16",
+      "group_description": "Syringes/Needles/Cannulae 16",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 16",
+      "purchase_group_description": "Purchase group description 16",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 17,
+    "fields": {
+      "short_description": "Syringe,disp Generic 17",
+      "basic_description": "Z06 PS Services/ Consumable 17",
+      "group_description": "Syringes/Needles/Cannulae 17",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 17",
+      "purchase_group_description": "Purchase group description 17",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 18,
+    "fields": {
+      "short_description": "Syringe,disp Generic 18",
+      "basic_description": "Z06 PS Services/ Consumable 18",
+      "group_description": "Syringes/Needles/Cannulae 18",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 18",
+      "purchase_group_description": "Purchase group description 18",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 19,
+    "fields": {
+      "short_description": "Syringe,disp Generic 19",
+      "basic_description": "Z06 PS Services/ Consumable 19",
+      "group_description": "Syringes/Needles/Cannulae 19",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 19",
+      "purchase_group_description": "Purchase group description 19",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 20,
+    "fields": {
+      "short_description": "Syringe,disp Generic 20",
+      "basic_description": "Z06 PS Services/ Consumable 20",
+      "group_description": "Syringes/Needles/Cannulae 20",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 20",
+      "purchase_group_description": "Purchase group description 20",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 21,
+    "fields": {
+      "short_description": "Syringe,disp Generic 21",
+      "basic_description": "Z06 PS Services/ Consumable 21",
+      "group_description": "Syringes/Needles/Cannulae 21",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 21",
+      "purchase_group_description": "Purchase group description 21",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 22,
+    "fields": {
+      "short_description": "Syringe,disp Generic 22",
+      "basic_description": "Z06 PS Services/ Consumable 22",
+      "group_description": "Syringes/Needles/Cannulae 22",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 22",
+      "purchase_group_description": "Purchase group description 22",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 23,
+    "fields": {
+      "short_description": "Syringe,disp Generic 23",
+      "basic_description": "Z06 PS Services/ Consumable 23",
+      "group_description": "Syringes/Needles/Cannulae 23",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 23",
+      "purchase_group_description": "Purchase group description 23",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 24,
+    "fields": {
+      "short_description": "Syringe,disp Generic 24",
+      "basic_description": "Z06 PS Services/ Consumable 24",
+      "group_description": "Syringes/Needles/Cannulae 24",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 24",
+      "purchase_group_description": "Purchase group description 24",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 25,
+    "fields": {
+      "short_description": "Syringe,disp Generic 25",
+      "basic_description": "Z06 PS Services/ Consumable 25",
+      "group_description": "Syringes/Needles/Cannulae 25",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 25",
+      "purchase_group_description": "Purchase group description 25",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 26,
+    "fields": {
+      "short_description": "Syringe,disp Generic 26",
+      "basic_description": "Z06 PS Services/ Consumable 26",
+      "group_description": "Syringes/Needles/Cannulae 26",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 26",
+      "purchase_group_description": "Purchase group description 26",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 27,
+    "fields": {
+      "short_description": "Syringe,disp Generic 27",
+      "basic_description": "Z06 PS Services/ Consumable 27",
+      "group_description": "Syringes/Needles/Cannulae 27",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 27",
+      "purchase_group_description": "Purchase group description 27",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 28,
+    "fields": {
+      "short_description": "Syringe,disp Generic 28",
+      "basic_description": "Z06 PS Services/ Consumable 28",
+      "group_description": "Syringes/Needles/Cannulae 28",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 28",
+      "purchase_group_description": "Purchase group description 28",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 29,
+    "fields": {
+      "short_description": "Syringe,disp Generic 29",
+      "basic_description": "Z06 PS Services/ Consumable 29",
+      "group_description": "Syringes/Needles/Cannulae 29",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 29",
+      "purchase_group_description": "Purchase group description 29",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 30,
+    "fields": {
+      "short_description": "Syringe,disp Generic 30",
+      "basic_description": "Z06 PS Services/ Consumable 30",
+      "group_description": "Syringes/Needles/Cannulae 30",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 30",
+      "purchase_group_description": "Purchase group description 30",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 31,
+    "fields": {
+      "short_description": "Syringe,disp Generic 31",
+      "basic_description": "Z06 PS Services/ Consumable 31",
+      "group_description": "Syringes/Needles/Cannulae 31",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 31",
+      "purchase_group_description": "Purchase group description 31",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 32,
+    "fields": {
+      "short_description": "Syringe,disp Generic 32",
+      "basic_description": "Z06 PS Services/ Consumable 32",
+      "group_description": "Syringes/Needles/Cannulae 32",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 32",
+      "purchase_group_description": "Purchase group description 32",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 33,
+    "fields": {
+      "short_description": "Syringe,disp Generic 33",
+      "basic_description": "Z06 PS Services/ Consumable 33",
+      "group_description": "Syringes/Needles/Cannulae 33",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 33",
+      "purchase_group_description": "Purchase group description 33",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 34,
+    "fields": {
+      "short_description": "Syringe,disp Generic 34",
+      "basic_description": "Z06 PS Services/ Consumable 34",
+      "group_description": "Syringes/Needles/Cannulae 34",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 34",
+      "purchase_group_description": "Purchase group description 34",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 35,
+    "fields": {
+      "short_description": "Syringe,disp Generic 35",
+      "basic_description": "Z06 PS Services/ Consumable 35",
+      "group_description": "Syringes/Needles/Cannulae 35",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 35",
+      "purchase_group_description": "Purchase group description 35",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 36,
+    "fields": {
+      "short_description": "Syringe,disp Generic 36",
+      "basic_description": "Z06 PS Services/ Consumable 36",
+      "group_description": "Syringes/Needles/Cannulae 36",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 36",
+      "purchase_group_description": "Purchase group description 36",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 37,
+    "fields": {
+      "short_description": "Syringe,disp Generic 37",
+      "basic_description": "Z06 PS Services/ Consumable 37",
+      "group_description": "Syringes/Needles/Cannulae 37",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 37",
+      "purchase_group_description": "Purchase group description 37",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 38,
+    "fields": {
+      "short_description": "Syringe,disp Generic 38",
+      "basic_description": "Z06 PS Services/ Consumable 38",
+      "group_description": "Syringes/Needles/Cannulae 38",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 38",
+      "purchase_group_description": "Purchase group description 38",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 39,
+    "fields": {
+      "short_description": "Syringe,disp Generic 39",
+      "basic_description": "Z06 PS Services/ Consumable 39",
+      "group_description": "Syringes/Needles/Cannulae 39",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 39",
+      "purchase_group_description": "Purchase group description 39",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 40,
+    "fields": {
+      "short_description": "Syringe,disp Generic 40",
+      "basic_description": "Z06 PS Services/ Consumable 40",
+      "group_description": "Syringes/Needles/Cannulae 40",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 40",
+      "purchase_group_description": "Purchase group description 40",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 41,
+    "fields": {
+      "short_description": "Syringe,disp Generic 41",
+      "basic_description": "Z06 PS Services/ Consumable 41",
+      "group_description": "Syringes/Needles/Cannulae 41",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 41",
+      "purchase_group_description": "Purchase group description 41",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 42,
+    "fields": {
+      "short_description": "Syringe,disp Generic 42",
+      "basic_description": "Z06 PS Services/ Consumable 42",
+      "group_description": "Syringes/Needles/Cannulae 42",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 42",
+      "purchase_group_description": "Purchase group description 42",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 43,
+    "fields": {
+      "short_description": "Syringe,disp Generic 43",
+      "basic_description": "Z06 PS Services/ Consumable 43",
+      "group_description": "Syringes/Needles/Cannulae 43",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 43",
+      "purchase_group_description": "Purchase group description 43",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 44,
+    "fields": {
+      "short_description": "Syringe,disp Generic 44",
+      "basic_description": "Z06 PS Services/ Consumable 44",
+      "group_description": "Syringes/Needles/Cannulae 44",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 44",
+      "purchase_group_description": "Purchase group description 44",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 45,
+    "fields": {
+      "short_description": "Syringe,disp Generic 45",
+      "basic_description": "Z06 PS Services/ Consumable 45",
+      "group_description": "Syringes/Needles/Cannulae 45",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 45",
+      "purchase_group_description": "Purchase group description 45",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 46,
+    "fields": {
+      "short_description": "Syringe,disp Generic 46",
+      "basic_description": "Z06 PS Services/ Consumable 46",
+      "group_description": "Syringes/Needles/Cannulae 46",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 46",
+      "purchase_group_description": "Purchase group description 46",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 47,
+    "fields": {
+      "short_description": "Syringe,disp Generic 47",
+      "basic_description": "Z06 PS Services/ Consumable 47",
+      "group_description": "Syringes/Needles/Cannulae 47",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 47",
+      "purchase_group_description": "Purchase group description 47",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 48,
+    "fields": {
+      "short_description": "Syringe,disp Generic 48",
+      "basic_description": "Z06 PS Services/ Consumable 48",
+      "group_description": "Syringes/Needles/Cannulae 48",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 48",
+      "purchase_group_description": "Purchase group description 48",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 49,
+    "fields": {
+      "short_description": "Syringe,disp Generic 49",
+      "basic_description": "Z06 PS Services/ Consumable 49",
+      "group_description": "Syringes/Needles/Cannulae 49",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 49",
+      "purchase_group_description": "Purchase group description 49",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 50,
+    "fields": {
+      "short_description": "Syringe,disp Generic 50",
+      "basic_description": "Z06 PS Services/ Consumable 50",
+      "group_description": "Syringes/Needles/Cannulae 50",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 50",
+      "purchase_group_description": "Purchase group description 50",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 51,
+    "fields": {
+      "short_description": "Syringe,disp Generic 51",
+      "basic_description": "Z06 PS Services/ Consumable 51",
+      "group_description": "Syringes/Needles/Cannulae 51",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 51",
+      "purchase_group_description": "Purchase group description 51",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 52,
+    "fields": {
+      "short_description": "Syringe,disp Generic 52",
+      "basic_description": "Z06 PS Services/ Consumable 52",
+      "group_description": "Syringes/Needles/Cannulae 52",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 52",
+      "purchase_group_description": "Purchase group description 52",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 53,
+    "fields": {
+      "short_description": "Syringe,disp Generic 53",
+      "basic_description": "Z06 PS Services/ Consumable 53",
+      "group_description": "Syringes/Needles/Cannulae 53",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 53",
+      "purchase_group_description": "Purchase group description 53",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 54,
+    "fields": {
+      "short_description": "Syringe,disp Generic 54",
+      "basic_description": "Z06 PS Services/ Consumable 54",
+      "group_description": "Syringes/Needles/Cannulae 54",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 54",
+      "purchase_group_description": "Purchase group description 54",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 55,
+    "fields": {
+      "short_description": "Syringe,disp Generic 55",
+      "basic_description": "Z06 PS Services/ Consumable 55",
+      "group_description": "Syringes/Needles/Cannulae 55",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 55",
+      "purchase_group_description": "Purchase group description 55",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 56,
+    "fields": {
+      "short_description": "Syringe,disp Generic 56",
+      "basic_description": "Z06 PS Services/ Consumable 56",
+      "group_description": "Syringes/Needles/Cannulae 56",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 56",
+      "purchase_group_description": "Purchase group description 56",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 57,
+    "fields": {
+      "short_description": "Syringe,disp Generic 57",
+      "basic_description": "Z06 PS Services/ Consumable 57",
+      "group_description": "Syringes/Needles/Cannulae 57",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 57",
+      "purchase_group_description": "Purchase group description 57",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 58,
+    "fields": {
+      "short_description": "Syringe,disp Generic 58",
+      "basic_description": "Z06 PS Services/ Consumable 58",
+      "group_description": "Syringes/Needles/Cannulae 58",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 58",
+      "purchase_group_description": "Purchase group description 58",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 59,
+    "fields": {
+      "short_description": "Syringe,disp Generic 59",
+      "basic_description": "Z06 PS Services/ Consumable 59",
+      "group_description": "Syringes/Needles/Cannulae 59",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 59",
+      "purchase_group_description": "Purchase group description 59",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 60,
+    "fields": {
+      "short_description": "Syringe,disp Generic 60",
+      "basic_description": "Z06 PS Services/ Consumable 60",
+      "group_description": "Syringes/Needles/Cannulae 60",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 60",
+      "purchase_group_description": "Purchase group description 60",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 61,
+    "fields": {
+      "short_description": "Syringe,disp Generic 61",
+      "basic_description": "Z06 PS Services/ Consumable 61",
+      "group_description": "Syringes/Needles/Cannulae 61",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 61",
+      "purchase_group_description": "Purchase group description 61",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 62,
+    "fields": {
+      "short_description": "Syringe,disp Generic 62",
+      "basic_description": "Z06 PS Services/ Consumable 62",
+      "group_description": "Syringes/Needles/Cannulae 62",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 62",
+      "purchase_group_description": "Purchase group description 62",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 63,
+    "fields": {
+      "short_description": "Syringe,disp Generic 63",
+      "basic_description": "Z06 PS Services/ Consumable 63",
+      "group_description": "Syringes/Needles/Cannulae 63",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 63",
+      "purchase_group_description": "Purchase group description 63",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 64,
+    "fields": {
+      "short_description": "Syringe,disp Generic 64",
+      "basic_description": "Z06 PS Services/ Consumable 64",
+      "group_description": "Syringes/Needles/Cannulae 64",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 64",
+      "purchase_group_description": "Purchase group description 64",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 65,
+    "fields": {
+      "short_description": "Syringe,disp Generic 65",
+      "basic_description": "Z06 PS Services/ Consumable 65",
+      "group_description": "Syringes/Needles/Cannulae 65",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 65",
+      "purchase_group_description": "Purchase group description 65",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 66,
+    "fields": {
+      "short_description": "Syringe,disp Generic 66",
+      "basic_description": "Z06 PS Services/ Consumable 66",
+      "group_description": "Syringes/Needles/Cannulae 66",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 66",
+      "purchase_group_description": "Purchase group description 66",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 67,
+    "fields": {
+      "short_description": "Syringe,disp Generic 67",
+      "basic_description": "Z06 PS Services/ Consumable 67",
+      "group_description": "Syringes/Needles/Cannulae 67",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 67",
+      "purchase_group_description": "Purchase group description 67",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 68,
+    "fields": {
+      "short_description": "Syringe,disp Generic 68",
+      "basic_description": "Z06 PS Services/ Consumable 68",
+      "group_description": "Syringes/Needles/Cannulae 68",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 68",
+      "purchase_group_description": "Purchase group description 68",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 69,
+    "fields": {
+      "short_description": "Syringe,disp Generic 69",
+      "basic_description": "Z06 PS Services/ Consumable 69",
+      "group_description": "Syringes/Needles/Cannulae 69",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 69",
+      "purchase_group_description": "Purchase group description 69",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 70,
+    "fields": {
+      "short_description": "Syringe,disp Generic 70",
+      "basic_description": "Z06 PS Services/ Consumable 70",
+      "group_description": "Syringes/Needles/Cannulae 70",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 70",
+      "purchase_group_description": "Purchase group description 70",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 71,
+    "fields": {
+      "short_description": "Syringe,disp Generic 71",
+      "basic_description": "Z06 PS Services/ Consumable 71",
+      "group_description": "Syringes/Needles/Cannulae 71",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 71",
+      "purchase_group_description": "Purchase group description 71",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 72,
+    "fields": {
+      "short_description": "Syringe,disp Generic 72",
+      "basic_description": "Z06 PS Services/ Consumable 72",
+      "group_description": "Syringes/Needles/Cannulae 72",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 72",
+      "purchase_group_description": "Purchase group description 72",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 73,
+    "fields": {
+      "short_description": "Syringe,disp Generic 73",
+      "basic_description": "Z06 PS Services/ Consumable 73",
+      "group_description": "Syringes/Needles/Cannulae 73",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 73",
+      "purchase_group_description": "Purchase group description 73",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 74,
+    "fields": {
+      "short_description": "Syringe,disp Generic 74",
+      "basic_description": "Z06 PS Services/ Consumable 74",
+      "group_description": "Syringes/Needles/Cannulae 74",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 74",
+      "purchase_group_description": "Purchase group description 74",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 75,
+    "fields": {
+      "short_description": "Syringe,disp Generic 75",
+      "basic_description": "Z06 PS Services/ Consumable 75",
+      "group_description": "Syringes/Needles/Cannulae 75",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 75",
+      "purchase_group_description": "Purchase group description 75",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 76,
+    "fields": {
+      "short_description": "Syringe,disp Generic 76",
+      "basic_description": "Z06 PS Services/ Consumable 76",
+      "group_description": "Syringes/Needles/Cannulae 76",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 76",
+      "purchase_group_description": "Purchase group description 76",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 77,
+    "fields": {
+      "short_description": "Syringe,disp Generic 77",
+      "basic_description": "Z06 PS Services/ Consumable 77",
+      "group_description": "Syringes/Needles/Cannulae 77",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 77",
+      "purchase_group_description": "Purchase group description 77",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 78,
+    "fields": {
+      "short_description": "Syringe,disp Generic 78",
+      "basic_description": "Z06 PS Services/ Consumable 78",
+      "group_description": "Syringes/Needles/Cannulae 78",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 78",
+      "purchase_group_description": "Purchase group description 78",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 79,
+    "fields": {
+      "short_description": "Syringe,disp Generic 79",
+      "basic_description": "Z06 PS Services/ Consumable 79",
+      "group_description": "Syringes/Needles/Cannulae 79",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 79",
+      "purchase_group_description": "Purchase group description 79",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 80,
+    "fields": {
+      "short_description": "Syringe,disp Generic 80",
+      "basic_description": "Z06 PS Services/ Consumable 80",
+      "group_description": "Syringes/Needles/Cannulae 80",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 80",
+      "purchase_group_description": "Purchase group description 80",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 81,
+    "fields": {
+      "short_description": "Syringe,disp Generic 81",
+      "basic_description": "Z06 PS Services/ Consumable 81",
+      "group_description": "Syringes/Needles/Cannulae 81",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 81",
+      "purchase_group_description": "Purchase group description 81",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 82,
+    "fields": {
+      "short_description": "Syringe,disp Generic 82",
+      "basic_description": "Z06 PS Services/ Consumable 82",
+      "group_description": "Syringes/Needles/Cannulae 82",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 82",
+      "purchase_group_description": "Purchase group description 82",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 83,
+    "fields": {
+      "short_description": "Syringe,disp Generic 83",
+      "basic_description": "Z06 PS Services/ Consumable 83",
+      "group_description": "Syringes/Needles/Cannulae 83",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 83",
+      "purchase_group_description": "Purchase group description 83",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 84,
+    "fields": {
+      "short_description": "Syringe,disp Generic 84",
+      "basic_description": "Z06 PS Services/ Consumable 84",
+      "group_description": "Syringes/Needles/Cannulae 84",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 84",
+      "purchase_group_description": "Purchase group description 84",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 85,
+    "fields": {
+      "short_description": "Syringe,disp Generic 85",
+      "basic_description": "Z06 PS Services/ Consumable 85",
+      "group_description": "Syringes/Needles/Cannulae 85",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 85",
+      "purchase_group_description": "Purchase group description 85",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 86,
+    "fields": {
+      "short_description": "Syringe,disp Generic 86",
+      "basic_description": "Z06 PS Services/ Consumable 86",
+      "group_description": "Syringes/Needles/Cannulae 86",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 86",
+      "purchase_group_description": "Purchase group description 86",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 87,
+    "fields": {
+      "short_description": "Syringe,disp Generic 87",
+      "basic_description": "Z06 PS Services/ Consumable 87",
+      "group_description": "Syringes/Needles/Cannulae 87",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 87",
+      "purchase_group_description": "Purchase group description 87",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 88,
+    "fields": {
+      "short_description": "Syringe,disp Generic 88",
+      "basic_description": "Z06 PS Services/ Consumable 88",
+      "group_description": "Syringes/Needles/Cannulae 88",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 88",
+      "purchase_group_description": "Purchase group description 88",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 89,
+    "fields": {
+      "short_description": "Syringe,disp Generic 89",
+      "basic_description": "Z06 PS Services/ Consumable 89",
+      "group_description": "Syringes/Needles/Cannulae 89",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 89",
+      "purchase_group_description": "Purchase group description 89",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 90,
+    "fields": {
+      "short_description": "Syringe,disp Generic 90",
+      "basic_description": "Z06 PS Services/ Consumable 90",
+      "group_description": "Syringes/Needles/Cannulae 90",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 90",
+      "purchase_group_description": "Purchase group description 90",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 91,
+    "fields": {
+      "short_description": "Syringe,disp Generic 91",
+      "basic_description": "Z06 PS Services/ Consumable 91",
+      "group_description": "Syringes/Needles/Cannulae 91",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 91",
+      "purchase_group_description": "Purchase group description 91",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 92,
+    "fields": {
+      "short_description": "Syringe,disp Generic 92",
+      "basic_description": "Z06 PS Services/ Consumable 92",
+      "group_description": "Syringes/Needles/Cannulae 92",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 92",
+      "purchase_group_description": "Purchase group description 92",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 93,
+    "fields": {
+      "short_description": "Syringe,disp Generic 93",
+      "basic_description": "Z06 PS Services/ Consumable 93",
+      "group_description": "Syringes/Needles/Cannulae 93",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 93",
+      "purchase_group_description": "Purchase group description 93",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 94,
+    "fields": {
+      "short_description": "Syringe,disp Generic 94",
+      "basic_description": "Z06 PS Services/ Consumable 94",
+      "group_description": "Syringes/Needles/Cannulae 94",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 94",
+      "purchase_group_description": "Purchase group description 94",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 95,
+    "fields": {
+      "short_description": "Syringe,disp Generic 95",
+      "basic_description": "Z06 PS Services/ Consumable 95",
+      "group_description": "Syringes/Needles/Cannulae 95",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 95",
+      "purchase_group_description": "Purchase group description 95",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 96,
+    "fields": {
+      "short_description": "Syringe,disp Generic 96",
+      "basic_description": "Z06 PS Services/ Consumable 96",
+      "group_description": "Syringes/Needles/Cannulae 96",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 96",
+      "purchase_group_description": "Purchase group description 96",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 97,
+    "fields": {
+      "short_description": "Syringe,disp Generic 97",
+      "basic_description": "Z06 PS Services/ Consumable 97",
+      "group_description": "Syringes/Needles/Cannulae 97",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 97",
+      "purchase_group_description": "Purchase group description 97",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 98,
+    "fields": {
+      "short_description": "Syringe,disp Generic 98",
+      "basic_description": "Z06 PS Services/ Consumable 98",
+      "group_description": "Syringes/Needles/Cannulae 98",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 98",
+      "purchase_group_description": "Purchase group description 98",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 99,
+    "fields": {
+      "short_description": "Syringe,disp Generic 99",
+      "basic_description": "Z06 PS Services/ Consumable 99",
+      "group_description": "Syringes/Needles/Cannulae 99",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 99",
+      "purchase_group_description": "Purchase group description 99",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 100,
+    "fields": {
+      "short_description": "Syringe,disp Generic 100",
+      "basic_description": "Z06 PS Services/ Consumable 100",
+      "group_description": "Syringes/Needles/Cannulae 100",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 100",
+      "purchase_group_description": "Purchase group description 100",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 101,
+    "fields": {
+      "short_description": "Syringe,disp Generic 101",
+      "basic_description": "Z06 PS Services/ Consumable 101",
+      "group_description": "Syringes/Needles/Cannulae 101",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 101",
+      "purchase_group_description": "Purchase group description 101",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 102,
+    "fields": {
+      "short_description": "Syringe,disp Generic 102",
+      "basic_description": "Z06 PS Services/ Consumable 102",
+      "group_description": "Syringes/Needles/Cannulae 102",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 102",
+      "purchase_group_description": "Purchase group description 102",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 103,
+    "fields": {
+      "short_description": "Syringe,disp Generic 103",
+      "basic_description": "Z06 PS Services/ Consumable 103",
+      "group_description": "Syringes/Needles/Cannulae 103",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 103",
+      "purchase_group_description": "Purchase group description 103",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 104,
+    "fields": {
+      "short_description": "Syringe,disp Generic 104",
+      "basic_description": "Z06 PS Services/ Consumable 104",
+      "group_description": "Syringes/Needles/Cannulae 104",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 104",
+      "purchase_group_description": "Purchase group description 104",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 105,
+    "fields": {
+      "short_description": "Syringe,disp Generic 105",
+      "basic_description": "Z06 PS Services/ Consumable 105",
+      "group_description": "Syringes/Needles/Cannulae 105",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 105",
+      "purchase_group_description": "Purchase group description 105",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 106,
+    "fields": {
+      "short_description": "Syringe,disp Generic 106",
+      "basic_description": "Z06 PS Services/ Consumable 106",
+      "group_description": "Syringes/Needles/Cannulae 106",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 106",
+      "purchase_group_description": "Purchase group description 106",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 107,
+    "fields": {
+      "short_description": "Syringe,disp Generic 107",
+      "basic_description": "Z06 PS Services/ Consumable 107",
+      "group_description": "Syringes/Needles/Cannulae 107",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 107",
+      "purchase_group_description": "Purchase group description 107",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 108,
+    "fields": {
+      "short_description": "Syringe,disp Generic 108",
+      "basic_description": "Z06 PS Services/ Consumable 108",
+      "group_description": "Syringes/Needles/Cannulae 108",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 108",
+      "purchase_group_description": "Purchase group description 108",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 109,
+    "fields": {
+      "short_description": "Syringe,disp Generic 109",
+      "basic_description": "Z06 PS Services/ Consumable 109",
+      "group_description": "Syringes/Needles/Cannulae 109",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 109",
+      "purchase_group_description": "Purchase group description 109",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 110,
+    "fields": {
+      "short_description": "Syringe,disp Generic 110",
+      "basic_description": "Z06 PS Services/ Consumable 110",
+      "group_description": "Syringes/Needles/Cannulae 110",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 110",
+      "purchase_group_description": "Purchase group description 110",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 111,
+    "fields": {
+      "short_description": "Syringe,disp Generic 111",
+      "basic_description": "Z06 PS Services/ Consumable 111",
+      "group_description": "Syringes/Needles/Cannulae 111",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 111",
+      "purchase_group_description": "Purchase group description 111",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 112,
+    "fields": {
+      "short_description": "Syringe,disp Generic 112",
+      "basic_description": "Z06 PS Services/ Consumable 112",
+      "group_description": "Syringes/Needles/Cannulae 112",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 112",
+      "purchase_group_description": "Purchase group description 112",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 113,
+    "fields": {
+      "short_description": "Syringe,disp Generic 113",
+      "basic_description": "Z06 PS Services/ Consumable 113",
+      "group_description": "Syringes/Needles/Cannulae 113",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 113",
+      "purchase_group_description": "Purchase group description 113",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 114,
+    "fields": {
+      "short_description": "Syringe,disp Generic 114",
+      "basic_description": "Z06 PS Services/ Consumable 114",
+      "group_description": "Syringes/Needles/Cannulae 114",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 114",
+      "purchase_group_description": "Purchase group description 114",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 115,
+    "fields": {
+      "short_description": "Syringe,disp Generic 115",
+      "basic_description": "Z06 PS Services/ Consumable 115",
+      "group_description": "Syringes/Needles/Cannulae 115",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 115",
+      "purchase_group_description": "Purchase group description 115",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 116,
+    "fields": {
+      "short_description": "Syringe,disp Generic 116",
+      "basic_description": "Z06 PS Services/ Consumable 116",
+      "group_description": "Syringes/Needles/Cannulae 116",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 116",
+      "purchase_group_description": "Purchase group description 116",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 117,
+    "fields": {
+      "short_description": "Syringe,disp Generic 117",
+      "basic_description": "Z06 PS Services/ Consumable 117",
+      "group_description": "Syringes/Needles/Cannulae 117",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 117",
+      "purchase_group_description": "Purchase group description 117",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 118,
+    "fields": {
+      "short_description": "Syringe,disp Generic 118",
+      "basic_description": "Z06 PS Services/ Consumable 118",
+      "group_description": "Syringes/Needles/Cannulae 118",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 118",
+      "purchase_group_description": "Purchase group description 118",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 119,
+    "fields": {
+      "short_description": "Syringe,disp Generic 119",
+      "basic_description": "Z06 PS Services/ Consumable 119",
+      "group_description": "Syringes/Needles/Cannulae 119",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 119",
+      "purchase_group_description": "Purchase group description 119",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 120,
+    "fields": {
+      "short_description": "Syringe,disp Generic 120",
+      "basic_description": "Z06 PS Services/ Consumable 120",
+      "group_description": "Syringes/Needles/Cannulae 120",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 120",
+      "purchase_group_description": "Purchase group description 120",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 121,
+    "fields": {
+      "short_description": "Syringe,disp Generic 121",
+      "basic_description": "Z06 PS Services/ Consumable 121",
+      "group_description": "Syringes/Needles/Cannulae 121",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 121",
+      "purchase_group_description": "Purchase group description 121",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 122,
+    "fields": {
+      "short_description": "Syringe,disp Generic 122",
+      "basic_description": "Z06 PS Services/ Consumable 122",
+      "group_description": "Syringes/Needles/Cannulae 122",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 122",
+      "purchase_group_description": "Purchase group description 122",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 123,
+    "fields": {
+      "short_description": "Syringe,disp Generic 123",
+      "basic_description": "Z06 PS Services/ Consumable 123",
+      "group_description": "Syringes/Needles/Cannulae 123",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 123",
+      "purchase_group_description": "Purchase group description 123",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 124,
+    "fields": {
+      "short_description": "Syringe,disp Generic 124",
+      "basic_description": "Z06 PS Services/ Consumable 124",
+      "group_description": "Syringes/Needles/Cannulae 124",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 124",
+      "purchase_group_description": "Purchase group description 124",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 125,
+    "fields": {
+      "short_description": "Syringe,disp Generic 125",
+      "basic_description": "Z06 PS Services/ Consumable 125",
+      "group_description": "Syringes/Needles/Cannulae 125",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 125",
+      "purchase_group_description": "Purchase group description 125",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 126,
+    "fields": {
+      "short_description": "Syringe,disp Generic 126",
+      "basic_description": "Z06 PS Services/ Consumable 126",
+      "group_description": "Syringes/Needles/Cannulae 126",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 126",
+      "purchase_group_description": "Purchase group description 126",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 127,
+    "fields": {
+      "short_description": "Syringe,disp Generic 127",
+      "basic_description": "Z06 PS Services/ Consumable 127",
+      "group_description": "Syringes/Needles/Cannulae 127",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 127",
+      "purchase_group_description": "Purchase group description 127",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 128,
+    "fields": {
+      "short_description": "Syringe,disp Generic 128",
+      "basic_description": "Z06 PS Services/ Consumable 128",
+      "group_description": "Syringes/Needles/Cannulae 128",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 128",
+      "purchase_group_description": "Purchase group description 128",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 129,
+    "fields": {
+      "short_description": "Syringe,disp Generic 129",
+      "basic_description": "Z06 PS Services/ Consumable 129",
+      "group_description": "Syringes/Needles/Cannulae 129",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 129",
+      "purchase_group_description": "Purchase group description 129",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 130,
+    "fields": {
+      "short_description": "Syringe,disp Generic 130",
+      "basic_description": "Z06 PS Services/ Consumable 130",
+      "group_description": "Syringes/Needles/Cannulae 130",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 130",
+      "purchase_group_description": "Purchase group description 130",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 131,
+    "fields": {
+      "short_description": "Syringe,disp Generic 131",
+      "basic_description": "Z06 PS Services/ Consumable 131",
+      "group_description": "Syringes/Needles/Cannulae 131",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 131",
+      "purchase_group_description": "Purchase group description 131",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 132,
+    "fields": {
+      "short_description": "Syringe,disp Generic 132",
+      "basic_description": "Z06 PS Services/ Consumable 132",
+      "group_description": "Syringes/Needles/Cannulae 132",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 132",
+      "purchase_group_description": "Purchase group description 132",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 133,
+    "fields": {
+      "short_description": "Syringe,disp Generic 133",
+      "basic_description": "Z06 PS Services/ Consumable 133",
+      "group_description": "Syringes/Needles/Cannulae 133",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 133",
+      "purchase_group_description": "Purchase group description 133",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 134,
+    "fields": {
+      "short_description": "Syringe,disp Generic 134",
+      "basic_description": "Z06 PS Services/ Consumable 134",
+      "group_description": "Syringes/Needles/Cannulae 134",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 134",
+      "purchase_group_description": "Purchase group description 134",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 135,
+    "fields": {
+      "short_description": "Syringe,disp Generic 135",
+      "basic_description": "Z06 PS Services/ Consumable 135",
+      "group_description": "Syringes/Needles/Cannulae 135",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 135",
+      "purchase_group_description": "Purchase group description 135",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 136,
+    "fields": {
+      "short_description": "Syringe,disp Generic 136",
+      "basic_description": "Z06 PS Services/ Consumable 136",
+      "group_description": "Syringes/Needles/Cannulae 136",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 136",
+      "purchase_group_description": "Purchase group description 136",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 137,
+    "fields": {
+      "short_description": "Syringe,disp Generic 137",
+      "basic_description": "Z06 PS Services/ Consumable 137",
+      "group_description": "Syringes/Needles/Cannulae 137",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 137",
+      "purchase_group_description": "Purchase group description 137",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 138,
+    "fields": {
+      "short_description": "Syringe,disp Generic 138",
+      "basic_description": "Z06 PS Services/ Consumable 138",
+      "group_description": "Syringes/Needles/Cannulae 138",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 138",
+      "purchase_group_description": "Purchase group description 138",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 139,
+    "fields": {
+      "short_description": "Syringe,disp Generic 139",
+      "basic_description": "Z06 PS Services/ Consumable 139",
+      "group_description": "Syringes/Needles/Cannulae 139",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 139",
+      "purchase_group_description": "Purchase group description 139",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 140,
+    "fields": {
+      "short_description": "Syringe,disp Generic 140",
+      "basic_description": "Z06 PS Services/ Consumable 140",
+      "group_description": "Syringes/Needles/Cannulae 140",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 140",
+      "purchase_group_description": "Purchase group description 140",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 141,
+    "fields": {
+      "short_description": "Syringe,disp Generic 141",
+      "basic_description": "Z06 PS Services/ Consumable 141",
+      "group_description": "Syringes/Needles/Cannulae 141",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 141",
+      "purchase_group_description": "Purchase group description 141",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 142,
+    "fields": {
+      "short_description": "Syringe,disp Generic 142",
+      "basic_description": "Z06 PS Services/ Consumable 142",
+      "group_description": "Syringes/Needles/Cannulae 142",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 142",
+      "purchase_group_description": "Purchase group description 142",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 143,
+    "fields": {
+      "short_description": "Syringe,disp Generic 143",
+      "basic_description": "Z06 PS Services/ Consumable 143",
+      "group_description": "Syringes/Needles/Cannulae 143",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 143",
+      "purchase_group_description": "Purchase group description 143",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 144,
+    "fields": {
+      "short_description": "Syringe,disp Generic 144",
+      "basic_description": "Z06 PS Services/ Consumable 144",
+      "group_description": "Syringes/Needles/Cannulae 144",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 144",
+      "purchase_group_description": "Purchase group description 144",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 145,
+    "fields": {
+      "short_description": "Syringe,disp Generic 145",
+      "basic_description": "Z06 PS Services/ Consumable 145",
+      "group_description": "Syringes/Needles/Cannulae 145",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 145",
+      "purchase_group_description": "Purchase group description 145",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 146,
+    "fields": {
+      "short_description": "Syringe,disp Generic 146",
+      "basic_description": "Z06 PS Services/ Consumable 146",
+      "group_description": "Syringes/Needles/Cannulae 146",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 146",
+      "purchase_group_description": "Purchase group description 146",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 147,
+    "fields": {
+      "short_description": "Syringe,disp Generic 147",
+      "basic_description": "Z06 PS Services/ Consumable 147",
+      "group_description": "Syringes/Needles/Cannulae 147",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 147",
+      "purchase_group_description": "Purchase group description 147",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 148,
+    "fields": {
+      "short_description": "Syringe,disp Generic 148",
+      "basic_description": "Z06 PS Services/ Consumable 148",
+      "group_description": "Syringes/Needles/Cannulae 148",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 148",
+      "purchase_group_description": "Purchase group description 148",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 149,
+    "fields": {
+      "short_description": "Syringe,disp Generic 149",
+      "basic_description": "Z06 PS Services/ Consumable 149",
+      "group_description": "Syringes/Needles/Cannulae 149",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 149",
+      "purchase_group_description": "Purchase group description 149",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 150,
+    "fields": {
+      "short_description": "Syringe,disp Generic 150",
+      "basic_description": "Z06 PS Services/ Consumable 150",
+      "group_description": "Syringes/Needles/Cannulae 150",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 150",
+      "purchase_group_description": "Purchase group description 150",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 151,
+    "fields": {
+      "short_description": "Syringe,disp Generic 151",
+      "basic_description": "Z06 PS Services/ Consumable 151",
+      "group_description": "Syringes/Needles/Cannulae 151",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 151",
+      "purchase_group_description": "Purchase group description 151",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 152,
+    "fields": {
+      "short_description": "Syringe,disp Generic 152",
+      "basic_description": "Z06 PS Services/ Consumable 152",
+      "group_description": "Syringes/Needles/Cannulae 152",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 152",
+      "purchase_group_description": "Purchase group description 152",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 153,
+    "fields": {
+      "short_description": "Syringe,disp Generic 153",
+      "basic_description": "Z06 PS Services/ Consumable 153",
+      "group_description": "Syringes/Needles/Cannulae 153",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 153",
+      "purchase_group_description": "Purchase group description 153",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 154,
+    "fields": {
+      "short_description": "Syringe,disp Generic 154",
+      "basic_description": "Z06 PS Services/ Consumable 154",
+      "group_description": "Syringes/Needles/Cannulae 154",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 154",
+      "purchase_group_description": "Purchase group description 154",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 155,
+    "fields": {
+      "short_description": "Syringe,disp Generic 155",
+      "basic_description": "Z06 PS Services/ Consumable 155",
+      "group_description": "Syringes/Needles/Cannulae 155",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 155",
+      "purchase_group_description": "Purchase group description 155",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 156,
+    "fields": {
+      "short_description": "Syringe,disp Generic 156",
+      "basic_description": "Z06 PS Services/ Consumable 156",
+      "group_description": "Syringes/Needles/Cannulae 156",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 156",
+      "purchase_group_description": "Purchase group description 156",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 157,
+    "fields": {
+      "short_description": "Syringe,disp Generic 157",
+      "basic_description": "Z06 PS Services/ Consumable 157",
+      "group_description": "Syringes/Needles/Cannulae 157",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 157",
+      "purchase_group_description": "Purchase group description 157",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 158,
+    "fields": {
+      "short_description": "Syringe,disp Generic 158",
+      "basic_description": "Z06 PS Services/ Consumable 158",
+      "group_description": "Syringes/Needles/Cannulae 158",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 158",
+      "purchase_group_description": "Purchase group description 158",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 159,
+    "fields": {
+      "short_description": "Syringe,disp Generic 159",
+      "basic_description": "Z06 PS Services/ Consumable 159",
+      "group_description": "Syringes/Needles/Cannulae 159",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 159",
+      "purchase_group_description": "Purchase group description 159",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 160,
+    "fields": {
+      "short_description": "Syringe,disp Generic 160",
+      "basic_description": "Z06 PS Services/ Consumable 160",
+      "group_description": "Syringes/Needles/Cannulae 160",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 160",
+      "purchase_group_description": "Purchase group description 160",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 161,
+    "fields": {
+      "short_description": "Syringe,disp Generic 161",
+      "basic_description": "Z06 PS Services/ Consumable 161",
+      "group_description": "Syringes/Needles/Cannulae 161",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 161",
+      "purchase_group_description": "Purchase group description 161",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 162,
+    "fields": {
+      "short_description": "Syringe,disp Generic 162",
+      "basic_description": "Z06 PS Services/ Consumable 162",
+      "group_description": "Syringes/Needles/Cannulae 162",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 162",
+      "purchase_group_description": "Purchase group description 162",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 163,
+    "fields": {
+      "short_description": "Syringe,disp Generic 163",
+      "basic_description": "Z06 PS Services/ Consumable 163",
+      "group_description": "Syringes/Needles/Cannulae 163",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 163",
+      "purchase_group_description": "Purchase group description 163",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 164,
+    "fields": {
+      "short_description": "Syringe,disp Generic 164",
+      "basic_description": "Z06 PS Services/ Consumable 164",
+      "group_description": "Syringes/Needles/Cannulae 164",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 164",
+      "purchase_group_description": "Purchase group description 164",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 165,
+    "fields": {
+      "short_description": "Syringe,disp Generic 165",
+      "basic_description": "Z06 PS Services/ Consumable 165",
+      "group_description": "Syringes/Needles/Cannulae 165",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 165",
+      "purchase_group_description": "Purchase group description 165",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 166,
+    "fields": {
+      "short_description": "Syringe,disp Generic 166",
+      "basic_description": "Z06 PS Services/ Consumable 166",
+      "group_description": "Syringes/Needles/Cannulae 166",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 166",
+      "purchase_group_description": "Purchase group description 166",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 167,
+    "fields": {
+      "short_description": "Syringe,disp Generic 167",
+      "basic_description": "Z06 PS Services/ Consumable 167",
+      "group_description": "Syringes/Needles/Cannulae 167",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 167",
+      "purchase_group_description": "Purchase group description 167",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 168,
+    "fields": {
+      "short_description": "Syringe,disp Generic 168",
+      "basic_description": "Z06 PS Services/ Consumable 168",
+      "group_description": "Syringes/Needles/Cannulae 168",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 168",
+      "purchase_group_description": "Purchase group description 168",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 169,
+    "fields": {
+      "short_description": "Syringe,disp Generic 169",
+      "basic_description": "Z06 PS Services/ Consumable 169",
+      "group_description": "Syringes/Needles/Cannulae 169",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 169",
+      "purchase_group_description": "Purchase group description 169",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 170,
+    "fields": {
+      "short_description": "Syringe,disp Generic 170",
+      "basic_description": "Z06 PS Services/ Consumable 170",
+      "group_description": "Syringes/Needles/Cannulae 170",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 170",
+      "purchase_group_description": "Purchase group description 170",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 171,
+    "fields": {
+      "short_description": "Syringe,disp Generic 171",
+      "basic_description": "Z06 PS Services/ Consumable 171",
+      "group_description": "Syringes/Needles/Cannulae 171",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 171",
+      "purchase_group_description": "Purchase group description 171",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 172,
+    "fields": {
+      "short_description": "Syringe,disp Generic 172",
+      "basic_description": "Z06 PS Services/ Consumable 172",
+      "group_description": "Syringes/Needles/Cannulae 172",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 172",
+      "purchase_group_description": "Purchase group description 172",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 173,
+    "fields": {
+      "short_description": "Syringe,disp Generic 173",
+      "basic_description": "Z06 PS Services/ Consumable 173",
+      "group_description": "Syringes/Needles/Cannulae 173",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 173",
+      "purchase_group_description": "Purchase group description 173",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 174,
+    "fields": {
+      "short_description": "Syringe,disp Generic 174",
+      "basic_description": "Z06 PS Services/ Consumable 174",
+      "group_description": "Syringes/Needles/Cannulae 174",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 174",
+      "purchase_group_description": "Purchase group description 174",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 175,
+    "fields": {
+      "short_description": "Syringe,disp Generic 175",
+      "basic_description": "Z06 PS Services/ Consumable 175",
+      "group_description": "Syringes/Needles/Cannulae 175",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 175",
+      "purchase_group_description": "Purchase group description 175",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 176,
+    "fields": {
+      "short_description": "Syringe,disp Generic 176",
+      "basic_description": "Z06 PS Services/ Consumable 176",
+      "group_description": "Syringes/Needles/Cannulae 176",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 176",
+      "purchase_group_description": "Purchase group description 176",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 177,
+    "fields": {
+      "short_description": "Syringe,disp Generic 177",
+      "basic_description": "Z06 PS Services/ Consumable 177",
+      "group_description": "Syringes/Needles/Cannulae 177",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 177",
+      "purchase_group_description": "Purchase group description 177",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 178,
+    "fields": {
+      "short_description": "Syringe,disp Generic 178",
+      "basic_description": "Z06 PS Services/ Consumable 178",
+      "group_description": "Syringes/Needles/Cannulae 178",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 178",
+      "purchase_group_description": "Purchase group description 178",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 179,
+    "fields": {
+      "short_description": "Syringe,disp Generic 179",
+      "basic_description": "Z06 PS Services/ Consumable 179",
+      "group_description": "Syringes/Needles/Cannulae 179",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 179",
+      "purchase_group_description": "Purchase group description 179",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 180,
+    "fields": {
+      "short_description": "Syringe,disp Generic 180",
+      "basic_description": "Z06 PS Services/ Consumable 180",
+      "group_description": "Syringes/Needles/Cannulae 180",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 180",
+      "purchase_group_description": "Purchase group description 180",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 181,
+    "fields": {
+      "short_description": "Syringe,disp Generic 181",
+      "basic_description": "Z06 PS Services/ Consumable 181",
+      "group_description": "Syringes/Needles/Cannulae 181",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 181",
+      "purchase_group_description": "Purchase group description 181",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 182,
+    "fields": {
+      "short_description": "Syringe,disp Generic 182",
+      "basic_description": "Z06 PS Services/ Consumable 182",
+      "group_description": "Syringes/Needles/Cannulae 182",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 182",
+      "purchase_group_description": "Purchase group description 182",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 183,
+    "fields": {
+      "short_description": "Syringe,disp Generic 183",
+      "basic_description": "Z06 PS Services/ Consumable 183",
+      "group_description": "Syringes/Needles/Cannulae 183",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 183",
+      "purchase_group_description": "Purchase group description 183",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 184,
+    "fields": {
+      "short_description": "Syringe,disp Generic 184",
+      "basic_description": "Z06 PS Services/ Consumable 184",
+      "group_description": "Syringes/Needles/Cannulae 184",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 184",
+      "purchase_group_description": "Purchase group description 184",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 185,
+    "fields": {
+      "short_description": "Syringe,disp Generic 185",
+      "basic_description": "Z06 PS Services/ Consumable 185",
+      "group_description": "Syringes/Needles/Cannulae 185",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 185",
+      "purchase_group_description": "Purchase group description 185",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 186,
+    "fields": {
+      "short_description": "Syringe,disp Generic 186",
+      "basic_description": "Z06 PS Services/ Consumable 186",
+      "group_description": "Syringes/Needles/Cannulae 186",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 186",
+      "purchase_group_description": "Purchase group description 186",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 187,
+    "fields": {
+      "short_description": "Syringe,disp Generic 187",
+      "basic_description": "Z06 PS Services/ Consumable 187",
+      "group_description": "Syringes/Needles/Cannulae 187",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 187",
+      "purchase_group_description": "Purchase group description 187",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 188,
+    "fields": {
+      "short_description": "Syringe,disp Generic 188",
+      "basic_description": "Z06 PS Services/ Consumable 188",
+      "group_description": "Syringes/Needles/Cannulae 188",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 188",
+      "purchase_group_description": "Purchase group description 188",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 189,
+    "fields": {
+      "short_description": "Syringe,disp Generic 189",
+      "basic_description": "Z06 PS Services/ Consumable 189",
+      "group_description": "Syringes/Needles/Cannulae 189",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 189",
+      "purchase_group_description": "Purchase group description 189",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 190,
+    "fields": {
+      "short_description": "Syringe,disp Generic 190",
+      "basic_description": "Z06 PS Services/ Consumable 190",
+      "group_description": "Syringes/Needles/Cannulae 190",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 190",
+      "purchase_group_description": "Purchase group description 190",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 191,
+    "fields": {
+      "short_description": "Syringe,disp Generic 191",
+      "basic_description": "Z06 PS Services/ Consumable 191",
+      "group_description": "Syringes/Needles/Cannulae 191",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 191",
+      "purchase_group_description": "Purchase group description 191",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 192,
+    "fields": {
+      "short_description": "Syringe,disp Generic 192",
+      "basic_description": "Z06 PS Services/ Consumable 192",
+      "group_description": "Syringes/Needles/Cannulae 192",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 192",
+      "purchase_group_description": "Purchase group description 192",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 193,
+    "fields": {
+      "short_description": "Syringe,disp Generic 193",
+      "basic_description": "Z06 PS Services/ Consumable 193",
+      "group_description": "Syringes/Needles/Cannulae 193",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 193",
+      "purchase_group_description": "Purchase group description 193",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 194,
+    "fields": {
+      "short_description": "Syringe,disp Generic 194",
+      "basic_description": "Z06 PS Services/ Consumable 194",
+      "group_description": "Syringes/Needles/Cannulae 194",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 194",
+      "purchase_group_description": "Purchase group description 194",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 195,
+    "fields": {
+      "short_description": "Syringe,disp Generic 195",
+      "basic_description": "Z06 PS Services/ Consumable 195",
+      "group_description": "Syringes/Needles/Cannulae 195",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 195",
+      "purchase_group_description": "Purchase group description 195",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 196,
+    "fields": {
+      "short_description": "Syringe,disp Generic 196",
+      "basic_description": "Z06 PS Services/ Consumable 196",
+      "group_description": "Syringes/Needles/Cannulae 196",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 196",
+      "purchase_group_description": "Purchase group description 196",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 197,
+    "fields": {
+      "short_description": "Syringe,disp Generic 197",
+      "basic_description": "Z06 PS Services/ Consumable 197",
+      "group_description": "Syringes/Needles/Cannulae 197",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 197",
+      "purchase_group_description": "Purchase group description 197",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 198,
+    "fields": {
+      "short_description": "Syringe,disp Generic 198",
+      "basic_description": "Z06 PS Services/ Consumable 198",
+      "group_description": "Syringes/Needles/Cannulae 198",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 198",
+      "purchase_group_description": "Purchase group description 198",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 199,
+    "fields": {
+      "short_description": "Syringe,disp Generic 199",
+      "basic_description": "Z06 PS Services/ Consumable 199",
+      "group_description": "Syringes/Needles/Cannulae 199",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 199",
+      "purchase_group_description": "Purchase group description 199",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 200,
+    "fields": {
+      "short_description": "Syringe,disp Generic 200",
+      "basic_description": "Z06 PS Services/ Consumable 200",
+      "group_description": "Syringes/Needles/Cannulae 200",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 200",
+      "purchase_group_description": "Purchase group description 200",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 201,
+    "fields": {
+      "short_description": "Syringe,disp Generic 201",
+      "basic_description": "Z06 PS Services/ Consumable 201",
+      "group_description": "Syringes/Needles/Cannulae 201",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 201",
+      "purchase_group_description": "Purchase group description 201",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 202,
+    "fields": {
+      "short_description": "Syringe,disp Generic 202",
+      "basic_description": "Z06 PS Services/ Consumable 202",
+      "group_description": "Syringes/Needles/Cannulae 202",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 202",
+      "purchase_group_description": "Purchase group description 202",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 203,
+    "fields": {
+      "short_description": "Syringe,disp Generic 203",
+      "basic_description": "Z06 PS Services/ Consumable 203",
+      "group_description": "Syringes/Needles/Cannulae 203",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 203",
+      "purchase_group_description": "Purchase group description 203",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 204,
+    "fields": {
+      "short_description": "Syringe,disp Generic 204",
+      "basic_description": "Z06 PS Services/ Consumable 204",
+      "group_description": "Syringes/Needles/Cannulae 204",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 204",
+      "purchase_group_description": "Purchase group description 204",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 205,
+    "fields": {
+      "short_description": "Syringe,disp Generic 205",
+      "basic_description": "Z06 PS Services/ Consumable 205",
+      "group_description": "Syringes/Needles/Cannulae 205",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 205",
+      "purchase_group_description": "Purchase group description 205",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 206,
+    "fields": {
+      "short_description": "Syringe,disp Generic 206",
+      "basic_description": "Z06 PS Services/ Consumable 206",
+      "group_description": "Syringes/Needles/Cannulae 206",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 206",
+      "purchase_group_description": "Purchase group description 206",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 207,
+    "fields": {
+      "short_description": "Syringe,disp Generic 207",
+      "basic_description": "Z06 PS Services/ Consumable 207",
+      "group_description": "Syringes/Needles/Cannulae 207",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 207",
+      "purchase_group_description": "Purchase group description 207",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 208,
+    "fields": {
+      "short_description": "Syringe,disp Generic 208",
+      "basic_description": "Z06 PS Services/ Consumable 208",
+      "group_description": "Syringes/Needles/Cannulae 208",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 208",
+      "purchase_group_description": "Purchase group description 208",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 209,
+    "fields": {
+      "short_description": "Syringe,disp Generic 209",
+      "basic_description": "Z06 PS Services/ Consumable 209",
+      "group_description": "Syringes/Needles/Cannulae 209",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 209",
+      "purchase_group_description": "Purchase group description 209",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 210,
+    "fields": {
+      "short_description": "Syringe,disp Generic 210",
+      "basic_description": "Z06 PS Services/ Consumable 210",
+      "group_description": "Syringes/Needles/Cannulae 210",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 210",
+      "purchase_group_description": "Purchase group description 210",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 211,
+    "fields": {
+      "short_description": "Syringe,disp Generic 211",
+      "basic_description": "Z06 PS Services/ Consumable 211",
+      "group_description": "Syringes/Needles/Cannulae 211",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 211",
+      "purchase_group_description": "Purchase group description 211",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 212,
+    "fields": {
+      "short_description": "Syringe,disp Generic 212",
+      "basic_description": "Z06 PS Services/ Consumable 212",
+      "group_description": "Syringes/Needles/Cannulae 212",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 212",
+      "purchase_group_description": "Purchase group description 212",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 213,
+    "fields": {
+      "short_description": "Syringe,disp Generic 213",
+      "basic_description": "Z06 PS Services/ Consumable 213",
+      "group_description": "Syringes/Needles/Cannulae 213",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 213",
+      "purchase_group_description": "Purchase group description 213",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 214,
+    "fields": {
+      "short_description": "Syringe,disp Generic 214",
+      "basic_description": "Z06 PS Services/ Consumable 214",
+      "group_description": "Syringes/Needles/Cannulae 214",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 214",
+      "purchase_group_description": "Purchase group description 214",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 215,
+    "fields": {
+      "short_description": "Syringe,disp Generic 215",
+      "basic_description": "Z06 PS Services/ Consumable 215",
+      "group_description": "Syringes/Needles/Cannulae 215",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 215",
+      "purchase_group_description": "Purchase group description 215",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 216,
+    "fields": {
+      "short_description": "Syringe,disp Generic 216",
+      "basic_description": "Z06 PS Services/ Consumable 216",
+      "group_description": "Syringes/Needles/Cannulae 216",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 216",
+      "purchase_group_description": "Purchase group description 216",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 217,
+    "fields": {
+      "short_description": "Syringe,disp Generic 217",
+      "basic_description": "Z06 PS Services/ Consumable 217",
+      "group_description": "Syringes/Needles/Cannulae 217",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 217",
+      "purchase_group_description": "Purchase group description 217",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 218,
+    "fields": {
+      "short_description": "Syringe,disp Generic 218",
+      "basic_description": "Z06 PS Services/ Consumable 218",
+      "group_description": "Syringes/Needles/Cannulae 218",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 218",
+      "purchase_group_description": "Purchase group description 218",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 219,
+    "fields": {
+      "short_description": "Syringe,disp Generic 219",
+      "basic_description": "Z06 PS Services/ Consumable 219",
+      "group_description": "Syringes/Needles/Cannulae 219",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 219",
+      "purchase_group_description": "Purchase group description 219",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 220,
+    "fields": {
+      "short_description": "Syringe,disp Generic 220",
+      "basic_description": "Z06 PS Services/ Consumable 220",
+      "group_description": "Syringes/Needles/Cannulae 220",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 220",
+      "purchase_group_description": "Purchase group description 220",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 221,
+    "fields": {
+      "short_description": "Syringe,disp Generic 221",
+      "basic_description": "Z06 PS Services/ Consumable 221",
+      "group_description": "Syringes/Needles/Cannulae 221",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 221",
+      "purchase_group_description": "Purchase group description 221",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 222,
+    "fields": {
+      "short_description": "Syringe,disp Generic 222",
+      "basic_description": "Z06 PS Services/ Consumable 222",
+      "group_description": "Syringes/Needles/Cannulae 222",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 222",
+      "purchase_group_description": "Purchase group description 222",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 223,
+    "fields": {
+      "short_description": "Syringe,disp Generic 223",
+      "basic_description": "Z06 PS Services/ Consumable 223",
+      "group_description": "Syringes/Needles/Cannulae 223",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 223",
+      "purchase_group_description": "Purchase group description 223",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 224,
+    "fields": {
+      "short_description": "Syringe,disp Generic 224",
+      "basic_description": "Z06 PS Services/ Consumable 224",
+      "group_description": "Syringes/Needles/Cannulae 224",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 224",
+      "purchase_group_description": "Purchase group description 224",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 225,
+    "fields": {
+      "short_description": "Syringe,disp Generic 225",
+      "basic_description": "Z06 PS Services/ Consumable 225",
+      "group_description": "Syringes/Needles/Cannulae 225",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 225",
+      "purchase_group_description": "Purchase group description 225",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 226,
+    "fields": {
+      "short_description": "Syringe,disp Generic 226",
+      "basic_description": "Z06 PS Services/ Consumable 226",
+      "group_description": "Syringes/Needles/Cannulae 226",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 226",
+      "purchase_group_description": "Purchase group description 226",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 227,
+    "fields": {
+      "short_description": "Syringe,disp Generic 227",
+      "basic_description": "Z06 PS Services/ Consumable 227",
+      "group_description": "Syringes/Needles/Cannulae 227",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 227",
+      "purchase_group_description": "Purchase group description 227",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 228,
+    "fields": {
+      "short_description": "Syringe,disp Generic 228",
+      "basic_description": "Z06 PS Services/ Consumable 228",
+      "group_description": "Syringes/Needles/Cannulae 228",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 228",
+      "purchase_group_description": "Purchase group description 228",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 229,
+    "fields": {
+      "short_description": "Syringe,disp Generic 229",
+      "basic_description": "Z06 PS Services/ Consumable 229",
+      "group_description": "Syringes/Needles/Cannulae 229",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 229",
+      "purchase_group_description": "Purchase group description 229",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 230,
+    "fields": {
+      "short_description": "Syringe,disp Generic 230",
+      "basic_description": "Z06 PS Services/ Consumable 230",
+      "group_description": "Syringes/Needles/Cannulae 230",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 230",
+      "purchase_group_description": "Purchase group description 230",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 231,
+    "fields": {
+      "short_description": "Syringe,disp Generic 231",
+      "basic_description": "Z06 PS Services/ Consumable 231",
+      "group_description": "Syringes/Needles/Cannulae 231",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 231",
+      "purchase_group_description": "Purchase group description 231",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 232,
+    "fields": {
+      "short_description": "Syringe,disp Generic 232",
+      "basic_description": "Z06 PS Services/ Consumable 232",
+      "group_description": "Syringes/Needles/Cannulae 232",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 232",
+      "purchase_group_description": "Purchase group description 232",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 233,
+    "fields": {
+      "short_description": "Syringe,disp Generic 233",
+      "basic_description": "Z06 PS Services/ Consumable 233",
+      "group_description": "Syringes/Needles/Cannulae 233",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 233",
+      "purchase_group_description": "Purchase group description 233",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 234,
+    "fields": {
+      "short_description": "Syringe,disp Generic 234",
+      "basic_description": "Z06 PS Services/ Consumable 234",
+      "group_description": "Syringes/Needles/Cannulae 234",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 234",
+      "purchase_group_description": "Purchase group description 234",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 235,
+    "fields": {
+      "short_description": "Syringe,disp Generic 235",
+      "basic_description": "Z06 PS Services/ Consumable 235",
+      "group_description": "Syringes/Needles/Cannulae 235",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 235",
+      "purchase_group_description": "Purchase group description 235",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 236,
+    "fields": {
+      "short_description": "Syringe,disp Generic 236",
+      "basic_description": "Z06 PS Services/ Consumable 236",
+      "group_description": "Syringes/Needles/Cannulae 236",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 236",
+      "purchase_group_description": "Purchase group description 236",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 237,
+    "fields": {
+      "short_description": "Syringe,disp Generic 237",
+      "basic_description": "Z06 PS Services/ Consumable 237",
+      "group_description": "Syringes/Needles/Cannulae 237",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 237",
+      "purchase_group_description": "Purchase group description 237",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 238,
+    "fields": {
+      "short_description": "Syringe,disp Generic 238",
+      "basic_description": "Z06 PS Services/ Consumable 238",
+      "group_description": "Syringes/Needles/Cannulae 238",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 238",
+      "purchase_group_description": "Purchase group description 238",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 239,
+    "fields": {
+      "short_description": "Syringe,disp Generic 239",
+      "basic_description": "Z06 PS Services/ Consumable 239",
+      "group_description": "Syringes/Needles/Cannulae 239",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 239",
+      "purchase_group_description": "Purchase group description 239",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 240,
+    "fields": {
+      "short_description": "Syringe,disp Generic 240",
+      "basic_description": "Z06 PS Services/ Consumable 240",
+      "group_description": "Syringes/Needles/Cannulae 240",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 240",
+      "purchase_group_description": "Purchase group description 240",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 241,
+    "fields": {
+      "short_description": "Syringe,disp Generic 241",
+      "basic_description": "Z06 PS Services/ Consumable 241",
+      "group_description": "Syringes/Needles/Cannulae 241",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 241",
+      "purchase_group_description": "Purchase group description 241",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 242,
+    "fields": {
+      "short_description": "Syringe,disp Generic 242",
+      "basic_description": "Z06 PS Services/ Consumable 242",
+      "group_description": "Syringes/Needles/Cannulae 242",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 242",
+      "purchase_group_description": "Purchase group description 242",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 243,
+    "fields": {
+      "short_description": "Syringe,disp Generic 243",
+      "basic_description": "Z06 PS Services/ Consumable 243",
+      "group_description": "Syringes/Needles/Cannulae 243",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 243",
+      "purchase_group_description": "Purchase group description 243",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 244,
+    "fields": {
+      "short_description": "Syringe,disp Generic 244",
+      "basic_description": "Z06 PS Services/ Consumable 244",
+      "group_description": "Syringes/Needles/Cannulae 244",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 244",
+      "purchase_group_description": "Purchase group description 244",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 245,
+    "fields": {
+      "short_description": "Syringe,disp Generic 245",
+      "basic_description": "Z06 PS Services/ Consumable 245",
+      "group_description": "Syringes/Needles/Cannulae 245",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 245",
+      "purchase_group_description": "Purchase group description 245",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 246,
+    "fields": {
+      "short_description": "Syringe,disp Generic 246",
+      "basic_description": "Z06 PS Services/ Consumable 246",
+      "group_description": "Syringes/Needles/Cannulae 246",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 246",
+      "purchase_group_description": "Purchase group description 246",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 247,
+    "fields": {
+      "short_description": "Syringe,disp Generic 247",
+      "basic_description": "Z06 PS Services/ Consumable 247",
+      "group_description": "Syringes/Needles/Cannulae 247",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 247",
+      "purchase_group_description": "Purchase group description 247",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 248,
+    "fields": {
+      "short_description": "Syringe,disp Generic 248",
+      "basic_description": "Z06 PS Services/ Consumable 248",
+      "group_description": "Syringes/Needles/Cannulae 248",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 248",
+      "purchase_group_description": "Purchase group description 248",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 249,
+    "fields": {
+      "short_description": "Syringe,disp Generic 249",
+      "basic_description": "Z06 PS Services/ Consumable 249",
+      "group_description": "Syringes/Needles/Cannulae 249",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 249",
+      "purchase_group_description": "Purchase group description 249",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 250,
+    "fields": {
+      "short_description": "Syringe,disp Generic 250",
+      "basic_description": "Z06 PS Services/ Consumable 250",
+      "group_description": "Syringes/Needles/Cannulae 250",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 250",
+      "purchase_group_description": "Purchase group description 250",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 251,
+    "fields": {
+      "short_description": "Syringe,disp Generic 251",
+      "basic_description": "Z06 PS Services/ Consumable 251",
+      "group_description": "Syringes/Needles/Cannulae 251",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 251",
+      "purchase_group_description": "Purchase group description 251",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 252,
+    "fields": {
+      "short_description": "Syringe,disp Generic 252",
+      "basic_description": "Z06 PS Services/ Consumable 252",
+      "group_description": "Syringes/Needles/Cannulae 252",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 252",
+      "purchase_group_description": "Purchase group description 252",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 253,
+    "fields": {
+      "short_description": "Syringe,disp Generic 253",
+      "basic_description": "Z06 PS Services/ Consumable 253",
+      "group_description": "Syringes/Needles/Cannulae 253",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 253",
+      "purchase_group_description": "Purchase group description 253",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 254,
+    "fields": {
+      "short_description": "Syringe,disp Generic 254",
+      "basic_description": "Z06 PS Services/ Consumable 254",
+      "group_description": "Syringes/Needles/Cannulae 254",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 254",
+      "purchase_group_description": "Purchase group description 254",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 255,
+    "fields": {
+      "short_description": "Syringe,disp Generic 255",
+      "basic_description": "Z06 PS Services/ Consumable 255",
+      "group_description": "Syringes/Needles/Cannulae 255",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 255",
+      "purchase_group_description": "Purchase group description 255",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 256,
+    "fields": {
+      "short_description": "Syringe,disp Generic 256",
+      "basic_description": "Z06 PS Services/ Consumable 256",
+      "group_description": "Syringes/Needles/Cannulae 256",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 256",
+      "purchase_group_description": "Purchase group description 256",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 257,
+    "fields": {
+      "short_description": "Syringe,disp Generic 257",
+      "basic_description": "Z06 PS Services/ Consumable 257",
+      "group_description": "Syringes/Needles/Cannulae 257",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 257",
+      "purchase_group_description": "Purchase group description 257",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 258,
+    "fields": {
+      "short_description": "Syringe,disp Generic 258",
+      "basic_description": "Z06 PS Services/ Consumable 258",
+      "group_description": "Syringes/Needles/Cannulae 258",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 258",
+      "purchase_group_description": "Purchase group description 258",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 259,
+    "fields": {
+      "short_description": "Syringe,disp Generic 259",
+      "basic_description": "Z06 PS Services/ Consumable 259",
+      "group_description": "Syringes/Needles/Cannulae 259",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 259",
+      "purchase_group_description": "Purchase group description 259",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 260,
+    "fields": {
+      "short_description": "Syringe,disp Generic 260",
+      "basic_description": "Z06 PS Services/ Consumable 260",
+      "group_description": "Syringes/Needles/Cannulae 260",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 260",
+      "purchase_group_description": "Purchase group description 260",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 261,
+    "fields": {
+      "short_description": "Syringe,disp Generic 261",
+      "basic_description": "Z06 PS Services/ Consumable 261",
+      "group_description": "Syringes/Needles/Cannulae 261",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 261",
+      "purchase_group_description": "Purchase group description 261",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 262,
+    "fields": {
+      "short_description": "Syringe,disp Generic 262",
+      "basic_description": "Z06 PS Services/ Consumable 262",
+      "group_description": "Syringes/Needles/Cannulae 262",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 262",
+      "purchase_group_description": "Purchase group description 262",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 263,
+    "fields": {
+      "short_description": "Syringe,disp Generic 263",
+      "basic_description": "Z06 PS Services/ Consumable 263",
+      "group_description": "Syringes/Needles/Cannulae 263",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 263",
+      "purchase_group_description": "Purchase group description 263",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 264,
+    "fields": {
+      "short_description": "Syringe,disp Generic 264",
+      "basic_description": "Z06 PS Services/ Consumable 264",
+      "group_description": "Syringes/Needles/Cannulae 264",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 264",
+      "purchase_group_description": "Purchase group description 264",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 265,
+    "fields": {
+      "short_description": "Syringe,disp Generic 265",
+      "basic_description": "Z06 PS Services/ Consumable 265",
+      "group_description": "Syringes/Needles/Cannulae 265",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 265",
+      "purchase_group_description": "Purchase group description 265",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 266,
+    "fields": {
+      "short_description": "Syringe,disp Generic 266",
+      "basic_description": "Z06 PS Services/ Consumable 266",
+      "group_description": "Syringes/Needles/Cannulae 266",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 266",
+      "purchase_group_description": "Purchase group description 266",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 267,
+    "fields": {
+      "short_description": "Syringe,disp Generic 267",
+      "basic_description": "Z06 PS Services/ Consumable 267",
+      "group_description": "Syringes/Needles/Cannulae 267",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 267",
+      "purchase_group_description": "Purchase group description 267",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 268,
+    "fields": {
+      "short_description": "Syringe,disp Generic 268",
+      "basic_description": "Z06 PS Services/ Consumable 268",
+      "group_description": "Syringes/Needles/Cannulae 268",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 268",
+      "purchase_group_description": "Purchase group description 268",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 269,
+    "fields": {
+      "short_description": "Syringe,disp Generic 269",
+      "basic_description": "Z06 PS Services/ Consumable 269",
+      "group_description": "Syringes/Needles/Cannulae 269",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 269",
+      "purchase_group_description": "Purchase group description 269",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 270,
+    "fields": {
+      "short_description": "Syringe,disp Generic 270",
+      "basic_description": "Z06 PS Services/ Consumable 270",
+      "group_description": "Syringes/Needles/Cannulae 270",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 270",
+      "purchase_group_description": "Purchase group description 270",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 271,
+    "fields": {
+      "short_description": "Syringe,disp Generic 271",
+      "basic_description": "Z06 PS Services/ Consumable 271",
+      "group_description": "Syringes/Needles/Cannulae 271",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 271",
+      "purchase_group_description": "Purchase group description 271",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 272,
+    "fields": {
+      "short_description": "Syringe,disp Generic 272",
+      "basic_description": "Z06 PS Services/ Consumable 272",
+      "group_description": "Syringes/Needles/Cannulae 272",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 272",
+      "purchase_group_description": "Purchase group description 272",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 273,
+    "fields": {
+      "short_description": "Syringe,disp Generic 273",
+      "basic_description": "Z06 PS Services/ Consumable 273",
+      "group_description": "Syringes/Needles/Cannulae 273",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 273",
+      "purchase_group_description": "Purchase group description 273",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 274,
+    "fields": {
+      "short_description": "Syringe,disp Generic 274",
+      "basic_description": "Z06 PS Services/ Consumable 274",
+      "group_description": "Syringes/Needles/Cannulae 274",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 274",
+      "purchase_group_description": "Purchase group description 274",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 275,
+    "fields": {
+      "short_description": "Syringe,disp Generic 275",
+      "basic_description": "Z06 PS Services/ Consumable 275",
+      "group_description": "Syringes/Needles/Cannulae 275",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 275",
+      "purchase_group_description": "Purchase group description 275",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 276,
+    "fields": {
+      "short_description": "Syringe,disp Generic 276",
+      "basic_description": "Z06 PS Services/ Consumable 276",
+      "group_description": "Syringes/Needles/Cannulae 276",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 276",
+      "purchase_group_description": "Purchase group description 276",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 277,
+    "fields": {
+      "short_description": "Syringe,disp Generic 277",
+      "basic_description": "Z06 PS Services/ Consumable 277",
+      "group_description": "Syringes/Needles/Cannulae 277",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 277",
+      "purchase_group_description": "Purchase group description 277",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 278,
+    "fields": {
+      "short_description": "Syringe,disp Generic 278",
+      "basic_description": "Z06 PS Services/ Consumable 278",
+      "group_description": "Syringes/Needles/Cannulae 278",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 278",
+      "purchase_group_description": "Purchase group description 278",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 279,
+    "fields": {
+      "short_description": "Syringe,disp Generic 279",
+      "basic_description": "Z06 PS Services/ Consumable 279",
+      "group_description": "Syringes/Needles/Cannulae 279",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 279",
+      "purchase_group_description": "Purchase group description 279",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 280,
+    "fields": {
+      "short_description": "Syringe,disp Generic 280",
+      "basic_description": "Z06 PS Services/ Consumable 280",
+      "group_description": "Syringes/Needles/Cannulae 280",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 280",
+      "purchase_group_description": "Purchase group description 280",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 281,
+    "fields": {
+      "short_description": "Syringe,disp Generic 281",
+      "basic_description": "Z06 PS Services/ Consumable 281",
+      "group_description": "Syringes/Needles/Cannulae 281",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 281",
+      "purchase_group_description": "Purchase group description 281",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 282,
+    "fields": {
+      "short_description": "Syringe,disp Generic 282",
+      "basic_description": "Z06 PS Services/ Consumable 282",
+      "group_description": "Syringes/Needles/Cannulae 282",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 282",
+      "purchase_group_description": "Purchase group description 282",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 283,
+    "fields": {
+      "short_description": "Syringe,disp Generic 283",
+      "basic_description": "Z06 PS Services/ Consumable 283",
+      "group_description": "Syringes/Needles/Cannulae 283",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 283",
+      "purchase_group_description": "Purchase group description 283",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 284,
+    "fields": {
+      "short_description": "Syringe,disp Generic 284",
+      "basic_description": "Z06 PS Services/ Consumable 284",
+      "group_description": "Syringes/Needles/Cannulae 284",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 284",
+      "purchase_group_description": "Purchase group description 284",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 285,
+    "fields": {
+      "short_description": "Syringe,disp Generic 285",
+      "basic_description": "Z06 PS Services/ Consumable 285",
+      "group_description": "Syringes/Needles/Cannulae 285",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 285",
+      "purchase_group_description": "Purchase group description 285",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 286,
+    "fields": {
+      "short_description": "Syringe,disp Generic 286",
+      "basic_description": "Z06 PS Services/ Consumable 286",
+      "group_description": "Syringes/Needles/Cannulae 286",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 286",
+      "purchase_group_description": "Purchase group description 286",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 287,
+    "fields": {
+      "short_description": "Syringe,disp Generic 287",
+      "basic_description": "Z06 PS Services/ Consumable 287",
+      "group_description": "Syringes/Needles/Cannulae 287",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 287",
+      "purchase_group_description": "Purchase group description 287",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 288,
+    "fields": {
+      "short_description": "Syringe,disp Generic 288",
+      "basic_description": "Z06 PS Services/ Consumable 288",
+      "group_description": "Syringes/Needles/Cannulae 288",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 288",
+      "purchase_group_description": "Purchase group description 288",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 289,
+    "fields": {
+      "short_description": "Syringe,disp Generic 289",
+      "basic_description": "Z06 PS Services/ Consumable 289",
+      "group_description": "Syringes/Needles/Cannulae 289",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 289",
+      "purchase_group_description": "Purchase group description 289",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 290,
+    "fields": {
+      "short_description": "Syringe,disp Generic 290",
+      "basic_description": "Z06 PS Services/ Consumable 290",
+      "group_description": "Syringes/Needles/Cannulae 290",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 290",
+      "purchase_group_description": "Purchase group description 290",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 291,
+    "fields": {
+      "short_description": "Syringe,disp Generic 291",
+      "basic_description": "Z06 PS Services/ Consumable 291",
+      "group_description": "Syringes/Needles/Cannulae 291",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 291",
+      "purchase_group_description": "Purchase group description 291",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 292,
+    "fields": {
+      "short_description": "Syringe,disp Generic 292",
+      "basic_description": "Z06 PS Services/ Consumable 292",
+      "group_description": "Syringes/Needles/Cannulae 292",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 292",
+      "purchase_group_description": "Purchase group description 292",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 293,
+    "fields": {
+      "short_description": "Syringe,disp Generic 293",
+      "basic_description": "Z06 PS Services/ Consumable 293",
+      "group_description": "Syringes/Needles/Cannulae 293",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 293",
+      "purchase_group_description": "Purchase group description 293",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 294,
+    "fields": {
+      "short_description": "Syringe,disp Generic 294",
+      "basic_description": "Z06 PS Services/ Consumable 294",
+      "group_description": "Syringes/Needles/Cannulae 294",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 294",
+      "purchase_group_description": "Purchase group description 294",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 295,
+    "fields": {
+      "short_description": "Syringe,disp Generic 295",
+      "basic_description": "Z06 PS Services/ Consumable 295",
+      "group_description": "Syringes/Needles/Cannulae 295",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 295",
+      "purchase_group_description": "Purchase group description 295",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 296,
+    "fields": {
+      "short_description": "Syringe,disp Generic 296",
+      "basic_description": "Z06 PS Services/ Consumable 296",
+      "group_description": "Syringes/Needles/Cannulae 296",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 296",
+      "purchase_group_description": "Purchase group description 296",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 297,
+    "fields": {
+      "short_description": "Syringe,disp Generic 297",
+      "basic_description": "Z06 PS Services/ Consumable 297",
+      "group_description": "Syringes/Needles/Cannulae 297",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 297",
+      "purchase_group_description": "Purchase group description 297",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 298,
+    "fields": {
+      "short_description": "Syringe,disp Generic 298",
+      "basic_description": "Z06 PS Services/ Consumable 298",
+      "group_description": "Syringes/Needles/Cannulae 298",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 298",
+      "purchase_group_description": "Purchase group description 298",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 299,
+    "fields": {
+      "short_description": "Syringe,disp Generic 299",
+      "basic_description": "Z06 PS Services/ Consumable 299",
+      "group_description": "Syringes/Needles/Cannulae 299",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 299",
+      "purchase_group_description": "Purchase group description 299",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 300,
+    "fields": {
+      "short_description": "Syringe,disp Generic 300",
+      "basic_description": "Z06 PS Services/ Consumable 300",
+      "group_description": "Syringes/Needles/Cannulae 300",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 300",
+      "purchase_group_description": "Purchase group description 300",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 301,
+    "fields": {
+      "short_description": "Syringe,disp Generic 301",
+      "basic_description": "Z06 PS Services/ Consumable 301",
+      "group_description": "Syringes/Needles/Cannulae 301",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 301",
+      "purchase_group_description": "Purchase group description 301",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 302,
+    "fields": {
+      "short_description": "Syringe,disp Generic 302",
+      "basic_description": "Z06 PS Services/ Consumable 302",
+      "group_description": "Syringes/Needles/Cannulae 302",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 302",
+      "purchase_group_description": "Purchase group description 302",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 303,
+    "fields": {
+      "short_description": "Syringe,disp Generic 303",
+      "basic_description": "Z06 PS Services/ Consumable 303",
+      "group_description": "Syringes/Needles/Cannulae 303",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 303",
+      "purchase_group_description": "Purchase group description 303",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 304,
+    "fields": {
+      "short_description": "Syringe,disp Generic 304",
+      "basic_description": "Z06 PS Services/ Consumable 304",
+      "group_description": "Syringes/Needles/Cannulae 304",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 304",
+      "purchase_group_description": "Purchase group description 304",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 305,
+    "fields": {
+      "short_description": "Syringe,disp Generic 305",
+      "basic_description": "Z06 PS Services/ Consumable 305",
+      "group_description": "Syringes/Needles/Cannulae 305",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 305",
+      "purchase_group_description": "Purchase group description 305",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 306,
+    "fields": {
+      "short_description": "Syringe,disp Generic 306",
+      "basic_description": "Z06 PS Services/ Consumable 306",
+      "group_description": "Syringes/Needles/Cannulae 306",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 306",
+      "purchase_group_description": "Purchase group description 306",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 307,
+    "fields": {
+      "short_description": "Syringe,disp Generic 307",
+      "basic_description": "Z06 PS Services/ Consumable 307",
+      "group_description": "Syringes/Needles/Cannulae 307",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 307",
+      "purchase_group_description": "Purchase group description 307",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 308,
+    "fields": {
+      "short_description": "Syringe,disp Generic 308",
+      "basic_description": "Z06 PS Services/ Consumable 308",
+      "group_description": "Syringes/Needles/Cannulae 308",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 308",
+      "purchase_group_description": "Purchase group description 308",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 309,
+    "fields": {
+      "short_description": "Syringe,disp Generic 309",
+      "basic_description": "Z06 PS Services/ Consumable 309",
+      "group_description": "Syringes/Needles/Cannulae 309",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 309",
+      "purchase_group_description": "Purchase group description 309",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 310,
+    "fields": {
+      "short_description": "Syringe,disp Generic 310",
+      "basic_description": "Z06 PS Services/ Consumable 310",
+      "group_description": "Syringes/Needles/Cannulae 310",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 310",
+      "purchase_group_description": "Purchase group description 310",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 311,
+    "fields": {
+      "short_description": "Syringe,disp Generic 311",
+      "basic_description": "Z06 PS Services/ Consumable 311",
+      "group_description": "Syringes/Needles/Cannulae 311",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 311",
+      "purchase_group_description": "Purchase group description 311",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 312,
+    "fields": {
+      "short_description": "Syringe,disp Generic 312",
+      "basic_description": "Z06 PS Services/ Consumable 312",
+      "group_description": "Syringes/Needles/Cannulae 312",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 312",
+      "purchase_group_description": "Purchase group description 312",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 313,
+    "fields": {
+      "short_description": "Syringe,disp Generic 313",
+      "basic_description": "Z06 PS Services/ Consumable 313",
+      "group_description": "Syringes/Needles/Cannulae 313",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 313",
+      "purchase_group_description": "Purchase group description 313",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 314,
+    "fields": {
+      "short_description": "Syringe,disp Generic 314",
+      "basic_description": "Z06 PS Services/ Consumable 314",
+      "group_description": "Syringes/Needles/Cannulae 314",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 314",
+      "purchase_group_description": "Purchase group description 314",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 315,
+    "fields": {
+      "short_description": "Syringe,disp Generic 315",
+      "basic_description": "Z06 PS Services/ Consumable 315",
+      "group_description": "Syringes/Needles/Cannulae 315",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 315",
+      "purchase_group_description": "Purchase group description 315",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 316,
+    "fields": {
+      "short_description": "Syringe,disp Generic 316",
+      "basic_description": "Z06 PS Services/ Consumable 316",
+      "group_description": "Syringes/Needles/Cannulae 316",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 316",
+      "purchase_group_description": "Purchase group description 316",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 317,
+    "fields": {
+      "short_description": "Syringe,disp Generic 317",
+      "basic_description": "Z06 PS Services/ Consumable 317",
+      "group_description": "Syringes/Needles/Cannulae 317",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 317",
+      "purchase_group_description": "Purchase group description 317",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 318,
+    "fields": {
+      "short_description": "Syringe,disp Generic 318",
+      "basic_description": "Z06 PS Services/ Consumable 318",
+      "group_description": "Syringes/Needles/Cannulae 318",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 318",
+      "purchase_group_description": "Purchase group description 318",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 319,
+    "fields": {
+      "short_description": "Syringe,disp Generic 319",
+      "basic_description": "Z06 PS Services/ Consumable 319",
+      "group_description": "Syringes/Needles/Cannulae 319",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 319",
+      "purchase_group_description": "Purchase group description 319",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 320,
+    "fields": {
+      "short_description": "Syringe,disp Generic 320",
+      "basic_description": "Z06 PS Services/ Consumable 320",
+      "group_description": "Syringes/Needles/Cannulae 320",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 320",
+      "purchase_group_description": "Purchase group description 320",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 321,
+    "fields": {
+      "short_description": "Syringe,disp Generic 321",
+      "basic_description": "Z06 PS Services/ Consumable 321",
+      "group_description": "Syringes/Needles/Cannulae 321",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 321",
+      "purchase_group_description": "Purchase group description 321",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 322,
+    "fields": {
+      "short_description": "Syringe,disp Generic 322",
+      "basic_description": "Z06 PS Services/ Consumable 322",
+      "group_description": "Syringes/Needles/Cannulae 322",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 322",
+      "purchase_group_description": "Purchase group description 322",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 323,
+    "fields": {
+      "short_description": "Syringe,disp Generic 323",
+      "basic_description": "Z06 PS Services/ Consumable 323",
+      "group_description": "Syringes/Needles/Cannulae 323",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 323",
+      "purchase_group_description": "Purchase group description 323",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 324,
+    "fields": {
+      "short_description": "Syringe,disp Generic 324",
+      "basic_description": "Z06 PS Services/ Consumable 324",
+      "group_description": "Syringes/Needles/Cannulae 324",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 324",
+      "purchase_group_description": "Purchase group description 324",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 325,
+    "fields": {
+      "short_description": "Syringe,disp Generic 325",
+      "basic_description": "Z06 PS Services/ Consumable 325",
+      "group_description": "Syringes/Needles/Cannulae 325",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 325",
+      "purchase_group_description": "Purchase group description 325",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 326,
+    "fields": {
+      "short_description": "Syringe,disp Generic 326",
+      "basic_description": "Z06 PS Services/ Consumable 326",
+      "group_description": "Syringes/Needles/Cannulae 326",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 326",
+      "purchase_group_description": "Purchase group description 326",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 327,
+    "fields": {
+      "short_description": "Syringe,disp Generic 327",
+      "basic_description": "Z06 PS Services/ Consumable 327",
+      "group_description": "Syringes/Needles/Cannulae 327",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 327",
+      "purchase_group_description": "Purchase group description 327",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 328,
+    "fields": {
+      "short_description": "Syringe,disp Generic 328",
+      "basic_description": "Z06 PS Services/ Consumable 328",
+      "group_description": "Syringes/Needles/Cannulae 328",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 328",
+      "purchase_group_description": "Purchase group description 328",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 329,
+    "fields": {
+      "short_description": "Syringe,disp Generic 329",
+      "basic_description": "Z06 PS Services/ Consumable 329",
+      "group_description": "Syringes/Needles/Cannulae 329",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 329",
+      "purchase_group_description": "Purchase group description 329",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 330,
+    "fields": {
+      "short_description": "Syringe,disp Generic 330",
+      "basic_description": "Z06 PS Services/ Consumable 330",
+      "group_description": "Syringes/Needles/Cannulae 330",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 330",
+      "purchase_group_description": "Purchase group description 330",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 331,
+    "fields": {
+      "short_description": "Syringe,disp Generic 331",
+      "basic_description": "Z06 PS Services/ Consumable 331",
+      "group_description": "Syringes/Needles/Cannulae 331",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 331",
+      "purchase_group_description": "Purchase group description 331",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 332,
+    "fields": {
+      "short_description": "Syringe,disp Generic 332",
+      "basic_description": "Z06 PS Services/ Consumable 332",
+      "group_description": "Syringes/Needles/Cannulae 332",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 332",
+      "purchase_group_description": "Purchase group description 332",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 333,
+    "fields": {
+      "short_description": "Syringe,disp Generic 333",
+      "basic_description": "Z06 PS Services/ Consumable 333",
+      "group_description": "Syringes/Needles/Cannulae 333",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 333",
+      "purchase_group_description": "Purchase group description 333",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 334,
+    "fields": {
+      "short_description": "Syringe,disp Generic 334",
+      "basic_description": "Z06 PS Services/ Consumable 334",
+      "group_description": "Syringes/Needles/Cannulae 334",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 334",
+      "purchase_group_description": "Purchase group description 334",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 335,
+    "fields": {
+      "short_description": "Syringe,disp Generic 335",
+      "basic_description": "Z06 PS Services/ Consumable 335",
+      "group_description": "Syringes/Needles/Cannulae 335",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 335",
+      "purchase_group_description": "Purchase group description 335",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 336,
+    "fields": {
+      "short_description": "Syringe,disp Generic 336",
+      "basic_description": "Z06 PS Services/ Consumable 336",
+      "group_description": "Syringes/Needles/Cannulae 336",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 336",
+      "purchase_group_description": "Purchase group description 336",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 337,
+    "fields": {
+      "short_description": "Syringe,disp Generic 337",
+      "basic_description": "Z06 PS Services/ Consumable 337",
+      "group_description": "Syringes/Needles/Cannulae 337",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 337",
+      "purchase_group_description": "Purchase group description 337",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 338,
+    "fields": {
+      "short_description": "Syringe,disp Generic 338",
+      "basic_description": "Z06 PS Services/ Consumable 338",
+      "group_description": "Syringes/Needles/Cannulae 338",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 338",
+      "purchase_group_description": "Purchase group description 338",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 339,
+    "fields": {
+      "short_description": "Syringe,disp Generic 339",
+      "basic_description": "Z06 PS Services/ Consumable 339",
+      "group_description": "Syringes/Needles/Cannulae 339",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 339",
+      "purchase_group_description": "Purchase group description 339",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 340,
+    "fields": {
+      "short_description": "Syringe,disp Generic 340",
+      "basic_description": "Z06 PS Services/ Consumable 340",
+      "group_description": "Syringes/Needles/Cannulae 340",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 340",
+      "purchase_group_description": "Purchase group description 340",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 341,
+    "fields": {
+      "short_description": "Syringe,disp Generic 341",
+      "basic_description": "Z06 PS Services/ Consumable 341",
+      "group_description": "Syringes/Needles/Cannulae 341",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 341",
+      "purchase_group_description": "Purchase group description 341",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 342,
+    "fields": {
+      "short_description": "Syringe,disp Generic 342",
+      "basic_description": "Z06 PS Services/ Consumable 342",
+      "group_description": "Syringes/Needles/Cannulae 342",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 342",
+      "purchase_group_description": "Purchase group description 342",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 343,
+    "fields": {
+      "short_description": "Syringe,disp Generic 343",
+      "basic_description": "Z06 PS Services/ Consumable 343",
+      "group_description": "Syringes/Needles/Cannulae 343",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 343",
+      "purchase_group_description": "Purchase group description 343",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 344,
+    "fields": {
+      "short_description": "Syringe,disp Generic 344",
+      "basic_description": "Z06 PS Services/ Consumable 344",
+      "group_description": "Syringes/Needles/Cannulae 344",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 344",
+      "purchase_group_description": "Purchase group description 344",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 345,
+    "fields": {
+      "short_description": "Syringe,disp Generic 345",
+      "basic_description": "Z06 PS Services/ Consumable 345",
+      "group_description": "Syringes/Needles/Cannulae 345",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 345",
+      "purchase_group_description": "Purchase group description 345",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 346,
+    "fields": {
+      "short_description": "Syringe,disp Generic 346",
+      "basic_description": "Z06 PS Services/ Consumable 346",
+      "group_description": "Syringes/Needles/Cannulae 346",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 346",
+      "purchase_group_description": "Purchase group description 346",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 347,
+    "fields": {
+      "short_description": "Syringe,disp Generic 347",
+      "basic_description": "Z06 PS Services/ Consumable 347",
+      "group_description": "Syringes/Needles/Cannulae 347",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 347",
+      "purchase_group_description": "Purchase group description 347",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 348,
+    "fields": {
+      "short_description": "Syringe,disp Generic 348",
+      "basic_description": "Z06 PS Services/ Consumable 348",
+      "group_description": "Syringes/Needles/Cannulae 348",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 348",
+      "purchase_group_description": "Purchase group description 348",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 349,
+    "fields": {
+      "short_description": "Syringe,disp Generic 349",
+      "basic_description": "Z06 PS Services/ Consumable 349",
+      "group_description": "Syringes/Needles/Cannulae 349",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 349",
+      "purchase_group_description": "Purchase group description 349",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 350,
+    "fields": {
+      "short_description": "Syringe,disp Generic 350",
+      "basic_description": "Z06 PS Services/ Consumable 350",
+      "group_description": "Syringes/Needles/Cannulae 350",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 350",
+      "purchase_group_description": "Purchase group description 350",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 351,
+    "fields": {
+      "short_description": "Syringe,disp Generic 351",
+      "basic_description": "Z06 PS Services/ Consumable 351",
+      "group_description": "Syringes/Needles/Cannulae 351",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 351",
+      "purchase_group_description": "Purchase group description 351",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 352,
+    "fields": {
+      "short_description": "Syringe,disp Generic 352",
+      "basic_description": "Z06 PS Services/ Consumable 352",
+      "group_description": "Syringes/Needles/Cannulae 352",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 352",
+      "purchase_group_description": "Purchase group description 352",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 353,
+    "fields": {
+      "short_description": "Syringe,disp Generic 353",
+      "basic_description": "Z06 PS Services/ Consumable 353",
+      "group_description": "Syringes/Needles/Cannulae 353",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 353",
+      "purchase_group_description": "Purchase group description 353",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 354,
+    "fields": {
+      "short_description": "Syringe,disp Generic 354",
+      "basic_description": "Z06 PS Services/ Consumable 354",
+      "group_description": "Syringes/Needles/Cannulae 354",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 354",
+      "purchase_group_description": "Purchase group description 354",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 355,
+    "fields": {
+      "short_description": "Syringe,disp Generic 355",
+      "basic_description": "Z06 PS Services/ Consumable 355",
+      "group_description": "Syringes/Needles/Cannulae 355",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 355",
+      "purchase_group_description": "Purchase group description 355",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 356,
+    "fields": {
+      "short_description": "Syringe,disp Generic 356",
+      "basic_description": "Z06 PS Services/ Consumable 356",
+      "group_description": "Syringes/Needles/Cannulae 356",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 356",
+      "purchase_group_description": "Purchase group description 356",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 357,
+    "fields": {
+      "short_description": "Syringe,disp Generic 357",
+      "basic_description": "Z06 PS Services/ Consumable 357",
+      "group_description": "Syringes/Needles/Cannulae 357",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 357",
+      "purchase_group_description": "Purchase group description 357",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 358,
+    "fields": {
+      "short_description": "Syringe,disp Generic 358",
+      "basic_description": "Z06 PS Services/ Consumable 358",
+      "group_description": "Syringes/Needles/Cannulae 358",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 358",
+      "purchase_group_description": "Purchase group description 358",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 359,
+    "fields": {
+      "short_description": "Syringe,disp Generic 359",
+      "basic_description": "Z06 PS Services/ Consumable 359",
+      "group_description": "Syringes/Needles/Cannulae 359",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 359",
+      "purchase_group_description": "Purchase group description 359",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 360,
+    "fields": {
+      "short_description": "Syringe,disp Generic 360",
+      "basic_description": "Z06 PS Services/ Consumable 360",
+      "group_description": "Syringes/Needles/Cannulae 360",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 360",
+      "purchase_group_description": "Purchase group description 360",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 361,
+    "fields": {
+      "short_description": "Syringe,disp Generic 361",
+      "basic_description": "Z06 PS Services/ Consumable 361",
+      "group_description": "Syringes/Needles/Cannulae 361",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 361",
+      "purchase_group_description": "Purchase group description 361",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 362,
+    "fields": {
+      "short_description": "Syringe,disp Generic 362",
+      "basic_description": "Z06 PS Services/ Consumable 362",
+      "group_description": "Syringes/Needles/Cannulae 362",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 362",
+      "purchase_group_description": "Purchase group description 362",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 363,
+    "fields": {
+      "short_description": "Syringe,disp Generic 363",
+      "basic_description": "Z06 PS Services/ Consumable 363",
+      "group_description": "Syringes/Needles/Cannulae 363",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 363",
+      "purchase_group_description": "Purchase group description 363",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 364,
+    "fields": {
+      "short_description": "Syringe,disp Generic 364",
+      "basic_description": "Z06 PS Services/ Consumable 364",
+      "group_description": "Syringes/Needles/Cannulae 364",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 364",
+      "purchase_group_description": "Purchase group description 364",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 365,
+    "fields": {
+      "short_description": "Syringe,disp Generic 365",
+      "basic_description": "Z06 PS Services/ Consumable 365",
+      "group_description": "Syringes/Needles/Cannulae 365",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 365",
+      "purchase_group_description": "Purchase group description 365",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 366,
+    "fields": {
+      "short_description": "Syringe,disp Generic 366",
+      "basic_description": "Z06 PS Services/ Consumable 366",
+      "group_description": "Syringes/Needles/Cannulae 366",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 366",
+      "purchase_group_description": "Purchase group description 366",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 367,
+    "fields": {
+      "short_description": "Syringe,disp Generic 367",
+      "basic_description": "Z06 PS Services/ Consumable 367",
+      "group_description": "Syringes/Needles/Cannulae 367",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 367",
+      "purchase_group_description": "Purchase group description 367",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 368,
+    "fields": {
+      "short_description": "Syringe,disp Generic 368",
+      "basic_description": "Z06 PS Services/ Consumable 368",
+      "group_description": "Syringes/Needles/Cannulae 368",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 368",
+      "purchase_group_description": "Purchase group description 368",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 369,
+    "fields": {
+      "short_description": "Syringe,disp Generic 369",
+      "basic_description": "Z06 PS Services/ Consumable 369",
+      "group_description": "Syringes/Needles/Cannulae 369",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 369",
+      "purchase_group_description": "Purchase group description 369",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 370,
+    "fields": {
+      "short_description": "Syringe,disp Generic 370",
+      "basic_description": "Z06 PS Services/ Consumable 370",
+      "group_description": "Syringes/Needles/Cannulae 370",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 370",
+      "purchase_group_description": "Purchase group description 370",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 371,
+    "fields": {
+      "short_description": "Syringe,disp Generic 371",
+      "basic_description": "Z06 PS Services/ Consumable 371",
+      "group_description": "Syringes/Needles/Cannulae 371",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 371",
+      "purchase_group_description": "Purchase group description 371",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 372,
+    "fields": {
+      "short_description": "Syringe,disp Generic 372",
+      "basic_description": "Z06 PS Services/ Consumable 372",
+      "group_description": "Syringes/Needles/Cannulae 372",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 372",
+      "purchase_group_description": "Purchase group description 372",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 373,
+    "fields": {
+      "short_description": "Syringe,disp Generic 373",
+      "basic_description": "Z06 PS Services/ Consumable 373",
+      "group_description": "Syringes/Needles/Cannulae 373",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 373",
+      "purchase_group_description": "Purchase group description 373",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 374,
+    "fields": {
+      "short_description": "Syringe,disp Generic 374",
+      "basic_description": "Z06 PS Services/ Consumable 374",
+      "group_description": "Syringes/Needles/Cannulae 374",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 374",
+      "purchase_group_description": "Purchase group description 374",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 375,
+    "fields": {
+      "short_description": "Syringe,disp Generic 375",
+      "basic_description": "Z06 PS Services/ Consumable 375",
+      "group_description": "Syringes/Needles/Cannulae 375",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 375",
+      "purchase_group_description": "Purchase group description 375",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 376,
+    "fields": {
+      "short_description": "Syringe,disp Generic 376",
+      "basic_description": "Z06 PS Services/ Consumable 376",
+      "group_description": "Syringes/Needles/Cannulae 376",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 376",
+      "purchase_group_description": "Purchase group description 376",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 377,
+    "fields": {
+      "short_description": "Syringe,disp Generic 377",
+      "basic_description": "Z06 PS Services/ Consumable 377",
+      "group_description": "Syringes/Needles/Cannulae 377",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 377",
+      "purchase_group_description": "Purchase group description 377",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 378,
+    "fields": {
+      "short_description": "Syringe,disp Generic 378",
+      "basic_description": "Z06 PS Services/ Consumable 378",
+      "group_description": "Syringes/Needles/Cannulae 378",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 378",
+      "purchase_group_description": "Purchase group description 378",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 379,
+    "fields": {
+      "short_description": "Syringe,disp Generic 379",
+      "basic_description": "Z06 PS Services/ Consumable 379",
+      "group_description": "Syringes/Needles/Cannulae 379",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 379",
+      "purchase_group_description": "Purchase group description 379",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 380,
+    "fields": {
+      "short_description": "Syringe,disp Generic 380",
+      "basic_description": "Z06 PS Services/ Consumable 380",
+      "group_description": "Syringes/Needles/Cannulae 380",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 380",
+      "purchase_group_description": "Purchase group description 380",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 381,
+    "fields": {
+      "short_description": "Syringe,disp Generic 381",
+      "basic_description": "Z06 PS Services/ Consumable 381",
+      "group_description": "Syringes/Needles/Cannulae 381",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 381",
+      "purchase_group_description": "Purchase group description 381",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 382,
+    "fields": {
+      "short_description": "Syringe,disp Generic 382",
+      "basic_description": "Z06 PS Services/ Consumable 382",
+      "group_description": "Syringes/Needles/Cannulae 382",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 382",
+      "purchase_group_description": "Purchase group description 382",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 383,
+    "fields": {
+      "short_description": "Syringe,disp Generic 383",
+      "basic_description": "Z06 PS Services/ Consumable 383",
+      "group_description": "Syringes/Needles/Cannulae 383",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 383",
+      "purchase_group_description": "Purchase group description 383",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 384,
+    "fields": {
+      "short_description": "Syringe,disp Generic 384",
+      "basic_description": "Z06 PS Services/ Consumable 384",
+      "group_description": "Syringes/Needles/Cannulae 384",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 384",
+      "purchase_group_description": "Purchase group description 384",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 385,
+    "fields": {
+      "short_description": "Syringe,disp Generic 385",
+      "basic_description": "Z06 PS Services/ Consumable 385",
+      "group_description": "Syringes/Needles/Cannulae 385",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 385",
+      "purchase_group_description": "Purchase group description 385",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 386,
+    "fields": {
+      "short_description": "Syringe,disp Generic 386",
+      "basic_description": "Z06 PS Services/ Consumable 386",
+      "group_description": "Syringes/Needles/Cannulae 386",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 386",
+      "purchase_group_description": "Purchase group description 386",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 387,
+    "fields": {
+      "short_description": "Syringe,disp Generic 387",
+      "basic_description": "Z06 PS Services/ Consumable 387",
+      "group_description": "Syringes/Needles/Cannulae 387",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 387",
+      "purchase_group_description": "Purchase group description 387",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 388,
+    "fields": {
+      "short_description": "Syringe,disp Generic 388",
+      "basic_description": "Z06 PS Services/ Consumable 388",
+      "group_description": "Syringes/Needles/Cannulae 388",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 388",
+      "purchase_group_description": "Purchase group description 388",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 389,
+    "fields": {
+      "short_description": "Syringe,disp Generic 389",
+      "basic_description": "Z06 PS Services/ Consumable 389",
+      "group_description": "Syringes/Needles/Cannulae 389",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 389",
+      "purchase_group_description": "Purchase group description 389",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 390,
+    "fields": {
+      "short_description": "Syringe,disp Generic 390",
+      "basic_description": "Z06 PS Services/ Consumable 390",
+      "group_description": "Syringes/Needles/Cannulae 390",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 390",
+      "purchase_group_description": "Purchase group description 390",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 391,
+    "fields": {
+      "short_description": "Syringe,disp Generic 391",
+      "basic_description": "Z06 PS Services/ Consumable 391",
+      "group_description": "Syringes/Needles/Cannulae 391",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 391",
+      "purchase_group_description": "Purchase group description 391",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 392,
+    "fields": {
+      "short_description": "Syringe,disp Generic 392",
+      "basic_description": "Z06 PS Services/ Consumable 392",
+      "group_description": "Syringes/Needles/Cannulae 392",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 392",
+      "purchase_group_description": "Purchase group description 392",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 393,
+    "fields": {
+      "short_description": "Syringe,disp Generic 393",
+      "basic_description": "Z06 PS Services/ Consumable 393",
+      "group_description": "Syringes/Needles/Cannulae 393",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 393",
+      "purchase_group_description": "Purchase group description 393",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 394,
+    "fields": {
+      "short_description": "Syringe,disp Generic 394",
+      "basic_description": "Z06 PS Services/ Consumable 394",
+      "group_description": "Syringes/Needles/Cannulae 394",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 394",
+      "purchase_group_description": "Purchase group description 394",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 395,
+    "fields": {
+      "short_description": "Syringe,disp Generic 395",
+      "basic_description": "Z06 PS Services/ Consumable 395",
+      "group_description": "Syringes/Needles/Cannulae 395",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 395",
+      "purchase_group_description": "Purchase group description 395",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 396,
+    "fields": {
+      "short_description": "Syringe,disp Generic 396",
+      "basic_description": "Z06 PS Services/ Consumable 396",
+      "group_description": "Syringes/Needles/Cannulae 396",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 396",
+      "purchase_group_description": "Purchase group description 396",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 397,
+    "fields": {
+      "short_description": "Syringe,disp Generic 397",
+      "basic_description": "Z06 PS Services/ Consumable 397",
+      "group_description": "Syringes/Needles/Cannulae 397",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 397",
+      "purchase_group_description": "Purchase group description 397",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 398,
+    "fields": {
+      "short_description": "Syringe,disp Generic 398",
+      "basic_description": "Z06 PS Services/ Consumable 398",
+      "group_description": "Syringes/Needles/Cannulae 398",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 398",
+      "purchase_group_description": "Purchase group description 398",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 399,
+    "fields": {
+      "short_description": "Syringe,disp Generic 399",
+      "basic_description": "Z06 PS Services/ Consumable 399",
+      "group_description": "Syringes/Needles/Cannulae 399",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 399",
+      "purchase_group_description": "Purchase group description 399",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 400,
+    "fields": {
+      "short_description": "Syringe,disp Generic 400",
+      "basic_description": "Z06 PS Services/ Consumable 400",
+      "group_description": "Syringes/Needles/Cannulae 400",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 400",
+      "purchase_group_description": "Purchase group description 400",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 401,
+    "fields": {
+      "short_description": "Syringe,disp Generic 401",
+      "basic_description": "Z06 PS Services/ Consumable 401",
+      "group_description": "Syringes/Needles/Cannulae 401",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 401",
+      "purchase_group_description": "Purchase group description 401",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 402,
+    "fields": {
+      "short_description": "Syringe,disp Generic 402",
+      "basic_description": "Z06 PS Services/ Consumable 402",
+      "group_description": "Syringes/Needles/Cannulae 402",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 402",
+      "purchase_group_description": "Purchase group description 402",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 403,
+    "fields": {
+      "short_description": "Syringe,disp Generic 403",
+      "basic_description": "Z06 PS Services/ Consumable 403",
+      "group_description": "Syringes/Needles/Cannulae 403",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 403",
+      "purchase_group_description": "Purchase group description 403",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 404,
+    "fields": {
+      "short_description": "Syringe,disp Generic 404",
+      "basic_description": "Z06 PS Services/ Consumable 404",
+      "group_description": "Syringes/Needles/Cannulae 404",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 404",
+      "purchase_group_description": "Purchase group description 404",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 405,
+    "fields": {
+      "short_description": "Syringe,disp Generic 405",
+      "basic_description": "Z06 PS Services/ Consumable 405",
+      "group_description": "Syringes/Needles/Cannulae 405",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 405",
+      "purchase_group_description": "Purchase group description 405",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 406,
+    "fields": {
+      "short_description": "Syringe,disp Generic 406",
+      "basic_description": "Z06 PS Services/ Consumable 406",
+      "group_description": "Syringes/Needles/Cannulae 406",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 406",
+      "purchase_group_description": "Purchase group description 406",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 407,
+    "fields": {
+      "short_description": "Syringe,disp Generic 407",
+      "basic_description": "Z06 PS Services/ Consumable 407",
+      "group_description": "Syringes/Needles/Cannulae 407",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 407",
+      "purchase_group_description": "Purchase group description 407",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 408,
+    "fields": {
+      "short_description": "Syringe,disp Generic 408",
+      "basic_description": "Z06 PS Services/ Consumable 408",
+      "group_description": "Syringes/Needles/Cannulae 408",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 408",
+      "purchase_group_description": "Purchase group description 408",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 409,
+    "fields": {
+      "short_description": "Syringe,disp Generic 409",
+      "basic_description": "Z06 PS Services/ Consumable 409",
+      "group_description": "Syringes/Needles/Cannulae 409",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 409",
+      "purchase_group_description": "Purchase group description 409",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 410,
+    "fields": {
+      "short_description": "Syringe,disp Generic 410",
+      "basic_description": "Z06 PS Services/ Consumable 410",
+      "group_description": "Syringes/Needles/Cannulae 410",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 410",
+      "purchase_group_description": "Purchase group description 410",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 411,
+    "fields": {
+      "short_description": "Syringe,disp Generic 411",
+      "basic_description": "Z06 PS Services/ Consumable 411",
+      "group_description": "Syringes/Needles/Cannulae 411",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 411",
+      "purchase_group_description": "Purchase group description 411",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 412,
+    "fields": {
+      "short_description": "Syringe,disp Generic 412",
+      "basic_description": "Z06 PS Services/ Consumable 412",
+      "group_description": "Syringes/Needles/Cannulae 412",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 412",
+      "purchase_group_description": "Purchase group description 412",
+      "temperature_group": null
+    }
+  },
+  {
+    "model": "last_mile.material",
+    "pk": 413,
+    "fields": {
+      "short_description": "Syringe,disp Generic 413",
+      "basic_description": "Z06 PS Services/ Consumable 413",
+      "group_description": "Syringes/Needles/Cannulae 413",
+      "original_uom": "PC",
+      "purchase_group": "mat pur grup 413",
+      "purchase_group_description": "Purchase group description 413",
+      "temperature_group": null
+    }
+  }
+]

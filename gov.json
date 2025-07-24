@@ -1,0 +1,332 @@
+[
+{
+    "model": "governments.governmentewp",
+    "pk": 1,
+    "fields": {
+        "created": "2024-10-16T13:50:54.713Z",
+        "modified": "2024-10-16T13:50:54.713Z",
+        "country_programme": 2,
+        "name": "Protection Workplan 2025",
+        "ewp_id": "wqewr",
+        "wbs": "WP/0060A007/000085/01",
+        "status": "wr",
+        "cost_center_code": "wr",
+        "cost_center_name": "wr",
+        "plan_type": "wr",
+        "category_type": "rw",
+        "start_date": "2024-10-16",
+        "end_date": "2025-10-16"
+    }
+},
+    {
+    "model": "governments.governmentewp",
+    "pk": 2,
+    "fields": {
+        "created": "2024-10-16T13:50:54.713Z",
+        "modified": "2024-10-16T13:50:54.713Z",
+        "country_programme": 2,
+        "name": "Child Protection Workplan 2024 Southern",
+        "ewp_id": "wqewr",
+        "wbs": "WP/0060A007/000085/02",
+        "status": "wr",
+        "cost_center_code": "wr",
+        "cost_center_name": "wr",
+        "plan_type": "wr",
+        "category_type": "rw",
+        "start_date": "2024-10-16",
+        "end_date": "2024-10-16"
+    }
+},
+    {
+    "model": "governments.governmentewp",
+    "pk": 3,
+    "fields": {
+        "created": "2024-10-16T13:50:54.713Z",
+        "modified": "2024-10-16T13:50:54.713Z",
+        "country_programme": 2,
+        "name": "Health Workplan 2024 Eastern",
+        "ewp_id": "wqewr",
+        "wbs": "WP/0060A007/000085/03",
+        "status": "wr",
+        "cost_center_code": "wr",
+        "cost_center_name": "wr",
+        "plan_type": "wr",
+        "category_type": "rw",
+        "start_date": "2024-10-16",
+        "end_date": "2024-10-16"
+    }
+},
+{
+    "model": "governments.ewpoutput",
+    "pk": 1,
+    "fields": {
+        "created": "2024-10-17T15:05:35.129Z",
+        "modified": "2024-10-17T15:05:35.129Z",
+        "workplan": 1,
+        "cp_output": 453
+    }
+},
+{
+    "model": "governments.ewpoutput",
+    "pk": 2,
+    "fields": {
+        "created": "2024-10-17T15:05:35.129Z",
+        "modified": "2024-10-17T15:05:35.129Z",
+        "workplan": 1,
+        "cp_output": 453
+    }
+},
+{
+    "model": "governments.ewpoutput",
+    "pk": 3,
+    "fields": {
+        "created": "2024-10-17T15:05:35.129Z",
+        "modified": "2024-10-17T15:05:35.129Z",
+        "workplan": 1,
+        "cp_output": 453
+    }
+},
+{
+"model": "reports.result",
+"pk": 495,
+"fields": {
+    "country_programme": 2,
+    "result_type": 3,
+    "sector": 13,
+    "name": "activity result for test GDD",
+    "code": "44",
+    "from_date": null,
+    "to_date": null,
+    "parent": null,
+    "humanitarian_tag": false,
+    "humanitarian_marker_code": null,
+    "humanitarian_marker_name": null,
+    "wbs": "1234",
+    "vision_id": null,
+    "programme_area_code": null,
+    "programme_area_name": null,
+    "gic_code": null,
+    "gic_name": null,
+    "sic_code": null,
+    "sic_name": null,
+    "activity_focus_code": null,
+    "activity_focus_name": null,
+    "hidden": false,
+    "ram": false,
+    "created": "2024-10-17T15:14:54.132Z",
+    "modified": "2024-10-17T15:14:54.132Z",
+    "lft": 1,
+    "rght": 2,
+    "tree_id": 35,
+    "level": 0
+}
+},
+{
+    "model": "governments.ewpkeyintervention",
+    "pk": 1,
+    "fields": {
+        "created": "2024-10-17T15:15:49.331Z",
+        "modified": "2024-10-17T15:15:49.331Z",
+        "ewp_output": 1,
+        "cp_key_intervention": 495
+    }
+},
+{
+    "model": "governments.ewpkeyintervention",
+    "pk": 2,
+    "fields": {
+        "created": "2024-10-17T15:15:49.331Z",
+        "modified": "2024-10-17T15:15:49.331Z",
+        "ewp_output": 2,
+        "cp_key_intervention": 495
+    }
+},
+{
+    "model": "governments.ewpkeyintervention",
+    "pk": 3,
+    "fields": {
+        "created": "2024-10-17T15:15:49.331Z",
+        "modified": "2024-10-17T15:15:49.331Z",
+        "ewp_output": 2,
+        "cp_key_intervention": 495
+    }
+},
+{
+    "model": "governments.ewpkeyintervention",
+    "pk": 4,
+    "fields": {
+        "created": "2024-10-17T15:15:49.331Z",
+        "modified": "2024-10-17T15:15:49.331Z",
+        "ewp_output": 3,
+        "cp_key_intervention": 495
+    }
+},
+{
+    "model": "governments.ewpkeyintervention",
+    "pk": 5,
+    "fields": {
+        "created": "2024-10-17T15:15:49.331Z",
+        "modified": "2024-10-17T15:15:49.331Z",
+        "ewp_output": 3,
+        "cp_key_intervention": 495
+    }
+},
+{
+    "model": "governments.ewpactivity",
+    "pk": 1,
+    "fields": {
+        "created": "2024-10-17T15:21:03.862Z",
+        "modified": "2024-10-17T15:21:03.862Z",
+        "workplan": 1,
+        "wpa_id": "1111",
+        "wpa_wbs": "3333",
+        "ewp_key_intervention": 1,
+        "title": "workplan activity title pk 1",
+        "description": "",
+        "total_budget": null,
+        "locations": [
+            37,
+            38
+        ],
+        "partners": []
+    }
+},
+{
+"model": "governments.ewpactivity",
+"pk": 2,
+"fields": {
+    "created": "2024-10-17T15:21:03.862Z",
+    "modified": "2024-10-17T15:21:03.862Z",
+    "workplan": 1,
+    "wpa_id": "2222",
+    "wpa_wbs": "4444",
+    "ewp_key_intervention": 1,
+    "title": "workplan activity title pk 2",
+    "description": "",
+    "total_budget": null,
+    "locations": [
+        37,
+        38
+    ],
+    "partners": []
+}
+},
+{
+"model": "governments.ewpactivity",
+"pk": 3,
+"fields": {
+    "created": "2024-10-17T15:21:03.862Z",
+    "modified": "2024-10-17T15:21:03.862Z",
+    "workplan": 1,
+    "wpa_id": "3333",
+    "wpa_wbs": "5555",
+    "ewp_key_intervention": 1,
+    "title": "workplan activity title pk 3",
+    "description": "",
+    "total_budget": null,
+    "locations": [
+        37,
+        38
+    ],
+    "partners": []
+}
+},
+{
+    "model": "governments.gdd",
+    "pk": 2,
+    "fields": {
+        "created": "2024-10-17T14:56:12.803Z",
+        "modified": "2024-10-17T14:56:12.833Z",
+        "agreement": null,
+        "partner": 311,
+        "country_programme": 2,
+        "number": "2/20252",
+        "title": "GDD test",
+        "status": "draft",
+        "start": "2024-10-17",
+        "end": "2025-06-19",
+        "submission_date": null,
+        "submission_date_prc": null,
+        "reference_number_year": 2025,
+        "date_partnership_review_performed": null,
+        "review_date_prc": null,
+        "final_review_approved": false,
+        "signed_by_unicef_date": null,
+        "signed_by_partner_date": null,
+        "unicef_signatory": null,
+        "partner_authorized_officer_signatory": null,
+        "contingency_pd": false,
+        "activation_protocol": "",
+        "population_focus": null,
+        "in_amendment": false,
+        "humanitarian_flag": false,
+        "unicef_court": true,
+        "date_sent_to_partner": null,
+        "unicef_accepted": false,
+        "partner_accepted": false,
+        "accepted_on_behalf_of_partner": false,
+        "cfei_number": null,
+        "context": "",
+        "implementation_strategy": "",
+        "gender_rating": "none",
+        "gender_narrative": "",
+        "equity_rating": "none",
+        "equity_narrative": "",
+        "sustainability_rating": "none",
+        "sustainability_narrative": "",
+        "ip_program_contribution": null,
+        "budget_owner": null,
+        "hq_support_cost": "0.0",
+        "cash_transfer_modalities": "[\"dct\", \"reimbursement\"]",
+        "unicef_review_type": "none",
+        "capacity_development": "",
+        "other_info": "",
+        "other_details": null,
+        "other_partners_involved": "",
+        "technical_guidance": "",
+        "cancel_justification": null,
+        "has_data_processing_agreement": false,
+        "has_activities_involving_children": false,
+        "has_special_conditions_for_construction": false,
+        "metadata": {},
+        "confidential": false,
+        "e_workplans": [
+            1
+        ],
+        "unicef_focal_points": [],
+        "partner_focal_points": [],
+        "sections": [
+            13,
+            4
+        ],
+        "offices": [],
+        "flat_locations": [
+            37
+        ],
+        "sites": []
+    }
+},
+{
+    "model": "governments.gddbudget",
+    "pk": 2,
+    "fields": {
+        "created": "2024-10-17T14:56:12.835Z",
+        "modified": "2024-10-17T14:56:12.835Z",
+        "gdd": 2,
+        "partner_contribution": "0.00",
+        "unicef_cash": "0.00",
+        "in_kind_amount": "0.00",
+        "total": "0.00",
+        "partner_contribution_local": "0.00",
+        "partner_supply_local": "0.00",
+        "total_partner_contribution_local": "0.00",
+        "total_unicef_cash_local_wo_hq": "0.00",
+        "total_hq_cash_local": "0.00",
+        "unicef_cash_local": "0.00",
+        "in_kind_amount_local": "0.00",
+        "currency": "RWF",
+        "total_local": "0.00",
+        "programme_effectiveness": "0.00"
+    }
+}
+]

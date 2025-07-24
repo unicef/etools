@@ -1,0 +1,116 @@
+[
+{
+    "model": "last_mile.transfer",
+    "pk": 999,
+    "fields": {
+      "created": "2024-02-15T07:43:12.105Z",
+      "modified": "2024-02-15T07:43:12.105Z",
+      "name": "incoming 699",
+      "partner_organization": 289,
+      "status": "PENDING",
+      "transfer_type": "DELIVERY",
+      "checked_in_by": null,
+      "checked_out_by": null,
+      "origin_point": 1,
+      "destination_point": 3,
+      "destination_check_in_at": "2024-02-15T07:43:12.105Z",
+      "purchase_order_id": null,
+      "delivery_id": null,
+      "delivery_item_id": null,
+      "waybill_id": null,
+      "e_tools_reference": null,
+      "reason": null,
+      "comment": ""
+    }
+},
+{
+    "model": "last_mile.item",
+    "pk": 991,
+    "fields": {
+        "created": "2024-02-15T07:49:24.346Z",
+        "modified": "2024-02-15T07:49:24.346Z",
+        "conversion_factor": 1,
+        "quantity": 11,
+        "batch_id": "b111",
+        "expiry_date": "2024-05-01T07:43:36Z",
+        "comment": "",
+        "is_prepositioned": false,
+        "preposition_qty": null,
+        "amount_usd": 987,
+        "transfer": 999,
+        "material": 1
+    }
+},
+{
+    "model": "last_mile.item",
+    "pk": 992,
+    "fields": {
+        "created": "2024-02-15T07:49:24.346Z",
+        "modified": "2024-02-15T07:49:24.346Z",
+        "conversion_factor": null,
+        "quantity": 22,
+        "batch_id": "222",
+        "expiry_date": "2024-05-01T07:43:36Z",
+        "comment": "",
+        "is_prepositioned": false,
+        "preposition_qty": null,
+        "amount_usd": 789,
+        "transfer": 999,
+        "material": 2
+    }
+},
+{
+    "model": "last_mile.item",
+    "pk": 993,
+    "fields": {
+        "created": "2024-02-15T07:49:24.346Z",
+        "modified": "2024-02-15T07:49:24.346Z",
+        "conversion_factor": null,
+        "quantity": 33,
+        "batch_id": "b333",
+        "expiry_date": "2024-05-01T07:43:36Z",
+        "comment": "",
+        "is_prepositioned": false,
+        "preposition_qty": null,
+        "amount_usd": 200,
+        "transfer": 999,
+        "material": 3
+    }
+},
+{
+    "model": "last_mile.item",
+    "pk": 994,
+    "fields": {
+        "created": "2024-02-15T07:49:24.346Z",
+        "modified": "2024-02-15T07:49:24.346Z",
+        "conversion_factor": null,
+        "quantity": 4,
+        "batch_id": "b44",
+        "expiry_date": "2024-05-01T07:43:36Z",
+        "comment": "comment item 4",
+        "is_prepositioned": false,
+        "preposition_qty": null,
+        "amount_usd": 567,
+        "transfer": 999,
+        "material": 4
+    }
+},
+{
+    "model": "last_mile.item",
+    "pk": 995,
+    "fields": {
+        "created": "2024-02-15T07:49:24.346Z",
+        "modified": "2024-02-15T07:49:24.346Z",
+        "conversion_factor": null,
+        "quantity": 123,
+        "batch_id": "b123",
+        "expiry_date": "2024-05-01T07:43:36Z",
+        "comment": "comment item 4",
+        "is_prepositioned": false,
+        "preposition_qty": null,
+        "amount_usd": 30,
+        "transfer": 999,
+        "material": 2
+    }
+}
+]
