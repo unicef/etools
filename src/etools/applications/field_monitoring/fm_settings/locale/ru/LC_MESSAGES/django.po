@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-07-08 06:58+0000\n"
+"POT-Creation-Date: 2025-07-24 08:57+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -68,6 +68,52 @@ msgstr "Положение дел"
 msgid "Attachments"
 msgstr "Вложения"
 
+msgid "Question"
+msgstr "Вопрос"
+
+#, fuzzy
+#| msgid "Question Text"
+msgid "Question Target Level"
+msgstr "Текст вопроса"
+
+msgid "Collection Methods"
+msgstr ""
+
+msgid "Sections"
+msgstr "Разделы"
+
+msgid "Answer Type"
+msgstr "Тип ответа"
+
+msgid "Group"
+msgstr ""
+
+#, fuzzy
+#| msgid "Option"
+msgid "Options"
+msgstr "Вариант"
+
+#, fuzzy
+#| msgid "Is Active"
+msgid "Is Active ?"
+msgstr "Активен"
+
+#, fuzzy
+#| msgid "Count as HACT"
+msgid "Count as HACT ?"
+msgstr "Считать как HACT"
+
+#, fuzzy
+#| msgid "Is Custom"
+msgid "Is Custom ?"
+msgstr "Пользовательский"
+
+msgid "Yes"
+msgstr ""
+
+msgid "No"
+msgstr ""
+
 msgid "Global Attachments"
 msgstr "Глобальные вложения"
 
@@ -113,9 +159,6 @@ msgstr "Вывод"
 msgid "PD/SPD"
 msgstr "ПД/СПД"
 
-msgid "Answer Type"
-msgstr "Тип ответа"
-
 msgid "Choices Size"
 msgstr "Выбор размера"
 
@@ -124,9 +167,6 @@ msgstr "Уровень"
 
 msgid "Category"
 msgstr "Категория"
-
-msgid "Sections"
-msgstr "Разделы"
 
 msgid "Question Text"
 msgstr "Текст вопроса"
@@ -142,9 +182,6 @@ msgstr "Активен"
 
 msgid "Other details"
 msgstr ""
-
-msgid "Question"
-msgstr "Вопрос"
 
 msgid "Questions"
 msgstr "Вопросы"

@@ -48,6 +48,7 @@ class LogIssueCSVRenderer(CSVRenderer):
     def header(self):
         return self.labels.keys()
 
+
 class QuestionCSVRenderer(CSVRenderer):
     labels = {
         'text': _('Question'),

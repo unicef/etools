@@ -1,9 +1,10 @@
 from urllib.parse import urljoin
 
 from django.conf import settings
+from django.utils.translation import gettext as _
 
 from rest_framework import serializers
-from django.utils.translation import gettext as _
+
 
 class LocationSiteExportSerializer(serializers.Serializer):
     def __init__(self, *args, **kwargs):
@@ -67,6 +68,7 @@ class LogIssueExportSerializer(serializers.Serializer):
             for a in obj.attachments.all()
         ])
 
+
 class QuestionExportSerializer(serializers.Serializer):
     category = serializers.SerializerMethodField()
     text = serializers.CharField()
@@ -96,7 +98,7 @@ class QuestionExportSerializer(serializers.Serializer):
 
     def get_options(self, obj):
         return ', '.join([opt.label for opt in obj.options.all()])
-    
+
     def get_is_active(self, obj):
         return _("Yes") if obj.is_active else _("No")
 
