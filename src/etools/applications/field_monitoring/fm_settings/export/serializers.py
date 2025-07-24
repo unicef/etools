@@ -3,7 +3,7 @@ from urllib.parse import urljoin
 from django.conf import settings
 
 from rest_framework import serializers
-
+from django.utils.translation import gettext as _
 
 class LocationSiteExportSerializer(serializers.Serializer):
     def __init__(self, *args, **kwargs):
@@ -66,3 +66,42 @@ class LogIssueExportSerializer(serializers.Serializer):
             '{} - {}'.format(a.file_type, urljoin(settings.HOST, a.url))
             for a in obj.attachments.all()
         ])
+
+class QuestionExportSerializer(serializers.Serializer):
+    category = serializers.SerializerMethodField()
+    text = serializers.CharField()
+    level = serializers.SerializerMethodField()
+    answer_type = serializers.SerializerMethodField()
+    is_active = serializers.SerializerMethodField()
+    is_hact = serializers.SerializerMethodField()
+    is_custom = serializers.SerializerMethodField()
+    methods = serializers.SerializerMethodField()
+    sections = serializers.SerializerMethodField()
+    options = serializers.SerializerMethodField()
+
+    def get_category(self, obj):
+        return obj.category.name if obj.category else ''
+
+    def get_level(self, obj):
+        return dict(obj.LEVELS).get(obj.level, obj.level)
+
+    def get_answer_type(self, obj):
+        return dict(obj.ANSWER_TYPES).get(obj.answer_type, obj.answer_type)
+
+    def get_methods(self, obj):
+        return ', '.join([m.name for m in obj.methods.all()])
+
+    def get_sections(self, obj):
+        return ', '.join([s.name for s in obj.sections.all()])
+
+    def get_options(self, obj):
+        return ', '.join([opt.label for opt in obj.options.all()])
+    
+    def get_is_active(self, obj):
+        return _("Yes") if obj.is_active else _("No")
+
+    def get_is_hact(self, obj):
+        return _("Yes") if obj.is_hact else _("No")
+
+    def get_is_custom(self, obj):
+        return _("Yes") if obj.is_custom else _("No")
