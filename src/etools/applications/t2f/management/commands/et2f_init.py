@@ -269,7 +269,7 @@ class Command(BaseCommand):
                 'HNL', 'XPF', 'FJD', 'ETB', 'PEN', 'MKD', 'ILS', 'DOP', 'TMM', 'MDL', 'QAR', 'SEK', 'MVR', 'AUD', 'SRD',
                 'CUP', 'BBD', 'KMF', 'KRW', 'GMD', 'VEF', 'GTQ', 'ANG', 'CLP', 'ZMW', 'EUR', 'CDF', 'RWF', 'KZT', 'RUB',
                 'ISK', 'TTD', 'OMR', 'BRL', 'SBD', 'PLN', 'KES', 'SVC', 'USD', 'AZM', 'TOP', 'GNF', 'WST', 'IQD', 'ERN',
-                'BAM', 'SCR', 'CAD', 'GYD', 'KWD', 'BIF', 'PGK', 'SOS', 'SGD', 'UZS', 'STD', 'IRR', 'CNY', 'XOF', 'TND',
+                'BAM', 'SCR', 'CAD', 'GYD', 'KWD', 'BIF', 'PGK', 'SOS', 'SGD', 'UZS', 'STN', 'IRR', 'CNY', 'XOF', 'TND',
                 'NZD', 'LVL', 'BSD', 'KGS', 'ARS', 'BMD', 'RSD', 'BHD', 'JPY', 'SDG']
 
         for code in data:
@@ -581,7 +581,7 @@ class Command(BaseCommand):
                      ('Cabo Verde', '6820', 'Cape Verde', 'CVI', '682', 'CV', 'CPV',
                       'CVE', '16.09.1975', '31.12.9999', 'REPUBLIC OF CABO VERDE'),
                      ('Sao Tome and Principe', '6830', 'Sao Tome and Principe', 'STP', '683', 'ST', 'STP',
-                      'STD', '16.09.1975', '31.12.9999', 'THE DEMOCRATIC REPUBLIC OF SAO TOME AND PRINCIPE'),
+                      'STN', '16.09.1975', '31.12.9999', 'THE DEMOCRATIC REPUBLIC OF SAO TOME AND PRINCIPE'),
                      ('Guinea-Bissau', '6850', 'Guinea Bissau', 'GBS', '685', 'GW', 'GNB',
                       'XOF', '17.09.1974', '31.12.9999', 'THE REPUBLIC OF GUINEA-BISSAU'),
                      ('Mozambique', '6890', 'Mozambique', 'MOZ', '689', 'MZ', 'MOZ',
