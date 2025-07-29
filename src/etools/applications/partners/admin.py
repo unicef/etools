@@ -144,6 +144,7 @@ class InterventionBudgetAdmin(RestrictedEditAdmin):
     )
     list_display = (
         'intervention',
+        'currency',
         'total'
     )
     list_filter = (
