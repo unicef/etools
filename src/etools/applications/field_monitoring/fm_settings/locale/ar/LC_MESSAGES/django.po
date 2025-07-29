@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-07-08 06:58+0000\n"
+"POT-Creation-Date: 2025-07-24 08:57+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -23,7 +23,7 @@ msgid "Methods"
 msgstr "طرق"
 
 msgid "Import LocationSites"
-msgstr ""
+msgstr "استيراد المواقع"
 
 msgid "Site ID"
 msgstr "معرف المكان"
@@ -66,6 +66,42 @@ msgstr "الحالة"
 
 msgid "Attachments"
 msgstr "المرفقات"
+
+msgid "Question"
+msgstr "السؤال"
+
+msgid "Question Target Level"
+msgstr "نص السؤال"
+
+msgid "Collection Methods"
+msgstr "طرق الجمع"
+
+msgid "Sections"
+msgstr "الأقسام"
+
+msgid "Answer Type"
+msgstr "نوع الإجابة"
+
+msgid "Group"
+msgstr "مجموعة"
+
+msgid "Options"
+msgstr "خيارات"
+
+msgid "Is Active ?"
+msgstr "هل هو نشط؟"
+
+msgid "Count as HACT ?"
+msgstr "تعتبر كـ HACT؟"
+
+msgid "Is Custom ?"
+msgstr "هل هو مخصص ؟"
+
+msgid "Yes"
+msgstr "نعم"
+
+msgid "No"
+msgstr "لا"
 
 msgid "Global Attachments"
 msgstr "المرفقات العالمية"
@@ -112,9 +148,6 @@ msgstr "المخرجات"
 msgid "PD/SPD"
 msgstr "PD/SPD"
 
-msgid "Answer Type"
-msgstr "نوع الإجابة"
-
 msgid "Choices Size"
 msgstr "حجم الاختيارات"
 
@@ -123,9 +156,6 @@ msgstr "المستوى"
 
 msgid "Category"
 msgstr "الفئة"
-
-msgid "Sections"
-msgstr "الأقسام"
 
 msgid "Question Text"
 msgstr "نص السؤال"
@@ -140,10 +170,7 @@ msgid "Is Active"
 msgstr "فعال"
 
 msgid "Other details"
-msgstr ""
-
-msgid "Question"
-msgstr "السؤال"
+msgstr "تفاصيل أخرى"
 
 msgid "Questions"
 msgstr "الأسئلة"
@@ -221,4 +248,4 @@ msgid "Site Specific Locations"
 msgstr "مكان المواقع المحددة"
 
 msgid "Multiple updates to a single question found"
-msgstr ""
+msgstr "تم العثور على تحديثات متعددة لسؤال واحد"
