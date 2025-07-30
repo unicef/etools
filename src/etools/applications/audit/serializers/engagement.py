@@ -341,12 +341,12 @@ class EngagementSerializer(
         agreement = validated_data.get('agreement', None) or self.instance.agreement if self.instance else None
 
         if staff_members and agreement and agreement.auditor_firm:
-            existed_staff_members = agreement.auditor_firm.staff_members.all()
-            unexisted = set(staff_members) - set(existed_staff_members)
-            if unexisted:
+            existing_staff_members = agreement.auditor_firm.all_staff_members.all()
+            unexisting = set(staff_members) - set(existing_staff_members)
+            if unexisting:
                 msg = self.fields['staff_members'].write_field.child_relation.error_messages['does_not_exist']
                 raise serializers.ValidationError({
-                    'staff_members': [msg.format(pk_value=staff_member.pk) for staff_member in unexisted],
+                    'staff_members': [msg.format(pk_value=staff_member.pk) for staff_member in unexisting],
                 })
 
         return validated_data

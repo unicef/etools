@@ -1141,6 +1141,25 @@ class TestQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
             [True, False]
         )
 
+    def test_export_questions_csv(self):
+        # Create some questions to be exported
+        QuestionFactory.create_batch(2)
+        QuestionFactory.create_batch(3, answer_type=Question.ANSWER_TYPES.likert_scale, options__count=2)
+
+        # Call the export endpoint
+        response = self.forced_auth_req(
+            'get',
+            reverse('field_monitoring_settings:questions-export'),
+            user=self.usual_user
+        )
+
+        # Assert success
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Check Content-Disposition for file download
+        self.assertIn('Content-Disposition', response.headers)
+        self.assertTrue(response.headers['Content-Disposition'].startswith('attachment;filename=questions_'))
+
     def test_update(self):
         question = QuestionFactory(answer_type=Question.ANSWER_TYPES.likert_scale, options__count=2)
         first_option, second_option = question.options.all()

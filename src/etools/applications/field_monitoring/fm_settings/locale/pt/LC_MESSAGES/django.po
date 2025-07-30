@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-01-08 12:42+0000\n"
+"POT-Creation-Date: 2025-07-24 08:57+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -20,6 +20,9 @@ msgstr ""
 
 msgid "Methods"
 msgstr "Métodos"
+
+msgid "Import LocationSites"
+msgstr "Localização de importaçãoSites"
 
 msgid "Site ID"
 msgstr "Identificação do sítio"
@@ -62,6 +65,42 @@ msgstr "Estado"
 
 msgid "Attachments"
 msgstr "Anexos"
+
+msgid "Question"
+msgstr "Pergunta"
+
+msgid "Question Target Level"
+msgstr "Nível alvo da questão"
+
+msgid "Collection Methods"
+msgstr "Métodos de recolha"
+
+msgid "Sections"
+msgstr "Secções"
+
+msgid "Answer Type"
+msgstr "Tipo de resposta"
+
+msgid "Group"
+msgstr "Grupo"
+
+msgid "Options"
+msgstr "Opções"
+
+msgid "Is Active ?"
+msgstr "Está ativo?"
+
+msgid "Count as HACT ?"
+msgstr "Contar como HACT?"
+
+msgid "Is Custom ?"
+msgstr "É personalizado?"
+
+msgid "Yes"
+msgstr "Sim"
+
+msgid "No"
+msgstr "Não"
 
 msgid "Global Attachments"
 msgstr "Anexos Globais"
@@ -108,9 +147,6 @@ msgstr "Saída"
 msgid "PD/SPD"
 msgstr "PD/SPD"
 
-msgid "Answer Type"
-msgstr "Tipo de resposta"
-
 msgid "Choices Size"
 msgstr "Escolha Tamanho"
 
@@ -119,9 +155,6 @@ msgstr "Nível"
 
 msgid "Category"
 msgstr "Categoria"
-
-msgid "Sections"
-msgstr "Secções"
 
 msgid "Question Text"
 msgstr "Texto da Pergunta"
@@ -136,10 +169,7 @@ msgid "Is Active"
 msgstr "Está activo"
 
 msgid "Other details"
-msgstr ""
-
-msgid "Question"
-msgstr "Pergunta"
+msgstr "Outros detalhes"
 
 msgid "Questions"
 msgstr "Perguntas"
@@ -218,4 +248,4 @@ msgid "Site Specific Locations"
 msgstr "Localizações específicas do local"
 
 msgid "Multiple updates to a single question found"
-msgstr ""
+msgstr "Várias atualizações para uma única questão encontradas"
