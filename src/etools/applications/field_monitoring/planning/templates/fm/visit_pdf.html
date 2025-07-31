@@ -161,6 +161,15 @@
                         <span class="value">{{ finding.grouper }}</span>
                     </div>
                     {% for finding in finding.list %}
+                        <div>
+                            <span class="label">STATUS:</span>
+                            <span class="value">
+                                {% if finding.on_track == True %} On Track
+                                {% elif finding.on_track == False %} Off Track
+                                {% else %} Not Monitored
+                                {% endif %}
+                            </span>
+                        </div>
                         <div class="value">
                             {{ finding.narrative_finding|safe|default:"-"|linebreaks }}
                         </div>

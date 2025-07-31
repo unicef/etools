@@ -12,6 +12,7 @@ from django.utils.translation import gettext_lazy as _
 from django_fsm import FSMField, transition
 from model_utils import Choices, FieldTracker
 from model_utils.models import TimeStampedModel
+from sentry_sdk import capture_exception
 from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CodedGenericRelation
 
@@ -423,35 +424,45 @@ class MonitoringActivity(
 
         ActivityQuestion.objects.bulk_create(questions)
 
+    @transaction.atomic()
     def prepare_activity_overall_findings(self):
-        self.overall_findings.all().delete()
+        try:
+            self.overall_findings.all().delete()
 
-        from etools.applications.field_monitoring.data_collection.models import ActivityOverallFinding
+            from etools.applications.field_monitoring.data_collection.models import ActivityOverallFinding
 
-        findings = []
-        for relation, level in self.RELATIONS_MAPPING:
-            for target in getattr(self, relation).all():
-                if not self.questions.filter(**{Question.get_target_relation_name(level): target}).exists():
-                    continue
+            findings = []
+            for relation, level in self.RELATIONS_MAPPING:
+                for target in getattr(self, relation).all():
+                    if not self.questions.filter(**{Question.get_target_relation_name(level): target}).exists():
+                        continue
 
-                finding = ActivityOverallFinding(monitoring_activity=self)
+                    finding = ActivityOverallFinding(monitoring_activity=self)
 
-                setattr(finding, Question.get_target_relation_name(level), target)
+                    setattr(finding, Question.get_target_relation_name(level), target)
 
-                findings.append(finding)
+                    findings.append(finding)
 
-        ActivityOverallFinding.objects.bulk_create(findings)
+            ActivityOverallFinding.objects.bulk_create(findings)
+        except Exception as ex:  # noqa
+            logger.exception(f'Generating ActivityOverallFinding for Monitoring Activity id {self.pk} failed. Error: {ex}')
+            capture_exception(ex)
 
+    @transaction.atomic
     def prepare_questions_overall_findings(self):
-        from etools.applications.field_monitoring.data_collection.models import ActivityQuestionOverallFinding
+        try:
+            from etools.applications.field_monitoring.data_collection.models import ActivityQuestionOverallFinding
 
-        # cleanup
-        ActivityQuestionOverallFinding.objects.filter(activity_question__monitoring_activity=self).delete()
+            # cleanup
+            ActivityQuestionOverallFinding.objects.filter(activity_question__monitoring_activity=self).delete()
 
-        ActivityQuestionOverallFinding.objects.bulk_create([
-            ActivityQuestionOverallFinding(activity_question=question)
-            for question in self.questions.filter(is_enabled=True)
-        ])
+            ActivityQuestionOverallFinding.objects.bulk_create([
+                ActivityQuestionOverallFinding(activity_question=question)
+                for question in self.questions.filter(is_enabled=True)
+            ])
+        except Exception as ex:  # noqa
+            logger.exception(f'Generating ActivityQuestionOverallFinding for Monitoring Activity id {self.pk} failed. Error: {ex}')
+            capture_exception(ex)
 
     def get_object_url(self, **kwargs):
         return build_frontend_url(

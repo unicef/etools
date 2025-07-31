@@ -53,15 +53,15 @@ class PointOfInterestNotificationSerializer(serializers.ModelSerializer):
     parent_name = serializers.SerializerMethodField(read_only=True)
 
     def get_parent_name(self, obj):
-        parent_locations = obj.parent.get_parent_locations()
-        district = parent_locations.get(2)
+        parent_locations = obj.parent.get_parent_locations() if obj.parent else {}
+        district = parent_locations.get(2)  # THIRD_ADMIN_LEVEL = 2  # Everything under a region
         if not district or not hasattr(district, 'name'):
             return obj.parent.__str__() if hasattr(obj, 'parent') and obj.parent else ''
         return f"{district.name} ({district.p_code})"
 
     def get_region(self, obj):
-        parent_locations = obj.parent.get_parent_locations()
-        state = parent_locations.get(1)
+        parent_locations = obj.parent.get_parent_locations() if obj.parent else {}
+        state = parent_locations.get(1)  # SECOND_ADMIN_LEVEL = 1  # Region or Province or County or ...
         if not state or not hasattr(state, 'name'):
             return obj.parent.name if hasattr(obj, 'parent') and obj.parent else ''
         return state.name
@@ -241,7 +241,7 @@ class ItemUpdateSerializer(serializers.ModelSerializer):
             description = self.validated_data.pop('description')
             if self.instance.mapped_description and self.instance.mapped_description != description:
                 raise ValidationError(_('The description cannot be modified. A value is already present.'))
-            if description:
+            if description and description != self.instance.description:
                 self.instance.mapped_description = description
         super().save(**kwargs)
 

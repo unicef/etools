@@ -207,8 +207,15 @@ class TransferAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
 class PartnerMaterialInline(admin.TabularInline):
     extra = 0
     model = models.PartnerMaterial
-    list_select_related = ('material', 'partner_organization')
-    fields = ('material', 'partner_organization',)
+    autocomplete_field = ('partner_organization',)
+    fields = ('partner_organization',)
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        return queryset.select_related(
+            'partner_organization__organization',
+            'material'
+        )
 
 
 @admin.register(models.Material)
@@ -222,6 +229,18 @@ class MaterialAdmin(admin.ModelAdmin):
         'material_type_description', 'group', 'group_description'
     )
     inlines = (PartnerMaterialInline,)
+
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        queryset = queryset.prefetch_related(
+            Prefetch(
+                'partner_material',
+                queryset=models.PartnerMaterial.objects.select_related(
+                    'partner_organization__organization', "material"
+                )
+            )
+        )
+        return queryset
 
 
 @admin.register(models.Profile)
@@ -481,7 +500,12 @@ class TransferHistoryAdmin(admin.ModelAdmin):
         return obj.origin_transfer.name if obj.origin_transfer else '-'
 
     def list_sub_transfers(self, obj):
-        return ", ".join([t.name for t in obj.transfers.all()])
+        all_transfer = obj.transfers.all()
+        if not all_transfer:
+            return '-'
+        return ", ".join([t.name if t.name else "Transfer Name Missing" for t in all_transfer])
+
+    list_sub_transfers.short_description = 'Sub Transfers'
 
     def origin_transfer_link(self, obj):
         if obj.origin_transfer:

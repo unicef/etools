@@ -130,6 +130,14 @@ class QuestionSerializer(QuestionLightSerializer):
         instance.options.exclude(pk__in=updated_pks).delete()
 
 
+class QuestionExportSerializer(serializers.ModelSerializer):
+    category = serializers.CharField(source='category.name', default='')
+
+    class Meta:
+        model = Question
+        fields = ['id', 'text', 'level', 'answer_type', 'category', 'is_active', 'is_hact']
+
+
 class BulkOrderUpdateListSerializer(serializers.ListSerializer):
 
     def update(self, instances, validated_data):
