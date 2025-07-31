@@ -217,15 +217,15 @@ class ItemUpdateSerializer(serializers.ModelSerializer):
             if new_uom not in uom_map:
                 raise ValidationError(_('The provided uom is not available in the material mapping.'))
 
-            conversion_factor = validated_data.get('conversion_factor', None)
+            conversion_factor = validated_data.get('conversion_factor', 1)
             current_uom = self.instance.uom if self.instance.uom else material.original_uom
 
             expected_conversion_factor = round(uom_map[current_uom] / uom_map[new_uom], 2)
-            if expected_conversion_factor != float(conversion_factor):
+            if expected_conversion_factor != float(conversion_factor) and current_uom != new_uom:
                 raise ValidationError(_('The conversion_factor is incorrect.'))
 
             expected_qty = int(self.instance.quantity * conversion_factor)
-            if expected_qty != validated_data.get('quantity'):
+            if expected_qty != validated_data.get('quantity') and current_uom != new_uom:
                 raise ValidationError(_('The calculated quantity is incorrect.'))
 
     def validate(self, attrs):
