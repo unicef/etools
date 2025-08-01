@@ -94,6 +94,7 @@ class TestUserAdminViewSetImport(BaseTenantTestCase):
         self.assertEqual(alice.username, "alice.smith@example.com")
         self.assertFalse(alice.is_active)
         self.assertTrue(alice.check_password("test_pass"))
+        self.assertEqual(alice.points_of_interest.count(), 2)
         self.assertEqual(alice.profile.organization, self.org1)
         self.assertEqual(alice.profile.job_title, "")
         self.assertEqual(alice.profile.phone_number, "")
@@ -103,13 +104,15 @@ class TestUserAdminViewSetImport(BaseTenantTestCase):
 
         bob = User.objects.get(email="bob.johnson@example.com")
         self.assertEqual(bob.profile.organization, self.org2)
+        self.assertEqual(bob.points_of_interest.count(), 1)
         self.assertTrue(Realm.objects.filter(user=bob, group=self.ip_lm_editor_group, organization=self.org2).exists())
         self.assertEqual(set(p.p_code for p in bob.profile.organization.partner.points_of_interest.all()), {"PCODE003"})
 
         charlie = User.objects.get(email="charlie.brown@example.com")
         self.assertEqual(charlie.profile.organization, self.org1)
+        self.assertEqual(charlie.points_of_interest.count(), 0)
 
-        self.assertEqual(self.partner1.points_of_interest.count(), 0)
+        self.assertEqual(self.partner1.points_of_interest.count(), 2)
 
     def test_import_users_no_file_provided(self):
         response = self.forced_auth_req(
@@ -162,7 +165,7 @@ class TestUserAdminViewSetImport(BaseTenantTestCase):
         self.assertEqual(sheet.cell(row=3, column=errors_col_idx).value, "Success")
         self.assertIn("Organization not found by vendor number", sheet.cell(row=4, column=errors_col_idx).value)
         self.assertIn("Enter a valid email address.", sheet.cell(row=5, column=errors_col_idx).value)
-        self.assertIn("Invalid point of interest format", sheet.cell(row=6, column=errors_col_idx).value)
+        self.assertIn("Invalid 'Point of Interests' format. Must be a valid JSON list.", sheet.cell(row=6, column=errors_col_idx).value)
         self.assertIn("does not exist", sheet.cell(row=7, column=errors_col_idx).value)
 
     def test_import_users_all_rows_invalid_returns_error_file(self):
@@ -240,4 +243,6 @@ class TestUserAdminViewSetImport(BaseTenantTestCase):
         self.assertEqual(response.data, {"valid": True})
 
         user = User.objects.get(email="emptypoi.string@example.com")
-        self.assertEqual(user.profile.organization.partner.points_of_interest.count(), 0)
+        self.assertEqual(user.profile.organization.partner.points_of_interest.count(), 2)
+
+        self.assertEqual(user.points_of_interest.count(), 0)
