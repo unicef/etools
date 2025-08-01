@@ -24,6 +24,7 @@ from etools.applications.field_monitoring.planning.models import (
     MonitoringActivityActionPoint,
     QuestionTemplate,
     TPMConcern,
+    VisitGoal,
     YearPlan,
 )
 from etools.applications.field_monitoring.utils.fsm import get_available_transitions
@@ -94,6 +95,12 @@ class TemplatedQuestionSerializer(QuestionSerializer):
         return instance
 
 
+class VisitGoalSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = VisitGoal
+        fields = ['id', 'name', 'info']
+
+
 class TPMPartnerSerializer(serializers.ModelSerializer):
     class Meta:
         model = TPMPartner
@@ -125,6 +132,11 @@ class MonitoringActivityLightSerializer(serializers.ModelSerializer):
 
     checklists_count = serializers.ReadOnlyField()
 
+    visit_goals = SeparatedReadWriteField(
+        read_field=VisitGoalSerializer(many=True),
+        required=False
+    )
+
     class Meta:
         model = MonitoringActivity
         fields = (
@@ -139,6 +151,7 @@ class MonitoringActivityLightSerializer(serializers.ModelSerializer):
             'status',
             'sections',
             'overlapping_entities',
+            'visit_goals'
         )
 
     def get_overlapping_entities(self, obj):
