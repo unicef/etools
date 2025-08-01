@@ -61,6 +61,7 @@ class Command(BaseCommand):
 
         'audit.engagement.status',
         'audit.engagement.status_date',
+        'audit.engagement.exchange_rate',
 
         'purchase_order.purchaseorder.*',
         'purchase_order.auditorfirm.*',
@@ -74,12 +75,14 @@ class Command(BaseCommand):
         'audit.engagement.start_date',
         'audit.engagement.end_date',
         'audit.engagement.total_value',
+        'audit.engagement.total_value_local',
         'audit.engagement.joint_audit',
         'audit.engagement.year_of_audit',
         'audit.engagement.shared_ip_with',
         'audit.engagement.related_agreement',
         'audit.engagement.sections',
         'audit.engagement.offices',
+        'audit.engagement.face_forms',
     ]
 
     engagement_status_editable_date_fields = [
@@ -120,17 +123,20 @@ class Command(BaseCommand):
     ]
 
     follow_up_editable_page = [
-        'audit.engagement.amount_refunded',
-        'audit.engagement.additional_supporting_documentation_provided',
+        'audit.engagement.amount_refunded_local',
+        'audit.engagement.additional_supporting_documentation_provided_local',
+        'audit.engagement.justification_provided_and_accepted_local',
+        'audit.engagement.write_off_required_local',
         'audit.engagement.explanation_for_additional_information',
-        'audit.engagement.justification_provided_and_accepted',
-        'audit.engagement.write_off_required',
-        'audit.engagement.pending_unsupported_amount',
     ]
 
     follow_up_page = follow_up_editable_page + [
+        'audit.engagement.pending_unsupported_amount',
+        'audit.engagement.pending_unsupported_amount_local',
         'audit.spotcheck.total_amount_tested',
         'audit.spotcheck.total_amount_of_ineligible_expenditure',
+        'audit.spotcheck.total_amount_tested_local',
+        'audit.spotcheck.total_amount_of_ineligible_expenditure_local',
     ]
 
     engagement_overview_editable_page = (engagement_overview_editable_block + special_audit_block +
@@ -155,22 +161,19 @@ class Command(BaseCommand):
     audit_report_block = [
         'audit.audit.audit_opinion',
         'audit.audit.audited_expenditure',
-        'audit.audit.financial_findings',
         'audit.audit.audited_expenditure_local',
-        'audit.audit.financial_findings_local',
         'audit.audit.financial_finding_set',
         'audit.audit.key_internal_controls',
         'audit.audit.key_internal_weakness',
-        'audit.audit.exchange_rate',
         'audit.audit.currency_of_report',
     ]
 
     spot_check_report_block = [
         'audit.spotcheck.findings',
+        'audit.spotcheck.financial_finding_set',
         'audit.spotcheck.internal_controls',
-        'audit.spotcheck.total_amount_of_ineligible_expenditure',
         'audit.spotcheck.total_amount_tested',
-        'audit.spotcheck.exchange_rate',
+        'audit.spotcheck.total_amount_tested_local',
         'audit.spotcheck.currency_of_report',
     ]
 
@@ -180,9 +183,21 @@ class Command(BaseCommand):
     ]
 
     report_readonly_block = [
+        'audit.engagement.amount_refunded',
+        'audit.engagement.additional_supporting_documentation_provided',
+        'audit.engagement.justification_provided_and_accepted',
+        'audit.engagement.write_off_required',
+        'audit.audit.audited_expenditure',
         'audit.audit.percent_of_audited_expenditure',
         'audit.audit.number_of_financial_findings',
         'audit.audit.pending_unsupported_amount',
+        'audit.audit.pending_unsupported_amount_local',
+        'audit.audit.financial_findings',
+        'audit.audit.financial_findings_local',
+        'audit.spotcheck.total_amount_of_ineligible_expenditure',
+        'audit.spotcheck.total_amount_of_ineligible_expenditure_local',
+        'audit.spotcheck.total_amount_tested',
+        'audit.spotcheck.percent_of_audited_expenditure'
     ]
 
     report_editable_block = (microassessment_report_block + audit_report_block + spot_check_report_block +
