@@ -52,6 +52,10 @@
         .right {
           width: 50%;
         }
+        a.printable:link:after,
+        a.printable:visited:after {
+        content:" [" attr(href) "] ";
+}
         </style>
     {% endblock %}
 {% endblock %}
@@ -232,6 +236,121 @@
                                 </table><br/>
                             {% endfor %}
                     {% endfor %}<br/><br/>
+                {% endfor %}
+                <br/>
+
+                <br/>
+                <div class="content-section">
+                    <span>ACTION POINTS:</span>
+                </div>
+                {% for ap in action_points %}
+                    <div>
+                        <span class="label">Reference Number:</span>
+                        <span class="value">{{ ap.reference_number }}</span>
+                    </div>
+                    <div>
+                        <span class="label">Is High Priority:</span>
+                        <span class="value">{{ ap.is_high_priority }}</span>
+                    </div>
+                    <div>
+                        <span class="label">Description:</span>
+                        <span class="value">{{ ap.description }}</span>
+                    </div>
+                <br/>
+                    <table>
+                        <tr>
+                            <td class="right">
+                                <div>
+                                    <span class="label">Status:</span>
+                                    <span class="value">{{ ap.status }}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div>
+                                    <span class="label">Due Date:</span>
+                                    <span class="value">{{ ap.due_date }}</span>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div>
+                                    <span class="label">Assigned To:</span>
+                                    <span class="value">{{ ap.assigned_to }}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div>
+                                    <span class="label">Assigned By:</span>
+                                    <span class="value">{{ ap.assigned_by }}</span>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div>
+                                    <span class="label">Section:</span>
+                                    <span class="value">{{ ap.section }}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div>
+                                    <span class="label">Office:</span>
+                                    <span class="value">{{ ap.office }}</span>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div>
+                                    <span class="label">Related To:</span>
+                                    <span class="value">{{ ap.related_to }}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div>
+                                    <span class="label">Category:</span>
+                                    <span class="value">{{ ap.category }}</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                    <br/>
+
+                    <div>
+                        <span class="label">Actions Taken:</span>
+                    </div>
+                    {% for comment in ap.comments %}
+                        <br/>
+                        <div>
+                            <span class="label">Comment:</span>
+                            <span class="value">{{ comment.comment }}</span>
+                        </div>
+                        <table>
+                            <tr>
+                                <td class="right">
+                                    <div>
+                                        <span class="label">User:</span>
+                                        <span class="value">{{ comment.user }}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div>
+                                        <span class="label">Submit Date:</span>
+                                        <span class="value">{{ comment.submit_date }}</span>
+                                    </div>
+                                </td>
+                            </tr>
+                            <div>
+                                <span class="label">Supporting document:</span>
+                                <span class="value">
+                                    <a href="{{ comment.url_path }}" class="printable" target="_blank">{{ comment.filename }}</a>
+                                </span>
+                            </div>
+                        </table>
+                    {% endfor %}
+                    <hr size="0.01in" color="#a6a6a6">
+                    <br/><br/>
                 {% endfor %}
                 <br/>
         </div>
