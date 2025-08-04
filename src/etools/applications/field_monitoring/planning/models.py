@@ -294,6 +294,7 @@ class MonitoringActivity(
     objects = models.Manager.from_queryset(MonitoringActivitiesQuerySet)()
 
     visit_goals = models.ManyToManyField(VisitGoal, related_name='monitoring_activities')
+    objective = models.TextField(verbose_name=_('Objective'), blank=True)
 
     class Meta:
         verbose_name = _('Monitoring Activity')

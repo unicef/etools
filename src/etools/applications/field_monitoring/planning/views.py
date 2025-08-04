@@ -168,7 +168,7 @@ class MonitoringActivitiesViewSet(
         .select_related('tpm_partner', 'tpm_partner__organization',
                         'visit_lead', 'location', 'location_site')\
         .prefetch_related('team_members', 'partners', 'partners__organization', 'report_reviewers',
-                          'interventions', 'cp_outputs')\
+                          'interventions', 'cp_outputs', 'sections', 'visit_goals')\
         .order_by("-id")
     serializer_class = MonitoringActivitySerializer
     serializer_action_classes = {

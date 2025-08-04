@@ -151,7 +151,8 @@ class MonitoringActivityLightSerializer(serializers.ModelSerializer):
             'status',
             'sections',
             'overlapping_entities',
-            'visit_goals'
+            'visit_goals',
+            'objective'
         )
 
     def get_overlapping_entities(self, obj):
