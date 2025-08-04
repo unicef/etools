@@ -861,6 +861,13 @@ class TransferItemAdminSerializer(serializers.ModelSerializer):
     destination_point = serializers.CharField(source='destination_point.name', read_only=True)
     partner_organization = serializers.CharField(source='partner_organization.name', read_only=True)
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        reversed_origin_point, reversed_destination_point = TransferReverse(instance.pk).decide_origin_and_destination_location()
+        data['reversed_origin_point'] = reversed_origin_point.name if reversed_origin_point else None
+        data['reversed_destination_point'] = reversed_destination_point.name if reversed_destination_point else None
+        return data
+
     class Meta:
         model = models.Transfer
         fields = ("id", "created", "modified", "unicef_release_order", "name", "transfer_type", "status", "partner_organization", "destination_point", "origin_point", "items")
@@ -873,5 +880,5 @@ class TransferReverseAdminSerializer(serializers.ModelSerializer):
         fields = ("id",)
 
     def update(self, instance, validated_data):
-        reversed_transfer = TransferReverse(transfer_id=instance.id).reverse()
+        reversed_transfer = TransferReverse(transfer_id=instance.pk).reverse()
         return reversed_transfer
