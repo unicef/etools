@@ -367,7 +367,9 @@
                             <td>
                                 <div>
                                     <span class="label">File Attachment:</span>
-                                    <a href="{{ checklist_att.url_path }}" class="printable" target="_blank">{{ checklist_att.filename }}</a>
+                                    <span class="value">
+                                        <a href="{{ checklist_att.url_path }}" class="printable" target="_blank">{{ checklist_att.filename }}</a>
+                                    </span>
                                 </div>
                             </td>
                         </tr>
@@ -380,7 +382,7 @@
                     <span>ACTION POINTS:</span>
                 </div>
                 {% for ap in action_points %}
-                    <span class="label"> #{{forloop.counter}} </span>
+                    <span class="label"> #{{}} </span>
                     <div>
                         <span class="label">Reference Number:</span>
                         <span class="value">{{ ap.reference_number }}</span>
