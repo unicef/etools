@@ -238,6 +238,24 @@ class TestVisionIngestTransfersApiView(BaseTenantTestCase):
         self.assertEqual(models.Transfer.objects.count(), 1)
         self.assertEqual(models.Item.objects.count(), 1)
 
+    def test_import_with_null_batch_number(self):
+        payload = [{
+            "Event": "LD",
+            "ReleaseOrder": "RO-NULL-BATCH",
+            "ImplementingPartner": "IP12345",
+            "ItemDescription": "This item will be ignored",
+            "MaterialNumber": "MAT-001",
+            "ReleaseOrderItem": "10",
+            "Quantity": 10,
+            "UOM": "EA",
+            "BatchNumber": None,
+        }]
+
+        response = self.forced_auth_req(method="post", url=self.url, data=payload, user=self.api_user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(models.Transfer.objects.count(), 1)
+        self.assertEqual(models.Item.objects.count(), 1)
+
     def test_rows_with_incorrect_event_are_ignored(self):
         payload = [
             {"Event": "LD", "ReleaseOrder": "RO-GOOD", "ImplementingPartner": "IP12345", "MaterialNumber": "MAT-001", "ReleaseOrderItem": "10", "Quantity": 10, "BatchNumber": "B1", "ItemDescription": "This item will be ignored", "UOM": "EA"},
