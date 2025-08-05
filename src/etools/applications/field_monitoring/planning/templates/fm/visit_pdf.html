@@ -382,7 +382,7 @@
                     <span>ACTION POINTS:</span>
                 </div>
                 {% for ap in action_points %}
-                    <span class="label"> #{{}} </span>
+                    <span class="label"> #{{ forloop.counter }} </span>
                     <div>
                         <span class="label">Reference Number:</span>
                         <span class="value">{{ ap.reference_number }}</span>
