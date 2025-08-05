@@ -5,7 +5,7 @@ from etools.applications.last_mile.admin_panel.validators import AdminPanelValid
 from etools.applications.last_mile.models import Item, Transfer
 
 
-class TransferReverse:
+class ReverseTransfer:
 
     def __init__(self, transfer_id=None):
         self.transfer = Transfer.objects.filter(id=transfer_id).select_related("origin_point", "destination_point", "origin_point__poi_type", "destination_point__poi_type").first()
