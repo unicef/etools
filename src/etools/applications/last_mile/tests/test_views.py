@@ -888,6 +888,35 @@ class TestItemUpdateViewSet(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("The description cannot be modified. A value is already present", str(response.data))
 
+    def test_patch_item_with_uom(self):
+        item = ItemFactory(transfer=self.transfer, material=self.material, quantity=100)
+
+        url = reverse('last_mile:item-update-detail', args=(item.pk,))
+        data = {
+            "conversion_factor": 150,
+            "description": "updated description",
+            "uom": "PAC"
+        }
+        response = self.forced_auth_req('patch', url, user=self.partner_staff, data=data)
+        item.refresh_from_db()
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(item.mapped_description, 'updated description')
+        self.assertEqual(item.uom, 'PAC')
+
+    def test_update_description_without_conversion_factor(self):
+        item = ItemFactory(transfer=self.transfer, material=self.material, quantity=100)
+
+        url = reverse('last_mile:item-update-detail', args=(item.pk,))
+        data = {
+            "description": "updated description",
+            "uom": "PAC"
+        }
+        response = self.forced_auth_req('patch', url, user=self.partner_staff, data=data)
+        item.refresh_from_db()
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(item.mapped_description, 'updated description')
+        self.assertEqual(item.uom, 'PAC')
+
     def test_patch_uom_mappings(self):
         item = ItemFactory(transfer=self.transfer, material=self.material, quantity=100)
 
