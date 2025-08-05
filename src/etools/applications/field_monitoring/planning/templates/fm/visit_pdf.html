@@ -241,9 +241,146 @@
 
                 <br/>
                 <div class="content-section">
+                    <span>RELATED DOCUMENTS:</span>
+                </div>
+                {% for related_att in related_attachments%}
+                    <table>
+                        <tr>
+                            <td class="right">
+                                <div>
+                                    <span class="label">Date Uploaded:</span>
+                                    <span class="value">{{ related_att.date_uploaded }}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div>
+                                    <span class="label">Document Type:</span>
+                                    <span class="value">{{ related_att.doc_type }}</span>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div>
+                                    <span class="label">File Attachment:</span>
+                                    <span class="value">
+                                        <a href="{{ related_att.url_path }}" class="printable" target="_blank">{{ related_att.filename }}</a>
+                                    </span>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                <hr size="0.01in" color="#a6a6a6">
+                {% endfor %}
+                <br/>
+
+                <div class="content-section">
+                    <span>REPORTED DOCUMENTS:</span>
+                </div>
+                {% for reported_att in reported_attachments%}
+                    <table>
+                        <tr>
+                            <td class="right">
+                                <div>
+                                    <span class="label">Date Uploaded:</span>
+                                    <span class="value">{{ reported_att.date_uploaded }}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div>
+                                    <span class="label">Document Type:</span>
+                                    <span class="value">{{ reported_att.doc_type }}</span>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div>
+                                    <span class="label">File Attachment:</span>
+                                    <span class="value">
+                                        <a href="{{ reported_att.url_path }}" class="printable" target="_blank">{{ reported_att.filename }}</a>
+                                    </span>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                <hr size="0.01in" color="#a6a6a6">
+                {% endfor %}
+                <br/>
+
+                <div class="content-section">
+                    <span>CHECKLIST DOCUMENTS:</span>
+                </div>
+                {% for checklist_att in checklist_attachments%}
+                    <table>
+                        <tr>
+                            <td class="right">
+                                <div>
+                                    <span class="label">Method:</span>
+                                    <span class="value">{{ checklist_att.method }}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div>
+                                    <span class="label">Data Collector:</span>
+                                    <span class="value">{{ checklist_att.data_collector }}</span>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="right">
+                                <div>
+                                    <span class="label">Method Type:</span>
+                                    <span class="value">{{ checklist_att.method_type }}</span>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="right">
+                                <div>
+                                    <span class="label">Related To:</span>
+                                    <span class="value">{{ checklist_att.related_to }}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div>
+                                    <span class="label">Related Name:</span>
+                                    <span class="value">{{ checklist_att.related_name }}</span>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="right">
+                                <div>
+                                    <span class="label">Date Uploaded:</span>
+                                    <span class="value">{{ checklist_att.date_uploaded }}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div>
+                                    <span class="label">Document Type:</span>
+                                    <span class="value">{{ checklist_att.doc_type }}</span>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div>
+                                    <span class="label">File Attachment:</span>
+                                    <a href="{{ checklist_att.url_path }}" class="printable" target="_blank">{{ checklist_att.filename }}</a>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                <hr size="0.01in" color="#a6a6a6">
+                {% endfor %}
+
+                <br/>
+                <div class="content-section">
                     <span>ACTION POINTS:</span>
                 </div>
                 {% for ap in action_points %}
+                    <span class="label"> #{{forloop.counter}} </span>
                     <div>
                         <span class="label">Reference Number:</span>
                         <span class="value">{{ ap.reference_number }}</span>

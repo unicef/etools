@@ -772,6 +772,49 @@ class MonitoringActivity(
 
             yield ap_dict
 
+    def get_export_reported_attachments(self, request):
+        for att in self.report_attachments.all().select_related('file_type'):
+            att_dict = dict(date_uploaded=att.created,
+                            doc_type=att.file_type.label,
+                            filename=att.filename,
+                            url_path=request.build_absolute_uri(att.file.url) if att.file else "-")
+            yield att_dict
+
+    def get_export_related_attachments(self, request):
+        for att in self.attachments.all().select_related('file_type'):
+            att_dict = dict(date_uploaded=att.created,
+                            doc_type=att.file_type.label,
+                            filename=att.filename,
+                            url_path=request.build_absolute_uri(att.file.url) if att.file else "-")
+            yield att_dict
+
+    def get_export_checklist_attachments(self, request):
+        for checklist in self.checklists.all():
+            checklist_overall_findings = checklist.overall_findings.all()
+
+            attachment_qs = Attachment.objects.filter(
+                content_type__app_label=checklist_overall_findings.model._meta.app_label,
+                content_type__model=checklist_overall_findings.model._meta.model_name,
+                object_id__in=checklist_overall_findings.values_list('id', flat=True)
+            ).order_by('object_id')
+
+            for att in attachment_qs:
+                att_dict = dict(method=checklist.method.name,
+                                data_collector=checklist.author.full_name,
+                                method_type=checklist.information_source,
+                                date_uploaded=att.created,
+                                doc_type=att.file_type.label,
+                                filename=att.filename,
+                                url_path=request.build_absolute_uri(att.file.url) if att.file else "-")
+                checklist_overall_finding = checklist_overall_findings.get(id=att.object_id)
+                related_to = (checklist_overall_finding.partner or checklist_overall_finding.cp_output or
+                              checklist_overall_finding.intervention)
+                if related_to:
+                    att_dict['related_to'] = related_to._meta.verbose_name.title()
+                    att_dict['related_name'] = getattr(related_to, 'name', '') or getattr(related_to, 'reference_number', '')
+
+                yield att_dict
+
 
 class MonitoringActivityActionPointManager(models.Manager):
     def get_queryset(self):
