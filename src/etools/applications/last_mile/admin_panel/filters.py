@@ -2,11 +2,29 @@ from django.contrib.auth import get_user_model
 from django.db.models import CharField, F, Func, Q
 
 from django_filters import rest_framework as filters
+from django_filters.constants import EMPTY_VALUES
 
 from etools.applications.last_mile.admin_panel.constants import ALERT_TYPES
 from etools.applications.last_mile.models import PointOfInterest, TransferHistory
 from etools.applications.locations.models import Location
 from etools.applications.users.models import Realm
+
+
+class OrCharFilter(filters.CharFilter):
+    def __init__(self, *args, field_names, **kwargs):
+        self.field_names = field_names
+        kwargs.pop('field_name', None)
+        super().__init__(*args, **kwargs)
+
+    def filter(self, qs, value):
+        if value in EMPTY_VALUES:
+            return qs
+        q_objects = Q()
+        for field_name in self.field_names:
+            lookup = {f"{field_name}__{self.lookup_expr}": value}
+            q_objects |= Q(**lookup)
+
+        return qs.filter(q_objects)
 
 
 class UserFilter(filters.FilterSet):
@@ -118,26 +136,40 @@ class AlertNotificationFilter(filters.FilterSet):
 
 
 class TransferHistoryFilter(filters.FilterSet):
-    unicef_release_order = filters.CharFilter(
-        field_name='unicef_release_order', lookup_expr='icontains', label='UNICEF Release Order'
+    unicef_release_order = OrCharFilter(
+        field_names=['origin_transfer__unicef_release_order', 'transfers__unicef_release_order'],
+        lookup_expr='icontains',
+        label='UNICEF Release Order'
     )
-    transfer_name = filters.CharFilter(
-        field_name='transfer_name', lookup_expr='icontains', label='Transfer Name'
+    transfer_name = OrCharFilter(
+        field_names=['origin_transfer__name', 'transfers__name'],
+        lookup_expr='icontains',
+        label='Transfer Name'
     )
-    transfer_type = filters.CharFilter(
-        field_name='transfer_type', lookup_expr='icontains', label='Transfer Type'
+    transfer_type = OrCharFilter(
+        field_names=['origin_transfer__transfer_type', 'transfers__transfer_type'],
+        lookup_expr='icontains',
+        label='Transfer Type'
     )
-    status = filters.CharFilter(
-        field_name='status', lookup_expr='icontains', label='Status'
+    status = OrCharFilter(
+        field_names=['origin_transfer__status', 'transfers__status'],
+        lookup_expr='icontains',
+        label='Status'
     )
-    partner_organization = filters.CharFilter(
-        field_name='partner_organization', lookup_expr='icontains', label='Partner Organization'
+    partner_organization = OrCharFilter(
+        field_names=['origin_transfer__partner_organization__organization__name', 'transfers__partner_organization__organization__name'],
+        lookup_expr='icontains',
+        label='Partner Organization'
     )
-    origin_point = filters.CharFilter(
-        field_name='origin_point', lookup_expr='icontains', label='Origin Point'
+    origin_point = OrCharFilter(
+        field_names=['origin_transfer__origin_point__name', 'transfers__origin_point__name'],
+        lookup_expr='icontains',
+        label='Origin Point'
     )
-    destination_point = filters.CharFilter(
-        field_name='destination_point', lookup_expr='icontains', label='Destination Point'
+    destination_point = OrCharFilter(
+        field_names=['origin_transfer__destination_point__name', 'transfers__destination_point__name'],
+        lookup_expr='icontains',
+        label='Destination Point'
     )
 
     class Meta:
