@@ -300,18 +300,6 @@ def sections_valid(i):
     return True
 
 
-def locations_valid(i):
-    ind_locations = Location.objects.filter(
-        applied_indicators__lower_result__result_link__intervention__pk=i.pk).distinct()
-    diff_locations = ind_locations.difference(i.flat_locations.all())
-    if diff_locations:
-        raise BasicValidationError(
-            _('The following locations have been selected on the PD/SPD indicators and '
-              'cannot be removed without removing them from the indicators first: %(locations)s')
-            % {'locations': ', '.join([str(loc) for loc in diff_locations])})
-    return True
-
-
 def cp_structure_valid(i):
     if i.agreement.agreement_type == i.agreement.PCA:
         invalid = False
@@ -366,7 +354,6 @@ class InterventionValid(CompleteValidation):
         document_type_pca_valid,
         rigid_in_amendment_flag,
         sections_valid,
-        locations_valid,
         cp_structure_valid,
     ]
 
@@ -382,9 +369,7 @@ class InterventionValid(CompleteValidation):
         'start_date_related_agreement_valid': _('PD start date cannot be earlier than the Start Date of the related PCA'),
         'rigid_in_amendment_flag': _('Amendment Flag cannot be turned on without adding an amendment'),
         'sections_valid': _("The sections selected on the PD/SPD are not a subset of all sections selected "
-                            "for this PD/SPD's indicators"),
-        'locations_valid': _("The locations selected on the PD/SPD are not a subset of all locations selected "
-                             "for this PD/SPD's indicators"),
+                            "for this PD/SPD's indicators")
     }
 
     PERMISSIONS_CLASS = InterventionPermissions

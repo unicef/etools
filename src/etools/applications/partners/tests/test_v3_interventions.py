@@ -1017,6 +1017,39 @@ class TestUpdate(BaseInterventionTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
         self.assertIn('context', response.data)
 
+    def test_update_remove_flat_locations(self):
+        location1 = LocationFactory()
+        location2 = LocationFactory()
+        location3 = LocationFactory()
+
+        intervention = InterventionFactory()
+
+        applied_indicator1 = AppliedIndicatorFactory(
+            lower_result__result_link=InterventionResultLinkFactory(intervention=intervention),
+            locations=[location1, location2]
+        )
+        applied_indicator2 = AppliedIndicatorFactory(
+            lower_result__result_link=InterventionResultLinkFactory(intervention=intervention),
+            locations=[location2, location3]
+        )
+        applied_indicator3 = AppliedIndicatorFactory(
+            lower_result__result_link=InterventionResultLinkFactory(intervention=intervention),
+            locations=[location2, location3]
+        )
+
+        for location in [location1, location2, location3]:
+            intervention.flat_locations.add(location)
+
+        partnership_manager = UserFactory(
+            is_staff=True,
+            realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP],
+        )
+        intervention.unicef_focal_points.add(partnership_manager)
+
+        self.url = reverse(
+            'pmp_v3:intervention-detail',
+            args=[intervention.pk]
+        )
 
 class TestDelete(BaseInterventionTestCase):
     def setUp(self):
