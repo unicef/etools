@@ -1,0 +1,76 @@
+[
+  {
+    "model": "field_monitoring_planning.visitgoal",
+    "pk": 1,
+    "fields": {
+      "name": "Programme Implementation Monitoring",
+      "info": [
+        "Check alignment with work plans, results frameworks, and donor agreements.",
+        "Assess delivery of planned interventions and activities.",
+        "Verify whether services (e.g., education, health, WASH) are reaching intended beneficiaries."
+      ]
+    }
+  },
+  {
+    "model": "field_monitoring_planning.visitgoal",
+    "pk": 2,
+    "fields": {
+      "name": "Outputs and Results Verification",
+      "info": [
+        "Monitor the achievement of specific outputs, activities and interventions (e.g., supplies delivered, teacher training).",
+        "Validate results data reported by implementing partners- CSO and government.",
+        "Assess quality, timeliness, and completeness of services or interventions."
+      ]
+    }
+  },
+  {
+    "model": "field_monitoring_planning.visitgoal",
+    "pk": 3,
+    "fields": {
+      "name": "Partner Monitoring",
+      "info": [
+        "Review partner activities and compliance with Harmonized Approach to Cash Transfers (HACT).",
+        "Validate use of funds and effectiveness of partner implementation.",
+        "Assess partner capacity, coordination, and challenges.",
+        "Cross-check reported data with field observations.",
+        "Identify issues in data collection, documentation, or reporting accuracy."
+      ]
+    }
+  },
+  {
+    "model": "field_monitoring_planning.visitgoal",
+    "pk": 4,
+    "fields": {
+      "name": "Risk and Compliance Monitoring",
+      "info": [
+        "Identify operational or contextual risks (e.g., PSEA, ESS, security, political, financial).",
+        "Ensure compliance with UNICEF's ethical standards, protection, and procurement rules.",
+        "Flag fraud, misuse, or diversion of resources."
+      ]
+    }
+  },
+  {
+    "model": "field_monitoring_planning.visitgoal",
+    "pk": 5,
+    "fields": {
+      "name": "Beneficiary Feedback and Accountability",
+      "info": [
+        "Collect feedback from communities and beneficiaries, including complaints or suggestions.",
+        "Monitor equity and inclusion (e.g., access for marginalized or vulnerable populations).",
+        "Assess satisfaction and relevance of interventions to community needs."
+      ]
+    }
+  },
+  {
+    "model": "field_monitoring_planning.visitgoal",
+    "pk": 6,
+    "fields": {
+      "name": "Humanitarian Response Monitoring",
+      "info": [
+        "Track evolving humanitarian needs (nutrition, displacement, WASH conditions).",
+        "Monitor emergency response coverage and gaps.",
+        "Coordinate with clusters and other humanitarian actors."
+      ]
+    }
+  }
+]
