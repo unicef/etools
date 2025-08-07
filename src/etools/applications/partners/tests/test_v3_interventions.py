@@ -1023,22 +1023,26 @@ class TestUpdate(BaseInterventionTestCase):
         location3 = LocationFactory()
 
         intervention = InterventionFactory()
-
-        applied_indicator1 = AppliedIndicatorFactory(
-            lower_result__result_link=InterventionResultLinkFactory(intervention=intervention),
-            locations=[location1, location2]
-        )
-        applied_indicator2 = AppliedIndicatorFactory(
-            lower_result__result_link=InterventionResultLinkFactory(intervention=intervention),
-            locations=[location2, location3]
-        )
-        applied_indicator3 = AppliedIndicatorFactory(
-            lower_result__result_link=InterventionResultLinkFactory(intervention=intervention),
-            locations=[location2, location3]
-        )
-
         for location in [location1, location2, location3]:
             intervention.flat_locations.add(location)
+
+        applied_indicator1 = AppliedIndicatorFactory(
+            lower_result__result_link=InterventionResultLinkFactory(
+                intervention=intervention, cp_output=ResultFactory(result_type__name=ResultType.OUTPUT))
+        )
+        applied_indicator1.locations.set([location1, location2])
+
+        applied_indicator2 = AppliedIndicatorFactory(
+            lower_result__result_link=InterventionResultLinkFactory(
+                intervention=intervention, cp_output=ResultFactory(result_type__name=ResultType.OUTPUT))
+        )
+        applied_indicator2.locations.set([location2, location3])
+
+        applied_indicator3 = AppliedIndicatorFactory(
+            lower_result__result_link=InterventionResultLinkFactory(
+                intervention=intervention, cp_output=ResultFactory(result_type__name=ResultType.OUTPUT))
+        )
+        applied_indicator3.locations.set([location2, location3])
 
         partnership_manager = UserFactory(
             is_staff=True,
@@ -1046,10 +1050,30 @@ class TestUpdate(BaseInterventionTestCase):
         )
         intervention.unicef_focal_points.add(partnership_manager)
 
-        self.url = reverse(
-            'pmp_v3:intervention-detail',
-            args=[intervention.pk]
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+            user=partnership_manager,
+            data={'flat_locations': [location1.id, location2.id]}
         )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(intervention.flat_locations.count(), 2)
+        applied_indicator1.refresh_from_db()
+        self.assertEqual(
+            list(applied_indicator1.locations.order_by('id').values_list('id', flat=True)),
+            [location1.id, location2.id]
+        )
+        applied_indicator2.refresh_from_db()
+        self.assertEqual(
+            list(applied_indicator2.locations.order_by('id').values_list('id', flat=True)),
+            [location2.id]
+        )
+        applied_indicator3.refresh_from_db()
+        self.assertEqual(
+            list(applied_indicator3.locations.order_by('id').values_list('id', flat=True)),
+            [location1.id]
+        )
+
 
 class TestDelete(BaseInterventionTestCase):
     def setUp(self):

@@ -45,7 +45,7 @@ from etools.applications.partners.validation.agreements import (
     agreement_transition_to_signed_valid,
     agreements_illegal_transition,
 )
-from etools.applications.reports.models import CountryProgramme, Indicator, Office, Result, Section
+from etools.applications.reports.models import AppliedIndicator, CountryProgramme, Indicator, Office, Result, Section
 from etools.applications.t2f.models import Travel, TravelActivity, TravelType
 from etools.applications.tpm.models import TPMActivity, TPMVisit
 from etools.applications.users.mixins import PARTNER_ACTIVE_GROUPS
@@ -2513,6 +2513,12 @@ class Intervention(TimeStampedModel):
             if save_agreement:
                 self.agreement.save()
 
+    def update_applied_indicator_locations(self, oldself):
+        diff_locations = oldself.flat_locations.all().difference(self.flat_locations.all())
+        if diff_locations:
+            for indicator in AppliedIndicator.objects.filter(lower_result__result_link__intervention=self).distinct():
+                indicator.locations.remove(diff_locations)
+
     @transaction.atomic
     def save(self, force_insert=False, save_from_agreement=False, **kwargs):
         # automatically set hq_support_cost to 7% for INGOs
@@ -2549,6 +2555,8 @@ class Intervention(TimeStampedModel):
         if not oldself:
             self.management_budgets = InterventionManagementBudget.objects.create(intervention=self)
             self.planned_budget = InterventionBudget.objects.create(intervention=self)
+        else:
+            self.update_applied_indicator_locations(oldself)
 
     def has_active_amendment(self, kind=None):
         active_amendments = self.amendments.filter(is_active=True)

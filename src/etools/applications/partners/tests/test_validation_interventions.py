@@ -3,7 +3,6 @@ from unittest import skip
 from unittest.mock import Mock, patch
 
 from etools_validator.exceptions import BasicValidationError, StateValidationError, TransitionError
-from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase

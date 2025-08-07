@@ -12,7 +12,6 @@ from etools_validator.exceptions import (
 from etools_validator.utils import check_required_fields, check_rigid_fields
 from etools_validator.validation import CompleteValidation
 
-from etools.applications.locations.models import Location
 from etools.applications.partners.permissions import InterventionPermissions
 from etools.applications.reports.models import InterventionActivity, Section
 
