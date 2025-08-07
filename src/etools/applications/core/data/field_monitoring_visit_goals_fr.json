@@ -1,6 +1,6 @@
 [
   {
-    "model": "field_monitoring_planning.visit_goal",
+    "model": "field_monitoring_planning.visitgoal",
     "pk": 1,
     "fields": {
       "name": "Surveillance de la mise en œuvre du programme",
@@ -12,7 +12,7 @@
     }
   },
   {
-    "model": "field_monitoring_planning.visit_goal",
+    "model": "field_monitoring_planning.visitgoal",
     "pk": 2,
     "fields": {
       "name": "Vérification des sorties et des résultats",
@@ -24,7 +24,7 @@
     }
   },
   {
-    "model": "field_monitoring_planning.visit_goal",
+    "model": "field_monitoring_planning.visitgoal",
     "pk": 3,
     "fields": {
       "name": "Surveillance des partenaires",
@@ -38,7 +38,7 @@
     }
   },
   {
-    "model": "field_monitoring_planning.visit_goal",
+    "model": "field_monitoring_planning.visitgoal",
     "pk": 4,
     "fields": {
       "name": "Surveillance des risques et de la conformité",
@@ -50,7 +50,7 @@
     }
   },
   {
-    "model": "field_monitoring_planning.visit_goal",
+    "model": "field_monitoring_planning.visitgoal",
     "pk": 5,
     "fields": {
       "name": "Feedback et responsabilité des bénéficiaires",
@@ -62,7 +62,7 @@
     }
   },
   {
-    "model": "field_monitoring_planning.visit_goal",
+    "model": "field_monitoring_planning.visitgoal",
     "pk": 6,
     "fields": {
       "name": "Surveillance de la réponse humanitaire",
