@@ -117,6 +117,13 @@ class VisitGoal(models.Model):
         return self.name
 
 
+class FacilityType(models.Model):
+    name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.name
+
+
 class MonitoringActivitiesQuerySet(models.QuerySet):
     def filter_hact_for_partner(self, partner_id: int):
         from etools.applications.field_monitoring.data_collection.models import ActivityQuestionOverallFinding
@@ -295,6 +302,8 @@ class MonitoringActivity(
 
     visit_goals = models.ManyToManyField(VisitGoal, related_name='monitoring_activities')
     objective = models.TextField(verbose_name=_('Objective'), blank=True)
+    facility_type = models.ForeignKey(FacilityType, blank=True, null=True, verbose_name=_('Type Of Facility'),
+                                      related_name='monitoring_activities', on_delete=models.CASCADE)
 
     class Meta:
         verbose_name = _('Monitoring Activity')

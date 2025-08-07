@@ -51,6 +51,7 @@ from etools.applications.field_monitoring.planning.filters import (
 )
 from etools.applications.field_monitoring.planning.mixins import EmptyQuerysetForExternal
 from etools.applications.field_monitoring.planning.models import (
+    FacilityType,
     MonitoringActivity,
     MonitoringActivityActionPoint,
     TPMConcern,
@@ -61,6 +62,7 @@ from etools.applications.field_monitoring.planning.serializers import (
     CPOutputListSerializer,
     DuplicateMonitoringActivitySerializer,
     FMUserSerializer,
+    FacilityTypeSerializer,
     InterventionWithLinkedInstancesSerializer,
     MonitoringActivityActionPointSerializer,
     MonitoringActivityLightSerializer,
@@ -155,6 +157,11 @@ class VisitGoalsViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = VisitGoalSerializer
 
 
+class FacilityTypesViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = FacilityType.objects.all()
+    serializer_class = FacilityTypeSerializer
+
+
 class MonitoringActivitiesViewSet(
     ValidatorViewMixin,
     FMBaseViewSet,
@@ -166,7 +173,7 @@ class MonitoringActivitiesViewSet(
     queryset = MonitoringActivity.objects\
         .annotate(checklists_count=Count('checklists'))\
         .select_related('tpm_partner', 'tpm_partner__organization',
-                        'visit_lead', 'location', 'location_site')\
+                        'visit_lead', 'location', 'location_site', 'facility_type')\
         .prefetch_related('team_members', 'partners', 'partners__organization', 'report_reviewers',
                           'interventions', 'cp_outputs', 'sections', 'visit_goals')\
         .order_by("-id")
