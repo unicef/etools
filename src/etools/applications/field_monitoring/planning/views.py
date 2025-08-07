@@ -61,8 +61,8 @@ from etools.applications.field_monitoring.planning.models import (
 from etools.applications.field_monitoring.planning.serializers import (
     CPOutputListSerializer,
     DuplicateMonitoringActivitySerializer,
-    FMUserSerializer,
     FacilityTypeSerializer,
+    FMUserSerializer,
     InterventionWithLinkedInstancesSerializer,
     MonitoringActivityActionPointSerializer,
     MonitoringActivityLightSerializer,
