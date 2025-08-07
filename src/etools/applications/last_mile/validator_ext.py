@@ -1,3 +1,4 @@
+from etools.applications.last_mile.models import Material
 from etools.applications.partners.models import Organization
 
 
@@ -21,6 +22,10 @@ class ItemValidator:
     def validate(self, item_data, processed_ids_in_run):
         material_number = item_data.get('material_number')
         material = self.all_materials.get(material_number)
+        uom = item_data.get('uom')
+        allowed_uoms = [uom[0] for uom in Material.UOM]
+        if uom not in allowed_uoms:
+            return None, f"UOM '{uom}' not valid."
         if not material:
             return None, f"Material number '{material_number}' not found."
 
