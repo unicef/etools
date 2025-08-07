@@ -16,10 +16,12 @@ from unicef_locations.serializers import LocationLightSerializer
 from etools.applications.field_monitoring.fm_settings.export.renderers import (
     LocationSiteCSVRenderer,
     LogIssueCSVRenderer,
+    QuestionCSVRenderer,
 )
 from etools.applications.field_monitoring.fm_settings.export.serializers import (
     LocationSiteExportSerializer,
     LogIssueExportSerializer,
+    QuestionExportSerializer,
 )
 from etools.applications.field_monitoring.fm_settings.filters import (
     LogIssueMonitoringActivityFilter,
@@ -231,6 +233,15 @@ class QuestionsViewSet(
     ordering_fields = (
         'text', 'level', 'answer_type', 'category__name', 'is_active', 'is_hact'
     )
+
+    @action(detail=False, methods=['get'], url_path='export', renderer_classes=[QuestionCSVRenderer])
+    def export(self, request, *args, **kwargs):
+        instances = self.filter_queryset(self.get_queryset())
+
+        serializer = QuestionExportSerializer(instances, many=True)
+        return Response(serializer.data, headers={
+            'Content-Disposition': 'attachment;filename=questions_{}.csv'.format(timezone.now().date())
+        })
 
     @action(detail=False, methods=['patch'], url_path='update-order',
             serializer_class=UpdateQuestionOrderSerializer)

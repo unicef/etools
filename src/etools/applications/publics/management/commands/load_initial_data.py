@@ -505,7 +505,7 @@ class Command(BaseCommand):
                      ('Cabo Verde', '6820', 'Cape Verde', 'CVI', '682', 'CV', 'CPV',
                       'CVE', '16.09.1975', '31.12.9999', 'REPUBLIC OF CABO VERDE'),
                      ('Sao Tome and Principe', '6830', 'Sao Tome and Principe', 'STP', '683', 'ST', 'STP',
-                      'STD', '16.09.1975', '31.12.9999', 'THE DEMOCRATIC REPUBLIC OF SAO TOME AND PRINCIPE'),
+                      'STN', '16.09.1975', '31.12.9999', 'THE DEMOCRATIC REPUBLIC OF SAO TOME AND PRINCIPE'),
                      ('Guinea-Bissau', '6850', 'Guinea Bissau', 'GBS', '685', 'GW', 'GNB',
                       'XOF', '17.09.1974', '31.12.9999', 'THE REPUBLIC OF GUINEA-BISSAU'),
                      ('Mozambique', '6890', 'Mozambique', 'MOZ', '689', 'MZ', 'MOZ',
