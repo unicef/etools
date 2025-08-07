@@ -468,7 +468,21 @@ class TransferHistoryListView(mixins.ListModelMixin, GenericViewSet):
     filterset_class = TransferHistoryFilter
 
     ordering_fields = ['unicef_release_order', 'transfer_name', 'transfer_type', 'status', 'partner_organization', 'destination_point', 'origin_point']
-    search_fields = ['unicef_release_order', 'transfer_name', 'transfer_type', 'status', 'partner_organization', 'destination_point', 'origin_point']
+    search_fields = ['unicef_release_order',
+                     'transfer_name',
+                     'transfer_type',
+                     'status',
+                     'partner_organization',
+                     'destination_point',
+                     'origin_point',
+                     # Sub Transfers Search
+                     'transfers__unicef_release_order',
+                     'transfers__name',
+                     'transfers__transfer_type',
+                     'transfers__status',
+                     'transfers__partner_organization__organization__name',
+                     'transfers__destination_point__name',
+                     'transfers__origin_point__name']
 
     def get_queryset(self):
         qs = models.TransferHistory.objects.select_related(
@@ -476,6 +490,8 @@ class TransferHistoryListView(mixins.ListModelMixin, GenericViewSet):
             'origin_transfer__partner_organization__organization',
             'origin_transfer__destination_point',
             'origin_transfer__origin_point'
+        ).prefetch_related(
+            "transfers"
         ).order_by('-created').annotate(
             unicef_release_order=F('origin_transfer__unicef_release_order'),
             transfer_name=F('origin_transfer__name'),

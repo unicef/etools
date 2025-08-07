@@ -31,7 +31,7 @@ class TestTransferHistoryViewSet(BaseTenantTestCase):
         cls.url = reverse(f'{ADMIN_PANEL_APP_NAME}:{TRANSFER_HISTORY_ADMIN_PANEL}-list')
 
     def test_get_transfer_history(self):
-        with self.assertNumQueries(4):
+        with self.assertNumQueries(5):
             response = self.forced_auth_req('get', self.url, user=self.partner_staff)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data.get('count'), 1)

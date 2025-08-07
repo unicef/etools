@@ -248,7 +248,7 @@ class Transfer(TimeStampedModel, models.Model):
         (OTHER, _('Other')),
     )
 
-    unicef_release_order = models.CharField(max_length=30, unique=True, null=True)
+    unicef_release_order = models.CharField(max_length=255, unique=True, null=True)
     name = models.CharField(max_length=255, null=True, blank=True)
     dispense_type = models.CharField(max_length=30, choices=DISPENSE_TYPE, null=True, blank=True)
     transfer_type = models.CharField(max_length=30, choices=TRANSFER_TYPE, null=True, blank=True)

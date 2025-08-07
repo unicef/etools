@@ -12,7 +12,7 @@ from etools.applications.last_mile import models
 from etools.applications.last_mile.admin_panel.constants import ALERT_TYPES, TRANSFER_MANUAL_CREATION_NAME
 from etools.applications.last_mile.admin_panel.services.lm_profile_status_updater import LMProfileStatusUpdater
 from etools.applications.last_mile.admin_panel.services.lm_user_creator import LMUserCreator
-from etools.applications.last_mile.admin_panel.services.reverse_transfer import TransferReverse
+from etools.applications.last_mile.admin_panel.services.reverse_transfer import ReverseTransfer
 from etools.applications.last_mile.admin_panel.validators import AdminPanelValidator
 from etools.applications.last_mile.permissions import LastMileUserPermissionRetriever
 from etools.applications.last_mile.serializers import PointOfInterestTypeSerializer
@@ -861,6 +861,13 @@ class TransferItemAdminSerializer(serializers.ModelSerializer):
     destination_point = serializers.CharField(source='destination_point.name', read_only=True)
     partner_organization = serializers.CharField(source='partner_organization.name', read_only=True)
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        reversed_origin_point, reversed_destination_point = ReverseTransfer(instance.pk).decide_origin_and_destination_location()
+        data['reversed_origin_point'] = reversed_origin_point.name if reversed_origin_point else None
+        data['reversed_destination_point'] = reversed_destination_point.name if reversed_destination_point else None
+        return data
+
     class Meta:
         model = models.Transfer
         fields = ("id", "created", "modified", "unicef_release_order", "name", "transfer_type", "status", "partner_organization", "destination_point", "origin_point", "items")
@@ -873,5 +880,5 @@ class TransferReverseAdminSerializer(serializers.ModelSerializer):
         fields = ("id",)
 
     def update(self, instance, validated_data):
-        reversed_transfer = TransferReverse(transfer_id=instance.id).reverse()
+        reversed_transfer = ReverseTransfer(transfer_id=instance.pk).reverse()
         return reversed_transfer
