@@ -1042,7 +1042,7 @@ class TestUpdate(BaseInterventionTestCase):
             lower_result__result_link=InterventionResultLinkFactory(
                 intervention=intervention, cp_output=ResultFactory(result_type__name=ResultType.OUTPUT))
         )
-        applied_indicator3.locations.set([location2, location3])
+        applied_indicator3.locations.set([location1, location3])
 
         partnership_manager = UserFactory(
             is_staff=True,
@@ -1058,21 +1058,43 @@ class TestUpdate(BaseInterventionTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(intervention.flat_locations.count(), 2)
-        applied_indicator1.refresh_from_db()
         self.assertEqual(
             list(applied_indicator1.locations.order_by('id').values_list('id', flat=True)),
             [location1.id, location2.id]
         )
-        applied_indicator2.refresh_from_db()
         self.assertEqual(
             list(applied_indicator2.locations.order_by('id').values_list('id', flat=True)),
             [location2.id]
         )
-        applied_indicator3.refresh_from_db()
         self.assertEqual(
             list(applied_indicator3.locations.order_by('id').values_list('id', flat=True)),
             [location1.id]
         )
+        # remove all locations
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+            user=partnership_manager,
+            data={'flat_locations': []}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(intervention.flat_locations.count(), 0)
+        self.assertEqual(applied_indicator1.locations.count(), 0)
+        self.assertEqual(applied_indicator2.locations.count(), 0)
+        self.assertEqual(applied_indicator3.locations.count(), 0)
+
+        # adding a new location on PD will not add it to indicators
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+            user=partnership_manager,
+            data={'flat_locations': [LocationFactory().pk]}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(intervention.flat_locations.count(), 1)
+        self.assertEqual(applied_indicator1.locations.count(), 0)
+        self.assertEqual(applied_indicator2.locations.count(), 0)
+        self.assertEqual(applied_indicator3.locations.count(), 0)
 
 
 class TestDelete(BaseInterventionTestCase):

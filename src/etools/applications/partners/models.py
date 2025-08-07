@@ -2513,11 +2513,12 @@ class Intervention(TimeStampedModel):
             if save_agreement:
                 self.agreement.save()
 
-    def update_applied_indicator_locations(self, oldself):
-        diff_locations = oldself.flat_locations.all().difference(self.flat_locations.all())
+    def update_applied_indicator_locations(self, locations):
+        location_ids = [loc.id for loc in locations]
+        diff_locations = self.flat_locations.all().difference(Location.objects.filter(id__in=location_ids))
         if diff_locations:
             for indicator in AppliedIndicator.objects.filter(lower_result__result_link__intervention=self).distinct():
-                indicator.locations.remove(diff_locations)
+                indicator.locations.remove(*diff_locations)
 
     @transaction.atomic
     def save(self, force_insert=False, save_from_agreement=False, **kwargs):
@@ -2555,8 +2556,6 @@ class Intervention(TimeStampedModel):
         if not oldself:
             self.management_budgets = InterventionManagementBudget.objects.create(intervention=self)
             self.planned_budget = InterventionBudget.objects.create(intervention=self)
-        else:
-            self.update_applied_indicator_locations(oldself)
 
     def has_active_amendment(self, kind=None):
         active_amendments = self.amendments.filter(is_active=True)
