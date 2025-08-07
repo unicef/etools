@@ -849,10 +849,14 @@ class MaterialsLightSerializer(serializers.ModelSerializer):
 
 class ItemTransferRevertSerializer(serializers.ModelSerializer):
     material = MaterialsLightSerializer(read_only=True)
+    uom = serializers.SerializerMethodField(read_only=True)
+
+    def get_uom(self, obj):
+        return obj.uom if obj.uom else obj.material.original_uom
 
     class Meta:
         model = models.Item
-        fields = ('material', 'quantity', 'modified', 'batch_id', 'description', 'mapped_description')
+        fields = ('material', 'quantity', 'modified', 'batch_id', 'description', 'mapped_description', 'uom')
 
 
 class TransferItemAdminSerializer(serializers.ModelSerializer):
