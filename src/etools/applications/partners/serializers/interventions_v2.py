@@ -911,7 +911,9 @@ class InterventionCreateUpdateSerializer(
     def update(self, instance, validated_data):
         final_partnership_review = validated_data.pop('final_partnership_review', None)
 
-        instance.update_applied_indicator_locations(validated_data.get('flat_locations', None))
+        locations = validated_data.get('flat_locations', None)
+        if locations:
+            instance.update_applied_indicator_locations(locations)
 
         updated = super().update(instance, validated_data)
 
