@@ -1017,6 +1017,85 @@ class TestUpdate(BaseInterventionTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
         self.assertIn('context', response.data)
 
+    def test_update_remove_flat_locations(self):
+        location1 = LocationFactory()
+        location2 = LocationFactory()
+        location3 = LocationFactory()
+
+        intervention = InterventionFactory()
+        for location in [location1, location2, location3]:
+            intervention.flat_locations.add(location)
+
+        applied_indicator1 = AppliedIndicatorFactory(
+            lower_result__result_link=InterventionResultLinkFactory(
+                intervention=intervention, cp_output=ResultFactory(result_type__name=ResultType.OUTPUT))
+        )
+        applied_indicator1.locations.set([location1, location2])
+
+        applied_indicator2 = AppliedIndicatorFactory(
+            lower_result__result_link=InterventionResultLinkFactory(
+                intervention=intervention, cp_output=ResultFactory(result_type__name=ResultType.OUTPUT))
+        )
+        applied_indicator2.locations.set([location2, location3])
+
+        applied_indicator3 = AppliedIndicatorFactory(
+            lower_result__result_link=InterventionResultLinkFactory(
+                intervention=intervention, cp_output=ResultFactory(result_type__name=ResultType.OUTPUT))
+        )
+        applied_indicator3.locations.set([location1, location3])
+
+        partnership_manager = UserFactory(
+            is_staff=True,
+            realms__data=[UNICEF_USER, PARTNERSHIP_MANAGER_GROUP],
+        )
+        intervention.unicef_focal_points.add(partnership_manager)
+
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+            user=partnership_manager,
+            data={'flat_locations': [location1.id, location2.id]}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(intervention.flat_locations.count(), 2)
+        self.assertEqual(
+            list(applied_indicator1.locations.order_by('id').values_list('id', flat=True)),
+            [location1.id, location2.id]
+        )
+        self.assertEqual(
+            list(applied_indicator2.locations.order_by('id').values_list('id', flat=True)),
+            [location2.id]
+        )
+        self.assertEqual(
+            list(applied_indicator3.locations.order_by('id').values_list('id', flat=True)),
+            [location1.id]
+        )
+        # remove all locations
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+            user=partnership_manager,
+            data={'flat_locations': []}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(intervention.flat_locations.count(), 0)
+        self.assertEqual(applied_indicator1.locations.count(), 0)
+        self.assertEqual(applied_indicator2.locations.count(), 0)
+        self.assertEqual(applied_indicator3.locations.count(), 0)
+
+        # adding a new location on PD will not add it to indicators
+        response = self.forced_auth_req(
+            "patch",
+            reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
+            user=partnership_manager,
+            data={'flat_locations': [LocationFactory().pk]}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(intervention.flat_locations.count(), 1)
+        self.assertEqual(applied_indicator1.locations.count(), 0)
+        self.assertEqual(applied_indicator2.locations.count(), 0)
+        self.assertEqual(applied_indicator3.locations.count(), 0)
+
 
 class TestDelete(BaseInterventionTestCase):
     def setUp(self):
@@ -1870,7 +1949,7 @@ class TestInterventionUpdate(BaseInterventionTestCase):
             realms__data=['IP Viewer'],
             profile__organization=intervention.agreement.partner.organization
         )
-        with self.assertNumQueries(194):
+        with self.assertNumQueries(193):
             response = self.forced_auth_req(
                 "patch",
                 reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
@@ -1897,7 +1976,7 @@ class TestInterventionUpdate(BaseInterventionTestCase):
         budget_owner = UserFactory(is_staff=True)
         office = OfficeFactory()
         section = SectionFactory()
-        with self.assertNumQueries(205):
+        with self.assertNumQueries(204):
             response = self.forced_auth_req(
                 "patch",
                 reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
