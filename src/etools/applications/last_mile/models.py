@@ -140,6 +140,9 @@ class PointOfInterest(TimeStampedModel, models.Model):
 
         return location
 
+    def is_warehouse(self):
+        return self.poi_type.category.lower() == 'warehouse' if self.poi_type else False
+
     def save(self, **kwargs):
         if not self.parent_id:
             self.parent = self.get_parent_location(self.point)
