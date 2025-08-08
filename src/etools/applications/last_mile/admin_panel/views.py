@@ -546,6 +546,7 @@ class TransferEvidenceListView(mixins.RetrieveModelMixin, GenericViewSet):
         queryset = models.Transfer.objects.select_related(
             'from_partner_organization__organization',
             'recipient_partner_organization__organization',
+            'partner_organization__organization',
             'origin_point',
             'destination_point'
         ).filter(transfer_history_id=transfer_history_id, items__isnull=False).only(
@@ -563,6 +564,7 @@ class TransferEvidenceListView(mixins.RetrieveModelMixin, GenericViewSet):
             'destination_point',
             'from_partner_organization__organization__name',
             'recipient_partner_organization__organization__name',
+            'partner_organization__organization__name'
         ).distinct()
         queryset = self.filter_queryset(queryset)
 
