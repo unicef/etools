@@ -274,7 +274,12 @@ class MonitoringActivitiesViewSet(
             "interventions": ', '.join([str(intervention) for intervention in ma.interventions.all()]),
             "overall_findings": list(ma.activity_overall_findings().values('entity_name', 'narrative_finding', 'on_track')),
             "summary_findings": ma.get_export_activity_questions_overall_findings(),
-            "data_collected": ma.get_export_checklist_findings()
+            "data_collected": ma.get_export_checklist_findings(),
+            "action_points": ma.get_export_action_points(request),
+            "related_attachments": ma.get_export_related_attachments(request),
+            "reported_attachments": ma.get_export_reported_attachments(request),
+            "checklist_attachments": ma.get_export_checklist_attachments(request),
+
         }
         return render_to_pdf_response(
             request, "fm/visit_pdf.html", context=context,
