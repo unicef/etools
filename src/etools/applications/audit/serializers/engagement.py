@@ -1,4 +1,6 @@
+import datetime
 from copy import copy
+from decimal import Decimal
 
 from django.db import connection
 from django.db.models import Exists, OuterRef
@@ -10,6 +12,7 @@ from unicef_attachments.models import Attachment, FileType
 from unicef_attachments.serializers import AttachmentSerializerMixin
 from unicef_restlib.fields import SeparatedReadWriteField
 from unicef_restlib.serializers import WritableNestedParentSerializerMixin, WritableNestedSerializerMixin
+from unicef_vision.utils import get_data_from_insight
 
 from etools.applications.action_points.categories.models import Category
 from etools.applications.action_points.categories.serializers import CategoryModelChoiceField
@@ -19,6 +22,7 @@ from etools.applications.audit.models import (
     DetailedFindingInfo,
     Engagement,
     EngagementActionPoint,
+    FaceForm,
     FinancialFinding,
     Finding,
     KeyInternalControl,
@@ -28,6 +32,7 @@ from etools.applications.audit.models import (
     SpecialAuditRecommendation,
     SpecificProcedure,
     SpotCheck,
+    SpotCheckFinancialFinding,
 )
 from etools.applications.audit.purchase_order.models import PurchaseOrder
 from etools.applications.audit.serializers.auditor import (
@@ -41,6 +46,7 @@ from etools.applications.audit.serializers.risks import (
     KeyInternalWeaknessSerializer,
     RiskRootSerializer,
 )
+from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.serializers.interventions_v2 import BaseInterventionListSerializer
 from etools.applications.partners.serializers.partner_organization_v2 import (
     MinimalPartnerOrganizationListSerializer,
@@ -67,6 +73,19 @@ class PartnerOrganizationLightSerializer(PartnerOrganizationListSerializer):
                 'label': _('Phone Number'),
             },
         }
+
+
+class FaceFormSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(required=False)
+    commitment_ref = serializers.CharField(required=True)
+    start_date = serializers.DateField(required=False)
+    end_date = serializers.DateField(required=False)
+    dct_amt_usd = serializers.CharField(required=False)
+    dct_amt_local = serializers.CharField(required=False)
+
+    class Meta:
+        model = FaceForm
+        fields = ('id', 'commitment_ref', 'start_date', 'end_date', 'dct_amt_usd', 'dct_amt_local')
 
 
 class AttachmentField(serializers.Field):
@@ -220,7 +239,7 @@ class EngagementLightSerializer(serializers.ModelSerializer):
         model = Engagement
         fields = [
             'id', 'reference_number', 'agreement', 'po_item', 'related_agreement', 'partner',
-            'engagement_type', 'status', 'status_date', 'total_value', 'offices', 'sections'
+            'engagement_type', 'status', 'status_date', 'offices', 'sections'
         ]
 
     def validate(self, attrs):
@@ -249,6 +268,25 @@ class SpecificProcedureSerializer(WritableNestedSerializerMixin,
         fields = [
             'id', 'description', 'finding',
         ]
+
+
+class FaceFormRelatedField(serializers.RelatedField):
+    def get_queryset(self):
+        return FaceForm.objects.all()
+
+    def to_internal_value(self, data):
+        if not isinstance(data, dict):
+            raise serializers.ValidationError("Expected a dict for face form data.")
+
+        commitment_ref = data.pop('commitment_ref')
+        face_form, created = FaceForm.objects.update_or_create(
+            commitment_ref=commitment_ref,
+            defaults={**data}
+        )
+        return face_form
+
+    def to_representation(self, value):
+        return value.commitment_ref
 
 
 class EngagementSerializer(
@@ -288,10 +326,24 @@ class EngagementSerializer(
         label=_("Offices"),
     )
 
+    face_forms = SeparatedReadWriteField(
+        read_field=FaceFormSerializer(many=True),
+        write_field=FaceFormRelatedField(many=True, required=False),
+        required=False,
+        label=_("FACE Forms")
+    )
+    total_value = serializers.CharField(read_only=True)
+    total_value_local = serializers.CharField(read_only=True)
+
+    amount_refunded = serializers.DecimalField(20, 2, read_only=True, label=_("Amount Refunded ($)"))
+    additional_supporting_documentation_provided = serializers.DecimalField(20, 2, read_only=True, label=_("Additional Supporting Documentation Provided ($)"))
+    justification_provided_and_accepted = serializers.DecimalField(20, 2, read_only=True, label=_("Justification Provided and Accepted ($)"))
+    write_off_required = serializers.DecimalField(20, 2, read_only=True, label=_("Impairment ($)"))
+
     class Meta(EngagementListSerializer.Meta):
         fields = EngagementListSerializer.Meta.fields + [
             'face_form_start_date', 'face_form_end_date',
-            'total_value', 'staff_members', 'active_pd', 'authorized_officers', 'users_notified',
+            'total_value', 'total_value_local', 'staff_members', 'active_pd', 'authorized_officers', 'users_notified',
             'joint_audit', 'year_of_audit', 'shared_ip_with', 'exchange_rate', 'currency_of_report',
             'start_date', 'end_date', 'partner_contacted_at', 'date_of_field_visit', 'date_of_draft_report_to_ip',
             'date_of_comments_by_ip', 'date_of_draft_report_to_unicef', 'date_of_comments_by_unicef',
@@ -302,10 +354,13 @@ class EngagementSerializer(
             'final_report',
             'sections',
             'offices',
+            'face_forms',
+            'amount_refunded', 'additional_supporting_documentation_provided',
+            'justification_provided_and_accepted', 'write_off_required'
         ]
         extra_kwargs = {
             field: {'required': True} for field in [
-                'start_date', 'end_date', 'total_value',
+                'start_date', 'end_date',
                 'partner_contacted_at',
                 'date_of_field_visit',
                 'date_of_draft_report_to_ip',
@@ -336,6 +391,15 @@ class EngagementSerializer(
 
     def validate(self, data):
         validated_data = super().validate(data)
+
+        if not self.instance and 'engagement_type' in self.initial_data:
+            if self.initial_data['engagement_type'] == Engagement.TYPE_SPECIAL_AUDIT:
+                validated_data['total_value'] = Decimal(self.initial_data.get('total_value', 0))
+                validated_data['total_value_local'] = Decimal(self.initial_data.get('total_value_local', 0))
+            elif (self.initial_data['engagement_type'] in [Engagement.TYPE_AUDIT, Engagement.TYPE_SPOT_CHECK] and
+                  not validated_data.get('face_forms', None)):
+                raise serializers.ValidationError(_('You must specify at least one FACE Form.'))
+
         staff_members = validated_data.get('staff_members', [])
         validated_data.pop('related_agreement', None)
         agreement = validated_data.get('agreement', None) or self.instance.agreement if self.instance else None
@@ -350,6 +414,15 @@ class EngagementSerializer(
                 })
 
         return validated_data
+
+    def create(self, validated_data):
+        instance = super().create(validated_data)
+        instance.update_totals()
+        return instance
+
+    def to_representation(self, instance):
+        instance.refresh_from_db()
+        return super().to_representation(instance)
 
 
 class ActivePDValidationMixin:
@@ -370,6 +443,7 @@ class EngagementHactSerializer(EngagementLightSerializer):
     amount_tested = serializers.SerializerMethodField()
     outstanding_findings = serializers.SerializerMethodField()
     pending_unsupported_amount = serializers.SerializerMethodField()
+    open_high_priority_count = serializers.IntegerField(source='count_open_high_priority')
     object_url = serializers.ReadOnlyField(source='get_object_url')
 
     def get_amount_tested(self, obj):
@@ -392,7 +466,17 @@ class EngagementHactSerializer(EngagementLightSerializer):
 
     class Meta(EngagementLightSerializer.Meta):
         fields = EngagementLightSerializer.Meta.fields + [
-            "amount_tested", "outstanding_findings", "pending_unsupported_amount", "object_url"
+            "amount_tested", "outstanding_findings", "pending_unsupported_amount", "object_url", "open_high_priority_count"
+        ]
+
+
+class SpotCheckFinancialFindingSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):
+    class Meta(WritableNestedSerializerMixin.Meta):
+        model = SpotCheckFinancialFinding
+        fields = [
+            'id', 'title',
+            'local_amount', 'amount',
+            'description', 'recommendation', 'ip_comments'
         ]
 
 
@@ -407,17 +491,29 @@ class FindingSerializer(WritableNestedSerializerMixin, serializers.ModelSerializ
 
 class SpotCheckSerializer(ActivePDValidationMixin, EngagementSerializer):
     findings = FindingSerializer(many=True, required=False)
+    financial_finding_set = SpotCheckFinancialFindingSerializer(many=True, required=False, label=_('Financial Findings'))
 
-    pending_unsupported_amount = serializers.DecimalField(20, 2, label=_('Pending Unsupported Amount'), read_only=True)
+    pending_unsupported_amount = serializers.DecimalField(20, 2, label=_('Pending Unsupported Amount ($)'), read_only=True)
+    pending_unsupported_amount_local = serializers.DecimalField(20, 2, label=_('Pending Unsupported Amount (Local)'), read_only=True)
+
+    total_amount_tested = serializers.DecimalField(20, 2, label=_('Total Amount Tested ($)'), read_only=True)
+    total_amount_of_ineligible_expenditure = serializers.DecimalField(20, 2, label=_('Total Amount of Ineligible Expenditure ($)'), read_only=True)
+
+    percent_of_audited_expenditure = serializers.DecimalField(20, 2, label=_('% Of Audited Expenditure'), read_only=True)
 
     class Meta(EngagementSerializer.Meta):
         model = SpotCheck
         fields = EngagementSerializer.Meta.fields + [
             'total_amount_tested', 'total_amount_of_ineligible_expenditure',
-            'internal_controls', 'findings',
+            'total_amount_tested_local', 'total_amount_of_ineligible_expenditure_local',
+            'internal_controls', 'findings', 'financial_finding_set',
             'amount_refunded', 'additional_supporting_documentation_provided',
-            'justification_provided_and_accepted', 'write_off_required', 'pending_unsupported_amount',
-            'explanation_for_additional_information'
+            'justification_provided_and_accepted', 'write_off_required',
+            'amount_refunded_local', 'additional_supporting_documentation_provided_local',
+            'justification_provided_and_accepted_local', 'write_off_required_local',
+            'pending_unsupported_amount', 'pending_unsupported_amount_local',
+            'explanation_for_additional_information',
+            'percent_of_audited_expenditure'
         ]
         fields.remove('joint_audit')
         fields.remove('shared_ip_with')
@@ -427,9 +523,7 @@ class SpotCheckSerializer(ActivePDValidationMixin, EngagementSerializer):
             'engagement_type': {'read_only': True}
         })
         extra_kwargs.update({
-            field: {'required': True} for field in [
-                'total_amount_tested', 'total_amount_of_ineligible_expenditure', 'internal_controls',
-            ]
+            'internal_controls': {'required': True}
         })
 
     def create(self, validated_data):
@@ -503,12 +597,14 @@ class MicroAssessmentSerializer(ActivePDValidationMixin, RiskCategoriesUpdateMix
         fields.remove('currency_of_report')
         fields.remove('sections')
         fields.remove('offices')
+        fields.remove('face_forms')
         extra_kwargs = EngagementSerializer.Meta.extra_kwargs.copy()
         extra_kwargs.update({
             'engagement_type': {'read_only': True},
             'start_date': {'required': False},
             'end_date': {'required': False},
             'total_value': {'required': False},
+            'total_value_local': {'required': False}
         })
 
 
@@ -541,8 +637,12 @@ class AuditSerializer(ActivePDValidationMixin, RiskCategoriesUpdateMixin, Engage
 
     number_of_financial_findings = serializers.SerializerMethodField(label=_('No. of Financial Findings'))
 
-    pending_unsupported_amount = serializers.DecimalField(20, 2, label=_('Pending Unsupported Amount'), read_only=True)
-    percent_of_audited_expenditure = serializers.DecimalField(20, 1, label=_('% Of Audited Expenditure'), read_only=True)
+    financial_findings = serializers.DecimalField(20, 2, label=_('Financial Findings ($)'), read_only=True)
+    financial_findings_local = serializers.DecimalField(20, 2, label=_('Financial Findings (Local)'), read_only=True)
+
+    pending_unsupported_amount = serializers.DecimalField(20, 2, label=_('Pending Unsupported Amount ($)'), read_only=True)
+    pending_unsupported_amount_local = serializers.DecimalField(20, 2, label=_('Pending Unsupported Amount (Local)'), read_only=True)
+    percent_of_audited_expenditure = serializers.DecimalField(20, 2, label=_('% Of Audited Expenditure'), read_only=True)
 
     class Meta(EngagementSerializer.Meta):
         model = Audit
@@ -550,9 +650,13 @@ class AuditSerializer(ActivePDValidationMixin, RiskCategoriesUpdateMixin, Engage
         fields = EngagementSerializer.Meta.fields + [
             'audited_expenditure', 'audited_expenditure_local', 'financial_findings', 'financial_findings_local',
             'financial_finding_set', 'percent_of_audited_expenditure', 'audit_opinion', 'number_of_financial_findings',
-            'key_internal_weakness', 'key_internal_controls', 'amount_refunded',
-            'additional_supporting_documentation_provided', 'justification_provided_and_accepted', 'write_off_required',
-            'pending_unsupported_amount', 'explanation_for_additional_information',
+            'key_internal_weakness', 'key_internal_controls',
+            'amount_refunded', 'additional_supporting_documentation_provided', 'justification_provided_and_accepted',
+            'write_off_required', 'pending_unsupported_amount',
+            'amount_refunded_local', 'additional_supporting_documentation_provided_local',
+            'justification_provided_and_accepted_local', 'write_off_required_local',
+            'pending_unsupported_amount_local',
+            'explanation_for_additional_information',
         ]
         fields.remove('specific_procedures')
         extra_kwargs = EngagementSerializer.Meta.extra_kwargs.copy()
@@ -564,33 +668,19 @@ class AuditSerializer(ActivePDValidationMixin, RiskCategoriesUpdateMixin, Engage
     def get_number_of_financial_findings(self, obj):
         return obj.financial_finding_set.count()
 
-    def _validate_financial_findings(self, validated_data):
-        financial_findings = validated_data.get('financial_findings')
-        audited_expenditure = validated_data.get('audited_expenditure')
-        financial_findings_local = validated_data.get('financial_findings_local')
+    def _validate_audited_expenditure_local(self, validated_data):
         audited_expenditure_local = validated_data.get('audited_expenditure_local')
-        if not (financial_findings or audited_expenditure) and not (financial_findings_local or audited_expenditure_local):
+        if not audited_expenditure_local:
             return
 
-        if not financial_findings:
-            financial_findings = self.instance.financial_findings if self.instance else None
-        if not audited_expenditure:
-            audited_expenditure = self.instance.audited_expenditure if self.instance else None
-
-        if audited_expenditure and financial_findings and financial_findings >= audited_expenditure:
-            raise serializers.ValidationError({'financial_findings': _('Cannot exceed Audited Expenditure')})
-
-        if not financial_findings_local:
-            financial_findings_local = self.instance.financial_findings_local if self.instance else None
-        if not audited_expenditure_local:
-            audited_expenditure_local = self.instance.audited_expenditure_local if self.instance else None
+        financial_findings_local = self.instance.financial_findings_local if self.instance else None
 
         if audited_expenditure_local and financial_findings_local and financial_findings_local >= audited_expenditure_local:
-            raise serializers.ValidationError({'financial_findings_local': _('Cannot exceed Audited Expenditure Local')})
+            raise serializers.ValidationError({'audited_expenditure_local': _('Cannot be lower than Financial Findings Local')})
 
     def validate(self, validated_data):
         validated_data = super().validate(validated_data)
-        self._validate_financial_findings(validated_data)
+        self._validate_audited_expenditure_local(validated_data)
         return validated_data
 
 
@@ -609,13 +699,67 @@ class SpecialAuditSerializer(EngagementSerializer):
     class Meta(EngagementSerializer.Meta):
         model = SpecialAudit
         fields = EngagementSerializer.Meta.fields + [
-            'other_recommendations',
+            'other_recommendations', 'total_value', 'total_value_local'
         ]
-        fields.remove('exchange_rate')
         fields.remove('currency_of_report')
         extra_kwargs = EngagementSerializer.Meta.extra_kwargs.copy()
         extra_kwargs.update({
             'start_date': {'required': False},
             'end_date': {'required': False},
             'total_value': {'required': False},
+            'total_value_local': {'required': False}
         })
+
+
+class PartnerFaceFormSerializer(serializers.ModelSerializer):
+    rows = serializers.SerializerMethodField()
+
+    def get_vision_data(self, obj):
+        if not hasattr(self, '_vision_data'):
+            valid_response, response = get_data_from_insight(
+                f'dcts/?vendor={obj.vendor_number}',
+                {
+                    "vendor_code": obj.vendor_number,
+                    "businessarea": self.context.get('businessarea')
+                }
+            )
+            self._vision_data = response
+        return self._vision_data['ROWSET']['ROW']
+
+    def get_rows(self, obj):
+        return RowSerializer(self.get_vision_data(obj), many=True).data
+
+    class Meta:
+        model = PartnerOrganization
+        fields = (
+            "id",
+            "name",
+            "vendor_number",
+            "rows",
+        )
+
+
+class RowSerializer(serializers.Serializer):
+    wbs_element_ex = serializers.CharField(source='WBS_ELEMENT_EX')
+    grant_ref = serializers.CharField(source='GRANT_REF')
+    donor_name = serializers.CharField(source='DONOR_NAME')
+    end_date = serializers.SerializerMethodField()
+    commitment_ref = serializers.CharField(source='COMMITMENT_REF')
+    dct_amt_usd = serializers.CharField(source='DCT_AMT_USD')
+    dct_amt_local = serializers.SerializerMethodField()
+    start_date = serializers.SerializerMethodField()
+
+    def get_end_date(self, obj):
+        if not obj['EXPIRY_DATE']:
+            return ""
+        dt = datetime.datetime.strptime(obj['EXPIRY_DATE'], "%d-%b-%y")
+        return dt.strftime("%Y-%m-%d")
+
+    def get_dct_amt_local(self, obj):
+        # Hardcoded until we get the data
+        return '{0:.2f}'.format((Decimal(obj['DCT_AMT_USD']) * Decimal(0.8)))
+
+    def get_start_date(self, obj):
+        # Hardcoded until we get the data
+        import random
+        return datetime.date(random.randint(2000, 2020), random.randint(1, 12), random.randint(1, 28)).strftime("%Y-%m-%d")
