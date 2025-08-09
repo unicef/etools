@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from django.contrib.gis.geos import GEOSGeometry
 
 from rest_framework import status
@@ -5,6 +7,7 @@ from rest_framework.reverse import reverse
 from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.last_mile import models
 from etools.applications.last_mile.admin_panel.constants import *  # NOQA
 from etools.applications.last_mile.tests.factories import PointOfInterestFactory, PointOfInterestTypeFactory
 from etools.applications.organizations.tests.factories import OrganizationFactory
@@ -24,6 +27,11 @@ class TestLocationsViewSet(BaseTenantTestCase):
         cls.partner_staff = UserPermissionFactory(
             realms__data=['LMSM Admin Panel'],
             profile__organization=cls.partner.organization,
+            perms=[LOCATIONS_ADMIN_PANEL_PERMISSION, APPROVE_LOCATIONS_ADMIN_PANEL_PERMISSION]
+        )
+        cls.partner_staff_without_approve_perms = UserPermissionFactory(
+            realms__data=['LMSM Admin Panel'],
+            profile__organization=cls.organization,
             perms=[LOCATIONS_ADMIN_PANEL_PERMISSION]
         )
         cls.simple_user = SimpleUserFactory()
@@ -76,22 +84,42 @@ class TestLocationsViewSet(BaseTenantTestCase):
         cls.url = reverse(f'{ADMIN_PANEL_APP_NAME}:{LOCATIONS_ADMIN_PANEL}-list')
         cls.url_coordinates = reverse(f'{ADMIN_PANEL_APP_NAME}:{GEOPOINT_LOCATIONS}-list')
 
+        cls.review_url = cls.url + 'bulk-review/'
+        cls.poi_pending_1 = PointOfInterestFactory(
+            status=models.PointOfInterest.ApprovalStatus.PENDING,
+            partner_organizations=[cls.partner]
+        )
+        cls.poi_pending_2 = PointOfInterestFactory(
+            status=models.PointOfInterest.ApprovalStatus.PENDING,
+            partner_organizations=[cls.partner]
+        )
+        cls.poi_initially_approved = PointOfInterestFactory(
+            status=models.PointOfInterest.ApprovalStatus.APPROVED,
+            partner_organizations=[cls.partner],
+            review_notes="Initial approval."
+        )
+        cls.poi_initially_rejected = PointOfInterestFactory(
+            status=models.PointOfInterest.ApprovalStatus.REJECTED,
+            partner_organizations=[cls.partner],
+            review_notes="Initial rejection."
+        )
+
     def test_get_locations(self):
         response = self.forced_auth_req('get', self.url, user=self.partner_staff)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data.get('count'), 8)
+        self.assertEqual(response.data.get('count'), 12)
 
     def test_get_location_with_coordinates(self):
         data = {'with_coordinates': True}
         response = self.forced_auth_req('get', self.url, user=self.partner_staff, data=data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data.get('count'), 8)
+        self.assertEqual(response.data.get('count'), 12)
 
     def test_get_locations_with_coordinates_data(self):
         data = {'with_coordinates': True}
         response = self.forced_auth_req('get', self.url, user=self.partner_staff, data=data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data.get('count'), 8)
+        self.assertEqual(response.data.get('count'), 12)
         result = response.data.get('results')
         borders_count = 0
         for location in result:
@@ -120,7 +148,7 @@ class TestLocationsViewSet(BaseTenantTestCase):
     def test_get_only_coordinates(self):
         response = self.forced_auth_req('get', self.url_coordinates, user=self.partner_staff)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data.get('count'), 8)
+        self.assertEqual(response.data.get('count'), 12)
 
     def test_get_locations_unauthorized(self):
         response = self.forced_auth_req('get', self.url, user=self.simple_user)
@@ -354,7 +382,7 @@ class TestLocationsViewSet(BaseTenantTestCase):
             user=self.partner_staff
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data.get('count'), 8)
+        self.assertEqual(response.data.get('count'), 12)
 
     def test_filter_by_partner_organization(self):
         response = self.forced_auth_req(
@@ -391,3 +419,158 @@ class TestLocationsViewSet(BaseTenantTestCase):
         url_with_param = self.url + f"{self.poi_filter_1.pk}/"
         response = self.forced_auth_req('get', url_with_param, user=self.simple_user)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_bulk_approve_success(self):
+        pois_to_approve = [self.poi_pending_1, self.poi_pending_2]
+        poi_ids = [p.pk for p in pois_to_approve]
+        payload = {
+            'status': models.PointOfInterest.ApprovalStatus.APPROVED,
+            'points_of_interest': poi_ids,
+            'review_notes': 'All look good.'
+        }
+
+        response = self.forced_auth_req('put', self.review_url, data=payload, user=self.partner_staff)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        for poi in pois_to_approve:
+            poi.refresh_from_db()
+            self.assertEqual(poi.status, models.PointOfInterest.ApprovalStatus.APPROVED)
+            self.assertEqual(poi.approved_by, self.partner_staff)
+            self.assertIsNotNone(poi.approved_on)
+            self.assertEqual(poi.review_notes, 'All look good.')
+
+    def test_bulk_reject_success(self):
+        payload = {
+            'status': models.PointOfInterest.ApprovalStatus.REJECTED,
+            'points_of_interest': [self.poi_pending_1.pk],
+            'review_notes': 'Location data is inaccurate.'
+        }
+
+        response = self.forced_auth_req('put', self.review_url, data=payload, user=self.partner_staff)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.poi_pending_1.refresh_from_db()
+        self.assertEqual(self.poi_pending_1.status, models.PointOfInterest.ApprovalStatus.REJECTED)
+        self.assertEqual(self.poi_pending_1.approved_by, self.partner_staff)
+        self.assertIsNotNone(self.poi_pending_1.approved_on)
+        self.assertEqual(self.poi_pending_1.review_notes, 'Location data is inaccurate.')
+
+    def test_bulk_reject_without_notes(self):
+        payload = {
+            'status': models.PointOfInterest.ApprovalStatus.REJECTED,
+            'points_of_interest': [self.poi_pending_1.pk],
+        }
+
+        response = self.forced_auth_req('put', self.review_url, data=payload, user=self.partner_staff)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.poi_pending_1.refresh_from_db()
+        self.assertEqual(self.poi_pending_1.status, models.PointOfInterest.ApprovalStatus.REJECTED)
+        self.assertIsNone(self.poi_pending_1.review_notes)
+
+    def test_bulk_review_transition_approved_to_rejected(self):
+        payload = {
+            'status': models.PointOfInterest.ApprovalStatus.REJECTED,
+            'points_of_interest': [self.poi_initially_approved.pk],
+            'review_notes': 'Re-evaluated and rejected.'
+        }
+
+        response = self.forced_auth_req('put', self.review_url, data=payload, user=self.partner_staff)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.poi_initially_approved.refresh_from_db()
+        self.assertEqual(self.poi_initially_approved.status, models.PointOfInterest.ApprovalStatus.REJECTED)
+        self.assertEqual(self.poi_initially_approved.review_notes, 'Re-evaluated and rejected.')
+        self.assertEqual(self.poi_initially_approved.approved_by, self.partner_staff)
+
+    def test_bulk_review_transition_rejected_to_approved(self):
+        payload = {
+            'status': models.PointOfInterest.ApprovalStatus.APPROVED,
+            'points_of_interest': [self.poi_initially_rejected.pk],
+            'review_notes': 'Corrections were made.'
+        }
+
+        response = self.forced_auth_req('put', self.review_url, data=payload, user=self.partner_staff)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.poi_initially_rejected.refresh_from_db()
+        self.assertEqual(self.poi_initially_rejected.status, models.PointOfInterest.ApprovalStatus.APPROVED)
+        self.assertEqual(self.poi_initially_rejected.review_notes, 'Corrections were made.')
+        self.assertEqual(self.poi_initially_rejected.approved_by, self.partner_staff)
+
+    def test_bulk_review_idempotent_request_updates_fields(self):
+        """Test that re-approving an approved POI works and updates the review fields. Should not change anything"""
+        original_approved_on = self.poi_initially_approved.approved_on
+        payload = {
+            'status': models.PointOfInterest.ApprovalStatus.APPROVED,
+            'points_of_interest': [self.poi_initially_approved.pk],
+            'review_notes': 'Confirmed approval.'
+        }
+
+        response = self.forced_auth_req('put', self.review_url, data=payload, user=self.partner_staff)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.poi_initially_approved.refresh_from_db()
+        self.assertEqual(self.poi_initially_approved.status, models.PointOfInterest.ApprovalStatus.APPROVED)
+        self.assertEqual(self.poi_initially_approved.review_notes, 'Initial approval.')
+        self.assertEqual(self.poi_initially_approved.approved_on, original_approved_on)
+
+    def test_bulk_review_fails_for_forbidden_status_pending(self):
+        """A review endpoint should not allow setting the status back to PENDING."""
+        payload = {
+            'status': models.PointOfInterest.ApprovalStatus.PENDING,
+            'points_of_interest': [self.poi_initially_approved.pk]
+        }
+        response = self.forced_auth_req('put', self.review_url, data=payload, user=self.partner_staff)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('status', response.data)
+
+    def test_bulk_review_fails_if_any_poi_id_is_invalid(self):
+        """Tests the atomicity of the request; if one POI is invalid, the whole request fails."""
+        non_existent_id = 999999
+        payload = {
+            'status': models.PointOfInterest.ApprovalStatus.APPROVED,
+            'points_of_interest': [self.poi_pending_1.pk, non_existent_id]
+        }
+        response = self.forced_auth_req('put', self.review_url, data=payload, user=self.partner_staff)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('points_of_interest', response.data)
+
+        self.poi_pending_1.refresh_from_db()
+        self.assertEqual(self.poi_pending_1.status, models.PointOfInterest.ApprovalStatus.PENDING)
+
+    def test_bulk_review_unauthorized_user(self):
+        payload = {'status': models.PointOfInterest.ApprovalStatus.APPROVED, 'points_of_interest': [self.poi_pending_1.pk]}
+        response = self.forced_auth_req('put', self.review_url, data=payload, user=self.simple_user)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_bulk_review_method_not_allowed(self):
+        payload = {'status': models.PointOfInterest.ApprovalStatus.APPROVED, 'points_of_interest': [self.poi_pending_1.pk]}
+        response_post = self.forced_auth_req('post', self.review_url, data=payload, user=self.partner_staff)
+        response_get = self.forced_auth_req('get', self.review_url, user=self.partner_staff)
+        self.assertEqual(response_post.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+        self.assertEqual(response_get.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def test_approve_without_correct_permissions(self):
+        payload = {'status': models.PointOfInterest.ApprovalStatus.APPROVED, 'points_of_interest': [self.poi_pending_1.pk]}
+        response = self.forced_auth_req('put', self.review_url, data=payload, user=self.simple_user)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    @patch('etools.applications.last_mile.models.PointOfInterest.approve')
+    def test_bulk_review_atomic_transaction_rolls_back_on_failure(self, mock_approve):
+        mock_approve.side_effect = [
+            None,
+            Exception("Simulated database error")
+        ]
+
+        payload = {
+            'status': models.PointOfInterest.ApprovalStatus.APPROVED,
+            'points_of_interest': [self.poi_pending_1.pk, self.poi_pending_2.pk]
+        }
+
+        with self.assertRaises(Exception):
+            self.forced_auth_req('put', self.review_url, data=payload, user=self.partner_staff)
+
+        self.poi_pending_1.refresh_from_db()
+        self.assertEqual(self.poi_pending_1.status, models.PointOfInterest.ApprovalStatus.PENDING,
+                         "The first POI's status should have been rolled back")

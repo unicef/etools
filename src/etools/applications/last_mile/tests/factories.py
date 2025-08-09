@@ -36,6 +36,14 @@ class PointOfInterestFactory(factory.django.DjangoModelFactory):
             self.partner_organizations.add(PartnerFactory())
 
 
+class UserPointOfInterestFactory(factory.django.DjangoModelFactory):
+    user = factory.SubFactory(UserFactory)
+    point_of_interest = factory.SubFactory(PointOfInterestFactory)
+
+    class Meta:
+        model = models.UserPointsOfInterest
+
+
 class MaterialFactory(factory.django.DjangoModelFactory):
     number = factory.Sequence(lambda n: n + 1)
     short_description = factory.Sequence(lambda n: 'Material short description {}'.format(n))
