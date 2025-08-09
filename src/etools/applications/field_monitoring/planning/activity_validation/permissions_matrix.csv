@@ -64,6 +64,12 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,report_reviewers,Field Monitor,staff_visit,report_finalization,edit,TRUE
 ,report_reviewers,Field Monitor,tpm_visit+old_status_review,assigned,edit,TRUE
 ,report_reviewers,UNICEF User,staff_visit+is_visit_lead+old_status_report_finalization,submitted,edit,TRUE
+,visit_goals,Field Monitor,,draft,edit,TRUE
+,visit_goals,Field Monitor,,checklist,edit,TRUE
+,visit_goals,Field Monitor,,review,edit,TRUE
+,objective,Field Monitor,,draft,edit,TRUE
+,objective,Field Monitor,,checklist,edit,TRUE
+,objective,Field Monitor,,review,edit,TRUE
 
 
 ,location,All Users,,*,required,TRUE
@@ -134,3 +140,5 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,activity_overall_finding,All Users,,submitted,view,TRUE
 ,activity_overall_finding,All Users,,completed,view,TRUE
 ,additional_info,All Users,,draft,view,FALSE
+,visit_goals,All Users,,*,view,TRUE
+,objective,All Users,,*,view,TRUE

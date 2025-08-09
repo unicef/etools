@@ -32,7 +32,7 @@ class TestRevertTransfersViewSet(BaseTenantTestCase):
 
     def test_get_transfer_details_success(self):
         url = reverse(f'{ADMIN_PANEL_APP_NAME}:{TRANSFER_REVERSE_ADMIN_PANEL}-details', kwargs={'pk': self.transfer_1.id})
-        with self.assertNumQueries(8):
+        with self.assertNumQueries(9):
             response = self.forced_auth_req('get', url, user=self.partner_staff)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -57,7 +57,7 @@ class TestRevertTransfersViewSet(BaseTenantTestCase):
 
         self.assertEqual(old_transfer_item_count, 1)
 
-        with self.assertNumQueries(15):
+        with self.assertNumQueries(13):
             response = self.forced_auth_req('put', url, user=self.partner_staff, data={})
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -172,8 +172,8 @@ class TestRevertTransfersViewSet(BaseTenantTestCase):
         self.assertEqual(new_transfer.transfer_history, transfer_detailed.transfer_history)
 
     def test_unicef_release_order_truncation_on_reverse(self):
-        long_order = 'A-VERY-LONG-ORDER-NUM-123'
-        self.assertEqual(len(long_order), 25)
+        long_order = "x" * 249
+        self.assertEqual(len(long_order), 249)
         transfer_long_order = TransferFactory(unicef_release_order=long_order)
         ItemFactory(transfer=transfer_long_order)
 
@@ -182,9 +182,9 @@ class TestRevertTransfersViewSet(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         new_transfer = Transfer.objects.get(id=response.data['id'])
-        expected_order = f"{long_order}_reversed"[:29]
+        expected_order = f"{long_order}_reversed"[:254]
         self.assertEqual(new_transfer.unicef_release_order, expected_order)
-        self.assertEqual(len(new_transfer.unicef_release_order), 29)
+        self.assertEqual(len(new_transfer.unicef_release_order), 254)
 
     def test_reverse_a_previously_reversed_transfer(self):
 
@@ -203,8 +203,8 @@ class TestRevertTransfersViewSet(BaseTenantTestCase):
         self.assertEqual(reversed_transfer_2.destination_point, self.transfer_1.destination_point)
         self.item_1.refresh_from_db()
         self.assertEqual(self.item_1.transfer, reversed_transfer_2)
-        self.assertTrue(reversed_transfer_2.unicef_release_order.endswith('_reverse'))
-        self.assertTrue('_reversed_reverse' in reversed_transfer_2.unicef_release_order)
+        self.assertTrue(reversed_transfer_2.unicef_release_order.endswith('_reversed'))
+        self.assertTrue('_reversed_reversed' in reversed_transfer_2.unicef_release_order)
 
     def test_reverse_transfer_with_hidden_items(self):
         transfer_with_deleted_items = TransferFactory()

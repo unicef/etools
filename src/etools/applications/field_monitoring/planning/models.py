@@ -109,6 +109,14 @@ class QuestionTemplate(QuestionTargetMixin, models.Model):
         return 'Question Template for {}'.format(self.related_to)
 
 
+class VisitGoal(models.Model):
+    name = models.CharField(max_length=255)
+    info = models.JSONField()  # Stores the list of strings
+
+    def __str__(self):
+        return self.name
+
+
 class MonitoringActivitiesQuerySet(models.QuerySet):
     def filter_hact_for_partner(self, partner_id: int):
         from etools.applications.field_monitoring.data_collection.models import ActivityQuestionOverallFinding
@@ -284,6 +292,9 @@ class MonitoringActivity(
     visit_lead_tracker = FieldTracker(fields=['visit_lead'])
 
     objects = models.Manager.from_queryset(MonitoringActivitiesQuerySet)()
+
+    visit_goals = models.ManyToManyField(VisitGoal, related_name='monitoring_activities')
+    objective = models.TextField(verbose_name=_('Objective'), blank=True)
 
     class Meta:
         verbose_name = _('Monitoring Activity')

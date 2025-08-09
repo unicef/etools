@@ -173,7 +173,7 @@ class TestTransferView(BaseTenantTestCase):
     fixtures = ('poi_type.json',)
 
     @classmethod
-    def setUpTestData(cls):
+    def setUp(cls):
         cls.partner = PartnerFactory(organization=OrganizationFactory(name='Partner'))
         cls.partner_receive_handover = PartnerFactory(organization=OrganizationFactory(name='Partner Receive Handover'))
         cls.partner_staff = UserFactory(

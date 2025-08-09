@@ -732,7 +732,7 @@ class TestCreate(BaseGDDTestCase):
         self.assertEqual(data['lead_section_name'], lead_section.name)
         i = GDD.objects.get(pk=response.data.get("id"))
         self.assertEqual(i.lead_section, lead_section)
-        self.assertEqual(list(i.sections.all().values_list('id', flat=True)), sections)
+        self.assertEqual(sorted(list(i.sections.all().values_list('id', flat=True))), sorted(sections))
 
     def test_post_sections_bad_request(self):
         lead_section = SectionFactory()

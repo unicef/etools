@@ -1,49 +1,65 @@
+from typing import Optional
+
 from django.db import transaction
 from django.utils import timezone
 
 from etools.applications.last_mile.admin_panel.validators import AdminPanelValidator
-from etools.applications.last_mile.models import Item, Transfer
+from etools.applications.last_mile.models import Item, PointOfInterest, Transfer
 
 
-class TransferReverse:
+class ReverseTransfer:
 
-    def __init__(self, transfer_id):
-        self.transfer = Transfer.objects.filter(id=transfer_id).first()
+    def __init__(self, transfer_id) -> None:
+        self.transfer = Transfer.objects.filter(id=transfer_id).select_related("origin_point", "destination_point", "origin_point__poi_type", "destination_point__poi_type").first()
         self.adminValidator = AdminPanelValidator()
 
+    def decide_origin_and_destination_location(self) -> tuple[PointOfInterest, Optional[PointOfInterest]]:
+        origin_point = self.transfer.origin_point
+        destination_point = self.transfer.destination_point
+
+        if origin_point and origin_point.is_warehouse():
+            # checkin, wastage, dispense, etc.
+            return origin_point, None
+
+        if destination_point and destination_point.is_warehouse():
+            # shouldn't happen, just in case
+            return destination_point, None
+
+        # handover
+        return destination_point, origin_point
+
     @transaction.atomic
-    def _create_new_transfer(self, old_transfer):
-        new_transfer_name = f"{old_transfer.partner_organization.name}_reversal_{timezone.now().strftime('%d-%m-%Y %H:%M:%S')}"
+    def _create_new_transfer(self) -> Transfer:
+        new_transfer_name = f"{self.transfer.partner_organization.name}_reversal_{timezone.now().strftime('%d-%m-%Y %H:%M:%S')}"
         new_status = Transfer.PENDING
         new_type = Transfer.DELIVERY
-        new_partner_organization = old_transfer.partner_organization
-        reversed_unicef_release_order = f"{old_transfer.unicef_release_order}_reversed"
+        new_partner_organization = self.transfer.partner_organization
+        reversed_unicef_release_order = f"{self.transfer.unicef_release_order}_reversed"
+        origin_point, destination_point = self.decide_origin_and_destination_location()
         new_transfer = Transfer.objects.create(
             transfer_type=new_type,
             name=new_transfer_name,
-            dispense_type=old_transfer.dispense_type,
-            transfer_subtype=old_transfer.transfer_subtype,
             status=new_status,
-            origin_point=old_transfer.destination_point,
-            destination_point=old_transfer.origin_point,
+            origin_point=origin_point,
+            destination_point=destination_point,
             partner_organization=new_partner_organization,
-            unicef_release_order=reversed_unicef_release_order[:29],  # To not overload the max_length of the field
-            origin_transfer=old_transfer,
-            reason=old_transfer.reason,
-            comment=old_transfer.comment,
-            transfer_history=old_transfer.transfer_history,
-            purchase_order_id=old_transfer.purchase_order_id,
-            waybill_id=old_transfer.waybill_id,
-            pd_number=old_transfer.pd_number,
-            initial_items=old_transfer.initial_items
+            unicef_release_order=reversed_unicef_release_order[:254],  # To not overload the max_length of the field
+            origin_transfer=self.transfer,
+            reason=self.transfer.reason,
+            comment=self.transfer.comment,
+            transfer_history=self.transfer.transfer_history,
+            purchase_order_id=self.transfer.purchase_order_id,
+            waybill_id=self.transfer.waybill_id,
+            pd_number=self.transfer.pd_number,
+            initial_items=self.transfer.initial_items
         )
-        Item.all_objects.filter(transfer=old_transfer).update(transfer=new_transfer)
+        Item.all_objects.filter(transfer=self.transfer).update(transfer=new_transfer)
         return new_transfer
 
-    def reverse(self):
+    def reverse(self) -> Transfer:
         old_transfer = self.transfer
         self.adminValidator.validate_reverse_transfer(old_transfer)
         self.adminValidator.validate_transfer_items(old_transfer)
         self.adminValidator.validate_transfer_type(old_transfer)
-        new_transfer = self._create_new_transfer(old_transfer)
+        new_transfer = self._create_new_transfer()
         return new_transfer

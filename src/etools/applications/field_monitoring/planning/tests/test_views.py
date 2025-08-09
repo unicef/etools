@@ -40,6 +40,7 @@ from etools.applications.field_monitoring.planning.tests.factories import (
     MonitoringActivityFactory,
     QuestionTemplateFactory,
     TPMConcernFactory,
+    VisitGoalFactory,
     YearPlanFactory,
 )
 from etools.applications.field_monitoring.tests.base import APIViewSetTestCase, FMBaseTestCaseMixin
@@ -128,7 +129,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             MonitoringActivityFactory(monitor_type='staff'),
         ]
 
-        with self.assertNumQueries(10):
+        with self.assertNumQueries(9):
             self._test_list(self.unicef_user, activities, data={'page': 1, 'page_size': 10})
 
     def test_list_as_tpm_user(self):
@@ -139,12 +140,12 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             MonitoringActivityFactory(
                 monitor_type='tpm', tpm_partner=tpm_partner, status='assigned', team_members=[tpm_staff]),
             MonitoringActivityFactory(
-                monitor_type='tpm', tpm_partner=TPMPartnerFactory(), status='assigned'),
+                monitor_type='tpm', tpm_partner=tpm_partner, status='assigned', team_members=[tpm_staff]),
             MonitoringActivityFactory(
                 monitor_type='staff', status='assigned')
         ]
-        with self.assertNumQueries(8):
-            self._test_list(tpm_staff, [activities[0]], data={'page': 1, 'page_size': 10})
+        with self.assertNumQueries(9):
+            self._test_list(tpm_staff, [activities[0], activities[1]], data={'page': 1, 'page_size': 10})
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_search_by_ref_number(self):
@@ -204,12 +205,17 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_details(self):
         activity = MonitoringActivityFactory(monitor_type='staff', team_members=[UserFactory(unicef_user=True)])
+        visit_goal = VisitGoalFactory()
+        activity.visit_goals.add(visit_goal)
 
         response = self._test_retrieve(self.fm_user, activity)
 
         # check permissions are added correctly
         self.assertIn('team_members', response.data['permissions']['view'])
         self.assertTrue(response.data['permissions']['view']['team_members'])
+
+        # check if monitoring activity has visit goal
+        self.assertEqual(response.data['visit_goals'][0]['id'], visit_goal.id)
 
         # check transitions exists
         self.assertListEqual(
@@ -871,7 +877,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             for _ in range(20)
         ]
 
-        with self.assertNumQueries(16):
+        with self.assertNumQueries(17):
             response = self.make_request_to_viewset(self.unicef_user, action='export', method='get', data={'page': 1, 'page_size': 100})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('Content-Disposition', response.headers)
@@ -1616,3 +1622,21 @@ class PartnersViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenantTe
         tpm_staff = TPMUserFactory(tpm_partner=TPMPartnerFactory())
 
         self._test_list(tpm_staff, [])
+
+
+class VisitGoalsTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenantTestCase):
+    base_view = 'field_monitoring_planning:visit-goals'
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_list(self):
+        valid_goals = [
+            VisitGoalFactory(name='b goal', info=["foo", "bar"]),
+            VisitGoalFactory(name='a goal', info=["baz"]),
+        ]
+        valid_goals.reverse()
+
+        self._test_list(self.unicef_user, valid_goals)

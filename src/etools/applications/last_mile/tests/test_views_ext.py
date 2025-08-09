@@ -238,6 +238,24 @@ class TestVisionIngestTransfersApiView(BaseTenantTestCase):
         self.assertEqual(models.Transfer.objects.count(), 1)
         self.assertEqual(models.Item.objects.count(), 1)
 
+    def test_import_with_null_batch_number(self):
+        payload = [{
+            "Event": "LD",
+            "ReleaseOrder": "RO-NULL-BATCH",
+            "ImplementingPartner": "IP12345",
+            "ItemDescription": "This item will be ignored",
+            "MaterialNumber": "MAT-001",
+            "ReleaseOrderItem": "10",
+            "Quantity": 10,
+            "UOM": "EA",
+            "BatchNumber": None,
+        }]
+
+        response = self.forced_auth_req(method="post", url=self.url, data=payload, user=self.api_user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(models.Transfer.objects.count(), 1)
+        self.assertEqual(models.Item.objects.count(), 1)
+
     def test_rows_with_incorrect_event_are_ignored(self):
         payload = [
             {"Event": "LD", "ReleaseOrder": "RO-GOOD", "ImplementingPartner": "IP12345", "MaterialNumber": "MAT-001", "ReleaseOrderItem": "10", "Quantity": 10, "BatchNumber": "B1", "ItemDescription": "This item will be ignored", "UOM": "EA"},
@@ -294,7 +312,7 @@ class TestVisionIngestTransfersApiView(BaseTenantTestCase):
             "ReleaseOrderItem": "10",
             "ItemDescription": "This item will be ignored",
             "Quantity": 15,
-            "UOM": "SHOULD BE IGNORED"
+            "UOM": "EA"
         }]
 
         response = self.forced_auth_req(method="post", url=self.url, data=payload, user=self.api_user)
@@ -378,7 +396,7 @@ class TestVisionIngestTransfersApiView(BaseTenantTestCase):
             "AmountUSD": "350.55",
             "BatchNumber": "B1",
             "ItemDescription": "This item will be ignored",
-            "UOM": "SHOULD BE IGNORED"
+            "UOM": "EA"
         }]
 
         response = self.forced_auth_req(
@@ -584,6 +602,22 @@ class TestVisionIngestTransfersApiView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(models.Transfer.objects.count(), 0)
         self.assertEqual(response.data['detail'], "No rows with Event 'LD' found in the payload.")
+
+    def test_create_transfer_with_items_wrong_uom(self):
+        payload = [
+            {"Event": "LD", "ReleaseOrder": "RO-IGNORE-1", "ImplementingPartner": "IP12345", "MaterialNumber": "MAT-001", "ReleaseOrderItem": "10", "Quantity": 10, "BatchNumber": "B1", "UOM": "CAAR", "ItemDescription": "d"},
+            {"Event": "LD", "ReleaseOrder": "RO-IGNORE-2", "ImplementingPartner": "IP12345", "MaterialNumber": "MAT-002", "ReleaseOrderItem": "20", "Quantity": 20, "BatchNumber": "B2", "UOM": "CAR", "ItemDescription": "d"},
+        ]
+        response = self.forced_auth_req(method="post", url=self.url, data=payload, user=self.api_user)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(models.Transfer.objects.count(), 2)
+        self.assertEqual(models.Item.objects.count(), 1)
+
+        self.assertEqual(response.data['transfers_created'], 2)
+        self.assertEqual(response.data['items_created'], 1)
+        self.assertEqual(response.data['skipped_count'], 1)
+        self.assertEqual(response.data['details']['skipped_items'][0]['reason'], "UOM 'CAAR' not valid.")
 
     def test_mixed_payload_creates_new_and_adds_to_existing_transfer(self):
         existing_transfer = TransferFactory(unicef_release_order="RO-EXISTING", partner_organization=self.partner1)

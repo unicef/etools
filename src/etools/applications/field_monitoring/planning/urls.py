@@ -14,6 +14,7 @@ root_api.register(r'users', views.FMUsersViewSet, basename='users')
 root_api.register(r'cp-outputs', views.CPOutputsViewSet, basename='cp_outputs')
 root_api.register(r'interventions', views.InterventionsViewSet, basename='interventions')
 root_api.register(r'partners', views.PartnersViewSet, basename='partners')
+root_api.register(r'visit-goals', views.VisitGoalsViewSet, basename='visit-goals')
 
 activities_api = NestedComplexRouter(root_api, r'activities', lookup='monitoring_activity')
 activities_api.register(r'attachments', views.ActivityAttachmentsViewSet, basename='activity_attachments')

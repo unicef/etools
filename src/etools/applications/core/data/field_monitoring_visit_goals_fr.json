@@ -1,0 +1,76 @@
+[
+  {
+    "model": "field_monitoring_planning.visitgoal",
+    "pk": 1,
+    "fields": {
+      "name": "Surveillance de la mise en œuvre du programme",
+      "info": [
+        "Vérifiez l'alignement avec les plans de travail, les cadres de résultats et les accords de donateurs.",
+        "Évaluer la livraison des interventions et des activités prévues.",
+        "Vérifiez si les services (par exemple, l'éducation, la santé, le lavage) atteignent les bénéficiaires visés."
+      ]
+    }
+  },
+  {
+    "model": "field_monitoring_planning.visitgoal",
+    "pk": 2,
+    "fields": {
+      "name": "Vérification des sorties et des résultats",
+      "info": [
+        "Surveillez la réalisation de résultats, activités et interventions spécifiques (par exemple, les fournitures dispensées, formation des enseignants).",
+        "Valider les données sur les résultats rapportées par la mise en œuvre des partenaires et le gouvernement.",
+        "Évaluer la qualité, la rapidité et l'exhaustivité des services ou des interventions."
+      ]
+    }
+  },
+  {
+    "model": "field_monitoring_planning.visitgoal",
+    "pk": 3,
+    "fields": {
+      "name": "Surveillance des partenaires",
+      "info": [
+        "Examiner les activités des partenaires et le respect de l'approche harmonisée des transferts en espèces (HACT).",
+        "Valider l'utilisation des fonds et l'efficacité de la mise en œuvre des partenaires.",
+        "Évaluez la capacité du partenaire, la coordination et les défis.",
+        "Cross-Check a rapporté des données avec des observations sur le terrain.",
+        "Identifiez les problèmes de collecte de données, de documentation ou de précision de rapport."
+      ]
+    }
+  },
+  {
+    "model": "field_monitoring_planning.visitgoal",
+    "pk": 4,
+    "fields": {
+      "name": "Surveillance des risques et de la conformité",
+      "info": [
+        "Identifier les risques opérationnels ou contextuels (par exemple, PSEA, ESS, sécurité, politique, financier).",
+        "Assurez-vous la conformité aux normes éthiques de l'UNICEF, aux règles de protection et d'approvisionnement de l'UNICEF.",
+        "Fraude, utilisation abusive ou détournement de ressources."
+      ]
+    }
+  },
+  {
+    "model": "field_monitoring_planning.visitgoal",
+    "pk": 5,
+    "fields": {
+      "name": "Feedback et responsabilité des bénéficiaires",
+      "info": [
+        "Collectez les commentaires des communautés et des bénéficiaires, y compris des plaintes ou des suggestions.",
+        "Surveiller l'équité et l'inclusion (par exemple, l'accès pour les populations marginalisées ou vulnérables).",
+        "Évaluez la satisfaction et la pertinence des interventions aux besoins de la communauté."
+      ]
+    }
+  },
+  {
+    "model": "field_monitoring_planning.visitgoal",
+    "pk": 6,
+    "fields": {
+      "name": "Surveillance de la réponse humanitaire",
+      "info": [
+        "Suivi en évolution des besoins humanitaires (nutrition, déplacement, conditions de lavage).",
+        "Surveillez la couverture des interventions d'urgence et les lacunes.",
+        "Coordonner avec les grappes et autres acteurs humanitaires."
+      ]
+    }
+  }
+]

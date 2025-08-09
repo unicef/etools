@@ -54,6 +54,7 @@ from etools.applications.field_monitoring.planning.models import (
     MonitoringActivity,
     MonitoringActivityActionPoint,
     TPMConcern,
+    VisitGoal,
     YearPlan,
 )
 from etools.applications.field_monitoring.planning.serializers import (
@@ -66,6 +67,7 @@ from etools.applications.field_monitoring.planning.serializers import (
     MonitoringActivitySerializer,
     TemplatedQuestionSerializer,
     TPMConcernSerializer,
+    VisitGoalSerializer,
     YearPlanSerializer,
 )
 from etools.applications.field_monitoring.views import FMBaseViewSet, LinkedAttachmentsViewSet
@@ -148,6 +150,11 @@ class TemplatedQuestionsViewSet(
         return _('Templates')
 
 
+class VisitGoalsViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = VisitGoal.objects.all()
+    serializer_class = VisitGoalSerializer
+
+
 class MonitoringActivitiesViewSet(
     ValidatorViewMixin,
     FMBaseViewSet,
@@ -161,7 +168,7 @@ class MonitoringActivitiesViewSet(
         .select_related('tpm_partner', 'tpm_partner__organization',
                         'visit_lead', 'location', 'location_site')\
         .prefetch_related('team_members', 'partners', 'partners__organization', 'report_reviewers',
-                          'interventions', 'cp_outputs')\
+                          'interventions', 'cp_outputs', 'sections', 'visit_goals')\
         .order_by("-id")
     serializer_class = MonitoringActivitySerializer
     serializer_action_classes = {
