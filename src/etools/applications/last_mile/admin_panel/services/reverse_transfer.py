@@ -1,32 +1,35 @@
+from typing import Optional
+
 from django.db import transaction
 from django.utils import timezone
 
 from etools.applications.last_mile.admin_panel.validators import AdminPanelValidator
-from etools.applications.last_mile.models import Item, Transfer
+from etools.applications.last_mile.models import Item, PointOfInterest, Transfer
 
 
 class ReverseTransfer:
 
-    def __init__(self, transfer_id=None):
+    def __init__(self, transfer_id) -> None:
         self.transfer = Transfer.objects.filter(id=transfer_id).select_related("origin_point", "destination_point", "origin_point__poi_type", "destination_point__poi_type").first()
         self.adminValidator = AdminPanelValidator()
 
-    def decide_origin_and_destination_location(self):
-        final_origin_point = None
-        final_destination_point = None
+    def decide_origin_and_destination_location(self) -> tuple[PointOfInterest, Optional[PointOfInterest]]:
         origin_point = self.transfer.origin_point
         destination_point = self.transfer.destination_point
-        if origin_point and origin_point.poi_type.category.lower() == 'warehouse':
-            final_origin_point = origin_point
-        elif destination_point and destination_point.poi_type.category.lower() == 'warehouse':
-            final_origin_point = destination_point
-        else:
-            final_origin_point = destination_point
-            final_destination_point = origin_point
-        return final_origin_point, final_destination_point
+
+        if origin_point and origin_point.is_warehouse():
+            # checkin, wastage, dispense, etc.
+            return origin_point, None
+
+        if destination_point and destination_point.is_warehouse():
+            # shouldn't happen, just in case
+            return destination_point, None
+
+        # handover
+        return destination_point, origin_point
 
     @transaction.atomic
-    def _create_new_transfer(self):
+    def _create_new_transfer(self) -> Transfer:
         new_transfer_name = f"{self.transfer.partner_organization.name}_reversal_{timezone.now().strftime('%d-%m-%Y %H:%M:%S')}"
         new_status = Transfer.PENDING
         new_type = Transfer.DELIVERY
@@ -53,7 +56,7 @@ class ReverseTransfer:
         Item.all_objects.filter(transfer=self.transfer).update(transfer=new_transfer)
         return new_transfer
 
-    def reverse(self):
+    def reverse(self) -> Transfer:
         old_transfer = self.transfer
         self.adminValidator.validate_reverse_transfer(old_transfer)
         self.adminValidator.validate_transfer_items(old_transfer)
