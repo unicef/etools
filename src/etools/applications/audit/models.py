@@ -1060,24 +1060,23 @@ UNICEFUser = GroupWrapper(code='unicef_user',
 
 
 class FaceForm(TimeStampedModel, models.Model):
-    commitment_ref = models.CharField(max_length=255, verbose_name=_('Commitment Reference'))
+    face_number = models.CharField(max_length=255, verbose_name=_('Face Form Number'))
+    partner = models.ForeignKey(PartnerOrganization, verbose_name=_('Partner'), related_name='faceforms', on_delete=models.CASCADE)
 
     start_date = models.DateField(null=True, blank=True, verbose_name=_('Start Date'))
     end_date = models.DateField(null=True, blank=True, verbose_name=_('End Date'))
+    date_of_liquidation = models.DateField(null=True, blank=True, verbose_name=_('Date of Liquidation'))
+    modality = models.CharField(null=True, blank=True, max_length=255, verbose_name=_('Modality'))
 
-    dct_amt_usd = models.DecimalField(
-        verbose_name=_('Direct Cash Transfer Amount ($)'), default=0, decimal_places=2, max_digits=20
-    )
-    dct_amt_local = models.DecimalField(
-        verbose_name=_('Direct Cash Transfer Amount (local)'), default=0, decimal_places=2, max_digits=20
-    )
+    amount_usd = models.DecimalField(verbose_name=_('Amount ($)'), default=0, decimal_places=2, max_digits=20)
+    amount_local = models.DecimalField(verbose_name=_('Amount (local)'), default=0, decimal_places=2, max_digits=20)
 
     class Meta:
         verbose_name = _('Face Form')
         verbose_name_plural = _('Face Forms')
 
     def __str__(self):
-        return self.commitment_ref
+        return self.face_number
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
