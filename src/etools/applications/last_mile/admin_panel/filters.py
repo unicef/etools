@@ -5,7 +5,7 @@ from django_filters import rest_framework as filters
 from django_filters.constants import EMPTY_VALUES
 
 from etools.applications.last_mile.admin_panel.constants import ALERT_TYPES
-from etools.applications.last_mile.models import PointOfInterest, TransferHistory
+from etools.applications.last_mile.models import PointOfInterest, Transfer, TransferHistory
 from etools.applications.locations.models import Location
 from etools.applications.users.models import Realm
 
@@ -175,3 +175,19 @@ class TransferHistoryFilter(filters.FilterSet):
     class Meta:
         model = TransferHistory
         fields = []
+
+
+class TransferEvidenceFilter(filters.FilterSet):
+    name = filters.CharFilter(field_name="name", lookup_expr="icontains")
+    transfer_type = filters.CharFilter(field_name="transfer_type", lookup_expr="icontains")
+    unicef_release_order = filters.CharFilter(field_name="unicef_release_order", lookup_expr="icontains")
+    status = filters.CharFilter(field_name="status", lookup_expr="icontains")
+    partner_organization = filters.CharFilter(field_name="partner_organization__organization__name", lookup_expr="icontains")
+    from_partner_organization = filters.CharFilter(field_name="from_partner_organization__organization__name", lookup_expr="icontains")
+    recipient_partner_organization = filters.CharFilter(field_name="recipient_partner_organization__organization__name", lookup_expr="icontains")
+    origin_point = filters.CharFilter(field_name="origin_point__name", lookup_expr="icontains")
+    destination_point = filters.CharFilter(field_name="destination_point__name", lookup_expr="icontains")
+
+    class Meta:
+        model = Transfer
+        fields = ('name', 'transfer_type')
