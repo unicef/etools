@@ -1068,6 +1068,7 @@ class FaceForm(TimeStampedModel, models.Model):
     date_of_liquidation = models.DateField(null=True, blank=True, verbose_name=_('Date of Liquidation'))
     modality = models.CharField(null=True, blank=True, max_length=255, verbose_name=_('Modality'))
 
+    currency = CurrencyField(verbose_name=_("Currency of Report"), null=True, blank=True)
     amount_usd = models.DecimalField(verbose_name=_('Amount ($)'), default=0, decimal_places=2, max_digits=20)
     amount_local = models.DecimalField(verbose_name=_('Amount (local)'), default=0, decimal_places=2, max_digits=20)
 
