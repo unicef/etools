@@ -5,8 +5,8 @@ from unicef_restlib.fields import CommaSeparatedExportField
 class MonitoringActivityExportSerializer(serializers.Serializer):
     reference_number = serializers.CharField()
     ref_link = serializers.SerializerMethodField()
-    start_date = serializers.DateField(format='%d/%m/%Y', allow_null=True)
-    end_date = serializers.DateField(format='%d/%m/%Y', allow_null=True)
+    start_date = serializers.DateField(format='%Y/%m/%d', allow_null=True)
+    end_date = serializers.DateField(format='%Y/%m/%d', allow_null=True)
     location = serializers.CharField(allow_null=True)
     location_site = serializers.CharField(allow_null=True)
     sections = CommaSeparatedExportField()

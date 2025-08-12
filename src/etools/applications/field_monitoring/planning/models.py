@@ -4,7 +4,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.fields import GenericRelation
 from django.db import connection, models, transaction
-from django.db.models import Count, Exists, OuterRef, Q
+from django.db.models import Count, Exists, OuterRef, Prefetch, Q
 from django.db.models.base import ModelBase
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
@@ -16,7 +16,7 @@ from sentry_sdk import capture_exception
 from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CodedGenericRelation
 
-from etools.applications.action_points.models import ActionPoint, Category
+from etools.applications.action_points.models import ActionPoint, ActionPointComment, Category
 from etools.applications.core.permissions import import_permissions
 from etools.applications.core.urlresolvers import build_frontend_url
 from etools.applications.environment.notifications import send_notification_with_template
@@ -749,6 +749,82 @@ class MonitoringActivity(
                 checklist_dict['overall'].append(overall_dict)
 
             yield checklist_dict
+
+    def get_export_action_points(self, request):
+        for ap in (MonitoringActivityActionPoint.objects.prefetch_related(
+                Prefetch('comments', ActionPointComment.objects.prefetch_related(
+                    Prefetch('supporting_document', Attachment.objects.select_related('uploaded_by'))
+                ))).filter(monitoring_activity=self).order_by('-due_date')):
+
+            ap_dict = dict(
+                reference_number=ap.reference_number,
+                description=ap.description,
+                assigned_to=getattr(ap.assigned_to, 'full_name', '-'),
+                assigned_by=getattr(ap.assigned_by, 'full_name', '-'),
+                section=getattr(ap.section, 'name', '-'),
+                office=getattr(ap.office, 'name', '-'),
+                due_date=ap.due_date,
+                related_to=ap.related_object_str,
+                category=getattr(ap.category, 'description', '-'),
+                status=ap.status,
+                is_high_priority='Yes' if ap.high_priority else 'No',
+                comments=[]
+            )
+            for comment in ap.comments.all():
+                doc = comment.supporting_document.all().first()
+                comment_dict = dict(
+                    comment=comment.comment,
+                    submit_date=comment.submit_date,
+                    user=getattr(comment.user, 'full_name', '-'),
+                    filename=doc.filename if doc else "-",
+                    url_path=request.build_absolute_uri(doc.file.url) if doc else "-",
+                )
+                ap_dict['comments'].append(comment_dict)
+
+            yield ap_dict
+
+    def get_export_reported_attachments(self, request):
+        for att in self.report_attachments.all().select_related('file_type'):
+            att_dict = dict(date_uploaded=att.created,
+                            doc_type=att.file_type.label,
+                            filename=att.filename,
+                            url_path=request.build_absolute_uri(att.file.url) if att.file else "-")
+            yield att_dict
+
+    def get_export_related_attachments(self, request):
+        for att in self.attachments.all().select_related('file_type'):
+            att_dict = dict(date_uploaded=att.created,
+                            doc_type=att.file_type.label,
+                            filename=att.filename,
+                            url_path=request.build_absolute_uri(att.file.url) if att.file else "-")
+            yield att_dict
+
+    def get_export_checklist_attachments(self, request):
+        for checklist in self.checklists.all():
+            checklist_overall_findings = checklist.overall_findings.all()
+
+            attachment_qs = Attachment.objects.filter(
+                content_type__app_label=checklist_overall_findings.model._meta.app_label,
+                content_type__model=checklist_overall_findings.model._meta.model_name,
+                object_id__in=checklist_overall_findings.values_list('id', flat=True)
+            ).order_by('object_id')
+
+            for att in attachment_qs:
+                att_dict = dict(method=checklist.method.name,
+                                data_collector=checklist.author.full_name,
+                                method_type=checklist.information_source,
+                                date_uploaded=att.created,
+                                doc_type=att.file_type.label,
+                                filename=att.filename,
+                                url_path=request.build_absolute_uri(att.file.url) if att.file else "-")
+                checklist_overall_finding = checklist_overall_findings.get(id=att.object_id)
+                related_to = (checklist_overall_finding.partner or checklist_overall_finding.cp_output or
+                              checklist_overall_finding.intervention)
+                if related_to:
+                    att_dict['related_to'] = related_to._meta.verbose_name.title()
+                    att_dict['related_name'] = getattr(related_to, 'name', '') or getattr(related_to, 'reference_number', '')
+
+                yield att_dict
 
 
 class MonitoringActivityActionPointManager(models.Manager):
