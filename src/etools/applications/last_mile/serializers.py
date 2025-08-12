@@ -279,17 +279,20 @@ class ItemSplitSerializer(serializers.ModelSerializer):
             material=self.instance.material,
             origin_transfer=self.instance.origin_transfer,
             base_quantity=self.instance.base_quantity if self.instance.base_quantity else self.instance.quantity,
+            base_uom=self.instance.base_uom if self.instance.base_uom else self.instance.material.original_uom,
             quantity=self.validated_data['quantities'].pop(),
             **model_to_dict(
                 self.instance,
-                exclude=['id', 'created', 'modified', 'transfer', 'material', 'transfers_history', 'quantity', 'base_quantity', 'origin_transfer'])
+                exclude=['id', 'created', 'modified', 'transfer', 'material', 'transfers_history', 'quantity', 'base_quantity', 'origin_transfer', 'base_uom'])
         )
         _item.save()
         _item.transfers_history.add(self.instance.transfer)
         if not self.instance.base_quantity:
             self.instance.base_quantity = self.instance.quantity
+        if not self.instance.base_uom:
+            self.instance.base_uom = self.instance.base_uom if self.instance.base_uom else self.instance.material.original_uom
         self.instance.quantity = self.validated_data['quantities'].pop()
-        self.instance.save(update_fields=['quantity', 'base_quantity'])
+        self.instance.save(update_fields=['quantity', 'base_quantity', 'base_uom'])
 
 
 class TransferSerializer(serializers.ModelSerializer):
@@ -375,11 +378,13 @@ class TransferCheckinSerializer(TransferBaseSerializer):
                 quantity = original_item.quantity - checkin_item['quantity']
                 original_item.quantity = checkin_item['quantity']
                 original_item.base_quantity = base_quantity
+                original_item.base_uom = original_item.uom if original_item.uom else original_item.material.original_uom
                 original_item.origin_transfer = original_item.transfer
-                original_item.save(update_fields=['quantity', 'origin_transfer', 'base_quantity'])
+                original_item.save(update_fields=['quantity', 'origin_transfer', 'base_quantity', 'base_uom'])
             else:  # is surplus
                 original_item.base_quantity = base_quantity
-                original_item.save(update_fields=['base_quantity'])
+                original_item.base_oum = original_item.uom if original_item.uom else original_item.material.original_uom
+                original_item.save(update_fields=['base_quantity', 'base_uom'])
                 quantity = checkin_item['quantity'] - original_item.quantity
 
             _item = models.Item(
@@ -388,10 +393,11 @@ class TransferCheckinSerializer(TransferBaseSerializer):
                 quantity=quantity,
                 material=original_item.material,
                 hidden=original_item.should_be_hidden_for_partner,
+                base_uom=original_item.uom if original_item.uom else original_item.material.original_uom,
                 **model_to_dict(
                     original_item,
                     exclude=['id', 'created', 'modified', 'transfer', 'transfers_history', 'quantity',
-                             'material', 'hidden', 'origin_transfer']
+                             'material', 'hidden', 'origin_transfer', 'base_uom']
                 )
             )
             _item.save()
@@ -410,12 +416,13 @@ class TransferCheckinSerializer(TransferBaseSerializer):
                 surplus.append(checkin_item)
         return short, surplus
 
-    def update_base_quantity(self, items):
+    def update_base_quantity_and_base_uom(self, items):
         list_items_update = []
         for item in items:
             item.base_quantity = item.quantity
+            item.base_uom = item.uom if item.uom else item.material.original_uom
             list_items_update.append(item)
-        models.Item.objects.bulk_update(list_items_update, ['base_quantity'])
+        models.Item.objects.bulk_update(list_items_update, ['base_quantity', 'base_uom'])
 
     @transaction.atomic
     def update(self, instance, validated_data):
@@ -476,7 +483,7 @@ class TransferCheckinSerializer(TransferBaseSerializer):
             instance = super().update(instance, validated_data)
             instance.items.exclude(material__partner_material__partner_organization=instance.partner_organization).update(hidden=True)
             if not surplus_items and not short_items:
-                self.update_base_quantity(instance.items.all())
+                self.update_base_quantity_and_base_uom(instance.items.all())
             instance.refresh_from_db()
             is_unicef_warehouse = False
             if instance.origin_point:
@@ -559,11 +566,12 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
                     wastage_type=wastage_type,
                     quantity=checkout_item['quantity'],
                     base_quantity=checkout_item['quantity'],
+                    base_uom=original_item.uom if original_item.uom else original_item.material.original_uom,
                     material=original_item.material,
                     **model_to_dict(
                         original_item,
                         exclude=['id', 'created', 'modified', 'transfer', 'wastage_type',
-                                 'transfers_history', 'quantity', 'material', 'origin_transfer', 'base_quantity']
+                                 'transfers_history', 'quantity', 'material', 'origin_transfer', 'base_quantity', 'base_uom']
                     )
                 )
                 new_item.save()
