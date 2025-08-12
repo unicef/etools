@@ -54,6 +54,7 @@ from etools.applications.audit.models import (
     Auditor,
     Engagement,
     EngagementActionPoint,
+    FaceForm,
     MicroAssessment,
     SpecialAudit,
     SpotCheck,
@@ -86,8 +87,8 @@ from etools.applications.audit.serializers.engagement import (
     EngagementHactSerializer,
     EngagementListSerializer,
     EngagementSerializer,
+    FaceFormSerializer,
     MicroAssessmentSerializer,
-    PartnerFaceFormSerializer,
     ReportAttachmentSerializer,
     SpecialAuditSerializer,
     SpotCheckSerializer,
@@ -514,19 +515,18 @@ class SpecialAuditViewSet(EngagementManagementMixin, EngagementViewSet):
         return super().export_csv(request, *args, **kwargs)
 
 
-class FacereportViewSet(
-    mixins.RetrieveModelMixin,
+class FaceFormListViewSet(
+    BaseAuditViewSet,
+    mixins.ListModelMixin,
     viewsets.GenericViewSet
 ):
-    permission_classes = [IsAuthenticated, ]
-    queryset = PartnerOrganization.objects.filter(hidden=False)
-    serializer_class = PartnerFaceFormSerializer
+    metadata_class = PermissionBasedMetadata
+    permission_classes = BaseAuditViewSet.permission_classes
+    queryset = FaceForm.objects.all()
+    serializer_class = FaceFormSerializer
 
-    def get_serializer_context(self):
-        context = super().get_serializer_context()
-        context['businessarea'] = self.request.user.profile.country.business_area_code
-        context['country_currency'] = self.request.user.profile.country.local_currency
-        return context
+    def get_queryset(self):
+        return super().get_queryset().filter(partner_id=int(self.kwargs['partner_pk']))
 
 
 class AuditorStaffMembersViewSet(

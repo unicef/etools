@@ -1,4 +1,4 @@
-from django.urls import include, re_path
+from django.urls import include, path, re_path
 
 from rest_framework_nested import routers
 from unicef_restlib.routers import NestedComplexRouter
@@ -14,7 +14,6 @@ root_api.register(r'spot-checks', views.SpotCheckViewSet, basename='spot-checks'
 root_api.register(r'staff-spot-checks', views.StaffSpotCheckViewSet, basename='staff-spot-checks')
 root_api.register(r'audits', views.AuditViewSet, basename='audits')
 root_api.register(r'special-audits', views.SpecialAuditViewSet, basename='special-audits')
-root_api.register(r'face-reports', views.FacereportViewSet, basename='facereports')
 
 auditor_staffmember_api = NestedComplexRouter(root_api, r'audit-firms', lookup='auditor_firm')
 auditor_staffmember_api.register(r'staff-members', views.AuditorStaffMembersViewSet, basename='auditorstaffmembers')
@@ -56,5 +55,12 @@ urlpatterns = [
         r'^special-audit/(?P<object_pk>\d+)/links',
         view=views.SpecialAuditAttachmentLinksView.as_view(),
         name='special-audit-links'
+    ),
+    path(
+        'face-forms/<int:partner_pk>/',
+        view=views.FaceFormListViewSet.as_view(
+            {'get': 'list'},
+        ),
+        name='face-forms',
     ),
 ]

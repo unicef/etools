@@ -12,7 +12,6 @@ from unicef_attachments.models import Attachment, FileType
 from unicef_attachments.serializers import AttachmentSerializerMixin
 from unicef_restlib.fields import SeparatedReadWriteField
 from unicef_restlib.serializers import WritableNestedParentSerializerMixin, WritableNestedSerializerMixin
-from unicef_vision.utils import get_data_from_insight
 
 from etools.applications.action_points.categories.models import Category
 from etools.applications.action_points.categories.serializers import CategoryModelChoiceField
@@ -46,7 +45,6 @@ from etools.applications.audit.serializers.risks import (
     KeyInternalWeaknessSerializer,
     RiskRootSerializer,
 )
-from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.serializers.interventions_v2 import BaseInterventionListSerializer
 from etools.applications.partners.serializers.partner_organization_v2 import (
     MinimalPartnerOrganizationListSerializer,
@@ -77,15 +75,37 @@ class PartnerOrganizationLightSerializer(PartnerOrganizationListSerializer):
 
 class FaceFormSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(required=False)
-    commitment_ref = serializers.CharField(required=True)
+    face_number = serializers.CharField(required=True)
     start_date = serializers.DateField(required=False)
     end_date = serializers.DateField(required=False)
-    dct_amt_usd = serializers.CharField(required=False)
-    dct_amt_local = serializers.CharField(required=False)
+
+    modality = serializers.CharField(required=False)
+
+    currency = serializers.CharField(required=False)
+    amount_usd = serializers.CharField(required=False)
+    amount_local = serializers.CharField(required=False)
 
     class Meta:
         model = FaceForm
-        fields = ('id', 'commitment_ref', 'start_date', 'end_date', 'dct_amt_usd', 'dct_amt_local')
+        fields = '__all__'
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        # Hardcoded until we get the data
+        import random
+        data['end_date'] = datetime.date(random.randint(2023, 2024), random.randint(1, 12), random.randint(1, 28)).strftime("%Y-%m-%d")
+        data['amount_usd'] = '{0:.2f}'.format(round(random.uniform(1000.99, 10000.99), 2))
+        data['amount_local'] = '{0:.2f}'.format((Decimal(data['amount_usd']) * Decimal(0.8)))
+        return data
+
+    def get_dct_amt_local(self, obj):
+        # Hardcoded until we get the data
+        return '{0:.2f}'.format((Decimal(obj['DCT_AMT_USD']) * Decimal(0.8)))
+
+    def get_start_date(self, obj):
+        # Hardcoded until we get the data
+        import random
+        return datetime.date(random.randint(2000, 2020), random.randint(1, 12), random.randint(1, 28)).strftime("%Y-%m-%d")
 
 
 class AttachmentField(serializers.Field):
@@ -709,57 +729,3 @@ class SpecialAuditSerializer(EngagementSerializer):
             'total_value': {'required': False},
             'total_value_local': {'required': False}
         })
-
-
-class PartnerFaceFormSerializer(serializers.ModelSerializer):
-    rows = serializers.SerializerMethodField()
-
-    def get_vision_data(self, obj):
-        if not hasattr(self, '_vision_data'):
-            valid_response, response = get_data_from_insight(
-                f'dcts/?vendor={obj.vendor_number}',
-                {
-                    "vendor_code": obj.vendor_number,
-                    "businessarea": self.context.get('businessarea')
-                }
-            )
-            self._vision_data = response
-        return self._vision_data['ROWSET']['ROW']
-
-    def get_rows(self, obj):
-        return RowSerializer(self.get_vision_data(obj), many=True).data
-
-    class Meta:
-        model = PartnerOrganization
-        fields = (
-            "id",
-            "name",
-            "vendor_number",
-            "rows",
-        )
-
-
-class RowSerializer(serializers.Serializer):
-    wbs_element_ex = serializers.CharField(source='WBS_ELEMENT_EX')
-    grant_ref = serializers.CharField(source='GRANT_REF')
-    donor_name = serializers.CharField(source='DONOR_NAME')
-    end_date = serializers.SerializerMethodField()
-    commitment_ref = serializers.CharField(source='COMMITMENT_REF')
-    dct_amt_usd = serializers.CharField(source='DCT_AMT_USD')
-    dct_amt_local = serializers.SerializerMethodField()
-    start_date = serializers.SerializerMethodField()
-
-    def get_end_date(self, obj):
-        if not obj['EXPIRY_DATE']:
-            return ""
-        dt = datetime.datetime.strptime(obj['EXPIRY_DATE'], "%d-%b-%y")
-        return dt.strftime("%Y-%m-%d")
-
-    def get_dct_amt_local(self, obj):
-        # Hardcoded until we get the data
-        return '{0:.2f}'.format((Decimal(obj['DCT_AMT_USD']) * Decimal(0.8)))
-
-    def get_start_date(self, obj):
-        # Hardcoded until we get the data
-        import random
-        return datetime.date(random.randint(2000, 2020), random.randint(1, 12), random.randint(1, 28)).strftime("%Y-%m-%d")

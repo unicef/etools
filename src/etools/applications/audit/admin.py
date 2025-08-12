@@ -70,7 +70,9 @@ class SpotCheckAdmin(EngagementAdmin):
 
 @admin.register(FaceForm)
 class FaceFormAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('__str__', 'partner')
+    raw_id_fields = ('partner',)
+    search_fields = ('face_number', 'partner__organization__name')
 
 
 @admin.register(MicroAssessment)
