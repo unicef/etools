@@ -23,6 +23,7 @@ from etools.applications.last_mile.admin_panel.csv_importer import CsvImporter
 from etools.applications.last_mile.admin_panel.filters import (
     AlertNotificationFilter,
     LocationsFilter,
+    TransferEvidenceFilter,
     TransferHistoryFilter,
     UserFilter,
     UserLocationsFilter,
@@ -520,7 +521,22 @@ class TransferHistoryListView(mixins.ListModelMixin, GenericViewSet):
 class TransferEvidenceListView(mixins.RetrieveModelMixin, GenericViewSet):
     permission_classes = [IsLMSMAdmin]
     serializer_class = TransferLogAdminSerializer
+    pagination_class = DynamicPageNumberPagination
     lookup_field = 'transfer_history_id'
+
+    filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
+
+    filterset_class = TransferEvidenceFilter
+
+    search_fields = ['unicef_release_order',
+                     'name',
+                     'transfer_type',
+                     'status',
+                     'partner_organization__organization__name',
+                     'from_partner_organization__organization__name',
+                     'recipient_partner_organization__organization__name',
+                     'destination_point__name',
+                     'origin_point__name']
 
     def get_queryset(self):
         return models.Transfer.objects.all()
@@ -530,6 +546,7 @@ class TransferEvidenceListView(mixins.RetrieveModelMixin, GenericViewSet):
         queryset = models.Transfer.objects.select_related(
             'from_partner_organization__organization',
             'recipient_partner_organization__organization',
+            'partner_organization__organization',
             'origin_point',
             'destination_point'
         ).filter(transfer_history_id=transfer_history_id, items__isnull=False).only(
@@ -547,7 +564,16 @@ class TransferEvidenceListView(mixins.RetrieveModelMixin, GenericViewSet):
             'destination_point',
             'from_partner_organization__organization__name',
             'recipient_partner_organization__organization__name',
+            'partner_organization__organization__name'
         ).distinct()
+        queryset = self.filter_queryset(queryset)
+
+        page = self.paginate_queryset(queryset)
+
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 

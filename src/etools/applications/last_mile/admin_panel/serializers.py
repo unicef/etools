@@ -670,7 +670,9 @@ class TransferLogAdminSerializer(serializers.ModelSerializer):
         return obj.destination_point.name if obj.destination_point else None
 
     def get_from_partner_organization(self, obj):
-        return obj.from_partner_organization.organization.name if obj.from_partner_organization else None
+        if obj.from_partner_organization:
+            return obj.from_partner_organization.organization.name
+        return obj.partner_organization.organization.name if obj.partner_organization else None
 
     def get_recipient_partner_organization(self, obj):
         return obj.recipient_partner_organization.organization.name if obj.recipient_partner_organization else None
@@ -849,10 +851,14 @@ class MaterialsLightSerializer(serializers.ModelSerializer):
 
 class ItemTransferRevertSerializer(serializers.ModelSerializer):
     material = MaterialsLightSerializer(read_only=True)
+    uom = serializers.SerializerMethodField(read_only=True)
+
+    def get_uom(self, obj):
+        return obj.uom if obj.uom else obj.material.original_uom
 
     class Meta:
         model = models.Item
-        fields = ('material', 'quantity', 'modified', 'batch_id', 'description', 'mapped_description')
+        fields = ('material', 'quantity', 'modified', 'batch_id', 'description', 'mapped_description', 'uom')
 
 
 class TransferItemAdminSerializer(serializers.ModelSerializer):

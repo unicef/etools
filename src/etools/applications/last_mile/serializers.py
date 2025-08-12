@@ -17,7 +17,6 @@ from etools.applications.last_mile.tasks import (
     notify_wastage_transfer,
 )
 from etools.applications.last_mile.validators import TransferCheckOutValidator
-from etools.applications.partners.models import Agreement, PartnerOrganization
 from etools.applications.partners.serializers.partner_organization_v2 import (
     MinimalPartnerOrganizationListSerializer,
     PartnerOrganizationListSerializer,
@@ -512,8 +511,7 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
 
     def validate_partner_id(self, value):
         if value:
-            if not PartnerOrganization.objects.filter(agreements__status=Agreement.SIGNED, pk=value).exists() or \
-                    self.context['request'].user.partner.pk == value:
+            if self.context['request'].user.partner.pk == value:
                 raise ValidationError(_('The provided partner is not eligible for a handover.'))
         return value
 

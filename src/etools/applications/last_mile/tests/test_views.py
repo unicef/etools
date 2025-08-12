@@ -23,7 +23,6 @@ from etools.applications.last_mile.tests.factories import (
     TransferFactory,
 )
 from etools.applications.organizations.tests.factories import OrganizationFactory
-from etools.applications.partners.models import Agreement
 from etools.applications.partners.tests.factories import AgreementFactory, PartnerFactory
 from etools.applications.users.tests.factories import UserFactory
 
@@ -690,13 +689,12 @@ class TestTransferView(BaseTenantTestCase):
     def test_checkout_handover_partner_validation(self):
         item_1 = ItemFactory(quantity=11, transfer=self.checked_in)
         destination = PointOfInterestFactory()
-        agreement = AgreementFactory(status=Agreement.DRAFT)
         checkout_data = {
             "transfer_type": models.Transfer.HANDOVER,
             "destination_point": destination.pk,
             "comment": "",
             "proof_file": self.attachment.pk,
-            "partner_id": agreement.partner.id,
+            "partner_id": self.partner.id,
             "items": [
                 {"id": item_1.pk, "quantity": 9},
             ],
