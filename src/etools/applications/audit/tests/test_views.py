@@ -26,6 +26,7 @@ from etools.applications.audit.tests.factories import (
     AuditorUserFactory,
     AuditPartnerFactory,
     EngagementFactory,
+    FaceFormFactory,
     MicroAssessmentFactory,
     PartnerWithAgreementsFactory,
     PurchaseOrderFactory,
@@ -556,15 +557,7 @@ class BaseTestEngagementsCreateViewSet(EngagementTransitionsTestCaseMixin):
             'shared_ip_with': self.engagement.shared_ip_with,
         }
         if self.create_data['engagement_type'] in [Engagement.TYPE_AUDIT, Engagement.TYPE_SPOT_CHECK]:
-            self.create_data['face_forms'] = [
-                {
-                    "commitment_ref": "123",
-                    "start_date": "2025-07-11",
-                    "end_date": "2025-07-11",
-                    "dct_amt_usd": "321.00",
-                    "dct_amt_local": "222.00"
-                }
-            ]
+            self.create_data['face_forms'] = [FaceFormFactory().pk]
 
     def _do_create(self, user, data):
         data = data or {}
@@ -680,32 +673,18 @@ class TestAuditCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEngage
 
     def test_with_face_forms(self):
         data = copy(self.create_data)
-        data['face_forms'] = [
-            {
-                "commitment_ref": "123",
-                "start_date": "2025-07-11",
-                "end_date": "2025-07-11",
-                "dct_amt_usd": "100.00",
-                "dct_amt_local": "11.00"
-            },
-            {
-                "commitment_ref": "1234",
-                "start_date": "2025-07-11",
-                "end_date": "2025-09-11",
-                "dct_amt_usd": "200.00",
-                "dct_amt_local": "22.00"
-            }
-        ]
+        face_1 = FaceFormFactory()
+        face_2 = FaceFormFactory()
+        data['face_forms'] = [face_1.pk, face_2.pk]
+
         response = self._do_create(self.unicef_focal_point, data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         audit = Audit.objects.get(pk=response.data['id'])
         self.assertEqual(audit.face_forms.count(), response.data['face_forms'].__len__())
-        self.assertEqual(audit.face_forms.first().commitment_ref, response.data['face_forms'][0]['commitment_ref'])
-        self.assertEqual(audit.face_forms.first().dct_amt_usd.__str__(), response.data['face_forms'][0]['dct_amt_usd'])
-        self.assertEqual(audit.face_forms.first().dct_amt_local.__str__(), response.data['face_forms'][0]['dct_amt_local'])
-        self.assertEqual(audit.total_value, 300)
-        self.assertEqual(audit.total_value_local, 33)
-        self.assertEqual(audit.exchange_rate.__str__(), round(200 / 22, 2).__str__())
+        self.assertEqual(face_1.face_number, response.data['face_forms'][0]['face_number'])
+        self.assertEqual(face_1.amount_usd.__str__(), response.data['face_forms'][0]['amount_usd'])
+        self.assertEqual(face_1.amount_local.__str__(), response.data['face_forms'][0]['amount_local'])
+        self.assertEqual(audit.exchange_rate.__str__(), round(face_1.amount_usd / face_1.amount_local, 2).__str__())
         self.assertEqual(audit.total_value, Decimal(response.data['total_value']))
         self.assertEqual(audit.total_value_local, Decimal(response.data['total_value_local']))
 
@@ -851,15 +830,8 @@ class TestSpecialAuditCreateViewSet(BaseTestEngagementsCreateViewSet, BaseTenant
 
     def test_face_forms_with_total(self):
         data = copy(self.create_data)
-        data['face_forms'] = [
-            {
-                "commitment_ref": "123",
-                "start_date": "2025-07-11",
-                "end_date": "2025-07-11",
-                "dct_amt_usd": "321.00",
-                "dct_amt_local": "222.00"
-            }
-        ]
+        face_1 = FaceFormFactory()
+        data['face_forms'] = [face_1.pk]
         data['total_value'] = '333'
         data['total_value_local'] = '444'
 
@@ -868,9 +840,9 @@ class TestSpecialAuditCreateViewSet(BaseTestEngagementsCreateViewSet, BaseTenant
 
         sp_audit = SpecialAudit.objects.get(pk=response.data['id'])
         self.assertEqual(sp_audit.face_forms.count(), response.data['face_forms'].__len__())
-        self.assertEqual(sp_audit.face_forms.first().commitment_ref, response.data['face_forms'][0]['commitment_ref'])
-        self.assertEqual(sp_audit.face_forms.first().dct_amt_usd.__str__(), response.data['face_forms'][0]['dct_amt_usd'])
-        self.assertEqual(sp_audit.face_forms.first().dct_amt_local.__str__(), response.data['face_forms'][0]['dct_amt_local'])
+        self.assertEqual(face_1.face_number, response.data['face_forms'][0]['face_number'])
+        self.assertEqual(face_1.amount_usd.__str__(), response.data['face_forms'][0]['amount_usd'])
+        self.assertEqual(face_1.amount_local.__str__(), response.data['face_forms'][0]['amount_local'])
         self.assertEqual(sp_audit.total_value, 333)
         self.assertEqual(sp_audit.total_value_local, 444)
         self.assertEqual(sp_audit.exchange_rate.__str__(), round(333 / 444, 2).__str__())

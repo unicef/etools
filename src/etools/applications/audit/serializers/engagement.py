@@ -93,19 +93,13 @@ class FaceFormSerializer(serializers.ModelSerializer):
         data = super().to_representation(instance)
         # Hardcoded until we get the data
         import random
-        data['end_date'] = datetime.date(random.randint(2023, 2024), random.randint(1, 12), random.randint(1, 28)).strftime("%Y-%m-%d")
-        data['amount_usd'] = '{0:.2f}'.format(round(random.uniform(1000.99, 10000.99), 2))
-        data['amount_local'] = '{0:.2f}'.format((Decimal(data['amount_usd']) * Decimal(0.8)))
+        if not data['end_date']:
+            data['end_date'] = datetime.date(random.randint(2023, 2024), random.randint(1, 12), random.randint(1, 28)).strftime("%Y-%m-%d")
+        if not data['amount_usd']:
+            data['amount_usd'] = '{0:.2f}'.format(round(random.uniform(1000.99, 10000.99), 2))
+        if not data['amount_local']:
+            data['amount_local'] = '{0:.2f}'.format((Decimal(data['amount_usd']) * Decimal(0.8)))
         return data
-
-    def get_dct_amt_local(self, obj):
-        # Hardcoded until we get the data
-        return '{0:.2f}'.format((Decimal(obj['DCT_AMT_USD']) * Decimal(0.8)))
-
-    def get_start_date(self, obj):
-        # Hardcoded until we get the data
-        import random
-        return datetime.date(random.randint(2000, 2020), random.randint(1, 12), random.randint(1, 28)).strftime("%Y-%m-%d")
 
 
 class AttachmentField(serializers.Field):
@@ -348,7 +342,7 @@ class EngagementSerializer(
 
     face_forms = SeparatedReadWriteField(
         read_field=FaceFormSerializer(many=True),
-        write_field=FaceFormRelatedField(many=True, required=False),
+        write_field=serializers.PrimaryKeyRelatedField(many=True, queryset=FaceForm.objects.all(), required=False),
         required=False,
         label=_("FACE Forms")
     )

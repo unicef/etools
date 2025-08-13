@@ -12,6 +12,7 @@ from etools.applications.audit.models import (
     Auditor,
     DetailedFindingInfo,
     Engagement,
+    FaceForm,
     Finding,
     KeyInternalControl,
     MicroAssessment,
@@ -224,3 +225,12 @@ class SpecificProcedureFactory(factory.django.DjangoModelFactory):
     audit = factory.SubFactory(SpecialAuditFactory)
     description = fuzzy.FuzzyText(length=100)
     finding = fuzzy.FuzzyText(length=100)
+
+
+class FaceFormFactory(factory.django.DjangoModelFactory):
+    partner = factory.SubFactory(PartnerFactory)
+    amount_usd = fuzzy.FuzzyDecimal(1000.99, 10000.99)
+    amount_local = fuzzy.FuzzyDecimal(1000.99, 10000.99)
+
+    class Meta:
+        model = FaceForm

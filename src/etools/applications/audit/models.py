@@ -240,11 +240,12 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
             return
 
         if self.engagement_type in [self.TYPE_AUDIT, self.TYPE_SPOT_CHECK]:
-            self.total_value = face_form_qs.aggregate(Sum("dct_amt_usd"))['dct_amt_usd__sum']
-            self.total_value_local = face_form_qs.aggregate(Sum("dct_amt_local"))['dct_amt_local__sum']
+            self.total_value = face_form_qs.aggregate(Sum("amount_usd"))['amount_usd__sum']
+            self.total_value_local = face_form_qs.aggregate(Sum("amount_local"))['amount_local__sum']
 
             latest_face = face_form_qs.order_by('-end_date').first()
-            self.exchange_rate = latest_face.dct_amt_usd / latest_face.dct_amt_local
+            if latest_face.amount_local:
+                self.exchange_rate = latest_face.amount_usd / latest_face.amount_local
 
         elif self.engagement_type == self.TYPE_SPECIAL_AUDIT and self.total_value_local:
             self.exchange_rate = self.total_value / self.total_value_local
