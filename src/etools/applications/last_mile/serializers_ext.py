@@ -51,7 +51,7 @@ class IngestRowSerializer(serializers.Serializer):
     ItemDescription = serializers.CharField(required=False, allow_blank=True)
     Quantity = serializers.IntegerField(required=True, min_value=1)
     UOM = serializers.CharField(max_length=50)
-    BatchNumber = serializers.CharField(required=False, allow_blank=True, max_length=50)
+    BatchNumber = serializers.CharField(required=False, allow_blank=True, allow_null=True, max_length=50)
     ExpiryDate = serializers.DateField(required=False, allow_null=True)
     POItem = serializers.CharField(required=False, allow_blank=True, max_length=50)
     AmountUSD = serializers.DecimalField(required=False, max_digits=19, decimal_places=4)
