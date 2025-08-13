@@ -107,6 +107,11 @@ class FaceFormsSynchronizer(VisionDataTenantSynchronizer):
             for funding_item in funding_items:
                 face_dict['amount_local'] += Decimal(funding_item.get('OVERALL_AMOUNT', 0))
                 face_dict['amount_usd'] += Decimal(funding_item.get('OVERALL_AMOUNT_USD', 0))
+        # Hardcoded until we get the data
+        import random
+        face_dict['end_date'] = datetime.date(random.randint(2023, 2024), random.randint(1, 12), random.randint(1, 28)).strftime("%Y-%m-%d")
+        face_dict['amount_usd'] = round(random.uniform(1000.99, 10000.99), 2)
+        face_dict['amount_local'] = Decimal(face_dict['amount_usd']) * Decimal(0.8)
         return face_dict
 
     @staticmethod

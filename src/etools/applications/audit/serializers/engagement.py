@@ -89,17 +89,17 @@ class FaceFormSerializer(serializers.ModelSerializer):
         model = FaceForm
         fields = '__all__'
 
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
+    # def to_representation(self, instance):
+    #     data = super().to_representation(instance)
         # Hardcoded until we get the data
-        import random
-        if not data['end_date']:
-            data['end_date'] = datetime.date(random.randint(2023, 2024), random.randint(1, 12), random.randint(1, 28)).strftime("%Y-%m-%d")
-        if not data['amount_usd']:
-            data['amount_usd'] = '{0:.2f}'.format(round(random.uniform(1000.99, 10000.99), 2))
-        if not data['amount_local']:
-            data['amount_local'] = '{0:.2f}'.format((Decimal(data['amount_usd']) * Decimal(0.8)))
-        return data
+        # import random
+        # if not data['end_date']:
+        #     data['end_date'] = datetime.date(random.randint(2023, 2024), random.randint(1, 12), random.randint(1, 28)).strftime("%Y-%m-%d")
+        # if not float(data['amount_usd']):
+        #     data['amount_usd'] = '{0:.2f}'.format(round(random.uniform(1000.99, 10000.99), 2))
+        # if not float(data['amount_local']):
+        #     data['amount_local'] = '{0:.2f}'.format((Decimal(data['amount_usd']) * Decimal(0.8)))
+        # return data
 
 
 class AttachmentField(serializers.Field):
