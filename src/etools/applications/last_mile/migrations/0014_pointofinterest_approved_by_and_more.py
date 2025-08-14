@@ -11,7 +11,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('last_mile', '0011_alter_transfer_dispense_type'),
+        ('last_mile', '0013_item_base_uom'),
     ]
 
     operations = [
