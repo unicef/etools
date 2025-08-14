@@ -36,6 +36,7 @@ from etools.applications.last_mile.admin_panel.serializers import (
     AlertNotificationSerializer,
     AlertTypeSerializer,
     AuthUserPermissionsDetailSerializer,
+    BulkReviewPointOfInterestSerializer,
     BulkUpdateLastMileProfileStatusSerializer,
     ImportFileSerializer,
     ItemTransferAdminSerializer,
@@ -254,6 +255,10 @@ class LocationsViewSet(mixins.ListModelMixin,
             return PointOfInterestWithCoordinatesSerializer
         if self.action == 'list_export_csv':
             return PointOfInterestExportSerializer
+        if self.action == 'bulk_review':
+            return BulkReviewPointOfInterestSerializer
+        if self.action == '_import_file':
+            return ImportFileSerializer
         return PointOfInterestAdminSerializer
 
     @action(
@@ -272,6 +277,25 @@ class LocationsViewSet(mixins.ListModelMixin,
                 timezone.now().date(),
             )
         })
+
+    @action(detail=False, methods=['post'], url_path='import/xlsx')
+    def _import_file(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        excel_file = serializer.validated_data['file']
+        valid, out = CsvImporter().import_locations(excel_file, request.user)
+        if not valid:
+            resp = HttpResponse(out.getvalue(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            resp['Content-Disposition'] = f'attachment; filename="checked_{excel_file.name}"'
+            return resp
+        return Response({"valid": valid}, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['put'], url_path='bulk-review')
+    def bulk_review(self, request, *args, **kwargs):
+        serializer_data = BulkReviewPointOfInterestSerializer(data=request.data)
+        serializer_data.is_valid(raise_exception=True)
+        serializer_data.update(serializer_data.validated_data, request.user)
+        return Response(serializer_data.data, status=status.HTTP_200_OK)
 
 
 class PointOfInterestsLightViewSet(mixins.ListModelMixin,
