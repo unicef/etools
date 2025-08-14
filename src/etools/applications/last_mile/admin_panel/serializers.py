@@ -520,6 +520,24 @@ class ItemAdminSerializer(serializers.ModelSerializer):
         fields = ('material', 'quantity', 'modified', 'uom', 'batch_id', 'description')
 
 
+class ItemTransferAdminSerializer(serializers.ModelSerializer):
+    material = MaterialAdminSerializer()
+    description = serializers.SerializerMethodField(read_only=True)
+    transfer_name = serializers.SerializerMethodField(read_only=True)
+
+    def get_transfer_name(self, obj):
+        if not obj.transfer:
+            return None
+        return obj.transfer.name or obj.transfer.unicef_release_order
+
+    def get_description(self, obj):
+        return obj.description
+
+    class Meta:
+        model = models.Item
+        fields = ('material', 'quantity', 'modified', 'uom', 'batch_id', 'description', "transfer_name", "base_uom", "base_quantity")
+
+
 class TransferItemSerializer(serializers.ModelSerializer):
     items = ItemAdminSerializer(many=True, read_only=True)
     destination_point = SimplePointOfInterestSerializer(read_only=True)

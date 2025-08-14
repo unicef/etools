@@ -38,7 +38,8 @@ class TestStockManagementViewSet(BaseTenantTestCase):
 
     def test_get_stock_management(self):
         response = self.forced_auth_req('get', self.url, user=self.partner_staff)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("'poi_id': ErrorDetail(string='This query parameter is required.", str(response.data))
 
     def test_get_stock_management_unauthorized(self):
         response = self.forced_auth_req('get', self.url, user=self.simple_user)
@@ -51,7 +52,7 @@ class TestStockManagementViewSet(BaseTenantTestCase):
     def test_list_transfer_items_without_poi_id(self):
         # Without poi_id query param, the queryset should be empty.
         response = self.forced_auth_req('get', self.url, user=self.partner_staff, data={})
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(len(response.data.get("results", [])), 0)
 
     def test_list_transfer_items_with_valid_poi_id(self):
@@ -73,7 +74,7 @@ class TestStockManagementViewSet(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         results = response.data.get("results", [])
         self.assertGreaterEqual(len(results), 1)
-        self.assertTrue(results[0].get("items"))
+        self.assertTrue(results)
 
     def test_list_transfer_items_with_invalid_poi_id(self):
         payload = {"poi_id": 9999}  # Assuming 9999 does not exist.
@@ -293,14 +294,16 @@ class TestStockManagementViewSet(BaseTenantTestCase):
         )
         # Create one hidden and one visible item.
         ItemFactory(transfer=transfer, hidden=True)
-        ItemFactory(transfer=transfer, hidden=False)
+        item = ItemFactory(transfer=transfer, hidden=False)
         payload = {"poi_id": poi.id}
         response = self.forced_auth_req('get', self.url, user=self.partner_staff, data=payload)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         results = response.data.get("results", [])
         # Expect the transfer to appear because it has at least one non-hidden item.
         self.assertEqual(len(results), 1)
-        self.assertTrue(len(results[0].get("items", [])) > 0)
+        self.assertEqual(results[0].get("quantity"), item.quantity)
+        self.assertEqual(results[0].get("batch_id"), item.batch_id)
+        self.assertEqual(results[0].get("uom"), item.uom)
 
     def test_list_transfer_items_pagination(self):
         poi = PointOfInterestFactory(name="Pagination POI")

@@ -8,6 +8,7 @@ from django.utils import timezone
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -22,6 +23,7 @@ from etools.applications.last_mile.admin_panel.csv_exporter import CsvExporter
 from etools.applications.last_mile.admin_panel.csv_importer import CsvImporter
 from etools.applications.last_mile.admin_panel.filters import (
     AlertNotificationFilter,
+    ItemFilter,
     LocationsFilter,
     TransferEvidenceFilter,
     TransferHistoryFilter,
@@ -36,6 +38,7 @@ from etools.applications.last_mile.admin_panel.serializers import (
     AuthUserPermissionsDetailSerializer,
     BulkUpdateLastMileProfileStatusSerializer,
     ImportFileSerializer,
+    ItemTransferAdminSerializer,
     LastMileUserProfileSerializer,
     LastMileUserProfileUpdateAdminSerializer,
     LocationsAdminSerializer,
@@ -52,7 +55,6 @@ from etools.applications.last_mile.admin_panel.serializers import (
     TransferHistoryAdminSerializer,
     TransferItemAdminSerializer,
     TransferItemCreateSerializer,
-    TransferItemSerializer,
     TransferLogAdminSerializer,
     TransferReverseAdminSerializer,
     UserAdminCreateSerializer,
@@ -216,7 +218,13 @@ class LocationsViewSet(mixins.ListModelMixin,
     serializer_class = PointOfInterestAdminSerializer
     pagination_class = DynamicPageNumberPagination
 
-    queryset = models.PointOfInterest.all_objects.select_related("parent", "poi_type", "parent__parent", "parent__parent__parent", "parent__parent__parent__parent").prefetch_related('partner_organizations').all().order_by('id')
+    queryset = models.PointOfInterest.all_objects.select_related(
+        "parent",
+        "poi_type",
+        "parent__parent",
+        "parent__parent__parent",
+        "parent__parent__parent__parent"
+    ).prefetch_related('partner_organizations', 'partner_organizations__organization', 'destination_transfers').all().order_by('id')
 
     filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
     filterset_class = LocationsFilter
@@ -229,7 +237,15 @@ class LocationsViewSet(mixins.ListModelMixin,
         'description'
     ]
 
-    search_fields = ('name',)
+    search_fields = ('name',
+                     'p_code',
+                     'partner_organizations__organization__name',
+                     'partner_organizations__organization__vendor_number',
+                     'destination_transfers__name',
+                     'destination_transfers__unicef_release_order',
+                     'destination_transfers__items__mapped_description',
+                     'destination_transfers__items__material__short_description',
+                     'destination_transfers__items__material__number')
 
     def get_serializer_class(self):
         if self.action in ['update', 'partial_update', 'create']:
@@ -362,29 +378,51 @@ class AlertNotificationViewSet(mixins.ListModelMixin,
 
 class TransferItemViewSet(mixins.ListModelMixin, GenericViewSet, mixins.CreateModelMixin):
     permission_classes = [IsLMSMAdmin]
-    serializer_class = TransferItemSerializer
+    serializer_class = ItemTransferAdminSerializer
     pagination_class = DynamicPageNumberPagination
+    filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
+    filterset_class = ItemFilter
+    search_fields = (
+        'mapped_description',
+        'material__short_description',
+        'material__number',
+        'transfer__name',
+        'transfer__unicef_release_order',
+        'uom',
+        'batch_id',
+        'material__original_uom'
+    )
+
+    ordering_fields = (
+        'mapped_description',
+        'material__short_description',
+        'material__number',
+        'transfer__name',
+        'transfer__unicef_release_order',
+        'uom',
+        'batch_id',
+        'material__original_uom'
+    )
 
     def get_queryset(self):
         poi_id = self.request.query_params.get('poi_id')
-        if poi_id:
-            return models.Transfer.objects.select_related(
-                'destination_point',
-                'origin_point',
-            ).prefetch_related(
-                'items',
-                'items__material'
-            ).with_destination_point(poi_id).with_items().order_by('-id')
-        return models.Transfer.objects.none()
+
+        if not poi_id:
+            raise ValidationError({'poi_id': 'This query parameter is required.'})
+
+        return models.Item.objects.select_related(
+            'material',
+            'transfer',
+            'transfer__destination_point',
+            'transfer__origin_point'
+        ).filter(
+            transfer__destination_point_id=poi_id
+        ).order_by('-id')
 
     def get_serializer_class(self):
         if self.action == 'create':
             return TransferItemCreateSerializer
-        return TransferItemSerializer
-
-    filter_backends = (SearchFilter,)
-
-    search_fields = ('name', 'status', 'unicef_release_order')
+        return ItemTransferAdminSerializer
 
 
 class OrganizationListView(mixins.ListModelMixin, GenericViewSet):
