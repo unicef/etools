@@ -179,6 +179,7 @@ class TransferIngestService:
             uom=validated_data.get('uom'),
             conversion_factor=validated_data.get('conversion_factor'),
             base_quantity=validated_data.get('quantity'),
+            base_uom=validated_data.get('uom') if validated_data.get('uom') else material.original_uom,
             other=other_data
         )
 

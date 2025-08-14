@@ -204,13 +204,6 @@ class TransferAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
     display_name.admin_order_field = 'display_name_annotation'
 
 
-class PartnerMaterialInline(admin.TabularInline):
-    extra = 0
-    model = models.PartnerMaterial
-    list_select_related = ('material', 'partner_organization')
-    fields = ('material', 'partner_organization',)
-
-
 @admin.register(models.Material)
 class MaterialAdmin(admin.ModelAdmin):
     list_display = (
@@ -219,9 +212,8 @@ class MaterialAdmin(admin.ModelAdmin):
     list_filter = ('original_uom',)
     search_fields = (
         'number', 'short_description', 'original_uom', 'material_type',
-        'material_type_description', 'group', 'group_description'
+        'material_type_description', 'group', 'group_description', 'partner_material__partner_organization__organization__name'
     )
-    inlines = (PartnerMaterialInline,)
 
 
 @admin.register(models.Profile)
@@ -253,7 +245,7 @@ class UserPointsOfInterestAdmin(admin.ModelAdmin):
 @admin.register(models.Item)
 class ItemAdmin(XLSXImportMixin, admin.ModelAdmin):
     list_display = ('batch_id', 'material', 'wastage_type', 'transfer')
-    raw_id_fields = ('transfer', 'transfers_history', 'material')
+    raw_id_fields = ('transfer', 'transfers_history', 'material', 'origin_transfer')
     list_filter = ('wastage_type', 'hidden')
     readonly_fields = ('destination_point_name',)
 

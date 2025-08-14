@@ -58,10 +58,14 @@ class APIViewSetTestCase(BaseTenantTestCase):
         self.assertEqual(response.status_code, expected_status)
 
         if expected_status == status.HTTP_200_OK:
-            self.assertListEqual(
-                sorted([obj['id'] for obj in response.data['results']]),
-                sorted([obj.id for obj in (expected_objects or [])])
-            )
+            if isinstance(response.data, dict) and 'results' in response.data:
+                actual_ids = sorted(obj['id'] for obj in response.data['results'])
+            else:
+                actual_ids = sorted(obj['id'] for obj in response.data)
+
+            expected_ids = sorted(obj.id for obj in (expected_objects or []))
+
+            self.assertListEqual(actual_ids, expected_ids)
 
         return response
 

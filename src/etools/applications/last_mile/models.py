@@ -177,6 +177,9 @@ class PointOfInterest(TimeStampedModel, models.Model):
 
         return location
 
+    def is_warehouse(self):
+        return self.poi_type.category.lower() == 'warehouse' if self.poi_type else False
+
     def save(self, **kwargs):
         if not self.parent_id:
             self.parent = self.get_parent_location(self.point)
@@ -305,7 +308,7 @@ class Transfer(TimeStampedModel, models.Model):
         (OTHER, _('Other')),
     )
 
-    unicef_release_order = models.CharField(max_length=30, unique=True, null=True)
+    unicef_release_order = models.CharField(max_length=255, unique=True, null=True)
     name = models.CharField(max_length=255, null=True, blank=True)
     dispense_type = models.CharField(max_length=30, choices=DISPENSE_TYPE, null=True, blank=True)
     transfer_type = models.CharField(max_length=30, choices=TRANSFER_TYPE, null=True, blank=True)
@@ -561,6 +564,7 @@ class Item(TimeStampedModel, models.Model):
 
     quantity = models.IntegerField()
     base_quantity = models.IntegerField(null=True)
+    base_uom = models.CharField(max_length=30, choices=Material.UOM, null=True)
     batch_id = models.CharField(max_length=255, null=True, blank=True)
     expiry_date = models.DateTimeField(null=True, blank=True)
     comment = models.TextField(null=True, blank=True)

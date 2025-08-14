@@ -1,0 +1,76 @@
+[
+  {
+    "model": "field_monitoring_planning.visitgoal",
+    "pk": 1,
+    "fields": {
+      "name": "Monitoreo de implementación del programa",
+      "info": [
+        "Verifique la alineación con planes de trabajo, marcos de resultados y acuerdos de donantes.",
+        "Evaluar la entrega de intervenciones y actividades planificadas.",
+        "Verifique si los servicios (por ejemplo, educación, salud, lavado) están llegando a beneficiarios previstos."
+      ]
+    }
+  },
+  {
+    "model": "field_monitoring_planning.visitgoal",
+    "pk": 2,
+    "fields": {
+      "name": "VERIFICACIÓN DE SOTICIONES Y RESULTADOS",
+      "info": [
+        "Monitoree el logro de resultados, actividades e intervenciones específicas (por ejemplo, suministros entregados, capacitación del maestro).",
+        "Validar los datos de resultados informados por la implementación de socios y gobierno.",
+        "Evaluar la calidad, la puntualidad y la integridad de los servicios o intervenciones."
+      ]
+    }
+  },
+  {
+    "model": "field_monitoring_planning.visitgoal",
+    "pk": 3,
+    "fields": {
+      "name": "Monitoreo de socios",
+      "info": [
+        "Revise las actividades del socio y el cumplimiento del enfoque armonizado de las transferencias de efectivo (HACT).",
+        "Validar el uso de fondos y efectividad de la implementación de pareja.",
+        "Evaluar la capacidad de los socios, la coordinación y los desafíos.",
+        "La verificación cruzada informó datos con observaciones de campo.",
+        "Identificar problemas en la recopilación de datos, documentación o precisión de informes."
+      ]
+    }
+  },
+  {
+    "model": "field_monitoring_planning.visitgoal",
+    "pk": 4,
+    "fields": {
+      "name": "Monitoreo de riesgos y cumplimiento",
+      "info": [
+        "Identificar riesgos operativos o contextuales (por ejemplo, PSEA, ESS, Seguridad, Político, Financiero).",
+        "Garantizar el cumplimiento de las normas éticas, protección y adquisiciones de UNICEF.",
+        "Fraude de bandera, mal uso o desvío de recursos."
+      ]
+    }
+  },
+  {
+    "model": "field_monitoring_planning.visitgoal",
+    "pk": 5,
+    "fields": {
+      "name": "Comentarios y responsabilidad del beneficiario",
+      "info": [
+        "Recopile comentarios de las comunidades y beneficiarios, incluidas las quejas o sugerencias.",
+        "Monitoree la equidad y la inclusión (por ejemplo, acceso a poblaciones marginadas o vulnerables).",
+        "Evaluar la satisfacción y la relevancia de las intervenciones a las necesidades de la comunidad."
+      ]
+    }
+  },
+  {
+    "model": "field_monitoring_planning.visitgoal",
+    "pk": 6,
+    "fields": {
+      "name": "Monitoreo de la respuesta humanitaria",
+      "info": [
+        "Rastrear las necesidades humanitarias en evolución (nutrición, desplazamiento, condiciones de lavado).",
+        "Monitoree la cobertura de respuesta a emergencias y los huecos.",
+        "Coordinar con grupos y otros actores humanitarios."
+      ]
+    }
+  }
+]

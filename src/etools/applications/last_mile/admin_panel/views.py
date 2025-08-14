@@ -23,6 +23,7 @@ from etools.applications.last_mile.admin_panel.csv_importer import CsvImporter
 from etools.applications.last_mile.admin_panel.filters import (
     AlertNotificationFilter,
     LocationsFilter,
+    TransferEvidenceFilter,
     TransferHistoryFilter,
     UserFilter,
     UserLocationsFilter,
@@ -492,7 +493,21 @@ class TransferHistoryListView(mixins.ListModelMixin, GenericViewSet):
     filterset_class = TransferHistoryFilter
 
     ordering_fields = ['unicef_release_order', 'transfer_name', 'transfer_type', 'status', 'partner_organization', 'destination_point', 'origin_point']
-    search_fields = ['unicef_release_order', 'transfer_name', 'transfer_type', 'status', 'partner_organization', 'destination_point', 'origin_point']
+    search_fields = ['unicef_release_order',
+                     'transfer_name',
+                     'transfer_type',
+                     'status',
+                     'partner_organization',
+                     'destination_point',
+                     'origin_point',
+                     # Sub Transfers Search
+                     'transfers__unicef_release_order',
+                     'transfers__name',
+                     'transfers__transfer_type',
+                     'transfers__status',
+                     'transfers__partner_organization__organization__name',
+                     'transfers__destination_point__name',
+                     'transfers__origin_point__name']
 
     def get_queryset(self):
         qs = models.TransferHistory.objects.select_related(
@@ -500,6 +515,8 @@ class TransferHistoryListView(mixins.ListModelMixin, GenericViewSet):
             'origin_transfer__partner_organization__organization',
             'origin_transfer__destination_point',
             'origin_transfer__origin_point'
+        ).prefetch_related(
+            "transfers"
         ).order_by('-created').annotate(
             unicef_release_order=F('origin_transfer__unicef_release_order'),
             transfer_name=F('origin_transfer__name'),
@@ -528,7 +545,22 @@ class TransferHistoryListView(mixins.ListModelMixin, GenericViewSet):
 class TransferEvidenceListView(mixins.RetrieveModelMixin, GenericViewSet):
     permission_classes = [IsLMSMAdmin]
     serializer_class = TransferLogAdminSerializer
+    pagination_class = DynamicPageNumberPagination
     lookup_field = 'transfer_history_id'
+
+    filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
+
+    filterset_class = TransferEvidenceFilter
+
+    search_fields = ['unicef_release_order',
+                     'name',
+                     'transfer_type',
+                     'status',
+                     'partner_organization__organization__name',
+                     'from_partner_organization__organization__name',
+                     'recipient_partner_organization__organization__name',
+                     'destination_point__name',
+                     'origin_point__name']
 
     def get_queryset(self):
         return models.Transfer.objects.all()
@@ -538,6 +570,7 @@ class TransferEvidenceListView(mixins.RetrieveModelMixin, GenericViewSet):
         queryset = models.Transfer.objects.select_related(
             'from_partner_organization__organization',
             'recipient_partner_organization__organization',
+            'partner_organization__organization',
             'origin_point',
             'destination_point'
         ).filter(transfer_history_id=transfer_history_id, items__isnull=False).only(
@@ -555,7 +588,16 @@ class TransferEvidenceListView(mixins.RetrieveModelMixin, GenericViewSet):
             'destination_point',
             'from_partner_organization__organization__name',
             'recipient_partner_organization__organization__name',
+            'partner_organization__organization__name'
         ).distinct()
+        queryset = self.filter_queryset(queryset)
+
+        page = self.paginate_queryset(queryset)
+
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
