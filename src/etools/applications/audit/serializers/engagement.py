@@ -1,4 +1,3 @@
-import datetime
 from copy import copy
 from decimal import Decimal
 
@@ -88,18 +87,6 @@ class FaceFormSerializer(serializers.ModelSerializer):
     class Meta:
         model = FaceForm
         fields = '__all__'
-
-    # def to_representation(self, instance):
-    #     data = super().to_representation(instance)
-        # Hardcoded until we get the data
-        # import random
-        # if not data['end_date']:
-        #     data['end_date'] = datetime.date(random.randint(2023, 2024), random.randint(1, 12), random.randint(1, 28)).strftime("%Y-%m-%d")
-        # if not float(data['amount_usd']):
-        #     data['amount_usd'] = '{0:.2f}'.format(round(random.uniform(1000.99, 10000.99), 2))
-        # if not float(data['amount_local']):
-        #     data['amount_local'] = '{0:.2f}'.format((Decimal(data['amount_usd']) * Decimal(0.8)))
-        # return data
 
 
 class AttachmentField(serializers.Field):
@@ -671,12 +658,14 @@ class AuditSerializer(ActivePDValidationMixin, RiskCategoriesUpdateMixin, Engage
             'justification_provided_and_accepted_local', 'write_off_required_local',
             'pending_unsupported_amount_local',
             'explanation_for_additional_information',
+            'conducted_by_sai'
         ]
         fields.remove('specific_procedures')
         extra_kwargs = EngagementSerializer.Meta.extra_kwargs.copy()
         extra_kwargs.update({
             'engagement_type': {'read_only': True},
             'year_of_audit': {'required': True},
+            'conducted_by_sai': {'required': True}
         })
 
     def get_number_of_financial_findings(self, obj):
@@ -713,7 +702,7 @@ class SpecialAuditSerializer(EngagementSerializer):
     class Meta(EngagementSerializer.Meta):
         model = SpecialAudit
         fields = EngagementSerializer.Meta.fields + [
-            'other_recommendations', 'total_value', 'total_value_local'
+            'other_recommendations', 'total_value', 'total_value_local', 'conducted_by_sai'
         ]
         fields.remove('currency_of_report')
         extra_kwargs = EngagementSerializer.Meta.extra_kwargs.copy()
@@ -721,5 +710,6 @@ class SpecialAuditSerializer(EngagementSerializer):
             'start_date': {'required': False},
             'end_date': {'required': False},
             'total_value': {'required': False},
-            'total_value_local': {'required': False}
+            'total_value_local': {'required': False},
+            'conducted_by_sai': {'required': True},
         })

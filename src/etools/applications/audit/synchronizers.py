@@ -21,14 +21,14 @@ class FaceFormsSynchronizer(VisionDataTenantSynchronizer):
         "CURRENCY",
         "REPORTING_POSTING_DATE",
         "REPORTING_START_DATE",
-        # "REPORTING_END_DATE",
+        "REPORTING_END_DATE",
         "HACT_FUNDINGS"
     )
     MAPPING = {
         "face_number": "FACE_FORM_NUMBER",
         "partner": "IMPLEMENTING_PARNTER_CODE",
         "start_date": "REPORTING_START_DATE",
-        # "end_date": "REPORTING_END_DATE",
+        "end_date": "REPORTING_END_DATE",
         "date_of_liquidation": "REPORTING_POSTING_DATE",
         "modality": "DOCUMENT_TYPE_DESC",
         "currency": "CURRENCY",
@@ -36,7 +36,7 @@ class FaceFormsSynchronizer(VisionDataTenantSynchronizer):
         "amount_local": "OVERALL_AMOUNT"
     }
     FACE_FORM_FIELDS = ["FACE_FORM_NUMBER", "IMPLEMENTING_PARNTER_CODE", "DOCUMENT_TYPE_DESC", "CURRENCY",
-                        "REPORTING_POSTING_DATE", "REPORTING_START_DATE"]
+                        "REPORTING_POSTING_DATE", "REPORTING_START_DATE", "REPORTING_END_DATE"]
     FUNDING_FIELDS = ['OVERALL_AMOUNT', 'OVERALL_AMOUNT_USD']
 
     def __init__(self, *args, **kwargs):
@@ -107,11 +107,6 @@ class FaceFormsSynchronizer(VisionDataTenantSynchronizer):
             for funding_item in funding_items:
                 face_dict['amount_local'] += Decimal(funding_item.get('OVERALL_AMOUNT', 0))
                 face_dict['amount_usd'] += Decimal(funding_item.get('OVERALL_AMOUNT_USD', 0))
-        # Hardcoded until we get the data
-        import random
-        face_dict['end_date'] = datetime.date(random.randint(2023, 2024), random.randint(1, 12), random.randint(1, 28)).strftime("%Y-%m-%d")
-        face_dict['amount_usd'] = round(random.uniform(1000.99, 10000.99), 2)
-        face_dict['amount_local'] = Decimal(face_dict['amount_usd']) * Decimal(0.8)
         return face_dict
 
     @staticmethod
