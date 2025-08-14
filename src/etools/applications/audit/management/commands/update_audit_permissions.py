@@ -166,6 +166,7 @@ class Command(BaseCommand):
         'audit.audit.key_internal_controls',
         'audit.audit.key_internal_weakness',
         'audit.audit.currency_of_report',
+        'audit.audit.conducted_by_sai'
     ]
 
     spot_check_report_block = [
@@ -180,6 +181,7 @@ class Command(BaseCommand):
     special_audit_report_block = [
         'audit.specialaudit.other_recommendations',
         'audit.specialaudit.specific_procedures',
+        'audit.specialaudit.conducted_by_sai'
     ]
 
     report_readonly_block = [

@@ -526,7 +526,7 @@ class FaceFormListViewSet(
     serializer_class = FaceFormSerializer
 
     def get_queryset(self):
-        return super().get_queryset().filter(partner_id=int(self.kwargs['partner_pk']))
+        return super().get_queryset().filter(partner_id=int(self.kwargs['partner_pk'])).order_by('id')
 
 
 class AuditorStaffMembersViewSet(

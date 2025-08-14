@@ -756,16 +756,11 @@ class Audit(Engagement):
                                                     blank=True, default=0, decimal_places=2, max_digits=20)
     financial_findings_local = models.DecimalField(verbose_name=_('Financial Findings Local Currency'),
                                                    blank=True, default=0, decimal_places=2, max_digits=20)
-    audit_opinion = models.CharField(
-        verbose_name=_('Audit Opinion'), max_length=20, choices=OPTIONS, default='', blank=True,
-    )
-
-    final_report = CodedGenericRelation(
-        Attachment,
-        verbose_name=_('Audit Final Report'),
-        code='audit_final_report',
-        blank=True,
-    )
+    audit_opinion = models.CharField(verbose_name=_('Audit Opinion'), max_length=20, choices=OPTIONS,
+                                     default='', blank=True)
+    final_report = CodedGenericRelation(Attachment, verbose_name=_('Audit Final Report'),
+                                        code='audit_final_report', blank=True, )
+    conducted_by_sai = models.BooleanField(verbose_name=_('Conducted by SAI'), blank=True, null=True)
 
     objects = models.Manager()
 
@@ -944,6 +939,7 @@ class SpecialAudit(Engagement):
         code='special_audit_final_report',
         blank=True,
     )
+    conducted_by_sai = models.BooleanField(verbose_name=_('Conducted by SAI'), blank=True, null=True)
 
     objects = models.Manager()
 
