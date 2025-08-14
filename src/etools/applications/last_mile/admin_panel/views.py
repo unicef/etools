@@ -263,8 +263,8 @@ class LocationsViewSet(mixins.ListModelMixin,
         renderer_classes=(ExportCSVRenderer,),
     )
     def list_export_csv(self, request, *args, **kwargs):
-        users = self.filter_queryset(self.get_queryset())
-        serializer = self.get_serializer(users, many=True)
+        locations = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(locations, many=True)
         data = serializer.data
         dataset = CsvExporter().export(data)
         return Response(dataset, headers={

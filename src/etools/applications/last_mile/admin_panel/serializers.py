@@ -317,6 +317,15 @@ class PointOfInterestListSerializer(serializers.ListSerializer):
         return ret
 
 
+class POIExportListSerializer(serializers.ListSerializer):
+    def to_representation(self, data):
+        iterable = data.all() if hasattr(data, "all") else data
+        rows = []
+        for obj in iterable:
+            rows.extend(self.child.generate_rows(obj))
+        return rows
+
+
 class PointOfInterestExportSerializer(serializers.ModelSerializer):
     country = serializers.CharField(read_only=True)
     region = serializers.CharField(read_only=True)
@@ -329,12 +338,6 @@ class PointOfInterestExportSerializer(serializers.ModelSerializer):
 
     def get_status(self, obj):
         return "Active" if obj.is_active else "Inactive"
-
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        parent_locations = ParentLocationsSerializer(instance.parent).data
-        data.update(parent_locations)
-        return data
 
     def get_primary_type(self, obj):
         return obj.poi_type.name if obj.poi_type else None
@@ -349,10 +352,42 @@ class PointOfInterestExportSerializer(serializers.ModelSerializer):
     def get_lng(self, obj):
         return obj.point.x if obj.point else None
 
+    def base_representation(self, instance):
+        data = super().to_representation(instance)
+        parent_locations = ParentLocationsSerializer(instance.parent).data
+        data.update(parent_locations)
+        return data
+
+    def generate_rows(self, instance):
+        base = self.base_representation(instance)
+        transfers = (
+            instance.destination_transfers
+            .all()
+            .prefetch_related('items')
+        )
+
+        rows = []
+        for transfer in transfers:
+            for item in transfer.items.all():
+                row = dict(base)
+                row.update({
+                    "transfer_name": transfer.name,
+                    "transfer_ref": getattr(transfer, "unicef_release_order", None),
+                    "item_id": item.id,
+                    "item_name": getattr(item, "description", None),
+                    "item_qty": getattr(item, "quantity", None),
+                })
+                rows.append(row)
+
+        return rows or [base]
+
     class Meta:
         model = models.PointOfInterest
-        fields = ('id', 'name', 'primary_type', 'p_code', 'lat', 'lng', 'status', 'implementing_partner', 'region', 'district', 'country')
-        list_serializer_class = PointOfInterestListSerializer
+        fields = (
+            'id', 'name', 'primary_type', 'p_code', 'lat', 'lng',
+            'status', 'implementing_partner', 'region', 'district', 'country',
+        )
+        list_serializer_class = POIExportListSerializer
 
 
 class PointOfInterestSerializer(serializers.ModelSerializer):
