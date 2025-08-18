@@ -195,7 +195,7 @@ class TransferEvidenceFilter(filters.FilterSet):
 
 class ItemFilter(filters.FilterSet):
     poi_id = filters.NumberFilter(field_name='transfer__destination_point_id', lookup_expr='exact')
-    mapped_description = filters.CharFilter(field_name="mapped_description", lookup_expr="icontains")
+    description = filters.CharFilter(method='filter_mapped_description', label='description')
     material_description = filters.CharFilter(field_name="material__short_description", lookup_expr="icontains")
     material_number = filters.CharFilter(field_name="material__number", lookup_expr="icontains")
     quantity = filters.NumberFilter(field_name='quantity', lookup_expr='exact')
@@ -204,4 +204,18 @@ class ItemFilter(filters.FilterSet):
 
     class Meta:
         model = Item
-        fields = ['poi_id', 'mapped_description', 'material_description', 'material_number', 'quantity', 'uom', 'batch_id']
+        fields = [
+            'poi_id', 
+            'description', 
+            'material_description', 
+            'material_number', 
+            'quantity', 
+            'uom', 
+            'batch_id'
+        ]
+
+    def filter_mapped_description(self, queryset, name, value):
+        return queryset.filter(
+            Q(mapped_description__icontains=value) | 
+            Q(material__short_description__icontains=value)
+        )
