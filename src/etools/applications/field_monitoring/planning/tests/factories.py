@@ -12,6 +12,7 @@ from etools.applications.field_monitoring.planning.models import (
     MonitoringActivityGroup,
     QuestionTemplate,
     TPMConcern,
+    VisitGoal,
     YearPlan,
 )
 from etools.applications.field_monitoring.tests.factories import UserFactory
@@ -147,6 +148,13 @@ class CompletedActivityFactory(SubmittedActivityFactory):
 
 class CancelledActivityFactory(DraftActivityFactory):
     status = MonitoringActivity.STATUSES.cancelled
+
+
+class VisitGoalFactory(factory.django.DjangoModelFactory):
+    info = fuzzy.FuzzyText()
+
+    class Meta:
+        model = VisitGoal
 
 
 class MonitoringActivityFactory(BaseMonitoringActivityFactory, metaclass=StatusFactoryMetaClass):

@@ -38,9 +38,9 @@ class TransferEvidenceAttachmentInline(AttachmentSingleInline):
 
 @admin.register(models.PointOfInterest)
 class PointOfInterestAdmin(XLSXImportMixin, admin.ModelAdmin):
-    readonly_fields = ('partner_names',)
+    readonly_fields = ('partner_names', 'created_by', 'approved_by')
     list_display = ('name', 'parent', 'poi_type', 'p_code')
-    list_select_related = ('parent',)
+    list_select_related = ('parent', 'approved_by', 'created_by')
     list_filter = ('private', 'is_active', 'poi_type')
     search_fields = ('name', 'p_code')
     raw_id_fields = ('partner_organizations',)
@@ -204,20 +204,6 @@ class TransferAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
     display_name.admin_order_field = 'display_name_annotation'
 
 
-class PartnerMaterialInline(admin.TabularInline):
-    extra = 0
-    model = models.PartnerMaterial
-    autocomplete_field = ('partner_organization',)
-    fields = ('partner_organization',)
-
-    def get_queryset(self, request):
-        queryset = super().get_queryset(request)
-        return queryset.select_related(
-            'partner_organization__organization',
-            'material'
-        )
-
-
 @admin.register(models.Material)
 class MaterialAdmin(admin.ModelAdmin):
     list_display = (
@@ -226,21 +212,8 @@ class MaterialAdmin(admin.ModelAdmin):
     list_filter = ('original_uom',)
     search_fields = (
         'number', 'short_description', 'original_uom', 'material_type',
-        'material_type_description', 'group', 'group_description'
+        'material_type_description', 'group', 'group_description', 'partner_material__partner_organization__organization__name'
     )
-    inlines = (PartnerMaterialInline,)
-
-    def get_queryset(self, request):
-        queryset = super().get_queryset(request)
-        queryset = queryset.prefetch_related(
-            Prefetch(
-                'partner_material',
-                queryset=models.PartnerMaterial.objects.select_related(
-                    'partner_organization__organization', "material"
-                )
-            )
-        )
-        return queryset
 
 
 @admin.register(models.Profile)
@@ -261,10 +234,18 @@ class ProfileAdmin(admin.ModelAdmin):
                            )
 
 
+@admin.register(models.UserPointsOfInterest)
+class UserPointsOfInterestAdmin(admin.ModelAdmin):
+    list_display = ('user', 'point_of_interest')
+    raw_id_fields = ('user', 'point_of_interest')
+    search_fields = ('user__username', 'user__email', 'user__first_name', 'user__last_name', 'point_of_interest__pcode', 'point_of_interest__name')
+    list_select_related = ('user', 'point_of_interest')
+
+
 @admin.register(models.Item)
 class ItemAdmin(XLSXImportMixin, admin.ModelAdmin):
     list_display = ('batch_id', 'material', 'wastage_type', 'transfer')
-    raw_id_fields = ('transfer', 'transfers_history', 'material')
+    raw_id_fields = ('transfer', 'transfers_history', 'material', 'origin_transfer')
     list_filter = ('wastage_type', 'hidden')
     readonly_fields = ('destination_point_name',)
 

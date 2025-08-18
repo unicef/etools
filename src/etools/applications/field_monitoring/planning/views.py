@@ -54,6 +54,7 @@ from etools.applications.field_monitoring.planning.models import (
     MonitoringActivity,
     MonitoringActivityActionPoint,
     TPMConcern,
+    VisitGoal,
     YearPlan,
 )
 from etools.applications.field_monitoring.planning.serializers import (
@@ -66,6 +67,7 @@ from etools.applications.field_monitoring.planning.serializers import (
     MonitoringActivitySerializer,
     TemplatedQuestionSerializer,
     TPMConcernSerializer,
+    VisitGoalSerializer,
     YearPlanSerializer,
 )
 from etools.applications.field_monitoring.views import FMBaseViewSet, LinkedAttachmentsViewSet
@@ -148,6 +150,11 @@ class TemplatedQuestionsViewSet(
         return _('Templates')
 
 
+class VisitGoalsViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = VisitGoal.objects.all()
+    serializer_class = VisitGoalSerializer
+
+
 class MonitoringActivitiesViewSet(
     ValidatorViewMixin,
     FMBaseViewSet,
@@ -161,7 +168,7 @@ class MonitoringActivitiesViewSet(
         .select_related('tpm_partner', 'tpm_partner__organization',
                         'visit_lead', 'location', 'location_site')\
         .prefetch_related('team_members', 'partners', 'partners__organization', 'report_reviewers',
-                          'interventions', 'cp_outputs')\
+                          'interventions', 'cp_outputs', 'sections', 'visit_goals')\
         .order_by("-id")
     serializer_class = MonitoringActivitySerializer
     serializer_action_classes = {
@@ -267,7 +274,12 @@ class MonitoringActivitiesViewSet(
             "interventions": ', '.join([str(intervention) for intervention in ma.interventions.all()]),
             "overall_findings": list(ma.activity_overall_findings().values('entity_name', 'narrative_finding', 'on_track')),
             "summary_findings": ma.get_export_activity_questions_overall_findings(),
-            "data_collected": ma.get_export_checklist_findings()
+            "data_collected": ma.get_export_checklist_findings(),
+            "action_points": ma.get_export_action_points(request),
+            "related_attachments": ma.get_export_related_attachments(request),
+            "reported_attachments": ma.get_export_reported_attachments(request),
+            "checklist_attachments": ma.get_export_checklist_attachments(request),
+
         }
         return render_to_pdf_response(
             request, "fm/visit_pdf.html", context=context,

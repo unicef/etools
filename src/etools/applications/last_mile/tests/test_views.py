@@ -23,7 +23,6 @@ from etools.applications.last_mile.tests.factories import (
     TransferFactory,
 )
 from etools.applications.organizations.tests.factories import OrganizationFactory
-from etools.applications.partners.models import Agreement
 from etools.applications.partners.tests.factories import AgreementFactory, PartnerFactory
 from etools.applications.users.tests.factories import UserFactory
 
@@ -173,7 +172,7 @@ class TestTransferView(BaseTenantTestCase):
     fixtures = ('poi_type.json',)
 
     @classmethod
-    def setUpTestData(cls):
+    def setUp(cls):
         cls.partner = PartnerFactory(organization=OrganizationFactory(name='Partner'))
         cls.partner_receive_handover = PartnerFactory(organization=OrganizationFactory(name='Partner Receive Handover'))
         cls.partner_staff = UserFactory(
@@ -212,7 +211,7 @@ class TestTransferView(BaseTenantTestCase):
         )
         cls.attachment = AttachmentFactory(
             file=SimpleUploadedFile('proof_file.pdf', b'Proof File'), code='proof_of_transfer')
-        cls.material = MaterialFactory(number='1234')
+        cls.material = MaterialFactory(number='1234', original_uom='EA')
 
     def test_get_parent_locations(self):
         serializer = PointOfInterestNotificationSerializer(self.warehouse).data
@@ -262,9 +261,9 @@ class TestTransferView(BaseTenantTestCase):
 
     @override_settings(RUTF_MATERIALS=['1234'])
     def test_full_checkin(self):
-        item_1 = ItemFactory(quantity=11, transfer=self.incoming, material=self.material)
-        item_2 = ItemFactory(quantity=22, transfer=self.incoming, material=self.material)
-        item_3 = ItemFactory(quantity=33, transfer=self.incoming, material=self.material)
+        item_1 = ItemFactory(quantity=11, transfer=self.incoming, material=self.material, uom='EA')
+        item_2 = ItemFactory(quantity=22, transfer=self.incoming, material=self.material, uom='CAR')
+        item_3 = ItemFactory(quantity=33, transfer=self.incoming, material=self.material, uom='EA')
 
         PartnerMaterialFactory(material=self.material, partner_organization=self.partner)
 
@@ -299,6 +298,9 @@ class TestTransferView(BaseTenantTestCase):
         item_1.refresh_from_db()
         item_2.refresh_from_db()
         item_3.refresh_from_db()
+        self.assertEqual(item_1.uom, item_1.base_uom)
+        self.assertEqual(item_2.uom, item_2.base_uom)
+        self.assertEqual(item_3.uom, item_3.base_uom)
         self.assertEqual(item_1.base_quantity, item_1.quantity)
         self.assertEqual(item_2.base_quantity, item_2.quantity)
         self.assertEqual(item_3.base_quantity, item_3.quantity)
@@ -401,6 +403,7 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(short_transfer.destination_check_in_at, checkin_data['destination_check_in_at'])
         self.assertEqual(short_transfer.items.count(), 1)
         short_item_3 = short_transfer.items.last()
+        self.assertEqual(short_item_3.material.original_uom, short_item_3.base_uom)
         self.assertEqual(short_item_3.quantity, 30)
         self.assertEqual(short_item_3.base_quantity, 33)
         self.assertIn(self.incoming, short_item_3.transfers_history.all())
@@ -413,6 +416,7 @@ class TestTransferView(BaseTenantTestCase):
         surplus_item_2 = surplus_transfer.items.last()
         self.assertEqual(surplus_item_2.quantity, 1)
         self.assertEqual(surplus_item_2.base_quantity, 22)
+        self.assertEqual(surplus_item_2.material.original_uom, surplus_item_2.base_uom)
         self.assertIn(self.incoming, surplus_item_2.transfers_history.all())
 
     @override_settings(RUTF_MATERIALS=['1234'])
@@ -442,6 +446,7 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.incoming.refresh_from_db()
         self.assertEqual(self.incoming.status, models.Transfer.COMPLETED)
+        response.data['items'] = sorted(response.data['items'], key=lambda x: x['id'])
         self.assertEqual("RUTF", response.data['items'][0]['material']['material_type_translate'])
         self.assertIn(response.data['proof_file'], self.attachment.file.path)
         self.assertEqual(self.incoming.name, checkin_data['name'])
@@ -449,6 +454,7 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(self.incoming.items.count(), 2)
         self.assertEqual(self.incoming.items.first().id, item_1.pk)
         self.assertEqual(self.incoming.items.first().base_quantity, 11)
+        self.assertEqual(self.incoming.items.first().base_uom, self.incoming.items.first().material.original_uom)
         self.assertTrue(models.TransferHistory.objects.filter(origin_transfer_id=self.incoming.id).exists())
         item_1.refresh_from_db()
         self.assertEqual(self.incoming.items.first().quantity, item_1.quantity)
@@ -683,13 +689,12 @@ class TestTransferView(BaseTenantTestCase):
     def test_checkout_handover_partner_validation(self):
         item_1 = ItemFactory(quantity=11, transfer=self.checked_in)
         destination = PointOfInterestFactory()
-        agreement = AgreementFactory(status=Agreement.DRAFT)
         checkout_data = {
             "transfer_type": models.Transfer.HANDOVER,
             "destination_point": destination.pk,
             "comment": "",
             "proof_file": self.attachment.pk,
-            "partner_id": agreement.partner.id,
+            "partner_id": self.partner.id,
             "items": [
                 {"id": item_1.pk, "quantity": 9},
             ],
@@ -991,8 +996,10 @@ class TestItemUpdateViewSet(BaseTenantTestCase):
         item.refresh_from_db()
         self.assertEqual(item.quantity, 76)
         self.assertEqual(item.base_quantity, 100)
+        self.assertEqual(item.base_uom, item.material.original_uom)
         self.assertEqual(self.transfer.items.exclude(pk=item.pk).first().quantity, 24)
         self.assertEqual(self.transfer.items.exclude(pk=item.pk).first().base_quantity, 100)
+        self.assertEqual(self.transfer.items.exclude(pk=item.pk).first().base_uom, item.material.original_uom)
 
     def test_post_split_validation(self):
         item = ItemFactory(transfer=self.transfer, material=self.material, quantity=100)
