@@ -372,7 +372,7 @@ class EngagementViewSet(
         if self.action in ['list', 'export_list_csv']:
             queryset = queryset.filter(agreement__auditor_firm__unicef_users_allowed=self.unicef_engagements)
 
-        return queryset
+        return queryset.order_by('-id')
 
     def get_permission_context(self):
         context = super().get_permission_context()

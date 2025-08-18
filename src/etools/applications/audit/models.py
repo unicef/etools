@@ -223,6 +223,7 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
         max_length=100,
         null=True,
     )
+    conducted_by_sai = models.BooleanField(verbose_name=_('Conducted by SAI'), blank=True, null=True)
 
     objects = InheritanceManager()
 
@@ -760,7 +761,6 @@ class Audit(Engagement):
                                      default='', blank=True)
     final_report = CodedGenericRelation(Attachment, verbose_name=_('Audit Final Report'),
                                         code='audit_final_report', blank=True, )
-    conducted_by_sai = models.BooleanField(verbose_name=_('Conducted by SAI'), blank=True, null=True)
 
     objects = models.Manager()
 
@@ -939,7 +939,6 @@ class SpecialAudit(Engagement):
         code='special_audit_final_report',
         blank=True,
     )
-    conducted_by_sai = models.BooleanField(verbose_name=_('Conducted by SAI'), blank=True, null=True)
 
     objects = models.Manager()
 

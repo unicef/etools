@@ -83,6 +83,7 @@ class Command(BaseCommand):
         'audit.engagement.sections',
         'audit.engagement.offices',
         'audit.engagement.face_forms',
+        'audit.engagement.conducted_by_sai'
     ]
 
     engagement_status_editable_date_fields = [
@@ -166,7 +167,6 @@ class Command(BaseCommand):
         'audit.audit.key_internal_controls',
         'audit.audit.key_internal_weakness',
         'audit.audit.currency_of_report',
-        'audit.audit.conducted_by_sai'
     ]
 
     spot_check_report_block = [
@@ -181,7 +181,6 @@ class Command(BaseCommand):
     special_audit_report_block = [
         'audit.specialaudit.other_recommendations',
         'audit.specialaudit.specific_procedures',
-        'audit.specialaudit.conducted_by_sai'
     ]
 
     report_readonly_block = [
@@ -359,7 +358,8 @@ class Command(BaseCommand):
         self.add_permissions(
             self.focal_point, 'edit',
             self.staff_members_block +
-            self.users_notified_block,
+            self.users_notified_block +
+            ['audit.engagement.face_forms',],
             condition=partner_contacted_condition
         )
         self.add_permissions(

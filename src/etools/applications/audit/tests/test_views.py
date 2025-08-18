@@ -850,6 +850,24 @@ class TestSpecialAuditCreateViewSet(BaseTestEngagementsCreateViewSet, BaseTenant
         self.assertEqual(Decimal(data['total_value_local']), Decimal(response.data['total_value_local']))
 
 
+class TestSpecialAuditMetadataViewSet(BaseTestEngagementsCreateViewSet, BaseTenantTestCase):
+    engagement_factory = SpecialAuditFactory
+    endpoint = 'special-audits'
+
+    def test_conducted_by_sai_options(self):
+        special_audit = SpecialAuditFactory(status=Engagement.STATUSES.partner_contacted)
+        response = self.forced_auth_req(
+            'options',
+            '/api/audit/{}/{}/'.format(self.endpoint, special_audit.pk),
+            user=self.unicef_focal_point
+        )
+        self.assertIn('GET', response.data['actions'])
+        self.assertIn('conducted_by_sai', response.data['actions']['GET'])
+        # TODO waiting to response from Hassan
+        self.assertIn('PUT', response.data['actions'])
+        self.assertNotIn('conducted_by_sai', response.data['actions']['PUT'])
+
+
 class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenantTestCase):
     engagement_factory = AuditFactory
 
@@ -1452,6 +1470,15 @@ class TestAuditMetadataDetailViewSet(TestMetadataDetailViewSet, BaseTenantTestCa
 
     def test_weaknesses_choices(self):
         self._test_risk_choices('key_internal_weakness', Risk.AUDIT_VALUES)
+
+    def test_conducted_by_sai(self):
+        response = self.forced_auth_req(
+            'options',
+            '/api/audit/{}/{}/'.format(self.endpoint, self.engagement.id),
+            user=self.auditor
+        )
+        self.assertIn('GET', response.data['actions'])
+        self.assertIn('conducted_by_sai', response.data['actions']['GET'])
 
 
 class TestSpotCheckMetadataDetailViewSet(TestMetadataDetailViewSet, BaseTenantTestCase):

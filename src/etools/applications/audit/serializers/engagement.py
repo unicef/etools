@@ -341,6 +341,9 @@ class EngagementSerializer(
     justification_provided_and_accepted = serializers.DecimalField(20, 2, read_only=True, label=_("Justification Provided and Accepted ($)"))
     write_off_required = serializers.DecimalField(20, 2, read_only=True, label=_("Impairment ($)"))
 
+    year_of_audit = serializers.CharField(required=False, label=_("Scheduled Year"))
+    conducted_by_sai = serializers.BooleanField(required=False, label=_("SAI"))
+
     class Meta(EngagementListSerializer.Meta):
         fields = EngagementListSerializer.Meta.fields + [
             'face_form_start_date', 'face_form_end_date',
@@ -355,7 +358,7 @@ class EngagementSerializer(
             'final_report',
             'sections',
             'offices',
-            'face_forms',
+            'face_forms', 'conducted_by_sai',
             'amount_refunded', 'additional_supporting_documentation_provided',
             'justification_provided_and_accepted', 'write_off_required'
         ]
@@ -497,7 +500,7 @@ class SpotCheckSerializer(ActivePDValidationMixin, EngagementSerializer):
     pending_unsupported_amount = serializers.DecimalField(20, 2, label=_('Pending Unsupported Amount ($)'), read_only=True)
     pending_unsupported_amount_local = serializers.DecimalField(20, 2, label=_('Pending Unsupported Amount (Local)'), read_only=True)
 
-    total_amount_tested = serializers.DecimalField(20, 2, label=_('Total Amount Tested ($)'), read_only=True)
+    total_amount_tested = serializers.DecimalField(20, 2, label=_('Amount Audited ($)'), read_only=True)
     total_amount_of_ineligible_expenditure = serializers.DecimalField(20, 2, label=_('Total Amount of Ineligible Expenditure ($)'), read_only=True)
 
     percent_of_audited_expenditure = serializers.DecimalField(20, 2, label=_('% Of Audited Expenditure'), read_only=True)
