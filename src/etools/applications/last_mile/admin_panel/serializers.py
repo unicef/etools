@@ -637,7 +637,7 @@ class ItemTransferAdminSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Item
-        fields = ('material', 'quantity', 'modified', 'uom', 'batch_id', 'description', "transfer_name", "base_uom", "base_quantity")
+        fields = ('id', 'material', 'quantity', 'modified', 'uom', 'batch_id', 'description', "transfer_name", "base_uom", "base_quantity")
 
 
 class TransferItemSerializer(serializers.ModelSerializer):
