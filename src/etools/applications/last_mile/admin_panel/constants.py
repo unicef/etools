@@ -63,6 +63,8 @@ STATUS_NOT_CRRECT = "The status should be in 'approved' or 'rejected'."
 TRANSFER_NOT_FOUND_FOR_REVERSE = "The transfer was not found for reverse."
 TRANSFER_HAS_NO_ITEMS = "The transfer has no items. Cannot reverse."
 TRANSFER_TYPE_HANDOVER_NOT_ALLOWED = "Handover transfers cannot be reversed."
+BATCH_ID_TOO_LONG = "The batch id is too long. Maximum length is 254 characters."
+INVALID_EXPIRATION_DATE = "The expiration date is not valid. Should be in the next format: YYYY-MM-DD."
 
 LIST_INTERESTED_LASTMILE_PERMS = [
     USER_ADMIN_PANEL_PERMISSION,

@@ -4,6 +4,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework.exceptions import ValidationError
 
 from etools.applications.last_mile.admin_panel.constants import (
+    BATCH_ID_TOO_LONG,
     EMAIL_NOT_PROVIDED,
     GROUP_DOES_NOT_EXIST,
     GROUP_NOT_AVAILABLE,
@@ -114,3 +115,7 @@ class AdminPanelValidator:
     def validate_positive_quantity(self, quantity: int):
         if quantity < 1:
             raise ValidationError(_(INVALID_QUANTITY))
+
+    def validate_batch_id(self, batch_id: str):
+        if batch_id and len(batch_id) > 254:
+            raise ValidationError(_(BATCH_ID_TOO_LONG))

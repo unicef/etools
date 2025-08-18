@@ -447,7 +447,21 @@ class TransferItemViewSet(mixins.ListModelMixin, GenericViewSet, mixins.CreateMo
     def get_serializer_class(self):
         if self.action == 'create':
             return TransferItemCreateSerializer
+        if self.action == "_import_file":
+            return ImportFileSerializer
         return ItemTransferAdminSerializer
+
+    @action(detail=False, methods=['post'], url_path='import/xlsx')
+    def _import_file(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        excel_file = serializer.validated_data['file']
+        valid, out = CsvImporter().import_stock(excel_file)
+        if not valid:
+            resp = HttpResponse(out.getvalue(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            resp['Content-Disposition'] = f'attachment; filename="checked_{excel_file.name}"'
+            return resp
+        return Response({"valid": valid}, status=status.HTTP_200_OK)
 
 
 class ItemStockManagementView(mixins.UpdateModelMixin, mixins.RetrieveModelMixin, GenericViewSet):
