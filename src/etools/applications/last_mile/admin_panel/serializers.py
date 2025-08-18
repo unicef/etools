@@ -970,7 +970,7 @@ class StockManagementImportSerializer(serializers.Serializer):
     quantity = serializers.IntegerField()
     uom = serializers.CharField()
     expiration_date = serializers.DateTimeField()
-    batch_id = serializers.CharField(required=False)
+    batch_id = serializers.CharField(required=False, allow_null=True)
     p_code = serializers.CharField()
 
     adminValidator = AdminPanelValidator()
