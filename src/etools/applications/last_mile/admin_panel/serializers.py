@@ -257,7 +257,7 @@ class UserAdminUpdateSerializer(serializers.ModelSerializer):
 
         profile = getattr(instance, 'profile', None)
         if profile:
-            if 'organization' in profile_data:
+            if 'organization' in profile_data and profile.organization != profile_data.get('organization'):
                 profile.organization = profile_data.get('organization')
                 Realm.objects.filter(user=instance, country=country).update(organization=profile_data.get('organization'))
             if 'country' in profile_data:
@@ -601,6 +601,25 @@ class ItemAdminSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Item
         fields = ('material', 'quantity', 'modified', 'uom', 'batch_id', 'description')
+
+
+class ItemStockManagementUpdateSerializer(serializers.ModelSerializer):
+
+    adminValidator = AdminPanelValidator()
+
+    def validate_uom(self, value):
+        material = self.instance.material
+        self.adminValidator.validate_uom_map(material, value)
+        self.adminValidator.validate_uom(value)
+        return value
+
+    def validate_quantity(self, value):
+        self.adminValidator.validate_positive_quantity(value)
+        return value
+
+    class Meta:
+        model = models.Item
+        fields = ('quantity', 'uom')
 
 
 class ItemTransferAdminSerializer(serializers.ModelSerializer):

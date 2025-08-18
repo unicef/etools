@@ -30,6 +30,7 @@ ALERT_NOTIFICATIONS_ADMIN_PANEL_PERMISSION = 'lmsm_admin_panel_manage_email_aler
 
 STOCK_MANAGEMENT_ADMIN_PANEL = 'stock-management'
 STOCK_MANAGEMENT_MATERIALS_ADMIN_PANEL = 'materials-admin-panel'
+UPDATE_ITEM_STOCK_ADMIN_PANEL = 'update-item-stock-admin-panel'
 STOCK_MANAGEMENT_ADMIN_PANEL_PERMISSION = 'lmsm_admin_panel_manage_stock_management'
 
 TRANSFER_HISTORY_ADMIN_PANEL = 'transfer-history'
