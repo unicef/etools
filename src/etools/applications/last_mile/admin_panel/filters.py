@@ -205,17 +205,17 @@ class ItemFilter(filters.FilterSet):
     class Meta:
         model = Item
         fields = [
-            'poi_id', 
-            'description', 
-            'material_description', 
-            'material_number', 
-            'quantity', 
-            'uom', 
+            'poi_id',
+            'description',
+            'material_description',
+            'material_number',
+            'quantity',
+            'uom',
             'batch_id'
         ]
 
     def filter_mapped_description(self, queryset, name, value):
         return queryset.filter(
-            Q(mapped_description__icontains=value) | 
+            Q(mapped_description__icontains=value) |
             Q(material__short_description__icontains=value)
         )
