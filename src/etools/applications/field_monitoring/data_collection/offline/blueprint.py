@@ -13,6 +13,7 @@ from etools.applications.offline.fields import (
     FloatField,
     Group,
     MixedUploadedRemoteFileField,
+    MultiChoiceField,
     TextField,
 )
 from etools.applications.offline.fields.choices import LocalPairsOptions
@@ -27,6 +28,7 @@ answer_type_to_field_mapping = {
     Question.ANSWER_TYPES.number: FloatField,
     Question.ANSWER_TYPES.bool: BooleanField,
     Question.ANSWER_TYPES.likert_scale: ChoiceField,
+    Question.ANSWER_TYPES.multiple_choice: MultiChoiceField,
 }
 
 
@@ -86,7 +88,8 @@ def get_blueprint_for_activity_and_method(activity: 'MonitoringActivity', method
             for question in target_questions.select_related('question__category').distinct():
                 if question.question.answer_type in [
                     Question.ANSWER_TYPES.bool,
-                    Question.ANSWER_TYPES.likert_scale
+                    Question.ANSWER_TYPES.likert_scale,
+                    Question.ANSWER_TYPES.multiple_choice
                 ]:
                     options_key = 'question_{}'.format(question.question.id)
                     blueprint.metadata.options[options_key] = LocalPairsOptions(
