@@ -342,6 +342,7 @@ class EngagementSerializer(
     write_off_required = serializers.DecimalField(20, 2, read_only=True, label=_("Impairment ($)"))
 
     year_of_audit = serializers.CharField(required=False, label=_("Scheduled Year"))
+    joint_audit = serializers.BooleanField(required=False, label=_("Joint Engagement"))
     conducted_by_sai = serializers.BooleanField(required=False, label=_("SAI"))
 
     class Meta(EngagementListSerializer.Meta):

@@ -157,6 +157,9 @@ class PartnerOrganizationListAPIView(ExternalModuleFilterMixin, QueryStringFilte
                 if hidden is not None:
                     queries.append(Q(hidden=hidden))
 
+            if "with_name" in query_params.keys() and query_params.get("with_name").lower() == "true":
+                queries.append(Q(name__isnull=False, name__gt=''))
+
             if queries:
                 expression = functools.reduce(operator.and_, queries)
                 qs = qs.filter(expression)

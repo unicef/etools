@@ -265,7 +265,7 @@ class PurchaseOrderViewSet(
 
 
 class EngagementPartnerView(generics.ListAPIView):
-    queryset = PartnerOrganization.objects.filter(hidden=False)
+    queryset = PartnerOrganization.objects.filter(name__isnull=False)
     serializer_class = MinimalPartnerOrganizationListSerializer
     permission_classes = (IsAuthenticated, )
 
