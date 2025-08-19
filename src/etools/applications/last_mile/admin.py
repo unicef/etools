@@ -38,9 +38,9 @@ class TransferEvidenceAttachmentInline(AttachmentSingleInline):
 
 @admin.register(models.PointOfInterest)
 class PointOfInterestAdmin(XLSXImportMixin, admin.ModelAdmin):
-    readonly_fields = ('partner_names',)
+    readonly_fields = ('partner_names', 'created_by', 'approved_by')
     list_display = ('name', 'parent', 'poi_type', 'p_code')
-    list_select_related = ('parent',)
+    list_select_related = ('parent', 'approved_by', 'created_by')
     list_filter = ('private', 'is_active', 'poi_type')
     search_fields = ('name', 'p_code')
     raw_id_fields = ('partner_organizations',)
@@ -232,6 +232,14 @@ class ProfileAdmin(admin.ModelAdmin):
                            "approved_by__profile__country",
                            "approved_by__profile__organization"
                            )
+
+
+@admin.register(models.UserPointsOfInterest)
+class UserPointsOfInterestAdmin(admin.ModelAdmin):
+    list_display = ('user', 'point_of_interest')
+    raw_id_fields = ('user', 'point_of_interest')
+    search_fields = ('user__username', 'user__email', 'user__first_name', 'user__last_name', 'point_of_interest__pcode', 'point_of_interest__name')
+    list_select_related = ('user', 'point_of_interest')
 
 
 @admin.register(models.Item)
