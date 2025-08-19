@@ -1214,7 +1214,7 @@ class TestQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
 
     def test_update_multiple_choice(self):
         question = QuestionFactory(answer_type=Question.ANSWER_TYPES.multiple_choice, options__count=3)
-        first_option, second_option = question.options.all()
+        first_option, second_option = list(question.options.all()[:2])
 
         response = self.forced_auth_req(
             'patch',
