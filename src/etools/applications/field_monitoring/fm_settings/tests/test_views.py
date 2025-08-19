@@ -1120,7 +1120,7 @@ class TestQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
             reverse('field_monitoring_settings:questions-list'),
             user=self.pme,
             data={
-                'answer_type': 'multiple_Choice',
+                'answer_type': 'multiple_choice',
                 'level': 'partner',
                 'methods': [MethodFactory().id, ],
                 'category': CategoryFactory().id,
