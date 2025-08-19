@@ -35,9 +35,9 @@ class FaceFormsSynchronizer(VisionDataTenantSynchronizer):
         "amount_usd": "OVERALL_AMOUNT_USD",
         "amount_local": "OVERALL_AMOUNT"
     }
-    FACE_FORM_FIELDS = ["FACE_FORM_NUMBER", "IMPLEMENTING_PARNTER_CODE", "DOCUMENT_TYPE_DESC", "CURRENCY",
-                        "REPORTING_POSTING_DATE", "REPORTING_START_DATE", "REPORTING_END_DATE"]
-    FUNDING_FIELDS = ['OVERALL_AMOUNT', 'OVERALL_AMOUNT_USD']
+    FACE_FORM_FIELDS = ("FACE_FORM_NUMBER", "IMPLEMENTING_PARNTER_CODE", "DOCUMENT_TYPE_DESC", "CURRENCY",
+                        "REPORTING_POSTING_DATE", "REPORTING_START_DATE", "REPORTING_END_DATE")
+    FUNDING_FIELDS = ('OVERALL_AMOUNT', 'OVERALL_AMOUNT_USD')
 
     def __init__(self, *args, **kwargs):
         self.face_records = {}

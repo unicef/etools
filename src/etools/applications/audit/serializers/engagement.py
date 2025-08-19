@@ -404,6 +404,9 @@ class EngagementSerializer(
             elif (self.initial_data['engagement_type'] in [Engagement.TYPE_AUDIT, Engagement.TYPE_SPOT_CHECK] and
                   not validated_data.get('face_forms', None)):
                 raise serializers.ValidationError(_('You must specify at least one FACE Form.'))
+            if (self.initial_data['engagement_type'] in [Engagement.TYPE_AUDIT, Engagement.TYPE_SPECIAL_AUDIT] and
+                    ('conducted_by_sai' not in validated_data or validated_data['conducted_by_sai'] is None)):
+                raise serializers.ValidationError(_('You must specify if the engagement is conducted by SAI.'))
 
         staff_members = validated_data.get('staff_members', [])
         validated_data.pop('related_agreement', None)

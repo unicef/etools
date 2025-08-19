@@ -555,6 +555,7 @@ class BaseTestEngagementsCreateViewSet(EngagementTransitionsTestCaseMixin):
             'staff_members': self.engagement.staff_members.values_list('id', flat=True),
             'active_pd': self.engagement.active_pd.values_list('id', flat=True),
             'shared_ip_with': self.engagement.shared_ip_with,
+            'conducted_by_sai': False
         }
         if self.create_data['engagement_type'] in [Engagement.TYPE_AUDIT, Engagement.TYPE_SPOT_CHECK]:
             self.create_data['face_forms'] = [FaceFormFactory().pk]
