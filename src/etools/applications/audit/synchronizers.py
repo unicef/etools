@@ -100,11 +100,14 @@ class FaceFormsSynchronizer(VisionDataTenantSynchronizer):
                      for k in self.REVERSE_FACE_FORM_FIELDS}
         face_dict['amount_local'] = 0
         face_dict['amount_usd'] = 0
-        if ('HACT_FUNDINGS' in record and
-                'TYPE_HACT_FUNDING' in record['HACT_FUNDINGS'] and
-                isinstance(record['HACT_FUNDINGS']['TYPE_HACT_FUNDING'], list)):
-            funding_items = record['HACT_FUNDINGS']['TYPE_HACT_FUNDING']
-            for funding_item in funding_items:
+        if 'HACT_FUNDINGS' in record and 'TYPE_HACT_FUNDING' in record['HACT_FUNDINGS']:
+            if isinstance(record['HACT_FUNDINGS']['TYPE_HACT_FUNDING'], list):
+                funding_items = record['HACT_FUNDINGS']['TYPE_HACT_FUNDING']
+                for funding_item in funding_items:
+                    face_dict['amount_local'] += Decimal(funding_item.get('OVERALL_AMOUNT', 0))
+                    face_dict['amount_usd'] += Decimal(funding_item.get('OVERALL_AMOUNT_USD', 0))
+            elif isinstance(record['HACT_FUNDINGS']['TYPE_HACT_FUNDING'], dict):
+                funding_item = record['HACT_FUNDINGS']['TYPE_HACT_FUNDING']
                 face_dict['amount_local'] += Decimal(funding_item.get('OVERALL_AMOUNT', 0))
                 face_dict['amount_usd'] += Decimal(funding_item.get('OVERALL_AMOUNT_USD', 0))
         return face_dict

@@ -70,7 +70,7 @@ class SpotCheckAdmin(EngagementAdmin):
 
 @admin.register(FaceForm)
 class FaceFormAdmin(admin.ModelAdmin):
-    list_display = ('__str__', 'partner')
+    list_display = ('__str__', 'partner', 'amount_usd', 'amount_local', 'currency')
     raw_id_fields = ('partner',)
     search_fields = ('face_number', 'partner__organization__name')
 
