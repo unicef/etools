@@ -334,7 +334,7 @@ class EngagementSerializer(
         label=_("FACE Forms")
     )
     total_value = serializers.CharField(read_only=True)
-    total_value_local = serializers.CharField(read_only=True)
+    total_value_local = serializers.CharField(allow_null=False)
 
     amount_refunded = serializers.DecimalField(20, 2, read_only=True, label=_("Amount Refunded ($)"))
     additional_supporting_documentation_provided = serializers.DecimalField(20, 2, read_only=True, label=_("Additional Supporting Documentation Provided ($)"))

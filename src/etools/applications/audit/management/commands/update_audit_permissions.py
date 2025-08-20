@@ -161,7 +161,6 @@ class Command(BaseCommand):
 
     audit_report_block = [
         'audit.audit.audit_opinion',
-        'audit.audit.audited_expenditure',
         'audit.audit.audited_expenditure_local',
         'audit.audit.financial_finding_set',
         'audit.audit.key_internal_controls',
