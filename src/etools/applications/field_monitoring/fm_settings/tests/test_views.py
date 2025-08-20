@@ -1114,6 +1114,34 @@ class TestQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
             ['1', '2', '3']
         )
 
+    def test_create_multiple_choice(self):
+        response = self.forced_auth_req(
+            'post',
+            reverse('field_monitoring_settings:questions-list'),
+            user=self.pme,
+            data={
+                'answer_type': 'multiple_choice',
+                'level': 'partner',
+                'methods': [MethodFactory().id, ],
+                'category': CategoryFactory().id,
+                'sections': [SectionFactory().id],
+                'options': [
+                    {'label': 'Option #1', 'value': '1'},
+                    {'label': 'Option #2', 'value': '2'},
+                    {'label': 'Option #3', 'value': '3'},
+                ],
+                'text': 'Test Question',
+                'is_hact': False
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(len(response.data['options']), 3)
+        self.assertListEqual(
+            [o['value'] for o in response.data['options']],
+            ['1', '2', '3']
+        )
+
     def test_create_bool(self):
         response = self.forced_auth_req(
             'post',
@@ -1145,6 +1173,7 @@ class TestQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
         # Create some questions to be exported
         QuestionFactory.create_batch(2)
         QuestionFactory.create_batch(3, answer_type=Question.ANSWER_TYPES.likert_scale, options__count=2)
+        QuestionFactory.create_batch(2, answer_type=Question.ANSWER_TYPES.multiple_choice, options__count=3)
 
         # Call the export endpoint
         response = self.forced_auth_req(
@@ -1182,6 +1211,29 @@ class TestQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(len(response.data['options']), 3)
         self.assertTrue(question.options.filter(pk=first_option.pk).exists())
         self.assertFalse(question.options.filter(pk=second_option.pk).exists())
+
+    def test_update_multiple_choice(self):
+        question = QuestionFactory(answer_type=Question.ANSWER_TYPES.multiple_choice, options__count=3)
+        first_option, second_option = list(question.options.all()[:2])
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse('field_monitoring_settings:questions-detail', args=[question.id, ]),
+            user=self.pme,
+            data={
+                'title': 'New title',
+                'options': [
+                    {'label': first_option.label, 'value': first_option.value},
+                    {'label': '1', 'value': '1'},
+                    {'label': second_option.label, 'value': second_option.value},
+                ]
+            }
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['options']), 3)
+        self.assertTrue(question.options.filter(pk=first_option.pk).exists())
+        self.assertTrue(question.options.filter(pk=second_option.pk).exists())
 
     def test_deactivate_default_question(self):
         question = QuestionFactory(is_custom=False, is_active=True)

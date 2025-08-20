@@ -702,16 +702,32 @@ class MonitoringActivity(
 
     def get_export_activity_questions_overall_findings(self):
         for activity_question in self.questions.filter_for_activity_export():
-            finding_dict = dict(entity_name=activity_question.entity_name,
-                                question_text=activity_question.text)
+            finding_dict = dict(
+                entity_name=activity_question.entity_name,
+                question_text=activity_question.text
+            )
+
             if activity_question.overall_finding.value and \
-                    activity_question.question.answer_type == 'likert_scale':
+                    activity_question.question.answer_type in ['likert_scale', 'multiple_choice']:
                 try:
-                    option = activity_question.question.options \
-                        .get(value=activity_question.overall_finding.value)
-                    finding_dict['value'] = option.label
+                    if activity_question.question.answer_type == 'likert_scale':
+                        option = activity_question.question.options.get(
+                            value=activity_question.overall_finding.value
+                        )
+                        finding_dict['value'] = option.label
+
+                    elif activity_question.question.answer_type == 'multiple_choice':
+                        values = activity_question.overall_finding.value or []
+                        options = activity_question.question.options.filter(value__in=values)
+                        labels = [opt.label for opt in options]
+                        finding_dict['value'] = ", ".join(labels)
+
                 except Option.DoesNotExist:
-                    logger.error(f'No option found for finding value {activity_question.overall_finding.value}')
+                    logger.error(
+                        f"No option found for finding value(s) "
+                        f"{activity_question.overall_finding.value}"
+                    )
+                    finding_dict['value'] = activity_question.overall_finding.value
             else:
                 finding_dict['value'] = activity_question.overall_finding.value
 
@@ -736,12 +752,22 @@ class MonitoringActivity(
 
                     finding_dict = dict(question_text=finding.activity_question.text)
                     if finding.value and \
-                            finding.activity_question.question.answer_type == 'likert_scale':
+                       finding.activity_question.question.answer_type in \
+                       ['likert_scale', 'multiple_choice']:
                         try:
-                            option = finding.activity_question.question.options.get(value=finding.value)
-                            finding_dict['value'] = option.label
+                            if finding.activity_question.question.answer_type == 'likert_scale':
+                                option = finding.activity_question.question.options.get(value=finding.value)
+                                finding_dict['value'] = option.label
+
+                            elif finding.activity_question.question.answer_type == 'multiple_choice':
+                                values = finding.value or []
+                                options = finding.activity_question.question.options.filter(value__in=values)
+                                labels = [opt.label for opt in options]
+                                finding_dict['value'] = ", ".join(labels)
+
                         except Option.DoesNotExist:
-                            logger.error(f'No option found for finding value {finding.value}')
+                            logger.error(f"No option found for finding value(s) {finding.value}")
+                            finding_dict['value'] = finding.value
                     else:
                         finding_dict['value'] = finding.value
 
