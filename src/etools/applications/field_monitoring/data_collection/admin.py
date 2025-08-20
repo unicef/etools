@@ -46,3 +46,4 @@ class StartedChecklistAdmin(admin.ModelAdmin):
 class ActivityOverallFindingAdmin(admin.ModelAdmin):
     list_display = ('monitoring_activity', 'narrative_finding')
     list_filter = ('on_track', )
+    raw_id_fields = ('monitoring_activity', 'partner', 'cp_output', 'intervention')
