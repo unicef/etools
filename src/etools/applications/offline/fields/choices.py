@@ -103,3 +103,25 @@ class ChoiceField(BaseField):
             raise BadValueError(value)
 
         return value
+
+
+class MultiChoiceField(BaseField):
+    input_type = 'multiple_choice'
+
+    def __init__(self, name: str, **kwargs):
+        if not kwargs.get('options_key'):
+            raise ImproperlyConfigured('options key is required for multi choice field')
+        super().__init__(name, self.input_type, **kwargs)
+
+    def validate_single_value(self, value: Any, metadata: Metadata) -> Any:
+        value = super().validate_single_value(value, metadata)
+        keys = metadata.options[self.options_key].get_keys()
+
+        if not isinstance(value, (list, tuple)):
+            raise BadValueError(f"Expected a list or tuple of choices, got {type(value).__name__}")
+
+        invalid_values = [v for v in value if v not in keys]
+        if invalid_values:
+            raise BadValueError(f"Invalid choices: {invalid_values}")
+
+        return value
