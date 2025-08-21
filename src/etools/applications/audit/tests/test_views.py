@@ -851,6 +851,44 @@ class TestSpecialAuditCreateViewSet(BaseTestEngagementsCreateViewSet, BaseTenant
         self.assertEqual(Decimal(data['total_value_local']), Decimal(response.data['total_value_local']))
 
 
+class TestSpecialAuditUpdateViewSet(BaseTestEngagementsCreateViewSet, BaseTenantTestCase):
+    engagement_factory = SpecialAuditFactory
+
+    def setUp(self):
+        super().setUp()
+        self.create_data['specific_procedures'] = [
+            {
+                'description': 'some description',
+                'finding': '',
+            }
+        ]
+        self.sp_audit_id = self._do_create(self.unicef_focal_point, self.create_data).data['id']
+
+    def test_update_specific_procedure(self):
+        sp_audit = SpecialAudit.objects.get(pk=self.sp_audit_id)
+
+        procedure = sp_audit.specific_procedures.first()
+        self.assertEqual(procedure.description, 'some description')
+        self.assertEqual(procedure.finding, '')
+        data = {
+            'specific_procedures': [
+                {
+                    'id': procedure.id,
+                    'description': 'some description',
+                    'finding': 'Test finding',
+                }
+            ]
+        }
+        response = self.forced_auth_req(
+            'patch',
+            '/api/audit/special-audits/{}/'.format(self.sp_audit_id),
+            user=self.auditor, data=data
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        procedure.refresh_from_db()
+        self.assertEqual(procedure.finding, 'Test finding')
+
+
 class TestSpecialAuditMetadataViewSet(BaseTestEngagementsCreateViewSet, BaseTenantTestCase):
     engagement_factory = SpecialAuditFactory
     endpoint = 'special-audits'
@@ -864,7 +902,6 @@ class TestSpecialAuditMetadataViewSet(BaseTestEngagementsCreateViewSet, BaseTena
         )
         self.assertIn('GET', response.data['actions'])
         self.assertIn('conducted_by_sai', response.data['actions']['GET'])
-        # TODO waiting to response from Hassan
         self.assertIn('PUT', response.data['actions'])
         self.assertNotIn('conducted_by_sai', response.data['actions']['PUT'])
 
