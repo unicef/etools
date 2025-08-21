@@ -72,7 +72,7 @@ class TestHandoverPartnersListView(BaseTenantTestCase):
 
     def test_api_handover_partners_list(self):
         response = self.forced_auth_req('get', self.url, user=self.partner_staff)
-        
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data.get('count'), 6)
 
