@@ -46,6 +46,37 @@ class TestPointOfInterestTypeView(BaseTenantTestCase):
         self.assertEqual(len(response.data), 10)
 
 
+class TestHandoverPartnersListView(BaseTenantTestCase):
+    url = reverse('last_mile:partners-list')
+
+    @classmethod
+    def setUp(cls):
+        cls.partner = PartnerFactory(organization=OrganizationFactory(name='Partner'))
+        cls.hidden_partner = PartnerFactory(organization=OrganizationFactory(name='Hidden Partner'), hidden=True)
+        cls.agreement_partner_draft = PartnerFactory(organization=OrganizationFactory(name='Agreement Partner Draft'))
+        cls.agreement_draft = AgreementFactory(partner=cls.agreement_partner_draft, status='draft')
+        cls.agreement_partner_signed = PartnerFactory(organization=OrganizationFactory(name='Agreement Partner Signed'))
+        cls.agreement_signed = AgreementFactory(partner=cls.agreement_partner_signed, status='signed')
+        cls.agreement_partner_ended = PartnerFactory(organization=OrganizationFactory(name='Agreement Partner Ended'))
+        cls.agreement_ended = AgreementFactory(partner=cls.agreement_partner_ended, status='ended')
+        cls.agreement_partner_suspended = PartnerFactory(organization=OrganizationFactory(name='Agreement Partner Suspended'))
+        cls.agreement_suspended = AgreementFactory(partner=cls.agreement_partner_suspended, status='suspended')
+        cls.agreement_partner_terminated = PartnerFactory(organization=OrganizationFactory(name='Agreement Partner Terminated'))
+        cls.agreement_terminated = AgreementFactory(partner=cls.agreement_partner_terminated, status='terminated')
+        cls.partner_without_name = PartnerFactory(organization=OrganizationFactory(name=''))
+        cls.partner_is_deleted_flag = PartnerFactory(organization=OrganizationFactory(name='Deleted Partner'), deleted_flag=True)
+        cls.partner_staff = UserFactory(
+            realms__data=['IP LM Editor'],
+            profile__organization=cls.partner.organization,
+        )
+
+    def test_api_handover_partners_list(self):
+        response = self.forced_auth_req('get', self.url, user=self.partner_staff)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('count'), 6)
+
+
 class TestPointOfInterestView(BaseTenantTestCase):
     fixtures = ('poi_type.json',)
 
