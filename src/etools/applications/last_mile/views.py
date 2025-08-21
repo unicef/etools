@@ -89,7 +89,7 @@ class HandoverPartnerListViewSet(mixins.ListModelMixin, GenericViewSet):
     search_fields = ('name',)
 
     def get_queryset(self):
-        return PartnerOrganization.objects.filter(hidden=False).values('id', 'name')
+        return PartnerOrganization.objects.filter(hidden=False, deleted_flag=False, organization__name__gt='').values('id', 'name')
 
 
 class InventoryItemListView(POIQuerysetMixin, ListAPIView):

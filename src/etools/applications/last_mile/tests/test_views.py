@@ -63,6 +63,8 @@ class TestHandoverPartnersListView(BaseTenantTestCase):
         cls.agreement_suspended = AgreementFactory(partner=cls.agreement_partner_suspended, status='suspended')
         cls.agreement_partner_terminated = PartnerFactory(organization=OrganizationFactory(name='Agreement Partner Terminated'))
         cls.agreement_terminated = AgreementFactory(partner=cls.agreement_partner_terminated, status='terminated')
+        cls.partner_without_name = PartnerFactory(organization=OrganizationFactory(name=''))
+        cls.partner_is_deleted_flag = PartnerFactory(organization=OrganizationFactory(name='Deleted Partner'), deleted_flag=True)
         cls.partner_staff = UserFactory(
             realms__data=['IP LM Editor'],
             profile__organization=cls.partner.organization,
@@ -70,7 +72,7 @@ class TestHandoverPartnersListView(BaseTenantTestCase):
 
     def test_api_handover_partners_list(self):
         response = self.forced_auth_req('get', self.url, user=self.partner_staff)
-
+        
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data.get('count'), 6)
 
