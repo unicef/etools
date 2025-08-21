@@ -3283,8 +3283,12 @@ class InterventionReviewNotification(TimeStampedModel):
             'url': self.review.intervention.get_frontend_object_url(suffix='review')
         }
 
+        recipients = [self.user.email]
+        if self.review.intervention.budget_owner and self.review.intervention.budget_owner.email:
+            recipients.append(self.review.intervention.budget_owner.email)
+        
         send_notification_with_template(
-            recipients=[self.user.email],
+            recipients=recipients,
             template_name='partners/intervention/prc_review_notification',
             context=context,
         )
