@@ -22,7 +22,7 @@ from etools.applications.last_mile import models, serializers
 from etools.applications.last_mile.filters import POIFilter, TransferFilter
 from etools.applications.last_mile.permissions import IsIPLMEditor
 from etools.applications.last_mile.tasks import notify_upload_waybill
-from etools.applications.partners.models import Agreement, PartnerOrganization
+from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.utils.pbi_auth import get_access_token, get_embed_token, get_embed_url, TokenRetrieveException
 
@@ -88,7 +88,7 @@ class HandoverPartnerListViewSet(mixins.ListModelMixin, GenericViewSet):
     search_fields = ('name',)
 
     def get_queryset(self):
-        return PartnerOrganization.objects.filter(agreements__status=Agreement.SIGNED).values('id', 'name')
+        return PartnerOrganization.objects.all().values('id', 'name')
 
 
 class InventoryItemListView(POIQuerysetMixin, ListAPIView):
