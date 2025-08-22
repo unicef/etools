@@ -2346,10 +2346,8 @@ class TestInterventionAcceptBehalfOfPartner(BaseInterventionActionTestCase):
         self.assertEqual(mock_email.call_count, 2)
         self.assertEqual(self.intervention.partner_focal_points.count(), 6)
         self.assertEqual(self.intervention.unicef_focal_points.count(), 6)
-        # first email call is to unicef users
-        self.assertEqual(len(mock_email.call_args_list[0][1]['recipients']), 5)
-        # second call is to external - partner users
-        self.assertEqual(len(mock_email.call_args_list[1][1]['recipients']), 6)
+        self.assertEqual(len(mock_email.call_args_list[0][1]['recipients']), 6)
+        self.assertEqual(len(mock_email.call_args_list[1][1]['recipients']), 7)
         self.assertNotIn(self.unicef_user.email, mock_email.call_args[1]['recipients'])
         self.assertEqual(self.intervention.status, Intervention.DRAFT)
         self.assertEqual(self.intervention.unicef_court, True)
@@ -2498,9 +2496,10 @@ class TestInterventionReview(BaseInterventionActionTestCase):
         self.assertEqual(self.intervention.status, Intervention.REVIEW)
         mock_send.assert_called()
         prc_secretaries_number = get_user_model().objects.filter(realms__group__name=PRC_SECRETARY).distinct().count()
+        expected_recipients = self.intervention.unicef_focal_points.count() + prc_secretaries_number + 1
         self.assertEqual(
             len(mock_send.mock_calls[0].kwargs['recipients']),
-            self.intervention.unicef_focal_points.count() + prc_secretaries_number
+            expected_recipients
         )
 
     def test_patch_after_reject(self):
