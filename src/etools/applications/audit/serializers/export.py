@@ -277,16 +277,22 @@ class SpotCheckDetailCSVSerializer(EngagementBaseDetailCSVSerializer):
 
 class AuditDetailCSVSerializer(EngagementBaseDetailCSVSerializer):
     total_value = CurrencyReadOnlyField()
+    total_value_local = CurrencyReadOnlyField()
     audited_expenditure = CurrencyReadOnlyField()
     audited_expenditure_local = CurrencyReadOnlyField()
     financial_findings = CurrencyReadOnlyField()
     financial_findings_local = CurrencyReadOnlyField()
     audit_opinion = serializers.ReadOnlyField()
     amount_refunded = CurrencyReadOnlyField()
+    amount_refunded_local = CurrencyReadOnlyField()
     additional_supporting_documentation_provided = CurrencyReadOnlyField()
+    additional_supporting_documentation_provided_local = CurrencyReadOnlyField()
     justification_provided_and_accepted = CurrencyReadOnlyField()
+    justification_provided_and_accepted_local = CurrencyReadOnlyField()
     write_off_required = CurrencyReadOnlyField()
+    write_off_required_local = CurrencyReadOnlyField()
     pending_unsupported_amount = CurrencyReadOnlyField()
+    pending_unsupported_amount_local = CurrencyReadOnlyField()
     control_weaknesses = serializers.SerializerMethodField()
     subject_area = serializers.SerializerMethodField()
 

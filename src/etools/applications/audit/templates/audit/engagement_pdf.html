@@ -166,7 +166,7 @@
                 </td>
                 <td class="input-container">
                   <div class="input-container__label">{{ serializer.fields.joint_audit.label }}</div>
-                  <div class="input-container__value">{% if engagement.joint_audit %}Y{% else %}N{% endif %}</div>
+                  <div class="input-container__value">{% if engagement.joint_audit %}Yes{% else %}No{% endif %}</div>
                 </td>
               {% endif %}
             </tr>
@@ -177,12 +177,16 @@
                   <div class="input-container__value">$ {{ engagement.total_value|default_if_none:"0.00"|currency }}</div>
                 </td>
                 <td class="input-container">
+                  <div class="input-container__label">{{ serializer.fields.total_value_local.label }}</div>
+                  <div class="input-container__value">$ {{ engagement.total_value_local|default_if_none:"0.00"|currency }}</div>
+                </td>
+                <td class="input-container">
                   <div class="input-container__label">{{ serializer.fields.shared_ip_with.label }}</div>
                   <div class="input-container__value">{{ engagement.shared_ip_with|default:"-" }}</div>
                 </td>
                 <td class="input-container">
                   <div class="input-container__label">{{ serializer.fields.joint_audit.label }}</div>
-                  <div class="input-container__value">{% if engagement.joint_audit %}Y{% else %}N{% endif %}</div>
+                  <div class="input-container__value">{% if engagement.joint_audit %}Yes{% else %}No{% endif %}</div>
                 </td>
               </tr>
             {% elif engagement.engagement_type == 'sc' %}
@@ -190,6 +194,10 @@
                 <td class="input-container">
                   <div class="input-container__label">{{ serializer.fields.total_value.label }}</div>
                   <div class="input-container__value">$ {{ engagement.total_value|default_if_none:"0.00"|currency }}</div>
+                </td>
+                <td class="input-container">
+                  <div class="input-container__label">{{ serializer.fields.total_value_local.label }}</div>
+                  <div class="input-container__value">$ {{ engagement.total_value_local|default_if_none:"0.00"|currency }}</div>
                 </td>
                 <td class="input-container">
                   <div class="input-container__label">{{ serializer.fields.status.label }}</div>
