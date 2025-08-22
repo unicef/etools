@@ -3286,7 +3286,7 @@ class InterventionReviewNotification(TimeStampedModel):
         recipients = [self.user.email]
         if self.review.intervention.budget_owner and self.review.intervention.budget_owner.email:
             recipients.append(self.review.intervention.budget_owner.email)
-        
+
         send_notification_with_template(
             recipients=recipients,
             template_name='partners/intervention/prc_review_notification',
