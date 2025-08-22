@@ -73,12 +73,12 @@
           <td colspan="2">Amount Local</td>
           <td colspan="2">Amount USD</td>
         </tr>
-        {% for financial_finding in engagement.financial_finding_set %}
+        {% for ff in engagement.financial_finding_set %}
           <tr>
-            <td colspan="2">{{ financial_finding.title|default:"-" }}</td>
-            <td colspan="4">{{ financial_finding.description|default:"-" }}</td>
-            <td colspan="2">{{ financial_finding.local_amount|default:"0.00"|currency }}</td>
-            <td colspan="2">{{ financial_finding.amount|default:"0.00"|currency }}</td>
+            <td colspan="2">{{ ff.title|default:"-" }}</td>
+            <td colspan="4">{{ ff.description|default:"-" }}</td>
+            <td colspan="2">{{ ff.local_amount|default:"0.00"|currency }}</td>
+            <td colspan="2">{{ ff.amount|default:"0.00"|currency }}</td>
           </tr>
         {% endfor %}
       </table>

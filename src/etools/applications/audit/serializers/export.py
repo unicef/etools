@@ -21,7 +21,8 @@ from etools.applications.audit.models import (
 )
 from etools.applications.audit.purchase_order.models import AuditorFirm, PurchaseOrder
 from etools.applications.audit.serializers.auditor import PurchaseOrderItemSerializer
-from etools.applications.audit.serializers.engagement import DetailedFindingInfoSerializer, KeyInternalControlSerializer
+from etools.applications.audit.serializers.engagement import DetailedFindingInfoSerializer, \
+    KeyInternalControlSerializer, FinancialFindingSerializer
 from etools.applications.audit.serializers.risks import (
     AggregatedRiskRootSerializer,
     KeyInternalWeaknessSerializer,
@@ -172,14 +173,20 @@ class AuditPDFSerializer(EngagementPDFSerializer):
     key_internal_controls = KeyInternalControlSerializer(many=True, required=False,
                                                          label=_('Assessment of Key Internal Controls'))
     percent_of_audited_expenditure = serializers.DecimalField(20, 1)
+    financial_finding_set = FinancialFindingSerializer(many=True, required=False,)
 
     class Meta(EngagementPDFSerializer.Meta):
         model = Audit
         fields = EngagementPDFSerializer.Meta.fields + [
-            'audited_expenditure', 'audited_expenditure_local', 'financial_findings', 'financial_findings_local',
-            'financial_finding_set', 'percent_of_audited_expenditure', 'audit_opinion', 'key_internal_weakness',
-            'key_internal_controls', 'amount_refunded', 'additional_supporting_documentation_provided',
-            'justification_provided_and_accepted', 'write_off_required', 'pending_unsupported_amount',
+            'audited_expenditure', 'audited_expenditure_local',
+            'financial_findings', 'financial_findings_local',
+            'financial_finding_set', 'percent_of_audited_expenditure',
+            'audit_opinion', 'key_internal_weakness', 'key_internal_controls',
+            'amount_refunded', 'amount_refunded_local',
+            'additional_supporting_documentation_provided', 'additional_supporting_documentation_provided_local',
+            'justification_provided_and_accepted', 'justification_provided_and_accepted_local',
+            'write_off_required', 'write_off_required_local',
+            'pending_unsupported_amount', 'pending_unsupported_amount_local',
             'explanation_for_additional_information',
         ]
 
