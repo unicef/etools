@@ -20,6 +20,7 @@ from etools.applications.partners.tests.factories import (
     InterventionAttachmentFactory,
     InterventionFactory,
     PartnerFactory,
+    UserFactory,
 )
 from etools.applications.reports.tests.factories import CountryProgrammeFactory
 
