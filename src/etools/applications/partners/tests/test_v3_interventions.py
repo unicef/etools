@@ -2347,7 +2347,7 @@ class TestInterventionAcceptBehalfOfPartner(BaseInterventionActionTestCase):
         self.assertEqual(self.intervention.partner_focal_points.count(), 6)
         self.assertEqual(self.intervention.unicef_focal_points.count(), 6)
         self.assertEqual(len(mock_email.call_args_list[0][1]['recipients']), 6)
-        self.assertEqual(len(mock_email.call_args_list[1][1]['recipients']), 7)
+        self.assertEqual(len(mock_email.call_args_list[1][1]['recipients']), 6)
         self.assertNotIn(self.unicef_user.email, mock_email.call_args[1]['recipients'])
         self.assertEqual(self.intervention.status, Intervention.DRAFT)
         self.assertEqual(self.intervention.unicef_court, True)
