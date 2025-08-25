@@ -2206,6 +2206,9 @@ class TestInterventionAccept(BaseInterventionActionTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         self.assertIn("available_actions", response.data)
         mock_send.assert_called()
+        # Verify budget owner is in recipients
+        recipients = mock_send.call_args[1]['recipients']
+        self.assertIn(self.intervention.budget_owner.email, recipients)
         self.intervention.refresh_from_db()
         self.assertTrue(self.intervention.unicef_accepted)
         self.assertIsNone(self.intervention.submission_date)
@@ -2235,6 +2238,9 @@ class TestInterventionAccept(BaseInterventionActionTestCase):
             )
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         mock_send.assert_called()
+        # Verify budget owner is in recipients
+        recipients = mock_send.call_args[1]['recipients']
+        self.assertIn(self.intervention.budget_owner.email, recipients)
         self.intervention.refresh_from_db()
         self.assertTrue(self.intervention.partner_accepted)
         self.assertFalse(self.intervention.accepted_on_behalf_of_partner)
@@ -2464,6 +2470,9 @@ class TestInterventionReview(BaseInterventionActionTestCase):
             response = self.forced_auth_req("patch", self.url, user=self.unicef_user, data={'review_type': 'prc'})
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         mock_send.assert_called()
+        # Verify budget owner is in recipients
+        recipients = mock_send.call_args[1]['recipients']
+        self.assertIn(self.intervention.budget_owner.email, recipients)
         self.intervention.refresh_from_db()
         self.assertEqual(self.intervention.status, Intervention.REVIEW)
         self.assertEqual(self.intervention.submission_date_prc, datetime.date.today())
@@ -2642,6 +2651,9 @@ class TestInterventionReviewSendBack(BaseInterventionActionTestCase):
             response = self.forced_auth_req("patch", self.url, user=self.unicef_user, data={'sent_back_comment': 'Because'})
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         mock_send.assert_called()
+        # Verify budget owner is in recipients
+        recipients = mock_send.call_args[1]['recipients']
+        self.assertIn(self.intervention.budget_owner.email, recipients)
         self.intervention.refresh_from_db()
         self.assertEqual(self.intervention.status, Intervention.DRAFT)
 
@@ -2868,6 +2880,9 @@ class TestInterventionCancel(BaseInterventionActionTestCase):
             )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         mock_send.assert_called()
+        # Verify budget owner is in recipients
+        recipients = mock_send.call_args[1]['recipients']
+        self.assertIn(self.intervention.budget_owner.email, recipients)
         self.intervention.refresh_from_db()
         self.assertEqual(self.intervention.status, Intervention.CANCELLED)
         self.assertFalse(self.intervention.unicef_accepted)
@@ -2952,6 +2967,9 @@ class TestInterventionTerminate(BaseInterventionActionTestCase):
             response = self.forced_auth_req("patch", self.url, user=self.unicef_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         mock_send.assert_called()
+        # Verify budget owner is in recipients
+        recipients = mock_send.call_args[1]['recipients']
+        self.assertIn(self.intervention.budget_owner.email, recipients)
         self.intervention.refresh_from_db()
         self.assertEqual(self.intervention.status, Intervention.TERMINATED)
         self.assertFalse(self.intervention.unicef_accepted)
@@ -3023,6 +3041,9 @@ class TestInterventionSuspend(BaseInterventionActionTestCase):
             response = self.forced_auth_req("patch", self.url, user=self.unicef_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         mock_send.assert_called()
+        # Verify budget owner is in recipients
+        recipients = mock_send.call_args[1]['recipients']
+        self.assertIn(self.intervention.budget_owner.email, recipients)
         self.intervention.refresh_from_db()
         self.assertEqual(self.intervention.status, Intervention.SUSPENDED)
         self.assertFalse(self.intervention.unicef_accepted)
@@ -3098,6 +3119,9 @@ class TestInterventionUnsuspend(BaseInterventionActionTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         mock_send.assert_called()
+        # Verify budget owner is in recipients
+        recipients = mock_send.call_args[1]['recipients']
+        self.assertIn(self.intervention.budget_owner.email, recipients)
         self.intervention.refresh_from_db()
         self.assertEqual(self.intervention.status, Intervention.ACTIVE)
         self.assertFalse(self.intervention.unicef_accepted)
@@ -3169,6 +3193,9 @@ class TestInterventionSignature(BaseInterventionActionTestCase):
             response = self.forced_auth_req("patch", self.url, user=self.unicef_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
         mock_send.assert_called()
+        # Verify budget owner is in recipients
+        recipients = mock_send.call_args[1]['recipients']
+        self.assertIn(self.intervention.budget_owner.email, recipients)
         intervention = Intervention.objects.get(pk=self.intervention.pk)
         self.assertEqual(intervention.status, Intervention.SIGNATURE)
         self.assertEqual(intervention.review.review_date, timezone.now().date())
@@ -3228,6 +3255,9 @@ class TestInterventionUnlock(BaseInterventionActionTestCase):
             response = self.forced_auth_req("patch", self.url, user=self.unicef_user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         mock_send.assert_called()
+        # Verify budget owner is in recipients
+        recipients = mock_send.call_args[1]['recipients']
+        self.assertIn(self.intervention.budget_owner.email, recipients)
         self.intervention.refresh_from_db()
         self.assertFalse(self.intervention.unicef_accepted)
 
@@ -3254,6 +3284,9 @@ class TestInterventionUnlock(BaseInterventionActionTestCase):
             )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         mock_send.assert_called()
+        # Verify budget owner is in recipients
+        recipients = mock_send.call_args[1]['recipients']
+        self.assertIn(self.intervention.budget_owner.email, recipients)
         self.intervention.refresh_from_db()
         self.assertFalse(self.intervention.partner_accepted)
 
@@ -3325,6 +3358,9 @@ class TestInterventionSendToPartner(BaseInterventionActionTestCase):
             )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         mock_send.assert_called()
+        # Verify budget owner is in recipients
+        recipients = mock_send.call_args[1]['recipients']
+        self.assertIn(self.intervention.budget_owner.email, recipients)
         self.intervention.refresh_from_db()
         self.assertIsNotNone(self.intervention.date_sent_to_partner)
         self.assertEqual(
@@ -3403,6 +3439,9 @@ class TestInterventionSendToUNICEF(BaseInterventionActionTestCase):
             )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         mock_send.assert_called()
+        # Verify budget owner is in recipients
+        recipients = mock_send.call_args[1]['recipients']
+        self.assertIn(self.intervention.budget_owner.email, recipients)
         self.intervention.refresh_from_db()
         self.assertTrue(self.intervention.submission_date)
         self.assertEqual(
