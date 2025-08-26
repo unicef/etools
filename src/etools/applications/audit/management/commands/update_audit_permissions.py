@@ -138,6 +138,10 @@ class Command(BaseCommand):
         'audit.spotcheck.total_amount_of_ineligible_expenditure',
         'audit.spotcheck.total_amount_tested_local',
         'audit.spotcheck.total_amount_of_ineligible_expenditure_local',
+        'audit.spotcheck.amount_refunded',
+        'audit.spotcheck.additional_supporting_documentation_provided',
+        'audit.spotcheck.justification_provided_and_accepted',
+        'audit.spotcheck.write_off_required',
     ]
 
     engagement_overview_editable_page = (engagement_overview_editable_block + special_audit_block +
