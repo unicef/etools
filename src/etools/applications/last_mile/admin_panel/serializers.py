@@ -1,11 +1,13 @@
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password
+from django.contrib.gis.geos import Point
 from django.db import transaction
 from django.utils import timezone
 from django.utils.encoding import force_str
 
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 from rest_framework_gis.fields import GeometryField
 
 from etools.applications.last_mile import models
@@ -47,11 +49,7 @@ class UserAdminSerializer(SimpleUserSerializer):
     country = serializers.CharField(source='profile.country.name', read_only=True)
     country_id = serializers.CharField(source='profile.country.id', read_only=True)
     last_mile_profile = serializers.CharField(source='profile.id', read_only=True)
-    point_of_interests = SimplePointOfInterestSerializer(
-        source='profile.organization.partner.points_of_interest',
-        many=True,
-        read_only=True
-    )
+    point_of_interests = serializers.SerializerMethodField(read_only=True)
     last_mile_profile = LastMileProfileSerializer(read_only=True)
 
     class Meta:
@@ -72,6 +70,10 @@ class UserAdminSerializer(SimpleUserSerializer):
             'point_of_interests',
             'last_mile_profile',
         )
+
+    def get_point_of_interests(self, obj):
+        poi_instances = [upoi.point_of_interest for upoi in obj.points_of_interest.all()]
+        return SimplePointOfInterestSerializer(poi_instances, many=True, read_only=True, context=self.context).data
 
 
 class UserAdminExportSerializer(serializers.ModelSerializer):
@@ -194,17 +196,55 @@ class UserAdminUpdateSerializer(serializers.ModelSerializer):
             'point_of_interests',
         )
 
+    def _validate_pois_for_user(self, user, points_of_interest):
+        partner = user.partner
+        if not partner:
+            partner = user.profile.organization.partner if user.profile.organization else None
+
+        allowed_poi_ids = set()
+        if partner:
+            partner_poi_ids = partner.points_of_interest.values_list('id', flat=True)
+            allowed_poi_ids.update(partner_poi_ids)
+
+        global_poi_ids = models.PointOfInterest.objects.filter(
+            partner_organizations__isnull=True, is_active=True
+        ).exclude(name="UNICEF Warehouse").values_list('id', flat=True)
+        allowed_poi_ids.update(global_poi_ids)
+        new_poi_ids = {poi.id for poi in points_of_interest}
+
+        if not new_poi_ids.issubset(allowed_poi_ids):
+            invalid_ids = new_poi_ids - allowed_poi_ids
+            invalid_pois = models.PointOfInterest.objects.filter(id__in=invalid_ids)
+            invalid_names = ", ".join([poi.name for poi in invalid_pois])
+            raise ValidationError(
+                f'User does not have access to the following Points of Interest: {invalid_names}s'
+            )
+
     @transaction.atomic
     def update(self, instance, validated_data):
         self.adminValidator.validate_profile(instance)
 
         profile_data = validated_data.pop('profile', {})
 
-        point_of_interests = validated_data.pop('point_of_interests', None)
-        if point_of_interests is not None:
-            partner = instance.profile.organization.partner
-            partner.points_of_interest.set(point_of_interests)
-            instance.save()
+        if 'point_of_interests' in validated_data:
+            point_of_interests = validated_data.pop('point_of_interests')
+            self._validate_pois_for_user(instance, point_of_interests)
+            new_poi_ids = {poi.id for poi in point_of_interests}
+            models.UserPointsOfInterest.objects.filter(user=instance).exclude(
+                point_of_interest_id__in=new_poi_ids
+            ).delete()
+            existing_poi_ids = set(
+                models.UserPointsOfInterest.objects.filter(
+                    user=instance
+                ).values_list('point_of_interest_id', flat=True)
+            )
+            ids_to_create = new_poi_ids - existing_poi_ids
+            if ids_to_create:
+                new_relations = [
+                    models.UserPointsOfInterest(user=instance, point_of_interest_id=poi_id)
+                    for poi_id in ids_to_create
+                ]
+                models.UserPointsOfInterest.objects.bulk_create(new_relations)
 
         for attr, value in validated_data.items():
             if attr == 'password':
@@ -245,9 +285,17 @@ class PointOfInterestCustomSerializer(serializers.ModelSerializer):
     )
     point = GeometryField(required=False)
 
+    created_by = serializers.HiddenField(
+        default=serializers.CurrentUserDefault()
+    )
+
+    is_active = serializers.HiddenField(
+        default=False
+    )
+
     class Meta:
         model = models.PointOfInterest
-        fields = ('name', 'parent', 'p_code', 'partner_organizations', 'poi_type', 'point')
+        fields = ('name', 'parent', 'p_code', 'partner_organizations', 'poi_type', 'point', 'created_by', 'is_active')
 
 
 class SimplePartnerOrganizationSerializer(serializers.ModelSerializer):
@@ -780,6 +828,28 @@ class BulkUpdateLastMileProfileStatusSerializer(serializers.Serializer):
         return validated_data
 
 
+class BulkReviewPointOfInterestSerializer(serializers.Serializer):
+    status = serializers.ChoiceField(choices=PointOfInterestSerializer.Meta.model.ApprovalStatus.choices)
+    points_of_interest = serializers.PrimaryKeyRelatedField(queryset=models.PointOfInterest.objects.all(), many=True, write_only=True)
+    review_notes = serializers.CharField(required=False)
+
+    def validate_status(self, value):
+        self.admin_validator = AdminPanelValidator()
+        self.admin_validator.validate_status(value)
+        return value
+
+    @transaction.atomic
+    def update(self, validated_data, approver_user):
+        points_of_interest = validated_data.pop('points_of_interest')
+        status = validated_data.get('status')
+        for poi in points_of_interest:
+            if status == models.PointOfInterest.ApprovalStatus.REJECTED:
+                poi.reject(approver_user, validated_data.get('review_notes'))
+            elif status == models.PointOfInterest.ApprovalStatus.APPROVED:
+                poi.approve(approver_user, validated_data.get('review_notes'))
+        return validated_data
+
+
 class LastMileUserProfileSerializer(serializers.ModelSerializer):
     id = serializers.CharField(source='last_mile_profile.id', read_only=True)
     status = serializers.CharField(source='last_mile_profile.status', read_only=True)
@@ -841,6 +911,83 @@ class UserImportSerializer(serializers.Serializer):
         except Exception as ex:
             return False, str(ex)
         return True, user
+
+
+class LocationImportSerializer(serializers.Serializer):
+    p_code_location = serializers.CharField()
+    location_name = serializers.CharField()
+    primary_type_name = serializers.CharField()
+    latitude = serializers.CharField()
+    longitude = serializers.CharField()
+    ip_numbers = serializers.SlugRelatedField(
+        slug_field='organization__vendor_number',
+        many=True,
+        queryset=PartnerOrganization.objects.all(),
+        write_only=True,
+        required=False,
+        allow_null=True,
+        allow_empty=True
+    )
+
+    def validate_p_code_location(self, value):
+        try:
+            data = models.PointOfInterest.objects.get(p_code=value)
+            if data:
+                raise serializers.ValidationError("Point of interest already exists")
+        except models.PointOfInterest.DoesNotExist:
+            return value
+
+    def validate_location_name(self, value):
+        try:
+            data = models.PointOfInterest.objects.get(name=value)
+            if data:
+                raise serializers.ValidationError("Point of interest already exists")
+            if not value:
+                raise serializers.ValidationError("Point of interest name is required")
+            if len(value) < 1:
+                raise serializers.ValidationError("Point of interest name is required")
+        except models.PointOfInterest.DoesNotExist:
+            return value
+
+    def validate_primary_type_name(self, value):
+        poi_type = models.PointOfInterestType.objects.filter(name=value).first()
+        if not poi_type:
+            raise serializers.ValidationError("Point of interest type does not exist")
+        return poi_type
+
+    def validate_latitude(self, value):
+        try:
+            return float(value)
+        except ValueError:
+            raise serializers.ValidationError("Invalid latitude")
+
+    def validate_longitude(self, value):
+        try:
+            return float(value)
+        except ValueError:
+            raise serializers.ValidationError("Invalid longitude")
+
+    def create(self, validated_data, created_by):
+        partner_organizations = validated_data.pop('ip_numbers')
+        p_code_location = validated_data.pop('p_code_location')
+        location_name = validated_data.pop('location_name')
+        primary_type_name = validated_data.pop('primary_type_name')
+        latitude = validated_data.pop('latitude')
+        longitude = validated_data.pop('longitude')
+        try:
+            with transaction.atomic():
+                point_of_interest = models.PointOfInterest.objects.create(
+                    p_code=p_code_location,
+                    name=location_name,
+                    poi_type=primary_type_name,
+                    point=Point(longitude, latitude),
+                    created_by=created_by,
+                    is_active=False,
+                )
+                point_of_interest.partner_organizations.set(partner_organizations)
+        except Exception as ex:
+            return False, str(ex)
+        return True, point_of_interest
 
 
 class MaterialsLightSerializer(serializers.ModelSerializer):

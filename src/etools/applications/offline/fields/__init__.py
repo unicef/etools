@@ -1,5 +1,5 @@
 from .base import Structure
-from .choices import ChoiceField
+from .choices import ChoiceField, MultiChoiceField
 from .combined import Group
 from .files import MixedUploadedRemoteFileField, RemoteFileField, UploadedFileField
 from .informational import Information
@@ -14,6 +14,7 @@ __all__ = [
     'FloatField',
     'BooleanField',
     'ChoiceField',
+    'MultiChoiceField',
     'RemoteFileField',
     'UploadedFileField',
     'MixedUploadedRemoteFileField',

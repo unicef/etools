@@ -70,13 +70,24 @@ class IsLMSMAdmin(IsAuthenticated):
         UPDATE_USER_PROFILE_ADMIN_PANEL: [
             APPROVE_USERS_ADMIN_PANEL_PERMISSION
         ],
+        # Can approve locations
+        LOCATIONS_BULK_REVIEW_ADMIN_PANEL: [
+            APPROVE_LOCATIONS_ADMIN_PANEL_PERMISSION
+        ],
     }
+
+    def special_case_permissions(self, view):
+        if view.basename == LOCATIONS_ADMIN_PANEL:
+            if view.name == 'Bulk review':
+                return LOCATIONS_BULK_REVIEW_ADMIN_PANEL
+        return view.basename
 
     def get_required_permissions(self, view_basename: str) -> set:
         return self.MAPPED_VIEWS_TO_PERMS.get(view_basename, set())
 
     def has_page_permission(self, request, view) -> bool:
-        required_perms = self.get_required_permissions(view.basename)
+        view_basename = self.special_case_permissions(view)
+        required_perms = self.get_required_permissions(view_basename)
         if not required_perms:
             return False
         required_perms = required_perms if request.method == 'GET' else required_perms[:1]

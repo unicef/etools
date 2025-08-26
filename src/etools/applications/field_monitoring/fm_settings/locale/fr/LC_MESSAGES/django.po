@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-07-24 08:57+0000\n"
+"POT-Creation-Date: 2025-08-18 06:45+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -137,6 +137,9 @@ msgstr "booléen"
 
 msgid "Likert Scale"
 msgstr "Échelle de Likert"
+
+msgid "Multiple Choice"
+msgstr "Choix multiples"
 
 msgid "Partner"
 msgstr "Partenaire"

@@ -52,7 +52,7 @@ class QuestionFactory(factory.django.DjangoModelFactory):
     category = factory.SubFactory(CategoryFactory)
     answer_type = fuzzy.FuzzyChoice(dict(Question.ANSWER_TYPES).keys())
     is_custom = True
-    choices_size = factory.Maybe(LazyAttribute(lambda self: self.answer_type == Question.ANSWER_TYPES.likert_scale), 3)
+    choices_size = factory.Maybe(LazyAttribute(lambda self: self.answer_type == Question.ANSWER_TYPES.likert_scale or self.answer_type == Question.ANSWER_TYPES.multiple_choice), 3)
     level = fuzzy.FuzzyChoice(dict(Question.LEVELS).keys())
     text = fuzzy.FuzzyText()
 
@@ -61,8 +61,11 @@ class QuestionFactory(factory.django.DjangoModelFactory):
 
     @factory.post_generation
     def options(self, created, extracted, count=0, **kwargs):
-        if not count and self.answer_type == Question.ANSWER_TYPES.likert_scale:
-            count = 2
+        if not count:
+            if self.answer_type == Question.ANSWER_TYPES.likert_scale:
+                count = 2
+            elif self.answer_type == Question.ANSWER_TYPES.multiple_choice:
+                count = 3
 
         OptionFactory.create_batch(count, question=self)
 

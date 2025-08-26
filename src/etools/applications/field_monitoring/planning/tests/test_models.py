@@ -5,7 +5,9 @@ from django.core.management import call_command
 
 from dateutil.utils import today
 from factory import fuzzy
+from rest_framework.test import APIRequestFactory
 
+from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentLinkFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.field_monitoring.data_collection.models import (
     ActivityOverallFinding,
@@ -23,6 +25,7 @@ from etools.applications.field_monitoring.fm_settings.tests.factories import Que
 from etools.applications.field_monitoring.planning.activity_validation.validator import ActivityValid
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
 from etools.applications.field_monitoring.planning.tests.factories import (
+    MonitoringActivityActionPointFactory,
     MonitoringActivityFactory,
     MonitoringActivityGroupFactory,
     QuestionTemplateFactory,
@@ -279,7 +282,7 @@ class TestMonitoringActivityGroups(BaseTenantTestCase):
         self.assertEqual(new_hact['programmatic_visits']['completed'][get_quarter()], 3)
 
 
-class TestMonitoringActivityFindingsExport(BaseTenantTestCase):
+class TestMonitoringActivityExport(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
@@ -298,6 +301,10 @@ class TestMonitoringActivityFindingsExport(BaseTenantTestCase):
         cls.question2 = QuestionFactory(
             text='text question2',
             answer_type=Question.ANSWER_TYPES.text
+        )
+        cls.question3 = QuestionFactory(
+            text='text question3',
+            answer_type=Question.ANSWER_TYPES.multiple_choice
         )
 
     def test_activity_overall_findings(self):
@@ -331,6 +338,11 @@ class TestMonitoringActivityFindingsExport(BaseTenantTestCase):
             cp_output=self.cp_output,
             question=self.question2
         )
+        activity_question3 = ActivityQuestionFactory(
+            monitoring_activity=self.activity,
+            cp_output=self.cp_output,
+            question=self.question3
+        )
         disabled_activity_question = ActivityQuestionFactory(
             monitoring_activity=self.activity,
             cp_output=self.cp_output,
@@ -345,6 +357,10 @@ class TestMonitoringActivityFindingsExport(BaseTenantTestCase):
         overall_findings.append(ActivityQuestionOverallFinding(
             activity_question=activity_question2,
             value='text value')
+        )
+        overall_findings.append(ActivityQuestionOverallFinding(
+            activity_question=activity_question3,
+            value=[self.question3.options.all()[0].value, self.question3.options.all()[1].value])
         )
         overall_findings.append(ActivityQuestionOverallFinding(
             activity_question=disabled_activity_question)
@@ -364,8 +380,18 @@ class TestMonitoringActivityFindingsExport(BaseTenantTestCase):
 
             self.assertEqual(actual['question_text'], expected.activity_question.question.text)
 
-            expected_value = expected.value if expected.activity_question.question.answer_type != 'likert_scale' \
-                else expected.activity_question.question.options.all()[0].label
+            question_type = expected.activity_question.question.answer_type
+            if question_type == 'likert_scale':
+                expected_value = expected.activity_question.question.options.all()[0].label
+            elif question_type == 'multiple_choice':
+                # Map values to labels and join with comma
+                option_labels = expected.activity_question.question.options.filter(
+                    value__in=expected.value or []
+                ).values_list('label', flat=True)
+                expected_value = ', '.join(option_labels)
+            else:
+                expected_value = expected.value
+
             self.assertEqual(actual['value'], expected_value)
 
     def test_get_export_checklist_findings(self):
@@ -373,6 +399,9 @@ class TestMonitoringActivityFindingsExport(BaseTenantTestCase):
         ChecklistOverallFindingFactory(
             started_checklist=started_checklist,
             partner=self.partner)
+        ChecklistOverallFindingFactory(
+            started_checklist=started_checklist,
+            cp_output=self.cp_output)
         ChecklistOverallFindingFactory(
             started_checklist=started_checklist,
             cp_output=self.cp_output)
@@ -386,6 +415,11 @@ class TestMonitoringActivityFindingsExport(BaseTenantTestCase):
             monitoring_activity=self.activity,
             cp_output=self.cp_output,
             question=self.question2
+        )
+        activity_question3 = ActivityQuestionFactory(
+            monitoring_activity=self.activity,
+            cp_output=self.cp_output,
+            question=self.question3
         )
         disabled_activity_question = ActivityQuestionFactory(
             monitoring_activity=self.activity,
@@ -401,6 +435,11 @@ class TestMonitoringActivityFindingsExport(BaseTenantTestCase):
             started_checklist=started_checklist,
             activity_question=activity_question2,
             value='text value'
+        )
+        FindingFactory(
+            started_checklist=started_checklist,
+            activity_question=activity_question3,
+            value=[self.question3.options.all()[0].value, self.question3.options.all()[1].value]
         )
         FindingFactory(
             started_checklist=started_checklist,
@@ -435,3 +474,97 @@ class TestMonitoringActivityFindingsExport(BaseTenantTestCase):
                 expected_entity = expected_overall.partner.name if expected_overall.partner \
                     else expected_overall.cp_output.name
                 self.assertEqual(actual_overall['entity_name'], expected_entity)
+
+    def test_get_export_action_points(self):
+        action_point_1 = MonitoringActivityActionPointFactory(
+            monitoring_activity=self.activity,
+            status='open',
+            comments__count=0
+        )
+        action_point_2 = MonitoringActivityActionPointFactory(
+            monitoring_activity=self.activity,
+            status='completed',
+            comments__count=2
+        )
+        request = APIRequestFactory()
+        export_list = list(self.activity.get_export_action_points(request))
+
+        self.assertEqual(len(export_list), self.activity.actionpoint_set.all().count())
+        export_list.sort(key=lambda x: x['reference_number'])
+
+        for actual, expected in zip(export_list, [action_point_1, action_point_2]):
+
+            self.assertEqual(actual['reference_number'], expected.reference_number)
+            self.assertEqual(actual['status'], expected.status)
+            self.assertEqual(actual['is_high_priority'], 'No')
+            self.assertEqual(actual['description'], expected.description)
+            self.assertEqual(actual['section'], expected.section.name)
+            self.assertEqual(actual['description'], expected.description)
+            self.assertEqual(actual['assigned_to'], expected.assigned_to.full_name)
+            self.assertEqual(actual['assigned_by'], expected.assigned_by.full_name)
+            self.assertEqual(actual['office'], expected.office.name)
+
+            comments_qs = expected.comments.all()
+            self.assertEqual(len(actual['comments']), comments_qs.count())
+            for actual_overall, expected_comment in zip(actual['comments'], comments_qs):
+                self.assertEqual(actual_overall['comment'], expected_comment.comment)
+                self.assertEqual(actual_overall['user'], expected_comment.user.full_name)
+
+    def test_get_export_reported_attachments(self):
+        attachment_1 = AttachmentFactory(content_object=self.activity, code='report_attachments')
+        AttachmentLinkFactory(attachment=attachment_1, content_object=self.activity)
+        attachment_2 = AttachmentFactory(content_object=self.activity, code='report_attachments')
+        AttachmentLinkFactory(attachment=attachment_2, content_object=self.activity)
+        attachment_3 = AttachmentFactory(content_object=self.activity, code='report_attachments')
+        AttachmentLinkFactory(attachment=attachment_3, content_object=self.activity)
+
+        request = APIRequestFactory()
+        export_list = list(self.activity.get_export_reported_attachments(request))
+
+        self.assertEqual(len(export_list), self.activity.report_attachments.all().count())
+        for actual, expected in zip(export_list, [attachment_1, attachment_2, attachment_3]):
+            self.assertEqual(actual['date_uploaded'], expected.created)
+            self.assertEqual(actual['doc_type'], expected.file_type.label)
+            self.assertEqual(actual['filename'], expected.filename)
+            self.assertEqual(actual['url_path'], request.build_absolute_uri(expected.file.url) if expected.file else "-")
+
+    def test_get_export_related_attachments(self):
+        attachment_1 = AttachmentFactory(content_object=self.activity, code='attachments')
+        AttachmentLinkFactory(attachment=attachment_1, content_object=self.activity)
+        attachment_2 = AttachmentFactory(content_object=self.activity, code='attachments')
+        AttachmentLinkFactory(attachment=attachment_2, content_object=self.activity)
+
+        request = APIRequestFactory()
+        export_list = list(self.activity.get_export_related_attachments(request))
+
+        self.assertEqual(len(export_list), self.activity.attachments.all().count())
+        for actual, expected in zip(export_list, [attachment_1, attachment_2]):
+            self.assertEqual(actual['date_uploaded'], expected.created)
+            self.assertEqual(actual['doc_type'], expected.file_type.label)
+            self.assertEqual(actual['filename'], expected.filename)
+            self.assertEqual(actual['url_path'], request.build_absolute_uri(expected.file.url) if expected.file else "-")
+
+    def test_get_export_checklist_attachments(self):
+        started_checklist = StartedChecklistFactory(monitoring_activity=self.activity)
+
+        checklist_overall_finding_1 = ChecklistOverallFindingFactory(started_checklist=started_checklist)
+        attachment_1 = AttachmentFactory(content_object=checklist_overall_finding_1, code='attachments')
+        AttachmentLinkFactory(attachment=attachment_1, content_object=checklist_overall_finding_1)
+
+        checklist_overall_finding_2 = ChecklistOverallFindingFactory(started_checklist=started_checklist)
+        attachment_2 = AttachmentFactory(content_object=checklist_overall_finding_2, code='attachments')
+        AttachmentLinkFactory(attachment=attachment_2, content_object=checklist_overall_finding_2)
+
+        request = APIRequestFactory()
+        export_list = list(self.activity.get_export_checklist_attachments(request))
+
+        self.assertEqual(len(export_list), 2)
+
+        for actual, expected_att in zip(export_list, [attachment_1, attachment_2]):
+            self.assertEqual(actual['method'], started_checklist.method.name)
+            self.assertEqual(actual['method_type'], started_checklist.information_source)
+            self.assertEqual(actual['data_collector'], started_checklist.author.full_name)
+            self.assertEqual(actual['date_uploaded'], expected_att.created)
+            self.assertEqual(actual['doc_type'], expected_att.file_type.label)
+            self.assertEqual(actual['filename'], expected_att.filename)
+            self.assertEqual(actual['url_path'], request.build_absolute_uri(expected_att.file.url) if expected_att.file else "-")

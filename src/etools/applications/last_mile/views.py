@@ -22,7 +22,7 @@ from etools.applications.last_mile import models, serializers
 from etools.applications.last_mile.filters import POIFilter, TransferFilter
 from etools.applications.last_mile.permissions import IsIPLMEditor
 from etools.applications.last_mile.tasks import notify_upload_waybill
-from etools.applications.partners.models import Agreement, PartnerOrganization
+from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.utils.pbi_auth import get_access_token, get_embed_token, get_embed_url, TokenRetrieveException
 
@@ -40,6 +40,7 @@ class POIQuerysetMixin:
             qs = (models.PointOfInterest.objects
                   .filter(Q(partner_organizations=partner) | Q(partner_organizations__isnull=True))
                   .filter(is_active=True)
+                  .filter(Q(users__user__id=self.request.user.id) | Q(users__isnull=True))
                   .exclude(name="UNICEF Warehouse")  # exclude UNICEF Warehouse
                   .select_related('parent').defer('parent__point', 'parent__geom', 'point')
                   .select_related('poi_type')
@@ -61,7 +62,7 @@ class PointOfInterestViewSet(POIQuerysetMixin, ModelViewSet):
 
     def get_queryset(self):
         return self.get_poi_queryset(exclude_partner_prefetch=True).only(
-            'parent__name', 'p_code', 'name', 'is_active', 'description', 'poi_type'
+            'parent__name', 'p_code', 'name', 'is_active', 'description', 'poi_type', 'status', 'created_on', 'approved_on', 'review_notes', 'created_by_id', 'approved_by_id'
         )
 
     @action(detail=True, methods=['post'], url_path='upload-waybill',
@@ -88,7 +89,7 @@ class HandoverPartnerListViewSet(mixins.ListModelMixin, GenericViewSet):
     search_fields = ('name',)
 
     def get_queryset(self):
-        return PartnerOrganization.objects.filter(agreements__status=Agreement.SIGNED).values('id', 'name')
+        return PartnerOrganization.objects.filter(hidden=False, deleted_flag=False, organization__name__gt='').values('id', 'name')
 
 
 class InventoryItemListView(POIQuerysetMixin, ListAPIView):
