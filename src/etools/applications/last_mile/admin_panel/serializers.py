@@ -42,6 +42,15 @@ class LastMileProfileSerializer(serializers.ModelSerializer):
         fields = ('id', 'user', 'status', 'created_by', 'approved_by', 'created_on', 'approved_on', 'review_notes')
 
 
+class SimpleRealmSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(source='group.name', read_only=True)
+    id = serializers.CharField(source='group.id', read_only=True)
+
+    class Meta:
+        model = Realm
+        fields = ('id', 'name')
+
+
 class UserAdminSerializer(SimpleUserSerializer):
     ip_name = serializers.CharField(source='profile.organization.name', read_only=True)
     ip_number = serializers.CharField(source='profile.organization.vendor_number', read_only=True)
@@ -51,6 +60,11 @@ class UserAdminSerializer(SimpleUserSerializer):
     last_mile_profile = serializers.CharField(source='profile.id', read_only=True)
     point_of_interests = serializers.SerializerMethodField(read_only=True)
     last_mile_profile = LastMileProfileSerializer(read_only=True)
+    alert_types = serializers.SerializerMethodField(read_only=True)
+
+    def get_alert_types(self, obj):
+        realms = getattr(obj, 'realms', [])
+        return SimpleRealmSerializer(realms, many=True, read_only=True).data
 
     class Meta:
         model = get_user_model()
@@ -69,6 +83,7 @@ class UserAdminSerializer(SimpleUserSerializer):
             'organization_id',
             'point_of_interests',
             'last_mile_profile',
+            'alert_types',
         )
 
     def get_point_of_interests(self, obj):
@@ -483,15 +498,21 @@ class PointOfInterestLightSerializer(serializers.ModelSerializer):
 
 class AlertNotificationSerializer(serializers.ModelSerializer):
 
-    alert_type = serializers.SerializerMethodField(read_only=True)
-    email = serializers.EmailField(source='user.email')
+    alert_types = serializers.SerializerMethodField(read_only=True)
+    email = serializers.EmailField()
 
-    def get_alert_type(self, obj):
-        return self.context.get('ALERT_TYPES').get(obj.group.name)
+    def get_alert_types(self, obj):
+        alert_types_map = self.context.get('ALERT_TYPES', {})
+        group_names = getattr(obj, 'alert_group_names', [])
+
+        if not group_names:
+            return []
+
+        return [alert_types_map.get(group_name, group_name) for group_name in group_names]
 
     class Meta:
-        model = Realm
-        fields = ('id', 'email', 'alert_type')
+        model = get_user_model()
+        fields = ('id', 'email', 'alert_types')
 
 
 class AlertNotificationCreateSerializer(serializers.ModelSerializer):
@@ -499,30 +520,32 @@ class AlertNotificationCreateSerializer(serializers.ModelSerializer):
     adminValidator = AdminPanelValidator()
 
     email = serializers.EmailField(source='user.email')
-    group = serializers.PrimaryKeyRelatedField(
+    groups = serializers.PrimaryKeyRelatedField(
         queryset=Group.objects.all(),
+        many=True
     )
 
     @transaction.atomic
     def create(self, validated_data):
         self.adminValidator.validate_input_data(validated_data)
         self.adminValidator.validate_user_email(validated_data['user']['email'])
-        self.adminValidator.validate_group_name(validated_data['group'], self.context['ALERT_TYPES'].keys())
+        self.adminValidator.validate_group_names(validated_data['groups'], self.context['ALERT_TYPES'].keys())
         country_schema = self.context.get('country_schema')
         user = get_user_model().objects.get(email=validated_data['user']['email'])
         country = Country.objects.get(schema_name=country_schema)
-        self.adminValidator.validate_realm(user, country, validated_data['group'])
-        instance = Realm.objects.create(
-            user=user,
-            country=country,
-            organization=user.profile.organization,
-            group=validated_data['group']
-        )
-        return instance
+        self.adminValidator.validate_realm(user, country, validated_data['groups'])
+        realms_to_create = []
+        for group in validated_data['groups']:
+            realms_to_create.append(Realm(user=user, country=country, organization=user.profile.organization, group=group))
+        Realm.objects.bulk_create(realms_to_create)
+        return {
+            "user": {"email": validated_data['user']['email']},
+            'groups': [group for group in validated_data['groups']]
+        }
 
     class Meta:
         model = Realm
-        fields = ('email', 'group')
+        fields = ('email', 'groups')
 
 
 class AlertNotificationCustomeSerializer(serializers.ModelSerializer):
