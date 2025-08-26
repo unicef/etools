@@ -21,6 +21,7 @@ from etools.applications.reports.tests.factories import SectionFactory
 from etools.applications.t2f.tests.factories import TravelActivityFactory, TravelFactory
 from etools.applications.tpm.tests.factories import TPMVisitFactory
 from etools.applications.users.tests.factories import PMEUserFactory, SimpleUserFactory, UserFactory
+from unicef_locations.tests.factories import LocationFactory
 from etools.libraries.djangolib.tests.utils import TestExportMixin
 
 
@@ -914,3 +915,90 @@ class TestCategoriesViewSet(BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), Category.objects.filter(module=Category.MODULE_CHOICES.apd).count())
+
+
+class TestActionPointLocationValidation(ActionPointsTestCaseMixin, BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        call_command('update_action_points_permissions', verbosity=0)
+        call_command('update_notifications')
+        
+        cls.pme_user = PMEUserFactory()
+        cls.active_location = LocationFactory(is_active=True)
+        cls.inactive_location = LocationFactory(is_active=False)
+        cls.create_data = {
+            'description': 'do something',
+            'due_date': date.today(),
+            'assigned_to': cls.pme_user.id,
+            'office': cls.pme_user.profile.tenant_profile.office.id,
+            'section': SectionFactory().id,
+            'partner': PartnerFactory().id,
+        }
+
+    def test_create_action_point_with_active_location(self):
+        """Test that creating an action point with an active location succeeds"""
+        data = self.create_data.copy()
+        data['location'] = self.active_location.id
+        
+        response = self.forced_auth_req(
+            'post',
+            reverse('action-points:action-points-list'),
+            user=self.pme_user,
+            data=data
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['location'], self.active_location.id)
+
+    def test_create_action_point_with_inactive_location_fails(self):
+        """Test that creating an action point with an inactive location fails"""
+        data = self.create_data.copy()
+        data['location'] = self.inactive_location.id
+        
+        response = self.forced_auth_req(
+            'post',
+            reverse('action-points:action-points-list'),
+            user=self.pme_user,
+            data=data
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('location', response.data)
+        self.assertIn('Cannot assign inactive location', str(response.data['location'][0]))
+
+    def test_update_action_point_with_active_location(self):
+        """Test that updating an action point with an active location succeeds"""
+        action_point = ActionPointFactory(status='open', location=self.active_location)
+        other_active_location = LocationFactory(is_active=True)
+        
+        response = self.forced_auth_req(
+            'patch',
+            reverse('action-points:action-points-detail', args=[action_point.id]),
+            user=self.pme_user,
+            data={'location': other_active_location.id}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['location'], other_active_location.id)
+
+    def test_update_action_point_with_inactive_location_fails(self):
+        """Test that updating an action point with an inactive location fails"""
+        action_point = ActionPointFactory(status='open', location=self.active_location)
+        
+        response = self.forced_auth_req(
+            'patch',
+            reverse('action-points:action-points-detail', args=[action_point.id]),
+            user=self.pme_user,
+            data={'location': self.inactive_location.id}
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('location', response.data)
+        self.assertIn('Cannot assign inactive location', str(response.data['location'][0]))
+
+    def test_create_action_point_without_location(self):
+        """Test that creating an action point without a location succeeds (location is optional)"""
+        response = self.forced_auth_req(
+            'post',
+            reverse('action-points:action-points-list'),
+            user=self.pme_user,
+            data=self.create_data
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertIsNone(response.data['location'])

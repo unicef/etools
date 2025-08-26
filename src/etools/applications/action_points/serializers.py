@@ -106,6 +106,16 @@ class ActionPointListSerializer(PermissionsBasedSerializerMixin, ActionPointBase
             'date_of_verification',
         ]
 
+    def validate_location(self, value):
+        """
+        Prevent adding inactive locations to Action Points.
+        """
+        if value and not value.is_active:
+            raise serializers.ValidationError(
+                _('Cannot assign inactive location "{}". Please choose an active location.').format(value.name)
+            )
+        return value
+
 
 class ActionPointCreateSerializer(ActionPointListSerializer):
     class Meta(ActionPointListSerializer.Meta):

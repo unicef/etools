@@ -1640,3 +1640,77 @@ class VisitGoalsTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenantTest
         valid_goals.reverse()
 
         self._test_list(self.unicef_user, valid_goals)
+
+
+class MonitoringActivityActionPointLocationValidationTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        call_command('update_action_points_permissions', verbosity=0)
+        call_command('update_notifications')
+        
+        cls.monitoring_activity = MonitoringActivityFactory()
+        cls.active_location = LocationFactory(is_active=True)
+        cls.inactive_location = LocationFactory(is_active=False)
+
+    def test_create_monitoring_activity_action_point_with_active_location(self):
+        """Test that creating a monitoring activity action point with an active location succeeds"""
+        data = {
+            'description': 'Test action point',
+            'due_date': date.today() + timedelta(days=7),
+            'assigned_to': self.unicef_user.id,
+            'office': self.unicef_user.profile.tenant_profile.office.id,
+            'section': self.unicef_user.profile.tenant_profile.section.id,
+            'location': self.active_location.id,
+            'category': ActionPointCategoryFactory().id,
+        }
+        
+        response = self.forced_auth_req(
+            'post',
+            reverse('field_monitoring_planning:monitoring-activity-action-points-list', 
+                    args=[self.monitoring_activity.id]),
+            user=self.unicef_user,
+            data=data
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_create_monitoring_activity_action_point_with_inactive_location_fails(self):
+        """Test that creating a monitoring activity action point with an inactive location fails"""
+        data = {
+            'description': 'Test action point',
+            'due_date': date.today() + timedelta(days=7),
+            'assigned_to': self.unicef_user.id,
+            'office': self.unicef_user.profile.tenant_profile.office.id,
+            'section': self.unicef_user.profile.tenant_profile.section.id,
+            'location': self.inactive_location.id,
+            'category': ActionPointCategoryFactory().id,
+        }
+        
+        response = self.forced_auth_req(
+            'post',
+            reverse('field_monitoring_planning:monitoring-activity-action-points-list', 
+                    args=[self.monitoring_activity.id]),
+            user=self.unicef_user,
+            data=data
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('location', response.data)
+        self.assertIn('Cannot assign inactive location', str(response.data['location'][0]))
+
+    def test_update_monitoring_activity_action_point_with_inactive_location_fails(self):
+        """Test that updating a monitoring activity action point with an inactive location fails"""
+        action_point = MonitoringActivityActionPointFactory(
+            monitoring_activity=self.monitoring_activity,
+            location=self.active_location
+        )
+        
+        response = self.forced_auth_req(
+            'patch',
+            reverse('field_monitoring_planning:monitoring-activity-action-points-detail', 
+                    args=[self.monitoring_activity.id, action_point.id]),
+            user=self.unicef_user,
+            data={'location': self.inactive_location.id}
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('location', response.data)
+        self.assertIn('Cannot assign inactive location', str(response.data['location'][0]))
