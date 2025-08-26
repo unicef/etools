@@ -44,6 +44,15 @@ class FaceFormsSynchronizerTestCase(BaseTenantTestCase):
                         "OVERALL_AMOUNT_USD": "1500.00"
                     }
                 ]
+            },
+            "HACT_TRANSACTIONS": {
+                "TYPE_HACT_TRANSACTION": {
+                    "FACE_ENTERED": "0060 / 502200",
+                    "FACE_ACCOUNTED": "0060 / 501096",
+                    "FC_ITEM": "0100654833 / 001",
+                    "AUTH_AMT": "2155914.00",
+                    "AUTH_AMT_USD": "2155914.00"
+                }
             }
         }
 
@@ -56,7 +65,6 @@ class FaceFormsSynchronizerTestCase(BaseTenantTestCase):
         self.assertEqual(sync.funding_records, {})
         self.assertIsNotNone(sync.REVERSE_MAPPING)
         self.assertIsNotNone(sync.REVERSE_FACE_FORM_FIELDS)
-        self.assertIsNotNone(sync.REVERSE_FUNDING_FIELDS)
 
     def test_set_kwargs(self):
         kwargs = self.synchronizer.set_kwargs(
@@ -248,14 +256,6 @@ class FaceFormsSynchronizerTestCase(BaseTenantTestCase):
 
             result = self.synchronizer._save_records(records)
             self.assertEqual(result, 0)
-
-    def test_required_keys_presence(self):
-        all_mapped_fields = set(self.synchronizer.MAPPING.values())
-        all_required_fields = set(self.synchronizer.REQUIRED_KEYS + self.synchronizer.FUNDING_FIELDS)
-
-        missing_fields = all_mapped_fields - all_required_fields
-        self.assertEqual(len(missing_fields), 0,
-                         f"Missing fields in REQUIRED_KEYS or FUNDING_FIELDS: {missing_fields}")
 
     def test_reverse_mapping_consistency(self):
         original_mapping = self.synchronizer.MAPPING

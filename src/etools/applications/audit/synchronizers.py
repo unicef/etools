@@ -22,10 +22,12 @@ class FaceFormsSynchronizer(VisionDataTenantSynchronizer):
         "REPORTING_POSTING_DATE",
         "REPORTING_START_DATE",
         "REPORTING_END_DATE",
-        "HACT_FUNDINGS"
+        "HACT_FUNDINGS",
+        "HACT_TRANSACTIONS"
     )
     MAPPING = {
         "face_number": "FACE_FORM_NUMBER",
+        "face_accounted": "FACE_ACCOUNTED",
         "partner": "IMPLEMENTING_PARNTER_CODE",
         "start_date": "REPORTING_START_DATE",
         "end_date": "REPORTING_END_DATE",
@@ -37,14 +39,12 @@ class FaceFormsSynchronizer(VisionDataTenantSynchronizer):
     }
     FACE_FORM_FIELDS = ("FACE_FORM_NUMBER", "IMPLEMENTING_PARNTER_CODE", "DOCUMENT_TYPE_DESC", "CURRENCY",
                         "REPORTING_POSTING_DATE", "REPORTING_START_DATE", "REPORTING_END_DATE")
-    FUNDING_FIELDS = ('OVERALL_AMOUNT', 'OVERALL_AMOUNT_USD')
 
     def __init__(self, *args, **kwargs):
         self.face_records = {}
         self.funding_records = {}
         self.REVERSE_MAPPING = {v: k for k, v in self.MAPPING.items()}
         self.REVERSE_FACE_FORM_FIELDS = [self.REVERSE_MAPPING[v] for v in self.FACE_FORM_FIELDS]
-        self.REVERSE_FUNDING_FIELDS = [self.REVERSE_MAPPING[v] for v in self.FUNDING_FIELDS]
         super().__init__(*args, **kwargs)
 
     def set_kwargs(self, **kwargs):
@@ -100,16 +100,24 @@ class FaceFormsSynchronizer(VisionDataTenantSynchronizer):
                      for k in self.REVERSE_FACE_FORM_FIELDS}
         face_dict['amount_local'] = 0
         face_dict['amount_usd'] = 0
+
         if 'HACT_FUNDINGS' in record and 'TYPE_HACT_FUNDING' in record['HACT_FUNDINGS']:
-            if isinstance(record['HACT_FUNDINGS']['TYPE_HACT_FUNDING'], list):
-                funding_items = record['HACT_FUNDINGS']['TYPE_HACT_FUNDING']
-                for funding_item in funding_items:
+            funding = record['HACT_FUNDINGS']['TYPE_HACT_FUNDING']
+            if isinstance(funding, list):
+                for funding_item in funding:
                     face_dict['amount_local'] += Decimal(funding_item.get('OVERALL_AMOUNT', 0))
                     face_dict['amount_usd'] += Decimal(funding_item.get('OVERALL_AMOUNT_USD', 0))
-            elif isinstance(record['HACT_FUNDINGS']['TYPE_HACT_FUNDING'], dict):
-                funding_item = record['HACT_FUNDINGS']['TYPE_HACT_FUNDING']
-                face_dict['amount_local'] += Decimal(funding_item.get('OVERALL_AMOUNT', 0))
-                face_dict['amount_usd'] += Decimal(funding_item.get('OVERALL_AMOUNT_USD', 0))
+            elif isinstance(funding, dict):
+                face_dict['amount_local'] += Decimal(funding.get('OVERALL_AMOUNT', 0))
+                face_dict['amount_usd'] += Decimal(funding.get('OVERALL_AMOUNT_USD', 0))
+
+        if 'HACT_TRANSACTIONS' in record and 'TYPE_HACT_TRANSACTION' in record['HACT_TRANSACTIONS']:
+            transaction = record['HACT_TRANSACTIONS']['TYPE_HACT_TRANSACTION']
+            if isinstance(transaction, list):
+                face_dict['face_accounted'] = transaction[0]['FACE_ACCOUNTED'].replace(' ', '')
+            elif isinstance(transaction, dict):
+                face_dict['face_accounted'] = transaction['FACE_ACCOUNTED'].replace(' ', '')
+
         return face_dict
 
     @staticmethod

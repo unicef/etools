@@ -1057,6 +1057,8 @@ UNICEFUser = GroupWrapper(code='unicef_user',
 
 class FaceForm(TimeStampedModel, models.Model):
     face_number = models.CharField(max_length=255, verbose_name=_('Face Form Number'))
+    face_accounted = models.CharField(max_length=255, verbose_name=_('Face Accounted'), null=True, blank=True)
+
     partner = models.ForeignKey(PartnerOrganization, verbose_name=_('Partner'), related_name='faceforms', on_delete=models.CASCADE)
 
     start_date = models.DateField(null=True, blank=True, verbose_name=_('Start Date'))
