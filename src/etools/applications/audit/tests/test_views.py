@@ -558,7 +558,7 @@ class BaseTestEngagementsCreateViewSet(EngagementTransitionsTestCaseMixin):
             'conducted_by_sai': False
         }
         if self.create_data['engagement_type'] in [Engagement.TYPE_AUDIT, Engagement.TYPE_SPOT_CHECK]:
-            self.create_data['face_forms'] = [FaceFormFactory().pk]
+            self.create_data['face_forms'] = [FaceFormFactory(currency='TEST').pk]
 
     def _do_create(self, user, data):
         data = data or {}
@@ -688,6 +688,24 @@ class TestAuditCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEngage
         self.assertEqual(audit.exchange_rate.__str__(), round(face_1.amount_usd / face_1.amount_local, 2).__str__())
         self.assertEqual(audit.total_value, Decimal(response.data['total_value']))
         self.assertEqual(audit.total_value_local, Decimal(response.data['total_value_local']))
+
+    def test_with_face_forms_different_currencies(self):
+        data = copy(self.create_data)
+        face_1 = FaceFormFactory(currency='USD', amount_usd=100.0, amount_local=100.0)
+        face_2 = FaceFormFactory(currency='TEST', amount_usd=250.0, amount_local=1000.0)
+        data['face_forms'] = [face_1.pk, face_2.pk]
+
+        response = self._do_create(self.unicef_focal_point, data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        audit = Audit.objects.get(pk=response.data['id'])
+        self.assertEqual(audit.face_forms.count(), response.data['face_forms'].__len__())
+
+        self.assertEqual(audit.exchange_rate.__str__(), round(face_2.amount_usd / face_2.amount_local, 2).__str__())
+        self.assertEqual(audit.total_value, Decimal(response.data['total_value']))
+        self.assertEqual(audit.total_value_local, Decimal(response.data['total_value_local']))
+
+        self.assertEqual(audit.total_value, 350)
+        self.assertEqual(audit.total_value_local, 1000)
 
 
 class TestSpotCheckCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEngagementsCreateViewSet,

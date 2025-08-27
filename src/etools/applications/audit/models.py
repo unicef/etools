@@ -244,12 +244,24 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
             if face_form_qs.count() == 0:
                 return
 
-            self.total_value = face_form_qs.aggregate(Sum("amount_usd"))['amount_usd__sum']
-            self.total_value_local = face_form_qs.aggregate(Sum("amount_local"))['amount_local__sum']
+            usd_qs = face_form_qs.filter(currency='USD')
+            local_qs = face_form_qs.exclude(currency='USD')
 
-            latest_face = face_form_qs.order_by('-end_date').first()
-            if latest_face.amount_local:
-                self.exchange_rate = latest_face.amount_usd / latest_face.amount_local
+            if face_form_qs.count() == usd_qs.count() or face_form_qs.count() == local_qs.count():
+                self.total_value = face_form_qs.aggregate(Sum("amount_usd"))['amount_usd__sum']
+                self.total_value_local = face_form_qs.aggregate(Sum("amount_local"))['amount_local__sum']
+
+                latest_face = face_form_qs.order_by('-end_date').first()
+                if latest_face.amount_local:
+                    self.exchange_rate = latest_face.amount_usd / latest_face.amount_local
+            else:
+                self.total_value = face_form_qs.aggregate(Sum("amount_usd"))['amount_usd__sum']
+
+                if local_qs.count() > 0:
+                    latest_face = local_qs.order_by('-end_date').first()
+                    if latest_face.amount_local:
+                        self.exchange_rate = latest_face.amount_usd / latest_face.amount_local
+                    self.total_value_local = local_qs.aggregate(Sum("amount_local"))['amount_local__sum']
 
         self.save(update_fields=['total_value', 'total_value_local', 'exchange_rate'])
 
