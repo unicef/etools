@@ -397,15 +397,23 @@ class AlertNotificationViewSet(mixins.ListModelMixin,
 
     filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
 
-    filterset_class = AlertNotificationFilter
+    @property
+    def filterset_class(self):
+        if self.action == 'list':
+            return AlertNotificationFilter
+        return None
 
-    ordering_fields = [
-        'email',
-        'first_name',
-        'last_name',
-    ]
+    @property
+    def ordering_fields(self):
+        if self.action == 'list':
+            return ['email', 'first_name', 'last_name']
+        return []
 
-    search_fields = ('email', 'first_name', 'last_name')
+    @property
+    def search_fields(self):
+        if self.action == 'list':
+            return ('email', 'first_name', 'last_name')
+        return []
 
 
 class TransferItemViewSet(mixins.ListModelMixin, GenericViewSet, mixins.CreateModelMixin):
