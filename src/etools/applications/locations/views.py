@@ -25,7 +25,7 @@ class LocationsLightViewSet(views.LocationsLightViewSet):
     def get_queryset(self):
         """
         Override get_queryset to add optional filtering of deactivated locations.
-        
+
         Query parameters:
         - hide_deactivated: boolean (true/false) - if true, only return active locations (is_active=True)
         """

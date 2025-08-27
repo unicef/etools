@@ -1685,7 +1685,7 @@ class MonitoringActivityActionPointLocationValidationTestCase(FMBaseTestCaseMixi
             'location': self.inactive_location.id,
             'category': ActionPointCategoryFactory().id,
         }
-        
+
         response = self.forced_auth_req(
             'post',
             reverse('field_monitoring_planning:monitoring-activity-action-points-list',
