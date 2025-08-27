@@ -397,9 +397,7 @@ class AlertNotificationViewSet(mixins.ListModelMixin,
 
     filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
 
-    def get_filterset_class(self):
-        if self.action == 'list':
-            return AlertNotificationFilter
+    filterset_class = AlertNotificationFilter
 
     ordering_fields = [
         'email',
