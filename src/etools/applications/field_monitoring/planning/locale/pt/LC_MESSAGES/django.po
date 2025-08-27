@@ -308,7 +308,7 @@ msgstr "Prioridade"
 
 msgid ""
 "Cannot assign inactive location \"{}\". Please choose an active location."
-msgstr ""
+msgstr "Não é possível atribuir uma localização inativa \"{}\". Por favor, escolha uma localização ativa."
 
 msgid "TPM Concern Category"
 msgstr ""

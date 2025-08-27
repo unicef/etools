@@ -309,7 +309,7 @@ msgstr "الأولوية"
 
 msgid ""
 "Cannot assign inactive location \"{}\". Please choose an active location."
-msgstr ""
+msgstr "لا يمكن تعيين موقع غير نشط \"{}\". يرجى اختيار موقع نشط."
 
 msgid "TPM Concern Category"
 msgstr ""
