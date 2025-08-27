@@ -56,7 +56,7 @@ class AdminPanelValidator:
     def validate_input_data(self, data: dict) -> None:
         if not data.get('user'):
             raise ValidationError(_(USER_NOT_PROVIDED))
-        if not data.get('groups'):
+        if data.get('groups') is None:
             raise ValidationError(_(GROUP_NOT_PROVIDED))
         if not data.get('user', {}).get('email'):
             raise ValidationError(_(EMAIL_NOT_PROVIDED))
