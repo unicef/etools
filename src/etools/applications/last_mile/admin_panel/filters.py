@@ -32,6 +32,7 @@ class UserFilter(filters.FilterSet):
     last_name = filters.CharFilter(field_name="last_name", lookup_expr="icontains")
     email = filters.CharFilter(field_name="email", lookup_expr="icontains")
     organization_name = filters.CharFilter(field_name="profile__organization__name", lookup_expr="icontains")
+    organization_vendor_number = filters.CharFilter(field_name="profile__organization__vendor_number", lookup_expr="icontains")
     country_name = filters.CharFilter(field_name="profile__country__name", lookup_expr="icontains")
     is_active = filters.BooleanFilter(field_name="is_active")
     profile_status = filters.CharFilter(field_name="last_mile_profile__status", lookup_expr="icontains")

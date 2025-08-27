@@ -52,8 +52,7 @@ class TestLocationAdminViewSetImport(BaseTenantTestCase):
     def _create_locations_xlsx_file(self, data_rows, headers=None):
         if headers is None:
             headers = [
-                "ip_numbers", "location_name", "primary_type_name",
-                "latitude", "longitude", "p_code_location"
+                "Partner information ", "Location Information "
             ]
 
         stream = io.BytesIO()

@@ -23,6 +23,24 @@ class CsvReportHandler:
                 continue
             yield index, row
 
+    def validate_header_row(self, file_for=""):
+        expected_headers = {
+            "users": ["Partner information ", "User Information ", None, None, "Location information "],
+            "locations": ["Partner information ", "Location Information "],
+        }
+
+        if file_for not in expected_headers:
+            return False
+
+        row_num = 1
+
+        actual_headers = [
+            self.ws.cell(row=row_num, column=col).value
+            for col in range(1, len(expected_headers[file_for]) + 1)
+        ]
+
+        return actual_headers == expected_headers[file_for]
+
     def write_status(self, row_index, message):
         self.ws.cell(row=row_index, column=self.status_col, value=message)
 
@@ -87,8 +105,12 @@ class CsvImporter:
 
         return True, "Success"
 
-    def _perform_import(self, file, row_processor):
+    def _perform_import(self, file, row_processor, file_for):
         file_handler = CsvReportHandler(file.read())
+        is_valid_file = file_handler.validate_header_row(file_for=file_for)
+        if not is_valid_file:
+            processed_file = file_handler.get_processed_file()
+            return False, processed_file
         import_is_fully_successful = True
 
         with transaction.atomic():
@@ -105,11 +127,11 @@ class CsvImporter:
 
     def import_users(self, file, country_schema, user):
         processor = partial(self._process_user_row, country_schema=country_schema, user=user)
-        return self._perform_import(file, processor)
+        return self._perform_import(file, processor, "users")
 
     def import_locations(self, file, user):
         processor = partial(self._process_location_row, user=user)
-        return self._perform_import(file, processor)
+        return self._perform_import(file, processor, "locations")
 
     def import_stock(self, file):
         print(f"file : {file}")
