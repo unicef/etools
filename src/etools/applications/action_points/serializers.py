@@ -44,7 +44,7 @@ class ActionPointBaseSerializer(UserContextSerializerMixin, SnapshotModelSeriali
             'author', 'assigned_by', 'assigned_to',
 
             'high_priority', 'due_date', 'description',
-            'office', 'section',
+            'office', 'section', 'location',
             'created', 'date_of_completion',
             'status', 'status_date',
         ]
