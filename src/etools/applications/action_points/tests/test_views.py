@@ -6,6 +6,7 @@ from django.urls import reverse
 
 from factory import fuzzy
 from rest_framework import status
+from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.action_points.categories.models import Category
 from etools.applications.action_points.models import OperationsGroup, PME
@@ -21,7 +22,6 @@ from etools.applications.reports.tests.factories import SectionFactory
 from etools.applications.t2f.tests.factories import TravelActivityFactory, TravelFactory
 from etools.applications.tpm.tests.factories import TPMVisitFactory
 from etools.applications.users.tests.factories import PMEUserFactory, SimpleUserFactory, UserFactory
-from unicef_locations.tests.factories import LocationFactory
 from etools.libraries.djangolib.tests.utils import TestExportMixin
 
 
