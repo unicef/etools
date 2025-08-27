@@ -1518,6 +1518,22 @@ class TestAuditMetadataDetailViewSet(TestMetadataDetailViewSet, BaseTenantTestCa
         self.assertIn('GET', response.data['actions'])
         self.assertIn('conducted_by_sai', response.data['actions']['GET'])
 
+    def test_follow_up_fields_view_comments_from_unicef(self):
+        audit = self.engagement_factory(
+            staff_members=[self.auditor], agreement__auditor_firm=self.auditor_firm,
+            date_of_comments_by_unicef=datetime.date.today()
+        )
+        response = self.forced_auth_req(
+            'options',
+            '/api/audit/{}/{}/'.format(self.endpoint, audit.id),
+            user=self.auditor
+        )
+        self.assertIn('GET', response.data['actions'])
+
+        for field in ['amount_refunded', 'additional_supporting_documentation_provided',
+                      'justification_provided_and_accepted', 'write_off_required']:
+            self.assertIn(field, response.data['actions']['GET'])
+
 
 class TestSpotCheckMetadataDetailViewSet(TestMetadataDetailViewSet, BaseTenantTestCase):
     engagement_factory = StaffSpotCheckFactory
@@ -1554,6 +1570,23 @@ class TestSpotCheckMetadataDetailViewSet(TestMetadataDetailViewSet, BaseTenantTe
         self.assertIn('users_notified', get)
         put = response.data['actions']['PUT']
         self.assertIn('users_notified', put)
+
+    def test_follow_up_fields_view_comments_from_unicef(self):
+        spot_check = self.engagement_factory(
+            staff_members=[self.auditor], agreement__auditor_firm=self.auditor_firm,
+            date_of_comments_by_unicef=datetime.date.today()
+        )
+        response = self.forced_auth_req(
+            'options',
+            '/api/audit/{}/{}/'.format(self.endpoint, spot_check.id),
+            user=self.auditor
+        )
+        self.assertIn('GET', response.data['actions'])
+
+        for field in ['amount_refunded', 'additional_supporting_documentation_provided',
+                      'justification_provided_and_accepted', 'write_off_required',
+                      'total_amount_tested', 'total_amount_of_ineligible_expenditure']:
+            self.assertIn(field, response.data['actions']['GET'])
 
 
 class TestAuditorFirmViewSet(AuditTestCaseMixin, BaseTenantTestCase):

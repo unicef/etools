@@ -134,14 +134,15 @@ class Command(BaseCommand):
     follow_up_page = follow_up_editable_page + [
         'audit.engagement.pending_unsupported_amount',
         'audit.engagement.pending_unsupported_amount_local',
+        'audit.engagement.amount_refunded',
+        'audit.engagement.additional_supporting_documentation_provided',
+        'audit.engagement.justification_provided_and_accepted',
+        'audit.engagement.write_off_required',
+
         'audit.spotcheck.total_amount_tested',
         'audit.spotcheck.total_amount_of_ineligible_expenditure',
         'audit.spotcheck.total_amount_tested_local',
         'audit.spotcheck.total_amount_of_ineligible_expenditure_local',
-        'audit.spotcheck.amount_refunded',
-        'audit.spotcheck.additional_supporting_documentation_provided',
-        'audit.spotcheck.justification_provided_and_accepted',
-        'audit.spotcheck.write_off_required',
     ]
 
     engagement_overview_editable_page = (engagement_overview_editable_block + special_audit_block +
