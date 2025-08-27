@@ -139,6 +139,9 @@ class Command(BaseCommand):
         'audit.engagement.justification_provided_and_accepted',
         'audit.engagement.write_off_required',
 
+        'audit.audit.audited_expenditure',
+        'audit.audit.audited_expenditure_local',
+
         'audit.spotcheck.total_amount_tested',
         'audit.spotcheck.total_amount_of_ineligible_expenditure',
         'audit.spotcheck.total_amount_tested_local',
