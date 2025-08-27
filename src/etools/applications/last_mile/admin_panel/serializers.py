@@ -503,12 +503,15 @@ class AlertNotificationSerializer(serializers.ModelSerializer):
 
     def get_alert_types(self, obj):
         alert_types_map = self.context.get('ALERT_TYPES', {})
-        group_names = getattr(obj, 'alert_group_names', [])
+        alerts_data = getattr(obj, 'alert_groups', [])
+        data = []
+        if not alerts_data:
+            return data
 
-        if not group_names:
-            return []
+        for alert in alerts_data:
+            data.append({"id": alert.get("id"), "name": alert_types_map.get(alert.get("name"), alert.get("name"))})
 
-        return [alert_types_map.get(group_name, group_name) for group_name in group_names]
+        return data
 
     class Meta:
         model = get_user_model()
@@ -532,6 +535,8 @@ class AlertNotificationCreateSerializer(serializers.ModelSerializer):
         self.adminValidator.validate_group_names(validated_data['groups'], self.context['ALERT_TYPES'].keys())
         country_schema = self.context.get('country_schema')
         user = get_user_model().objects.get(email=validated_data['user']['email'])
+        old_realms = Realm.objects.filter(user=user, country__schema_name=country_schema, group__name__in=self.context['ALERT_TYPES'].keys())
+        old_realms.delete()
         country = Country.objects.get(schema_name=country_schema)
         self.adminValidator.validate_realm(user, country, validated_data['groups'])
         realms_to_create = []
