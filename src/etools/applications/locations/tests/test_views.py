@@ -183,7 +183,7 @@ class TestLocationViews(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 9)
 
-        active_location_ids = set([loc.id for loc in self.locations + active_locations])
+        active_location_ids = set([str(loc.id) for loc in self.locations + active_locations])
         returned_location_ids = set([loc['id'] for loc in response.data])
         self.assertEqual(returned_location_ids, active_location_ids)
 
