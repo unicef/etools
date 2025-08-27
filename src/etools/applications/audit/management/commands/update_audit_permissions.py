@@ -139,6 +139,8 @@ class Command(BaseCommand):
         'audit.engagement.justification_provided_and_accepted',
         'audit.engagement.write_off_required',
 
+        'audit.audit.financial_findings',
+        'audit.audit.financial_findings_local',
         'audit.audit.audited_expenditure',
         'audit.audit.audited_expenditure_local',
 
