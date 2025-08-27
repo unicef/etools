@@ -108,8 +108,10 @@ class CsvImporter:
 
         if not serializer.is_valid():
             return False, str(serializer.errors)
-
-        created, object_data = serializer.create(serializer.validated_data)
+        try:
+            created, object_data = serializer.create(serializer.validated_data)
+        except Exception as ex:
+            return False, str(ex)
         if not created:
             return False, object_data
 

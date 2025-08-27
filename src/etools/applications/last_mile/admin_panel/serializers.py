@@ -1016,11 +1016,8 @@ class StockManagementImportSerializer(serializers.Serializer):
             'item_name': validated_data.pop('batch_id'),
             'expiration_date': validated_data.pop('expiration_date')
         }]
-        try:
-            instance = StockManagementCreateService().create_stock_management(validated_data)
-            return True, instance
-        except Exception as ex:
-            return False, str(ex)
+        instance = StockManagementCreateService().create_stock_management(validated_data)
+        return True, instance
 
 
 class LocationImportSerializer(serializers.Serializer):
