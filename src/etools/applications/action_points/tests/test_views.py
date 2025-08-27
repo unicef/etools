@@ -923,7 +923,7 @@ class TestActionPointLocationValidation(BaseTenantTestCase):
         super().setUpTestData()
         call_command('update_action_points_permissions', verbosity=0)
         call_command('update_notifications')
-        
+
         cls.pme_user = PMEUserFactory()
         cls.active_location = LocationFactory(is_active=True)
         cls.inactive_location = LocationFactory(is_active=False)
