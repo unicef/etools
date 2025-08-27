@@ -21,7 +21,7 @@ def cache_key(request: Request):
 
 class LocationsLightViewSet(views.LocationsLightViewSet):
     # TODO: check user filter?
-    
+
     def get_queryset(self):
         """
         Override get_queryset to add optional filtering of deactivated locations.
@@ -33,9 +33,9 @@ class LocationsLightViewSet(views.LocationsLightViewSet):
         hide_deactivated = self.request.query_params.get('hide_deactivated', '').lower()
         if hide_deactivated in ('true', '1', 'yes'):
             queryset = queryset.filter(is_active=True)
-        
+
         return queryset
-    
+
     @method_decorator(cache_control(
         max_age=0,  # enable cache yet automatically treat all cached data as stale to request backend every time
         public=True,  # reset cache control header to allow etags work with cache_page

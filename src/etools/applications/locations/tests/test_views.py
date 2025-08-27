@@ -161,9 +161,9 @@ class TestLocationViews(BaseTenantTestCase):
         self.assertEqual(len(response.data), 11)
         
         response = self.forced_auth_req(
-            'get', 
-            reverse('locations-light-list'), 
-            user=self.unicef_staff, 
+            'get',
+            reverse('locations-light-list'),
+            user=self.unicef_staff,
             data={'hide_deactivated': 'false'}
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -175,9 +175,9 @@ class TestLocationViews(BaseTenantTestCase):
         inactive_locations = [LocationFactory(is_active=False) for _ in range(2)]
         
         response = self.forced_auth_req(
-            'get', 
-            reverse('locations-light-list'), 
-            user=self.unicef_staff, 
+            'get',
+            reverse('locations-light-list'),
+            user=self.unicef_staff,
             data={'hide_deactivated': 'true'}
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -189,14 +189,13 @@ class TestLocationViews(BaseTenantTestCase):
 
     def test_api_location_light_list_hide_deactivated_various_values(self):
         """Test that hide_deactivated works with various truthy values"""
-        active_locations = [LocationFactory(is_active=True) for _ in range(2)]
-        inactive_locations = [LocationFactory(is_active=False) for _ in range(2)]
-        
+        [LocationFactory(is_active=True) for _ in range(2)]
+        [LocationFactory(is_active=False) for _ in range(2)]
         for truthy_value in ['true', 'True', 'TRUE', '1', 'yes', 'Yes', 'YES']:
             response = self.forced_auth_req(
-                'get', 
-                reverse('locations-light-list'), 
-                user=self.unicef_staff, 
+                'get',
+                reverse('locations-light-list'),
+                user=self.unicef_staff,
                 data={'hide_deactivated': truthy_value}
             )
             self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -204,9 +203,9 @@ class TestLocationViews(BaseTenantTestCase):
             
         for falsy_value in ['false', 'False', '0', 'no', 'random_string', '']:
             response = self.forced_auth_req(
-                'get', 
-                reverse('locations-light-list'), 
-                user=self.unicef_staff, 
+                'get',
+                reverse('locations-light-list'),
+                user=self.unicef_staff,
                 data={'hide_deactivated': falsy_value}
             )
             self.assertEqual(response.status_code, status.HTTP_200_OK)

@@ -922,7 +922,7 @@ class TestActionPointLocationValidation(ActionPointsTestCaseMixin, BaseTenantTes
     def setUpTestData(cls):
         call_command('update_action_points_permissions', verbosity=0)
         call_command('update_notifications')
-        
+
         cls.pme_user = PMEUserFactory()
         cls.active_location = LocationFactory(is_active=True)
         cls.inactive_location = LocationFactory(is_active=False)
@@ -939,7 +939,7 @@ class TestActionPointLocationValidation(ActionPointsTestCaseMixin, BaseTenantTes
         """Test that creating an action point with an active location succeeds"""
         data = self.create_data.copy()
         data['location'] = self.active_location.id
-        
+
         response = self.forced_auth_req(
             'post',
             reverse('action-points:action-points-list'),
@@ -953,7 +953,7 @@ class TestActionPointLocationValidation(ActionPointsTestCaseMixin, BaseTenantTes
         """Test that creating an action point with an inactive location fails"""
         data = self.create_data.copy()
         data['location'] = self.inactive_location.id
-        
+
         response = self.forced_auth_req(
             'post',
             reverse('action-points:action-points-list'),
@@ -968,7 +968,7 @@ class TestActionPointLocationValidation(ActionPointsTestCaseMixin, BaseTenantTes
         """Test that updating an action point with an active location succeeds"""
         action_point = ActionPointFactory(status='open', location=self.active_location)
         other_active_location = LocationFactory(is_active=True)
-        
+
         response = self.forced_auth_req(
             'patch',
             reverse('action-points:action-points-detail', args=[action_point.id]),
@@ -981,7 +981,7 @@ class TestActionPointLocationValidation(ActionPointsTestCaseMixin, BaseTenantTes
     def test_update_action_point_with_inactive_location_fails(self):
         """Test that updating an action point with an inactive location fails"""
         action_point = ActionPointFactory(status='open', location=self.active_location)
-        
+
         response = self.forced_auth_req(
             'patch',
             reverse('action-points:action-points-detail', args=[action_point.id]),

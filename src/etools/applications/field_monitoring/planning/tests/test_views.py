@@ -1648,7 +1648,7 @@ class MonitoringActivityActionPointLocationValidationTestCase(FMBaseTestCaseMixi
         super().setUpTestData()
         call_command('update_action_points_permissions', verbosity=0)
         call_command('update_notifications')
-        
+
         cls.monitoring_activity = MonitoringActivityFactory()
         cls.active_location = LocationFactory(is_active=True)
         cls.inactive_location = LocationFactory(is_active=False)
@@ -1664,10 +1664,10 @@ class MonitoringActivityActionPointLocationValidationTestCase(FMBaseTestCaseMixi
             'location': self.active_location.id,
             'category': ActionPointCategoryFactory().id,
         }
-        
+
         response = self.forced_auth_req(
             'post',
-            reverse('field_monitoring_planning:monitoring-activity-action-points-list', 
+            reverse('field_monitoring_planning:monitoring-activity-action-points-list',
                     args=[self.monitoring_activity.id]),
             user=self.unicef_user,
             data=data
@@ -1688,7 +1688,7 @@ class MonitoringActivityActionPointLocationValidationTestCase(FMBaseTestCaseMixi
         
         response = self.forced_auth_req(
             'post',
-            reverse('field_monitoring_planning:monitoring-activity-action-points-list', 
+            reverse('field_monitoring_planning:monitoring-activity-action-points-list',
                     args=[self.monitoring_activity.id]),
             user=self.unicef_user,
             data=data
@@ -1703,10 +1703,10 @@ class MonitoringActivityActionPointLocationValidationTestCase(FMBaseTestCaseMixi
             monitoring_activity=self.monitoring_activity,
             location=self.active_location
         )
-        
+
         response = self.forced_auth_req(
             'patch',
-            reverse('field_monitoring_planning:monitoring-activity-action-points-detail', 
+            reverse('field_monitoring_planning:monitoring-activity-action-points-detail',
                     args=[self.monitoring_activity.id, action_point.id]),
             user=self.unicef_user,
             data={'location': self.inactive_location.id}
