@@ -31,13 +31,12 @@ class CsvReportHandler:
         expected_headers = {
             "users": ["Partner information ", "User Information ", None, None, "Location information "],
             "locations": ["Partner information ", "Location Information "],
+            "stock": ["Partner information ", "Stock level information ", None, None, None, None, "Location Information "],
         }
 
         if file_for not in expected_headers:
             return False
-
         row_num = 1
-
         actual_headers = [
             self.ws.cell(row=row_num, column=col).value
             for col in range(1, len(expected_headers[file_for]) + 1)
@@ -165,4 +164,4 @@ class CsvImporter:
 
     def import_stock(self, file):
         processor = partial(self._process_stock_row)
-        return self._perform_import(file, processor)
+        return self._perform_import(file, processor, 'stock')
