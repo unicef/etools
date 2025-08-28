@@ -46,3 +46,13 @@ class EngagementUnicefCommentsReceivedCondition(SimpleCondition):
 
     def is_satisfied(self):
         return self.engagement.date_of_comments_by_unicef is not None
+
+
+class EngagementPartnerContactedDisplayStatusCondition(SimpleCondition):
+    predicate = 'audit_engagement.partner_contacted_display_status'
+
+    def __init__(self, engagement):
+        self.engagement = engagement
+
+    def is_satisfied(self):
+        return self.engagement.status == self.engagement.displayed_status == self.engagement.PARTNER_CONTACTED

@@ -10,6 +10,7 @@ from etools.applications.action_points.models import ActionPoint
 from etools.applications.audit.conditions import (
     AuditModuleCondition,
     AuditStaffMemberCondition,
+    EngagementPartnerContactedDisplayStatusCondition,
     EngagementStaffMemberCondition,
     EngagementUnicefCommentsReceivedCondition,
     IsUnicefUserCondition,
@@ -257,6 +258,9 @@ class Command(BaseCommand):
     def engagement_comments_received_by_unicef(self):
         return [EngagementUnicefCommentsReceivedCondition.predicate]
 
+    def engagement_partner_contacted_display_status(self):
+        return [EngagementPartnerContactedDisplayStatusCondition.predicate]
+
     def new_engagement(self):
         model = get_model_target(Engagement)
         return [NewObjectCondition.predicate_template.format(model=model)]
@@ -367,9 +371,13 @@ class Command(BaseCommand):
         self.add_permissions(
             self.focal_point, 'edit',
             self.staff_members_block +
-            self.users_notified_block +
-            ['audit.engagement.face_forms',],
+            self.users_notified_block,
             condition=partner_contacted_condition
+        )
+        self.add_permissions(
+            self.focal_point, 'edit',
+            'audit.engagement.face_forms',
+            condition=self.engagement_partner_contacted_display_status()
         )
         self.add_permissions(
             self.focal_point, 'action',
