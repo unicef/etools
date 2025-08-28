@@ -10,7 +10,7 @@ from etools.applications.action_points.models import ActionPoint
 from etools.applications.audit.conditions import (
     AuditModuleCondition,
     AuditStaffMemberCondition,
-    EngagementPartnerContactedDisplayStatusCondition,
+    EngagementFaceFormPartnerContactedDisplayStatusCondition,
     EngagementStaffMemberCondition,
     EngagementUnicefCommentsReceivedCondition,
     IsUnicefUserCondition,
@@ -259,7 +259,7 @@ class Command(BaseCommand):
         return [EngagementUnicefCommentsReceivedCondition.predicate]
 
     def engagement_partner_contacted_display_status(self):
-        return [EngagementPartnerContactedDisplayStatusCondition.predicate]
+        return [EngagementFaceFormPartnerContactedDisplayStatusCondition.predicate]
 
     def new_engagement(self):
         model = get_model_target(Engagement)
@@ -345,7 +345,7 @@ class Command(BaseCommand):
         partner_contacted_condition = self.engagement_status(Engagement.STATUSES.partner_contacted)
         self.add_permissions(self.auditor, 'edit', self.report_attachments_block, condition=partner_contacted_condition)
         self.add_permissions(
-            self.engagement_staff_auditor, 'view',
+            self.everybody, 'view',
             self.report_readonly_block,
             condition=partner_contacted_condition
         )

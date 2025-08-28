@@ -1552,13 +1552,12 @@ class TestAuditMetadataDetailViewSet(TestMetadataDetailViewSet, BaseTenantTestCa
                       'justification_provided_and_accepted', 'write_off_required']:
             self.assertIn(field, response.data['actions']['GET'])
 
-    def test_face_forms_not_editable_comments_from_unicef(self):
+    def test_face_forms_editable(self):
         audit = self.engagement_factory(
-            staff_members=[self.auditor], agreement__auditor_firm=self.auditor_firm,
-            date_of_comments_by_unicef=datetime.date.today()
+            staff_members=[self.auditor], agreement__auditor_firm=self.auditor_firm
         )
         self.assertEqual(audit.status, Engagement.PARTNER_CONTACTED)
-        self.assertEqual(audit.displayed_status, 'comments_received_by_unicef')
+        self.assertEqual(audit.displayed_status, Engagement.PARTNER_CONTACTED)
 
         response = self.forced_auth_req(
             'options',
@@ -1575,7 +1574,23 @@ class TestAuditMetadataDetailViewSet(TestMetadataDetailViewSet, BaseTenantTestCa
         )
 
         self.assertIn('PUT', response.data['actions'])
-        self.assertNotIn('face_forms', response.data['actions']['PUT'])
+        self.assertIn('face_forms', response.data['actions']['PUT'])
+
+        def test_face_forms_not_editable(self):
+            audit = self.engagement_factory(
+                staff_members=[self.auditor], agreement__auditor_firm=self.auditor_firm,
+                date_of_comments_by_unicef=datetime.date.today()
+            )
+            self.assertEqual(audit.status, Engagement.PARTNER_CONTACTED)
+            self.assertEqual(audit.displayed_status, 'comments_received_by_unicef')
+            response = self.forced_auth_req(
+                'options',
+                '/api/audit/{}/{}/'.format(self.endpoint, audit.id),
+                user=self.unicef_focal_point
+            )
+
+            self.assertIn('PUT', response.data['actions'])
+            self.assertNotIn('face_forms', response.data['actions']['PUT'])
 
 
 class TestSpotCheckMetadataDetailViewSet(TestMetadataDetailViewSet, BaseTenantTestCase):

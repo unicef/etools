@@ -48,7 +48,7 @@ class EngagementUnicefCommentsReceivedCondition(SimpleCondition):
         return self.engagement.date_of_comments_by_unicef is not None
 
 
-class EngagementPartnerContactedDisplayStatusCondition(SimpleCondition):
+class EngagementFaceFormPartnerContactedDisplayStatusCondition(SimpleCondition):
     predicate = 'audit_engagement.partner_contacted_display_status'
 
     def __init__(self, engagement):
