@@ -36,9 +36,32 @@ class TestStockManagementViewSet(BaseTenantTestCase):
 
         cls.url = reverse(f'{ADMIN_PANEL_APP_NAME}:{STOCK_MANAGEMENT_ADMIN_PANEL}-list')
 
+        cls.material_for_update = MaterialFactory(
+            other={"uom_map": {"CAR": 1, "BOX": 10}}
+        )
+        cls.transfer_for_update = TransferFactory(
+            status=Transfer.COMPLETED,
+            partner_organization=cls.partner,
+        )
+        cls.item_for_update = ItemFactory(
+            transfer=cls.transfer_for_update,
+            material=cls.material_for_update,
+            quantity=100,
+            uom="CAR"
+        )
+        cls.item_update_url = reverse(
+            f'{ADMIN_PANEL_APP_NAME}:{UPDATE_ITEM_STOCK_ADMIN_PANEL}-detail',
+            kwargs={'pk': cls.item_for_update.pk}
+        )
+        cls.non_existent_item_url = reverse(
+            f'{ADMIN_PANEL_APP_NAME}:{UPDATE_ITEM_STOCK_ADMIN_PANEL}-detail',
+            kwargs={'pk': 99999}
+        )
+
     def test_get_stock_management(self):
         response = self.forced_auth_req('get', self.url, user=self.partner_staff)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("'poi_id': ErrorDetail(string='This query parameter is required.", str(response.data))
 
     def test_get_stock_management_unauthorized(self):
         response = self.forced_auth_req('get', self.url, user=self.simple_user)
@@ -51,7 +74,7 @@ class TestStockManagementViewSet(BaseTenantTestCase):
     def test_list_transfer_items_without_poi_id(self):
         # Without poi_id query param, the queryset should be empty.
         response = self.forced_auth_req('get', self.url, user=self.partner_staff, data={})
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(len(response.data.get("results", [])), 0)
 
     def test_list_transfer_items_with_valid_poi_id(self):
@@ -73,7 +96,7 @@ class TestStockManagementViewSet(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         results = response.data.get("results", [])
         self.assertGreaterEqual(len(results), 1)
-        self.assertTrue(results[0].get("items"))
+        self.assertTrue(results)
 
     def test_list_transfer_items_with_invalid_poi_id(self):
         payload = {"poi_id": 9999}  # Assuming 9999 does not exist.
@@ -293,14 +316,16 @@ class TestStockManagementViewSet(BaseTenantTestCase):
         )
         # Create one hidden and one visible item.
         ItemFactory(transfer=transfer, hidden=True)
-        ItemFactory(transfer=transfer, hidden=False)
+        item = ItemFactory(transfer=transfer, hidden=False)
         payload = {"poi_id": poi.id}
         response = self.forced_auth_req('get', self.url, user=self.partner_staff, data=payload)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         results = response.data.get("results", [])
         # Expect the transfer to appear because it has at least one non-hidden item.
         self.assertEqual(len(results), 1)
-        self.assertTrue(len(results[0].get("items", [])) > 0)
+        self.assertEqual(results[0].get("quantity"), item.quantity)
+        self.assertEqual(results[0].get("batch_id"), item.batch_id)
+        self.assertEqual(results[0].get("uom"), item.uom)
 
     def test_list_transfer_items_pagination(self):
         poi = PointOfInterestFactory(name="Pagination POI")
@@ -457,3 +482,89 @@ class TestStockManagementViewSet(BaseTenantTestCase):
         response = self.forced_auth_req('post', self.url, user=self.partner_staff, data=payload)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("location", str(response.data).lower())
+
+    def test_retrieve_item_success(self):
+        response = self.forced_auth_req('get', self.item_update_url, user=self.partner_staff)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['quantity'], self.item_for_update.quantity)
+
+    def test_retrieve_item_unauthorized(self):
+        response = self.forced_auth_req('get', self.item_update_url, user=self.simple_user)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_retrieve_item_not_found(self):
+        response = self.forced_auth_req('get', self.non_existent_item_url, user=self.partner_staff)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_update_item_success(self):
+        payload = {"quantity": 50, "uom": "BOX"}
+        response = self.forced_auth_req('patch', self.item_update_url, user=self.partner_staff, data=payload)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.item_for_update.refresh_from_db()
+        self.assertEqual(self.item_for_update.quantity, 50)
+        self.assertEqual(self.item_for_update.uom, "BOX")
+
+    def test_partial_update_item_quantity_only(self):
+        payload = {"quantity": 75}
+        response = self.forced_auth_req('patch', self.item_update_url, user=self.partner_staff, data=payload)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.item_for_update.refresh_from_db()
+        self.assertEqual(self.item_for_update.quantity, 75)
+        self.assertEqual(self.item_for_update.uom, "CAR")  # Should not change
+
+    def test_partial_update_item_uom_only(self):
+        payload = {"uom": "BOX"}
+        response = self.forced_auth_req('patch', self.item_update_url, user=self.partner_staff, data=payload)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.item_for_update.refresh_from_db()
+        self.assertEqual(self.item_for_update.quantity, 100)  # Should not change
+        self.assertEqual(self.item_for_update.uom, "BOX")
+
+    def test_update_item_fails_unauthorized(self):
+        payload = {"quantity": 50}
+        response = self.forced_auth_req('patch', self.item_update_url, user=self.simple_user, data=payload)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_update_item_fails_without_correct_permissions(self):
+        payload = {"quantity": 50}
+        response = self.forced_auth_req(
+            'patch', self.item_update_url, user=self.partner_staff_without_correct_permissions, data=payload
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_update_item_fails_negative_quantity(self):
+        payload = {"quantity": -10}
+        response = self.forced_auth_req('patch', self.item_update_url, user=self.partner_staff, data=payload)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("The quantity must be greater than 0", str(response.data))
+
+    def test_update_item_fails_zero_quantity(self):
+        payload = {"quantity": 0}
+        response = self.forced_auth_req('patch', self.item_update_url, user=self.partner_staff, data=payload)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("The quantity must be greater than 0", str(response.data))
+
+    def test_update_item_fails_invalid_uom(self):
+        payload = {"uom": "INVALID_UOM"}
+        response = self.forced_auth_req('patch', self.item_update_url, user=self.partner_staff, data=payload)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("is not a valid choice", str(response.data))
+
+    def test_update_item_fails_uom_not_valid_for_material(self):
+        payload = {"uom": "PCS"}
+        response = self.forced_auth_req('patch', self.item_update_url, user=self.partner_staff, data=payload)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("is not a valid choice.", str(response.data))
+
+    def test_update_item_not_found(self):
+        payload = {"quantity": 50}
+        response = self.forced_auth_req('patch', self.non_existent_item_url, user=self.partner_staff, data=payload)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_update_item_with_put_success(self):
+        payload = {"quantity": 50, "uom": "BOX"}
+        response = self.forced_auth_req('put', self.item_update_url, user=self.partner_staff, data=payload)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.item_for_update.refresh_from_db()
+        self.assertEqual(self.item_for_update.quantity, 50)
+        self.assertEqual(self.item_for_update.uom, "BOX")

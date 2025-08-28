@@ -6,7 +6,11 @@ from django.db import transaction
 
 import openpyxl
 
-from etools.applications.last_mile.admin_panel.serializers import LocationImportSerializer, UserImportSerializer
+from etools.applications.last_mile.admin_panel.serializers import (
+    LocationImportSerializer,
+    StockManagementImportSerializer,
+    UserImportSerializer,
+)
 
 
 class CsvReportHandler:
@@ -87,6 +91,32 @@ class CsvImporter:
 
         return True, "Success"
 
+    def _process_stock_row(self, row_data):
+        ip_number, material_number, quantity, uom, expiration_date, batch_id, p_code, *_ = row_data
+
+        data = {
+            'ip_number': ip_number,
+            'material_number': material_number,
+            'quantity': quantity,
+            'uom': uom,
+            'expiration_date': expiration_date,
+            'batch_id': batch_id,
+            'p_code': p_code
+        }
+
+        serializer = StockManagementImportSerializer(data=data)
+
+        if not serializer.is_valid():
+            return False, str(serializer.errors)
+        try:
+            created, object_data = serializer.create(serializer.validated_data)
+        except Exception as ex:
+            return False, str(ex)
+        if not created:
+            return False, object_data
+
+        return True, "Success"
+
     def _perform_import(self, file, row_processor):
         file_handler = CsvReportHandler(file.read())
         import_is_fully_successful = True
@@ -112,5 +142,5 @@ class CsvImporter:
         return self._perform_import(file, processor)
 
     def import_stock(self, file):
-        print(f"file : {file}")
-        pass
+        processor = partial(self._process_stock_row)
+        return self._perform_import(file, processor)
