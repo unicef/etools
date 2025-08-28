@@ -117,6 +117,8 @@ class FaceFormsSynchronizer(VisionDataTenantSynchronizer):
                 face_dict['face_accounted'] = transaction[0]['FACE_ACCOUNTED'].replace(' ', '')
             elif isinstance(transaction, dict):
                 face_dict['face_accounted'] = transaction['FACE_ACCOUNTED'].replace(' ', '')
+        if face_dict['amount_usd'] > 0:
+            face_dict['exchange_rate'] = face_dict['amount_local'] / face_dict['amount_usd']
 
         return face_dict
 

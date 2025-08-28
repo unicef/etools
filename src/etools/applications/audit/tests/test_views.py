@@ -674,8 +674,8 @@ class TestAuditCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEngage
 
     def test_with_face_forms(self):
         data = copy(self.create_data)
-        face_1 = FaceFormFactory()
-        face_2 = FaceFormFactory()
+        face_1 = FaceFormFactory(amount_usd=100.25, amount_local=9550.55, exchange_rate=95.27)
+        face_2 = FaceFormFactory(amount_usd=20.45, amount_local=2010.35, exchange_rate=98.28)
         data['face_forms'] = [face_1.pk, face_2.pk]
 
         response = self._do_create(self.unicef_focal_point, data)
@@ -685,14 +685,14 @@ class TestAuditCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEngage
         self.assertEqual(face_1.face_number, response.data['face_forms'][0]['face_number'])
         self.assertEqual(face_1.amount_usd.__str__(), response.data['face_forms'][0]['amount_usd'])
         self.assertEqual(face_1.amount_local.__str__(), response.data['face_forms'][0]['amount_local'])
-        self.assertEqual(audit.exchange_rate.__str__(), round(face_1.amount_usd / face_1.amount_local, 2).__str__())
+        self.assertEqual(audit.exchange_rate.__str__(), round(face_1.amount_local / face_1.amount_usd, 2).__str__())
         self.assertEqual(audit.total_value, Decimal(response.data['total_value']))
         self.assertEqual(audit.total_value_local, Decimal(response.data['total_value_local']))
 
     def test_with_face_forms_different_currencies(self):
         data = copy(self.create_data)
-        face_1 = FaceFormFactory(currency='USD', amount_usd=100.0, amount_local=100.0)
-        face_2 = FaceFormFactory(currency='TEST', amount_usd=250.0, amount_local=1000.0)
+        face_1 = FaceFormFactory(currency='USD', amount_usd=100.0, amount_local=100.0, exchange_rate=1.0)
+        face_2 = FaceFormFactory(currency='TEST', amount_usd=250.0, amount_local=1000.0, exchange_rate=4.0)
         data['face_forms'] = [face_1.pk, face_2.pk]
 
         response = self._do_create(self.unicef_focal_point, data)
@@ -700,12 +700,12 @@ class TestAuditCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEngage
         audit = Audit.objects.get(pk=response.data['id'])
         self.assertEqual(audit.face_forms.count(), response.data['face_forms'].__len__())
 
-        self.assertEqual(audit.exchange_rate.__str__(), round(face_2.amount_usd / face_2.amount_local, 2).__str__())
+        self.assertEqual(audit.exchange_rate, round(face_2.amount_local / face_2.amount_usd, 2))
         self.assertEqual(audit.total_value, Decimal(response.data['total_value']))
         self.assertEqual(audit.total_value_local, Decimal(response.data['total_value_local']))
 
         self.assertEqual(audit.total_value, 350)
-        self.assertEqual(audit.total_value_local, 1000)
+        self.assertEqual(audit.total_value_local, 1000 + 100 * audit.exchange_rate)
 
 
 class TestSpotCheckCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEngagementsCreateViewSet,

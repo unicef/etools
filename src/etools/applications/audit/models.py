@@ -252,16 +252,15 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
                 self.total_value_local = face_form_qs.aggregate(Sum("amount_local"))['amount_local__sum']
 
                 latest_face = face_form_qs.order_by('-end_date').first()
-                if latest_face.amount_local:
-                    self.exchange_rate = latest_face.amount_usd / latest_face.amount_local
+                if latest_face.exchange_rate:
+                    self.exchange_rate = latest_face.exchange_rate
             else:
                 self.total_value = face_form_qs.aggregate(Sum("amount_usd"))['amount_usd__sum']
-
                 if local_qs.count() > 0:
                     latest_face = local_qs.order_by('-end_date').first()
-                    if latest_face.amount_local:
-                        self.exchange_rate = latest_face.amount_usd / latest_face.amount_local
-                    self.total_value_local = local_qs.aggregate(Sum("amount_local"))['amount_local__sum']
+                    self.exchange_rate = latest_face.exchange_rate
+                    usd_to_local = usd_qs.aggregate(Sum("amount_local"))['amount_local__sum'] * self.exchange_rate
+                    self.total_value_local = usd_to_local + local_qs.aggregate(Sum("amount_local"))['amount_local__sum']
 
         self.save(update_fields=['total_value', 'total_value_local', 'exchange_rate'])
 
@@ -1081,6 +1080,7 @@ class FaceForm(TimeStampedModel, models.Model):
     currency = CurrencyField(verbose_name=_("Currency of Report"), null=True, blank=True)
     amount_usd = models.DecimalField(verbose_name=_('Amount ($)'), default=0, decimal_places=2, max_digits=20)
     amount_local = models.DecimalField(verbose_name=_('Amount (local)'), default=0, decimal_places=2, max_digits=20)
+    exchange_rate = models.DecimalField(verbose_name=_('Exchange Rate'), default=0, decimal_places=2, max_digits=20)
 
     class Meta:
         verbose_name = _('Face Form')
