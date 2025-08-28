@@ -27,7 +27,7 @@ class TestLocationViews(BaseTenantTestCase):
     def test_api_location_light_list(self):
         response = self.forced_auth_req('get', reverse('locations-light-list'), user=self.unicef_staff)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(sorted(response.data[0].keys()), ['admin_level', 'admin_level_name', "id", "name", "name_display", "p_code", "parent"])
+        self.assertEqual(sorted(response.data[0].keys()), ['admin_level', 'admin_level_name', "id", "is_active", "name", "name_display", "p_code", "parent"])
         # sort the expected locations by name, the same way the API results are sorted
         self.locations.sort(key=lambda location: location.name)
 
@@ -150,63 +150,3 @@ class TestLocationViews(BaseTenantTestCase):
         self.assertEqual(sorted(response.data[0].keys()), ['admin_level', 'admin_level_name', "id", "name",
                                                            "name_display", "p_code", "parent"])
         self.assertIn("Loc", response.data[0]["name"])
-
-    def test_api_location_light_list_hide_deactivated_false(self):
-        """Test that all locations are returned when hide_deactivated is false or not provided"""
-        [LocationFactory(is_active=True) for _ in range(3)]
-        [LocationFactory(is_active=False) for _ in range(2)]
-
-        response = self.forced_auth_req('get', reverse('locations-light-list'), user=self.unicef_staff)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 11)
-
-        response = self.forced_auth_req(
-            'get',
-            reverse('locations-light-list'),
-            user=self.unicef_staff,
-            data={'hide_deactivated': 'false'}
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 11)
-
-    def test_api_location_light_list_hide_deactivated_true(self):
-        """Test that only active locations are returned when hide_deactivated is true"""
-        active_locations = [LocationFactory(is_active=True) for _ in range(3)]
-        [LocationFactory(is_active=False) for _ in range(2)]
-
-        response = self.forced_auth_req(
-            'get',
-            reverse('locations-light-list'),
-            user=self.unicef_staff,
-            data={'hide_deactivated': 'true'}
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 9)
-
-        active_location_ids = set([str(loc.id) for loc in self.locations + active_locations])
-        returned_location_ids = set([loc['id'] for loc in response.data])
-        self.assertEqual(returned_location_ids, active_location_ids)
-
-    def test_api_location_light_list_hide_deactivated_various_values(self):
-        """Test that hide_deactivated works with various truthy values"""
-        [LocationFactory(is_active=True) for _ in range(2)]
-        [LocationFactory(is_active=False) for _ in range(2)]
-        for truthy_value in ['true', 'True', 'TRUE', '1', 'yes', 'Yes', 'YES']:
-            response = self.forced_auth_req(
-                'get',
-                reverse('locations-light-list'),
-                user=self.unicef_staff,
-                data={'hide_deactivated': truthy_value}
-            )
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
-            self.assertEqual(len(response.data), 8, f"Failed for value: {truthy_value}")
-
-        for falsy_value in ['false', 'False', '0', 'no', 'random_string', '']:
-            response = self.forced_auth_req(
-                'get',
-                reverse('locations-light-list'),
-                user=self.unicef_staff,
-                data={'hide_deactivated': falsy_value}
-            )
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
-            self.assertEqual(len(response.data), 10, f"Failed for value: {falsy_value}")

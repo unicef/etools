@@ -8,9 +8,18 @@ from rest_framework import permissions
 from rest_framework.request import Request
 from unicef_locations import views
 from unicef_locations.cache import etag_cached, get_cache_version
+from unicef_locations.serializers import LocationLightSerializer
 
 from etools.applications.locations.models import Location
 from etools.libraries.tenant_support.utils import TenantSuffixedString
+
+
+class LocationLightWithActiveSerializer(LocationLightSerializer):
+    """
+    Extends the base LocationLightSerializer to include the is_active field.
+    """
+    class Meta(LocationLightSerializer.Meta):
+        fields = LocationLightSerializer.Meta.fields + ('is_active',)
 
 
 def cache_key(request: Request):
@@ -21,20 +30,7 @@ def cache_key(request: Request):
 
 class LocationsLightViewSet(views.LocationsLightViewSet):
     # TODO: check user filter?
-
-    def get_queryset(self):
-        """
-        Override get_queryset to add optional filtering of deactivated locations.
-
-        Query parameters:
-        - hide_deactivated: boolean (true/false) - if true, only return active locations (is_active=True)
-        """
-        queryset = super().get_queryset()
-        hide_deactivated = self.request.query_params.get('hide_deactivated', '').lower()
-        if hide_deactivated in ('true', '1', 'yes'):
-            queryset = queryset.filter(is_active=True)
-
-        return queryset
+    serializer_class = LocationLightWithActiveSerializer
 
     @method_decorator(cache_control(
         max_age=0,  # enable cache yet automatically treat all cached data as stale to request backend every time
