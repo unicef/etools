@@ -6,6 +6,7 @@ from etools.applications.last_mile.admin_panel.constants import *  # NOQA
 from etools.applications.last_mile.admin_panel.views import (
     AlertNotificationViewSet,
     AlertTypeListView,
+    ItemStockManagementView,
     LocationsViewSet,
     MaterialListView,
     OrganizationListView,
@@ -34,6 +35,7 @@ router.register(r'locations-type', PointOfInterestTypeListView, basename=LOCATIO
 router.register(r'user-locations', UserLocationsViewSet, basename=USER_LOCATIONS_ADMIN_PANEL)
 router.register(r'alert-notifications', AlertNotificationViewSet, basename=ALERT_NOTIFICATIONS_ADMIN_PANEL)
 router.register(r'stock-management', TransferItemViewSet, basename=STOCK_MANAGEMENT_ADMIN_PANEL)
+router.register(r'stock-management-items', ItemStockManagementView, basename=UPDATE_ITEM_STOCK_ADMIN_PANEL)
 router.register(r'organizations', OrganizationListView, basename='organizations-admin')
 router.register(r'user-permissions', UserPermissionsListView, basename='user-permissions')
 router.register(r'parent-locations', ParentLocationListView, basename=PARENT_LOCATIONS_ADMIN_PANEL)

@@ -5,7 +5,7 @@ from django_filters import rest_framework as filters
 from django_filters.constants import EMPTY_VALUES
 
 from etools.applications.last_mile.admin_panel.constants import ALERT_TYPES
-from etools.applications.last_mile.models import PointOfInterest, Transfer, TransferHistory
+from etools.applications.last_mile.models import Item, PointOfInterest, Transfer, TransferHistory
 from etools.applications.locations.models import Location
 from etools.applications.users.models import Realm
 
@@ -192,3 +192,31 @@ class TransferEvidenceFilter(filters.FilterSet):
     class Meta:
         model = Transfer
         fields = ('name', 'transfer_type')
+
+
+class ItemFilter(filters.FilterSet):
+    poi_id = filters.NumberFilter(field_name='transfer__destination_point_id', lookup_expr='exact')
+    description = filters.CharFilter(method='filter_mapped_description', label='description')
+    material_description = filters.CharFilter(field_name="material__short_description", lookup_expr="icontains")
+    material_number = filters.CharFilter(field_name="material__number", lookup_expr="icontains")
+    quantity = filters.NumberFilter(field_name='quantity', lookup_expr='exact')
+    uom = filters.CharFilter(field_name="uom", lookup_expr="icontains")
+    batch_id = filters.CharFilter(field_name="batch_id", lookup_expr="icontains")
+
+    class Meta:
+        model = Item
+        fields = [
+            'poi_id',
+            'description',
+            'material_description',
+            'material_number',
+            'quantity',
+            'uom',
+            'batch_id'
+        ]
+
+    def filter_mapped_description(self, queryset, name, value):
+        return queryset.filter(
+            Q(mapped_description__icontains=value) |
+            Q(material__short_description__icontains=value)
+        )

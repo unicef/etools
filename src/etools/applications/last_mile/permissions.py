@@ -53,6 +53,9 @@ class IsLMSMAdmin(IsAuthenticated):
         STOCK_MANAGEMENT_MATERIALS_ADMIN_PANEL: [
             STOCK_MANAGEMENT_ADMIN_PANEL_PERMISSION,
         ],
+        UPDATE_ITEM_STOCK_ADMIN_PANEL: [
+            STOCK_MANAGEMENT_ADMIN_PANEL_PERMISSION,
+        ],
         # Manage Transfer History Perms
         TRANSFER_HISTORY_ADMIN_PANEL: [
             TRANSFER_HISTORY_ADMIN_PANEL_PERMISSION,
