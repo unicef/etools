@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-12-03 14:31+0000\n"
+"POT-Creation-Date: 2025-08-07 16:27+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -230,6 +230,12 @@ msgstr "Signaler le motif du rejet"
 
 msgid "Cancellation reason"
 msgstr "Motif d'annulation"
+
+msgid "Objective"
+msgstr "Objectif"
+
+msgid "Type Of Facility"
+msgstr "Type d'installation"
 
 msgid "Monitoring Activity"
 msgstr "Activité de suivi"

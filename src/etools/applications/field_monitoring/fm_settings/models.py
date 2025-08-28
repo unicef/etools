@@ -89,6 +89,7 @@ class Question(models.Model):
         ('number', _('Number')),
         ('bool', _('Boolean')),
         ('likert_scale', _('Likert Scale')),
+        ('multiple_choice', _('Multiple Choice')),
     )
 
     LEVELS = Choices(

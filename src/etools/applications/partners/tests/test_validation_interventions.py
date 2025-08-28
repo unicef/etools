@@ -3,7 +3,6 @@ from unittest import skip
 from unittest.mock import Mock, patch
 
 from etools_validator.exceptions import BasicValidationError, StateValidationError, TransitionError
-from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
@@ -19,7 +18,6 @@ from etools.applications.partners.tests.factories import (
 )
 from etools.applications.partners.validation.interventions import (
     InterventionValid,
-    locations_valid,
     partnership_manager_only,
     sections_valid,
     signed_date_valid,
@@ -885,21 +883,6 @@ class TestInterventionValid(BaseTenantTestCase):
         """Invalid if end date is after today"""
         self.intervention.end = datetime.date(2001, 1, 1)
         self.assertTrue(self.validator.state_ended_valid(self.intervention))
-
-    def test_locations_valid(self):
-        with self.assertNumQueries(1):
-            self.assertTrue(locations_valid(self.intervention))
-
-    def test_locations_invalid(self):
-        loc = LocationFactory()
-        self.applied_indicator.locations.add(loc)
-
-        with self.assertRaisesRegex(
-                BasicValidationError,
-                'The following locations have been selected on the PD/SPD indicators and '
-                'cannot be removed without removing them from the indicators first'
-        ):
-            locations_valid(self.intervention)
 
     def test_sections_valid(self):
         sec = SectionFactory()

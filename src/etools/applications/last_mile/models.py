@@ -87,6 +87,12 @@ class PointOfInteresetLMExportManager(models.Manager):
 
 
 class PointOfInterest(TimeStampedModel, models.Model):
+
+    class ApprovalStatus(models.TextChoices):
+        PENDING = 'PENDING', _('Pending Approval')
+        APPROVED = 'APPROVED', _('Approved')
+        REJECTED = 'REJECTED', _('Rejected')
+
     partner_organizations = models.ManyToManyField(
         PartnerOrganization,
         related_name='points_of_interest',
@@ -116,6 +122,37 @@ class PointOfInterest(TimeStampedModel, models.Model):
     private = models.BooleanField(default=False)
     is_active = models.BooleanField(verbose_name=_("Active"), default=True)
 
+    status = models.CharField(
+        _('Approval Status'),
+        max_length=10,
+        choices=ApprovalStatus.choices,
+        default=ApprovalStatus.PENDING,
+        db_index=True,
+        help_text=_('The current approval status of this location.')
+    )
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='created_points_of_interest'
+    )
+    created_on = models.DateTimeField(default=timezone.now)
+    approved_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='approved_points_of_interest'
+    )
+    approved_on = models.DateTimeField(null=True, blank=True)
+    review_notes = models.TextField(
+        _('Review Notes'),
+        null=True,
+        blank=True,
+        help_text=_('Optional notes from the reviewer regarding approval or rejection.')
+    )
+
     tracker = FieldTracker(['point'])
 
     objects = PointOfInterestManager()
@@ -140,6 +177,9 @@ class PointOfInterest(TimeStampedModel, models.Model):
 
         return location
 
+    def is_warehouse(self):
+        return self.poi_type.category.lower() == 'warehouse' if self.poi_type else False
+
     def save(self, **kwargs):
         if not self.parent_id:
             self.parent = self.get_parent_location(self.point)
@@ -148,6 +188,26 @@ class PointOfInterest(TimeStampedModel, models.Model):
             self.parent = self.get_parent_location(self.point)
 
         super().save(**kwargs)
+
+    def approve(self, approver_user, notes=None):
+        if self.status != self.ApprovalStatus.APPROVED:
+            self.status = self.ApprovalStatus.APPROVED
+            self.approved_by = approver_user
+            self.approved_on = timezone.now()
+            self.is_active = True
+            if notes:
+                self.review_notes = notes
+            self.save(update_fields=['status', 'approved_by', 'approved_on', 'review_notes', 'is_active'])
+
+    def reject(self, reviewer_user, notes=None):
+        if self.status != self.ApprovalStatus.REJECTED:
+            self.status = self.ApprovalStatus.REJECTED
+            self.approved_by = reviewer_user
+            self.approved_on = timezone.now()
+            self.is_active = False
+            if notes:
+                self.review_notes = notes
+            self.save(update_fields=['status', 'approved_by', 'approved_on', 'review_notes', 'is_active'])
 
 
 class TransferHistoryManager(models.Manager):
@@ -248,7 +308,7 @@ class Transfer(TimeStampedModel, models.Model):
         (OTHER, _('Other')),
     )
 
-    unicef_release_order = models.CharField(max_length=30, unique=True, null=True)
+    unicef_release_order = models.CharField(max_length=255, unique=True, null=True)
     name = models.CharField(max_length=255, null=True, blank=True)
     dispense_type = models.CharField(max_length=30, choices=DISPENSE_TYPE, null=True, blank=True)
     transfer_type = models.CharField(max_length=30, choices=TRANSFER_TYPE, null=True, blank=True)
@@ -504,6 +564,7 @@ class Item(TimeStampedModel, models.Model):
 
     quantity = models.IntegerField()
     base_quantity = models.IntegerField(null=True)
+    base_uom = models.CharField(max_length=30, choices=Material.UOM, null=True)
     batch_id = models.CharField(max_length=255, null=True, blank=True)
     expiry_date = models.DateTimeField(null=True, blank=True)
     comment = models.TextField(null=True, blank=True)
@@ -686,3 +747,13 @@ class Profile(TimeStampedModel, models.Model):
 
     def is_pending_approval(self):
         return self.status == self.ApprovalStatus.PENDING
+
+
+class UserPointsOfInterest(TimeStampedModel, models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='points_of_interest')
+    point_of_interest = models.ForeignKey(PointOfInterest, on_delete=models.CASCADE, related_name='users')
+
+    class Meta:
+        unique_together = ('user', 'point_of_interest')
+        verbose_name = _('User Point of Interest')
+        verbose_name_plural = _('User Points of Interest')

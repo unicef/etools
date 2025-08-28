@@ -2,11 +2,13 @@ from django.contrib import admin
 
 from etools.applications.action_points.admin import ActionPointAdmin
 from etools.applications.field_monitoring.planning.models import (
+    FacilityType,
     MonitoringActivity,
     MonitoringActivityActionPoint,
     MonitoringActivityGroup,
     QuestionTemplate,
     TPMConcern,
+    VisitGoal,
     YearPlan,
 )
 
@@ -24,6 +26,16 @@ class QuestionTemplateAdmin(admin.ModelAdmin):
     list_display = ('question', 'related_to', 'is_active', 'specific_details')
     list_select_related = ('partner', 'cp_output', 'intervention', 'question')
     list_filter = ('is_active', 'question')
+
+
+@admin.register(VisitGoal)
+class VisitGoalAdmin(admin.ModelAdmin):
+    list_display = ('name', 'info')
+
+
+@admin.register(FacilityType)
+class FacilityTypeAdmin(admin.ModelAdmin):
+    list_display = ('name',)
 
 
 @admin.register(MonitoringActivity)
