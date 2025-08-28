@@ -7,6 +7,7 @@ from unicef_locations.admin import ActiveLocationsFilter, CartoDBTableAdmin, Loc
 from unicef_locations.models import CartoDBTable
 
 from etools.applications.locations.models import Location
+from etools.applications.locations.services import LocationsDeactivationService
 from etools.applications.locations.tasks import import_locations, notify_import_site_completed
 
 
@@ -27,9 +28,19 @@ class eToolsLocationAdmin(LocationAdmin):
         ActiveLocationsFilter,
         "admin_level",
     )
+    actions = ["deactivate_selected_locations"]
 
     def get_queryset(self, request):
         return super().get_queryset(request).defer("geom", "point")
+
+    def deactivate_selected_locations(self, request, queryset):
+        service = LocationsDeactivationService()
+        result = service.deactivate(queryset, actor=request.user)
+        if result.deactivated_count:
+            messages.success(request, f"Deactivated {result.deactivated_count} location(s).")
+        else:
+            messages.info(request, "No active locations to deactivate.")
+    deactivate_selected_locations.short_description = "Deactivate selected locations"
 
 
 admin.site.unregister(CartoDBTable)

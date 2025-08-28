@@ -302,6 +302,10 @@ class TestMonitoringActivityExport(BaseTenantTestCase):
             text='text question2',
             answer_type=Question.ANSWER_TYPES.text
         )
+        cls.question3 = QuestionFactory(
+            text='text question3',
+            answer_type=Question.ANSWER_TYPES.multiple_choice
+        )
 
     def test_activity_overall_findings(self):
         ActivityOverallFinding.objects.create(
@@ -334,6 +338,11 @@ class TestMonitoringActivityExport(BaseTenantTestCase):
             cp_output=self.cp_output,
             question=self.question2
         )
+        activity_question3 = ActivityQuestionFactory(
+            monitoring_activity=self.activity,
+            cp_output=self.cp_output,
+            question=self.question3
+        )
         disabled_activity_question = ActivityQuestionFactory(
             monitoring_activity=self.activity,
             cp_output=self.cp_output,
@@ -348,6 +357,10 @@ class TestMonitoringActivityExport(BaseTenantTestCase):
         overall_findings.append(ActivityQuestionOverallFinding(
             activity_question=activity_question2,
             value='text value')
+        )
+        overall_findings.append(ActivityQuestionOverallFinding(
+            activity_question=activity_question3,
+            value=[self.question3.options.all()[0].value, self.question3.options.all()[1].value])
         )
         overall_findings.append(ActivityQuestionOverallFinding(
             activity_question=disabled_activity_question)
@@ -367,8 +380,18 @@ class TestMonitoringActivityExport(BaseTenantTestCase):
 
             self.assertEqual(actual['question_text'], expected.activity_question.question.text)
 
-            expected_value = expected.value if expected.activity_question.question.answer_type != 'likert_scale' \
-                else expected.activity_question.question.options.all()[0].label
+            question_type = expected.activity_question.question.answer_type
+            if question_type == 'likert_scale':
+                expected_value = expected.activity_question.question.options.all()[0].label
+            elif question_type == 'multiple_choice':
+                # Map values to labels and join with comma
+                option_labels = expected.activity_question.question.options.filter(
+                    value__in=expected.value or []
+                ).values_list('label', flat=True)
+                expected_value = ', '.join(option_labels)
+            else:
+                expected_value = expected.value
+
             self.assertEqual(actual['value'], expected_value)
 
     def test_get_export_checklist_findings(self):
@@ -376,6 +399,9 @@ class TestMonitoringActivityExport(BaseTenantTestCase):
         ChecklistOverallFindingFactory(
             started_checklist=started_checklist,
             partner=self.partner)
+        ChecklistOverallFindingFactory(
+            started_checklist=started_checklist,
+            cp_output=self.cp_output)
         ChecklistOverallFindingFactory(
             started_checklist=started_checklist,
             cp_output=self.cp_output)
@@ -389,6 +415,11 @@ class TestMonitoringActivityExport(BaseTenantTestCase):
             monitoring_activity=self.activity,
             cp_output=self.cp_output,
             question=self.question2
+        )
+        activity_question3 = ActivityQuestionFactory(
+            monitoring_activity=self.activity,
+            cp_output=self.cp_output,
+            question=self.question3
         )
         disabled_activity_question = ActivityQuestionFactory(
             monitoring_activity=self.activity,
@@ -404,6 +435,11 @@ class TestMonitoringActivityExport(BaseTenantTestCase):
             started_checklist=started_checklist,
             activity_question=activity_question2,
             value='text value'
+        )
+        FindingFactory(
+            started_checklist=started_checklist,
+            activity_question=activity_question3,
+            value=[self.question3.options.all()[0].value, self.question3.options.all()[1].value]
         )
         FindingFactory(
             started_checklist=started_checklist,
