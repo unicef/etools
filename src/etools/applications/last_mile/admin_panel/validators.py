@@ -4,6 +4,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework.exceptions import ValidationError
 
 from etools.applications.last_mile.admin_panel.constants import (
+    BATCH_ID_TOO_LONG,
     EMAIL_NOT_PROVIDED,
     GROUP_DOES_NOT_EXIST,
     GROUP_NOT_AVAILABLE,
@@ -101,3 +102,20 @@ class AdminPanelValidator:
     def validate_transfer_type(self, transfer: Transfer):
         if transfer.transfer_type == Transfer.HANDOVER:
             raise ValidationError(_(TRANSFER_TYPE_HANDOVER_NOT_ALLOWED))
+
+    def validate_uom(self, uom: str):
+        if uom not in [uom[0] for uom in Material.UOM]:
+            raise ValidationError(_(UOM_NOT_VALID))
+
+    def validate_uom_map(self, material: Material, uom: str):
+        if material.other and 'uom_map' in material.other and material.other['uom_map']:
+            if uom not in material.other['uom_map']:
+                raise ValidationError(f"UOM {uom} is not allowed for material {material.number}. Allowed UOMs: {material.other['uom_map']}")
+
+    def validate_positive_quantity(self, quantity: int):
+        if quantity < 1:
+            raise ValidationError(_(INVALID_QUANTITY))
+
+    def validate_batch_id(self, batch_id: str):
+        if batch_id and len(batch_id) > 254:
+            raise ValidationError(_(BATCH_ID_TOO_LONG))

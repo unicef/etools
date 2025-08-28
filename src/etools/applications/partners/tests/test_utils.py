@@ -124,28 +124,38 @@ class TestSendPCARequiredNotification(BaseTenantTestCase):
 
     def test_direct_cp(self):
         cp = CountryProgrammeFactory(to_date=self.lead_date)
+        budget_owner = UserFactory()
         intervention = InterventionFactory(
             document_type=Intervention.PD,
             end=self.lead_date + datetime.timedelta(days=10),
+            budget_owner=budget_owner,
         )
         intervention.country_programmes.add(cp)
         mock_send = Mock()
         with patch(self.send_path, mock_send):
             utils.send_pca_required_notifications()
         self.assertEqual(mock_send.call_count, 1)
+        # Verify budget owner is in recipients
+        recipients = mock_send.call_args[1]['recipients']
+        self.assertIn(budget_owner.email, recipients)
 
     def test_agreement_cp(self):
         cp = CountryProgrammeFactory(to_date=self.lead_date)
         agreement = AgreementFactory(country_programme=cp)
+        budget_owner = UserFactory()
         InterventionFactory(
             document_type=Intervention.PD,
             end=self.lead_date + datetime.timedelta(days=10),
             agreement=agreement,
+            budget_owner=budget_owner,
         )
         mock_send = Mock()
         with patch(self.send_path, mock_send):
             utils.send_pca_required_notifications()
         self.assertEqual(mock_send.call_count, 1)
+        # Verify budget owner is in recipients
+        recipients = mock_send.call_args[1]['recipients']
+        self.assertIn(budget_owner.email, recipients)
 
 
 class TestSendPCAMissingNotification(BaseTenantTestCase):
@@ -189,16 +199,21 @@ class TestSendPCAMissingNotification(BaseTenantTestCase):
             agreement_type=Agreement.PCA,
             country_programme=cp,
         )
+        budget_owner = UserFactory()
         InterventionFactory(
             document_type=Intervention.PD,
             start=date_past + datetime.timedelta(days=1),
             end=date_future,
             agreement=agreement,
+            budget_owner=budget_owner,
         )
         mock_send = Mock()
         with patch(self.send_path, mock_send):
             utils.send_pca_missing_notifications()
         self.assertEqual(mock_send.call_count, 1)
+        # Verify budget owner is in recipients
+        recipients = mock_send.call_args[1]['recipients']
+        self.assertIn(budget_owner.email, recipients)
 
     def test_cp_previous(self):
         date_past = datetime.date.today() - datetime.timedelta(days=10)
@@ -241,7 +256,8 @@ class TestSendInterventionDraftNotification(BaseTenantTestCase):
         cls.send_path = "etools.applications.partners.utils.send_notification_with_template"
 
     def test_send(self):
-        intervention = InterventionFactory(status=Intervention.DRAFT)
+        budget_owner = UserFactory()
+        intervention = InterventionFactory(status=Intervention.DRAFT, budget_owner=budget_owner)
         tz = timezone.get_default_timezone()
         intervention.created = datetime.datetime(2018, 1, 1, 12, 55, 12, 12345, tzinfo=tz)
         intervention.save()
@@ -249,6 +265,9 @@ class TestSendInterventionDraftNotification(BaseTenantTestCase):
         with patch(self.send_path, mock_send):
             utils.send_intervention_draft_notification()
         self.assertEqual(mock_send.call_count, 1)
+        # Verify budget owner is in recipients
+        recipients = mock_send.call_args[1]['recipients']
+        self.assertIn(budget_owner.email, recipients)
 
     def test_send_not_week_old(self):
         InterventionFactory(status=Intervention.DRAFT)
@@ -274,15 +293,20 @@ class TestSendInterventionPastStartNotification(BaseTenantTestCase):
         cls.send_path = "etools.applications.partners.utils.send_notification_with_template"
 
     def test_send(self):
+        budget_owner = UserFactory()
         intervention = InterventionFactory(
             status=Intervention.SIGNED,
             start=datetime.date.today() - datetime.timedelta(days=2),
+            budget_owner=budget_owner,
         )
         FundsReservationHeaderFactory(intervention=intervention)
         mock_send = Mock()
         with patch(self.send_path, mock_send):
             utils.send_intervention_past_start_notification()
         self.assertEqual(mock_send.call_count, 1)
+        # Verify budget owner is in recipients
+        recipients = mock_send.call_args[1]['recipients']
+        self.assertIn(budget_owner.email, recipients)
 
     def test_send_not_signed(self):
         intervention = InterventionFactory(

@@ -440,6 +440,8 @@ def send_pca_required_notifications():
 
     for pd in pd_list:
         recipients = [u.user.email for u in pd.unicef_focal_points.all()]
+        if pd.budget_owner and pd.budget_owner.email:
+            recipients.append(pd.budget_owner.email)
         context = {
             "reference_number": pd.reference_number,
             "partner_name": str(pd.agreement.partner),
@@ -480,6 +482,8 @@ def send_pca_missing_notifications():
         )
         if not pca_next_qs.exists():
             recipients = [u.user.email for u in pd.unicef_focal_points.all()]
+            if pd.budget_owner and pd.budget_owner.email:
+                recipients.append(pd.budget_owner.email)
             context = {
                 "reference_number": pd.reference_number,
                 "partner_name": str(pd.agreement.partner),
@@ -527,6 +531,8 @@ def send_intervention_draft_notification():
             u.email for u in intervention.unicef_focal_points.all()
             if u.email
         ]
+        if intervention.budget_owner and intervention.budget_owner.email:
+            recipients.append(intervention.budget_owner.email)
         send_notification_with_template(
             recipients=recipients,
             template_name="partners/intervention/draft",
@@ -550,6 +556,8 @@ def send_intervention_past_start_notification():
             u.user.email for u in intervention.unicef_focal_points.all()
             if u.user.email
         ]
+        if intervention.budget_owner and intervention.budget_owner.email:
+            recipients.append(intervention.budget_owner.email)
         send_notification_with_template(
             recipients=recipients,
             template_name="partners/intervention/past-start",
