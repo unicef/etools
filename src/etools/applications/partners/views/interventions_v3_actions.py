@@ -95,6 +95,8 @@ class PMPInterventionAcceptView(PMPInterventionActionView):
                 })
 
             recipients = [u.email for u in pd.unicef_focal_points.all()]
+            if pd.budget_owner and pd.budget_owner.email:
+                recipients.append(pd.budget_owner.email)
             template_name = 'partners/intervention/partner_accepted'
         else:
             if not pd.unicef_court:
@@ -109,6 +111,8 @@ class PMPInterventionAcceptView(PMPInterventionActionView):
 
             request.data.update({"unicef_accepted": True})
             recipients = [u.email for u in pd.partner_focal_points.all()]
+            if pd.budget_owner and pd.budget_owner.email:
+                recipients.append(pd.budget_owner.email)
             template_name = 'partners/intervention/unicef_accepted'
 
         response = super().update(request, *args, **kwargs)
@@ -163,6 +167,8 @@ class PMPInterventionAcceptOnBehalfOfPartner(PMPInterventionActionView):
             [u.email for u in pd.unicef_focal_points.all()] +
             [u.email for u in pd.partner_focal_points.all()]
         )
+        if pd.budget_owner and pd.budget_owner.email:
+            recipients.add(pd.budget_owner.email)
         recipients.discard(self.request.user.email)
 
         template_name = 'partners/intervention/unicef_accepted_behalf_of_partner'
@@ -331,6 +337,8 @@ class PMPInterventionReviewView(PMPInterventionActionView):
             recipients = set(
                 u.email for u in pd.unicef_focal_points.all()
             )
+            if pd.budget_owner and pd.budget_owner.email:
+                recipients.add(pd.budget_owner.email)
             # context should be valid for both templates mentioned below
             context = {
                 "reference_number": pd.reference_number,
@@ -387,6 +395,8 @@ class PMPInterventionCancelView(PMPInterventionActionView):
             ] + [
                 u.email for u in pd.unicef_focal_points.all()
             ]
+            if pd.budget_owner and pd.budget_owner.email:
+                recipients.append(pd.budget_owner.email)
             context = {
                 "reference_number": pd.reference_number,
                 "partner_name": str(pd.agreement.partner),
@@ -423,6 +433,8 @@ class PMPInterventionTerminateView(PMPInterventionActionView):
             ] + [
                 u.email for u in pd.unicef_focal_points.all()
             ])
+            if pd.budget_owner and pd.budget_owner.email:
+                recipients.add(pd.budget_owner.email)
             context = {
                 "reference_number": pd.reference_number,
                 "partner_name": str(pd.agreement.partner),
@@ -459,6 +471,8 @@ class PMPInterventionSuspendView(PMPInterventionActionView):
             ] + [
                 u.email for u in pd.unicef_focal_points.all()
             ]
+            if pd.budget_owner and pd.budget_owner.email:
+                recipients.append(pd.budget_owner.email)
             context = {
                 "reference_number": pd.reference_number,
                 "partner_name": str(pd.agreement.partner)
@@ -495,6 +509,8 @@ class PMPInterventionUnsuspendView(PMPInterventionActionView):
             ] + [
                 u.email for u in pd.unicef_focal_points.all()
             ]
+            if pd.budget_owner and pd.budget_owner.email:
+                recipients.append(pd.budget_owner.email)
             context = {
                 "reference_number": pd.reference_number,
                 "partner_name": str(pd.agreement.partner),
@@ -542,6 +558,8 @@ class PMPInterventionSignatureView(PMPInterventionActionView):
             recipients = set([
                 u.email for u in pd.unicef_users_involved
             ])
+            if pd.budget_owner and pd.budget_owner.email:
+                recipients.add(pd.budget_owner.email)
             context = {
                 "reference_number": pd.reference_number,
                 "partner_name": str(pd.agreement.partner)
@@ -568,6 +586,8 @@ class PMPInterventionUnlockView(PMPInterventionActionView):
             template_name = 'partners/intervention/partner_unlocked'
         else:
             recipients = [u.email for u in pd.partner_focal_points.all()]
+            if pd.budget_owner and pd.budget_owner.email:
+                recipients.append(pd.budget_owner.email)
             template_name = 'partners/intervention/unicef_unlocked'
 
         request.data.update({"partner_accepted": False, "unicef_accepted": False})
@@ -610,6 +630,8 @@ class PMPInterventionSendToPartnerView(PMPInterventionActionView):
         if response.status_code == 200:
             # notify partner
             recipients = [u.email for u in pd.partner_focal_points.all()]
+            if pd.budget_owner and pd.budget_owner.email:
+                recipients.append(pd.budget_owner.email)
             context = {
                 "reference_number": pd.reference_number,
                 "partner_name": str(pd.agreement.partner)
@@ -645,6 +667,8 @@ class PMPInterventionSendToUNICEFView(PMPInterventionActionView):
         if response.status_code == 200:
             # notify unicef
             recipients = [u.email for u in pd.unicef_focal_points.all()]
+            if pd.budget_owner and pd.budget_owner.email:
+                recipients.append(pd.budget_owner.email)
             context = {
                 "reference_number": pd.reference_number,
                 "partner_name": str(pd.agreement.partner)
