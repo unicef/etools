@@ -394,9 +394,13 @@ class MonitoringActivityActionPointSerializer(ActionPointBaseSerializer):
 
     def validate_location(self, value):
         """
-        Prevent adding inactive locations to Monitoring Activity Action Points.
+        Prevent adding new inactive locations to Monitoring Activity Action Points.
+        Allow keeping existing inactive locations that were previously saved.
         """
         if value and not value.is_active:
+            if self.instance and self.instance.location == value:
+                return value
+
             raise serializers.ValidationError(
                 _('Cannot assign inactive location "{}". Please choose an active location.').format(value.name)
             )

@@ -1685,8 +1685,8 @@ class MonitoringActivityActionPointLocationValidationTestCase(FMBaseTestCaseMixi
         self.assertIn('location', response.data)
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
-    def test_update_action_point_with_inactive_location_fails(self):
-        """Test that updating an action point with an inactive location fails"""
+    def test_update_action_point_with_new_inactive_location_fails(self):
+        """Test that updating an action point with a new inactive location fails"""
         action_point = MonitoringActivityActionPointFactory(
             monitoring_activity=self.monitoring_activity,
             location=self.active_location
@@ -1704,3 +1704,30 @@ class MonitoringActivityActionPointLocationValidationTestCase(FMBaseTestCaseMixi
             print(f"Expected 400, got {response.status_code}. Response: {response.data}")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('location', response.data)
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_update_action_point_keeping_existing_inactive_location_succeeds(self):
+        """Test that updating an action point while keeping its existing inactive location succeeds"""
+        action_point = MonitoringActivityActionPointFactory(
+            monitoring_activity=self.monitoring_activity,
+            location=self.inactive_location
+        )
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse('field_monitoring_planning:activity_action_points-detail',
+                    kwargs={'monitoring_activity_pk': self.monitoring_activity.id, 'pk': action_point.id}),
+            user=self.visit_lead,
+            data={'description': 'Updated description'}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Verify that we can explicitly set the same inactive location
+        response = self.forced_auth_req(
+            'patch',
+            reverse('field_monitoring_planning:activity_action_points-detail',
+                    kwargs={'monitoring_activity_pk': self.monitoring_activity.id, 'pk': action_point.id}),
+            user=self.visit_lead,
+            data={'location': self.inactive_location.id}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
