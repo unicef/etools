@@ -53,7 +53,7 @@ class TestStockAdminViewSetImport(BaseTenantTestCase):
 
     def _create_xlsx_file(self, data_rows, headers=None):
         if headers is None:
-            headers = ["ip_number", "material_number", "quantity", "uom", "expiration_date", "batch_id", "p_code"]
+            headers = ["Partner information ", "Stock level information ", None, None, None, None, "Location Information "]
 
         stream = io.BytesIO()
         workbook = openpyxl.Workbook()
@@ -267,7 +267,7 @@ class TestStockAdminViewSetImport(BaseTenantTestCase):
     def test_import_with_extra_columns_is_ignored_and_succeeds(self, mock_get_unicef_warehouses):
         mock_get_unicef_warehouses.return_value = self.unicef_warehouse
         expiration_date = datetime(2099, 12, 31)
-        headers = ["ip_number", "material_number", "quantity", "uom", "expiration_date", "batch_id", "p_code", "extra_notes_column"]
+        headers = ["Partner information ", "Stock level information ", None, None, None, None, "Location Information "]
         data_rows = [
             ["VN_STOCK_001", "MAT001", 100, "BOX", expiration_date, "BATCH_EXTRA", "PCODE_STOCK_001", "This is an extra note."],
         ]

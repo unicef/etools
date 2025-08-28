@@ -73,6 +73,11 @@ class UserAdminSerializer(SimpleUserSerializer):
 
     def get_point_of_interests(self, obj):
         poi_instances = [upoi.point_of_interest for upoi in obj.points_of_interest.all()]
+        if not poi_instances:
+            try:
+                poi_instances = obj.profile.organization.partner.points_of_interest.all()
+            except (Organization.DoesNotExist, PartnerOrganization.DoesNotExist):
+                poi_instances = []
         return SimplePointOfInterestSerializer(poi_instances, many=True, read_only=True, context=self.context).data
 
 
@@ -123,7 +128,9 @@ class UserAdminCreateSerializer(serializers.ModelSerializer):
     last_name = serializers.CharField(required=True)
     point_of_interests = serializers.PrimaryKeyRelatedField(many=True,
                                                             queryset=models.PointOfInterest.objects.all(),
-                                                            write_only=True
+                                                            write_only=True,
+                                                            required=False,
+                                                            allow_empty=True,
                                                             )
     last_mile_profile = LastMileProfileSerializer(read_only=True)
 
@@ -864,7 +871,7 @@ class ImportFileSerializer(serializers.Serializer):
 class BulkUpdateLastMileProfileStatusSerializer(serializers.Serializer):
     status = serializers.ChoiceField(choices=LastMileUserProfileUpdateAdminSerializer.Meta.model.ApprovalStatus.choices)
     user_ids = serializers.PrimaryKeyRelatedField(queryset=get_user_model().objects.all(), many=True, write_only=True)
-    review_notes = serializers.CharField(required=False)
+    review_notes = serializers.CharField(required=False, allow_blank=True)
 
     admin_validator = AdminPanelValidator()
 
