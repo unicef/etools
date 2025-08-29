@@ -3,7 +3,6 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password
 from django.contrib.gis.geos import Point
 from django.db import transaction
-from django.utils import timezone
 from django.utils.encoding import force_str
 
 from rest_framework import serializers
@@ -11,10 +10,11 @@ from rest_framework.exceptions import ValidationError
 from rest_framework_gis.fields import GeometryField
 
 from etools.applications.last_mile import models
-from etools.applications.last_mile.admin_panel.constants import ALERT_TYPES, TRANSFER_MANUAL_CREATION_NAME
+from etools.applications.last_mile.admin_panel.constants import ALERT_TYPES
 from etools.applications.last_mile.admin_panel.services.lm_profile_status_updater import LMProfileStatusUpdater
 from etools.applications.last_mile.admin_panel.services.lm_user_creator import LMUserCreator
 from etools.applications.last_mile.admin_panel.services.reverse_transfer import ReverseTransfer
+from etools.applications.last_mile.admin_panel.services.stock_management_create import StockManagementCreateService
 from etools.applications.last_mile.admin_panel.validators import AdminPanelValidator
 from etools.applications.last_mile.permissions import LastMileUserPermissionRetriever
 from etools.applications.last_mile.serializers import PointOfInterestTypeSerializer
@@ -73,6 +73,11 @@ class UserAdminSerializer(SimpleUserSerializer):
 
     def get_point_of_interests(self, obj):
         poi_instances = [upoi.point_of_interest for upoi in obj.points_of_interest.all()]
+        if not poi_instances:
+            try:
+                poi_instances = obj.profile.organization.partner.points_of_interest.all()
+            except (Organization.DoesNotExist, PartnerOrganization.DoesNotExist):
+                poi_instances = []
         return SimplePointOfInterestSerializer(poi_instances, many=True, read_only=True, context=self.context).data
 
 
@@ -123,7 +128,9 @@ class UserAdminCreateSerializer(serializers.ModelSerializer):
     last_name = serializers.CharField(required=True)
     point_of_interests = serializers.PrimaryKeyRelatedField(many=True,
                                                             queryset=models.PointOfInterest.objects.all(),
-                                                            write_only=True
+                                                            write_only=True,
+                                                            required=False,
+                                                            allow_empty=True,
                                                             )
     last_mile_profile = LastMileProfileSerializer(read_only=True)
 
@@ -257,7 +264,7 @@ class UserAdminUpdateSerializer(serializers.ModelSerializer):
 
         profile = getattr(instance, 'profile', None)
         if profile:
-            if 'organization' in profile_data:
+            if 'organization' in profile_data and profile.organization != profile_data.get('organization'):
                 profile.organization = profile_data.get('organization')
                 Realm.objects.filter(user=instance, country=country).update(organization=profile_data.get('organization'))
             if 'country' in profile_data:
@@ -365,6 +372,15 @@ class PointOfInterestListSerializer(serializers.ListSerializer):
         return ret
 
 
+class POIExportListSerializer(serializers.ListSerializer):
+    def to_representation(self, data):
+        iterable = data.all() if hasattr(data, "all") else data
+        rows = []
+        for obj in iterable:
+            rows.extend(self.child.generate_rows(obj))
+        return rows
+
+
 class PointOfInterestExportSerializer(serializers.ModelSerializer):
     country = serializers.CharField(read_only=True)
     region = serializers.CharField(read_only=True)
@@ -377,12 +393,6 @@ class PointOfInterestExportSerializer(serializers.ModelSerializer):
 
     def get_status(self, obj):
         return "Active" if obj.is_active else "Inactive"
-
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        parent_locations = ParentLocationsSerializer(instance.parent).data
-        data.update(parent_locations)
-        return data
 
     def get_primary_type(self, obj):
         return obj.poi_type.name if obj.poi_type else None
@@ -397,10 +407,42 @@ class PointOfInterestExportSerializer(serializers.ModelSerializer):
     def get_lng(self, obj):
         return obj.point.x if obj.point else None
 
+    def base_representation(self, instance):
+        data = super().to_representation(instance)
+        parent_locations = ParentLocationsSerializer(instance.parent).data
+        data.update(parent_locations)
+        return data
+
+    def generate_rows(self, instance):
+        base = self.base_representation(instance)
+        transfers = (
+            instance.destination_transfers
+            .all()
+            .prefetch_related('items')
+        )
+
+        rows = []
+        for transfer in transfers:
+            for item in transfer.items.all():
+                row = dict(base)
+                row.update({
+                    "transfer_name": transfer.name,
+                    "transfer_ref": getattr(transfer, "unicef_release_order", None),
+                    "item_id": item.id,
+                    "item_name": getattr(item, "description", None),
+                    "item_qty": getattr(item, "quantity", None),
+                })
+                rows.append(row)
+
+        return rows or [base]
+
     class Meta:
         model = models.PointOfInterest
-        fields = ('id', 'name', 'primary_type', 'p_code', 'lat', 'lng', 'status', 'implementing_partner', 'region', 'district', 'country')
-        list_serializer_class = PointOfInterestListSerializer
+        fields = (
+            'id', 'name', 'primary_type', 'p_code', 'lat', 'lng',
+            'status', 'implementing_partner', 'region', 'district', 'country',
+        )
+        list_serializer_class = POIExportListSerializer
 
 
 class PointOfInterestSerializer(serializers.ModelSerializer):
@@ -568,6 +610,43 @@ class ItemAdminSerializer(serializers.ModelSerializer):
         fields = ('material', 'quantity', 'modified', 'uom', 'batch_id', 'description')
 
 
+class ItemStockManagementUpdateSerializer(serializers.ModelSerializer):
+
+    adminValidator = AdminPanelValidator()
+
+    def validate_uom(self, value):
+        material = self.instance.material
+        self.adminValidator.validate_uom_map(material, value)
+        self.adminValidator.validate_uom(value)
+        return value
+
+    def validate_quantity(self, value):
+        self.adminValidator.validate_positive_quantity(value)
+        return value
+
+    class Meta:
+        model = models.Item
+        fields = ('quantity', 'uom')
+
+
+class ItemTransferAdminSerializer(serializers.ModelSerializer):
+    material = MaterialAdminSerializer()
+    description = serializers.SerializerMethodField(read_only=True)
+    transfer_name = serializers.SerializerMethodField(read_only=True)
+
+    def get_transfer_name(self, obj):
+        if not obj.transfer:
+            return None
+        return obj.transfer.name or obj.transfer.unicef_release_order
+
+    def get_description(self, obj):
+        return obj.description
+
+    class Meta:
+        model = models.Item
+        fields = ('id', 'material', 'quantity', 'modified', 'uom', 'batch_id', 'description', "transfer_name", "base_uom", "base_quantity")
+
+
 class TransferItemSerializer(serializers.ModelSerializer):
     items = ItemAdminSerializer(many=True, read_only=True)
     destination_point = SimplePointOfInterestSerializer(read_only=True)
@@ -609,28 +688,7 @@ class TransferItemCreateSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         self.adminValidator.validate_items(validated_data.get('items', []))
         self.adminValidator.validate_partner_location(validated_data.get('location'), validated_data.get('partner_organization'))
-        items = validated_data.pop('items', [])
-        validated_data['unicef_release_order'] = f"{TRANSFER_MANUAL_CREATION_NAME} {timezone.now().strftime('%d-%m-%Y %H:%M:%S')}"
-        validated_data['transfer_type'] = models.Transfer.DELIVERY
-        validated_data['status'] = models.Transfer.PENDING
-        validated_data['origin_point'] = models.PointOfInterest.objects.get_unicef_warehouses()
-        validated_data['destination_point'] = validated_data.pop('location')
-        instance = models.Transfer.objects.create(
-            **validated_data
-        )
-        items_to_create = []
-        for item in items:
-            items_to_create.append(
-                models.Item(
-                    transfer=instance,
-                    material=item.get('material'),
-                    quantity=item.get('quantity'),
-                    uom=item.get('uom'),
-                    batch_id=item.get('item_name'),
-                )
-            )
-        models.Item.objects.bulk_create(items_to_create)
-        return instance
+        return StockManagementCreateService().create_stock_management(validated_data)
 
     class Meta:
         model = models.Transfer
@@ -813,7 +871,7 @@ class ImportFileSerializer(serializers.Serializer):
 class BulkUpdateLastMileProfileStatusSerializer(serializers.Serializer):
     status = serializers.ChoiceField(choices=LastMileUserProfileUpdateAdminSerializer.Meta.model.ApprovalStatus.choices)
     user_ids = serializers.PrimaryKeyRelatedField(queryset=get_user_model().objects.all(), many=True, write_only=True)
-    review_notes = serializers.CharField(required=False)
+    review_notes = serializers.CharField(required=False, allow_blank=True)
 
     admin_validator = AdminPanelValidator()
 
@@ -911,6 +969,62 @@ class UserImportSerializer(serializers.Serializer):
         except Exception as ex:
             return False, str(ex)
         return True, user
+
+
+class StockManagementImportSerializer(serializers.Serializer):
+    ip_number = serializers.CharField()
+    material_number = serializers.CharField()
+    quantity = serializers.IntegerField()
+    uom = serializers.CharField()
+    expiration_date = serializers.DateTimeField()
+    batch_id = serializers.CharField(required=False, allow_null=True)
+    p_code = serializers.CharField()
+
+    adminValidator = AdminPanelValidator()
+
+    def validate_ip_number(self, value):
+        try:
+            return PartnerOrganization.objects.get(organization__vendor_number=value)
+        except PartnerOrganization.DoesNotExist:
+            raise serializers.ValidationError("Partner Organization not found by vendor number")
+
+    def validate_material_number(self, value):
+        try:
+            return models.Material.objects.get(number=value)
+        except models.Material.DoesNotExist:
+            raise serializers.ValidationError("Material not found by material number")
+
+    def validate_quantity(self, value):
+        self.adminValidator.validate_positive_quantity(value)
+        return value
+
+    def validate_uom(self, value):
+        self.adminValidator.validate_uom(value)
+        return value
+
+    def validate_batch_id(self, value):
+        if value:
+            self.adminValidator.validate_batch_id(value)
+        return value
+
+    def validate_p_code(self, value):
+        try:
+            return models.PointOfInterest.objects.get(p_code=value)
+        except models.PointOfInterest.DoesNotExist:
+            raise serializers.ValidationError("Point of interest not found by p_code")
+
+    def create(self, validated_data):
+        validated_data['partner_organization'] = validated_data.pop('ip_number')
+        validated_data['location'] = validated_data.pop('p_code')
+        validated_data['items'] = [{
+            'material': validated_data.pop('material_number'),
+            'quantity': validated_data.pop('quantity'),
+            'uom': validated_data.pop('uom'),
+            'item_name': validated_data.pop('batch_id'),
+            'expiration_date': validated_data.pop('expiration_date')
+        }]
+        instance = StockManagementCreateService().create_stock_management(validated_data)
+        return True, instance
 
 
 class LocationImportSerializer(serializers.Serializer):
