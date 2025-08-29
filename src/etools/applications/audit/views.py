@@ -30,6 +30,7 @@ from etools.applications.action_points.conditions import (
 from etools.applications.audit.conditions import (
     AuditModuleCondition,
     AuditStaffMemberCondition,
+    EngagementFaceFormPartnerContactedDisplayStatusCondition,
     EngagementStaffMemberCondition,
     EngagementUnicefCommentsReceivedCondition,
     IsUnicefUserCondition,
@@ -54,6 +55,7 @@ from etools.applications.audit.models import (
     Auditor,
     Engagement,
     EngagementActionPoint,
+    FaceForm,
     MicroAssessment,
     SpecialAudit,
     SpotCheck,
@@ -86,6 +88,7 @@ from etools.applications.audit.serializers.engagement import (
     EngagementHactSerializer,
     EngagementListSerializer,
     EngagementSerializer,
+    FaceFormSerializer,
     MicroAssessmentSerializer,
     ReportAttachmentSerializer,
     SpecialAuditSerializer,
@@ -263,7 +266,7 @@ class PurchaseOrderViewSet(
 
 
 class EngagementPartnerView(generics.ListAPIView):
-    queryset = PartnerOrganization.objects.filter(hidden=False)
+    queryset = PartnerOrganization.objects.filter(name__isnull=False)
     serializer_class = MinimalPartnerOrganizationListSerializer
     permission_classes = (IsAuthenticated, )
 
@@ -370,7 +373,7 @@ class EngagementViewSet(
         if self.action in ['list', 'export_list_csv']:
             queryset = queryset.filter(agreement__auditor_firm__unicef_users_allowed=self.unicef_engagements)
 
-        return queryset
+        return queryset.order_by('-id')
 
     def get_permission_context(self):
         context = super().get_permission_context()
@@ -387,6 +390,7 @@ class EngagementViewSet(
         context.extend([
             ObjectStatusCondition(obj),
             EngagementUnicefCommentsReceivedCondition(obj),
+            EngagementFaceFormPartnerContactedDisplayStatusCondition(obj),
             AuditStaffMemberCondition(obj.agreement.auditor_firm.organization, self.request.user),
             EngagementStaffMemberCondition(obj, self.request.user),
             IsUnicefUserCondition(self.request.user)
@@ -511,6 +515,20 @@ class SpecialAuditViewSet(EngagementManagementMixin, EngagementViewSet):
     @action(detail=True, methods=['get'], url_path='csv', renderer_classes=[SpecialAuditDetailCSVRenderer])
     def export_csv(self, request, *args, **kwargs):
         return super().export_csv(request, *args, **kwargs)
+
+
+class FaceFormListViewSet(
+    BaseAuditViewSet,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet
+):
+    metadata_class = PermissionBasedMetadata
+    permission_classes = BaseAuditViewSet.permission_classes
+    queryset = FaceForm.objects.all()
+    serializer_class = FaceFormSerializer
+
+    def get_queryset(self):
+        return super().get_queryset().filter(partner_id=int(self.kwargs['partner_pk'])).order_by('id')
 
 
 class AuditorStaffMembersViewSet(
