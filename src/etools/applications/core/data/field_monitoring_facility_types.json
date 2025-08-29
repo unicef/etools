@@ -3,84 +3,49 @@
     "model": "field_monitoring_planning.facilitytype",
     "pk": 1,
     "fields": {
-      "name": "Housing"
+      "name": "Nutrition Facility"
     }
   },
   {
     "model": "field_monitoring_planning.facilitytype",
     "pk": 2,
     "fields": {
-      "name": "Health"
+      "name": "Health Facility"
     }
   },
   {
     "model": "field_monitoring_planning.facilitytype",
     "pk": 3,
     "fields": {
-      "name": "Education"
+      "name": "WASH Facility"
     }
   },
   {
     "model": "field_monitoring_planning.facilitytype",
     "pk": 4,
     "fields": {
-      "name": "Commerce & Industry"
+      "name": "Education Facility"
     }
   },
   {
     "model": "field_monitoring_planning.facilitytype",
     "pk": 5,
     "fields": {
-      "name": "Tourism"
+      "name": "Child Protection Facility"
     }
   },
   {
     "model": "field_monitoring_planning.facilitytype",
     "pk": 6,
     "fields": {
-      "name": "Agriculture"
+      "name": "Government or CSO Office"
     }
   },
   {
     "model": "field_monitoring_planning.facilitytype",
     "pk": 7,
     "fields": {
-      "name": "Energy"
-    }
-  },
-  {
-    "model": "field_monitoring_planning.facilitytype",
-    "pk": 8,
-    "fields": {
-      "name": "Transport"
-    }
-  },
-  {
-    "model": "field_monitoring_planning.facilitytype",
-    "pk": 9,
-    "fields": {
-      "name": "Telecommunications"
-    }
-  },
-  {
-    "model": "field_monitoring_planning.facilitytype",
-    "pk": 10,
-    "fields": {
-      "name": "Water & sanitation"
-    }
-  },
-  {
-    "model": "field_monitoring_planning.facilitytype",
-    "pk": 11,
-    "fields": {
-      "name": "Community governance & infrastructure"
-    }
-  },
-  {
-    "model": "field_monitoring_planning.facilitytype",
-    "pk": 12,
-    "fields": {
-      "name": "Environment"
+      "name": "Other Facility"
     }
   }
 ]
