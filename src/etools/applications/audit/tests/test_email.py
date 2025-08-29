@@ -19,7 +19,8 @@ class TestEmail(BaseTenantTestCase):
         """Ensure the email templates for this app exist and have content"""
         for name in ('audit/engagement/submit_to_auditor',
                      'audit/engagement/reported_by_auditor',
-                     'audit/engagement/action_point_assigned', ):
+                     'audit/engagement/action_point_assigned',
+                     'audit/engagement/follow-up-changed'):
             q = EmailTemplate.objects.filter(name=name)
             # There's a migration that creates these EmailTemplate objects, but with empty content. The empty
             # content versions are pretty useless, so I want to ensure the fixture versions (with non-null content)

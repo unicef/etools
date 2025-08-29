@@ -3,7 +3,8 @@ from django.db import connection
 from django.db.models.signals import m2m_changed, post_save
 from django.dispatch import receiver
 
-from etools.applications.audit.models import Auditor, Engagement, EngagementActionPoint
+from etools.applications.audit.models import Auditor, Engagement, EngagementActionPoint, UNICEFAuditFocalPoint, Audit, \
+    SpotCheck
 from etools.applications.audit.purchase_order.models import send_user_appointed_email
 from etools.applications.users.models import Country, Realm
 
@@ -39,3 +40,27 @@ def action_point_updated_receiver(instance, created, **kwargs):
     elif not instance.tracker.has_changed('reference_number'):
         if instance.tracker.has_changed('assigned_to'):
             instance.send_email(instance.assigned_to, 'audit/engagement/action_point_assigned')
+
+
+@receiver(post_save, sender=Audit)
+def follow_up_field_update(instance, created, **kwargs):
+    if not created and instance.follow_up_tracker.changed():
+        # country = Country.objects.get(schema_name=connection.schema_name)
+        # audit_focal_points = get_user_model().objects.filter(
+        #     realms__country=country,
+        #     realms__group=UNICEFAuditFocalPoint.as_group(),
+        #     realms__is_active=True
+        # )
+        instance.notify_focal_points_on_follow_up('audit/engagement/follow-up-changed')
+
+
+@receiver(post_save, sender=Engagement)
+def follow_up_field_update(instance, created, **kwargs):
+    if not created and instance.follow_up_tracker.changed():
+        # country = Country.objects.get(schema_name=connection.schema_name)
+        # audit_focal_points = get_user_model().objects.filter(
+        #     realms__country=country,
+        #     realms__group=UNICEFAuditFocalPoint.as_group(),
+        #     realms__is_active=True
+        # )
+        instance.notify_focal_points_on_follow_up('audit/engagement/follow-up-changed')

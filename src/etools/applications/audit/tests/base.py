@@ -39,6 +39,7 @@ class AuditTestCaseMixin:
         EmailTemplate.objects.get_or_create(name='audit/staff_member/invite')
         EmailTemplate.objects.get_or_create(name='audit/engagement/submit_to_auditor')
         EmailTemplate.objects.get_or_create(name='audit/engagement/reported_by_auditor')
+        EmailTemplate.objects.get_or_create(name='audit/engagement/follow-up-changed')
 
         GroupWrapper.invalidate_instances()
 
