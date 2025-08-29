@@ -27,7 +27,7 @@ class TestLocationViews(BaseTenantTestCase):
     def test_api_location_light_list(self):
         response = self.forced_auth_req('get', reverse('locations-light-list'), user=self.unicef_staff)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(sorted(response.data[0].keys()), ['admin_level', 'admin_level_name', "id", "name", "name_display", "p_code", "parent"])
+        self.assertEqual(sorted(response.data[0].keys()), ['admin_level', 'admin_level_name', "id", "is_active", "name", "name_display", "p_code", "parent"])
         # sort the expected locations by name, the same way the API results are sorted
         self.locations.sort(key=lambda location: location.name)
 

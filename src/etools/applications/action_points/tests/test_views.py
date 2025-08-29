@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 from unittest.mock import Mock, patch
 
 from django.core.management import call_command
@@ -6,6 +6,7 @@ from django.urls import reverse
 
 from factory import fuzzy
 from rest_framework import status
+from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.action_points.categories.models import Category
 from etools.applications.action_points.models import OperationsGroup, PME
@@ -914,3 +915,71 @@ class TestCategoriesViewSet(BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), Category.objects.filter(module=Category.MODULE_CHOICES.apd).count())
+
+
+class TestActionPointLocationValidation(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        call_command('update_action_points_permissions', verbosity=0)
+        call_command('update_notifications')
+
+        cls.pme_user = PMEUserFactory()
+        cls.active_location = LocationFactory(is_active=True)
+        cls.inactive_location = LocationFactory(is_active=False)
+
+    def test_create_action_point_with_inactive_location_fails(self):
+        """Test that creating an action point with an inactive location fails"""
+        data = {
+            'description': 'Test action point',
+            'due_date': date.today() + timedelta(days=7),
+            'assigned_to': self.pme_user.id,
+            'office': self.pme_user.profile.tenant_profile.office.id,
+            'section': SectionFactory().id,
+            'partner': PartnerFactory().id,
+            'location': self.inactive_location.id,
+        }
+
+        response = self.forced_auth_req(
+            'post',
+            reverse('action-points:action-points-list'),
+            user=self.pme_user,
+            data=data
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('location', response.data)
+
+    def test_update_action_point_with_new_inactive_location_fails(self):
+        """Test that updating an action point with a new inactive location fails"""
+        action_point = ActionPointFactory(location=self.active_location)
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse('action-points:action-points-detail', args=[action_point.id]),
+            user=self.pme_user,
+            data={'location': self.inactive_location.id}
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('location', response.data)
+
+    def test_update_action_point_keeping_existing_inactive_location_succeeds(self):
+        """Test that updating an action point while keeping its existing inactive location succeeds"""
+        action_point = ActionPointFactory(location=self.inactive_location)
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse('action-points:action-points-detail', args=[action_point.id]),
+            user=self.pme_user,
+            data={'description': 'Updated description'}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Verify that we can explicitly set the same inactive location
+        response = self.forced_auth_req(
+            'patch',
+            reverse('action-points:action-points-detail', args=[action_point.id]),
+            user=self.pme_user,
+            data={'location': self.inactive_location.id}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['location']['id'], str(self.inactive_location.id))
