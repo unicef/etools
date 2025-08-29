@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model
 from django.utils.html import strip_tags
 
 from rest_framework import serializers
@@ -5,6 +6,8 @@ from rest_framework.exceptions import APIException
 
 from etools.applications.last_mile.models import PointOfInterest
 from etools.applications.last_mile.services_ext import IngestReportDTO
+
+User = get_user_model()
 
 
 class UnicefWarehouseNotDefined(APIException):
@@ -146,3 +149,14 @@ class MaterialIngestResultSerializer(serializers.Serializer):
 
     def get_skipped_count(self, obj) -> int:
         return len(obj.skipped_existing_in_db) + len(obj.skipped_duplicate_in_payload)
+
+
+class UserListSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(read_only=True)
+    first_name = serializers.CharField(read_only=True)
+    last_name = serializers.CharField(read_only=True)
+    vendor_number = serializers.CharField(source="profile.organization.vendor_number", read_only=True)
+
+    class Meta:
+        model = User
+        fields = ['id', 'email', 'first_name', 'last_name', 'vendor_number']

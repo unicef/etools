@@ -1,15 +1,21 @@
+from django.contrib.auth import get_user_model
 from django.http import StreamingHttpResponse
 
+from django_filters import rest_framework as filters
 from rest_framework import status
+from rest_framework.filters import OrderingFilter, SearchFilter
+from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from etools.applications.last_mile.filters_ext import UserFilter
 from etools.applications.last_mile.permissions import LMSMAPIPermission
 from etools.applications.last_mile.serializers_ext import (
     IngestRowSerializer,
     MaterialIngestResultSerializer,
     MaterialIngestSerializer,
     TransferIngestResultSerializer,
+    UserListSerializer,
 )
 from etools.applications.last_mile.services_ext import (
     DataExportService,
@@ -35,6 +41,43 @@ class VisionIngestMaterialsApiView(APIView):
         output_serializer = MaterialIngestResultSerializer(ingest_result)
 
         return Response(output_serializer.data, status=status.HTTP_200_OK)
+
+
+class VisionUsersExport(ListAPIView):
+    permission_classes = (LMSMAPIPermission,)
+    serializer_class = UserListSerializer
+    filter_backends = [filters.DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_class = UserFilter
+    search_fields = ['email', 'first_name', 'last_name', 'profile__vendor_number']
+    ordering_fields = ['email', 'first_name', 'last_name', 'profile__vendor_number']
+    ordering = ['email']
+
+    def get_queryset(self):
+        workspace = self.request.query_params.get('workspace')
+        role = self.request.query_params.get('role')
+
+        if not workspace or not role:
+            return get_user_model().objects.none()
+
+        return get_user_model().objects.select_related('profile').prefetch_related(
+            'realms__country',
+            'realms__group'
+        ).filter(is_active=True)
+
+    def list(self, request, *args, **kwargs):
+        workspace = request.query_params.get('workspace')
+        role = request.query_params.get('role')
+
+        if not workspace or not role:
+            return Response(
+                {
+                    "error": "Both 'workspace' and 'role' filters are required.",
+                    "detail": "Please provide both workspace and role query parameters."
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        return super().list(request, *args, **kwargs)
 
 
 class VisionLMSMExport(APIView):

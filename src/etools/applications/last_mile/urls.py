@@ -39,6 +39,11 @@ urlpatterns = [
         name="vision-export-data"
     ),
     path(
+        'users/',
+        view=views_ext.VisionUsersExport.as_view(),
+        name="users-list"
+    ),
+    path(
         'pbi-data/',
         view=views.PowerBIDataView.as_view(http_method_names=['get'],),
         name="vision-export-data-pbi"
