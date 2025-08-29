@@ -789,8 +789,7 @@ class MonitoringActivity(
         for ap in (MonitoringActivityActionPoint.objects.prefetch_related(
                 Prefetch('comments', ActionPointComment.objects.prefetch_related(
                     Prefetch('supporting_document', Attachment.objects.select_related('uploaded_by'))
-                ))).filter(monitoring_activity=self).order_by('-due_date')):
-
+                ))).filter(monitoring_activity=self).order_by('due_date')):
             ap_dict = dict(
                 reference_number=ap.reference_number,
                 description=ap.description,
