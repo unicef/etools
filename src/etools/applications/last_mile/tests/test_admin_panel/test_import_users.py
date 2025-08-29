@@ -49,7 +49,7 @@ class TestUserAdminViewSetImport(BaseTenantTestCase):
 
     def _create_xlsx_file(self, data_rows, headers=None):
         if headers is None:
-            headers = ["ip_number", "first_name", "last_name", "email", "point_of_interests"]
+            headers = ["Partner information ", "User Information ", None, None, "Location information "]
 
         stream = io.BytesIO()
         workbook = openpyxl.Workbook()
