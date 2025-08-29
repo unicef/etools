@@ -1095,16 +1095,20 @@ class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenan
         self.assertEqual(self.engagement.financial_finding_set.count(), 0)
         self.assertEqual(self.engagement.financial_findings, 0)
         self.assertEqual(self.engagement.financial_findings_local, 0)
-        response = self._do_update(self.auditor, {"financial_finding_set": [
-            {
-                "title": "vat-incorrectly-claimed",
-                "local_amount": "96533.00",
-                "amount": "1253.67",
-                "description": "During the audit process..",
-                "recommendation": "We recommend proper control procedures",
-                "ip_comments": "payments accordingly"
-            }
-        ]})
+        mock_send = Mock()
+        with patch("etools.applications.audit.models.send_notification_with_template", mock_send):
+            response = self._do_update(self.auditor, {"financial_finding_set": [
+                {
+                    "title": "vat-incorrectly-claimed",
+                    "local_amount": "96533.00",
+                    "amount": "1253.67",
+                    "description": "During the audit process..",
+                    "recommendation": "We recommend proper control procedures",
+                    "ip_comments": "payments accordingly"
+                }
+            ]})
+        self.assertEqual(mock_send.call_count, 1)
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.engagement.refresh_from_db()
         self.assertEqual(self.engagement.financial_findings, Decimal('1253.67'))
@@ -1288,6 +1292,31 @@ class TestSpotCheckDetail(SCTransitionsTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.data['total_amount_of_ineligible_expenditure'], '1253.67')
         self.assertEqual(response.data['total_amount_of_ineligible_expenditure_local'], '96533.00')
 
+
+    def test_update_follow_up(self):
+        self.engagement.exchange_rate = 2
+        self.engagement.save(update_fields=['exchange_rate'])
+
+        self.assertEqual(self.engagement.amount_refunded, 0)
+        self.assertEqual(self.engagement.amount_refunded_local, 0)
+        data = {
+            'amount_refunded_local': 333
+        }
+        mock_send = Mock()
+        with patch("etools.applications.audit.models.send_notification_with_template", mock_send):
+            response = self.forced_auth_req(
+            'patch',
+            '/api/audit/spot-checks/{}/'.format(self.engagement.id),
+            user=self.auditor, data=data
+        )
+        self.assertEqual(mock_send.call_count, 1)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.engagement.refresh_from_db()
+        self.assertEqual(self.engagement.total_amount_of_ineligible_expenditure, Decimal('1253.67'))
+        self.assertEqual(self.engagement.total_amount_of_ineligible_expenditure_local, Decimal('96533.00'))
+        self.assertEqual(response.data['total_amount_of_ineligible_expenditure'], '1253.67')
+        self.assertEqual(response.data['total_amount_of_ineligible_expenditure_local'], '96533.00')
 
 class TestStaffSpotCheck(AuditTestCaseMixin, BaseTenantTestCase):
     fixtures = ('audit_staff_organization',)
