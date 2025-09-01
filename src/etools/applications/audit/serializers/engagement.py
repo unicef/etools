@@ -404,10 +404,10 @@ class EngagementSerializer(
 
         return validated_data
 
-    def create(self, validated_data):
-        instance = super().create(validated_data)
-        instance.update_totals()
-        return instance
+    def save(self, *args, **kwargs):
+        self.instance =  super().save(*args, **kwargs)
+        self.instance.update_totals()
+        return self.instance
 
     def to_representation(self, instance):
         instance.refresh_from_db()
