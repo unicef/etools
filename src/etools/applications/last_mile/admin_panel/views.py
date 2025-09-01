@@ -1,6 +1,8 @@
 from django.contrib.auth import get_user_model
+from django.contrib.postgres.aggregates import ArrayAgg
 from django.db import connection
-from django.db.models import F, Q
+from django.db.models import F, Prefetch, Q
+from django.db.models.functions import JSONObject
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -93,7 +95,9 @@ class UserViewSet(ExportMixin,
                                                'last_mile_profile',
                                                'last_mile_profile__created_by',
                                                'last_mile_profile__approved_by',
-                                               ).prefetch_related('profile__organization__partner__points_of_interest',).for_schema(schema_name).only_lmsm_users()
+                                               ).prefetch_related('profile__organization__partner__points_of_interest', Prefetch(
+                                                   "realms", queryset=Realm.objects.filter(is_active=True, country__schema_name=schema_name, group__name__in=ALERT_TYPES.keys()).select_related('group')
+                                               )).for_schema(schema_name).only_lmsm_users()
 
         has_active_location = self.request.query_params.get('hasActiveLocation')
         if has_active_location == "1":
@@ -387,18 +391,46 @@ class AlertNotificationViewSet(mixins.ListModelMixin,
         return AlertNotificationSerializer
 
     def get_queryset(self):
+        if self.action == "list":
+            return (
+                get_user_model().objects.filter(
+                    realms__country__schema_name=connection.tenant.schema_name,
+                    realms__is_active=True,
+                    realms__group__name__in=ALERT_TYPES.keys()
+                )
+                .annotate(
+                    alert_groups=ArrayAgg(
+                        JSONObject(
+                            id='realms__group__id',
+                            name='realms__group__name'
+                        ),
+                        distinct=True
+                    )
+                )
+                .distinct()
+                .order_by('id')
+            )
         return Realm.objects.filter(country__schema_name=connection.tenant.schema_name, group__name__in=ALERT_TYPES.keys()).distinct().order_by('id')
 
     filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
-    filterset_class = AlertNotificationFilter
 
-    ordering_fields = [
-        'user__email',
-        'user__first_name',
-        'user__last_name',
-    ]
+    @property
+    def filterset_class(self):
+        if self.action == 'list':
+            return AlertNotificationFilter
+        return None
 
-    search_fields = ('user__email', 'user__first_name', 'user__last_name')
+    @property
+    def ordering_fields(self):
+        if self.action == 'list':
+            return ['email', 'first_name', 'last_name']
+        return []
+
+    @property
+    def search_fields(self):
+        if self.action == 'list':
+            return ('email', 'first_name', 'last_name')
+        return []
 
 
 class TransferItemViewSet(mixins.ListModelMixin, GenericViewSet, mixins.CreateModelMixin):
@@ -598,7 +630,7 @@ class TransferHistoryListView(mixins.ListModelMixin, GenericViewSet):
             'origin_transfer',
             'created',
             'modified',
-        )
+        ).distinct()
 
         return qs
 
