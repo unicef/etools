@@ -5,9 +5,8 @@ from django_filters import rest_framework as filters
 from django_filters.constants import EMPTY_VALUES
 
 from etools.applications.last_mile.admin_panel.constants import ALERT_TYPES
-from etools.applications.last_mile.models import PointOfInterest, Transfer, TransferHistory
+from etools.applications.last_mile.models import Item, PointOfInterest, Transfer, TransferHistory
 from etools.applications.locations.models import Location
-from etools.applications.users.models import Realm
 
 
 class OrCharFilter(filters.CharFilter):
@@ -32,6 +31,7 @@ class UserFilter(filters.FilterSet):
     last_name = filters.CharFilter(field_name="last_name", lookup_expr="icontains")
     email = filters.CharFilter(field_name="email", lookup_expr="icontains")
     organization_name = filters.CharFilter(field_name="profile__organization__name", lookup_expr="icontains")
+    organization_vendor_number = filters.CharFilter(field_name="profile__organization__vendor_number", lookup_expr="icontains")
     country_name = filters.CharFilter(field_name="profile__country__name", lookup_expr="icontains")
     is_active = filters.BooleanFilter(field_name="is_active")
     profile_status = filters.CharFilter(field_name="last_mile_profile__status", lookup_expr="icontains")
@@ -118,7 +118,7 @@ class UserLocationsFilter(filters.FilterSet):
 
 
 class AlertNotificationFilter(filters.FilterSet):
-    email = filters.CharFilter(field_name="user__email", lookup_expr="icontains")
+    email = filters.CharFilter(field_name="email", lookup_expr="icontains")
     alert_type = filters.CharFilter(method='filter_alert_type', label='Alert Type')
 
     def filter_alert_type(self, queryset, name, value):
@@ -127,11 +127,11 @@ class AlertNotificationFilter(filters.FilterSet):
             if value.lower() in alert_value.lower()
         ]
         if mapped_groups:
-            return queryset.filter(group__name__in=mapped_groups)
-        return queryset.filter(group__name__icontains=value)
+            return queryset.filter(realms__group__name__in=mapped_groups)
+        return queryset.filter(realms__group__name__icontains=value)
 
     class Meta:
-        model = Realm
+        model = get_user_model()
         fields = ('email',)
 
 
@@ -191,3 +191,31 @@ class TransferEvidenceFilter(filters.FilterSet):
     class Meta:
         model = Transfer
         fields = ('name', 'transfer_type')
+
+
+class ItemFilter(filters.FilterSet):
+    poi_id = filters.NumberFilter(field_name='transfer__destination_point_id', lookup_expr='exact')
+    description = filters.CharFilter(method='filter_mapped_description', label='description')
+    material_description = filters.CharFilter(field_name="material__short_description", lookup_expr="icontains")
+    material_number = filters.CharFilter(field_name="material__number", lookup_expr="icontains")
+    quantity = filters.NumberFilter(field_name='quantity', lookup_expr='exact')
+    uom = filters.CharFilter(field_name="uom", lookup_expr="icontains")
+    batch_id = filters.CharFilter(field_name="batch_id", lookup_expr="icontains")
+
+    class Meta:
+        model = Item
+        fields = [
+            'poi_id',
+            'description',
+            'material_description',
+            'material_number',
+            'quantity',
+            'uom',
+            'batch_id'
+        ]
+
+    def filter_mapped_description(self, queryset, name, value):
+        return queryset.filter(
+            Q(mapped_description__icontains=value) |
+            Q(material__short_description__icontains=value)
+        )

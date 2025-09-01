@@ -4,6 +4,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework.exceptions import ValidationError
 
 from etools.applications.last_mile.admin_panel.constants import (
+    BATCH_ID_TOO_LONG,
     EMAIL_NOT_PROVIDED,
     GROUP_DOES_NOT_EXIST,
     GROUP_NOT_AVAILABLE,
@@ -46,17 +47,25 @@ class AdminPanelValidator:
         if not Group.objects.filter(name=group.name).exists():
             raise ValidationError(_(GROUP_DOES_NOT_EXIST))
 
+    def validate_group_names(self, groups: list[Group], available_groups: list) -> None:
+        for group in groups:
+            if group.name not in available_groups:
+                raise ValidationError(_(GROUP_NOT_AVAILABLE))
+            if not Group.objects.filter(name=group.name).exists():
+                raise ValidationError(_(GROUP_DOES_NOT_EXIST))
+
     def validate_input_data(self, data: dict) -> None:
         if not data.get('user'):
             raise ValidationError(_(USER_NOT_PROVIDED))
-        if not data.get('group'):
+        if data.get('groups') is None:
             raise ValidationError(_(GROUP_NOT_PROVIDED))
         if not data.get('user', {}).get('email'):
             raise ValidationError(_(EMAIL_NOT_PROVIDED))
 
-    def validate_realm(self, user: User, country: Country, group: Group) -> None:
-        if Realm.objects.filter(user=user, country=country, group=group, organization=user.profile.organization).exists():
-            raise ValidationError(_(REALM_ALREADY_EXISTS))
+    def validate_realm(self, user: User, country: Country, groups: list[Group]) -> None:
+        for group in groups:
+            if Realm.objects.filter(user=user, country=country, group=group, organization=user.profile.organization).exists():
+                raise ValidationError(_(REALM_ALREADY_EXISTS))
 
     def validate_profile(self, user: User) -> None:
         if not getattr(user.profile, 'organization', None):
@@ -101,3 +110,20 @@ class AdminPanelValidator:
     def validate_transfer_type(self, transfer: Transfer):
         if transfer.transfer_type == Transfer.HANDOVER:
             raise ValidationError(_(TRANSFER_TYPE_HANDOVER_NOT_ALLOWED))
+
+    def validate_uom(self, uom: str):
+        if uom not in [uom[0] for uom in Material.UOM]:
+            raise ValidationError(_(UOM_NOT_VALID))
+
+    def validate_uom_map(self, material: Material, uom: str):
+        if material.other and 'uom_map' in material.other and material.other['uom_map']:
+            if uom not in material.other['uom_map']:
+                raise ValidationError(f"UOM {uom} is not allowed for material {material.number}. Allowed UOMs: {material.other['uom_map']}")
+
+    def validate_positive_quantity(self, quantity: int):
+        if quantity < 1:
+            raise ValidationError(_(INVALID_QUANTITY))
+
+    def validate_batch_id(self, batch_id: str):
+        if batch_id and len(batch_id) > 254:
+            raise ValidationError(_(BATCH_ID_TOO_LONG))
