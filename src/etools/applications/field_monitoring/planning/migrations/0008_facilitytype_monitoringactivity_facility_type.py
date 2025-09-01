@@ -20,7 +20,8 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name='monitoringactivity',
-            name='facility_type',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='monitoring_activities', to='field_monitoring_planning.facilitytype', verbose_name='Type Of Facility'),
+            name='facility_types',
+            field=models.ManyToManyField(blank=True, related_name='monitoring_activities',
+                                         to='field_monitoring_planning.facilitytype', verbose_name='Facility types'),
         ),
     ]
