@@ -26,7 +26,7 @@ for app_dir in ${app_dirs};
 do
     echo ${app_dir}
     cd ${app_dir}
-    django-admin makemessages -a --no-location
+    django-admin makemessages -a --no-location --no-wrap
     git diff --ignore-matching-lines=POT-Creation-Date --exit-code
 done
 cd ${cwd}
