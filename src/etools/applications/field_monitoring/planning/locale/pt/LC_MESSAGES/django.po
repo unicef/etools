@@ -306,6 +306,10 @@ msgstr "Categoria de Ponto de Ação"
 msgid "Priority"
 msgstr "Prioridade"
 
+msgid ""
+"Cannot assign inactive location \"{}\". Please choose an active location."
+msgstr "Não é possível atribuir uma localização inativa \"{}\". Por favor, escolha uma localização ativa."
+
 msgid "TPM Concern Category"
 msgstr ""
 

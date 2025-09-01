@@ -2,7 +2,6 @@ from django.contrib import admin
 
 from etools.applications.action_points.admin import ActionPointAdmin
 from etools.applications.field_monitoring.planning.models import (
-    FacilityType,
     MonitoringActivity,
     MonitoringActivityActionPoint,
     MonitoringActivityGroup,
@@ -31,11 +30,6 @@ class QuestionTemplateAdmin(admin.ModelAdmin):
 @admin.register(VisitGoal)
 class VisitGoalAdmin(admin.ModelAdmin):
     list_display = ('name', 'info')
-
-
-@admin.register(FacilityType)
-class FacilityTypeAdmin(admin.ModelAdmin):
-    list_display = ('name',)
 
 
 @admin.register(MonitoringActivity)
