@@ -231,9 +231,6 @@ msgstr "Motivo do cancelamento"
 msgid "Objective"
 msgstr "Objetivo"
 
-msgid "Type Of Facility"
-msgstr "Tipo de instalação"
-
 msgid "Monitoring Activity"
 msgstr "Atividade de Monitoramento"
 

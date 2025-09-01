@@ -20,7 +20,6 @@ from etools.applications.field_monitoring.fm_settings.models import Question
 from etools.applications.field_monitoring.fm_settings.serializers import LocationSiteSerializer, QuestionSerializer
 from etools.applications.field_monitoring.planning.activity_validation.permissions import ActivityPermissions
 from etools.applications.field_monitoring.planning.models import (
-    FacilityType,
     MonitoringActivity,
     MonitoringActivityActionPoint,
     QuestionTemplate,
@@ -102,12 +101,6 @@ class VisitGoalSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'info']
 
 
-class FacilityTypeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = FacilityType
-        fields = ['id', 'name']
-
-
 class TPMPartnerSerializer(serializers.ModelSerializer):
     class Meta:
         model = TPMPartner
@@ -159,8 +152,7 @@ class MonitoringActivityLightSerializer(serializers.ModelSerializer):
             'sections',
             'overlapping_entities',
             'visit_goals',
-            'objective',
-            'facility_type'
+            'objective'
         )
 
     def get_overlapping_entities(self, obj):

@@ -232,9 +232,6 @@ msgstr "سبب الإلغاء"
 msgid "Objective"
 msgstr "أهداف"
 
-msgid "Type Of Facility"
-msgstr "نوع المنشأة"
-
 msgid "Monitoring Activity"
 msgstr "نشاط المراقبة"
 
