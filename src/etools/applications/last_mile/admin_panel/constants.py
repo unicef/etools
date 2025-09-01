@@ -30,6 +30,7 @@ ALERT_NOTIFICATIONS_ADMIN_PANEL_PERMISSION = 'lmsm_admin_panel_manage_email_aler
 
 STOCK_MANAGEMENT_ADMIN_PANEL = 'stock-management'
 STOCK_MANAGEMENT_MATERIALS_ADMIN_PANEL = 'materials-admin-panel'
+UPDATE_ITEM_STOCK_ADMIN_PANEL = 'update-item-stock-admin-panel'
 STOCK_MANAGEMENT_ADMIN_PANEL_PERMISSION = 'lmsm_admin_panel_manage_stock_management'
 
 TRANSFER_HISTORY_ADMIN_PANEL = 'transfer-history'
@@ -62,6 +63,8 @@ STATUS_NOT_CRRECT = "The status should be in 'approved' or 'rejected'."
 TRANSFER_NOT_FOUND_FOR_REVERSE = "The transfer was not found for reverse."
 TRANSFER_HAS_NO_ITEMS = "The transfer has no items. Cannot reverse."
 TRANSFER_TYPE_HANDOVER_NOT_ALLOWED = "Handover transfers cannot be reversed."
+BATCH_ID_TOO_LONG = "The batch id is too long. Maximum length is 254 characters."
+INVALID_EXPIRATION_DATE = "The expiration date is not valid. Should be in the next format: YYYY-MM-DD."
 
 LIST_INTERESTED_LASTMILE_PERMS = [
     USER_ADMIN_PANEL_PERMISSION,
