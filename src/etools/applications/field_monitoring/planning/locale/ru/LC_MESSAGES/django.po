@@ -309,10 +309,6 @@ msgstr "Категория точки действия"
 msgid "Priority"
 msgstr "Приоритет"
 
-msgid ""
-"Cannot assign inactive location \"{}\". Please choose an active location."
-msgstr "Невозможно назначить неактивное местоположение \"{}\". Пожалуйста, выберите активное местоположение."
-
 msgid "TPM Concern Category"
 msgstr ""
 

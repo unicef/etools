@@ -8,18 +8,9 @@ from rest_framework import permissions
 from rest_framework.request import Request
 from unicef_locations import views
 from unicef_locations.cache import etag_cached, get_cache_version
-from unicef_locations.serializers import LocationLightSerializer
 
 from etools.applications.locations.models import Location
 from etools.libraries.tenant_support.utils import TenantSuffixedString
-
-
-class LocationLightWithActiveSerializer(LocationLightSerializer):
-    """
-    Extends the base LocationLightSerializer to include the is_active field.
-    """
-    class Meta(LocationLightSerializer.Meta):
-        fields = LocationLightSerializer.Meta.fields + ('is_active',)
 
 
 def cache_key(request: Request):
@@ -30,8 +21,6 @@ def cache_key(request: Request):
 
 class LocationsLightViewSet(views.LocationsLightViewSet):
     # TODO: check user filter?
-    serializer_class = LocationLightWithActiveSerializer
-
     @method_decorator(cache_control(
         max_age=0,  # enable cache yet automatically treat all cached data as stale to request backend every time
         public=True,  # reset cache control header to allow etags work with cache_page

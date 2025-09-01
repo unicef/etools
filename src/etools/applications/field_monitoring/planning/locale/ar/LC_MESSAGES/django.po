@@ -233,7 +233,7 @@ msgid "Objective"
 msgstr "أهداف"
 
 msgid "Facility types"
-msgstr "أنواع المرافق"
+msgstr "Facility types"
 
 msgid "Monitoring Activity"
 msgstr "نشاط المراقبة"
@@ -306,10 +306,6 @@ msgstr "فئة نقطة العمل"
 
 msgid "Priority"
 msgstr "الأولوية"
-
-msgid ""
-"Cannot assign inactive location \"{}\". Please choose an active location."
-msgstr "لا يمكن تعيين موقع غير نشط \"{}\". يرجى اختيار موقع نشط."
 
 msgid "TPM Concern Category"
 msgstr ""

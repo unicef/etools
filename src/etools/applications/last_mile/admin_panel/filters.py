@@ -7,6 +7,7 @@ from django_filters.constants import EMPTY_VALUES
 from etools.applications.last_mile.admin_panel.constants import ALERT_TYPES
 from etools.applications.last_mile.models import Item, PointOfInterest, Transfer, TransferHistory
 from etools.applications.locations.models import Location
+from etools.applications.users.models import Realm
 
 
 class OrCharFilter(filters.CharFilter):
@@ -118,7 +119,7 @@ class UserLocationsFilter(filters.FilterSet):
 
 
 class AlertNotificationFilter(filters.FilterSet):
-    email = filters.CharFilter(field_name="email", lookup_expr="icontains")
+    email = filters.CharFilter(field_name="user__email", lookup_expr="icontains")
     alert_type = filters.CharFilter(method='filter_alert_type', label='Alert Type')
 
     def filter_alert_type(self, queryset, name, value):
@@ -127,11 +128,11 @@ class AlertNotificationFilter(filters.FilterSet):
             if value.lower() in alert_value.lower()
         ]
         if mapped_groups:
-            return queryset.filter(realms__group__name__in=mapped_groups)
-        return queryset.filter(realms__group__name__icontains=value)
+            return queryset.filter(group__name__in=mapped_groups)
+        return queryset.filter(group__name__icontains=value)
 
     class Meta:
-        model = get_user_model()
+        model = Realm
         fields = ('email',)
 
 

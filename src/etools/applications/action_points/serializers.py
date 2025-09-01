@@ -44,7 +44,7 @@ class ActionPointBaseSerializer(UserContextSerializerMixin, SnapshotModelSeriali
             'author', 'assigned_by', 'assigned_to',
 
             'high_priority', 'due_date', 'description',
-            'office', 'section', 'location',
+            'office', 'section',
             'created', 'date_of_completion',
             'status', 'status_date',
         ]
@@ -105,20 +105,6 @@ class ActionPointListSerializer(PermissionsBasedSerializerMixin, ActionPointBase
             'engagement', 'psea_assessment', 'tpm_activity', 'travel_activity',
             'date_of_verification',
         ]
-
-    def validate_location(self, value):
-        """
-        Prevent adding new inactive locations to Action Points.
-        Allow keeping existing inactive locations that were previously saved.
-        """
-        if value and not value.is_active:
-            if self.instance and self.instance.location == value:
-                return value
-
-            raise serializers.ValidationError(
-                _('Cannot assign inactive location "{}". Please choose an active location.').format(value.name)
-            )
-        return value
 
 
 class ActionPointCreateSerializer(ActionPointListSerializer):

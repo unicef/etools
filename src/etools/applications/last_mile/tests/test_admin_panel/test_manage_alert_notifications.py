@@ -48,9 +48,8 @@ class TestAlertNotificationsViewSet(BaseTenantTestCase):
     def test_get_alert_notifications(self):
         response = self.forced_auth_req('get', self.url, user=self.partner_staff)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data.get('count'), 1)
+        self.assertEqual(response.data.get('count'), 3)
         self.assertEqual(response.data.get('results')[0].get('email'), self.partner_staff.email)
-        self.assertEqual(len(response.data.get('results')[0].get('alert_types')), 3)
 
     def test_get_alert_notifications_unauthorized(self):
         response = self.forced_auth_req('get', self.url, user=self.simple_user)
@@ -63,7 +62,7 @@ class TestAlertNotificationsViewSet(BaseTenantTestCase):
     def test_create_alert_notification_success(self):
         payload = {
             "email": self.partner_staff.email,
-            "groups": [self.wastage_notification.pk],
+            "group": self.wastage_notification.pk,
         }
         response = self.forced_auth_req('post', self.url, user=self.partner_staff, data=payload)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -81,7 +80,7 @@ class TestAlertNotificationsViewSet(BaseTenantTestCase):
     def test_create_alert_notification_missing_user(self):
         # Payload missing "email" key
         payload = {
-            "groups": [self.wastage_notification.pk],
+            "group": self.wastage_notification.pk,
         }
         response = self.forced_auth_req('post', self.url, user=self.partner_staff, data=payload)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -101,7 +100,7 @@ class TestAlertNotificationsViewSet(BaseTenantTestCase):
         # Simulate missing email by providing an empty string.
         payload = {
             "email": "",
-            "groups": [self.wastage_notification.pk],
+            "group": self.wastage_notification.pk,
         }
         response = self.forced_auth_req('post', self.url, user=self.partner_staff, data=payload)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -111,7 +110,7 @@ class TestAlertNotificationsViewSet(BaseTenantTestCase):
     def test_create_alert_notification_invalid_user_email(self):
         payload = {
             "email": "nonexistent@example.com",
-            "groups": [self.wastage_notification.pk],
+            "group": self.wastage_notification.pk,
         }
         response = self.forced_auth_req('post', self.url, user=self.partner_staff, data=payload)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -120,7 +119,7 @@ class TestAlertNotificationsViewSet(BaseTenantTestCase):
     def test_create_alert_notification_invalid_group(self):
         payload = {
             "email": self.partner_staff.email,
-            "groups": [self.invalid_group.pk],
+            "group": self.invalid_group.pk,
         }
         response = self.forced_auth_req('post', self.url, user=self.partner_staff, data=payload)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -136,44 +135,16 @@ class TestAlertNotificationsViewSet(BaseTenantTestCase):
         )
         payload = {
             "email": self.partner_staff.email,
-            "groups": [self.wastage_notification.pk],
+            "group": self.wastage_notification.pk,
         }
         response = self.forced_auth_req('post', self.url, user=self.partner_staff, data=payload)
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
-    def test_delete_all_alert_notifications(self):
-        # Pre-create a Realm with the same user, country, group, and organization.
-        RealmFactory(
-            user=self.partner_staff,
-            country=self.country,
-            organization=self.partner_staff.profile.organization,
-            group=self.wastage_notification
-        )
-        RealmFactory(
-            user=self.partner_staff,
-            country=self.country,
-            organization=self.partner_staff.profile.organization,
-            group=self.acknowledgement
-        )
-        RealmFactory(
-            user=self.partner_staff,
-            country=self.country,
-            organization=self.partner_staff.profile.organization,
-            group=self.waybill
-        )
-        payload = {
-            "email": self.partner_staff.email,
-            "groups": [],
-        }
-        response = self.forced_auth_req('post', self.url, user=self.partner_staff, data=payload)
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data.get('email'), self.partner_staff.email)
-        self.assertEqual(response.data.get('groups'), [])
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("The realm already exists.", str(response.data))
 
     def test_create_alert_notification_unauthorized(self):
         payload = {
             "email": self.simple_user.email,
-            "groups": self.wastage_notification.pk,
+            "group": self.wastage_notification.pk,
         }
         response = self.forced_auth_req('post', self.url, user=self.simple_user, data=payload)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
@@ -311,14 +282,13 @@ class TestAlertNotificationsViewSet(BaseTenantTestCase):
         payload = {"alert_type": alert_substring}
         response = self.forced_auth_req('get', self.url, user=self.partner_staff, data=payload)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        found_alert = ""
+        expected_groups = [
+            group_name for group_name, alert_value in ALERT_TYPES.items()
+            if alert_substring in alert_value.lower()
+        ]
         for item in response.data.get("results", []):
-            alert_types = item.get("alert_types", [])
-            for alert_type in alert_types:
-                if alert_substring in alert_type.get("name", "").lower():
-                    found_alert = alert_type.get("name", "").lower()
-        self.assertIsNotNone(found_alert)
-        self.assertIn(alert_substring, found_alert)
+            realm_obj = RealmFactory._meta.model.objects.get(pk=item["id"])
+            self.assertIn(realm_obj.group.name, expected_groups)
 
     def test_filter_by_alert_type_not_found(self):
         # Create a realm with wastage_notification.
@@ -354,7 +324,7 @@ class TestAlertNotificationsViewSet(BaseTenantTestCase):
         response = self.forced_auth_req('get', self.url, user=self.partner_staff, data=payload)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         results = response.data.get("results", [])
-        self.assertEqual(len(results), 1)
+        self.assertEqual(len(results), 2)
         self.assertEqual(results[0]["email"], self.partner_staff.email)
 
     def test_filter_no_params_returns_all(self):

@@ -11,6 +11,7 @@ from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from unicef_locations.cache import etag_cached
+from unicef_locations.serializers import LocationLightSerializer
 
 from etools.applications.field_monitoring.fm_settings.export.renderers import (
     LocationSiteCSVRenderer,
@@ -41,7 +42,6 @@ from etools.applications.field_monitoring.fm_settings.serializers import (
     FMCommonAttachmentSerializer,
     LinkedAttachmentBaseSerializer,
     LocationFullSerializer,
-    LocationLightWithActiveSerializer,
     LocationSiteSerializer,
     LogIssueSerializer,
     MethodSerializer,
@@ -82,7 +82,7 @@ class FieldMonitoringGeneralAttachmentsViewSet(LinkedAttachmentsViewSet):
 
 class InterventionLocationsView(FMBaseViewSet, generics.ListAPIView):
     queryset = Location.objects.all()
-    serializer_class = LocationLightWithActiveSerializer
+    serializer_class = LocationLightSerializer
 
     def get_queryset(self):
         queryset = super().get_queryset()

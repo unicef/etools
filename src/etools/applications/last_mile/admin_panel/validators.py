@@ -47,25 +47,17 @@ class AdminPanelValidator:
         if not Group.objects.filter(name=group.name).exists():
             raise ValidationError(_(GROUP_DOES_NOT_EXIST))
 
-    def validate_group_names(self, groups: list[Group], available_groups: list) -> None:
-        for group in groups:
-            if group.name not in available_groups:
-                raise ValidationError(_(GROUP_NOT_AVAILABLE))
-            if not Group.objects.filter(name=group.name).exists():
-                raise ValidationError(_(GROUP_DOES_NOT_EXIST))
-
     def validate_input_data(self, data: dict) -> None:
         if not data.get('user'):
             raise ValidationError(_(USER_NOT_PROVIDED))
-        if data.get('groups') is None:
+        if not data.get('group'):
             raise ValidationError(_(GROUP_NOT_PROVIDED))
         if not data.get('user', {}).get('email'):
             raise ValidationError(_(EMAIL_NOT_PROVIDED))
 
-    def validate_realm(self, user: User, country: Country, groups: list[Group]) -> None:
-        for group in groups:
-            if Realm.objects.filter(user=user, country=country, group=group, organization=user.profile.organization).exists():
-                raise ValidationError(_(REALM_ALREADY_EXISTS))
+    def validate_realm(self, user: User, country: Country, group: Group) -> None:
+        if Realm.objects.filter(user=user, country=country, group=group, organization=user.profile.organization).exists():
+            raise ValidationError(_(REALM_ALREADY_EXISTS))
 
     def validate_profile(self, user: User) -> None:
         if not getattr(user.profile, 'organization', None):
