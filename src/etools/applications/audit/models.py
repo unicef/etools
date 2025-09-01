@@ -1,6 +1,7 @@
 from decimal import DivisionByZero, InvalidOperation
 from functools import cached_property
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
@@ -285,6 +286,10 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
     @cached_property
     def count_open_high_priority(self):
         return self.action_points.filter(status=ActionPoint.STATUS_OPEN, high_priority=True).count()
+
+    @cached_property
+    def prior_face_forms(self):
+        return self.created.date() < settings.FAM_FACE_FORMS_RELEASE_DATE
 
     @property
     def displayed_status_date(self):

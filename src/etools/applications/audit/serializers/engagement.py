@@ -326,6 +326,8 @@ class EngagementSerializer(
     joint_audit = serializers.BooleanField(required=False, label=_("Joint Engagement"))
     conducted_by_sai = serializers.BooleanField(required=False, label=_("SAI"))
 
+    prior_face_forms = serializers.BooleanField(read_only=True, label=_("Prior Face Forms"))
+
     class Meta(EngagementListSerializer.Meta):
         fields = EngagementListSerializer.Meta.fields + [
             'face_form_start_date', 'face_form_end_date',
@@ -342,7 +344,8 @@ class EngagementSerializer(
             'offices',
             'face_forms', 'conducted_by_sai',
             'amount_refunded', 'additional_supporting_documentation_provided',
-            'justification_provided_and_accepted', 'write_off_required'
+            'justification_provided_and_accepted', 'write_off_required',
+            'prior_face_forms',
         ]
         extra_kwargs = {
             field: {'required': True} for field in [
@@ -405,7 +408,7 @@ class EngagementSerializer(
         return validated_data
 
     def save(self, *args, **kwargs):
-        self.instance =  super().save(*args, **kwargs)
+        self.instance = super().save(*args, **kwargs)
         self.instance.update_totals()
         return self.instance
 

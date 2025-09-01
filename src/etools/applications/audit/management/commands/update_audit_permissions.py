@@ -63,6 +63,7 @@ class Command(BaseCommand):
         'audit.engagement.status',
         'audit.engagement.status_date',
         'audit.engagement.exchange_rate',
+        'audit.engagement.prior_face_forms',
 
         'purchase_order.purchaseorder.*',
         'purchase_order.auditorfirm.*',
