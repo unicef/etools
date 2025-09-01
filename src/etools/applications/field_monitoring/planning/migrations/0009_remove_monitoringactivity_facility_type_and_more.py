@@ -6,10 +6,14 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('field_monitoring_planning', '0007_visitgoal_monitoringactivity_objective_and_more'),
+        ('field_monitoring_planning', '0008_facilitytype_monitoringactivity_facility_type'),
     ]
 
     operations = [
+        migrations.RemoveField(
+            model_name='monitoringactivity',
+            name='facility_type',
+        ),
         migrations.AddField(
             model_name='monitoringactivity',
             name='facility_types',
