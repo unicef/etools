@@ -33,6 +33,8 @@ from etools.applications.audit.conditions import (
     EngagementFaceFormPartnerContactedDisplayStatusCondition,
     EngagementStaffMemberCondition,
     EngagementUnicefCommentsReceivedCondition,
+    EngagementWithFaceFormsCondition,
+    EngagementWithoutFaceFormsCondition,
     IsUnicefUserCondition,
 )
 from etools.applications.audit.exports import (
@@ -390,6 +392,8 @@ class EngagementViewSet(
         context.extend([
             ObjectStatusCondition(obj),
             EngagementUnicefCommentsReceivedCondition(obj),
+            EngagementWithFaceFormsCondition(obj),
+            EngagementWithoutFaceFormsCondition(obj),
             EngagementFaceFormPartnerContactedDisplayStatusCondition(obj),
             AuditStaffMemberCondition(obj.agreement.auditor_firm.organization, self.request.user),
             EngagementStaffMemberCondition(obj, self.request.user),

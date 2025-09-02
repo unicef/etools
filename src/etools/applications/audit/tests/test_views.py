@@ -949,6 +949,8 @@ class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenan
     def test_audited_expenditure_invalid(self):
         self.engagement.financial_findings_local = 2
         self.engagement.save(update_fields=['financial_findings_local'])
+        face_1 = FaceFormFactory(amount_usd=100.25, amount_local=9550.55, exchange_rate=95.27)
+        self.engagement.face_forms.add(face_1)
         response = self._do_update(self.auditor, {
             'audited_expenditure_local': 1,
         })
@@ -1536,21 +1538,62 @@ class TestAuditMetadataDetailViewSet(TestMetadataDetailViewSet, BaseTenantTestCa
         self.assertIn('GET', response.data['actions'])
         self.assertIn('conducted_by_sai', response.data['actions']['GET'])
 
-    def test_follow_up_fields_view_comments_from_unicef(self):
+    def test_follow_up_without_face_view_comments_from_unicef(self):
         audit = self.engagement_factory(
             staff_members=[self.auditor], agreement__auditor_firm=self.auditor_firm,
             date_of_comments_by_unicef=datetime.date.today()
         )
+        self.assertFalse(audit.face_forms.exists())
+        self.assertEqual(audit.status, Audit.PARTNER_CONTACTED)
+        self.assertEqual(audit.displayed_status, Audit.DISPLAY_STATUSES.comments_received_by_unicef)
+
         response = self.forced_auth_req(
             'options',
             '/api/audit/{}/{}/'.format(self.endpoint, audit.id),
             user=self.auditor
         )
-        self.assertIn('GET', response.data['actions'])
+        # auditor cannot view/edit the follow up fields, usd or local
+        for field in ['amount_refunded', 'additional_supporting_documentation_provided',
+                      'justification_provided_and_accepted', 'write_off_required']:
+            self.assertNotIn(field, response.data['actions']['GET'])
+            self.assertNotIn(field, response.data['actions']['PUT'])
 
+        for field in ['amount_refunded_local', 'additional_supporting_documentation_provided_local',
+                      'justification_provided_and_accepted_local', 'write_off_required_local']:
+            self.assertNotIn(field, response.data['actions']['GET'])
+            self.assertNotIn(field, response.data['actions']['PUT'])
+
+        # auditor can view but not edit pending_unsupported_amount in usd
+        self.assertIn('pending_unsupported_amount', response.data['actions']['GET'])
+        self.assertNotIn('pending_unsupported_amount', response.data['actions']['PUT'])
+
+        # auditor cannot view nor edit pending_unsupported_amount_local
+        self.assertNotIn('pending_unsupported_amount_local', response.data['actions']['GET'])
+        self.assertNotIn('pending_unsupported_amount_local', response.data['actions']['PUT'])
+
+        # auditor can view and edit audited_expenditure in usd
+        self.assertIn('audited_expenditure', response.data['actions']['GET'])
+        self.assertIn('audited_expenditure', response.data['actions']['PUT'])
+
+        # auditor cannot view nor edit audited_expenditure local
+        self.assertNotIn('audited_expenditure_local', response.data['actions']['GET'])
+        self.assertNotIn('audited_expenditure_local', response.data['actions']['PUT'])
+
+        response = self.forced_auth_req(
+            'options',
+            '/api/audit/{}/{}/'.format(self.endpoint, audit.id),
+            user=self.unicef_focal_point
+        )
+
+        # unicef focal point can view/edit the follow up fields in usd but not local
+        for field in ['amount_refunded_local', 'additional_supporting_documentation_provided_local',
+                      'justification_provided_and_accepted_local', 'write_off_required_local']:
+            self.assertNotIn(field, response.data['actions']['GET'])
+            self.assertNotIn(field, response.data['actions']['PUT'])
         for field in ['amount_refunded', 'additional_supporting_documentation_provided',
                       'justification_provided_and_accepted', 'write_off_required']:
             self.assertIn(field, response.data['actions']['GET'])
+            self.assertIn(field, response.data['actions']['PUT'])
 
     def test_face_forms_editable(self):
         audit = self.engagement_factory(
@@ -1629,7 +1672,7 @@ class TestSpotCheckMetadataDetailViewSet(TestMetadataDetailViewSet, BaseTenantTe
         put = response.data['actions']['PUT']
         self.assertIn('users_notified', put)
 
-    def test_follow_up_fields_view_comments_from_unicef(self):
+    def test_follow_up_without_face_view_comments_from_unicef(self):
         spot_check = self.engagement_factory(
             staff_members=[self.auditor], agreement__auditor_firm=self.auditor_firm,
             date_of_comments_by_unicef=datetime.date.today()
@@ -1639,12 +1682,53 @@ class TestSpotCheckMetadataDetailViewSet(TestMetadataDetailViewSet, BaseTenantTe
             '/api/audit/{}/{}/'.format(self.endpoint, spot_check.id),
             user=self.auditor
         )
-        self.assertIn('GET', response.data['actions'])
-
+        # auditor cannot view/edit the follow up fields, usd or local
         for field in ['amount_refunded', 'additional_supporting_documentation_provided',
                       'justification_provided_and_accepted', 'write_off_required',
-                      'total_amount_tested', 'total_amount_of_ineligible_expenditure']:
+                      # 'total_amount_of_ineligible_expenditure', 'total_amount_tested',
+                      # 'pending_unsupported_amount'
+                      ]:
+            self.assertNotIn(field, response.data['actions']['GET'])
+            self.assertNotIn(field, response.data['actions']['PUT'])
+
+        # auditor can view the report fields, only usd and not local
+        for field in ['total_amount_of_ineligible_expenditure', 'total_amount_tested',
+                      'pending_unsupported_amount']:
             self.assertIn(field, response.data['actions']['GET'])
+            self.assertNotIn(field, response.data['actions']['PUT'])
+
+        for field in ['total_amount_of_ineligible_expenditure_local', 'total_amount_tested_local',
+                      'pending_unsupported_amount_local']:
+            self.assertNotIn(field, response.data['actions']['GET'])
+            self.assertNotIn(field, response.data['actions']['PUT'])
+
+        response = self.forced_auth_req(
+            'options',
+            '/api/audit/{}/{}/'.format(self.endpoint, spot_check.id),
+            user=self.unicef_focal_point
+        )
+        # unicef focal point can view/edit the follow up fields in usd but not local
+        for field in ['amount_refunded_local', 'additional_supporting_documentation_provided_local',
+                      'justification_provided_and_accepted_local', 'write_off_required_local']:
+            self.assertNotIn(field, response.data['actions']['GET'])
+            self.assertIn('pending_unsupported_amount_local', response.data['actions']['GET'])
+            self.assertNotIn(field, response.data['actions']['PUT'])
+            self.assertNoIn('pending_unsupported_amount_local', response.data['actions']['GET'])
+        for field in ['amount_refunded', 'additional_supporting_documentation_provided',
+                      'justification_provided_and_accepted', 'write_off_required']:
+            self.assertIn(field, response.data['actions']['GET'])
+            self.assertIn(field, response.data['actions']['PUT'])
+
+        # unicef focal point can view the report fields, only usd and not local
+        for field in ['total_amount_of_ineligible_expenditure', 'total_amount_tested',
+                      'pending_unsupported_amount']:
+            self.assertIn(field, response.data['actions']['GET'])
+            self.assertNotIn(field, response.data['actions']['PUT'])
+
+        for field in ['total_amount_of_ineligible_expenditure_local', 'total_amount_tested_local',
+                      'pending_unsupported_amount_local']:
+            self.assertNotIn(field, response.data['actions']['GET'])
+            self.assertNotIn(field, response.data['actions']['PUT'])
 
 
 class TestAuditorFirmViewSet(AuditTestCaseMixin, BaseTenantTestCase):

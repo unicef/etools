@@ -56,3 +56,23 @@ class EngagementFaceFormPartnerContactedDisplayStatusCondition(SimpleCondition):
 
     def is_satisfied(self):
         return self.engagement.status == self.engagement.displayed_status == self.engagement.PARTNER_CONTACTED
+
+
+class EngagementWithFaceFormsCondition(SimpleCondition):
+    predicate = 'audit_engagement.with_face_forms'
+
+    def __init__(self, engagement):
+        self.engagement = engagement
+
+    def is_satisfied(self):
+        return self.engagement.face_forms.exists()
+
+
+class EngagementWithoutFaceFormsCondition(SimpleCondition):
+    predicate = 'audit_engagement.without_face_forms'
+
+    def __init__(self, engagement):
+        self.engagement = engagement
+
+    def is_satisfied(self):
+        return not self.engagement.face_forms.exists()

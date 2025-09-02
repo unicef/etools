@@ -317,10 +317,10 @@ class EngagementSerializer(
     total_value = serializers.CharField(read_only=True)
     total_value_local = serializers.CharField(read_only=True)
 
-    amount_refunded = serializers.DecimalField(20, 2, read_only=True, label=_("Amount Refunded ($)"))
-    additional_supporting_documentation_provided = serializers.DecimalField(20, 2, read_only=True, label=_("Additional Supporting Documentation Provided ($)"))
-    justification_provided_and_accepted = serializers.DecimalField(20, 2, read_only=True, label=_("Justification Provided and Accepted ($)"))
-    write_off_required = serializers.DecimalField(20, 2, read_only=True, label=_("Impairment ($)"))
+    amount_refunded = serializers.DecimalField(20, 2, label=_("Amount Refunded ($)"))
+    additional_supporting_documentation_provided = serializers.DecimalField(20, 2, label=_("Additional Supporting Documentation Provided ($)"))
+    justification_provided_and_accepted = serializers.DecimalField(20, 2, label=_("Justification Provided and Accepted ($)"))
+    write_off_required = serializers.DecimalField(20, 2, label=_("Impairment ($)"))
 
     year_of_audit = serializers.CharField(required=False, label=_("Scheduled Year"))
     joint_audit = serializers.BooleanField(required=False, label=_("Joint Engagement"))
