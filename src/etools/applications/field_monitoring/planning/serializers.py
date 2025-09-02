@@ -160,7 +160,7 @@ class MonitoringActivityLightSerializer(serializers.ModelSerializer):
             'overlapping_entities',
             'visit_goals',
             'objective',
-            'facility_type'
+            'facility_types'
         )
 
     def get_overlapping_entities(self, obj):

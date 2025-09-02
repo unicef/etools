@@ -3,84 +3,49 @@
     "model": "field_monitoring_planning.facilitytype",
     "pk": 1,
     "fields": {
-      "name": "Alojamiento"
+      "name": "Instalación de Nutrición"
     }
   },
   {
     "model": "field_monitoring_planning.facilitytype",
     "pk": 2,
     "fields": {
-      "name": "Salud"
+      "name": "Instalación de Salud"
     }
   },
   {
     "model": "field_monitoring_planning.facilitytype",
     "pk": 3,
     "fields": {
-      "name": "Educación"
+      "name": "Instalación de WASH"
     }
   },
   {
     "model": "field_monitoring_planning.facilitytype",
     "pk": 4,
     "fields": {
-      "name": "Comercio e industria"
+      "name": "Instalación Educativa"
     }
   },
   {
     "model": "field_monitoring_planning.facilitytype",
     "pk": 5,
     "fields": {
-      "name": "Turismo"
+      "name": "Instalación de Protección Infantil"
     }
   },
   {
     "model": "field_monitoring_planning.facilitytype",
     "pk": 6,
     "fields": {
-      "name": "Agricultura"
+      "name": "Oficina del Gobierno o OSC"
     }
   },
   {
     "model": "field_monitoring_planning.facilitytype",
     "pk": 7,
     "fields": {
-      "name": "Energía"
-    }
-  },
-  {
-    "model": "field_monitoring_planning.facilitytype",
-    "pk": 8,
-    "fields": {
-      "name": "Transporte"
-    }
-  },
-  {
-    "model": "field_monitoring_planning.facilitytype",
-    "pk": 9,
-    "fields": {
-      "name": "Telecomunicaciones"
-    }
-  },
-  {
-    "model": "field_monitoring_planning.facilitytype",
-    "pk": 10,
-    "fields": {
-      "name": "Agua y saneamiento"
-    }
-  },
-  {
-    "model": "field_monitoring_planning.facilitytype",
-    "pk": 11,
-    "fields": {
-      "name": "Gobierno e infraestructura comunitaria"
-    }
-  },
-  {
-    "model": "field_monitoring_planning.facilitytype",
-    "pk": 12,
-    "fields": {
-      "name": "Ambiente"
+      "name": "Otra Instalación"
     }
   }
 ]
