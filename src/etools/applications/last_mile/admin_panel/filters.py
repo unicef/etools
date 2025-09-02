@@ -183,7 +183,11 @@ class TransferEvidenceFilter(filters.FilterSet):
     unicef_release_order = filters.CharFilter(field_name="unicef_release_order", lookup_expr="icontains")
     status = filters.CharFilter(field_name="status", lookup_expr="icontains")
     partner_organization = filters.CharFilter(field_name="partner_organization__organization__name", lookup_expr="icontains")
-    from_partner_organization = filters.CharFilter(field_name="from_partner_organization__organization__name", lookup_expr="icontains")
+    from_partner_organization = OrCharFilter(
+        field_names=["from_partner_organization__organization__name", "partner_organization__organization__name"],
+        lookup_expr="icontains",
+        label="Partner Organization"
+    )
     recipient_partner_organization = filters.CharFilter(field_name="recipient_partner_organization__organization__name", lookup_expr="icontains")
     origin_point = filters.CharFilter(field_name="origin_point__name", lookup_expr="icontains")
     destination_point = filters.CharFilter(field_name="destination_point__name", lookup_expr="icontains")
