@@ -173,9 +173,10 @@ class MonitoringActivitiesViewSet(
     queryset = MonitoringActivity.objects\
         .annotate(checklists_count=Count('checklists'))\
         .select_related('tpm_partner', 'tpm_partner__organization',
-                        'visit_lead', 'location', 'location_site', 'facility_type')\
-        .prefetch_related('team_members', 'partners', 'partners__organization', 'report_reviewers',
-                          'interventions', 'cp_outputs', 'sections', 'visit_goals')\
+                        'visit_lead', 'location', 'location_site')\
+        .prefetch_related('team_members', 'partners', 'partners__organization',
+                          'report_reviewers', 'interventions', 'cp_outputs',
+                          'sections', 'visit_goals', 'facility_types')\
         .order_by("-id")
     serializer_class = MonitoringActivitySerializer
     serializer_action_classes = {

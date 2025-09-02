@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-08-04 07:25+0000\n"
+"POT-Creation-Date: 2025-09-01 17:55+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -25,20 +25,12 @@ msgid "Staff members do not belong to the selected partner"
 msgstr "Os funcionários não pertencem ao parceiro selecionado"
 
 #, python-format
-msgid ""
-"You've selected a PD/SPD and unselected some of it's corresponding partners, "
-"please either remove the PD or add the partners back before saving: %s"
-msgstr ""
-"Você selecionou um PD/SPD e desmarcou alguns de seus parceiros "
-"correspondentes, remova o PD ou adicione os parceiros antes de salvar: %s"
+msgid "You've selected a PD/SPD and unselected some of it's corresponding partners, please either remove the PD or add the partners back before saving: %s"
+msgstr "Você selecionou um PD/SPD e desmarcou alguns de seus parceiros correspondentes, remova o PD ou adicione os parceiros antes de salvar: %s"
 
 #, python-format
-msgid ""
-"You've selected a PD/SPD and unselected some of it's corresponding outputs, "
-"please either remove the PD or add the outputs back before saving: %s"
-msgstr ""
-"Você selecionou um PD/SPD e desmarcou algumas de suas saídas "
-"correspondentes, remova o PD ou adicione as saídas antes de salvar: %s"
+msgid "You've selected a PD/SPD and unselected some of it's corresponding outputs, please either remove the PD or add the outputs back before saving: %s"
+msgstr "Você selecionou um PD/SPD e desmarcou algumas de suas saídas correspondentes, remova o PD ou adicione as saídas antes de salvar: %s"
 
 msgid "Partner is not defined for TPM activity"
 msgstr "Parceiro não está definido para atividade TPM"
@@ -231,8 +223,8 @@ msgstr "Motivo do cancelamento"
 msgid "Objective"
 msgstr "Objetivo"
 
-msgid "Type Of Facility"
-msgstr "Tipo de instalação"
+msgid "Facility types"
+msgstr ""
 
 msgid "Monitoring Activity"
 msgstr "Atividade de Monitoramento"
@@ -306,6 +298,9 @@ msgstr "Categoria de Ponto de Ação"
 msgid "Priority"
 msgstr "Prioridade"
 
+msgid "Cannot assign inactive location \"{}\". Please choose an active location."
+msgstr "Não é possível atribuir uma localização inativa \"{}\". Por favor, escolha uma localização ativa."
+
 msgid "TPM Concern Category"
 msgstr ""
 
@@ -317,6 +312,9 @@ msgstr "Modelos"
 
 msgid "Attachments"
 msgstr "Anexos"
+
+#~ msgid "Type Of Facility"
+#~ msgstr "Tipo de instalação"
 
 #~ msgid "Invited"
 #~ msgstr "Convidado"
