@@ -26,6 +26,32 @@ class OrCharFilter(filters.CharFilter):
         return qs.filter(q_objects)
 
 
+class OrCharFilterWithItemsCheck(filters.CharFilter):
+    def __init__(self, *args, field_names, **kwargs):
+        self.field_names = field_names
+        kwargs.pop('field_name', None)
+        super().__init__(*args, **kwargs)
+
+    def filter(self, qs, value):
+        if value in EMPTY_VALUES:
+            return qs
+
+        q_objects = Q()
+        for field_name in self.field_names:
+            lookup = {f"{field_name}__{self.lookup_expr}": value}
+
+            if field_name.startswith('origin_transfer'):
+                items_check = Q(origin_transfer__items__isnull=False)
+            elif field_name.startswith('transfers'):
+                items_check = Q(transfers__items__isnull=False)
+            else:
+                items_check = Q()
+
+            q_objects |= (Q(**lookup) & items_check)
+
+        return qs.filter(q_objects).distinct()
+
+
 class UserFilter(filters.FilterSet):
     first_name = filters.CharFilter(field_name="first_name", lookup_expr="icontains")
     last_name = filters.CharFilter(field_name="last_name", lookup_expr="icontains")
@@ -136,41 +162,59 @@ class AlertNotificationFilter(filters.FilterSet):
 
 
 class TransferHistoryFilter(filters.FilterSet):
-    unicef_release_order = OrCharFilter(
+    unicef_release_order = OrCharFilterWithItemsCheck(
         field_names=['origin_transfer__unicef_release_order', 'transfers__unicef_release_order'],
         lookup_expr='icontains',
         label='UNICEF Release Order'
     )
-    transfer_name = OrCharFilter(
+    transfer_name = OrCharFilterWithItemsCheck(
         field_names=['origin_transfer__name', 'transfers__name'],
         lookup_expr='icontains',
         label='Transfer Name'
     )
-    transfer_type = OrCharFilter(
+    transfer_type = OrCharFilterWithItemsCheck(
         field_names=['origin_transfer__transfer_type', 'transfers__transfer_type'],
         lookup_expr='icontains',
         label='Transfer Type'
     )
-    status = OrCharFilter(
+    status = OrCharFilterWithItemsCheck(
         field_names=['origin_transfer__status', 'transfers__status'],
         lookup_expr='icontains',
         label='Status'
     )
-    partner_organization = OrCharFilter(
+    partner_organization = OrCharFilterWithItemsCheck(
         field_names=['origin_transfer__partner_organization__organization__name', 'transfers__partner_organization__organization__name'],
         lookup_expr='icontains',
         label='Partner Organization'
     )
-    origin_point = OrCharFilter(
+    origin_point = OrCharFilterWithItemsCheck(
         field_names=['origin_transfer__origin_point__name', 'transfers__origin_point__name'],
         lookup_expr='icontains',
         label='Origin Point'
     )
-    destination_point = OrCharFilter(
+    destination_point = OrCharFilterWithItemsCheck(
         field_names=['origin_transfer__destination_point__name', 'transfers__destination_point__name'],
         lookup_expr='icontains',
         label='Destination Point'
     )
+
+    @property
+    def qs(self):
+        queryset = super().qs
+        queryset = queryset.select_related(
+            'origin_transfer',
+            'origin_transfer__partner_organization__organization',
+            'origin_transfer__origin_point',
+            'origin_transfer__destination_point'
+        ).prefetch_related(
+            'transfers',
+            'transfers__partner_organization__organization',
+            'transfers__origin_point',
+            'transfers__destination_point',
+            'transfers__items',
+            'origin_transfer__items'
+        ).distinct()
+        return queryset
 
     class Meta:
         model = TransferHistory

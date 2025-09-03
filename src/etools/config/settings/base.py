@@ -108,7 +108,7 @@ EMAIL_USE_TLS = str2bool(get_from_secrets_or_env('EMAIL_USE_TLS'))  # set True i
 
 # DJANGO: FILE UPLOADS
 MEDIA_ROOT = os.environ.get('MEDIA_ROOT', '/tmp/etools/media/')
-MEDIA_URL = '/media/'
+MEDIA_URL = '/tmp/etools/media/'
 
 # DJANGO: GLOBALIZATION (I18N/L10N)
 LANGUAGE_CODE = 'en-us'
