@@ -1,7 +1,6 @@
 from decimal import DivisionByZero, InvalidOperation
 from functools import cached_property
 
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
@@ -241,9 +240,10 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
             self.exchange_rate = self.total_value / self.total_value_local
 
         elif self.engagement_type in [self.TYPE_AUDIT, self.TYPE_SPOT_CHECK]:
-            face_form_qs = self.face_forms.all()
-            if face_form_qs.count() == 0:
+            if not self.prior_face_forms:
                 return
+
+            face_form_qs = self.face_forms.all()
 
             usd_qs = face_form_qs.filter(currency='USD')
             local_qs = face_form_qs.exclude(currency='USD')
@@ -287,9 +287,10 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
     def count_open_high_priority(self):
         return self.action_points.filter(status=ActionPoint.STATUS_OPEN, high_priority=True).count()
 
+    # TODO rename to has_face_forms
     @cached_property
     def prior_face_forms(self):
-        return self.created.date() < settings.FAM_FACE_FORMS_RELEASE_DATE
+        return self.face_forms.exists()
 
     @property
     def displayed_status_date(self):

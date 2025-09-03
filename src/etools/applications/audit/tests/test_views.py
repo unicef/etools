@@ -1268,7 +1268,8 @@ class TestSpotCheckDetail(SCTransitionsTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(self.engagement.financial_finding_set.count(), 0)
         self.assertEqual(self.engagement.total_amount_of_ineligible_expenditure_local, 0)
         self.assertEqual(self.engagement.total_amount_of_ineligible_expenditure, 0)
-
+        face_1 = FaceFormFactory()
+        self.engagement.face_forms.add(face_1)
         data = {
             "financial_finding_set": [
                 {
@@ -1420,7 +1421,8 @@ class TestStaffSpotCheck(AuditTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(staff_spot_check.financial_finding_set.count(), 0)
         self.assertEqual(staff_spot_check.total_amount_of_ineligible_expenditure_local, 0)
         self.assertEqual(staff_spot_check.total_amount_of_ineligible_expenditure, 0)
-
+        face_1 = FaceFormFactory()
+        staff_spot_check.face_forms.add(face_1)
         response = self.forced_auth_req(
             'options',
             reverse('audit:staff-spot-checks-detail', args=[staff_spot_check.pk]),
@@ -1713,11 +1715,11 @@ class TestSpotCheckMetadataDetailViewSet(TestMetadataDetailViewSet, BaseTenantTe
         )
         # unicef focal point can view/edit the follow up fields in usd but not local
         for field in ['amount_refunded_local', 'additional_supporting_documentation_provided_local',
-                      'justification_provided_and_accepted_local', 'write_off_required_local']:
+                      'justification_provided_and_accepted_local', 'write_off_required_local'
+                      'pending_unsupported_amount_local', 'total_amount_of_ineligible_expenditure_local',
+                      'total_amount_tested_local']:
             self.assertNotIn(field, response.data['actions']['GET'])
-            self.assertIn('pending_unsupported_amount_local', response.data['actions']['GET'])
             self.assertNotIn(field, response.data['actions']['PUT'])
-            self.assertNoIn('pending_unsupported_amount_local', response.data['actions']['GET'])
         for field in ['amount_refunded', 'additional_supporting_documentation_provided',
                       'justification_provided_and_accepted', 'write_off_required']:
             self.assertIn(field, response.data['actions']['GET'])
@@ -1727,11 +1729,6 @@ class TestSpotCheckMetadataDetailViewSet(TestMetadataDetailViewSet, BaseTenantTe
         for field in ['total_amount_of_ineligible_expenditure', 'total_amount_tested',
                       'pending_unsupported_amount']:
             self.assertIn(field, response.data['actions']['GET'])
-            self.assertNotIn(field, response.data['actions']['PUT'])
-
-        for field in ['total_amount_of_ineligible_expenditure_local', 'total_amount_tested_local',
-                      'pending_unsupported_amount_local']:
-            self.assertNotIn(field, response.data['actions']['GET'])
             self.assertNotIn(field, response.data['actions']['PUT'])
 
 

@@ -129,21 +129,19 @@ class Command(BaseCommand):
 
     report_edit_locals = [
         'audit.audit.audited_expenditure_local',
-
         'audit.spotcheck.total_amount_tested_local',
-        'audit.spotcheck.total_amount_of_ineligible_expenditure_local',
     ]
     report_locals = report_edit_locals + [
         'audit.engagement.pending_unsupported_amount_local',
+        'audit.spotcheck.total_amount_of_ineligible_expenditure_local',
     ]
     report_edit_usd = [
         'audit.audit.audited_expenditure',
-
         'audit.spotcheck.total_amount_tested',
-        'audit.spotcheck.total_amount_of_ineligible_expenditure',
     ]
     report_usd = report_edit_usd + [
         'audit.engagement.pending_unsupported_amount',
+        'audit.spotcheck.total_amount_of_ineligible_expenditure',
     ]
 
     follow_up_locals = [
@@ -193,14 +191,14 @@ class Command(BaseCommand):
         'audit.audit.key_internal_controls',
         'audit.audit.key_internal_weakness',
         'audit.audit.currency_of_report',
+        'audit.audit.financial_findings',
+        'audit.audit.financial_findings_local',
     ]
 
     spot_check_report_block = [
         'audit.spotcheck.findings',
         'audit.spotcheck.financial_finding_set',
         'audit.spotcheck.internal_controls',
-        'audit.spotcheck.total_amount_tested',
-        'audit.spotcheck.total_amount_tested_local',
         'audit.spotcheck.currency_of_report',
     ]
 
@@ -210,11 +208,9 @@ class Command(BaseCommand):
     ]
 
     report_readonly_block = [
-        'audit.audit.audited_expenditure',
         'audit.audit.percent_of_audited_expenditure',
         'audit.audit.number_of_financial_findings',
-        'audit.audit.financial_findings',
-        'audit.audit.financial_findings_local',
+
         'audit.spotcheck.percent_of_audited_expenditure'
     ]
 
@@ -457,13 +453,38 @@ class Command(BaseCommand):
         self.add_permissions(
             self.all_unicef_users, 'view',
             self.follow_up_usd,
-            condition=self.engagement_comments_received_by_unicef() + self.engagement_without_face_forms()
+            condition=self.engagement_comments_received_by_unicef()
         )
 
         self.add_permissions(
             self.everybody, 'view',
             self.report_usd,
             condition=partner_contacted_condition
+        )
+        self.add_permissions(
+            self.everybody, 'view',
+            self.report_usd,
+            condition=report_submitted_condition
+        )
+        self.add_permissions(
+            self.everybody, 'view',
+            self.report_usd,
+            condition=final_engagement_condition
+        )
+        self.add_permissions(
+            self.everybody, 'view',
+            self.report_locals,
+            condition=partner_contacted_condition + self.engagement_with_face_forms()
+        )
+        self.add_permissions(
+            self.everybody, 'view',
+            self.report_locals,
+            condition=report_submitted_condition + self.engagement_with_face_forms()
+        )
+        self.add_permissions(
+            self.everybody, 'view',
+            self.report_locals,
+            condition=final_engagement_condition + self.engagement_with_face_forms()
         )
         self.add_permissions(
             self.everybody, 'view',
