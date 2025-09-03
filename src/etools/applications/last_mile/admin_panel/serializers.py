@@ -90,8 +90,11 @@ class UserAdminSerializer(SimpleUserSerializer):
         poi_instances = [upoi.point_of_interest for upoi in obj.points_of_interest.all()]
         if not poi_instances:
             try:
-                poi_instances = obj.profile.organization.partner.points_of_interest.all()
-            except (Organization.DoesNotExist, PartnerOrganization.DoesNotExist):
+                if (obj.profile and obj.profile.organization and obj.profile.organization.partner):
+                    poi_instances = obj.profile.organization.partner.points_of_interest.all()
+                else:
+                    poi_instances = []
+            except (AttributeError, Organization.DoesNotExist, PartnerOrganization.DoesNotExist):
                 poi_instances = []
         return SimplePointOfInterestSerializer(poi_instances, many=True, read_only=True, context=self.context).data
 
@@ -518,7 +521,9 @@ class UserPointOfInterestExportSerializer(serializers.ModelSerializer):
         return f"{obj.profile.organization.vendor_number if obj.profile.organization else '-'} - {obj.profile.organization.name if obj.profile.organization else '-'}"
 
     def get_location(self, obj):
-        return ", ".join([location.name for location in obj.profile.organization.partner.points_of_interest.all()])
+        if (obj.profile and obj.profile.organization and obj.profile.organization.partner):
+            return ", ".join([location.name for location in obj.profile.organization.partner.points_of_interest.all()])
+        return ""
 
     class Meta:
         model = get_user_model()
@@ -545,13 +550,16 @@ class AlertNotificationSerializer(serializers.ModelSerializer):
 
     def get_alert_types(self, obj):
         alert_types_map = self.context.get('ALERT_TYPES', {})
-        alerts_data = getattr(obj, 'alert_groups', [])
         data = []
-        if not alerts_data:
-            return data
 
-        for alert in alerts_data:
-            data.append({"id": alert.get("id"), "name": alert_types_map.get(alert.get("name"), alert.get("name"))})
+        realms = obj.realms.all() if hasattr(obj, 'realms') else []
+
+        for realm in realms:
+            if realm.group:
+                data.append({
+                    "id": realm.group.id,
+                    "name": alert_types_map.get(realm.group.name, realm.group.name)
+                })
 
         return data
 
