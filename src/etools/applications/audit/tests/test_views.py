@@ -961,6 +961,8 @@ class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenan
     def test_audited_expenditure_valid(self):
         self.engagement.financial_findings_local = 2
         self.engagement.save(update_fields=['financial_findings_local'])
+        face_1 = FaceFormFactory(amount_usd=100.25, amount_local=9550.55, exchange_rate=95.27)
+        self.engagement.face_forms.add(face_1)
         response = self._do_update(self.auditor, {
             'audited_expenditure_local': 10,
         })
@@ -970,6 +972,8 @@ class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenan
     def test_calculate_audited_expenditure(self):
         self.engagement.exchange_rate = 1.5
         self.engagement.save(update_fields=['exchange_rate'])
+        face_1 = FaceFormFactory(amount_usd=100.25, amount_local=9550.55, exchange_rate=95.27)
+        self.engagement.face_forms.add(face_1)
         response = self._do_update(self.auditor, {
             'audited_expenditure_local': 10,
         })
