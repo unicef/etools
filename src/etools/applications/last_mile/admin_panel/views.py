@@ -1,8 +1,6 @@
 from django.contrib.auth import get_user_model
-from django.contrib.postgres.aggregates import ArrayAgg
 from django.db import connection
 from django.db.models import F, Prefetch, Q
-from django.db.models.functions import JSONObject
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -88,16 +86,37 @@ class UserViewSet(ExportMixin,
         schema_name = connection.tenant.schema_name
         User = get_user_model()
 
-        queryset = User.objects.select_related('profile',
-                                               'profile__country',
-                                               'profile__organization',
-                                               'profile__organization__partner',
-                                               'last_mile_profile',
-                                               'last_mile_profile__created_by',
-                                               'last_mile_profile__approved_by',
-                                               ).prefetch_related('profile__organization__partner__points_of_interest', Prefetch(
-                                                   "realms", queryset=Realm.objects.filter(is_active=True, country__schema_name=schema_name, group__name__in=ALERT_TYPES.keys()).select_related('group')
-                                               )).for_schema(schema_name).only_lmsm_users()
+        points_of_interest_prefetch = Prefetch(
+            'points_of_interest',
+            queryset=models.UserPointsOfInterest.objects.select_related(
+                'point_of_interest',
+                'point_of_interest__parent',
+                'point_of_interest__poi_type'
+            )
+        )
+
+        realms_prefetch = Prefetch(
+            'realms',
+            queryset=Realm.objects.filter(
+                is_active=True,
+                country__schema_name=schema_name,
+                group__name__in=ALERT_TYPES.keys()
+            ).select_related('group')
+        )
+
+        queryset = User.objects.select_related(
+            'profile',
+            'profile__country',
+            'profile__organization',
+            'profile__organization__partner',
+            'last_mile_profile',
+            'last_mile_profile__created_by',
+            'last_mile_profile__approved_by',
+        ).prefetch_related(
+            'profile__organization__partner__points_of_interest',
+            realms_prefetch,
+            points_of_interest_prefetch,
+        ).for_schema(schema_name).only_lmsm_users()
 
         has_active_location = self.request.query_params.get('hasActiveLocation')
         if has_active_location == "1":
@@ -392,19 +411,21 @@ class AlertNotificationViewSet(mixins.ListModelMixin,
 
     def get_queryset(self):
         if self.action == "list":
+            # Use prefetch_related instead of annotate to avoid GROUP BY issues
             return (
                 get_user_model().objects.filter(
                     realms__country__schema_name=connection.tenant.schema_name,
                     realms__is_active=True,
                     realms__group__name__in=ALERT_TYPES.keys()
                 )
-                .annotate(
-                    alert_groups=ArrayAgg(
-                        JSONObject(
-                            id='realms__group__id',
-                            name='realms__group__name'
-                        ),
-                        distinct=True
+                .prefetch_related(
+                    Prefetch(
+                        'realms',
+                        queryset=Realm.objects.filter(
+                            country__schema_name=connection.tenant.schema_name,
+                            is_active=True,
+                            group__name__in=ALERT_TYPES.keys()
+                        ).select_related('group')
                     )
                 )
                 .distinct()
@@ -603,14 +624,37 @@ class TransferHistoryListView(mixins.ListModelMixin, GenericViewSet):
                      'transfers__origin_point__name']
 
     def get_queryset(self):
+        transfers_prefetch = Prefetch(
+            'transfers',
+            queryset=models.Transfer.objects.select_related(
+                'partner_organization__organization',
+                'destination_point',
+                'origin_point'
+            ).only(
+                'id',
+                'unicef_release_order',
+                'name',
+                'transfer_type',
+                'status',
+                'partner_organization__id',
+                'partner_organization__organization__id',
+                'partner_organization__organization__name',
+                'destination_point__id',
+                'destination_point__name',
+                'origin_point__id',
+                'origin_point__name',
+                'transfer_history_id'
+            )
+        )
+
         qs = models.TransferHistory.objects.select_related(
             'origin_transfer',
             'origin_transfer__partner_organization__organization',
             'origin_transfer__destination_point',
             'origin_transfer__origin_point'
         ).prefetch_related(
-            "transfers"
-        ).order_by('-created').annotate(
+            transfers_prefetch
+        ).annotate(
             unicef_release_order=F('origin_transfer__unicef_release_order'),
             transfer_name=F('origin_transfer__name'),
             transfer_type=F('origin_transfer__transfer_type'),
@@ -620,17 +664,21 @@ class TransferHistoryListView(mixins.ListModelMixin, GenericViewSet):
             origin_point=F('origin_transfer__origin_point__name')
         ).only(
             'id',
+            'created',
+            'modified',
+            'origin_transfer__id',
             'origin_transfer__unicef_release_order',
             'origin_transfer__name',
             'origin_transfer__transfer_type',
             'origin_transfer__status',
+            'origin_transfer__partner_organization__id',
+            'origin_transfer__partner_organization__organization__id',
             'origin_transfer__partner_organization__organization__name',
+            'origin_transfer__destination_point__id',
             'origin_transfer__destination_point__name',
-            'origin_transfer__origin_point__name',
-            'origin_transfer',
-            'created',
-            'modified',
-        ).distinct()
+            'origin_transfer__origin_point__id',
+            'origin_transfer__origin_point__name'
+        ).order_by('-created').distinct()
 
         return qs
 
