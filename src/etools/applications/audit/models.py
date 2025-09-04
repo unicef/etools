@@ -290,7 +290,7 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
     # TODO rename to has_face_forms
     @cached_property
     def prior_face_forms(self):
-        return self.face_forms.exists()
+        return not self.face_forms.exists()
 
     @property
     def displayed_status_date(self):
