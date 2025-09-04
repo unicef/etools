@@ -240,7 +240,7 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
             self.exchange_rate = self.total_value / self.total_value_local
 
         elif self.engagement_type in [self.TYPE_AUDIT, self.TYPE_SPOT_CHECK]:
-            if not self.prior_face_forms:
+            if self.prior_face_forms: # if not face_forms.exist()
                 return
 
             face_form_qs = self.face_forms.all()
