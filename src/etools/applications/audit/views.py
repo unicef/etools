@@ -108,6 +108,7 @@ from etools.applications.audit.serializers.export import (
     SpotCheckDetailCSVSerializer,
     SpotCheckPDFSerializer,
 )
+from etools.applications.audit.serializers.face_export import FaceAuditPDFSerializer, FaceSpotCheckPDFSerializer
 from etools.applications.organizations.models import Organization
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
@@ -325,6 +326,8 @@ class EngagementViewSet(
             'serializer_class': AuditSerializer,
             'pdf_serializer_class': AuditPDFSerializer,
             'pdf_template': 'audit/audit_pdf.html',
+            'face_pdf_serializer_class': FaceAuditPDFSerializer,
+            'face_pdf_template': 'audit/face_audit_pdf.html',
         },
         Engagement.TYPES.ma: {
             'serializer_class': MicroAssessmentSerializer,
@@ -335,11 +338,15 @@ class EngagementViewSet(
             'serializer_class': SpecialAuditSerializer,
             'pdf_serializer_class': SpecialAuditPDFSerializer,
             'pdf_template': 'audit/special_audit_pdf.html',
+            # 'face_pdf_serializer_class': FaceSpecialAuditPDFSerializer,
+            # 'face_pdf_template': 'audit/face_special_audit_pdf.html',
         },
         Engagement.TYPES.sc: {
             'serializer_class': SpotCheckSerializer,
             'pdf_serializer_class': SpotCheckPDFSerializer,
             'pdf_template': 'audit/spotcheck_pdf.html',
+            'face_pdf_serializer_class': FaceSpotCheckPDFSerializer,
+            'face_pdf_template': 'audit/face_spotcheck_pdf.html',
         },
     }
 
@@ -423,8 +430,12 @@ class EngagementViewSet(
         obj = self.get_object()
 
         engagement_params = self.ENGAGEMENT_MAPPING.get(obj.engagement_type, {})
-        pdf_serializer_class = engagement_params.get('pdf_serializer_class', None)
-        template = engagement_params.get('pdf_template', None)
+        if obj.prior_face_forms:  # if not face_forms.exist()
+            pdf_serializer_class = engagement_params.get('pdf_serializer_class', None)
+            template = engagement_params.get('pdf_template', None)
+        else:
+            pdf_serializer_class = engagement_params.get('face_pdf_serializer_class', None)
+            template = engagement_params.get('face_pdf_template', None)
 
         if not pdf_serializer_class or not template:
             raise NotImplementedError

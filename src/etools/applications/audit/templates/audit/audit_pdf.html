@@ -4,44 +4,30 @@
 {% block extra_content %}
   <div class="content-section">
     <div class="content-section__header">
-      <div class="content-section__header__title">Summary of engagement findings</div>
+      <div class="content-section__header__title">Summary of audit findings</div>
     </div>
     <div class="content-section__wrapper">
       <table class="content-section__table">
         <tr class="content-section__table__header">
-          <td colspan="2"></td>
-          <td colspan="2">Local Currency</td>
-          <td colspan="2">USD</td>
-        </tr>
-        <tr>
-          <td colspan="2">Value of Selected FACE</td>
-          <td colspan="2">{{ engagement.total_value_local|default:"0.00"|currency }}</td>
-          <td colspan="2">{{ engagement.total_value|default:"0.00"|currency }}</td>
-        </tr>
-        <tr>
-          <td colspan="2">Audited Expenditure</td>
-          <td colspan="2">{{ engagement.audited_expenditure_local|default:"0.00"|currency }}</td>
-          <td colspan="2">{{ engagement.audited_expenditure|default:"0.00"|currency }}</td>
-        </tr>
-        <tr>
-          <td colspan="2">Amount of Financial Findings</td>
-          <td colspan="2">{{ engagement.pending_unsupported_amount_local|default:"0.00"|currency }}</td>
-          <td colspan="2">{{ engagement.pending_unsupported_amount|default:"0.00"|currency }}</td>
-        </tr>
-        <tr>
-          <td colspan="2">% of audited Expenditure</td>
-          <td colspan="4">{{ engagement.percent_of_audited_expenditure }}</td>
-        </tr>
-        <tr class="content-section__table__header" >
-          <td colspan="2" style="border-top: double">{{ serializer.fields.audit_opinion.label }}</td>
+          <td colspan="2">Partner Name</td>
+          <td colspan="2">{{ serializer.fields.audited_expenditure.label }}</td>
+          <td colspan="2">{{ serializer.fields.financial_findings.label }}</td>
+          {% if engagement.audited_expenditure_local %}
+          <td colspan="2">{{ serializer.fields.audited_expenditure_local.label }}</td>
+          {% endif %}
+          {% if engagement.financial_findings_local %}
+          <td colspan="2">{{ serializer.fields.financial_findings_local.label }}</td>
+          {% endif %}
+          <td>{{ serializer.fields.percent_of_audited_expenditure.label }}</td>
+          <td colspan="2">{{ serializer.fields.audit_opinion.label }}</td>
           <td>No. of Financial Findings</td>
           <td colspan="3" style="padding: 0">
             <table>
               <tr style="border-bottom: none;">
-                <td colspan="3" style="text-align:center;">No. of Key Control Weaknesses</td>
+                <td colspan="3">No. of Key Control Weaknesses</td>
               </tr>
-              <tr class="content-section__table__header"  style="border-bottom: none;">
-                <td >High risk</td>
+              <tr style="border-bottom: none;">
+                <td>High risk</td>
                 <td>Medium risk</td>
                 <td>Low risk</td>
               </tr>
@@ -49,6 +35,16 @@
           </td>
         </tr>
         <tr>
+          <td colspan="2">{{ engagement.partner.name }}</td>
+          <td colspan="2">{{ engagement.audited_expenditure|default_if_none:"0.00"|currency }}</td>
+          <td colspan="2">{{ engagement.financial_findings|default_if_none:"0.00"|currency }}</td>
+          {% if engagement.audited_expenditure_local %}
+          <td colspan="2">{{ engagement.audited_expenditure_local|default_if_none:"0.00"|currency }}</td>
+          {% endif %}
+          {% if engagement.financial_findings_local %}
+          <td colspan="2">{{ engagement.financial_findings_local|default_if_none:"0.00"|currency }}</td>
+          {% endif %}
+          <td>{{ engagement.percent_of_audited_expenditure|default_if_none:"0.00"|currency }}</td>
           <td colspan="2">{{ engagement.audit_opinion|default:"-"|title }}</td>
           <td>{{ engagement.financial_finding_set|length }}</td>
           <td>{{ engagement.key_internal_weakness.high_risk_count }}</td>
@@ -59,31 +55,6 @@
     </div>
   </div>
 
-  <pdf:nextpage></pdf:nextpage>
-
-  <div class="content-section">
-    <div class="content-section__header">
-      <div class="content-section__header__title">Report Financial Findings</div>
-    </div>
-    <div class="content-section__wrapper">
-      <table class="content-section__table">
-        <tr class="content-section__table__header">
-          <td colspan="2">Title (Category)</td>
-          <td colspan="4">Description</td>
-          <td colspan="2">Amount Local</td>
-          <td colspan="2">Amount USD</td>
-        </tr>
-        {% for ff in engagement.financial_finding_set %}
-          <tr>
-            <td colspan="2">{{ ff.title|default:"-" }}</td>
-            <td colspan="4">{{ ff.description|default:"-" }}</td>
-            <td colspan="2">{{ ff.local_amount|default:"0.00"|currency }}</td>
-            <td colspan="2">{{ ff.amount|default:"0.00"|currency }}</td>
-          </tr>
-        {% endfor %}
-      </table>
-    </div>
-  </div>
 
   <div class="content-section">
     <div class="content-section__header">
@@ -111,45 +82,57 @@
 
   <div class="content-section">
     <div class="content-section__header">
-      <div class="content-section__header__title">Follow-Up Financial Findings</div>
+      <div class="content-section__header__title">Financial Findings</div>
     </div>
-    <div class="content-section__wrapper">
-      <table class="content-section__table">
-        <tr class="content-section__table__header">
-          <td colspan="2"></td>
-          <td colspan="2">Local Currency</td>
-          <td colspan="2">USD</td>
-        </tr>
-        <tr>
-          <td colspan="2">Audited Expenditure</td>
-          <td colspan="2">{{ engagement.audited_expenditure_local|default:"0.00"|currency }}</td>
-          <td colspan="2">{{ engagement.audited_expenditure|default:"0.00"|currency }}</td>
-        </tr>
-        <tr>
-          <td colspan="2">Amount Refunded</td>
-          <td colspan="2">{{ engagement.amount_refunded_local|default:"0.00"|currency }}</td>
-          <td colspan="2">{{ engagement.amount_refunded|default:"0.00"|currency }}</td>
-        </tr>
-        <tr>
-          <td colspan="2">Additional Supporting Documentation Provided</td>
-          <td colspan="2">{{ engagement.additional_supporting_documentation_provided_local|default:"0.00"|currency }}</td>
-          <td colspan="2">{{ engagement.additional_supporting_documentation_provided|default:"0.00"|currency }}</td>
-        </tr>
-        <tr>
-          <td colspan="2">Justification Provided and Accepted</td>
-          <td colspan="2">{{ engagement.justification_provided_and_accepted_local|default:"0.00"|currency }}</td>
-          <td colspan="2">{{ engagement.justification_provided_and_accepted|default:"0.00"|currency }}</td>
-        </tr>
-        <tr>
-          <td colspan="2">Impairment</td>
-          <td colspan="2">{{ engagement.write_off_required_local|default:"0.00"|currency }}</td>
-          <td colspan="2">{{ engagement.write_off_required|default:"0.00"|currency }}</td>
-        </tr>
-        <tr>
-          <td colspan="2">Pending Unsupported Amount</td>
-          <td colspan="2">{{ engagement.pending_unsupported_amount_local|default:"0.00"|currency }}</td>
-          <td colspan="2">{{ engagement.pending_unsupported_amount|default:"0.00"|currency }}</td>
-        </tr>
+    <table class="content-section__wrapper">
+      <tr>
+        <td class="input-container">
+          <div class="input-container__label">{{ serializer.fields.audit_opinion.label }}</div>
+          <div class="input-container__value">
+            {{ engagement.audit_opinion|default:"-"|title }}</div>
+        </td>
+      </tr>
+      <tr>
+        <td class="input-container">
+          <div class="input-container__label">{{ serializer.fields.audited_expenditure.label }}</div>
+          <div class="input-container__value">
+            $ {{ engagement.audited_expenditure|default:"0.00"|currency }}</div>
+        </td>
+        <td class="input-container">
+          <div class="input-container__label">{{ serializer.fields.financial_findings.label }}</div>
+          <div class="input-container__value">
+            $ {{ engagement.financial_findings|default_if_none:"0.00"|currency }}</div>
+        </td>
+        <td class="input-container">
+          <div class="input-container__label">{{ serializer.fields.amount_refunded.label }}</div>
+          <div class="input-container__value">
+            $ {{ engagement.amount_refunded|default:"0.00"|currency }}</div>
+        </td>
+      </tr>
+      <tr>
+        <td class="input-container">
+          <div class="input-container__label">{{ serializer.fields.additional_supporting_documentation_provided.label }}</div>
+          <div class="input-container__value">
+            $ {{ engagement.additional_supporting_documentation_provided|default:"0.00"|currency }}</div>
+        </td>
+        <td class="input-container">
+          <div class="input-container__label">{{ serializer.fields.justification_provided_and_accepted.label }}</div>
+          <div class="input-container__value">
+            $ {{ engagement.justification_provided_and_accepted|default:"0.00"|currency }}</div>
+        </td>
+        <td class="input-container">
+          <div class="input-container__label">{{ serializer.fields.write_off_required.label }}</div>
+          <div class="input-container__value">
+            $ {{ engagement.write_off_required|default:"0.00"|currency }}</div>
+        </td>
+      </tr>
+      <tr>
+        <td class="input-container">
+          <div class="input-container__label">{{ serializer.fields.pending_unsupported_amount.label }}</div>
+          <div class="input-container__value">
+            $ {{ engagement.pending_unsupported_amount|default:"0.00"|currency }}</div>
+        </td>
+      </tr>
       <tr>
         <td class="input-container" colspan="3">
           <div class="input-container__label">{{ serializer.fields.explanation_for_additional_information.label }}</div>
@@ -159,5 +142,4 @@
       </tr>
     </table>
   </div>
-</div>
 {% endblock %}
