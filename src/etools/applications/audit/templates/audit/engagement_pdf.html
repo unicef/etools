@@ -176,10 +176,12 @@
                   <div class="input-container__label">{{ serializer.fields.total_value.label }}</div>
                   <div class="input-container__value">USD {{ engagement.total_value|default:"0.00"|currency }}</div>
                 </td>
+                {% if engagement.face_forms|length > 0 %}
                 <td class="input-container">
                   <div class="input-container__label">{{ serializer.fields.total_value_local.label }}</div>
                   <div class="input-container__value">{{ engagement.total_value_local|default:"0.00"|currency }}</div>
                 </td>
+                {% endif %}
                 <td class="input-container">
                   <div class="input-container__label">{{ serializer.fields.shared_ip_with.label }}</div>
                   <div class="input-container__value">{{ engagement.shared_ip_with|default:"-" }}</div>
@@ -195,10 +197,12 @@
                   <div class="input-container__label">{{ serializer.fields.total_value.label }}</div>
                   <div class="input-container__value">USD {{ engagement.total_value|default:"0.00"|currency }}</div>
                 </td>
+                {% if engagement.face_forms|length > 0 %}
                 <td class="input-container">
                   <div class="input-container__label">{{ serializer.fields.total_value_local.label }}</div>
                   <div class="input-container__value">{{ engagement.total_value_local|default:"0.00"|currency }}</div>
                 </td>
+                {% endif %}
                 <td class="input-container">
                   <div class="input-container__label">{{ serializer.fields.status.label }}</div>
                   <div class="input-container__value">{{ engagement.status_display }}</div>

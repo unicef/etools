@@ -23,6 +23,8 @@ class FaceAuditPDFSerializer(AuditPDFSerializer):
             'justification_provided_and_accepted_local',
             'write_off_required_local',
             'pending_unsupported_amount_local',
+            'total_value_local',
+            'face_forms'
         ]
 
 
@@ -31,10 +33,14 @@ class FaceSpotCheckPDFSerializer(SpotCheckPDFSerializer):
     class Meta(SpotCheckPDFSerializer.Meta):
         model = SpotCheck
         fields = SpotCheckPDFSerializer.Meta.fields + [
-            'total_amount_tested_local', 'total_amount_of_ineligible_expenditure_local',
-            'amount_refunded_local', 'additional_supporting_documentation_provided_local',
-            'justification_provided_and_accepted_local', 'write_off_required_local', 'pending_unsupported_amount_local',
-            'explanation_for_additional_information',
+            'total_amount_tested_local',
+            'total_amount_of_ineligible_expenditure_local',
+            'amount_refunded_local',
+            'additional_supporting_documentation_provided_local',
+            'justification_provided_and_accepted_local',
+            'write_off_required_local',
+            'pending_unsupported_amount_local',
+            'total_value_local',
         ]
 
 
