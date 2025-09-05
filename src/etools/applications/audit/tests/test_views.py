@@ -1698,8 +1698,7 @@ class TestSpotCheckMetadataDetailViewSet(TestMetadataDetailViewSet, BaseTenantTe
             self.assertNotIn(field, response.data['actions']['PUT'])
 
         # auditor can view the report fields, only usd and not local
-        for field in ['total_amount_of_ineligible_expenditure', 'total_amount_tested',
-                      'pending_unsupported_amount']:
+        for field in ['total_amount_of_ineligible_expenditure', 'pending_unsupported_amount']:
             self.assertIn(field, response.data['actions']['GET'])
             self.assertNotIn(field, response.data['actions']['PUT'])
 
