@@ -21,7 +21,11 @@ from etools.applications.audit.models import (
 )
 from etools.applications.audit.purchase_order.models import AuditorFirm, PurchaseOrder
 from etools.applications.audit.serializers.auditor import PurchaseOrderItemSerializer
-from etools.applications.audit.serializers.engagement import DetailedFindingInfoSerializer, KeyInternalControlSerializer
+from etools.applications.audit.serializers.engagement import (
+    DetailedFindingInfoSerializer,
+    FinancialFindingSerializer,
+    KeyInternalControlSerializer,
+)
 from etools.applications.audit.serializers.risks import (
     AggregatedRiskRootSerializer,
     KeyInternalWeaknessSerializer,
@@ -172,6 +176,7 @@ class AuditPDFSerializer(EngagementPDFSerializer):
     key_internal_controls = KeyInternalControlSerializer(many=True, required=False,
                                                          label=_('Assessment of Key Internal Controls'))
     percent_of_audited_expenditure = serializers.DecimalField(20, 1)
+    financial_finding_set = FinancialFindingSerializer(many=True, required=False)
 
     class Meta(EngagementPDFSerializer.Meta):
         model = Audit
@@ -181,6 +186,7 @@ class AuditPDFSerializer(EngagementPDFSerializer):
             'key_internal_controls', 'amount_refunded', 'additional_supporting_documentation_provided',
             'justification_provided_and_accepted', 'write_off_required', 'pending_unsupported_amount',
             'explanation_for_additional_information',
+            'financial_finding_set'
         ]
 
 
