@@ -545,7 +545,7 @@ class SpotCheck(Engagement):
     @property
     def percent_of_audited_expenditure(self):
         try:
-            return 100 * self.total_amount_of_ineligible_expenditure_local / self.total_amount_tested_local
+            return 100 * self.total_amount_of_ineligible_expenditure / self.total_amount_tested
         except (TypeError, DivisionByZero, InvalidOperation):
             return 0
 
