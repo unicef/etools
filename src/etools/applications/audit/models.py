@@ -559,9 +559,8 @@ class SpotCheck(Engagement):
     def save(self, *args, **kwargs):
         self.engagement_type = Engagement.TYPES.sc
 
-        if self.exchange_rate:
-            self.total_amount_tested = self.total_amount_tested_local * self.exchange_rate \
-                if self.total_amount_tested_local else 0
+        if self.exchange_rate and not self.prior_face_forms:
+            self.total_amount_tested = self.total_amount_tested_local / self.exchange_rate if self.total_amount_tested_local else 0
         return super().save(*args, **kwargs)
 
     @transition(
