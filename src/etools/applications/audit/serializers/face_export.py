@@ -1,3 +1,6 @@
+from django.utils.translation import gettext as _
+
+from rest_framework import serializers
 
 from etools.applications.audit.models import Audit, SpotCheck
 from etools.applications.audit.serializers.export import (
@@ -24,11 +27,11 @@ class FaceAuditPDFSerializer(AuditPDFSerializer):
             'write_off_required_local',
             'pending_unsupported_amount_local',
             'total_value_local',
-            'face_forms'
         ]
 
 
 class FaceSpotCheckPDFSerializer(SpotCheckPDFSerializer):
+    percent_of_audited_expenditure = serializers.DecimalField(20, 2, label=_('% of Audited Expenditure'), read_only=True)
 
     class Meta(SpotCheckPDFSerializer.Meta):
         model = SpotCheck
@@ -41,6 +44,7 @@ class FaceSpotCheckPDFSerializer(SpotCheckPDFSerializer):
             'write_off_required_local',
             'pending_unsupported_amount_local',
             'total_value_local',
+            'percent_of_audited_expenditure'
         ]
 
 

@@ -130,7 +130,7 @@ class EngagementPDFSerializer(serializers.ModelSerializer):
             'date_of_field_visit', 'date_of_draft_report_to_ip', 'date_of_comments_by_ip',
             'date_of_draft_report_to_unicef', 'date_of_comments_by_unicef', 'partner_contacted_at',
             'action_points', 'engagement_attachments', 'report_attachments',
-            'total_value', 'start_date', 'end_date', 'joint_audit', 'shared_ip_with'
+            'total_value', 'start_date', 'end_date', 'joint_audit', 'shared_ip_with', 'face_forms'
         ]
 
     def get_status_display(self, obj):
@@ -207,6 +207,7 @@ class SpotCheckPDFSerializer(EngagementPDFSerializer):
     low_priority_findings = serializers.SerializerMethodField()
 
     pending_unsupported_amount = serializers.DecimalField(20, 2, label=_('Pending Unsupported Amount'), read_only=True)
+    financial_finding_set = FinancialFindingSerializer(many=True, required=False)
 
     class Meta(EngagementPDFSerializer.Meta):
         model = SpotCheck
@@ -217,6 +218,7 @@ class SpotCheckPDFSerializer(EngagementPDFSerializer):
             'amount_refunded', 'additional_supporting_documentation_provided',
             'justification_provided_and_accepted', 'write_off_required', 'pending_unsupported_amount',
             'explanation_for_additional_information',
+            'financial_finding_set'
         ]
 
     def get_high_priority_findings(self, obj):

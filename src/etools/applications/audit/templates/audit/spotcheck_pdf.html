@@ -41,6 +41,30 @@
 
   <pdf:nextpage></pdf:nextpage>
   <div class="content-section">
+    <div class="content-section__header">
+      <div class="content-section__header__title">Report Financial Findings</div>
+    </div>
+    <div class="content-section__wrapper">
+      <table class="content-section__table">
+        <tr class="content-section__table__header">
+          <td colspan="2">Title (Category)</td>
+          <td colspan="4">Description</td>
+          <td colspan="2">Amount Local</td>
+          <td colspan="2">Amount USD</td>
+        </tr>
+        {% for ff in engagement.financial_finding_set %}
+          <tr>
+            <td colspan="2">{{ ff.title|default:"-" }}</td>
+            <td colspan="4">{{ ff.description|default:"-" }}</td>
+            <td colspan="2">{{ ff.local_amount|default:"0.00"|currency }}</td>
+            <td colspan="2">{{ ff.amount|default:"0.00"|currency }}</td>
+          </tr>
+        {% endfor %}
+      </table>
+    </div>
+  </div>
+
+  <div class="content-section">
     <div class="content-section__header content-section__header--orange">
       <div class="content-section__header__title">Summary of High Priority Findings and Recommendations</div>
     </div>
