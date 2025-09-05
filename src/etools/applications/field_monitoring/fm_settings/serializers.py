@@ -31,6 +31,14 @@ from etools.applications.reports.serializers.v2 import OutputListSerializer
 from etools.applications.users.serializers_v3 import MinimalUserSerializer
 
 
+class LocationLightWithActiveSerializer(LocationLightSerializer):
+    """
+    Extends the base LocationLightSerializer to include the is_active field.
+    """
+    class Meta(LocationLightSerializer.Meta):
+        fields = LocationLightSerializer.Meta.fields + ('is_active',)
+
+
 class MethodSerializer(serializers.ModelSerializer):
     class Meta:
         model = Method
@@ -204,13 +212,13 @@ class LocationSiteSerializer(LocationSiteLightSerializer):
         pass
 
 
-class LocationFullSerializer(LocationLightSerializer):
+class LocationFullSerializer(LocationLightWithActiveSerializer):
     point = serializers.SerializerMethodField()
     geom = serializers.SerializerMethodField()
     is_leaf = serializers.BooleanField(source='is_leaf_node', read_only=True)
 
-    class Meta(LocationLightSerializer.Meta):
-        fields = LocationLightSerializer.Meta.fields + ('point', 'geom', 'is_leaf')
+    class Meta(LocationLightWithActiveSerializer.Meta):
+        fields = LocationLightWithActiveSerializer.Meta.fields + ('point', 'geom', 'is_leaf')
 
     def get_geom(self, obj):
         if not obj.geom:
