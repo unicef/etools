@@ -25,6 +25,7 @@ from etools.applications.audit.serializers.engagement import (
     DetailedFindingInfoSerializer,
     FinancialFindingSerializer,
     KeyInternalControlSerializer,
+    SpotCheckFinancialFindingSerializer,
 )
 from etools.applications.audit.serializers.risks import (
     AggregatedRiskRootSerializer,
@@ -207,7 +208,7 @@ class SpotCheckPDFSerializer(EngagementPDFSerializer):
     low_priority_findings = serializers.SerializerMethodField()
 
     pending_unsupported_amount = serializers.DecimalField(20, 2, label=_('Pending Unsupported Amount'), read_only=True)
-    financial_finding_set = FinancialFindingSerializer(many=True, required=False)
+    financial_finding_set = SpotCheckFinancialFindingSerializer(many=True, required=False)
 
     class Meta(EngagementPDFSerializer.Meta):
         model = SpotCheck

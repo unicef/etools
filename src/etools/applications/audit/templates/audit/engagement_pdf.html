@@ -320,88 +320,88 @@
             </table>
           </div>
         </div>
-        {% if engagement.status == 'report_submitted' or engagement.status == 'final' %}
-          <pdf:nextpage></pdf:nextpage>
-          <div class="content-section">
-            <div class="content-section__header">
-              <div class="content-section__header__title">Engagement Status</div>
-            </div>
-            <table class="content-section__wrapper">
-              <tr>
-                <td class="input-container">
-                  <div class="input-container__label">{{ serializer.fields.date_of_field_visit.label }}</div>
-                  <div class="input-container__value">{{ engagement.date_of_field_visit|default:"-" }}</div>
-                </td>
-                <td class="input-container">
-                  <div class="input-container__label">{{ serializer.fields.date_of_draft_report_to_ip.label }}</div>
-                  <div class="input-container__value">{{ engagement.date_of_draft_report_to_ip|default:"-" }}</div>
-                </td>
-                <td class="input-container">
-                  <div class="input-container__label">{{ serializer.fields.date_of_comments_by_ip.label }}</div>
-                  <div class="input-container__value">{{ engagement.date_of_comments_by_ip|default:"-" }}</div>
-                </td>
+
+        <pdf:nextpage></pdf:nextpage>
+        <div class="content-section">
+          <div class="content-section__header">
+            <div class="content-section__header__title">Engagement Status</div>
+          </div>
+          <table class="content-section__wrapper">
+            <tr>
+              <td class="input-container">
+                <div class="input-container__label">{{ serializer.fields.date_of_field_visit.label }}</div>
+                <div class="input-container__value">{{ engagement.date_of_field_visit|default:"-" }}</div>
+              </td>
+              <td class="input-container">
+                <div class="input-container__label">{{ serializer.fields.date_of_draft_report_to_ip.label }}</div>
+                <div class="input-container__value">{{ engagement.date_of_draft_report_to_ip|default:"-" }}</div>
+              </td>
+              <td class="input-container">
+                <div class="input-container__label">{{ serializer.fields.date_of_comments_by_ip.label }}</div>
+                <div class="input-container__value">{{ engagement.date_of_comments_by_ip|default:"-" }}</div>
+              </td>
+            </tr>
+            <tr>
+              <td class="input-container">
+                <div class="input-container__label">{{ serializer.fields.date_of_draft_report_to_unicef.label }}</div>
+                <div class="input-container__value">{{ engagement.date_of_draft_report_to_unicef|default:"-" }}</div>
+              </td>
+              <td class="input-container">
+                <div class="input-container__label">{{ serializer.fields.date_of_comments_by_unicef.label }}</div>
+                <div class="input-container__value">{{ engagement.date_of_comments_by_unicef|default:"-" }}</div>
+              </td>
+            </tr>
+          </table>
+        </div>
+
+        {% block extra_content %}{% endblock %}
+
+        <pdf:nextpage></pdf:nextpage>
+        <div class="content-section">
+          <div class="content-section__header">
+            <div class="content-section__header__title">UNICEF Follow-Up Actions</div>
+          </div>
+          <div class="content-section__wrapper">
+            <table class="content-section__table">
+              <tr class="content-section__table__header">
+                <td colspan="3">Reference No.</td>
+                <td colspan="2">Status</td>
+                <td>High Priority</td>
+                <td colspan="3">Due Date</td>
+                <td colspan="3">Assigned To</td>
+                <td colspan="2">Office</td>
+                <td colspan="3">Section</td>
+                <td colspan="5">Description</td>
               </tr>
-              <tr>
-                <td class="input-container">
-                  <div class="input-container__label">{{ serializer.fields.date_of_draft_report_to_unicef.label }}</div>
-                  <div class="input-container__value">{{ engagement.date_of_draft_report_to_unicef|default:"-" }}</div>
-                </td>
-                <td class="input-container">
-                  <div class="input-container__label">{{ serializer.fields.date_of_comments_by_unicef.label }}</div>
-                  <div class="input-container__value">{{ engagement.date_of_comments_by_unicef|default:"-" }}</div>
-                </td>
-              </tr>
+              {% if engagement.action_points %}
+                {% for action_point in engagement.action_points %}
+                  <tr>
+                    <td colspan="3">{{ action_point.reference_number|default:"-" }}</td>
+                    <td colspan="2">{{ action_point.status|default:"-" }}</td>
+                    <td>{{ action_point.high_priority|yesno:"Y,N"}}</td>
+                    <td colspan="3">{{ action_point.due_date|default:"-" }}</td>
+                    <td colspan="3">{{ action_point.assigned_to|default:"-" }}</td>
+                    <td colspan="2">{{ action_point.office|default:"-" }}</td>
+                    <td colspan="3">{{ action_point.section|default:"-" }}</td>
+                    <td colspan="5">{{ action_point.description|default:"-" }}</td>
+                  </tr>
+                {% endfor %}
+              {% else %}
+                <tr>
+                  <td colspan="3">-</td>
+                  <td colspan="2">-</td>
+                  <td>-</td>
+                  <td colspan="3">-</td>
+                  <td colspan="3">-</td>
+                  <td colspan="2">-</td>
+                  <td colspan="3">-</td>
+                  <td colspan="5">-</td>
+                </tr>
+              {% endif %}
             </table>
           </div>
+        </div>
 
-          {% block extra_content %}{% endblock %}
-
-          <pdf:nextpage></pdf:nextpage>
-          <div class="content-section">
-            <div class="content-section__header">
-              <div class="content-section__header__title">UNICEF Follow-Up Actions</div>
-            </div>
-            <div class="content-section__wrapper">
-              <table class="content-section__table">
-                <tr class="content-section__table__header">
-                  <td colspan="3">Reference No.</td>
-                  <td colspan="2">Status</td>
-                  <td>High Priority</td>
-                  <td colspan="3">Due Date</td>
-                  <td colspan="3">Assigned To</td>
-                  <td colspan="2">Office</td>
-                  <td colspan="3">Section</td>
-                  <td colspan="5">Description</td>
-                </tr>
-                {% if engagement.action_points %}
-                  {% for action_point in engagement.action_points %}
-                    <tr>
-                      <td colspan="3">{{ action_point.reference_number|default:"-" }}</td>
-                      <td colspan="2">{{ action_point.status|default:"-" }}</td>
-                      <td>{{ action_point.high_priority|yesno:"Y,N"}}</td>
-                      <td colspan="3">{{ action_point.due_date|default:"-" }}</td>
-                      <td colspan="3">{{ action_point.assigned_to|default:"-" }}</td>
-                      <td colspan="2">{{ action_point.office|default:"-" }}</td>
-                      <td colspan="3">{{ action_point.section|default:"-" }}</td>
-                      <td colspan="5">{{ action_point.description|default:"-" }}</td>
-                    </tr>
-                  {% endfor %}
-                {% else %}
-                  <tr>
-                    <td colspan="3">-</td>
-                    <td colspan="2">-</td>
-                    <td>-</td>
-                    <td colspan="3">-</td>
-                    <td colspan="3">-</td>
-                    <td colspan="2">-</td>
-                    <td colspan="3">-</td>
-                    <td colspan="5">-</td>
-                  </tr>
-                {% endif %}
-              </table>
-            </div>
-          </div>
-        {% endif %}
         <pdf:nextpage></pdf:nextpage>
         <div class="content-section">
           <div class="content-section__header">
