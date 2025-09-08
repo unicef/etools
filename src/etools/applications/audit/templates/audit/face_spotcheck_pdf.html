@@ -4,42 +4,64 @@
 {% block extra_content %}
   <div class="content-section">
     <div class="content-section__header">
-      <div class="content-section__header__title">Overview</div>
+      <div class="content-section__header__title">Summary of Engagement Findings</div>
     </div>
-    <table class="content-section__wrapper">
-      <tr>
-        <td class="input-container">
-          <div class="input-container__label">{{ serializer.fields.face_form_start_date.label }}</div>
-          <div class="input-container__value">
-            {{ engagement.start_date|default:"-" }}</div>
-        </td>
-        <td class="input-container">
-          <div class="input-container__label">{{ serializer.fields.face_form_end_date.label }}</div>
-          <div class="input-container__value">
-            {{ engagement.end_date|default:"-" }}</div>
-        </td>
-        <td class="input-container">
-          <div class="input-container__label">{{ serializer.fields.total_value.label }}</div>
-          <div class="input-container__value">
-            $ {{ engagement.total_value|default_if_none:"0.00"|currency }}</div>
-        </td>
-      </tr>
-      <tr>
-        <td class="input-container">
-          <div class="input-container__label">{{ serializer.fields.total_amount_tested.label }}</div>
-          <div class="input-container__value">
-            $ {{ engagement.total_amount_tested|default_if_none:"0.00"|currency }}</div>
-        </td>
-        <td class="input-container">
-          <div class="input-container__label">{{ serializer.fields.total_amount_of_ineligible_expenditure.label }}</div>
-          <div class="input-container__value">
-            $ {{ engagement.total_amount_of_ineligible_expenditure|default_if_none:"0.00"|currency }}</div>
-        </td>
-      </tr>
-    </table>
+    <div class="content-section__wrapper">
+      <table class="content-section__table">
+        <tr class="content-section__table__header">
+          <td colspan="2"></td>
+          <td colspan="2">Local Currency</td>
+          <td colspan="2">USD</td>
+        </tr>
+        <tr>
+          <td colspan="2">Value of Selected FACE</td>
+          <td colspan="2">{{ engagement.total_value_local|default:"0.00"|currency }}</td>
+          <td colspan="2">{{ engagement.total_value|default:"0.00"|currency }}</td>
+        </tr>
+        <tr>
+          <td colspan="2">Total Amount Tested</td>
+          <td colspan="2">{{ engagement.total_amount_tested_local|default:"0.00"|currency }}</td>
+          <td colspan="2">{{ engagement.total_amount_tested|default:"0.00"|currency }}</td>
+        </tr>
+        <tr>
+          <td colspan="2">Total Amount of Ineligible Expenditure</td>
+          <td colspan="2">{{ engagement.total_amount_of_ineligible_expenditure_local|default:"0.00"|currency }}</td>
+          <td colspan="2">{{ engagement.total_amount_of_ineligible_expenditure|default:"0.00"|currency }}</td>
+        </tr>
+        <tr>
+          <td colspan="2">% of audited Expenditure</td>
+          <td colspan="4">{{ engagement.percent_of_audited_expenditure }}</td>
+        </tr>
+      </table>
+    </div>
   </div>
 
   <pdf:nextpage></pdf:nextpage>
+
+  <div class="content-section">
+    <div class="content-section__header">
+      <div class="content-section__header__title">Report Financial Findings</div>
+    </div>
+    <div class="content-section__wrapper">
+      <table class="content-section__table">
+        <tr class="content-section__table__header">
+          <td colspan="2">Title (Category)</td>
+          <td colspan="4">Description</td>
+          <td colspan="2">Amount Local</td>
+          <td colspan="2">Amount USD</td>
+        </tr>
+        {% for ff in engagement.financial_finding_set %}
+          <tr>
+            <td colspan="2">{{ ff.title|default:"-" }}</td>
+            <td colspan="4">{{ ff.description|default:"-" }}</td>
+            <td colspan="2">{{ ff.local_amount|default:"0.00"|currency }}</td>
+            <td colspan="2">{{ ff.amount|default:"0.00"|currency }}</td>
+          </tr>
+        {% endfor %}
+      </table>
+    </div>
+  </div>
+
   <div class="content-section">
     <div class="content-section__header content-section__header--orange">
       <div class="content-section__header__title">Summary of High Priority Findings and Recommendations</div>
@@ -137,50 +159,50 @@
 
   <div class="content-section">
     <div class="content-section__header">
-      <div class="content-section__header__title">Financial Findings</div>
+      <div class="content-section__header__title">Follow-Up Financial Findings</div>
     </div>
-    <table class="content-section__wrapper">
-      <tr>
-        <td class="input-container">
-          <div class="input-container__label">{{ serializer.fields.total_amount_tested.label }}</div>
-          <div class="input-container__value">
-            $ {{ engagement.total_amount_tested|default:"0.00"|currency }}</div>
-        </td>
-        <td class="input-container">
-          <div class="input-container__label">{{ serializer.fields.total_amount_of_ineligible_expenditure.label }}</div>
-          <div class="input-container__value">
-            $ {{ engagement.total_amount_of_ineligible_expenditure|default:"0.00"|currency }}</div>
-        </td>
-        <td class="input-container">
-          <div class="input-container__label">{{ serializer.fields.amount_refunded.label }}</div>
-          <div class="input-container__value">
-            $ {{ engagement.amount_refunded|default:"0.00"|currency }}</div>
-        </td>
-      </tr>
-      <tr>
-        <td class="input-container">
-          <div class="input-container__label">{{ serializer.fields.additional_supporting_documentation_provided.label }}</div>
-          <div class="input-container__value">
-            $ {{ engagement.additional_supporting_documentation_provided|default:"0.00"|currency }}</div>
-        </td>
-        <td class="input-container">
-          <div class="input-container__label">{{ serializer.fields.justification_provided_and_accepted.label }}</div>
-          <div class="input-container__value">
-            $ {{ engagement.justification_provided_and_accepted|default:"0.00"|currency }}</div>
-        </td>
-        <td class="input-container">
-          <div class="input-container__label">{{ serializer.fields.write_off_required.label }}</div>
-          <div class="input-container__value">
-            $ {{ engagement.write_off_required|default:"0.00"|currency }}</div>
-        </td>
-      </tr>
-      <tr>
-        <td class="input-container">
-          <div class="input-container__label">{{ serializer.fields.pending_unsupported_amount.label }}</div>
-          <div class="input-container__value">
-            $ {{ engagement.pending_unsupported_amount|default:"0.00"|currency }}</div>
-        </td>
-      </tr>
+    <div class="content-section__wrapper">
+      <table class="content-section__table">
+        <tr class="content-section__table__header">
+          <td colspan="2"></td>
+          <td colspan="2">Local Currency</td>
+          <td colspan="2">USD</td>
+        </tr>
+        <tr>
+          <td colspan="2">Amount Audited</td>
+          <td colspan="2">{{ engagement.total_amount_tested_local|default:"0.00"|currency }}</td>
+          <td colspan="2">{{ engagement.total_amount_tested|default:"0.00"|currency }}</td>
+        </tr>
+        <tr>
+          <td colspan="2">Total Amount of Ineligible Expenditure</td>
+          <td colspan="2">{{ engagement.total_amount_of_ineligible_expenditure_local|default:"0.00"|currency }}</td>
+          <td colspan="2">{{ engagement.total_amount_of_ineligible_expenditure|default:"0.00"|currency }}</td>
+        </tr>
+        <tr>
+          <td colspan="2">Amount Refunded</td>
+          <td colspan="2">{{ engagement.amount_refunded_local|default:"0.00"|currency }}</td>
+          <td colspan="2">{{ engagement.amount_refunded|default:"0.00"|currency }}</td>
+        </tr>
+        <tr>
+          <td colspan="2">Additional Supporting Documentation Provided</td>
+          <td colspan="2">{{ engagement.additional_supporting_documentation_provided_local|default:"0.00"|currency }}</td>
+          <td colspan="2">{{ engagement.additional_supporting_documentation_provided|default:"0.00"|currency }}</td>
+        </tr>
+        <tr>
+          <td colspan="2">Justification Provided and Accepted</td>
+          <td colspan="2">{{ engagement.justification_provided_and_accepted_local|default:"0.00"|currency }}</td>
+          <td colspan="2">{{ engagement.justification_provided_and_accepted|default:"0.00"|currency }}</td>
+        </tr>
+        <tr>
+          <td colspan="2">Impairment</td>
+          <td colspan="2">{{ engagement.write_off_required_local|default:"0.00"|currency }}</td>
+          <td colspan="2">{{ engagement.write_off_required|default:"0.00"|currency }}</td>
+        </tr>
+        <tr>
+          <td colspan="2">Pending Unsupported Amount</td>
+          <td colspan="2">{{ engagement.pending_unsupported_amount_local|default:"0.00"|currency }}</td>
+          <td colspan="2">{{ engagement.pending_unsupported_amount|default:"0.00"|currency }}</td>
+        </tr>
       <tr>
         <td class="input-container" colspan="3">
           <div class="input-container__label">{{ serializer.fields.explanation_for_additional_information.label }}</div>
@@ -190,4 +212,5 @@
       </tr>
     </table>
   </div>
+</div>
 {% endblock %}

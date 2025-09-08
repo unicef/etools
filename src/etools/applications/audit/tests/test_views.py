@@ -1228,6 +1228,7 @@ class TestSpotCheckDetail(SCTransitionsTestCaseMixin, BaseTenantTestCase):
 
         self.engagement.total_amount_tested_local = 1000
         self.engagement.total_amount_of_ineligible_expenditure_local = 300
+        self.engagement.total_amount_of_ineligible_expenditure = 150
         self.engagement.exchange_rate = 2
         self.engagement.amount_refunded_local = 100
         self.engagement.additional_supporting_documentation_provided_local = 25
@@ -1247,8 +1248,8 @@ class TestSpotCheckDetail(SCTransitionsTestCaseMixin, BaseTenantTestCase):
         )
         self.assertEqual("{:.2f}".format(expected_amount), response.data['pending_unsupported_amount'])
         self.assertEqual(expected_amount, self.engagement.pending_unsupported_amount)
-        self.assertEqual(float(response.data['total_amount_tested']), 2000.00)
-        self.assertEqual(float(response.data['total_amount_of_ineligible_expenditure']), 0.00)
+        self.assertEqual(float(response.data['total_amount_tested']), 500.00)
+        self.assertEqual(float(response.data['total_amount_of_ineligible_expenditure']), 150.00)
 
         self.assertEqual(float(response.data['exchange_rate']), 2.00)
 
