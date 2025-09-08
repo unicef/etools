@@ -338,8 +338,8 @@ class EngagementViewSet(
             'serializer_class': SpecialAuditSerializer,
             'pdf_serializer_class': SpecialAuditPDFSerializer,
             'pdf_template': 'audit/special_audit_pdf.html',
-            # 'face_pdf_serializer_class': FaceSpecialAuditPDFSerializer,
-            # 'face_pdf_template': 'audit/face_special_audit_pdf.html',
+            'face_pdf_serializer_class': SpecialAuditPDFSerializer,
+            'face_pdf_template': 'audit/special_audit_pdf.html',
         },
         Engagement.TYPES.sc: {
             'serializer_class': SpotCheckSerializer,

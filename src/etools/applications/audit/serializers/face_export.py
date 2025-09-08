@@ -8,9 +8,6 @@ from etools.applications.audit.serializers.export import (
     AuditPDFSerializer,
     CurrencyReadOnlyField,
     EngagementBaseDetailCSVSerializer,
-    EngagementPDFSerializer,
-    SpecialAuditRecommendationPDFSerializer,
-    SpecificProcedurePDFSerializer,
     SpotCheckDetailCSVSerializer,
     SpotCheckPDFSerializer,
 )
@@ -45,16 +42,6 @@ class FaceSpotCheckPDFSerializer(SpotCheckPDFSerializer):
             'pending_unsupported_amount_local',
             'total_value_local',
             'percent_of_audited_expenditure'
-        ]
-
-
-class SpecialAuditPDFSerializer(EngagementPDFSerializer):
-    specific_procedures = SpecificProcedurePDFSerializer(many=True)
-    other_recommendations = SpecialAuditRecommendationPDFSerializer(many=True)
-
-    class Meta(EngagementPDFSerializer.Meta):
-        fields = EngagementPDFSerializer.Meta.fields + [
-            'specific_procedures', 'other_recommendations',
         ]
 
 

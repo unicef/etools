@@ -15,6 +15,7 @@ from etools.applications.audit.models import (
     Risk,
     RiskBluePrint,
     RiskCategory,
+    SpecialAudit,
     SpecialAuditRecommendation,
     SpecificProcedure,
     SpotCheck,
@@ -82,6 +83,11 @@ class MicroAssessmentAdmin(EngagementAdmin):
 
 @admin.register(Audit)
 class AuditAdmin(EngagementAdmin):
+    pass
+
+
+@admin.register(SpecialAudit)
+class SpecialAuditAdmin(EngagementAdmin):
     pass
 
 

@@ -247,7 +247,7 @@ class SpecialAuditPDFSerializer(EngagementPDFSerializer):
 
     class Meta(EngagementPDFSerializer.Meta):
         fields = EngagementPDFSerializer.Meta.fields + [
-            'specific_procedures', 'other_recommendations',
+            'specific_procedures', 'other_recommendations', 'total_value_local'
         ]
 
 

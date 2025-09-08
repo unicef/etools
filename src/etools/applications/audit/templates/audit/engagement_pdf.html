@@ -176,7 +176,8 @@
                   <div class="input-container__label">{{ serializer.fields.total_value.label }}</div>
                   <div class="input-container__value">USD {{ engagement.total_value|default:"0.00"|currency }}</div>
                 </td>
-                {% if engagement.face_forms|length > 0 %}
+                {{engagement.total_value_local|stringformat:"s"}}
+                {% if engagement.face_forms|length > 0 or engagement.total_value_local|stringformat:"s" != "0.00" %}
                 <td class="input-container">
                   <div class="input-container__label">{{ serializer.fields.total_value_local.label }}</div>
                   <div class="input-container__value">{{ engagement.total_value_local|default:"0.00"|currency }}</div>
