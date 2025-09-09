@@ -1,6 +1,6 @@
 import logging
-from datetime import date
 import re
+from datetime import date
 
 from django.contrib.auth import get_user_model
 from django.db import connection, transaction
