@@ -4,10 +4,8 @@ from rest_framework import serializers
 
 from etools.applications.audit.models import Audit, SpotCheck
 from etools.applications.audit.serializers.export import (
-    AuditDetailCSVSerializer,
     AuditPDFSerializer,
     CurrencyReadOnlyField,
-    EngagementBaseDetailCSVSerializer,
     SpotCheckDetailCSVSerializer,
     SpotCheckPDFSerializer,
 )
@@ -51,18 +49,3 @@ class FaceSpotCheckDetailCSVSerializer(SpotCheckDetailCSVSerializer):
     justification_provided_and_accepted_local = CurrencyReadOnlyField()
     write_off_required_local = CurrencyReadOnlyField()
     pending_unsupported_amount_local = CurrencyReadOnlyField()
-
-
-class FaceAuditDetailCSVSerializer(AuditDetailCSVSerializer):
-    total_value_local = CurrencyReadOnlyField()
-    amount_refunded_local = CurrencyReadOnlyField()
-    additional_supporting_documentation_provided_local = CurrencyReadOnlyField()
-    justification_provided_and_accepted_local = CurrencyReadOnlyField()
-    write_off_required_local = CurrencyReadOnlyField()
-    pending_unsupported_amount_local = CurrencyReadOnlyField()
-
-
-class SpecialAuditDetailCSVSerializer(EngagementBaseDetailCSVSerializer):
-    """
-
-    """

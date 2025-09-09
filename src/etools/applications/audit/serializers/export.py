@@ -275,6 +275,15 @@ class SpotCheckDetailCSVSerializer(EngagementBaseDetailCSVSerializer):
     justification_provided_and_accepted = CurrencyReadOnlyField()
     write_off_required = CurrencyReadOnlyField()
     pending_unsupported_amount = CurrencyReadOnlyField()
+
+    total_value_local = CurrencyReadOnlyField()
+    total_amount_tested_local = CurrencyReadOnlyField()
+    amount_refunded_local = CurrencyReadOnlyField()
+    additional_supporting_documentation_provided_local = CurrencyReadOnlyField()
+    justification_provided_and_accepted_local = CurrencyReadOnlyField()
+    write_off_required_local = CurrencyReadOnlyField()
+    pending_unsupported_amount_local = CurrencyReadOnlyField()
+
     high_priority_observations = serializers.SerializerMethodField()
 
     def get_high_priority_observations(self, obj):
@@ -298,6 +307,13 @@ class AuditDetailCSVSerializer(EngagementBaseDetailCSVSerializer):
     pending_unsupported_amount = CurrencyReadOnlyField()
     control_weaknesses = serializers.SerializerMethodField()
     subject_area = serializers.SerializerMethodField()
+
+    total_value_local = CurrencyReadOnlyField()
+    amount_refunded_local = CurrencyReadOnlyField()
+    additional_supporting_documentation_provided_local = CurrencyReadOnlyField()
+    justification_provided_and_accepted_local = CurrencyReadOnlyField()
+    write_off_required_local = CurrencyReadOnlyField()
+    pending_unsupported_amount_local = CurrencyReadOnlyField()
 
     def get_control_weaknesses(self, obj):
         serializer = KeyInternalWeaknessSerializer(code='audit_key_weakness')
@@ -381,6 +397,5 @@ class MicroAssessmentDetailCSVSerializer(EngagementBaseDetailCSVSerializer):
 
 
 class SpecialAuditDetailCSVSerializer(EngagementBaseDetailCSVSerializer):
-    """
-
-    """
+    total_value = CurrencyReadOnlyField()
+    total_value_local = CurrencyReadOnlyField()

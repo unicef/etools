@@ -41,6 +41,9 @@ from etools.applications.audit.exports import (
     AuditDetailCSVRenderer,
     AuditorFirmCSVRenderer,
     EngagementCSVRenderer,
+    FaceAuditDetailCSVRenderer,
+    FaceSpecialAuditDetailCSVRenderer,
+    FaceSpotCheckDetailCSVRenderer,
     MicroAssessmentDetailCSVRenderer,
     SpecialAuditDetailCSVRenderer,
     SpotCheckDetailCSVRenderer,
@@ -499,6 +502,10 @@ class AuditViewSet(EngagementManagementMixin, EngagementViewSet):
 
     @action(detail=True, methods=['get'], url_path='csv', renderer_classes=[AuditDetailCSVRenderer])
     def export_csv(self, request, *args, **kwargs):
+        obj = self.get_object()
+
+        if not obj.prior_face_forms:
+            request.accepted_renderer = FaceAuditDetailCSVRenderer()
         return super().export_csv(request, *args, **kwargs)
 
 
@@ -510,6 +517,10 @@ class SpotCheckViewSet(EngagementManagementMixin, EngagementViewSet):
 
     @action(detail=True, methods=['get'], url_path='csv', renderer_classes=[SpotCheckDetailCSVRenderer])
     def export_csv(self, request, *args, **kwargs):
+        obj = self.get_object()
+
+        if not obj.prior_face_forms:
+            request.accepted_renderer = FaceSpotCheckDetailCSVRenderer()
         return super().export_csv(request, *args, **kwargs)
 
 
@@ -529,6 +540,10 @@ class SpecialAuditViewSet(EngagementManagementMixin, EngagementViewSet):
 
     @action(detail=True, methods=['get'], url_path='csv', renderer_classes=[SpecialAuditDetailCSVRenderer])
     def export_csv(self, request, *args, **kwargs):
+        obj = self.get_object()
+
+        if not obj.prior_face_forms or obj.total_value_local > 0:
+            request.accepted_renderer = FaceSpecialAuditDetailCSVRenderer()
         return super().export_csv(request, *args, **kwargs)
 
 
