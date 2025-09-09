@@ -398,6 +398,13 @@ class Command(BaseCommand):
             'audit.engagement.face_forms',
             condition=self.engagement_partner_contacted_display_status()
         )
+
+        self.add_permissions(
+            self.focal_point, 'edit',
+            ['audit.specialaudit.total_value',
+             'audit.specialaudit.total_value_local'],
+            condition=self.engagement_partner_contacted_display_status()
+        )
         self.add_permissions(
             self.focal_point, 'action',
             'audit.engagement.cancel',

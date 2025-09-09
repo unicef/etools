@@ -689,6 +689,8 @@ class SpecialAuditRecommendationSerializer(WritableNestedSerializerMixin, serial
 class SpecialAuditSerializer(EngagementSerializer):
     other_recommendations = SpecialAuditRecommendationSerializer(label='Other Observations and Recommendations',
                                                                  many=True)
+    total_value = serializers.CharField(required=False)
+    total_value_local = serializers.CharField(required=False)
 
     class Meta(EngagementSerializer.Meta):
         model = SpecialAudit
@@ -700,7 +702,5 @@ class SpecialAuditSerializer(EngagementSerializer):
         extra_kwargs.update({
             'start_date': {'required': False},
             'end_date': {'required': False},
-            'total_value': {'required': False},
-            'total_value_local': {'required': False},
             'conducted_by_sai': {'required': True},
         })

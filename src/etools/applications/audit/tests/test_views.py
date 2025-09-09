@@ -923,6 +923,22 @@ class TestSpecialAuditMetadataViewSet(BaseTestEngagementsCreateViewSet, BaseTena
         self.assertIn('PUT', response.data['actions'])
         self.assertNotIn('conducted_by_sai', response.data['actions']['PUT'])
 
+    def test_total_value(self):
+        special_audit = SpecialAuditFactory(status=Engagement.STATUSES.partner_contacted)
+        response = self.forced_auth_req(
+            'options',
+            '/api/audit/{}/{}/'.format(self.endpoint, special_audit.pk),
+            user=self.unicef_focal_point
+        )
+        self.assertIn('GET', response.data['actions'])
+        self.assertIn('face_forms', response.data['actions']['GET'])
+        self.assertIn('total_value', response.data['actions']['GET'])
+        self.assertIn('total_value_local', response.data['actions']['GET'])
+        self.assertIn('PUT', response.data['actions'])
+        self.assertIn('total_value', response.data['actions']['PUT'])
+        self.assertIn('total_value_local', response.data['actions']['PUT'])
+        self.assertIn('face_forms', response.data['actions']['PUT'])
+
 
 class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenantTestCase):
     engagement_factory = AuditFactory
