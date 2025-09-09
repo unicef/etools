@@ -648,6 +648,8 @@ class ItemAdminSerializer(serializers.ModelSerializer):
 
 class ItemStockManagementUpdateSerializer(serializers.ModelSerializer):
 
+    
+
     adminValidator = AdminPanelValidator()
 
     def validate_uom(self, value):
@@ -659,6 +661,15 @@ class ItemStockManagementUpdateSerializer(serializers.ModelSerializer):
     def validate_quantity(self, value):
         self.adminValidator.validate_positive_quantity(value)
         return value
+    
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        if validated_data.get('quantity') != instance.quantity:
+            instance.quantity = validated_data['quantity']
+        if validated_data.get('uom') != instance.uom:
+            instance.uom = validated_data['uom']
+        instance.save()
+        return instance
 
     class Meta:
         model = models.Item
