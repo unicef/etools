@@ -2,7 +2,8 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Dict, List
 
-from django.db.models import QuerySet
+from django.db import connection
+from django.db.models import QuerySet, Value
 
 from etools.applications.last_mile import models
 from etools.applications.last_mile.validator_ext import ItemValidator, ValidatorEXT
@@ -88,7 +89,13 @@ class DataExportService:
             except (ValueError, TypeError):
                 raise InvalidDateFormatError("Invalid ISO 8601 format for 'last_modified'.")
 
-        return queryset.prepare_for_lm_export()
+        country_name = connection.tenant.name if hasattr(connection, 'tenant') else None
+        queryset = queryset.prepare_for_lm_export()
+        
+        if country_name:
+            queryset = queryset.annotate(country=Value(country_name))
+        
+        return queryset
 
 
 @dataclass

@@ -104,6 +104,11 @@ class InventoryItemListView(POIQuerysetMixin, ListAPIView):
         'material__purchase_group', 'material__purchase_group_description', 'material__temperature_group', 'mapped_description'
     )
 
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['country'] = connection.tenant.name
+        return context
+
     def get_queryset(self):
         if self.request.parser_context['kwargs'] and 'poi_pk' in self.request.parser_context['kwargs']:
             poi = get_object_or_404(self.get_poi_queryset(), pk=self.request.parser_context['kwargs']['poi_pk'])

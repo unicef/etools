@@ -190,6 +190,10 @@ class ItemListSerializer(serializers.ModelSerializer):
 class ItemSimpleListSerializer(serializers.ModelSerializer):
     material = MaterialSerializer()
     description = serializers.CharField(read_only=True)
+    country = serializers.SerializerMethodField()
+
+    def get_country(self, obj):
+        return self.context.get('country')
 
     class Meta:
         model = models.Item
