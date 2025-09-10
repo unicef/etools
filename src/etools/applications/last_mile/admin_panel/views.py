@@ -479,7 +479,8 @@ class TransferItemViewSet(mixins.ListModelMixin, GenericViewSet, mixins.CreateMo
         'transfer__unicef_release_order',
         'uom',
         'batch_id',
-        'material__original_uom'
+        'material__original_uom',
+        'quantity'
     )
 
     def get_queryset(self):
