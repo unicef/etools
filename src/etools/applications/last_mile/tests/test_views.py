@@ -382,6 +382,10 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(incoming.items.count(), len(response.data['items']))
         self.assertEqual(incoming.items.get(pk=item_1.pk).quantity, 11)
         self.assertEqual(incoming.items.get(pk=item_3.pk).quantity, 3)
+        self.assertEqual(incoming.items.get(pk=item_1.pk).base_quantity, 11)
+        self.assertEqual(incoming.items.get(pk=item_3.pk).base_quantity, 33)
+        self.assertEqual(incoming.items.get(pk=item_1.pk).base_uom, "EA")
+        self.assertEqual(incoming.items.get(pk=item_3.pk).base_uom, "EA")
         self.assertEqual(len(incoming.initial_items), 3)
 
         short_transfer = models.Transfer.objects.filter(transfer_type=models.Transfer.WASTAGE).first()
@@ -391,9 +395,13 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(short_transfer.items.count(), 2)
         loss_item_2 = short_transfer.items.order_by('id').last()
         self.assertEqual(loss_item_2.quantity, 22)
+        self.assertEqual(loss_item_2.base_quantity, 22)
+        self.assertEqual(loss_item_2.base_uom, "EA")
         self.assertIn(incoming, loss_item_2.transfers_history.all())
         self.assertTrue(models.TransferHistory.objects.filter(origin_transfer_id=incoming.id).exists())
         self.assertEqual(short_transfer.items.order_by('id').first().quantity, 30)
+        self.assertEqual(short_transfer.items.order_by('id').first().base_quantity, 33)
+        self.assertEqual(short_transfer.items.order_by('id').first().base_uom, "EA")
         self.assertEqual(short_transfer.origin_transfer, incoming)
 
     @override_settings(RUTF_MATERIALS=['1234'])
@@ -427,6 +435,11 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(self.incoming.items.get(pk=item_1.pk).quantity, 11)
         self.assertEqual(self.incoming.items.get(pk=item_2.pk).quantity, 22)
         self.assertEqual(self.incoming.items.get(pk=item_3.pk).quantity, 3)
+        self.assertEqual(self.incoming.items.get(pk=item_1.pk).base_quantity, 11)
+        self.assertEqual(self.incoming.items.get(pk=item_2.pk).base_quantity, 22)
+        self.assertEqual(self.incoming.items.get(pk=item_3.pk).base_quantity, 33)
+        self.assertEqual(self.incoming.items.get(pk=item_1.pk).base_uom, "EA")
+        self.assertEqual(self.incoming.items.get(pk=item_3.pk).base_uom, "EA")
 
         short_transfer = models.Transfer.objects.filter(
             transfer_type=models.Transfer.WASTAGE, transfer_subtype=models.Transfer.SHORT).first()

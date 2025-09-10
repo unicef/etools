@@ -482,8 +482,9 @@ class TransferCheckinSerializer(TransferBaseSerializer):
 
             instance = super().update(instance, validated_data)
             instance.items.exclude(material__partner_material__partner_organization=instance.partner_organization).update(hidden=True)
-            if not surplus_items and not short_items:
-                self.update_base_quantity_and_base_uom(instance.items.all())
+            excluded_item_ids = [item['id'] for item in short_items + surplus_items]
+            items_to_update = instance.items.exclude(id__in=excluded_item_ids)
+            self.update_base_quantity_and_base_uom(items_to_update)
             instance.refresh_from_db()
             is_unicef_warehouse = False
             if instance.origin_point:
