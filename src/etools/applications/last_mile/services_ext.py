@@ -91,10 +91,10 @@ class DataExportService:
 
         country_name = connection.tenant.name if hasattr(connection, 'tenant') else None
         queryset = queryset.prepare_for_lm_export()
-        
+
         if country_name:
             queryset = queryset.annotate(country=Value(country_name))
-        
+
         return queryset
 
 
