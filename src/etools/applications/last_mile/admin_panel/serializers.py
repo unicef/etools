@@ -662,9 +662,9 @@ class ItemStockManagementUpdateSerializer(serializers.ModelSerializer):
 
     @transaction.atomic
     def update(self, instance, validated_data):
-        if validated_data.get('quantity') != instance.quantity:
+        if validated_data.get('quantity') and validated_data.get('quantity') != instance.quantity:
             instance.quantity = validated_data['quantity']
-        if validated_data.get('uom') != instance.uom:
+        if validated_data.get('uom') and validated_data.get('uom') != instance.uom:
             instance.uom = validated_data['uom']
         instance.save()
         return instance
