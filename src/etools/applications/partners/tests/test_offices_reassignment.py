@@ -1,5 +1,3 @@
-import datetime
-
 from django.test import TestCase
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
@@ -57,5 +55,3 @@ class TestInterventionOfficesReassignment(BaseTenantTestCase, TestCase):
         offices_meta = self.intervention.metadata['offices']
         self.assertCountEqual(offices_meta.get('ids', []), [self.office_a.id, self.office_b.id])
         self.assertCountEqual(offices_meta.get('names', []), [self.office_a.name, self.office_b.name])
-
-
