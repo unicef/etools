@@ -70,7 +70,9 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,objective,Field Monitor,,draft,edit,TRUE
 ,objective,Field Monitor,,checklist,edit,TRUE
 ,objective,Field Monitor,,review,edit,TRUE
-
+,facility_types,Field Monitor,,draft,edit,TRUE
+,facility_types,Field Monitor,,checklist,edit,TRUE
+,facility_types,Field Monitor,,review,edit,TRUE
 
 ,location,All Users,,*,required,TRUE
 ,location_site,All Users,,*,required,FALSE
@@ -142,3 +144,4 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,additional_info,All Users,,draft,view,FALSE
 ,visit_goals,All Users,,*,view,TRUE
 ,objective,All Users,,*,view,TRUE
+,facility_types,All Users,,*,view,TRUE

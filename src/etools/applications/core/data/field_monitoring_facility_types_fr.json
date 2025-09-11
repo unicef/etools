@@ -1,0 +1,51 @@
+[
+  {
+    "model": "field_monitoring_planning.facilitytype",
+    "pk": 1,
+    "fields": {
+      "name": "Établissement de nutrition"
+    }
+  },
+  {
+    "model": "field_monitoring_planning.facilitytype",
+    "pk": 2,
+    "fields": {
+      "name": "Établissement de santé"
+    }
+  },
+  {
+    "model": "field_monitoring_planning.facilitytype",
+    "pk": 3,
+    "fields": {
+      "name": "Établissement WASH"
+    }
+  },
+  {
+    "model": "field_monitoring_planning.facilitytype",
+    "pk": 4,
+    "fields": {
+      "name": "Établissement d'éducation"
+    }
+  },
+  {
+    "model": "field_monitoring_planning.facilitytype",
+    "pk": 5,
+    "fields": {
+      "name": "Établissement de protection de l'enfant"
+    }
+  },
+  {
+    "model": "field_monitoring_planning.facilitytype",
+    "pk": 6,
+    "fields": {
+      "name": "Bureau du gouvernement ou d'OSC"
+    }
+  },
+  {
+    "model": "field_monitoring_planning.facilitytype",
+    "pk": 7,
+    "fields": {
+      "name": "Autre établissement"
+    }
+  }
+]
