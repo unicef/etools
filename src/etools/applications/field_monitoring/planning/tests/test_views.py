@@ -129,7 +129,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             MonitoringActivityFactory(monitor_type='staff'),
         ]
 
-        with self.assertNumQueries(9):
+        with self.assertNumQueries(10):
             self._test_list(self.unicef_user, activities, data={'page': 1, 'page_size': 10})
 
     def test_list_as_tpm_user(self):
@@ -144,7 +144,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             MonitoringActivityFactory(
                 monitor_type='staff', status='assigned')
         ]
-        with self.assertNumQueries(9):
+        with self.assertNumQueries(10):
             self._test_list(tpm_staff, [activities[0], activities[1]], data={'page': 1, 'page_size': 10})
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
@@ -877,7 +877,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             for _ in range(20)
         ]
 
-        with self.assertNumQueries(17):
+        with self.assertNumQueries(18):
             response = self.make_request_to_viewset(self.unicef_user, action='export', method='get', data={'page': 1, 'page_size': 100})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('Content-Disposition', response.headers)
@@ -1640,3 +1640,94 @@ class VisitGoalsTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenantTest
         valid_goals.reverse()
 
         self._test_list(self.unicef_user, valid_goals)
+
+
+class MonitoringActivityActionPointLocationValidationTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        call_command('update_action_points_permissions', verbosity=0)
+        call_command('update_notifications')
+
+        # Create monitoring activity with a visit lead (required for action point creation permissions)
+        cls.visit_lead = UserFactory(unicef_user=True)
+        cls.monitoring_activity = MonitoringActivityFactory(
+            status='completed',
+            visit_lead=cls.visit_lead
+        )
+        cls.active_location = LocationFactory(is_active=True)
+        cls.inactive_location = LocationFactory(is_active=False)
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_create_action_point_with_inactive_location_fails(self):
+        """Test that creating an action point with an inactive location fails"""
+        data = {
+            'description': 'Test action point',
+            'due_date': date.today() + timedelta(days=7),
+            'assigned_to': self.unicef_user.id,
+            'partner': PartnerFactory().id,
+            'intervention': InterventionFactory().id,
+            'cp_output': ResultFactory(result_type__name=ResultType.OUTPUT).id,
+            'category': ActionPointCategoryFactory(module='fm').id,
+            'section': SectionFactory().id,
+            'office': OfficeFactory().id,
+            'location': self.inactive_location.id,
+        }
+
+        response = self.forced_auth_req(
+            'post',
+            reverse('field_monitoring_planning:activity_action_points-list',
+                    kwargs={'monitoring_activity_pk': self.monitoring_activity.id}),
+            user=self.visit_lead,
+            data=data
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('location', response.data)
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_update_action_point_with_new_inactive_location_fails(self):
+        """Test that updating an action point with a new inactive location fails"""
+        action_point = MonitoringActivityActionPointFactory(
+            monitoring_activity=self.monitoring_activity,
+            location=self.active_location
+        )
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse('field_monitoring_planning:activity_action_points-detail',
+                    kwargs={'monitoring_activity_pk': self.monitoring_activity.id, 'pk': action_point.id}),
+            user=self.visit_lead,
+            data={'location': self.inactive_location.id}
+        )
+        # Debug: print actual response if it's not what we expect
+        if response.status_code != status.HTTP_400_BAD_REQUEST:
+            print(f"Expected 400, got {response.status_code}. Response: {response.data}")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('location', response.data)
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_update_action_point_keeping_existing_inactive_location_succeeds(self):
+        """Test that updating an action point while keeping its existing inactive location succeeds"""
+        action_point = MonitoringActivityActionPointFactory(
+            monitoring_activity=self.monitoring_activity,
+            location=self.inactive_location
+        )
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse('field_monitoring_planning:activity_action_points-detail',
+                    kwargs={'monitoring_activity_pk': self.monitoring_activity.id, 'pk': action_point.id}),
+            user=self.visit_lead,
+            data={'description': 'Updated description'}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Verify that we can explicitly set the same inactive location
+        response = self.forced_auth_req(
+            'patch',
+            reverse('field_monitoring_planning:activity_action_points-detail',
+                    kwargs={'monitoring_activity_pk': self.monitoring_activity.id, 'pk': action_point.id}),
+            user=self.visit_lead,
+            data={'location': self.inactive_location.id}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)

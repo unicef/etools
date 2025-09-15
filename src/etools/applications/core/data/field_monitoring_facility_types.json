@@ -1,0 +1,51 @@
+[
+  {
+    "model": "field_monitoring_planning.facilitytype",
+    "pk": 1,
+    "fields": {
+      "name": "Nutrition Facility"
+    }
+  },
+  {
+    "model": "field_monitoring_planning.facilitytype",
+    "pk": 2,
+    "fields": {
+      "name": "Health Facility"
+    }
+  },
+  {
+    "model": "field_monitoring_planning.facilitytype",
+    "pk": 3,
+    "fields": {
+      "name": "WASH Facility"
+    }
+  },
+  {
+    "model": "field_monitoring_planning.facilitytype",
+    "pk": 4,
+    "fields": {
+      "name": "Education Facility"
+    }
+  },
+  {
+    "model": "field_monitoring_planning.facilitytype",
+    "pk": 5,
+    "fields": {
+      "name": "Child Protection Facility"
+    }
+  },
+  {
+    "model": "field_monitoring_planning.facilitytype",
+    "pk": 6,
+    "fields": {
+      "name": "Government or CSO Office"
+    }
+  },
+  {
+    "model": "field_monitoring_planning.facilitytype",
+    "pk": 7,
+    "fields": {
+      "name": "Other Facility"
+    }
+  }
+]
