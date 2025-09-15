@@ -4,6 +4,7 @@ from etools.applications.core.models import BulkDeactivationLog
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.locations.models import Location
 from etools.applications.locations.services import LocationsDeactivationService
+from etools.applications.locations.views import LocationLightWithActiveSerializer
 from etools.applications.users.tests.factories import UserFactory
 
 
@@ -60,3 +61,15 @@ class TestLocationsDeactivationService(BaseTenantTestCase):
         self.assertEqual(log.app_label, "locations")
         # affected ids should include only those that were active
         self.assertCountEqual(log.affected_ids, [l.id for l in active_locs])
+
+    def test_light_serializer_returns_is_active_false_after_bulk_deactivate(self):
+        location = LocationFactory(is_active=True)
+        queryset = Location.objects.filter(id__in=[location.id])
+
+        service = LocationsDeactivationService()
+        service.deactivate(queryset)
+
+        location.refresh_from_db()
+        serialized = LocationLightWithActiveSerializer(location)
+        self.assertIn('is_active', serialized.data)
+        self.assertFalse(serialized.data['is_active'])
