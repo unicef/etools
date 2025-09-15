@@ -1,9 +1,13 @@
 from dataclasses import dataclass
 
+from django.db import connection
 from django.db.models import QuerySet
+
+from unicef_locations.cache import invalidate_cache
 
 from etools.applications.core.models import BulkDeactivationLog
 from etools.applications.locations.models import Location
+from etools.libraries.views.cache import invalidate_view_cache
 
 
 @dataclass
@@ -25,4 +29,8 @@ class LocationsDeactivationService:
                 model_name="Location",
                 app_label="locations",
             )
+            try:
+                invalidate_cache()
+            finally:
+                invalidate_view_cache('locations.{}'.format(connection.tenant.country_short_code or ''))
         return DeactivateLocationsResult(deactivated_count=updated)
