@@ -367,7 +367,10 @@ class EngagementViewSet(
 
         user_groups = self.request.user.groups.all()
 
-        if UNICEFUser.as_group() in user_groups or UNICEFAuditFocalPoint.as_group() in user_groups:
+        # an auditor from a different audit firm can download the engagement pdf
+        if (UNICEFUser.as_group() in user_groups or UNICEFAuditFocalPoint.as_group() in user_groups or
+            (self.action == 'export_pdf' and self.request.user.realms.filter(
+                country=connection.tenant, group=Auditor.as_group(), is_active=True).exists())):
             # no need to filter queryset
             pass
         elif Auditor.as_group() in user_groups:

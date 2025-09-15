@@ -2009,6 +2009,10 @@ class TestEngagementPDFExportViewSet(EngagementTransitionsTestCaseMixin, BaseTen
     def test_focal_point(self):
         self._test_pdf_view(self.unicef_focal_point)
 
+    def test_auditor_different_audit_firm(self):
+        new_auditor = AuditorUserFactory()
+        self._test_pdf_view(new_auditor)
+
 
 class TestEngagementCSVExportViewSet(EngagementTransitionsTestCaseMixin, BaseTenantTestCase):
     engagement_factory = MicroAssessmentFactory
