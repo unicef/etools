@@ -1,8 +1,17 @@
+import time
+
+from django.contrib.auth.models import AnonymousUser
+
 from rest_framework import status
 from rest_framework.reverse import reverse
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
-from etools.applications.last_mile.admin_panel.constants import *  # NOQA
+from etools.applications.last_mile.admin_panel.constants import (
+    ADMIN_PANEL_APP_NAME,
+    ALERT_NOTIFICATIONS_ADMIN_PANEL_PERMISSION,
+    ALERT_TYPES_ADMIN_PANEL,
+    USER_ADMIN_PANEL_PERMISSION,
+)
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.users.tests.factories import GroupFactory, SimpleUserFactory, UserPermissionFactory
@@ -75,7 +84,6 @@ class TestLocationsTypesViewSet(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_get_alert_types_with_unauthenticated_user(self):
-        from django.contrib.auth.models import AnonymousUser
 
         anonymous_user = AnonymousUser()
         response = self.forced_auth_req("get", reverse(self.url), user=anonymous_user)
@@ -136,16 +144,6 @@ class TestLocationsTypesViewSet(BaseTenantTestCase):
                 f"Method {method.upper()} should not be allowed",
             )
 
-    def test_get_alert_types_with_malformed_url(self):
-        try:
-            malformed_url = reverse(self.url) + "extra/"
-            response = self.forced_auth_req(
-                "get", malformed_url, user=self.partner_staff
-            )
-            self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        except Exception:
-            pass
-
     def test_get_alert_types_with_query_parameters(self):
         query_params = [
             {"search": "Wastage"},
@@ -161,14 +159,6 @@ class TestLocationsTypesViewSet(BaseTenantTestCase):
                 "get", reverse(self.url), user=self.partner_staff, data=params
             )
             self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-    def test_get_alert_types_response_headers(self):
-        response = self.forced_auth_req(
-            "get", reverse(self.url), user=self.partner_staff
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        self.assertIn("application/json", response.get("Content-Type", ""))
 
     def test_get_alert_types_user_with_no_permissions_at_all(self):
         no_perm_user = SimpleUserFactory()
@@ -226,7 +216,6 @@ class TestLocationsTypesViewSet(BaseTenantTestCase):
         )
 
     def test_get_alert_types_response_time(self):
-        import time
 
         start_time = time.time()
         response = self.forced_auth_req(

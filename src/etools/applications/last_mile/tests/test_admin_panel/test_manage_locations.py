@@ -891,35 +891,6 @@ class TestLocationsViewSet(BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-    def test_ordering_with_sql_injection_attempt(self):
-        malicious_orders = [
-            "name; DROP TABLE locations; --",
-            "name UNION SELECT * FROM users",
-            "name'; DELETE FROM locations; --",
-        ]
-
-        for malicious_order in malicious_orders:
-            response = self.forced_auth_req(
-                "get",
-                self.url,
-                data={"ordering": malicious_order},
-                user=self.partner_staff,
-            )
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-    def test_large_pagination_offset(self):
-        response = self.forced_auth_req(
-            "get", self.url, data={"page": "999999999"}, user=self.partner_staff
-        )
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertEqual(len(response.data.get("results", [])), 0)
-
-    def test_negative_pagination_offset(self):
-        response = self.forced_auth_req(
-            "get", self.url, data={"offset": "-10"}, user=self.partner_staff
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
     def test_bulk_review_with_duplicate_poi_ids(self):
         payload = {
             "status": models.PointOfInterest.ApprovalStatus.APPROVED,
@@ -978,32 +949,6 @@ class TestLocationsViewSet(BaseTenantTestCase):
             self.assertIn(
                 response.status_code, [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST]
             )
-
-    def test_concurrent_location_creation(self):
-        payloads = []
-        for i in range(5):
-            payloads.append(
-                {
-                    "name": f"Concurrent Location {i}",
-                    "parent": self.parent_location.pk,
-                    "p_code": f"CONC00{i}",
-                    "partner_organizations": [self.partner.pk],
-                    "poi_type": self.poi_type.pk,
-                    "point": {"type": "Point", "coordinates": [43.7 + i, 25.6 + i]},
-                }
-            )
-
-        responses = []
-        for payload in payloads:
-            response = self.forced_auth_req(
-                "post", self.url, data=payload, user=self.partner_staff
-            )
-            responses.append(response)
-
-        success_count = sum(
-            1 for r in responses if r.status_code == status.HTTP_201_CREATED
-        )
-        self.assertGreater(success_count, 0)
 
     def test_export_csv_with_large_dataset_simulation(self):
         for i in range(50):

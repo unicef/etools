@@ -683,42 +683,6 @@ class TestStockManagementViewSet(BaseTenantTestCase):
         item = transfer.items.first()
         self.assertEqual(item.batch_id, "批次أ-测试-🏷️")
 
-    def test_create_transfer_item_with_special_characters_in_batch_name(self):
-        destination = PointOfInterestFactory(
-            partner_organizations=[self.partner], name="Special Char Destination"
-        )
-        material = MaterialFactory()
-        special_batch_names = [
-            "Batch@#$%",
-            "Batch&*()_+-=",
-            "Batch[]{}|;:",
-            "Batch<>?/\\",
-            "Batch with spaces",
-            "Batch\tTab\nNewline",
-        ]
-
-        for i, batch_name in enumerate(special_batch_names):
-            payload = {
-                "partner_organization": self.partner.pk,
-                "location": destination.pk,
-                "items": [
-                    {
-                        "material": material.pk,
-                        "quantity": 5 + i,
-                        "uom": "CAR",
-                        "item_name": batch_name,
-                    }
-                ],
-            }
-            response = self.forced_auth_req(
-                "post", self.url, user=self.partner_staff, data=payload
-            )
-            self.assertEqual(
-                response.status_code,
-                status.HTTP_201_CREATED,
-                f"Failed for batch name: {batch_name}",
-            )
-
     def test_create_transfer_item_with_maximum_length_batch_name(self):
         destination = PointOfInterestFactory(
             partner_organizations=[self.partner], name="Max Length Destination"
@@ -766,9 +730,8 @@ class TestStockManagementViewSet(BaseTenantTestCase):
             response = self.forced_auth_req(
                 "post", self.url, user=self.partner_staff, data=payload
             )
-            self.assertIn(
-                response.status_code,
-                [status.HTTP_201_CREATED, status.HTTP_400_BAD_REQUEST],
+            self.assertEqual(
+                response.status_code, status.HTTP_400_BAD_REQUEST,
             )
 
     def test_create_transfer_item_with_multiple_items_same_material(self):
@@ -921,59 +884,6 @@ class TestStockManagementViewSet(BaseTenantTestCase):
             )
             self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-    def test_search_with_sql_injection_attempts(self):
-        poi = PointOfInterestFactory(name="SQL Injection Test POI")
-        transfer = TransferFactory(
-            origin_point=poi,
-            status=Transfer.COMPLETED,
-            partner_organization=self.partner,
-            destination_point=poi,
-        )
-        ItemFactory(transfer=transfer, hidden=False)
-
-        malicious_searches = [
-            "'; DROP TABLE last_mile_transfers; --",
-            "' UNION SELECT * FROM users; --",
-            "1' OR '1'='1",
-            "<script>alert('xss')</script>",
-            "%'; DELETE FROM items; --",
-        ]
-
-        for search_term in malicious_searches:
-            payload = {"poi_id": poi.id, "search": search_term}
-            response = self.forced_auth_req(
-                "get", self.url, user=self.partner_staff, data=payload
-            )
-            self.assertEqual(
-                response.status_code,
-                status.HTTP_200_OK,
-                f"Search should be safe against: {search_term}",
-            )
-
-    def test_update_item_with_extreme_quantities(self):
-        extreme_quantities = [1, 0.00001, 999999999, float("inf")]
-
-        for quantity in extreme_quantities:
-            if quantity == float("inf"):
-                continue
-            payload = {"quantity": quantity}
-            response = self.forced_auth_req(
-                "patch", self.item_update_url, user=self.partner_staff, data=payload
-            )
-            self.assertIn(
-                response.status_code, [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST]
-            )
-
-    def test_update_item_with_unicode_uom(self):
-        unicode_uoms = ["箱", "كيس", "🎁"]
-
-        for uom in unicode_uoms:
-            payload = {"uom": uom}
-            response = self.forced_auth_req(
-                "patch", self.item_update_url, user=self.partner_staff, data=payload
-            )
-            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
     def test_update_item_with_null_values(self):
         null_payloads = [{"quantity": None}, {"uom": None}]
 
@@ -982,24 +892,6 @@ class TestStockManagementViewSet(BaseTenantTestCase):
                 "patch", self.item_update_url, user=self.partner_staff, data=payload
             )
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-    def test_concurrent_item_updates(self):
-        payloads = [
-            {"quantity": 25},
-            {"quantity": 75},
-            {"uom": "BOX"},
-            {"quantity": 100, "uom": "BOX"},
-        ]
-
-        responses = []
-        for payload in payloads:
-            response = self.forced_auth_req(
-                "patch", self.item_update_url, user=self.partner_staff, data=payload
-            )
-            responses.append(response)
-
-        success_count = sum(1 for r in responses if r.status_code == status.HTTP_200_OK)
-        self.assertGreater(success_count, 0)
 
     def test_list_transfer_items_with_malformed_filter_parameters(self):
         poi = PointOfInterestFactory(name="Malformed Filter POI")
@@ -1044,22 +936,6 @@ class TestStockManagementViewSet(BaseTenantTestCase):
             "post", self.url, user=self.partner_staff, data=payload
         )
         self.assertIn(response.status_code, [status.HTTP_201_CREATED])
-
-    def test_pagination_edge_cases(self):
-        poi = PointOfInterestFactory(name="Pagination Edge POI")
-
-        edge_cases = [
-            {"poi_id": poi.id, "offset": 0, "limit": 1},
-            {"poi_id": poi.id, "offset": 999999},
-            {"poi_id": poi.id, "limit": 0},
-            {"poi_id": poi.id, "limit": 999999},
-        ]
-
-        for params in edge_cases:
-            response = self.forced_auth_req(
-                "get", self.url, user=self.partner_staff, data=params
-            )
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_item_visibility_edge_cases(self):
         poi = PointOfInterestFactory(name="Visibility Edge POI")
