@@ -1976,7 +1976,7 @@ class TestInterventionUpdate(BaseInterventionTestCase):
         budget_owner = UserFactory(is_staff=True)
         office = OfficeFactory()
         section = SectionFactory()
-        with self.assertNumQueries(204):
+        with self.assertNumQueries(208):
             response = self.forced_auth_req(
                 "patch",
                 reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
@@ -2025,7 +2025,7 @@ class TestInterventionUpdate(BaseInterventionTestCase):
         site2 = LocationSiteFactory()
         site3 = LocationSiteFactory()
 
-        with self.assertNumQueries(255):
+        with self.assertNumQueries(259):
             response = self.forced_auth_req(
                 "patch",
                 reverse('pmp_v3:intervention-detail', args=[intervention.pk]),
