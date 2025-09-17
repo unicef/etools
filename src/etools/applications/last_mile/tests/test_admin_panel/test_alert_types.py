@@ -111,7 +111,13 @@ class TestLocationsTypesViewSet(BaseTenantTestCase):
 
         self.assertEqual(response1.status_code, status.HTTP_200_OK)
         self.assertEqual(response2.status_code, status.HTTP_200_OK)
-        self.assertEqual(response1.data, response2.data)
+
+        alert_types1 = [alert_type["name"] for alert_type in response1.data]
+        alert_types2 = [alert_type["name"] for alert_type in response2.data]
+        self.assertEqual(alert_types1, alert_types2)
+        self.assertEqual(alert_types1[0], "Wastage Notification")
+        self.assertEqual(alert_types1[1], "Acknowledgement by IP")
+        self.assertEqual(alert_types1[2], "Waybill Recipient")
 
     def test_get_alert_types_with_different_user_organizations(self):
         other_org = OrganizationFactory(name="Other Organization")
