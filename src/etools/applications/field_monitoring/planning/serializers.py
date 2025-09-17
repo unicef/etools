@@ -299,10 +299,11 @@ class FMUserSerializer(MinimalUserSerializer):
     name = serializers.SerializerMethodField()
     user_type = serializers.SerializerMethodField()
     tpm_partner = serializers.ReadOnlyField(allow_null=True)
+    has_active_realm = serializers.SerializerMethodField()
 
     class Meta(MinimalUserSerializer.Meta):
         fields = MinimalUserSerializer.Meta.fields + (
-            'user_type', 'tpm_partner'
+            'user_type', 'tpm_partner', 'has_active_realm'
         )
 
     def get_user_type(self, obj):
@@ -318,6 +319,9 @@ class FMUserSerializer(MinimalUserSerializer):
         else:
             status = _('Inactive')
         return f"[{status}] {obj.get_full_name()}"
+
+    def get_has_active_realm(self, obj):
+        return getattr(obj, 'has_active_realm', None)
 
 
 class CPOutputListSerializer(MinimalOutputListSerializer):

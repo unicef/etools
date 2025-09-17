@@ -191,7 +191,7 @@ class MinimalUserSerializer(SimpleUserSerializer):
 
     class Meta:
         model = get_user_model()
-        fields = ('id', 'name', 'first_name', 'middle_name', 'last_name')
+        fields = ('id', 'name', 'first_name', 'middle_name', 'last_name', 'is_active')
 
 
 class UserCreationSerializer(serializers.ModelSerializer):
