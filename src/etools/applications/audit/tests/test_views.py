@@ -1427,13 +1427,15 @@ class TestStaffSpotCheck(AuditTestCaseMixin, BaseTenantTestCase):
     def test_update_financial_finding_set(self):
         auditor_firm = AuditPartnerFactory(unicef_users_allowed=True)
         auditor = AuditorUserFactory(partner_firm=auditor_firm, realms__data=[UNICEFUser.name, Auditor.name])
+        auditor.profile.organization = auditor_firm.organization
+        auditor.profile.save()
 
         staff_spot_check = SpotCheckFactory(staff_members=[auditor], status='partner_contacted')
         staff_spot_check.exchange_rate = 2
         staff_spot_check.save(update_fields=['exchange_rate'])
 
-        staff_spot_check.agreement.auditor_firm.unicef_users_allowed = True
-        staff_spot_check.agreement.auditor_firm.save(update_fields=['unicef_users_allowed'])
+        staff_spot_check.agreement.auditor_firm = auditor_firm
+        staff_spot_check.agreement.save(update_fields=['auditor_firm'])
 
         self.assertEqual(staff_spot_check.financial_finding_set.count(), 0)
         self.assertEqual(staff_spot_check.total_amount_of_ineligible_expenditure_local, 0)
