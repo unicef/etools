@@ -13,6 +13,7 @@ from etools.applications.partners.tests.factories import (
     InterventionResultLinkFactory,
 )
 from etools.applications.reports.models import InterventionActivityItem, InterventionTimeFrame, ResultType
+from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
 from etools.applications.reports.tests.factories import (
     InterventionActivityFactory,
     InterventionActivityItemFactory,
@@ -477,6 +478,80 @@ class TestFunctionality(BaseTestCase):
         self.assertEqual(response.data['is_active'], False)
         self.activity.refresh_from_db()
         self.assertEqual(self.activity.is_active, False)
+
+    def test_deactivate_activity_draft_pd_with_dct_allows(self):
+        # PD is Draft (default from setUp). Add FR with amounts > 0; deactivation should be allowed
+        FundsReservationHeaderFactory(
+            intervention=self.intervention,
+            actual_amt=100,
+            outstanding_amt=50,
+        )
+        self.assertEqual(self.activity.is_active, True)
+        response = self.forced_auth_req(
+            'patch', self.detail_url,
+            user=self.user,
+            data={'is_active': False}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.activity.refresh_from_db()
+        self.assertEqual(self.activity.is_active, False)
+
+    def test_deactivate_activity_active_pd_no_dct_allows(self):
+        # PD Active, but FR amounts are 0; deactivation should be allowed
+        self.intervention.status = Intervention.ACTIVE
+        self.intervention.save()
+        FundsReservationHeaderFactory(
+            intervention=self.intervention,
+            actual_amt=0,
+            outstanding_amt=0,
+        )
+        self.assertTrue(self.activity.is_active)
+        response = self.forced_auth_req(
+            'patch', self.detail_url,
+            user=self.user,
+            data={'is_active': False}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.activity.refresh_from_db()
+        self.assertFalse(self.activity.is_active)
+
+    def test_deactivate_activity_active_pd_with_actual_blocks(self):
+        # PD Active, FR has actual > 0; deactivation should be blocked (400)
+        self.intervention.status = Intervention.ACTIVE
+        self.intervention.save()
+        FundsReservationHeaderFactory(
+            intervention=self.intervention,
+            actual_amt=10,
+            outstanding_amt=0,
+        )
+        response = self.forced_auth_req(
+            'patch', self.detail_url,
+            user=self.user,
+            data={'is_active': False}
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
+        self.assertIn('Direct Cash Transfers', str(response.data))
+        self.activity.refresh_from_db()
+        self.assertTrue(self.activity.is_active)
+
+    def test_deactivate_activity_active_pd_with_outstanding_blocks(self):
+        # PD Active, FR has outstanding > 0; deactivation should be blocked (400)
+        self.intervention.status = Intervention.ACTIVE
+        self.intervention.save()
+        FundsReservationHeaderFactory(
+            intervention=self.intervention,
+            actual_amt=0,
+            outstanding_amt=15,
+        )
+        response = self.forced_auth_req(
+            'patch', self.detail_url,
+            user=self.user,
+            data={'is_active': False}
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
+        self.assertIn('Direct Cash Transfers', str(response.data))
+        self.activity.refresh_from_db()
+        self.assertTrue(self.activity.is_active)
 
 
 class TestPermissions(BaseTestCase):
