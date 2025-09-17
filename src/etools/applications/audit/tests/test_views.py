@@ -1642,21 +1642,50 @@ class TestAuditMetadataDetailViewSet(TestMetadataDetailViewSet, BaseTenantTestCa
         self.assertIn('PUT', response.data['actions'])
         self.assertIn('face_forms', response.data['actions']['PUT'])
 
-        def test_face_forms_not_editable(self):
-            audit = self.engagement_factory(
-                staff_members=[self.auditor], agreement__auditor_firm=self.auditor_firm,
-                date_of_comments_by_unicef=datetime.date.today()
-            )
-            self.assertEqual(audit.status, Engagement.PARTNER_CONTACTED)
-            self.assertEqual(audit.displayed_status, 'comments_received_by_unicef')
-            response = self.forced_auth_req(
-                'options',
-                '/api/audit/{}/{}/'.format(self.endpoint, audit.id),
-                user=self.unicef_focal_point
-            )
+    def test_face_forms_not_editable(self):
+        audit = self.engagement_factory(
+            staff_members=[self.auditor], agreement__auditor_firm=self.auditor_firm,
+            date_of_comments_by_unicef=datetime.date.today()
+        )
+        self.assertEqual(audit.status, Engagement.PARTNER_CONTACTED)
+        self.assertEqual(audit.displayed_status, 'comments_received_by_unicef')
+        response = self.forced_auth_req(
+            'options',
+            '/api/audit/{}/{}/'.format(self.endpoint, audit.id),
+            user=self.unicef_focal_point
+        )
 
-            self.assertIn('PUT', response.data['actions'])
-            self.assertNotIn('face_forms', response.data['actions']['PUT'])
+        self.assertIn('PUT', response.data['actions'])
+        self.assertNotIn('face_forms', response.data['actions']['PUT'])
+
+    def test_report_not_editable_for_unicef_auditor(self):
+        audit = self.engagement_factory(
+            staff_members=[self.auditor], agreement__auditor_firm=self.auditor_firm,
+        )
+        face_1 = FaceFormFactory(amount_usd=100.25, amount_local=9550.55, exchange_rate=95.27)
+        audit.face_forms.add(face_1)
+
+        unicef_auditor = UserFactory(realms__data=['UNICEF User', 'UNICEF Audit Focal Point', 'Auditor'])
+        RealmFactory(
+            user=unicef_auditor, group=Auditor.as_group(),
+            organization=self.auditor_firm.organization, country=connection.tenant)
+        audit.staff_members.add(unicef_auditor)
+
+        self.assertEqual(unicef_auditor.profile.organization.name, 'UNICEF')
+        self.assertEqual(audit.status, Engagement.PARTNER_CONTACTED)
+
+        response = self.forced_auth_req(
+            'options',
+            '/api/audit/{}/{}/'.format(self.endpoint, audit.id),
+            user=unicef_auditor
+        )
+
+        self.assertIn('PUT', response.data['actions'])
+        for field in ['currency_of_report', 'date_of_field_visit', 'date_of_draft_report_to_ip',
+                      'date_of_comments_by_ip', 'date_of_draft_report_to_unicef', 'date_of_comments_by_unicef',
+                      'audited_expenditure_local', 'financial_finding_set', 'audit_opinion',
+                      'key_internal_weakness', 'key_internal_controls']:
+            self.assertNotIn(field, response.data['actions']['PUT'])
 
 
 class TestSpotCheckMetadataDetailViewSet(TestMetadataDetailViewSet, BaseTenantTestCase):

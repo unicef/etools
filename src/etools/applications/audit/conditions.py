@@ -25,7 +25,8 @@ class EngagementStaffMemberCondition(SimpleCondition):
         self.user = user
 
     def is_satisfied(self):
-        return self.user in self.engagement.staff_members.all()
+        return (self.user in self.engagement.staff_members.all() and
+                self.user.profile.organization == self.engagement.agreement.auditor_firm.organization)
 
 
 class IsUnicefUserCondition(SimpleCondition):
