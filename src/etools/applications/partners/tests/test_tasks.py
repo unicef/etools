@@ -1260,8 +1260,8 @@ class SendPDToVisionTestCase(BaseTenantTestCase):
             intervention=cls.active_intervention,
             cp_output__result_type__name=ResultType.OUTPUT,
         )
-        cls.pd_output = LowerResultFactory(result_link=cls.result_link)
-        cls.activity = InterventionActivityFactory(result=cls.pd_output)
+        cls.pd_output = LowerResultFactory(result_link=cls.result_link, code="0", name="Lower Result 0")
+        cls.activity = InterventionActivityFactory(result=cls.pd_output, name="Distribute kits")
 
     def test_sync_validation_error(self, logger_mock):
         etools.applications.partners.tasks.send_pd_to_vision(connection.tenant.name, self.draft_intervention.pk)
@@ -1300,6 +1300,27 @@ class SendPDToVisionTestCase(BaseTenantTestCase):
         str_data = synchronizer.render()
         self.assertIsInstance(str_data, bytes)
         self.assertGreater(len(str_data), 100)
+
+    @mock.patch(
+        'etools.applications.partners.synchronizers.requests.post',
+        return_value=namedtuple('Response', ['status_code', 'text', 'json'])(200, '{}', lambda: {})
+    )
+    def test_payload_sent_to_vision_contain_code_prefix(self, requests_mock, _logger_mock):
+        etools.applications.partners.tasks.send_pd_to_vision(connection.tenant.name, self.active_intervention.pk)
+
+        sent_body = requests_mock.mock_calls[0][2]['data']
+        payload = json.loads(sent_body)
+
+        result_links = payload.get('result_links', [])
+        ll_results = result_links[0].get('ll_results', [])
+        activities = ll_results[0].get('activities', [])
+
+        matched = {a.get('id'): a for a in activities}.get(self.activity.id)
+        self.assertIsNotNone(matched, 'Created activity must be present in payload')
+        self.assertTrue(
+            matched['name'].startswith(f"{self.activity.code} "),
+            f"Activity name should start with code prefix. Got: {matched['name']}"
+        )
 
 
 class TestRealmsPRPExport(BaseTenantTestCase):

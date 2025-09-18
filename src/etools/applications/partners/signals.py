@@ -68,3 +68,16 @@ def sync_budget_owner_to_amendment(instance: Intervention, created: bool, **kwar
         for amendment in instance.amendments.filter(is_active=True):
             amendment.amended_intervention.budget_owner_id = instance.budget_owner_id
             amendment.amended_intervention.save()
+
+
+@receiver(m2m_changed, sender=Intervention.offices.through)
+def update_metadata_on_offices_change(sender, instance: Intervention, action, reverse, pk_set, *args, **kwargs):
+    if action in ('post_add', 'post_remove', 'post_clear'):
+        offices_qs = instance.offices.all()
+        offices_data = {
+            'ids': list(offices_qs.values_list('id', flat=True)),
+            'names': list(offices_qs.values_list('name', flat=True)),
+        }
+        metadata = instance.metadata or {}
+        metadata['offices'] = offices_data
+        Intervention.objects.filter(pk=instance.pk).update(metadata=metadata)

@@ -33,6 +33,11 @@ class GroupEditPermissionMixin:
         "PME": {"tpm": TPM_ACTIVE_GROUPS},
         "Partnership Manager": {"partner": AMP_ACTIVE_GROUPS},
         "UNICEF Audit Focal Point": {"audit": ["Auditor"]},
+        "User Reviewer": {
+            "audit": ["Auditor"],
+            "partner": AMP_ACTIVE_GROUPS,
+            "tpm": TPM_ACTIVE_GROUPS,
+        }
     }
 
     CAN_ADD_USER = ["IP Admin", "IP Authorized Officer", "PME",

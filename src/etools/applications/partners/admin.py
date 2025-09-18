@@ -320,11 +320,12 @@ class InterventionAdmin(
     )
     filter_horizontal = (
         'sections',
+        'offices',
         'unicef_focal_points',
         'partner_focal_points',
         'flat_locations'
     )
-    country_office_admin_editable = ('unicef_court', )
+    country_office_admin_editable = ('unicef_court', 'offices')
     fieldsets = (
         (_('Intervention Details'), {
             'fields':
@@ -339,6 +340,7 @@ class InterventionAdmin(
                     'country_programmes',
                     'submission_date',
                     'sections',
+                    'offices',
                     'flat_locations',
                     'metadata',
                 )
