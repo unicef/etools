@@ -446,7 +446,7 @@ class StagedUserViewSet(
             raise ValidationError(ex.messages)
 
         staged_user.user_json.update({"organization": staged_user.organization.id})
-        request.user = staged_user.requester
+
         user_serializer = UserRealmCreateSerializer(data=staged_user.user_json, context={'request': request})
         if user_serializer.is_valid(raise_exception=True):
             user_serializer.save()
