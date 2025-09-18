@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-01 17:55+0200\n"
+"POT-Creation-Date: 2025-09-18 13:14+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -298,9 +298,6 @@ msgstr "فئة نقطة العمل"
 msgid "Priority"
 msgstr "الأولوية"
 
-msgid "Cannot assign inactive location \"{}\". Please choose an active location."
-msgstr "لا يمكن تعيين موقع غير نشط \"{}\". يرجى اختيار موقع نشط."
-
 msgid "TPM Concern Category"
 msgstr ""
 
@@ -312,6 +309,9 @@ msgstr "النماذج"
 
 msgid "Attachments"
 msgstr "المرفقات"
+
+#~ msgid "Cannot assign inactive location \"{}\". Please choose an active location."
+#~ msgstr "لا يمكن تعيين موقع غير نشط \"{}\". يرجى اختيار موقع نشط."
 
 #~ msgid "Type Of Facility"
 #~ msgstr "نوع المنشأة"
