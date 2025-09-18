@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-01 17:55+0200\n"
+"POT-Creation-Date: 2025-09-18 16:39+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -298,9 +298,6 @@ msgstr "Categoría de Punto de Acción"
 msgid "Priority"
 msgstr "Prioridad"
 
-msgid "Cannot assign inactive location \"{}\". Please choose an active location."
-msgstr "No se puede asignar una ubicación inactiva \"{}\". Por favor, elija una ubicación activa."
-
 msgid "TPM Concern Category"
 msgstr ""
 
@@ -312,6 +309,9 @@ msgstr "Plantillas"
 
 msgid "Attachments"
 msgstr "Archivos adjuntos"
+
+#~ msgid "Cannot assign inactive location \"{}\". Please choose an active location."
+#~ msgstr "No se puede asignar una ubicación inactiva \"{}\". Por favor, elija una ubicación activa."
 
 #~ msgid "Type Of Facility"
 #~ msgstr "Tipo de instalación"
