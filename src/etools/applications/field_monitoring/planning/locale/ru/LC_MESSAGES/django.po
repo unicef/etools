@@ -234,6 +234,9 @@ msgstr "Причина отмены"
 msgid "Objective"
 msgstr "Цель"
 
+msgid "Type Of Facility"
+msgstr "Тип объекта"
+
 msgid "Monitoring Activity"
 msgstr "Мониторинг активности"
 
