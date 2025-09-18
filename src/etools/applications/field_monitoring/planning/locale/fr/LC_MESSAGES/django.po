@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-08-04 07:25+0000\n"
+"POT-Creation-Date: 2025-09-18 16:39+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -25,29 +25,18 @@ msgid "Staff members do not belong to the selected partner"
 msgstr "Les membres du personnel n'appartiennent pas au partenaire sélectionné"
 
 #, python-format
-msgid ""
-"You've selected a PD/SPD and unselected some of it's corresponding partners, "
-"please either remove the PD or add the partners back before saving: %s"
-msgstr ""
-"Vous avez sélectionné un PD/SSFA et désélectionné certains de ses "
-"partenaires correspondants, veuillez supprimer le PD ou rajouter les "
-"partenaires avant de sauvegarder: %s"
+msgid "You've selected a PD/SPD and unselected some of it's corresponding partners, please either remove the PD or add the partners back before saving: %s"
+msgstr "Vous avez sélectionné un PD/SSFA et désélectionné certains de ses partenaires correspondants, veuillez supprimer le PD ou rajouter les partenaires avant de sauvegarder: %s"
 
 #, python-format
-msgid ""
-"You've selected a PD/SPD and unselected some of it's corresponding outputs, "
-"please either remove the PD or add the outputs back before saving: %s"
-msgstr ""
-"Vous avez sélectionné un PD/SSFA et désélectionné certaines de ses produits "
-"correspondantes, veuillez supprimer le PD ou rajouter les produits avant "
-"d'enregistrer: %s"
+msgid "You've selected a PD/SPD and unselected some of it's corresponding outputs, please either remove the PD or add the outputs back before saving: %s"
+msgstr "Vous avez sélectionné un PD/SSFA et désélectionné certaines de ses produits correspondantes, veuillez supprimer le PD ou rajouter les produits avant d'enregistrer: %s"
 
 msgid "Partner is not defined for TPM activity"
 msgstr "Le partenaire n'est pas défini pour l'activité TPM"
 
 msgid "At least one Partner, CP Output or PD/SPD should be added"
-msgstr ""
-"Au moins un partenaire, un produit du CP ou un PD/SSFA doit être ajouté"
+msgstr "Au moins un partenaire, un produit du CP ou un PD/SSFA doit être ajouté"
 
 msgid "Rejection reason should be provided."
 msgstr "La raison du rejet doit être fournie."
@@ -234,6 +223,9 @@ msgstr "Motif d'annulation"
 msgid "Objective"
 msgstr "Objectif"
 
+msgid "Facility types"
+msgstr ""
+
 msgid "Monitoring Activity"
 msgstr "Activité de suivi"
 
@@ -317,6 +309,12 @@ msgstr "Modèles"
 
 msgid "Attachments"
 msgstr "Pièces jointes"
+
+#~ msgid "Cannot assign inactive location \"{}\". Please choose an active location."
+#~ msgstr "Impossible d'assigner un emplacement inactif \"{}\". Veuillez choisir un emplacement actif."
+
+#~ msgid "Type Of Facility"
+#~ msgstr "Type d'installation"
 
 #~ msgid "Invited"
 #~ msgstr "Invité"

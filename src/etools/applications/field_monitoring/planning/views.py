@@ -1,4 +1,5 @@
 import logging
+import re
 from datetime import date
 
 from django.contrib.auth import get_user_model
@@ -51,6 +52,7 @@ from etools.applications.field_monitoring.planning.filters import (
 )
 from etools.applications.field_monitoring.planning.mixins import EmptyQuerysetForExternal
 from etools.applications.field_monitoring.planning.models import (
+    FacilityType,
     MonitoringActivity,
     MonitoringActivityActionPoint,
     TPMConcern,
@@ -60,6 +62,7 @@ from etools.applications.field_monitoring.planning.models import (
 from etools.applications.field_monitoring.planning.serializers import (
     CPOutputListSerializer,
     DuplicateMonitoringActivitySerializer,
+    FacilityTypeSerializer,
     FMUserSerializer,
     InterventionWithLinkedInstancesSerializer,
     MonitoringActivityActionPointSerializer,
@@ -155,6 +158,11 @@ class VisitGoalsViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = VisitGoalSerializer
 
 
+class FacilityTypesViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = FacilityType.objects.all()
+    serializer_class = FacilityTypeSerializer
+
+
 class MonitoringActivitiesViewSet(
     ValidatorViewMixin,
     FMBaseViewSet,
@@ -167,8 +175,9 @@ class MonitoringActivitiesViewSet(
         .annotate(checklists_count=Count('checklists'))\
         .select_related('tpm_partner', 'tpm_partner__organization',
                         'visit_lead', 'location', 'location_site')\
-        .prefetch_related('team_members', 'partners', 'partners__organization', 'report_reviewers',
-                          'interventions', 'cp_outputs', 'sections', 'visit_goals')\
+        .prefetch_related('team_members', 'partners', 'partners__organization',
+                          'report_reviewers', 'interventions', 'cp_outputs',
+                          'sections', 'visit_goals', 'facility_types')\
         .order_by("-id")
     serializer_class = MonitoringActivitySerializer
     serializer_action_classes = {
@@ -262,6 +271,40 @@ class MonitoringActivitiesViewSet(
     @action(detail=True, methods=['get'], url_path='pdf')
     def visit_pdf(self, request, *args, **kwargs):
         ma = self.get_object()
+
+        def _sanitize_html(value):
+            if not isinstance(value, str):
+                return value
+            # remove <img ...> tags
+            value = re.sub(r'<\s*img[^>]*?>', '', value, flags=re.IGNORECASE)
+            # remove style attributes that contain url(...)
+            value = re.sub(r'\sstyle=\"[^\"]*?url\([^)]*\)[^\"]*?\"', '', value, flags=re.IGNORECASE)
+            value = re.sub(r"\sstyle='[^']*?url\([^)]*\)[^']*?'", '', value, flags=re.IGNORECASE)
+            # remove bare url(...) occurrences inside inline CSS
+            value = re.sub(r'url\([^)]*\)', '', value, flags=re.IGNORECASE)
+            return value
+
+        def _sanitize_overall_findings(findings):
+            for item in findings:
+                if 'narrative_finding' in item:
+                    item['narrative_finding'] = _sanitize_html(item['narrative_finding'])
+            return findings
+
+        def _sanitize_summary_findings(findings):
+            for item in findings:
+                if 'value' in item:
+                    item['value'] = _sanitize_html(item['value'])
+            return findings
+
+        def _sanitize_data_collected(data_list):
+            for checklist in data_list:
+                for overall in checklist.get('overall', []):
+                    if 'narrative_finding' in overall:
+                        overall['narrative_finding'] = _sanitize_html(overall['narrative_finding'])
+                    for finding in overall.get('findings', []):
+                        if 'value' in finding:
+                            finding['value'] = _sanitize_html(finding['value'])
+            return data_list
         context = {
             "workspace": connection.tenant.name,
             "ma": ma,
@@ -272,9 +315,9 @@ class MonitoringActivitiesViewSet(
             "team_members": ', '.join([member.full_name for member in ma.team_members.all()]),
             "cp_outputs": ', '.join([cp_out.name for cp_out in ma.cp_outputs.all()]),
             "interventions": ', '.join([str(intervention) for intervention in ma.interventions.all()]),
-            "overall_findings": list(ma.activity_overall_findings().values('entity_name', 'narrative_finding', 'on_track')),
-            "summary_findings": ma.get_export_activity_questions_overall_findings(),
-            "data_collected": ma.get_export_checklist_findings(),
+            "overall_findings": _sanitize_overall_findings(list(ma.activity_overall_findings().values('entity_name', 'narrative_finding', 'on_track'))),
+            "summary_findings": _sanitize_summary_findings(list(ma.get_export_activity_questions_overall_findings())),
+            "data_collected": _sanitize_data_collected(list(ma.get_export_checklist_findings())),
             "action_points": ma.get_export_action_points(request),
             "related_attachments": ma.get_export_related_attachments(request),
             "reported_attachments": ma.get_export_reported_attachments(request),

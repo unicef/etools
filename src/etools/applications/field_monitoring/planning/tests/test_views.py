@@ -129,7 +129,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             MonitoringActivityFactory(monitor_type='staff'),
         ]
 
-        with self.assertNumQueries(9):
+        with self.assertNumQueries(10):
             self._test_list(self.unicef_user, activities, data={'page': 1, 'page_size': 10})
 
     def test_list_as_tpm_user(self):
@@ -144,7 +144,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             MonitoringActivityFactory(
                 monitor_type='staff', status='assigned')
         ]
-        with self.assertNumQueries(9):
+        with self.assertNumQueries(10):
             self._test_list(tpm_staff, [activities[0], activities[1]], data={'page': 1, 'page_size': 10})
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
@@ -859,6 +859,32 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         self.assertIn('Content-Disposition', response.headers)
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_visit_pdf_export_with_external_image_in_narrative_succeeds(self):
+        partner = PartnerFactory()
+        activity = MonitoringActivityFactory(partners=[partner])
+        # Ensure summary findings exist as in the working test
+        ActivityQuestionOverallFinding.objects.create(
+            activity_question=ActivityQuestionFactory(
+                question__level='partner',
+                monitoring_activity=activity,
+            ),
+            value='ok',
+        )
+        # Inject an external image in the narrative to trigger the media path restriction
+        html_with_external_img = '<p>Overview</p><p><img src="https://example.com/test.png" /></p>'
+        ActivityOverallFinding.objects.create(
+            partner=partner,
+            narrative_finding=html_with_external_img,
+            monitoring_activity=activity,
+        )
+
+        response = self.make_request_to_viewset(
+            self.fm_user, action='visit-pdf', method='get', instance=activity)
+        # After sanitization, PDF should render successfully
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('Content-Disposition', response.headers)
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_visits_csv_export(self):
         MonitoringActivityFactory(status='draft')
         MonitoringActivityFactory(status='assigned')
@@ -877,7 +903,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             for _ in range(20)
         ]
 
-        with self.assertNumQueries(17):
+        with self.assertNumQueries(18):
             response = self.make_request_to_viewset(self.unicef_user, action='export', method='get', data={'page': 1, 'page_size': 100})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('Content-Disposition', response.headers)

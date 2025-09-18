@@ -1,0 +1,51 @@
+[
+  {
+    "model": "field_monitoring_planning.facilitytype",
+    "pk": 1,
+    "fields": {
+      "name": "Instalación de Nutrición"
+    }
+  },
+  {
+    "model": "field_monitoring_planning.facilitytype",
+    "pk": 2,
+    "fields": {
+      "name": "Instalación de Salud"
+    }
+  },
+  {
+    "model": "field_monitoring_planning.facilitytype",
+    "pk": 3,
+    "fields": {
+      "name": "Instalación de WASH"
+    }
+  },
+  {
+    "model": "field_monitoring_planning.facilitytype",
+    "pk": 4,
+    "fields": {
+      "name": "Instalación Educativa"
+    }
+  },
+  {
+    "model": "field_monitoring_planning.facilitytype",
+    "pk": 5,
+    "fields": {
+      "name": "Instalación de Protección Infantil"
+    }
+  },
+  {
+    "model": "field_monitoring_planning.facilitytype",
+    "pk": 6,
+    "fields": {
+      "name": "Oficina del Gobierno o OSC"
+    }
+  },
+  {
+    "model": "field_monitoring_planning.facilitytype",
+    "pk": 7,
+    "fields": {
+      "name": "Otra Instalación"
+    }
+  }
+]
