@@ -674,6 +674,17 @@ class ItemStockManagementUpdateSerializer(serializers.ModelSerializer):
         fields = ('quantity', 'uom')
 
 
+class ItemStockManagementDeleteSerializer(serializers.ModelSerializer):
+
+    @transaction.atomic
+    def delete(self, instance):
+        instance.hide()
+
+    class Meta:
+        model = models.Item
+        fields = ()
+
+
 class ItemTransferAdminSerializer(serializers.ModelSerializer):
     material = MaterialAdminSerializer()
     description = serializers.SerializerMethodField(read_only=True)

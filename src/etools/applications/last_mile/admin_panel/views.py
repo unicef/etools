@@ -39,6 +39,7 @@ from etools.applications.last_mile.admin_panel.serializers import (
     BulkReviewPointOfInterestSerializer,
     BulkUpdateLastMileProfileStatusSerializer,
     ImportFileSerializer,
+    ItemStockManagementDeleteSerializer,
     ItemStockManagementUpdateSerializer,
     ItemTransferAdminSerializer,
     LastMileUserProfileSerializer,
@@ -527,9 +528,14 @@ class TransferItemViewSet(mixins.ListModelMixin, GenericViewSet, mixins.CreateMo
         return Response({"valid": valid}, status=status.HTTP_200_OK)
 
 
-class ItemStockManagementView(mixins.UpdateModelMixin, mixins.RetrieveModelMixin, GenericViewSet):
+class ItemStockManagementView(mixins.UpdateModelMixin, mixins.RetrieveModelMixin, mixins.DestroyModelMixin, GenericViewSet):
     permission_classes = [IsLMSMAdmin]
     serializer_class = ItemStockManagementUpdateSerializer
+
+    def get_serializer_class(self):
+        if self.action == 'delete':
+            return ItemStockManagementDeleteSerializer
+        return self.serializer_class
 
     def get_queryset(self):
         return models.Item.objects.all()
