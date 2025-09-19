@@ -962,12 +962,6 @@ class TestStockManagementViewSet(BaseTenantTestCase):
         self.assertIn(visible_item.id, returned_item_ids)
         self.assertNotIn(hidden_item.id, returned_item_ids)
 
-    def test_soft_delete_item_success(self):
-        response = self.forced_auth_req(
-            "delete", self.item_update_url, user=self.partner_staff
-        )
-        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-
     def test_item_marked_as_hidden_after_soft_delete(self):
         item_id = self.item_for_update.id
         self.assertFalse(self.item_for_update.hidden)
@@ -998,12 +992,12 @@ class TestStockManagementViewSet(BaseTenantTestCase):
 
     def test_soft_deleted_item_not_in_default_queryset(self):
         item_id = self.item_for_update.id
-        self.assertTrue(ItemFactory._meta.model.objects.filter(id=item_id).exists())
+        self.assertTrue(Item.objects.filter(id=item_id).exists())
         response = self.forced_auth_req(
             "delete", self.item_update_url, user=self.partner_staff
         )
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-        self.assertFalse(ItemFactory._meta.model.objects.filter(id=item_id).exists())
+        self.assertFalse(Item.objects.filter(id=item_id).exists())
 
     def test_multiple_items_soft_delete_transfer_visibility(self):
         poi = PointOfInterestFactory(name="Multi Delete POI")
