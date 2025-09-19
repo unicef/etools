@@ -757,3 +757,100 @@ class UserPointsOfInterest(TimeStampedModel, models.Model):
         unique_together = ('user', 'point_of_interest')
         verbose_name = _('User Point of Interest')
         verbose_name_plural = _('User Points of Interest')
+
+
+class ItemAuditLog(TimeStampedModel, models.Model):
+    ACTION_CREATE = 'CREATE'
+    ACTION_UPDATE = 'UPDATE'
+    ACTION_DELETE = 'DELETE'
+    ACTION_SOFT_DELETE = 'SOFT_DELETE'
+
+    ACTION_CHOICES = (
+        (ACTION_CREATE, _('Created')),
+        (ACTION_UPDATE, _('Updated')),
+        (ACTION_DELETE, _('Deleted')),
+        (ACTION_SOFT_DELETE, _('Soft Deleted')),
+    )
+
+    item_id = models.PositiveIntegerField(verbose_name=_("Item ID"))
+    action = models.CharField(max_length=20, choices=ACTION_CHOICES, verbose_name=_("Action"))
+    changed_fields = models.JSONField(
+        verbose_name=_("Changed Fields"),
+        null=True,
+        blank=True,
+        help_text=_("List of field names that were changed")
+    )
+    old_values = models.JSONField(
+        verbose_name=_("Previous Values"),
+        null=True,
+        blank=True,
+        help_text=_("Previous values of tracked fields")
+    )
+    new_values = models.JSONField(
+        verbose_name=_("New Values"),
+        null=True,
+        blank=True,
+        help_text=_("New values of tracked fields")
+    )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='item_audit_logs',
+        verbose_name=_("User")
+    )
+    transfer_info = models.JSONField(
+        verbose_name=_("Transfer Information"),
+        null=True,
+        blank=True,
+        help_text=_("Transfer details at the time of audit")
+    )
+    material_info = models.JSONField(
+        verbose_name=_("Material Information"),
+        null=True,
+        blank=True,
+        help_text=_("Material details at the time of audit")
+    )
+    critical_changes = models.JSONField(
+        verbose_name=_("Critical Changes"),
+        null=True,
+        blank=True,
+        help_text=_("Important changes like transfer or material changes")
+    )
+    timestamp = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name=_("Timestamp")
+    )
+
+    class Meta:
+        ordering = ['-timestamp']
+        verbose_name = _('Item Audit Log')
+        verbose_name_plural = _('Item Audit Logs')
+        indexes = [
+            models.Index(fields=['item_id', '-timestamp']),
+            models.Index(fields=['action', '-timestamp']),
+            models.Index(fields=['user', '-timestamp']),
+        ]
+
+    def __str__(self):
+        return f'Item {self.item_id} - {self.get_action_display()} at {self.timestamp}'
+
+    @property
+    def item_exists(self):
+        return Item.objects.filter(id=self.item_id).exists()
+
+    def get_tracked_fields_display(self):
+        if not self.changed_fields:
+            return []
+
+        display_data = []
+        for field in self.changed_fields:
+            old_val = self.old_values.get(field) if self.old_values else None
+            new_val = self.new_values.get(field) if self.new_values else None
+            display_data.append({
+                'field': field,
+                'old_value': old_val,
+                'new_value': new_val
+            })
+        return display_data

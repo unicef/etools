@@ -1,4 +1,5 @@
 import logging
+from decimal import Decimal
 
 from django.contrib import admin
 from django.contrib.gis import forms
@@ -7,12 +8,15 @@ from django.db import transaction
 from django.db.models import CharField, Count, F, Prefetch, Value
 from django.db.models.functions import Coalesce
 from django.urls import reverse
+from django.utils.dateparse import parse_datetime
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 
 from unicef_attachments.admin import AttachmentSingleInline
 
 from etools.applications.last_mile import models
+from etools.applications.last_mile.audit_signals import audit_context
+from etools.applications.last_mile.config_audit import ITEM_AUDIT_LOG_TRACKED_FIELDS
 from etools.applications.organizations.models import Organization
 from etools.applications.partners.admin import AttachmentInlineAdminMixin
 from etools.applications.partners.models import PartnerOrganization
@@ -556,3 +560,190 @@ class PartnerMaterialAdmin(admin.ModelAdmin):
 
 
 admin.site.register(models.PointOfInterestType)
+
+
+@admin.register(models.ItemAuditLog)
+class ItemAuditLogAdmin(admin.ModelAdmin):
+    list_display = ('item_id', 'action', 'user', 'timestamp', 'changed_fields_display', 'transfer_display', 'view_item_link')
+    list_filter = ('action',)
+    search_fields = ('item_id', 'user__email', 'user__first_name', 'user__last_name')
+    readonly_fields = ('item_id', 'action', 'changed_fields', 'old_values', 'new_values',
+                       'user', 'transfer_info', 'material_info', 'critical_changes', 'timestamp', 'tracked_changes_display', 'transfer_details_display', 'item_exists')
+    ordering = ('-timestamp',)
+    date_hierarchy = 'timestamp'
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('user')
+
+    def changed_fields_display(self, obj):
+        if obj.changed_fields:
+            return ', '.join(obj.changed_fields)
+        return '-'
+    changed_fields_display.short_description = 'Changed Fields'
+
+    def tracked_changes_display(self, obj):
+        if not obj.changed_fields:
+            return '-'
+
+        changes = []
+        for field in obj.changed_fields:
+            old_val = self._format_field_value(obj.old_values.get(field, 'N/A') if obj.old_values else 'N/A')
+            new_val = self._format_field_value(obj.new_values.get(field, 'N/A') if obj.new_values else 'N/A')
+            changes.append(f"<b>{field}:</b> {old_val} → {new_val}")
+
+        return format_html('<br>'.join(changes))
+
+    def _format_field_value(self, value):
+        if value is None:
+            return 'None'
+        elif isinstance(value, dict):
+            if 'id' in value and 'str' in value:
+                return f"{value.get('str', 'N/A')} (ID: {value.get('id', 'N/A')})"
+            elif 'id' in value:
+                return f"ID: {value.get('id', 'N/A')}"
+            else:
+                return str(value)
+        elif isinstance(value, (list, tuple)):
+            return str(value)
+        else:
+            return str(value)
+    tracked_changes_display.short_description = 'Field Changes'
+
+    def transfer_display(self, obj):
+        if obj.transfer_info:
+            transfer_name = obj.transfer_info.get('transfer_name', 'N/A')
+            unicef_order = obj.transfer_info.get('unicef_release_order', '')
+            if unicef_order:
+                return f"{transfer_name} ({unicef_order})"
+            return transfer_name
+        return '-'
+    transfer_display.short_description = 'Transfer'
+
+    def transfer_details_display(self, obj):
+        if not obj.transfer_info:
+            return '-'
+
+        details = []
+        transfer_info = obj.transfer_info
+
+        details.append(f"<b>Transfer:</b> {transfer_info.get('transfer_name', 'N/A')}")
+        details.append(f"<b>Type:</b> {transfer_info.get('transfer_type', 'N/A')}")
+        details.append(f"<b>Status:</b> {transfer_info.get('transfer_status', 'N/A')}")
+
+        if transfer_info.get('unicef_release_order'):
+            details.append(f"<b>UNICEF Release Order:</b> {transfer_info['unicef_release_order']}")
+
+        if transfer_info.get('waybill_id'):
+            details.append(f"<b>Waybill ID:</b> {transfer_info['waybill_id']}")
+
+        if transfer_info.get('origin_point'):
+            origin = transfer_info['origin_point']
+            if origin and isinstance(origin, dict):
+                details.append(f"<b>Origin:</b> {origin.get('name', 'N/A')} ({origin.get('p_code', '')})")
+
+        if transfer_info.get('destination_point'):
+            dest = transfer_info['destination_point']
+            if dest and isinstance(dest, dict):
+                details.append(f"<b>Destination:</b> {dest.get('name', 'N/A')} ({dest.get('p_code', '')})")
+
+        if transfer_info.get('partner_organization'):
+            partner = transfer_info['partner_organization']
+            if partner and isinstance(partner, dict):
+                details.append(f"<b>Partner:</b> {partner.get('name', 'N/A')}")
+
+        return format_html('<br>'.join(details))
+    transfer_details_display.short_description = 'Transfer Details'
+
+    def item_exists(self, obj):
+        try:
+            models.Item.objects.get(id=obj.item_id)
+            return True
+        except models.Item.DoesNotExist:
+            return False
+    item_exists.short_description = 'Item Exists'
+    item_exists.boolean = True
+
+    def view_item_link(self, obj):
+        if self.item_exists(obj):
+            try:
+                url = reverse("admin:last_mile_item_change", args=[obj.item_id])
+                return format_html('<a href="{}" target="_blank">View Item</a>', url)
+            except Exception:
+                return format_html('<span style="color: red;">Item Deleted</span>')
+        return format_html('<span style="color: red;">Item Deleted</span>')
+    view_item_link.short_description = 'Item'
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_superuser
+
+    actions = ['revert_to_selected_state']
+
+    def revert_to_selected_state(self, request, queryset):
+        if queryset.count() != 1:
+            self.message_user(request, "Please select exactly one audit log entry to revert to.", level='error')
+            return
+
+        audit_log = queryset.first()
+
+        try:
+            success = self.revert_item_to_audit_state(audit_log, request.user)
+            if success:
+                self.message_user(request, f"Successfully reverted Item {audit_log.item_id} to state from {audit_log.timestamp}.")
+            else:
+                self.message_user(request, f"Failed to revert Item {audit_log.item_id}. Item may no longer exist.", level='error')
+        except Exception as e:
+            self.message_user(request, f"Error reverting item: {str(e)}", level='error')
+
+    revert_to_selected_state.short_description = "Revert item to this audit state"
+
+    def revert_item_to_audit_state(self, audit_log, reverting_user):
+
+        try:
+            item = models.Item.objects.get(id=audit_log.item_id)
+        except models.Item.DoesNotExist:
+            if audit_log.action == models.ItemAuditLog.ACTION_DELETE:
+                return False
+            return False
+
+        with audit_context(reverting_user):
+            with transaction.atomic():
+                if audit_log.action == models.ItemAuditLog.ACTION_CREATE:
+                    return False
+                elif audit_log.action in [models.ItemAuditLog.ACTION_UPDATE, models.ItemAuditLog.ACTION_DELETE]:
+                    if audit_log.old_values:
+                        self._apply_audit_values_to_item(item, audit_log.old_values)
+                    else:
+                        return False
+                elif audit_log.action == models.ItemAuditLog.ACTION_SOFT_DELETE:
+                    if audit_log.old_values:
+                        self._apply_audit_values_to_item(item, audit_log.old_values)
+                    else:
+                        return False
+                item.save()
+                return True
+
+        return False
+
+    def _apply_audit_values_to_item(self, item, audit_values):
+
+        for field_name, field_value in audit_values.items():
+            if field_name in ITEM_AUDIT_LOG_TRACKED_FIELDS and hasattr(item, field_name):
+                if field_name.endswith('_id') and isinstance(field_value, dict):
+                    setattr(item, field_name, field_value.get('id'))
+                elif field_name in ['expiry_date'] and field_value:
+
+                    if isinstance(field_value, str):
+                        setattr(item, field_name, parse_datetime(field_value))
+                    else:
+                        setattr(item, field_name, field_value)
+                elif field_name in ['conversion_factor', 'amount_usd'] and field_value is not None:
+
+                    setattr(item, field_name, Decimal(str(field_value)))
+                else:
+                    setattr(item, field_name, field_value)
