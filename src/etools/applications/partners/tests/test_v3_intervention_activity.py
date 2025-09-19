@@ -5,6 +5,7 @@ from django.urls import reverse
 from rest_framework import status
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
 from etools.applications.partners.models import Intervention
 from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, UNICEF_USER
 from etools.applications.partners.tests.factories import (
@@ -13,7 +14,6 @@ from etools.applications.partners.tests.factories import (
     InterventionResultLinkFactory,
 )
 from etools.applications.reports.models import InterventionActivityItem, InterventionTimeFrame, ResultType
-from etools.applications.funds.tests.factories import FundsReservationHeaderFactory
 from etools.applications.reports.tests.factories import (
     InterventionActivityFactory,
     InterventionActivityItemFactory,
