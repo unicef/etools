@@ -499,6 +499,7 @@ class TestFunctionality(BaseTestCase):
     def test_deactivate_activity_active_pd_no_dct_allows(self):
         # PD Active, but FR amounts are 0; deactivation should be allowed
         self.intervention.status = Intervention.ACTIVE
+        self.intervention.in_amendment = True
         self.intervention.save()
         FundsReservationHeaderFactory(
             intervention=self.intervention,
@@ -518,6 +519,7 @@ class TestFunctionality(BaseTestCase):
     def test_deactivate_activity_active_pd_with_actual_blocks(self):
         # PD Active, FR has actual > 0; deactivation should be blocked (400)
         self.intervention.status = Intervention.ACTIVE
+        self.intervention.in_amendment = True
         self.intervention.save()
         FundsReservationHeaderFactory(
             intervention=self.intervention,
@@ -537,6 +539,7 @@ class TestFunctionality(BaseTestCase):
     def test_deactivate_activity_active_pd_with_outstanding_blocks(self):
         # PD Active, FR has outstanding > 0; deactivation should be blocked (400)
         self.intervention.status = Intervention.ACTIVE
+        self.intervention.in_amendment = True
         self.intervention.save()
         FundsReservationHeaderFactory(
             intervention=self.intervention,
