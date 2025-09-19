@@ -701,8 +701,8 @@ class InterventionActivityDetailSerializer(
                 Intervention.TERMINATED,
             ]
             if (intervention and
-                intervention.status in active_or_later_statuses and
-                intervention.frs.filter(Q(actual_amt__gt=0) | Q(outstanding_amt__gt=0)).exists()):
+                    intervention.status in active_or_later_statuses and
+                    intervention.frs.filter(Q(actual_amt__gt=0) | Q(outstanding_amt__gt=0)).exists()):
                 raise ValidationError(_('This activity cannot be deactivated because there are Direct Cash Transfers associated in eZHACT.'))
         return attrs
 
