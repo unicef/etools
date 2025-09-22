@@ -1,5 +1,6 @@
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import transaction
+from django.db.models import Q
 from django.utils.translation import gettext as _
 
 from rest_framework import serializers
@@ -687,6 +688,22 @@ class InterventionActivityDetailSerializer(
             # it's easy to break total values, so we ignore them
             attrs.pop('unicef_cash', None)
             attrs.pop('cso_cash', None)
+
+        if self.instance and self.partial and attrs.get('is_active') is False:
+            # if status is active or later and FR with actual/outstanding amount > 0:
+            # deactivation is blocked
+            intervention = self.get_intervention()
+            active_or_later_statuses = [
+                Intervention.ACTIVE,
+                Intervention.SUSPENDED,
+                Intervention.ENDED,
+                Intervention.CLOSED,
+                Intervention.TERMINATED,
+            ]
+            if (intervention and
+                    intervention.status in active_or_later_statuses and
+                    intervention.frs.filter(Q(actual_amt__gt=0) | Q(outstanding_amt__gt=0)).exists()):
+                raise ValidationError(_('This activity cannot be deactivated because there are Direct Cash Transfers associated in eZHACT.'))
         return attrs
 
     @transaction.atomic

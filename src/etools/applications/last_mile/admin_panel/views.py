@@ -249,19 +249,27 @@ class LocationsViewSet(mixins.ListModelMixin,
         "parent__parent",
         "parent__parent__parent",
         "parent__parent__parent__parent"
-    ).prefetch_related('partner_organizations', 'partner_organizations__organization', 'destination_transfers').all().order_by('id')
+    ).annotate(
+        region=F('parent__parent__name'),
+        district=F('parent__parent__parent__name')
+    ).prefetch_related(
+        'partner_organizations',
+        'partner_organizations__organization',
+        'destination_transfers'
+    ).all().order_by('id')
 
     filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
     filterset_class = LocationsFilter
+
     ordering_fields = [
         'id',
         'poi_type',
         'country',
-        'region',
         'p_code',
-        'description'
+        'description',
+        'region',
+        'district'
     ]
-
     search_fields = ('name',
                      'p_code',
                      'partner_organizations__organization__name',
@@ -480,7 +488,8 @@ class TransferItemViewSet(mixins.ListModelMixin, GenericViewSet, mixins.CreateMo
         'uom',
         'batch_id',
         'material__original_uom',
-        'quantity'
+        'quantity',
+        'modified'
     )
 
     def get_queryset(self):
@@ -518,9 +527,14 @@ class TransferItemViewSet(mixins.ListModelMixin, GenericViewSet, mixins.CreateMo
         return Response({"valid": valid}, status=status.HTTP_200_OK)
 
 
-class ItemStockManagementView(mixins.UpdateModelMixin, mixins.RetrieveModelMixin, GenericViewSet):
+class ItemStockManagementView(mixins.UpdateModelMixin, mixins.RetrieveModelMixin, mixins.DestroyModelMixin, GenericViewSet):
     permission_classes = [IsLMSMAdmin]
     serializer_class = ItemStockManagementUpdateSerializer
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.hide()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     def get_queryset(self):
         return models.Item.objects.all()

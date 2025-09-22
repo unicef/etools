@@ -624,6 +624,10 @@ class Item(TimeStampedModel, models.Model):
             return self.mapped_description
         return self.material.short_description
 
+    def hide(self):
+        self.hidden = True
+        self.save()
+
     @cached_property
     def should_be_hidden_for_partner(self):
         if not self.transfer or not self.transfer.partner_organization:
