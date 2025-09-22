@@ -9,6 +9,7 @@ from etools.applications.field_monitoring.planning.activity_validation.validatio
     interventions_connected_with_partners,
     staff_activity_has_no_tpm_partner,
     tpm_staff_members_belongs_to_the_partner,
+    assignees_have_active_access,
 )
 from etools.applications.field_monitoring.planning.activity_validation.validations.state import (
     activity_overall_findings_required,
@@ -28,6 +29,7 @@ class ActivityValid(CompleteValidation):
         staff_activity_has_no_tpm_partner,
         tpm_staff_members_belongs_to_the_partner,
         interventions_connected_with_partners,
+        assignees_have_active_access,
         # interventions_connected_with_cp_outputs,
     ]
 
