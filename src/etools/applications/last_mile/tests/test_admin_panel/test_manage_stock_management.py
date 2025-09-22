@@ -1,9 +1,11 @@
+from django.core.exceptions import ObjectDoesNotExist
+
 from rest_framework import status
 from rest_framework.reverse import reverse
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.last_mile.admin_panel.constants import *  # NOQA
-from etools.applications.last_mile.models import Transfer
+from etools.applications.last_mile.models import Item, Transfer
 from etools.applications.last_mile.tests.factories import (
     ItemFactory,
     MaterialFactory,
@@ -959,3 +961,80 @@ class TestStockManagementViewSet(BaseTenantTestCase):
         returned_item_ids = [r.get("id") for r in results]
         self.assertIn(visible_item.id, returned_item_ids)
         self.assertNotIn(hidden_item.id, returned_item_ids)
+
+    def test_item_marked_as_hidden_after_soft_delete(self):
+        item_id = self.item_for_update.id
+        self.assertFalse(self.item_for_update.hidden)
+        response = self.forced_auth_req(
+            "delete", self.item_update_url, user=self.partner_staff
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        with self.assertRaises(ObjectDoesNotExist):
+            Item.objects.get(id=item_id)
+
+    def test_soft_delete_item_unauthorized(self):
+        response = self.forced_auth_req(
+            "delete", self.item_update_url, user=self.simple_user
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_soft_delete_item_without_correct_permissions(self):
+        response = self.forced_auth_req(
+            "delete", self.item_update_url, user=self.partner_staff_without_correct_permissions
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_soft_delete_non_existent_item(self):
+        response = self.forced_auth_req(
+            "delete", self.non_existent_item_url, user=self.partner_staff
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_soft_deleted_item_not_in_default_queryset(self):
+        item_id = self.item_for_update.id
+        self.assertTrue(Item.objects.filter(id=item_id).exists())
+        response = self.forced_auth_req(
+            "delete", self.item_update_url, user=self.partner_staff
+        )
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(Item.objects.filter(id=item_id).exists())
+
+    def test_multiple_items_soft_delete_transfer_visibility(self):
+        poi = PointOfInterestFactory(name="Multi Delete POI")
+        transfer = TransferFactory(
+            origin_point=poi,
+            status=Transfer.COMPLETED,
+            partner_organization=self.partner,
+            destination_point=poi,
+        )
+        item1 = ItemFactory(transfer=transfer, hidden=False)
+        item2 = ItemFactory(transfer=transfer, hidden=False)
+
+        item1_url = reverse(
+            f"{ADMIN_PANEL_APP_NAME}:{UPDATE_ITEM_STOCK_ADMIN_PANEL}-detail",
+            kwargs={"pk": item1.pk},
+        )
+        item2_url = reverse(
+            f"{ADMIN_PANEL_APP_NAME}:{UPDATE_ITEM_STOCK_ADMIN_PANEL}-detail",
+            kwargs={"pk": item2.pk},
+        )
+
+        payload = {"poi_id": poi.id}
+        response = self.forced_auth_req(
+            "get", self.url, user=self.partner_staff, data=payload
+        )
+        initial_count = len(response.data.get("results", []))
+
+        self.forced_auth_req("delete", item1_url, user=self.partner_staff)
+
+        response = self.forced_auth_req(
+            "get", self.url, user=self.partner_staff, data=payload
+        )
+        self.assertEqual(len(response.data.get("results", [])), initial_count - 1)
+
+        self.forced_auth_req("delete", item2_url, user=self.partner_staff)
+
+        response = self.forced_auth_req(
+            "get", self.url, user=self.partner_staff, data=payload
+        )
+        self.assertEqual(len(response.data.get("results", [])), initial_count - 2)
