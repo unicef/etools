@@ -572,7 +572,7 @@ class TestItemAuditLogEdgeCases(BaseTenantTestCase):
 
         audit_log = models.ItemAuditLog.objects.filter(item_id=item.id).first()
         self.assertIsNotNone(audit_log)
-        self.assertGreaterEqual(len(audit_log.changed_fields), 7)
+        self.assertEqual(len(audit_log.changed_fields), 7)
 
 
 class TestItemAuditLogAdvancedScenarios(BaseTenantTestCase):

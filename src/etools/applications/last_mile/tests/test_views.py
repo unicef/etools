@@ -338,6 +338,19 @@ class TestTransferView(BaseTenantTestCase):
 
         self.assertFalse(models.Transfer.objects.filter(transfer_type=models.Transfer.WASTAGE).exists())
 
+        audit_logs = models.ItemAuditLog.objects.filter(
+            item_id__in=[item_1.id, item_2.id, item_3.id]
+        ).order_by('item_id', 'timestamp')
+
+        self.assertEqual(audit_logs.count(), 3)
+
+        item_1_audits = audit_logs.filter(item_id=item_1.id)
+        if item_1_audits.exists():
+            latest_audit = item_1_audits.latest('timestamp')
+            self.assertEqual(latest_audit.action, models.ItemAuditLog.ACTION_CREATE)
+            self.assertIsNotNone(latest_audit.transfer_info)
+            self.assertEqual(latest_audit.transfer_info['transfer_name'], checkin_data['name'])
+
         # test new checkin of an already checked-in transfer
         response = self.forced_auth_req('patch', url, user=self.partner_staff, data=checkin_data)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -403,6 +416,23 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(short_transfer.items.order_by('id').first().base_quantity, 33)
         self.assertEqual(short_transfer.items.order_by('id').first().base_uom, "EA")
         self.assertEqual(short_transfer.origin_transfer, incoming)
+
+        checkin_audit_logs = models.ItemAuditLog.objects.filter(
+            item_id__in=[item_1.id, item_3.id]
+        )
+        short_audit_logs = models.ItemAuditLog.objects.filter(
+            item_id__in=[item.id for item in short_transfer.items.all()]
+        )
+
+        self.assertEqual(checkin_audit_logs.count(), 3)
+        self.assertEqual(short_audit_logs.count(), 2)
+
+        for audit_log in checkin_audit_logs:
+            self.assertIn(audit_log.action, [
+                models.ItemAuditLog.ACTION_UPDATE,
+                models.ItemAuditLog.ACTION_CREATE
+            ])
+            self.assertIsNotNone(audit_log.transfer_info)
 
     @override_settings(RUTF_MATERIALS=['1234'])
     def test_partial_checkin_with_short_surplus(self):
@@ -613,6 +643,29 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(self.checked_in.items.get(pk=item_2.pk).quantity, 22)
         self.assertEqual(self.checked_in.items.get(pk=item_3.pk).quantity, 30)
 
+        checkout_item_audits = models.ItemAuditLog.objects.filter(
+            item_id__in=[item.id for item in checkout_transfer.items.all()]
+        )
+        remaining_item_audits = models.ItemAuditLog.objects.filter(
+            item_id__in=[item_2.id, item_3.id]
+        )
+
+        self.assertEqual(checkout_item_audits.count(), 3)
+        for audit_log in checkout_item_audits:
+            self.assertIn(audit_log.action, [
+                models.ItemAuditLog.ACTION_CREATE,
+                models.ItemAuditLog.ACTION_UPDATE
+            ])
+            self.assertIsNotNone(audit_log.transfer_info)
+
+        remaining_item_3_audits = remaining_item_audits.filter(item_id=item_3.id)
+        if remaining_item_3_audits.exists():
+            latest_audit = remaining_item_3_audits.latest('timestamp')
+            self.assertEqual(latest_audit.action, models.ItemAuditLog.ACTION_UPDATE)
+            self.assertIn('quantity', latest_audit.changed_fields)
+            self.assertEqual(latest_audit.old_values['quantity'], 33)
+            self.assertEqual(latest_audit.new_values['quantity'], 30)
+
     def test_checkout_wastage(self):
         item_1 = ItemFactory(quantity=11, transfer=self.checked_in)
         item_2 = ItemFactory(quantity=22, transfer=self.checked_in)
@@ -651,6 +704,27 @@ class TestTransferView(BaseTenantTestCase):
         self.assertIn(f'W @ {checkout_data["origin_check_out_at"].strftime("%y-%m-%d")}', wastage_transfer.name)
 
         self.assertEqual(mock_send.call_count, 1)
+
+        wastage_item_audits = models.ItemAuditLog.objects.filter(
+            item_id__in=[item.id for item in wastage_transfer.items.all()]
+        )
+        remaining_item_audits = models.ItemAuditLog.objects.filter(item_id=item_1.id)
+
+        self.assertEqual(wastage_item_audits.count(), 1)
+        wastage_audit = wastage_item_audits.first()
+        self.assertEqual(wastage_audit.action, models.ItemAuditLog.ACTION_CREATE)
+        self.assertEqual(wastage_audit.user, self.partner_staff)
+        self.assertEqual(wastage_audit.new_values['wastage_type'], models.Item.EXPIRED)
+        self.assertEqual(wastage_audit.new_values['quantity'], 9)
+
+        remaining_audits = remaining_item_audits.filter(
+            action=models.ItemAuditLog.ACTION_UPDATE
+        ).order_by('-timestamp')
+        if remaining_audits.exists():
+            quantity_update_audit = remaining_audits.first()
+            self.assertIn('quantity', quantity_update_audit.changed_fields)
+            self.assertEqual(quantity_update_audit.old_values['quantity'], 11)
+            self.assertEqual(quantity_update_audit.new_values['quantity'], 2)
 
     def test_checkout_dispense(self):
         item_1 = ItemFactory(quantity=11, transfer=self.checked_in)
@@ -917,6 +991,17 @@ class TestItemUpdateViewSet(BaseTenantTestCase):
         self.assertEqual(item.uom, 'KG')
         self.assertEqual(response.data['uom'], 'KG')
 
+        audit_logs = models.ItemAuditLog.objects.filter(item_id=item.id)
+        self.assertEqual(audit_logs.count(), 2)
+
+        update_audits = audit_logs.filter(action=models.ItemAuditLog.ACTION_UPDATE)
+        if update_audits.exists():
+            update_audit = update_audits.latest('timestamp')
+            self.assertIn('mapped_description', update_audit.changed_fields)
+            self.assertIn('uom', update_audit.changed_fields)
+            self.assertEqual(update_audit.new_values['mapped_description'], 'updated description')
+            self.assertEqual(update_audit.new_values['uom'], 'KG')
+
     def test_patch_already_updated_description(self):
         item = ItemFactory(transfer=self.transfer)
         url = reverse('last_mile:item-update-detail', args=(item.pk,))
@@ -1045,6 +1130,25 @@ class TestItemUpdateViewSet(BaseTenantTestCase):
         self.assertEqual(self.transfer.items.exclude(pk=item.pk).first().base_quantity, 100)
         self.assertEqual(self.transfer.items.exclude(pk=item.pk).first().base_uom, item.material.original_uom)
 
+        new_item = self.transfer.items.exclude(pk=item.pk).first()
+
+        original_item_audits = models.ItemAuditLog.objects.filter(item_id=item.id)
+        update_audits = original_item_audits.filter(action=models.ItemAuditLog.ACTION_UPDATE)
+        self.assertEqual(update_audits.count(), 1)
+
+        latest_update = update_audits.latest('timestamp')
+        self.assertIn('quantity', latest_update.changed_fields)
+        self.assertEqual(latest_update.old_values['quantity'], 100)
+        self.assertEqual(latest_update.new_values['quantity'], 76)
+
+        new_item_audits = models.ItemAuditLog.objects.filter(item_id=new_item.id)
+        create_audits = new_item_audits.filter(action=models.ItemAuditLog.ACTION_CREATE)
+        self.assertEqual(create_audits.count(), 1)
+
+        create_audit = create_audits.first()
+        self.assertEqual(create_audit.new_values['quantity'], 24)
+        self.assertIsNotNone(create_audit.transfer_info)
+
     def test_post_split_validation(self):
         item = ItemFactory(transfer=self.transfer, material=self.material, quantity=100)
         self.assertEqual(self.transfer.items.count(), 1)
@@ -1062,3 +1166,203 @@ class TestItemUpdateViewSet(BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('Incorrect split values.', response.data['quantities'][0])
+
+
+class TestItemAuditLogViewWorkflow(BaseTenantTestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.partner = PartnerFactory(organization=OrganizationFactory(name='Audit Partner'))
+        cls.partner_staff = UserFactory(
+            realms__data=['IP LM Editor'],
+            profile__organization=cls.partner.organization,
+        )
+        cls.warehouse = PointOfInterestFactory(partner_organizations=[cls.partner], poi_type_id=1)
+        cls.hospital = PointOfInterestFactory(partner_organizations=[cls.partner], poi_type_id=3)
+        cls.material = MaterialFactory(number='AUD001', original_uom='EA')
+
+    def setUp(self):
+        models.ItemAuditLog.objects.all().delete()
+
+    def test_complete_transfer_workflow_audit_trail(self):
+
+        PartnerMaterialFactory(partner_organization=self.partner, material=self.material)
+
+        incoming_transfer = TransferFactory(
+            partner_organization=self.partner,
+            destination_point=self.warehouse,
+            transfer_type=models.Transfer.DELIVERY,
+            status=models.Transfer.PENDING
+        )
+
+        item_1 = ItemFactory(quantity=100, transfer=incoming_transfer, material=self.material)
+        item_2 = ItemFactory(quantity=200, transfer=incoming_transfer, material=self.material)
+
+        initial_audit_count = models.ItemAuditLog.objects.count()
+        self.assertEqual(initial_audit_count, 2)
+
+        attachment = AttachmentFactory(file=SimpleUploadedFile('test.pdf', b'test content'))
+        attachment_delivery = AttachmentFactory(file=SimpleUploadedFile('test_delivery.pdf', b'test content'))
+        checkin_data = {
+            "name": "Audit Test Check-in",
+            "comment": "Testing audit trail",
+            "proof_file": attachment.pk,
+            "items": [
+                {"id": item_1.pk, "quantity": 95},
+                {"id": item_2.pk, "quantity": 200}
+            ],
+            "destination_check_in_at": timezone.now()
+        }
+
+        url = reverse('last_mile:transfers-new-check-in', args=(self.warehouse.pk, incoming_transfer.pk))
+        response = self.forced_auth_req('patch', url, user=self.partner_staff, data=checkin_data)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        checkin_audit_count = models.ItemAuditLog.objects.count()
+        self.assertGreater(checkin_audit_count, initial_audit_count)
+
+        short_transfer = models.Transfer.objects.filter(transfer_type=models.Transfer.WASTAGE).first()
+        short_transfer.refresh_from_db()
+        if short_transfer:
+            item_ids = [item.id for item in short_transfer.items.all()]
+            short_transfer_audits = models.ItemAuditLog.objects.filter(
+                item_id__in=item_ids
+            )
+
+            self.assertGreater(short_transfer_audits.count(), 0)
+
+        item_1.refresh_from_db()
+        item_2.refresh_from_db()
+
+        checkout_data = {
+            "transfer_type": models.Transfer.DISTRIBUTION,
+            "destination_point": self.hospital.pk,
+            "comment": "Distribution for audit test",
+            "proof_file": attachment_delivery.pk,
+            "items": [
+                {"id": item_1.pk, "quantity": 50},
+                {"id": item_2.pk, "quantity": 100}
+            ],
+            "origin_check_out_at": timezone.now()
+        }
+
+        url = reverse('last_mile:transfers-new-check-out', args=(self.warehouse.pk,))
+        response = self.forced_auth_req('post', url, user=self.partner_staff, data=checkout_data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        distribution_audit_count = models.ItemAuditLog.objects.count()
+        self.assertGreater(distribution_audit_count, checkin_audit_count)
+
+        distribution_transfer = models.Transfer.objects.get(pk=response.data['id'])
+
+        distribution_items = list(distribution_transfer.items.all())
+        for i, item in enumerate(distribution_items):
+            url = reverse('last_mile:item-update-detail', args=(item.pk,))
+            update_data = {
+                'description': f'Updated description {i+1}',
+                'uom': 'KG'
+            }
+            response = self.forced_auth_req('patch', url, user=self.partner_staff, data=update_data)
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        update_audit_count = models.ItemAuditLog.objects.count()
+        self.assertGreater(update_audit_count, distribution_audit_count)
+
+        split_item = distribution_items[0]
+        url = reverse('last_mile:item-update-split', args=(split_item.pk,))
+        split_data = {'quantities': [20, 30]}
+
+        response = self.forced_auth_req('post', url, user=self.partner_staff, data=split_data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        split_audit_count = models.ItemAuditLog.objects.count()
+        self.assertGreater(split_audit_count, update_audit_count)
+
+        all_audits = models.ItemAuditLog.objects.all().order_by('timestamp')
+
+        action_types = set(all_audits.values_list('action', flat=True))
+        self.assertIn(models.ItemAuditLog.ACTION_CREATE, action_types)
+        self.assertIn(models.ItemAuditLog.ACTION_UPDATE, action_types)
+
+        user_audits = all_audits.filter(user=self.partner_staff)
+        self.assertGreater(user_audits.count(), 0)
+
+        for audit in all_audits:
+            if audit.action != models.ItemAuditLog.ACTION_DELETE:
+                self.assertIsNotNone(audit.transfer_info)
+
+    def test_audit_log_data_integrity_across_operations(self):
+        transfer = TransferFactory(partner_organization=self.partner, destination_point=self.warehouse)
+        item = ItemFactory(quantity=100, transfer=transfer, material=self.material, batch_id='INTEGRITY_TEST')
+
+        models.ItemAuditLog.objects.all().delete()
+
+        operations = [
+            {'quantity': 90, 'mapped_description': 'First update'},
+            {'quantity': 80, 'batch_id': 'UPDATED_BATCH'},
+            {'quantity': 70, 'wastage_type': models.Item.EXPIRED},
+            {'quantity': 60, 'wastage_type': None},
+        ]
+
+        for _, update_data in enumerate(operations):
+            for field, value in update_data.items():
+                setattr(item, field, value)
+            item.save()
+
+            latest_audit = models.ItemAuditLog.objects.filter(item_id=item.id).latest('timestamp')
+            self.assertEqual(latest_audit.action, models.ItemAuditLog.ACTION_UPDATE)
+
+            for field, new_value in update_data.items():
+                if field in latest_audit.changed_fields:
+                    self.assertEqual(latest_audit.new_values[field], new_value)
+
+        all_item_audits = models.ItemAuditLog.objects.filter(item_id=item.id).order_by('timestamp')
+        self.assertEqual(all_item_audits.count(), len(operations))
+
+    def test_audit_log_performance_with_bulk_workflow_operations(self):
+        items = []
+
+        start_time = timezone.now()
+
+        for i in range(10):
+            transfer = TransferFactory(
+                partner_organization=self.partner,
+                destination_point=self.warehouse,
+                name=f'Bulk Transfer {i}'
+            )
+
+            for j in range(5):
+                item = ItemFactory(
+                    quantity=100 + j,
+                    transfer=transfer,
+                    material=self.material,
+                    batch_id=f'BULK_{i}_{j}'
+                )
+                items.append(item)
+
+        creation_time = (timezone.now() - start_time).total_seconds()
+
+        models.ItemAuditLog.objects.all().delete()
+
+        start_time = timezone.now()
+        for i, item in enumerate(items):
+            item.quantity = item.quantity * 2
+            item.mapped_description = f'Bulk updated {i}'
+            item.save()
+
+        update_time = (timezone.now() - start_time).total_seconds()
+
+        self.assertLess(creation_time, 2.0)
+        self.assertLess(update_time, 2.0)
+
+        total_audits = models.ItemAuditLog.objects.count()
+        self.assertEqual(total_audits, len(items))
+
+        for item in items:
+            audit = models.ItemAuditLog.objects.filter(item_id=item.id).first()
+            self.assertIsNotNone(audit)
+            self.assertEqual(audit.action, models.ItemAuditLog.ACTION_UPDATE)
+            self.assertIn('quantity', audit.changed_fields)
+            self.assertIn('mapped_description', audit.changed_fields)
+            self.assertIsNotNone(audit.transfer_info)
