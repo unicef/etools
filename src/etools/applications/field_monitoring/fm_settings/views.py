@@ -156,8 +156,7 @@ class FMLocationsViewSet(FMBaseViewSet, mixins.ListModelMixin, viewsets.GenericV
 
     @action(methods=['get'], detail=True)
     def path(self, request, *args, **kwargs):
-        # allowing inactive locations to be included in the path
-        location = get_object_or_404(Location.objects.all_with_geom(), pk=kwargs.get('pk'))
+        location = get_object_or_404(Location, pk=kwargs.get('pk'))
         ancestors = location.get_ancestors(include_self=True).filter(is_active=True)
         return Response(data=self.get_serializer(instance=ancestors, many=True).data)
 
