@@ -1,4 +1,5 @@
 import inspect
+import logging
 import threading
 
 from django.db import transaction
@@ -14,6 +15,8 @@ from etools.applications.last_mile.config_audit import (
     ITEM_AUDIT_LOG_TRACKED_FIELDS,
 )
 from etools.applications.last_mile.models import Item, ItemAuditLog
+
+logger = logging.getLogger(__name__)
 
 
 def get_current_user_from_stack():
@@ -48,11 +51,9 @@ def get_current_user_from_stack():
 
 
 def get_current_user():
-
     user = get_current_user_from_stack()
     if user:
         return user
-
     return None
 
 
@@ -222,8 +223,6 @@ class AuditLogManager:
                     critical_changes=critical_changes
                 )
         except Exception as e:
-            import logging
-            logger = logging.getLogger(__name__)
             logger.error(f"Failed to create audit log for item {item_id}: {e}")
 
     @staticmethod
@@ -331,7 +330,7 @@ def set_audit_user(user):
 
 
 def get_audit_user():
-    return getattr(_audit_context, 'user', None)
+    return getattr(_audit_context, 'user', get_current_user())
 
 
 class audit_context:

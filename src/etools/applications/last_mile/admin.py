@@ -160,7 +160,7 @@ class TransferInLine(RestrictedEditAdminMixin, admin.TabularInline):
     exclude = (
         'comment', 'reason', 'proof_file', 'waybill_file', 'pd_number', 'waybill_id',
         'purchase_order_id', 'is_shipment', 'origin_check_out_at', 'system_origin_check_out_at',
-        'destination_check_in_at', 'system_destination_check_in_at'
+        'destination_check_in_at', 'system_destination_check_in_at', "initial_items"
     )
 
     show_change_link = True
@@ -566,7 +566,7 @@ admin.site.register(models.PointOfInterestType)
 class ItemAuditLogAdmin(admin.ModelAdmin):
     list_display = ('item_id', 'action', 'user', 'timestamp', 'changed_fields_display', 'transfer_display', 'view_item_link')
     list_filter = ('action',)
-    search_fields = ('item_id', 'user__email', 'user__first_name', 'user__last_name')
+    search_fields = ('item_id', 'user__email', 'user__first_name', 'user__last_name', 'transfer_info', 'material_info', 'critical_changes')
     readonly_fields = ('item_id', 'action', 'changed_fields', 'old_values', 'new_values',
                        'user', 'transfer_info', 'material_info', 'critical_changes', 'timestamp', 'tracked_changes_display', 'transfer_details_display', 'item_exists')
     ordering = ('-timestamp',)
