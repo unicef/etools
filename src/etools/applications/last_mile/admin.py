@@ -15,8 +15,8 @@ from django.utils.translation import gettext_lazy as _
 from unicef_attachments.admin import AttachmentSingleInline
 
 from etools.applications.last_mile import models
-from etools.applications.last_mile.audit_signals import audit_context
-from etools.applications.last_mile.config_audit import ITEM_AUDIT_LOG_TRACKED_FIELDS
+from etools.applications.last_mile.utils.audit_context import audit_context
+from etools.applications.last_mile.utils.config_audit import ITEM_AUDIT_LOG_TRACKED_FIELDS
 from etools.applications.organizations.models import Organization
 from etools.applications.partners.admin import AttachmentInlineAdminMixin
 from etools.applications.partners.models import PartnerOrganization

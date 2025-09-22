@@ -10,13 +10,13 @@ from rest_framework.reverse import reverse
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.last_mile import models
 from etools.applications.last_mile.admin import ItemAuditLogAdmin
-from etools.applications.last_mile.config_audit import ITEM_AUDIT_LOG_TRACKED_FIELDS
 from etools.applications.last_mile.tests.factories import (
     ItemFactory,
     MaterialFactory,
     PointOfInterestFactory,
     TransferFactory,
 )
+from etools.applications.last_mile.utils.config_audit import ITEM_AUDIT_LOG_TRACKED_FIELDS
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.users.tests.factories import UserFactory
@@ -527,7 +527,7 @@ class TestItemAuditLogEdgeCases(BaseTenantTestCase):
         audit_logs = models.ItemAuditLog.objects.filter(item_id=item.id)
         self.assertEqual(audit_logs.count(), 2)
 
-    @patch('etools.applications.last_mile.audit_signals.AuditLogManager.create_audit_log')
+    @patch('etools.applications.last_mile.services.audit_log_service.AuditLogService.create_audit_log')
     def test_audit_failure_doesnt_break_application(self, mock_create_audit):
         mock_create_audit.side_effect = Exception("Audit system error")
         try:

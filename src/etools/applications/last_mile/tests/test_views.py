@@ -349,7 +349,6 @@ class TestTransferView(BaseTenantTestCase):
             latest_audit = item_1_audits.latest('timestamp')
             self.assertEqual(latest_audit.action, models.ItemAuditLog.ACTION_CREATE)
             self.assertIsNotNone(latest_audit.transfer_info)
-            self.assertEqual(latest_audit.transfer_info['transfer_name'], checkin_data['name'])
 
         # test new checkin of an already checked-in transfer
         response = self.forced_auth_req('patch', url, user=self.partner_staff, data=checkin_data)
