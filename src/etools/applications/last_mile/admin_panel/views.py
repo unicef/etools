@@ -527,9 +527,14 @@ class TransferItemViewSet(mixins.ListModelMixin, GenericViewSet, mixins.CreateMo
         return Response({"valid": valid}, status=status.HTTP_200_OK)
 
 
-class ItemStockManagementView(mixins.UpdateModelMixin, mixins.RetrieveModelMixin, GenericViewSet):
+class ItemStockManagementView(mixins.UpdateModelMixin, mixins.RetrieveModelMixin, mixins.DestroyModelMixin, GenericViewSet):
     permission_classes = [IsLMSMAdmin]
     serializer_class = ItemStockManagementUpdateSerializer
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.hide()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     def get_queryset(self):
         return models.Item.objects.all()

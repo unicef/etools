@@ -1121,6 +1121,40 @@ class TestStagedUserViewSet(BaseTenantTestCase):
         response = self.make_request_detail(self.user_reviewer, staged_user.pk, action='accept')
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, '403 from the view permission classes')
 
+    def test_accept_user_requester_different_realm(self):
+        new_user_email = "test@test.com"
+        existing_user = UserFactory(
+            email=new_user_email,
+            realms__data=['IP Editor'],
+            profile__organization=OrganizationFactory(name='Test Organization')
+        )
+        requester = UserFactory(
+            email='test@unicef.org',
+            realms__data=['IP Viewer'],
+            profile__organization=OrganizationFactory(name='Another Organization')
+        )
+        staged_user = StagedUserFactory(
+            user_json={
+                "email": new_user_email,
+                "groups": [GroupFactory(name=IPViewer.name).pk],
+                "username": new_user_email,
+                "last_name": "First Name",
+                "first_name": "Last Name"
+            },
+            organization=self.organization,
+            requester=requester
+        )
+        self.assertEqual(existing_user.email, staged_user.user_json['email'])
+
+        response = self.make_request_detail(self.user_reviewer, staged_user.pk, action='accept')
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        staged_user.refresh_from_db()
+        self.assertEqual(staged_user.request_state, StagedUser.ACCEPTED)
+        self.assertEqual(staged_user.reviewer, self.user_reviewer)
+
+        self.assertEqual(existing_user.realms.count(), 2)
+
     def test_decline_forbidden(self):
         staged_user = StagedUserFactory(
             user_json={
