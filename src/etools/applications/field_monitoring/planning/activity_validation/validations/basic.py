@@ -68,6 +68,9 @@ def interventions_connected_with_cp_outputs(i):
 
 
 def assignees_have_active_access(i):
+    if i.monitor_type != MonitoringActivity.MONITOR_TYPE_CHOICES.both:
+        return True
+
     def has_active_realm(user):
         return Realm.objects.filter(country=connection.tenant, user=user, is_active=True).exists()
 
