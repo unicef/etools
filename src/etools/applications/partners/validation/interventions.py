@@ -335,7 +335,7 @@ def review_was_accepted(i):
     from etools.applications.partners.models import InterventionReview
 
     r = i.review
-    if r.review_type == InterventionReview.NORV:
+    if r and hasattr(r, 'review_type') and r.review_type == InterventionReview.NORV:
         return True
 
     return r.overall_approval if r else False
