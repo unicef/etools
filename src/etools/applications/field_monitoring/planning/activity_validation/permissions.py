@@ -41,15 +41,19 @@ class ActivityPermissions(PMPPermissions):
             return is_visit_lead() or is_team_member()
 
         monitor_types = self.instance.MONITOR_TYPE_CHOICES
+        is_staff_visit = self.instance.monitor_type in [monitor_types.staff, monitor_types.both]
+        is_tpm_visit = self.instance.monitor_type in [monitor_types.tpm, monitor_types.both]
+        visit_lead = is_visit_lead()
+        ma_user = is_ma_user()
 
         self.condition_map = {
-            'is_ma_related_user': is_ma_user(),
-            'is_visit_lead': is_visit_lead(),
-            'tpm_visit': self.instance.monitor_type in [monitor_types.tpm, monitor_types.both],
-            'staff_visit': self.instance.monitor_type in [monitor_types.staff, monitor_types.both],
-            'staff_visit+is_visit_lead': (self.instance.monitor_type in [monitor_types.staff, monitor_types.both]) and is_visit_lead(),
-            'tpm_visit+tpm_ma_related': (self.instance.monitor_type in [monitor_types.tpm, monitor_types.both]) and is_ma_user(),
-            'tpm_visit+tpm_ma_related+is_visit_lead': ((self.instance.monitor_type in [monitor_types.tpm, monitor_types.both]) and is_ma_user()) or is_visit_lead(),
+            'is_ma_related_user': ma_user,
+            'is_visit_lead': visit_lead,
+            'tpm_visit': is_tpm_visit,
+            'staff_visit': is_staff_visit,
+            'staff_visit+is_visit_lead': is_staff_visit and visit_lead,
+            'tpm_visit+tpm_ma_related': is_tpm_visit and ma_user,
+            'tpm_visit+tpm_ma_related+is_visit_lead': (is_tpm_visit and ma_user) or visit_lead,
         }
 
         if getattr(self.instance, 'old', None) is not None:
