@@ -2,44 +2,142 @@ import logging
 
 from django.db import transaction
 
-from etools.applications.last_mile.models import ItemAuditLog
-from etools.applications.last_mile.utils.config_audit import (
-    ITEM_AUDIT_LOG_ENABLED,
-    ITEM_AUDIT_LOG_EXCLUDE_USERS,
-    ITEM_AUDIT_LOG_FK_FIELDS,
-    ITEM_AUDIT_LOG_MAX_ENTRIES_PER_ITEM,
-    ITEM_AUDIT_LOG_SYSTEM_USERS,
-    ITEM_AUDIT_LOG_TRACKED_FIELDS,
-)
+from etools.applications.core.middleware import get_current_user
+from etools.applications.environment.helpers import tenant_switch_is_active
+from etools.applications.last_mile.models import AuditConfiguration, Item, ItemAuditLog
 
 logger = logging.getLogger(__name__)
 
 
 class AuditLogService:
 
-    @staticmethod
-    def should_audit(instance, user=None):
-        if not ITEM_AUDIT_LOG_ENABLED:
+    def handle_pre_save(self, instance, **kwargs):
+        if not self.should_audit(instance):
+            return
+
+        if instance.pk:
+            try:
+                instance._original = Item.objects.get(pk=instance.pk)
+            except Item.DoesNotExist:
+                instance._original = None
+        else:
+            instance._original = None
+
+    def handle_post_save(self, instance, created, **kwargs):
+        user = get_current_user()
+        if not self.should_audit(instance, user):
+            return
+
+        if created:
+            self._handle_item_creation(instance, user)
+        else:
+            self._handle_item_update(instance, user)
+
+    def handle_post_delete(self, instance, **kwargs):
+        user = get_current_user()
+        if not self.should_audit(instance, user):
+            return
+
+        self._handle_item_deletion(instance, user)
+
+    def _handle_item_creation(self, instance, user):
+        config = AuditConfiguration.get_active_config()
+        tracked_fields = config.tracked_fields if config else []
+
+        new_values = {}
+        for field in tracked_fields:
+            if hasattr(instance, field):
+                value = getattr(instance, field)
+                new_values[field] = self.serialize_field_value(instance, field, value)
+
+        self.create_audit_log(
+            item_id=instance.id,
+            action=ItemAuditLog.ACTION_CREATE,
+            new_values=new_values,
+            user=user,
+            instance=instance
+        )
+
+    def _handle_item_update(self, instance, user):
+        original = getattr(instance, '_original', None)
+        if not original:
+            return
+
+        changed_fields = self.get_changed_fields(original, instance)
+        if not changed_fields:
+            return
+
+        old_values = {}
+        new_values = {}
+
+        for field, old_value in changed_fields.items():
+            old_values[field] = self.serialize_field_value(original, field, old_value)
+            new_value = getattr(instance, field)
+            new_values[field] = self.serialize_field_value(instance, field, new_value)
+
+        action = (ItemAuditLog.ACTION_SOFT_DELETE if hasattr(instance, 'hidden') and instance.hidden else ItemAuditLog.ACTION_UPDATE)
+
+        self.create_audit_log(
+            item_id=instance.id,
+            action=action,
+            old_values=old_values,
+            new_values=new_values,
+            changed_fields=changed_fields,
+            user=user,
+            instance=instance,
+            original_instance=original
+        )
+
+    def _handle_item_deletion(self, instance, user):
+        config = AuditConfiguration.get_active_config()
+        tracked_fields = config.tracked_fields if config else []
+
+        old_values = {}
+        for field in tracked_fields:
+            if hasattr(instance, field):
+                value = getattr(instance, field)
+                old_values[field] = self.serialize_field_value(instance, field, value)
+
+        action = (ItemAuditLog.ACTION_SOFT_DELETE if hasattr(instance, 'hidden') and instance.hidden else ItemAuditLog.ACTION_DELETE)
+
+        self.create_audit_log(
+            item_id=instance.id,
+            action=action,
+            old_values=old_values,
+            user=user,
+            instance=instance,
+        )
+
+    def should_audit(self, instance, user=None):
+        if not tenant_switch_is_active("lmsm_item_audit_logs"):
+            return False
+        config = AuditConfiguration.get_active_config()
+        if not config or not config.is_enabled:
             return False
 
-        if user and user.id in ITEM_AUDIT_LOG_EXCLUDE_USERS:
+        if user and user.id in config.excluded_user_ids:
             return False
 
-        if user and not ITEM_AUDIT_LOG_SYSTEM_USERS and (user.is_staff or user.is_superuser):
+        if user and not config.track_system_users and (user.is_staff or user.is_superuser):
             return False
 
         return True
 
-    @staticmethod
-    def get_changed_fields(old_instance, new_instance):
+    def get_changed_fields(self, old_instance, new_instance):
+        config = AuditConfiguration.get_active_config()
+        if not config:
+            return {}
+
+        tracked_fields = config.tracked_fields or []
+
         if not old_instance:
             return {
-                field: None for field in ITEM_AUDIT_LOG_TRACKED_FIELDS
+                field: None for field in tracked_fields
                 if hasattr(new_instance, field)
             }
 
         changed_fields = {}
-        for field in ITEM_AUDIT_LOG_TRACKED_FIELDS:
+        for field in tracked_fields:
             if hasattr(old_instance, field) and hasattr(new_instance, field):
                 old_value = getattr(old_instance, field)
                 new_value = getattr(new_instance, field)
@@ -48,14 +146,16 @@ class AuditLogService:
 
         return changed_fields
 
-    @staticmethod
-    def serialize_field_value(instance, field_name, value):
+    def serialize_field_value(self, instance, field_name, value):
         if value is None:
             return None
 
-        if field_name in ITEM_AUDIT_LOG_FK_FIELDS:
-            if hasattr(instance, ITEM_AUDIT_LOG_FK_FIELDS[field_name]):
-                related_obj = getattr(instance, ITEM_AUDIT_LOG_FK_FIELDS[field_name])
+        config = AuditConfiguration.get_active_config()
+        fk_fields = config.fk_field_mappings if config else {}
+
+        if field_name in fk_fields:
+            if hasattr(instance, fk_fields[field_name]):
+                related_obj = getattr(instance, fk_fields[field_name])
                 if related_obj:
                     return {
                         'id': value,
@@ -71,8 +171,7 @@ class AuditLogService:
 
         return str(value)
 
-    @staticmethod
-    def get_transfer_info(instance):
+    def get_transfer_info(self, instance):
         transfer_info = {}
 
         if hasattr(instance, 'transfer') and instance.transfer:
@@ -106,8 +205,7 @@ class AuditLogService:
 
         return transfer_info if transfer_info else None
 
-    @staticmethod
-    def get_material_info(instance):
+    def get_material_info(self, instance):
         material_info = {}
 
         if hasattr(instance, 'material') and instance.material:
@@ -121,8 +219,7 @@ class AuditLogService:
 
         return material_info if material_info else None
 
-    @staticmethod
-    def detect_critical_changes(old_instance, new_instance):
+    def detect_critical_changes(self, old_instance, new_instance):
         critical_changes = {}
 
         if not old_instance:
@@ -152,22 +249,21 @@ class AuditLogService:
 
         return critical_changes if critical_changes else None
 
-    @staticmethod
-    def create_audit_log(item_id, action, old_values=None, new_values=None, changed_fields=None, user=None, instance=None, original_instance=None):
+    def create_audit_log(self, item_id, action, old_values=None, new_values=None, changed_fields=None, user=None, instance=None, original_instance=None):
         try:
             with transaction.atomic():
-                AuditLogService.cleanup_old_entries(item_id)
+                self.cleanup_old_entries(item_id)
 
                 transfer_info = None
                 material_info = None
                 critical_changes = None
 
                 if instance:
-                    transfer_info = AuditLogService.get_transfer_info(instance)
-                    material_info = AuditLogService.get_material_info(instance)
+                    transfer_info = self.get_transfer_info(instance)
+                    material_info = self.get_material_info(instance)
 
                     if action == ItemAuditLog.ACTION_UPDATE and original_instance:
-                        critical_changes = AuditLogService.detect_critical_changes(original_instance, instance)
+                        critical_changes = self.detect_critical_changes(original_instance, instance)
 
                 ItemAuditLog.objects.create(
                     item_id=item_id,
@@ -183,14 +279,14 @@ class AuditLogService:
         except Exception as e:
             logger.error(f"Failed to create audit log for item {item_id}: {e}")
 
-    @staticmethod
-    def cleanup_old_entries(item_id):
-        if ITEM_AUDIT_LOG_MAX_ENTRIES_PER_ITEM <= 0:
+    def cleanup_old_entries(self, item_id):
+        config = AuditConfiguration.get_active_config()
+        if not config or config.max_entries_per_item <= 0:
             return
 
         count = ItemAuditLog.objects.filter(item_id=item_id).count()
-        if count >= ITEM_AUDIT_LOG_MAX_ENTRIES_PER_ITEM:
-            entries_to_delete = count - ITEM_AUDIT_LOG_MAX_ENTRIES_PER_ITEM + 1
-            old_entries = ItemAuditLog.objects.filter(item_id=item_id).order_by('timestamp')[:entries_to_delete]
+        if count >= config.max_entries_per_item:
+            entries_to_delete = count - config.max_entries_per_item + 1
+            old_entries = ItemAuditLog.objects.filter(item_id=item_id).order_by('created')[:entries_to_delete]
             old_entry_ids = list(old_entries.values_list('id', flat=True))
             ItemAuditLog.objects.filter(id__in=old_entry_ids).delete()

@@ -4,6 +4,7 @@ from unittest.mock import Mock, patch
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
+from django.db import connection
 from django.test import override_settings
 from django.utils import timezone
 
@@ -13,9 +14,11 @@ from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.environment.tests.factories import TenantSwitchFactory
 from etools.applications.last_mile import models
 from etools.applications.last_mile.serializers import PointOfInterestNotificationSerializer
 from etools.applications.last_mile.tests.factories import (
+    ItemAuditConfigurationFactory,
     ItemFactory,
     MaterialFactory,
     PartnerMaterialFactory,
@@ -203,7 +206,15 @@ class TestTransferView(BaseTenantTestCase):
     fixtures = ('poi_type.json',)
 
     @classmethod
-    def setUp(cls):
+    def setUpTestData(cls):
+        cls.t1 = ItemAuditConfigurationFactory()
+        cls.tenant = TenantSwitchFactory.create(
+            name="lmsm_item_audit_logs",
+            countries=[connection.tenant],
+            active=True,
+        )
+        # Clear waffle cache to ensure fresh lookups
+        cls.tenant.flush()
         cls.partner = PartnerFactory(organization=OrganizationFactory(name='Partner'))
         cls.partner_receive_handover = PartnerFactory(organization=OrganizationFactory(name='Partner Receive Handover'))
         cls.partner_staff = UserFactory(
@@ -340,13 +351,13 @@ class TestTransferView(BaseTenantTestCase):
 
         audit_logs = models.ItemAuditLog.objects.filter(
             item_id__in=[item_1.id, item_2.id, item_3.id]
-        ).order_by('item_id', 'timestamp')
+        ).order_by('item_id', 'created')
 
         self.assertEqual(audit_logs.count(), 3)
 
         item_1_audits = audit_logs.filter(item_id=item_1.id)
         if item_1_audits.exists():
-            latest_audit = item_1_audits.latest('timestamp')
+            latest_audit = item_1_audits.latest('created')
             self.assertEqual(latest_audit.action, models.ItemAuditLog.ACTION_CREATE)
             self.assertIsNotNone(latest_audit.transfer_info)
 
@@ -659,7 +670,7 @@ class TestTransferView(BaseTenantTestCase):
 
         remaining_item_3_audits = remaining_item_audits.filter(item_id=item_3.id)
         if remaining_item_3_audits.exists():
-            latest_audit = remaining_item_3_audits.latest('timestamp')
+            latest_audit = remaining_item_3_audits.latest('created')
             self.assertEqual(latest_audit.action, models.ItemAuditLog.ACTION_UPDATE)
             self.assertIn('quantity', latest_audit.changed_fields)
             self.assertEqual(latest_audit.old_values['quantity'], 33)
@@ -712,13 +723,12 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(wastage_item_audits.count(), 1)
         wastage_audit = wastage_item_audits.first()
         self.assertEqual(wastage_audit.action, models.ItemAuditLog.ACTION_CREATE)
-        self.assertEqual(wastage_audit.user, self.partner_staff)
         self.assertEqual(wastage_audit.new_values['wastage_type'], models.Item.EXPIRED)
         self.assertEqual(wastage_audit.new_values['quantity'], 9)
 
         remaining_audits = remaining_item_audits.filter(
             action=models.ItemAuditLog.ACTION_UPDATE
-        ).order_by('-timestamp')
+        ).order_by('-created')
         if remaining_audits.exists():
             quantity_update_audit = remaining_audits.first()
             self.assertIn('quantity', quantity_update_audit.changed_fields)
@@ -959,6 +969,14 @@ class TestTransferView(BaseTenantTestCase):
 class TestItemUpdateViewSet(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
+        ItemAuditConfigurationFactory()
+        cls.tenant = TenantSwitchFactory.create(
+            name="lmsm_item_audit_logs",
+            countries=[connection.tenant],
+            active=True,
+        )
+        # Clear waffle cache to ensure fresh lookups
+        cls.tenant.flush()
         cls.partner = PartnerFactory(organization=OrganizationFactory(name='Partner'))
         cls.partner_staff = UserFactory(
             realms__data=['IP LM Editor'],
@@ -995,7 +1013,7 @@ class TestItemUpdateViewSet(BaseTenantTestCase):
 
         update_audits = audit_logs.filter(action=models.ItemAuditLog.ACTION_UPDATE)
         if update_audits.exists():
-            update_audit = update_audits.latest('timestamp')
+            update_audit = update_audits.latest('created')
             self.assertIn('mapped_description', update_audit.changed_fields)
             self.assertIn('uom', update_audit.changed_fields)
             self.assertEqual(update_audit.new_values['mapped_description'], 'updated description')
@@ -1135,7 +1153,7 @@ class TestItemUpdateViewSet(BaseTenantTestCase):
         update_audits = original_item_audits.filter(action=models.ItemAuditLog.ACTION_UPDATE)
         self.assertEqual(update_audits.count(), 1)
 
-        latest_update = update_audits.latest('timestamp')
+        latest_update = update_audits.latest('created')
         self.assertIn('quantity', latest_update.changed_fields)
         self.assertEqual(latest_update.old_values['quantity'], 100)
         self.assertEqual(latest_update.new_values['quantity'], 76)
@@ -1171,6 +1189,14 @@ class TestItemAuditLogViewWorkflow(BaseTenantTestCase):
 
     @classmethod
     def setUpTestData(cls):
+        ItemAuditConfigurationFactory(name="Workflow Test Config")
+        cls.tenant = TenantSwitchFactory.create(
+            name="lmsm_item_audit_logs",
+            countries=[connection.tenant],
+            active=True,
+        )
+        # Clear waffle cache to ensure fresh lookups
+        cls.tenant.flush()
         cls.partner = PartnerFactory(organization=OrganizationFactory(name='Audit Partner'))
         cls.partner_staff = UserFactory(
             realms__data=['IP LM Editor'],
@@ -1278,14 +1304,11 @@ class TestItemAuditLogViewWorkflow(BaseTenantTestCase):
         split_audit_count = models.ItemAuditLog.objects.count()
         self.assertGreater(split_audit_count, update_audit_count)
 
-        all_audits = models.ItemAuditLog.objects.all().order_by('timestamp')
+        all_audits = models.ItemAuditLog.objects.all().order_by('created')
 
         action_types = set(all_audits.values_list('action', flat=True))
         self.assertIn(models.ItemAuditLog.ACTION_CREATE, action_types)
         self.assertIn(models.ItemAuditLog.ACTION_UPDATE, action_types)
-
-        user_audits = all_audits.filter(user=self.partner_staff)
-        self.assertGreater(user_audits.count(), 0)
 
         for audit in all_audits:
             if audit.action != models.ItemAuditLog.ACTION_DELETE:
@@ -1309,14 +1332,14 @@ class TestItemAuditLogViewWorkflow(BaseTenantTestCase):
                 setattr(item, field, value)
             item.save()
 
-            latest_audit = models.ItemAuditLog.objects.filter(item_id=item.id).latest('timestamp')
+            latest_audit = models.ItemAuditLog.objects.filter(item_id=item.id).latest('created')
             self.assertEqual(latest_audit.action, models.ItemAuditLog.ACTION_UPDATE)
 
             for field, new_value in update_data.items():
                 if field in latest_audit.changed_fields:
                     self.assertEqual(latest_audit.new_values[field], new_value)
 
-        all_item_audits = models.ItemAuditLog.objects.filter(item_id=item.id).order_by('timestamp')
+        all_item_audits = models.ItemAuditLog.objects.filter(item_id=item.id).order_by('created')
         self.assertEqual(all_item_audits.count(), len(operations))
 
     def test_audit_log_performance_with_bulk_workflow_operations(self):

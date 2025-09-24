@@ -100,3 +100,18 @@ class PartnerMaterialFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = models.PartnerMaterial
+
+
+class ItemAuditConfigurationFactory(factory.django.DjangoModelFactory):
+
+    name = factory.Sequence(lambda n: 'Item Audit Configuration {}'.format(n))
+    is_enabled = True
+    track_system_users = True
+    tracked_fields = models.default_tracked_fields()
+    excluded_user_ids = []
+    max_entries_per_item = models.AuditConfiguration.DEFAULT_MAX_ENTRIES_PER_ITEM
+    fk_field_mappings = models.default_fk_field_mappings()
+    is_active = True
+
+    class Meta:
+        model = models.AuditConfiguration

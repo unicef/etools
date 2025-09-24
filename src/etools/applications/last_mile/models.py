@@ -2,7 +2,8 @@ from functools import cached_property
 
 from django.conf import settings
 from django.contrib.gis.db.models import PointField
-from django.db import models
+from django.core.cache import cache
+from django.db import connection, models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
@@ -818,23 +819,19 @@ class ItemAuditLog(TimeStampedModel, models.Model):
         blank=True,
         help_text=_("Important changes like transfer or material changes")
     )
-    timestamp = models.DateTimeField(
-        auto_now_add=True,
-        verbose_name=_("Timestamp")
-    )
 
     class Meta:
-        ordering = ['-timestamp']
+        ordering = ['-created']
         verbose_name = _('Item Audit Log')
         verbose_name_plural = _('Item Audit Logs')
         indexes = [
-            models.Index(fields=['item_id', '-timestamp']),
-            models.Index(fields=['action', '-timestamp']),
-            models.Index(fields=['user', '-timestamp']),
+            models.Index(fields=['item_id']),
+            models.Index(fields=['action']),
+            models.Index(fields=['user']),
         ]
 
     def __str__(self):
-        return f'Item {self.item_id} - {self.get_action_display()} at {self.timestamp}'
+        return f'Item {self.item_id} - {self.get_action_display()} at {self.created}'
 
     @property
     def item_exists(self):
@@ -854,3 +851,127 @@ class ItemAuditLog(TimeStampedModel, models.Model):
                 'new_value': new_val
             })
         return display_data
+
+
+def default_tracked_fields():
+    return [
+        'quantity',
+        'uom',
+        'conversion_factor',
+        'wastage_type',
+        'batch_id',
+        'expiry_date',
+        'comment',
+        'mapped_description',
+        'hidden',
+        'transfer_id',
+        'material_id',
+        'is_prepositioned',
+        'preposition_qty',
+        'amount_usd',
+        'base_quantity',
+        'base_uom'
+    ]
+
+
+def default_fk_field_mappings():
+    return {
+        'transfer_id': 'transfer',
+        'material_id': 'material'
+    }
+
+
+class AuditConfiguration(TimeStampedModel, models.Model):
+
+    DEFAULT_MAX_ENTRIES_PER_ITEM = 100
+
+    name = models.CharField(
+        max_length=100,
+        unique=True,
+        default="Default Audit Configuration",
+        verbose_name=_("Configuration Name"),
+        help_text=_("Name for this audit configuration")
+    )
+
+    is_enabled = models.BooleanField(
+        default=True,
+        verbose_name=_("Enable Audit Logging"),
+        help_text=_("Master switch to enable or disable all audit logging")
+    )
+
+    track_system_users = models.BooleanField(
+        default=True,
+        verbose_name=_("Track System Users"),
+        help_text=_("Whether to audit changes made by staff/superuser accounts")
+    )
+
+    tracked_fields = models.JSONField(
+        default=default_tracked_fields,
+        blank=True,
+        verbose_name=_("Tracked Fields"),
+        help_text=_("List of Item model fields to track in audit logs")
+    )
+
+    excluded_user_ids = models.JSONField(
+        default=list,
+        blank=True,
+        verbose_name=_("Excluded User IDs"),
+        help_text=_("List of user IDs to exclude from audit logging")
+    )
+
+    max_entries_per_item = models.PositiveIntegerField(
+        default=DEFAULT_MAX_ENTRIES_PER_ITEM,
+        verbose_name=_("Max Entries Per Item"),
+        help_text=_("Maximum number of audit entries to keep per item (0 = unlimited)")
+    )
+
+    fk_field_mappings = models.JSONField(
+        default=default_fk_field_mappings,
+        blank=True,
+        verbose_name=_("Foreign Key Field Mappings"),
+        help_text=_("Mapping of foreign key fields to their related model fields")
+    )
+
+    is_active = models.BooleanField(
+        default=True,
+        verbose_name=_("Is Active Configuration"),
+        help_text=_("Whether this is the active configuration (only one can be active)")
+    )
+
+    def __str__(self):
+        status = "Active" if self.is_active else "Inactive"
+        enabled = "Enabled" if self.is_enabled else "Disabled"
+        return f"{self.name} ({status}, {enabled})"
+
+    def save(self, *args, **kwargs):
+        if self.is_active:
+            AuditConfiguration.objects.filter(is_active=True).update(is_active=False)
+
+        super().save(*args, **kwargs)
+        self._clear_cache()
+
+    def delete(self, *args, **kwargs):
+        super().delete(*args, **kwargs)
+        self._clear_cache()
+
+    def _clear_cache(self):
+        cache.delete(f'audit_config_active_{connection.tenant.schema_name}')
+
+    @classmethod
+    def get_active_config(cls):
+        config = cache.get(f'audit_config_active_{connection.tenant.schema_name}')
+        if config is None:
+            try:
+                config = cls.objects.filter(is_active=True).first()
+                if config:
+                    cache.set(f'audit_config_active_{connection.tenant.schema_name}', config, 7200)
+            except cls.DoesNotExist:
+                config = None
+
+        return config
+
+    class Meta:
+        db_table = 'last_mile_auditconfiguration'
+        verbose_name = 'Audit Configuration'
+        verbose_name_plural = 'Audit Configurations'
+        ordering = ['-is_active', 'name']

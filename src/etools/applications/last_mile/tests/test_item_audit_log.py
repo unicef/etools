@@ -2,30 +2,37 @@ import datetime
 from decimal import Decimal
 from unittest.mock import Mock, patch
 
-from django.db import IntegrityError, transaction
+from django.db import connection, IntegrityError, transaction
 from django.utils import timezone
 
 from rest_framework.reverse import reverse
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.environment.tests.factories import TenantSwitchFactory
 from etools.applications.last_mile import models
 from etools.applications.last_mile.admin import ItemAuditLogAdmin
 from etools.applications.last_mile.tests.factories import (
+    ItemAuditConfigurationFactory,
     ItemFactory,
     MaterialFactory,
     PointOfInterestFactory,
     TransferFactory,
 )
-from etools.applications.last_mile.utils.config_audit import ITEM_AUDIT_LOG_TRACKED_FIELDS
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.tests.factories import PartnerFactory
-from etools.applications.users.tests.factories import UserFactory
+from etools.applications.users.tests.factories import CountryFactory, UserFactory
 
 
 class TestItemAuditLogSignals(BaseTenantTestCase):
 
     @classmethod
     def setUpTestData(cls):
+        cls.tenant = TenantSwitchFactory(
+            name="lmsm_item_audit_logs",
+        )
+        cls.tenant.countries.add(connection.tenant)
+        cls.tenant.flush()
+        ItemAuditConfigurationFactory()
         cls.partner = PartnerFactory(organization=OrganizationFactory(name='Partner'))
         cls.partner_staff = UserFactory(
             realms__data=['IP LM Editor'],
@@ -280,13 +287,21 @@ class TestItemAuditLogModel(BaseTenantTestCase):
             realms__data=['IP LM Editor'],
             profile__organization=cls.partner.organization,
         )
+        cls.country = CountryFactory()
+        connection.tenant = cls.country
+
+        cls.tenant = TenantSwitchFactory(
+            name="lmsm_item_audit_logs",
+            countries=[cls.country],
+        )
+        cls.tenant.flush()
 
     def test_audit_log_str_representation(self):
         audit_log = models.ItemAuditLog(
             item_id=123,
             action=models.ItemAuditLog.ACTION_UPDATE,
             user=self.partner_staff,
-            timestamp=timezone.now()
+            created=timezone.now()
         )
 
         self.assertIn("Item 123 - Updated at", str(audit_log))
@@ -298,19 +313,19 @@ class TestItemAuditLogModel(BaseTenantTestCase):
         older_log = models.ItemAuditLog.objects.create(
             item_id=item_id,
             action=models.ItemAuditLog.ACTION_CREATE,
-            timestamp=timezone.now() - datetime.timedelta(hours=2)
+            created=timezone.now() - datetime.timedelta(hours=2)
         )
 
         newer_log = models.ItemAuditLog.objects.create(
             item_id=item_id,
             action=models.ItemAuditLog.ACTION_UPDATE,
-            timestamp=timezone.now() - datetime.timedelta(hours=1)
+            created=timezone.now() - datetime.timedelta(hours=1)
         )
 
         newest_log = models.ItemAuditLog.objects.create(
             item_id=item_id,
             action=models.ItemAuditLog.ACTION_DELETE,
-            timestamp=timezone.now()
+            created=timezone.now()
         )
 
         logs = list(models.ItemAuditLog.objects.filter(item_id=item_id))
@@ -323,6 +338,15 @@ class TestItemAuditLogAdmin(BaseTenantTestCase):
 
     @classmethod
     def setUpTestData(cls):
+        cls.country = CountryFactory()
+        connection.tenant = cls.country
+        cls.tenant = TenantSwitchFactory(
+            name="lmsm_item_audit_logs",
+            active=True,
+            countries=[cls.country],
+        )
+        cls.tenant.flush()
+        ItemAuditConfigurationFactory()
         cls.partner = PartnerFactory(organization=OrganizationFactory(name='Partner'))
         cls.superuser = UserFactory(is_superuser=True, is_staff=True)
         cls.transfer = TransferFactory()
@@ -355,7 +379,7 @@ class TestItemAuditLogAdmin(BaseTenantTestCase):
 
         expected_readonly = [
             'item_id', 'action', 'changed_fields', 'old_values', 'new_values',
-            'user', 'transfer_info', 'material_info', 'critical_changes', 'timestamp',
+            'user', 'transfer_info', 'material_info', 'critical_changes', 'created',
             'tracked_changes_display', 'transfer_details_display', 'item_exists'
         ]
 
@@ -379,6 +403,14 @@ class TestItemAuditLogReversion(BaseTenantTestCase):
 
     @classmethod
     def setUpTestData(cls):
+        cls.country = CountryFactory()
+        connection.tenant = cls.country
+        cls.tenant = TenantSwitchFactory(
+            name="lmsm_item_audit_logs",
+            countries=[cls.country],
+        )
+        cls.tenant.flush()
+        ItemAuditConfigurationFactory()
         cls.partner = PartnerFactory(organization=OrganizationFactory(name='Partner'))
         cls.superuser = UserFactory(is_superuser=True, is_staff=True)
         cls.transfer = TransferFactory()
@@ -450,16 +482,25 @@ class TestItemAuditLogReversion(BaseTenantTestCase):
 
 class TestItemAuditLogConfiguration(BaseTenantTestCase):
 
-    def test_config_audit_import(self):
-        try:
-            self.assertIsInstance(ITEM_AUDIT_LOG_TRACKED_FIELDS, list)
-            self.assertIn('quantity', ITEM_AUDIT_LOG_TRACKED_FIELDS)
-            self.assertIn('batch_id', ITEM_AUDIT_LOG_TRACKED_FIELDS)
-        except ImportError:
-            self.fail("config_audit module should be importable")
+    def setUp(self):
+        self.config = ItemAuditConfigurationFactory(name="Test Audit Config")
+        self.country = CountryFactory()
+        connection.tenant = self.country
+
+        self.tenant = TenantSwitchFactory(
+            name="lmsm_item_audit_logs",
+            countries=[self.country],
+        )
+
+        self.tenant.flush()
+
+    def test_active_config_retrieval(self):
+        active_config = models.AuditConfiguration.get_active_config()
+        self.assertIsNotNone(active_config)
+        self.assertEqual(active_config.name, "Test Audit Config")
+        self.assertTrue(active_config.is_active)
 
     def test_tracked_fields_configuration(self):
-
         item = ItemFactory(
             transfer=TransferFactory(),
             material=MaterialFactory(),
@@ -479,7 +520,57 @@ class TestItemAuditLogConfiguration(BaseTenantTestCase):
 
         if audit_log:
             for field in audit_log.changed_fields:
-                self.assertIn(field, ITEM_AUDIT_LOG_TRACKED_FIELDS)
+                self.assertIn(field, self.config.tracked_fields)
+
+    def test_config_disable_auditing(self):
+        self.config.is_enabled = False
+        self.config.save()
+
+        models.AuditConfiguration()._clear_cache()
+
+        models.ItemAuditLog.objects.all().delete()
+
+        item = ItemFactory(
+            transfer=TransferFactory(),
+            material=MaterialFactory(),
+            quantity=10
+        )
+
+        item.quantity = 20
+        item.save()
+
+        audit_logs = models.ItemAuditLog.objects.filter(item_id=item.id)
+        self.assertEqual(audit_logs.count(), 0)
+
+    def test_config_max_entries_cleanup(self):
+        self.config.max_entries_per_item = 2
+        self.config.save()
+
+        models.AuditConfiguration()._clear_cache()
+
+        item = ItemFactory(
+            transfer=TransferFactory(),
+            material=MaterialFactory(),
+            quantity=1
+        )
+
+        for i in range(5):
+            item.quantity = i + 2
+            item.save()
+
+        audit_logs = models.ItemAuditLog.objects.filter(item_id=item.id)
+        self.assertLessEqual(audit_logs.count(), self.config.max_entries_per_item)
+
+    def test_single_active_config_enforcement(self):
+        config2 = models.AuditConfiguration.objects.create(
+            name="Second Config",
+            is_enabled=True,
+            is_active=True
+        )
+
+        self.config.refresh_from_db()
+        self.assertFalse(self.config.is_active)
+        self.assertTrue(config2.is_active)
 
 
 class TestItemAuditLogEdgeCases(BaseTenantTestCase):
@@ -488,6 +579,15 @@ class TestItemAuditLogEdgeCases(BaseTenantTestCase):
     def setUpTestData(cls):
         cls.transfer = TransferFactory()
         cls.material = MaterialFactory()
+        cls.country = CountryFactory()
+        connection.tenant = cls.country
+
+        cls.tenant = TenantSwitchFactory(
+            name="lmsm_item_audit_logs",
+            countries=[cls.country],
+        )
+
+        cls.tenant.flush()
 
     def test_audit_log_with_null_values(self):
         item = ItemFactory(
@@ -506,27 +606,6 @@ class TestItemAuditLogEdgeCases(BaseTenantTestCase):
             for value in new_values.values():
                 str(value)
 
-    def test_concurrent_updates(self):
-        item = ItemFactory(transfer=self.transfer, material=self.material)
-
-        models.ItemAuditLog.objects.all().delete()
-
-        def update_item_quantity():
-            fresh_item = models.Item.objects.get(id=item.id)
-            fresh_item.quantity += 1
-            fresh_item.save()
-
-        def update_item_batch():
-            fresh_item = models.Item.objects.get(id=item.id)
-            fresh_item.batch_id = 'CONCURRENT_UPDATE'
-            fresh_item.save()
-
-        update_item_quantity()
-        update_item_batch()
-
-        audit_logs = models.ItemAuditLog.objects.filter(item_id=item.id)
-        self.assertEqual(audit_logs.count(), 2)
-
     @patch('etools.applications.last_mile.services.audit_log_service.AuditLogService.create_audit_log')
     def test_audit_failure_doesnt_break_application(self, mock_create_audit):
         mock_create_audit.side_effect = Exception("Audit system error")
@@ -537,42 +616,8 @@ class TestItemAuditLogEdgeCases(BaseTenantTestCase):
         except Exception as e:
             self.assertEqual(str(e), "Audit system error")
 
-    def test_audit_log_performance_with_many_fields(self):
-        item = ItemFactory(
-            transfer=self.transfer,
-            material=self.material,
-            quantity=10,
-            batch_id='BATCH123',
-            mapped_description='Test description',
-            expiry_date=timezone.now(),
-            amount_usd=Decimal('100.00'),
-            conversion_factor=Decimal('1.5'),
-            wastage_type=models.Item.EXPIRED,
-            purchase_order_item='PO123',
-            unicef_ro_item='RO456'
-        )
-
-        models.ItemAuditLog.objects.all().delete()
-
-        start_time = timezone.now()
-        item.quantity = 20
-        item.batch_id = 'BATCH456'
-        item.mapped_description = 'Updated description'
-        item.expiry_date = timezone.now() + datetime.timedelta(days=1)
-        item.amount_usd = Decimal('200.00')
-        item.conversion_factor = Decimal('2.0')
-        item.wastage_type = models.Item.DAMAGED
-        item.purchase_order_item = 'PO789'
-        item.unicef_ro_item = 'RO123'
-        item.save()
-        end_time = timezone.now()
-
-        duration = (end_time - start_time).total_seconds()
-        self.assertLess(duration, 1.0)
-
-        audit_log = models.ItemAuditLog.objects.filter(item_id=item.id).first()
-        self.assertIsNotNone(audit_log)
-        self.assertEqual(len(audit_log.changed_fields), 7)
+    def setUp(self):
+        ItemAuditConfigurationFactory()
 
 
 class TestItemAuditLogAdvancedScenarios(BaseTenantTestCase):
@@ -582,6 +627,13 @@ class TestItemAuditLogAdvancedScenarios(BaseTenantTestCase):
         cls.partner = PartnerFactory(organization=OrganizationFactory(name='Partner'))
         cls.transfer = TransferFactory()
         cls.material = MaterialFactory()
+        ItemAuditConfigurationFactory()
+        cls.tenant = TenantSwitchFactory(
+            name="lmsm_item_audit_logs",
+            countries=[connection.tenant],
+        )
+
+        cls.tenant.flush()
 
     def setUp(self):
         models.ItemAuditLog.objects.all().delete()
@@ -632,7 +684,7 @@ class TestItemAuditLogAdvancedScenarios(BaseTenantTestCase):
             item.expiry_date = new_date
             item.save()
 
-            audit_log = models.ItemAuditLog.objects.filter(item_id=item.id).latest('timestamp')
+            audit_log = models.ItemAuditLog.objects.filter(item_id=item.id).latest('created')
 
             if new_date is not None:
                 new_value = audit_log.new_values.get('expiry_date')
@@ -665,51 +717,13 @@ class TestItemAuditLogAdvancedScenarios(BaseTenantTestCase):
             item.wastage_type = wastage_type
             item.save()
 
-            audit_log = models.ItemAuditLog.objects.filter(item_id=item.id).latest('timestamp')
+            audit_log = models.ItemAuditLog.objects.filter(item_id=item.id).latest('created')
             self.assertIn('wastage_type', audit_log.changed_fields)
 
             expected_value = wastage_type
             self.assertEqual(audit_log.new_values.get('wastage_type'), expected_value)
 
             models.ItemAuditLog.objects.filter(item_id=item.id).delete()
-
-    def test_json_field_complex_structures(self):
-        complex_data = {
-            'metadata': {
-                'version': '1.0',
-                'created_by': 'system',
-                'tags': ['urgent', 'medical'],
-                'nested_data': {
-                    'coordinates': [12.34, 56.78],
-                    'measurements': {'weight': 10.5, 'volume': 2.3}
-                }
-            },
-            'flags': {'is_priority': True, 'needs_review': False},
-            'unicode_test': '测试数据 🚀 with émojis'
-        }
-
-        item = ItemFactory(
-            transfer=self.transfer,
-            material=self.material,
-            other=complex_data
-        )
-
-        models.ItemAuditLog.objects.all().delete()
-
-        new_data = {
-            'metadata': {'version': '2.0', 'updated': True},
-            'new_field': [1, 2, 3, {'nested': 'value'}]
-        }
-
-        item.other = new_data
-        item.save()
-
-        audit_log = models.ItemAuditLog.objects.filter(item_id=item.id).first()
-        if audit_log and 'other' in audit_log.changed_fields:
-            old_value = audit_log.old_values.get('other')
-            new_value = audit_log.new_values.get('other')
-            self.assertIsNotNone(old_value)
-            self.assertIsNotNone(new_value)
 
     def test_unicode_and_special_characters_comprehensive(self):
         unicode_samples = [

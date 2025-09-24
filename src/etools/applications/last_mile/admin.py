@@ -15,8 +15,6 @@ from django.utils.translation import gettext_lazy as _
 from unicef_attachments.admin import AttachmentSingleInline
 
 from etools.applications.last_mile import models
-from etools.applications.last_mile.utils.audit_context import audit_context
-from etools.applications.last_mile.utils.config_audit import ITEM_AUDIT_LOG_TRACKED_FIELDS
 from etools.applications.organizations.models import Organization
 from etools.applications.partners.admin import AttachmentInlineAdminMixin
 from etools.applications.partners.models import PartnerOrganization
@@ -562,15 +560,51 @@ class PartnerMaterialAdmin(admin.ModelAdmin):
 admin.site.register(models.PointOfInterestType)
 
 
+@admin.register(models.AuditConfiguration)
+class AuditConfigurationAdmin(admin.ModelAdmin):
+    list_display = ('name', 'is_enabled', 'track_system_users', 'max_entries_per_item', 'is_active', 'created', 'modified')
+    list_filter = ('is_enabled', 'track_system_users', 'is_active')
+    search_fields = ('name',)
+    readonly_fields = ('created', 'modified')
+
+    fieldsets = (
+        (None, {
+            'fields': ('name', 'is_active')
+        }),
+        ('Audit Settings', {
+            'fields': ('is_enabled', 'track_system_users', 'max_entries_per_item')
+        }),
+        ('Field Configuration', {
+            'fields': ('tracked_fields', 'fk_field_mappings')
+        }),
+        ('User Exclusions', {
+            'fields': ('excluded_user_ids',)
+        }),
+        ('Timestamps', {
+            'fields': ('created', 'modified'),
+            'classes': ('collapse',)
+        })
+    )
+
+    def has_add_permission(self, request):
+        return True if request.user.is_superuser else False
+
+    def has_delete_permission(self, request, obj=None):
+        return True if request.user.is_superuser else False
+
+    def has_change_permission(self, request, obj=None):
+        return True if request.user.is_superuser else False
+
+
 @admin.register(models.ItemAuditLog)
 class ItemAuditLogAdmin(admin.ModelAdmin):
-    list_display = ('item_id', 'action', 'user', 'timestamp', 'changed_fields_display', 'transfer_display', 'view_item_link')
+    list_display = ('item_id', 'action', 'user', 'created', 'changed_fields_display', 'transfer_display', 'view_item_link')
     list_filter = ('action',)
     search_fields = ('item_id', 'user__email', 'user__first_name', 'user__last_name', 'transfer_info', 'material_info', 'critical_changes')
     readonly_fields = ('item_id', 'action', 'changed_fields', 'old_values', 'new_values',
-                       'user', 'transfer_info', 'material_info', 'critical_changes', 'timestamp', 'tracked_changes_display', 'transfer_details_display', 'item_exists')
-    ordering = ('-timestamp',)
-    date_hierarchy = 'timestamp'
+                       'user', 'transfer_info', 'material_info', 'critical_changes', 'created', 'tracked_changes_display', 'transfer_details_display', 'item_exists')
+    ordering = ('-created',)
+    date_hierarchy = 'created'
 
     def get_queryset(self, request):
         return super().get_queryset(request).select_related('user')
@@ -694,7 +728,7 @@ class ItemAuditLogAdmin(admin.ModelAdmin):
         try:
             success = self.revert_item_to_audit_state(audit_log, request.user)
             if success:
-                self.message_user(request, f"Successfully reverted Item {audit_log.item_id} to state from {audit_log.timestamp}.")
+                self.message_user(request, f"Successfully reverted Item {audit_log.item_id} to state from {audit_log.created}.")
             else:
                 self.message_user(request, f"Failed to revert Item {audit_log.item_id}. Item may no longer exist.", level='error')
         except Exception as e:
@@ -711,29 +745,31 @@ class ItemAuditLogAdmin(admin.ModelAdmin):
                 return False
             return False
 
-        with audit_context(reverting_user):
-            with transaction.atomic():
-                if audit_log.action == models.ItemAuditLog.ACTION_CREATE:
+        with transaction.atomic():
+            if audit_log.action == models.ItemAuditLog.ACTION_CREATE:
+                return False
+            elif audit_log.action in [models.ItemAuditLog.ACTION_UPDATE, models.ItemAuditLog.ACTION_DELETE]:
+                if audit_log.old_values:
+                    self._apply_audit_values_to_item(item, audit_log.old_values)
+                else:
                     return False
-                elif audit_log.action in [models.ItemAuditLog.ACTION_UPDATE, models.ItemAuditLog.ACTION_DELETE]:
-                    if audit_log.old_values:
-                        self._apply_audit_values_to_item(item, audit_log.old_values)
-                    else:
-                        return False
-                elif audit_log.action == models.ItemAuditLog.ACTION_SOFT_DELETE:
-                    if audit_log.old_values:
-                        self._apply_audit_values_to_item(item, audit_log.old_values)
-                    else:
-                        return False
-                item.save()
-                return True
+            elif audit_log.action == models.ItemAuditLog.ACTION_SOFT_DELETE:
+                if audit_log.old_values:
+                    self._apply_audit_values_to_item(item, audit_log.old_values)
+                else:
+                    return False
+            item.save()
+            return True
 
         return False
 
     def _apply_audit_values_to_item(self, item, audit_values):
 
+        config = models.AuditConfiguration.get_active_config()
+        tracked_fields = config.tracked_fields if config else []
+
         for field_name, field_value in audit_values.items():
-            if field_name in ITEM_AUDIT_LOG_TRACKED_FIELDS and hasattr(item, field_name):
+            if field_name in tracked_fields and hasattr(item, field_name):
                 if field_name.endswith('_id') and isinstance(field_value, dict):
                     setattr(item, field_name, field_value.get('id'))
                 elif field_name in ['expiry_date'] and field_value:
