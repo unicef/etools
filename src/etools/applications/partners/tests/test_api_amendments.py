@@ -293,6 +293,24 @@ class TestInterventionAmendments(BaseTestInterventionAmendments, BaseTenantTestC
         self.assertFalse(response.data['permissions']['view']['attachments'])
         self.assertFalse(response.data['permissions']['edit']['attachments'])
 
+    def test_special_reporting_requirements(self):
+        amendment = InterventionAmendmentFactory(intervention=self.active_intervention)
+        # Special reports are not editable in the amendment, as the changes will not be merged
+        response = self.forced_auth_req(
+            'get', reverse('pmp_v3:intervention-detail', args=[amendment.amended_intervention.pk]),
+            self.unicef_staff
+        )
+        self.assertTrue(response.data['permissions']['view']['special_reporting_requirements'])
+        self.assertFalse(response.data['permissions']['edit']['special_reporting_requirements'])
+
+        # Special reports are editable only in the original PD
+        response = self.forced_auth_req(
+            'get', reverse('pmp_v3:intervention-detail', args=[self.active_intervention.pk]),
+            self.unicef_staff
+        )
+        self.assertTrue(response.data['permissions']['view']['special_reporting_requirements'])
+        self.assertTrue(response.data['permissions']['edit']['special_reporting_requirements'])
+
     def test_amendment_prc_no_review_type(self):
         amendment = InterventionAmendmentFactory(intervention=self.active_intervention)
         amendment.amended_intervention.unicef_accepted = True
