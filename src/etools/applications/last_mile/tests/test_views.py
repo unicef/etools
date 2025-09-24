@@ -1259,7 +1259,7 @@ class TestItemAuditLogViewWorkflow(BaseTenantTestCase):
         for i, item in enumerate(distribution_items):
             url = reverse('last_mile:item-update-detail', args=(item.pk,))
             update_data = {
-                'description': f'Updated description {i+1}',
+                'description': f'Updated description {i + 1}',
                 'uom': 'KG'
             }
             response = self.forced_auth_req('patch', url, user=self.partner_staff, data=update_data)
