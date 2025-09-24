@@ -971,7 +971,6 @@ class AuditConfiguration(TimeStampedModel, models.Model):
         return config
 
     class Meta:
-        db_table = 'last_mile_auditconfiguration'
         verbose_name = 'Audit Configuration'
         verbose_name_plural = 'Audit Configurations'
         ordering = ['-is_active', 'name']
