@@ -5,7 +5,7 @@ from unittest.mock import Mock, patch
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
 from django.db import connection
-from django.test import override_settings
+from django.test import override_settings, tag
 from django.utils import timezone
 
 from rest_framework import status
@@ -1185,6 +1185,7 @@ class TestItemUpdateViewSet(BaseTenantTestCase):
         self.assertIn('Incorrect split values.', response.data['quantities'][0])
 
 
+@tag('e2e')
 class TestItemAuditLogViewWorkflow(BaseTenantTestCase):
 
     @classmethod
