@@ -128,6 +128,20 @@ class LocationsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.data[0]['id'], str(self.country.id))
         self.assertEqual(response.data[1]['id'], str(self.child_location.id))
 
+    def test_get_path_inactive_location(self):
+        """Path endpoint should be accessible for inactive locations and return only active ancestors."""
+        inactive_child = LocationFactory(parent=self.country, is_active=False)
+
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_settings:locations-path', args=[inactive_child.id]),
+            user=self.unicef_user,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # Inactive location itself is excluded; only active ancestors should be returned
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['id'], str(self.country.id))
+
 
 class LocationSitesViewTestCase(TestExportMixin, FMBaseTestCaseMixin, BaseTenantTestCase):
     def setUp(self):
