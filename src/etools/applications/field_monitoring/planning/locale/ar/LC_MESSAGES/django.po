@@ -166,6 +166,16 @@ msgstr "الموظفين"
 msgid "TPM"
 msgstr "المُراقب المستقل"
 
+msgid "Visit lead is inactive or has no access"
+msgstr "مسؤول الزيارة غير نشط أو ليس لديه حق الوصول"
+
+#, python-format
+msgid "Team members inactive or with no access: %s"
+msgstr "أعضاء الفريق غير نشطين أو بدون حق وصول: %s"
+
+msgid "Both"
+msgstr "كلاهما"
+
 msgid "Draft"
 msgstr "الصياغة التمهيدية"
 
