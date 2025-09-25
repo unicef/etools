@@ -6,10 +6,10 @@ from etools_validator.validation import CompleteValidation
 
 from etools.applications.field_monitoring.planning.activity_validation.permissions import ActivityPermissions
 from etools.applications.field_monitoring.planning.activity_validation.validations.basic import (
+    assignees_have_active_access,
     interventions_connected_with_partners,
     staff_activity_has_no_tpm_partner,
     tpm_staff_members_belongs_to_the_partner,
-    assignees_have_active_access,
 )
 from etools.applications.field_monitoring.planning.activity_validation.validations.state import (
     activity_overall_findings_required,

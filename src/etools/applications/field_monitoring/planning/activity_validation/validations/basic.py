@@ -1,3 +1,4 @@
+from django.db import connection
 from django.utils.translation import gettext as _
 
 from etools_validator.exceptions import BasicValidationError
@@ -5,7 +6,6 @@ from etools_validator.exceptions import BasicValidationError
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.reports.models import CountryProgramme, Result
-from django.db import connection
 from etools.applications.users.models import Realm
 
 
