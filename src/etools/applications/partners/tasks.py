@@ -122,7 +122,6 @@ def intervention_status_automatic_transition():
         _make_intervention_status_automatic_transitions(country.name)
 
 
-@transaction.atomic
 def _make_intervention_status_automatic_transitions(country_name):
     """Implementation core of intervention_status_automatic_transition() (q.v.)"""
     logger.info('Starting intervention auto status transition for country {}'.format(country_name))
