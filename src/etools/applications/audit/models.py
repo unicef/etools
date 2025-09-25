@@ -236,8 +236,8 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
         return '{} {}'.format(self.get_engagement_type_display(), self.reference_number)
 
     def update_totals(self):
-        if self.engagement_type == self.TYPE_SPECIAL_AUDIT and self.total_value_local:
-            self.exchange_rate = self.total_value / self.total_value_local
+        if self.engagement_type == self.TYPE_SPECIAL_AUDIT and self.total_value:
+            self.exchange_rate = self.total_value_local / self.total_value
 
         elif self.engagement_type in [self.TYPE_AUDIT, self.TYPE_SPOT_CHECK]:
             if self.prior_face_forms:  # if not face_forms.exist()
@@ -260,7 +260,7 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
                 if local_qs.count() > 0:
                     latest_face = local_qs.order_by('-end_date').first()
                     self.exchange_rate = latest_face.exchange_rate
-                    usd_to_local = usd_qs.aggregate(Sum("amount_local"))['amount_local__sum'] * self.exchange_rate
+                    usd_to_local = usd_qs.aggregate(Sum("amount_local"))['amount_local__sum'] / self.exchange_rate
                     self.total_value_local = usd_to_local + local_qs.aggregate(Sum("amount_local"))['amount_local__sum']
 
         self.save(update_fields=['total_value', 'total_value_local', 'exchange_rate'])
@@ -374,10 +374,10 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
 
     def save(self, *args, **kwargs):
         if self.exchange_rate:
-            self.amount_refunded = self.amount_refunded_local * self.exchange_rate if self.amount_refunded_local else 0
-            self.additional_supporting_documentation_provided = self.additional_supporting_documentation_provided_local * self.exchange_rate if self.additional_supporting_documentation_provided_local else 0
-            self.justification_provided_and_accepted = self.justification_provided_and_accepted_local * self.exchange_rate if self.justification_provided_and_accepted_local else 0
-            self.write_off_required = self.write_off_required_local * self.exchange_rate if self.write_off_required_local else 0
+            self.amount_refunded = self.amount_refunded_local / self.exchange_rate if self.amount_refunded_local else 0
+            self.additional_supporting_documentation_provided = self.additional_supporting_documentation_provided_local / self.exchange_rate if self.additional_supporting_documentation_provided_local else 0
+            self.justification_provided_and_accepted = self.justification_provided_and_accepted_local / self.exchange_rate if self.justification_provided_and_accepted_local else 0
+            self.write_off_required = self.write_off_required_local / self.exchange_rate if self.write_off_required_local else 0
 
         super().save(*args, **kwargs)
         if not self.reference_number:
@@ -789,7 +789,7 @@ class Audit(Engagement):
         self.engagement_type = Engagement.TYPES.audit
 
         if self.exchange_rate and self.audited_expenditure_local:
-            self.audited_expenditure = self.audited_expenditure_local * self.exchange_rate
+            self.audited_expenditure = self.audited_expenditure_local / self.exchange_rate
 
         return super().save(*args, **kwargs)
 

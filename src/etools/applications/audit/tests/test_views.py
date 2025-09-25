@@ -705,7 +705,7 @@ class TestAuditCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEngage
         self.assertEqual(audit.total_value_local, Decimal(response.data['total_value_local']))
 
         self.assertEqual(audit.total_value, 350)
-        self.assertEqual(audit.total_value_local, 1000 + 100 * audit.exchange_rate)
+        self.assertEqual(audit.total_value_local, 1000 + 100 / audit.exchange_rate)
 
 
 class TestSpotCheckCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEngagementsCreateViewSet,
@@ -864,7 +864,7 @@ class TestSpecialAuditCreateViewSet(BaseTestEngagementsCreateViewSet, BaseTenant
         self.assertEqual(face_1.amount_local.__str__(), response.data['face_forms'][0]['amount_local'])
         self.assertEqual(sp_audit.total_value, 333)
         self.assertEqual(sp_audit.total_value_local, 444)
-        self.assertEqual(sp_audit.exchange_rate.__str__(), round(333 / 444, 2).__str__())
+        self.assertEqual(sp_audit.exchange_rate.__str__(), round(444 / 333, 2).__str__())
         self.assertEqual(Decimal(data['total_value']), Decimal(response.data['total_value']))
         self.assertEqual(Decimal(data['total_value_local']), Decimal(response.data['total_value_local']))
 
@@ -986,15 +986,15 @@ class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenan
         self.assertEqual(response.data['audited_expenditure_local'], '10.00')
 
     def test_calculate_audited_expenditure(self):
-        self.engagement.exchange_rate = 1.5
+        self.engagement.exchange_rate = 95.27
         self.engagement.save(update_fields=['exchange_rate'])
         face_1 = FaceFormFactory(amount_usd=100.25, amount_local=9550.55, exchange_rate=95.27)
         self.engagement.face_forms.add(face_1)
         response = self._do_update(self.auditor, {
-            'audited_expenditure_local': 10,
+            'audited_expenditure_local': 550,
         })
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['audited_expenditure'], '15.00')
+        self.assertEqual(response.data['audited_expenditure'], '5.77')
 
     def test_date_of_field_visit_after_partner_contacted_at_validation(self):
         self.engagement.partner_contacted_at = self.engagement.end_date + datetime.timedelta(days=1)
@@ -1269,10 +1269,10 @@ class TestSpotCheckDetail(SCTransitionsTestCaseMixin, BaseTenantTestCase):
 
         self.assertEqual(float(response.data['exchange_rate']), 2.00)
 
-        self.assertEqual(float(response.data['amount_refunded']), 200.00)
-        self.assertEqual(float(response.data['additional_supporting_documentation_provided']), 50.00)
-        self.assertEqual(float(response.data['justification_provided_and_accepted']), 150.00)
-        self.assertEqual(float(response.data['write_off_required']), 100.00)
+        self.assertEqual(float(response.data['amount_refunded']), 50.00)
+        self.assertEqual(float(response.data['additional_supporting_documentation_provided']), 12.50)
+        self.assertEqual(float(response.data['justification_provided_and_accepted']), 37.50)
+        self.assertEqual(float(response.data['write_off_required']), 25.00)
         self.assertEqual(
             float(response.data['percent_of_audited_expenditure']),
             100 * self.engagement.total_amount_of_ineligible_expenditure_local / self.engagement.total_amount_tested_local
