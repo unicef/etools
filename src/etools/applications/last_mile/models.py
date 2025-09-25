@@ -601,7 +601,6 @@ class Item(TimeStampedModel, models.Model):
         null=True, blank=True,
         related_name='origin_items'
     )
-    transfers_history = models.ManyToManyField(Transfer, through='ItemTransferHistory')
 
     mapped_description = models.CharField(max_length=255, null=True, blank=True)
 
@@ -638,24 +637,8 @@ class Item(TimeStampedModel, models.Model):
         should_hide = not partner_material_exists
         return should_hide
 
-    def add_transfer_history(self, transfer):
-        ItemTransferHistory.objects.create(
-            item=self,
-            transfer=transfer
-        )
-
     def __str__(self):
         return f'{self.material.number}: {self.description} / qty {self.quantity}'
-
-
-class ItemTransferHistory(TimeStampedModel, models.Model):
-    transfer = models.ForeignKey(Transfer, on_delete=models.CASCADE)
-    item = models.ForeignKey(Item, on_delete=models.CASCADE)
-
-    objects = BaseExportQuerySet.as_manager()
-
-    class Meta:
-        unique_together = ('transfer', 'item')
 
 
 class AdminPanelPermission(models.Model):
@@ -760,6 +743,13 @@ class UserPointsOfInterest(TimeStampedModel, models.Model):
         verbose_name_plural = _('User Points of Interest')
 
 
+class ItemAuditLogQuerySet(models.QuerySet):
+    def prepare_for_lm_export(self) -> models.QuerySet:
+        return self.values("id", "created", "modified", "item_id", "action", "changed_fields", "old_values", "new_values").annotate(
+            transfer_id=models.F("transfer_info__transfer_id"),
+        )
+
+
 class ItemAuditLog(TimeStampedModel, models.Model):
     ACTION_CREATE = 'CREATE'
     ACTION_UPDATE = 'UPDATE'
@@ -819,6 +809,8 @@ class ItemAuditLog(TimeStampedModel, models.Model):
         blank=True,
         help_text=_("Important changes like transfer or material changes")
     )
+
+    objects = ItemAuditLogQuerySet.as_manager()
 
     class Meta:
         ordering = ['-created']
