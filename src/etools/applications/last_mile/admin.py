@@ -5,7 +5,7 @@ from django.contrib import admin
 from django.contrib.gis import forms
 from django.contrib.gis.geos import Point
 from django.db import transaction
-from django.db.models import CharField, Count, F, Prefetch, Value
+from django.db.models import CharField, F, Prefetch, Value
 from django.db.models.functions import Coalesce
 from django.urls import reverse
 from django.utils.dateparse import parse_datetime
@@ -247,7 +247,7 @@ class UserPointsOfInterestAdmin(admin.ModelAdmin):
 @admin.register(models.Item)
 class ItemAdmin(XLSXImportMixin, admin.ModelAdmin):
     list_display = ('batch_id', 'material', 'wastage_type', 'transfer')
-    raw_id_fields = ('transfer', 'transfers_history', 'material', 'origin_transfer')
+    raw_id_fields = ('transfer', 'material', 'origin_transfer')
     list_filter = ('wastage_type', 'hidden')
     readonly_fields = ('destination_point_name',)
 
@@ -281,7 +281,7 @@ class ItemAdmin(XLSXImportMixin, admin.ModelAdmin):
                 'transfer__partner_organization__organization',
                 'material',
             )\
-            .prefetch_related('transfers_history', 'material__partner_material')
+            .prefetch_related('material__partner_material')
         return qs
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
@@ -502,52 +502,6 @@ class TransferHistoryAdmin(admin.ModelAdmin):
         if search_term:
             queryset |= self.model.objects.filter(origin_transfer__name__icontains=search_term)
         return queryset, use_distinct
-
-
-@admin.register(models.ItemTransferHistory)
-class ItemTransferHistoryAdmin(admin.ModelAdmin):
-    list_display = ('item_batch_id', 'transfer_unicef_release_order', 'transfer_count', 'view_items_link')
-    list_filter = ('transfer__name',)
-    search_fields = ('transfer__name', 'transfer__partner_organization__organization__name', 'transfer__destination_point__name', 'item__batch_id')
-
-    def transfer_unicef_release_order(self, obj):
-        return obj.unicef_release_order
-    transfer_unicef_release_order.short_description = "UNICEF Release Order"
-
-    def item_batch_id(self, obj):
-        return obj.batch_id
-    item_batch_id.short_description = "Batch ID"
-
-    def transfer_count(self, obj):
-        return obj.item_count
-    transfer_count.short_description = 'Transfers Count'
-
-    def get_queryset(self, request):
-        qs = models.ItemTransferHistory.objects.select_related(
-            "transfer__partner_organization__organization",
-        ).annotate(
-            item_count=Count('transfer__itemtransferhistory'),
-            unicef_release_order=F('transfer__unicef_release_order'),
-            batch_id=F('item__batch_id')
-        )
-        return qs
-
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if db_field.name == "transfer":
-            kwargs["queryset"] = models.Transfer.objects.select_related(
-                "partner_organization__organization",
-            )
-        if db_field.name == "item":
-            kwargs["queryset"] = models.Item.objects.select_related(
-                "transfer__partner_organization", 'material'
-            )
-        return super().formfield_for_foreignkey(db_field, request, **kwargs)
-
-    def view_items_link(self, obj):
-        """ Link to the transfer detail page with items listed """
-        url = reverse("admin:last_mile_transfer_change", args=[obj.transfer.id])
-        return format_html(f'<a href="{url}">View Transfer</a>')
-    view_items_link.short_description = "Transfer Details"
 
 
 @admin.register(models.PartnerMaterial)

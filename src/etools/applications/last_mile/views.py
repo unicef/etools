@@ -235,7 +235,6 @@ class TransferViewSet(
             Prefetch(
                 'items', models.Item.objects
                 .select_related('material')
-                .prefetch_related('transfers_history')
                 .annotate(description=F('material__short_description')))
         )
 
