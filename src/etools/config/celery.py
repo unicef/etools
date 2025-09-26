@@ -19,12 +19,3 @@ app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
 
 def get_task_app():
     return app
-
-
-@app.task
-def send_to_slack(message):
-    if settings.SLACK_URL:
-        requests.post(
-            settings.SLACK_URL,
-            data=json.dumps({'text': message})
-        )
