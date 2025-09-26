@@ -1,9 +1,7 @@
-import json
 import os
 
 from django.conf import settings
 
-import requests
 from tenant_schemas_celery.app import CeleryApp
 
 # set the default Django settings module for the 'celery' program.
