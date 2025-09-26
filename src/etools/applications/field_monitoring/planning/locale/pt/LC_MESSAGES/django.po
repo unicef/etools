@@ -32,6 +32,13 @@ msgstr "Você selecionou um PD/SPD e desmarcou alguns de seus parceiros correspo
 msgid "You've selected a PD/SPD and unselected some of it's corresponding outputs, please either remove the PD or add the outputs back before saving: %s"
 msgstr "Você selecionou um PD/SPD e desmarcou algumas de suas saídas correspondentes, remova o PD ou adicione as saídas antes de salvar: %s"
 
+msgid "Visit lead is inactive or has no access"
+msgstr "O responsável pela visita está inativo ou sem acesso"
+
+#, python-format
+msgid "Team members inactive or with no access: %s"
+msgstr "Membros da equipe inativos ou sem acesso: %s"
+
 msgid "Partner is not defined for TPM activity"
 msgstr "Parceiro não está definido para atividade TPM"
 
@@ -165,6 +172,9 @@ msgstr "Pessoal"
 
 msgid "TPM"
 msgstr ""
+
+msgid "Both"
+msgstr "Ambos"
 
 msgid "Draft"
 msgstr ""
