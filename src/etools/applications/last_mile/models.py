@@ -468,7 +468,8 @@ class Material(TimeStampedModel, models.Model):
         ("SET", _("SET")),
         ("TBE", _("TBE")),
         ("TO", _("TO")),
-        ("VL", _("VL"))
+        ("VL", _("VL")),
+        ("CAN", _("CAN")),
     )
 
     number = models.CharField(max_length=30, unique=True)
