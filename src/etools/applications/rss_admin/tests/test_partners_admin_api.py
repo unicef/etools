@@ -4,8 +4,9 @@ from django.urls import reverse
 from rest_framework import status
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.tests.factories import PartnerFactory
-from etools.applications.users.tests.factories import SuperUserFactory
+from etools.applications.users.tests.factories import UserFactory
 
 
 @override_settings(RESTRICTED_ADMIN=False)
@@ -14,7 +15,7 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
-        cls.user = SuperUserFactory()
+        cls.user = UserFactory(is_staff=True)
         cls.partner = PartnerFactory()
 
     def test_list_partners(self):
@@ -32,8 +33,9 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
 
     def test_create_partner(self):
         url = reverse('rss_admin:rss-admin-partners-list')
+        new_org = OrganizationFactory()
         payload = {
-            'organization': self.partner.organization.id,
+            'organization': new_org.id,
         }
         response = self.forced_auth_req('post', url, user=self.user, data=payload)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
