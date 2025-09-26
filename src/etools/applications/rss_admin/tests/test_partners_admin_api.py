@@ -54,5 +54,3 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         url = reverse('rss_admin:rss-admin-partners-detail', kwargs={'pk': partner.pk})
         response = self.forced_auth_req('delete', url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-
-

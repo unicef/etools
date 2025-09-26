@@ -13,5 +13,3 @@ app_name = 'rss_admin'
 urlpatterns = [
     path('', include(router.urls)),
 ]
-
-

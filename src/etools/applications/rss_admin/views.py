@@ -1,4 +1,4 @@
-from rest_framework import viewsets, filters
+from rest_framework import filters, viewsets
 
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.rss_admin.permissions import IsRssAdmin
@@ -17,4 +17,3 @@ class PartnerOrganizationAdminViewSet(viewsets.ModelViewSet):
         'email',
         'phone_number',
     )
-

@@ -10,5 +10,3 @@ class PartnerOrganizationAdminSerializer(serializers.ModelSerializer):
     class Meta:
         model = PartnerOrganization
         fields = '__all__'
-
-

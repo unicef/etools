@@ -11,5 +11,3 @@ class IsRssAdmin(BasePermission):
         allowed = getattr(settings, 'ADMIN_EDIT_EMAILS', '')
         allowed_set = {email.strip().lower() for email in allowed.split(',') if email.strip()}
         return request.user.email and request.user.email.lower() in allowed_set
-
-
