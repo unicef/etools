@@ -23,6 +23,43 @@ from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.users.tests.factories import CountryFactory, UserFactory
 
 
+class TestItemAuditLogSignalsDisabled(BaseTenantTestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.tenant = TenantSwitchFactory(
+            name="lmsm_item_audit_logs",
+            active=False,
+        )
+        cls.tenant.countries.add(connection.tenant)
+        cls.tenant.flush()
+        ItemAuditConfigurationFactory()
+        cls.transfer = TransferFactory()
+        cls.material = MaterialFactory()
+
+    def test_audit_when_tenant_disabled(self):
+        self.tenant.active = False
+        self.tenant.save()
+
+        self.tenant.refresh_from_db()
+        self.tenant.flush()
+
+        item = ItemFactory(
+            transfer=self.transfer,
+            material=self.material,
+            quantity=10,
+            batch_id='BATCH123'
+        )
+
+        item.quantity = 15
+        item.batch_id = 'BATCH456'
+        item.mapped_description = 'Updated description'
+        item.save()
+
+        audit_logs = models.ItemAuditLog.objects.filter(item_id=item.id)
+        self.assertEqual(audit_logs.count(), 0)
+
+
 class TestItemAuditLogSignals(BaseTenantTestCase):
 
     @classmethod
