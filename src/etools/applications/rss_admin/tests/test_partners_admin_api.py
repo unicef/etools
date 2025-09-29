@@ -1,3 +1,4 @@
+from django.db import connection
 from django.test import override_settings
 from django.urls import reverse
 
@@ -6,7 +7,7 @@ from rest_framework import status
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.tests.factories import AgreementFactory, PartnerFactory
-from etools.applications.users.tests.factories import UserFactory
+from etools.applications.users.tests.factories import GroupFactory, RealmFactory, UserFactory
 
 
 @override_settings(RESTRICTED_ADMIN=False)
@@ -31,6 +32,17 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         response = self.forced_auth_req('get', url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['id'], self.partner.id)
+        self.assertIn('name', response.data)
+        self.assertIn('vendor_number', response.data)
+        self.assertIn('short_name', response.data)
+        self.assertIn('email', response.data)
+        self.assertIn('phone_number', response.data)
+        self.assertIn('street_address', response.data)
+        self.assertIn('city', response.data)
+        self.assertIn('postal_code', response.data)
+        self.assertIn('country', response.data)
+        self.assertIn('rating', response.data)
+        self.assertIn('basis_for_risk_rating', response.data)
 
     def test_create_partner(self):
         url = reverse('rss_admin:rss-admin-partners-list')
@@ -95,3 +107,21 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         ids = [row['id'] for row in response.data]
         self.assertIn(self.agreement.id, ids)
+
+    @override_settings(RESTRICTED_ADMIN=True)
+    def test_access_allowed_for_rss_admin_realm(self):
+        user = UserFactory(is_staff=False)
+        group = GroupFactory(name='Rss Admin')
+        RealmFactory(user=user, country=connection.tenant, group=group, is_active=True)
+
+        url = reverse('rss_admin:rss-admin-partners-list')
+        response = self.forced_auth_req('get', url, user=user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    @override_settings(RESTRICTED_ADMIN=True)
+    def test_access_denied_without_rss_admin_realm(self):
+        user = UserFactory(is_staff=False)
+        # no realm added for this user in current tenant with the required group
+        url = reverse('rss_admin:rss-admin-partners-list')
+        response = self.forced_auth_req('get', url, user=user)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
