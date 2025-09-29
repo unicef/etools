@@ -469,7 +469,8 @@ class Material(TimeStampedModel, models.Model):
         ("SET", _("SET")),
         ("TBE", _("TBE")),
         ("TO", _("TO")),
-        ("VL", _("VL"))
+        ("VL", _("VL")),
+        ("CAN", _("CAN")),
     )
 
     number = models.CharField(max_length=30, unique=True)
@@ -623,6 +624,10 @@ class Item(TimeStampedModel, models.Model):
         if self.mapped_description:
             return self.mapped_description
         return self.material.short_description
+
+    def hide(self):
+        self.hidden = True
+        self.save()
 
     @cached_property
     def should_be_hidden_for_partner(self):
