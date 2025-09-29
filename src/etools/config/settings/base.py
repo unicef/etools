@@ -499,8 +499,6 @@ if INACTIVE_BUSINESS_AREAS == ['']:
     # really what we want
     INACTIVE_BUSINESS_AREAS = []
 
-SLACK_URL = get_from_secrets_or_env('SLACK_URL')
-
 TASK_ADMIN_USER = get_from_secrets_or_env('TASK_ADMIN_USER', 'etools_task_admin@unicef.org')
 
 INSIGHT_LOGGER_MODEL = "vision.VisionSyncLog"

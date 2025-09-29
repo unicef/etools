@@ -3,6 +3,7 @@ import logging
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
+from etools.applications.last_mile import audit_signals  # noqa
 from etools.applications.last_mile.models import Item
 from etools.applications.last_mile.serializers import ItemSerializer
 
