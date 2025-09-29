@@ -1,4 +1,5 @@
 import logging
+import threading
 
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
@@ -27,6 +28,8 @@ ANONYMOUS_ALLOWED_URL_FRAGMENTS = [
 ]
 
 INACTIVE_WORKSPACE_URL = reverse('workspace-inactive')
+
+_thread_locals = threading.local()
 
 
 class QueryCountDebugMiddleware(MiddlewareMixin):
@@ -153,8 +156,14 @@ class ExternalAccessControlMiddleware:
 
     def __call__(self, request):
         # Check if the request method is not GET
+        if request.user.is_authenticated:
+            _thread_locals.user = request.user
         if request.user.is_authenticated and request.user.is_unicef_user():
-            return self.get_response(request)
+            try:
+                response = self.get_response(request)
+                return response
+            finally:
+                _thread_locals.user = None
 
         if request.user.is_authenticated:
             # check where they're trying to access:
@@ -162,4 +171,13 @@ class ExternalAccessControlMiddleware:
                 user_group_names = [g.name for g in request.user.groups]
                 if not any([g in PARTNER_PD_ACTIVE_GROUPS for g in user_group_names]):
                     return HttpResponseForbidden("You don't have permission to perform this action.")
-        return self.get_response(request)
+        try:
+            response = self.get_response(request)
+            return response
+        finally:
+            _thread_locals.user = None
+
+
+def get_current_user():
+    user = getattr(_thread_locals, 'user', None)
+    return user if user else None
