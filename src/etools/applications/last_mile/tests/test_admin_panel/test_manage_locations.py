@@ -414,8 +414,25 @@ class TestLocationsViewSet(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content_disposition = response.headers.get("Content-Disposition", "")
         self.assertTrue(
-            content_disposition.startswith("attachment;filename=locations_")
+            content_disposition.startswith('attachment; filename="locations_')
         )
+
+    def test_export_csv(self):
+        response = self.forced_auth_req('get', self.url + "export/csv/", user=self.partner_staff)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('Content-Disposition', response.headers)
+        content = b''.join(response.streaming_content).decode('utf-8')
+        self.assertIn('Unique ID', content)
+        self.assertIn('Name', content)
+        self.assertIn('Primary Type', content)
+        self.assertIn('P Code', content)
+        self.assertIn('Latitude', content)
+        self.assertIn('Longitude', content)
+        self.assertIn('Status', content)
+        self.assertIn('Implementing Partner', content)
+        self.assertIn('Region', content)
+        self.assertIn('District', content)
+        self.assertIn('Country', content)
 
     def test_export_csv_unauthorized(self):
         csv_url = self.url + "export/csv/"

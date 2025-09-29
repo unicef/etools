@@ -628,3 +628,16 @@ class TestUsersViewSet(BaseTenantTestCase):
         response = self.forced_auth_req('patch', self.bulk_url, user=self.approver_user, data=payload)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('status', response.data)
+
+    def test_export_csv(self):
+        response = self.forced_auth_req('get', self.url + "export/csv/", user=self.partner_staff)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('Content-Disposition', response.headers)
+        content = b''.join(response.streaming_content).decode('utf-8')
+        self.assertIn('First Name', content)
+        self.assertIn('Last Name', content)
+        self.assertIn('Email', content)
+        self.assertIn('Implementing Partner', content)
+        self.assertIn('Country', content)
+        self.assertIn('Last Login', content)
+        self.assertIn('Status', content)
