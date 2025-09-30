@@ -32,17 +32,18 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         response = self.forced_auth_req('get', url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['id'], self.partner.id)
-        self.assertIn('name', response.data)
-        self.assertIn('vendor_number', response.data)
-        self.assertIn('short_name', response.data)
-        self.assertIn('email', response.data)
-        self.assertIn('phone_number', response.data)
-        self.assertIn('street_address', response.data)
-        self.assertIn('city', response.data)
-        self.assertIn('postal_code', response.data)
-        self.assertIn('country', response.data)
-        self.assertIn('rating', response.data)
-        self.assertIn('basis_for_risk_rating', response.data)
+        self.assertEqual(response.data['name'], self.partner.organization.name)
+        self.assertEqual(response.data['vendor_number'], self.partner.organization.vendor_number)
+        # short_name may be blank/null by default; just ensure key exists
+        self.assertTrue('short_name' in response.data)
+        self.assertEqual(response.data['email'], self.partner.email)
+        self.assertEqual(response.data['phone_number'], self.partner.phone_number)
+        self.assertEqual(response.data['street_address'], self.partner.street_address)
+        self.assertEqual(response.data['city'], self.partner.city)
+        self.assertEqual(response.data['postal_code'], self.partner.postal_code)
+        self.assertEqual(response.data['country'], self.partner.country)
+        self.assertEqual(response.data['rating'], self.partner.rating)
+        self.assertEqual(response.data['basis_for_risk_rating'], self.partner.basis_for_risk_rating)
 
     def test_create_partner(self):
         url = reverse('rss_admin:rss-admin-partners-list')
@@ -75,6 +76,18 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         response = self.forced_auth_req('get', url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(any(row['id'] == self.agreement.id for row in response.data))
+
+    def test_retrieve_agreement_details(self):
+        url = reverse('rss_admin:rss-admin-agreements-detail', kwargs={'pk': self.agreement.pk})
+        response = self.forced_auth_req('get', url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['id'], self.agreement.id)
+        self.assertEqual(response.data['agreement_number'], self.agreement.agreement_number)
+        self.assertEqual(response.data['agreement_type'], self.agreement.agreement_type)
+        self.assertEqual(response.data['status'], self.agreement.status)
+        self.assertEqual(response.data['partner'], self.partner.id)
+        self.assertEqual(response.data['signed_by_unicef_date'], str(self.agreement.signed_by_unicef_date))
+        self.assertEqual(response.data['signed_by_partner_date'], str(self.agreement.signed_by_partner_date))
 
     def test_update_agreement_signature_dates(self):
         url = reverse('rss_admin:rss-admin-agreements-detail', kwargs={'pk': self.agreement.pk})
