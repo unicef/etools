@@ -250,7 +250,8 @@ class LocationsViewSet(mixins.ListModelMixin,
         "parent__parent__parent__parent"
     ).annotate(
         region=F('parent__parent__name'),
-        district=F('parent__parent__parent__name')
+        district=F('parent__parent__parent__name'),
+        country=F('parent__name')
     ).prefetch_related(
         'partner_organizations',
         'partner_organizations__organization',
