@@ -116,7 +116,7 @@ class UserViewSet(ExportMixin,
             'profile__organization__partner__points_of_interest',
             realms_prefetch,
             points_of_interest_prefetch,
-        ).for_schema(schema_name).only_lmsm_users()
+        ).annotate(profile_status=F('last_mile_profile__status')).for_schema(schema_name).only_lmsm_users()
 
         has_active_location = self.request.query_params.get('hasActiveLocation')
         if has_active_location == "1":
@@ -136,11 +136,12 @@ class UserViewSet(ExportMixin,
         'last_login',
         'first_name',
         'last_name',
+        'profile_status',
         'profile__organization__name',
         'profile__organization__vendor_number',
         'profile__country__name',
         'profile__country__id',
-        'profile__organization__partner__points_of_interest__name'
+        'profile__organization__partner__points_of_interest__name',
     ]
 
     ordering = ('id',)
