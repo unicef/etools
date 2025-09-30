@@ -16,10 +16,12 @@ def staff_activity_has_no_tpm_partner(i):
 
 
 def tpm_staff_members_belongs_to_the_partner(i):
-    if not i.tpm_partner:
+    # For BOTH we do not restrict TPM team members to the selected TPM partner
+    if not i.tpm_partner or i.monitor_type == MonitoringActivity.MONITOR_TYPE_CHOICES.both:
         return True
 
-    team_members = set([tm.id for tm in i.team_members.all()])
+    team_members_qs = list(i.team_members.all())
+    team_members = set([tm.id for tm in team_members_qs])
     if i.old_instance:
         old_team_members = set([tm.id for tm in i.old_instance.team_members.all()])
         members_to_validate = team_members - old_team_members
