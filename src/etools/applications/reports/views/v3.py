@@ -82,7 +82,7 @@ class PMPSpecialReportingRequirementListCreateView(
 ):
     permission_classes = [
         IsAuthenticated,
-        IsReadAction | (IsEditAction & intervention_field_is_editable_permission('reporting_requirements')),
+        IsReadAction | (IsEditAction & intervention_field_is_editable_permission('special_reporting_requirements')),
     ]
 
     def get_root_object(self):

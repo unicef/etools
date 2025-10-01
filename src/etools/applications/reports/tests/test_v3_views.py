@@ -176,7 +176,7 @@ class TestPMPSpecialReportingRequirementListCreateView(BaseTenantTestCase):
         cls.intervention = InterventionFactory(
             start=datetime.date(2001, 1, 1),
             status=Intervention.DRAFT,
-            in_amendment=True,
+            in_amendment=False,
         )
         cls.intervention.unicef_focal_points.add(cls.unicef_staff)
 

@@ -246,7 +246,8 @@ TENANT_APPS = (
     'unicef_attachments',
     'unicef_vision',
     'etools.applications.last_mile',
-    'etools.applications.governments'
+    'etools.applications.governments',
+    'etools.applications.rss_admin'
 )
 INSTALLED_APPS = ('django_tenants',) + SHARED_APPS + TENANT_APPS
 
@@ -497,8 +498,6 @@ if INACTIVE_BUSINESS_AREAS == ['']:
     # 'split' splits an empty string into an array with one empty string, which isn't
     # really what we want
     INACTIVE_BUSINESS_AREAS = []
-
-SLACK_URL = get_from_secrets_or_env('SLACK_URL')
 
 TASK_ADMIN_USER = get_from_secrets_or_env('TASK_ADMIN_USER', 'etools_task_admin@unicef.org')
 

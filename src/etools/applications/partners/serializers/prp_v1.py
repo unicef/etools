@@ -259,9 +259,9 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
                                                   max_digits=20, decimal_places=2)
     unicef_budget_currency = serializers.SerializerMethodField(read_only=True)
 
-    expected_results = serializers.SerializerMethodField()
+    expected_results = PRPResultSerializer(read_only=True, many=True, source='all_lower_results')
     update_date = serializers.DateTimeField(source='modified')
-    reporting_requirements = serializers.SerializerMethodField()
+    reporting_requirements = ReportingRequirementsSerializer(read_only=True, many=True)
     special_reports = SpecialReportingRequirementsSerializer(source="special_reporting_requirements",
                                                              many=True, read_only=True)
     sections = SectionSerializer(many=True, read_only=True)
@@ -296,16 +296,6 @@ class PRPInterventionListSerializer(serializers.ModelSerializer):
 
     def get_business_area_code(self, obj):
         return connection.tenant.business_area_code
-
-    def get_reporting_requirements(self, obj):
-        if obj.status not in [Intervention.ACTIVE, ]:
-            return []
-        return ReportingRequirementsSerializer(obj.reporting_requirements, many=True).data
-
-    def get_expected_results(self, obj):
-        if obj.status not in [Intervention.ACTIVE, ]:
-            return []
-        return PRPResultSerializer(obj.all_lower_results, many=True).data
 
     class Meta:
         model = Intervention

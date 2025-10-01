@@ -33,7 +33,6 @@ def _build_country(name):
 
 
 @mock.patch('etools.applications.vision.tasks.Country')
-@mock.patch('etools.applications.vision.tasks.send_to_slack')
 @mock.patch('etools.applications.vision.tasks.sync_handler')
 @mock.patch('etools.applications.vision.tasks.connection', spec=['set_tenant'])
 @mock.patch('etools.applications.vision.tasks.logger.info')
@@ -77,26 +76,6 @@ class TestVisionSyncTask(SimpleTestCase):
             self.assertEqual(country.save.call_count, 1)
             self.assertEqual(country.save.call_args, ((), {}))
 
-    def _assertSlackNotified(self, mock_send_to_slack, tenant_countries_used=None, selected_synchronizers=None):
-        """Ensure vision_sync_task() sent the appropriate message to Slack.
-        tenant_countries_used should be a list of countries. If None, defaults to self.tenant_countries.
-        selected_synchronizers should be a list of synchronizers. If None, SYNC_HANDLERS is used.
-        """
-        if tenant_countries_used is None:
-            tenant_countries_used = self.tenant_countries
-        if not selected_synchronizers:
-            selected_synchronizers = etools.applications.vision.tasks.SYNC_HANDLERS.keys()
-
-        self.assertEqual(mock_send_to_slack.call_count, 1)
-        # Verify that each processed country was sent in the message. For some reason, the public
-        # tenant is not listed in this message even though it was synced.
-        expected_msg = 'Created tasks for the following countries: {} and synchronizers: {}'.format(
-            ',\n '.join([country.name for country in tenant_countries_used]),
-            ',\n '.join([synchronizer for synchronizer in selected_synchronizers])
-        )
-        self.assertEqual(mock_send_to_slack.call_args[0], (expected_msg, ))
-        self.assertEqual(mock_send_to_slack.call_args[1], {})
-
     def _assertConnectionTenantSet(self, mock_django_db_connection, tenant_countries_used=None):
         """Ensure vision_sync_task() set the DB connection schema to the appropriate tenant countries.
         tenant_countries_used should be a list of countries. If None, defaults to self.tenant_countries.
@@ -133,10 +112,6 @@ class TestVisionSyncTask(SimpleTestCase):
         self.assertEqual(countries.count('ZZZ Test2'), sync_t2)
 
     def _assertLoggerMessages(self, mock_logger, tenant_countries_used=None, selected_synchronizers=None):
-        """Ensure the task sent the appropriate message to Slack.
-        tenant_countries_used should be a list of countries. If None, defaults to self.tenant_countries.
-        selected_synchronizers should be a list of synchronizers. If None, SYNC_HANDLERS is used.
-        """
         if tenant_countries_used is None:
             tenant_countries_used = self.tenant_countries
         if not selected_synchronizers:
@@ -153,7 +128,7 @@ class TestVisionSyncTask(SimpleTestCase):
         self.assertEqual(mock_logger.call_args[1], {})
 
     @override_settings(CELERY_TASK_ALWAYS_EAGER=True, CELERY_EAGER_PROPAGATES_EXCEPTIONS=True)
-    def test_sync_no_args_success_case(self, mock_logger, mock_django_db_connection, mock_handler, mock_send_to_slack,
+    def test_sync_no_args_success_case(self, mock_logger, mock_django_db_connection, mock_handler,
                                        countryMock):
         """Exercise etools.applications.vision.tasks.vision_sync_task() called without passing any argument"""
 
@@ -167,11 +142,10 @@ class TestVisionSyncTask(SimpleTestCase):
         self._assertTenantHandlersSynced(mock_handler, 21, 7, 7, 7)
         self._assertConnectionTenantSet(mock_django_db_connection)
         self._assertVisionLastSynced()
-        self._assertSlackNotified(mock_send_to_slack)
         self._assertLoggerMessages(mock_logger)
 
     @override_settings(CELERY_TASK_ALWAYS_EAGER=True, CELERY_EAGER_PROPAGATES_EXCEPTIONS=True)
-    def test_sync_country_filter_args(self, mock_logger, mock_django_db_connection, mock_handler, mock_send_to_slack,
+    def test_sync_country_filter_args(self, mock_logger, mock_django_db_connection, mock_handler,
                                       countryMock):
         """
         Exercise etools.applications.vision.tasks.vision_sync_task() called with passing as argument a specific country
@@ -187,12 +161,10 @@ class TestVisionSyncTask(SimpleTestCase):
         self._assertTenantHandlersSynced(mock_handler, 7, 7, 0, 0)
         self._assertConnectionTenantSet(mock_django_db_connection, selected_countries)
         self._assertVisionLastSynced(selected_countries)
-        self._assertSlackNotified(mock_send_to_slack, selected_countries)
         self._assertLoggerMessages(mock_logger, selected_countries)
 
     @override_settings(CELERY_TASK_ALWAYS_EAGER=True, CELERY_EAGER_PROPAGATES_EXCEPTIONS=True)
-    def test_sync_synchronizer_filter_args(self, mock_logger, mock_django_db_connection, mock_handler,
-                                           mock_send_to_slack, countryMock):
+    def test_sync_synchronizer_filter_args(self, mock_logger, mock_django_db_connection, mock_handler, countryMock):
         """
         Exercise etools.applications.vision.tasks.vision_sync_task()
         called with passing as argument a specific synchronizer
@@ -208,12 +180,10 @@ class TestVisionSyncTask(SimpleTestCase):
         self._assertTenantHandlersSynced(mock_handler, all_sync_task=3, sync_t0=1, sync_t1=1, sync_t2=1)
         self._assertConnectionTenantSet(mock_django_db_connection)
         self._assertVisionLastSynced()
-        self._assertSlackNotified(mock_send_to_slack, None, selected_synchronizers)
         self._assertLoggerMessages(mock_logger, None, selected_synchronizers)
 
     @override_settings(CELERY_TASK_ALWAYS_EAGER=True, CELERY_EAGER_PROPAGATES_EXCEPTIONS=True)
-    def test_sync_country_and_synchronizer_filter_args(self, mock_logger, mock_django_db_connection, mock_handler,
-                                                       mock_send_to_slack, countryMock):
+    def test_sync_country_and_synchronizer_filter_args(self, mock_logger, mock_django_db_connection, mock_handler, countryMock):
         """
         Exercise etools.applications.vision.tasks.vision_sync_task()
         called with passing a specific country and a synchronizer
@@ -232,7 +202,6 @@ class TestVisionSyncTask(SimpleTestCase):
         self._assertTenantHandlersSynced(mock_handler, all_sync_task=1, sync_t0=1, sync_t1=0, sync_t2=0)
         self._assertConnectionTenantSet(mock_django_db_connection, selected_countries)
         self._assertVisionLastSynced(selected_countries)
-        self._assertSlackNotified(mock_send_to_slack, selected_countries, selected_synchronizers)
         self._assertLoggerMessages(mock_logger, selected_countries, selected_synchronizers)
 
 

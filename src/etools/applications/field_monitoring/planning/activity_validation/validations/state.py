@@ -7,7 +7,8 @@ from etools.applications.field_monitoring.planning.models import MonitoringActiv
 
 
 def tpm_partner_is_assigned_for_tpm_activity(i):
-    if i.monitor_type == MonitoringActivity.MONITOR_TYPE_CHOICES.tpm and not i.tpm_partner:
+    if i.monitor_type in [MonitoringActivity.MONITOR_TYPE_CHOICES.tpm, MonitoringActivity.MONITOR_TYPE_CHOICES.both] \
+            and not i.tpm_partner:
         raise StateValidationError([_('Partner is not defined for TPM activity')])
     return True
 
