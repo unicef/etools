@@ -1,3 +1,4 @@
+from django.db import connection
 from django.utils.translation import gettext as _
 
 from etools_validator.exceptions import BasicValidationError
@@ -5,6 +6,7 @@ from etools_validator.exceptions import BasicValidationError
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.reports.models import CountryProgramme, Result
+from etools.applications.users.models import Realm
 
 
 def staff_activity_has_no_tpm_partner(i):
@@ -14,10 +16,12 @@ def staff_activity_has_no_tpm_partner(i):
 
 
 def tpm_staff_members_belongs_to_the_partner(i):
-    if not i.tpm_partner:
+    # For BOTH we do not restrict TPM team members to the selected TPM partner
+    if not i.tpm_partner or i.monitor_type == MonitoringActivity.MONITOR_TYPE_CHOICES.both:
         return True
 
-    team_members = set([tm.id for tm in i.team_members.all()])
+    team_members_qs = list(i.team_members.all())
+    team_members = set([tm.id for tm in team_members_qs])
     if i.old_instance:
         old_team_members = set([tm.id for tm in i.old_instance.team_members.all()])
         members_to_validate = team_members - old_team_members
@@ -61,5 +65,24 @@ def interventions_connected_with_cp_outputs(i):
             "You've selected a PD/SPD and unselected some of it's corresponding outputs, "
             "please either remove the PD or add the outputs back before saving: %s")
         raise BasicValidationError(error_text % ', '.join(wrong_cp_outputs))
+
+    return True
+
+
+def assignees_have_active_access(i):
+    if i.monitor_type != MonitoringActivity.MONITOR_TYPE_CHOICES.both:
+        return True
+
+    def has_active_realm(user):
+        return Realm.objects.filter(country=connection.tenant, user=user, is_active=True).exists()
+
+    # visit lead
+    if i.visit_lead and not has_active_realm(i.visit_lead):
+        raise BasicValidationError(_('Visit lead is inactive or has no access'))
+
+    # team members
+    inactive_members = [tm.get_full_name() for tm in i.team_members.all() if not has_active_realm(tm)]
+    if inactive_members:
+        raise BasicValidationError(_('Team members inactive or with no access: %s') % ', '.join(inactive_members))
 
     return True

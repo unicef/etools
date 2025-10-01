@@ -214,6 +214,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.13.1,reporting_requirements,*,contingency_on,Review,Required,FALSE
 3.13.1,reporting_requirements,*,contingency_on,Signature,Required,FALSE
 3.13.1,reporting_requirements,*,contingency_on,Signed,Required,FALSE
+,special_reporting_requirements,Unicef Focal Point,not_in_amendment_mode,*,Edit,TRUE
 ,result_links,Partner User,partner_court,Draft,Edit,TRUE
 3.13.1,result_links,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
 3.13.1,result_links,Unicef Focal Point,contingency_on,Signed,Edit,TRUE

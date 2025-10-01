@@ -30,7 +30,7 @@ class OrganizationSerializer(SimpleOrganizationSerializer):
 
     class Meta(SimpleOrganizationSerializer.Meta):
         model = Organization
-        fields = SimpleOrganizationSerializer.Meta.fields + ['relationship_types', 'is_government']
+        fields = SimpleOrganizationSerializer.Meta.fields + ['relationship_types', 'is_government', 'vendor_number']
 
     def get_is_government(self, obj):
         if obj.organization_type == OrganizationType.GOVERNMENT:
@@ -191,7 +191,7 @@ class MinimalUserSerializer(SimpleUserSerializer):
 
     class Meta:
         model = get_user_model()
-        fields = ('id', 'name', 'first_name', 'middle_name', 'last_name')
+        fields = ('id', 'name', 'first_name', 'middle_name', 'last_name', 'is_active')
 
 
 class UserCreationSerializer(serializers.ModelSerializer):

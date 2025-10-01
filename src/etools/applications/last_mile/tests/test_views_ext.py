@@ -9,7 +9,6 @@ from django.utils import timezone
 
 from applications.last_mile.tests.factories import (
     ItemFactory,
-    ItemTransferHistoryFactory,
     MaterialFactory,
     PointOfInterestFactory,
     PointOfInterestTypeFactory,
@@ -1188,14 +1187,12 @@ class TestVisionLMSMExport(BaseTenantTestCase):
             cls.old_transfer = TransferFactory()
             cls.old_poi = PointOfInterestFactory()
             cls.old_item = ItemFactory()
-            cls.old_item_history = ItemTransferHistoryFactory()
             cls.old_poi_type = PointOfInterestTypeFactory()
 
         with freeze_time(cls.split_time + timedelta(days=1)):
             cls.new_transfer = TransferFactory()
             cls.new_poi = PointOfInterestFactory()
             cls.new_item = ItemFactory()
-            cls.new_item_history = ItemTransferHistoryFactory()
             cls.new_poi_type = PointOfInterestTypeFactory()
 
     def _get_and_decode_streaming_response(self, response):
@@ -1255,7 +1252,7 @@ class TestVisionLMSMExport(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = self._get_and_decode_streaming_response(response)
         self.assertEqual(len(data), models.Transfer.objects.count())
-        self.assertEqual(len(data), 8)
+        self.assertEqual(len(data), 4)
 
     def test_export_all_pois(self):
         response = self.forced_auth_req(
@@ -1264,7 +1261,7 @@ class TestVisionLMSMExport(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = self._get_and_decode_streaming_response(response)
         self.assertEqual(len(data), models.PointOfInterest.all_objects.count())
-        self.assertEqual(len(data), 18)
+        self.assertEqual(len(data), 10)
 
     def test_export_all_items(self):
         response = self.forced_auth_req(
@@ -1273,7 +1270,7 @@ class TestVisionLMSMExport(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = self._get_and_decode_streaming_response(response)
         self.assertEqual(len(data), models.Item.objects.count())
-        self.assertEqual(len(data), 4)
+        self.assertEqual(len(data), 2)
 
     def test_export_filtered_transfers_by_last_modified(self):
         params = {"type": "transfer", "last_modified": self.split_time.isoformat()}
@@ -1282,7 +1279,7 @@ class TestVisionLMSMExport(BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = self._get_and_decode_streaming_response(response)
-        self.assertEqual(len(data), 4)
+        self.assertEqual(len(data), 2)
 
     def test_export_filtered_pois_by_last_modified(self):
         params = {"type": "poi", "last_modified": self.split_time.isoformat()}
@@ -1291,7 +1288,7 @@ class TestVisionLMSMExport(BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = self._get_and_decode_streaming_response(response)
-        self.assertEqual(len(data), 9)
+        self.assertEqual(len(data), 5)
 
     def test_export_filtered_items_by_last_modified(self):
         params = {"type": "item", "last_modified": self.split_time.isoformat()}
@@ -1300,7 +1297,7 @@ class TestVisionLMSMExport(BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = self._get_and_decode_streaming_response(response)
-        self.assertEqual(len(data), 2)
+        self.assertEqual(len(data), 1)
         self.assertEqual(data[0]["id"], self.new_item.id)
 
     def test_export_returns_empty_list_for_filter_with_no_results(self):
