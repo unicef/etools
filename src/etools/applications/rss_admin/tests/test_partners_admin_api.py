@@ -87,6 +87,28 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(any(row['id'] == self.agreement.id for row in response.data))
 
+    def test_list_partners_paginated(self):
+        url = reverse('rss_admin:rss-admin-partners-list')
+        response = self.forced_auth_req('get', url, user=self.user, data={'page': 1, 'page_size': 1})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsInstance(response.data, dict)
+        self.assertIn('results', response.data)
+        self.assertIn('count', response.data)
+        self.assertIsInstance(response.data['results'], list)
+        ids = [row['id'] for row in response.data['results']]
+        self.assertTrue(self.partner.id in ids or response.data['count'] >= 1)
+
+    def test_list_agreements_paginated(self):
+        url = reverse('rss_admin:rss-admin-agreements-list')
+        response = self.forced_auth_req('get', url, user=self.user, data={'page': 1, 'page_size': 1})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsInstance(response.data, dict)
+        self.assertIn('results', response.data)
+        self.assertIn('count', response.data)
+        self.assertIsInstance(response.data['results'], list)
+        ids = [row['id'] for row in response.data['results']]
+        self.assertTrue(self.agreement.id in ids or response.data['count'] >= 1)
+
     def test_retrieve_agreement_details(self):
         url = reverse('rss_admin:rss-admin-agreements-detail', kwargs={'pk': self.agreement.pk})
         response = self.forced_auth_req('get', url, user=self.user)
