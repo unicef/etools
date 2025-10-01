@@ -516,6 +516,38 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         self.assertTrue(any('inactive or with no access' in str(err) for err in response.data))
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_both_allow_any_tpm_team_members(self):
+        # BOTH: allow adding TPM users from other partners; UNICEF staff unaffected
+        tpm_partner = TPMPartnerFactory()
+        unicef_staff = UserFactory(unicef_user=True)
+        # TPM user from another partner
+        other_tpm_partner = TPMPartnerFactory()
+        foreign_tpm_user = TPMUserFactory(tpm_partner=other_tpm_partner, profile__organization=other_tpm_partner.organization)
+
+        activity = MonitoringActivityFactory(
+            monitor_type='both',
+            status='draft',
+            tpm_partner=tpm_partner,
+            team_members=[unicef_staff],
+        )
+
+        # Adding a UNICEF staff should be fine (not validated vs tpm_partner)
+        self._test_update(
+            self.fm_user,
+            activity,
+            data={'team_members': [unicef_staff.id]},
+            expected_status=status.HTTP_200_OK
+        )
+
+        # Adding a TPM user from a different partner should be allowed for BOTH
+        self._test_update(
+            self.fm_user,
+            activity,
+            data={'team_members': [unicef_staff.id, foreign_tpm_user.id]},
+            expected_status=status.HTTP_200_OK,
+        )
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_cancel_activity(self):
         activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.review)
 
