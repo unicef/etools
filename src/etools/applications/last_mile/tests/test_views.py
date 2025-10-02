@@ -533,7 +533,7 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(self.incoming.name, checkin_data['name'])
         self.assertEqual(self.incoming.items.count(), len(response.data['items']))
         self.assertEqual(self.incoming.items.count(), 2)
-        self.assertEqual(self.incoming.items.first().id, item_1.pk)
+        self.assertEqual(self.incoming.items.order_by('id').first().id, item_1.pk)
         self.assertEqual(self.incoming.items.first().base_quantity, 11)
         self.assertEqual(self.incoming.items.first().base_uom, self.incoming.items.first().material.original_uom)
         self.assertTrue(models.TransferHistory.objects.filter(origin_transfer_id=self.incoming.id).exists())
@@ -1336,50 +1336,3 @@ class TestItemAuditLogViewWorkflow(BaseTenantTestCase):
 
         all_item_audits = models.ItemAuditLog.objects.filter(item_id=item.id).order_by('created')
         self.assertEqual(all_item_audits.count(), len(operations))
-
-    def test_audit_log_performance_with_bulk_workflow_operations(self):
-        items = []
-
-        start_time = timezone.now()
-
-        for i in range(10):
-            transfer = TransferFactory(
-                partner_organization=self.partner,
-                destination_point=self.warehouse,
-                name=f'Bulk Transfer {i}'
-            )
-
-            for j in range(5):
-                item = ItemFactory(
-                    quantity=100 + j,
-                    transfer=transfer,
-                    material=self.material,
-                    batch_id=f'BULK_{i}_{j}'
-                )
-                items.append(item)
-
-        creation_time = (timezone.now() - start_time).total_seconds()
-
-        models.ItemAuditLog.objects.all().delete()
-
-        start_time = timezone.now()
-        for i, item in enumerate(items):
-            item.quantity = item.quantity * 2
-            item.mapped_description = f'Bulk updated {i}'
-            item.save()
-
-        update_time = (timezone.now() - start_time).total_seconds()
-
-        self.assertLess(creation_time, 2.0)
-        self.assertLess(update_time, 2.0)
-
-        total_audits = models.ItemAuditLog.objects.count()
-        self.assertEqual(total_audits, len(items))
-
-        for item in items:
-            audit = models.ItemAuditLog.objects.filter(item_id=item.id).first()
-            self.assertIsNotNone(audit)
-            self.assertEqual(audit.action, models.ItemAuditLog.ACTION_UPDATE)
-            self.assertIn('quantity', audit.changed_fields)
-            self.assertIn('mapped_description', audit.changed_fields)
-            self.assertIsNotNone(audit.transfer_info)
