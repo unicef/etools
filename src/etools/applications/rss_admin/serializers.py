@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from etools.applications.organizations.models import Organization
-from etools.applications.partners.models import Agreement, PartnerOrganization
+from etools.applications.partners.models import Agreement, Intervention, PartnerOrganization
 from etools.applications.reports.models import Office, Section
 
 
@@ -101,4 +101,36 @@ class AgreementAdminSerializer(serializers.ModelSerializer):
             'agreement_signature_date',
             'signed_by_unicef_date',
             'signed_by_partner_date',
+        )
+
+
+class InterventionAdminSerializer(serializers.ModelSerializer):
+    partner = serializers.SerializerMethodField()
+    agreement_number = serializers.CharField(source='agreement.agreement_number', read_only=True)
+    start = serializers.DateField(required=False, allow_null=True)
+    end = serializers.DateField(required=False, allow_null=True)
+
+    def get_partner(self, obj):
+        partner = getattr(obj.agreement, 'partner', None)
+        if not partner or not getattr(partner, 'organization', None):
+            return None
+        org = partner.organization
+        return {
+            'id': partner.id,
+            'name': org.name,
+            'vendor_number': org.vendor_number,
+        }
+
+    class Meta:
+        model = Intervention
+        fields = (
+            'id',
+            'number',
+            'title',
+            'status',
+            'document_type',
+            'agreement_number',
+            'partner',
+            'start',
+            'end',
         )

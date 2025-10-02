@@ -2,11 +2,13 @@ from django.db import connection
 from django.test import override_settings
 from django.urls import reverse
 
+import mock
 from rest_framework import status
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.organizations.tests.factories import OrganizationFactory
-from etools.applications.partners.tests.factories import AgreementFactory, PartnerFactory
+from etools.applications.partners.models import Intervention
+from etools.applications.partners.tests.factories import AgreementFactory, InterventionFactory, PartnerFactory
 from etools.applications.users.tests.factories import GroupFactory, RealmFactory, UserFactory
 
 
@@ -19,6 +21,8 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         cls.user = UserFactory(is_staff=True)
         cls.partner = PartnerFactory()
         cls.agreement = AgreementFactory(partner=cls.partner)
+        cls.pd = InterventionFactory(agreement=cls.agreement, document_type=Intervention.PD)
+        cls.spd = InterventionFactory(agreement=cls.agreement, document_type=Intervention.SPD)
 
     def test_list_partners(self):
         url = reverse('rss_admin:rss-admin-partners-list')
@@ -86,6 +90,55 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         response = self.forced_auth_req('get', url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(any(row['id'] == self.agreement.id for row in response.data))
+
+    def test_list_pds(self):
+        url = reverse('rss_admin:rss-admin-programme-documents-list')
+        response = self.forced_auth_req('get', url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        ids = [
+            row['id'] for row in (
+                response.data if isinstance(response.data, list) else response.data.get('results', [])
+            )
+            if row.get('document_type') == Intervention.PD
+        ]
+        self.assertIn(self.pd.id, ids)
+
+    def test_list_spds(self):
+        url = reverse('rss_admin:rss-admin-programme-documents-list')
+        response = self.forced_auth_req('get', url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        ids = [
+            row['id'] for row in (
+                response.data if isinstance(response.data, list) else response.data.get('results', [])
+            )
+            if row.get('document_type') == Intervention.SPD
+        ]
+        self.assertIn(self.spd.id, ids)
+
+    def test_patch_pd_title(self):
+        url = reverse('rss_admin:rss-admin-programme-documents-detail', kwargs={'pk': self.pd.pk})
+        resp = self.forced_auth_req('patch', url, user=self.user, data={'title': 'Updated PD Title'})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.data['title'], 'Updated PD Title')
+
+    def test_patch_spd_title(self):
+        url = reverse('rss_admin:rss-admin-programme-documents-detail', kwargs={'pk': self.spd.pk})
+        resp = self.forced_auth_req('patch', url, user=self.user, data={'title': 'Updated SPD Title'})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.data['title'], 'Updated SPD Title')
+
+    @mock.patch('etools.applications.rss_admin.views.send_pd_to_vision')
+    def test_signed_triggers_vision_sync(self, mock_task):
+        pd = InterventionFactory(agreement=self.agreement, document_type=Intervention.PD, status=Intervention.REVIEW)
+        url = reverse('rss_admin:rss-admin-programme-documents-detail', kwargs={'pk': pd.pk})
+        resp = self.forced_auth_req('patch', url, user=self.user, data={'status': Intervention.SIGNED})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        # ensure task is queued with correct args
+        self.assertTrue(mock_task.delay.called)
+        args, kwargs = mock_task.delay.call_args
+        self.assertEqual(args[1], pd.pk)
+
+    # PD/SPD editing happens in Django admin, not via rss_admin endpoints
 
     def test_list_partners_paginated(self):
         url = reverse('rss_admin:rss-admin-partners-list')
