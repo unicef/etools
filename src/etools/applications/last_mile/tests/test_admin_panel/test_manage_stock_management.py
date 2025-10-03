@@ -1038,3 +1038,26 @@ class TestStockManagementViewSet(BaseTenantTestCase):
             "get", self.url, user=self.partner_staff, data=payload
         )
         self.assertEqual(len(response.data.get("results", [])), initial_count - 2)
+
+    def test_export_csv(self):
+        response = self.forced_auth_req('get', reverse(f"{ADMIN_PANEL_APP_NAME}:{LOCATIONS_ADMIN_PANEL}-list") + "export/csv/", user=self.partner_staff)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('Content-Disposition', response.headers)
+        content = b''.join(response.streaming_content).decode('utf-8')
+        self.assertIn('Unique ID', content)
+        self.assertIn('Name', content)
+        self.assertIn('Primary Type', content)
+        self.assertIn('P Code', content)
+        self.assertIn('Latitude', content)
+        self.assertIn('Longitude', content)
+        self.assertIn('Status', content)
+        self.assertIn('Implementing Partner', content)
+        self.assertIn('Region', content)
+        self.assertIn('District', content)
+        self.assertIn('Country', content)
+
+        self.assertIn('Transfer Name', content)
+        self.assertIn('Transfer Reference', content)
+        self.assertIn('Item ID', content)
+        self.assertIn('Item Name', content)
+        self.assertIn('Item Quantity', content)
