@@ -34,6 +34,7 @@ from etools.applications.audit.transitions.conditions import (
 from etools.applications.audit.transitions.serializers import EngagementCancelSerializer, EngagementSendBackSerializer
 from etools.applications.audit.utils import generate_final_report
 from etools.applications.core.urlresolvers import build_frontend_url
+from etools.applications.core.util_scripts import currency_format
 from etools.applications.environment.notifications import send_notification_with_template
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.reports.models import Office, Section
@@ -225,6 +226,10 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
     )
     conducted_by_sai = models.BooleanField(verbose_name=_('Conducted by SAI'), blank=True, null=True)
 
+    follow_up_tracker = FieldTracker(
+        fields=['amount_refunded', 'additional_supporting_documentation_provided',
+                'justification_provided_and_accepted', 'write_off_required'])
+
     objects = InheritanceManager()
 
     class Meta:
@@ -336,6 +341,26 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
             base_context.update(ctx)
             context = base_context
 
+            send_notification_with_template(
+                recipients=[focal_point.email],
+                template_name=template_name,
+                context=context,
+            )
+
+    def notify_focal_points_on_follow_up(self, template_name):
+        for focal_point in self.users_notified.all():
+            engagement = self.get_subclass()
+            context = {
+                'full_name': focal_point.full_name,
+                'reference_number': self.reference_number,
+                'object_url': self.get_object_url(user=focal_point),
+                'engagement_type': self.engagement_type,
+                'financial_findings': currency_format(engagement.financial_findings) if self.engagement_type == self.TYPES.audit else 0,
+                'amount_refunded': currency_format(self.amount_refunded),
+                'additional_supporting_documentation_provided': currency_format(self.additional_supporting_documentation_provided),
+                'justification_provided_and_accepted': currency_format(self.justification_provided_and_accepted),
+                'write_off_required': currency_format(self.write_off_required),
+            }
             send_notification_with_template(
                 recipients=[focal_point.email],
                 template_name=template_name,
@@ -777,6 +802,10 @@ class Audit(Engagement):
                                      default='', blank=True)
     final_report = CodedGenericRelation(Attachment, verbose_name=_('Audit Final Report'),
                                         code='audit_final_report', blank=True, )
+
+    follow_up_tracker = FieldTracker(
+        fields=['amount_refunded', 'additional_supporting_documentation_provided',
+                'justification_provided_and_accepted', 'write_off_required', 'financial_findings'])
 
     objects = models.Manager()
 
