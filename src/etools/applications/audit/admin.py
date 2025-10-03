@@ -8,15 +8,18 @@ from etools.applications.audit.models import (
     Audit,
     Engagement,
     EngagementActionPoint,
+    FaceForm,
     FinancialFinding,
     Finding,
     MicroAssessment,
     Risk,
     RiskBluePrint,
     RiskCategory,
+    SpecialAudit,
     SpecialAuditRecommendation,
     SpecificProcedure,
     SpotCheck,
+    SpotCheckFinancialFinding,
     TestSubjectAreas,
 )
 
@@ -32,7 +35,7 @@ class EngagementAdmin(admin.ModelAdmin):
     ]
     search_fields = 'partner__organization__name', 'agreement__auditor_firm__organization__name',
     filter_horizontal = ('authorized_officers', 'active_pd', 'staff_members', 'users_notified', 'sections', 'offices')
-    raw_id_fields = ('po_item', 'partner', 'active_pd', 'staff_members', 'authorized_officers', 'users_notified', )
+    raw_id_fields = ('po_item', 'partner', 'active_pd', 'staff_members', 'authorized_officers', 'users_notified', 'face_forms')
 
 
 @admin.register(RiskCategory)
@@ -66,6 +69,13 @@ class SpotCheckAdmin(EngagementAdmin):
     pass
 
 
+@admin.register(FaceForm)
+class FaceFormAdmin(admin.ModelAdmin):
+    list_display = ('__str__', 'partner', 'amount_usd', 'amount_local', 'currency', 'exchange_rate')
+    raw_id_fields = ('partner',)
+    search_fields = ('face_number', 'partner__organization__name')
+
+
 @admin.register(MicroAssessment)
 class MicroAssessmentAdmin(EngagementAdmin):
     pass
@@ -73,6 +83,11 @@ class MicroAssessmentAdmin(EngagementAdmin):
 
 @admin.register(Audit)
 class AuditAdmin(EngagementAdmin):
+    pass
+
+
+@admin.register(SpecialAudit)
+class SpecialAuditAdmin(EngagementAdmin):
     pass
 
 
@@ -92,6 +107,16 @@ class FinancialFindingAdmin(admin.ModelAdmin):
     list_display = [
         'title', 'audit', 'description', 'amount', 'local_amount',
     ]
+    raw_id_fields = ('audit',)
+    search_fields = ['title', ]
+
+
+@admin.register(SpotCheckFinancialFinding)
+class SpotCheckFinancialFindingAdmin(admin.ModelAdmin):
+    list_display = [
+        'title', 'spot_check', 'description', 'amount', 'local_amount',
+    ]
+    raw_id_fields = ('spot_check', )
     search_fields = ['title', ]
 
 
