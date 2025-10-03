@@ -2,11 +2,13 @@ from django.db import connection
 from django.test import override_settings
 from django.urls import reverse
 
+import mock
 from rest_framework import status
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.organizations.tests.factories import OrganizationFactory
-from etools.applications.partners.tests.factories import AgreementFactory, PartnerFactory
+from etools.applications.partners.models import Intervention
+from etools.applications.partners.tests.factories import AgreementFactory, InterventionFactory, PartnerFactory
 from etools.applications.users.tests.factories import GroupFactory, RealmFactory, UserFactory
 
 
@@ -19,6 +21,8 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         cls.user = UserFactory(is_staff=True)
         cls.partner = PartnerFactory()
         cls.agreement = AgreementFactory(partner=cls.partner)
+        cls.pd = InterventionFactory(agreement=cls.agreement, document_type=Intervention.PD)
+        cls.spd = InterventionFactory(agreement=cls.agreement, document_type=Intervention.SPD)
 
     def test_list_partners(self):
         url = reverse('rss_admin:rss-admin-partners-list')
@@ -44,6 +48,16 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         self.assertEqual(response.data['country'], self.partner.country)
         self.assertEqual(response.data['rating'], self.partner.rating)
         self.assertEqual(response.data['basis_for_risk_rating'], self.partner.basis_for_risk_rating)
+        self.assertTrue('partner_type' in response.data)
+        self.assertTrue('hact_risk_rating' in response.data)
+        self.assertEqual(response.data['hact_risk_rating'], self.partner.rating)
+        self.assertTrue('sea_risk_rating' in response.data)
+        self.assertEqual(response.data['sea_risk_rating'], self.partner.sea_risk_rating_name)
+        self.assertTrue('psea_last_assessment_date' in response.data)
+        self.assertTrue('lead_office' in response.data)
+        self.assertTrue('lead_office_name' in response.data)
+        self.assertTrue('lead_section' in response.data)
+        self.assertTrue('lead_section_name' in response.data)
 
     def test_create_partner(self):
         url = reverse('rss_admin:rss-admin-partners-list')
@@ -77,6 +91,77 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(any(row['id'] == self.agreement.id for row in response.data))
 
+    def test_list_pds(self):
+        url = reverse('rss_admin:rss-admin-programme-documents-list')
+        response = self.forced_auth_req('get', url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        ids = [
+            row['id'] for row in (
+                response.data if isinstance(response.data, list) else response.data.get('results', [])
+            )
+            if row.get('document_type') == Intervention.PD
+        ]
+        self.assertIn(self.pd.id, ids)
+
+    def test_list_spds(self):
+        url = reverse('rss_admin:rss-admin-programme-documents-list')
+        response = self.forced_auth_req('get', url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        ids = [
+            row['id'] for row in (
+                response.data if isinstance(response.data, list) else response.data.get('results', [])
+            )
+            if row.get('document_type') == Intervention.SPD
+        ]
+        self.assertIn(self.spd.id, ids)
+
+    def test_patch_pd_title(self):
+        url = reverse('rss_admin:rss-admin-programme-documents-detail', kwargs={'pk': self.pd.pk})
+        resp = self.forced_auth_req('patch', url, user=self.user, data={'title': 'Updated PD Title'})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.data['title'], 'Updated PD Title')
+
+    def test_patch_spd_title(self):
+        url = reverse('rss_admin:rss-admin-programme-documents-detail', kwargs={'pk': self.spd.pk})
+        resp = self.forced_auth_req('patch', url, user=self.user, data={'title': 'Updated SPD Title'})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.data['title'], 'Updated SPD Title')
+
+    @mock.patch('etools.applications.rss_admin.views.send_pd_to_vision')
+    def test_signed_triggers_vision_sync(self, mock_task):
+        pd = InterventionFactory(agreement=self.agreement, document_type=Intervention.PD, status=Intervention.REVIEW)
+        url = reverse('rss_admin:rss-admin-programme-documents-detail', kwargs={'pk': pd.pk})
+        resp = self.forced_auth_req('patch', url, user=self.user, data={'status': Intervention.SIGNED})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        # ensure task is queued with correct args
+        self.assertTrue(mock_task.delay.called)
+        args, kwargs = mock_task.delay.call_args
+        self.assertEqual(args[1], pd.pk)
+
+    # PD/SPD editing happens in Django admin, not via rss_admin endpoints
+
+    def test_list_partners_paginated(self):
+        url = reverse('rss_admin:rss-admin-partners-list')
+        response = self.forced_auth_req('get', url, user=self.user, data={'page': 1, 'page_size': 1})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsInstance(response.data, dict)
+        self.assertIn('results', response.data)
+        self.assertIn('count', response.data)
+        self.assertIsInstance(response.data['results'], list)
+        ids = [row['id'] for row in response.data['results']]
+        self.assertTrue(self.partner.id in ids or response.data['count'] >= 1)
+
+    def test_list_agreements_paginated(self):
+        url = reverse('rss_admin:rss-admin-agreements-list')
+        response = self.forced_auth_req('get', url, user=self.user, data={'page': 1, 'page_size': 1})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsInstance(response.data, dict)
+        self.assertIn('results', response.data)
+        self.assertIn('count', response.data)
+        self.assertIsInstance(response.data['results'], list)
+        ids = [row['id'] for row in response.data['results']]
+        self.assertTrue(self.agreement.id in ids or response.data['count'] >= 1)
+
     def test_retrieve_agreement_details(self):
         url = reverse('rss_admin:rss-admin-agreements-detail', kwargs={'pk': self.agreement.pk})
         response = self.forced_auth_req('get', url, user=self.user)
@@ -85,9 +170,18 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         self.assertEqual(response.data['agreement_number'], self.agreement.agreement_number)
         self.assertEqual(response.data['agreement_type'], self.agreement.agreement_type)
         self.assertEqual(response.data['status'], self.agreement.status)
-        self.assertEqual(response.data['partner'], self.partner.id)
+        self.assertEqual(response.data['partner']['id'], self.partner.id)
+        self.assertTrue('start' in response.data)
+        self.assertTrue('end' in response.data)
+        self.assertTrue('authorized_officers' in response.data)
+        self.assertIsInstance(response.data['authorized_officers'], list)
+        self.assertTrue('agreement_document' in response.data)
+        self.assertTrue('agreement_signature_date' in response.data)
+        self.assertEqual(response.data['agreement_signature_date'], str(self.agreement.signed_by_unicef_date))
         self.assertEqual(response.data['signed_by_unicef_date'], str(self.agreement.signed_by_unicef_date))
         self.assertEqual(response.data['signed_by_partner_date'], str(self.agreement.signed_by_partner_date))
+        self.assertIn('partner_signatory', response.data)
+        self.assertIsNone(response.data['partner_signatory'])
 
     def test_update_agreement_signature_dates(self):
         url = reverse('rss_admin:rss-admin-agreements-detail', kwargs={'pk': self.agreement.pk})
