@@ -5,7 +5,7 @@ from etools.applications.partners.models import Agreement, Intervention, Partner
 from etools.applications.reports.models import Office, Section
 
 
-class PartnerOrganizationAdminSerializer(serializers.ModelSerializer):
+class PartnerOrganizationRssSerializer(serializers.ModelSerializer):
     organization = serializers.PrimaryKeyRelatedField(queryset=Organization.objects.all())
     name = serializers.CharField(source='organization.name', read_only=True)
     vendor_number = serializers.CharField(source='organization.vendor_number', read_only=True)
@@ -13,19 +13,11 @@ class PartnerOrganizationAdminSerializer(serializers.ModelSerializer):
     partner_type = serializers.CharField(read_only=True)
     hact_risk_rating = serializers.CharField(source='rating', read_only=True)
     sea_risk_rating = serializers.CharField(source='sea_risk_rating_name', read_only=True)
-    psea_last_assessment_date = serializers.SerializerMethodField()
+    psea_last_assessment_date = serializers.DateField(source='psea_assessment_date', required=False, allow_null=True)
     lead_office = serializers.PrimaryKeyRelatedField(queryset=Office.objects.all(), required=False, allow_null=True)
     lead_office_name = serializers.SerializerMethodField()
     lead_section = serializers.PrimaryKeyRelatedField(queryset=Section.objects.all(), required=False, allow_null=True)
     lead_section_name = serializers.SerializerMethodField()
-
-    def get_psea_last_assessment_date(self, obj):
-        if getattr(obj, 'psea_assessment_date', None):
-            try:
-                return obj.psea_assessment_date.date().isoformat()
-            except Exception:
-                return obj.psea_assessment_date.isoformat()
-        return None
 
     def get_lead_office_name(self, obj):
         return obj.lead_office.name if getattr(obj, 'lead_office', None) else None
@@ -61,13 +53,13 @@ class PartnerOrganizationAdminSerializer(serializers.ModelSerializer):
         )
 
 
-class AgreementAdminSerializer(serializers.ModelSerializer):
-    partner = PartnerOrganizationAdminSerializer(read_only=True)
+class AgreementRssSerializer(serializers.ModelSerializer):
+    partner = PartnerOrganizationRssSerializer(read_only=True)
     partner_id = serializers.PrimaryKeyRelatedField(source='partner', queryset=PartnerOrganization.objects.all(), write_only=True, required=False)
     start = serializers.DateField(required=False, allow_null=True)
     end = serializers.DateField(required=False, allow_null=True)
     authorized_officers = serializers.SerializerMethodField()
-    agreement_document = serializers.SerializerMethodField()
+    agreement_document = serializers.FileField(source='attached_agreement', allow_null=True, required=False)
     agreement_signature_date = serializers.DateField(source='signed_by_unicef_date', read_only=True)
 
     def get_authorized_officers(self, obj):
@@ -75,15 +67,6 @@ class AgreementAdminSerializer(serializers.ModelSerializer):
         if officers is None:
             return []
         return [{'id': u.id, 'name': u.get_full_name()} for u in officers.all()]
-
-    def get_agreement_document(self, obj):
-        file_field = getattr(obj, 'attached_agreement', None)
-        if file_field:
-            try:
-                return file_field.url if file_field.name else None
-            except Exception:
-                return None
-        return None
 
     class Meta:
         model = Agreement
@@ -104,7 +87,7 @@ class AgreementAdminSerializer(serializers.ModelSerializer):
         )
 
 
-class InterventionAdminSerializer(serializers.ModelSerializer):
+class InterventionRssSerializer(serializers.ModelSerializer):
     partner = serializers.SerializerMethodField()
     agreement_number = serializers.CharField(source='agreement.agreement_number', read_only=True)
     start = serializers.DateField(required=False, allow_null=True)

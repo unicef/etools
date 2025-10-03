@@ -11,13 +11,13 @@ from etools.applications.partners.serializers.interventions_v2 import (
 )
 from etools.applications.partners.tasks import send_pd_to_vision
 from etools.applications.rss_admin.permissions import IsRssAdmin
-from etools.applications.rss_admin.serializers import AgreementAdminSerializer, PartnerOrganizationAdminSerializer
+from etools.applications.rss_admin.serializers import AgreementRssSerializer, PartnerOrganizationRssSerializer
 from etools.applications.utils.pagination import AppendablePageNumberPagination
 
 
-class PartnerOrganizationAdminViewSet(viewsets.ModelViewSet):
+class PartnerOrganizationRssViewSet(viewsets.ModelViewSet):
     queryset = PartnerOrganization.objects.all()
-    serializer_class = PartnerOrganizationAdminSerializer
+    serializer_class = PartnerOrganizationRssSerializer
     permission_classes = (IsRssAdmin,)
     filter_backends = (filters.SearchFilter,)
     pagination_class = AppendablePageNumberPagination
@@ -30,9 +30,9 @@ class PartnerOrganizationAdminViewSet(viewsets.ModelViewSet):
     )
 
 
-class AgreementAdminViewSet(viewsets.ModelViewSet):
+class AgreementRssViewSet(viewsets.ModelViewSet):
     queryset = Agreement.objects.all()
-    serializer_class = AgreementAdminSerializer
+    serializer_class = AgreementRssSerializer
     permission_classes = (IsRssAdmin,)
     filter_backends = (filters.SearchFilter,)
     pagination_class = AppendablePageNumberPagination
@@ -43,7 +43,7 @@ class AgreementAdminViewSet(viewsets.ModelViewSet):
     )
 
 
-class ProgrammeDocumentAdminViewSet(viewsets.ModelViewSet):
+class ProgrammeDocumentRssViewSet(viewsets.ModelViewSet):
     queryset = Intervention.objects.all()
     serializer_class = InterventionListSerializer
     permission_classes = (IsRssAdmin,)
