@@ -61,6 +61,7 @@ class AgreementRssSerializer(serializers.ModelSerializer):
     authorized_officers = serializers.SerializerMethodField()
     agreement_document = serializers.FileField(source='attached_agreement', allow_null=True, required=False)
     agreement_signature_date = serializers.DateField(source='signed_by_unicef_date', read_only=True)
+    partner_signatory = serializers.PrimaryKeyRelatedField(source='partner_manager', read_only=True)
 
     def get_authorized_officers(self, obj):
         officers = getattr(obj, 'authorized_officers', None)
@@ -84,6 +85,7 @@ class AgreementRssSerializer(serializers.ModelSerializer):
             'agreement_signature_date',
             'signed_by_unicef_date',
             'signed_by_partner_date',
+            'partner_signatory',
         )
 
 

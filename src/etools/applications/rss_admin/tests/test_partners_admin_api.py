@@ -180,6 +180,8 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         self.assertEqual(response.data['agreement_signature_date'], str(self.agreement.signed_by_unicef_date))
         self.assertEqual(response.data['signed_by_unicef_date'], str(self.agreement.signed_by_unicef_date))
         self.assertEqual(response.data['signed_by_partner_date'], str(self.agreement.signed_by_partner_date))
+        self.assertIn('partner_signatory', response.data)
+        self.assertIsNone(response.data['partner_signatory'])
 
     def test_update_agreement_signature_dates(self):
         url = reverse('rss_admin:rss-admin-agreements-detail', kwargs={'pk': self.agreement.pk})
