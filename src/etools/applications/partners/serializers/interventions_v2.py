@@ -1171,7 +1171,7 @@ class InterventionReportingRequirementCreateSerializer(
     report_type = serializers.ChoiceField(
         choices=ReportingRequirement.TYPE_CHOICES
     )
-    reporting_requirements = ReportingRequirementSerializer(many=True)
+    reporting_requirements = ReportingRequirementSerializer(many=True, required=True, allow_null=False)
 
     class Meta:
         model = Intervention
@@ -1183,6 +1183,8 @@ class InterventionReportingRequirementCreateSerializer(
         self._validate_date_intervals(requirements)
 
     def _validate_hr(self, requirements):
+        if not requirements:
+            return
         # Ensure intervention has high frequency or cluster indicators
         indicator_qs = AppliedIndicator.objects.filter(
             lower_result__result_link__intervention=self.intervention
@@ -1339,8 +1341,8 @@ class InterventionReportingRequirementCreateSerializer(
                 _("PD needs to have a start date.")
             )
 
-        # Validate reporting requirements first
-        if not len(data["reporting_requirements"]):
+        # Validate QPRs length
+        if data["report_type"] == ReportingRequirement.TYPE_QPR and not len(data["reporting_requirements"]):
             raise serializers.ValidationError({
                 "reporting_requirements": _("This field cannot be empty.")
             })
