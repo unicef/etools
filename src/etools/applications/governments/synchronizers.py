@@ -327,8 +327,8 @@ class EWPsSynchronizer(VisionDataTenantSynchronizer):
         for r in records:
             skip = False
             for i in self.ACTIVITY_MAP:
-                if not r[i[0]] and i[0] not in ['TOTAL_BUDGET', 'WPA_GEOLOCATIONS']:
-                    logger.warning(f"Skipping: Missing {i[0]} for record: {r['VISION_ACTIVITY_WBS']}")
+                if not r.get(i[0]) and i[0] not in ['TOTAL_BUDGET', 'WPA_GEOLOCATIONS', 'WPA_IMPLEMENTING_PARTNERS']:
+                    logger.warning(f"Skipping: Missing {i[0]} for record: {r.get('VISION_ACTIVITY_WBS', 'UNKNOWN')}")
                     skip = True
             if skip:
                 continue
@@ -357,13 +357,14 @@ class EWPsSynchronizer(VisionDataTenantSynchronizer):
                     local_prop = item[1]
 
                     if local_prop == 'locations':
-                        if not r[remote_key]:
+                        geo_data = r.get(remote_key)
+                        if not geo_data:
                             # if no locations were provided, set the default to the country location
                             country_location = Location.objects.active().filter(admin_level=0).first()
                             result[local_prop] = [country_location.p_code]
-                        elif isinstance(r[remote_key], dict):
-                            if 'GEOLOCATION' in r[remote_key]:
-                                locs = r[remote_key]['GEOLOCATION']
+                        elif isinstance(geo_data, dict):
+                            if 'GEOLOCATION' in geo_data:
+                                locs = geo_data['GEOLOCATION']
                                 if locs:
                                     if isinstance(locs, list):
                                         result[local_prop] = [loc['P_CODE'] for loc in locs]
@@ -373,8 +374,11 @@ class EWPsSynchronizer(VisionDataTenantSynchronizer):
                         location_p_codes.update(result[local_prop])
 
                     elif local_prop == 'partners':
-                        if isinstance(r[remote_key], dict) and r[remote_key].get('IMPL_PARTNER', None):
-                            remote_partners = r[remote_key]['IMPL_PARTNER']
+                        # this allows future syncs in case partners are missing due to upstream delays.
+                        result[local_prop] = []
+                        partners_data = r.get(remote_key)
+                        if isinstance(partners_data, dict) and partners_data.get('IMPL_PARTNER', None):
+                            remote_partners = partners_data['IMPL_PARTNER']
                             if remote_partners:
                                 if isinstance(remote_partners, list):
                                     result[local_prop] = [p['IMPLEMENTING_PARTNER_CODE'] for p in remote_partners]
@@ -382,7 +386,7 @@ class EWPsSynchronizer(VisionDataTenantSynchronizer):
                                     result[local_prop] = [remote_partners['IMPLEMENTING_PARTNER_CODE']]
                                 partner_vendor_numbers.update(result[local_prop])
                     else:
-                        result[local_prop] = r[remote_key]
+                        result[local_prop] = r.get(remote_key)
 
                     activities[r['WPA_GID']] = result
 

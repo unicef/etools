@@ -283,3 +283,104 @@ class TestEWPsSynchronizer(BaseTenantTestCase):
         self.assertIn('0060/A0/07', result['remote_cps'])
         self.assertEqual(len(result['remote_ewps']), 1)
         self.assertEqual(len(result['activities']), 1)
+
+    def test_clean_records_missing_partners_still_includes_activity(self):
+        synchronizer = EWPsSynchronizer(business_area_code=self.tenant.business_area_code)
+
+        sample = deepcopy(self.sample_input)
+        # Remove partners entirely to simulate upstream RAM issue
+        del sample['ROWSET']['ROW'][0]['WPA_IMPLEMENTING_PARTNERS']
+
+        result = synchronizer._clean_records(sample['ROWSET']['ROW'])
+
+        # Activity should still be present
+        self.assertEqual(len(result['activities']), 1)
+        # No partners collected
+        self.assertEqual(result['remote_partners'], set())
+
+    def test_activity_created_without_partners_then_updated_with_partners(self):
+        # Build EWPSynchronizer inputs: first run without partners
+        from copy import deepcopy as _dc
+
+        # Prerequisites from TestEWPSynchronizer
+        cp = CountryProgrammeFactory(wbs='0060/A0/07', name='CP')
+        out = ResultFactory(
+            wbs='0060/A0/07/885/006',
+            name='Output',
+            result_type=ResultTypeFactory(name=ResultType.OUTPUT)
+        )
+        ki = ResultFactory(
+            wbs='0060/A0/07/885/006/001',
+            name='KI',
+            result_type=ResultTypeFactory(name=ResultType.ACTIVITY)
+        )
+        loc = LocationFactory(p_code='LO', name='Country', admin_level=0)
+
+        partner = self.partner
+
+        base_data = {
+            'remote_cps': [cp.wbs],
+            'remote_outputs': [{
+                'wbs': out.wbs,
+                'workplan': 'WP/0060A007/000143/01'
+            }],
+            'remote_kis': [{
+                'wbs': ki.wbs,
+                'output': out.wbs,
+                'workplan': 'WP/0060A007/000143/01'
+            }],
+            'remote_partners': [],
+            'remote_locations': [loc.p_code],
+            'remote_ewps': {
+                'WP/0060A007/000143/01': {
+                    'ewp_id': '152539',
+                    'wbs': 'WP/0060A007/000143/01',
+                    'name': 'WP',
+                    'status': 'Signed',
+                    'cost_center_code': '0060B00000',
+                    'cost_center_name': 'CC',
+                    'category_type': 'Section',
+                    'plan_type': 'Annual',
+                    'country_programme': cp.wbs,
+                },
+            },
+            'activities': {
+                '0060/A0/07/885/006/001/WPA0001': {
+                    'wbs': '0060/A0/07/885/006/001/WPA0001',
+                    'wpa_id': '187033',
+                    'start_date': datetime.date(2025, 1, 1),
+                    'end_date': datetime.date(2025, 12, 31),
+                    'title': 'A',
+                    'description': 'D',
+                    'total_budget': 0,
+                    'locations': [loc.p_code],
+                    # partners intentionally missing/empty in first run
+                    'partners': [],
+                    'ewp_key_intervention': ki.wbs,
+                    'workplan': 'WP/0060A007/000143/01',
+                }
+            }
+        }
+
+        # First run: create activity with no partners
+        sync1 = EWPSynchronizer(_dc(base_data))
+        sync1.update_workplans()
+        sync1.update_ewp_outputs()
+        sync1.update_kis()
+        total_data, total_updated, total_new = sync1.update_activities()
+        self.assertEqual(total_new, 1)
+
+        act = EWPActivity.objects.get(wbs='0060/A0/07/885/006/001/WPA0001')
+        self.assertEqual(act.partners.count(), 0)
+
+        # Second run: same activity now has partners upstream
+        with_partners = _dc(base_data)
+        with_partners['remote_partners'] = [partner.organization.vendor_number]
+        with_partners['activities']['0060/A0/07/885/006/001/WPA0001']['partners'] = [partner.organization.vendor_number]
+
+        sync2 = EWPSynchronizer(with_partners)
+        # Only activities update is needed to reflect M2M changes
+        total_data2, total_updated2, total_new2 = sync2.update_activities()
+        self.assertEqual(total_updated2, 1)
+        act.refresh_from_db()
+        self.assertEqual(list(act.partners.values_list('pk', flat=True)), [partner.pk])
