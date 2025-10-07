@@ -98,6 +98,7 @@ class PartnerOrganizationListSerializer(serializers.ModelSerializer):
     short_name = serializers.CharField(source='organization.short_name')
     partner_type = serializers.CharField(source='organization.organization_type')
     cso_type = serializers.CharField(source='organization.cso_type')
+    inactive = serializers.SerializerMethodField()
 
     class Meta:
         model = PartnerOrganization
@@ -129,7 +130,15 @@ class PartnerOrganizationListSerializer(serializers.ModelSerializer):
             "basis_for_risk_rating",
             "psea_assessment_date",
             "sea_risk_rating_name",
+            "inactive",
         )
+
+    def get_inactive(self, obj):
+        partner_type_value = getattr(obj, 'partner_type', None)
+        if partner_type_value == OrganizationType.GOVERNMENT:
+            total_ct_cp = getattr(obj, 'total_ct_cp', 0) or 0
+            return bool(getattr(obj, 'hidden', False) or total_ct_cp <= 0)
+        return False
 
 
 class PartnerOrgPSEADetailsSerializer(serializers.ModelSerializer):

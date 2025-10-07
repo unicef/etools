@@ -1,4 +1,5 @@
 import datetime
+from decimal import Decimal
 from unittest import skip
 
 from django.contrib.auth.models import AnonymousUser
@@ -9,6 +10,7 @@ from rest_framework import status
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.core.tests.mixins import URLAssertionMixin
+from etools.applications.organizations.models import OrganizationType
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.permissions import PARTNERSHIP_MANAGER_GROUP, UNICEF_USER
@@ -80,6 +82,54 @@ class TestPartnerOrganizationList(BasePartnerOrganizationTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]["id"], partner.pk)
+
+    def test_inactive_flag_for_government_partner_no_cash(self):
+        gov = PartnerFactory(organization=OrganizationFactory(organization_type=OrganizationType.GOVERNMENT))
+        gov.total_ct_cp = Decimal("0")
+        gov.hidden = False
+        gov.save()
+
+        response = self.forced_auth_req(
+            "get",
+            reverse('pmp_v3:partner-list'),
+            user=self.unicef_user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        item = next((p for p in response.data if p["id"] == gov.pk), None)
+        self.assertIsNotNone(item)
+        self.assertTrue(item["inactive"])  # not in active()
+
+    def test_inactive_flag_for_government_partner_with_cash(self):
+        gov = PartnerFactory(organization=OrganizationFactory(organization_type=OrganizationType.GOVERNMENT))
+        gov.total_ct_cp = Decimal("5")
+        gov.hidden = False
+        gov.save()
+
+        response = self.forced_auth_req(
+            "get",
+            reverse('pmp_v3:partner-list'),
+            user=self.unicef_user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        item = next((p for p in response.data if p["id"] == gov.pk), None)
+        self.assertIsNotNone(item)
+        self.assertFalse(item["inactive"])  # in active()
+
+    def test_inactive_flag_for_government_partner_hidden(self):
+        gov = PartnerFactory(organization=OrganizationFactory(organization_type=OrganizationType.GOVERNMENT))
+        gov.total_ct_cp = Decimal("10")
+        gov.hidden = True
+        gov.save()
+
+        response = self.forced_auth_req(
+            "get",
+            reverse('pmp_v3:partner-list'),
+            user=self.unicef_user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        item = next((p for p in response.data if p["id"] == gov.pk), None)
+        self.assertIsNotNone(item)
+        self.assertTrue(item["inactive"])  # excluded by active() because hidden
 
     def test_not_authenticated(self):
         response = self.forced_auth_req(
