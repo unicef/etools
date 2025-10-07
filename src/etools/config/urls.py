@@ -10,6 +10,7 @@ from rest_framework_swagger.renderers import OpenAPIRenderer
 from etools.applications.core.schemas import get_schema_view, get_swagger_view
 from etools.applications.core.urlresolvers import decorator_include
 from etools.applications.core.views import IssueJWTRedirectView, logout_view, MainView, SocialLogoutView
+from etools.applications.core.zendesk_sso import zendesk_sso_redirect, zendesk_sso_info
 from etools.applications.locations.prp_views import PRPLocationListAPIView
 from etools.applications.locations.views import (
     CartoDBTablesView,
@@ -145,6 +146,9 @@ urlpatterns = [
 
     re_path('^social/', include('social_django.urls', namespace='social')),
     re_path(r'^social/unicef-logout/', SocialLogoutView.as_view(), name='social-logout'),
+
+    re_path(r'^api/zendesk/sso/$', zendesk_sso_redirect, name='zendesk-sso'),
+    re_path(r'^api/zendesk/sso/info/$', zendesk_sso_info, name='zendesk-sso-info'),
     re_path('^monitoring/', include('etools.libraries.monitoring.urls')),
 
     # *************** Government Digital Document API ******************
