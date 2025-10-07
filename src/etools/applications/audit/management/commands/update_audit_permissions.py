@@ -74,7 +74,7 @@ class Command(BaseCommand):
     engagement_overview_editable_block = [
         'audit.engagement.agreement',
         'audit.engagement.po_item',
-        'audit.engagement.partner_contacted_at',
+        'audit.engagement.`partner_contacted_at`',
         'audit.engagement.engagement_type',
         'audit.engagement.start_date',
         'audit.engagement.end_date',
@@ -395,7 +395,7 @@ class Command(BaseCommand):
         )
         self.add_permissions(
             self.focal_point, 'edit',
-            'audit.engagement.face_forms',
+            ['audit.engagement.face_forms', 'audit.engagement.partner_contacted_at'],
             condition=self.engagement_partner_contacted_display_status()
         )
 
