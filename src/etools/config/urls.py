@@ -10,7 +10,7 @@ from rest_framework_swagger.renderers import OpenAPIRenderer
 from etools.applications.core.schemas import get_schema_view, get_swagger_view
 from etools.applications.core.urlresolvers import decorator_include
 from etools.applications.core.views import IssueJWTRedirectView, logout_view, MainView, SocialLogoutView
-from etools.applications.core.zendesk_sso import zendesk_sso_redirect, zendesk_sso_info
+from etools.applications.core.zendesk_sso import zendesk_sso_info, zendesk_sso_redirect
 from etools.applications.locations.prp_views import PRPLocationListAPIView
 from etools.applications.locations.views import (
     CartoDBTablesView,
