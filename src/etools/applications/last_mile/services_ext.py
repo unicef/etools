@@ -95,6 +95,7 @@ class DataExportService:
         if country_name:
             queryset = queryset.annotate(country=Value(country_name))
 
+        queryset = queryset.order_by('id')
         return queryset
 
 

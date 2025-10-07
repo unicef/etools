@@ -19,7 +19,12 @@ from unicef_restlib.pagination import DynamicPageNumberPagination
 
 from etools.applications.last_mile import models
 from etools.applications.last_mile.admin_panel.constants import ALERT_TYPES
-from etools.applications.last_mile.admin_panel.csv_exporter import CsvExporter
+from etools.applications.last_mile.admin_panel.csv_exporter import (
+    LocationsCSVExporter,
+    POITypesCSVExporter,
+    UserLocationsCSVExporter,
+    UsersCSVExporter,
+)
 from etools.applications.last_mile.admin_panel.csv_importer import CsvImporter
 from etools.applications.last_mile.admin_panel.filters import (
     AlertNotificationFilter,
@@ -172,7 +177,7 @@ class UserViewSet(ExportMixin,
     def list_export_csv(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         response = StreamingHttpResponse(
-            CsvExporter().generate_csv_data_for_users(queryset=queryset, serializer_class=self.get_serializer_class()),
+            UsersCSVExporter().generate_csv_data(queryset=queryset, serializer_class=self.get_serializer_class()),
             content_type='text/csv'
         )
         response['Content-Disposition'] = f'attachment; filename="users_{timezone.now().date()}.csv"'
@@ -304,7 +309,7 @@ class LocationsViewSet(mixins.ListModelMixin,
         only_locations = self.request.query_params.get('only_locations', False)
         queryset = self.filter_queryset(self.get_queryset())
         response = StreamingHttpResponse(
-            CsvExporter().generate_csv_data_for_locations(queryset=queryset, serializer_class=self.get_serializer_class(), only_locations=only_locations),
+            LocationsCSVExporter().generate_csv_data(queryset=queryset, serializer_class=self.get_serializer_class(), only_locations=only_locations),
             content_type='text/csv'
         )
         response['Content-Disposition'] = f'attachment; filename="locations_{timezone.now().date()}.csv"'
@@ -383,7 +388,7 @@ class UserLocationsViewSet(mixins.ListModelMixin,
     def list_export_csv(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         response = StreamingHttpResponse(
-            CsvExporter().generate_csv_data_for_user_locations(queryset=queryset, serializer_class=self.get_serializer_class()),
+            UserLocationsCSVExporter().generate_csv_data(queryset=queryset, serializer_class=self.get_serializer_class()),
             content_type='text/csv'
         )
         response['Content-Disposition'] = f'attachment; filename="user_locations_{timezone.now().date()}.csv"'
@@ -584,7 +589,7 @@ class PointOfInterestTypeListView(mixins.ListModelMixin, mixins.CreateModelMixin
     def list_export_csv(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         response = StreamingHttpResponse(
-            CsvExporter().generate_csv_data_for_poi_types(queryset=queryset, serializer_class=self.get_serializer_class()),
+            POITypesCSVExporter().generate_csv_data(queryset=queryset, serializer_class=self.get_serializer_class()),
             content_type='text/csv'
         )
         response['Content-Disposition'] = f'attachment; filename="locations_type_{timezone.now().date()}.csv"'
