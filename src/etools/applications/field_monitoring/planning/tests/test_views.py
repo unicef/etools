@@ -452,6 +452,102 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         self.assertEqual(len(mail.outbox), len(team_members) + 1)
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_auto_accept_activity_if_both(self):
+        # BOTH should behave like staff for auto-accept
+        staff1 = UserFactory(unicef_user=True)
+        staff2 = UserFactory(unicef_user=True)
+        tpm_partner = SimpleTPMPartnerFactory()
+        activity = MonitoringActivityFactory(
+            monitor_type='both',
+            status='pre_' + MonitoringActivity.STATUSES.assigned,
+            visit_lead=staff1,
+            team_members=[staff2],
+            tpm_partner=tpm_partner,
+        )
+
+        response = self._test_update(self.fm_user, activity, data={'status': 'assigned'})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['status'], MonitoringActivity.STATUSES.data_collection)
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_both_requires_tpm_partner(self):
+        # BOTH must require tpm_partner
+        staff1 = UserFactory(unicef_user=True)
+        reviewer = UserFactory(pme=True)
+        activity = MonitoringActivityFactory(
+            monitor_type='both',
+            status='review',
+            visit_lead=staff1,
+            tpm_partner=None,
+            team_members=[staff1],
+        )
+
+        self._test_update(
+            self.fm_user,
+            activity,
+            data={'status': 'assigned', 'report_reviewers': [reviewer.id]},
+            expected_status=status.HTTP_400_BAD_REQUEST,
+            basic_errors=['Partner is not defined for TPM activity'],
+        )
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_both_inactive_assignees_validation(self):
+        # For BOTH, inactive assignees should block save with clear error
+        tpm_partner = TPMPartnerFactory()
+        staff1 = UserFactory(unicef_user=True)
+        staff2 = UserFactory(unicef_user=True)
+        activity = MonitoringActivityFactory(
+            monitor_type='both',
+            status='draft',
+            visit_lead=staff1,
+            team_members=[staff2],
+            tpm_partner=tpm_partner,
+        )
+        # deactivate staff2 realm
+        staff2.realms.update(is_active=False)
+
+        response = self._test_update(
+            self.fm_user,
+            activity,
+            data={'team_members': [staff2.pk]},
+            expected_status=status.HTTP_400_BAD_REQUEST,
+        )
+        self.assertTrue(any('inactive or with no access' in str(err) for err in response.data))
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_both_allow_any_tpm_team_members(self):
+        # BOTH: allow adding TPM users from other partners; UNICEF staff unaffected
+        tpm_partner = TPMPartnerFactory()
+        unicef_staff = UserFactory(unicef_user=True)
+        # TPM user from another partner
+        other_tpm_partner = TPMPartnerFactory()
+        foreign_tpm_user = TPMUserFactory(tpm_partner=other_tpm_partner, profile__organization=other_tpm_partner.organization)
+
+        activity = MonitoringActivityFactory(
+            monitor_type='both',
+            status='draft',
+            tpm_partner=tpm_partner,
+            team_members=[unicef_staff],
+        )
+
+        # Adding a UNICEF staff should be fine (not validated vs tpm_partner)
+        self._test_update(
+            self.fm_user,
+            activity,
+            data={'team_members': [unicef_staff.id]},
+            expected_status=status.HTTP_200_OK
+        )
+
+        # Adding a TPM user from a different partner should be allowed for BOTH
+        self._test_update(
+            self.fm_user,
+            activity,
+            data={'team_members': [unicef_staff.id, foreign_tpm_user.id]},
+            expected_status=status.HTTP_200_OK,
+        )
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_cancel_activity(self):
         activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.review)
 

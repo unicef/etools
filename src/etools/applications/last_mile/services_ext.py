@@ -71,7 +71,7 @@ class DataExportService:
         "transfer": models.Transfer.objects,
         "poi": models.PointOfInterest.export_objects,
         "item": models.Item.objects,
-        "item_history": models.ItemTransferHistory.objects,
+        "item_history": models.ItemAuditLog.objects,
         "poi_type": models.PointOfInterestType.objects,
     }
 
@@ -95,6 +95,7 @@ class DataExportService:
         if country_name:
             queryset = queryset.annotate(country=Value(country_name))
 
+        queryset = queryset.order_by('id')
         return queryset
 
 

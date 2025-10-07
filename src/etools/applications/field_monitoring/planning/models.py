@@ -166,6 +166,7 @@ class MonitoringActivity(
     MONITOR_TYPE_CHOICES = Choices(
         ('staff', _('Staff')),
         ('tpm', _('TPM')),
+        ('both', _('Both')),
     )
 
     STATUS_DRAFT = 'draft'
@@ -568,15 +569,30 @@ class MonitoringActivity(
         recipients = set(
             list(self.team_members.all()) + [self.visit_lead]
         )
+        # decide templates, then send
+        deliveries = []
         # check if it was rejected otherwise send assign message
         if old_instance and old_instance.status == self.STATUSES.submitted:
-            email_template = "fm/activity/staff-reject"
-            recipients = [self.visit_lead]
+            deliveries = [
+                (self.visit_lead, "fm/activity/staff-reject"),
+            ]
         elif self.monitor_type == self.MONITOR_TYPE_CHOICES.staff:
-            email_template = 'fm/activity/staff-assign'
+            deliveries = [(r, 'fm/activity/staff-assign') for r in recipients]
+        elif self.monitor_type == self.MONITOR_TYPE_CHOICES.tpm:
+            deliveries = [(r, 'fm/activity/assign') for r in recipients]
+        elif self.monitor_type == self.MONITOR_TYPE_CHOICES.both:
+            # send staff template to UNICEF Users and TPM template to TPM users
+            deliveries = [
+                (
+                    r,
+                    'fm/activity/staff-assign' if r.groups.filter(name='UNICEF User').exists() else 'fm/activity/assign'
+                )
+                for r in recipients
+            ]
         else:
-            email_template = 'fm/activity/assign'
-        for recipient in recipients:
+            deliveries = [(r, 'fm/activity/assign') for r in recipients]
+
+        for recipient, email_template in deliveries:
             self._send_email(
                 recipient.email,
                 email_template,
@@ -584,7 +600,7 @@ class MonitoringActivity(
                 user=recipient
             )
 
-        if self.monitor_type == self.MONITOR_TYPE_CHOICES.staff:
+        if self.monitor_type in [self.MONITOR_TYPE_CHOICES.staff, self.MONITOR_TYPE_CHOICES.both]:
             self.accept()
             self.save()
             # todo: direct transitions doesn't trigger side effects.

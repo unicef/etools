@@ -10,7 +10,7 @@ from etools.applications.governments.synchronizers import EWPsSynchronizer
 from etools.applications.partners.synchronizers import DirectCashTransferSynchronizer, PartnerSynchronizer
 from etools.applications.reports.synchronizers import ProgrammeSynchronizer, RAMSynchronizer
 from etools.applications.users.models import Country
-from etools.config.celery import app, send_to_slack
+from etools.config.celery import app
 
 PUBLIC_SYNC_HANDLERS = {}
 
@@ -64,7 +64,6 @@ def vision_sync_task(business_area_code=None, synchronizers=SYNC_HANDLERS.keys()
         ',\n '.join([country.name for country in countries]),
         ',\n '.join([synchronizer for synchronizer in synchronizers])
     )
-    send_to_slack(text)
     logger.info(text)
 
 

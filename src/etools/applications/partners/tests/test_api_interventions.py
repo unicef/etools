@@ -1980,6 +1980,29 @@ class BaseInterventionReportingRequirementMixin:
             init_count + 2
         )
 
+    def test_post_hr_remove_all(self):
+        AppliedIndicatorFactory(
+            is_high_frequency=True,
+            lower_result=self.lower_result
+        )
+        report_type = ReportingRequirement.TYPE_HR
+        ReportingRequirementFactory(intervention=self.intervention, report_type=report_type)
+        ReportingRequirementFactory(intervention=self.intervention, report_type=report_type)
+
+        requirement_qs = ReportingRequirement.objects.filter(
+            intervention=self.intervention,
+            report_type=report_type,
+        )
+        self.assertEqual(requirement_qs.count(), 2)
+        response = self.forced_auth_req(
+            "post",
+            self._get_url(report_type),
+            user=self.unicef_staff,
+            data={"reporting_requirements": []}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(requirement_qs.count(), 0)
+
     def test_post_invalid_no_start_date(self):
         """Missing report type value"""
         report_type = ReportingRequirement.TYPE_QPR
