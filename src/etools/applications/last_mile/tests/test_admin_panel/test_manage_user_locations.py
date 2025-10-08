@@ -93,7 +93,19 @@ class TestUserLocationViewSet(BaseTenantTestCase):
         response = self.forced_auth_req('get', csv_url, user=self.partner_staff)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content_disposition = response.headers.get('Content-Disposition', '')
-        self.assertTrue(content_disposition.startswith('attachment;filename=user_locations_'))
+        self.assertTrue(content_disposition.startswith('attachment; filename="user_locations_'))
+
+    def test_export_csv(self):
+        response = self.forced_auth_req('get', self.url + "export/csv/", user=self.partner_staff)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('Content-Disposition', response.headers)
+        content = b''.join(response.streaming_content).decode('utf-8')
+        self.assertIn('First Name', content)
+        self.assertIn('Last Name', content)
+        self.assertIn('Email', content)
+        self.assertIn('Implementing Partner', content)
+        self.assertIn('Unique ID', content)
+        self.assertIn('Location', content)
 
     def test_filter_by_first_name_with_data(self):
         data = {'first_name': self.partner_staff.first_name[:3]}
