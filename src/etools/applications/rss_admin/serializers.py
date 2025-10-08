@@ -1,7 +1,9 @@
+from etools_validator.exceptions import TransitionError
 from rest_framework import serializers
 
 from etools.applications.organizations.models import Organization
 from etools.applications.partners.models import Agreement, Intervention, PartnerOrganization
+from etools.applications.partners.validation.interventions import transition_to_closed
 from etools.applications.reports.models import Office, Section
 
 
@@ -119,3 +121,36 @@ class InterventionRssSerializer(serializers.ModelSerializer):
             'start',
             'end',
         )
+
+
+class BulkCloseProgrammeDocumentsSerializer(serializers.Serializer):
+    programme_documents = serializers.PrimaryKeyRelatedField(queryset=Intervention.objects.all(), many=True, write_only=True)
+
+    def validate_programme_documents(self, programme_documents):
+        # Ensure only PDs are processed via this endpoint
+        invalid_ids = [i.id for i in programme_documents if i.document_type != Intervention.PD]
+        if invalid_ids:
+            raise serializers.ValidationError({'non_pd_ids': invalid_ids})
+        return programme_documents
+
+    def update(self, validated_data, user):
+        interventions = validated_data.get('programme_documents', [])
+        result = {
+            'closed_ids': [],
+            'errors': [],
+        }
+
+        for intervention in interventions:
+            # Only allow closing from ENDED status
+            if intervention.status != Intervention.ENDED:
+                result['errors'].append({'id': intervention.id, 'errors': ['PD is not in ENDED status']})
+                continue
+            try:
+                transition_to_closed(intervention)
+                intervention.status = Intervention.CLOSED
+                intervention.save()
+                result['closed_ids'].append(intervention.id)
+            except TransitionError as exc:
+                result['errors'].append({'id': intervention.id, 'errors': str(exc)})
+
+        return result

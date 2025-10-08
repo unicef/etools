@@ -1,6 +1,8 @@
 from django.db import connection
 
-from rest_framework import filters, viewsets
+from rest_framework import filters, status, viewsets
+from rest_framework.decorators import action
+from rest_framework.response import Response
 
 from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.partners.models import Agreement, Intervention, PartnerOrganization
@@ -11,7 +13,11 @@ from etools.applications.partners.serializers.interventions_v2 import (
 )
 from etools.applications.partners.tasks import send_pd_to_vision
 from etools.applications.rss_admin.permissions import IsRssAdmin
-from etools.applications.rss_admin.serializers import AgreementRssSerializer, PartnerOrganizationRssSerializer
+from etools.applications.rss_admin.serializers import (
+    AgreementRssSerializer,
+    BulkCloseProgrammeDocumentsSerializer,
+    PartnerOrganizationRssSerializer,
+)
 from etools.applications.utils.pagination import AppendablePageNumberPagination
 
 
@@ -86,3 +92,10 @@ class ProgrammeDocumentRssViewSet(viewsets.ModelViewSet):
         old_status = serializer.instance.status
         serializer.save()
         self._maybe_trigger_vision_sync(serializer.instance, old_status=old_status)
+
+    @action(detail=False, methods=['put'], url_path='bulk-close')
+    def bulk_close(self, request, *args, **kwargs):
+        serializer = BulkCloseProgrammeDocumentsSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        result = serializer.update(serializer.validated_data, request.user)
+        return Response(result, status=status.HTTP_200_OK)

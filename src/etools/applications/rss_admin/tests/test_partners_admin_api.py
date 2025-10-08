@@ -215,6 +215,61 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         ids = [row['id'] for row in response.data]
         self.assertIn(self.agreement.id, ids)
 
+    def test_bulk_close_success(self):
+        pd1 = InterventionFactory(
+            agreement=self.agreement,
+            document_type=Intervention.PD,
+            status=Intervention.ENDED,
+        )
+        pd2 = InterventionFactory(
+            agreement=self.agreement,
+            document_type=Intervention.PD,
+            status=Intervention.ENDED,
+        )
+        pd3 = InterventionFactory(
+            agreement=self.agreement,
+            document_type=Intervention.PD,
+            status=Intervention.ENDED,
+        )
+        # ensure validator passes end date and final review
+        for pd in (pd1, pd2, pd3):
+            pd.end = pd.created.date()
+            pd.final_review_approved = True
+            pd.save()
+
+        url = reverse('rss_admin:rss-admin-programme-documents-bulk-close')
+        payload = {'programme_documents': [pd1.id, pd2.id, pd3.id]}
+        resp = self.forced_auth_req('put', url, user=self.user, data=payload)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        closed = set(resp.data['closed_ids'])
+        self.assertTrue(set([pd1.id, pd2.id, pd3.id]).issubset(closed))
+        for pd in (pd1, pd2, pd3):
+            pd.refresh_from_db()
+            self.assertEqual(pd.status, Intervention.CLOSED)
+
+    def test_bulk_close_rejects_non_pd(self):
+        spd = InterventionFactory(
+            agreement=self.agreement,
+            document_type=Intervention.SPD,
+            status=Intervention.ENDED,
+        )
+        url = reverse('rss_admin:rss-admin-programme-documents-bulk-close')
+        payload = {'programme_documents': [spd.id]}
+        resp = self.forced_auth_req('put', url, user=self.user, data=payload)
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_bulk_close_errors_when_not_ended(self):
+        pd = InterventionFactory(
+            agreement=self.agreement,
+            document_type=Intervention.PD,
+            status=Intervention.ACTIVE,
+        )
+        url = reverse('rss_admin:rss-admin-programme-documents-bulk-close')
+        payload = {'programme_documents': [pd.id]}
+        resp = self.forced_auth_req('put', url, user=self.user, data=payload)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertTrue(any(e['id'] == pd.id for e in resp.data['errors']))
+
     @override_settings(RESTRICTED_ADMIN=True)
     def test_access_allowed_for_rss_admin_realm(self):
         user = UserFactory(is_staff=False)
