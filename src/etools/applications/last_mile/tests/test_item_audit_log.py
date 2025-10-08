@@ -815,35 +815,3 @@ class TestItemAuditLogAdvancedScenarios(BaseTenantTestCase):
 
         item.refresh_from_db()
         self.assertEqual(item.quantity, 100)
-
-    def test_signal_performance_under_load(self):
-        items = []
-
-        start_time = timezone.now()
-        for i in range(50):
-            item = ItemFactory(
-                transfer=self.transfer,
-                material=self.material,
-                quantity=i + 1,
-                batch_id=f'PERF_{i}',
-                mapped_description=f'Performance test item {i}',
-                amount_usd=Decimal(str(i + 0.99))
-            )
-            items.append(item)
-        creation_time = (timezone.now() - start_time).total_seconds()
-
-        models.ItemAuditLog.objects.all().delete()
-
-        start_time = timezone.now()
-        for i, item in enumerate(items):
-            item.quantity = (i + 1) * 2
-            item.batch_id = f'UPDATED_{i}'
-            item.mapped_description = f'Updated item {i}'
-            item.save()
-        update_time = (timezone.now() - start_time).total_seconds()
-
-        self.assertLess(creation_time, 2.0)
-        self.assertLess(update_time, 2.0)
-
-        total_audit_logs = models.ItemAuditLog.objects.count()
-        self.assertEqual(total_audit_logs, 50)

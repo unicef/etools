@@ -694,6 +694,10 @@ PARTNER_PROTECTED_URLS = [
     "/api/v2/funds",
 ]
 
+# Zendesk SSO Configuration
+ZENDESK_SUBDOMAIN = get_from_secrets_or_env('ZENDESK_SUBDOMAIN', 'etools')
+ZENDESK_SHARED_SECRET = get_from_secrets_or_env('ZENDESK_SHARED_SECRET', '')
+
 PBI_CONFIG = {
     "AUTHENTICATION_MODE": 'ServicePrincipal',
     "WORKSPACE_ID": get_from_secrets_or_env('PBI_LMSM_WORKSPACE_ID', ''),
