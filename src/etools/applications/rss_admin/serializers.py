@@ -1,3 +1,5 @@
+from django.contrib.auth import get_user_model
+
 from etools_validator.exceptions import TransitionError
 from rest_framework import serializers
 
@@ -5,6 +7,7 @@ from etools.applications.organizations.models import Organization
 from etools.applications.partners.models import Agreement, Intervention, PartnerOrganization
 from etools.applications.partners.validation.interventions import transition_to_closed
 from etools.applications.reports.models import Office, Section
+from etools.applications.travel.models import Trip
 
 
 class PartnerOrganizationRssSerializer(serializers.ModelSerializer):
@@ -154,3 +157,31 @@ class BulkCloseProgrammeDocumentsSerializer(serializers.Serializer):
                 result['errors'].append({'id': intervention.id, 'errors': str(exc)})
 
         return result
+
+
+class TripApproverUpdateSerializer(serializers.ModelSerializer):
+    supervisor_id = serializers.PrimaryKeyRelatedField(
+        source='supervisor', queryset=get_user_model().objects.all(), write_only=True
+    )
+    supervisor = serializers.CharField(source='supervisor.get_full_name', read_only=True)
+    traveller = serializers.CharField(source='traveller.get_full_name', read_only=True)
+    status = serializers.CharField(read_only=True)
+    reference_number = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = Trip
+        fields = (
+            'id',
+            'reference_number',
+            'status',
+            'traveller',
+            'supervisor',
+            'supervisor_id',
+        )
+
+    def validate(self, data):
+        data = super().validate(data)
+        trip = self.instance
+        if trip and trip.status != Trip.STATUS_SUBMITTED:
+            raise serializers.ValidationError('Approver can only be changed for Submitted trips.')
+        return data
