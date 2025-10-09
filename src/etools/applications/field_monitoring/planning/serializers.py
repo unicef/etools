@@ -281,6 +281,20 @@ class MonitoringActivitySerializer(UserContextSerializerMixin, MonitoringActivit
 
         return super().update(instance, validated_data)
 
+    def validate_location(self, value):
+        """
+        Prevent adding new inactive locations to Monitoring Activities.
+        Allow keeping existing inactive locations that were previously saved.
+        """
+        if value and not value.is_active:
+            if self.instance and self.instance.location == value:
+                return value
+
+            raise serializers.ValidationError(
+                _('Cannot assign inactive location "{}". Please choose an active location.').format(value.name)
+            )
+        return value
+
 
 class ActivityAttachmentSerializer(BaseAttachmentSerializer):
     file_type = FileTypeModelChoiceField(
