@@ -84,9 +84,12 @@ class FaceFormSerializer(serializers.ModelSerializer):
     amount_usd = serializers.CharField(required=False)
     amount_local = serializers.CharField(required=False)
 
+    selected = serializers.BooleanField(required=False)
+
     class Meta:
         model = FaceForm
-        fields = '__all__'
+        fields = ('id', 'face_number', 'start_date', 'end_date', 'modality', 'currency',
+                  'amount_usd', 'amount_local', 'selected')
 
 
 class AttachmentField(serializers.Field):

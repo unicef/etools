@@ -557,11 +557,14 @@ class FaceFormListViewSet(
 ):
     metadata_class = PermissionBasedMetadata
     permission_classes = BaseAuditViewSet.permission_classes
-    queryset = FaceForm.objects.all()
+    queryset = FaceForm.objects.select_related('partner')
     serializer_class = FaceFormSerializer
 
     def get_queryset(self):
-        return super().get_queryset().filter(partner_id=int(self.kwargs['partner_pk'])).order_by('id')
+        return (super().get_queryset()
+                .filter(partner_id=int(self.kwargs['partner_pk']))
+                .annotate(selected=Exists(Engagement.objects.filter(face_forms=OuterRef('pk'))))
+                .order_by('id'))
 
 
 class AuditorStaffMembersViewSet(

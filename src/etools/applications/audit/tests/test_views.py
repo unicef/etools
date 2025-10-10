@@ -18,7 +18,15 @@ from unicef_attachments.models import Attachment
 
 from etools.applications.action_points.tests.factories import ActionPointCategoryFactory, ActionPointFactory
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
-from etools.applications.audit.models import Audit, Auditor, Engagement, Risk, SpecialAudit, SpotCheck, UNICEFUser
+from etools.applications.audit.models import (
+    Audit,
+    Auditor,
+    Engagement,
+    Risk,
+    SpecialAudit,
+    SpotCheck,
+    UNICEFUser,
+)
 from etools.applications.audit.tests.base import AuditTestCaseMixin, EngagementTransitionsTestCaseMixin
 from etools.applications.audit.tests.factories import (
     AuditFactory,
@@ -43,6 +51,7 @@ from etools.applications.organizations.models import OrganizationType
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.reports.tests.factories import SectionFactory
 from etools.applications.users.tests.factories import CountryFactory, GroupFactory, OfficeFactory, RealmFactory
+from etools.libraries.djangolib.models import GroupWrapper
 
 
 class BaseTestCategoryRisksViewSet(EngagementTransitionsTestCaseMixin):
@@ -1965,6 +1974,52 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, BaseTenantTestCase):
             user=self.usual_user
         )
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+
+class TestFaceFormsViewSet(BaseTenantTestCase):
+    def setUp(self):
+        super().setUp()
+        GroupWrapper.invalidate_instances()
+
+        self.partner = PartnerWithAgreementsFactory()
+        self.unicef_focal_point = AuditFocalPointUserFactory(first_name='UNICEF Audit Focal Point')
+
+        self.audit = AuditFactory(partner=self.partner)
+
+    def test_list(self):
+        ff_1 = FaceFormFactory(partner=self.partner)
+        ff_2 = FaceFormFactory(partner=self.partner)
+
+        response = self.forced_auth_req(
+            'get',
+            '/api/audit/face-forms/{0}/'.format(self.partner.id),
+            user=self.unicef_focal_point
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 2)
+        ff_list = sorted(response.data['results'], key=lambda ff: ff['id'])
+        self.assertEqual(ff_list[0]['id'], ff_1.id)
+        self.assertEqual(ff_list[0]['selected'], False)
+
+        self.assertEqual(ff_list[1]['id'], ff_2.id)
+        self.assertEqual(ff_list[1]['selected'], False)
+
+        # First face form is selected on audit
+        self.audit.face_forms.add(ff_1)
+
+        response = self.forced_auth_req(
+            'get',
+            '/api/audit/face-forms/{0}/'.format(self.partner.id),
+            user=self.unicef_focal_point
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 2)
+        ff_list = sorted(response.data['results'], key=lambda ff: ff['id'])
+        self.assertEqual(ff_list[0]['id'], ff_1.id)
+        self.assertEqual(ff_list[0]['selected'], True)
+
+        self.assertEqual(ff_list[1]['id'], ff_2.id)
+        self.assertEqual(ff_list[1]['selected'], False)
 
 
 class TestEngagementSpecialPDFExportViewSet(EngagementTransitionsTestCaseMixin, BaseTenantTestCase):
