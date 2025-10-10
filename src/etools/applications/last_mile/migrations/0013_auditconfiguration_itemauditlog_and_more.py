@@ -8,6 +8,35 @@ import etools.applications.last_mile.models
 import etools.applications.utils.validators
 import model_utils.fields
 
+def copy_old_item_transfers_to_new_one(apps, schema_editor):
+    ItemTransferHistory = apps.get_model('last_mile', 'ItemTransferHistory')
+    ItemAuditLog = apps.get_model('last_mile', 'ItemAuditLog')
+    item_audit_logs_to_create = []
+    for item_transfer_history in ItemTransferHistory.objects.select_related('item', 'transfer', 'item__material').all():
+        item_audit_log = ItemAuditLog(
+            item_id=item_transfer_history.item.pk,
+            action="UPDATE",
+            transfer_info={
+                "transfer_id": item_transfer_history.transfer.pk,
+                "transfer_type": item_transfer_history.transfer.transfer_type,
+                "transfer_status": item_transfer_history.transfer.status,
+                "transfer_name": item_transfer_history.transfer.name,
+                "unicef_release_order": item_transfer_history.transfer.unicef_release_order,
+                "waybill_id": item_transfer_history.transfer.waybill_id
+            },
+            material_info={
+                "material_id": item_transfer_history.item.material.pk,
+                "material_uom": item_transfer_history.item.material.original_uom,
+                "material_number": item_transfer_history.item.material.number,
+                "material_description": item_transfer_history.item.material.short_description,
+                "material_group": item_transfer_history.item.material.group,
+                "material_type": item_transfer_history.item.material.material_type
+            }
+        )
+        item_audit_logs_to_create.append(item_audit_log)
+
+    ItemAuditLog.objects.bulk_create(item_audit_logs_to_create, batch_size=5000)
+
 
 class Migration(migrations.Migration):
 
@@ -60,6 +89,7 @@ class Migration(migrations.Migration):
                 'ordering': ['-created'],
             },
         ),
+        migrations.RunPython(copy_old_item_transfers_to_new_one, migrations.RunPython.noop),
         migrations.RemoveField(
             model_name='item',
             name='transfers_history',
