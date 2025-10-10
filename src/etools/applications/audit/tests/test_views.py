@@ -18,15 +18,7 @@ from unicef_attachments.models import Attachment
 
 from etools.applications.action_points.tests.factories import ActionPointCategoryFactory, ActionPointFactory
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
-from etools.applications.audit.models import (
-    Audit,
-    Auditor,
-    Engagement,
-    Risk,
-    SpecialAudit,
-    SpotCheck,
-    UNICEFUser,
-)
+from etools.applications.audit.models import Audit, Auditor, Engagement, Risk, SpecialAudit, SpotCheck, UNICEFUser
 from etools.applications.audit.tests.base import AuditTestCaseMixin, EngagementTransitionsTestCaseMixin
 from etools.applications.audit.tests.factories import (
     AuditFactory,
