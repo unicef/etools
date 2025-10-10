@@ -1,6 +1,7 @@
 from django.db import connection
 from django.test import override_settings
 from django.urls import reverse
+from django.utils import timezone
 
 import mock
 from rest_framework import status
@@ -91,6 +92,16 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(any(row['id'] == self.agreement.id for row in response.data))
 
+    def test_partner_psea_date_serialization_date_only(self):
+        # ensure datetime field is serialized as YYYY-MM-DD
+        self.partner.psea_assessment_date = timezone.now()
+        self.partner.save()
+        url = reverse('rss_admin:rss-admin-partners-list')
+        response = self.forced_auth_req('get', url, user=self.user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        row = next(r for r in response.data if r['id'] == self.partner.id)
+        self.assertEqual(row['psea_last_assessment_date'], timezone.now().date().isoformat())
+
     def test_list_pds(self):
         url = reverse('rss_admin:rss-admin-programme-documents-list')
         response = self.forced_auth_req('get', url, user=self.user)
@@ -114,6 +125,26 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
             if row.get('document_type') == Intervention.SPD
         ]
         self.assertIn(self.spd.id, ids)
+
+    def test_agreement_date_fields_are_date_strings(self):
+        # Set agreement dates and ensure serializer returns YYYY-MM-DD
+        today = timezone.now().date()
+        self.agreement.start = today
+        self.agreement.end = today
+        self.agreement.signed_by_unicef_date = today
+        self.agreement.signed_by_partner_date = today
+        self.agreement.save()
+
+        # list endpoint
+        url = reverse('rss_admin:rss-admin-agreements-list')
+        resp = self.forced_auth_req('get', url, user=self.user)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        row = next(r for r in resp.data if r['id'] == self.agreement.id)
+        self.assertEqual(row['start'], today.isoformat())
+        self.assertEqual(row['end'], today.isoformat())
+        self.assertEqual(row['agreement_signature_date'], today.isoformat())
+        self.assertEqual(row['signed_by_unicef_date'], today.isoformat())
+        self.assertEqual(row['signed_by_partner_date'], today.isoformat())
 
     def test_patch_pd_title(self):
         url = reverse('rss_admin:rss-admin-programme-documents-detail', kwargs={'pk': self.pd.pk})

@@ -18,7 +18,12 @@ class PartnerOrganizationRssSerializer(serializers.ModelSerializer):
     partner_type = serializers.CharField(read_only=True)
     hact_risk_rating = serializers.CharField(source='rating', read_only=True)
     sea_risk_rating = serializers.CharField(source='sea_risk_rating_name', read_only=True)
-    psea_last_assessment_date = serializers.DateField(source='psea_assessment_date', required=False, allow_null=True)
+    psea_last_assessment_date = serializers.DateTimeField(
+        source='psea_assessment_date', format='%Y-%m-%d', required=False, allow_null=True, read_only=True
+    )
+    # psea_last_assessment_date = serializers.DateTimeField(
+    #     source='psea_assessment_date', format='%Y-%m-%d', required=False, allow_null=True, read_only=True
+    # )
     lead_office = serializers.PrimaryKeyRelatedField(queryset=Office.objects.all(), required=False, allow_null=True)
     lead_office_name = serializers.SerializerMethodField()
     lead_section = serializers.PrimaryKeyRelatedField(queryset=Section.objects.all(), required=False, allow_null=True)
@@ -66,6 +71,8 @@ class AgreementRssSerializer(serializers.ModelSerializer):
     authorized_officers = serializers.SerializerMethodField()
     agreement_document = serializers.FileField(source='attached_agreement', allow_null=True, required=False)
     agreement_signature_date = serializers.DateField(source='signed_by_unicef_date', read_only=True)
+    signed_by_unicef_date = serializers.DateField(required=False, allow_null=True)
+    signed_by_partner_date = serializers.DateField(required=False, allow_null=True)
     partner_signatory = serializers.PrimaryKeyRelatedField(source='partner_manager', read_only=True)
 
     def get_authorized_officers(self, obj):
