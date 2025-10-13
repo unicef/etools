@@ -21,9 +21,6 @@ class PartnerOrganizationRssSerializer(serializers.ModelSerializer):
     psea_last_assessment_date = serializers.DateTimeField(
         source='psea_assessment_date', format='%Y-%m-%d', required=False, allow_null=True, read_only=True
     )
-    # psea_last_assessment_date = serializers.DateTimeField(
-    #     source='psea_assessment_date', format='%Y-%m-%d', required=False, allow_null=True, read_only=True
-    # )
     lead_office = serializers.PrimaryKeyRelatedField(queryset=Office.objects.all(), required=False, allow_null=True)
     lead_office_name = serializers.SerializerMethodField()
     lead_section = serializers.PrimaryKeyRelatedField(queryset=Section.objects.all(), required=False, allow_null=True)
@@ -69,6 +66,9 @@ class AgreementRssSerializer(serializers.ModelSerializer):
     start = serializers.DateField(required=False, allow_null=True)
     end = serializers.DateField(required=False, allow_null=True)
     authorized_officers = serializers.SerializerMethodField()
+    authorized_officers_ids = serializers.PrimaryKeyRelatedField(
+        queryset=get_user_model().objects.all(), many=True, write_only=True, required=False
+    )
     agreement_document = serializers.FileField(source='attached_agreement', allow_null=True, required=False)
     agreement_signature_date = serializers.DateField(source='signed_by_unicef_date', read_only=True)
     signed_by_unicef_date = serializers.DateField(required=False, allow_null=True)
@@ -93,12 +93,20 @@ class AgreementRssSerializer(serializers.ModelSerializer):
             'start',
             'end',
             'authorized_officers',
+            'authorized_officers_ids',
             'agreement_document',
             'agreement_signature_date',
             'signed_by_unicef_date',
             'signed_by_partner_date',
             'partner_signatory',
         )
+
+    def update(self, instance, validated_data):
+        officers = validated_data.pop('authorized_officers_ids', None)
+        instance = super().update(instance, validated_data)
+        if officers is not None:
+            instance.authorized_officers.set(officers)
+        return instance
 
 
 class InterventionRssSerializer(serializers.ModelSerializer):

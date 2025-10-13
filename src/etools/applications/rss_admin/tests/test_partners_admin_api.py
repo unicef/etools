@@ -34,6 +34,7 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
 
     def test_retrieve_partner(self):
         url = reverse('rss_admin:rss-admin-partners-detail', kwargs={'pk': self.partner.pk})
+        print('url:', url)
         response = self.forced_auth_req('get', url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['id'], self.partner.id)
@@ -141,7 +142,8 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         row = next(r for r in resp.data if r['id'] == self.agreement.id)
         self.assertEqual(row['start'], today.isoformat())
-        self.assertEqual(row['end'], today.isoformat())
+        expected_end = self.agreement.country_programme.to_date.isoformat()
+        self.assertEqual(row['end'], expected_end)
         self.assertEqual(row['agreement_signature_date'], today.isoformat())
         self.assertEqual(row['signed_by_unicef_date'], today.isoformat())
         self.assertEqual(row['signed_by_partner_date'], today.isoformat())
@@ -231,6 +233,15 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         response = self.forced_auth_req('patch', url, user=self.user, data=payload)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['signed_by_unicef_date'], '2024-02-10')
+
+    def test_update_agreement_authorized_officers(self):
+        url = reverse('rss_admin:rss-admin-agreements-detail', kwargs={'pk': self.agreement.pk})
+        officer1 = UserFactory()
+        officer2 = UserFactory()
+        payload = {'authorized_officers_ids': [officer1.id, officer2.id]}
+        response = self.forced_auth_req('patch', url, user=self.user, data=payload)
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        self.assertEqual(len(response.data['authorized_officers']), 2)
 
     def test_agreements_permission_denied_for_non_staff(self):
         non_staff_user = UserFactory(is_staff=False)
