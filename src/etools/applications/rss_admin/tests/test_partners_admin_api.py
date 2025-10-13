@@ -34,7 +34,6 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
 
     def test_retrieve_partner(self):
         url = reverse('rss_admin:rss-admin-partners-detail', kwargs={'pk': self.partner.pk})
-        print('url:', url)
         response = self.forced_auth_req('get', url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['id'], self.partner.id)

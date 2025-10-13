@@ -25,7 +25,7 @@ class TestRssAdminTripsApi(BaseTenantTestCase):
         trip.status = Trip.STATUS_SUBMITTED
         trip.save()
 
-        url = reverse('rss_admin:rss-admin-trips-change-approver', kwargs={'pk': trip.pk})
+        url = reverse('rss_admin:rss-admin-trips-detail', kwargs={'pk': trip.pk})
         resp = self.forced_auth_req('patch', url, user=self.admin_user, data={'supervisor_id': self.supervisor2.id})
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         trip.refresh_from_db()
@@ -36,7 +36,7 @@ class TestRssAdminTripsApi(BaseTenantTestCase):
         trip.status = Trip.STATUS_DRAFT
         trip.save()
 
-        url = reverse('rss_admin:rss-admin-trips-change-approver', kwargs={'pk': trip.pk})
+        url = reverse('rss_admin:rss-admin-trips-detail', kwargs={'pk': trip.pk})
         resp = self.forced_auth_req('patch', url, user=self.admin_user, data={'supervisor_id': self.supervisor2.id})
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -47,7 +47,7 @@ class TestRssAdminTripsApi(BaseTenantTestCase):
         trip.save()
 
         non_staff_user = UserFactory(is_staff=False)
-        url = reverse('rss_admin:rss-admin-trips-change-approver', kwargs={'pk': trip.pk})
+        url = reverse('rss_admin:rss-admin-trips-detail', kwargs={'pk': trip.pk})
         resp = self.forced_auth_req('patch', url, user=non_staff_user, data={'supervisor_id': self.supervisor2.id})
         self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)
 
@@ -61,7 +61,7 @@ class TestRssAdminTripsApi(BaseTenantTestCase):
         group = GroupFactory(name='Rss Admin')
         RealmFactory(user=user, country=self.tenant, group=group, is_active=True)
 
-        url = reverse('rss_admin:rss-admin-trips-change-approver', kwargs={'pk': trip.pk})
+        url = reverse('rss_admin:rss-admin-trips-detail', kwargs={'pk': trip.pk})
         resp = self.forced_auth_req('patch', url, user=user, data={'supervisor_id': self.supervisor2.id})
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         trip.refresh_from_db()

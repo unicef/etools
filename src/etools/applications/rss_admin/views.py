@@ -108,8 +108,7 @@ class TripRssViewSet(viewsets.GenericViewSet):
     permission_classes = (IsRssAdmin,)
     serializer_class = TripApproverUpdateSerializer
 
-    @action(detail=True, methods=["patch"], url_path='change-approver')
-    def change_approver(self, request, pk=None):
+    def partial_update(self, request, pk=None):
         trip = self.get_object()
         serializer = self.get_serializer(instance=trip, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)

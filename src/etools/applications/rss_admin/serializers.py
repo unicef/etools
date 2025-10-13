@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 
 from etools_validator.exceptions import TransitionError
 from rest_framework import serializers
+from unicef_attachments.fields import AttachmentSingleFileField
 
 from etools.applications.organizations.models import Organization
 from etools.applications.partners.models import Agreement, Intervention, PartnerOrganization
@@ -69,7 +70,8 @@ class AgreementRssSerializer(serializers.ModelSerializer):
     authorized_officers_ids = serializers.PrimaryKeyRelatedField(
         queryset=get_user_model().objects.all(), many=True, write_only=True, required=False
     )
-    agreement_document = serializers.FileField(source='attached_agreement', allow_null=True, required=False)
+    agreement_document = serializers.FileField(source='attached_agreement', read_only=True)
+    agreement_attachment = AttachmentSingleFileField(source='attachment', required=False, write_only=True)
     agreement_signature_date = serializers.DateField(source='signed_by_unicef_date', read_only=True)
     signed_by_unicef_date = serializers.DateField(required=False, allow_null=True)
     signed_by_partner_date = serializers.DateField(required=False, allow_null=True)
@@ -95,6 +97,7 @@ class AgreementRssSerializer(serializers.ModelSerializer):
             'authorized_officers',
             'authorized_officers_ids',
             'agreement_document',
+            'agreement_attachment',
             'agreement_signature_date',
             'signed_by_unicef_date',
             'signed_by_partner_date',
