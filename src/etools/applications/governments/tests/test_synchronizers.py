@@ -299,9 +299,6 @@ class TestEWPsSynchronizer(BaseTenantTestCase):
         self.assertEqual(result['remote_partners'], set())
 
     def test_activity_created_without_partners_then_updated_with_partners(self):
-        # Build EWPSynchronizer inputs: first run without partners
-        from copy import deepcopy as _dc
-
         # Prerequisites from TestEWPSynchronizer
         cp = CountryProgrammeFactory(wbs='0060/A0/07', name='CP')
         out = ResultFactory(
@@ -363,7 +360,7 @@ class TestEWPsSynchronizer(BaseTenantTestCase):
         }
 
         # First run: create activity with no partners
-        sync1 = EWPSynchronizer(_dc(base_data))
+        sync1 = EWPSynchronizer(deepcopy(base_data))
         sync1.update_workplans()
         sync1.update_ewp_outputs()
         sync1.update_kis()
@@ -374,7 +371,7 @@ class TestEWPsSynchronizer(BaseTenantTestCase):
         self.assertEqual(act.partners.count(), 0)
 
         # Second run: same activity now has partners upstream
-        with_partners = _dc(base_data)
+        with_partners = deepcopy(base_data)
         with_partners['remote_partners'] = [partner.organization.vendor_number]
         with_partners['activities']['0060/A0/07/885/006/001/WPA0001']['partners'] = [partner.organization.vendor_number]
 
