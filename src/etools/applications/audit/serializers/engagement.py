@@ -88,8 +88,8 @@ class FaceFormSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = FaceForm
-        fields = ('id', 'face_number', 'start_date', 'end_date', 'modality', 'currency',
-                  'amount_usd', 'amount_local', 'selected')
+        fields = ('id', 'face_number', 'face_accounted', 'start_date', 'end_date', 'date_of_liquidation',
+                  'modality', 'currency', 'amount_usd', 'amount_local', 'exchange_rate', 'selected')
 
 
 class AttachmentField(serializers.Field):
