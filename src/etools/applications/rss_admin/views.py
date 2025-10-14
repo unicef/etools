@@ -1,5 +1,6 @@
 from django.db import connection
 
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -27,7 +28,12 @@ class PartnerOrganizationRssViewSet(viewsets.ModelViewSet):
     queryset = PartnerOrganization.objects.all()
     serializer_class = PartnerOrganizationRssSerializer
     permission_classes = (IsRssAdmin,)
-    filter_backends = (filters.SearchFilter,)
+    filter_backends = (DjangoFilterBackend, filters.SearchFilter,)
+    filterset_fields = (
+        'organization',
+        'rating',
+        'organization__vendor_number',
+    )
     pagination_class = AppendablePageNumberPagination
     search_fields = (
         'organization__name',
@@ -42,7 +48,13 @@ class AgreementRssViewSet(viewsets.ModelViewSet):
     queryset = Agreement.objects.all()
     serializer_class = AgreementRssSerializer
     permission_classes = (IsRssAdmin,)
-    filter_backends = (filters.SearchFilter,)
+    filter_backends = (DjangoFilterBackend, filters.SearchFilter,)
+    filterset_fields = (
+        'agreement_type',
+        'status',
+        'partner',
+        'agreement_number',
+    )
     pagination_class = AppendablePageNumberPagination
     search_fields = (
         'agreement_number',
@@ -55,7 +67,13 @@ class ProgrammeDocumentRssViewSet(viewsets.ModelViewSet):
     queryset = Intervention.objects.all()
     serializer_class = InterventionListSerializer
     permission_classes = (IsRssAdmin,)
-    filter_backends = (filters.SearchFilter,)
+    filter_backends = (DjangoFilterBackend, filters.SearchFilter,)
+    filterset_fields = (
+        'document_type',
+        'status',
+        'agreement',
+        'agreement__partner',
+    )
     pagination_class = AppendablePageNumberPagination
     search_fields = (
         'number',

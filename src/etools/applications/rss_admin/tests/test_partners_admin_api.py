@@ -32,7 +32,35 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         self.assertIsInstance(response.data, list)
         self.assertTrue(any(row['id'] == self.partner.id for row in response.data))
 
+    def test_filter_partners_by_rating(self):
+        other_partner = PartnerFactory(rating='Medium')
+        self.partner.rating = 'High'
+        self.partner.save(update_fields=['rating'])
+
+        url = reverse('rss_admin:rss-admin-partners-list')
+        response = self.forced_auth_req('get', url, user=self.user, data={'rating': 'High'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        ids = [row['id'] for row in response.data]
+        self.assertIn(self.partner.id, ids)
+        self.assertNotIn(other_partner.id, ids)
+
+    def test_filter_partners_by_organization_vendor_number(self):
+        vendor_number = self.partner.organization.vendor_number
+        url = reverse('rss_admin:rss-admin-partners-list')
+        response = self.forced_auth_req('get', url, user=self.user, data={'organization__vendor_number': vendor_number})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        ids = [row['id'] for row in response.data]
+        self.assertIn(self.partner.id, ids)
+
+    def test_filter_partners_by_organization_id(self):
+        url = reverse('rss_admin:rss-admin-partners-list')
+        response = self.forced_auth_req('get', url, user=self.user, data={'organization': self.partner.organization.id})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        ids = [row['id'] for row in response.data]
+        self.assertIn(self.partner.id, ids)
+
     def test_retrieve_partner(self):
+        self.partner.refresh_from_db()
         url = reverse('rss_admin:rss-admin-partners-detail', kwargs={'pk': self.partner.pk})
         response = self.forced_auth_req('get', url, user=self.user)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -126,6 +154,43 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         ]
         self.assertIn(self.spd.id, ids)
 
+    def test_filter_programme_documents_by_status(self):
+        self.pd.status = Intervention.ACTIVE
+        self.pd.save(update_fields=['status'])
+        url = reverse('rss_admin:rss-admin-programme-documents-list')
+        resp = self.forced_auth_req('get', url, user=self.user, data={'status': Intervention.ACTIVE})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        results = resp.data if isinstance(resp.data, list) else resp.data.get('results', [])
+        ids = [row['id'] for row in results]
+        self.assertIn(self.pd.id, ids)
+
+    def test_filter_programme_documents_by_agreement(self):
+        url = reverse('rss_admin:rss-admin-programme-documents-list')
+        resp = self.forced_auth_req('get', url, user=self.user, data={'agreement': self.agreement.id})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        results = resp.data if isinstance(resp.data, list) else resp.data.get('results', [])
+        ids = [row['id'] for row in results]
+        self.assertIn(self.pd.id, ids)
+        self.assertIn(self.spd.id, ids)
+
+    def test_filter_programme_documents_by_partner(self):
+        url = reverse('rss_admin:rss-admin-programme-documents-list')
+        resp = self.forced_auth_req('get', url, user=self.user, data={'agreement__partner': self.partner.id})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        results = resp.data if isinstance(resp.data, list) else resp.data.get('results', [])
+        ids = [row['id'] for row in results]
+        self.assertIn(self.pd.id, ids)
+        self.assertIn(self.spd.id, ids)
+
+    def test_filter_programme_documents_by_document_type(self):
+        url = reverse('rss_admin:rss-admin-programme-documents-list')
+        resp = self.forced_auth_req('get', url, user=self.user, data={'document_type': Intervention.PD})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        results = resp.data if isinstance(resp.data, list) else resp.data.get('results', [])
+        ids = [row['id'] for row in results]
+        self.assertIn(self.pd.id, ids)
+        self.assertNotIn(self.spd.id, ids)
+
     def test_agreement_date_fields_are_date_strings(self):
         # Set agreement dates and ensure serializer returns YYYY-MM-DD
         today = timezone.now().date()
@@ -193,6 +258,43 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         self.assertIsInstance(response.data['results'], list)
         ids = [row['id'] for row in response.data['results']]
         self.assertTrue(self.agreement.id in ids or response.data['count'] >= 1)
+
+    def test_filter_agreements_by_status(self):
+        # create a second agreement with a different status
+        other_agreement = AgreementFactory(partner=self.partner, status='draft')
+        self.agreement.status = 'signed'
+        self.agreement.save(update_fields=['status'])
+
+        url = reverse('rss_admin:rss-admin-agreements-list')
+        response = self.forced_auth_req('get', url, user=self.user, data={'status': 'signed'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        ids = [row['id'] for row in response.data]
+        self.assertIn(self.agreement.id, ids)
+        self.assertNotIn(other_agreement.id, ids)
+
+    def test_filter_agreements_by_partner(self):
+        # filter by partner id
+        url = reverse('rss_admin:rss-admin-agreements-list')
+        response = self.forced_auth_req('get', url, user=self.user, data={'partner': self.partner.id})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        ids = [row['id'] for row in response.data]
+        self.assertIn(self.agreement.id, ids)
+
+    def test_filter_agreements_by_type(self):
+        self.agreement.agreement_type = 'PCA'
+        self.agreement.save(update_fields=['agreement_type'])
+        url = reverse('rss_admin:rss-admin-agreements-list')
+        response = self.forced_auth_req('get', url, user=self.user, data={'agreement_type': 'PCA'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        ids = [row['id'] for row in response.data]
+        self.assertIn(self.agreement.id, ids)
+
+    def test_filter_agreements_by_number(self):
+        url = reverse('rss_admin:rss-admin-agreements-list')
+        response = self.forced_auth_req('get', url, user=self.user, data={'agreement_number': self.agreement.agreement_number})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        ids = [row['id'] for row in response.data]
+        self.assertIn(self.agreement.id, ids)
 
     def test_retrieve_agreement_details(self):
         url = reverse('rss_admin:rss-admin-agreements-detail', kwargs={'pk': self.agreement.pk})
