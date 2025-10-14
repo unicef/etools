@@ -327,7 +327,7 @@ class EWPsSynchronizer(VisionDataTenantSynchronizer):
         for r in records:
             skip = False
             for i in self.ACTIVITY_MAP:
-                if not r.get(i[0]) and i[0] not in ['TOTAL_BUDGET', 'WPA_GEOLOCATIONS', 'WPA_IMPLEMENTING_PARTNERS']:
+                if not r.get(i[0]) and i[0] not in ['TOTAL_BUDGET', 'WPA_GEOLOCATIONS', 'WPA_IMPLEMENTING_PARTNERS', 'WPA_DESCRIPTION']:
                     logger.warning(f"Skipping: Missing {i[0]} for record: {r.get('VISION_ACTIVITY_WBS', 'UNKNOWN')}")
                     skip = True
             if skip:
