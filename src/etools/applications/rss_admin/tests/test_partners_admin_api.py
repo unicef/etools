@@ -2,17 +2,16 @@ from django.db import connection
 from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
-from django.core.files.uploadedfile import SimpleUploadedFile
 
 import mock
 from rest_framework import status
 
+from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.models import Intervention
 from etools.applications.partners.tests.factories import AgreementFactory, InterventionFactory, PartnerFactory
 from etools.applications.users.tests.factories import GroupFactory, RealmFactory, UserFactory
-from etools.applications.attachments.tests.factories import AttachmentFactory
 
 
 @override_settings(RESTRICTED_ADMIN=False)
