@@ -551,8 +551,8 @@ class SpotCheck(Engagement):
 
     def update_financial_findings(self):
         findings = self.financial_finding_set.aggregate(usd=Sum('amount'), local=Sum('local_amount'))
-        self.total_amount_of_ineligible_expenditure = findings['usd']
-        self.total_amount_of_ineligible_expenditure_local = findings['local']
+        self.total_amount_of_ineligible_expenditure = findings['usd'] if findings['usd'] else 0
+        self.total_amount_of_ineligible_expenditure_local = findings['local'] if findings['local'] else 0
 
         self.save(update_fields=['total_amount_of_ineligible_expenditure', 'total_amount_of_ineligible_expenditure_local'])
 
@@ -795,8 +795,8 @@ class Audit(Engagement):
 
     def update_financial_findings(self):
         findings = self.financial_finding_set.aggregate(usd=Sum('amount'), local=Sum('local_amount'))
-        self.financial_findings = findings['usd']
-        self.financial_findings_local = findings['local']
+        self.financial_findings = findings['usd'] if findings['usd'] else 0
+        self.financial_findings_local = findings['local'] if findings['local'] else 0
 
         self.save(update_fields=['financial_findings', 'financial_findings_local'])
 
@@ -898,8 +898,8 @@ class FinancialFinding(models.Model):
         super().save(*args, **kwargs)
         self.audit.update_financial_findings()
 
-    def delete(self, *args, **kwargs):
-        super().delete(self, *args, **kwargs)
+    def delete(self, using=None, keep_parents=False):
+        super().delete(using=None, keep_parents=True)
         self.audit.update_financial_findings()
 
 
@@ -929,8 +929,8 @@ class SpotCheckFinancialFinding(models.Model):
         super().save(*args, **kwargs)
         self.spot_check.update_financial_findings()
 
-    def delete(self, *args, **kwargs):
-        super().delete(self, *args, **kwargs)
+    def delete(self, using=None, keep_parents=False):
+        super().delete(using=None, keep_parents=True)
         self.spot_check.update_financial_findings()
 
 

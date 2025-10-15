@@ -1118,22 +1118,35 @@ class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenan
         self.assertEqual(self.engagement.financial_finding_set.count(), 0)
         self.assertEqual(self.engagement.financial_findings, 0)
         self.assertEqual(self.engagement.financial_findings_local, 0)
-        response = self._do_update(self.auditor, {"financial_finding_set": [
-            {
-                "title": "vat-incorrectly-claimed",
-                "local_amount": "96533.00",
-                "amount": "1253.67",
-                "description": "During the audit process..",
-                "recommendation": "We recommend proper control procedures",
-                "ip_comments": "payments accordingly"
-            }
-        ]})
+        data = {
+            "financial_finding_set": [
+                {
+                    "title": "vat-incorrectly-claimed",
+                    "local_amount": "96533.00",
+                    "amount": "1253.67",
+                    "description": "During the audit process..",
+                    "recommendation": "We recommend proper control procedures",
+                    "ip_comments": "payments accordingly"
+                }
+        ]}
+        response = self._do_update(self.auditor, data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.engagement.refresh_from_db()
         self.assertEqual(self.engagement.financial_findings, Decimal('1253.67'))
         self.assertEqual(self.engagement.financial_findings_local, Decimal('96533.00'))
         self.assertEqual(response.data['financial_findings'], '1253.67')
         self.assertEqual(response.data['financial_findings_local'], '96533.00')
+
+        # test recalculations after removing financial finding
+        data['financial_finding_set'][0]['id'] = self.engagement.financial_finding_set.first().id
+        data['financial_finding_set'][0]['_delete'] = True
+        response = self._do_update(self.auditor, data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.engagement.refresh_from_db()
+        self.assertEqual(self.engagement.financial_findings, 0)
+        self.assertEqual(self.engagement.financial_findings_local, 0)
+        self.assertEqual(response.data['financial_findings'], '0.00')
+        self.assertEqual(response.data['financial_findings_local'], '0.00')
 
 
 class TestEngagementActionPointViewSet(EngagementTransitionsTestCaseMixin, BaseTenantTestCase):
@@ -1296,7 +1309,7 @@ class TestSpotCheckDetail(SCTransitionsTestCaseMixin, BaseTenantTestCase):
                     "amount": "1253.67",
                     "description": "During the audit process..",
                     "recommendation": "We recommend proper control procedures",
-                    "ip_comm`ents": "payments accordingly"
+                    "ip_comments": "payments accordingly"
                 }
             ]
         }
@@ -1305,13 +1318,27 @@ class TestSpotCheckDetail(SCTransitionsTestCaseMixin, BaseTenantTestCase):
             '/api/audit/spot-checks/{}/'.format(self.engagement.id),
             user=self.auditor, data=data
         )
-
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.engagement.refresh_from_db()
         self.assertEqual(self.engagement.total_amount_of_ineligible_expenditure, Decimal('1253.67'))
         self.assertEqual(self.engagement.total_amount_of_ineligible_expenditure_local, Decimal('96533.00'))
         self.assertEqual(response.data['total_amount_of_ineligible_expenditure'], '1253.67')
         self.assertEqual(response.data['total_amount_of_ineligible_expenditure_local'], '96533.00')
+
+        # test recalculations after removing financial finding
+        data['financial_finding_set'][0]['id'] = self.engagement.financial_finding_set.first().id
+        data['financial_finding_set'][0]['_delete'] = True
+        response = self.forced_auth_req(
+            'patch',
+            '/api/audit/spot-checks/{}/'.format(self.engagement.id),
+            user=self.auditor, data=data
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.engagement.refresh_from_db()
+        self.assertEqual(self.engagement.total_amount_of_ineligible_expenditure, 0)
+        self.assertEqual(self.engagement.total_amount_of_ineligible_expenditure_local, 0)
+        self.assertEqual(response.data['total_amount_of_ineligible_expenditure'], '0.00')
+        self.assertEqual(response.data['total_amount_of_ineligible_expenditure_local'], '0.00')
 
 
 class TestStaffSpotCheck(AuditTestCaseMixin, BaseTenantTestCase):
