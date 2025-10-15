@@ -309,7 +309,7 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         self.assertTrue('end' in response.data)
         self.assertTrue('authorized_officers' in response.data)
         self.assertIsInstance(response.data['authorized_officers'], list)
-        self.assertTrue('agreement_document' in response.data)
+        self.assertTrue('attached_agreement_file' in response.data)
         self.assertTrue('agreement_signature_date' in response.data)
         self.assertEqual(response.data['agreement_signature_date'], str(self.agreement.signed_by_unicef_date))
         self.assertEqual(response.data['signed_by_unicef_date'], str(self.agreement.signed_by_unicef_date))

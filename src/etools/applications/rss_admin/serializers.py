@@ -70,8 +70,8 @@ class AgreementRssSerializer(serializers.ModelSerializer):
     authorized_officers_ids = serializers.PrimaryKeyRelatedField(
         queryset=get_user_model().objects.all(), many=True, write_only=True, required=False
     )
-    agreement_document = serializers.FileField(source='attached_agreement', read_only=True)
-    agreement_attachment = AttachmentSingleFileField(source='attachment', required=False, write_only=True)
+    attached_agreement_file = serializers.FileField(source='attached_agreement', read_only=True)
+    attachment = AttachmentSingleFileField(required=False)
     agreement_signature_date = serializers.DateField(source='signed_by_unicef_date', read_only=True)
     signed_by_unicef_date = serializers.DateField(required=False, allow_null=True)
     signed_by_partner_date = serializers.DateField(required=False, allow_null=True)
@@ -96,8 +96,8 @@ class AgreementRssSerializer(serializers.ModelSerializer):
             'end',
             'authorized_officers',
             'authorized_officers_ids',
-            'agreement_document',
-            'agreement_attachment',
+            'attached_agreement_file',
+            'attachment',
             'agreement_signature_date',
             'signed_by_unicef_date',
             'signed_by_partner_date',
