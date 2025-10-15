@@ -4,6 +4,7 @@ from django.conf import settings
 from django.contrib.gis.db.models import PointField
 from django.core.cache import cache
 from django.db import connection, models
+from django.db.models.signals import pre_save
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
@@ -546,6 +547,12 @@ class ItemQuerySet(models.QuerySet):
 class ItemManager(models.Manager):
     def get_queryset(self):
         return ItemQuerySet(self.model, using=self._db).filter(hidden=False)
+
+    def bulk_create(self, objs, **kwargs):
+        for obj in objs:
+            pre_save.send(sender=self.model, instance=obj, created=False)
+        result = super().bulk_create(objs, **kwargs)
+        return result
 
 
 class Item(TimeStampedModel, models.Model):
