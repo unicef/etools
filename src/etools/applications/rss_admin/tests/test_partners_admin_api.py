@@ -2,6 +2,7 @@ from django.db import connection
 from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
+from django.core.files.uploadedfile import SimpleUploadedFile
 
 import mock
 from rest_framework import status
@@ -11,6 +12,7 @@ from etools.applications.organizations.tests.factories import OrganizationFactor
 from etools.applications.partners.models import Intervention
 from etools.applications.partners.tests.factories import AgreementFactory, InterventionFactory, PartnerFactory
 from etools.applications.users.tests.factories import GroupFactory, RealmFactory, UserFactory
+from etools.applications.attachments.tests.factories import AttachmentFactory
 
 
 @override_settings(RESTRICTED_ADMIN=False)
@@ -208,7 +210,6 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         self.assertEqual(row['start'], today.isoformat())
         expected_end = self.agreement.country_programme.to_date.isoformat()
         self.assertEqual(row['end'], expected_end)
-        self.assertEqual(row['agreement_signature_date'], today.isoformat())
         self.assertEqual(row['signed_by_unicef_date'], today.isoformat())
         self.assertEqual(row['signed_by_partner_date'], today.isoformat())
 
@@ -305,17 +306,27 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         self.assertEqual(response.data['agreement_type'], self.agreement.agreement_type)
         self.assertEqual(response.data['status'], self.agreement.status)
         self.assertEqual(response.data['partner']['id'], self.partner.id)
-        self.assertTrue('start' in response.data)
-        self.assertTrue('end' in response.data)
-        self.assertTrue('authorized_officers' in response.data)
-        self.assertIsInstance(response.data['authorized_officers'], list)
-        self.assertTrue('attached_agreement_file' in response.data)
-        self.assertTrue('agreement_signature_date' in response.data)
-        self.assertEqual(response.data['agreement_signature_date'], str(self.agreement.signed_by_unicef_date))
+        # start
+        if self.agreement.start:
+            self.assertEqual(response.data['start'], str(self.agreement.start))
+        else:
+            self.assertIsNone(response.data['start'])
+        # end
+        if self.agreement.end:
+            self.assertEqual(response.data['end'], str(self.agreement.end))
+        else:
+            self.assertIsNone(response.data['end'])
+        # officers
+        expected_officer_ids = set(self.agreement.authorized_officers.values_list('id', flat=True))
+        returned_officer_ids = set([o['id'] for o in response.data['authorized_officers']])
+        self.assertEqual(returned_officer_ids, expected_officer_ids)
+        # file url
+        self.assertIsNone(response.data['attached_agreement_file'])
+        # signature dates
         self.assertEqual(response.data['signed_by_unicef_date'], str(self.agreement.signed_by_unicef_date))
         self.assertEqual(response.data['signed_by_partner_date'], str(self.agreement.signed_by_partner_date))
-        self.assertIn('partner_signatory', response.data)
-        self.assertIsNone(response.data['partner_signatory'])
+        # partner signatory id
+        self.assertEqual(response.data['partner_signatory'], self.agreement.partner_manager_id)
 
     def test_update_agreement_signature_dates(self):
         url = reverse('rss_admin:rss-admin-agreements-detail', kwargs={'pk': self.agreement.pk})
@@ -334,6 +345,34 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         response = self.forced_auth_req('patch', url, user=self.user, data=payload)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['signed_by_unicef_date'], '2024-02-10')
+
+    def test_patch_attachment_officers_and_signature(self):
+        url = reverse('rss_admin:rss-admin-agreements-detail', kwargs={'pk': self.agreement.pk})
+        officer = UserFactory()
+        attachment = AttachmentFactory(file="upload.pdf")
+        payload = {
+            'signed_by_unicef_date': '2025-10-15',
+            'attachment': attachment.id,
+            'authorized_officers_ids': [officer.id],
+        }
+        response = self.forced_auth_req('patch', url, user=self.user, data=payload)
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        # officers changed
+        returned_officer_ids = set([o['id'] for o in response.data['authorized_officers']])
+        self.assertEqual(returned_officer_ids, {officer.id})
+        # signature date changed
+        self.assertEqual(response.data['signed_by_unicef_date'], '2025-10-15')
+        # attachment linked: URL comes via 'attachment'; FileField remains unset
+        self.assertTrue(response.data['attachment'])
+
+    def test_retrieve_agreement_details_with_attached_agreement_file(self):
+        # 1) Simulate prior upload by creating an attachment with a file
+        attachment = AttachmentFactory(file="agreement.pdf")
+        # 2) Link to agreement (attachment field) and assert URL present in response
+        url = reverse('rss_admin:rss-admin-agreements-detail', kwargs={'pk': self.agreement.pk})
+        resp = self.forced_auth_req('patch', url, user=self.user, data={'attachment': attachment.id})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
+        self.assertTrue(resp.data['attachment'])
 
     def test_update_agreement_authorized_officers(self):
         url = reverse('rss_admin:rss-admin-agreements-detail', kwargs={'pk': self.agreement.pk})

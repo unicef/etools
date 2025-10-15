@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 from etools_validator.exceptions import TransitionError
 from rest_framework import serializers
 from unicef_attachments.fields import AttachmentSingleFileField
+from unicef_attachments.serializers import AttachmentSerializerMixin
 
 from etools.applications.organizations.models import Organization
 from etools.applications.partners.models import Agreement, Intervention, PartnerOrganization
@@ -61,7 +62,7 @@ class PartnerOrganizationRssSerializer(serializers.ModelSerializer):
         )
 
 
-class AgreementRssSerializer(serializers.ModelSerializer):
+class AgreementRssSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
     partner = PartnerOrganizationRssSerializer(read_only=True)
     partner_id = serializers.PrimaryKeyRelatedField(source='partner', queryset=PartnerOrganization.objects.all(), write_only=True, required=False)
     start = serializers.DateField(required=False, allow_null=True)
@@ -72,7 +73,6 @@ class AgreementRssSerializer(serializers.ModelSerializer):
     )
     attached_agreement_file = serializers.FileField(source='attached_agreement', read_only=True)
     attachment = AttachmentSingleFileField(required=False)
-    agreement_signature_date = serializers.DateField(source='signed_by_unicef_date', read_only=True)
     signed_by_unicef_date = serializers.DateField(required=False, allow_null=True)
     signed_by_partner_date = serializers.DateField(required=False, allow_null=True)
     partner_signatory = serializers.PrimaryKeyRelatedField(source='partner_manager', read_only=True)
@@ -98,7 +98,6 @@ class AgreementRssSerializer(serializers.ModelSerializer):
             'authorized_officers_ids',
             'attached_agreement_file',
             'attachment',
-            'agreement_signature_date',
             'signed_by_unicef_date',
             'signed_by_partner_date',
             'partner_signatory',
