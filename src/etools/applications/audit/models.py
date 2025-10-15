@@ -559,7 +559,7 @@ class SpotCheck(Engagement):
     def save(self, *args, **kwargs):
         self.engagement_type = Engagement.TYPES.sc
 
-        if self.exchange_rate and self.total_amount_tested_local:
+        if self.exchange_rate:
             self.total_amount_tested = self.total_amount_tested_local / self.exchange_rate
         return super().save(*args, **kwargs)
 
@@ -788,7 +788,7 @@ class Audit(Engagement):
     def save(self, *args, **kwargs):
         self.engagement_type = Engagement.TYPES.audit
 
-        if self.exchange_rate and self.audited_expenditure_local:
+        if self.exchange_rate:
             self.audited_expenditure = self.audited_expenditure_local / self.exchange_rate
 
         return super().save(*args, **kwargs)
@@ -898,6 +898,10 @@ class FinancialFinding(models.Model):
         super().save(*args, **kwargs)
         self.audit.update_financial_findings()
 
+    def delete(self, *args, **kwargs):
+        super().delete(self, *args, **kwargs)
+        self.audit.update_financial_findings()
+
 
 class SpotCheckFinancialFinding(models.Model):
     spot_check = models.ForeignKey(
@@ -923,7 +927,10 @@ class SpotCheckFinancialFinding(models.Model):
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
+        self.spot_check.update_financial_findings()
 
+    def delete(self, *args, **kwargs):
+        super().delete(self, *args, **kwargs)
         self.spot_check.update_financial_findings()
 
 
