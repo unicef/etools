@@ -298,9 +298,6 @@ class UserAdminUpdateSerializer(serializers.ModelSerializer):
 
 
 class PointOfInterestCustomSerializer(serializers.ModelSerializer):
-    parent = serializers.PrimaryKeyRelatedField(
-        queryset=Location.objects.all(),
-    )
     partner_organizations = serializers.PrimaryKeyRelatedField(
         queryset=PartnerOrganization.objects.all(),
         many=True,
@@ -308,6 +305,12 @@ class PointOfInterestCustomSerializer(serializers.ModelSerializer):
     poi_type = serializers.PrimaryKeyRelatedField(
         queryset=models.PointOfInterestType.objects.all(),
     )
+
+    secondary_type = serializers.PrimaryKeyRelatedField(
+        queryset=models.PointOfInterestType.objects.all(),
+        required=False
+    )
+
     point = GeometryField(required=False)
 
     created_by = serializers.HiddenField(
@@ -320,7 +323,7 @@ class PointOfInterestCustomSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.PointOfInterest
-        fields = ('name', 'parent', 'p_code', 'partner_organizations', 'poi_type', 'point', 'created_by', 'is_active')
+        fields = ('name', 'partner_organizations', 'poi_type', 'secondary_type', 'point', 'created_by', 'is_active')
 
 
 class SimplePartnerOrganizationSerializer(serializers.ModelSerializer):
@@ -349,6 +352,7 @@ class ParentLocationsSerializer(serializers.Serializer):
 class PointOfInterestAdminSerializer(serializers.ModelSerializer):
     partner_organizations = SimplePartnerOrganizationSerializer(many=True, read_only=True)
     poi_type = PointOfInterestTypeSerializer(read_only=True)
+    secondary_type = PointOfInterestTypeSerializer(read_only=True)
     country = serializers.CharField(read_only=True)
     region = serializers.CharField(read_only=True)
     district = serializers.CharField(read_only=True)
@@ -715,6 +719,7 @@ class TransferItemDetailSerializer(serializers.Serializer):
     )
     quantity = serializers.IntegerField(required=True)
     uom = serializers.CharField(required=True)
+    expiry_date = serializers.DateField(allow_null=True, required=False)
 
 
 class TransferItemCreateSerializer(serializers.ModelSerializer):

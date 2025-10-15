@@ -342,7 +342,7 @@ class PointOfInterestsLightViewSet(mixins.ListModelMixin,
     serializer_class = PointOfInterestLightSerializer
     pagination_class = DynamicPageNumberPagination
 
-    queryset = models.PointOfInterest.objects.select_related("parent", "poi_type").prefetch_related('partner_organizations').all().order_by('id')
+    queryset = models.PointOfInterest.all_objects.select_related("parent", "poi_type", "parent__parent", "parent__parent__parent", "parent__parent__parent__parent").prefetch_related('partner_organizations').all().order_by('id')
 
 
 class UserLocationsViewSet(mixins.ListModelMixin,

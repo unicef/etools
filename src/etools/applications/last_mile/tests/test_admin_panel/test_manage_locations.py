@@ -266,6 +266,7 @@ class TestLocationsViewSet(BaseTenantTestCase):
             "p_code": "P001",
             "partner_organizations": [self.partner.pk],
             "poi_type": self.poi_type.pk,
+            "secondary_type": self.poi_type.pk,
             "point": {"type": "Point", "coordinates": [43.7, 25.6]},
         }
         response = self.forced_auth_req(
@@ -290,7 +291,7 @@ class TestLocationsViewSet(BaseTenantTestCase):
     def test_create_location_invalid_parent(self):
         payload = {
             "name": "Invalid Parent",
-            "parent": 9999,  # non-existent parent
+            "parent": 9999,  # non-existent parent -> Parent is set based on the coordinates
             "p_code": "P003",
             "partner_organizations": [self.partner.pk],
             "poi_type": self.poi_type.pk,
@@ -299,7 +300,7 @@ class TestLocationsViewSet(BaseTenantTestCase):
         response = self.forced_auth_req(
             "post", self.url, data=payload, user=self.partner_staff
         )
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_create_location_invalid_partner_organizations(self):
         payload = {
@@ -845,7 +846,7 @@ class TestLocationsViewSet(BaseTenantTestCase):
         payload2 = {
             "name": "Second Location",
             "parent": self.parent_location.pk,
-            "p_code": "DUP001",  # Same p_code
+            "p_code": "DUP001",  # Same p_code -> Will be created, because the p_code is set up on the BE
             "partner_organizations": [self.partner.pk],
             "poi_type": self.poi_type.pk,
             "point": {"type": "Point", "coordinates": [44.7, 26.6]},
@@ -853,7 +854,9 @@ class TestLocationsViewSet(BaseTenantTestCase):
         response2 = self.forced_auth_req(
             "post", self.url, data=payload2, user=self.partner_staff
         )
-        self.assertEqual(response2.status_code, status.HTTP_400_BAD_REQUEST)
+        last_poi = models.PointOfInterest.objects.last()
+        self.assertEqual(response2.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(last_poi.p_code, "tes000000002")
 
     def test_create_location_with_multiple_partner_organizations(self):
         payload = {
