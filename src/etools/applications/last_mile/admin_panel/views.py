@@ -96,7 +96,8 @@ class UserViewSet(ExportMixin,
             queryset=models.UserPointsOfInterest.objects.select_related(
                 'point_of_interest',
                 'point_of_interest__parent',
-                'point_of_interest__poi_type'
+                'point_of_interest__poi_type',
+                'user'
             )
         )
 
@@ -109,18 +110,41 @@ class UserViewSet(ExportMixin,
             ).select_related('group')
         )
 
+        partner_pois_prefetch = Prefetch(
+            'profile__organization__partner__points_of_interest',
+            queryset=models.PointOfInterest.all_objects.filter(is_active=True)
+            .exclude(name="UNICEF Warehouse")
+            .prefetch_related(
+                Prefetch(
+                    'users',
+                    queryset=models.UserPointsOfInterest.objects.only('user_id', 'point_of_interest_id')
+                )
+            )
+            .only('id', 'name', 'is_active')
+        )
+
+        created_by_prefetch = Prefetch(
+            'last_mile_profile__created_by',
+            queryset=User.objects.only('id', 'first_name', 'middle_name', 'last_name', 'is_active')
+        )
+
+        approved_by_prefetch = Prefetch(
+            'last_mile_profile__approved_by',
+            queryset=User.objects.only('id', 'first_name', 'middle_name', 'last_name', 'is_active')
+        )
+
         queryset = User.objects.select_related(
             'profile',
             'profile__country',
             'profile__organization',
             'profile__organization__partner',
             'last_mile_profile',
-            'last_mile_profile__created_by',
-            'last_mile_profile__approved_by',
         ).prefetch_related(
-            'profile__organization__partner__points_of_interest',
+            partner_pois_prefetch,
             realms_prefetch,
             points_of_interest_prefetch,
+            created_by_prefetch,
+            approved_by_prefetch,
         ).annotate(profile_status=F('last_mile_profile__status')).for_schema(schema_name).only_lmsm_users()
 
         has_active_location = self.request.query_params.get('hasActiveLocation')
