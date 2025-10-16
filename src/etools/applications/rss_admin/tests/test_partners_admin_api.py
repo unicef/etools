@@ -44,6 +44,16 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         self.assertEqual(response.data['country'], self.partner.country)
         self.assertEqual(response.data['rating'], self.partner.rating)
         self.assertEqual(response.data['basis_for_risk_rating'], self.partner.basis_for_risk_rating)
+        self.assertTrue('partner_type' in response.data)
+        self.assertTrue('hact_risk_rating' in response.data)
+        self.assertEqual(response.data['hact_risk_rating'], self.partner.rating)
+        self.assertTrue('sea_risk_rating' in response.data)
+        self.assertEqual(response.data['sea_risk_rating'], self.partner.sea_risk_rating_name)
+        self.assertTrue('psea_last_assessment_date' in response.data)
+        self.assertTrue('lead_office' in response.data)
+        self.assertTrue('lead_office_name' in response.data)
+        self.assertTrue('lead_section' in response.data)
+        self.assertTrue('lead_section_name' in response.data)
 
     def test_create_partner(self):
         url = reverse('rss_admin:rss-admin-partners-list')
@@ -77,6 +87,28 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(any(row['id'] == self.agreement.id for row in response.data))
 
+    def test_list_partners_paginated(self):
+        url = reverse('rss_admin:rss-admin-partners-list')
+        response = self.forced_auth_req('get', url, user=self.user, data={'page': 1, 'page_size': 1})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsInstance(response.data, dict)
+        self.assertIn('results', response.data)
+        self.assertIn('count', response.data)
+        self.assertIsInstance(response.data['results'], list)
+        ids = [row['id'] for row in response.data['results']]
+        self.assertTrue(self.partner.id in ids or response.data['count'] >= 1)
+
+    def test_list_agreements_paginated(self):
+        url = reverse('rss_admin:rss-admin-agreements-list')
+        response = self.forced_auth_req('get', url, user=self.user, data={'page': 1, 'page_size': 1})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsInstance(response.data, dict)
+        self.assertIn('results', response.data)
+        self.assertIn('count', response.data)
+        self.assertIsInstance(response.data['results'], list)
+        ids = [row['id'] for row in response.data['results']]
+        self.assertTrue(self.agreement.id in ids or response.data['count'] >= 1)
+
     def test_retrieve_agreement_details(self):
         url = reverse('rss_admin:rss-admin-agreements-detail', kwargs={'pk': self.agreement.pk})
         response = self.forced_auth_req('get', url, user=self.user)
@@ -85,7 +117,14 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         self.assertEqual(response.data['agreement_number'], self.agreement.agreement_number)
         self.assertEqual(response.data['agreement_type'], self.agreement.agreement_type)
         self.assertEqual(response.data['status'], self.agreement.status)
-        self.assertEqual(response.data['partner'], self.partner.id)
+        self.assertEqual(response.data['partner']['id'], self.partner.id)
+        self.assertTrue('start' in response.data)
+        self.assertTrue('end' in response.data)
+        self.assertTrue('authorized_officers' in response.data)
+        self.assertIsInstance(response.data['authorized_officers'], list)
+        self.assertTrue('agreement_document' in response.data)
+        self.assertTrue('agreement_signature_date' in response.data)
+        self.assertEqual(response.data['agreement_signature_date'], str(self.agreement.signed_by_unicef_date))
         self.assertEqual(response.data['signed_by_unicef_date'], str(self.agreement.signed_by_unicef_date))
         self.assertEqual(response.data['signed_by_partner_date'], str(self.agreement.signed_by_partner_date))
 
