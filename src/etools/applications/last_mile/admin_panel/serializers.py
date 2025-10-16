@@ -425,11 +425,15 @@ class PointOfInterestExportSerializer(serializers.ModelSerializer):
     def get_lng(self, obj):
         return obj.point.x if obj.point else None
 
-    def base_representation(self, instance):
+    def to_representation(self, instance):
         data = super().to_representation(instance)
-        parent_locations = ParentLocationsSerializer(instance.parent).data
-        data.update(parent_locations)
+        if instance.parent:
+            parent_locations = ParentLocationsSerializer(instance.parent).data
+            data.update(parent_locations)
         return data
+
+    def base_representation(self, instance):
+        return self.to_representation(instance)
 
     def generate_rows(self, instance):
         base = self.base_representation(instance)

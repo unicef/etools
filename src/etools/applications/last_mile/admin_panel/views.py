@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.db import connection
 from django.db.models import F, Prefetch, Q
-from django.http import HttpResponse
+from django.http import HttpResponse, StreamingHttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 
@@ -19,7 +19,12 @@ from unicef_restlib.pagination import DynamicPageNumberPagination
 
 from etools.applications.last_mile import models
 from etools.applications.last_mile.admin_panel.constants import ALERT_TYPES
-from etools.applications.last_mile.admin_panel.csv_exporter import CsvExporter
+from etools.applications.last_mile.admin_panel.csv_exporter import (
+    LocationsCSVExporter,
+    POITypesCSVExporter,
+    UserLocationsCSVExporter,
+    UsersCSVExporter,
+)
 from etools.applications.last_mile.admin_panel.csv_importer import CsvImporter
 from etools.applications.last_mile.admin_panel.filters import (
     AlertNotificationFilter,
@@ -116,7 +121,7 @@ class UserViewSet(ExportMixin,
             'profile__organization__partner__points_of_interest',
             realms_prefetch,
             points_of_interest_prefetch,
-        ).for_schema(schema_name).only_lmsm_users()
+        ).annotate(profile_status=F('last_mile_profile__status')).for_schema(schema_name).only_lmsm_users()
 
         has_active_location = self.request.query_params.get('hasActiveLocation')
         if has_active_location == "1":
@@ -136,11 +141,12 @@ class UserViewSet(ExportMixin,
         'last_login',
         'first_name',
         'last_name',
+        'profile_status',
         'profile__organization__name',
         'profile__organization__vendor_number',
         'profile__country__name',
         'profile__country__id',
-        'profile__organization__partner__points_of_interest__name'
+        'profile__organization__partner__points_of_interest__name',
     ]
 
     ordering = ('id',)
@@ -169,15 +175,14 @@ class UserViewSet(ExportMixin,
         renderer_classes=(ExportCSVRenderer,),
     )
     def list_export_csv(self, request, *args, **kwargs):
-        users = self.filter_queryset(self.get_queryset())
-        serializer = self.get_serializer(users, many=True)
-        data = serializer.data
-        dataset = CsvExporter().export(data)
-        return Response(dataset, headers={
-            'Content-Disposition': 'attachment;filename=users_{}.csv'.format(
-                timezone.now().date(),
-            )
-        })
+        queryset = self.filter_queryset(self.get_queryset())
+        response = StreamingHttpResponse(
+            UsersCSVExporter().generate_csv_data(queryset=queryset, serializer_class=self.get_serializer_class()),
+            content_type='text/csv'
+        )
+        response['Content-Disposition'] = f'attachment; filename="users_{timezone.now().date()}.csv"'
+
+        return response
 
     @action(detail=False, methods=['post'], url_path='import/xlsx')
     def _import_file(self, request, *args, **kwargs):
@@ -251,7 +256,8 @@ class LocationsViewSet(mixins.ListModelMixin,
         "parent__parent__parent__parent"
     ).annotate(
         region=F('parent__parent__name'),
-        district=F('parent__parent__parent__name')
+        district=F('parent__parent__parent__name'),
+        country=F('parent__name')
     ).prefetch_related(
         'partner_organizations',
         'partner_organizations__organization',
@@ -300,15 +306,14 @@ class LocationsViewSet(mixins.ListModelMixin,
         renderer_classes=(ExportCSVRenderer,),
     )
     def list_export_csv(self, request, *args, **kwargs):
-        locations = self.filter_queryset(self.get_queryset())
-        serializer = self.get_serializer(locations, many=True)
-        data = serializer.data
-        dataset = CsvExporter().export(data)
-        return Response(dataset, headers={
-            'Content-Disposition': 'attachment;filename=locations_{}.csv'.format(
-                timezone.now().date(),
-            )
-        })
+        only_locations = self.request.query_params.get('only_locations', False)
+        queryset = self.filter_queryset(self.get_queryset())
+        response = StreamingHttpResponse(
+            LocationsCSVExporter().generate_csv_data(queryset=queryset, serializer_class=self.get_serializer_class(), only_locations=only_locations),
+            content_type='text/csv'
+        )
+        response['Content-Disposition'] = f'attachment; filename="locations_{timezone.now().date()}.csv"'
+        return response
 
     @action(detail=False, methods=['post'], url_path='import/xlsx')
     def _import_file(self, request, *args, **kwargs):
@@ -381,15 +386,13 @@ class UserLocationsViewSet(mixins.ListModelMixin,
         renderer_classes=(ExportCSVRenderer,),
     )
     def list_export_csv(self, request, *args, **kwargs):
-        users = self.filter_queryset(self.get_queryset())
-        serializer = self.get_serializer(users, many=True)
-        data = serializer.data
-        dataset = CsvExporter().export(data)
-        return Response(dataset, headers={
-            'Content-Disposition': 'attachment;filename=user_locations_{}.csv'.format(
-                timezone.now().date(),
-            )
-        })
+        queryset = self.filter_queryset(self.get_queryset())
+        response = StreamingHttpResponse(
+            UserLocationsCSVExporter().generate_csv_data(queryset=queryset, serializer_class=self.get_serializer_class()),
+            content_type='text/csv'
+        )
+        response['Content-Disposition'] = f'attachment; filename="user_locations_{timezone.now().date()}.csv"'
+        return response
 
 
 class AlertNotificationViewSet(mixins.ListModelMixin,
@@ -584,15 +587,13 @@ class PointOfInterestTypeListView(mixins.ListModelMixin, mixins.CreateModelMixin
         renderer_classes=(ExportCSVRenderer,),
     )
     def list_export_csv(self, request, *args, **kwargs):
-        users = self.filter_queryset(self.get_queryset())
-        serializer = self.get_serializer(users, many=True)
-        data = serializer.data
-        dataset = CsvExporter().export(data)
-        return Response(dataset, headers={
-            'Content-Disposition': 'attachment;filename=locations_type_{}.csv'.format(
-                timezone.now().date(),
-            )
-        })
+        queryset = self.filter_queryset(self.get_queryset())
+        response = StreamingHttpResponse(
+            POITypesCSVExporter().generate_csv_data(queryset=queryset, serializer_class=self.get_serializer_class()),
+            content_type='text/csv'
+        )
+        response['Content-Disposition'] = f'attachment; filename="locations_type_{timezone.now().date()}.csv"'
+        return response
 
 
 class PointOfInterestCoordinateListView(mixins.RetrieveModelMixin, mixins.ListModelMixin, GenericViewSet):
