@@ -308,7 +308,9 @@ class PointOfInterestCustomSerializer(serializers.ModelSerializer):
 
     secondary_type = serializers.PrimaryKeyRelatedField(
         queryset=models.PointOfInterestType.objects.all(),
-        required=False
+        required=False,
+        allow_empty=True,
+        allow_null=True
     )
 
     point = GeometryField(required=False)
