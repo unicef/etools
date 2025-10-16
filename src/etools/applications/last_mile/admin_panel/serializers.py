@@ -945,7 +945,7 @@ class BulkUpdateLastMileProfileStatusSerializer(serializers.Serializer):
 class BulkReviewPointOfInterestSerializer(serializers.Serializer):
     status = serializers.ChoiceField(choices=PointOfInterestSerializer.Meta.model.ApprovalStatus.choices)
     points_of_interest = serializers.PrimaryKeyRelatedField(queryset=models.PointOfInterest.objects.all(), many=True, write_only=True)
-    review_notes = serializers.CharField(required=False)
+    review_notes = serializers.CharField(required=False, allow_blank=True, allow_null=True)
 
     def validate_status(self, value):
         self.admin_validator = AdminPanelValidator()
