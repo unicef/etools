@@ -86,6 +86,7 @@ class VisionLMSMExport(APIView):
     def get(self, request, *args, **kwargs):
         model_type = request.query_params.get('type')
         last_modified = request.query_params.get('last_modified')
+        chunk_size = int(request.query_params.get('chunk_size', 1000))
 
         if not model_type:
             return Response({"type": "This field is required."}, status=status.HTTP_400_BAD_REQUEST)
@@ -103,7 +104,7 @@ class VisionLMSMExport(APIView):
             return Response({"last_modified": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         response = StreamingHttpResponse(
-            stream_queryset_as_json(queryset),
+            stream_queryset_as_json(queryset, chunk_size=chunk_size),
             content_type='application/json'
         )
 
