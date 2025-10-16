@@ -1128,7 +1128,8 @@ class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenan
                     "recommendation": "We recommend proper control procedures",
                     "ip_comments": "payments accordingly"
                 }
-        ]}
+            ]
+        }
         response = self._do_update(self.auditor, data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.engagement.refresh_from_db()
