@@ -415,7 +415,7 @@ class TestLocationsViewSet(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         content_disposition = response.headers.get("Content-Disposition", "")
         self.assertTrue(
-            content_disposition.startswith('attachment; filename="locations_')
+            content_disposition.startswith('attachment; filename="stock_management_locations_')
         )
 
     def test_export_csv(self):
