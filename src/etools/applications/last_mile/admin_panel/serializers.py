@@ -897,9 +897,9 @@ class PointOfInterestCoordinateAdminSerializer(serializers.ModelSerializer):
         if instance.parent.FIRST_ADMIN_LEVEL in parent_locations:
             data['country'] = LocationWithBordersSerializer(parent_locations[instance.parent.FIRST_ADMIN_LEVEL]).data
         if instance.parent.SECOND_ADMIN_LEVEL in parent_locations:
-            data['region'] = LocationWithBordersSerializer(parent_locations[instance.parent.FIRST_ADMIN_LEVEL]).data
+            data['region'] = LocationWithBordersSerializer(parent_locations[instance.parent.SECOND_ADMIN_LEVEL]).data
         if instance.parent.THIRD_ADMIN_LEVEL in parent_locations:
-            data['district'] = LocationWithBordersSerializer(parent_locations[instance.parent.FIRST_ADMIN_LEVEL]).data
+            data['district'] = LocationWithBordersSerializer(parent_locations[instance.parent.THIRD_ADMIN_LEVEL]).data
         return data
 
     class Meta:
