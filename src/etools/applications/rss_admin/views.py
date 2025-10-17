@@ -1,15 +1,38 @@
-from rest_framework import filters, viewsets
+from django.db import connection
 
-from etools.applications.partners.models import Agreement, PartnerOrganization
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters, status, viewsets
+from rest_framework.decorators import action
+from rest_framework.response import Response
+
+from etools.applications.environment.helpers import tenant_switch_is_active
+from etools.applications.partners.models import Agreement, Intervention, PartnerOrganization
+from etools.applications.partners.serializers.interventions_v2 import (
+    InterventionCreateUpdateSerializer,
+    InterventionDetailSerializer,
+    InterventionListSerializer,
+)
+from etools.applications.partners.tasks import send_pd_to_vision
 from etools.applications.rss_admin.permissions import IsRssAdmin
-from etools.applications.rss_admin.serializers import AgreementAdminSerializer, PartnerOrganizationAdminSerializer
+from etools.applications.rss_admin.serializers import (
+    AgreementRssSerializer,
+    BulkCloseProgrammeDocumentsSerializer,
+    PartnerOrganizationRssSerializer,
+)
+from etools.applications.utils.pagination import AppendablePageNumberPagination
 
 
-class PartnerOrganizationAdminViewSet(viewsets.ModelViewSet):
+class PartnerOrganizationRssViewSet(viewsets.ModelViewSet):
     queryset = PartnerOrganization.objects.all()
-    serializer_class = PartnerOrganizationAdminSerializer
+    serializer_class = PartnerOrganizationRssSerializer
     permission_classes = (IsRssAdmin,)
-    filter_backends = (filters.SearchFilter,)
+    filter_backends = (DjangoFilterBackend, filters.SearchFilter,)
+    filterset_fields = (
+        'organization',
+        'rating',
+        'organization__vendor_number',
+    )
+    pagination_class = AppendablePageNumberPagination
     search_fields = (
         'organization__name',
         'organization__vendor_number',
@@ -19,13 +42,78 @@ class PartnerOrganizationAdminViewSet(viewsets.ModelViewSet):
     )
 
 
-class AgreementAdminViewSet(viewsets.ModelViewSet):
+class AgreementRssViewSet(viewsets.ModelViewSet):
     queryset = Agreement.objects.all()
-    serializer_class = AgreementAdminSerializer
+    serializer_class = AgreementRssSerializer
     permission_classes = (IsRssAdmin,)
-    filter_backends = (filters.SearchFilter,)
+    filter_backends = (DjangoFilterBackend, filters.SearchFilter,)
+    filterset_fields = (
+        'agreement_type',
+        'status',
+        'partner',
+        'agreement_number',
+    )
+    pagination_class = AppendablePageNumberPagination
     search_fields = (
         'agreement_number',
         'partner__organization__name',
         'partner__organization__vendor_number',
     )
+
+
+class ProgrammeDocumentRssViewSet(viewsets.ModelViewSet):
+    queryset = Intervention.objects.all()
+    serializer_class = InterventionListSerializer
+    permission_classes = (IsRssAdmin,)
+    filter_backends = (DjangoFilterBackend, filters.SearchFilter,)
+    filterset_fields = (
+        'document_type',
+        'status',
+        'agreement',
+        'agreement__partner',
+    )
+    pagination_class = AppendablePageNumberPagination
+    search_fields = (
+        'number',
+        'title',
+        'agreement__agreement_number',
+        'agreement__partner__organization__name',
+        'agreement__partner__organization__vendor_number',
+    )
+
+    def get_serializer_class(self):
+        if self.request.method in ["PATCH", "PUT"]:
+            return InterventionCreateUpdateSerializer
+        if self.request.method == "POST":
+            return InterventionCreateUpdateSerializer
+        if self.action == 'retrieve':
+            return InterventionDetailSerializer
+        return InterventionListSerializer
+
+    def get_queryset(self):
+        qs = Intervention.objects.frs_qs()
+        doc_type = self.request.query_params.get('document_type')
+        if doc_type in (Intervention.PD, Intervention.SPD):
+            qs = qs.filter(document_type=doc_type)
+        return qs
+
+    def _maybe_trigger_vision_sync(self, instance, old_status=None):
+        if instance.status == Intervention.SIGNED and old_status != Intervention.SIGNED:
+            if not tenant_switch_is_active('disable_pd_vision_sync'):
+                send_pd_to_vision.delay(connection.tenant.name, instance.pk)
+
+    def perform_create(self, serializer):
+        serializer.save()
+        self._maybe_trigger_vision_sync(serializer.instance)
+
+    def perform_update(self, serializer):
+        old_status = serializer.instance.status
+        serializer.save()
+        self._maybe_trigger_vision_sync(serializer.instance, old_status=old_status)
+
+    @action(detail=False, methods=['put'], url_path='bulk-close')
+    def bulk_close(self, request, *args, **kwargs):
+        serializer = BulkCloseProgrammeDocumentsSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        result = serializer.update(serializer.validated_data, request.user)
+        return Response(result, status=status.HTTP_200_OK)
