@@ -71,6 +71,7 @@ from etools.applications.last_mile.admin_panel.serializers import (
     UserPointOfInterestAdminSerializer,
     UserPointOfInterestExportSerializer,
 )
+from etools.applications.last_mile.admin_panel.validators import AdminPanelValidator
 from etools.applications.last_mile.permissions import IsLMSMAdmin
 from etools.applications.locations.models import Location
 from etools.applications.organizations.models import Organization
@@ -110,19 +111,6 @@ class UserViewSet(ExportMixin,
             ).select_related('group')
         )
 
-        partner_pois_prefetch = Prefetch(
-            'profile__organization__partner__points_of_interest',
-            queryset=models.PointOfInterest.all_objects.filter(is_active=True)
-            .exclude(name="UNICEF Warehouse")
-            .prefetch_related(
-                Prefetch(
-                    'users',
-                    queryset=models.UserPointsOfInterest.objects.only('user_id', 'point_of_interest_id')
-                )
-            )
-            .only('id', 'name', 'is_active')
-        )
-
         created_by_prefetch = Prefetch(
             'last_mile_profile__created_by',
             queryset=User.objects.only('id', 'first_name', 'middle_name', 'last_name', 'is_active')
@@ -140,7 +128,6 @@ class UserViewSet(ExportMixin,
             'profile__organization__partner',
             'last_mile_profile',
         ).prefetch_related(
-            partner_pois_prefetch,
             realms_prefetch,
             points_of_interest_prefetch,
             created_by_prefetch,
@@ -271,6 +258,7 @@ class LocationsViewSet(mixins.ListModelMixin,
     permission_classes = [IsLMSMAdmin]
     serializer_class = PointOfInterestAdminSerializer
     pagination_class = DynamicPageNumberPagination
+    adminValidator = AdminPanelValidator()
 
     queryset = models.PointOfInterest.all_objects.select_related(
         "parent",
@@ -287,6 +275,13 @@ class LocationsViewSet(mixins.ListModelMixin,
         'partner_organizations__organization',
         'destination_transfers'
     ).all().order_by('id')
+
+    def get_queryset(self):
+        partner_id = self.request.query_params.get('partner_id')
+        if partner_id:
+            self.adminValidator.validate_partner_id(partner_id)
+            return self.queryset.filter(partner_organizations__id=partner_id)
+        return self.queryset
 
     filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
     filterset_class = LocationsFilter

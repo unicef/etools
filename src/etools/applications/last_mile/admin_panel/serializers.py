@@ -59,7 +59,6 @@ class UserAdminSerializer(SimpleUserSerializer):
     country_id = serializers.CharField(source='profile.country.id', read_only=True)
     last_mile_profile = serializers.CharField(source='profile.id', read_only=True)
     point_of_interests = serializers.SerializerMethodField(read_only=True)
-    partner_points_of_interest = serializers.SerializerMethodField(read_only=True)
     last_mile_profile = LastMileProfileSerializer(read_only=True)
     alert_types = serializers.SerializerMethodField(read_only=True)
 
@@ -83,21 +82,9 @@ class UserAdminSerializer(SimpleUserSerializer):
             'last_login',
             'organization_id',
             'point_of_interests',
-            'partner_points_of_interest',
             'last_mile_profile',
             'alert_types',
         )
-
-    def get_partner_points_of_interest(self, obj):
-        try:
-            if (obj.profile and obj.profile.organization and obj.profile.organization.partner):
-                poi_instances = obj.profile.organization.partner.points_of_interest.all()
-            else:
-                poi_instances = []
-        except (AttributeError, Organization.DoesNotExist, PartnerOrganization.DoesNotExist):
-            poi_instances = []
-
-        return SimplePointOfInterestSerializer(poi_instances, many=True, read_only=True, context=self.context).data
 
     def get_point_of_interests(self, obj):
         poi_instances = [upoi.point_of_interest for upoi in obj.points_of_interest.all()]
