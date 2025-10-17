@@ -679,6 +679,8 @@ WAYBILL_EMAILS = get_from_secrets_or_env('WAYBILL_EMAILS', '')
 
 RUTF_MATERIALS = get_from_secrets_or_env('RUTF_MATERIALS', '').split(',')
 
+LOCKED_CONVERSION_FACTOR_MATERIALS = get_from_secrets_or_env('LOCKED_CONVERSION_FACTOR_MATERIALS', '').split(',')
+
 READ_ONLY_EXCLUDED_PATHS = [
     "/login",
     "/admin/login",
