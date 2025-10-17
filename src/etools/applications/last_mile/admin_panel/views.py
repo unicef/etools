@@ -251,6 +251,7 @@ class LocationsViewSet(mixins.ListModelMixin,
     queryset = models.PointOfInterest.all_objects.select_related(
         "parent",
         "poi_type",
+        "secondary_type",
         "parent__parent",
         "parent__parent__parent",
         "parent__parent__parent__parent"
@@ -270,6 +271,7 @@ class LocationsViewSet(mixins.ListModelMixin,
     ordering_fields = [
         'id',
         'poi_type',
+        'secondary_type',
         'country',
         'p_code',
         'description',
@@ -312,7 +314,10 @@ class LocationsViewSet(mixins.ListModelMixin,
             LocationsCSVExporter().generate_csv_data(queryset=queryset, serializer_class=self.get_serializer_class(), only_locations=only_locations),
             content_type='text/csv'
         )
-        response['Content-Disposition'] = f'attachment; filename="locations_{timezone.now().date()}.csv"'
+        if only_locations:
+            response['Content-Disposition'] = f'attachment; filename="locations_{timezone.now()}.csv"'
+        else:
+            response['Content-Disposition'] = f'attachment; filename="stock_management_locations_{timezone.now()}.csv"'
         return response
 
     @action(detail=False, methods=['post'], url_path='import/xlsx')
@@ -342,7 +347,7 @@ class PointOfInterestsLightViewSet(mixins.ListModelMixin,
     serializer_class = PointOfInterestLightSerializer
     pagination_class = DynamicPageNumberPagination
 
-    queryset = models.PointOfInterest.objects.select_related("parent", "poi_type").prefetch_related('partner_organizations').all().order_by('id')
+    queryset = models.PointOfInterest.all_objects.select_related("parent", "poi_type", "parent__parent", "parent__parent__parent", "parent__parent__parent__parent").prefetch_related('partner_organizations').all().order_by('id')
 
 
 class UserLocationsViewSet(mixins.ListModelMixin,
