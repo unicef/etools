@@ -298,9 +298,6 @@ class UserAdminUpdateSerializer(serializers.ModelSerializer):
 
 
 class PointOfInterestCustomSerializer(serializers.ModelSerializer):
-    parent = serializers.PrimaryKeyRelatedField(
-        queryset=Location.objects.all(),
-    )
     partner_organizations = serializers.PrimaryKeyRelatedField(
         queryset=PartnerOrganization.objects.all(),
         many=True,
@@ -308,6 +305,14 @@ class PointOfInterestCustomSerializer(serializers.ModelSerializer):
     poi_type = serializers.PrimaryKeyRelatedField(
         queryset=models.PointOfInterestType.objects.all(),
     )
+
+    secondary_type = serializers.PrimaryKeyRelatedField(
+        queryset=models.PointOfInterestType.objects.all(),
+        required=False,
+        allow_empty=True,
+        allow_null=True
+    )
+
     point = GeometryField(required=False)
 
     created_by = serializers.HiddenField(
@@ -320,7 +325,7 @@ class PointOfInterestCustomSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.PointOfInterest
-        fields = ('name', 'parent', 'p_code', 'partner_organizations', 'poi_type', 'point', 'created_by', 'is_active')
+        fields = ('name', 'partner_organizations', 'poi_type', 'secondary_type', 'point', 'created_by', 'is_active')
 
 
 class SimplePartnerOrganizationSerializer(serializers.ModelSerializer):
@@ -349,6 +354,7 @@ class ParentLocationsSerializer(serializers.Serializer):
 class PointOfInterestAdminSerializer(serializers.ModelSerializer):
     partner_organizations = SimplePartnerOrganizationSerializer(many=True, read_only=True)
     poi_type = PointOfInterestTypeSerializer(read_only=True)
+    secondary_type = PointOfInterestTypeSerializer(read_only=True)
     country = serializers.CharField(read_only=True)
     region = serializers.CharField(read_only=True)
     district = serializers.CharField(read_only=True)
@@ -693,7 +699,7 @@ class ItemTransferAdminSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Item
-        fields = ('id', 'material', 'quantity', 'modified', 'uom', 'batch_id', 'description', "transfer_name", "base_uom", "base_quantity")
+        fields = ('id', 'material', 'quantity', 'modified', 'uom', 'batch_id', 'description', "transfer_name", "base_uom", "base_quantity", "expiry_date")
 
 
 class TransferItemSerializer(serializers.ModelSerializer):
@@ -715,6 +721,7 @@ class TransferItemDetailSerializer(serializers.Serializer):
     )
     quantity = serializers.IntegerField(required=True)
     uom = serializers.CharField(required=True)
+    expiry_date = serializers.DateField(allow_null=True, required=False)
 
 
 class TransferItemCreateSerializer(serializers.ModelSerializer):
@@ -890,9 +897,9 @@ class PointOfInterestCoordinateAdminSerializer(serializers.ModelSerializer):
         if instance.parent.FIRST_ADMIN_LEVEL in parent_locations:
             data['country'] = LocationWithBordersSerializer(parent_locations[instance.parent.FIRST_ADMIN_LEVEL]).data
         if instance.parent.SECOND_ADMIN_LEVEL in parent_locations:
-            data['region'] = LocationWithBordersSerializer(parent_locations[instance.parent.FIRST_ADMIN_LEVEL]).data
+            data['region'] = LocationWithBordersSerializer(parent_locations[instance.parent.SECOND_ADMIN_LEVEL]).data
         if instance.parent.THIRD_ADMIN_LEVEL in parent_locations:
-            data['district'] = LocationWithBordersSerializer(parent_locations[instance.parent.FIRST_ADMIN_LEVEL]).data
+            data['district'] = LocationWithBordersSerializer(parent_locations[instance.parent.THIRD_ADMIN_LEVEL]).data
         return data
 
     class Meta:
@@ -938,7 +945,7 @@ class BulkUpdateLastMileProfileStatusSerializer(serializers.Serializer):
 class BulkReviewPointOfInterestSerializer(serializers.Serializer):
     status = serializers.ChoiceField(choices=PointOfInterestSerializer.Meta.model.ApprovalStatus.choices)
     points_of_interest = serializers.PrimaryKeyRelatedField(queryset=models.PointOfInterest.objects.all(), many=True, write_only=True)
-    review_notes = serializers.CharField(required=False)
+    review_notes = serializers.CharField(required=False, allow_blank=True, allow_null=True)
 
     def validate_status(self, value):
         self.admin_validator = AdminPanelValidator()

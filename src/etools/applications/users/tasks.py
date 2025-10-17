@@ -237,8 +237,7 @@ def sync_realms_to_prp(user_pk, last_modified_at_timestamp, retry_counter=0):
         logger.info('No partner roles exist in user realms. Skipping..')
         return
 
-    user = User.objects.filter(pk=user_pk).prefetch_related(
-        Prefetch('realms', _partner_realms.filter(is_active=True).select_related('country', 'organization', 'group'))).get()
+    user = User.objects.filter(pk=user_pk).prefetch_related(Prefetch('realms', _partner_realms.filter(is_active=True).select_related('country', 'organization', 'group'))).get()
 
     data = PRPSyncUserSerializer(instance=user).data
 
