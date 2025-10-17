@@ -254,6 +254,7 @@ class TestTransferView(BaseTenantTestCase):
         cls.attachment = AttachmentFactory(
             file=SimpleUploadedFile('proof_file.pdf', b'Proof File'), code='proof_of_transfer')
         cls.material = MaterialFactory(number='1234', original_uom='EA')
+        cls.locked_conversion_material = MaterialFactory(number='ILOCKED1', original_uom='EA')
 
     def test_get_parent_locations(self):
         serializer = PointOfInterestNotificationSerializer(self.warehouse).data
@@ -958,6 +959,16 @@ class TestTransferView(BaseTenantTestCase):
         response = self.forced_auth_req('post', url, user=self.partner_staff, data=data)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(self.completed.transfer_evidences.count(), 1)
+
+    @override_settings(LOCKED_CONVERSION_FACTOR_MATERIALS=['ILOCKED1'])
+    def test_conversion_factor_locked(self):
+        item_1 = ItemFactory(quantity=11, transfer=self.incoming, material=self.locked_conversion_material)
+        item_2 = ItemFactory(quantity=22, transfer=self.incoming)
+        item_3 = ItemFactory(quantity=33, transfer=self.incoming, material=self.locked_conversion_material)
+
+        self.assertEqual(item_1.conversion_factor, 1.0)
+        self.assertEqual(item_2.conversion_factor, None)
+        self.assertEqual(item_3.conversion_factor, 1.0)
 
 
 class TestItemUpdateViewSet(BaseTenantTestCase):
