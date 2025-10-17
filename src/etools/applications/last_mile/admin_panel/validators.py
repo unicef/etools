@@ -9,7 +9,7 @@ from etools.applications.last_mile.admin_panel.constants import (
     GROUP_DOES_NOT_EXIST,
     GROUP_NOT_AVAILABLE,
     GROUP_NOT_PROVIDED,
-    INVALID_PARTNER_ID,
+    INVALID_ORGANIZATION_ID,
     INVALID_QUANTITY,
     ITEMS_NOT_PROVIDED,
     LAST_MILE_PROFILE_NOT_FOUND,
@@ -129,8 +129,8 @@ class AdminPanelValidator:
         if batch_id and len(batch_id) > 254:
             raise ValidationError(_(BATCH_ID_TOO_LONG))
 
-    def validate_partner_id(self, partner_id):
+    def validate_organization_id(self, organization_id):
         try:
-            int(partner_id)
+            int(organization_id)
         except ValueError:
-            raise ValidationError(_(INVALID_PARTNER_ID))
+            raise ValidationError(_(INVALID_ORGANIZATION_ID))

@@ -277,10 +277,10 @@ class LocationsViewSet(mixins.ListModelMixin,
     ).all().order_by('id')
 
     def get_queryset(self):
-        partner_id = self.request.query_params.get('partner_id')
-        if partner_id:
-            self.adminValidator.validate_partner_id(partner_id)
-            return self.queryset.filter(partner_organizations__id=partner_id)
+        organization_id = self.request.query_params.get('organization_id')
+        if organization_id:
+            self.adminValidator.validate_organization_id(organization_id)
+            return self.queryset.filter(partner_organizations__organization__id=organization_id)
         return self.queryset
 
     filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)

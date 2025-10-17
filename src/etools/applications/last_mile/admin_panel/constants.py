@@ -65,7 +65,7 @@ TRANSFER_HAS_NO_ITEMS = "The transfer has no items. Cannot reverse."
 TRANSFER_TYPE_HANDOVER_NOT_ALLOWED = "Handover transfers cannot be reversed."
 BATCH_ID_TOO_LONG = "The batch id is too long. Maximum length is 254 characters."
 INVALID_EXPIRATION_DATE = "The expiration date is not valid. Should be in the next format: YYYY-MM-DD."
-INVALID_PARTNER_ID = "The partner id is not valid. Must be a positive integer."
+INVALID_ORGANIZATION_ID = "The organization id is not valid. Must be a integer"
 
 LIST_INTERESTED_LASTMILE_PERMS = [
     USER_ADMIN_PANEL_PERMISSION,
