@@ -1909,8 +1909,7 @@ class TestPlannedEngagement(BaseTenantTestCase):
             scheduled_audit=True,
             special_audit=False
         )
-
-        self.assertEqual(pe.spot_check_required, pe.partner.min_req_spot_checks + 2)
+        self.assertEqual(pe.spot_check_required, pe.partner.min_req_spot_checks + pe.spot_check_follow_up)
 
 
 class TestPartnerPlannedVisits(BaseTenantTestCase):
