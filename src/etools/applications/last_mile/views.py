@@ -37,16 +37,29 @@ class POIQuerysetMixin:
     def get_poi_queryset(self, exclude_partner_prefetch=False):
         partner = self.request.user.partner
         if partner:
-            qs = (models.PointOfInterest.objects
-                  .filter(Q(partner_organizations=partner) | Q(partner_organizations__isnull=True))
-                  .filter(is_active=True)
-                  .filter(Q(users__user__id=self.request.user.id) | Q(users__isnull=True))
-                  .exclude(name="UNICEF Warehouse")  # exclude UNICEF Warehouse
-                  .select_related('parent').defer('parent__point', 'parent__geom', 'point')
-                  .select_related('poi_type')
-                  .order_by('name', 'id'))
+            user_has_assigned_poi = models.UserPointsOfInterest.objects.filter(
+                user=self.request.user
+            ).exists()
+
+            if user_has_assigned_poi:
+                qs = (models.PointOfInterest.objects
+                      .filter(users__user__id=self.request.user.id)
+                      .filter(is_active=True)
+                      .exclude(name="UNICEF Warehouse")  # exclude UNICEF Warehouse
+                      .select_related('parent').defer('parent__point', 'parent__geom', 'point')
+                      .select_related('poi_type')
+                      .order_by('name', 'id'))
+            else:
+                qs = (models.PointOfInterest.objects
+                      .filter(Q(partner_organizations=partner) | Q(partner_organizations__isnull=True))
+                      .filter(is_active=True)
+                      .exclude(name="UNICEF Warehouse")  # exclude UNICEF Warehouse
+                      .select_related('parent').defer('parent__point', 'parent__geom', 'point')
+                      .select_related('poi_type')
+                      .order_by('name', 'id'))
+
             if not exclude_partner_prefetch:
-                qs.prefetch_related('partner_organizations')
+                qs = qs.prefetch_related('partner_organizations')
             return qs
         return models.PointOfInterest.objects.none()
 

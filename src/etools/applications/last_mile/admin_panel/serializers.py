@@ -58,8 +58,7 @@ class UserAdminSerializer(SimpleUserSerializer):
     country = serializers.CharField(source='profile.country.name', read_only=True)
     country_id = serializers.CharField(source='profile.country.id', read_only=True)
     last_mile_profile = serializers.CharField(source='profile.id', read_only=True)
-    point_of_interests = serializers.CharField(read_only=True)
-    user_points_of_interest = serializers.SerializerMethodField(read_only=True)
+    point_of_interests = serializers.SerializerMethodField(read_only=True)
     partner_points_of_interest = serializers.SerializerMethodField(read_only=True)
     last_mile_profile = LastMileProfileSerializer(read_only=True)
     alert_types = serializers.SerializerMethodField(read_only=True)
@@ -84,7 +83,6 @@ class UserAdminSerializer(SimpleUserSerializer):
             'last_login',
             'organization_id',
             'point_of_interests',
-            'user_points_of_interest',
             'partner_points_of_interest',
             'last_mile_profile',
             'alert_types',
@@ -101,37 +99,9 @@ class UserAdminSerializer(SimpleUserSerializer):
 
         return SimplePointOfInterestSerializer(poi_instances, many=True, read_only=True, context=self.context).data
 
-    def get_user_points_of_interest(self, obj):
+    def get_point_of_interests(self, obj):
         poi_instances = [upoi.point_of_interest for upoi in obj.points_of_interest.all()]
         return SimplePointOfInterestSerializer(poi_instances, many=True, read_only=True).data
-
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-
-        try:
-            if not (instance.profile and instance.profile.organization and instance.profile.organization.partner):
-                data['point_of_interests'] = []
-                return data
-
-            partner = instance.profile.organization.partner
-
-            available_pois = []
-            for poi in partner.points_of_interest.all():
-                user_ids = {upoi.user_id for upoi in poi.users.all()}
-
-                if not user_ids or instance.id in user_ids:
-                    available_pois.append(poi)
-
-            available_pois.sort(key=lambda x: (x.name, x.id))
-
-            data['point_of_interests'] = SimplePointOfInterestSerializer(
-                available_pois, many=True, read_only=True, context=self.context
-            ).data
-
-        except (AttributeError, Organization.DoesNotExist, PartnerOrganization.DoesNotExist):
-            data['point_of_interests'] = []
-
-        return data
 
 
 class UserAdminExportSerializer(serializers.ModelSerializer):
