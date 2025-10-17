@@ -4,6 +4,7 @@ from django.conf import settings
 from django.contrib.gis.db.models import PointField
 from django.core.cache import cache
 from django.db import connection, models
+from django.db.models.signals import pre_save
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
@@ -117,6 +118,13 @@ class PointOfInterest(TimeStampedModel, models.Model):
         on_delete=models.SET_NULL,
         null=True
     )
+    secondary_type = models.ForeignKey(
+        PointOfInterestType,
+        verbose_name=_("Secondary Type"),
+        related_name='secondary_points_of_interest',
+        on_delete=models.SET_NULL,
+        null=True
+    )
     other = models.JSONField(verbose_name=_("Other Details"), null=True, blank=True)
     point = PointField(verbose_name=_("Point"), null=True, blank=True)
 
@@ -181,7 +189,27 @@ class PointOfInterest(TimeStampedModel, models.Model):
     def is_warehouse(self):
         return self.poi_type.category.lower() == 'warehouse' if self.poi_type else False
 
+    def _autogenerate_pcode(self):
+        tenant_name = connection.schema_name
+
+        if tenant_name:
+            start_p_code = tenant_name[:3]
+        else:
+            start_p_code = 'pub'
+
+        last_location = PointOfInterest.all_objects.only('p_code').order_by('-created').first()
+
+        if last_location and last_location.p_code.startswith(start_p_code):
+            last_p_code = int(last_location.p_code.split(start_p_code)[-1])
+            next_p_code = last_p_code + 1
+        else:
+            next_p_code = 1
+
+        return f"{start_p_code}{str(next_p_code).zfill(9)}"
+
     def save(self, **kwargs):
+        if not self.p_code:
+            self.p_code = self._autogenerate_pcode()
         if not self.parent_id:
             self.parent = self.get_parent_location(self.point)
             assert self.parent_id, 'Unable to find location for {}'.format(self.point)
@@ -546,6 +574,12 @@ class ItemQuerySet(models.QuerySet):
 class ItemManager(models.Manager):
     def get_queryset(self):
         return ItemQuerySet(self.model, using=self._db).filter(hidden=False)
+
+    def bulk_create(self, objs, **kwargs):
+        for obj in objs:
+            pre_save.send(sender=self.model, instance=obj, created=False)
+        result = super().bulk_create(objs, **kwargs)
+        return result
 
 
 class Item(TimeStampedModel, models.Model):
