@@ -1,15 +1,13 @@
 from django.contrib.auth import get_user_model
 
-from etools_validator.exceptions import TransitionError
 from rest_framework import serializers
 from unicef_attachments.fields import AttachmentSingleFileField
 from unicef_attachments.serializers import AttachmentSerializerMixin
 
 from etools.applications.organizations.models import Organization
 from etools.applications.partners.models import Agreement, Intervention, PartnerOrganization
-from etools.applications.partners.validation.interventions import transition_to_closed
 from etools.applications.reports.models import Office, Section
-from etools.applications.travel.models import Trip
+from etools.applications.rss_admin.services import ProgrammeDocumentService
 
 
 class PartnerOrganizationRssSerializer(serializers.ModelSerializer):
@@ -111,22 +109,24 @@ class AgreementRssSerializer(AttachmentSerializerMixin, serializers.ModelSeriali
         return instance
 
 
+class PartnerNestedSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(source='organization.name', read_only=True)
+    vendor_number = serializers.CharField(source='organization.vendor_number', read_only=True)
+
+    class Meta:
+        model = PartnerOrganization
+        fields = (
+            'id',
+            'name',
+            'vendor_number',
+        )
+
+
 class InterventionRssSerializer(serializers.ModelSerializer):
-    partner = serializers.SerializerMethodField()
+    partner = PartnerNestedSerializer(source='agreement.partner', read_only=True, allow_null=True)
     agreement_number = serializers.CharField(source='agreement.agreement_number', read_only=True)
     start = serializers.DateField(required=False, allow_null=True)
     end = serializers.DateField(required=False, allow_null=True)
-
-    def get_partner(self, obj):
-        partner = getattr(obj.agreement, 'partner', None)
-        if not partner or not getattr(partner, 'organization', None):
-            return None
-        org = partner.organization
-        return {
-            'id': partner.id,
-            'name': org.name,
-            'vendor_number': org.vendor_number,
-        }
 
     class Meta:
         model = Intervention
@@ -155,50 +155,8 @@ class BulkCloseProgrammeDocumentsSerializer(serializers.Serializer):
 
     def update(self, validated_data, user):
         interventions = validated_data.get('programme_documents', [])
-        result = {
-            'closed_ids': [],
-            'errors': [],
-        }
-
-        for intervention in interventions:
-            # Only allow closing from ENDED status
-            if intervention.status != Intervention.ENDED:
-                result['errors'].append({'id': intervention.id, 'errors': ['PD is not in ENDED status']})
-                continue
-            try:
-                transition_to_closed(intervention)
-                intervention.status = Intervention.CLOSED
-                intervention.save()
-                result['closed_ids'].append(intervention.id)
-            except TransitionError as exc:
-                result['errors'].append({'id': intervention.id, 'errors': str(exc)})
-
-        return result
+        return ProgrammeDocumentService.bulk_close(interventions)
 
 
 class TripApproverUpdateSerializer(serializers.ModelSerializer):
-    supervisor_id = serializers.PrimaryKeyRelatedField(
-        source='supervisor', queryset=get_user_model().objects.all(), write_only=True
-    )
-    supervisor = serializers.CharField(source='supervisor.get_full_name', read_only=True)
-    traveller = serializers.CharField(source='traveller.get_full_name', read_only=True)
-    status = serializers.CharField(read_only=True)
-    reference_number = serializers.CharField(read_only=True)
-
-    class Meta:
-        model = Trip
-        fields = (
-            'id',
-            'reference_number',
-            'status',
-            'traveller',
-            'supervisor',
-            'supervisor_id',
-        )
-
-    def validate(self, data):
-        data = super().validate(data)
-        trip = self.instance
-        if trip and trip.status != Trip.STATUS_SUBMITTED:
-            raise serializers.ValidationError('Approver can only be changed for Submitted trips.')
-        return data
+    pass

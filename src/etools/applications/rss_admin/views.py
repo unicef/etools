@@ -18,9 +18,7 @@ from etools.applications.rss_admin.serializers import (
     AgreementRssSerializer,
     BulkCloseProgrammeDocumentsSerializer,
     PartnerOrganizationRssSerializer,
-    TripApproverUpdateSerializer,
 )
-from etools.applications.travel.models import Trip
 from etools.applications.utils.pagination import AppendablePageNumberPagination
 
 
@@ -119,16 +117,3 @@ class ProgrammeDocumentRssViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         result = serializer.update(serializer.validated_data, request.user)
         return Response(result, status=status.HTTP_200_OK)
-
-
-class TripRssViewSet(viewsets.GenericViewSet):
-    queryset = Trip.objects.all()
-    permission_classes = (IsRssAdmin,)
-    serializer_class = TripApproverUpdateSerializer
-
-    def partial_update(self, request, pk=None):
-        trip = self.get_object()
-        serializer = self.get_serializer(instance=trip, data=request.data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_200_OK)
