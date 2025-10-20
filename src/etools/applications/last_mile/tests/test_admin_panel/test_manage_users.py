@@ -9,7 +9,11 @@ from rest_framework.reverse import reverse
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.last_mile.admin_panel.constants import *  # NOQA
 from etools.applications.last_mile.models import Profile
-from etools.applications.last_mile.tests.factories import LastMileProfileFactory, PointOfInterestFactory
+from etools.applications.last_mile.tests.factories import (
+    LastMileProfileFactory,
+    PointOfInterestFactory,
+    UserPointOfInterestFactory,
+)
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.users.tests.factories import GroupFactory, SimpleUserFactory, UserPermissionFactory
@@ -641,3 +645,26 @@ class TestUsersViewSet(BaseTenantTestCase):
         self.assertIn('Country', content)
         self.assertIn('Last Login', content)
         self.assertIn('Status', content)
+
+    def test_manage_user_locations(self):
+        UserPointOfInterestFactory(user=self.partner_staff, point_of_interest=self.active_location_2)
+        UserPointOfInterestFactory(user=self.partner_staff, point_of_interest=self.active_location_3)
+        UserPointOfInterestFactory(user=self.partner_staff_2, point_of_interest=self.active_location_2)
+
+        response = self.forced_auth_req('get', self.url, user=self.partner_staff)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_data = response.data
+        first_user = response_data['results'][0]
+        self.assertEqual(len(first_user['point_of_interests']), 2)
+        self.assertEqual(first_user['point_of_interests'][0]['id'], self.active_location_2.id)
+        self.assertEqual(first_user['point_of_interests'][0]['name'], self.active_location_2.name)
+
+        self.assertEqual(first_user['point_of_interests'][1]['id'], self.active_location_3.id)
+        self.assertEqual(first_user['point_of_interests'][1]['name'], self.active_location_3.name)
+
+        self.assertEqual(self.partner_staff.points_of_interest.all().count(), 2)
+
+        self.assertEqual(self.partner_staff_2.points_of_interest.all().count(), 1)
+
+        self.assertEqual(self.active_location_2.users.all().count(), 2)
+        self.assertEqual(self.active_location_3.users.all().count(), 1)
