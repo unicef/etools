@@ -73,8 +73,10 @@ class LocationsFilter(filters.FilterSet):
     district = filters.CharFilter(method='filter_district', label='District')
     region = filters.CharFilter(method='filter_region', label='Region')
     country = filters.CharFilter(method='filter_country', label='Country')
-    partner_organization = filters.CharFilter(method='filter_partner_organization', label='Partner Organization Name/Number')
+    partner_organization = filters.CharFilter(method='filter_partner_organization', label='Partner Organization Name')
+    partner_organization_number = filters.CharFilter(method='filter_partner_vendor_number', label='Partner Vendor Number')
     primary_type = filters.CharFilter(field_name="poi_type__name", lookup_expr="icontains")
+    secondary_type = filters.CharFilter(field_name="secondary_type__name", lookup_expr="icontains")
     is_active = filters.BooleanFilter(field_name="is_active")
     latitude = filters.CharFilter(method='filter_latitude', label='Latitude')
     longitude = filters.CharFilter(method='filter_longitude', label='Longitude')
@@ -106,10 +108,10 @@ class LocationsFilter(filters.FilterSet):
         return self.filter_by_admin_level(queryset, name, value, Location.FIRST_ADMIN_LEVEL)
 
     def filter_partner_organization(self, queryset, name, value):
-        return queryset.filter(
-            Q(partner_organizations__organization__name__icontains=value) |
-            Q(partner_organizations__organization__vendor_number__icontains=value)
-        ).distinct()
+        return queryset.filter(partner_organizations__organization__name__icontains=value).distinct()
+
+    def filter_partner_vendor_number(self, queryset, name, value):
+        return queryset.filter(partner_organizations__organization__vendor_number__icontains=value).distinct()
 
     def filter_latitude(self, queryset, name, value):
         queryset = queryset.annotate(
@@ -125,7 +127,7 @@ class LocationsFilter(filters.FilterSet):
 
     class Meta:
         model = PointOfInterest
-        fields = ('name', 'p_code', 'primary_type', 'is_active')
+        fields = ('name', 'p_code', 'primary_type', 'is_active', 'secondary_type')
 
 
 class UserLocationsFilter(filters.FilterSet):

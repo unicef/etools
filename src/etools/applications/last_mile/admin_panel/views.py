@@ -71,6 +71,7 @@ from etools.applications.last_mile.admin_panel.serializers import (
     UserPointOfInterestAdminSerializer,
     UserPointOfInterestExportSerializer,
 )
+from etools.applications.last_mile.admin_panel.validators import AdminPanelValidator
 from etools.applications.last_mile.permissions import IsLMSMAdmin
 from etools.applications.locations.models import Location
 from etools.applications.organizations.models import Organization
@@ -96,7 +97,8 @@ class UserViewSet(ExportMixin,
             queryset=models.UserPointsOfInterest.objects.select_related(
                 'point_of_interest',
                 'point_of_interest__parent',
-                'point_of_interest__poi_type'
+                'point_of_interest__poi_type',
+                'user'
             )
         )
 
@@ -109,18 +111,27 @@ class UserViewSet(ExportMixin,
             ).select_related('group')
         )
 
+        created_by_prefetch = Prefetch(
+            'last_mile_profile__created_by',
+            queryset=User.objects.only('id', 'first_name', 'middle_name', 'last_name', 'is_active')
+        )
+
+        approved_by_prefetch = Prefetch(
+            'last_mile_profile__approved_by',
+            queryset=User.objects.only('id', 'first_name', 'middle_name', 'last_name', 'is_active')
+        )
+
         queryset = User.objects.select_related(
             'profile',
             'profile__country',
             'profile__organization',
             'profile__organization__partner',
             'last_mile_profile',
-            'last_mile_profile__created_by',
-            'last_mile_profile__approved_by',
         ).prefetch_related(
-            'profile__organization__partner__points_of_interest',
             realms_prefetch,
             points_of_interest_prefetch,
+            created_by_prefetch,
+            approved_by_prefetch,
         ).annotate(profile_status=F('last_mile_profile__status')).for_schema(schema_name).only_lmsm_users()
 
         has_active_location = self.request.query_params.get('hasActiveLocation')
@@ -247,10 +258,12 @@ class LocationsViewSet(mixins.ListModelMixin,
     permission_classes = [IsLMSMAdmin]
     serializer_class = PointOfInterestAdminSerializer
     pagination_class = DynamicPageNumberPagination
+    adminValidator = AdminPanelValidator()
 
     queryset = models.PointOfInterest.all_objects.select_related(
         "parent",
         "poi_type",
+        "secondary_type",
         "parent__parent",
         "parent__parent__parent",
         "parent__parent__parent__parent"
@@ -264,12 +277,31 @@ class LocationsViewSet(mixins.ListModelMixin,
         'destination_transfers'
     ).all().order_by('id')
 
+    def get_queryset(self):
+        organization_id = self.request.query_params.get('organization_id')
+        if organization_id:
+            self.adminValidator.validate_organization_id(organization_id)
+            self.queryset = self.queryset.filter(partner_organizations__organization__id=organization_id)
+        if self.request.query_params.get('with_coordinates') is None:
+            self.queryset = self.queryset.defer(
+                'parent__point',
+                'parent__parent__point',
+                'parent__parent__parent__point',
+                'parent__parent__parent__parent__point',
+                'parent__geom',
+                'parent__parent__geom',
+                'parent__parent__parent__geom',
+                'parent__parent__parent__parent__geom'
+            )
+        return self.queryset
+
     filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
     filterset_class = LocationsFilter
 
     ordering_fields = [
         'id',
         'poi_type',
+        'secondary_type',
         'country',
         'p_code',
         'description',
@@ -312,7 +344,10 @@ class LocationsViewSet(mixins.ListModelMixin,
             LocationsCSVExporter().generate_csv_data(queryset=queryset, serializer_class=self.get_serializer_class(), only_locations=only_locations),
             content_type='text/csv'
         )
-        response['Content-Disposition'] = f'attachment; filename="locations_{timezone.now().date()}.csv"'
+        if only_locations:
+            response['Content-Disposition'] = f'attachment; filename="locations_{timezone.now()}.csv"'
+        else:
+            response['Content-Disposition'] = f'attachment; filename="stock_management_locations_{timezone.now()}.csv"'
         return response
 
     @action(detail=False, methods=['post'], url_path='import/xlsx')
@@ -342,7 +377,23 @@ class PointOfInterestsLightViewSet(mixins.ListModelMixin,
     serializer_class = PointOfInterestLightSerializer
     pagination_class = DynamicPageNumberPagination
 
-    queryset = models.PointOfInterest.objects.select_related("parent", "poi_type").prefetch_related('partner_organizations').all().order_by('id')
+    queryset = models.PointOfInterest.all_objects.select_related(
+        'parent',
+        'parent__parent',
+        'parent__parent__parent',
+        'parent__parent__parent__parent'
+    ).only(
+        "parent__name",
+        "id",
+        "name",
+        "point",
+        "parent__admin_level",
+        "parent__parent__name",
+        "parent__parent__admin_level",
+        "parent__parent__parent__name",
+        "parent__parent__parent__admin_level",
+        "parent__parent__parent__parent__name",
+        "parent__parent__parent__parent__admin_level").prefetch_related('partner_organizations').all().order_by('id')
 
 
 class UserLocationsViewSet(mixins.ListModelMixin,
