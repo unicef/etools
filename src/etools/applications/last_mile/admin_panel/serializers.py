@@ -87,7 +87,7 @@ class UserAdminSerializer(SimpleUserSerializer):
         )
 
     def get_point_of_interests(self, obj):
-        poi_instances = [upoi.point_of_interest for upoi in obj.points_of_interest.all()]
+        poi_instances = [upoi.point_of_interest for upoi in obj.points_of_interest.all().order_by('id')]
         return SimplePointOfInterestSerializer(poi_instances, many=True, read_only=True).data
 
 

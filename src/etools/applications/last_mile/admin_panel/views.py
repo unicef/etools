@@ -281,7 +281,18 @@ class LocationsViewSet(mixins.ListModelMixin,
         organization_id = self.request.query_params.get('organization_id')
         if organization_id:
             self.adminValidator.validate_organization_id(organization_id)
-            return self.queryset.filter(partner_organizations__organization__id=organization_id)
+            self.queryset = self.queryset.filter(partner_organizations__organization__id=organization_id)
+        if self.request.query_params.get('with_coordinates') is None:
+            self.queryset = self.queryset.defer(
+                'parent__point',
+                'parent__parent__point',
+                'parent__parent__parent__point',
+                'parent__parent__parent__parent__point',
+                'parent__geom',
+                'parent__parent__geom',
+                'parent__parent__parent__geom',
+                'parent__parent__parent__parent__geom'
+            )
         return self.queryset
 
     filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
@@ -366,7 +377,23 @@ class PointOfInterestsLightViewSet(mixins.ListModelMixin,
     serializer_class = PointOfInterestLightSerializer
     pagination_class = DynamicPageNumberPagination
 
-    queryset = models.PointOfInterest.all_objects.select_related("parent", "poi_type", "parent__parent", "parent__parent__parent", "parent__parent__parent__parent").prefetch_related('partner_organizations').all().order_by('id')
+    queryset = models.PointOfInterest.all_objects.select_related(
+        'parent',
+        'parent__parent',
+        'parent__parent__parent',
+        'parent__parent__parent__parent'
+    ).only(
+        "parent__name",
+        "id",
+        "name",
+        "point",
+        "parent__admin_level",
+        "parent__parent__name",
+        "parent__parent__admin_level",
+        "parent__parent__parent__name",
+        "parent__parent__parent__admin_level",
+        "parent__parent__parent__parent__name",
+        "parent__parent__parent__parent__admin_level").prefetch_related('partner_organizations').all().order_by('id')
 
 
 class UserLocationsViewSet(mixins.ListModelMixin,
