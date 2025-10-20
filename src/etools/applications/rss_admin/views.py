@@ -1,11 +1,15 @@
+import functools
+import operator
+
 from django.db import connection
 
-from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from unicef_restlib.views import QueryStringFilterMixin
 
 from etools.applications.environment.helpers import tenant_switch_is_active
+from etools.applications.partners.filters import InterventionEditableByFilter, ShowAmendmentsFilter
 from etools.applications.partners.models import Agreement, Intervention, PartnerOrganization
 from etools.applications.partners.serializers.interventions_v2 import (
     InterventionCreateUpdateSerializer,
@@ -22,16 +26,11 @@ from etools.applications.rss_admin.serializers import (
 from etools.applications.utils.pagination import AppendablePageNumberPagination
 
 
-class PartnerOrganizationRssViewSet(viewsets.ModelViewSet):
+class PartnerOrganizationRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet):
     queryset = PartnerOrganization.objects.all()
     serializer_class = PartnerOrganizationRssSerializer
     permission_classes = (IsRssAdmin,)
-    filter_backends = (DjangoFilterBackend, filters.SearchFilter,)
-    filterset_fields = (
-        'organization',
-        'rating',
-        'organization__vendor_number',
-    )
+    filter_backends = (filters.SearchFilter, filters.OrderingFilter)
     pagination_class = AppendablePageNumberPagination
     search_fields = (
         'organization__name',
@@ -40,37 +39,77 @@ class PartnerOrganizationRssViewSet(viewsets.ModelViewSet):
         'email',
         'phone_number',
     )
+    ordering_fields = (
+        'organization__name', 'organization__vendor_number', 'rating', 'hidden'
+    )
+
+    # PMP-style filters mapping
+    filters = (
+        ('partner_types', 'organization__organization_type__in'),
+        ('cso_types', 'organization__cso_type__in'),
+        ('risk_ratings', 'rating__in'),
+        ('rating', 'rating'),
+        ('hidden', 'hidden'),
+        ('organization__vendor_number', 'organization__vendor_number__icontains'),
+    )
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        queries = []
+        queries.extend(self.filter_params())
+        queries.append(self.search_params())
+        if queries:
+            expression = functools.reduce(operator.and_, queries)
+            qs = qs.filter(expression)
+        return qs
 
 
-class AgreementRssViewSet(viewsets.ModelViewSet):
+class AgreementRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet):
     queryset = Agreement.objects.all()
     serializer_class = AgreementRssSerializer
     permission_classes = (IsRssAdmin,)
-    filter_backends = (DjangoFilterBackend, filters.SearchFilter,)
-    filterset_fields = (
-        'agreement_type',
-        'status',
-        'partner',
-        'agreement_number',
-    )
+    filter_backends = (filters.SearchFilter, filters.OrderingFilter)
     pagination_class = AppendablePageNumberPagination
     search_fields = (
         'agreement_number',
         'partner__organization__name',
         'partner__organization__vendor_number',
     )
+    ordering_fields = (
+        'agreement_number', 'partner__organization__name', 'status', 'start', 'end'
+    )
+
+    # PMP-style filters mapping
+    filters = (
+        ('type', 'agreement_type__in'),
+        ('status', 'status__in'),
+        ('cpStructures', 'country_programme__in'),
+        ('partners', 'partner__in'),
+        ('start', 'start'),
+        ('end', 'end'),
+        ('special_conditions_pca', 'special_conditions_pca'),
+    )
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        queries = []
+        queries.extend(self.filter_params())
+        queries.append(self.search_params())
+        if queries:
+            expression = functools.reduce(operator.and_, queries)
+            qs = qs.filter(expression)
+        return qs
 
 
-class ProgrammeDocumentRssViewSet(viewsets.ModelViewSet):
+class ProgrammeDocumentRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet):
     queryset = Intervention.objects.all()
     serializer_class = InterventionListSerializer
     permission_classes = (IsRssAdmin,)
-    filter_backends = (DjangoFilterBackend, filters.SearchFilter,)
-    filterset_fields = (
-        'document_type',
-        'status',
-        'agreement',
-        'agreement__partner',
+    filter_backends = (
+        filters.SearchFilter,
+        filters.OrderingFilter,
+        ShowAmendmentsFilter,
+        InterventionEditableByFilter,
     )
     pagination_class = AppendablePageNumberPagination
     search_fields = (
@@ -79,6 +118,28 @@ class ProgrammeDocumentRssViewSet(viewsets.ModelViewSet):
         'agreement__agreement_number',
         'agreement__partner__organization__name',
         'agreement__partner__organization__vendor_number',
+    )
+    ordering_fields = (
+        'number', 'document_type', 'status', 'title', 'start', 'end',
+        'agreement__partner__organization__name'
+    )
+
+    filters = (
+        ('status', 'status__in'),
+        ('document_type', 'document_type__in'),
+        ('sections', 'sections__in'),
+        ('office', 'offices__in'),
+        ('donors', 'frs__fr_items__donor__icontains'),
+        ('partners', 'agreement__partner__in'),
+        ('grants', 'frs__fr_items__grant_number__icontains'),
+        ('unicef_focal_points', 'unicef_focal_points__in'),
+        ('budget_owner__in', 'budget_owner__in'),
+        ('country_programme', 'country_programme__in'),
+        ('cp_outputs', 'result_links__cp_output__in'),
+        ('start', 'start'),
+        ('end', 'end'),
+        ('end_after', 'end__gte'),
+        ('contingency_pd', 'contingency_pd'),
     )
 
     def get_serializer_class(self):
@@ -92,6 +153,12 @@ class ProgrammeDocumentRssViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         qs = Intervention.objects.frs_qs()
+        queries = []
+        queries.extend(self.filter_params())
+        queries.append(self.search_params())
+        if queries:
+            expression = functools.reduce(operator.and_, queries)
+            qs = qs.filter(expression)
         doc_type = self.request.query_params.get('document_type')
         if doc_type in (Intervention.PD, Intervention.SPD):
             qs = qs.filter(document_type=doc_type)

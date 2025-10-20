@@ -8,9 +8,11 @@ from rest_framework import status
 
 from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.funds.tests.factories import FundsReservationHeaderFactory, FundsReservationItemFactory
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.models import Intervention
 from etools.applications.partners.tests.factories import AgreementFactory, InterventionFactory, PartnerFactory
+from etools.applications.reports.tests.factories import CountryProgrammeFactory, OfficeFactory, SectionFactory
 from etools.applications.users.tests.factories import GroupFactory, RealmFactory, UserFactory
 
 
@@ -59,6 +61,38 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         ids = [row['id'] for row in response.data]
         self.assertIn(self.partner.id, ids)
+
+    def test_filter_partners_hidden_flag(self):
+        hidden_partner = PartnerFactory(hidden=True)
+        visible_partner = PartnerFactory(hidden=False)
+        url = reverse('rss_admin:rss-admin-partners-list')
+        resp_hidden = self.forced_auth_req('get', url, user=self.user, data={'hidden': True})
+        self.assertEqual(resp_hidden.status_code, status.HTTP_200_OK)
+        ids_hidden = [row['id'] for row in resp_hidden.data]
+        self.assertIn(hidden_partner.id, ids_hidden)
+        self.assertNotIn(visible_partner.id, ids_hidden)
+
+        resp_visible = self.forced_auth_req('get', url, user=self.user, data={'hidden': False})
+        self.assertEqual(resp_visible.status_code, status.HTTP_200_OK)
+        ids_visible = [row['id'] for row in resp_visible.data]
+        self.assertIn(visible_partner.id, ids_visible)
+        self.assertNotIn(hidden_partner.id, ids_visible)
+
+    def test_filter_partners_types_cso_and_ordering(self):
+        p_type = PartnerFactory()
+        p_type.organization.organization_type = 'Government'
+        p_type.organization.cso_type = 'Academic Institution'
+        p_type.organization.save()
+
+        url = reverse('rss_admin:rss-admin-partners-list')
+        resp = self.forced_auth_req('get', url, user=self.user, data={
+            'partner_types': 'Government',
+            'cso_types': 'Academic Institution',
+            'ordering': 'organization__name',
+        })
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        ids = [row['id'] for row in resp.data]
+        self.assertIn(p_type.id, ids)
 
     def test_retrieve_partner(self):
         self.partner.refresh_from_db()
@@ -192,6 +226,78 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         self.assertIn(self.pd.id, ids)
         self.assertNotIn(self.spd.id, ids)
 
+    def test_filter_programme_documents_donors_grants(self):
+        frh = FundsReservationHeaderFactory(intervention=self.pd)
+        fri = FundsReservationItemFactory(fund_reservation=frh)
+        fri.donor = 'Asian Development Bank'
+        fri.grant_number = 'GE180013'
+        fri.save()
+
+        url = reverse('rss_admin:rss-admin-programme-documents-list')
+        resp = self.forced_auth_req('get', url, user=self.user, data={'donors': 'Asian Development Bank'})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        results = resp.data if isinstance(resp.data, list) else resp.data.get('results', [])
+        ids = [row['id'] for row in results]
+        self.assertIn(self.pd.id, ids)
+
+        resp2 = self.forced_auth_req('get', url, user=self.user, data={'grants': 'GE180013'})
+        self.assertEqual(resp2.status_code, status.HTTP_200_OK)
+        results2 = resp2.data if isinstance(resp2.data, list) else resp2.data.get('results', [])
+        ids2 = [row['id'] for row in results2]
+        self.assertIn(self.pd.id, ids2)
+
+    def test_filter_programme_documents_sections_offices_and_dates(self):
+        section = SectionFactory()
+        office = OfficeFactory()
+        self.pd.sections.add(section)
+        self.pd.offices.add(office)
+        self.pd.start = timezone.now().date()
+        self.pd.end = timezone.now().date()
+        self.pd.save()
+
+        url = reverse('rss_admin:rss-admin-programme-documents-list')
+        resp = self.forced_auth_req('get', url, user=self.user, data={
+            'sections': section.id,
+            'office': office.id,
+            'start': self.pd.start.isoformat(),
+            'end': self.pd.end.isoformat(),
+            'end_after': self.pd.end.isoformat(),
+        })
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        results = resp.data if isinstance(resp.data, list) else resp.data.get('results', [])
+        ids = [row['id'] for row in results]
+        self.assertIn(self.pd.id, ids)
+
+    def test_filter_programme_documents_editable_by_and_contingency_and_ordering(self):
+        self.pd.unicef_court = True
+        self.pd.contingency_pd = True
+        self.pd.title = 'A Title'
+        self.pd.save(update_fields=['unicef_court', 'contingency_pd', 'title'])
+
+        other = InterventionFactory(agreement=self.agreement, document_type=Intervention.PD, title='Z Title')
+        other.unicef_court = False
+        other.contingency_pd = False
+        other.save(update_fields=['unicef_court', 'contingency_pd'])
+
+        url = reverse('rss_admin:rss-admin-programme-documents-list')
+        resp = self.forced_auth_req('get', url, user=self.user, data={'editable_by': 'unicef', 'contingency_pd': True, 'ordering': 'title'})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        results = resp.data if isinstance(resp.data, list) else resp.data.get('results', [])
+        titles = [row['title'] for row in results]
+        self.assertIn(self.pd.title, titles)
+        self.assertTrue(titles == sorted(titles))
+
+    def test_programme_documents_show_amendments(self):
+        amended = InterventionFactory(agreement=self.agreement, document_type=Intervention.PD, in_amendment=True)
+        url = reverse('rss_admin:rss-admin-programme-documents-list')
+        resp_default = self.forced_auth_req('get', url, user=self.user)
+        results_default = resp_default.data if isinstance(resp_default.data, list) else resp_default.data.get('results', [])
+        self.assertNotIn(amended.id, [row['id'] for row in results_default])
+        resp_include = self.forced_auth_req('get', url, user=self.user, data={'show_amendments': True})
+        self.assertEqual(resp_include.status_code, status.HTTP_200_OK)
+        results_include = resp_include.data if isinstance(resp_include.data, list) else resp_include.data.get('results', [])
+        self.assertIn(amended.id, [row['id'] for row in results_include])
+
     def test_agreement_date_fields_are_date_strings(self):
         # Set agreement dates and ensure serializer returns YYYY-MM-DD
         today = timezone.now().date()
@@ -288,6 +394,26 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         ids = [row['id'] for row in response.data]
         self.assertIn(self.agreement.id, ids)
+
+    def test_filter_agreements_cp_structures_dates_special_flags_and_ordering(self):
+        cp = CountryProgrammeFactory()
+        ag1 = AgreementFactory(partner=self.partner, country_programme=cp, status='draft', special_conditions_pca=True)
+        ag1.start = timezone.now().date()
+        ag1.end = timezone.now().date()
+        ag1.save()
+
+        url = reverse('rss_admin:rss-admin-agreements-list')
+        resp = self.forced_auth_req('get', url, user=self.user, data={
+            'cpStructures': cp.id,
+            'status': 'draft',
+            'special_conditions_pca': True,
+            'start': ag1.start.isoformat(),
+            'end': ag1.end.isoformat(),
+            'ordering': 'partner_name',
+        })
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        ids = [row['id'] for row in resp.data]
+        self.assertIn(ag1.id, ids)
 
     def test_filter_agreements_by_number(self):
         url = reverse('rss_admin:rss-admin-agreements-list')
