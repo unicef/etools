@@ -74,7 +74,7 @@ class LocationsFilter(filters.FilterSet):
     region = filters.CharFilter(method='filter_region', label='Region')
     country = filters.CharFilter(method='filter_country', label='Country')
     partner_organization = filters.CharFilter(method='filter_partner_organization', label='Partner Organization Name')
-    partner_organziation_number = filters.CharFilter(method='filter_partner_organization_number', label='Partner Organization Number')
+    partner_organization_number = filters.CharFilter(method='filter_partner_organization_number', label='Partner Organization Number')
     primary_type = filters.CharFilter(field_name="poi_type__name", lookup_expr="icontains")
     secondary_type = filters.CharFilter(field_name="secondary_type__name", lookup_expr="icontains")
     is_active = filters.BooleanFilter(field_name="is_active")
