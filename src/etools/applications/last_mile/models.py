@@ -197,7 +197,7 @@ class PointOfInterest(TimeStampedModel, models.Model):
         else:
             start_p_code = 'pub'
 
-        last_location = PointOfInterest.all_objects.only('p_code').order_by('-created').first()
+        last_location = PointOfInterest.all_objects.filter(p_code__istartswith=start_p_code).only('p_code').order_by('-created').first()
 
         if last_location and last_location.p_code.startswith(start_p_code):
             last_p_code = int(last_location.p_code.split(start_p_code)[-1])
