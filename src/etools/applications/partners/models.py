@@ -974,20 +974,21 @@ class PlannedEngagement(TimeStampedModel):
     scheduled_audit = models.BooleanField(verbose_name=_("Scheduled Audit"), default=False)
     special_audit = models.BooleanField(verbose_name=_("Special Audit"), default=False)
 
-    @cached_property
+    @property
     def total_spot_check_planned(self):
         return sum([
             self.spot_check_planned_q1, self.spot_check_planned_q2,
             self.spot_check_planned_q3, self.spot_check_planned_q4
         ])
 
-    @cached_property
+    @property
     def spot_check_required(self):
-        completed_audit = self.partner.hact_values['audits']['completed']
-        required = self.spot_check_follow_up + self.partner.min_req_spot_checks - completed_audit
-        return max(0, required)
+        # completed_audit = self.partner.hact_values['audits']['completed']
+        # required = self.spot_check_follow_up + self.partner.min_req_spot_checks - completed_audit
+        # return max(0, required)
+        return self.spot_check_follow_up + self.partner.min_req_spot_checks
 
-    @cached_property
+    @property
     def required_audit(self):
         return sum([self.scheduled_audit, self.special_audit])
 
