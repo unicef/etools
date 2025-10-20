@@ -79,10 +79,15 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         self.assertNotIn(hidden_partner.id, ids_visible)
 
     def test_filter_partners_types_cso_and_ordering(self):
-        p_type = PartnerFactory()
-        p_type.organization.organization_type = 'Government'
-        p_type.organization.cso_type = 'Academic Institution'
-        p_type.organization.save()
+        p_type1 = PartnerFactory(organization__name='Zebra Institute')
+        p_type1.organization.organization_type = 'Government'
+        p_type1.organization.cso_type = 'Academic Institution'
+        p_type1.organization.save()
+
+        p_type2 = PartnerFactory(organization__name='Alpha Institute')
+        p_type2.organization.organization_type = 'Government'
+        p_type2.organization.cso_type = 'Academic Institution'
+        p_type2.organization.save()
 
         url = reverse('rss_admin:rss-admin-partners-list')
         resp = self.forced_auth_req('get', url, user=self.user, data={
@@ -90,9 +95,10 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
             'cso_types': 'Academic Institution',
             'ordering': 'organization__name',
         })
+
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        ids = [row['id'] for row in resp.data]
-        self.assertIn(p_type.id, ids)
+        names = [row['name'] for row in resp.data]
+        self.assertEqual(names, sorted(names))
 
     def test_retrieve_partner(self):
         self.partner.refresh_from_db()

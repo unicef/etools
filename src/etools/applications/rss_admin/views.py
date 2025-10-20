@@ -1,6 +1,3 @@
-import functools
-import operator
-
 from django.db import connection
 
 from rest_framework import filters, status, viewsets
@@ -24,9 +21,10 @@ from etools.applications.rss_admin.serializers import (
     PartnerOrganizationRssSerializer,
 )
 from etools.applications.utils.pagination import AppendablePageNumberPagination
+from etools.libraries.djangolib.views import FilterQueryMixin
 
 
-class PartnerOrganizationRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet):
+class PartnerOrganizationRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet, FilterQueryMixin):
     queryset = PartnerOrganization.objects.all()
     serializer_class = PartnerOrganizationRssSerializer
     permission_classes = (IsRssAdmin,)
@@ -55,16 +53,10 @@ class PartnerOrganizationRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSe
 
     def get_queryset(self):
         qs = super().get_queryset()
-        queries = []
-        queries.extend(self.filter_params())
-        queries.append(self.search_params())
-        if queries:
-            expression = functools.reduce(operator.and_, queries)
-            qs = qs.filter(expression)
-        return qs
+        return self.apply_filter_queries(qs, self.filter_params)
 
 
-class AgreementRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet):
+class AgreementRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet, FilterQueryMixin):
     queryset = Agreement.objects.all()
     serializer_class = AgreementRssSerializer
     permission_classes = (IsRssAdmin,)
@@ -92,16 +84,10 @@ class AgreementRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet):
 
     def get_queryset(self):
         qs = super().get_queryset()
-        queries = []
-        queries.extend(self.filter_params())
-        queries.append(self.search_params())
-        if queries:
-            expression = functools.reduce(operator.and_, queries)
-            qs = qs.filter(expression)
-        return qs
+        return self.apply_filter_queries(qs, self.filter_params)
 
 
-class ProgrammeDocumentRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet):
+class ProgrammeDocumentRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet, FilterQueryMixin):
     queryset = Intervention.objects.all()
     serializer_class = InterventionListSerializer
     permission_classes = (IsRssAdmin,)
@@ -153,16 +139,7 @@ class ProgrammeDocumentRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet)
 
     def get_queryset(self):
         qs = Intervention.objects.frs_qs()
-        queries = []
-        queries.extend(self.filter_params())
-        queries.append(self.search_params())
-        if queries:
-            expression = functools.reduce(operator.and_, queries)
-            qs = qs.filter(expression)
-        doc_type = self.request.query_params.get('document_type')
-        if doc_type in (Intervention.PD, Intervention.SPD):
-            qs = qs.filter(document_type=doc_type)
-        return qs
+        return self.apply_filter_queries(qs, self.filter_params)
 
     def _maybe_trigger_vision_sync(self, instance, old_status=None):
         if instance.status == Intervention.SIGNED and old_status != Intervention.SIGNED:
