@@ -140,6 +140,10 @@ class UserViewSet(ExportMixin,
         elif has_active_location == "0":
             queryset = queryset.without_points_of_interest()
 
+        show_all_users = self.request.query_params.get('showAllUsers')
+        if show_all_users != "1":
+            queryset = queryset.non_unicef_users()
+
         return queryset.distinct()
 
     filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
@@ -306,7 +310,8 @@ class LocationsViewSet(mixins.ListModelMixin,
         'p_code',
         'description',
         'region',
-        'district'
+        'district',
+        'name',
     ]
     search_fields = ('name',
                      'p_code',
@@ -543,7 +548,8 @@ class TransferItemViewSet(mixins.ListModelMixin, GenericViewSet, mixins.CreateMo
         'batch_id',
         'material__original_uom',
         'quantity',
-        'modified'
+        'expiry_date',
+        'last_updated'
     )
 
     def get_queryset(self):
@@ -559,6 +565,8 @@ class TransferItemViewSet(mixins.ListModelMixin, GenericViewSet, mixins.CreateMo
             'transfer__origin_point'
         ).filter(
             transfer__destination_point_id=poi_id
+        ).annotate(
+            last_updated=F('modified'),
         ).order_by('-id')
 
     def get_serializer_class(self):
