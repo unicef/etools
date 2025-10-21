@@ -81,12 +81,13 @@ class TestSyncResultsStructure(BaseGDDTestCase):
             data=data
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-
         self.gdd.refresh_from_db()
         self.assertEqual(self.gdd.result_links.count(), 2)
         result = self.gdd.result_links.filter(cp_output=self.ewp_output_1).get()
         self.assertEqual(result.gdd_key_interventions.count(), 1)
         self.assertEqual(result.ram_indicators.count(), 2)
+        activity = result.gdd_key_interventions.last().gdd_activities.first()
+        self.assertEqual(activity.code, '1.1.1')
 
         result = self.gdd.result_links.filter(cp_output=self.ewp_output_2).get()
         self.assertEqual(result.gdd_key_interventions.count(), 1)
@@ -147,6 +148,8 @@ class TestSyncResultsStructure(BaseGDDTestCase):
         result = self.gdd.result_links.filter(cp_output=self.ewp_output_1).get()
         self.assertEqual(result.gdd_key_interventions.count(), 2)
         self.assertEqual(result.ram_indicators.count(), 1)
+        activity_qs = result.gdd_key_interventions.first().gdd_activities.order_by('id')
+        self.assertEqual(list(activity_qs.values_list('code', flat=True)), ['1.1.1', '1.1.2'])
 
         result = self.gdd.result_links.filter(cp_output=ewp_output_3).get()
         self.assertEqual(result.gdd_key_interventions.count(), 1)
