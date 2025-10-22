@@ -1723,6 +1723,22 @@ class TestSpotCheckMetadataDetailViewSet(TestMetadataDetailViewSet, BaseTenantTe
     engagement_factory = StaffSpotCheckFactory
     endpoint = 'spot-checks'
 
+    def test_currencies_display_text(self):
+        self.assertFalse(self.auditor.is_unicef_user())
+        spot_check = self.engagement_factory(
+            staff_members=[self.auditor], agreement__auditor_firm=self.auditor_firm
+        )
+        response = self.forced_auth_req(
+            'options',
+            '/api/audit/{}/{}/'.format(self.endpoint, spot_check.id),
+            user=self.auditor
+        )
+        self.assertIn('GET', response.data['actions'])
+        get = response.data['actions']['GET']
+        self.assertIn('currency_of_report', get)
+        self.assertEqual(get['currency_of_report']['choices'][0]['value'], 'GIP')
+        self.assertEqual(get['currency_of_report']['choices'][0]['display_name'], 'Gibraltar Pound')
+
     def test_users_notified_auditor_not_unicef(self):
         self.assertFalse(self.auditor.is_unicef_user())
         spot_check = self.engagement_factory(
