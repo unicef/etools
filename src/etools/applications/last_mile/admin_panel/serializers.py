@@ -87,16 +87,8 @@ class UserAdminSerializer(SimpleUserSerializer):
         )
 
     def get_point_of_interests(self, obj):
-        poi_instances = [upoi.point_of_interest for upoi in obj.points_of_interest.all()]
-        if not poi_instances:
-            try:
-                if (obj.profile and obj.profile.organization and obj.profile.organization.partner):
-                    poi_instances = obj.profile.organization.partner.points_of_interest.all()
-                else:
-                    poi_instances = []
-            except (AttributeError, Organization.DoesNotExist, PartnerOrganization.DoesNotExist):
-                poi_instances = []
-        return SimplePointOfInterestSerializer(poi_instances, many=True, read_only=True, context=self.context).data
+        poi_instances = [upoi.point_of_interest for upoi in obj.points_of_interest.all().order_by('id')]
+        return SimplePointOfInterestSerializer(poi_instances, many=True, read_only=True).data
 
 
 class UserAdminExportSerializer(serializers.ModelSerializer):

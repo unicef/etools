@@ -26,6 +26,7 @@ from etools.applications.funds.tests.factories import FundsReservationHeaderFact
 from etools.applications.organizations.models import OrganizationType
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.models import Agreement, Intervention, PartnerOrganization
+from etools.applications.partners.serializers.exports.vision.interventions_v1 import InterventionSerializer
 from etools.applications.partners.synchronizers import PDVisionUploader
 from etools.applications.partners.tasks import transfer_active_pds_to_new_cp
 from etools.applications.partners.tests.factories import (
@@ -46,6 +47,7 @@ from etools.applications.reports.tests.factories import (
 )
 from etools.applications.users.tasks import sync_realms_to_prp
 from etools.applications.users.tests.factories import CountryFactory, GroupFactory, RealmFactory, UserFactory
+from etools.applications.vision.models import VisionSyncLog
 
 
 def _build_country(name):
@@ -1280,6 +1282,11 @@ class SendPDToVisionTestCase(BaseTenantTestCase):
                 f'PD number: {self.active_intervention.pk}. Business area code: {connection.tenant.business_area_code}'
             ) in logger_mock.exception.mock_calls
         )
+        vision_log = VisionSyncLog.objects.filter(
+            country=connection.tenant,
+            handler_name='PDVisionUploader'
+        ).last()
+        self.assertTrue(vision_log.data, InterventionSerializer(self.active_intervention).data)
 
     @mock.patch(
         'etools.applications.partners.synchronizers.requests.post',
@@ -1288,6 +1295,11 @@ class SendPDToVisionTestCase(BaseTenantTestCase):
     def test_sync_success(self, _requests_mock, logger_mock):
         etools.applications.partners.tasks.send_pd_to_vision(connection.tenant.name, self.active_intervention.pk)
         self.assertTrue(mock.call('Completed pd synchronization') in logger_mock.info.mock_calls)
+        vision_log = VisionSyncLog.objects.filter(
+            country=connection.tenant,
+            handler_name='PDVisionUploader'
+        ).last()
+        self.assertTrue(vision_log.data, InterventionSerializer(self.active_intervention).data)
 
     @mock.patch('etools.applications.partners.synchronizers.requests.post',
                 return_value=namedtuple('Response', ['status_code', 'text', 'json'])(200, '', lambda: None))

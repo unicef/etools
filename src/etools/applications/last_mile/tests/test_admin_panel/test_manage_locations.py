@@ -863,7 +863,6 @@ class TestLocationsViewSet(BaseTenantTestCase):
         payload = {
             "name": "Multi Partner Location",
             "parent": self.parent_location.pk,
-            "p_code": "MULTI001",
             "partner_organizations": [
                 self.partner.pk,
                 self.partner_2.pk,
@@ -994,7 +993,6 @@ class TestLocationsViewSet(BaseTenantTestCase):
         payload = {
             "name": "Location with Inactive Partner",
             "parent": self.parent_location.pk,
-            "p_code": "INACTIVE001",
             "partner_organizations": [inactive_partner.pk],
             "poi_type": self.poi_type.pk,
             "point": {"type": "Point", "coordinates": [43.7, 25.6]},
