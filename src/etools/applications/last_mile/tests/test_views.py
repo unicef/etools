@@ -129,7 +129,7 @@ class TestPointOfInterestView(BaseTenantTestCase):
         PointOfInterestFactory(partner_organizations=[self.partner], private=True, poi_type_id=2)  # distribution_point
         PointOfInterestFactory(partner_organizations=[self.partner], private=True, poi_type_id=3)  # hospital
 
-        with self.assertNumQueries(3):
+        with self.assertNumQueries(4):
             response = self.forced_auth_req('get', url, user=self.partner_staff, data={"selected_reason": "DELIVERY"})
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)

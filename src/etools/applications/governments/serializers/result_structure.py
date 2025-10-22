@@ -452,6 +452,7 @@ class BulkSyncResultsSerializer(serializers.ListSerializer):
                         [GDDActivity(key_intervention=gdd_ki, ewp_activity_id=ewp_activity_id)
                          for ewp_activity_id in ewp_ki['ewp_activities']]
                     )
+                    GDDActivity.renumber_activities_for_result(gdd_ki)
             elif result['id'] in outputs_to_update:
                 gdd_result = result_qs.get(cp_output=result['id'])
                 gdd_result.ram_indicators.set(result['ram_indicators'])
@@ -475,6 +476,8 @@ class BulkSyncResultsSerializer(serializers.ListSerializer):
                             [GDDActivity(key_intervention=gdd_ki, ewp_activity_id=ewp_activity_id)
                              for ewp_activity_id in ewp_ki['ewp_activities']]
                         )
+                        GDDActivity.renumber_activities_for_result(gdd_ki)
+
                     elif ewp_ki['id'] in ki_to_update:
                         gdd_ki = gdd_result.gdd_key_interventions.get(ewp_key_intervention=ewp_ki['id'])
                         existing_activities_qs = gdd_ki.gdd_activities.all()
@@ -488,7 +491,7 @@ class BulkSyncResultsSerializer(serializers.ListSerializer):
                         activities_to_update = {act for act in ewp_ki['ewp_activities'] if act in existing_activities}
                         activities_to_inactivate = existing_activities.difference(activities_to_update)
                         existing_activities_qs.filter(ewp_activity__id__in=activities_to_inactivate).update(is_active=False)
-
+                        GDDActivity.renumber_activities_for_result(gdd_ki)
         return instance
 
 

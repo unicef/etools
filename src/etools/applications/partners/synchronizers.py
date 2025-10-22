@@ -1,3 +1,4 @@
+import json
 import logging
 from datetime import datetime
 from decimal import Decimal
@@ -456,7 +457,8 @@ class VisionUploader:
             country=connection.tenant,
             handler_name=self.__class__.__name__,
             business_area_code=connection.tenant.business_area_code,
-            total_records=1
+            total_records=1,
+            data=json.loads(data)
         )
 
         if response.status_code in {200, 201}:
