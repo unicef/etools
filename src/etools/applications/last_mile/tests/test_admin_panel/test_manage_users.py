@@ -42,6 +42,14 @@ class TestUsersViewSet(BaseTenantTestCase):
             profile__organization=cls.partner.organization,
             perms=[ALERT_NOTIFICATIONS_ADMIN_PANEL_PERMISSION]
         )
+
+        # This user should be excluded from the list
+        cls.unicef_user = UserPermissionFactory(
+            realms__data=['LMSM Admin Panel', 'IP LM Editor'],
+            profile__organization=cls.partner.organization,
+            perms=[ALERT_NOTIFICATIONS_ADMIN_PANEL_PERMISSION],
+            email="test123@unicef.org"
+        )
         cls.active_location = PointOfInterestFactory(partner_organizations=[cls.partner], private=True)
         cls.active_location_1 = PointOfInterestFactory()
         cls.active_location_2 = PointOfInterestFactory(partner_organizations=[cls.partner])
@@ -113,6 +121,17 @@ class TestUsersViewSet(BaseTenantTestCase):
         cls.user_to_manage3_initially_rejected.save()
         LastMileProfileFactory(user=cls.user_to_manage3_initially_rejected, status=Profile.ApprovalStatus.REJECTED)
 
+        cls.user_to_manage_4 = UserPermissionFactory(
+            username='user_manage4_profiletest',
+            email='manage4_profiletest@example.com',
+            realms__data=['LMSM Admin Panel'],
+            profile__organization=cls.organization,
+        )
+        cls.user_to_manage_4.is_active = False
+        cls.user_to_manage_4.save()
+
+        LastMileProfileFactory(user=cls.user_to_manage_4, status=Profile.ApprovalStatus.PENDING, created_by=cls.approver_user)
+
         cls.detail_url = lambda ignored_selff, pk: reverse(f'{ADMIN_PANEL_APP_NAME}:{UPDATE_USER_PROFILE_ADMIN_PANEL}-detail', args=[pk])
         cls.bulk_url = reverse(f'{ADMIN_PANEL_APP_NAME}:{UPDATE_USER_PROFILE_ADMIN_PANEL}-bulk-update')
 
@@ -121,6 +140,7 @@ class TestUsersViewSet(BaseTenantTestCase):
     def test_get_users(self):
         response = self.forced_auth_req('get', self.url, user=self.partner_staff)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        print(response.data)
         self.assertEqual(response.data.get('count'), 5)
 
     def test_get_specific_user(self):
@@ -561,6 +581,7 @@ class TestUsersViewSet(BaseTenantTestCase):
         for user_obj in users_to_update:
             user_obj.refresh_from_db()
             user_obj.last_mile_profile.refresh_from_db()
+            self.assertEqual(user_obj.realms.filter(is_active=True).count(), 1)
             self.assertTrue(user_obj.is_active)
             self.assertEqual(user_obj.last_mile_profile.status, Profile.ApprovalStatus.APPROVED)
             self.assertEqual(user_obj.last_mile_profile.review_notes, "Bulk approved")
@@ -587,6 +608,7 @@ class TestUsersViewSet(BaseTenantTestCase):
         for user_obj in users_to_update:
             user_obj.refresh_from_db()
             user_obj.last_mile_profile.refresh_from_db()
+            self.assertEqual(user_obj.realms.filter(is_active=True).count(), 0)
             self.assertFalse(user_obj.is_active)
             self.assertEqual(user_obj.last_mile_profile.status, Profile.ApprovalStatus.REJECTED)
             self.assertIsNone(user_obj.last_mile_profile.review_notes)
@@ -626,6 +648,12 @@ class TestUsersViewSet(BaseTenantTestCase):
         response = self.forced_auth_req('patch', self.bulk_url, user=self.approver_user, data=payload)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('user_ids', response.data)
+
+    def test_approve_user_with_the_same_user_who_created_it(self):
+        payload = {"user_ids": [self.user_to_manage_4.pk], "status": Profile.ApprovalStatus.APPROVED}
+        response = self.forced_auth_req('patch', self.bulk_url, user=self.approver_user, data=payload)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("This user/s can't be approved by the same user who created it.", response.data)
 
     def test_bulk_update_profiles_invalid_status_value(self):
         payload = {"user_ids": [self.user_to_manage1.pk], "status": "INVALID_BULK_STATUS"}
