@@ -140,7 +140,6 @@ class TestUsersViewSet(BaseTenantTestCase):
     def test_get_users(self):
         response = self.forced_auth_req('get', self.url, user=self.partner_staff)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        print(response.data)
         self.assertEqual(response.data.get('count'), 5)
 
     def test_get_specific_user(self):
