@@ -1,6 +1,4 @@
-
 from django.contrib.auth import get_user_model
-from django.contrib.auth.hashers import make_password
 from django.contrib.gis.geos import Point
 from django.db import transaction
 from django.utils.encoding import force_str
@@ -131,7 +129,6 @@ class UserProfileCreationSerializer(serializers.ModelSerializer):
 class UserAdminCreateSerializer(serializers.ModelSerializer):
     id = serializers.CharField(read_only=True)
     profile = UserProfileCreationSerializer()
-    password = serializers.CharField(write_only=True)
     email = serializers.EmailField(validators=[EmailValidator(), LowerCaseEmailValidator()])
     is_active = serializers.BooleanField(read_only=True)
     first_name = serializers.CharField(required=True)
@@ -166,7 +163,6 @@ class UserAdminCreateSerializer(serializers.ModelSerializer):
             'last_name',
             'is_staff',
             'is_active',
-            'password',
             'profile',
             'point_of_interests',
             'last_mile_profile',
@@ -1031,7 +1027,6 @@ class UserImportSerializer(serializers.Serializer):
         validated_data['profile']['organization'] = validated_data.pop('ip_number')
         validated_data['profile']['job_title'] = ""
         validated_data['profile']['phone_number'] = ""
-        validated_data['password'] = make_password('test_pass')
         validated_data['username'] = validated_data['email']
         try:
             user = LMUserCreator().create(validated_data)

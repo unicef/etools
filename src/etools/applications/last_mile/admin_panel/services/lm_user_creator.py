@@ -1,4 +1,7 @@
+import random
+
 from django.contrib.auth import get_user_model
+from django.contrib.auth.hashers import make_password
 from django.db import transaction
 
 from etools.applications.last_mile import models
@@ -7,11 +10,15 @@ from etools.applications.users.models import Country, Group, Realm
 
 class LMUserCreator:
 
+    def generate_password(self):
+        return get_user_model().objects.make_random_password(length=random.randint(10, 16), allowed_chars='abcdefghjkmnpqrstuvwxyz0123456789.,!#$%^&*()')
+
     def create(self, validated_data):
         user_profile = validated_data.pop('profile', {})
         point_of_interests = validated_data.pop('point_of_interests', None)
         country_schema = validated_data.pop('country_schema')
         created_by = validated_data.pop('created_by')
+        validated_data['password'] = make_password(self.generate_password())
         group = Group.objects.get(name="IP LM Editor")
 
         country = Country.objects.get(schema_name=country_schema)
