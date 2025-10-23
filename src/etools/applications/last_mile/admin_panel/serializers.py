@@ -633,7 +633,7 @@ class MaterialAdminSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Material
-        fields = ('id', 'original_uom', 'short_description', 'number')
+        fields = ('id', 'original_uom', 'short_description', 'number', 'other')
 
 
 class ItemAdminSerializer(serializers.ModelSerializer):

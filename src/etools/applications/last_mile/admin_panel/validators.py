@@ -24,6 +24,7 @@ from etools.applications.last_mile.admin_panel.constants import (
     TRANSFER_TYPE_HANDOVER_NOT_ALLOWED,
     UOM_NOT_PROVIDED,
     UOM_NOT_VALID,
+    USER_CANT_APPROVE,
     USER_DOES_NOT_EXIST,
     USER_NOT_PROVIDED,
 )
@@ -77,6 +78,10 @@ class AdminPanelValidator:
     def validate_last_mile_profile(self, user: User) -> None:
         if not getattr(user, 'last_mile_profile', None):
             raise ValidationError(_(LAST_MILE_PROFILE_NOT_FOUND))
+
+    def validate_user_can_approve(self, created_by_id, approved_by_id) -> None:
+        if created_by_id == approved_by_id:
+            raise ValidationError(_(USER_CANT_APPROVE))
 
     def validate_status(self, status: str) -> None:
         if status not in [Profile.ApprovalStatus.APPROVED, Profile.ApprovalStatus.REJECTED]:
