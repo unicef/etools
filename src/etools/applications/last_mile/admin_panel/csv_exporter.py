@@ -157,3 +157,18 @@ class POITypesCSVExporter(BaseCSVExporter):
             serialized_data = self._serialize_item(poi_type, serializer_class)
             row_values = self._extract_values(serialized_data, headers.keys())
             yield self._write_csv_row(row_values)
+
+
+class UserAlertNotificationsCSVExporter(BaseCSVExporter):
+
+    def generate_csv_data(self, queryset, serializer_class) -> Iterator[str]:
+        headers = {
+            "email": "Email",
+            "alert_types": "Alert Types"
+        }
+        yield self._write_csv_row(headers.values())
+
+        for poi_type in queryset.iterator(chunk_size=self.chunk_size):
+            serialized_data = self._serialize_item(poi_type, serializer_class)
+            row_values = self._extract_values(serialized_data, headers.keys())
+            yield self._write_csv_row(row_values)

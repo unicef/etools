@@ -448,3 +448,25 @@ class TestAlertNotificationsViewSet(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # Expect no matches since "12345" is not in the email.
         self.assertEqual(len(response.data.get("results", [])), 0)
+
+    def test_export_csv_success(self):
+        csv_url = self.url + "export/csv/"
+        response = self.forced_auth_req("get", csv_url, user=self.partner_staff)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        content_disposition = response.headers.get("Content-Disposition", "")
+        self.assertTrue(
+            content_disposition.startswith('attachment; filename="email_alerts_')
+        )
+
+    def test_export_csv(self):
+        response = self.forced_auth_req('get', self.url + "export/csv/", user=self.partner_staff)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('Content-Disposition', response.headers)
+        content = b''.join(response.streaming_content).decode('utf-8')
+        self.assertIn('Email', content)
+        self.assertIn('Alert Types', content)
+
+    def test_export_csv_unauthorized(self):
+        csv_url = self.url + "export/csv/"
+        response = self.forced_auth_req("get", csv_url, user=self.simple_user)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

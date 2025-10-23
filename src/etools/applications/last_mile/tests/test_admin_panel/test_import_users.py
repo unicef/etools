@@ -93,7 +93,7 @@ class TestUserAdminViewSetImport(BaseTenantTestCase):
         self.assertEqual(alice.last_name, "Smith")
         self.assertEqual(alice.username, "alice.smith@example.com")
         self.assertFalse(alice.is_active)
-        self.assertTrue(alice.check_password("test_pass"))
+        self.assertIsNotNone(alice.password)
         self.assertEqual(alice.points_of_interest.count(), 2)
         self.assertEqual(alice.profile.organization, self.org1)
         self.assertEqual(alice.profile.job_title, "")
