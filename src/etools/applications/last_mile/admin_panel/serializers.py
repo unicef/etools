@@ -631,9 +631,14 @@ class AlertNotificationCustomeSerializer(serializers.ModelSerializer):
 
 class MaterialAdminSerializer(serializers.ModelSerializer):
 
+    uom_map = serializers.SerializerMethodField(read_only=True)
+
+    def get_uom_map(self, obj):
+        return obj.other.get('uom_map') if obj.other else None
+
     class Meta:
         model = models.Material
-        fields = ('id', 'original_uom', 'short_description', 'number')
+        fields = ('id', 'original_uom', 'short_description', 'number', 'uom_map')
 
 
 class ItemAdminSerializer(serializers.ModelSerializer):
