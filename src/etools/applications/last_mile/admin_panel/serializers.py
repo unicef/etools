@@ -545,6 +545,27 @@ class PointOfInterestLightSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', "point")
 
 
+class UserAlertNotificationsExportSerializer(serializers.ModelSerializer):
+
+    alert_types = serializers.SerializerMethodField(read_only=True)
+
+    def get_alert_types(self, obj):
+        alert_types_map = self.context.get('ALERT_TYPES', {})
+        alert_notifications = ""
+
+        realms = obj.realms.all() if hasattr(obj, 'realms') else []
+
+        for realm in realms:
+            if realm.group:
+                alert_notifications += f"{alert_types_map.get(realm.group.name, realm.group.name)},"
+
+        return alert_notifications
+
+    class Meta:
+        model = get_user_model()
+        fields = ('id', 'email', 'alert_types')
+
+
 class AlertNotificationSerializer(serializers.ModelSerializer):
 
     alert_types = serializers.SerializerMethodField(read_only=True)
