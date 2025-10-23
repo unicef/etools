@@ -492,7 +492,8 @@ class SpotCheckSerializer(ActivePDValidationMixin, EngagementSerializer):
     pending_unsupported_amount_local = serializers.DecimalField(20, 2, label=_('Pending Unsupported Amount (Local)'), read_only=True)
 
     total_amount_tested = serializers.DecimalField(20, 2, label=_('Amount Audited ($)'))
-    total_amount_of_ineligible_expenditure = serializers.DecimalField(20, 2, label=_('Total Amount of Ineligible Expenditure ($)'), read_only=True)
+    total_amount_of_ineligible_expenditure = serializers.DecimalField(20, 2, label=_('Financial Findings ($)'), read_only=True)
+    total_amount_of_ineligible_expenditure_local = serializers.DecimalField(20, 2, label=_('Financial Findings (Local)'), read_only=True)
 
     percent_of_audited_expenditure = serializers.DecimalField(20, 2, label=_('% Of Audited Expenditure'), read_only=True)
 
