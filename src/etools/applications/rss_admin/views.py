@@ -95,18 +95,14 @@ class AgreementRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet, FilterQ
 
     def perform_update(self, serializer):
         old_instance = copy.copy(serializer.instance)
-        # if only signature dates are changed, persist without full validation
-        updated_fields = set(serializer.validated_data.keys()) if hasattr(serializer, 'validated_data') else set()
-        signature_only_update = updated_fields and updated_fields.issubset({'signed_by_unicef_date', 'signed_by_partner_date'})
         serializer.save()
-        if not signature_only_update:
-            validator = RssAgreementValid(
-                serializer.instance,
-                old=old_instance,
-                user=self.request.user,
-            )
-            if not validator.is_valid:
-                raise ValidationError(validator.errors)
+        validator = RssAgreementValid(
+            serializer.instance,
+            old=old_instance,
+            user=self.request.user,
+        )
+        if not validator.is_valid:
+            raise ValidationError(validator.errors)
         # notify on suspension
         if serializer.instance.status == serializer.instance.SUSPENDED and old_instance.status != serializer.instance.SUSPENDED:
             send_agreement_suspended_notification(serializer.instance, self.request.user)
