@@ -21,7 +21,12 @@ from etools.applications.audit.models import (
 )
 from etools.applications.audit.purchase_order.models import AuditorFirm, PurchaseOrder
 from etools.applications.audit.serializers.auditor import PurchaseOrderItemSerializer
-from etools.applications.audit.serializers.engagement import DetailedFindingInfoSerializer, KeyInternalControlSerializer
+from etools.applications.audit.serializers.engagement import (
+    DetailedFindingInfoSerializer,
+    FinancialFindingSerializer,
+    KeyInternalControlSerializer,
+    SpotCheckFinancialFindingSerializer,
+)
 from etools.applications.audit.serializers.risks import (
     AggregatedRiskRootSerializer,
     KeyInternalWeaknessSerializer,
@@ -126,7 +131,7 @@ class EngagementPDFSerializer(serializers.ModelSerializer):
             'date_of_field_visit', 'date_of_draft_report_to_ip', 'date_of_comments_by_ip',
             'date_of_draft_report_to_unicef', 'date_of_comments_by_unicef', 'partner_contacted_at',
             'action_points', 'engagement_attachments', 'report_attachments',
-            'total_value', 'start_date', 'end_date', 'joint_audit', 'shared_ip_with'
+            'total_value', 'start_date', 'end_date', 'joint_audit', 'shared_ip_with', 'face_forms'
         ]
 
     def get_status_display(self, obj):
@@ -172,6 +177,7 @@ class AuditPDFSerializer(EngagementPDFSerializer):
     key_internal_controls = KeyInternalControlSerializer(many=True, required=False,
                                                          label=_('Assessment of Key Internal Controls'))
     percent_of_audited_expenditure = serializers.DecimalField(20, 1)
+    financial_finding_set = FinancialFindingSerializer(many=True, required=False)
 
     class Meta(EngagementPDFSerializer.Meta):
         model = Audit
@@ -181,6 +187,7 @@ class AuditPDFSerializer(EngagementPDFSerializer):
             'key_internal_controls', 'amount_refunded', 'additional_supporting_documentation_provided',
             'justification_provided_and_accepted', 'write_off_required', 'pending_unsupported_amount',
             'explanation_for_additional_information',
+            'financial_finding_set'
         ]
 
 
@@ -201,6 +208,7 @@ class SpotCheckPDFSerializer(EngagementPDFSerializer):
     low_priority_findings = serializers.SerializerMethodField()
 
     pending_unsupported_amount = serializers.DecimalField(20, 2, label=_('Pending Unsupported Amount'), read_only=True)
+    financial_finding_set = SpotCheckFinancialFindingSerializer(many=True, required=False)
 
     class Meta(EngagementPDFSerializer.Meta):
         model = SpotCheck
@@ -211,6 +219,7 @@ class SpotCheckPDFSerializer(EngagementPDFSerializer):
             'amount_refunded', 'additional_supporting_documentation_provided',
             'justification_provided_and_accepted', 'write_off_required', 'pending_unsupported_amount',
             'explanation_for_additional_information',
+            'financial_finding_set'
         ]
 
     def get_high_priority_findings(self, obj):
@@ -238,7 +247,7 @@ class SpecialAuditPDFSerializer(EngagementPDFSerializer):
 
     class Meta(EngagementPDFSerializer.Meta):
         fields = EngagementPDFSerializer.Meta.fields + [
-            'specific_procedures', 'other_recommendations',
+            'specific_procedures', 'other_recommendations', 'total_value_local'
         ]
 
 
@@ -266,6 +275,15 @@ class SpotCheckDetailCSVSerializer(EngagementBaseDetailCSVSerializer):
     justification_provided_and_accepted = CurrencyReadOnlyField()
     write_off_required = CurrencyReadOnlyField()
     pending_unsupported_amount = CurrencyReadOnlyField()
+
+    total_value_local = CurrencyReadOnlyField()
+    total_amount_tested_local = CurrencyReadOnlyField()
+    amount_refunded_local = CurrencyReadOnlyField()
+    additional_supporting_documentation_provided_local = CurrencyReadOnlyField()
+    justification_provided_and_accepted_local = CurrencyReadOnlyField()
+    write_off_required_local = CurrencyReadOnlyField()
+    pending_unsupported_amount_local = CurrencyReadOnlyField()
+
     high_priority_observations = serializers.SerializerMethodField()
 
     def get_high_priority_observations(self, obj):
@@ -289,6 +307,13 @@ class AuditDetailCSVSerializer(EngagementBaseDetailCSVSerializer):
     pending_unsupported_amount = CurrencyReadOnlyField()
     control_weaknesses = serializers.SerializerMethodField()
     subject_area = serializers.SerializerMethodField()
+
+    total_value_local = CurrencyReadOnlyField()
+    amount_refunded_local = CurrencyReadOnlyField()
+    additional_supporting_documentation_provided_local = CurrencyReadOnlyField()
+    justification_provided_and_accepted_local = CurrencyReadOnlyField()
+    write_off_required_local = CurrencyReadOnlyField()
+    pending_unsupported_amount_local = CurrencyReadOnlyField()
 
     def get_control_weaknesses(self, obj):
         serializer = KeyInternalWeaknessSerializer(code='audit_key_weakness')
@@ -372,6 +397,5 @@ class MicroAssessmentDetailCSVSerializer(EngagementBaseDetailCSVSerializer):
 
 
 class SpecialAuditDetailCSVSerializer(EngagementBaseDetailCSVSerializer):
-    """
-
-    """
+    total_value = CurrencyReadOnlyField()
+    total_value_local = CurrencyReadOnlyField()

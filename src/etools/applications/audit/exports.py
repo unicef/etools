@@ -32,13 +32,40 @@ class SpotCheckDetailCSVRenderer(BaseCSVRenderer):
         ('auditor', 'Auditor or Staff Assigned'),
         ('partner', 'IP'),
         ('status_display', 'Status'),
-        ('total_value', 'Total value of selected FACE form(s)'),
-        ('total_amount_tested', 'Total amount tested'),
-        ('amount_refunded', 'Amount Refunded'),
-        ('additional_supporting_documentation_provided', 'Additional Supporting Documentation Provided'),
-        ('justification_provided_and_accepted', 'Justification Provided and Accepted'),
-        ('write_off_required', 'Impairment'),
-        ('pending_unsupported_amount', 'Pending Unsupported Amount'),
+        ('total_value', 'Total value of selected FACE form(s) USD'),
+        ('total_amount_tested', 'Total amount tested USD'),
+        ('amount_refunded', 'Amount Refunded USD'),
+        ('additional_supporting_documentation_provided', 'Additional Supporting Documentation Provided USD'),
+        ('justification_provided_and_accepted', 'Justification Provided and Accepted USD'),
+        ('write_off_required', 'Impairment USD'),
+        ('pending_unsupported_amount', 'Pending Unsupported Amount USD'),
+        ('high_priority_observations', 'High priority observations')
+    ))
+    header = labels.keys()
+
+
+class FaceSpotCheckDetailCSVRenderer(BaseCSVRenderer):
+    labels = OrderedDict((
+        ('reference_number', 'Unique ID'),
+        ('link', 'Hyperlink'),
+        ('auditor', 'Auditor or Staff Assigned'),
+        ('partner', 'IP'),
+        ('status_display', 'Status'),
+        ('total_value', 'Total value of selected FACE form(s) USD'),
+        ('total_value_local', 'Total value of selected FACE form(s) Local Currency'),
+        ('total_amount_tested', 'Total amount tested USD'),
+        ('total_amount_tested_local', 'Total amount tested Local Currency'),
+        ('amount_refunded', 'Amount Refunded USD'),
+        ('amount_refunded_local', 'Amount Refunded Local Currency'),
+        ('additional_supporting_documentation_provided', 'Additional Supporting Documentation Provided USD'),
+        ('additional_supporting_documentation_provided_local',
+         'Additional Supporting Documentation Provided Local Currency'),
+        ('justification_provided_and_accepted', 'Justification Provided and Accepted USD'),
+        ('justification_provided_and_accepted_local', 'Justification Provided and Accepted Local Currency'),
+        ('write_off_required', 'Impairment USD'),
+        ('write_off_required_local', 'Impairment Local Currency'),
+        ('pending_unsupported_amount', 'Pending Unsupported Amount USD'),
+        ('pending_unsupported_amount_local', 'Pending Unsupported Amount Local Currency'),
         ('high_priority_observations', 'High priority observations')
     ))
     header = labels.keys()
@@ -53,17 +80,57 @@ class AuditDetailCSVRenderer(BaseCSVRenderer):
             ('auditor', 'Auditor or Staff Assigned'),
             ('partner', 'IP'),
             ('status_display', 'Status'),
-            ('total_value', 'Total value of selected FACE form(s)'),
-            ('audited_expenditure', 'Audited Expenditure'),
-            ('financial_findings', 'Financial Findings'),
+            ('total_value', 'Total value of selected FACE form(s) USD'),
+            ('audited_expenditure', 'Audited Expenditure USD'),
             ('audited_expenditure_local', 'Audited Expenditure Local Currency'),
+            ('financial_findings', 'Financial Findings USD'),
             ('financial_findings_local', 'Financial Findings Local Currency'),
             ('audit_opinion', 'Audit Opinion'),
-            ('amount_refunded', 'Amount Refunded'),
-            ('additional_supporting_documentation_provided', 'Additional Supporting Documentation Provided'),
-            ('justification_provided_and_accepted', 'Justification Provided and Accepted'),
-            ('write_off_required', 'Impairment'),
-            ('pending_unsupported_amount', 'Pending Unsupported Amount'),
+            ('amount_refunded', 'Amount Refunded USD'),
+            ('additional_supporting_documentation_provided', 'Additional Supporting Documentation Provided USD'),
+            ('justification_provided_and_accepted', 'Justification Provided and Accepted USD'),
+            ('write_off_required', 'Impairment USD'),
+            ('pending_unsupported_amount', 'Pending Unsupported Amount USD'),
+        ))
+        for priority in ['high', 'medium', 'low']:
+            labels['control_weaknesses.{}'.format(priority)] = 'Control Weaknesses - {}'.format(priority.capitalize())
+
+        for blueprint in RiskCategory.objects.get(code='audit_key_weakness').blueprints.all():
+            labels['subject_area.{}'.format(blueprint.id)] = 'Subject Area - {}'.format(blueprint.header)
+
+        return labels
+
+    @property
+    def header(self):
+        return self.labels.keys()
+
+
+class FaceAuditDetailCSVRenderer(BaseCSVRenderer):
+    @property
+    def labels(self):
+        labels = OrderedDict((
+            ('reference_number', 'Unique ID'),
+            ('link', 'Hyperlink'),
+            ('auditor', 'Auditor or Staff Assigned'),
+            ('partner', 'IP'),
+            ('status_display', 'Status'),
+            ('total_value', 'Total value of selected FACE form(s) USD'),
+            ('total_value_local', 'Total value of selected FACE form(s) Local Currency'),
+            ('audited_expenditure', 'Audited Expenditure USD'),
+            ('audited_expenditure_local', 'Audited Expenditure Local Currency'),
+            ('financial_findings', 'Financial Findings USD'),
+            ('financial_findings_local', 'Financial Findings Local Currency'),
+            ('audit_opinion', 'Audit Opinion'),
+            ('amount_refunded', 'Amount Refunded USD'),
+            ('amount_refunded_local', 'Amount Refunded Local Currency'),
+            ('additional_supporting_documentation_provided', 'Additional Supporting Documentation Provided USD'),
+            ('additional_supporting_documentation_provided_local', 'Additional Supporting Documentation Provided Local Currency'),
+            ('justification_provided_and_accepted', 'Justification Provided and Accepted USD'),
+            ('justification_provided_and_accepted_local', 'Justification Provided and Accepted Local Currency'),
+            ('write_off_required', 'Impairment USD'),
+            ('write_off_required_local', 'Impairment Local Currency'),
+            ('pending_unsupported_amount', 'Pending Unsupported Amount USD'),
+            ('pending_unsupported_amount_local', 'Pending Unsupported Amount Local Currency'),
         ))
         for priority in ['high', 'medium', 'low']:
             labels['control_weaknesses.{}'.format(priority)] = 'Control Weaknesses - {}'.format(priority.capitalize())
@@ -134,5 +201,19 @@ class SpecialAuditDetailCSVRenderer(BaseCSVRenderer):
         ('auditor', 'Auditor or Staff Assigned'),
         ('partner', 'IP'),
         ('status_display', 'Status'),
+        ('total_value', 'Total value of selected FACE form(s) USD'),
+    ))
+    header = labels.keys()
+
+
+class FaceSpecialAuditDetailCSVRenderer(BaseCSVRenderer):
+    labels = OrderedDict((
+        ('reference_number', 'Unique ID'),
+        ('link', 'Hyperlink'),
+        ('auditor', 'Auditor or Staff Assigned'),
+        ('partner', 'IP'),
+        ('status_display', 'Status'),
+        ('total_value', 'Total value of selected FACE form(s) USD'),
+        ('total_value_local', 'Total value of selected FACE form(s) Local Currency'),
     ))
     header = labels.keys()
