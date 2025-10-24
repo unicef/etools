@@ -1,6 +1,7 @@
+import copy
+
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import connection
-import copy
 
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
@@ -8,6 +9,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from unicef_restlib.views import QueryStringFilterMixin
 
+from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.partners.filters import InterventionEditableByFilter, ShowAmendmentsFilter
 from etools.applications.partners.models import Agreement, Intervention, InterventionBudget, PartnerOrganization
 from etools.applications.partners.serializers.interventions_v2 import (
@@ -15,6 +17,7 @@ from etools.applications.partners.serializers.interventions_v2 import (
     InterventionDetailSerializer,
     InterventionListSerializer,
 )
+from etools.applications.partners.tasks import send_pd_to_vision
 from etools.applications.partners.utils import send_agreement_suspended_notification
 from etools.applications.rss_admin.permissions import IsRssAdmin
 from etools.applications.rss_admin.serializers import (
