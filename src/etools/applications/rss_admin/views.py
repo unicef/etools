@@ -1,3 +1,4 @@
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import connection
 
 from rest_framework import filters, status, viewsets
@@ -7,7 +8,7 @@ from unicef_restlib.views import QueryStringFilterMixin
 
 from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.partners.filters import InterventionEditableByFilter, ShowAmendmentsFilter
-from etools.applications.partners.models import Agreement, Intervention, PartnerOrganization
+from etools.applications.partners.models import Agreement, Intervention, InterventionBudget, PartnerOrganization
 from etools.applications.partners.serializers.interventions_v2 import (
     InterventionCreateUpdateSerializer,
     InterventionDetailSerializer,
@@ -21,6 +22,7 @@ from etools.applications.rss_admin.serializers import (
     PartnerOrganizationRssSerializer,
 )
 from etools.applications.utils.pagination import AppendablePageNumberPagination
+from etools.libraries.djangolib.fields import CURRENCY_LIST
 from etools.libraries.djangolib.views import FilterQueryMixin
 
 
@@ -161,3 +163,49 @@ class ProgrammeDocumentRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet,
         serializer.is_valid(raise_exception=True)
         result = serializer.update(serializer.validated_data, request.user)
         return Response(result, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'], url_path='assign-frs')
+    def assign_frs(self, request, pk=None):
+        instance = self.get_object()
+        frs = request.data.get('frs')
+        if frs is None:
+            return Response({'detail': 'Missing frs'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not isinstance(frs, (list, tuple)):
+            frs = [frs]
+
+        serializer = InterventionCreateUpdateSerializer(
+            instance=instance,
+            data={'frs': frs},
+            partial=True,
+            context={'request': request},
+        )
+        serializer.is_valid(raise_exception=True)
+        instance = serializer.save()
+        return Response(InterventionDetailSerializer(instance, context={'request': request}).data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'], url_path='set-currency')
+    def set_currency(self, request, pk=None):
+        instance = self.get_object()
+        currency = request.data.get('currency')
+        if not currency:
+            return Response({'detail': 'Missing currency'}, status=status.HTTP_400_BAD_REQUEST)
+        if currency not in CURRENCY_LIST:
+            return Response({'detail': f'Invalid currency: {currency}.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            budget = instance.planned_budget
+        except ObjectDoesNotExist:
+            budget, _ = InterventionBudget.objects.get_or_create(intervention=instance)
+
+        budget.currency = currency
+        budget.save()
+        return Response(InterventionDetailSerializer(instance, context={'request': request}).data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'], url_path='send-to-vision')
+    def send_to_vision(self, request, pk=None):
+        instance = self.get_object()
+        if tenant_switch_is_active('disable_pd_vision_sync'):
+            return Response({'detail': 'Vision sync disabled by tenant switch'}, status=status.HTTP_403_FORBIDDEN)
+        send_pd_to_vision.delay(connection.tenant.name, instance.pk)
+        return Response({'detail': 'PD queued for Vision upload'}, status=status.HTTP_202_ACCEPTED)
