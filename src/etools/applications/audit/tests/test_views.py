@@ -963,7 +963,7 @@ class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenan
         )
         return response
 
-    def test_audited_expenditure_invalid(self):
+    def test_audited_expenditure_invalid_lower(self):
         self.engagement.financial_findings_local = 2
         self.engagement.save(update_fields=['financial_findings_local'])
         face_1 = FaceFormFactory(amount_usd=100.25, amount_local=9550.55, exchange_rate=95.27)
@@ -974,6 +974,21 @@ class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenan
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(len(response.data), 1)
         self.assertIn('audited_expenditure_local', response.data)
+        self.assertIn('Cannot be lower than Financial Findings Local', response.data['audited_expenditure_local'])
+
+    def test_audited_expenditure_invalid_higher(self):
+        self.engagement.financial_findings_local = 2
+        self.engagement.total_value_local = 9550.55
+        self.engagement.save(update_fields=['financial_findings_local', 'total_value_local'])
+        face_1 = FaceFormFactory(amount_usd=100.25, amount_local=9550.55, exchange_rate=95.27)
+        self.engagement.face_forms.add(face_1)
+        response = self._do_update(self.auditor, {
+            'audited_expenditure_local': self.engagement.total_value_local + 1000,
+        })
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(len(response.data), 1)
+        self.assertIn('audited_expenditure_local', response.data)
+        self.assertIn('Cannot be higher than the value of Selected FACE Local', response.data['audited_expenditure_local'])
 
     def test_audited_expenditure_valid(self):
         self.engagement.financial_findings_local = 2
@@ -1340,6 +1355,58 @@ class TestSpotCheckDetail(SCTransitionsTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(self.engagement.total_amount_of_ineligible_expenditure_local, 0)
         self.assertEqual(response.data['total_amount_of_ineligible_expenditure'], '0.00')
         self.assertEqual(response.data['total_amount_of_ineligible_expenditure_local'], '0.00')
+
+    def test_update_totals_local_validation(self):
+        self.engagement.exchange_rate = 2
+        self.engagement.save(update_fields=['exchange_rate'])
+
+        self.assertEqual(self.engagement.financial_finding_set.count(), 0)
+        self.assertEqual(self.engagement.total_amount_of_ineligible_expenditure_local, 0)
+        self.assertEqual(self.engagement.total_amount_of_ineligible_expenditure, 0)
+        face_1 = FaceFormFactory(amount_local=5400, amount_usd=400)
+        self.engagement.face_forms.add(face_1)
+        data = {
+            "financial_finding_set": [
+                {
+                    "title": "vat-incorrectly-claimed",
+                    "local_amount": "6533.00",
+                    "amount": "253.67",
+                    "description": "During the audit process..",
+                    "recommendation": "We recommend proper control procedures",
+                    "ip_comments": "payments accordingly"
+                }
+            ]
+        }
+        response = self.forced_auth_req(
+            'patch',
+            '/api/audit/spot-checks/{}/'.format(self.engagement.id),
+            user=self.auditor, data=data
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.engagement.refresh_from_db()
+        self.assertEqual(self.engagement.total_amount_of_ineligible_expenditure, Decimal('253.67'))
+        self.assertEqual(self.engagement.total_amount_of_ineligible_expenditure_local, Decimal('6533.00'))
+        self.assertEqual(response.data['total_amount_of_ineligible_expenditure'], '253.67')
+        self.assertEqual(response.data['total_amount_of_ineligible_expenditure_local'], '6533.00')
+
+        # test validation for total_amount_tested_local
+        data = {'total_amount_tested_local': self.engagement.total_amount_of_ineligible_expenditure_local - 1000}
+        response = self.forced_auth_req(
+            'patch',
+            '/api/audit/spot-checks/{}/'.format(self.engagement.id),
+            user=self.auditor, data=data
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('Cannot be lower than Financial Findings Local', response.data['total_amount_tested_local'])
+
+        data = {'total_amount_tested_local': self.engagement.total_value_local + 2000}
+        response = self.forced_auth_req(
+            'patch',
+            '/api/audit/spot-checks/{}/'.format(self.engagement.id),
+            user=self.auditor, data=data
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('Cannot be higher than the value of Selected FACE Local', response.data['total_amount_tested_local'])
 
 
 class TestStaffSpotCheck(AuditTestCaseMixin, BaseTenantTestCase):

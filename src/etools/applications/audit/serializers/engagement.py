@@ -522,6 +522,26 @@ class SpotCheckSerializer(ActivePDValidationMixin, EngagementSerializer):
             'internal_controls': {'required': True}
         })
 
+    def _validate_totals_local(self, validated_data):
+        total_amount_tested_local = validated_data.get('total_amount_tested_local')
+        if not total_amount_tested_local:
+            return
+
+        total_amount_of_ineligible_expenditure_local = self.instance.total_amount_of_ineligible_expenditure_local if self.instance else None
+
+        if total_amount_tested_local and total_amount_of_ineligible_expenditure_local and total_amount_tested_local < total_amount_of_ineligible_expenditure_local:
+            raise serializers.ValidationError({'total_amount_tested_local': _('Cannot be lower than Financial Findings Local')})
+
+        total_value_local = self.instance.total_value_local if self.instance else None
+
+        if total_amount_tested_local and total_value_local and total_amount_tested_local > total_value_local:
+            raise serializers.ValidationError({'total_amount_tested_local': _('Cannot be higher than the value of Selected FACE Local')})
+
+    def validate(self, validated_data):
+        validated_data = super().validate(validated_data)
+        self._validate_totals_local(validated_data)
+        return validated_data
+
     def create(self, validated_data):
         sections = []
         if "sections" in validated_data:
@@ -673,8 +693,13 @@ class AuditSerializer(ActivePDValidationMixin, RiskCategoriesUpdateMixin, Engage
 
         financial_findings_local = self.instance.financial_findings_local if self.instance else None
 
-        if audited_expenditure_local and financial_findings_local and financial_findings_local >= audited_expenditure_local:
+        if audited_expenditure_local and financial_findings_local and audited_expenditure_local < financial_findings_local:
             raise serializers.ValidationError({'audited_expenditure_local': _('Cannot be lower than Financial Findings Local')})
+
+        total_value_local = self.instance.total_value_local if self.instance else None
+
+        if audited_expenditure_local and total_value_local and audited_expenditure_local > total_value_local:
+            raise serializers.ValidationError({'audited_expenditure_local': _('Cannot be higher than the value of Selected FACE Local')})
 
     def validate(self, validated_data):
         validated_data = super().validate(validated_data)
