@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from django.db import connection
 from django.test import override_settings
 from django.urls import reverse
@@ -205,6 +207,16 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         ids = [row['id'] for row in results]
         self.assertIn(self.pd.id, ids)
 
+    def test_filter_programme_documents_by_statuses_plural(self):
+        self.pd.status = Intervention.ACTIVE
+        self.pd.save(update_fields=['status'])
+        url = reverse('rss_admin:rss-admin-programme-documents-list')
+        resp = self.forced_auth_req('get', url, user=self.user, data={'statuses': Intervention.ACTIVE})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        results = resp.data if isinstance(resp.data, list) else resp.data.get('results', [])
+        ids = [row['id'] for row in results]
+        self.assertIn(self.pd.id, ids)
+
     def test_filter_programme_documents_by_agreement(self):
         url = reverse('rss_admin:rss-admin-programme-documents-list')
         resp = self.forced_auth_req('get', url, user=self.user, data={'agreement': self.agreement.id})
@@ -226,6 +238,15 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
     def test_filter_programme_documents_by_document_type(self):
         url = reverse('rss_admin:rss-admin-programme-documents-list')
         resp = self.forced_auth_req('get', url, user=self.user, data={'document_type': Intervention.PD})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        results = resp.data if isinstance(resp.data, list) else resp.data.get('results', [])
+        ids = [row['id'] for row in results]
+        self.assertIn(self.pd.id, ids)
+        self.assertNotIn(self.spd.id, ids)
+
+    def test_filter_programme_documents_by_document_types_plural(self):
+        url = reverse('rss_admin:rss-admin-programme-documents-list')
+        resp = self.forced_auth_req('get', url, user=self.user, data={'document_types': Intervention.PD})
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         results = resp.data if isinstance(resp.data, list) else resp.data.get('results', [])
         ids = [row['id'] for row in results]
@@ -269,6 +290,18 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
             'end': self.pd.end.isoformat(),
             'end_after': self.pd.end.isoformat(),
         })
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        results = resp.data if isinstance(resp.data, list) else resp.data.get('results', [])
+        ids = [row['id'] for row in results]
+        self.assertIn(self.pd.id, ids)
+
+    def test_filter_programme_documents_offices_plural(self):
+        office = OfficeFactory()
+        self.pd.offices.add(office)
+        self.pd.save()
+
+        url = reverse('rss_admin:rss-admin-programme-documents-list')
+        resp = self.forced_auth_req('get', url, user=self.user, data={'offices': office.id})
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         results = resp.data if isinstance(resp.data, list) else resp.data.get('results', [])
         ids = [row['id'] for row in results]
@@ -384,6 +417,18 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         self.assertIn(self.agreement.id, ids)
         self.assertNotIn(other_agreement.id, ids)
 
+    def test_filter_agreements_by_statuses_plural(self):
+        other_agreement = AgreementFactory(partner=self.partner, status='draft')
+        self.agreement.status = 'signed'
+        self.agreement.save(update_fields=['status'])
+
+        url = reverse('rss_admin:rss-admin-agreements-list')
+        response = self.forced_auth_req('get', url, user=self.user, data={'statuses': 'signed'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        ids = [row['id'] for row in response.data]
+        self.assertIn(self.agreement.id, ids)
+        self.assertNotIn(other_agreement.id, ids)
+
     def test_filter_agreements_by_partner(self):
         # filter by partner id
         url = reverse('rss_admin:rss-admin-agreements-list')
@@ -397,6 +442,15 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         self.agreement.save(update_fields=['agreement_type'])
         url = reverse('rss_admin:rss-admin-agreements-list')
         response = self.forced_auth_req('get', url, user=self.user, data={'agreement_type': 'PCA'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        ids = [row['id'] for row in response.data]
+        self.assertIn(self.agreement.id, ids)
+
+    def test_filter_agreements_by_types_plural(self):
+        self.agreement.agreement_type = 'PCA'
+        self.agreement.save(update_fields=['agreement_type'])
+        url = reverse('rss_admin:rss-admin-agreements-list')
+        response = self.forced_auth_req('get', url, user=self.user, data={'types': 'PCA'})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         ids = [row['id'] for row in response.data]
         self.assertIn(self.agreement.id, ids)
@@ -570,6 +624,13 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         payload = {'programme_documents': [spd.id]}
         resp = self.forced_auth_req('put', url, user=self.user, data=payload)
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        # Assert error structure and message
+        self.assertIn('programme_documents', resp.data)
+        self.assertIn('non_pd_ids', resp.data['programme_documents'])
+        non_pd_ids = resp.data['programme_documents']['non_pd_ids']
+        self.assertIn(str(spd.id), [str(x) for x in non_pd_ids])
+        self.assertIn('errors', resp.data['programme_documents'])
+        self.assertTrue(any('Programme Documents (PD)' in msg for msg in resp.data['programme_documents']['errors']))
 
     def test_bulk_close_errors_when_not_ended(self):
         pd = InterventionFactory(
@@ -582,6 +643,51 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         resp = self.forced_auth_req('put', url, user=self.user, data=payload)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertTrue(any(e['id'] == pd.id for e in resp.data['errors']))
+
+    def test_bulk_close_grouped_errors_not_ended(self):
+        pd1 = InterventionFactory(
+            agreement=self.agreement,
+            document_type=Intervention.PD,
+            status=Intervention.ACTIVE,
+        )
+        pd2 = InterventionFactory(
+            agreement=self.agreement,
+            document_type=Intervention.PD,
+            status=Intervention.ACTIVE,
+        )
+        url = reverse('rss_admin:rss-admin-programme-documents-bulk-close')
+        payload = {'programme_documents': [pd1.id, pd2.id]}
+        resp = self.forced_auth_req('put', url, user=self.user, data=payload)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertIn('grouped_errors', resp.data)
+        group = next(g for g in resp.data['grouped_errors'] if 'ENDED status' in g['message'])
+        self.assertEqual(set(group['ids']), {pd1.id, pd2.id})
+
+    def test_bulk_close_grouped_errors_transition_error(self):
+        # Create PDs in ENDED but with end date in future to trigger validator error
+        future_date = timezone.now().date() + timedelta(days=1)
+        pd1 = InterventionFactory(
+            agreement=self.agreement,
+            document_type=Intervention.PD,
+            status=Intervention.ENDED,
+        )
+        pd1.end = future_date
+        pd1.save(update_fields=['end'])
+        pd2 = InterventionFactory(
+            agreement=self.agreement,
+            document_type=Intervention.PD,
+            status=Intervention.ENDED,
+        )
+        pd2.end = future_date
+        pd2.save(update_fields=['end'])
+
+        url = reverse('rss_admin:rss-admin-programme-documents-bulk-close')
+        payload = {'programme_documents': [pd1.id, pd2.id]}
+        resp = self.forced_auth_req('put', url, user=self.user, data=payload)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertIn('grouped_errors', resp.data)
+        group = next(g for g in resp.data['grouped_errors'] if 'End date is in the future' in g['message'])
+        self.assertEqual(set(group['ids']), {pd1.id, pd2.id})
 
     @override_settings(RESTRICTED_ADMIN=True)
     def test_access_allowed_for_rss_admin_realm(self):
