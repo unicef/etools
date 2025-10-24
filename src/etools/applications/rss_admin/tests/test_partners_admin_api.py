@@ -22,6 +22,7 @@ from etools.applications.reports.tests.factories import (
     SectionFactory,
 )
 from etools.applications.users.tests.factories import GroupFactory, RealmFactory, UserFactory
+from etools.libraries.djangolib.fields import CURRENCY_LIST
 
 
 @override_settings(RESTRICTED_ADMIN=False)
@@ -787,6 +788,41 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         self.assertIn('grouped_errors', resp.data)
         group = next(g for g in resp.data['grouped_errors'] if 'End date is in the future' in g['message'])
         self.assertEqual(set(group['ids']), {pd1.id, pd2.id})
+
+    def test_assign_frs_to_pd(self):
+        fr1 = FundsReservationHeaderFactory(intervention=None)
+        fr2 = FundsReservationHeaderFactory(intervention=None)
+
+        url = reverse('rss_admin:rss-admin-programme-documents-assign-frs', kwargs={'pk': self.pd.pk})
+        payload = {'frs': [fr1.id, fr2.id]}
+        resp = self.forced_auth_req('post', url, user=self.user, data=payload)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
+        # 'frs' returns a list of FR ids
+        self.assertCountEqual(resp.data['frs'], [fr1.id, fr2.id])
+        # 'frs_details.frs' returns FR objects; verify ids match
+        returned_ids = [fr['id'] for fr in resp.data['frs_details']['frs']]
+        self.assertCountEqual(returned_ids, [fr1.id, fr2.id])
+
+    def test_set_currency_on_pd(self):
+        currency = CURRENCY_LIST[0]
+        url = reverse('rss_admin:rss-admin-programme-documents-set-currency', kwargs={'pk': self.pd.pk})
+        resp = self.forced_auth_req('post', url, user=self.user, data={'currency': currency})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
+        self.assertEqual(resp.data['planned_budget']['currency'], currency)
+
+    def test_set_currency_invalid(self):
+        url = reverse('rss_admin:rss-admin-programme-documents-set-currency', kwargs={'pk': self.pd.pk})
+        resp = self.forced_auth_req('post', url, user=self.user, data={'currency': 'XXX'})
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    @mock.patch('etools.applications.rss_admin.views.send_pd_to_vision')
+    def test_send_to_vision_action(self, mock_task):
+        url = reverse('rss_admin:rss-admin-programme-documents-send-to-vision', kwargs={'pk': self.pd.pk})
+        resp = self.forced_auth_req('post', url, user=self.user)
+        self.assertEqual(resp.status_code, status.HTTP_202_ACCEPTED)
+        self.assertTrue(mock_task.delay.called)
+        args, _kwargs = mock_task.delay.call_args
+        self.assertEqual(args[1], self.pd.pk)
 
     @override_settings(RESTRICTED_ADMIN=True)
     def test_access_allowed_for_rss_admin_realm(self):
