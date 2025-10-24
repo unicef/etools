@@ -1,12 +1,13 @@
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import connection
+import copy
 
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from unicef_restlib.views import QueryStringFilterMixin
 
-from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.partners.filters import InterventionEditableByFilter, ShowAmendmentsFilter
 from etools.applications.partners.models import Agreement, Intervention, InterventionBudget, PartnerOrganization
 from etools.applications.partners.serializers.interventions_v2 import (
@@ -14,13 +15,14 @@ from etools.applications.partners.serializers.interventions_v2 import (
     InterventionDetailSerializer,
     InterventionListSerializer,
 )
-from etools.applications.partners.tasks import send_pd_to_vision
+from etools.applications.partners.utils import send_agreement_suspended_notification
 from etools.applications.rss_admin.permissions import IsRssAdmin
 from etools.applications.rss_admin.serializers import (
     AgreementRssSerializer,
     BulkCloseProgrammeDocumentsSerializer,
     PartnerOrganizationRssSerializer,
 )
+from etools.applications.rss_admin.validation import RssAgreementValid, RssInterventionValid
 from etools.applications.utils.pagination import AppendablePageNumberPagination
 from etools.libraries.djangolib.fields import CURRENCY_LIST
 from etools.libraries.djangolib.views import FilterQueryMixin
@@ -76,7 +78,9 @@ class AgreementRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet, FilterQ
     # PMP-style filters mapping
     filters = (
         ('type', 'agreement_type__in'),
+        ('types', 'agreement_type__in'),
         ('status', 'status__in'),
+        ('statuses', 'status__in'),
         ('cpStructures', 'country_programme__in'),
         ('partners', 'partner__in'),
         ('start', 'start'),
@@ -87,6 +91,26 @@ class AgreementRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet, FilterQ
     def get_queryset(self):
         qs = super().get_queryset()
         return self.apply_filter_queries(qs, self.filter_params)
+
+    def perform_create(self, serializer):
+        serializer.save()
+        validator = RssAgreementValid(serializer.instance, user=self.request.user)
+        if not validator.is_valid:
+            raise ValidationError(validator.errors)
+
+    def perform_update(self, serializer):
+        old_instance = copy.copy(serializer.instance)
+        serializer.save()
+        validator = RssAgreementValid(
+            serializer.instance,
+            old=old_instance,
+            user=self.request.user,
+        )
+        if not validator.is_valid:
+            raise ValidationError(validator.errors)
+        # notify on suspension
+        if serializer.instance.status == serializer.instance.SUSPENDED and old_instance.status != serializer.instance.SUSPENDED:
+            send_agreement_suspended_notification(serializer.instance, self.request.user)
 
 
 class ProgrammeDocumentRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet, FilterQueryMixin):
@@ -114,15 +138,19 @@ class ProgrammeDocumentRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet,
 
     filters = (
         ('status', 'status__in'),
+        ('statuses', 'status__in'),
         ('document_type', 'document_type__in'),
+        ('document_types', 'document_type__in'),
         ('sections', 'sections__in'),
         ('office', 'offices__in'),
+        ('offices', 'offices__in'),
         ('donors', 'frs__fr_items__donor__icontains'),
         ('partners', 'agreement__partner__in'),
         ('grants', 'frs__fr_items__grant_number__icontains'),
         ('unicef_focal_points', 'unicef_focal_points__in'),
         ('budget_owner__in', 'budget_owner__in'),
         ('country_programme', 'country_programme__in'),
+        ('country_programmes', 'country_programme__in'),
         ('cp_outputs', 'result_links__cp_output__in'),
         ('start', 'start'),
         ('end', 'end'),
@@ -143,19 +171,18 @@ class ProgrammeDocumentRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet,
         qs = Intervention.objects.frs_qs()
         return self.apply_filter_queries(qs, self.filter_params)
 
-    def _maybe_trigger_vision_sync(self, instance, old_status=None):
-        if instance.status == Intervention.SIGNED and old_status != Intervention.SIGNED:
-            if not tenant_switch_is_active('disable_pd_vision_sync'):
-                send_pd_to_vision.delay(connection.tenant.name, instance.pk)
-
     def perform_create(self, serializer):
         serializer.save()
-        self._maybe_trigger_vision_sync(serializer.instance)
+        validator = RssInterventionValid(serializer.instance, user=self.request.user)
+        if not validator.is_valid:
+            raise ValidationError(validator.errors)
 
     def perform_update(self, serializer):
-        old_status = serializer.instance.status
+        old_instance = copy.copy(serializer.instance)
         serializer.save()
-        self._maybe_trigger_vision_sync(serializer.instance, old_status=old_status)
+        validator = RssInterventionValid(serializer.instance, old=old_instance, user=self.request.user)
+        if not validator.is_valid:
+            raise ValidationError(validator.errors)
 
     @action(detail=False, methods=['put'], url_path='bulk-close')
     def bulk_close(self, request, *args, **kwargs):
