@@ -14,8 +14,13 @@ from etools.applications.reports.serializers.v2 import (
 
 
 class BAPInterventionActivitySerializer(InterventionActivitySerializer):
+    name = serializers.SerializerMethodField()
+
     class Meta(InterventionActivitySerializer.Meta):
         fields = ['id', 'name', 'unicef_cash', 'cso_cash', 'is_active']
+
+    def get_name(self, obj):
+        return f"{obj.code} {obj.name}" if getattr(obj, 'code', None) else obj.name
 
 
 class BAPLowerResultWithActivitiesSerializer(LowerResultWithActivitiesSerializer):
