@@ -150,7 +150,10 @@ class BulkCloseProgrammeDocumentsSerializer(serializers.Serializer):
         # Ensure only PDs are processed via this endpoint
         invalid_ids = [i.id for i in programme_documents if i.document_type != Intervention.PD]
         if invalid_ids:
-            raise serializers.ValidationError({'non_pd_ids': invalid_ids})
+            raise serializers.ValidationError({
+                'non_pd_ids': invalid_ids,
+                'errors': ['Only Programme Documents (PD) can be bulk-closed']
+            })
         return programme_documents
 
     def update(self, validated_data, user):

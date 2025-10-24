@@ -18,7 +18,7 @@ class ProgrammeDocumentService:
         """
         result = {
             'closed_ids': [],
-            'errors': [],
+            'errors': [],  # legacy per-item list of errors with id and errors
         }
 
         for intervention in interventions:
@@ -32,6 +32,21 @@ class ProgrammeDocumentService:
                 intervention.save()
                 result['closed_ids'].append(intervention.id)
             except TransitionError as exc:
-                result['errors'].append({'id': intervention.id, 'errors': str(exc)})
+                # TransitionError from validators may be a list-like message; normalize to list of strings
+                message = str(exc)
+                # Some validators raise with a list inside; DRF usually stringifies to "['msg']". Keep as string.
+                result['errors'].append({'id': intervention.id, 'errors': [message] if not isinstance(message, list) else message})
+
+        # Group errors by error message to reduce payload size for many IDs
+        if result['errors']:
+            grouped = {}
+            for item in result['errors']:
+                err_list = item.get('errors') or []
+                # take the first error text as the grouping key for simplicity
+                key = err_list[0] if err_list else 'Unknown error'
+                if key not in grouped:
+                    grouped[key] = []
+                grouped[key].append(item['id'])
+            result['grouped_errors'] = [{'message': k, 'ids': v} for k, v in grouped.items()]
 
         return result
