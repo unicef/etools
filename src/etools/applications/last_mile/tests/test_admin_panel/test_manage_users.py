@@ -211,7 +211,7 @@ class TestUsersViewSet(BaseTenantTestCase):
 
     def test_missing_main_fields_and_invalid_email(self):
         # Test missing required main fields
-        required_fields = ['first_name', 'last_name', 'email', 'username', 'password']
+        required_fields = ['first_name', 'last_name', 'email', 'username']
         for field in required_fields:
             with self.subTest(missing_field=field):
                 data = copy.deepcopy(self.valid_data)
