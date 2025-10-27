@@ -18,7 +18,10 @@ class LMProfileStatusUpdater:
         for user in users:
             self.admin_validator.validate_last_mile_profile(user)
             user.is_active = status == models.Profile.ApprovalStatus.APPROVED
+            user.realms.update(is_active=status == models.Profile.ApprovalStatus.APPROVED)
             last_mile_profile = user.last_mile_profile
+            if last_mile_profile.created_by:
+                self.admin_validator.validate_user_can_approve(last_mile_profile.created_by.id, approver_user.id)
             last_mile_profile.status = status
             last_mile_profile.review_notes = review_notes
             last_mile_profile.approved_by = approver_user
@@ -32,15 +35,19 @@ class LMProfileStatusUpdater:
     def update(self, instance, validated_data, approver_user):
         self.admin_validator.validate_last_mile_profile(instance)
         last_mile_profile = instance.last_mile_profile
+        if last_mile_profile.created_by:
+            self.admin_validator.validate_user_can_approve(last_mile_profile.created_by.id, approver_user.id)
         status = validated_data.pop('status', None)
         self.admin_validator.validate_status(status)
         review_notes = validated_data.pop('review_notes', None)
         if status == models.Profile.ApprovalStatus.APPROVED:
             last_mile_profile.approve(approver_user, review_notes)
             instance.is_active = True
+            instance.realms.update(is_active=True)
             instance.save(update_fields=['is_active'])
         elif status == models.Profile.ApprovalStatus.REJECTED:
             last_mile_profile.reject(approver_user, review_notes)
             instance.is_active = False
+            instance.realms.update(is_active=False)
             instance.save(update_fields=['is_active'])
         return last_mile_profile

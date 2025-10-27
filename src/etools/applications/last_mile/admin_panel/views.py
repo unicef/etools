@@ -22,6 +22,7 @@ from etools.applications.last_mile.admin_panel.constants import ALERT_TYPES
 from etools.applications.last_mile.admin_panel.csv_exporter import (
     LocationsCSVExporter,
     POITypesCSVExporter,
+    UserAlertNotificationsCSVExporter,
     UserLocationsCSVExporter,
     UsersCSVExporter,
 )
@@ -68,6 +69,7 @@ from etools.applications.last_mile.admin_panel.serializers import (
     UserAdminExportSerializer,
     UserAdminSerializer,
     UserAdminUpdateSerializer,
+    UserAlertNotificationsExportSerializer,
     UserPointOfInterestAdminSerializer,
     UserPointOfInterestExportSerializer,
 )
@@ -139,6 +141,10 @@ class UserViewSet(ExportMixin,
             queryset = queryset.with_points_of_interest()
         elif has_active_location == "0":
             queryset = queryset.without_points_of_interest()
+
+        show_all_users = self.request.query_params.get('showAllUsers')
+        if show_all_users != "1":
+            queryset = queryset.non_unicef_users()
 
         return queryset.distinct()
 
@@ -306,7 +312,8 @@ class LocationsViewSet(mixins.ListModelMixin,
         'p_code',
         'description',
         'region',
-        'district'
+        'district',
+        'name',
     ]
     search_fields = ('name',
                      'p_code',
@@ -469,10 +476,12 @@ class AlertNotificationViewSet(mixins.ListModelMixin,
             return AlertNotificationCustomeSerializer
         if self.action == 'create':
             return AlertNotificationCreateSerializer
+        if self.action == "list_export_csv":
+            return UserAlertNotificationsExportSerializer
         return AlertNotificationSerializer
 
     def get_queryset(self):
-        if self.action == "list":
+        if self.action in ["list", "list_export_csv"]:
             # Use prefetch_related instead of annotate to avoid GROUP BY issues
             return (
                 get_user_model().objects.filter(
@@ -499,21 +508,36 @@ class AlertNotificationViewSet(mixins.ListModelMixin,
 
     @property
     def filterset_class(self):
-        if self.action == 'list':
+        if self.action in ['list', 'list_export_csv']:
             return AlertNotificationFilter
         return None
 
     @property
     def ordering_fields(self):
-        if self.action == 'list':
+        if self.action in ['list', 'list_export_csv']:
             return ['email', 'first_name', 'last_name']
         return []
 
     @property
     def search_fields(self):
-        if self.action == 'list':
+        if self.action in ['list', 'list_export_csv']:
             return ('email', 'first_name', 'last_name')
         return []
+
+    @action(
+        detail=False,
+        methods=['get'],
+        url_path='export/csv',
+        renderer_classes=(ExportCSVRenderer,),
+    )
+    def list_export_csv(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        response = StreamingHttpResponse(
+            UserAlertNotificationsCSVExporter().generate_csv_data(queryset=queryset, serializer_class=self.get_serializer_class()),
+            content_type='text/csv'
+        )
+        response['Content-Disposition'] = f'attachment; filename="email_alerts_{timezone.now().date()}.csv"'
+        return response
 
 
 class TransferItemViewSet(mixins.ListModelMixin, GenericViewSet, mixins.CreateModelMixin):
@@ -543,7 +567,8 @@ class TransferItemViewSet(mixins.ListModelMixin, GenericViewSet, mixins.CreateMo
         'batch_id',
         'material__original_uom',
         'quantity',
-        'modified'
+        'expiry_date',
+        'last_updated'
     )
 
     def get_queryset(self):
@@ -559,6 +584,8 @@ class TransferItemViewSet(mixins.ListModelMixin, GenericViewSet, mixins.CreateMo
             'transfer__origin_point'
         ).filter(
             transfer__destination_point_id=poi_id
+        ).annotate(
+            last_updated=F('modified'),
         ).order_by('-id')
 
     def get_serializer_class(self):
