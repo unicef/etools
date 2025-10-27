@@ -4,6 +4,7 @@ from rest_framework import serializers
 from unicef_attachments.fields import AttachmentSingleFileField
 from unicef_attachments.serializers import AttachmentSerializerMixin
 
+from etools.applications.audit.models import Engagement
 from etools.applications.organizations.models import Organization
 from etools.applications.partners.models import Agreement, Intervention, PartnerOrganization
 from etools.applications.reports.models import Office, Section
@@ -163,3 +164,65 @@ class BulkCloseProgrammeDocumentsSerializer(serializers.Serializer):
 
 class TripApproverUpdateSerializer(serializers.ModelSerializer):
     pass
+
+
+class EngagementLightRssSerializer(serializers.ModelSerializer):
+    displayed_status = serializers.ReadOnlyField()
+
+    class Meta:
+        model = Engagement
+        fields = (
+            'id',
+            'reference_number',
+            'engagement_type',
+            'status',
+            'displayed_status',
+        )
+
+
+class EngagementChangeStatusSerializer(serializers.Serializer):
+    """Serializer to validate input for changing an Engagement status.
+
+    Accepts either an explicit action name or a target status. For actions that
+    require a comment, enforces that the appropriate comment is provided.
+    """
+
+    ACTION_SUBMIT = 'submit'
+    ACTION_SEND_BACK = 'send_back'
+    ACTION_CANCEL = 'cancel'
+    ACTION_FINALIZE = 'finalize'
+
+    ACTIONS = (ACTION_SUBMIT, ACTION_SEND_BACK, ACTION_CANCEL, ACTION_FINALIZE)
+
+    action = serializers.ChoiceField(choices=ACTIONS, required=False)
+    status = serializers.ChoiceField(choices=Engagement.STATUSES, required=False)
+    send_back_comment = serializers.CharField(required=False, allow_blank=False)
+    cancel_comment = serializers.CharField(required=False, allow_blank=False)
+
+    def validate(self, attrs):
+        action = attrs.get('action')
+        status_value = attrs.get('status')
+
+        if not action and not status_value:
+            raise serializers.ValidationError({'action': 'Provide either action or status'})
+
+        # Map status to action if only status is provided
+        if not action and status_value:
+            mapping = {
+                Engagement.STATUSES.report_submitted: self.ACTION_SUBMIT,
+                Engagement.STATUSES.partner_contacted: self.ACTION_SEND_BACK,
+                Engagement.STATUSES.cancelled: self.ACTION_CANCEL,
+                Engagement.STATUSES.final: self.ACTION_FINALIZE,
+            }
+            action = mapping.get(status_value)
+            if not action:
+                raise serializers.ValidationError({'status': f'Unsupported target status: {status_value}'})
+            attrs['action'] = action
+
+        # Ensure required comments for certain actions
+        if action == self.ACTION_SEND_BACK and not attrs.get('send_back_comment'):
+            raise serializers.ValidationError({'send_back_comment': 'This field is required for send_back'})
+        if action == self.ACTION_CANCEL and not attrs.get('cancel_comment'):
+            raise serializers.ValidationError({'cancel_comment': 'This field is required for cancel'})
+
+        return attrs

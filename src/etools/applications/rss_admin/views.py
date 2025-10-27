@@ -9,6 +9,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from unicef_restlib.views import QueryStringFilterMixin
 
+from etools.applications.audit.models import Engagement
 from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.partners.filters import InterventionEditableByFilter, ShowAmendmentsFilter
 from etools.applications.partners.models import Agreement, Intervention, InterventionBudget, PartnerOrganization
@@ -23,6 +24,8 @@ from etools.applications.rss_admin.permissions import IsRssAdmin
 from etools.applications.rss_admin.serializers import (
     AgreementRssSerializer,
     BulkCloseProgrammeDocumentsSerializer,
+    EngagementChangeStatusSerializer,
+    EngagementLightRssSerializer,
     PartnerOrganizationRssSerializer,
 )
 from etools.applications.rss_admin.validation import RssAgreementValid, RssInterventionValid
@@ -239,3 +242,31 @@ class ProgrammeDocumentRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet,
             return Response({'detail': 'Vision sync disabled by tenant switch'}, status=status.HTTP_403_FORBIDDEN)
         send_pd_to_vision.delay(connection.tenant.name, instance.pk)
         return Response({'detail': 'PD queued for Vision upload'}, status=status.HTTP_202_ACCEPTED)
+
+
+class EngagementRssViewSet(viewsets.GenericViewSet):
+    queryset = Engagement.objects.all()
+    serializer_class = EngagementLightRssSerializer
+    permission_classes = (IsRssAdmin,)
+
+    @action(detail=True, methods=['post'], url_path='change-status')
+    def change_status(self, request, pk=None):
+        engagement = self.get_object()
+        if hasattr(engagement, 'get_subclass'):
+            engagement = engagement.get_subclass()
+        serializer = EngagementChangeStatusSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        action = serializer.validated_data['action']
+
+        # Execute FSM actions; permissions are enforced by the transition decorators
+        if action == EngagementChangeStatusSerializer.ACTION_SUBMIT:
+            engagement.submit()
+        elif action == EngagementChangeStatusSerializer.ACTION_SEND_BACK:
+            engagement.send_back(serializer.validated_data['send_back_comment'])
+        elif action == EngagementChangeStatusSerializer.ACTION_CANCEL:
+            engagement.cancel(serializer.validated_data['cancel_comment'])
+        elif action == EngagementChangeStatusSerializer.ACTION_FINALIZE:
+            engagement.finalize()
+
+        engagement.save()
+        return Response(EngagementLightRssSerializer(engagement, context={'request': request}).data, status=status.HTTP_200_OK)

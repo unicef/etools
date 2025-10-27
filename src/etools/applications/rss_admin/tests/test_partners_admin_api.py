@@ -10,6 +10,8 @@ from rest_framework import status
 from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.attachments.tests.factories import AttachmentFactory
+from etools.applications.audit.models import Engagement
+from etools.applications.audit.tests.factories import AuditFactory, EngagementFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory, FundsReservationItemFactory
 from etools.applications.organizations.tests.factories import OrganizationFactory
@@ -841,6 +843,52 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         url = reverse('rss_admin:rss-admin-partners-list')
         response = self.forced_auth_req('get', url, user=user)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    # ------------------------
+    # Engagement status changes
+    # ------------------------
+
+    def test_engagement_submit(self):
+        """Submitting an engagement moves status to REPORT_SUBMITTED and returns 200."""
+        e = EngagementFactory()
+        url = reverse('rss_admin:rss-admin-engagements-change-status', kwargs={'pk': e.pk})
+        resp = self.forced_auth_req('post', url, user=self.user, data={'action': 'submit'})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
+        e.refresh_from_db()
+        self.assertEqual(e.status, Engagement.REPORT_SUBMITTED)
+
+    def test_engagement_send_back_requires_comment(self):
+        """Send back requires a comment; without it returns 400, with it moves to PARTNER_CONTACTED."""
+        e = EngagementFactory(status=Engagement.REPORT_SUBMITTED)
+        url = reverse('rss_admin:rss-admin-engagements-change-status', kwargs={'pk': e.pk})
+        resp_bad = self.forced_auth_req('post', url, user=self.user, data={'action': 'send_back'})
+        self.assertEqual(resp_bad.status_code, status.HTTP_400_BAD_REQUEST)
+        resp_ok = self.forced_auth_req('post', url, user=self.user, data={'action': 'send_back', 'send_back_comment': 'Fix issues'})
+        self.assertEqual(resp_ok.status_code, status.HTTP_200_OK, resp_ok.data)
+        e.refresh_from_db()
+        self.assertEqual(e.status, Engagement.PARTNER_CONTACTED)
+        self.assertEqual(e.send_back_comment, 'Fix issues')
+
+    def test_engagement_cancel_requires_comment(self):
+        """Cancel requires cancel_comment; without it returns 400, with it sets status to CANCELLED."""
+        e = EngagementFactory()
+        url = reverse('rss_admin:rss-admin-engagements-change-status', kwargs={'pk': e.pk})
+        resp_bad = self.forced_auth_req('post', url, user=self.user, data={'status': 'cancelled'})
+        self.assertEqual(resp_bad.status_code, status.HTTP_400_BAD_REQUEST)
+        resp_ok = self.forced_auth_req('post', url, user=self.user, data={'status': 'cancelled', 'cancel_comment': 'Not needed'})
+        self.assertEqual(resp_ok.status_code, status.HTTP_200_OK, resp_ok.data)
+        e.refresh_from_db()
+        self.assertEqual(e.status, Engagement.CANCELLED)
+        self.assertEqual(e.cancel_comment, 'Not needed')
+
+    def test_engagement_finalize_on_audit(self):
+        """Finalize transitions a submitted Audit to FINAL and returns 200."""
+        audit = AuditFactory(status=Engagement.REPORT_SUBMITTED)
+        url = reverse('rss_admin:rss-admin-engagements-change-status', kwargs={'pk': audit.pk})
+        resp = self.forced_auth_req('post', url, user=self.user, data={'status': 'final'})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
+        audit.refresh_from_db()
+        self.assertEqual(audit.status, Engagement.FINAL)
 
     # ------------------------------------------------------------------
     # Status transitions: targeted condition/side-effect tests
