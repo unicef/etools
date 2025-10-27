@@ -551,7 +551,7 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(models.Item.all_objects.filter(transfer=short_transfer).count(), 3)  # 3 items on transfer
         self.assertEqual(short_transfer.items.count(), 3)
 
-        loss_item_2 = short_transfer.items.first()
+        loss_item_2 = short_transfer.items.order_by('id').first()
         self.assertEqual(loss_item_2.quantity, 6)
 
     def test_checkout_validation(self):
