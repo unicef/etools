@@ -1333,6 +1333,10 @@ class SendPDToVisionTestCase(BaseTenantTestCase):
             matched['name'].startswith(f"{self.activity.code} "),
             f"Activity name should start with code prefix. Got: {matched['name']}"
         )
+        self.assertEqual(
+            matched['code'], self.activity.code,
+            f"Activity code should be equal to activity code. Got: {matched['code']}"
+        )
 
 
 class TestRealmsPRPExport(BaseTenantTestCase):

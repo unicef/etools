@@ -17,7 +17,7 @@ class BAPInterventionActivitySerializer(InterventionActivitySerializer):
     name = serializers.SerializerMethodField()
 
     class Meta(InterventionActivitySerializer.Meta):
-        fields = ['id', 'name', 'unicef_cash', 'cso_cash', 'is_active']
+        fields = ['id', 'name', 'unicef_cash', 'cso_cash', 'is_active', 'code']
 
     def get_name(self, obj):
         return f"{obj.code} {obj.name}" if getattr(obj, 'code', None) else obj.name
