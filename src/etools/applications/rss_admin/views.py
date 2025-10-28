@@ -25,6 +25,7 @@ from etools.applications.rss_admin.serializers import (
     AgreementRssSerializer,
     BulkCloseProgrammeDocumentsSerializer,
     EngagementChangeStatusSerializer,
+    EngagementInitiationUpdateSerializer,
     EngagementLightRssSerializer,
     PartnerOrganizationRssSerializer,
 )
@@ -270,3 +271,23 @@ class EngagementRssViewSet(viewsets.GenericViewSet):
 
         engagement.save()
         return Response(EngagementLightRssSerializer(engagement, context={'request': request}).data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['patch'], url_path='initiation', url_name='initiation')
+    def update_initiation(self, request, pk=None):
+        """Update Engagement initiation data (FACE dates, totals, currency/exchange).
+
+        Example payload keys: start_date, end_date, partner_contacted_at, total_value, exchange_rate, currency_of_report
+        """
+        engagement = self.get_object()
+        if hasattr(engagement, 'get_subclass'):
+            engagement = engagement.get_subclass()
+
+        serializer = EngagementInitiationUpdateSerializer(
+            instance=engagement,
+            data=request.data,
+            partial=True,
+            context={'request': request},
+        )
+        serializer.is_valid(raise_exception=True)
+        instance = serializer.save()
+        return Response(EngagementLightRssSerializer(instance, context={'request': request}).data, status=status.HTTP_200_OK)

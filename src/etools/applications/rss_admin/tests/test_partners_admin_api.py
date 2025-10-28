@@ -890,6 +890,45 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         audit.refresh_from_db()
         self.assertEqual(audit.status, Engagement.FINAL)
 
+    # ------------------------
+    # Engagement initiation update
+    # ------------------------
+    def test_engagement_initiation_update_success(self):
+        """RSS Admin: PATCH engagements/{id}/initiation updates initiation fields and persists them."""
+        e = EngagementFactory()
+        url = reverse('rss_admin:rss-admin-engagements-initiation', kwargs={'pk': e.pk})
+        payload = {
+            'start_date': (timezone.now().date() - timedelta(days=30)).isoformat(),
+            'end_date': (timezone.now().date() - timedelta(days=10)).isoformat(),
+            'partner_contacted_at': (timezone.now().date() - timedelta(days=5)).isoformat(),
+            'total_value': '12345.67',
+            'exchange_rate': '1.25',
+            'currency_of_report': 'USD',
+        }
+        resp = self.forced_auth_req('patch', url, user=self.user, data=payload)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
+        e.refresh_from_db()
+        self.assertEqual(str(e.start_date), payload['start_date'])
+        self.assertEqual(str(e.end_date), payload['end_date'])
+        self.assertEqual(str(e.partner_contacted_at), payload['partner_contacted_at'])
+        self.assertEqual(str(e.total_value), payload['total_value'])
+        self.assertEqual(str(e.exchange_rate), payload['exchange_rate'])
+        self.assertEqual(e.currency_of_report, payload['currency_of_report'])
+
+    def test_engagement_initiation_update_date_validation(self):
+        """RSS Admin: initiation update rejects invalid chronology (end_date < start_date) with 400 and error key."""
+        e = EngagementFactory()
+        url = reverse('rss_admin:rss-admin-engagements-initiation', kwargs={'pk': e.pk})
+        start = timezone.now().date() - timedelta(days=10)
+        end = start - timedelta(days=1)
+        payload = {
+            'start_date': start.isoformat(),
+            'end_date': end.isoformat(),
+        }
+        resp = self.forced_auth_req('patch', url, user=self.user, data=payload)
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('end_date', resp.data)
+
     # ------------------------------------------------------------------
     # Status transitions: targeted condition/side-effect tests
     # ------------------------------------------------------------------

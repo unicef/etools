@@ -5,6 +5,7 @@ from unicef_attachments.fields import AttachmentSingleFileField
 from unicef_attachments.serializers import AttachmentSerializerMixin
 
 from etools.applications.audit.models import Engagement
+from etools.applications.audit.serializers.mixins import EngagementDatesValidation
 from etools.applications.organizations.models import Organization
 from etools.applications.partners.models import Agreement, Intervention, PartnerOrganization
 from etools.applications.reports.models import Office, Section
@@ -226,3 +227,26 @@ class EngagementChangeStatusSerializer(serializers.Serializer):
             raise serializers.ValidationError({'cancel_comment': 'This field is required for cancel'})
 
         return attrs
+
+
+class EngagementInitiationUpdateSerializer(EngagementDatesValidation, serializers.ModelSerializer):
+    """Allow RSS admin to update Engagement initiation data.
+
+    Fields include FACE period dates and financial basics. All are optional
+    and validated for chronological consistency via EngagementDatesValidation.
+    """
+
+    class Meta:
+        model = Engagement
+        fields = (
+            'start_date',
+            'end_date',
+            'partner_contacted_at',
+            'total_value',
+            'exchange_rate',
+            'currency_of_report',
+        )
+        extra_kwargs = {f: {'required': False, 'allow_null': True} for f in fields}
+
+    def update(self, instance, validated_data):
+        return super().update(instance, validated_data)
