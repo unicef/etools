@@ -792,27 +792,29 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
     def test_assign_frs_to_pd(self):
         fr1 = FundsReservationHeaderFactory(intervention=None)
         fr2 = FundsReservationHeaderFactory(intervention=None)
-
-        url = reverse('rss_admin:rss-admin-programme-documents-assign-frs', kwargs={'pk': self.pd.pk})
+        # Use generic PATCH endpoint to assign FRs
+        url = reverse('rss_admin:rss-admin-programme-documents-detail', kwargs={'pk': self.pd.pk})
         payload = {'frs': [fr1.id, fr2.id]}
-        resp = self.forced_auth_req('post', url, user=self.user, data=payload)
+        resp = self.forced_auth_req('patch', url, user=self.user, data=payload)
         self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
-        # 'frs' returns a list of FR ids
+        # 'frs' returns a list of FR ids on the update serializer
         self.assertCountEqual(resp.data['frs'], [fr1.id, fr2.id])
-        # 'frs_details.frs' returns FR objects; verify ids match
-        returned_ids = [fr['id'] for fr in resp.data['frs_details']['frs']]
+        # Verify via detail GET that frs_details reflect the change
+        resp_get = self.forced_auth_req('get', url, user=self.user)
+        self.assertEqual(resp_get.status_code, status.HTTP_200_OK, resp_get.data)
+        returned_ids = [fr['id'] for fr in resp_get.data['frs_details']['frs']]
         self.assertCountEqual(returned_ids, [fr1.id, fr2.id])
 
     def test_set_currency_on_pd(self):
         currency = CURRENCY_LIST[0]
-        url = reverse('rss_admin:rss-admin-programme-documents-set-currency', kwargs={'pk': self.pd.pk})
-        resp = self.forced_auth_req('post', url, user=self.user, data={'currency': currency})
+        url = reverse('rss_admin:rss-admin-programme-documents-detail', kwargs={'pk': self.pd.pk})
+        resp = self.forced_auth_req('patch', url, user=self.user, data={'currency': currency})
         self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
         self.assertEqual(resp.data['planned_budget']['currency'], currency)
 
     def test_set_currency_invalid(self):
-        url = reverse('rss_admin:rss-admin-programme-documents-set-currency', kwargs={'pk': self.pd.pk})
-        resp = self.forced_auth_req('post', url, user=self.user, data={'currency': 'XXX'})
+        url = reverse('rss_admin:rss-admin-programme-documents-detail', kwargs={'pk': self.pd.pk})
+        resp = self.forced_auth_req('patch', url, user=self.user, data={'currency': 'XXX'})
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
     @mock.patch('etools.applications.rss_admin.views.send_pd_to_vision')
