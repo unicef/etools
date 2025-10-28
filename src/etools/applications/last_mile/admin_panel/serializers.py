@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.contrib.gis.geos import Point
-from django.db import transaction, connection
+from django.db import connection, transaction
 from django.utils.encoding import force_str
 
 from rest_framework import serializers
@@ -96,7 +96,7 @@ class UserAdminExportSerializer(serializers.ModelSerializer):
 
     def get_status(self, obj):
         return "Active" if obj.is_active else "Inactive"
-    
+
     def get_country(self, obj):
         return connection.tenant.name
 
