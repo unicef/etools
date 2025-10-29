@@ -805,6 +805,39 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         returned_ids = [fr['id'] for fr in resp.data['frs_details']['frs']]
         self.assertCountEqual(returned_ids, [fr1.id, fr2.id])
 
+    def test_patch_pd_sets_two_frs_and_retrieve_shows_both(self):
+        fr1 = FundsReservationHeaderFactory(intervention=None)
+        fr2 = FundsReservationHeaderFactory(intervention=None)
+
+        # Patch via the standard PD detail endpoint with two FRs
+        url_detail = reverse('rss_admin:rss-admin-programme-documents-detail', kwargs={'pk': self.pd.pk})
+        payload = {'frs': [fr1.id, fr2.id]}
+        resp_patch = self.forced_auth_req('patch', url_detail, user=self.user, data=payload)
+        self.assertEqual(resp_patch.status_code, status.HTTP_200_OK, resp_patch.data)
+        # response should include both FRs by id
+        self.assertCountEqual(resp_patch.data['frs'], [fr1.id, fr2.id])
+
+        # Retrieve should also return both FRs
+        resp_get = self.forced_auth_req('get', url_detail, user=self.user)
+        self.assertEqual(resp_get.status_code, status.HTTP_200_OK)
+        self.assertCountEqual(resp_get.data['frs'], [fr1.id, fr2.id])
+        returned_ids_get = [fr['id'] for fr in resp_get.data['frs_details']['frs']]
+        self.assertCountEqual(returned_ids_get, [fr1.id, fr2.id])
+
+    def test_patch_pd_with_fr_numbers(self):
+        fr1 = FundsReservationHeaderFactory(intervention=None)
+        fr2 = FundsReservationHeaderFactory(intervention=None)
+
+        url_detail = reverse('rss_admin:rss-admin-programme-documents-detail', kwargs={'pk': self.pd.pk})
+        payload = {'fr_numbers': [fr1.fr_number, fr2.fr_number]}
+        resp_patch = self.forced_auth_req('patch', url_detail, user=self.user, data=payload)
+        self.assertEqual(resp_patch.status_code, status.HTTP_200_OK, resp_patch.data)
+        self.assertCountEqual(resp_patch.data['frs'], [fr1.id, fr2.id])
+
+        resp_get = self.forced_auth_req('get', url_detail, user=self.user)
+        self.assertEqual(resp_get.status_code, status.HTTP_200_OK)
+        self.assertCountEqual(resp_get.data['frs'], [fr1.id, fr2.id])
+
     def test_set_currency_on_pd(self):
         currency = CURRENCY_LIST[0]
         url = reverse('rss_admin:rss-admin-programme-documents-set-currency', kwargs={'pk': self.pd.pk})
@@ -928,6 +961,25 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         resp = self.forced_auth_req('patch', url, user=self.user, data=payload)
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('end_date', resp.data)
+
+    def test_engagement_attachments_update(self):
+        """RSS Admin: PATCH engagements/{id}/attachments links provided attachment ids to engagement/report sets."""
+        e = EngagementFactory()
+        url = reverse('rss_admin:rss-admin-engagements-attachments', kwargs={'pk': e.pk})
+
+        attachment_eng = AttachmentFactory(file='eng.pdf')
+        attachment_rep = AttachmentFactory(file='rep.pdf')
+
+        payload = {
+            'engagement_attachment': attachment_eng.id,
+            'report_attachment': attachment_rep.id,
+        }
+        resp = self.forced_auth_req('patch', url, user=self.user, data=payload)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
+
+        e.refresh_from_db()
+        self.assertTrue(e.engagement_attachments.filter(pk=attachment_eng.id).exists())
+        self.assertTrue(e.report_attachments.filter(pk=attachment_rep.id).exists())
 
     # ------------------------------------------------------------------
     # Status transitions: targeted condition/side-effect tests

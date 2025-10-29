@@ -13,6 +13,7 @@ from etools.applications.audit.models import Engagement
 from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.partners.filters import InterventionEditableByFilter, ShowAmendmentsFilter
 from etools.applications.partners.models import Agreement, Intervention, InterventionBudget, PartnerOrganization
+from etools.applications.funds.models import FundsReservationHeader
 from etools.applications.partners.serializers.interventions_v2 import (
     InterventionCreateUpdateSerializer,
     InterventionDetailSerializer,
@@ -25,6 +26,7 @@ from etools.applications.rss_admin.serializers import (
     AgreementRssSerializer,
     BulkCloseProgrammeDocumentsSerializer,
     EngagementChangeStatusSerializer,
+    EngagementAttachmentsUpdateSerializer,
     EngagementInitiationUpdateSerializer,
     EngagementLightRssSerializer,
     PartnerOrganizationRssSerializer,
@@ -198,6 +200,38 @@ class ProgrammeDocumentRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet,
         result = serializer.update(serializer.validated_data, request.user)
         return Response(result, status=status.HTTP_200_OK)
 
+    def _apply_fr_numbers(self, data):
+        """Minimal: allow 'fr_numbers' to map to 'frs' IDs for PATCH/PUT."""
+        fr_numbers = data.get('fr_numbers')
+        if fr_numbers is None:
+            return data
+        if not isinstance(fr_numbers, (list, tuple)):
+            raise ValidationError({'fr_numbers': ["Must be a list of FR numbers"]})
+        numbers = list(fr_numbers)
+        qs = FundsReservationHeader.objects.filter(fr_number__in=numbers)
+        found = list(qs.values_list('fr_number', flat=True))
+        missing = [n for n in numbers if n not in found]
+        if missing:
+            raise ValidationError({'fr_numbers': [f"Unknown FR numbers: {', '.join(missing)}"]})
+        new_data = data.copy()
+        new_data['frs'] = list(qs.values_list('pk', flat=True))
+        new_data.pop('fr_numbers', None)
+        return new_data
+
+    def update(self, request, *args, **kwargs):
+        return self._update_with_fr_numbers(request, partial=False)
+
+    def partial_update(self, request, *args, **kwargs):
+        return self._update_with_fr_numbers(request, partial=True)
+
+    def _update_with_fr_numbers(self, request, *, partial: bool):
+        instance = self.get_object()
+        payload = self._apply_fr_numbers(request.data)
+        serializer = self.get_serializer(instance=instance, data=payload, partial=partial, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
     @action(detail=True, methods=['post'], url_path='assign-frs')
     def assign_frs(self, request, pk=None):
         instance = self.get_object()
@@ -283,6 +317,26 @@ class EngagementRssViewSet(viewsets.GenericViewSet):
             engagement = engagement.get_subclass()
 
         serializer = EngagementInitiationUpdateSerializer(
+            instance=engagement,
+            data=request.data,
+            partial=True,
+            context={'request': request},
+        )
+        serializer.is_valid(raise_exception=True)
+        instance = serializer.save()
+        return Response(EngagementLightRssSerializer(instance, context={'request': request}).data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['patch'], url_path='attachments', url_name='attachments')
+    def update_attachments(self, request, pk=None):
+        """Attach uploaded files to the Engagement (financial assurance context).
+
+        Payload accepts one or both keys: engagement_attachment (id) and report_attachment (id).
+        """
+        engagement = self.get_object()
+        if hasattr(engagement, 'get_subclass'):
+            engagement = engagement.get_subclass()
+
+        serializer = EngagementAttachmentsUpdateSerializer(
             instance=engagement,
             data=request.data,
             partial=True,
