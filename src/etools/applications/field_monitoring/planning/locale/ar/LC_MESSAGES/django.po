@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-01 17:55+0200\n"
+"POT-Creation-Date: 2025-10-29 15:16+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,7 +16,8 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
+"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 "
+"&& n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
 
 msgid "TPM Partner selected for staff activity"
 msgstr "تم اختيار شريك المراقب المستقل لنشاط الموظفين"
@@ -25,12 +26,20 @@ msgid "Staff members do not belong to the selected partner"
 msgstr "أعضاء فريق العمل لا ينتمون إلى الشريك المحدد"
 
 #, python-format
-msgid "You've selected a PD/SPD and unselected some of it's corresponding partners, please either remove the PD or add the partners back before saving: %s"
-msgstr "لقد حددت PD/SPD وألغيت تحديد بعض الشركاء المناظرين لها، يرجى إما إزالة PD أو إضافة الشركاء مرة أخرى قبل الحفظ: %s"
+msgid ""
+"You've selected a PD/SPD and unselected some of it's corresponding partners, "
+"please either remove the PD or add the partners back before saving: %s"
+msgstr ""
+"لقد حددت PD/SPD وألغيت تحديد بعض الشركاء المناظرين لها، يرجى إما إزالة PD أو "
+"إضافة الشركاء مرة أخرى قبل الحفظ: %s"
 
 #, python-format
-msgid "You've selected a PD/SPD and unselected some of it's corresponding outputs, please either remove the PD or add the outputs back before saving: %s"
-msgstr "لقد حددت PD/SPD وألغيت تحديد بعض المخرجات المقابلة لها، يرجى إما إزالة PD أو إضافة المخرجات مرة أخرى قبل الحفظ: %s"
+msgid ""
+"You've selected a PD/SPD and unselected some of it's corresponding outputs, "
+"please either remove the PD or add the outputs back before saving: %s"
+msgstr ""
+"لقد حددت PD/SPD وألغيت تحديد بعض المخرجات المقابلة لها، يرجى إما إزالة PD أو "
+"إضافة المخرجات مرة أخرى قبل الحفظ: %s"
 
 msgid "Visit lead is inactive or has no access"
 msgstr "مسؤول الزيارة غير نشط أو ليس لديه حق الوصول"
@@ -176,6 +185,15 @@ msgstr "المُراقب المستقل"
 msgid "Both"
 msgstr "كلاهما"
 
+msgid "Temporary"
+msgstr "مؤقت"
+
+msgid "Semi-permanent"
+msgstr "شبه دائم"
+
+msgid "Permanent"
+msgstr "دائم"
+
 msgid "Draft"
 msgstr "الصياغة التمهيدية"
 
@@ -234,7 +252,10 @@ msgid "Objective"
 msgstr "أهداف"
 
 msgid "Facility types"
-msgstr ""
+msgstr "أنواع المرافق"
+
+msgid "Facility Type Duration"
+msgstr "مدة نوع المرفق"
 
 msgid "Monitoring Activity"
 msgstr "نشاط المراقبة"
@@ -308,7 +329,8 @@ msgstr "فئة نقطة العمل"
 msgid "Priority"
 msgstr "الأولوية"
 
-msgid "Cannot assign inactive location \"{}\". Please choose an active location."
+msgid ""
+"Cannot assign inactive location \"{}\". Please choose an active location."
 msgstr "لا يمكن تعيين موقع غير نشط \"{}\". يرجى اختيار موقع نشط."
 
 msgid "TPM Concern Category"

@@ -73,6 +73,9 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 ,facility_types,Field Monitor,,draft,edit,TRUE
 ,facility_types,Field Monitor,,checklist,edit,TRUE
 ,facility_types,Field Monitor,,review,edit,TRUE
+,facility_type_duration,Field Monitor,,draft,edit,TRUE
+,facility_type_duration,Field Monitor,,checklist,edit,TRUE
+,facility_type_duration,Field Monitor,,review,edit,TRUE
 
 ,location,All Users,,*,required,TRUE
 ,location_site,All Users,,*,required,FALSE

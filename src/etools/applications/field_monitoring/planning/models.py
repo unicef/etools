@@ -169,6 +169,12 @@ class MonitoringActivity(
         ('both', _('Both')),
     )
 
+    FACILITY_TYPE_DURATION_CHOICES = Choices(
+        ('temporary', _('Temporary')),
+        ('semi_permanent', _('Semi-permanent')),
+        ('permanent', _('Permanent')),
+    )
+
     STATUS_DRAFT = 'draft'
     STATUS_CHECKLIST = 'checklist'
     STATUS_REVIEW = 'review'
@@ -308,6 +314,12 @@ class MonitoringActivity(
         blank=True,
         verbose_name=_('Facility types'),
         related_name='monitoring_activities'
+    )
+    facility_type_duration = models.CharField(
+        max_length=20,
+        choices=FACILITY_TYPE_DURATION_CHOICES,
+        blank=True,
+        verbose_name=_('Facility Type Duration')
     )
 
     class Meta:

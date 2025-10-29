@@ -47,5 +47,19 @@
     "fields": {
       "name": "Otra Instalación"
     }
+  },
+  {
+    "model": "field_monitoring_planning.facilitytype",
+    "pk": 8,
+    "fields": {
+      "name": "Instalación de suministros incluido almacén"
+    }
+  },
+  {
+    "model": "field_monitoring_planning.facilitytype",
+    "pk": 9,
+    "fields": {
+      "name": "Centro de Atención Primaria de Salud (APS)"
+    }
   }
 ]
