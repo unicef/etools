@@ -5,7 +5,7 @@ from django.contrib import admin
 from django.contrib.gis import forms
 from django.contrib.gis.geos import Point
 from django.db import transaction
-from django.db.models import CharField,Count, F, Prefetch, Value
+from django.db.models import CharField, Count, F, Prefetch, Value
 from django.db.models.functions import Coalesce
 from django.urls import reverse
 from django.utils.dateparse import parse_datetime
@@ -503,6 +503,7 @@ class TransferHistoryAdmin(admin.ModelAdmin):
             queryset |= self.model.objects.filter(origin_transfer__name__icontains=search_term)
         return queryset, use_distinct
 
+
 @admin.register(models.ItemTransferHistory)
 class ItemTransferHistoryAdmin(admin.ModelAdmin):
     list_display = ('item_batch_id', 'transfer_unicef_release_order', 'transfer_count', 'view_items_link')
@@ -546,6 +547,7 @@ class ItemTransferHistoryAdmin(admin.ModelAdmin):
         url = reverse("admin:last_mile_transfer_change", args=[obj.transfer.id])
         return format_html(f'<a href="{url}">View Transfer</a>')
     view_items_link.short_description = "Transfer Details"
+
 
 @admin.register(models.PartnerMaterial)
 class PartnerMaterialAdmin(admin.ModelAdmin):

@@ -690,7 +690,7 @@ class Item(TimeStampedModel, models.Model):
 
         should_hide = not partner_material_exists
         return should_hide
-    
+
     def add_transfer_history(self, transfer):
         ItemTransferHistory.objects.create(
             item=self,

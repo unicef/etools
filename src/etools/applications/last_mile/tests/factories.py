@@ -85,6 +85,7 @@ class TransferHistoryFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.TransferHistory
 
+
 class ItemTransferHistoryFactory(factory.django.DjangoModelFactory):
     item = factory.SubFactory(ItemFactory)
     transfer = factory.SubFactory(TransferFactory)
