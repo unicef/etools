@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-01 17:55+0200\n"
+"POT-Creation-Date: 2025-10-29 15:16+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -25,12 +25,22 @@ msgid "Staff members do not belong to the selected partner"
 msgstr "Miembros del personal no pertenecen al socio seleccionado"
 
 #, python-format
-msgid "You've selected a PD/SPD and unselected some of it's corresponding partners, please either remove the PD or add the partners back before saving: %s"
-msgstr "Has seleccionado un PD/SPD y has desmarcado algunos de sus socios correspondientes. Elimine el PD o añada los socios de nuevo antes de guardar: %s"
+msgid ""
+"You've selected a PD/SPD and unselected some of it's corresponding partners, "
+"please either remove the PD or add the partners back before saving: %s"
+msgstr ""
+"Has seleccionado un PD/SPD y has desmarcado algunos de sus socios "
+"correspondientes. Elimine el PD o añada los socios de nuevo antes de "
+"guardar: %s"
 
 #, python-format
-msgid "You've selected a PD/SPD and unselected some of it's corresponding outputs, please either remove the PD or add the outputs back before saving: %s"
-msgstr "Has seleccionado un PD/SPD y has desmarcado algunas de los productos del CP correspondientes. Elimine el PD o vuelva a añadir los productos del CP antes de guardar: %s"
+msgid ""
+"You've selected a PD/SPD and unselected some of it's corresponding outputs, "
+"please either remove the PD or add the outputs back before saving: %s"
+msgstr ""
+"Has seleccionado un PD/SPD y has desmarcado algunas de los productos del CP "
+"correspondientes. Elimine el PD o vuelva a añadir los productos del CP antes "
+"de guardar: %s"
 
 msgid "Visit lead is inactive or has no access"
 msgstr "El responsable de la visita está inactivo o no tiene acceso"
@@ -69,7 +79,8 @@ msgstr "Los campos obligatorios no se han rellenado en%(status)s: %(fields)s"
 
 #, python-format
 msgid "Cannot change fields while in %(status)s: %(field)s"
-msgstr "No se pueden cambiar los campos mientras se encuentra en%(status)s: %(field)s"
+msgstr ""
+"No se pueden cambiar los campos mientras se encuentra en%(status)s: %(field)s"
 
 msgid "Ref. #"
 msgstr ""
@@ -176,6 +187,15 @@ msgstr "TPM"
 msgid "Both"
 msgstr "Ambos"
 
+msgid "Temporary"
+msgstr "Temporal"
+
+msgid "Semi-permanent"
+msgstr "Semi-permanente"
+
+msgid "Permanent"
+msgstr "Permanente"
+
 msgid "Draft"
 msgstr "Borrador"
 
@@ -234,7 +254,10 @@ msgid "Objective"
 msgstr "Objetivo"
 
 msgid "Facility types"
-msgstr ""
+msgstr "Tipos de instalaciones"
+
+msgid "Facility Type Duration"
+msgstr "Duración del tipo de instalación"
 
 msgid "Monitoring Activity"
 msgstr "Actividad de Monitoreo "
@@ -308,8 +331,11 @@ msgstr "Categoría de Punto de Acción"
 msgid "Priority"
 msgstr "Prioridad"
 
-msgid "Cannot assign inactive location \"{}\". Please choose an active location."
-msgstr "No se puede asignar una ubicación inactiva \"{}\". Por favor, elija una ubicación activa."
+msgid ""
+"Cannot assign inactive location \"{}\". Please choose an active location."
+msgstr ""
+"No se puede asignar una ubicación inactiva \"{}\". Por favor, elija una "
+"ubicación activa."
 
 msgid "TPM Concern Category"
 msgstr ""

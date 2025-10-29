@@ -47,5 +47,19 @@
     "fields": {
       "name": "Autre établissement"
     }
+  },
+  {
+    "model": "field_monitoring_planning.facilitytype",
+    "pk": 8,
+    "fields": {
+      "name": "Installation de fournitures y compris entrepôt"
+    }
+  },
+  {
+    "model": "field_monitoring_planning.facilitytype",
+    "pk": 9,
+    "fields": {
+      "name": "Centre de soins de santé primaires (SSP)"
+    }
   }
 ]

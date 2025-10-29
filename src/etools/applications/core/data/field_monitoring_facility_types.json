@@ -47,5 +47,19 @@
     "fields": {
       "name": "Other Facility"
     }
+  },
+  {
+    "model": "field_monitoring_planning.facilitytype",
+    "pk": 8,
+    "fields": {
+      "name": "Supplies facility including warehouse"
+    }
+  },
+  {
+    "model": "field_monitoring_planning.facilitytype",
+    "pk": 9,
+    "fields": {
+      "name": "Primary Health Care facility (PHC)"
+    }
   }
 ]
