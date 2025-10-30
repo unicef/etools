@@ -134,7 +134,7 @@ class MaterialItemsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Item
-        exclude = ('material', 'transfers_history', 'created', 'modified',)
+        exclude = ('material', 'created', 'modified',)
 
     def get_material_type_translate(self, obj):
         material_type_translate = "RUTF" if obj.material.number in settings.RUTF_MATERIALS else "Other"
@@ -190,10 +190,14 @@ class ItemListSerializer(serializers.ModelSerializer):
 class ItemSimpleListSerializer(serializers.ModelSerializer):
     material = MaterialSerializer()
     description = serializers.CharField(read_only=True)
+    country = serializers.SerializerMethodField()
+
+    def get_country(self, obj):
+        return self.context.get('country')
 
     class Meta:
         model = models.Item
-        exclude = ('transfers_history',)
+        exclude = ()
 
 
 class ItemUpdateSerializer(serializers.ModelSerializer):
@@ -283,10 +287,9 @@ class ItemSplitSerializer(serializers.ModelSerializer):
             quantity=self.validated_data['quantities'].pop(),
             **model_to_dict(
                 self.instance,
-                exclude=['id', 'created', 'modified', 'transfer', 'material', 'transfers_history', 'quantity', 'base_quantity', 'origin_transfer', 'base_uom'])
+                exclude=['id', 'created', 'modified', 'transfer', 'material', 'quantity', 'base_quantity', 'origin_transfer', 'base_uom'])
         )
         _item.save()
-        _item.transfers_history.add(self.instance.transfer)
         if not self.instance.base_quantity:
             self.instance.base_quantity = self.instance.quantity
         if not self.instance.base_uom:
@@ -396,12 +399,11 @@ class TransferCheckinSerializer(TransferBaseSerializer):
                 base_uom=original_item.uom if original_item.uom else original_item.material.original_uom,
                 **model_to_dict(
                     original_item,
-                    exclude=['id', 'created', 'modified', 'transfer', 'transfers_history', 'quantity',
+                    exclude=['id', 'created', 'modified', 'transfer', 'quantity',
                              'material', 'hidden', 'origin_transfer', 'base_uom']
                 )
             )
             _item.save()
-            _item.transfers_history.add(self.instance)
             if original_item.quantity == 0:
                 original_item.delete()
 
@@ -482,8 +484,9 @@ class TransferCheckinSerializer(TransferBaseSerializer):
 
             instance = super().update(instance, validated_data)
             instance.items.exclude(material__partner_material__partner_organization=instance.partner_organization).update(hidden=True)
-            if not surplus_items and not short_items:
-                self.update_base_quantity_and_base_uom(instance.items.all())
+            excluded_item_ids = [item['id'] for item in short_items + surplus_items]
+            items_to_update = instance.items.exclude(id__in=excluded_item_ids)
+            self.update_base_quantity_and_base_uom(items_to_update)
             instance.refresh_from_db()
             is_unicef_warehouse = False
             if instance.origin_point:
@@ -549,7 +552,6 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
 
             original_item = orig_items_dict[checkout_item['id']]
             if original_item.quantity - checkout_item['quantity'] == 0:
-                original_item.transfers_history.add(original_item.transfer)
                 original_item.transfer = self.instance
                 original_item.wastage_type = wastage_type
                 original_item.origin_transfer = original_item.transfer
@@ -571,11 +573,10 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
                     **model_to_dict(
                         original_item,
                         exclude=['id', 'created', 'modified', 'transfer', 'wastage_type',
-                                 'transfers_history', 'quantity', 'material', 'origin_transfer', 'base_quantity', 'base_uom']
+                                 'quantity', 'material', 'origin_transfer', 'base_quantity', 'base_uom']
                     )
                 )
                 new_item.save()
-                new_item.add_transfer_history(original_item.transfer)
 
     def _extract_partner_id(self, validated_data):
         if validated_data.get('partner_id'):

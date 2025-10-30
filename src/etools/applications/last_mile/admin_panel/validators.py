@@ -9,6 +9,7 @@ from etools.applications.last_mile.admin_panel.constants import (
     GROUP_DOES_NOT_EXIST,
     GROUP_NOT_AVAILABLE,
     GROUP_NOT_PROVIDED,
+    INVALID_ORGANIZATION_ID,
     INVALID_QUANTITY,
     ITEMS_NOT_PROVIDED,
     LAST_MILE_PROFILE_NOT_FOUND,
@@ -23,6 +24,7 @@ from etools.applications.last_mile.admin_panel.constants import (
     TRANSFER_TYPE_HANDOVER_NOT_ALLOWED,
     UOM_NOT_PROVIDED,
     UOM_NOT_VALID,
+    USER_CANT_APPROVE,
     USER_DOES_NOT_EXIST,
     USER_NOT_PROVIDED,
 )
@@ -47,17 +49,25 @@ class AdminPanelValidator:
         if not Group.objects.filter(name=group.name).exists():
             raise ValidationError(_(GROUP_DOES_NOT_EXIST))
 
+    def validate_group_names(self, groups: list[Group], available_groups: list) -> None:
+        for group in groups:
+            if group.name not in available_groups:
+                raise ValidationError(_(GROUP_NOT_AVAILABLE))
+            if not Group.objects.filter(name=group.name).exists():
+                raise ValidationError(_(GROUP_DOES_NOT_EXIST))
+
     def validate_input_data(self, data: dict) -> None:
         if not data.get('user'):
             raise ValidationError(_(USER_NOT_PROVIDED))
-        if not data.get('group'):
+        if data.get('groups') is None:
             raise ValidationError(_(GROUP_NOT_PROVIDED))
         if not data.get('user', {}).get('email'):
             raise ValidationError(_(EMAIL_NOT_PROVIDED))
 
-    def validate_realm(self, user: User, country: Country, group: Group) -> None:
-        if Realm.objects.filter(user=user, country=country, group=group, organization=user.profile.organization).exists():
-            raise ValidationError(_(REALM_ALREADY_EXISTS))
+    def validate_realm(self, user: User, country: Country, groups: list[Group]) -> None:
+        for group in groups:
+            if Realm.objects.filter(user=user, country=country, group=group, organization=user.profile.organization).exists():
+                raise ValidationError(_(REALM_ALREADY_EXISTS))
 
     def validate_profile(self, user: User) -> None:
         if not getattr(user.profile, 'organization', None):
@@ -68,6 +78,10 @@ class AdminPanelValidator:
     def validate_last_mile_profile(self, user: User) -> None:
         if not getattr(user, 'last_mile_profile', None):
             raise ValidationError(_(LAST_MILE_PROFILE_NOT_FOUND))
+
+    def validate_user_can_approve(self, created_by_id, approved_by_id) -> None:
+        if created_by_id == approved_by_id:
+            raise ValidationError(_(USER_CANT_APPROVE))
 
     def validate_status(self, status: str) -> None:
         if status not in [Profile.ApprovalStatus.APPROVED, Profile.ApprovalStatus.REJECTED]:
@@ -119,3 +133,9 @@ class AdminPanelValidator:
     def validate_batch_id(self, batch_id: str):
         if batch_id and len(batch_id) > 254:
             raise ValidationError(_(BATCH_ID_TOO_LONG))
+
+    def validate_organization_id(self, organization_id):
+        try:
+            int(organization_id)
+        except ValueError:
+            raise ValidationError(_(INVALID_ORGANIZATION_ID))

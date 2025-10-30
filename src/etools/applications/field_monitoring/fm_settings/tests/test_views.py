@@ -128,6 +128,20 @@ class LocationsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.data[0]['id'], str(self.country.id))
         self.assertEqual(response.data[1]['id'], str(self.child_location.id))
 
+    def test_get_path_inactive_location(self):
+        """Path endpoint should be accessible for inactive locations and return only active ancestors."""
+        inactive_child = LocationFactory(parent=self.country, is_active=False)
+
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_settings:locations-path', args=[inactive_child.id]),
+            user=self.unicef_user,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # Inactive location itself is excluded; only active ancestors should be returned
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['id'], str(self.country.id))
+
 
 class LocationSitesViewTestCase(TestExportMixin, FMBaseTestCaseMixin, BaseTenantTestCase):
     def setUp(self):
@@ -1259,3 +1273,34 @@ class TestQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("The system provided questions cannot be edited.", response.data)
+
+
+class TestFieldMonitoringLocationEndpoints(FMBaseTestCaseMixin, BaseTenantTestCase):
+    def test_locations_endpoint_includes_is_active_field(self):
+        """Test that the field monitoring locations endpoint includes is_active field"""
+        LocationFactory(is_active=True)
+
+        response = self.forced_auth_req(
+            'get',
+            reverse('field_monitoring_settings:locations-list'),
+            user=self.unicef_user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertIn('results', response.data)
+        self.assertGreater(len(response.data['results']), 0)
+
+        first_location = response.data['results'][0]
+        self.assertIn('is_active', first_location)
+
+    def test_locations_country_endpoint_includes_is_active_field(self):
+        """Test that the field monitoring locations country endpoint includes is_active field"""
+        LocationFactory(admin_level=0, is_active=True)
+
+        response = self.forced_auth_req(
+            'get',
+            reverse('field_monitoring_settings:locations-country'),
+            user=self.unicef_user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('is_active', response.data)

@@ -45,7 +45,6 @@ class PRPPartnerPagination(LimitOffsetPagination):
 
 class PRPInterventionListAPIView(QueryStringFilterMixin, ListAPIView):
     """
-    Create new Interventions.
     Returns a list of Interventions.
     """
     serializer_class = PRPInterventionListSerializer
@@ -90,7 +89,7 @@ class PRPInterventionListAPIView(QueryStringFilterMixin, ListAPIView):
             frs_query.annotate(total=Count("currency", distinct=True)).values("total")[:1]
         ),
         max_fr_currency=MaxDistinct("frs__currency", output_field=CharField(), distinct=True),
-    ))
+    )).order_by('-id')
 
     filters = (
         ('id', 'id'),

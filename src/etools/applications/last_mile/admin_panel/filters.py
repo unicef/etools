@@ -7,7 +7,6 @@ from django_filters.constants import EMPTY_VALUES
 from etools.applications.last_mile.admin_panel.constants import ALERT_TYPES
 from etools.applications.last_mile.models import Item, PointOfInterest, Transfer, TransferHistory
 from etools.applications.locations.models import Location
-from etools.applications.users.models import Realm
 
 
 class OrCharFilter(filters.CharFilter):
@@ -25,6 +24,32 @@ class OrCharFilter(filters.CharFilter):
             q_objects |= Q(**lookup)
 
         return qs.filter(q_objects)
+
+
+class OrCharFilterWithItemsCheck(filters.CharFilter):
+    def __init__(self, *args, field_names, **kwargs):
+        self.field_names = field_names
+        kwargs.pop('field_name', None)
+        super().__init__(*args, **kwargs)
+
+    def filter(self, qs, value):
+        if value in EMPTY_VALUES:
+            return qs
+
+        q_objects = Q()
+        for field_name in self.field_names:
+            lookup = {f"{field_name}__{self.lookup_expr}": value}
+
+            if field_name.startswith('origin_transfer'):
+                items_check = Q(origin_transfer__items__isnull=False)
+            elif field_name.startswith('transfers'):
+                items_check = Q(transfers__items__isnull=False)
+            else:
+                items_check = Q()
+
+            q_objects |= (Q(**lookup) & items_check)
+
+        return qs.filter(q_objects).distinct()
 
 
 class UserFilter(filters.FilterSet):
@@ -48,8 +73,10 @@ class LocationsFilter(filters.FilterSet):
     district = filters.CharFilter(method='filter_district', label='District')
     region = filters.CharFilter(method='filter_region', label='Region')
     country = filters.CharFilter(method='filter_country', label='Country')
-    partner_organization = filters.CharFilter(method='filter_partner_organization', label='Partner Organization Name/Number')
+    partner_organization = filters.CharFilter(method='filter_partner_organization', label='Partner Organization Name')
+    partner_organization_number = filters.CharFilter(method='filter_partner_vendor_number', label='Partner Vendor Number')
     primary_type = filters.CharFilter(field_name="poi_type__name", lookup_expr="icontains")
+    secondary_type = filters.CharFilter(field_name="secondary_type__name", lookup_expr="icontains")
     is_active = filters.BooleanFilter(field_name="is_active")
     latitude = filters.CharFilter(method='filter_latitude', label='Latitude')
     longitude = filters.CharFilter(method='filter_longitude', label='Longitude')
@@ -81,10 +108,10 @@ class LocationsFilter(filters.FilterSet):
         return self.filter_by_admin_level(queryset, name, value, Location.FIRST_ADMIN_LEVEL)
 
     def filter_partner_organization(self, queryset, name, value):
-        return queryset.filter(
-            Q(partner_organizations__organization__name__icontains=value) |
-            Q(partner_organizations__organization__vendor_number__icontains=value)
-        ).distinct()
+        return queryset.filter(partner_organizations__organization__name__icontains=value).distinct()
+
+    def filter_partner_vendor_number(self, queryset, name, value):
+        return queryset.filter(partner_organizations__organization__vendor_number__icontains=value).distinct()
 
     def filter_latitude(self, queryset, name, value):
         queryset = queryset.annotate(
@@ -100,7 +127,7 @@ class LocationsFilter(filters.FilterSet):
 
     class Meta:
         model = PointOfInterest
-        fields = ('name', 'p_code', 'primary_type', 'is_active')
+        fields = ('name', 'p_code', 'primary_type', 'is_active', 'secondary_type')
 
 
 class UserLocationsFilter(filters.FilterSet):
@@ -119,7 +146,7 @@ class UserLocationsFilter(filters.FilterSet):
 
 
 class AlertNotificationFilter(filters.FilterSet):
-    email = filters.CharFilter(field_name="user__email", lookup_expr="icontains")
+    email = filters.CharFilter(field_name="email", lookup_expr="icontains")
     alert_type = filters.CharFilter(method='filter_alert_type', label='Alert Type')
 
     def filter_alert_type(self, queryset, name, value):
@@ -128,50 +155,68 @@ class AlertNotificationFilter(filters.FilterSet):
             if value.lower() in alert_value.lower()
         ]
         if mapped_groups:
-            return queryset.filter(group__name__in=mapped_groups)
-        return queryset.filter(group__name__icontains=value)
+            return queryset.filter(realms__group__name__in=mapped_groups)
+        return queryset.filter(realms__group__name__icontains=value)
 
     class Meta:
-        model = Realm
+        model = get_user_model()
         fields = ('email',)
 
 
 class TransferHistoryFilter(filters.FilterSet):
-    unicef_release_order = OrCharFilter(
+    unicef_release_order = OrCharFilterWithItemsCheck(
         field_names=['origin_transfer__unicef_release_order', 'transfers__unicef_release_order'],
         lookup_expr='icontains',
         label='UNICEF Release Order'
     )
-    transfer_name = OrCharFilter(
+    transfer_name = OrCharFilterWithItemsCheck(
         field_names=['origin_transfer__name', 'transfers__name'],
         lookup_expr='icontains',
         label='Transfer Name'
     )
-    transfer_type = OrCharFilter(
+    transfer_type = OrCharFilterWithItemsCheck(
         field_names=['origin_transfer__transfer_type', 'transfers__transfer_type'],
         lookup_expr='icontains',
         label='Transfer Type'
     )
-    status = OrCharFilter(
+    status = OrCharFilterWithItemsCheck(
         field_names=['origin_transfer__status', 'transfers__status'],
         lookup_expr='icontains',
         label='Status'
     )
-    partner_organization = OrCharFilter(
+    partner_organization = OrCharFilterWithItemsCheck(
         field_names=['origin_transfer__partner_organization__organization__name', 'transfers__partner_organization__organization__name'],
         lookup_expr='icontains',
         label='Partner Organization'
     )
-    origin_point = OrCharFilter(
+    origin_point = OrCharFilterWithItemsCheck(
         field_names=['origin_transfer__origin_point__name', 'transfers__origin_point__name'],
         lookup_expr='icontains',
         label='Origin Point'
     )
-    destination_point = OrCharFilter(
+    destination_point = OrCharFilterWithItemsCheck(
         field_names=['origin_transfer__destination_point__name', 'transfers__destination_point__name'],
         lookup_expr='icontains',
         label='Destination Point'
     )
+
+    @property
+    def qs(self):
+        queryset = super().qs
+        queryset = queryset.select_related(
+            'origin_transfer',
+            'origin_transfer__partner_organization__organization',
+            'origin_transfer__origin_point',
+            'origin_transfer__destination_point'
+        ).prefetch_related(
+            'transfers',
+            'transfers__partner_organization__organization',
+            'transfers__origin_point',
+            'transfers__destination_point',
+            'transfers__items',
+            'origin_transfer__items'
+        ).distinct()
+        return queryset
 
     class Meta:
         model = TransferHistory
@@ -184,7 +229,11 @@ class TransferEvidenceFilter(filters.FilterSet):
     unicef_release_order = filters.CharFilter(field_name="unicef_release_order", lookup_expr="icontains")
     status = filters.CharFilter(field_name="status", lookup_expr="icontains")
     partner_organization = filters.CharFilter(field_name="partner_organization__organization__name", lookup_expr="icontains")
-    from_partner_organization = filters.CharFilter(field_name="from_partner_organization__organization__name", lookup_expr="icontains")
+    from_partner_organization = OrCharFilter(
+        field_names=["from_partner_organization__organization__name", "partner_organization__organization__name"],
+        lookup_expr="icontains",
+        label="Partner Organization"
+    )
     recipient_partner_organization = filters.CharFilter(field_name="recipient_partner_organization__organization__name", lookup_expr="icontains")
     origin_point = filters.CharFilter(field_name="origin_point__name", lookup_expr="icontains")
     destination_point = filters.CharFilter(field_name="destination_point__name", lookup_expr="icontains")

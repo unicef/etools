@@ -246,7 +246,8 @@ TENANT_APPS = (
     'unicef_attachments',
     'unicef_vision',
     'etools.applications.last_mile',
-    'etools.applications.governments'
+    'etools.applications.governments',
+    'etools.applications.rss_admin'
 )
 INSTALLED_APPS = ('django_tenants',) + SHARED_APPS + TENANT_APPS
 
@@ -498,8 +499,6 @@ if INACTIVE_BUSINESS_AREAS == ['']:
     # really what we want
     INACTIVE_BUSINESS_AREAS = []
 
-SLACK_URL = get_from_secrets_or_env('SLACK_URL')
-
 TASK_ADMIN_USER = get_from_secrets_or_env('TASK_ADMIN_USER', 'etools_task_admin@unicef.org')
 
 INSIGHT_LOGGER_MODEL = "vision.VisionSyncLog"
@@ -680,6 +679,8 @@ WAYBILL_EMAILS = get_from_secrets_or_env('WAYBILL_EMAILS', '')
 
 RUTF_MATERIALS = get_from_secrets_or_env('RUTF_MATERIALS', '').split(',')
 
+LOCKED_CONVERSION_FACTOR_MATERIALS = get_from_secrets_or_env('LOCKED_CONVERSION_FACTOR_MATERIALS', '').split(',')
+
 READ_ONLY_EXCLUDED_PATHS = [
     "/login",
     "/admin/login",
@@ -694,6 +695,10 @@ PARTNER_PROTECTED_URLS = [
     "/api/pmp/v3",
     "/api/v2/funds",
 ]
+
+# Zendesk SSO Configuration
+ZENDESK_SUBDOMAIN = get_from_secrets_or_env('ZENDESK_SUBDOMAIN', 'etools')
+ZENDESK_SHARED_SECRET = get_from_secrets_or_env('ZENDESK_SHARED_SECRET', '')
 
 PBI_CONFIG = {
     "AUTHENTICATION_MODE": 'ServicePrincipal',

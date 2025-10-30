@@ -35,7 +35,7 @@ class StockManagementCreateService:
                     quantity=item.get('quantity'),
                     uom=item.get('uom'),
                     batch_id=item.get('item_name'),
-                    expiry_date=item.get('expiration_date'),
+                    expiry_date=item.get('expiration_date') or item.get('expiry_date'),
                 )
             )
         models.Item.objects.bulk_create(items_to_create)

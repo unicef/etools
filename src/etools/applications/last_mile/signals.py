@@ -1,8 +1,10 @@
 import logging
 
-from django.db.models.signals import post_save
+from django.conf import settings
+from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 
+from etools.applications.last_mile import audit_signals  # noqa
 from etools.applications.last_mile.models import Item
 from etools.applications.last_mile.serializers import ItemSerializer
 
@@ -33,3 +35,9 @@ def log_transfer(sender, instance, **kwargs):
         )
     except Exception:
         logger.exception("Error adding transfer history")
+
+
+@receiver(pre_save, sender=Item)
+def update_conversion_factor(sender, instance, **kwargs):
+    if instance.material and instance.material.number in settings.LOCKED_CONVERSION_FACTOR_MATERIALS:
+        instance.conversion_factor = 1.0

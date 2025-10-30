@@ -2,7 +2,8 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Dict, List
 
-from django.db.models import QuerySet
+from django.db import connection
+from django.db.models import QuerySet, Value
 
 from etools.applications.last_mile import models
 from etools.applications.last_mile.validator_ext import ItemValidator, ValidatorEXT
@@ -16,6 +17,44 @@ class IngestResultDTO:
 
 
 class MaterialIngestService:
+
+    CUSTOM_UOM_OVERRIDES = {
+        "S0000237": {
+            "original_uom": "CAR",
+            "other": {"uom_map": {"CAN": 1, "CAR": 24}}
+        },
+        "S0000236": {
+            "original_uom": "CAR",
+            "other": {"uom_map": {"CAN": 1, "CAR": 24}}
+        }
+    }
+
+    def _check_and_update_custom_uom(self, existing_materials: List[models.Material]) -> int:
+        updated_count = 0
+
+        for material in existing_materials:
+            if material.number in self.CUSTOM_UOM_OVERRIDES:
+                override = self.CUSTOM_UOM_OVERRIDES[material.number]
+                needs_update = False
+
+                if material.original_uom != override["original_uom"]:
+                    needs_update = True
+
+                current_uom_map = material.other.get("uom_map", {}) if material.other else {}
+                override_uom_map = override["other"].get("uom_map", {})
+
+                if current_uom_map != override_uom_map:
+                    needs_update = True
+
+                if needs_update:
+                    material.original_uom = override["original_uom"]
+                    if material.other is None:
+                        material.other = {}
+                    material.other.update(override["other"])
+                    material.save()
+                    updated_count += 1
+
+        return updated_count
 
     def ingest_materials(self, validated_data: List[Dict[str, Any]]) -> IngestResultDTO:
         incoming_numbers = {item['number'] for item in validated_data}
@@ -45,6 +84,10 @@ class MaterialIngestService:
         if materials_to_create:
             models.Material.objects.bulk_create(materials_to_create)
 
+        overwrite_materials = models.Material.objects.filter(number__in=self.CUSTOM_UOM_OVERRIDES.keys())
+
+        self._check_and_update_custom_uom(overwrite_materials)
+
         return IngestResultDTO(
             created_count=len(materials_to_create),
             skipped_existing_in_db=skipped_due_to_db_duplicate,
@@ -70,7 +113,7 @@ class DataExportService:
         "transfer": models.Transfer.objects,
         "poi": models.PointOfInterest.export_objects,
         "item": models.Item.objects,
-        "item_history": models.ItemTransferHistory.objects,
+        "item_history": models.ItemAuditLog.objects,
         "poi_type": models.PointOfInterestType.objects,
     }
 
@@ -88,7 +131,14 @@ class DataExportService:
             except (ValueError, TypeError):
                 raise InvalidDateFormatError("Invalid ISO 8601 format for 'last_modified'.")
 
-        return queryset.prepare_for_lm_export()
+        country_name = connection.tenant.name if hasattr(connection, 'tenant') else None
+        queryset = queryset.prepare_for_lm_export()
+
+        if country_name:
+            queryset = queryset.annotate(country=Value(country_name))
+
+        queryset = queryset.order_by('id')
+        return queryset
 
 
 @dataclass

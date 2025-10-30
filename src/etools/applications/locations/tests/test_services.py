@@ -1,9 +1,13 @@
+from django.urls import reverse
+
+from rest_framework import status
 from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.core.models import BulkDeactivationLog
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.locations.models import Location
 from etools.applications.locations.services import LocationsDeactivationService
+from etools.applications.locations.views import LocationLightWithActiveSerializer
 from etools.applications.users.tests.factories import UserFactory
 
 
@@ -60,3 +64,33 @@ class TestLocationsDeactivationService(BaseTenantTestCase):
         self.assertEqual(log.app_label, "locations")
         # affected ids should include only those that were active
         self.assertCountEqual(log.affected_ids, [l.id for l in active_locs])
+
+    def test_light_serializer_returns_is_active_false_after_bulk_deactivate(self):
+        location = LocationFactory(is_active=True)
+        queryset = Location.objects.filter(id__in=[location.id])
+
+        service = LocationsDeactivationService()
+        service.deactivate(queryset)
+
+        location.refresh_from_db()
+        serialized = LocationLightWithActiveSerializer(location)
+        self.assertIn('is_active', serialized.data)
+        self.assertFalse(serialized.data['is_active'])
+
+    def test_locations_light_endpoint_reflects_is_active_after_bulk_deactivate(self):
+        user = UserFactory(is_staff=True)
+        location = LocationFactory(is_active=True)
+
+        queryset = Location.objects.filter(id__in=[location.id])
+        service = LocationsDeactivationService()
+        service.deactivate(queryset)
+
+        url = reverse('locations-light-list')
+        response = self.forced_auth_req('get', url, user=user)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        ids = [str(item['id']) for item in response.data]
+        self.assertIn(str(location.id), ids)
+        idx = ids.index(str(location.id))
+        self.assertIn('is_active', response.data[idx])
+        self.assertFalse(response.data[idx]['is_active'])

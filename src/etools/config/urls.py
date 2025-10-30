@@ -10,6 +10,7 @@ from rest_framework_swagger.renderers import OpenAPIRenderer
 from etools.applications.core.schemas import get_schema_view, get_swagger_view
 from etools.applications.core.urlresolvers import decorator_include
 from etools.applications.core.views import IssueJWTRedirectView, logout_view, MainView, SocialLogoutView
+from etools.applications.core.zendesk_sso import zendesk_sso_info, zendesk_sso_redirect
 from etools.applications.locations.prp_views import PRPLocationListAPIView
 from etools.applications.locations.views import (
     CartoDBTablesView,
@@ -86,6 +87,9 @@ urlpatterns = [
     re_path(r'^api/last-mile/', include('etools.applications.last_mile.urls', namespace='last_mile')),
     re_path(r'^api/last-mile/admin/', include('etools.applications.last_mile.admin_panel.urls', namespace='last_mile_admin')),
 
+    # RSS Admin module
+    re_path(r'^api/rss-admin/', include('etools.applications.rss_admin.urls', namespace='rss_admin')),
+
     # GIS API urls
     re_path(r'^api/management/gis/', include('etools.applications.management.urls_gis')),
 
@@ -142,6 +146,9 @@ urlpatterns = [
 
     re_path('^social/', include('social_django.urls', namespace='social')),
     re_path(r'^social/unicef-logout/', SocialLogoutView.as_view(), name='social-logout'),
+
+    re_path(r'^api/zendesk/sso/$', zendesk_sso_redirect, name='zendesk-sso'),
+    re_path(r'^api/zendesk/sso/info/$', zendesk_sso_info, name='zendesk-sso-info'),
     re_path('^monitoring/', include('etools.libraries.monitoring.urls')),
 
     # *************** Government Digital Document API ******************

@@ -104,8 +104,14 @@ class TestLocationsTypesViewSet(BaseTenantTestCase):
         response = self.forced_auth_req('get', self.url + "export/csv/", user=self.partner_staff)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('Content-Disposition', response.headers)
-        content = response.content.decode('utf-8')
-        self.assertIn('id', content)
+        content = b''.join(response.streaming_content).decode('utf-8')
+        self.assertIn('Unique ID', content)
+        self.assertIn('Created', content)
+        self.assertIn('Modified', content)
+        self.assertIn('Name', content)
+        self.assertIn('Category', content)
+        self.assertIn('Hospital', content)
+        self.assertIn('School', content)
 
     def test_export_csv_unauthorized(self):
         response = self.forced_auth_req('get', self.url + "export/csv/", user=self.simple_user)

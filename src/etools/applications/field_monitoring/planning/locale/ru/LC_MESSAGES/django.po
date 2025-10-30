@@ -32,6 +32,13 @@ msgstr "Вы выбрали PD/SPD и отменили выбор некотор
 msgid "You've selected a PD/SPD and unselected some of it's corresponding outputs, please either remove the PD or add the outputs back before saving: %s"
 msgstr "Вы выбрали PD/SPD и сняли выделение с некоторых соответствующих выходов, пожалуйста, удалите PD или добавьте выходы обратно перед сохранением: %s"
 
+msgid "Visit lead is inactive or has no access"
+msgstr "Руководитель визита неактивен или не имеет доступа"
+
+#, python-format
+msgid "Team members inactive or with no access: %s"
+msgstr "Члены команды неактивны или без доступа: %s"
+
 msgid "Partner is not defined for TPM activity"
 msgstr "Партнер не определен для активности TPM."
 
@@ -166,6 +173,9 @@ msgstr "Персонал"
 msgid "TPM"
 msgstr "ТПМ"
 
+msgid "Both"
+msgstr "Оба"
+
 msgid "Draft"
 msgstr ""
 
@@ -298,6 +308,9 @@ msgstr "Категория точки действия"
 msgid "Priority"
 msgstr "Приоритет"
 
+msgid "Cannot assign inactive location \"{}\". Please choose an active location."
+msgstr "Невозможно назначить неактивное местоположение \"{}\". Пожалуйста, выберите активное местоположение."
+
 msgid "TPM Concern Category"
 msgstr ""
 
@@ -309,9 +322,6 @@ msgstr "Шаблоны"
 
 msgid "Attachments"
 msgstr "Вложения"
-
-#~ msgid "Cannot assign inactive location \"{}\". Please choose an active location."
-#~ msgstr "Невозможно назначить неактивное местоположение \"{}\". Пожалуйста, выберите активное местоположение."
 
 #~ msgid "Type Of Facility"
 #~ msgstr "Тип объекта"

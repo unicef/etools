@@ -2,7 +2,9 @@ from functools import cached_property
 
 from django.conf import settings
 from django.contrib.gis.db.models import PointField
-from django.db import models
+from django.core.cache import cache
+from django.db import connection, models
+from django.db.models.signals import pre_save
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
@@ -116,6 +118,13 @@ class PointOfInterest(TimeStampedModel, models.Model):
         on_delete=models.SET_NULL,
         null=True
     )
+    secondary_type = models.ForeignKey(
+        PointOfInterestType,
+        verbose_name=_("Secondary Type"),
+        related_name='secondary_points_of_interest',
+        on_delete=models.SET_NULL,
+        null=True
+    )
     other = models.JSONField(verbose_name=_("Other Details"), null=True, blank=True)
     point = PointField(verbose_name=_("Point"), null=True, blank=True)
 
@@ -180,7 +189,27 @@ class PointOfInterest(TimeStampedModel, models.Model):
     def is_warehouse(self):
         return self.poi_type.category.lower() == 'warehouse' if self.poi_type else False
 
+    def _autogenerate_pcode(self):
+        tenant_name = connection.schema_name
+
+        if tenant_name:
+            start_p_code = tenant_name[:3]
+        else:
+            start_p_code = 'pub'
+
+        last_location = PointOfInterest.all_objects.filter(p_code__istartswith=start_p_code).only('p_code').order_by('-created').first()
+
+        if last_location and last_location.p_code.startswith(start_p_code):
+            last_p_code = int(last_location.p_code.split(start_p_code)[-1])
+            next_p_code = last_p_code + 1
+        else:
+            next_p_code = 1
+
+        return f"{start_p_code}{str(next_p_code).zfill(9)}"
+
     def save(self, **kwargs):
+        if not self.p_code:
+            self.p_code = self._autogenerate_pcode()
         if not self.parent_id:
             self.parent = self.get_parent_location(self.point)
             assert self.parent_id, 'Unable to find location for {}'.format(self.point)
@@ -468,7 +497,8 @@ class Material(TimeStampedModel, models.Model):
         ("SET", _("SET")),
         ("TBE", _("TBE")),
         ("TO", _("TO")),
-        ("VL", _("VL"))
+        ("VL", _("VL")),
+        ("CAN", _("CAN")),
     )
 
     number = models.CharField(max_length=30, unique=True)
@@ -545,6 +575,12 @@ class ItemManager(models.Manager):
     def get_queryset(self):
         return ItemQuerySet(self.model, using=self._db).filter(hidden=False)
 
+    def bulk_create(self, objs, **kwargs):
+        for obj in objs:
+            pre_save.send(sender=self.model, instance=obj, created=False)
+        result = super().bulk_create(objs, **kwargs)
+        return result
+
 
 class Item(TimeStampedModel, models.Model):
     DAMAGED = 'DAMAGED'
@@ -600,7 +636,6 @@ class Item(TimeStampedModel, models.Model):
         null=True, blank=True,
         related_name='origin_items'
     )
-    transfers_history = models.ManyToManyField(Transfer, through='ItemTransferHistory')
 
     mapped_description = models.CharField(max_length=255, null=True, blank=True)
 
@@ -624,6 +659,10 @@ class Item(TimeStampedModel, models.Model):
             return self.mapped_description
         return self.material.short_description
 
+    def hide(self):
+        self.hidden = True
+        self.save()
+
     @cached_property
     def should_be_hidden_for_partner(self):
         if not self.transfer or not self.transfer.partner_organization:
@@ -637,24 +676,8 @@ class Item(TimeStampedModel, models.Model):
         should_hide = not partner_material_exists
         return should_hide
 
-    def add_transfer_history(self, transfer):
-        ItemTransferHistory.objects.create(
-            item=self,
-            transfer=transfer
-        )
-
     def __str__(self):
         return f'{self.material.number}: {self.description} / qty {self.quantity}'
-
-
-class ItemTransferHistory(TimeStampedModel, models.Model):
-    transfer = models.ForeignKey(Transfer, on_delete=models.CASCADE)
-    item = models.ForeignKey(Item, on_delete=models.CASCADE)
-
-    objects = BaseExportQuerySet.as_manager()
-
-    class Meta:
-        unique_together = ('transfer', 'item')
 
 
 class AdminPanelPermission(models.Model):
@@ -757,3 +780,228 @@ class UserPointsOfInterest(TimeStampedModel, models.Model):
         unique_together = ('user', 'point_of_interest')
         verbose_name = _('User Point of Interest')
         verbose_name_plural = _('User Points of Interest')
+
+
+class ItemAuditLogQuerySet(models.QuerySet):
+    def prepare_for_lm_export(self) -> models.QuerySet:
+        return self.values("id", "created", "modified", "item_id", "action", "changed_fields", "old_values", "new_values").annotate(
+            transfer_id=models.F("transfer_info__transfer_id"),
+        )
+
+
+class ItemAuditLog(TimeStampedModel, models.Model):
+    ACTION_CREATE = 'CREATE'
+    ACTION_UPDATE = 'UPDATE'
+    ACTION_DELETE = 'DELETE'
+    ACTION_SOFT_DELETE = 'SOFT_DELETE'
+
+    ACTION_CHOICES = (
+        (ACTION_CREATE, _('Created')),
+        (ACTION_UPDATE, _('Updated')),
+        (ACTION_DELETE, _('Deleted')),
+        (ACTION_SOFT_DELETE, _('Soft Deleted')),
+    )
+
+    item_id = models.PositiveIntegerField(verbose_name=_("Item ID"))
+    action = models.CharField(max_length=20, choices=ACTION_CHOICES, verbose_name=_("Action"))
+    changed_fields = models.JSONField(
+        verbose_name=_("Changed Fields"),
+        null=True,
+        blank=True,
+        help_text=_("List of field names that were changed")
+    )
+    old_values = models.JSONField(
+        verbose_name=_("Previous Values"),
+        null=True,
+        blank=True,
+        help_text=_("Previous values of tracked fields")
+    )
+    new_values = models.JSONField(
+        verbose_name=_("New Values"),
+        null=True,
+        blank=True,
+        help_text=_("New values of tracked fields")
+    )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='item_audit_logs',
+        verbose_name=_("User")
+    )
+    transfer_info = models.JSONField(
+        verbose_name=_("Transfer Information"),
+        null=True,
+        blank=True,
+        help_text=_("Transfer details at the time of audit")
+    )
+    material_info = models.JSONField(
+        verbose_name=_("Material Information"),
+        null=True,
+        blank=True,
+        help_text=_("Material details at the time of audit")
+    )
+    critical_changes = models.JSONField(
+        verbose_name=_("Critical Changes"),
+        null=True,
+        blank=True,
+        help_text=_("Important changes like transfer or material changes")
+    )
+
+    objects = ItemAuditLogQuerySet.as_manager()
+
+    class Meta:
+        ordering = ['-created']
+        verbose_name = _('Item Audit Log')
+        verbose_name_plural = _('Item Audit Logs')
+        indexes = [
+            models.Index(fields=['item_id']),
+            models.Index(fields=['action']),
+            models.Index(fields=['user']),
+        ]
+
+    def __str__(self):
+        return f'Item {self.item_id} - {self.get_action_display()} at {self.created}'
+
+    @property
+    def item_exists(self):
+        return Item.objects.filter(id=self.item_id).exists()
+
+    def get_tracked_fields_display(self):
+        if not self.changed_fields:
+            return []
+
+        display_data = []
+        for field in self.changed_fields:
+            old_val = self.old_values.get(field) if self.old_values else None
+            new_val = self.new_values.get(field) if self.new_values else None
+            display_data.append({
+                'field': field,
+                'old_value': old_val,
+                'new_value': new_val
+            })
+        return display_data
+
+
+def default_tracked_fields():
+    return [
+        'quantity',
+        'uom',
+        'conversion_factor',
+        'wastage_type',
+        'batch_id',
+        'expiry_date',
+        'comment',
+        'mapped_description',
+        'hidden',
+        'transfer_id',
+        'material_id',
+        'is_prepositioned',
+        'preposition_qty',
+        'amount_usd',
+        'base_quantity',
+        'base_uom'
+    ]
+
+
+def default_fk_field_mappings():
+    return {
+        'transfer_id': 'transfer',
+        'material_id': 'material'
+    }
+
+
+class AuditConfiguration(TimeStampedModel, models.Model):
+
+    DEFAULT_MAX_ENTRIES_PER_ITEM = 100
+
+    name = models.CharField(
+        max_length=100,
+        unique=True,
+        default="Default Audit Configuration",
+        verbose_name=_("Configuration Name"),
+        help_text=_("Name for this audit configuration")
+    )
+
+    is_enabled = models.BooleanField(
+        default=True,
+        verbose_name=_("Enable Audit Logging"),
+        help_text=_("Master switch to enable or disable all audit logging")
+    )
+
+    track_system_users = models.BooleanField(
+        default=True,
+        verbose_name=_("Track System Users"),
+        help_text=_("Whether to audit changes made by staff/superuser accounts")
+    )
+
+    tracked_fields = models.JSONField(
+        default=default_tracked_fields,
+        blank=True,
+        verbose_name=_("Tracked Fields"),
+        help_text=_("List of Item model fields to track in audit logs")
+    )
+
+    excluded_user_ids = models.JSONField(
+        default=list,
+        blank=True,
+        verbose_name=_("Excluded User IDs"),
+        help_text=_("List of user IDs to exclude from audit logging")
+    )
+
+    max_entries_per_item = models.PositiveIntegerField(
+        default=DEFAULT_MAX_ENTRIES_PER_ITEM,
+        verbose_name=_("Max Entries Per Item"),
+        help_text=_("Maximum number of audit entries to keep per item (0 = unlimited)")
+    )
+
+    fk_field_mappings = models.JSONField(
+        default=default_fk_field_mappings,
+        blank=True,
+        verbose_name=_("Foreign Key Field Mappings"),
+        help_text=_("Mapping of foreign key fields to their related model fields")
+    )
+
+    is_active = models.BooleanField(
+        default=True,
+        verbose_name=_("Is Active Configuration"),
+        help_text=_("Whether this is the active configuration (only one can be active)")
+    )
+
+    def __str__(self):
+        status = "Active" if self.is_active else "Inactive"
+        enabled = "Enabled" if self.is_enabled else "Disabled"
+        return f"{self.name} ({status}, {enabled})"
+
+    def save(self, *args, **kwargs):
+        if self.is_active:
+            AuditConfiguration.objects.filter(is_active=True).update(is_active=False)
+
+        super().save(*args, **kwargs)
+        self._clear_cache()
+
+    def delete(self, *args, **kwargs):
+        super().delete(*args, **kwargs)
+        self._clear_cache()
+
+    def _clear_cache(self):
+        cache.delete(f'audit_config_active_{connection.tenant.schema_name}')
+
+    @classmethod
+    def get_active_config(cls):
+        config = cache.get(f'audit_config_active_{connection.tenant.schema_name}')
+        if config is None:
+            try:
+                config = cls.objects.filter(is_active=True).first()
+                if config:
+                    cache.set(f'audit_config_active_{connection.tenant.schema_name}', config, 7200)
+            except cls.DoesNotExist:
+                config = None
+
+        return config
+
+    class Meta:
+        verbose_name = 'Audit Configuration'
+        verbose_name_plural = 'Audit Configurations'
+        ordering = ['-is_active', 'name']

@@ -1,6 +1,4 @@
-
 from django.contrib.auth import get_user_model
-from django.contrib.auth.hashers import make_password
 from django.contrib.gis.geos import Point
 from django.db import transaction
 from django.utils.encoding import force_str
@@ -42,6 +40,15 @@ class LastMileProfileSerializer(serializers.ModelSerializer):
         fields = ('id', 'user', 'status', 'created_by', 'approved_by', 'created_on', 'approved_on', 'review_notes')
 
 
+class SimpleRealmSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(source='group.name', read_only=True)
+    id = serializers.CharField(source='group.id', read_only=True)
+
+    class Meta:
+        model = Realm
+        fields = ('id', 'name')
+
+
 class UserAdminSerializer(SimpleUserSerializer):
     ip_name = serializers.CharField(source='profile.organization.name', read_only=True)
     ip_number = serializers.CharField(source='profile.organization.vendor_number', read_only=True)
@@ -51,6 +58,11 @@ class UserAdminSerializer(SimpleUserSerializer):
     last_mile_profile = serializers.CharField(source='profile.id', read_only=True)
     point_of_interests = serializers.SerializerMethodField(read_only=True)
     last_mile_profile = LastMileProfileSerializer(read_only=True)
+    alert_types = serializers.SerializerMethodField(read_only=True)
+
+    def get_alert_types(self, obj):
+        realms = getattr(obj, 'realms', [])
+        return SimpleRealmSerializer(realms, many=True, read_only=True).data
 
     class Meta:
         model = get_user_model()
@@ -69,16 +81,12 @@ class UserAdminSerializer(SimpleUserSerializer):
             'organization_id',
             'point_of_interests',
             'last_mile_profile',
+            'alert_types',
         )
 
     def get_point_of_interests(self, obj):
-        poi_instances = [upoi.point_of_interest for upoi in obj.points_of_interest.all()]
-        if not poi_instances:
-            try:
-                poi_instances = obj.profile.organization.partner.points_of_interest.all()
-            except (Organization.DoesNotExist, PartnerOrganization.DoesNotExist):
-                poi_instances = []
-        return SimplePointOfInterestSerializer(poi_instances, many=True, read_only=True, context=self.context).data
+        poi_instances = [upoi.point_of_interest for upoi in obj.points_of_interest.all().order_by('id')]
+        return SimplePointOfInterestSerializer(poi_instances, many=True, read_only=True).data
 
 
 class UserAdminExportSerializer(serializers.ModelSerializer):
@@ -121,7 +129,6 @@ class UserProfileCreationSerializer(serializers.ModelSerializer):
 class UserAdminCreateSerializer(serializers.ModelSerializer):
     id = serializers.CharField(read_only=True)
     profile = UserProfileCreationSerializer()
-    password = serializers.CharField(write_only=True)
     email = serializers.EmailField(validators=[EmailValidator(), LowerCaseEmailValidator()])
     is_active = serializers.BooleanField(read_only=True)
     first_name = serializers.CharField(required=True)
@@ -156,7 +163,6 @@ class UserAdminCreateSerializer(serializers.ModelSerializer):
             'last_name',
             'is_staff',
             'is_active',
-            'password',
             'profile',
             'point_of_interests',
             'last_mile_profile',
@@ -280,9 +286,6 @@ class UserAdminUpdateSerializer(serializers.ModelSerializer):
 
 
 class PointOfInterestCustomSerializer(serializers.ModelSerializer):
-    parent = serializers.PrimaryKeyRelatedField(
-        queryset=Location.objects.all(),
-    )
     partner_organizations = serializers.PrimaryKeyRelatedField(
         queryset=PartnerOrganization.objects.all(),
         many=True,
@@ -290,6 +293,14 @@ class PointOfInterestCustomSerializer(serializers.ModelSerializer):
     poi_type = serializers.PrimaryKeyRelatedField(
         queryset=models.PointOfInterestType.objects.all(),
     )
+
+    secondary_type = serializers.PrimaryKeyRelatedField(
+        queryset=models.PointOfInterestType.objects.all(),
+        required=False,
+        allow_empty=True,
+        allow_null=True
+    )
+
     point = GeometryField(required=False)
 
     created_by = serializers.HiddenField(
@@ -302,7 +313,7 @@ class PointOfInterestCustomSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.PointOfInterest
-        fields = ('name', 'parent', 'p_code', 'partner_organizations', 'poi_type', 'point', 'created_by', 'is_active')
+        fields = ('name', 'partner_organizations', 'poi_type', 'secondary_type', 'point', 'created_by', 'is_active')
 
 
 class SimplePartnerOrganizationSerializer(serializers.ModelSerializer):
@@ -331,6 +342,7 @@ class ParentLocationsSerializer(serializers.Serializer):
 class PointOfInterestAdminSerializer(serializers.ModelSerializer):
     partner_organizations = SimplePartnerOrganizationSerializer(many=True, read_only=True)
     poi_type = PointOfInterestTypeSerializer(read_only=True)
+    secondary_type = PointOfInterestTypeSerializer(read_only=True)
     country = serializers.CharField(read_only=True)
     region = serializers.CharField(read_only=True)
     district = serializers.CharField(read_only=True)
@@ -407,11 +419,15 @@ class PointOfInterestExportSerializer(serializers.ModelSerializer):
     def get_lng(self, obj):
         return obj.point.x if obj.point else None
 
-    def base_representation(self, instance):
+    def to_representation(self, instance):
         data = super().to_representation(instance)
-        parent_locations = ParentLocationsSerializer(instance.parent).data
-        data.update(parent_locations)
+        if instance.parent:
+            parent_locations = ParentLocationsSerializer(instance.parent).data
+            data.update(parent_locations)
         return data
+
+    def base_representation(self, instance):
+        return self.to_representation(instance)
 
     def generate_rows(self, instance):
         base = self.base_representation(instance)
@@ -503,7 +519,9 @@ class UserPointOfInterestExportSerializer(serializers.ModelSerializer):
         return f"{obj.profile.organization.vendor_number if obj.profile.organization else '-'} - {obj.profile.organization.name if obj.profile.organization else '-'}"
 
     def get_location(self, obj):
-        return ", ".join([location.name for location in obj.profile.organization.partner.points_of_interest.all()])
+        if (obj.profile and obj.profile.organization and obj.profile.organization.partner):
+            return ", ".join([location.name for location in obj.profile.organization.partner.points_of_interest.all()])
+        return ""
 
     class Meta:
         model = get_user_model()
@@ -523,17 +541,50 @@ class PointOfInterestLightSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', "point")
 
 
-class AlertNotificationSerializer(serializers.ModelSerializer):
+class UserAlertNotificationsExportSerializer(serializers.ModelSerializer):
 
-    alert_type = serializers.SerializerMethodField(read_only=True)
-    email = serializers.EmailField(source='user.email')
+    alert_types = serializers.SerializerMethodField(read_only=True)
 
-    def get_alert_type(self, obj):
-        return self.context.get('ALERT_TYPES').get(obj.group.name)
+    def get_alert_types(self, obj):
+        alert_types_map = self.context.get('ALERT_TYPES', {})
+        alert_notifications = ""
+
+        realms = obj.realms.all() if hasattr(obj, 'realms') else []
+
+        for realm in realms:
+            if realm.group:
+                alert_notifications += f"{alert_types_map.get(realm.group.name, realm.group.name)},"
+
+        return alert_notifications
 
     class Meta:
-        model = Realm
-        fields = ('id', 'email', 'alert_type')
+        model = get_user_model()
+        fields = ('id', 'email', 'alert_types')
+
+
+class AlertNotificationSerializer(serializers.ModelSerializer):
+
+    alert_types = serializers.SerializerMethodField(read_only=True)
+    email = serializers.EmailField()
+
+    def get_alert_types(self, obj):
+        alert_types_map = self.context.get('ALERT_TYPES', {})
+        data = []
+
+        realms = obj.realms.all() if hasattr(obj, 'realms') else []
+
+        for realm in realms:
+            if realm.group:
+                data.append({
+                    "id": realm.group.id,
+                    "name": alert_types_map.get(realm.group.name, realm.group.name)
+                })
+
+        return data
+
+    class Meta:
+        model = get_user_model()
+        fields = ('id', 'email', 'alert_types')
 
 
 class AlertNotificationCreateSerializer(serializers.ModelSerializer):
@@ -541,30 +592,34 @@ class AlertNotificationCreateSerializer(serializers.ModelSerializer):
     adminValidator = AdminPanelValidator()
 
     email = serializers.EmailField(source='user.email')
-    group = serializers.PrimaryKeyRelatedField(
+    groups = serializers.PrimaryKeyRelatedField(
         queryset=Group.objects.all(),
+        many=True
     )
 
     @transaction.atomic
     def create(self, validated_data):
         self.adminValidator.validate_input_data(validated_data)
         self.adminValidator.validate_user_email(validated_data['user']['email'])
-        self.adminValidator.validate_group_name(validated_data['group'], self.context['ALERT_TYPES'].keys())
+        self.adminValidator.validate_group_names(validated_data['groups'], self.context['ALERT_TYPES'].keys())
         country_schema = self.context.get('country_schema')
         user = get_user_model().objects.get(email=validated_data['user']['email'])
+        old_realms = Realm.objects.filter(user=user, country__schema_name=country_schema, group__name__in=self.context['ALERT_TYPES'].keys())
+        old_realms.delete()
         country = Country.objects.get(schema_name=country_schema)
-        self.adminValidator.validate_realm(user, country, validated_data['group'])
-        instance = Realm.objects.create(
-            user=user,
-            country=country,
-            organization=user.profile.organization,
-            group=validated_data['group']
-        )
-        return instance
+        self.adminValidator.validate_realm(user, country, validated_data['groups'])
+        realms_to_create = []
+        for group in validated_data['groups']:
+            realms_to_create.append(Realm(user=user, country=country, organization=user.profile.organization, group=group))
+        Realm.objects.bulk_create(realms_to_create)
+        return {
+            "user": {"email": validated_data['user']['email']},
+            'groups': [group for group in validated_data['groups']]
+        }
 
     class Meta:
         model = Realm
-        fields = ('email', 'group')
+        fields = ('email', 'groups')
 
 
 class AlertNotificationCustomeSerializer(serializers.ModelSerializer):
@@ -595,7 +650,7 @@ class MaterialAdminSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Material
-        fields = ('id', 'original_uom', 'short_description', 'number')
+        fields = ('id', 'original_uom', 'short_description', 'number', 'other')
 
 
 class ItemAdminSerializer(serializers.ModelSerializer):
@@ -624,6 +679,15 @@ class ItemStockManagementUpdateSerializer(serializers.ModelSerializer):
         self.adminValidator.validate_positive_quantity(value)
         return value
 
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        if validated_data.get('quantity') and validated_data.get('quantity') != instance.quantity:
+            instance.quantity = validated_data['quantity']
+        if validated_data.get('uom') and validated_data.get('uom') != instance.uom:
+            instance.uom = validated_data['uom']
+        instance.save()
+        return instance
+
     class Meta:
         model = models.Item
         fields = ('quantity', 'uom')
@@ -644,7 +708,7 @@ class ItemTransferAdminSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Item
-        fields = ('id', 'material', 'quantity', 'modified', 'uom', 'batch_id', 'description', "transfer_name", "base_uom", "base_quantity")
+        fields = ('id', 'material', 'quantity', 'modified', 'uom', 'batch_id', 'description', "transfer_name", "base_uom", "base_quantity", "expiry_date")
 
 
 class TransferItemSerializer(serializers.ModelSerializer):
@@ -666,6 +730,7 @@ class TransferItemDetailSerializer(serializers.Serializer):
     )
     quantity = serializers.IntegerField(required=True)
     uom = serializers.CharField(required=True)
+    expiry_date = serializers.DateField(allow_null=True, required=False)
 
 
 class TransferItemCreateSerializer(serializers.ModelSerializer):
@@ -841,9 +906,9 @@ class PointOfInterestCoordinateAdminSerializer(serializers.ModelSerializer):
         if instance.parent.FIRST_ADMIN_LEVEL in parent_locations:
             data['country'] = LocationWithBordersSerializer(parent_locations[instance.parent.FIRST_ADMIN_LEVEL]).data
         if instance.parent.SECOND_ADMIN_LEVEL in parent_locations:
-            data['region'] = LocationWithBordersSerializer(parent_locations[instance.parent.FIRST_ADMIN_LEVEL]).data
+            data['region'] = LocationWithBordersSerializer(parent_locations[instance.parent.SECOND_ADMIN_LEVEL]).data
         if instance.parent.THIRD_ADMIN_LEVEL in parent_locations:
-            data['district'] = LocationWithBordersSerializer(parent_locations[instance.parent.FIRST_ADMIN_LEVEL]).data
+            data['district'] = LocationWithBordersSerializer(parent_locations[instance.parent.THIRD_ADMIN_LEVEL]).data
         return data
 
     class Meta:
@@ -889,7 +954,7 @@ class BulkUpdateLastMileProfileStatusSerializer(serializers.Serializer):
 class BulkReviewPointOfInterestSerializer(serializers.Serializer):
     status = serializers.ChoiceField(choices=PointOfInterestSerializer.Meta.model.ApprovalStatus.choices)
     points_of_interest = serializers.PrimaryKeyRelatedField(queryset=models.PointOfInterest.objects.all(), many=True, write_only=True)
-    review_notes = serializers.CharField(required=False)
+    review_notes = serializers.CharField(required=False, allow_blank=True, allow_null=True)
 
     def validate_status(self, value):
         self.admin_validator = AdminPanelValidator()
@@ -962,7 +1027,6 @@ class UserImportSerializer(serializers.Serializer):
         validated_data['profile']['organization'] = validated_data.pop('ip_number')
         validated_data['profile']['job_title'] = ""
         validated_data['profile']['phone_number'] = ""
-        validated_data['password'] = make_password('test_pass')
         validated_data['username'] = validated_data['email']
         try:
             user = LMUserCreator().create(validated_data)

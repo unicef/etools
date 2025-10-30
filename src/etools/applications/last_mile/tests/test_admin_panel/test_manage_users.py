@@ -9,7 +9,11 @@ from rest_framework.reverse import reverse
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.last_mile.admin_panel.constants import *  # NOQA
 from etools.applications.last_mile.models import Profile
-from etools.applications.last_mile.tests.factories import LastMileProfileFactory, PointOfInterestFactory
+from etools.applications.last_mile.tests.factories import (
+    LastMileProfileFactory,
+    PointOfInterestFactory,
+    UserPointOfInterestFactory,
+)
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.users.tests.factories import GroupFactory, SimpleUserFactory, UserPermissionFactory
@@ -37,6 +41,14 @@ class TestUsersViewSet(BaseTenantTestCase):
             realms__data=['LMSM Admin Panel', 'IP LM Editor'],
             profile__organization=cls.partner.organization,
             perms=[ALERT_NOTIFICATIONS_ADMIN_PANEL_PERMISSION]
+        )
+
+        # This user should be excluded from the list
+        cls.unicef_user = UserPermissionFactory(
+            realms__data=['LMSM Admin Panel', 'IP LM Editor'],
+            profile__organization=cls.partner.organization,
+            perms=[ALERT_NOTIFICATIONS_ADMIN_PANEL_PERMISSION],
+            email="test123@unicef.org"
         )
         cls.active_location = PointOfInterestFactory(partner_organizations=[cls.partner], private=True)
         cls.active_location_1 = PointOfInterestFactory()
@@ -108,6 +120,17 @@ class TestUsersViewSet(BaseTenantTestCase):
         cls.user_to_manage3_initially_rejected.is_active = False
         cls.user_to_manage3_initially_rejected.save()
         LastMileProfileFactory(user=cls.user_to_manage3_initially_rejected, status=Profile.ApprovalStatus.REJECTED)
+
+        cls.user_to_manage_4 = UserPermissionFactory(
+            username='user_manage4_profiletest',
+            email='manage4_profiletest@example.com',
+            realms__data=['LMSM Admin Panel'],
+            profile__organization=cls.organization,
+        )
+        cls.user_to_manage_4.is_active = False
+        cls.user_to_manage_4.save()
+
+        LastMileProfileFactory(user=cls.user_to_manage_4, status=Profile.ApprovalStatus.PENDING, created_by=cls.approver_user)
 
         cls.detail_url = lambda ignored_selff, pk: reverse(f'{ADMIN_PANEL_APP_NAME}:{UPDATE_USER_PROFILE_ADMIN_PANEL}-detail', args=[pk])
         cls.bulk_url = reverse(f'{ADMIN_PANEL_APP_NAME}:{UPDATE_USER_PROFILE_ADMIN_PANEL}-bulk-update')
@@ -188,7 +211,7 @@ class TestUsersViewSet(BaseTenantTestCase):
 
     def test_missing_main_fields_and_invalid_email(self):
         # Test missing required main fields
-        required_fields = ['first_name', 'last_name', 'email', 'username', 'password']
+        required_fields = ['first_name', 'last_name', 'email', 'username']
         for field in required_fields:
             with self.subTest(missing_field=field):
                 data = copy.deepcopy(self.valid_data)
@@ -557,6 +580,7 @@ class TestUsersViewSet(BaseTenantTestCase):
         for user_obj in users_to_update:
             user_obj.refresh_from_db()
             user_obj.last_mile_profile.refresh_from_db()
+            self.assertEqual(user_obj.realms.filter(is_active=True).count(), 1)
             self.assertTrue(user_obj.is_active)
             self.assertEqual(user_obj.last_mile_profile.status, Profile.ApprovalStatus.APPROVED)
             self.assertEqual(user_obj.last_mile_profile.review_notes, "Bulk approved")
@@ -583,6 +607,7 @@ class TestUsersViewSet(BaseTenantTestCase):
         for user_obj in users_to_update:
             user_obj.refresh_from_db()
             user_obj.last_mile_profile.refresh_from_db()
+            self.assertEqual(user_obj.realms.filter(is_active=True).count(), 0)
             self.assertFalse(user_obj.is_active)
             self.assertEqual(user_obj.last_mile_profile.status, Profile.ApprovalStatus.REJECTED)
             self.assertIsNone(user_obj.last_mile_profile.review_notes)
@@ -623,8 +648,50 @@ class TestUsersViewSet(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('user_ids', response.data)
 
+    def test_approve_user_with_the_same_user_who_created_it(self):
+        payload = {"user_ids": [self.user_to_manage_4.pk], "status": Profile.ApprovalStatus.APPROVED}
+        response = self.forced_auth_req('patch', self.bulk_url, user=self.approver_user, data=payload)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("This user/s can't be approved by the same user who created it.", response.data)
+
     def test_bulk_update_profiles_invalid_status_value(self):
         payload = {"user_ids": [self.user_to_manage1.pk], "status": "INVALID_BULK_STATUS"}
         response = self.forced_auth_req('patch', self.bulk_url, user=self.approver_user, data=payload)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('status', response.data)
+
+    def test_export_csv(self):
+        response = self.forced_auth_req('get', self.url + "export/csv/", user=self.partner_staff)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('Content-Disposition', response.headers)
+        content = b''.join(response.streaming_content).decode('utf-8')
+        self.assertIn('First Name', content)
+        self.assertIn('Last Name', content)
+        self.assertIn('Email', content)
+        self.assertIn('Implementing Partner', content)
+        self.assertIn('Country', content)
+        self.assertIn('Last Login', content)
+        self.assertIn('Status', content)
+
+    def test_manage_user_locations(self):
+        UserPointOfInterestFactory(user=self.partner_staff, point_of_interest=self.active_location_2)
+        UserPointOfInterestFactory(user=self.partner_staff, point_of_interest=self.active_location_3)
+        UserPointOfInterestFactory(user=self.partner_staff_2, point_of_interest=self.active_location_2)
+
+        response = self.forced_auth_req('get', self.url, user=self.partner_staff)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_data = response.data
+        first_user = response_data['results'][0]
+        self.assertEqual(len(first_user['point_of_interests']), 2)
+        self.assertEqual(first_user['point_of_interests'][0]['id'], self.active_location_2.id)
+        self.assertEqual(first_user['point_of_interests'][0]['name'], self.active_location_2.name)
+
+        self.assertEqual(first_user['point_of_interests'][1]['id'], self.active_location_3.id)
+        self.assertEqual(first_user['point_of_interests'][1]['name'], self.active_location_3.name)
+
+        self.assertEqual(self.partner_staff.points_of_interest.all().count(), 2)
+
+        self.assertEqual(self.partner_staff_2.points_of_interest.all().count(), 1)
+
+        self.assertEqual(self.active_location_2.users.all().count(), 2)
+        self.assertEqual(self.active_location_3.users.all().count(), 1)

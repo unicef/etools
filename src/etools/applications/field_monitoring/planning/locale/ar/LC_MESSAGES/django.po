@@ -32,6 +32,13 @@ msgstr "لقد حددت PD/SPD وألغيت تحديد بعض الشركاء ا�
 msgid "You've selected a PD/SPD and unselected some of it's corresponding outputs, please either remove the PD or add the outputs back before saving: %s"
 msgstr "لقد حددت PD/SPD وألغيت تحديد بعض المخرجات المقابلة لها، يرجى إما إزالة PD أو إضافة المخرجات مرة أخرى قبل الحفظ: %s"
 
+msgid "Visit lead is inactive or has no access"
+msgstr "مسؤول الزيارة غير نشط أو ليس لديه حق الوصول"
+
+#, python-format
+msgid "Team members inactive or with no access: %s"
+msgstr "أعضاء الفريق غير نشطين أو بدون حق وصول: %s"
+
 msgid "Partner is not defined for TPM activity"
 msgstr "لم يتم تحديد الشريك لنشاط المُراقب المستقل"
 
@@ -166,6 +173,9 @@ msgstr "الموظفين"
 msgid "TPM"
 msgstr "المُراقب المستقل"
 
+msgid "Both"
+msgstr "كلاهما"
+
 msgid "Draft"
 msgstr "الصياغة التمهيدية"
 
@@ -298,6 +308,9 @@ msgstr "فئة نقطة العمل"
 msgid "Priority"
 msgstr "الأولوية"
 
+msgid "Cannot assign inactive location \"{}\". Please choose an active location."
+msgstr "لا يمكن تعيين موقع غير نشط \"{}\". يرجى اختيار موقع نشط."
+
 msgid "TPM Concern Category"
 msgstr ""
 
@@ -309,9 +322,6 @@ msgstr "النماذج"
 
 msgid "Attachments"
 msgstr "المرفقات"
-
-#~ msgid "Cannot assign inactive location \"{}\". Please choose an active location."
-#~ msgstr "لا يمكن تعيين موقع غير نشط \"{}\". يرجى اختيار موقع نشط."
 
 #~ msgid "Type Of Facility"
 #~ msgstr "نوع المنشأة"

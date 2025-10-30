@@ -37,16 +37,23 @@ class POIQuerysetMixin:
     def get_poi_queryset(self, exclude_partner_prefetch=False):
         partner = self.request.user.partner
         if partner:
-            qs = (models.PointOfInterest.objects
-                  .filter(Q(partner_organizations=partner) | Q(partner_organizations__isnull=True))
-                  .filter(is_active=True)
-                  .filter(Q(users__user__id=self.request.user.id) | Q(users__isnull=True))
-                  .exclude(name="UNICEF Warehouse")  # exclude UNICEF Warehouse
-                  .select_related('parent').defer('parent__point', 'parent__geom', 'point')
-                  .select_related('poi_type')
-                  .order_by('name', 'id'))
+            user_has_assigned_poi = models.UserPointsOfInterest.objects.filter(
+                user=self.request.user
+            ).exists()
+
+            base_qs = models.PointOfInterest.objects \
+                .filter(is_active=True) \
+                .exclude(name="UNICEF Warehouse") \
+                .select_related('parent', 'poi_type').defer('parent__point', 'parent__geom', 'point') \
+                .order_by('name', 'id')
+
+            if user_has_assigned_poi:
+                qs = base_qs.filter(users__user__id=self.request.user.id)
+            else:
+                qs = base_qs.filter(Q(partner_organizations=partner) | Q(partner_organizations__isnull=True))
+
             if not exclude_partner_prefetch:
-                qs.prefetch_related('partner_organizations')
+                qs = qs.prefetch_related('partner_organizations')
             return qs
         return models.PointOfInterest.objects.none()
 
@@ -62,7 +69,7 @@ class PointOfInterestViewSet(POIQuerysetMixin, ModelViewSet):
 
     def get_queryset(self):
         return self.get_poi_queryset(exclude_partner_prefetch=True).only(
-            'parent__name', 'p_code', 'name', 'is_active', 'description', 'poi_type', 'status', 'created_on', 'approved_on', 'review_notes', 'created_by_id', 'approved_by_id'
+            'parent__name', 'p_code', 'name', 'is_active', 'description', 'poi_type', 'secondary_type', 'status', 'created_on', 'approved_on', 'review_notes', 'created_by_id', 'approved_by_id'
         )
 
     @action(detail=True, methods=['post'], url_path='upload-waybill',
@@ -103,6 +110,11 @@ class InventoryItemListView(POIQuerysetMixin, ListAPIView):
         'material__short_description', 'material__group_description',
         'material__purchase_group', 'material__purchase_group_description', 'material__temperature_group', 'mapped_description'
     )
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['country'] = connection.tenant.name
+        return context
 
     def get_queryset(self):
         if self.request.parser_context['kwargs'] and 'poi_pk' in self.request.parser_context['kwargs']:
@@ -230,7 +242,6 @@ class TransferViewSet(
             Prefetch(
                 'items', models.Item.objects
                 .select_related('material')
-                .prefetch_related('transfers_history')
                 .annotate(description=F('material__short_description')))
         )
 

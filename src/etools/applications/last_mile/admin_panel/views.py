@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.db import connection
-from django.db.models import F, Q
-from django.http import HttpResponse
+from django.db.models import F, Prefetch, Q
+from django.http import HttpResponse, StreamingHttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 
@@ -19,7 +19,13 @@ from unicef_restlib.pagination import DynamicPageNumberPagination
 
 from etools.applications.last_mile import models
 from etools.applications.last_mile.admin_panel.constants import ALERT_TYPES
-from etools.applications.last_mile.admin_panel.csv_exporter import CsvExporter
+from etools.applications.last_mile.admin_panel.csv_exporter import (
+    LocationsCSVExporter,
+    POITypesCSVExporter,
+    UserAlertNotificationsCSVExporter,
+    UserLocationsCSVExporter,
+    UsersCSVExporter,
+)
 from etools.applications.last_mile.admin_panel.csv_importer import CsvImporter
 from etools.applications.last_mile.admin_panel.filters import (
     AlertNotificationFilter,
@@ -63,9 +69,11 @@ from etools.applications.last_mile.admin_panel.serializers import (
     UserAdminExportSerializer,
     UserAdminSerializer,
     UserAdminUpdateSerializer,
+    UserAlertNotificationsExportSerializer,
     UserPointOfInterestAdminSerializer,
     UserPointOfInterestExportSerializer,
 )
+from etools.applications.last_mile.admin_panel.validators import AdminPanelValidator
 from etools.applications.last_mile.permissions import IsLMSMAdmin
 from etools.applications.locations.models import Location
 from etools.applications.organizations.models import Organization
@@ -86,20 +94,57 @@ class UserViewSet(ExportMixin,
         schema_name = connection.tenant.schema_name
         User = get_user_model()
 
-        queryset = User.objects.select_related('profile',
-                                               'profile__country',
-                                               'profile__organization',
-                                               'profile__organization__partner',
-                                               'last_mile_profile',
-                                               'last_mile_profile__created_by',
-                                               'last_mile_profile__approved_by',
-                                               ).prefetch_related('profile__organization__partner__points_of_interest',).for_schema(schema_name).only_lmsm_users()
+        points_of_interest_prefetch = Prefetch(
+            'points_of_interest',
+            queryset=models.UserPointsOfInterest.objects.select_related(
+                'point_of_interest',
+                'point_of_interest__parent',
+                'point_of_interest__poi_type',
+                'user'
+            )
+        )
+
+        realms_prefetch = Prefetch(
+            'realms',
+            queryset=Realm.objects.filter(
+                is_active=True,
+                country__schema_name=schema_name,
+                group__name__in=ALERT_TYPES.keys()
+            ).select_related('group')
+        )
+
+        created_by_prefetch = Prefetch(
+            'last_mile_profile__created_by',
+            queryset=User.objects.only('id', 'first_name', 'middle_name', 'last_name', 'is_active')
+        )
+
+        approved_by_prefetch = Prefetch(
+            'last_mile_profile__approved_by',
+            queryset=User.objects.only('id', 'first_name', 'middle_name', 'last_name', 'is_active')
+        )
+
+        queryset = User.objects.select_related(
+            'profile',
+            'profile__country',
+            'profile__organization',
+            'profile__organization__partner',
+            'last_mile_profile',
+        ).prefetch_related(
+            realms_prefetch,
+            points_of_interest_prefetch,
+            created_by_prefetch,
+            approved_by_prefetch,
+        ).annotate(profile_status=F('last_mile_profile__status')).for_schema(schema_name).only_lmsm_users()
 
         has_active_location = self.request.query_params.get('hasActiveLocation')
         if has_active_location == "1":
             queryset = queryset.with_points_of_interest()
         elif has_active_location == "0":
             queryset = queryset.without_points_of_interest()
+
+        show_all_users = self.request.query_params.get('showAllUsers')
+        if show_all_users != "1":
+            queryset = queryset.non_unicef_users()
 
         return queryset.distinct()
 
@@ -113,11 +158,12 @@ class UserViewSet(ExportMixin,
         'last_login',
         'first_name',
         'last_name',
+        'profile_status',
         'profile__organization__name',
         'profile__organization__vendor_number',
         'profile__country__name',
         'profile__country__id',
-        'profile__organization__partner__points_of_interest__name'
+        'profile__organization__partner__points_of_interest__name',
     ]
 
     ordering = ('id',)
@@ -146,15 +192,14 @@ class UserViewSet(ExportMixin,
         renderer_classes=(ExportCSVRenderer,),
     )
     def list_export_csv(self, request, *args, **kwargs):
-        users = self.filter_queryset(self.get_queryset())
-        serializer = self.get_serializer(users, many=True)
-        data = serializer.data
-        dataset = CsvExporter().export(data)
-        return Response(dataset, headers={
-            'Content-Disposition': 'attachment;filename=users_{}.csv'.format(
-                timezone.now().date(),
-            )
-        })
+        queryset = self.filter_queryset(self.get_queryset())
+        response = StreamingHttpResponse(
+            UsersCSVExporter().generate_csv_data(queryset=queryset, serializer_class=self.get_serializer_class()),
+            content_type='text/csv'
+        )
+        response['Content-Disposition'] = f'attachment; filename="users_{timezone.now().date()}.csv"'
+
+        return response
 
     @action(detail=False, methods=['post'], url_path='import/xlsx')
     def _import_file(self, request, *args, **kwargs):
@@ -219,26 +264,57 @@ class LocationsViewSet(mixins.ListModelMixin,
     permission_classes = [IsLMSMAdmin]
     serializer_class = PointOfInterestAdminSerializer
     pagination_class = DynamicPageNumberPagination
+    adminValidator = AdminPanelValidator()
 
     queryset = models.PointOfInterest.all_objects.select_related(
         "parent",
         "poi_type",
+        "secondary_type",
         "parent__parent",
         "parent__parent__parent",
         "parent__parent__parent__parent"
-    ).prefetch_related('partner_organizations', 'partner_organizations__organization', 'destination_transfers').all().order_by('id')
+    ).annotate(
+        region=F('parent__parent__name'),
+        district=F('parent__parent__parent__name'),
+        country=F('parent__name')
+    ).prefetch_related(
+        'partner_organizations',
+        'partner_organizations__organization',
+        'destination_transfers'
+    ).all().order_by('id')
+
+    def get_queryset(self):
+        organization_id = self.request.query_params.get('organization_id')
+        if organization_id:
+            self.adminValidator.validate_organization_id(organization_id)
+            self.queryset = self.queryset.filter(partner_organizations__organization__id=organization_id)
+        if self.request.query_params.get('with_coordinates') is None:
+            self.queryset = self.queryset.defer(
+                'parent__point',
+                'parent__parent__point',
+                'parent__parent__parent__point',
+                'parent__parent__parent__parent__point',
+                'parent__geom',
+                'parent__parent__geom',
+                'parent__parent__parent__geom',
+                'parent__parent__parent__parent__geom'
+            )
+        return self.queryset
 
     filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
     filterset_class = LocationsFilter
+
     ordering_fields = [
         'id',
         'poi_type',
+        'secondary_type',
         'country',
-        'region',
         'p_code',
-        'description'
+        'description',
+        'region',
+        'district',
+        'name',
     ]
-
     search_fields = ('name',
                      'p_code',
                      'partner_organizations__organization__name',
@@ -269,15 +345,17 @@ class LocationsViewSet(mixins.ListModelMixin,
         renderer_classes=(ExportCSVRenderer,),
     )
     def list_export_csv(self, request, *args, **kwargs):
-        locations = self.filter_queryset(self.get_queryset())
-        serializer = self.get_serializer(locations, many=True)
-        data = serializer.data
-        dataset = CsvExporter().export(data)
-        return Response(dataset, headers={
-            'Content-Disposition': 'attachment;filename=locations_{}.csv'.format(
-                timezone.now().date(),
-            )
-        })
+        only_locations = self.request.query_params.get('only_locations', False)
+        queryset = self.filter_queryset(self.get_queryset())
+        response = StreamingHttpResponse(
+            LocationsCSVExporter().generate_csv_data(queryset=queryset, serializer_class=self.get_serializer_class(), only_locations=only_locations),
+            content_type='text/csv'
+        )
+        if only_locations:
+            response['Content-Disposition'] = f'attachment; filename="locations_{timezone.now()}.csv"'
+        else:
+            response['Content-Disposition'] = f'attachment; filename="stock_management_locations_{timezone.now()}.csv"'
+        return response
 
     @action(detail=False, methods=['post'], url_path='import/xlsx')
     def _import_file(self, request, *args, **kwargs):
@@ -306,7 +384,23 @@ class PointOfInterestsLightViewSet(mixins.ListModelMixin,
     serializer_class = PointOfInterestLightSerializer
     pagination_class = DynamicPageNumberPagination
 
-    queryset = models.PointOfInterest.objects.select_related("parent", "poi_type").prefetch_related('partner_organizations').all().order_by('id')
+    queryset = models.PointOfInterest.all_objects.select_related(
+        'parent',
+        'parent__parent',
+        'parent__parent__parent',
+        'parent__parent__parent__parent'
+    ).only(
+        "parent__name",
+        "id",
+        "name",
+        "point",
+        "parent__admin_level",
+        "parent__parent__name",
+        "parent__parent__admin_level",
+        "parent__parent__parent__name",
+        "parent__parent__parent__admin_level",
+        "parent__parent__parent__parent__name",
+        "parent__parent__parent__parent__admin_level").prefetch_related('partner_organizations').all().order_by('id')
 
 
 class UserLocationsViewSet(mixins.ListModelMixin,
@@ -350,15 +444,13 @@ class UserLocationsViewSet(mixins.ListModelMixin,
         renderer_classes=(ExportCSVRenderer,),
     )
     def list_export_csv(self, request, *args, **kwargs):
-        users = self.filter_queryset(self.get_queryset())
-        serializer = self.get_serializer(users, many=True)
-        data = serializer.data
-        dataset = CsvExporter().export(data)
-        return Response(dataset, headers={
-            'Content-Disposition': 'attachment;filename=user_locations_{}.csv'.format(
-                timezone.now().date(),
-            )
-        })
+        queryset = self.filter_queryset(self.get_queryset())
+        response = StreamingHttpResponse(
+            UserLocationsCSVExporter().generate_csv_data(queryset=queryset, serializer_class=self.get_serializer_class()),
+            content_type='text/csv'
+        )
+        response['Content-Disposition'] = f'attachment; filename="user_locations_{timezone.now().date()}.csv"'
+        return response
 
 
 class AlertNotificationViewSet(mixins.ListModelMixin,
@@ -384,21 +476,68 @@ class AlertNotificationViewSet(mixins.ListModelMixin,
             return AlertNotificationCustomeSerializer
         if self.action == 'create':
             return AlertNotificationCreateSerializer
+        if self.action == "list_export_csv":
+            return UserAlertNotificationsExportSerializer
         return AlertNotificationSerializer
 
     def get_queryset(self):
+        if self.action in ["list", "list_export_csv"]:
+            # Use prefetch_related instead of annotate to avoid GROUP BY issues
+            return (
+                get_user_model().objects.filter(
+                    realms__country__schema_name=connection.tenant.schema_name,
+                    realms__is_active=True,
+                    realms__group__name__in=ALERT_TYPES.keys()
+                )
+                .prefetch_related(
+                    Prefetch(
+                        'realms',
+                        queryset=Realm.objects.filter(
+                            country__schema_name=connection.tenant.schema_name,
+                            is_active=True,
+                            group__name__in=ALERT_TYPES.keys()
+                        ).select_related('group')
+                    )
+                )
+                .distinct()
+                .order_by('id')
+            )
         return Realm.objects.filter(country__schema_name=connection.tenant.schema_name, group__name__in=ALERT_TYPES.keys()).distinct().order_by('id')
 
     filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
-    filterset_class = AlertNotificationFilter
 
-    ordering_fields = [
-        'user__email',
-        'user__first_name',
-        'user__last_name',
-    ]
+    @property
+    def filterset_class(self):
+        if self.action in ['list', 'list_export_csv']:
+            return AlertNotificationFilter
+        return None
 
-    search_fields = ('user__email', 'user__first_name', 'user__last_name')
+    @property
+    def ordering_fields(self):
+        if self.action in ['list', 'list_export_csv']:
+            return ['email', 'first_name', 'last_name']
+        return []
+
+    @property
+    def search_fields(self):
+        if self.action in ['list', 'list_export_csv']:
+            return ('email', 'first_name', 'last_name')
+        return []
+
+    @action(
+        detail=False,
+        methods=['get'],
+        url_path='export/csv',
+        renderer_classes=(ExportCSVRenderer,),
+    )
+    def list_export_csv(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        response = StreamingHttpResponse(
+            UserAlertNotificationsCSVExporter().generate_csv_data(queryset=queryset, serializer_class=self.get_serializer_class()),
+            content_type='text/csv'
+        )
+        response['Content-Disposition'] = f'attachment; filename="email_alerts_{timezone.now().date()}.csv"'
+        return response
 
 
 class TransferItemViewSet(mixins.ListModelMixin, GenericViewSet, mixins.CreateModelMixin):
@@ -426,7 +565,10 @@ class TransferItemViewSet(mixins.ListModelMixin, GenericViewSet, mixins.CreateMo
         'transfer__unicef_release_order',
         'uom',
         'batch_id',
-        'material__original_uom'
+        'material__original_uom',
+        'quantity',
+        'expiry_date',
+        'last_updated'
     )
 
     def get_queryset(self):
@@ -442,6 +584,8 @@ class TransferItemViewSet(mixins.ListModelMixin, GenericViewSet, mixins.CreateMo
             'transfer__origin_point'
         ).filter(
             transfer__destination_point_id=poi_id
+        ).annotate(
+            last_updated=F('modified'),
         ).order_by('-id')
 
     def get_serializer_class(self):
@@ -464,9 +608,14 @@ class TransferItemViewSet(mixins.ListModelMixin, GenericViewSet, mixins.CreateMo
         return Response({"valid": valid}, status=status.HTTP_200_OK)
 
 
-class ItemStockManagementView(mixins.UpdateModelMixin, mixins.RetrieveModelMixin, GenericViewSet):
+class ItemStockManagementView(mixins.UpdateModelMixin, mixins.RetrieveModelMixin, mixins.DestroyModelMixin, GenericViewSet):
     permission_classes = [IsLMSMAdmin]
     serializer_class = ItemStockManagementUpdateSerializer
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        instance.hide()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     def get_queryset(self):
         return models.Item.objects.all()
@@ -516,15 +665,13 @@ class PointOfInterestTypeListView(mixins.ListModelMixin, mixins.CreateModelMixin
         renderer_classes=(ExportCSVRenderer,),
     )
     def list_export_csv(self, request, *args, **kwargs):
-        users = self.filter_queryset(self.get_queryset())
-        serializer = self.get_serializer(users, many=True)
-        data = serializer.data
-        dataset = CsvExporter().export(data)
-        return Response(dataset, headers={
-            'Content-Disposition': 'attachment;filename=locations_type_{}.csv'.format(
-                timezone.now().date(),
-            )
-        })
+        queryset = self.filter_queryset(self.get_queryset())
+        response = StreamingHttpResponse(
+            POITypesCSVExporter().generate_csv_data(queryset=queryset, serializer_class=self.get_serializer_class()),
+            content_type='text/csv'
+        )
+        response['Content-Disposition'] = f'attachment; filename="locations_type_{timezone.now().date()}.csv"'
+        return response
 
 
 class PointOfInterestCoordinateListView(mixins.RetrieveModelMixin, mixins.ListModelMixin, GenericViewSet):
@@ -571,14 +718,37 @@ class TransferHistoryListView(mixins.ListModelMixin, GenericViewSet):
                      'transfers__origin_point__name']
 
     def get_queryset(self):
+        transfers_prefetch = Prefetch(
+            'transfers',
+            queryset=models.Transfer.objects.select_related(
+                'partner_organization__organization',
+                'destination_point',
+                'origin_point'
+            ).only(
+                'id',
+                'unicef_release_order',
+                'name',
+                'transfer_type',
+                'status',
+                'partner_organization__id',
+                'partner_organization__organization__id',
+                'partner_organization__organization__name',
+                'destination_point__id',
+                'destination_point__name',
+                'origin_point__id',
+                'origin_point__name',
+                'transfer_history_id'
+            )
+        )
+
         qs = models.TransferHistory.objects.select_related(
             'origin_transfer',
             'origin_transfer__partner_organization__organization',
             'origin_transfer__destination_point',
             'origin_transfer__origin_point'
         ).prefetch_related(
-            "transfers"
-        ).order_by('-created').annotate(
+            transfers_prefetch
+        ).annotate(
             unicef_release_order=F('origin_transfer__unicef_release_order'),
             transfer_name=F('origin_transfer__name'),
             transfer_type=F('origin_transfer__transfer_type'),
@@ -588,17 +758,21 @@ class TransferHistoryListView(mixins.ListModelMixin, GenericViewSet):
             origin_point=F('origin_transfer__origin_point__name')
         ).only(
             'id',
+            'created',
+            'modified',
+            'origin_transfer__id',
             'origin_transfer__unicef_release_order',
             'origin_transfer__name',
             'origin_transfer__transfer_type',
             'origin_transfer__status',
+            'origin_transfer__partner_organization__id',
+            'origin_transfer__partner_organization__organization__id',
             'origin_transfer__partner_organization__organization__name',
+            'origin_transfer__destination_point__id',
             'origin_transfer__destination_point__name',
-            'origin_transfer__origin_point__name',
-            'origin_transfer',
-            'created',
-            'modified',
-        )
+            'origin_transfer__origin_point__id',
+            'origin_transfer__origin_point__name'
+        ).order_by('-created').distinct()
 
         return qs
 

@@ -299,10 +299,11 @@ class FMUserSerializer(MinimalUserSerializer):
     name = serializers.SerializerMethodField()
     user_type = serializers.SerializerMethodField()
     tpm_partner = serializers.ReadOnlyField(allow_null=True)
+    has_active_realm = serializers.SerializerMethodField()
 
     class Meta(MinimalUserSerializer.Meta):
         fields = MinimalUserSerializer.Meta.fields + (
-            'user_type', 'tpm_partner'
+            'user_type', 'tpm_partner', 'has_active_realm'
         )
 
     def get_user_type(self, obj):
@@ -318,6 +319,9 @@ class FMUserSerializer(MinimalUserSerializer):
         else:
             status = _('Inactive')
         return f"[{status}] {obj.get_full_name()}"
+
+    def get_has_active_realm(self, obj):
+        return getattr(obj, 'has_active_realm', None)
 
 
 class CPOutputListSerializer(MinimalOutputListSerializer):
@@ -391,6 +395,20 @@ class MonitoringActivityActionPointSerializer(ActionPointBaseSerializer):
         extra_kwargs.update({
             'high_priority': {'label': _('Priority')},
         })
+
+    def validate_location(self, value):
+        """
+        Prevent adding new inactive locations to Monitoring Activity Action Points.
+        Allow keeping existing inactive locations that were previously saved.
+        """
+        if value and not value.is_active:
+            if self.instance and self.instance.location == value:
+                return value
+
+            raise serializers.ValidationError(
+                _('Cannot assign inactive location "{}". Please choose an active location.').format(value.name)
+            )
+        return value
 
 
 class TPMConcernSerializer(UserContextSerializerMixin, SnapshotModelSerializer, serializers.ModelSerializer):

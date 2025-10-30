@@ -32,6 +32,13 @@ msgstr "Vous avez sélectionné un PD/SSFA et désélectionné certains de ses p
 msgid "You've selected a PD/SPD and unselected some of it's corresponding outputs, please either remove the PD or add the outputs back before saving: %s"
 msgstr "Vous avez sélectionné un PD/SSFA et désélectionné certaines de ses produits correspondantes, veuillez supprimer le PD ou rajouter les produits avant d'enregistrer: %s"
 
+msgid "Visit lead is inactive or has no access"
+msgstr "Le responsable de la visite est inactif ou n'a pas d'accès"
+
+#, python-format
+msgid "Team members inactive or with no access: %s"
+msgstr "Membres de l'équipe inactifs ou sans accès : %s"
+
 msgid "Partner is not defined for TPM activity"
 msgstr "Le partenaire n'est pas défini pour l'activité TPM"
 
@@ -166,6 +173,9 @@ msgstr "Personnel"
 msgid "TPM"
 msgstr "TPM"
 
+msgid "Both"
+msgstr "Les deux"
+
 msgid "Draft"
 msgstr "Draft"
 
@@ -298,6 +308,9 @@ msgstr "Catégorie de point d'action"
 msgid "Priority"
 msgstr "Priorité"
 
+msgid "Cannot assign inactive location \"{}\". Please choose an active location."
+msgstr "Impossible d'assigner un emplacement inactif \"{}\". Veuillez choisir un emplacement actif."
+
 msgid "TPM Concern Category"
 msgstr ""
 
@@ -309,9 +322,6 @@ msgstr "Modèles"
 
 msgid "Attachments"
 msgstr "Pièces jointes"
-
-#~ msgid "Cannot assign inactive location \"{}\". Please choose an active location."
-#~ msgstr "Impossible d'assigner un emplacement inactif \"{}\". Veuillez choisir un emplacement actif."
 
 #~ msgid "Type Of Facility"
 #~ msgstr "Type d'installation"
