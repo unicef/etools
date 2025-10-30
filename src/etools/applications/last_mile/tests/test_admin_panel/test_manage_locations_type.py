@@ -58,7 +58,7 @@ class TestLocationsTypesViewSet(BaseTenantTestCase):
         data = {"name": "School", "category": "recreational"}
         response = self.forced_auth_req('post', self.url, data=data, user=self.partner_staff)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("The point of interest type already exists.", str(response.data.get('name')))
+        self.assertIn("poi_type_already_exists", str(response.data.get('name')))
 
     def test_create_location_type_unauthorized(self):
         data = {"name": "Park", "category": "recreational"}

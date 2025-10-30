@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.contrib.gis.geos import Point
-from django.db import transaction
+from django.db import connection, transaction
 from django.utils.encoding import force_str
 
 from rest_framework import serializers
@@ -91,11 +91,14 @@ class UserAdminSerializer(SimpleUserSerializer):
 
 class UserAdminExportSerializer(serializers.ModelSerializer):
     implementing_partner = serializers.SerializerMethodField(read_only=True)
-    country = serializers.CharField(source='profile.country.name', read_only=True)
+    country = serializers.SerializerMethodField(read_only=True)
     status = serializers.SerializerMethodField(read_only=True)
 
     def get_status(self, obj):
         return "Active" if obj.is_active else "Inactive"
+
+    def get_country(self, obj):
+        return connection.tenant.name
 
     def get_implementing_partner(self, obj):
         return f"{obj.profile.organization.vendor_number if obj.profile.organization else '-'} - {obj.profile.organization.name if obj.profile.organization else '-'}"
