@@ -90,10 +90,6 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.RunPython(copy_old_item_transfers_to_new_one, migrations.RunPython.noop),
-        migrations.RemoveField(
-            model_name='item',
-            name='transfers_history',
-        ),
         migrations.AlterField(
             model_name='item',
             name='base_uom',
@@ -113,9 +109,6 @@ class Migration(migrations.Migration):
             model_name='material',
             name='other',
             field=models.JSONField(blank=True, null=True, validators=[etools.applications.utils.validators.JSONSchemaValidator(json_schema={'additionalProperties': True, 'properties': {'uom_map': {'additionalProperties': {'type': 'number'}, 'propertyNames': {'enum': ['BAG', 'BOT', 'BOX', 'CAR', 'DRM', 'DZ', 'EA', 'KG', 'L', 'M', 'PAA', 'PAC', 'RM', 'ROL', 'SET', 'TBE', 'TO', 'VL', 'CAN']}, 'type': 'object'}}, 'title': "Json schema for item 'other' field", 'type': 'object'})], verbose_name='Other Details'),
-        ),
-        migrations.DeleteModel(
-            name='ItemTransferHistory',
         ),
         migrations.AddIndex(
             model_name='itemauditlog',
