@@ -11,7 +11,12 @@ from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.audit.models import Engagement
-from etools.applications.audit.tests.factories import AuditFactory, EngagementFactory
+from etools.applications.audit.tests.factories import (
+    AuditFactory,
+    EngagementFactory,
+    SpotCheckFactory,
+    StaffSpotCheckFactory,
+)
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory, FundsReservationItemFactory
 from etools.applications.organizations.tests.factories import OrganizationFactory
@@ -980,6 +985,30 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         e.refresh_from_db()
         self.assertTrue(e.engagement_attachments.filter(pk=attachment_eng.id).exists())
         self.assertTrue(e.report_attachments.filter(pk=attachment_rep.id).exists())
+
+    # ------------------------
+    # Engagement list & detail
+    # ------------------------
+
+    def test_engagements_list_includes_staff_spot_checks(self):
+        sc = SpotCheckFactory()
+        ssc = StaffSpotCheckFactory()
+        url = reverse('rss_admin:rss-admin-engagements-list')
+        resp = self.forced_auth_req('get', url, user=self.user, data={'ordering': 'reference_number', 'page_size': 10})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertIn('results', resp.data)
+        ids = [row['id'] for row in resp.data['results']]
+        self.assertIn(sc.id, ids)
+        self.assertIn(ssc.id, ids)
+
+    def test_engagement_detail_audit(self):
+        audit = AuditFactory()
+        url = reverse('rss_admin:rss-admin-engagements-detail', kwargs={'pk': audit.pk})
+        resp = self.forced_auth_req('get', url, user=self.user)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.data['id'], audit.id)
+        # ensure a detail-only field is present (e.g., year_of_audit for audits)
+        self.assertIn('year_of_audit', resp.data)
 
     # ------------------------------------------------------------------
     # Status transitions: targeted condition/side-effect tests

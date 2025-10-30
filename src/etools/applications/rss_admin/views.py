@@ -3,17 +3,29 @@ import copy
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import connection
 
-from rest_framework import filters, status, viewsets
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters, mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
+from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.response import Response
+from unicef_restlib.pagination import DynamicPageNumberPagination
 from unicef_restlib.views import QueryStringFilterMixin
 
+from etools.applications.audit.filters import DisplayStatusFilter, EngagementFilter, UniqueIDOrderingFilter
 from etools.applications.audit.models import Engagement
+from etools.applications.audit.serializers.engagement import (
+    AuditSerializer,
+    EngagementListSerializer,
+    MicroAssessmentSerializer,
+    SpecialAuditSerializer,
+    SpotCheckSerializer,
+    StaffSpotCheckSerializer,
+)
 from etools.applications.environment.helpers import tenant_switch_is_active
+from etools.applications.funds.models import FundsReservationHeader
 from etools.applications.partners.filters import InterventionEditableByFilter, ShowAmendmentsFilter
 from etools.applications.partners.models import Agreement, Intervention, InterventionBudget, PartnerOrganization
-from etools.applications.funds.models import FundsReservationHeader
 from etools.applications.partners.serializers.interventions_v2 import (
     InterventionCreateUpdateSerializer,
     InterventionDetailSerializer,
@@ -25,8 +37,8 @@ from etools.applications.rss_admin.permissions import IsRssAdmin
 from etools.applications.rss_admin.serializers import (
     AgreementRssSerializer,
     BulkCloseProgrammeDocumentsSerializer,
-    EngagementChangeStatusSerializer,
     EngagementAttachmentsUpdateSerializer,
+    EngagementChangeStatusSerializer,
     EngagementInitiationUpdateSerializer,
     EngagementLightRssSerializer,
     PartnerOrganizationRssSerializer,
@@ -279,10 +291,78 @@ class ProgrammeDocumentRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet,
         return Response({'detail': 'PD queued for Vision upload'}, status=status.HTTP_202_ACCEPTED)
 
 
-class EngagementRssViewSet(viewsets.GenericViewSet):
+class EngagementRssViewSet(mixins.ListModelMixin,
+                           mixins.RetrieveModelMixin,
+                           viewsets.GenericViewSet):
     queryset = Engagement.objects.all()
     serializer_class = EngagementLightRssSerializer
     permission_classes = (IsRssAdmin,)
+    pagination_class = DynamicPageNumberPagination
+    filter_backends = (
+        SearchFilter,
+        DisplayStatusFilter,
+        DjangoFilterBackend,
+        UniqueIDOrderingFilter,
+        OrderingFilter,
+    )
+    search_fields = (
+        'reference_number',
+        'partner__organization__name',
+        'partner__organization__vendor_number',
+        'partner__organization__short_name',
+        'agreement__auditor_firm__organization__name',
+        'offices__name',
+        '=id',
+    )
+    ordering_fields = (
+        'agreement__order_number',
+        'agreement__auditor_firm__organization__name',
+        'partner__organization__name',
+        'engagement_type',
+        'status',
+    )
+    filterset_class = EngagementFilter
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        queryset = queryset.prefetch_related('partner', 'agreement', 'agreement__auditor_firm__organization')
+        return queryset
+
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return EngagementListSerializer
+        if self.action == 'retrieve':
+            # choose detail serializer by engagement type; handle staff spot checks
+            instance = getattr(self, 'object', None)
+            if not instance:
+                # fallback: try to peek by pk if available, else default to base
+                try:
+                    obj = self.get_object()  # will also set permissions
+                except Exception:
+                    return super().get_serializer_class()
+            else:
+                obj = instance
+
+            if hasattr(obj, 'get_subclass'):
+                obj = obj.get_subclass()
+
+            etype = getattr(obj, 'engagement_type', None)
+            if etype == Engagement.TYPES.audit:
+                return AuditSerializer
+            if etype == Engagement.TYPES.ma:
+                return MicroAssessmentSerializer
+            if etype == Engagement.TYPES.sa:
+                return SpecialAuditSerializer
+            if etype == Engagement.TYPES.sc:
+                # determine if staff spot check based on UNICEF users flag
+                try:
+                    if obj.agreement and getattr(obj.agreement.auditor_firm, 'unicef_users_allowed', False):
+                        return StaffSpotCheckSerializer
+                except Exception:
+                    pass
+                return SpotCheckSerializer
+
+        return super().get_serializer_class()
 
     @action(detail=True, methods=['post'], url_path='change-status')
     def change_status(self, request, pk=None):
