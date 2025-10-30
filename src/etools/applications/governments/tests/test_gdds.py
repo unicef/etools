@@ -797,7 +797,7 @@ class TestUpdate(BaseGDDTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         gdd.refresh_from_db()
         self.assertEqual(gdd.lead_section, lead_section)
-        self.assertEqual(list(gdd.sections.all().values_list('id', flat=True)), sections)
+        self.assertEqual(list(gdd.sections.order_by('id').all().values_list('id', flat=True)), sections)
 
     def test_patch_sections_bad_request(self):
         gdd = GDDFactory()
