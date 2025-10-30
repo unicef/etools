@@ -421,6 +421,7 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(loss_item_2.quantity, 22)
         self.assertEqual(loss_item_2.base_quantity, 22)
         self.assertEqual(loss_item_2.base_uom, "EA")
+        self.assertIn(incoming, loss_item_2.transfers_history.all())
         self.assertTrue(models.TransferHistory.objects.filter(origin_transfer_id=incoming.id).exists())
         self.assertEqual(short_transfer.items.order_by('id').first().quantity, 30)
         self.assertEqual(short_transfer.items.order_by('id').first().base_quantity, 33)
@@ -490,6 +491,7 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(short_item_3.material.original_uom, short_item_3.base_uom)
         self.assertEqual(short_item_3.quantity, 30)
         self.assertEqual(short_item_3.base_quantity, 33)
+        self.assertIn(self.incoming, short_item_3.transfers_history.all())
 
         surplus_transfer = models.Transfer.objects.filter(
             transfer_type=self.incoming.transfer_type, transfer_subtype=models.Transfer.SURPLUS).last()
@@ -500,6 +502,7 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(surplus_item_2.quantity, 1)
         self.assertEqual(surplus_item_2.base_quantity, 22)
         self.assertEqual(surplus_item_2.material.original_uom, surplus_item_2.base_uom)
+        self.assertIn(self.incoming, surplus_item_2.transfers_history.all())
 
     @override_settings(RUTF_MATERIALS=['1234'])
     def test_partial_checkin_RUFT_material(self):
@@ -553,6 +556,7 @@ class TestTransferView(BaseTenantTestCase):
 
         loss_item_2 = short_transfer.items.order_by('id').first()
         self.assertEqual(loss_item_2.quantity, 6)
+        self.assertIn(self.incoming, loss_item_2.transfers_history.all())
 
     def test_checkout_validation(self):
         destination = PointOfInterestFactory()
@@ -643,6 +647,8 @@ class TestTransferView(BaseTenantTestCase):
 
         new_item_pk = [item['id'] for item in response.data['items'] if item['id'] != item_1.pk].pop()
         self.assertEqual(checkout_transfer.items.get(pk=new_item_pk).quantity, 3)
+        for item in checkout_transfer.items.all():
+            self.assertIn(self.checked_in, item.transfers_history.all())
 
         self.assertEqual(self.checked_in.items.count(), 2)
         self.assertEqual(self.checked_in.items.get(pk=item_2.pk).quantity, 22)
