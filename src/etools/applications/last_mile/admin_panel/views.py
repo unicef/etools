@@ -255,7 +255,7 @@ class LocationsViewSet(mixins.ListModelMixin,
     GeoJSON representation of a geographical point.
 
     This object adheres to the GeoJSON standard, where:
-    - "type" specifies the kind of geometry (e.g., "Point").
+    - "type" specifies the kind of geometry (e.g., "Point")
     - "coordinates" is a list containing the longitude and latitude values.
 
     Example:
