@@ -37,3 +37,13 @@ class ExternalModuleFilterMixin:
                 # if no module query param or module has an unexpected value return none
                 return qs.model.objects.none()
         return qs
+
+
+class FilterQueryMixin:
+    def apply_filter_queries(self, qs, filter_params_func):
+        queries = []
+        queries.extend(filter_params_func())
+        if queries:
+            expression = functools.reduce(operator.and_, queries)
+            qs = qs.filter(expression)
+        return qs

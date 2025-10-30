@@ -97,7 +97,7 @@ def zendesk_sso_info(request):
             response_data['zendesk_subdomain'] = zendesk_subdomain
             response_data['knowledge_base_url'] = (
                 f"https://{zendesk_subdomain}.zendesk.com/hc/en-us/categories/"
-                "31285460572180-Last-Mile-Supply-Monitoring-Module"
+                "42522687793044-Last-Mile-Supply-Monitoring-Module"
             )
 
         return JsonResponse(response_data)
