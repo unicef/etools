@@ -27,6 +27,7 @@ from etools.applications.last_mile.admin_panel.csv_exporter import (
     UsersCSVExporter,
 )
 from etools.applications.last_mile.admin_panel.csv_importer import CsvImporter
+from etools.applications.last_mile.admin_panel.services.location_validator import LocationValidatorService
 from etools.applications.last_mile.admin_panel.filters import (
     AlertNotificationFilter,
     ItemFilter,
@@ -49,7 +50,9 @@ from etools.applications.last_mile.admin_panel.serializers import (
     ItemTransferAdminSerializer,
     LastMileUserProfileSerializer,
     LastMileUserProfileUpdateAdminSerializer,
+    LocationBorderResponseSerializer,
     LocationsAdminSerializer,
+    ValidateBorderSerializer,
     MaterialAdminSerializer,
     OrganizationAdminSerializer,
     PartnerOrganizationAdminSerializer,
@@ -336,6 +339,8 @@ class LocationsViewSet(mixins.ListModelMixin,
             return BulkReviewPointOfInterestSerializer
         if self.action == '_import_file':
             return ImportFileSerializer
+        if self.action == 'validate_border':
+            return ValidateBorderSerializer
         return PointOfInterestAdminSerializer
 
     @action(
@@ -368,6 +373,25 @@ class LocationsViewSet(mixins.ListModelMixin,
             resp['Content-Disposition'] = f'attachment; filename="checked_{excel_file.name}"'
             return resp
         return Response({"valid": valid}, status=status.HTTP_200_OK)
+    
+    @action(detail=False, methods=['post'], url_path='validate-border')
+    def validate_border(self, request, *args, **kwargs):
+        serializer = ValidateBorderSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        point = serializer.validated_data.get('point')
+
+        validator_service = LocationValidatorService()
+        result = validator_service.validate_point_with_borders(point)
+
+        if result['valid']:
+            response_serializer = LocationBorderResponseSerializer(result['location'])
+            return Response(response_serializer.data, status=status.HTTP_200_OK)
+
+        return Response({
+            "valid": False,
+            "error": result.get('error', 'No location found for the provided coordinates')
+        }, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=False, methods=['put'], url_path='bulk-review')
     def bulk_review(self, request, *args, **kwargs):

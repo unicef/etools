@@ -13,7 +13,7 @@ from etools.applications.last_mile.tests.factories import PointOfInterestFactory
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.users.tests.factories import SimpleUserFactory, UserPermissionFactory
-
+from etools.applications.locations.models import Location
 
 class TestLocationsViewSet(BaseTenantTestCase):
     @classmethod
@@ -1026,3 +1026,180 @@ class TestLocationsViewSet(BaseTenantTestCase):
                 "get", self.url, data=variation, user=self.partner_staff
             )
             self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_validate_border_with_point_inside_polygon(self):
+        validate_url = self.url + "validate-border/"
+        Location.objects.all().delete()
+        country = LocationFactory(
+            name="Test Country",
+            admin_level=0,
+            admin_level_name="Country",
+            geom="MULTIPOLYGON(((10 10, 10 20, 20 20, 20 10, 10 10)))",
+            is_active=True
+        )
+        region = LocationFactory(
+            name="Test Region",
+            admin_level=1,
+            admin_level_name="Region",
+            parent=country,
+            geom="MULTIPOLYGON(((12 12, 12 18, 18 18, 18 12, 12 12)))",
+            is_active=True
+        )
+        LocationFactory(
+            name="Test District",
+            admin_level=2,
+            admin_level_name="District",
+            parent=region,
+            geom="MULTIPOLYGON(((14 14, 14 16, 16 16, 16 14, 14 14)))",
+            is_active=True
+        )
+
+        data = {
+            "point": {
+                "type": "Point",
+                "coordinates": [15, 15]
+            }
+        }
+
+        response = self.forced_auth_req(
+            "post", validate_url, data=data, user=self.partner_staff
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data.get("valid"))
+
+        self.assertIn("country", response.data)
+        self.assertEqual(response.data["country"]["location"], "Test Country")
+        self.assertIsInstance(response.data["country"]["borders"], list)
+
+        self.assertIn("region", response.data)
+        self.assertEqual(response.data["region"]["location"], "Test Region")
+        self.assertIsInstance(response.data["region"]["borders"], list)
+
+        self.assertIn("district", response.data)
+        self.assertEqual(response.data["district"]["location"], "Test District")
+        self.assertIsInstance(response.data["district"]["borders"], list)
+
+    def test_validate_border_with_point_outside_all_polygons(self):
+        validate_url = self.url + "validate-border/"
+
+        LocationFactory(
+            name="Nearest Location",
+            admin_level=2,
+            point=GEOSGeometry("POINT(30 30)"),
+            is_active=True
+        )
+
+        data = {
+            "point": {
+                "type": "Point",
+                "coordinates": [100, 100]
+            }
+        }
+
+        response = self.forced_auth_req(
+            "post", validate_url, data=data, user=self.partner_staff
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data.get("valid"))
+
+    def test_validate_border_no_location_found(self):
+        validate_url = self.url + "validate-border/"
+
+        Location.objects.all().delete()
+
+        data = {
+            "point": {
+                "type": "Point",
+                "coordinates": [50, 50]
+            }
+        }
+
+        response = self.forced_auth_req(
+            "post", validate_url, data=data, user=self.partner_staff
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertFalse(response.data.get("valid"))
+        self.assertIn("error", response.data)
+
+    def test_validate_border_invalid_point_format(self):
+        validate_url = self.url + "validate-border/"
+
+        data = {
+            "point": {
+                "type": "InvalidType",
+                "coordinates": [15, 15]
+            }
+        }
+
+        response = self.forced_auth_req(
+            "post", validate_url, data=data, user=self.partner_staff
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_validate_border_missing_point(self):
+        validate_url = self.url + "validate-border/"
+
+        data = {}
+
+        response = self.forced_auth_req(
+            "post", validate_url, data=data, user=self.partner_staff
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_validate_border_unauthorized_user(self):
+        validate_url = self.url + "validate-border/"
+
+        data = {
+            "point": {
+                "type": "Point",
+                "coordinates": [15, 15]
+            }
+        }
+
+        response = self.forced_auth_req(
+            "post", validate_url, data=data, user=self.simple_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_validate_border_with_partial_hierarchy(self):
+        validate_url = self.url + "validate-border/"
+        Location.objects.all().delete()
+        country = LocationFactory(
+            name="Country Only",
+            admin_level=0,
+            admin_level_name="Country",
+            geom="MULTIPOLYGON(((10 10, 10 20, 20 20, 20 10, 10 10)))",
+            is_active=True
+        )
+        LocationFactory(
+            name="District Only",
+            admin_level=2,
+            admin_level_name="District",
+            parent=country,
+            geom="MULTIPOLYGON(((14 14, 14 16, 16 16, 16 14, 14 14)))",
+            is_active=True
+        )
+
+        data = {
+            "point": {
+                "type": "Point",
+                "coordinates": [15, 15]
+            }
+        }
+
+        response = self.forced_auth_req(
+            "post", validate_url, data=data, user=self.partner_staff
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data.get("valid"))
+
+        self.assertIn("country", response.data)
+        self.assertIn("district", response.data)
+        self.assertNotIn("region", response.data)
