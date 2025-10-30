@@ -340,7 +340,8 @@ class ParentLocationsSerializer(serializers.Serializer):
         if instance.THIRD_ADMIN_LEVEL in parent_locations:
             location_data["district"] = parent_locations.get(instance.THIRD_ADMIN_LEVEL).name
         return location_data
-    
+
+
 class ValidateBorderSerializer(serializers.Serializer):
     point = GeometryField(required=True)
 

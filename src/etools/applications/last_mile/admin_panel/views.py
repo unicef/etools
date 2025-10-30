@@ -27,7 +27,6 @@ from etools.applications.last_mile.admin_panel.csv_exporter import (
     UsersCSVExporter,
 )
 from etools.applications.last_mile.admin_panel.csv_importer import CsvImporter
-from etools.applications.last_mile.admin_panel.services.location_validator import LocationValidatorService
 from etools.applications.last_mile.admin_panel.filters import (
     AlertNotificationFilter,
     ItemFilter,
@@ -52,7 +51,6 @@ from etools.applications.last_mile.admin_panel.serializers import (
     LastMileUserProfileUpdateAdminSerializer,
     LocationBorderResponseSerializer,
     LocationsAdminSerializer,
-    ValidateBorderSerializer,
     MaterialAdminSerializer,
     OrganizationAdminSerializer,
     PartnerOrganizationAdminSerializer,
@@ -75,7 +73,9 @@ from etools.applications.last_mile.admin_panel.serializers import (
     UserAlertNotificationsExportSerializer,
     UserPointOfInterestAdminSerializer,
     UserPointOfInterestExportSerializer,
+    ValidateBorderSerializer,
 )
+from etools.applications.last_mile.admin_panel.services.location_validator import LocationValidatorService
 from etools.applications.last_mile.admin_panel.validators import AdminPanelValidator
 from etools.applications.last_mile.permissions import IsLMSMAdmin
 from etools.applications.locations.models import Location
@@ -373,7 +373,7 @@ class LocationsViewSet(mixins.ListModelMixin,
             resp['Content-Disposition'] = f'attachment; filename="checked_{excel_file.name}"'
             return resp
         return Response({"valid": valid}, status=status.HTTP_200_OK)
-    
+
     @action(detail=False, methods=['post'], url_path='validate-border')
     def validate_border(self, request, *args, **kwargs):
         serializer = ValidateBorderSerializer(data=request.data)

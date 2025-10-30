@@ -10,10 +10,11 @@ from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.last_mile import models
 from etools.applications.last_mile.admin_panel.constants import *  # NOQA
 from etools.applications.last_mile.tests.factories import PointOfInterestFactory, PointOfInterestTypeFactory
+from etools.applications.locations.models import Location
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.users.tests.factories import SimpleUserFactory, UserPermissionFactory
-from etools.applications.locations.models import Location
+
 
 class TestLocationsViewSet(BaseTenantTestCase):
     @classmethod
