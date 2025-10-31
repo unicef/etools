@@ -163,3 +163,17 @@ class BulkCloseProgrammeDocumentsSerializer(serializers.Serializer):
 
 class TripApproverUpdateSerializer(serializers.ModelSerializer):
     pass
+
+
+class SitesBulkUploadSerializer(serializers.Serializer):
+    import_file = serializers.FileField()
+
+
+class AnswerHactSerializer(serializers.Serializer):
+    partner = serializers.PrimaryKeyRelatedField(queryset=PartnerOrganization.objects.all())
+    value = serializers.JSONField(allow_null=True)
+
+
+class SetOnTrackSerializer(serializers.Serializer):
+    partner = serializers.PrimaryKeyRelatedField(queryset=PartnerOrganization.objects.all())
+    on_track = serializers.BooleanField(default=True)
