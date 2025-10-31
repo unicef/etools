@@ -113,7 +113,7 @@ class DataExportService:
         "transfer": models.Transfer.objects,
         "poi": models.PointOfInterest.export_objects,
         "item": models.Item.objects,
-        "item_history": models.ItemAuditLog.objects,
+        "item_history": models.ItemTransferHistory.objects,
         "poi_type": models.PointOfInterestType.objects,
     }
 

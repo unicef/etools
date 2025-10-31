@@ -18,7 +18,7 @@ from etools.applications.last_mile.admin_panel.constants import (
     PARTNER_NOT_UNDER_ORGANIZATION,
     POI_TYPE_ALREADY_EXISTS,
     REALM_ALREADY_EXISTS,
-    STATUS_NOT_CRRECT,
+    STATUS_NOT_CORRECT,
     TRANSFER_HAS_NO_ITEMS,
     TRANSFER_NOT_FOUND_FOR_REVERSE,
     TRANSFER_TYPE_HANDOVER_NOT_ALLOWED,
@@ -85,7 +85,7 @@ class AdminPanelValidator:
 
     def validate_status(self, status: str) -> None:
         if status not in [Profile.ApprovalStatus.APPROVED, Profile.ApprovalStatus.REJECTED]:
-            raise ValidationError(_(STATUS_NOT_CRRECT))
+            raise ValidationError(_(STATUS_NOT_CORRECT))
 
     def validate_items(self, items: list):
         uom_types = [uom[0] for uom in Material.UOM]

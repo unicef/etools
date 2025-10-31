@@ -582,6 +582,16 @@ class ItemManager(models.Manager):
         return result
 
 
+class ItemTransferHistory(TimeStampedModel, models.Model):
+    transfer = models.ForeignKey(Transfer, on_delete=models.CASCADE)
+    item = models.ForeignKey('Item', on_delete=models.CASCADE)
+
+    objects = BaseExportQuerySet.as_manager()
+
+    class Meta:
+        unique_together = ('transfer', 'item')
+
+
 class Item(TimeStampedModel, models.Model):
     DAMAGED = 'DAMAGED'
     EXPIRED = 'EXPIRED'
@@ -645,6 +655,11 @@ class Item(TimeStampedModel, models.Model):
         related_name='items'
     )
 
+    transfers_history = models.ManyToManyField(
+        Transfer,
+        through='ItemTransferHistory'
+    )
+
     class Meta:
         base_manager_name = 'objects'
         ordering = ("expiry_date",)
@@ -675,6 +690,12 @@ class Item(TimeStampedModel, models.Model):
 
         should_hide = not partner_material_exists
         return should_hide
+
+    def add_transfer_history(self, transfer):
+        ItemTransferHistory.objects.create(
+            item=self,
+            transfer=transfer
+        )
 
     def __str__(self):
         return f'{self.material.number}: {self.description} / qty {self.quantity}'
