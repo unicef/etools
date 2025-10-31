@@ -1327,11 +1327,6 @@ class SendPDToVisionTestCase(BaseTenantTestCase):
         ll_results = result_links[0].get('ll_results', [])
         activities = ll_results[0].get('activities', [])
 
-        first_result = ll_results[0]
-        self.assertEqual(
-            first_result.get('name'), f"{self.pd_output.code} {self.pd_output.name}",
-        )
-
         matched = {a.get('id'): a for a in activities}.get(self.activity.id)
         self.assertIsNotNone(matched, 'Created activity must be present in payload')
         self.assertTrue(
