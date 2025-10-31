@@ -115,7 +115,7 @@ class TestAlertNotificationsViewSet(BaseTenantTestCase):
         }
         response = self.forced_auth_req('post', self.url, user=self.partner_staff, data=payload)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("The user does not exist.", str(response.data))
+        self.assertIn("user_does_not_exist", str(response.data))
 
     def test_create_alert_notification_invalid_group(self):
         payload = {
@@ -124,7 +124,7 @@ class TestAlertNotificationsViewSet(BaseTenantTestCase):
         }
         response = self.forced_auth_req('post', self.url, user=self.partner_staff, data=payload)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("The group is not available.", str(response.data))
+        self.assertIn("group_not_available", str(response.data))
 
     def test_create_alert_notification_duplicate_realm(self):
         # Pre-create a Realm with the same user, country, group, and organization.
@@ -211,7 +211,7 @@ class TestAlertNotificationsViewSet(BaseTenantTestCase):
         }
         response = self.forced_auth_req('patch', detail_url, user=self.partner_staff, data=payload)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("The group is not available.", str(response.data))
+        self.assertIn("group_not_available", str(response.data))
 
     def test_update_alert_notification_unauthorized(self):
         realm = RealmFactory(

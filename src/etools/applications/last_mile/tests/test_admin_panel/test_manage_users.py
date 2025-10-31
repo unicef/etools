@@ -652,7 +652,7 @@ class TestUsersViewSet(BaseTenantTestCase):
         payload = {"user_ids": [self.user_to_manage_4.pk], "status": Profile.ApprovalStatus.APPROVED}
         response = self.forced_auth_req('patch', self.bulk_url, user=self.approver_user, data=payload)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("This user/s can't be approved by the same user who created it.", response.data)
+        self.assertIn("user_cant_approve", response.data)
 
     def test_bulk_update_profiles_invalid_status_value(self):
         payload = {"user_ids": [self.user_to_manage1.pk], "status": "INVALID_BULK_STATUS"}

@@ -102,7 +102,7 @@ class TestRevertTransfersViewSet(BaseTenantTestCase):
         response = self.forced_auth_req('put', url_no_items, user=self.partner_staff, data={})
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("The transfer has no items. Cannot reverse.", str(response.data))
+        self.assertIn("transfer_has_no_items", str(response.data))
         transfer_no_items.refresh_from_db()
         self.assertEqual(transfer_no_items.items.count(), 0)
 
@@ -114,7 +114,7 @@ class TestRevertTransfersViewSet(BaseTenantTestCase):
         response = self.forced_auth_req('put', url_handover, user=self.partner_staff, data={})
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("Handover transfers cannot be reversed.", str(response.data))
+        self.assertIn("transfer_type_handover_not_allowed", str(response.data))
         transfer_handover.refresh_from_db()
         self.assertEqual(transfer_handover.items.count(), 1)
         self.assertEqual(transfer_handover.transfer_type, Transfer.HANDOVER)
