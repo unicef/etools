@@ -217,7 +217,7 @@ class TestStockManagementViewSet(BaseTenantTestCase):
             "post", self.url, user=self.partner_staff, data=payload
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("No items were provided", str(response.data))
+        self.assertIn("items_not_provided", str(response.data))
 
     def test_create_transfer_item_invalid_items(self):
         destination = PointOfInterestFactory(name="Destination POI Invalid Items")
@@ -259,7 +259,7 @@ class TestStockManagementViewSet(BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn(
-            "The partner does not exist under the location.", str(response.data)
+            "partner_not_under_location", str(response.data)
         )
 
     def test_create_transfer_item_missing_location(self):
@@ -617,7 +617,7 @@ class TestStockManagementViewSet(BaseTenantTestCase):
             "patch", self.item_update_url, user=self.partner_staff, data=payload
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("The quantity must be greater than 0", str(response.data))
+        self.assertIn("invalid_quantity", str(response.data))
 
     def test_update_item_fails_zero_quantity(self):
         payload = {"quantity": 0}
@@ -625,7 +625,7 @@ class TestStockManagementViewSet(BaseTenantTestCase):
             "patch", self.item_update_url, user=self.partner_staff, data=payload
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("The quantity must be greater than 0", str(response.data))
+        self.assertIn("invalid_quantity", str(response.data))
 
     def test_update_item_fails_invalid_uom(self):
         payload = {"uom": "INVALID_UOM"}

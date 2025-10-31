@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.contrib.gis.geos import Point
-from django.db import transaction
+from django.db import connection, transaction
 from django.utils.encoding import force_str
 
 from rest_framework import serializers
@@ -91,11 +91,14 @@ class UserAdminSerializer(SimpleUserSerializer):
 
 class UserAdminExportSerializer(serializers.ModelSerializer):
     implementing_partner = serializers.SerializerMethodField(read_only=True)
-    country = serializers.CharField(source='profile.country.name', read_only=True)
+    country = serializers.SerializerMethodField(read_only=True)
     status = serializers.SerializerMethodField(read_only=True)
 
     def get_status(self, obj):
         return "Active" if obj.is_active else "Inactive"
+
+    def get_country(self, obj):
+        return connection.tenant.name
 
     def get_implementing_partner(self, obj):
         return f"{obj.profile.organization.vendor_number if obj.profile.organization else '-'} - {obj.profile.organization.name if obj.profile.organization else '-'}"
@@ -337,6 +340,47 @@ class ParentLocationsSerializer(serializers.Serializer):
         if instance.THIRD_ADMIN_LEVEL in parent_locations:
             location_data["district"] = parent_locations.get(instance.THIRD_ADMIN_LEVEL).name
         return location_data
+
+
+class ValidateBorderSerializer(serializers.Serializer):
+    point = GeometryField(required=True)
+
+
+class LocationBorderResponseSerializer(serializers.Serializer):
+    def to_representation(self, instance):
+        parent_locations = instance.get_parent_locations()
+
+        data = {"valid": True}
+
+        if instance.FIRST_ADMIN_LEVEL in parent_locations:
+            loc = parent_locations[instance.FIRST_ADMIN_LEVEL]
+            data["country"] = {
+                "location": loc.name,
+                "borders": loc.get_borders(tolerance=0.01) if loc.geom else []
+            }
+
+        if instance.SECOND_ADMIN_LEVEL in parent_locations:
+            loc = parent_locations[instance.SECOND_ADMIN_LEVEL]
+            data["region"] = {
+                "location": loc.name,
+                "borders": loc.get_borders(tolerance=0.01) if loc.geom else []
+            }
+
+        if instance.THIRD_ADMIN_LEVEL in parent_locations:
+            loc = parent_locations[instance.THIRD_ADMIN_LEVEL]
+            data["district"] = {
+                "location": loc.name,
+                "borders": loc.get_borders(tolerance=0.01) if loc.geom else []
+            }
+
+        if instance.FOURTH_ADMIN_LEVEL in parent_locations:
+            loc = parent_locations[instance.FOURTH_ADMIN_LEVEL]
+            data["subdistrict"] = {
+                "location": loc.name,
+                "borders": loc.get_borders(tolerance=0.01) if loc.geom else []
+            }
+
+        return data
 
 
 class PointOfInterestAdminSerializer(serializers.ModelSerializer):
