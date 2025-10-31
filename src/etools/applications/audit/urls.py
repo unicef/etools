@@ -1,4 +1,4 @@
-from django.urls import include, re_path
+from django.urls import include, path, re_path
 
 from rest_framework_nested import routers
 from unicef_restlib.routers import NestedComplexRouter
@@ -55,5 +55,12 @@ urlpatterns = [
         r'^special-audit/(?P<object_pk>\d+)/links',
         view=views.SpecialAuditAttachmentLinksView.as_view(),
         name='special-audit-links'
+    ),
+    path(
+        'face-forms/<int:partner_pk>/',
+        view=views.FaceFormListViewSet.as_view(
+            {'get': 'list'},
+        ),
+        name='face-forms',
     ),
 ]
