@@ -6,6 +6,7 @@ from django.urls import reverse
 
 import openpyxl
 from rest_framework import status
+from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.field_monitoring.data_collection.models import (
@@ -31,6 +32,8 @@ class TestRssAdminFieldMonitoringApi(BaseTenantTestCase):
 
     def test_sites_bulk_upload(self):
         # Build XLSX in-memory with required headers and a few rows
+        # Ensure at least one active admin level 0 Location exists so LocationSite.save() can set parent
+        LocationFactory(admin_level=0, is_active=True)
         wb = openpyxl.Workbook()
         ws = wb.active
         ws.title = "Data"
@@ -51,7 +54,7 @@ class TestRssAdminFieldMonitoringApi(BaseTenantTestCase):
         )
 
         url = reverse('rss_admin:rss-admin-sites-bulk-upload')
-        resp = self.forced_auth_req('post', url, user=self.user, data={'import_file': upload})
+        resp = self.forced_auth_req('post', url, user=self.user, data={'import_file': upload}, request_format='multipart')
         self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
         # Two valid created, rest skipped
         self.assertEqual(resp.data['created'] + resp.data['updated'], 2)
