@@ -21,6 +21,7 @@ from etools.applications.field_monitoring.data_collection.models import (
 )
 from etools.applications.field_monitoring.fm_settings.models import LocationSite
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
+from etools.applications.field_monitoring.planning.serializers import MonitoringActivitySerializer
 from etools.applications.partners.filters import InterventionEditableByFilter, ShowAmendmentsFilter
 from etools.applications.partners.models import Agreement, Intervention, InterventionBudget, PartnerOrganization
 from etools.applications.partners.serializers.interventions_v2 import (
@@ -332,6 +333,7 @@ class LocationSiteAdminViewSet(viewsets.ViewSet):
 
 class MonitoringActivityRssViewSet(viewsets.ModelViewSet):
     queryset = MonitoringActivity.objects.all()
+    serializer_class = MonitoringActivitySerializer
     permission_classes = (IsRssAdmin,)
 
     @action(detail=True, methods=['post'], url_path='answer-hact')
