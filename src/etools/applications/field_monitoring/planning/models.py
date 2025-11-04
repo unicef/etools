@@ -120,12 +120,10 @@ class VisitGoal(models.Model):
 
 class FacilityType(models.Model):
     name = models.CharField(max_length=255)
-    related_section = models.ForeignKey(
+    related_sections = models.ManyToManyField(
         Section,
-        on_delete=models.SET_NULL,
         blank=True,
-        null=True,
-        verbose_name=_('Related Section'),
+        verbose_name=_('Related Sections'),
         related_name='facility_types'
     )
 

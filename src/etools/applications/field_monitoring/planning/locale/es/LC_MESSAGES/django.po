@@ -181,6 +181,9 @@ msgstr "Plantillas de Preguntas"
 msgid "Related Section"
 msgstr "Sección Relacionada"
 
+msgid "Related Sections"
+msgstr "Secciones Relacionadas"
+
 msgid "Temporary"
 msgstr "Temporal"
 

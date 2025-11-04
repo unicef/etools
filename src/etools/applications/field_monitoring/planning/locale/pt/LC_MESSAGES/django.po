@@ -178,6 +178,9 @@ msgstr "Modelos de Pergunta"
 msgid "Related Section"
 msgstr "Seção Relacionada"
 
+msgid "Related Sections"
+msgstr "Seções Relacionadas"
+
 msgid "Temporary"
 msgstr "Temporário"
 

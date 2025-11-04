@@ -36,10 +36,15 @@ class VisitGoalAdmin(admin.ModelAdmin):
 
 @admin.register(FacilityType)
 class FacilityTypeAdmin(admin.ModelAdmin):
-    list_display = ('name', 'related_section')
-    list_filter = ('related_section',)
-    raw_id_fields = ('related_section',)
-    search_fields = ('name', 'related_section__name')
+    list_display = ('name', 'get_related_sections')
+    list_filter = ('related_sections',)
+    filter_horizontal = ('related_sections',)
+    search_fields = ('name', 'related_sections__name')
+
+    def get_related_sections(self, obj):
+        """Display related sections as comma-separated string."""
+        return ', '.join(section.name for section in obj.related_sections.all())
+    get_related_sections.short_description = 'Related Sections'
 
 
 @admin.register(MonitoringActivityFacilityType)

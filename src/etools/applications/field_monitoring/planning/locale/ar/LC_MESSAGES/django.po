@@ -179,6 +179,9 @@ msgstr "نماذج السؤال"
 msgid "Related Section"
 msgstr "القسم المعني"
 
+msgid "Related Sections"
+msgstr "الأقسام المعنية"
+
 msgid "Temporary"
 msgstr "مؤقت"
 

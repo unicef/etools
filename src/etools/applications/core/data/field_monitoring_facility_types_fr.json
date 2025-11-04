@@ -4,7 +4,7 @@
     "pk": 1,
     "fields": {
       "name": "Établissement de nutrition",
-      "related_section": null
+      "related_sections": []
     }
   },
   {
@@ -12,7 +12,7 @@
     "pk": 2,
     "fields": {
       "name": "Établissement de santé",
-      "related_section": null
+      "related_sections": []
     }
   },
   {
@@ -20,7 +20,7 @@
     "pk": 3,
     "fields": {
       "name": "Établissement WASH",
-      "related_section": null
+      "related_sections": []
     }
   },
   {
@@ -28,7 +28,7 @@
     "pk": 4,
     "fields": {
       "name": "Établissement d'éducation",
-      "related_section": null
+      "related_sections": []
     }
   },
   {
@@ -36,7 +36,7 @@
     "pk": 5,
     "fields": {
       "name": "Établissement de protection de l'enfant",
-      "related_section": null
+      "related_sections": []
     }
   },
   {
@@ -44,7 +44,7 @@
     "pk": 6,
     "fields": {
       "name": "Bureau du gouvernement ou d'OSC",
-      "related_section": null
+      "related_sections": []
     }
   },
   {
@@ -52,7 +52,7 @@
     "pk": 7,
     "fields": {
       "name": "Autre établissement",
-      "related_section": null
+      "related_sections": []
     }
   },
   {
@@ -60,7 +60,7 @@
     "pk": 8,
     "fields": {
       "name": "Installation de fournitures y compris entrepôt",
-      "related_section": null
+      "related_sections": []
     }
   },
   {
@@ -68,7 +68,7 @@
     "pk": 9,
     "fields": {
       "name": "Centre de soins de santé primaires (SSP)",
-      "related_section": null
+      "related_sections": []
     }
   }
 ]

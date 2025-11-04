@@ -4,7 +4,7 @@
     "pk": 1,
     "fields": {
       "name": "Nutrition Facility",
-      "related_section": null
+      "related_sections": []
     }
   },
   {
@@ -12,7 +12,7 @@
     "pk": 2,
     "fields": {
       "name": "Health Facility",
-      "related_section": null
+      "related_sections": []
     }
   },
   {
@@ -20,7 +20,7 @@
     "pk": 3,
     "fields": {
       "name": "WASH Facility",
-      "related_section": null
+      "related_sections": []
     }
   },
   {
@@ -28,7 +28,7 @@
     "pk": 4,
     "fields": {
       "name": "Education Facility",
-      "related_section": null
+      "related_sections": []
     }
   },
   {
@@ -36,7 +36,7 @@
     "pk": 5,
     "fields": {
       "name": "Child Protection Facility",
-      "related_section": null
+      "related_sections": []
     }
   },
   {
@@ -44,7 +44,7 @@
     "pk": 6,
     "fields": {
       "name": "Government or CSO Office",
-      "related_section": null
+      "related_sections": []
     }
   },
   {
@@ -52,7 +52,7 @@
     "pk": 7,
     "fields": {
       "name": "Other Facility",
-      "related_section": null
+      "related_sections": []
     }
   },
   {
@@ -60,7 +60,7 @@
     "pk": 8,
     "fields": {
       "name": "Supplies facility including warehouse",
-      "related_section": null
+      "related_sections": []
     }
   },
   {
@@ -68,7 +68,7 @@
     "pk": 9,
     "fields": {
       "name": "Primary Health Care facility (PHC)",
-      "related_section": null
+      "related_sections": []
     }
   }
 ]

@@ -104,11 +104,11 @@ class VisitGoalSerializer(serializers.ModelSerializer):
 
 
 class FacilityTypeSerializer(serializers.ModelSerializer):
-    related_section = SectionSerializer(read_only=True)
-
+    related_sections = SectionSerializer(many=True, read_only=True)
+    
     class Meta:
         model = FacilityType
-        fields = ['id', 'name', 'related_section']
+        fields = ['id', 'name', 'related_sections']
 
 
 class MonitoringActivityFacilityTypeSerializer(serializers.ModelSerializer):

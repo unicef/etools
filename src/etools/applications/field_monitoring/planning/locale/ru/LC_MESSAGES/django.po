@@ -181,6 +181,9 @@ msgstr "Шаблоны вопросов"
 msgid "Related Section"
 msgstr "Связанный раздел"
 
+msgid "Related Sections"
+msgstr "Связанные разделы"
+
 msgid "Temporary"
 msgstr "Временный"
 
