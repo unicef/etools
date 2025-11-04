@@ -3,49 +3,72 @@
     "model": "field_monitoring_planning.facilitytype",
     "pk": 1,
     "fields": {
-      "name": "Instalación de Nutrición"
+      "name": "Instalación de Nutrición",
+      "related_section": null
     }
   },
   {
     "model": "field_monitoring_planning.facilitytype",
     "pk": 2,
     "fields": {
-      "name": "Instalación de Salud"
+      "name": "Instalación de Salud",
+      "related_section": null
     }
   },
   {
     "model": "field_monitoring_planning.facilitytype",
     "pk": 3,
     "fields": {
-      "name": "Instalación de WASH"
+      "name": "Instalación de WASH",
+      "related_section": null
     }
   },
   {
     "model": "field_monitoring_planning.facilitytype",
     "pk": 4,
     "fields": {
-      "name": "Instalación Educativa"
+      "name": "Instalación Educativa",
+      "related_section": null
     }
   },
   {
     "model": "field_monitoring_planning.facilitytype",
     "pk": 5,
     "fields": {
-      "name": "Instalación de Protección Infantil"
+      "name": "Instalación de Protección Infantil",
+      "related_section": null
     }
   },
   {
     "model": "field_monitoring_planning.facilitytype",
     "pk": 6,
     "fields": {
-      "name": "Oficina del Gobierno o OSC"
+      "name": "Oficina del Gobierno o OSC",
+      "related_section": null
     }
   },
   {
     "model": "field_monitoring_planning.facilitytype",
     "pk": 7,
     "fields": {
-      "name": "Otra Instalación"
+      "name": "Otra Instalación",
+      "related_section": null
+    }
+  },
+  {
+    "model": "field_monitoring_planning.facilitytype",
+    "pk": 8,
+    "fields": {
+      "name": "Instalación de suministros incluido almacén",
+      "related_section": null
+    }
+  },
+  {
+    "model": "field_monitoring_planning.facilitytype",
+    "pk": 9,
+    "fields": {
+      "name": "Centro de Atención Primaria de Salud (APS)",
+      "related_section": null
     }
   }
 ]

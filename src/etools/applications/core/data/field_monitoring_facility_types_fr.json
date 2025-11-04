@@ -3,49 +3,72 @@
     "model": "field_monitoring_planning.facilitytype",
     "pk": 1,
     "fields": {
-      "name": "Établissement de nutrition"
+      "name": "Établissement de nutrition",
+      "related_section": null
     }
   },
   {
     "model": "field_monitoring_planning.facilitytype",
     "pk": 2,
     "fields": {
-      "name": "Établissement de santé"
+      "name": "Établissement de santé",
+      "related_section": null
     }
   },
   {
     "model": "field_monitoring_planning.facilitytype",
     "pk": 3,
     "fields": {
-      "name": "Établissement WASH"
+      "name": "Établissement WASH",
+      "related_section": null
     }
   },
   {
     "model": "field_monitoring_planning.facilitytype",
     "pk": 4,
     "fields": {
-      "name": "Établissement d'éducation"
+      "name": "Établissement d'éducation",
+      "related_section": null
     }
   },
   {
     "model": "field_monitoring_planning.facilitytype",
     "pk": 5,
     "fields": {
-      "name": "Établissement de protection de l'enfant"
+      "name": "Établissement de protection de l'enfant",
+      "related_section": null
     }
   },
   {
     "model": "field_monitoring_planning.facilitytype",
     "pk": 6,
     "fields": {
-      "name": "Bureau du gouvernement ou d'OSC"
+      "name": "Bureau du gouvernement ou d'OSC",
+      "related_section": null
     }
   },
   {
     "model": "field_monitoring_planning.facilitytype",
     "pk": 7,
     "fields": {
-      "name": "Autre établissement"
+      "name": "Autre établissement",
+      "related_section": null
+    }
+  },
+  {
+    "model": "field_monitoring_planning.facilitytype",
+    "pk": 8,
+    "fields": {
+      "name": "Installation de fournitures y compris entrepôt",
+      "related_section": null
+    }
+  },
+  {
+    "model": "field_monitoring_planning.facilitytype",
+    "pk": 9,
+    "fields": {
+      "name": "Centre de soins de santé primaires (SSP)",
+      "related_section": null
     }
   }
 ]

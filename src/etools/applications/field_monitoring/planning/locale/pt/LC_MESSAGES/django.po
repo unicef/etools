@@ -2,13 +2,13 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
+# 
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-18 16:39+0200\n"
+"POT-Creation-Date: 2025-11-04 09:16+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -25,12 +25,20 @@ msgid "Staff members do not belong to the selected partner"
 msgstr "Os funcionários não pertencem ao parceiro selecionado"
 
 #, python-format
-msgid "You've selected a PD/SPD and unselected some of it's corresponding partners, please either remove the PD or add the partners back before saving: %s"
-msgstr "Você selecionou um PD/SPD e desmarcou alguns de seus parceiros correspondentes, remova o PD ou adicione os parceiros antes de salvar: %s"
+msgid ""
+"You've selected a PD/SPD and unselected some of it's corresponding partners, "
+"please either remove the PD or add the partners back before saving: %s"
+msgstr ""
+"Você selecionou um PD/SPD e desmarcou alguns de seus parceiros "
+"correspondentes, remova o PD ou adicione os parceiros antes de salvar: %s"
 
 #, python-format
-msgid "You've selected a PD/SPD and unselected some of it's corresponding outputs, please either remove the PD or add the outputs back before saving: %s"
-msgstr "Você selecionou um PD/SPD e desmarcou algumas de suas saídas correspondentes, remova o PD ou adicione as saídas antes de salvar: %s"
+msgid ""
+"You've selected a PD/SPD and unselected some of it's corresponding outputs, "
+"please either remove the PD or add the outputs back before saving: %s"
+msgstr ""
+"Você selecionou um PD/SPD e desmarcou algumas de suas saídas "
+"correspondentes, remova o PD ou adicione as saídas antes de salvar: %s"
 
 msgid "Visit lead is inactive or has no access"
 msgstr "O responsável pela visita está inativo ou sem acesso"
@@ -167,6 +175,39 @@ msgstr "Modelo de Pergunta"
 msgid "Question Templates"
 msgstr "Modelos de Pergunta"
 
+msgid "Related Section"
+msgstr "Seção Relacionada"
+
+msgid "Temporary"
+msgstr "Temporário"
+
+msgid "Semi-permanent"
+msgstr "Semi-permanente"
+
+msgid "Permanent"
+msgstr "Permanente"
+
+msgid "Monitoring Activity"
+msgstr "Atividade de Monitoramento"
+
+msgid "Facility Type"
+msgstr "Tipo de Instalação"
+
+msgid "Facility Type Durations"
+msgstr "Durações do Tipo de Instalação"
+
+msgid "One or more duration options for this facility type"
+msgstr "Uma ou mais opções de duração para este tipo de instalação"
+
+msgid "Monitoring Activity Facility Type"
+msgstr "Tipo de Instalação de Atividade de Monitoramento"
+
+msgid "Monitoring Activity Facility Types"
+msgstr "Tipos de Instalação de Atividade de Monitoramento"
+
+msgid "No duration"
+msgstr "Sem duração"
+
 msgid "Staff"
 msgstr "Pessoal"
 
@@ -234,10 +275,7 @@ msgid "Objective"
 msgstr "Objetivo"
 
 msgid "Facility types"
-msgstr ""
-
-msgid "Monitoring Activity"
-msgstr "Atividade de Monitoramento"
+msgstr "Tipos de instalação"
 
 msgid "Monitoring Activities"
 msgstr "Atividades de Monitoramento"
@@ -308,8 +346,11 @@ msgstr "Categoria de Ponto de Ação"
 msgid "Priority"
 msgstr "Prioridade"
 
-msgid "Cannot assign inactive location \"{}\". Please choose an active location."
-msgstr "Não é possível atribuir uma localização inativa \"{}\". Por favor, escolha uma localização ativa."
+msgid ""
+"Cannot assign inactive location \"{}\". Please choose an active location."
+msgstr ""
+"Não é possível atribuir uma localização inativa \"{}\". Por favor, escolha "
+"uma localização ativa."
 
 msgid "TPM Concern Category"
 msgstr ""

@@ -2,13 +2,13 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
+# 
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-18 16:39+0200\n"
+"POT-Creation-Date: 2025-11-04 09:16+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -25,12 +25,22 @@ msgid "Staff members do not belong to the selected partner"
 msgstr "Les membres du personnel n'appartiennent pas au partenaire sélectionné"
 
 #, python-format
-msgid "You've selected a PD/SPD and unselected some of it's corresponding partners, please either remove the PD or add the partners back before saving: %s"
-msgstr "Vous avez sélectionné un PD/SSFA et désélectionné certains de ses partenaires correspondants, veuillez supprimer le PD ou rajouter les partenaires avant de sauvegarder: %s"
+msgid ""
+"You've selected a PD/SPD and unselected some of it's corresponding partners, "
+"please either remove the PD or add the partners back before saving: %s"
+msgstr ""
+"Vous avez sélectionné un PD/SSFA et désélectionné certains de ses "
+"partenaires correspondants, veuillez supprimer le PD ou rajouter les "
+"partenaires avant de sauvegarder: %s"
 
 #, python-format
-msgid "You've selected a PD/SPD and unselected some of it's corresponding outputs, please either remove the PD or add the outputs back before saving: %s"
-msgstr "Vous avez sélectionné un PD/SSFA et désélectionné certaines de ses produits correspondantes, veuillez supprimer le PD ou rajouter les produits avant d'enregistrer: %s"
+msgid ""
+"You've selected a PD/SPD and unselected some of it's corresponding outputs, "
+"please either remove the PD or add the outputs back before saving: %s"
+msgstr ""
+"Vous avez sélectionné un PD/SSFA et désélectionné certaines de ses produits "
+"correspondantes, veuillez supprimer le PD ou rajouter les produits avant "
+"d'enregistrer: %s"
 
 msgid "Visit lead is inactive or has no access"
 msgstr "Le responsable de la visite est inactif ou n'a pas d'accès"
@@ -43,7 +53,8 @@ msgid "Partner is not defined for TPM activity"
 msgstr "Le partenaire n'est pas défini pour l'activité TPM"
 
 msgid "At least one Partner, CP Output or PD/SPD should be added"
-msgstr "Au moins un partenaire, un produit du CP ou un PD/SSFA doit être ajouté"
+msgstr ""
+"Au moins un partenaire, un produit du CP ou un PD/SSFA doit être ajouté"
 
 msgid "Rejection reason should be provided."
 msgstr "La raison du rejet doit être fournie."
@@ -167,6 +178,39 @@ msgstr "Modèle de questions"
 msgid "Question Templates"
 msgstr "Modèles de questions"
 
+msgid "Related Section"
+msgstr "Section associée"
+
+msgid "Temporary"
+msgstr "Temporaire"
+
+msgid "Semi-permanent"
+msgstr "Semi-permanent"
+
+msgid "Permanent"
+msgstr "Permanent"
+
+msgid "Monitoring Activity"
+msgstr "Activité de suivi"
+
+msgid "Facility Type"
+msgstr "Type d'installation"
+
+msgid "Facility Type Durations"
+msgstr "Durées du type d'installation"
+
+msgid "One or more duration options for this facility type"
+msgstr "Une ou plusieurs options de durée pour ce type d'installation"
+
+msgid "Monitoring Activity Facility Type"
+msgstr "Type d'installation d'activité de suivi"
+
+msgid "Monitoring Activity Facility Types"
+msgstr "Types d'installation d'activité de suivi"
+
+msgid "No duration"
+msgstr "Aucune durée"
+
 msgid "Staff"
 msgstr "Personnel"
 
@@ -234,10 +278,7 @@ msgid "Objective"
 msgstr "Objectif"
 
 msgid "Facility types"
-msgstr ""
-
-msgid "Monitoring Activity"
-msgstr "Activité de suivi"
+msgstr "Types d'installation"
 
 msgid "Monitoring Activities"
 msgstr "Activités de suivi"
@@ -308,8 +349,11 @@ msgstr "Catégorie de point d'action"
 msgid "Priority"
 msgstr "Priorité"
 
-msgid "Cannot assign inactive location \"{}\". Please choose an active location."
-msgstr "Impossible d'assigner un emplacement inactif \"{}\". Veuillez choisir un emplacement actif."
+msgid ""
+"Cannot assign inactive location \"{}\". Please choose an active location."
+msgstr ""
+"Impossible d'assigner un emplacement inactif \"{}\". Veuillez choisir un "
+"emplacement actif."
 
 msgid "TPM Concern Category"
 msgstr ""

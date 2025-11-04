@@ -2,13 +2,13 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
+# 
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-18 16:39+0200\n"
+"POT-Creation-Date: 2025-11-04 09:16+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,7 +16,9 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=4; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || (n%100>=11 && n%100<=14)? 2 : 3);\n"
+"Plural-Forms: nplurals=4; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
+"n%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || "
+"(n%100>=11 && n%100<=14)? 2 : 3);\n"
 
 msgid "TPM Partner selected for staff activity"
 msgstr "партнер TPM выбран для работы персонала"
@@ -25,12 +27,21 @@ msgid "Staff members do not belong to the selected partner"
 msgstr "Сотрудники не принадлежат выбранному партнеру"
 
 #, python-format
-msgid "You've selected a PD/SPD and unselected some of it's corresponding partners, please either remove the PD or add the partners back before saving: %s"
-msgstr "Вы выбрали PD/SPD и отменили выбор некоторых соответствующих партнеров, пожалуйста, либо удалите PD, либо добавьте партнеров обратно перед сохранением: %s"
+msgid ""
+"You've selected a PD/SPD and unselected some of it's corresponding partners, "
+"please either remove the PD or add the partners back before saving: %s"
+msgstr ""
+"Вы выбрали PD/SPD и отменили выбор некоторых соответствующих партнеров, "
+"пожалуйста, либо удалите PD, либо добавьте партнеров обратно перед "
+"сохранением: %s"
 
 #, python-format
-msgid "You've selected a PD/SPD and unselected some of it's corresponding outputs, please either remove the PD or add the outputs back before saving: %s"
-msgstr "Вы выбрали PD/SPD и сняли выделение с некоторых соответствующих выходов, пожалуйста, удалите PD или добавьте выходы обратно перед сохранением: %s"
+msgid ""
+"You've selected a PD/SPD and unselected some of it's corresponding outputs, "
+"please either remove the PD or add the outputs back before saving: %s"
+msgstr ""
+"Вы выбрали PD/SPD и сняли выделение с некоторых соответствующих выходов, "
+"пожалуйста, удалите PD или добавьте выходы обратно перед сохранением: %s"
 
 msgid "Visit lead is inactive or has no access"
 msgstr "Руководитель визита неактивен или не имеет доступа"
@@ -167,6 +178,39 @@ msgstr "Шаблон вопроса"
 msgid "Question Templates"
 msgstr "Шаблоны вопросов"
 
+msgid "Related Section"
+msgstr "Связанный раздел"
+
+msgid "Temporary"
+msgstr "Временный"
+
+msgid "Semi-permanent"
+msgstr "Полупостоянный"
+
+msgid "Permanent"
+msgstr "Постоянный"
+
+msgid "Monitoring Activity"
+msgstr "Мониторинг активности"
+
+msgid "Facility Type"
+msgstr "Тип объекта"
+
+msgid "Facility Type Durations"
+msgstr "Длительность типа объекта"
+
+msgid "One or more duration options for this facility type"
+msgstr "Одна или несколько опций длительности для этого типа объекта"
+
+msgid "Monitoring Activity Facility Type"
+msgstr "Тип объекта мониторинга"
+
+msgid "Monitoring Activity Facility Types"
+msgstr "Типы объектов мониторинга"
+
+msgid "No duration"
+msgstr "Без длительности"
+
 msgid "Staff"
 msgstr "Персонал"
 
@@ -234,10 +278,7 @@ msgid "Objective"
 msgstr "Цель"
 
 msgid "Facility types"
-msgstr ""
-
-msgid "Monitoring Activity"
-msgstr "Мониторинг активности"
+msgstr "Типы объектов"
 
 msgid "Monitoring Activities"
 msgstr "Мониторинг деятельности"
@@ -308,8 +349,11 @@ msgstr "Категория точки действия"
 msgid "Priority"
 msgstr "Приоритет"
 
-msgid "Cannot assign inactive location \"{}\". Please choose an active location."
-msgstr "Невозможно назначить неактивное местоположение \"{}\". Пожалуйста, выберите активное местоположение."
+msgid ""
+"Cannot assign inactive location \"{}\". Please choose an active location."
+msgstr ""
+"Невозможно назначить неактивное местоположение \"{}\". Пожалуйста, выберите "
+"активное местоположение."
 
 msgid "TPM Concern Category"
 msgstr ""
