@@ -1258,13 +1258,16 @@ class TestVisionLMSMExport(BaseTenantTestCase):
         self.assertEqual(len(data), 8)
 
     def test_export_all_pois(self):
+        PointOfInterestFactory(is_active=False)
+        PointOfInterestFactory(is_active=False)
+        PointOfInterestFactory(is_active=True)
         response = self.forced_auth_req(
             method="get", url=self.url, data={"type": "poi"}, user=self.api_user
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = self._get_and_decode_streaming_response(response)
-        self.assertEqual(len(data), models.PointOfInterest.all_objects.count())
-        self.assertEqual(len(data), 18)
+        self.assertEqual(len(data) + 2, models.PointOfInterest.all_objects.count())
+        self.assertEqual(len(data), 19)
 
     def test_export_all_items(self):
         response = self.forced_auth_req(
