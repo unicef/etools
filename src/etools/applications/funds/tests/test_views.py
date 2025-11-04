@@ -31,6 +31,7 @@ from etools.applications.partners.tests.factories import (
     SignedInterventionFactory,
 )
 from etools.applications.users.tests.factories import UserFactory
+from etools.applications.vision.models import VisionSyncLog
 from etools.libraries.tests.vcrpy import VCR
 
 
@@ -489,6 +490,22 @@ class TestExternalReservationAPIView(BaseTenantTestCase):
         funds_reservation = signed_intervention.frs.first()
 
         self._assert_payload(funds_reservation, self.data)
+
+    @override_settings(ETOOLS_EZHACT_EMAIL='test@example.com', ETOOLS_EZHACT_TOKEN='testkey')
+    def test_post_404_pd_not_found(self):
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token.key)
+        tenant_switch = TenantSwitchFactory(name="ezhact_external_fr_disabled")
+        tenant_switch.countries.add(connection.tenant)
+        self.assertTrue(tenant_switch.is_active())
+
+        self.data["pd_reference_number"] = 'inexistent ref number'
+
+        response = self.client.post(reverse('funds:external-funds-reservation'), self.data, format='json')
+        self.assertEqual(status.HTTP_404_NOT_FOUND, response.status_code)
+        vision_log = VisionSyncLog.objects.filter(
+            handler_name='EZHactFundsReservation'
+        ).last()
+        self.assertTrue(vision_log.data, self.data)
 
     def test_post_unauthorized_401(self):
         tenant_switch = TenantSwitchFactory(name="ezhact_external_fr_disabled")
