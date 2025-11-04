@@ -8,6 +8,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from applications.last_mile.tests.factories import (
+    ItemAuditConfigurationFactory,
     ItemFactory,
     ItemTransferHistoryFactory,
     MaterialFactory,
@@ -19,6 +20,7 @@ from freezegun import freeze_time
 from rest_framework import status
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.environment.tests.factories import TenantSwitchFactory
 from etools.applications.last_mile import models
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.tests.factories import PartnerFactory
@@ -1869,3 +1871,331 @@ class TestVisionUsersExport(BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 0)
+
+
+class TestVisionLMSMExportItemAuditLog(BaseTenantTestCase):
+
+    url = reverse("last_mile:vision-export-data")
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+
+        cls.tenant = TenantSwitchFactory(
+            name="lmsm_item_audit_logs",
+            active=True,
+        )
+        cls.tenant.countries.add(connection.tenant)
+        cls.tenant.flush()
+
+        ItemAuditConfigurationFactory()
+
+        cls.api_user = UserFactory(is_superuser=True)
+        cls.unauthorized_user = UserFactory(is_superuser=False)
+
+        cls.partner = PartnerFactory(organization=OrganizationFactory(name='Test Partner'))
+        cls.poi = PointOfInterestFactory(partner_organizations=[cls.partner])
+
+        cls.split_time = timezone.now()
+
+        with freeze_time(cls.split_time - timedelta(days=2)):
+            cls.old_transfer = TransferFactory(
+                destination_point=cls.poi,
+                partner_organization=cls.partner,
+                unicef_release_order='URO-OLD-001'
+            )
+            cls.old_material = MaterialFactory(number='MAT-OLD-001')
+            cls.old_item = ItemFactory(
+                transfer=cls.old_transfer,
+                material=cls.old_material,
+                quantity=10
+            )
+
+        with freeze_time(cls.split_time + timedelta(days=1)):
+            cls.new_transfer = TransferFactory(
+                destination_point=cls.poi,
+                partner_organization=cls.partner,
+                unicef_release_order='URO-NEW-001'
+            )
+            cls.new_material = MaterialFactory(number='MAT-NEW-001')
+            cls.new_item = ItemFactory(
+                transfer=cls.new_transfer,
+                material=cls.new_material,
+                quantity=20
+            )
+
+    def _get_and_decode_streaming_response(self, response):
+        content_bytes = b"".join(response.streaming_content)
+        if not content_bytes:
+            return None
+        return json.loads(content_bytes.decode("utf-8"))
+
+    def setUp(self):
+        base_audit_ids = models.ItemAuditLog.objects.filter(
+            item_id__in=[self.old_item.id, self.new_item.id],
+            action=models.ItemAuditLog.ACTION_CREATE
+        ).values_list('id', flat=True)
+        models.ItemAuditLog.objects.exclude(id__in=base_audit_ids).delete()
+
+    def test_export_item_audit_log_successful(self):
+        response = self.forced_auth_req(
+            method="get",
+            url=self.url,
+            data={"type": "item_audit_log"},
+            user=self.api_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = self._get_and_decode_streaming_response(response)
+        self.assertIsInstance(data, list)
+        self.assertEqual(len(data), 2)
+
+        for item in data:
+            self.assertIn('id', item)
+            self.assertIn('created', item)
+            self.assertIn('modified', item)
+            self.assertIn('item_id', item)
+            self.assertIn('action', item)
+            self.assertIn('transfer_id', item)
+
+    def test_export_item_audit_log_with_last_modified_filter(self):
+        response = self.forced_auth_req(
+            method="get",
+            url=self.url,
+            data={
+                "type": "item_audit_log",
+                "last_modified": self.split_time.isoformat()
+            },
+            user=self.api_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = self._get_and_decode_streaming_response(response)
+
+        item_ids = [item['item_id'] for item in data]
+        self.assertIn(self.new_item.id, item_ids)
+        self.assertNotIn(self.old_item.id, item_ids)
+
+    def test_export_item_audit_log_includes_all_action_types(self):
+
+        self.old_item.quantity = 15
+        self.old_item.save()
+
+        self.new_item.hidden = True
+        self.new_item.save()
+
+        temp_item = ItemFactory(
+            transfer=self.new_transfer,
+            material=self.new_material,
+            quantity=30
+        )
+
+        temp_item.delete()
+
+        response = self.forced_auth_req(
+            method="get",
+            url=self.url,
+            data={"type": "item_audit_log"},
+            user=self.api_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = self._get_and_decode_streaming_response(response)
+
+        actions = set(item['action'] for item in data)
+        self.assertIn(models.ItemAuditLog.ACTION_CREATE, actions)
+        self.assertIn(models.ItemAuditLog.ACTION_UPDATE, actions)
+        self.assertIn(models.ItemAuditLog.ACTION_SOFT_DELETE, actions)
+        self.assertIn(models.ItemAuditLog.ACTION_DELETE, actions)
+
+    def test_export_item_audit_log_transfer_id_annotation(self):
+        response = self.forced_auth_req(
+            method="get",
+            url=self.url,
+            data={"type": "item_audit_log"},
+            user=self.api_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = self._get_and_decode_streaming_response(response)
+
+        for audit in data:
+            if audit['item_id'] == self.old_item.id:
+                self.assertEqual(audit['transfer_id'], self.old_transfer.id)
+            elif audit['item_id'] == self.new_item.id:
+                self.assertEqual(audit['transfer_id'], self.new_transfer.id)
+
+    def test_export_item_audit_log_empty_result(self):
+        future_time = (timezone.now() + timedelta(days=30)).isoformat()
+
+        response = self.forced_auth_req(
+            method="get",
+            url=self.url,
+            data={
+                "type": "item_audit_log",
+                "last_modified": future_time
+            },
+            user=self.api_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = self._get_and_decode_streaming_response(response)
+        self.assertEqual(data, [])
+
+    def test_export_item_audit_log_ordering_by_id(self):
+        items_and_ids = []
+        for i in range(3):
+            item = ItemFactory(
+                transfer=self.new_transfer,
+                material=self.new_material,
+                quantity=50 + i
+            )
+            audit_log = models.ItemAuditLog.objects.filter(
+                item_id=item.id,
+                action=models.ItemAuditLog.ACTION_CREATE
+            ).first()
+            if audit_log:
+                items_and_ids.append(audit_log.id)
+
+        response = self.forced_auth_req(
+            method="get",
+            url=self.url,
+            data={"type": "item_audit_log"},
+            user=self.api_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = self._get_and_decode_streaming_response(response)
+
+        ids = [item['id'] for item in data]
+        self.assertEqual(ids, sorted(ids))
+
+    def test_export_item_audit_log_includes_country(self):
+        response = self.forced_auth_req(
+            method="get",
+            url=self.url,
+            data={"type": "item_audit_log"},
+            user=self.api_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = self._get_and_decode_streaming_response(response)
+
+        if connection.tenant.name and len(data) > 0:
+            for item in data:
+                self.assertIn('country', item)
+                self.assertEqual(item['country'], connection.tenant.name)
+
+    def test_export_item_audit_log_bulk_operations(self):
+        items = []
+        for i in range(10):
+            item = ItemFactory(
+                transfer=self.new_transfer,
+                material=self.new_material,
+                quantity=1000 + i,
+                batch_id=f'BULK-{i:03d}'
+            )
+            items.append(item)
+
+        for i, item in enumerate(items):
+            item.quantity = 2000 + i
+            item.save()
+
+        response = self.forced_auth_req(
+            method="get",
+            url=self.url,
+            data={"type": "item_audit_log"},
+            user=self.api_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = self._get_and_decode_streaming_response(response)
+
+        self.assertGreaterEqual(len(data), 22)  # 10*2 + 2 original
+
+        bulk_item_ids = [item.id for item in items]
+        bulk_audit_logs = [d for d in data if d['item_id'] in bulk_item_ids]
+
+        create_count = sum(1 for log in bulk_audit_logs if log['action'] == 'CREATE')
+        update_count = sum(1 for log in bulk_audit_logs if log['action'] == 'UPDATE')
+
+        self.assertEqual(create_count, 10)
+        self.assertEqual(update_count, 10)
+
+    def test_export_item_audit_log_with_null_transfer_info(self):
+        models.ItemAuditLog.objects.create(
+            item_id=99999,
+            action=models.ItemAuditLog.ACTION_CREATE,
+            transfer_info=None,
+            changed_fields=[],
+            old_values=None,
+            new_values={'quantity': 100}
+        )
+
+        response = self.forced_auth_req(
+            method="get",
+            url=self.url,
+            data={"type": "item_audit_log"},
+            user=self.api_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = self._get_and_decode_streaming_response(response)
+
+        null_transfer_logs = [d for d in data if d['item_id'] == 99999]
+        self.assertEqual(len(null_transfer_logs), 1)
+        self.assertIsNone(null_transfer_logs[0]['transfer_id'])
+
+    def test_export_item_audit_log_permissions(self):
+        response = self.forced_auth_req(
+            method="get",
+            url=self.url,
+            data={"type": "item_audit_log"},
+            user=self.unauthorized_user
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_export_item_audit_log_complex_scenario(self):
+        transfer3 = TransferFactory(
+            partner_organization=self.partner,
+            unicef_release_order='URO-003'
+        )
+
+        item1 = ItemFactory(transfer=transfer3, material=self.new_material, quantity=100)
+        item2 = ItemFactory(transfer=transfer3, material=self.old_material, quantity=200)
+
+        for i in range(3):
+            item1.quantity = 100 + (i + 1) * 10
+            item1.save()
+
+        item2.hidden = True
+        item2.save()
+
+        item3 = ItemFactory(transfer=transfer3, material=self.new_material, quantity=300)
+        item3_id = item3.id
+        item3.delete()
+
+        response = self.forced_auth_req(
+            method="get",
+            url=self.url,
+            data={"type": "item_audit_log"},
+            user=self.api_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = self._get_and_decode_streaming_response(response)
+
+        item1_logs = [d for d in data if d['item_id'] == item1.id]
+        item2_logs = [d for d in data if d['item_id'] == item2.id]
+        item3_logs = [d for d in data if d['item_id'] == item3_id]
+
+        self.assertEqual(len(item1_logs), 4)
+
+        self.assertEqual(len(item2_logs), 2)
+
+        self.assertEqual(len(item3_logs), 2)
+
+        transfer3_logs = [d for d in data if d['item_id'] in [item1.id, item2.id, item3_id]]
+        for log in transfer3_logs:
+            self.assertEqual(log['transfer_id'], transfer3.id)
