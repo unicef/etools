@@ -23,7 +23,6 @@ class ExternalReservationAPIView(SafeTenantViewSetMixin, CreateAPIView, Interven
     permission_classes = [IsAuthenticated]
     serializer_class = ExternalFundsReservationSerializer
 
-    @transaction.atomic
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         log = VisionSyncLog(
@@ -34,12 +33,13 @@ class ExternalReservationAPIView(SafeTenantViewSetMixin, CreateAPIView, Interven
             total_processed=1, total_records=1
         )
         try:
-            serializer.is_valid(raise_exception=True)
-            intervention = get_object_or_404(Intervention, number=serializer.validated_data.get('pd_reference_number'))
-            serializer.save(intervention=intervention)
+            with transaction.atomic():
+                serializer.is_valid(raise_exception=True)
+                intervention = get_object_or_404(Intervention, number=serializer.validated_data.get('pd_reference_number'))
+                serializer.save(intervention=intervention)
 
-            admin_user = get_object_or_404(get_user_model(), username=settings.TASK_ADMIN_USER)
-            self.perform_auto_transitions(intervention=intervention, user=admin_user)
+                admin_user = get_object_or_404(get_user_model(), username=settings.TASK_ADMIN_USER)
+                self.perform_auto_transitions(intervention=intervention, user=admin_user)
         except Exception as e:
             log.exception_message = e.__str__()
             raise e

@@ -505,7 +505,7 @@ class TestExternalReservationAPIView(BaseTenantTestCase):
         vision_log = VisionSyncLog.objects.filter(
             handler_name='EZHactFundsReservation'
         ).last()
-        self.assertTrue(vision_log.data, self.data)
+        self.assertEqual(vision_log.data, self.data)
 
     def test_post_unauthorized_401(self):
         tenant_switch = TenantSwitchFactory(name="ezhact_external_fr_disabled")
