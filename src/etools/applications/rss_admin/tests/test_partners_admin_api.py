@@ -30,6 +30,7 @@ from etools.applications.reports.tests.factories import (
 )
 from etools.applications.users.tests.factories import GroupFactory, RealmFactory, UserFactory
 from etools.libraries.djangolib.fields import CURRENCY_LIST
+from etools.applications.action_points.tests.factories import ActionPointFactory
 
 
 @override_settings(RESTRICTED_ADMIN=False)
@@ -863,6 +864,25 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         self.assertTrue(mock_task.delay.called)
         args, _kwargs = mock_task.delay.call_args
         self.assertEqual(args[1], self.pd.pk)
+
+    @mock.patch('etools.applications.action_points.models.send_notification_with_template')
+    def test_add_attachment_to_completed_high_priority_action_point(self, _mock_notify):
+        ap = ActionPointFactory(status='completed', comments__count=1)
+        ap.high_priority = True
+        ap.save(update_fields=['high_priority'])
+        comment = ap.comments.first()
+        attachment = AttachmentFactory(file="evidence.pdf")
+
+        url = reverse('rss_admin:rss-admin-action-points-add-attachment', kwargs={'pk': ap.pk})
+        payload = {
+            'comment': comment.id,
+            'supporting_document': attachment.id,
+        }
+        resp = self.forced_auth_req('post', url, user=self.user, data=payload)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
+        comment.refresh_from_db()
+        self.assertEqual(comment.supporting_document.count(), 1)
+        self.assertEqual(comment.supporting_document.first().id, attachment.id)
 
     @override_settings(RESTRICTED_ADMIN=True)
     def test_access_allowed_for_rss_admin_realm(self):

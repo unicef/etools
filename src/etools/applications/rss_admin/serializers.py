@@ -291,3 +291,15 @@ class EngagementAttachmentsUpdateSerializer(serializers.ModelSerializer):
             instance.report_attachments.add(report_file)
 
         return instance
+class SitesBulkUploadSerializer(serializers.Serializer):
+    import_file = serializers.FileField()
+
+
+class AnswerHactSerializer(serializers.Serializer):
+    partner = serializers.PrimaryKeyRelatedField(queryset=PartnerOrganization.objects.all())
+    value = serializers.JSONField(allow_null=True)
+
+
+class SetOnTrackSerializer(serializers.Serializer):
+    partner = serializers.PrimaryKeyRelatedField(queryset=PartnerOrganization.objects.all())
+    on_track = serializers.BooleanField(default=True)
