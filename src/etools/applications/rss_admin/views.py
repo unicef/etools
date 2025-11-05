@@ -1,5 +1,6 @@
 import copy
 
+from django.db import connection
 # Field Monitoring imports for new features
 from django.contrib.gis.geos import Point
 from django.core.exceptions import ObjectDoesNotExist
@@ -38,7 +39,7 @@ from etools.applications.field_monitoring.fm_settings.models import LocationSite
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
 from etools.applications.field_monitoring.planning.serializers import MonitoringActivitySerializer
 from etools.applications.partners.filters import InterventionEditableByFilter, ShowAmendmentsFilter
-from etools.applications.partners.models import Agreement, Intervention, InterventionBudget, PartnerOrganization
+from etools.applications.partners.models import Agreement, Intervention, PartnerOrganization
 from etools.applications.partners.serializers.interventions_v2 import (
     InterventionCreateUpdateSerializer,
     InterventionDetailSerializer,
@@ -62,7 +63,6 @@ from etools.applications.rss_admin.serializers import (
 from etools.applications.rss_admin.validation import RssAgreementValid, RssInterventionValid
 from etools.applications.utils.helpers import generate_hash
 from etools.applications.utils.pagination import AppendablePageNumberPagination
-from etools.libraries.djangolib.fields import CURRENCY_LIST
 from etools.libraries.djangolib.views import FilterQueryMixin
 from etools.applications.action_points.models import ActionPoint, ActionPointComment
 from etools.applications.action_points.serializers import ActionPointSerializer as APDetailSerializer, CommentSerializer as APCommentSerializer
