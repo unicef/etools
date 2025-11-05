@@ -1,8 +1,12 @@
 import copy
 
+# Field Monitoring imports for new features
+from django.contrib.gis.geos import Point
 from django.core.exceptions import ObjectDoesNotExist
-from django.db import connection
+from django.db import connection, transaction
 
+# openpyxl used for bulk site upload (reuse FM admin import logic)
+import openpyxl
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
@@ -10,6 +14,14 @@ from rest_framework.response import Response
 from unicef_restlib.views import QueryStringFilterMixin
 
 from etools.applications.environment.helpers import tenant_switch_is_active
+from etools.applications.field_monitoring.data_collection.models import (
+    ActivityOverallFinding,
+    ActivityQuestion,
+    ActivityQuestionOverallFinding,
+)
+from etools.applications.field_monitoring.fm_settings.models import LocationSite
+from etools.applications.field_monitoring.planning.models import MonitoringActivity
+from etools.applications.field_monitoring.planning.serializers import MonitoringActivitySerializer
 from etools.applications.partners.filters import InterventionEditableByFilter, ShowAmendmentsFilter
 from etools.applications.partners.models import Agreement, Intervention, InterventionBudget, PartnerOrganization
 from etools.applications.partners.serializers.interventions_v2 import (
@@ -22,10 +34,14 @@ from etools.applications.partners.utils import send_agreement_suspended_notifica
 from etools.applications.rss_admin.permissions import IsRssAdmin
 from etools.applications.rss_admin.serializers import (
     AgreementRssSerializer,
+    AnswerHactSerializer,
     BulkCloseProgrammeDocumentsSerializer,
     PartnerOrganizationRssSerializer,
+    SetOnTrackSerializer,
+    SitesBulkUploadSerializer,
 )
 from etools.applications.rss_admin.validation import RssAgreementValid, RssInterventionValid
+from etools.applications.utils.helpers import generate_hash
 from etools.applications.utils.pagination import AppendablePageNumberPagination
 from etools.libraries.djangolib.fields import CURRENCY_LIST
 from etools.libraries.djangolib.views import FilterQueryMixin
@@ -239,3 +255,131 @@ class ProgrammeDocumentRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet,
             return Response({'detail': 'Vision sync disabled by tenant switch'}, status=status.HTTP_403_FORBIDDEN)
         send_pd_to_vision.delay(connection.tenant.name, instance.pk)
         return Response({'detail': 'PD queued for Vision upload'}, status=status.HTTP_202_ACCEPTED)
+
+
+class LocationSiteAdminViewSet(viewsets.ViewSet):
+    permission_classes = (IsRssAdmin,)
+
+    @staticmethod
+    def _get_pcode(split_name, name):
+        p_code = split_name[1].strip() if len(split_name) > 1 else None
+        if not p_code or p_code == "None":
+            return generate_hash(name, 12)
+        return p_code
+
+    @action(detail=False, methods=['post'], url_path='bulk-upload')
+    @transaction.atomic
+    def bulk_upload(self, request):
+        serializer = SitesBulkUploadSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        upload = serializer.validated_data['import_file']
+        try:
+            wb = openpyxl.load_workbook(upload)
+        except Exception:  # noqa
+            return Response({'detail': 'Invalid or unreadable XLSX file'}, status=status.HTTP_400_BAD_REQUEST)
+
+        sheet = wb.active
+        headers = [cell.value for cell in sheet[1]]
+        required_headers = ['Site_Name', 'Latitude', 'Longitude']
+        if any(h not in headers for h in required_headers):
+            return Response({'detail': 'Missing required columns: Site_Name, Latitude, Longitude'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        # Map header -> index for fast lookup
+        header_idx = {h: headers.index(h) for h in headers}
+
+        created = 0
+        updated = 0
+        skipped = 0
+
+        for row_idx in range(2, sheet.max_row + 1):
+            row = [c.value for c in sheet[row_idx]]
+            name_raw = row[header_idx['Site_Name']]
+            if not name_raw or str(name_raw).strip() == 'None':
+                skipped += 1
+                continue
+
+            try:
+                split_name = str(name_raw).split('_')
+                clean_name = split_name[0].split(':')[1].strip()
+            except Exception:  # noqa
+                skipped += 1
+                continue
+
+            p_code = self._get_pcode(split_name, clean_name)
+            try:
+                longitude = float(str(row[header_idx['Longitude']]).strip())
+                latitude = float(str(row[header_idx['Latitude']]).strip())
+            except Exception:  # noqa
+                skipped += 1
+                continue
+
+            point = Point(longitude, latitude)
+            obj, was_created = LocationSite.objects.update_or_create(
+                p_code=p_code,
+                defaults={
+                    'point': point,
+                    'name': clean_name,
+                }
+            )
+            if was_created:
+                created += 1
+            else:
+                updated += 1
+
+        return Response({'created': created, 'updated': updated, 'skipped': skipped}, status=status.HTTP_200_OK)
+
+
+class MonitoringActivityRssViewSet(viewsets.ModelViewSet):
+    queryset = MonitoringActivity.objects.all()
+    serializer_class = MonitoringActivitySerializer
+    permission_classes = (IsRssAdmin,)
+
+    @action(detail=True, methods=['post'], url_path='answer-hact')
+    def answer_hact(self, request, pk=None):
+        activity = self.get_object()
+        serializer = AnswerHactSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        partner = serializer.validated_data['partner']
+        value = serializer.validated_data['value']
+
+        aq = ActivityQuestion.objects.filter(
+            monitoring_activity=activity,
+            is_hact=True,
+            partner=partner,
+            is_enabled=True,
+        ).first()
+
+        if not aq:
+            return Response({'detail': 'No HACT question found for this activity and partner'},
+                            status=status.HTTP_404_NOT_FOUND)
+
+        aq_of, _ = ActivityQuestionOverallFinding.objects.get_or_create(activity_question=aq)
+        aq_of.value = value
+        aq_of.save()
+
+        # If activity already completed, bump programmatic visits counter once
+        if activity.status == activity.STATUSES.completed and activity.end_date:
+            partner.update_programmatic_visits(event_date=activity.end_date, update_one=True)
+
+        return Response({'detail': 'HACT answer saved'}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'], url_path='set-on-track')
+    def set_on_track(self, request, pk=None):
+        activity = self.get_object()
+        serializer = SetOnTrackSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        partner = serializer.validated_data['partner']
+        on_track = serializer.validated_data['on_track']
+
+        aof, _ = ActivityOverallFinding.objects.get_or_create(
+            monitoring_activity=activity,
+            partner=partner,
+        )
+        aof.on_track = on_track
+        aof.save()
+
+        return Response({'detail': 'Monitoring status updated', 'on_track': aof.on_track}, status=status.HTTP_200_OK)
