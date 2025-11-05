@@ -10,6 +10,13 @@ from rest_framework import status
 from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.attachments.tests.factories import AttachmentFactory
+from etools.applications.audit.models import Engagement
+from etools.applications.audit.tests.factories import (
+    AuditFactory,
+    EngagementFactory,
+    SpotCheckFactory,
+    StaffSpotCheckFactory,
+)
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory, FundsReservationItemFactory
 from etools.applications.organizations.tests.factories import OrganizationFactory
@@ -804,6 +811,39 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         returned_ids = [fr['id'] for fr in resp.data['frs_details']['frs']]
         self.assertCountEqual(returned_ids, [fr1.id, fr2.id])
 
+    def test_patch_pd_sets_two_frs_and_retrieve_shows_both(self):
+        fr1 = FundsReservationHeaderFactory(intervention=None)
+        fr2 = FundsReservationHeaderFactory(intervention=None)
+
+        # Patch via the standard PD detail endpoint with two FRs
+        url_detail = reverse('rss_admin:rss-admin-programme-documents-detail', kwargs={'pk': self.pd.pk})
+        payload = {'frs': [fr1.id, fr2.id]}
+        resp_patch = self.forced_auth_req('patch', url_detail, user=self.user, data=payload)
+        self.assertEqual(resp_patch.status_code, status.HTTP_200_OK, resp_patch.data)
+        # response should include both FRs by id
+        self.assertCountEqual(resp_patch.data['frs'], [fr1.id, fr2.id])
+
+        # Retrieve should also return both FRs
+        resp_get = self.forced_auth_req('get', url_detail, user=self.user)
+        self.assertEqual(resp_get.status_code, status.HTTP_200_OK)
+        self.assertCountEqual(resp_get.data['frs'], [fr1.id, fr2.id])
+        returned_ids_get = [fr['id'] for fr in resp_get.data['frs_details']['frs']]
+        self.assertCountEqual(returned_ids_get, [fr1.id, fr2.id])
+
+    def test_patch_pd_with_fr_numbers(self):
+        fr1 = FundsReservationHeaderFactory(intervention=None)
+        fr2 = FundsReservationHeaderFactory(intervention=None)
+
+        url_detail = reverse('rss_admin:rss-admin-programme-documents-detail', kwargs={'pk': self.pd.pk})
+        payload = {'fr_numbers': [fr1.fr_number, fr2.fr_number]}
+        resp_patch = self.forced_auth_req('patch', url_detail, user=self.user, data=payload)
+        self.assertEqual(resp_patch.status_code, status.HTTP_200_OK, resp_patch.data)
+        self.assertCountEqual(resp_patch.data['frs'], [fr1.id, fr2.id])
+
+        resp_get = self.forced_auth_req('get', url_detail, user=self.user)
+        self.assertEqual(resp_get.status_code, status.HTTP_200_OK)
+        self.assertCountEqual(resp_get.data['frs'], [fr1.id, fr2.id])
+
     def test_set_currency_on_pd(self):
         currency = CURRENCY_LIST[0]
         url = reverse('rss_admin:rss-admin-programme-documents-set-currency', kwargs={'pk': self.pd.pk})
@@ -861,6 +901,134 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         url = reverse('rss_admin:rss-admin-partners-list')
         response = self.forced_auth_req('get', url, user=user)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    # ------------------------
+    # Engagement status changes
+    # ------------------------
+
+    def test_engagement_submit(self):
+        """Submitting an engagement moves status to REPORT_SUBMITTED and returns 200."""
+        e = EngagementFactory()
+        url = reverse('rss_admin:rss-admin-engagements-change-status', kwargs={'pk': e.pk})
+        resp = self.forced_auth_req('post', url, user=self.user, data={'action': 'submit'})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
+        e.refresh_from_db()
+        self.assertEqual(e.status, Engagement.REPORT_SUBMITTED)
+
+    def test_engagement_send_back_requires_comment(self):
+        """Send back requires a comment; without it returns 400, with it moves to PARTNER_CONTACTED."""
+        e = EngagementFactory(status=Engagement.REPORT_SUBMITTED)
+        url = reverse('rss_admin:rss-admin-engagements-change-status', kwargs={'pk': e.pk})
+        resp_bad = self.forced_auth_req('post', url, user=self.user, data={'action': 'send_back'})
+        self.assertEqual(resp_bad.status_code, status.HTTP_400_BAD_REQUEST)
+        resp_ok = self.forced_auth_req('post', url, user=self.user, data={'action': 'send_back', 'send_back_comment': 'Fix issues'})
+        self.assertEqual(resp_ok.status_code, status.HTTP_200_OK, resp_ok.data)
+        e.refresh_from_db()
+        self.assertEqual(e.status, Engagement.PARTNER_CONTACTED)
+        self.assertEqual(e.send_back_comment, 'Fix issues')
+
+    def test_engagement_cancel_requires_comment(self):
+        """Cancel requires cancel_comment; without it returns 400, with it sets status to CANCELLED."""
+        e = EngagementFactory()
+        url = reverse('rss_admin:rss-admin-engagements-change-status', kwargs={'pk': e.pk})
+        resp_bad = self.forced_auth_req('post', url, user=self.user, data={'status': 'cancelled'})
+        self.assertEqual(resp_bad.status_code, status.HTTP_400_BAD_REQUEST)
+        resp_ok = self.forced_auth_req('post', url, user=self.user, data={'status': 'cancelled', 'cancel_comment': 'Not needed'})
+        self.assertEqual(resp_ok.status_code, status.HTTP_200_OK, resp_ok.data)
+        e.refresh_from_db()
+        self.assertEqual(e.status, Engagement.CANCELLED)
+        self.assertEqual(e.cancel_comment, 'Not needed')
+
+    def test_engagement_finalize_on_audit(self):
+        """Finalize transitions a submitted Audit to FINAL and returns 200."""
+        audit = AuditFactory(status=Engagement.REPORT_SUBMITTED)
+        url = reverse('rss_admin:rss-admin-engagements-change-status', kwargs={'pk': audit.pk})
+        resp = self.forced_auth_req('post', url, user=self.user, data={'status': 'final'})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
+        audit.refresh_from_db()
+        self.assertEqual(audit.status, Engagement.FINAL)
+
+    # ------------------------
+    # Engagement initiation update
+    # ------------------------
+    def test_engagement_initiation_update_success(self):
+        """RSS Admin: PATCH engagements/{id}/initiation updates initiation fields and persists them."""
+        e = EngagementFactory()
+        url = reverse('rss_admin:rss-admin-engagements-initiation', kwargs={'pk': e.pk})
+        payload = {
+            'start_date': (timezone.now().date() - timedelta(days=30)).isoformat(),
+            'end_date': (timezone.now().date() - timedelta(days=10)).isoformat(),
+            'partner_contacted_at': (timezone.now().date() - timedelta(days=5)).isoformat(),
+            'total_value': '12345.67',
+            'exchange_rate': '1.25',
+            'currency_of_report': 'USD',
+        }
+        resp = self.forced_auth_req('patch', url, user=self.user, data=payload)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
+        e.refresh_from_db()
+        self.assertEqual(str(e.start_date), payload['start_date'])
+        self.assertEqual(str(e.end_date), payload['end_date'])
+        self.assertEqual(str(e.partner_contacted_at), payload['partner_contacted_at'])
+        self.assertEqual(str(e.total_value), payload['total_value'])
+        self.assertEqual(str(e.exchange_rate), payload['exchange_rate'])
+        self.assertEqual(e.currency_of_report, payload['currency_of_report'])
+
+    def test_engagement_initiation_update_date_validation(self):
+        """RSS Admin: initiation update rejects invalid chronology (end_date < start_date) with 400 and error key."""
+        e = EngagementFactory()
+        url = reverse('rss_admin:rss-admin-engagements-initiation', kwargs={'pk': e.pk})
+        start = timezone.now().date() - timedelta(days=10)
+        end = start - timedelta(days=1)
+        payload = {
+            'start_date': start.isoformat(),
+            'end_date': end.isoformat(),
+        }
+        resp = self.forced_auth_req('patch', url, user=self.user, data=payload)
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('end_date', resp.data)
+
+    def test_engagement_attachments_update(self):
+        """RSS Admin: PATCH engagements/{id}/attachments links provided attachment ids to engagement/report sets."""
+        e = EngagementFactory()
+        url = reverse('rss_admin:rss-admin-engagements-attachments', kwargs={'pk': e.pk})
+
+        attachment_eng = AttachmentFactory(file='eng.pdf')
+        attachment_rep = AttachmentFactory(file='rep.pdf')
+
+        payload = {
+            'engagement_attachment': attachment_eng.id,
+            'report_attachment': attachment_rep.id,
+        }
+        resp = self.forced_auth_req('patch', url, user=self.user, data=payload)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
+
+        e.refresh_from_db()
+        self.assertTrue(e.engagement_attachments.filter(pk=attachment_eng.id).exists())
+        self.assertTrue(e.report_attachments.filter(pk=attachment_rep.id).exists())
+
+    # ------------------------
+    # Engagement list & detail
+    # ------------------------
+
+    def test_engagements_list_includes_staff_spot_checks(self):
+        sc = SpotCheckFactory()
+        ssc = StaffSpotCheckFactory()
+        url = reverse('rss_admin:rss-admin-engagements-list')
+        resp = self.forced_auth_req('get', url, user=self.user, data={'ordering': 'reference_number', 'page_size': 10})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertIn('results', resp.data)
+        ids = [row['id'] for row in resp.data['results']]
+        self.assertIn(sc.id, ids)
+        self.assertIn(ssc.id, ids)
+
+    def test_engagement_detail_audit(self):
+        audit = AuditFactory()
+        url = reverse('rss_admin:rss-admin-engagements-detail', kwargs={'pk': audit.pk})
+        resp = self.forced_auth_req('get', url, user=self.user)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.data['id'], audit.id)
+        # ensure a detail-only field is present (e.g., year_of_audit for audits)
+        self.assertIn('year_of_audit', resp.data)
 
     # ------------------------------------------------------------------
     # Status transitions: targeted condition/side-effect tests
