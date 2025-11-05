@@ -45,6 +45,8 @@ from etools.applications.utils.helpers import generate_hash
 from etools.applications.utils.pagination import AppendablePageNumberPagination
 from etools.libraries.djangolib.fields import CURRENCY_LIST
 from etools.libraries.djangolib.views import FilterQueryMixin
+from etools.applications.action_points.models import ActionPoint, ActionPointComment
+from etools.applications.action_points.serializers import ActionPointSerializer as APDetailSerializer, CommentSerializer as APCommentSerializer
 
 
 class PartnerOrganizationRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet, FilterQueryMixin):
@@ -257,6 +259,38 @@ class ProgrammeDocumentRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet,
         return Response({'detail': 'PD queued for Vision upload'}, status=status.HTTP_202_ACCEPTED)
 
 
+class ActionPointRssViewSet(viewsets.GenericViewSet):
+    queryset = ActionPoint.objects.all()
+    permission_classes = (IsRssAdmin,)
+    serializer_class = APDetailSerializer
+
+    @action(detail=True, methods=['post'], url_path='add-attachment')
+    def add_attachment(self, request, pk=None):
+        action_point = self.get_object()
+        if not (action_point.high_priority and action_point.status == ActionPoint.STATUS_COMPLETED):
+            return Response({'detail': 'Only completed high priority action points are allowed.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        comment_id = request.data.get('comment')
+        attachment_id = request.data.get('supporting_document')
+
+        if not comment_id or not attachment_id:
+            return Response({'detail': 'Fields "comment" and "supporting_document" are required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            comment = action_point.comments.get(pk=comment_id)
+        except ActionPointComment.DoesNotExist:
+            return Response({'detail': 'Comment not found for this Action Point.'}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = APCommentSerializer(
+            instance=comment,
+            data={'supporting_document': attachment_id},
+            partial=True,
+            context={'request': request},
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(APDetailSerializer(action_point, context={'request': request}).data, status=status.HTTP_200_OK)
 class LocationSiteAdminViewSet(viewsets.ViewSet):
     permission_classes = (IsRssAdmin,)
 
