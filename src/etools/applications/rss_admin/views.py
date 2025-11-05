@@ -418,6 +418,13 @@ class EngagementRssViewSet(mixins.ListModelMixin,
         serializer = EngagementInitiationUpdateSerializer(
             instance=engagement,
             data=request.data,
+            partial=True,
+            context={'request': request},
+        )
+        serializer.is_valid(raise_exception=True)
+        instance = serializer.save()
+        return Response(EngagementLightRssSerializer(instance, context={'request': request}).data, status=status.HTTP_200_OK)
+
 class ActionPointRssViewSet(viewsets.GenericViewSet):
     queryset = ActionPoint.objects.all()
     permission_classes = (IsRssAdmin,)
