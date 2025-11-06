@@ -2,7 +2,9 @@ import datetime
 import logging
 from decimal import Decimal
 
-from django.db.models import Sum
+from django.db import models
+from django.db.models import F, Sum, Value
+from django.db.models.functions import Concat
 
 from unicef_vision.settings import INSIGHT_DATE_FORMAT
 from unicef_vision.synchronizers import FileDataSynchronizer, MultiModelDataSynchronizer
@@ -18,7 +20,7 @@ from etools.applications.vision.synchronizers import VisionDataTenantSynchronize
 
 
 class FundReservationsSynchronizer(VisionDataTenantSynchronizer):
-    # DELEGATED flag to inform whether we're synching delegated FRs or local FRs. This is used by the manual
+    # DELEGATED flag to inform whether we're syncing delegated FRs or local FRs. This is used by the manual
     # synchronizer
     DELEGATED = False
 
@@ -231,12 +233,16 @@ class FundReservationsSynchronizer(VisionDataTenantSynchronizer):
 
         fr_line_item_keys = {k for k in self.item_records.keys()}
 
-        list_of_line_items = FundsReservationItem.objects.filter(fr_ref_number__in=fr_line_item_keys)
+        list_of_line_items = FundsReservationItem.objects.annotate(
+            unique_ref=Concat(
+                F('fund_reservation__fr_number'), Value('-'), F('line_item'),
+                output_field=models.CharField())
+        ).filter(unique_ref__in=fr_line_item_keys)
 
         for li in list_of_line_items:
-            if li.fr_ref_number in fr_line_item_keys:
+            if li.unique_ref in fr_line_item_keys:
                 to_update.append(li)
-                fr_line_item_keys.remove(li.fr_ref_number)
+                fr_line_item_keys.remove(li.unique_ref)
 
         to_create = []
         for item in fr_line_item_keys:
@@ -248,7 +254,7 @@ class FundReservationsSynchronizer(VisionDataTenantSynchronizer):
         FundsReservationItem.objects.bulk_create(to_create)
         updated = 0
         for li in to_update:
-            local_record = self.item_records.get(li.fr_ref_number)
+            local_record = self.item_records.get(li.unique_ref)
             del local_record['fr_number']
             if self.update_obj(li, local_record):
                 li.save()
