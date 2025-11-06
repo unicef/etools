@@ -303,3 +303,21 @@ class AnswerHactSerializer(serializers.Serializer):
 class SetOnTrackSerializer(serializers.Serializer):
     partner = serializers.PrimaryKeyRelatedField(queryset=PartnerOrganization.objects.all())
     on_track = serializers.BooleanField(default=True)
+
+
+class MapPartnerToWorkspaceSerializer(serializers.Serializer):
+    """Validate payload for mapping a Partner to the current workspace.
+
+    Accepts a vendor number and optional lead office/section.
+    """
+
+    vendor_number = serializers.CharField()
+    lead_office = serializers.PrimaryKeyRelatedField(queryset=Office.objects.all(), required=False, allow_null=True)
+    lead_section = serializers.PrimaryKeyRelatedField(queryset=Section.objects.all(), required=False, allow_null=True)
+
+    def validate_vendor_number(self, value):
+        try:
+            Organization.objects.get(vendor_number=value)
+        except Organization.DoesNotExist:
+            raise serializers.ValidationError("Unknown vendor number")
+        return value

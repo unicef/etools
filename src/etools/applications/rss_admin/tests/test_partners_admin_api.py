@@ -1107,3 +1107,39 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         self.agreement.save(update_fields=['end'])
         resp_ok = self.forced_auth_req('patch', url, user=self.user, data={'agreement_number': self.agreement.agreement_number})
         self.assertEqual(resp_ok.status_code, status.HTTP_200_OK, resp_ok.data)
+
+    def test_map_partner_to_workspace_creates_partner(self):
+        org = OrganizationFactory()
+        url = reverse('rss_admin:rss-admin-partners-map-to-workspace')
+        resp = self.forced_auth_req('post', url, user=self.user, data={'vendor_number': org.vendor_number})
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED, resp.data)
+        # PartnerOrganization now exists in this tenant for the organization
+        from etools.applications.partners.models import PartnerOrganization
+        self.assertTrue(PartnerOrganization.objects.filter(organization=org).exists())
+
+    def test_map_partner_to_workspace_idempotent(self):
+        org = OrganizationFactory()
+        # pre-create partner
+        partner = PartnerFactory(organization=org)
+        url = reverse('rss_admin:rss-admin-partners-map-to-workspace')
+        resp = self.forced_auth_req('post', url, user=self.user, data={'vendor_number': org.vendor_number})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
+        self.assertEqual(resp.data['id'], partner.id)
+
+    def test_map_partner_to_workspace_updates_leads(self):
+        org = OrganizationFactory()
+        office = OfficeFactory()
+        section = SectionFactory()
+        url = reverse('rss_admin:rss-admin-partners-map-to-workspace')
+        payload = {'vendor_number': org.vendor_number, 'lead_office': office.id, 'lead_section': section.id}
+        resp = self.forced_auth_req('post', url, user=self.user, data=payload)
+        self.assertIn(resp.status_code, (status.HTTP_201_CREATED, status.HTTP_200_OK))
+        from etools.applications.partners.models import PartnerOrganization
+        partner = PartnerOrganization.objects.get(organization=org)
+        self.assertEqual(partner.lead_office_id, office.id)
+        self.assertEqual(partner.lead_section_id, section.id)
+
+    def test_map_partner_to_workspace_unknown_vendor(self):
+        url = reverse('rss_admin:rss-admin-partners-map-to-workspace')
+        resp = self.forced_auth_req('post', url, user=self.user, data={'vendor_number': 'NOPE'})
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)

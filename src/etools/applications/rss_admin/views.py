@@ -40,6 +40,7 @@ from etools.applications.field_monitoring.planning.models import MonitoringActiv
 from etools.applications.field_monitoring.planning.serializers import MonitoringActivitySerializer
 from etools.applications.partners.filters import InterventionEditableByFilter, ShowAmendmentsFilter
 from etools.applications.partners.models import Agreement, Intervention, PartnerOrganization
+from etools.applications.organizations.models import Organization
 from etools.applications.partners.serializers.interventions_v2 import (
     InterventionCreateUpdateSerializer,
     InterventionDetailSerializer,
@@ -57,6 +58,7 @@ from etools.applications.rss_admin.serializers import (
     EngagementInitiationUpdateSerializer,
     EngagementLightRssSerializer,
     PartnerOrganizationRssSerializer,
+    MapPartnerToWorkspaceSerializer,
     SetOnTrackSerializer,
     SitesBulkUploadSerializer,
 )
@@ -98,6 +100,36 @@ class PartnerOrganizationRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSe
     def get_queryset(self):
         qs = super().get_queryset()
         return self.apply_filter_queries(qs, self.filter_params)
+
+    @action(detail=False, methods=['post'], url_path='map-to-workspace')
+    def map_to_workspace(self, request, *args, **kwargs):
+        """Map an existing Organization (by vendor number) as a Partner in the current workspace.
+
+        If a PartnerOrganization already exists for the vendor number in this tenant, it is returned.
+        Optionally updates lead_office/lead_section if provided.
+        """
+        payload = MapPartnerToWorkspaceSerializer(data=request.data)
+        payload.is_valid(raise_exception=True)
+
+        vendor_number = payload.validated_data['vendor_number']
+        lead_office = payload.validated_data.get('lead_office')
+        lead_section = payload.validated_data.get('lead_section')
+
+        org = Organization.objects.get(vendor_number=vendor_number)
+        partner, created = PartnerOrganization.objects.get_or_create(organization=org)
+
+        updates = {}
+        if lead_office is not None:
+            updates['lead_office'] = lead_office
+        if lead_section is not None:
+            updates['lead_section'] = lead_section
+        if updates:
+            for f, v in updates.items():
+                setattr(partner, f, v)
+            partner.save(update_fields=list(updates.keys()))
+
+        status_code = status.HTTP_201_CREATED if created else status.HTTP_200_OK
+        return Response(PartnerOrganizationRssSerializer(partner, context={'request': request}).data, status=status_code)
 
 
 class AgreementRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet, FilterQueryMixin):
