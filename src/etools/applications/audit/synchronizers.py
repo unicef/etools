@@ -22,7 +22,6 @@ class FaceFormsSynchronizer(VisionDataTenantSynchronizer):
         "REPORTING_POSTING_DATE",
         "REPORTING_START_DATE",
         "REPORTING_END_DATE",
-        "HACT_FUNDINGS",
         "HACT_TRANSACTIONS"
     )
     MAPPING = {
@@ -34,8 +33,8 @@ class FaceFormsSynchronizer(VisionDataTenantSynchronizer):
         "date_of_liquidation": "REPORTING_POSTING_DATE",
         "modality": "DOCUMENT_TYPE_DESC",
         "currency": "CURRENCY",
-        "amount_usd": "OVERALL_AMOUNT_USD",
-        "amount_local": "OVERALL_AMOUNT"
+        "amount_usd": "AUTH_AMT_USD",
+        "amount_local": "AUTH_AMT"
     }
     FACE_FORM_FIELDS = ("FACE_FORM_NUMBER", "IMPLEMENTING_PARNTER_CODE", "DOCUMENT_TYPE_DESC", "CURRENCY",
                         "REPORTING_POSTING_DATE", "REPORTING_START_DATE", "REPORTING_END_DATE")
@@ -101,22 +100,18 @@ class FaceFormsSynchronizer(VisionDataTenantSynchronizer):
         face_dict['amount_local'] = 0
         face_dict['amount_usd'] = 0
 
-        if 'HACT_FUNDINGS' in record and 'TYPE_HACT_FUNDING' in record['HACT_FUNDINGS']:
-            funding = record['HACT_FUNDINGS']['TYPE_HACT_FUNDING']
-            if isinstance(funding, list):
-                for funding_item in funding:
-                    face_dict['amount_local'] += Decimal(funding_item.get('OVERALL_AMOUNT', 0))
-                    face_dict['amount_usd'] += Decimal(funding_item.get('OVERALL_AMOUNT_USD', 0))
-            elif isinstance(funding, dict):
-                face_dict['amount_local'] += Decimal(funding.get('OVERALL_AMOUNT', 0))
-                face_dict['amount_usd'] += Decimal(funding.get('OVERALL_AMOUNT_USD', 0))
-
         if 'HACT_TRANSACTIONS' in record and 'TYPE_HACT_TRANSACTION' in record['HACT_TRANSACTIONS']:
             transaction = record['HACT_TRANSACTIONS']['TYPE_HACT_TRANSACTION']
             if isinstance(transaction, list):
                 face_dict['face_accounted'] = transaction[0]['FACE_ACCOUNTED'].replace(' ', '')
+                for transaction_item in transaction:
+                    face_dict['amount_local'] += Decimal(transaction_item.get('AUTH_AMT', 0))
+                    face_dict['amount_usd'] += Decimal(transaction_item.get('AUTH_AMT_USD', 0))
             elif isinstance(transaction, dict):
                 face_dict['face_accounted'] = transaction['FACE_ACCOUNTED'].replace(' ', '')
+                face_dict['amount_local'] += Decimal(transaction.get('AUTH_AMT', 0))
+                face_dict['amount_usd'] += Decimal(transaction.get('AUTH_AMT_USD', 0))
+
         if face_dict['amount_usd'] > 0:
             face_dict['exchange_rate'] = face_dict['amount_local'] / face_dict['amount_usd']
 

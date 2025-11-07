@@ -40,7 +40,7 @@ class FaceFormsSynchronizerTestCase(BaseTenantTestCase):
             "HACT_FUNDINGS": {
                 "TYPE_HACT_FUNDING": [
                     {
-                        "OVERALL_AMOUNT": "1500.00",
+                        "OVERALL_AMOUNT": "150345.00",
                         "OVERALL_AMOUNT_USD": "1500.00"
                     }
                 ]
@@ -50,8 +50,8 @@ class FaceFormsSynchronizerTestCase(BaseTenantTestCase):
                     "FACE_ENTERED": "0060 / 502200",
                     "FACE_ACCOUNTED": "0060 / 501096",
                     "FC_ITEM": "0100654833 / 001",
-                    "AUTH_AMT": "2155914.00",
-                    "AUTH_AMT_USD": "2155914.00"
+                    "AUTH_AMT": "150345.00",
+                    "AUTH_AMT_USD": "1500.00"
                 }
             }
         }
@@ -132,14 +132,14 @@ class FaceFormsSynchronizerTestCase(BaseTenantTestCase):
         result = self.synchronizer.map_face_from_record(record)
 
         self.assertEqual(result['face_number'], "FACE_002")
-        self.assertEqual(result['amount_local'], Decimal("1500.00"))
+        self.assertEqual(result['amount_local'], Decimal("150345.00"))
         self.assertEqual(result['amount_usd'], Decimal("1500.00"))
 
     def test_map_face_from_record_multiple_funding(self):
         record = self.valid_record.copy()
-        record["HACT_FUNDINGS"]["TYPE_HACT_FUNDING"] = [
-            {"OVERALL_AMOUNT": "500.00", "OVERALL_AMOUNT_USD": "500.00"},
-            {"OVERALL_AMOUNT": "1000.00", "OVERALL_AMOUNT_USD": "1000.00"}
+        record["HACT_TRANSACTIONS"]["TYPE_HACT_TRANSACTION"] = [
+            {"AUTH_AMT": "500.00", "AUTH_AMT_USD": "500.00", "FACE_ACCOUNTED": "0060 / 501096"},
+            {"AUTH_AMT": "1000.00", "AUTH_AMT_USD": "1000.00", "FACE_ACCOUNTED": "0060 / 501096"}
         ]
 
         result = self.synchronizer.map_face_from_record(record)
@@ -148,9 +148,10 @@ class FaceFormsSynchronizerTestCase(BaseTenantTestCase):
 
     def test_map_face_from_record_dict_funding(self):
         record = self.valid_record.copy()
-        record["HACT_FUNDINGS"]["TYPE_HACT_FUNDING"] = {
-            "OVERALL_AMOUNT": "1500.00",
-            "OVERALL_AMOUNT_USD": "1500.00"
+        record["HACT_TRANSACTIONS"]["TYPE_HACT_TRANSACTION"] = {
+            "AUTH_AMT": "1500.00",
+            "AUTH_AMT_USD": "1500.00",
+            "FACE_ACCOUNTED": "0060 / 501096"
         }
 
         result = self.synchronizer.map_face_from_record(record)
