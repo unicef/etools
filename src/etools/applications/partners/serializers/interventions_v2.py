@@ -926,11 +926,10 @@ class InterventionCreateUpdateSerializer(
 
         # Handle currency update on planned budget via generic endpoint
         if new_currency is not None:
-            budget = getattr(updated, 'planned_budget', None)
-            if budget is None:
-                budget = InterventionBudget.objects.get_or_create(intervention=updated)[0]
-            budget.currency = new_currency
-            budget.save()
+            InterventionBudget.objects.update_or_create(
+                intervention=updated,
+                defaults={"currency": new_currency},
+            )
 
         if final_partnership_review:
             self.get_fields()['final_partnership_review'].set_attachment(instance, final_partnership_review)

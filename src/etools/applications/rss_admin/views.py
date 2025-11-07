@@ -39,13 +39,14 @@ from etools.applications.field_monitoring.fm_settings.models import LocationSite
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
 from etools.applications.field_monitoring.planning.serializers import MonitoringActivitySerializer
 from etools.applications.partners.filters import InterventionEditableByFilter, ShowAmendmentsFilter
-from etools.applications.partners.models import Agreement, Intervention, PartnerOrganization
+from etools.applications.partners.models import Agreement, Intervention, PartnerOrganization, InterventionBudget
 from etools.applications.organizations.models import Organization
 from etools.applications.partners.serializers.interventions_v2 import (
     InterventionCreateUpdateSerializer,
     InterventionDetailSerializer,
     InterventionListSerializer,
 )
+from etools.libraries.djangolib.fields import CURRENCY_LIST
 from etools.applications.partners.tasks import send_pd_to_vision
 from etools.applications.partners.utils import send_agreement_suspended_notification
 from etools.applications.rss_admin.permissions import IsRssAdmin
@@ -57,17 +58,23 @@ from etools.applications.rss_admin.serializers import (
     EngagementChangeStatusSerializer,
     EngagementInitiationUpdateSerializer,
     EngagementLightRssSerializer,
+    EngagementDetailRssSerializer,
     PartnerOrganizationRssSerializer,
     MapPartnerToWorkspaceSerializer,
     SetOnTrackSerializer,
     SitesBulkUploadSerializer,
 )
+from etools.applications.rss_admin.services import PartnerService, EngagementService, FieldMonitoringService
+from etools.applications.rss_admin.importers import LocationSiteImporter
 from etools.applications.rss_admin.validation import RssAgreementValid, RssInterventionValid
 from etools.applications.utils.helpers import generate_hash
 from etools.applications.utils.pagination import AppendablePageNumberPagination
 from etools.libraries.djangolib.views import FilterQueryMixin
 from etools.applications.action_points.models import ActionPoint, ActionPointComment
 from etools.applications.action_points.serializers import ActionPointSerializer as APDetailSerializer, CommentSerializer as APCommentSerializer
+from etools.applications.permissions2.views import PermittedSerializerMixin
+from etools.applications.permissions2.conditions import ObjectStatusCondition
+from etools.applications.audit.conditions import AuditModuleCondition
 
 
 class PartnerOrganizationRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet, FilterQueryMixin):
@@ -115,18 +122,11 @@ class PartnerOrganizationRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSe
         lead_office = payload.validated_data.get('lead_office')
         lead_section = payload.validated_data.get('lead_section')
 
-        org = Organization.objects.get(vendor_number=vendor_number)
-        partner, created = PartnerOrganization.objects.get_or_create(organization=org)
-
-        updates = {}
-        if lead_office is not None:
-            updates['lead_office'] = lead_office
-        if lead_section is not None:
-            updates['lead_section'] = lead_section
-        if updates:
-            for f, v in updates.items():
-                setattr(partner, f, v)
-            partner.save(update_fields=list(updates.keys()))
+        partner, created = PartnerService.map_partner_to_workspace(
+            vendor_number=vendor_number,
+            lead_office=lead_office,
+            lead_section=lead_section,
+        )
 
         status_code = status.HTTP_201_CREATED if created else status.HTTP_200_OK
         return Response(PartnerOrganizationRssSerializer(partner, context={'request': request}).data, status=status_code)
@@ -290,10 +290,24 @@ class ProgrammeDocumentRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet,
     def _update_with_fr_numbers(self, request, *, partial: bool):
         instance = self.get_object()
         payload = self._apply_fr_numbers(request.data)
+
+        # Handle currency updates on PD via PATCH detail as per requirements/tests
+        currency = payload.pop('currency', None)
+        if currency is not None:
+            if currency not in CURRENCY_LIST:
+                return Response({'detail': f'Invalid currency: {currency}.'}, status=status.HTTP_400_BAD_REQUEST)
+            InterventionBudget.objects.update_or_create(
+                intervention=instance,
+                defaults={'currency': currency},
+            )
+
         serializer = self.get_serializer(instance=instance, data=payload, partial=partial, context={'request': request})
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+
+        # Always respond with detail payload to include planned_budget and other computed fields
+        refreshed = Intervention.objects.select_related('planned_budget').get(pk=instance.pk)
+        return Response(InterventionDetailSerializer(refreshed, context={'request': request}).data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['post'], url_path='assign-frs')
     def assign_frs(self, request, pk=None):
@@ -342,7 +356,8 @@ class ProgrammeDocumentRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet,
         return Response({'detail': 'PD queued for Vision upload'}, status=status.HTTP_202_ACCEPTED)
 
 
-class EngagementRssViewSet(mixins.ListModelMixin,
+class EngagementRssViewSet(PermittedSerializerMixin,
+                           mixins.ListModelMixin,
                            mixins.RetrieveModelMixin,
                            viewsets.GenericViewSet):
     queryset = Engagement.objects.all()
@@ -379,39 +394,37 @@ class EngagementRssViewSet(mixins.ListModelMixin,
         queryset = queryset.prefetch_related('partner', 'agreement', 'agreement__auditor_firm__organization')
         return queryset
 
+    def get_permission_context(self):
+        context = super().get_permission_context()
+        context.append(AuditModuleCondition())
+        return context
+
+    def get_obj_permission_context(self, obj):
+        context = super().get_obj_permission_context(obj)
+        # Include current status so state-based permissions allow readable fields
+        context.append(ObjectStatusCondition(obj))
+        return context
+
     def get_serializer_class(self):
         if self.action == 'list':
-            return EngagementListSerializer
+            # Keep list payload simple and always include 'id'
+            return EngagementLightRssSerializer
         if self.action == 'retrieve':
-            # choose detail serializer by engagement type; handle staff spot checks
             instance = getattr(self, 'object', None)
             if not instance:
-                # fallback: try to peek by pk if available, else default to base
                 try:
-                    obj = self.get_object()  # will also set permissions
+                    obj = self.get_object()
                 except Exception:
                     return super().get_serializer_class()
             else:
                 obj = instance
 
-            if hasattr(obj, 'get_subclass'):
-                obj = obj.get_subclass()
-
-            etype = getattr(obj, 'engagement_type', None)
-            if etype == Engagement.TYPES.audit:
-                return AuditSerializer
-            if etype == Engagement.TYPES.ma:
-                return MicroAssessmentSerializer
-            if etype == Engagement.TYPES.sa:
-                return SpecialAuditSerializer
-            if etype == Engagement.TYPES.sc:
-                # determine if staff spot check based on UNICEF users flag
-                try:
-                    if obj.agreement and getattr(obj.agreement.auditor_firm, 'unicef_users_allowed', False):
-                        return StaffSpotCheckSerializer
-                except Exception:
-                    pass
-                return SpotCheckSerializer
+            serializer_cls = EngagementService.serializer_for_instance(obj)
+            # RSS Admin: use permission-agnostic detail for audits
+            if serializer_cls is AuditSerializer:
+                return EngagementDetailRssSerializer
+            if serializer_cls:
+                return serializer_cls
 
         return super().get_serializer_class()
 
@@ -423,18 +436,12 @@ class EngagementRssViewSet(mixins.ListModelMixin,
         serializer = EngagementChangeStatusSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         action = serializer.validated_data['action']
-
-        # Execute FSM actions; permissions are enforced by the transition decorators
-        if action == EngagementChangeStatusSerializer.ACTION_SUBMIT:
-            engagement.submit()
-        elif action == EngagementChangeStatusSerializer.ACTION_SEND_BACK:
-            engagement.send_back(serializer.validated_data['send_back_comment'])
-        elif action == EngagementChangeStatusSerializer.ACTION_CANCEL:
-            engagement.cancel(serializer.validated_data['cancel_comment'])
-        elif action == EngagementChangeStatusSerializer.ACTION_FINALIZE:
-            engagement.finalize()
-
-        engagement.save()
+        EngagementService.execute_action(
+            engagement=engagement,
+            action=action,
+            send_back_comment=serializer.validated_data.get('send_back_comment'),
+            cancel_comment=serializer.validated_data.get('cancel_comment'),
+        )
         return Response(EngagementLightRssSerializer(engagement, context={'request': request}).data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['patch'], url_path='initiation', url_name='initiation')
@@ -448,6 +455,26 @@ class EngagementRssViewSet(mixins.ListModelMixin,
             engagement = engagement.get_subclass()
 
         serializer = EngagementInitiationUpdateSerializer(
+            instance=engagement,
+            data=request.data,
+            partial=True,
+            context={'request': request},
+        )
+        serializer.is_valid(raise_exception=True)
+        instance = serializer.save()
+        return Response(EngagementLightRssSerializer(instance, context={'request': request}).data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['patch'], url_path='attachments', url_name='attachments')
+    def update_attachments(self, request, pk=None):
+        """Attach uploaded files to the Engagement (financial assurance context).
+
+        Payload accepts one or both keys: engagement_attachment (id) and report_attachment (id).
+        """
+        engagement = self.get_object()
+        if hasattr(engagement, 'get_subclass'):
+            engagement = engagement.get_subclass()
+
+        serializer = EngagementAttachmentsUpdateSerializer(
             instance=engagement,
             data=request.data,
             partial=True,
@@ -486,31 +513,10 @@ class ActionPointRssViewSet(viewsets.GenericViewSet):
             context={'request': request},
         )
         serializer.is_valid(raise_exception=True)
-        instance = serializer.save()
-        return Response(EngagementLightRssSerializer(instance, context={'request': request}).data, status=status.HTTP_200_OK)
-
-    @action(detail=True, methods=['patch'], url_path='attachments', url_name='attachments')
-    def update_attachments(self, request, pk=None):
-        """Attach uploaded files to the Engagement (financial assurance context).
-
-        Payload accepts one or both keys: engagement_attachment (id) and report_attachment (id).
-        """
-        engagement = self.get_object()
-        if hasattr(engagement, 'get_subclass'):
-            engagement = engagement.get_subclass()
-
-        serializer = EngagementAttachmentsUpdateSerializer(
-            instance=engagement,
-            data=request.data,
-            partial=True,
-            context={'request': request},
-        )
-        serializer.is_valid(raise_exception=True)
-        instance = serializer.save()
-        return Response(EngagementLightRssSerializer(instance, context={'request': request}).data, status=status.HTTP_200_OK)
         serializer.save()
-
         return Response(APDetailSerializer(action_point, context={'request': request}).data, status=status.HTTP_200_OK)
+
+
 class LocationSiteAdminViewSet(viewsets.ViewSet):
     permission_classes = (IsRssAdmin,)
 
@@ -522,67 +528,15 @@ class LocationSiteAdminViewSet(viewsets.ViewSet):
         return p_code
 
     @action(detail=False, methods=['post'], url_path='bulk-upload')
-    @transaction.atomic
     def bulk_upload(self, request):
         serializer = SitesBulkUploadSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         upload = serializer.validated_data['import_file']
-        try:
-            wb = openpyxl.load_workbook(upload)
-        except Exception:  # noqa
-            return Response({'detail': 'Invalid or unreadable XLSX file'}, status=status.HTTP_400_BAD_REQUEST)
-
-        sheet = wb.active
-        headers = [cell.value for cell in sheet[1]]
-        required_headers = ['Site_Name', 'Latitude', 'Longitude']
-        if any(h not in headers for h in required_headers):
-            return Response({'detail': 'Missing required columns: Site_Name, Latitude, Longitude'},
-                            status=status.HTTP_400_BAD_REQUEST)
-
-        # Map header -> index for fast lookup
-        header_idx = {h: headers.index(h) for h in headers}
-
-        created = 0
-        updated = 0
-        skipped = 0
-
-        for row_idx in range(2, sheet.max_row + 1):
-            row = [c.value for c in sheet[row_idx]]
-            name_raw = row[header_idx['Site_Name']]
-            if not name_raw or str(name_raw).strip() == 'None':
-                skipped += 1
-                continue
-
-            try:
-                split_name = str(name_raw).split('_')
-                clean_name = split_name[0].split(':')[1].strip()
-            except Exception:  # noqa
-                skipped += 1
-                continue
-
-            p_code = self._get_pcode(split_name, clean_name)
-            try:
-                longitude = float(str(row[header_idx['Longitude']]).strip())
-                latitude = float(str(row[header_idx['Latitude']]).strip())
-            except Exception:  # noqa
-                skipped += 1
-                continue
-
-            point = Point(longitude, latitude)
-            obj, was_created = LocationSite.objects.update_or_create(
-                p_code=p_code,
-                defaults={
-                    'point': point,
-                    'name': clean_name,
-                }
-            )
-            if was_created:
-                created += 1
-            else:
-                updated += 1
-
-        return Response({'created': created, 'updated': updated, 'skipped': skipped}, status=status.HTTP_200_OK)
+        ok, result = LocationSiteImporter().import_file(upload)
+        if not ok:
+            return Response(result, status=status.HTTP_400_BAD_REQUEST)
+        return Response(result, status=status.HTTP_200_OK)
 
 
 class MonitoringActivityRssViewSet(viewsets.ModelViewSet):
@@ -595,29 +549,13 @@ class MonitoringActivityRssViewSet(viewsets.ModelViewSet):
         activity = self.get_object()
         serializer = AnswerHactSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
         partner = serializer.validated_data['partner']
         value = serializer.validated_data['value']
 
-        aq = ActivityQuestion.objects.filter(
-            monitoring_activity=activity,
-            is_hact=True,
-            partner=partner,
-            is_enabled=True,
-        ).first()
-
-        if not aq:
+        aq_of = FieldMonitoringService.save_hact_answer(activity=activity, partner=partner, value=value)
+        if not aq_of:
             return Response({'detail': 'No HACT question found for this activity and partner'},
                             status=status.HTTP_404_NOT_FOUND)
-
-        aq_of, _ = ActivityQuestionOverallFinding.objects.get_or_create(activity_question=aq)
-        aq_of.value = value
-        aq_of.save()
-
-        # If activity already completed, bump programmatic visits counter once
-        if activity.status == activity.STATUSES.completed and activity.end_date:
-            partner.update_programmatic_visits(event_date=activity.end_date, update_one=True)
-
         return Response({'detail': 'HACT answer saved'}, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['post'], url_path='set-on-track')
@@ -625,15 +563,8 @@ class MonitoringActivityRssViewSet(viewsets.ModelViewSet):
         activity = self.get_object()
         serializer = SetOnTrackSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
         partner = serializer.validated_data['partner']
         on_track = serializer.validated_data['on_track']
 
-        aof, _ = ActivityOverallFinding.objects.get_or_create(
-            monitoring_activity=activity,
-            partner=partner,
-        )
-        aof.on_track = on_track
-        aof.save()
-
+        aof = FieldMonitoringService.set_on_track(activity=activity, partner=partner, on_track=on_track)
         return Response({'detail': 'Monitoring status updated', 'on_track': aof.on_track}, status=status.HTTP_200_OK)

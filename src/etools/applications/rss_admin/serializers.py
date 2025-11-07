@@ -10,7 +10,7 @@ from etools.applications.audit.serializers.mixins import EngagementDatesValidati
 from etools.applications.organizations.models import Organization
 from etools.applications.partners.models import Agreement, Intervention, PartnerOrganization
 from etools.applications.reports.models import Office, Section
-from etools.applications.rss_admin.services import ProgrammeDocumentService
+from etools.applications.rss_admin.services import ProgrammeDocumentService, EngagementService
 
 
 class PartnerOrganizationRssSerializer(serializers.ModelSerializer):
@@ -182,6 +182,26 @@ class EngagementLightRssSerializer(serializers.ModelSerializer):
         )
 
 
+class EngagementDetailRssSerializer(serializers.ModelSerializer):
+    """Minimal, permission-agnostic detail for RSS Admin.
+
+    Covers audit detail expectations (id, year_of_audit) and core fields.
+    Only used for audit engagements to avoid field-level permission filtering.
+    """
+
+    year_of_audit = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = Engagement
+        fields = (
+            'id',
+            'reference_number',
+            'engagement_type',
+            'status',
+            'year_of_audit',
+        )
+
+
 class EngagementChangeStatusSerializer(serializers.Serializer):
     """Serializer to validate input for changing an Engagement status.
 
@@ -275,22 +295,11 @@ class EngagementAttachmentsUpdateSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         engagement_file = validated_data.get('engagement_attachment')
         report_file = validated_data.get('report_attachment')
-
-        if engagement_file:
-            # normalize code for engagement docs
-            if getattr(engagement_file, 'code', None) != 'audit_engagement':
-                engagement_file.code = 'audit_engagement'
-                engagement_file.save(update_fields=['code'])
-            instance.engagement_attachments.add(engagement_file)
-
-        if report_file:
-            # normalize code for report docs
-            if getattr(report_file, 'code', None) != 'audit_report':
-                report_file.code = 'audit_report'
-                report_file.save(update_fields=['code'])
-            instance.report_attachments.add(report_file)
-
-        return instance
+        return EngagementService.attach_files(
+            engagement=instance,
+            engagement_file=engagement_file,
+            report_file=report_file,
+        )
 class SitesBulkUploadSerializer(serializers.Serializer):
     import_file = serializers.FileField()
 
