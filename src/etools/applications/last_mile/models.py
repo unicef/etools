@@ -72,7 +72,7 @@ class PointOfInterestQuerySet(models.QuerySet):
             'id', 'created', 'modified', 'parent_id', 'name', 'description', 'poi_type_id',
             'other', 'private', 'is_active', 'p_code', 'vendor_number', 'parent_pcode',
             'latitude', 'longitude',
-        )
+        ).filter(is_active=True)
 
 
 class PointOfInterestManager(models.Manager):
