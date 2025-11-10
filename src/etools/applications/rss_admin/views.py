@@ -404,8 +404,7 @@ class EngagementRssViewSet(PermittedSerializerMixin,
 
     def get_serializer_class(self):
         if self.action == 'list':
-            # Keep list payload simple and always include 'id'
-            return EngagementLightRssSerializer
+            return EngagementListSerializer
         if self.action == 'retrieve':
             instance = getattr(self, 'object', None)
             if not instance:

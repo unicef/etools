@@ -1143,3 +1143,64 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         url = reverse('rss_admin:rss-admin-partners-map-to-workspace')
         resp = self.forced_auth_req('post', url, user=self.user, data={'vendor_number': 'NOPE'})
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    # ----------------------------------------------------
+    # Engagement list: fields and filters parity with Audit
+    # ----------------------------------------------------
+
+    def test_engagements_list_fields_match_audit_list(self):
+        """RSS Admin engagements list items must expose same fields as Audit engagements list."""
+        # Create a standard (non-staff) engagement
+        sc = SpotCheckFactory()
+        # Fetch same object via Audit list
+        audit_url = reverse('audit:engagements-list')
+        audit_resp = self.forced_auth_req('get', audit_url, user=self.user, data={
+            'search': sc.id,  # '=id' search is supported
+            'page_size': 1,
+        })
+        self.assertEqual(audit_resp.status_code, status.HTTP_200_OK, audit_resp.data)
+        audit_results = audit_resp.data if isinstance(audit_resp.data, list) else audit_resp.data.get('results', [])
+        self.assertTrue(audit_results, "Expected at least one result from Audit engagements list")
+        audit_row = next((r for r in audit_results if r.get('id') == sc.id), audit_results[0])
+
+        # Fetch via RSS Admin list
+        rss_url = reverse('rss_admin:rss-admin-engagements-list')
+        rss_resp = self.forced_auth_req('get', rss_url, user=self.user, data={
+            'search': sc.id,
+            'page_size': 1,
+        })
+        self.assertEqual(rss_resp.status_code, status.HTTP_200_OK, rss_resp.data)
+        rss_results = rss_resp.data if isinstance(rss_resp.data, list) else rss_resp.data.get('results', [])
+        self.assertTrue(rss_results, "Expected at least one result from RSS Admin engagements list")
+        rss_row = next((r for r in rss_results if r.get('id') == sc.id), rss_results[0])
+
+        # Compare field sets (order not enforced, only equality of keys)
+        self.assertEqual(set(rss_row.keys()), set(audit_row.keys()))
+
+    def test_engagements_filters_include_staff_spot_checks_toggle(self):
+        """Filter parity: ability to filter staff spot checks by unicef_users_allowed flag."""
+        sc = SpotCheckFactory()
+        ssc = StaffSpotCheckFactory()
+        url = reverse('rss_admin:rss-admin-engagements-list')
+
+        # Only staff spot checks
+        resp_staff = self.forced_auth_req('get', url, user=self.user, data={
+            'agreement__auditor_firm__unicef_users_allowed': True,
+            'page_size': 50,
+        })
+        self.assertEqual(resp_staff.status_code, status.HTTP_200_OK, resp_staff.data)
+        results_staff = resp_staff.data if isinstance(resp_staff.data, list) else resp_staff.data.get('results', [])
+        ids_staff = [r['id'] for r in results_staff]
+        self.assertIn(ssc.id, ids_staff)
+        self.assertNotIn(sc.id, ids_staff)
+
+        # Only non-staff spot checks
+        resp_non_staff = self.forced_auth_req('get', url, user=self.user, data={
+            'agreement__auditor_firm__unicef_users_allowed': False,
+            'page_size': 50,
+        })
+        self.assertEqual(resp_non_staff.status_code, status.HTTP_200_OK, resp_non_staff.data)
+        results_non_staff = resp_non_staff.data if isinstance(resp_non_staff.data, list) else resp_non_staff.data.get('results', [])
+        ids_non_staff = [r['id'] for r in results_non_staff]
+        self.assertIn(sc.id, ids_non_staff)
+        self.assertNotIn(ssc.id, ids_non_staff)
