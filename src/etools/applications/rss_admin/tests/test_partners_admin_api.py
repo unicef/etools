@@ -848,12 +848,8 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
 
     def test_set_currency_on_pd(self):
         currency = CURRENCY_LIST[0]
-        print('currency:', currency)
-        
         url = reverse('rss_admin:rss-admin-programme-documents-detail', kwargs={'pk': self.pd.pk})
-        print('url:', url)
         resp = self.forced_auth_req('patch', url, user=self.user, data={'currency': currency})
-        print('resp currency:', resp.data['planned_budget']['currency'])
         self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
         self.assertEqual(resp.data['planned_budget']['currency'], currency)
 
@@ -1032,7 +1028,6 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         url = reverse('rss_admin:rss-admin-engagements-detail', kwargs={'pk': audit.pk})
         resp = self.forced_auth_req('get', url, user=self.user)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        print(' resp data: ', resp.data)
         self.assertEqual(resp.data['id'], audit.id)
         # ensure a detail-only field is present (e.g., year_of_audit for audits)
         self.assertIn('year_of_audit', resp.data)

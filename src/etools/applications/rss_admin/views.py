@@ -291,7 +291,6 @@ class ProgrammeDocumentRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet,
         instance = self.get_object()
         payload = self._apply_fr_numbers(request.data)
 
-        # Handle currency updates on PD via PATCH detail as per requirements/tests
         currency = payload.pop('currency', None)
         if currency is not None:
             if currency not in CURRENCY_LIST:
@@ -305,7 +304,6 @@ class ProgrammeDocumentRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet,
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
 
-        # Always respond with detail payload to include planned_budget and other computed fields
         refreshed = Intervention.objects.select_related('planned_budget').get(pk=instance.pk)
         return Response(InterventionDetailSerializer(refreshed, context={'request': request}).data, status=status.HTTP_200_OK)
 
@@ -401,7 +399,6 @@ class EngagementRssViewSet(PermittedSerializerMixin,
 
     def get_obj_permission_context(self, obj):
         context = super().get_obj_permission_context(obj)
-        # Include current status so state-based permissions allow readable fields
         context.append(ObjectStatusCondition(obj))
         return context
 
