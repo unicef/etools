@@ -30,6 +30,22 @@ class TestRssAdminFieldMonitoringApi(BaseTenantTestCase):
         cls.user = UserFactory(is_staff=True)
         cls.partner = PartnerFactory()
 
+    def test_monitoring_activities_list_does_not_error(self):
+        # Ensure at least one activity exists to trigger serializer list representation
+        MonitoringActivityFactory()
+        url = reverse('rss_admin:rss-admin-monitoring-activities-list')
+        resp = self.forced_auth_req('get', url, user=self.user, data={})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK, getattr(resp, 'data', None))
+        data = resp.data
+        first = None
+        if isinstance(data, dict):
+            results = data.get('results') or data.get('data') or []
+            first = results[0] if results else None
+        elif isinstance(data, list):
+            first = data[0] if data else None
+        if first is not None:
+            self.assertIn('permissions', first)
+
     def test_sites_bulk_upload(self):
         # Build XLSX in-memory with required headers and a few rows
         # Ensure at least one active admin level 0 Location exists so LocationSite.save() can set parent

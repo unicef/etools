@@ -251,7 +251,7 @@ class MonitoringActivitySerializer(UserContextSerializerMixin, MonitoringActivit
 
     def get_permissions(self, obj):
         ps = MonitoringActivity.permission_structure()
-        permissions = ActivityPermissions(user=self.get_user(), instance=self.instance, permission_structure=ps)
+        permissions = ActivityPermissions(user=self.get_user(), instance=obj, permission_structure=ps)
         return permissions.get_permissions()
 
     def get_transitions(self, obj):
