@@ -13,7 +13,6 @@ from etools.applications.last_mile.admin_panel.constants import (
     INVALID_QUANTITY,
     ITEMS_NOT_PROVIDED,
     LAST_MILE_PROFILE_NOT_FOUND,
-    ONLY_ONE_ITEM_PER_TRANSFER,
     ORGANIZATION_DOES_NOT_EXIST,
     PARTNER_NOT_UNDER_LOCATION,
     PARTNER_NOT_UNDER_ORGANIZATION,
@@ -92,8 +91,6 @@ class AdminPanelValidator:
         uom_types = [uom[0] for uom in Material.UOM]
         if not items:
             raise ValidationError(_(ITEMS_NOT_PROVIDED))
-        if len(items) > 1:
-            raise ValidationError(_(ONLY_ONE_ITEM_PER_TRANSFER))
         for item in items:
             if item.get('quantity', 0) < 1:
                 raise ValidationError(_(INVALID_QUANTITY))
