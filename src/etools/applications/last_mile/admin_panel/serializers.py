@@ -391,12 +391,22 @@ class PointOfInterestAdminSerializer(serializers.ModelSerializer):
     country = serializers.CharField(read_only=True)
     region = serializers.CharField(read_only=True)
     district = serializers.CharField(read_only=True)
+    pending_approval = serializers.SerializerMethodField(read_only=True)
+    approved = serializers.SerializerMethodField(read_only=True)
+
+    def get_pending_approval(self, obj):
+        if hasattr(obj, 'pending_approval') and obj.pending_approval is not None:
+            return obj.pending_approval
+        return 0
+
+    def get_approved(self, obj):
+        if hasattr(obj, 'approved') and obj.approved is not None:
+            return obj.approved
+        return 0
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
         parent_locations = ParentLocationsSerializer(instance.parent).data
-        data['pending_items'] = 1
-        data['approved_items'] = 14
         data.update(parent_locations)
         return data
 

@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.db import connection
-from django.db.models import F, Prefetch, Q
+from django.db.models import Count, F, IntegerField, OuterRef, Prefetch, Q, Subquery, Value
+from django.db.models.functions import Coalesce
 from django.http import HttpResponse, StreamingHttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -303,6 +304,24 @@ class LocationsViewSet(mixins.ListModelMixin,
                 'parent__parent__parent__geom',
                 'parent__parent__parent__parent__geom'
             )
+
+        pending_subquery = models.Item.objects.filter(
+            transfer__destination_point_id=OuterRef('id'),
+            transfer__approval_status=models.Transfer.ApprovalStatus.PENDING,
+            hidden=False
+        ).values('transfer__destination_point_id').annotate(count=Count('id')).values('count')
+
+        approved_subquery = models.Item.objects.filter(
+            transfer__destination_point_id=OuterRef('id'),
+            transfer__approval_status=models.Transfer.ApprovalStatus.APPROVED,
+            hidden=False
+        ).values('transfer__destination_point_id').annotate(count=Count('id')).values('count')
+
+        self.queryset = self.queryset.annotate(
+            pending_approval=Coalesce(Subquery(pending_subquery, output_field=IntegerField()), Value(0)),
+            approved=Coalesce(Subquery(approved_subquery, output_field=IntegerField()), Value(0))
+        )
+
         return self.queryset
 
     filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
@@ -318,6 +337,8 @@ class LocationsViewSet(mixins.ListModelMixin,
         'region',
         'district',
         'name',
+        'pending_approval',
+        'approved',
     ]
     search_fields = ('name',
                      'p_code',
