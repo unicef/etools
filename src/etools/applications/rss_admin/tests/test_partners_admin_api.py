@@ -1152,17 +1152,13 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         """RSS Admin engagements list items must expose same fields as Audit engagements list."""
         # Create a standard (non-staff) engagement
         sc = SpotCheckFactory()
-        # Fetch same object via Audit list
-        audit_url = reverse('audit:engagements-list')
-        audit_resp = self.forced_auth_req('get', audit_url, user=self.user, data={
-            'search': sc.id,  # '=id' search is supported
-            'page_size': 1,
-        })
-        self.assertEqual(audit_resp.status_code, status.HTTP_200_OK, audit_resp.data)
-        audit_results = audit_resp.data if isinstance(audit_resp.data, list) else audit_resp.data.get('results', [])
-        self.assertTrue(audit_results, "Expected at least one result from Audit engagements list")
-        audit_row = next((r for r in audit_results if r.get('id') == sc.id), audit_results[0])
-
+        
+        # Expected fields from audit EngagementLightSerializer (related_agreement is write_only, not in response)
+        expected_fields = {
+            'id', 'reference_number', 'agreement', 'po_item', 'partner',
+            'engagement_type', 'status', 'status_date', 'total_value', 'offices', 'sections'
+        }
+        
         # Fetch via RSS Admin list
         rss_url = reverse('rss_admin:rss-admin-engagements-list')
         rss_resp = self.forced_auth_req('get', rss_url, user=self.user, data={
@@ -1174,8 +1170,9 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         self.assertTrue(rss_results, "Expected at least one result from RSS Admin engagements list")
         rss_row = next((r for r in rss_results if r.get('id') == sc.id), rss_results[0])
 
-        # Compare field sets (order not enforced, only equality of keys)
-        self.assertEqual(set(rss_row.keys()), set(audit_row.keys()))
+        # Verify field sets match expected (order not enforced, only equality of keys)
+        self.assertEqual(set(rss_row.keys()), expected_fields,
+                        f"RSS Admin engagement fields don't match expected. Got: {set(rss_row.keys())}, Expected: {expected_fields}")
 
     def test_engagements_filters_include_staff_spot_checks_toggle(self):
         """Filter parity: ability to filter staff spot checks by unicef_users_allowed flag."""

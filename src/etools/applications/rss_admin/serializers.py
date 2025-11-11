@@ -4,12 +4,17 @@ from rest_framework import serializers
 from unicef_attachments.fields import AttachmentSingleFileField
 from unicef_attachments.models import Attachment
 from unicef_attachments.serializers import AttachmentSerializerMixin
+from unicef_restlib.fields import SeparatedReadWriteField
 
 from etools.applications.audit.models import Engagement
+from etools.applications.audit.serializers.auditor import PurchaseOrderItemSerializer, PurchaseOrderSerializer
+from etools.applications.audit.serializers.engagement import PartnerOrganizationLightSerializer
 from etools.applications.audit.serializers.mixins import EngagementDatesValidation
 from etools.applications.organizations.models import Organization
 from etools.applications.partners.models import Agreement, Intervention, PartnerOrganization
 from etools.applications.reports.models import Office, Section
+from etools.applications.reports.serializers.v1 import SectionSerializer
+from etools.applications.reports.serializers.v2 import OfficeLightSerializer
 from etools.applications.rss_admin.services import ProgrammeDocumentService, EngagementService
 
 
@@ -169,17 +174,37 @@ class TripApproverUpdateSerializer(serializers.ModelSerializer):
 
 
 class EngagementLightRssSerializer(serializers.ModelSerializer):
-    displayed_status = serializers.ReadOnlyField()
+    """Permission-agnostic engagement list serializer for RSS Admin.
+    
+    Provides same fields as audit EngagementLightSerializer but without
+    field-level permission filtering. This matches the audit module's
+    EngagementLightSerializer exactly.
+    """
+    agreement = SeparatedReadWriteField(
+        read_field=PurchaseOrderSerializer(read_only=True), label='Purchase Order'
+    )
+    po_item = SeparatedReadWriteField(
+        read_field=PurchaseOrderItemSerializer(read_only=True), label='PO Item'
+    )
+    related_agreement = PurchaseOrderSerializer(write_only=True, required=False)
+    partner = SeparatedReadWriteField(
+        read_field=PartnerOrganizationLightSerializer(read_only=True),
+    )
+    status = serializers.ChoiceField(
+        choices=Engagement.DISPLAY_STATUSES,
+        source='displayed_status',
+        read_only=True
+    )
+    status_date = serializers.ReadOnlyField(source='displayed_status_date', label='Date of Status')
+    offices = OfficeLightSerializer(many=True)
+    sections = SectionSerializer(many=True)
 
     class Meta:
         model = Engagement
-        fields = (
-            'id',
-            'reference_number',
-            'engagement_type',
-            'status',
-            'displayed_status',
-        )
+        fields = [
+            'id', 'reference_number', 'agreement', 'po_item', 'related_agreement', 'partner',
+            'engagement_type', 'status', 'status_date', 'total_value', 'offices', 'sections'
+        ]
 
 
 class EngagementDetailRssSerializer(serializers.ModelSerializer):

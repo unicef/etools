@@ -404,8 +404,9 @@ class EngagementRssViewSet(PermittedSerializerMixin,
         return context
 
     def get_serializer_class(self):
+        # For list, use the default EngagementLightRssSerializer (permission-agnostic)
         if self.action == 'list':
-            return EngagementListSerializer
+            return EngagementLightRssSerializer
         if self.action == 'retrieve':
             instance = getattr(self, 'object', None)
             if not instance:
