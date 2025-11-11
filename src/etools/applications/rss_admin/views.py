@@ -5,6 +5,7 @@ from django.db import connection
 from django.contrib.gis.geos import Point
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import connection, transaction
+from django.db.models import Count
 
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, mixins, status, viewsets
@@ -536,9 +537,42 @@ class LocationSiteAdminViewSet(viewsets.ViewSet):
 
 
 class MonitoringActivityRssViewSet(viewsets.ModelViewSet):
-    queryset = MonitoringActivity.objects.all()
+    queryset = MonitoringActivity.objects\
+        .annotate(checklists_count=Count('checklists'))\
+        .select_related('tpm_partner', 'tpm_partner__organization',
+                        'visit_lead', 'location', 'location_site')\
+        .prefetch_related('team_members', 'partners', 'partners__organization',
+                          'report_reviewers', 'interventions', 'cp_outputs',
+                          'sections', 'visit_goals', 'facility_types')\
+        .order_by("-id")
     serializer_class = MonitoringActivitySerializer
     permission_classes = (IsRssAdmin,)
+    pagination_class = DynamicPageNumberPagination
+    filter_backends = (
+        DjangoFilterBackend,
+        filters.OrderingFilter,
+        filters.SearchFilter,
+    )
+    filterset_fields = {
+        'monitor_type': ['exact'],
+        'tpm_partner': ['exact', 'in'],
+        'visit_lead': ['exact', 'in'],
+        'location': ['exact', 'in'],
+        'location_site': ['exact', 'in'],
+        'start_date': ['gte', 'lte'],
+        'end_date': ['gte', 'lte'],
+        'status': ['exact', 'in'],
+    }
+    ordering_fields = (
+        'start_date', 'end_date', 'location', 'location_site', 'monitor_type', 'checklists_count', 'status'
+    )
+    search_fields = ('number',)
+
+    def get_serializer_class(self):
+        from etools.applications.field_monitoring.planning.serializers import MonitoringActivityLightSerializer
+        if self.action == 'list':
+            return MonitoringActivityLightSerializer
+        return MonitoringActivitySerializer
 
     @action(detail=True, methods=['post'], url_path='answer-hact')
     def answer_hact(self, request, pk=None):

@@ -16,8 +16,10 @@ from etools.applications.field_monitoring.data_collection.models import (
 from etools.applications.field_monitoring.data_collection.tests.factories import ActivityQuestionFactory
 from etools.applications.field_monitoring.fm_settings.models import LocationSite
 from etools.applications.field_monitoring.fm_settings.tests.factories import QuestionFactory
+from etools.applications.field_monitoring.planning.models import MonitoringActivity
 from etools.applications.field_monitoring.planning.tests.factories import MonitoringActivityFactory
 from etools.applications.partners.tests.factories import PartnerFactory
+from etools.applications.reports.tests.factories import OfficeFactory, SectionFactory
 from etools.applications.users.tests.factories import UserFactory
 
 
@@ -44,7 +46,11 @@ class TestRssAdminFieldMonitoringApi(BaseTenantTestCase):
         elif isinstance(data, list):
             first = data[0] if data else None
         if first is not None:
-            self.assertIn('permissions', first)
+            # List view uses MonitoringActivityLightSerializer (no permissions field)
+            # Permissions are only in detail view
+            self.assertIn('id', first)
+            self.assertIn('reference_number', first)
+            self.assertIn('status', first)
 
     def test_sites_bulk_upload(self):
         # Build XLSX in-memory with required headers and a few rows
@@ -120,3 +126,279 @@ class TestRssAdminFieldMonitoringApi(BaseTenantTestCase):
         # ActivityOverallFinding exists and is set
         aof = ActivityOverallFinding.objects.get(monitoring_activity=activity, partner=self.partner)
         self.assertTrue(aof.on_track)
+
+    def test_monitoring_activities_list_pagination(self):
+        """Test that pagination works correctly"""
+        # Create 30 activities
+        for i in range(30):
+            MonitoringActivityFactory()
+        
+        url = reverse('rss_admin:rss-admin-monitoring-activities-list')
+        resp = self.forced_auth_req('get', url, user=self.user, data={'page': 1, 'page_size': 10})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        
+        # Check pagination structure
+        self.assertIn('results', resp.data)
+        self.assertIn('count', resp.data)
+        self.assertIn('next', resp.data)
+        self.assertIn('previous', resp.data)
+        
+        # Check page size
+        self.assertEqual(len(resp.data['results']), 10)
+        self.assertEqual(resp.data['count'], 30)
+        
+        # Test second page
+        resp = self.forced_auth_req('get', url, user=self.user, data={'page': 2, 'page_size': 10})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(resp.data['results']), 10)
+
+    def test_monitoring_activities_list_filter_by_status(self):
+        """Test filtering by status"""
+        activity_draft = MonitoringActivityFactory(status=MonitoringActivity.STATUS_DRAFT)
+        activity_completed = MonitoringActivityFactory(status=MonitoringActivity.STATUS_COMPLETED)
+        
+        url = reverse('rss_admin:rss-admin-monitoring-activities-list')
+        
+        # Filter by draft status
+        resp = self.forced_auth_req('get', url, user=self.user, data={'status': MonitoringActivity.STATUS_DRAFT})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        results = resp.data.get('results', resp.data)
+        result_ids = [r['id'] for r in results]
+        self.assertIn(activity_draft.id, result_ids)
+        self.assertNotIn(activity_completed.id, result_ids)
+        
+        # Filter by completed status
+        resp = self.forced_auth_req('get', url, user=self.user, data={'status': MonitoringActivity.STATUS_COMPLETED})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        results = resp.data.get('results', resp.data)
+        result_ids = [r['id'] for r in results]
+        self.assertNotIn(activity_draft.id, result_ids)
+        self.assertIn(activity_completed.id, result_ids)
+
+    def test_monitoring_activities_list_filter_by_monitor_type(self):
+        """Test filtering by monitor_type"""
+        activity_staff = MonitoringActivityFactory(monitor_type=MonitoringActivity.MONITOR_TYPE_CHOICES.staff)
+        activity_tpm = MonitoringActivityFactory(monitor_type=MonitoringActivity.MONITOR_TYPE_CHOICES.tpm)
+        
+        url = reverse('rss_admin:rss-admin-monitoring-activities-list')
+        
+        # Filter by staff monitor type
+        resp = self.forced_auth_req('get', url, user=self.user, 
+                                    data={'monitor_type': MonitoringActivity.MONITOR_TYPE_CHOICES.staff})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        results = resp.data.get('results', resp.data)
+        result_ids = [r['id'] for r in results]
+        self.assertIn(activity_staff.id, result_ids)
+        self.assertNotIn(activity_tpm.id, result_ids)
+
+    def test_monitoring_activities_list_filter_by_location(self):
+        """Test filtering by location"""
+        location1 = LocationFactory()
+        location2 = LocationFactory()
+        activity1 = MonitoringActivityFactory(location=location1)
+        activity2 = MonitoringActivityFactory(location=location2)
+        
+        url = reverse('rss_admin:rss-admin-monitoring-activities-list')
+        
+        # Filter by location1
+        resp = self.forced_auth_req('get', url, user=self.user, data={'location': location1.id})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        results = resp.data.get('results', resp.data)
+        result_ids = [r['id'] for r in results]
+        self.assertIn(activity1.id, result_ids)
+        self.assertNotIn(activity2.id, result_ids)
+
+    def test_monitoring_activities_list_filter_by_date_range(self):
+        """Test filtering by date range"""
+        from datetime import date, timedelta
+        
+        today = date.today()
+        past_date = today - timedelta(days=30)
+        future_date = today + timedelta(days=30)
+        
+        activity_past = MonitoringActivityFactory(start_date=past_date, end_date=past_date)
+        activity_current = MonitoringActivityFactory(start_date=today, end_date=today)
+        activity_future = MonitoringActivityFactory(start_date=future_date, end_date=future_date)
+        
+        url = reverse('rss_admin:rss-admin-monitoring-activities-list')
+        
+        # Filter by start_date >= today
+        resp = self.forced_auth_req('get', url, user=self.user, data={'start_date__gte': str(today)})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        results = resp.data.get('results', resp.data)
+        result_ids = [r['id'] for r in results]
+        self.assertNotIn(activity_past.id, result_ids)
+        self.assertIn(activity_current.id, result_ids)
+        self.assertIn(activity_future.id, result_ids)
+        
+        # Filter by end_date <= today
+        resp = self.forced_auth_req('get', url, user=self.user, data={'end_date__lte': str(today)})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        results = resp.data.get('results', resp.data)
+        result_ids = [r['id'] for r in results]
+        self.assertIn(activity_past.id, result_ids)
+        self.assertIn(activity_current.id, result_ids)
+        self.assertNotIn(activity_future.id, result_ids)
+
+    def test_monitoring_activities_list_ordering(self):
+        """Test ordering functionality"""
+        from datetime import date, timedelta
+        
+        today = date.today()
+        activity1 = MonitoringActivityFactory(start_date=today - timedelta(days=2))
+        activity2 = MonitoringActivityFactory(start_date=today - timedelta(days=1))
+        activity3 = MonitoringActivityFactory(start_date=today)
+        
+        url = reverse('rss_admin:rss-admin-monitoring-activities-list')
+        
+        # Order by start_date ascending
+        resp = self.forced_auth_req('get', url, user=self.user, data={'ordering': 'start_date'})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        results = resp.data.get('results', resp.data)
+        self.assertEqual(results[0]['id'], activity1.id)
+        self.assertEqual(results[1]['id'], activity2.id)
+        self.assertEqual(results[2]['id'], activity3.id)
+        
+        # Order by start_date descending
+        resp = self.forced_auth_req('get', url, user=self.user, data={'ordering': '-start_date'})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        results = resp.data.get('results', resp.data)
+        self.assertEqual(results[0]['id'], activity3.id)
+        self.assertEqual(results[1]['id'], activity2.id)
+        self.assertEqual(results[2]['id'], activity1.id)
+
+    def test_monitoring_activities_list_search(self):
+        """Test search functionality"""
+        activity1 = MonitoringActivityFactory()
+        activity2 = MonitoringActivityFactory()
+        
+        url = reverse('rss_admin:rss-admin-monitoring-activities-list')
+        
+        # Search by number (partial match)
+        search_term = activity1.number[:6]
+        resp = self.forced_auth_req('get', url, user=self.user, data={'search': search_term})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        results = resp.data.get('results', resp.data)
+        result_ids = [r['id'] for r in results]
+        self.assertIn(activity1.id, result_ids)
+
+    def test_monitoring_activities_list_structure(self):
+        """Test that list response has the correct structure matching field-monitoring endpoint"""
+        activity = MonitoringActivityFactory(
+            partners=[self.partner],
+            status=MonitoringActivity.STATUS_DRAFT
+        )
+        
+        url = reverse('rss_admin:rss-admin-monitoring-activities-list')
+        resp = self.forced_auth_req('get', url, user=self.user)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        
+        results = resp.data.get('results', resp.data)
+        self.assertTrue(len(results) > 0)
+        
+        # Check structure of first result (should use MonitoringActivityLightSerializer)
+        first = results[0]
+        expected_fields = [
+            'id', 'reference_number', 'monitor_type', 'remote_monitoring',
+            'tpm_partner', 'visit_lead', 'team_members', 'location', 'location_site',
+            'partners', 'interventions', 'cp_outputs', 'start_date', 'end_date',
+            'checklists_count', 'reject_reason', 'report_reject_reason', 'cancel_reason',
+            'status', 'sections', 'overlapping_entities', 'visit_goals', 'objective', 'facility_types'
+        ]
+        for field in expected_fields:
+            self.assertIn(field, first, f"Field '{field}' missing from response")
+
+    def test_monitoring_activities_detail_structure(self):
+        """Test that detail response has the correct structure with permissions"""
+        activity = MonitoringActivityFactory(
+            partners=[self.partner],
+            status=MonitoringActivity.STATUS_DRAFT
+        )
+        
+        url = reverse('rss_admin:rss-admin-monitoring-activities-detail', kwargs={'pk': activity.pk})
+        resp = self.forced_auth_req('get', url, user=self.user)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        
+        # Check structure (should use MonitoringActivitySerializer)
+        expected_fields = [
+            'id', 'reference_number', 'permissions', 'transitions',
+            'offices', 'report_reviewers', 'reviewed_by'
+        ]
+        for field in expected_fields:
+            self.assertIn(field, resp.data, f"Field '{field}' missing from detail response")
+
+    def test_monitoring_activities_list_permissions_non_staff(self):
+        """Test that non-staff users get 403"""
+        # Create a non-staff user
+        non_staff_user = UserFactory(is_staff=False)
+        
+        activity = MonitoringActivityFactory()
+        url = reverse('rss_admin:rss-admin-monitoring-activities-list')
+        
+        # Non-staff user should get 403
+        resp = self.forced_auth_req('get', url, user=non_staff_user)
+        self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_monitoring_activities_detail_permissions_non_staff(self):
+        """Test that non-staff users get 403 on detail"""
+        # Create a non-staff user
+        non_staff_user = UserFactory(is_staff=False)
+        
+        activity = MonitoringActivityFactory()
+        url = reverse('rss_admin:rss-admin-monitoring-activities-detail', kwargs={'pk': activity.pk})
+        
+        # Non-staff user should get 403
+        resp = self.forced_auth_req('get', url, user=non_staff_user)
+        self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_monitoring_activities_list_permissions_staff(self):
+        """Test that staff users can access list"""
+        activity = MonitoringActivityFactory()
+        url = reverse('rss_admin:rss-admin-monitoring-activities-list')
+        
+        # Staff user should get 200
+        resp = self.forced_auth_req('get', url, user=self.user)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+    def test_monitoring_activities_detail_permissions_staff(self):
+        """Test that staff users can access detail"""
+        activity = MonitoringActivityFactory()
+        url = reverse('rss_admin:rss-admin-monitoring-activities-detail', kwargs={'pk': activity.pk})
+        
+        # Staff user should get 200
+        resp = self.forced_auth_req('get', url, user=self.user)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+    def test_monitoring_activities_combined_filters(self):
+        """Test combining multiple filters"""
+        from datetime import date, timedelta
+        
+        today = date.today()
+        location = LocationFactory()
+        partner = PartnerFactory()
+        
+        # Create activities with different combinations
+        activity_match = MonitoringActivityFactory(
+            status=MonitoringActivity.STATUS_DRAFT,
+            location=location,
+            start_date=today,
+            partners=[partner]
+        )
+        activity_no_match = MonitoringActivityFactory(
+            status=MonitoringActivity.STATUS_COMPLETED,
+            start_date=today - timedelta(days=10)
+        )
+        
+        url = reverse('rss_admin:rss-admin-monitoring-activities-list')
+        
+        # Combine filters
+        resp = self.forced_auth_req('get', url, user=self.user, data={
+            'status': MonitoringActivity.STATUS_DRAFT,
+            'location': location.id,
+            'start_date__gte': str(today)
+        })
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        results = resp.data.get('results', resp.data)
+        result_ids = [r['id'] for r in results]
+        self.assertIn(activity_match.id, result_ids)
+        self.assertNotIn(activity_no_match.id, result_ids)
