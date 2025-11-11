@@ -1201,3 +1201,69 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         ids_non_staff = [r['id'] for r in results_non_staff]
         self.assertIn(sc.id, ids_non_staff)
         self.assertNotIn(ssc.id, ids_non_staff)
+
+    def test_staff_spot_check_detail_retrieve(self):
+        """Test retrieving a staff spot check detail to ensure it doesn't cause AttributeError.
+        
+        This test reproduces the error from:
+        GET /api/rss-admin/engagements/3/
+        
+        Error was: 'Engagement' object has no attribute 'internal_controls'
+        
+        The issue occurred because the viewset was trying to serialize using audit module serializers
+        which have permission checks. The fix uses permission-agnostic EngagementDetailRssSerializer
+        and ensures get_object() returns the proper subclass to avoid AttributeError.
+        """
+        # Create a staff spot check
+        ssc = StaffSpotCheckFactory(internal_controls='Test internal controls')
+        
+        url = reverse('rss_admin:rss-admin-engagements-detail', args=[ssc.pk])
+        resp = self.forced_auth_req('get', url, user=self.user)
+        
+        # Should return 200 OK without AttributeError
+        self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
+        
+        # Verify the response contains expected minimal fields (permission-agnostic)
+        self.assertEqual(resp.data['id'], ssc.id)
+        self.assertEqual(resp.data['engagement_type'], 'sc')
+        self.assertIn('reference_number', resp.data)
+        self.assertIn('status', resp.data)
+
+    def test_spot_check_detail_retrieve(self):
+        """Test retrieving a regular (non-staff) spot check detail."""
+        # Create a regular spot check
+        sc = SpotCheckFactory(internal_controls='Regular spot check controls')
+        
+        url = reverse('rss_admin:rss-admin-engagements-detail', args=[sc.pk])
+        resp = self.forced_auth_req('get', url, user=self.user)
+        
+        # Should return 200 OK without AttributeError
+        self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
+        
+        # Verify the response contains expected minimal fields (permission-agnostic)
+        self.assertEqual(resp.data['id'], sc.id)
+        self.assertEqual(resp.data['engagement_type'], 'sc')
+        self.assertIn('reference_number', resp.data)
+        self.assertIn('status', resp.data)
+
+    def test_audit_detail_retrieve_new(self):
+        """Test retrieving an audit engagement detail.
+        
+        This ensures the get_object() override works correctly for all engagement types,
+        not just SpotCheck. All engagements use EngagementDetailRssSerializer for RSS Admin.
+        """
+        audit = AuditFactory()
+        
+        url = reverse('rss_admin:rss-admin-engagements-detail', args=[audit.pk])
+        resp = self.forced_auth_req('get', url, user=self.user)
+        
+        # Should return 200 OK
+        self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
+        
+        # Verify the response contains expected minimal fields (permission-agnostic)
+        self.assertEqual(resp.data['id'], audit.id)
+        self.assertEqual(resp.data['engagement_type'], 'audit')
+        self.assertIn('reference_number', resp.data)
+        self.assertIn('status', resp.data)
+        # Audits should include year_of_audit
+        self.assertIn('year_of_audit', resp.data)

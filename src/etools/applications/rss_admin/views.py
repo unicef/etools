@@ -393,6 +393,17 @@ class EngagementRssViewSet(PermittedSerializerMixin,
         queryset = queryset.prefetch_related('partner', 'agreement', 'agreement__auditor_firm__organization')
         return queryset
 
+    def get_object(self):
+        """Override to ensure we get the proper subclass (SpotCheck, Audit, etc.) not base Engagement.
+        
+        This is crucial for serializers like StaffSpotCheckSerializer which expect fields
+        that only exist on subclasses (e.g., internal_controls on SpotCheck).
+        """
+        obj = super().get_object()
+        if hasattr(obj, 'get_subclass'):
+            return obj.get_subclass()
+        return obj
+
     def get_permission_context(self):
         context = super().get_permission_context()
         context.append(AuditModuleCondition())
@@ -408,21 +419,7 @@ class EngagementRssViewSet(PermittedSerializerMixin,
         if self.action == 'list':
             return EngagementLightRssSerializer
         if self.action == 'retrieve':
-            instance = getattr(self, 'object', None)
-            if not instance:
-                try:
-                    obj = self.get_object()
-                except Exception:
-                    return super().get_serializer_class()
-            else:
-                obj = instance
-
-            serializer_cls = EngagementService.serializer_for_instance(obj)
-            # RSS Admin: use permission-agnostic detail for audits
-            if serializer_cls is AuditSerializer:
-                return EngagementDetailRssSerializer
-            if serializer_cls:
-                return serializer_cls
+            return EngagementDetailRssSerializer
 
         return super().get_serializer_class()
 
