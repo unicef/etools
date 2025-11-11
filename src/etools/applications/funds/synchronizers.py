@@ -266,14 +266,24 @@ class FundReservationsSynchronizer(VisionDataTenantSynchronizer):
     def update_fr_totals():
         totals_updated = 0
         qs = FundsReservationHeader.objects
-        qs = qs.annotate(my_li_total_sum=Sum('fr_items__overall_amount_dc'))
+        qs = qs.annotate(my_li_total_sum_local=Sum('fr_items__overall_amount_dc')).annotate(my_li_total_sum=Sum('fr_items__overall_amount'))
         for fr in qs:
+            updated = False
             # Note that Sum() returns None, not 0, if there's nothing to sum.
             total_li_sum = fr.my_li_total_sum or Decimal('0.00')
-            if not comp_decimals(total_li_sum, fr.total_amt_local):
-                fr.total_amt_local = total_li_sum
+            total_li_sum_local = fr.my_li_total_sum_local or Decimal('0.00')
+
+            if not comp_decimals(total_li_sum, fr.total_amt):
+                fr.total_amt = total_li_sum
+                updated = True
+            if not comp_decimals(total_li_sum_local, fr.total_amt_local):
+                fr.total_amt_local = total_li_sum_local
+                updated = True
+
+            if updated:
                 fr.save()
                 totals_updated += 1
+
         return totals_updated
 
     def _save_records(self, records):
