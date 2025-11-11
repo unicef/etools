@@ -43,6 +43,7 @@ from etools.applications.last_mile.admin_panel.serializers import (
     AlertTypeSerializer,
     AuthUserPermissionsDetailSerializer,
     BulkReviewPointOfInterestSerializer,
+    BulkReviewTransferSerializer,
     BulkUpdateLastMileProfileStatusSerializer,
     ImportFileSerializer,
     ItemStockManagementUpdateSerializer,
@@ -617,6 +618,8 @@ class TransferItemViewSet(mixins.ListModelMixin, GenericViewSet, mixins.CreateMo
             return TransferItemCreateSerializer
         if self.action == "_import_file":
             return ImportFileSerializer
+        if self.action == 'bulk_review':
+            return BulkReviewTransferSerializer
         return ItemTransferAdminSerializer
 
     @action(detail=False, methods=['post'], url_path='import/xlsx')
@@ -624,12 +627,19 @@ class TransferItemViewSet(mixins.ListModelMixin, GenericViewSet, mixins.CreateMo
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         excel_file = serializer.validated_data['file']
-        valid, out = CsvImporter().import_stock(excel_file)
+        valid, out = CsvImporter().import_stock(excel_file, request.user)
         if not valid:
             resp = HttpResponse(out.getvalue(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
             resp['Content-Disposition'] = f'attachment; filename="checked_{excel_file.name}"'
             return resp
         return Response({"valid": valid}, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['put'], url_path='bulk-review')
+    def bulk_review(self, request, *args, **kwargs):
+        serializer_data = BulkReviewTransferSerializer(data=request.data)
+        serializer_data.is_valid(raise_exception=True)
+        serializer_data.update(serializer_data.validated_data, request.user)
+        return Response(serializer_data.data, status=status.HTTP_200_OK)
 
 
 class ItemStockManagementView(mixins.UpdateModelMixin, mixins.RetrieveModelMixin, mixins.DestroyModelMixin, GenericViewSet):

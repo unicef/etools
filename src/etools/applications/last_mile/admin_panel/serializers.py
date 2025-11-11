@@ -13,6 +13,7 @@ from etools.applications.last_mile.admin_panel.services.lm_profile_status_update
 from etools.applications.last_mile.admin_panel.services.lm_user_creator import LMUserCreator
 from etools.applications.last_mile.admin_panel.services.reverse_transfer import ReverseTransfer
 from etools.applications.last_mile.admin_panel.services.stock_management_create import StockManagementCreateService
+from etools.applications.last_mile.admin_panel.services.transfer_approval import TransferApprovalService
 from etools.applications.last_mile.admin_panel.validators import AdminPanelValidator
 from etools.applications.last_mile.permissions import LastMileUserPermissionRetriever
 from etools.applications.last_mile.serializers import PointOfInterestTypeSerializer
@@ -394,6 +395,8 @@ class PointOfInterestAdminSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         parent_locations = ParentLocationsSerializer(instance.parent).data
+        data['pending_items'] = 1
+        data['approved_items'] = 14
         data.update(parent_locations)
         return data
 
@@ -797,6 +800,7 @@ class TransferItemCreateSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         self.adminValidator.validate_items(validated_data.get('items', []))
         self.adminValidator.validate_partner_location(validated_data.get('location'), validated_data.get('partner_organization'))
+        validated_data['created_by'] = self.context['request'].user
         return StockManagementCreateService().create_stock_management(validated_data)
 
     class Meta:
@@ -1121,9 +1125,10 @@ class StockManagementImportSerializer(serializers.Serializer):
         except models.PointOfInterest.DoesNotExist:
             raise serializers.ValidationError("Point of interest not found by p_code")
 
-    def create(self, validated_data):
+    def create(self, validated_data, created_by):
         validated_data['partner_organization'] = validated_data.pop('ip_number')
         validated_data['location'] = validated_data.pop('p_code')
+        validated_data['created_by'] = created_by
         validated_data['items'] = [{
             'material': validated_data.pop('material_number'),
             'quantity': validated_data.pop('quantity'),
@@ -1257,3 +1262,29 @@ class TransferReverseAdminSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         reversed_transfer = ReverseTransfer(transfer_id=instance.pk).reverse()
         return reversed_transfer
+
+
+class BulkReviewTransferSerializer(serializers.Serializer):
+    approval_status = serializers.ChoiceField(choices=models.Transfer.ApprovalStatus.choices)
+    items = serializers.PrimaryKeyRelatedField(queryset=models.Item.all_objects.select_related('transfer').all(), many=True, write_only=True)
+    review_notes = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+
+    admin_validator = AdminPanelValidator()
+
+    def validate_approval_status(self, value):
+        self.admin_validator.validate_status(value)
+        return value
+
+    @transaction.atomic
+    def update(self, validated_data, approver_user):
+        items = validated_data.pop('items')
+        approval_status = validated_data.get('approval_status')
+        review_notes = validated_data.get('review_notes')
+        TransferApprovalService().bulk_review(
+            items=items,
+            approval_status=approval_status,
+            approver_user=approver_user,
+            review_notes=review_notes
+        )
+
+        return validated_data
