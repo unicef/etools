@@ -52,6 +52,8 @@ from etools.applications.partners.tasks import send_pd_to_vision
 from etools.applications.partners.utils import send_agreement_suspended_notification
 from etools.applications.rss_admin.permissions import IsRssAdmin
 from etools.applications.rss_admin.serializers import (
+    ActionPointRssDetailSerializer,
+    ActionPointRssListSerializer,
     AgreementRssSerializer,
     AnswerHactSerializer,
     BulkCloseProgrammeDocumentsSerializer,
@@ -72,7 +74,9 @@ from etools.applications.utils.helpers import generate_hash
 from etools.applications.utils.pagination import AppendablePageNumberPagination
 from etools.libraries.djangolib.views import FilterQueryMixin
 from etools.applications.action_points.models import ActionPoint, ActionPointComment
-from etools.applications.action_points.serializers import ActionPointSerializer as APDetailSerializer, CommentSerializer as APCommentSerializer
+from etools.applications.action_points.serializers import (
+    CommentSerializer as APCommentSerializer,
+)
 from etools.applications.permissions2.views import PermittedSerializerMixin
 from etools.applications.permissions2.conditions import ObjectStatusCondition
 from etools.applications.audit.conditions import AuditModuleCondition
@@ -479,10 +483,61 @@ class EngagementRssViewSet(PermittedSerializerMixin,
         instance = serializer.save()
         return Response(EngagementLightRssSerializer(instance, context={'request': request}).data, status=status.HTTP_200_OK)
 
-class ActionPointRssViewSet(viewsets.GenericViewSet):
-    queryset = ActionPoint.objects.all()
+class ActionPointRssViewSet(mixins.ListModelMixin,
+                            mixins.RetrieveModelMixin,
+                            mixins.UpdateModelMixin,
+                            viewsets.GenericViewSet):
+    queryset = ActionPoint.objects.select_related(
+        'assigned_to', 'assigned_by', 'author', 'section', 'office', 'location',
+        'partner', 'partner__organization', 'intervention', 'cp_output',
+        'engagement', 'psea_assessment', 'tpm_activity', 'travel_activity'
+    ).prefetch_related(
+        'comments',
+        'comments__user',
+        'comments__supporting_document'
+    )
     permission_classes = (IsRssAdmin,)
-    serializer_class = APDetailSerializer
+    serializer_class = ActionPointRssDetailSerializer
+    pagination_class = DynamicPageNumberPagination
+    filter_backends = (
+        OrderingFilter,
+        SearchFilter,
+        DjangoFilterBackend,
+    )
+    search_fields = (
+        'assigned_to__email', 'assigned_to__first_name', 'assigned_to__last_name',
+        'assigned_by__email', 'assigned_by__first_name', 'assigned_by__last_name',
+        'section__name', 'office__name', '=id', 'reference_number',
+        'status', 'intervention__title', 'location__name', 'partner__organization__name', 'cp_output__name',
+    )
+    ordering_fields = (
+        'cp_output__name', 'partner__organization__name', 'section__name', 'office__name', 
+        'assigned_to__first_name', 'assigned_to__last_name', 'due_date', 'status', 'pk', 'id'
+    )
+    filterset_fields = {
+        'assigned_by': ['exact'],
+        'assigned_to': ['exact'],
+        'high_priority': ['exact'],
+        'author': ['exact'],
+        'section': ['exact', 'in'],
+        'location': ['exact'],
+        'office': ['exact'],
+        'partner': ['exact'],
+        'intervention': ['exact'],
+        'cp_output': ['exact'],
+        'engagement': ['exact'],
+        'psea_assessment': ['exact'],
+        'tpm_activity': ['exact'],
+        'travel_activity': ['exact'],
+        'status': ['exact', 'in'],
+        'due_date': ['exact', 'lte', 'gte'],
+    }
+
+    def get_serializer_class(self):
+        """Use list serializer for list action, detail serializer otherwise."""
+        if self.action == 'list':
+            return ActionPointRssListSerializer
+        return ActionPointRssDetailSerializer
 
     @action(detail=True, methods=['post'], url_path='add-attachment')
     def add_attachment(self, request, pk=None):
@@ -509,7 +564,7 @@ class ActionPointRssViewSet(viewsets.GenericViewSet):
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response(APDetailSerializer(action_point, context={'request': request}).data, status=status.HTTP_200_OK)
+        return Response(ActionPointRssDetailSerializer(action_point, context={'request': request}).data, status=status.HTTP_200_OK)
 
 
 class LocationSiteAdminViewSet(viewsets.ViewSet):

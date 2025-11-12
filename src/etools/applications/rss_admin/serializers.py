@@ -4,18 +4,25 @@ from rest_framework import serializers
 from unicef_attachments.fields import AttachmentSingleFileField
 from unicef_attachments.models import Attachment
 from unicef_attachments.serializers import AttachmentSerializerMixin
+from unicef_locations.serializers import LocationLightSerializer
 from unicef_restlib.fields import SeparatedReadWriteField
 
+from etools.applications.action_points.categories.serializers import CategorySerializer
+from etools.applications.action_points.models import ActionPoint
+from etools.applications.action_points.serializers import CommentSerializer, HistorySerializer
 from etools.applications.audit.models import Engagement
 from etools.applications.audit.serializers.auditor import PurchaseOrderItemSerializer, PurchaseOrderSerializer
 from etools.applications.audit.serializers.engagement import PartnerOrganizationLightSerializer
 from etools.applications.audit.serializers.mixins import EngagementDatesValidation
 from etools.applications.organizations.models import Organization
 from etools.applications.partners.models import Agreement, Intervention, PartnerOrganization
+from etools.applications.partners.serializers.interventions_v2 import MinimalInterventionListSerializer
+from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.reports.models import Office, Section
-from etools.applications.reports.serializers.v1 import SectionSerializer
-from etools.applications.reports.serializers.v2 import OfficeLightSerializer
+from etools.applications.reports.serializers.v1 import ResultSerializer, SectionSerializer
+from etools.applications.reports.serializers.v2 import OfficeSerializer, OfficeLightSerializer
 from etools.applications.rss_admin.services import ProgrammeDocumentService, EngagementService
+from etools.applications.users.serializers_v3 import MinimalUserSerializer
 
 
 class PartnerOrganizationRssSerializer(serializers.ModelSerializer):
@@ -355,3 +362,66 @@ class MapPartnerToWorkspaceSerializer(serializers.Serializer):
         except Organization.DoesNotExist:
             raise serializers.ValidationError("Unknown vendor number")
         return value
+
+
+class ActionPointRssListSerializer(serializers.ModelSerializer):
+    """Simple list serializer for RSS Admin action points (no permission filtering)."""
+    
+    reference_number = serializers.ReadOnlyField()
+    author = MinimalUserSerializer(read_only=True)
+    assigned_by = MinimalUserSerializer(read_only=True)
+    assigned_to = SeparatedReadWriteField(read_field=MinimalUserSerializer())
+    category = SeparatedReadWriteField(read_field=CategorySerializer())
+    status_date = serializers.DateTimeField(read_only=True)
+    related_module = serializers.ChoiceField(choices=ActionPoint.MODULE_CHOICES, read_only=True)
+    partner = SeparatedReadWriteField(read_field=MinimalPartnerOrganizationListSerializer(read_only=True))
+    intervention = SeparatedReadWriteField(read_field=MinimalInterventionListSerializer(read_only=True))
+    cp_output = SeparatedReadWriteField(read_field=ResultSerializer(read_only=True))
+    location = SeparatedReadWriteField(read_field=LocationLightSerializer(read_only=True))
+    section = SeparatedReadWriteField(read_field=SectionSerializer(read_only=True))
+    office = SeparatedReadWriteField(read_field=OfficeSerializer(read_only=True))
+    
+    class Meta:
+        model = ActionPoint
+        fields = [
+            'id', 'reference_number', 'category', 'author', 'assigned_by', 'assigned_to',
+            'high_priority', 'due_date', 'description', 'office', 'section', 'location',
+            'created', 'date_of_completion', 'status', 'status_date', 'related_module',
+            'cp_output', 'partner', 'intervention', 'engagement', 'psea_assessment',
+            'tpm_activity', 'travel_activity', 'date_of_verification',
+        ]
+
+
+class ActionPointRssDetailSerializer(serializers.ModelSerializer):
+    """Simple detail serializer for RSS Admin action points (no permission filtering)."""
+    
+    reference_number = serializers.ReadOnlyField()
+    author = MinimalUserSerializer(read_only=True)
+    assigned_by = MinimalUserSerializer(read_only=True)
+    assigned_to = SeparatedReadWriteField(read_field=MinimalUserSerializer())
+    category = SeparatedReadWriteField(read_field=CategorySerializer())
+    status_date = serializers.DateTimeField(read_only=True)
+    related_module = serializers.ChoiceField(choices=ActionPoint.MODULE_CHOICES, read_only=True)
+    partner = SeparatedReadWriteField(read_field=MinimalPartnerOrganizationListSerializer(read_only=True))
+    intervention = SeparatedReadWriteField(read_field=MinimalInterventionListSerializer(read_only=True))
+    cp_output = SeparatedReadWriteField(read_field=ResultSerializer(read_only=True))
+    location = SeparatedReadWriteField(read_field=LocationLightSerializer(read_only=True))
+    section = SeparatedReadWriteField(read_field=SectionSerializer(read_only=True))
+    office = SeparatedReadWriteField(read_field=OfficeSerializer(read_only=True))
+    comments = CommentSerializer(many=True, read_only=True)
+    history = HistorySerializer(many=True, source='get_meaningful_history', read_only=True)
+    verified_by = MinimalUserSerializer(read_only=True)
+    potential_verifier = SeparatedReadWriteField(read_field=MinimalUserSerializer())
+    related_object_str = serializers.ReadOnlyField()
+    related_object_url = serializers.ReadOnlyField()
+    
+    class Meta:
+        model = ActionPoint
+        fields = [
+            'id', 'reference_number', 'category', 'author', 'assigned_by', 'assigned_to',
+            'high_priority', 'due_date', 'description', 'office', 'section', 'location',
+            'created', 'date_of_completion', 'status', 'status_date', 'related_module',
+            'cp_output', 'partner', 'intervention', 'engagement', 'psea_assessment',
+            'tpm_activity', 'travel_activity', 'date_of_verification', 'comments', 'history',
+            'related_object_str', 'related_object_url', 'potential_verifier', 'verified_by', 'is_adequate',
+        ]
