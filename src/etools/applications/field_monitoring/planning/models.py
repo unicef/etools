@@ -82,6 +82,9 @@ class QuestionTargetMixin(models.Model):
                                   on_delete=models.CASCADE, related_name='+')
     intervention = models.ForeignKey(Intervention, blank=True, null=True, verbose_name=_('Intervention'),
                                      on_delete=models.CASCADE, related_name='+')
+    # GPD temporary CharFields to be replaced with FKs
+    workplan = models.CharField(max_length=255, null=True)
+    gpd = models.CharField(max_length=255, null=True)
 
     @property
     def related_to(self):
@@ -238,6 +241,8 @@ class MonitoringActivity(
         ('partners', 'partner'),
         ('cp_outputs', 'output'),
         ('interventions', 'intervention'),
+        ('workplans', 'workplan'),
+        ('gpds', 'gpd'),
     )
 
     number = models.CharField(
@@ -282,6 +287,10 @@ class MonitoringActivity(
                                            blank=True, verbose_name=_('PD/SPD'))
     cp_outputs = models.ManyToManyField(Result, verbose_name=_('Outputs'), related_name='monitoring_activities',
                                         blank=True)
+
+    # GPD temp JSONFields for workplans/activities and gpds
+    workplans = DummyEWPModel(default=list, null=True)
+    gpds = DummyGPDModel(default=list, null=True)
 
     start_date = models.DateField(verbose_name=_('Start Date'), blank=True, null=True)
     end_date = models.DateField(verbose_name=_('End Date'), blank=True, null=True)
