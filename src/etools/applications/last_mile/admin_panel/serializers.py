@@ -754,6 +754,7 @@ class ItemTransferAdminSerializer(serializers.ModelSerializer):
     material = MaterialAdminSerializer()
     description = serializers.SerializerMethodField(read_only=True)
     transfer_name = serializers.SerializerMethodField(read_only=True)
+    approval_status = serializers.SerializerMethodField(read_only=True)
 
     def get_transfer_name(self, obj):
         if not obj.transfer:
@@ -763,9 +764,12 @@ class ItemTransferAdminSerializer(serializers.ModelSerializer):
     def get_description(self, obj):
         return obj.description
 
+    def get_approval_status(self, obj):
+        return obj.transfer.approval_status if obj.transfer else "REJECTED"
+
     class Meta:
         model = models.Item
-        fields = ('id', 'material', 'quantity', 'modified', 'uom', 'batch_id', 'description', "transfer_name", "base_uom", "base_quantity", "expiry_date")
+        fields = ('id', 'material', 'quantity', 'modified', 'uom', 'batch_id', 'description', "transfer_name", "base_uom", "base_quantity", "expiry_date", "approval_status")
 
 
 class TransferItemSerializer(serializers.ModelSerializer):
