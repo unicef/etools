@@ -1489,11 +1489,13 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         # Should return 200 OK without AttributeError
         self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
         
-        # Verify the response contains expected minimal fields (permission-agnostic)
+        # Verify the response contains expected fields (comprehensive data from StaffSpotCheckSerializer)
         self.assertEqual(resp.data['id'], ssc.id)
         self.assertEqual(resp.data['engagement_type'], 'sc')
         self.assertIn('reference_number', resp.data)
         self.assertIn('status', resp.data)
+        # Should also include spot check specific fields
+        self.assertIn('internal_controls', resp.data)
 
     def test_spot_check_detail_retrieve(self):
         """Test retrieving a regular (non-staff) spot check detail."""
@@ -1506,17 +1508,20 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         # Should return 200 OK without AttributeError
         self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
         
-        # Verify the response contains expected minimal fields (permission-agnostic)
+        # Verify the response contains expected fields (comprehensive data from SpotCheckSerializer)
         self.assertEqual(resp.data['id'], sc.id)
         self.assertEqual(resp.data['engagement_type'], 'sc')
         self.assertIn('reference_number', resp.data)
         self.assertIn('status', resp.data)
+        # Should also include spot check specific fields
+        self.assertIn('internal_controls', resp.data)
 
     def test_audit_detail_retrieve_new(self):
         """Test retrieving an audit engagement detail.
         
         This ensures the get_object() override works correctly for all engagement types,
-        not just SpotCheck. All engagements use EngagementDetailRssSerializer for RSS Admin.
+        not just SpotCheck. RSS Admin uses the same serializers as the audit module
+        (AuditSerializer, SpotCheckSerializer, etc.) to return comprehensive data.
         """
         audit = AuditFactory()
         
@@ -1526,10 +1531,12 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         # Should return 200 OK
         self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
         
-        # Verify the response contains expected minimal fields (permission-agnostic)
+        # Verify the response contains expected fields (comprehensive data from AuditSerializer)
         self.assertEqual(resp.data['id'], audit.id)
         self.assertEqual(resp.data['engagement_type'], 'audit')
         self.assertIn('reference_number', resp.data)
         self.assertIn('status', resp.data)
-        # Audits should include year_of_audit
+        # Audits should include year_of_audit and audit-specific fields
         self.assertIn('year_of_audit', resp.data)
+        self.assertIn('audited_expenditure', resp.data)
+        self.assertIn('audit_opinion', resp.data)

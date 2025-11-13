@@ -23,6 +23,13 @@ from etools.applications.reports.serializers.v1 import ResultSerializer, Section
 from etools.applications.reports.serializers.v2 import OfficeSerializer, OfficeLightSerializer
 from etools.applications.rss_admin.services import ProgrammeDocumentService, EngagementService
 from etools.applications.users.serializers_v3 import MinimalUserSerializer
+from etools.applications.audit.serializers.engagement import (
+    AuditSerializer as BaseAuditSerializer,
+    SpotCheckSerializer as BaseSpotCheckSerializer,
+    StaffSpotCheckSerializer as BaseStaffSpotCheckSerializer,
+    MicroAssessmentSerializer as BaseMicroAssessmentSerializer,
+    SpecialAuditSerializer as BaseSpecialAuditSerializer,
+)
 
 
 class PartnerOrganizationRssSerializer(serializers.ModelSerializer):
@@ -214,24 +221,40 @@ class EngagementLightRssSerializer(serializers.ModelSerializer):
         ]
 
 
-class EngagementDetailRssSerializer(serializers.ModelSerializer):
-    """Minimal, permission-agnostic detail for RSS Admin.
+# RSS Admin engagement serializers without permission filtering
+class AuditRssSerializer(BaseAuditSerializer):
+    """Permission-agnostic audit serializer for RSS Admin."""
+    @property
+    def _readable_fields(self):
+        return [field for field in self.fields.values()]
 
-    Covers audit detail expectations (id, year_of_audit) and core fields.
-    Only used for audit engagements to avoid field-level permission filtering.
-    """
 
-    year_of_audit = serializers.IntegerField(read_only=True)
+class SpotCheckRssSerializer(BaseSpotCheckSerializer):
+    """Permission-agnostic spot check serializer for RSS Admin."""
+    @property
+    def _readable_fields(self):
+        return [field for field in self.fields.values()]
 
-    class Meta:
-        model = Engagement
-        fields = (
-            'id',
-            'reference_number',
-            'engagement_type',
-            'status',
-            'year_of_audit',
-        )
+
+class StaffSpotCheckRssSerializer(BaseStaffSpotCheckSerializer):
+    """Permission-agnostic staff spot check serializer for RSS Admin."""
+    @property
+    def _readable_fields(self):
+        return [field for field in self.fields.values()]
+
+
+class MicroAssessmentRssSerializer(BaseMicroAssessmentSerializer):
+    """Permission-agnostic micro assessment serializer for RSS Admin."""
+    @property
+    def _readable_fields(self):
+        return [field for field in self.fields.values()]
+
+
+class SpecialAuditRssSerializer(BaseSpecialAuditSerializer):
+    """Permission-agnostic special audit serializer for RSS Admin."""
+    @property
+    def _readable_fields(self):
+        return [field for field in self.fields.values()]
 
 
 class EngagementChangeStatusSerializer(serializers.Serializer):

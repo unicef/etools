@@ -21,14 +21,7 @@ from unicef_restlib.views import QueryStringFilterMixin
 
 from etools.applications.audit.filters import DisplayStatusFilter, EngagementFilter, UniqueIDOrderingFilter
 from etools.applications.audit.models import Engagement
-from etools.applications.audit.serializers.engagement import (
-    AuditSerializer,
-    EngagementListSerializer,
-    MicroAssessmentSerializer,
-    SpecialAuditSerializer,
-    SpotCheckSerializer,
-    StaffSpotCheckSerializer,
-)
+from etools.applications.audit.serializers.engagement import EngagementListSerializer
 from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.funds.models import FundsReservationHeader
 from etools.applications.field_monitoring.data_collection.models import (
@@ -56,16 +49,20 @@ from etools.applications.rss_admin.serializers import (
     ActionPointRssListSerializer,
     AgreementRssSerializer,
     AnswerHactSerializer,
+    AuditRssSerializer,
     BulkCloseProgrammeDocumentsSerializer,
     EngagementAttachmentsUpdateSerializer,
     EngagementChangeStatusSerializer,
     EngagementInitiationUpdateSerializer,
     EngagementLightRssSerializer,
-    EngagementDetailRssSerializer,
+    MicroAssessmentRssSerializer,
     PartnerOrganizationRssSerializer,
     MapPartnerToWorkspaceSerializer,
     SetOnTrackSerializer,
     SitesBulkUploadSerializer,
+    SpecialAuditRssSerializer,
+    SpotCheckRssSerializer,
+    StaffSpotCheckRssSerializer,
 )
 from etools.applications.rss_admin.services import PartnerService, EngagementService, FieldMonitoringService
 from etools.applications.rss_admin.importers import LocationSiteImporter
@@ -395,6 +392,21 @@ class EngagementRssViewSet(PermittedSerializerMixin,
     def get_queryset(self):
         queryset = super().get_queryset()
         queryset = queryset.prefetch_related('partner', 'agreement', 'agreement__auditor_firm__organization')
+        
+        # Add additional prefetching for detail views
+        if self.action == 'retrieve':
+            queryset = queryset.prefetch_related(
+                'staff_members',
+                'active_pd',
+                'authorized_officers',
+                'users_notified',
+                'offices',
+                'sections',
+            ).select_related(
+                'partner__organization',
+                'agreement__auditor_firm',
+            )
+        
         return queryset
 
     def get_object(self):
@@ -418,12 +430,34 @@ class EngagementRssViewSet(PermittedSerializerMixin,
         context.append(ObjectStatusCondition(obj))
         return context
 
+    def get_serializer(self, *args, **kwargs):
+        """Override to bypass permission checks for RSS Admin."""
+        serializer_class = kwargs.pop('serializer_class', None) or self.get_serializer_class()
+        kwargs.setdefault('context', self.get_serializer_context())
+        return serializer_class(*args, **kwargs)
+
     def get_serializer_class(self):
-        # For list, use the default EngagementLightRssSerializer (permission-agnostic)
         if self.action == 'list':
             return EngagementLightRssSerializer
+        
         if self.action == 'retrieve':
-            return EngagementDetailRssSerializer
+            obj = self.get_object()
+            is_staff_spot_check = (
+                obj.engagement_type == Engagement.TYPES.sc and 
+                obj.agreement and obj.agreement.auditor_firm and 
+                obj.agreement.auditor_firm.unicef_users_allowed
+            )
+            
+            if is_staff_spot_check:
+                return StaffSpotCheckRssSerializer
+            elif obj.engagement_type == Engagement.TYPES.audit:
+                return AuditRssSerializer
+            elif obj.engagement_type == Engagement.TYPES.sc:
+                return SpotCheckRssSerializer
+            elif obj.engagement_type == Engagement.TYPES.ma:
+                return MicroAssessmentRssSerializer
+            elif obj.engagement_type == Engagement.TYPES.sa:
+                return SpecialAuditRssSerializer
 
         return super().get_serializer_class()
 
