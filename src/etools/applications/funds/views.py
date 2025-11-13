@@ -112,7 +112,7 @@ class FRsView(APIView):
             try:
                 intervention = Intervention.objects.get(pk=intervention_id)
             except Intervention.DoesNotExist:
-                return self.bad_request('Intervention could not be found.')
+                return self.bad_request(f'Intervention with id {intervention_id} could not be found.')
             else:
                 if intervention.agreement.partner.vendor_number != all_frs_vendor_numbers[0]:
                     return self.bad_request(error_text)
@@ -121,11 +121,12 @@ class FRsView(APIView):
             try:
                 gpd = GDD.objects.get(pk=gpd_id)
             except GDD.DoesNotExist:
-                return self.bad_request('GPD could not be found.')
+                return self.bad_request(f'GPD with id {gpd_id} could not be found.')
             else:
                 if (gpd.agreement and gpd.agreement.partner.vendor_number != all_frs_vendor_numbers[0] or
                         gpd.partner.vendor_number != all_frs_vendor_numbers[0]):
                     return self.bad_request(error_text)
+
         serializer = FRsSerializer(qs)
 
         return Response(serializer.data)
