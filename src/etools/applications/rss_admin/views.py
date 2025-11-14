@@ -15,13 +15,19 @@ from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter, SearchFilter
+from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
+from unicef_attachments.models import Attachment
 from unicef_restlib.pagination import DynamicPageNumberPagination
-from unicef_restlib.views import QueryStringFilterMixin
+from unicef_restlib.views import QueryStringFilterMixin, NestedViewSetMixin
 
 from etools.applications.audit.filters import DisplayStatusFilter, EngagementFilter, UniqueIDOrderingFilter
 from etools.applications.audit.models import Engagement
-from etools.applications.audit.serializers.engagement import EngagementListSerializer
+from etools.applications.audit.serializers.engagement import (
+    EngagementAttachmentSerializer,
+    EngagementListSerializer,
+    ReportAttachmentSerializer,
+)
 from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.funds.models import FundsReservationHeader
 from etools.applications.field_monitoring.data_collection.models import (
@@ -49,20 +55,20 @@ from etools.applications.rss_admin.serializers import (
     ActionPointRssListSerializer,
     AgreementRssSerializer,
     AnswerHactSerializer,
-    AuditRssSerializer,
+    AuditRssSerializer as AuditSerializer,
     BulkCloseProgrammeDocumentsSerializer,
     EngagementAttachmentsUpdateSerializer,
     EngagementChangeStatusSerializer,
     EngagementInitiationUpdateSerializer,
     EngagementLightRssSerializer,
-    MicroAssessmentRssSerializer,
+    MicroAssessmentRssSerializer as MicroAssessmentSerializer,
     PartnerOrganizationRssSerializer,
     MapPartnerToWorkspaceSerializer,
     SetOnTrackSerializer,
     SitesBulkUploadSerializer,
-    SpecialAuditRssSerializer,
-    SpotCheckRssSerializer,
-    StaffSpotCheckRssSerializer,
+    SpecialAuditRssSerializer as SpecialAuditSerializer,
+    SpotCheckRssSerializer as SpotCheckSerializer,
+    StaffSpotCheckRssSerializer as StaffSpotCheckSerializer,
 )
 from etools.applications.rss_admin.services import PartnerService, EngagementService, FieldMonitoringService
 from etools.applications.rss_admin.importers import LocationSiteImporter
@@ -430,34 +436,33 @@ class EngagementRssViewSet(PermittedSerializerMixin,
         context.append(ObjectStatusCondition(obj))
         return context
 
-    def get_serializer(self, *args, **kwargs):
-        """Override to bypass permission checks for RSS Admin."""
-        serializer_class = kwargs.pop('serializer_class', None) or self.get_serializer_class()
-        kwargs.setdefault('context', self.get_serializer_context())
-        return serializer_class(*args, **kwargs)
-
     def get_serializer_class(self):
+        # For list, use the default EngagementLightRssSerializer (permission-agnostic)
         if self.action == 'list':
             return EngagementLightRssSerializer
         
+        # For retrieve, use the appropriate audit module serializer based on engagement type
         if self.action == 'retrieve':
             obj = self.get_object()
+            # Determine if it's a staff spot check (UNICEF-led)
             is_staff_spot_check = (
                 obj.engagement_type == Engagement.TYPES.sc and 
-                obj.agreement and obj.agreement.auditor_firm and 
+                obj.agreement and 
+                obj.agreement.auditor_firm and 
                 obj.agreement.auditor_firm.unicef_users_allowed
             )
             
+            # Map engagement type to the appropriate serializer
             if is_staff_spot_check:
-                return StaffSpotCheckRssSerializer
+                return StaffSpotCheckSerializer
             elif obj.engagement_type == Engagement.TYPES.audit:
-                return AuditRssSerializer
+                return AuditSerializer
             elif obj.engagement_type == Engagement.TYPES.sc:
-                return SpotCheckRssSerializer
+                return SpotCheckSerializer
             elif obj.engagement_type == Engagement.TYPES.ma:
-                return MicroAssessmentRssSerializer
+                return MicroAssessmentSerializer
             elif obj.engagement_type == Engagement.TYPES.sa:
-                return SpecialAuditRssSerializer
+                return SpecialAuditSerializer
 
         return super().get_serializer_class()
 
@@ -685,3 +690,96 @@ class MonitoringActivityRssViewSet(viewsets.ModelViewSet):
 
         aof = FieldMonitoringService.set_on_track(activity=activity, partner=partner, on_track=on_track)
         return Response({'detail': 'Monitoring status updated', 'on_track': aof.on_track}, status=status.HTTP_200_OK)
+
+
+class BaseRssAttachmentsViewSet(NestedViewSetMixin,
+                                mixins.ListModelMixin,
+                                mixins.CreateModelMixin,
+                                mixins.RetrieveModelMixin,
+                                mixins.UpdateModelMixin,
+                                mixins.DestroyModelMixin,
+                                viewsets.GenericViewSet):
+    """Base ViewSet for managing attachments in RSS Admin.
+    
+    Provides CRUD operations for attachments without permission filtering.
+    Reuses audit module's attachment serializers.
+    """
+    permission_classes = (IsRssAdmin,)
+    queryset = Attachment.objects.all()
+
+    def get_parent_filter(self):
+        """Filter attachments by parent engagement."""
+        parent = self.get_parent_object()
+        if not parent:
+            return {}
+
+        from django.contrib.contenttypes.models import ContentType
+        if hasattr(parent, 'get_subclass'):
+            parent = parent.get_subclass()
+        
+        return {
+            'content_type_id': ContentType.objects.get_for_model(parent._meta.model).id,
+            'object_id': parent.pk
+        }
+
+    def get_object(self, pk=None):
+        """Get attachment object, filtering by parent engagement."""
+        if self.request.method in ['GET', 'PATCH', 'DELETE']:
+            self.queryset = self.filter_queryset(self.get_queryset())
+        if pk:
+            return get_object_or_404(self.queryset, **{"pk": pk})
+        elif self.kwargs.get("pk"):
+            return get_object_or_404(self.queryset, **{"pk": self.kwargs.get("pk")})
+
+        return super().get_object()
+
+    def perform_create(self, serializer):
+        """Create attachment and link it to parent engagement."""
+        serializer.instance = self.get_object(
+            pk=serializer.validated_data.get("pk")
+        )
+        parent = self.get_parent_object()
+        if hasattr(parent, 'get_subclass'):
+            parent = parent.get_subclass()
+        serializer.save(content_object=parent)
+
+    def perform_update(self, serializer):
+        """Update attachment."""
+        parent = self.get_parent_object()
+        if hasattr(parent, 'get_subclass'):
+            parent = parent.get_subclass()
+        serializer.save(content_object=parent)
+
+
+class EngagementAttachmentsRssViewSet(BaseRssAttachmentsViewSet):
+    """ViewSet for managing engagement attachments in RSS Admin.
+    
+    Reuses EngagementAttachmentSerializer from audit module.
+    """
+    serializer_class = EngagementAttachmentSerializer
+
+    def get_view_name(self):
+        return 'Related Documents'
+
+    def get_parent_filter(self):
+        """Filter for engagement-specific attachments (code='audit_engagement')."""
+        filters = super().get_parent_filter()
+        filters.update({'code': 'audit_engagement'})
+        return filters
+
+
+class ReportAttachmentsRssViewSet(BaseRssAttachmentsViewSet):
+    """ViewSet for managing report attachments in RSS Admin.
+    
+    Reuses ReportAttachmentSerializer from audit module.
+    """
+    serializer_class = ReportAttachmentSerializer
+
+    def get_view_name(self):
+        return 'Report Attachments'
+
+    def get_parent_filter(self):
+        """Filter for report-specific attachments (code='audit_report')."""
+        filters = super().get_parent_filter()
+        filters.update({'code': 'audit_report'})
+        return filters

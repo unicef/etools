@@ -1274,6 +1274,140 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         self.assertTrue(e.engagement_attachments.filter(pk=attachment_eng.id).exists())
         self.assertTrue(e.report_attachments.filter(pk=attachment_rep.id).exists())
 
+    def test_engagement_attachments_viewset_queryset_filters_correctly(self):
+        """RSS Admin: Engagement attachments ViewSet queryset correctly filters by code."""
+        from django.contrib.contenttypes.models import ContentType
+        from unicef_attachments.models import Attachment, FileType
+        from etools.applications.rss_admin.views import EngagementAttachmentsRssViewSet
+        from unittest.mock import Mock
+        
+        audit = AuditFactory()
+        ct = ContentType.objects.get_for_model(audit._meta.model)
+        
+        eng_file_type, _ = FileType.objects.get_or_create(
+            name='engagement_doc',
+            code='audit_engagement'
+        )
+        rep_file_type, _ = FileType.objects.get_or_create(
+            name='report',
+            code='audit_report'
+        )
+        
+        # Create 3 engagement attachments
+        for i in range(3):
+            Attachment.objects.create(
+                code='audit_engagement',
+                content_type=ct,
+                object_id=audit.id,
+                file_type=eng_file_type
+            )
+        
+        # Create 2 report attachments (should NOT appear in engagement viewset)
+        for i in range(2):
+            Attachment.objects.create(
+                code='audit_report',
+                content_type=ct,
+                object_id=audit.id,
+                file_type=rep_file_type
+            )
+        
+        # Test the ViewSet's get_parent_filter method directly
+        viewset = EngagementAttachmentsRssViewSet()
+        viewset.kwargs = {'engagement_pk': audit.pk}
+        
+        # Mock get_parent_object to return our audit
+        def mock_get_parent():
+            return audit
+        viewset.get_parent_object = mock_get_parent
+        
+        # Get the filters that the ViewSet will apply
+        parent_filter = viewset.get_parent_filter()
+        
+        # Verify the ViewSet filters by the correct content_type, object_id, and code
+        self.assertEqual(parent_filter['content_type_id'], ct.id)
+        self.assertEqual(parent_filter['object_id'], audit.id)
+        self.assertEqual(parent_filter['code'], 'audit_engagement')
+        
+        # Apply the filters to verify they return only engagement attachments
+        filtered_qs = Attachment.objects.filter(**parent_filter)
+        self.assertEqual(filtered_qs.count(), 3, "Should return 3 engagement attachments, not report attachments")
+
+    def test_report_attachments_viewset_queryset_filters_correctly(self):
+        """RSS Admin: Report attachments ViewSet queryset correctly filters by code."""
+        from django.contrib.contenttypes.models import ContentType
+        from unicef_attachments.models import Attachment, FileType
+        from etools.applications.rss_admin.views import ReportAttachmentsRssViewSet
+        
+        audit = AuditFactory()
+        ct = ContentType.objects.get_for_model(audit._meta.model)
+        
+        eng_file_type, _ = FileType.objects.get_or_create(
+            name='engagement_doc',
+            code='audit_engagement'
+        )
+        rep_file_type, _ = FileType.objects.get_or_create(
+            name='report',
+            code='audit_report'
+        )
+        
+        # Create 3 engagement attachments (should NOT appear in report viewset)
+        for i in range(3):
+            Attachment.objects.create(
+                code='audit_engagement',
+                content_type=ct,
+                object_id=audit.id,
+                file_type=eng_file_type
+            )
+        
+        # Create 2 report attachments
+        for i in range(2):
+            Attachment.objects.create(
+                code='audit_report',
+                content_type=ct,
+                object_id=audit.id,
+                file_type=rep_file_type
+            )
+        
+        # Test the ViewSet's get_parent_filter method directly
+        viewset = ReportAttachmentsRssViewSet()
+        viewset.kwargs = {'engagement_pk': audit.pk}
+        
+        # Mock get_parent_object to return our audit
+        def mock_get_parent():
+            return audit
+        viewset.get_parent_object = mock_get_parent
+        
+        # Get the filters that the ViewSet will apply
+        parent_filter = viewset.get_parent_filter()
+        
+        # Verify the ViewSet filters by the correct content_type, object_id, and code
+        self.assertEqual(parent_filter['content_type_id'], ct.id)
+        self.assertEqual(parent_filter['object_id'], audit.id)
+        self.assertEqual(parent_filter['code'], 'audit_report')
+        
+        # Apply the filters to verify they return only report attachments
+        filtered_qs = Attachment.objects.filter(**parent_filter)
+        self.assertEqual(filtered_qs.count(), 2, "Should return 2 report attachments, not engagement attachments")
+
+    def test_attachment_endpoints_are_registered(self):
+        """RSS Admin: Attachment endpoints are properly registered in URLconf."""
+        from django.urls import reverse, NoReverseMatch
+        
+        audit = AuditFactory()
+        
+        # Verify both URL patterns are registered
+        try:
+            eng_url = reverse('rss_admin:rss-admin-engagement-attachments-list', kwargs={'engagement_pk': audit.pk})
+            rep_url = reverse('rss_admin:rss-admin-report-attachments-list', kwargs={'engagement_pk': audit.pk})
+            
+            # URLs should be properly formatted
+            self.assertIn(str(audit.pk), eng_url)
+            self.assertIn(str(audit.pk), rep_url)
+            self.assertIn('engagement-attachments', eng_url)
+            self.assertIn('report-attachments', rep_url)
+        except NoReverseMatch:
+            self.fail("Attachment endpoints are not properly registered")
+
     # ------------------------
     # Engagement list & detail
     # ------------------------
@@ -1477,7 +1611,7 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         Error was: 'Engagement' object has no attribute 'internal_controls'
         
         The issue occurred because the viewset was trying to serialize using audit module serializers
-        which have permission checks. The fix uses permission-agnostic EngagementDetailRssSerializer
+        which have permission checks. The fix uses permission-agnostic RSS serializers
         and ensures get_object() returns the proper subclass to avoid AttributeError.
         """
         # Create a staff spot check
