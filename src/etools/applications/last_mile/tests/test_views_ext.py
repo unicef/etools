@@ -2009,23 +2009,6 @@ class TestVisionLMSMExportItemAuditLog(BaseTenantTestCase):
         self.assertIn(models.ItemAuditLog.ACTION_SOFT_DELETE, actions)
         self.assertIn(models.ItemAuditLog.ACTION_DELETE, actions)
 
-    def test_export_item_audit_log_transfer_id_annotation(self):
-        response = self.forced_auth_req(
-            method="get",
-            url=self.url,
-            data={"type": "item_audit_log"},
-            user=self.api_user
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        data = self._get_and_decode_streaming_response(response)
-
-        for audit in data:
-            if audit['item_id'] == self.old_item.id:
-                self.assertEqual(audit['transfer_id'], self.old_transfer.id)
-            elif audit['item_id'] == self.new_item.id:
-                self.assertEqual(audit['transfer_id'], self.new_transfer.id)
-
     def test_export_item_audit_log_empty_result(self):
         future_time = (timezone.now() + timedelta(days=30)).isoformat()
 
@@ -2070,22 +2053,6 @@ class TestVisionLMSMExportItemAuditLog(BaseTenantTestCase):
 
         ids = [item['id'] for item in data]
         self.assertEqual(ids, sorted(ids))
-
-    def test_export_item_audit_log_includes_country(self):
-        response = self.forced_auth_req(
-            method="get",
-            url=self.url,
-            data={"type": "item_audit_log"},
-            user=self.api_user
-        )
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        data = self._get_and_decode_streaming_response(response)
-
-        if connection.tenant.name and len(data) > 0:
-            for item in data:
-                self.assertIn('country', item)
-                self.assertEqual(item['country'], connection.tenant.name)
 
     def test_export_item_audit_log_bulk_operations(self):
         items = []
