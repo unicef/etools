@@ -1,5 +1,6 @@
 import datetime
 import logging
+import json
 
 from django.db import transaction
 
@@ -365,6 +366,8 @@ class RAMSynchronizer(VisionDataTenantSynchronizer):
         fields_that_can_change = ['name', 'baseline', 'target', 'result__wbs']
         # get all the indicators that are present in our db:
         records, wbss = self._clean_records(records)
+
+        self.log.data = records if type(records) in [dict, list] else json.loads(records)
 
         results = Result.objects.filter(result_type__name='Output', wbs__in=wbss).all()
         result_map = dict([(r.wbs, r) for r in results])
