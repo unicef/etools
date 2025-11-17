@@ -6,13 +6,21 @@ from unicef_attachments.models import Attachment
 from unicef_attachments.serializers import AttachmentSerializerMixin
 from unicef_locations.serializers import LocationLightSerializer
 from unicef_restlib.fields import SeparatedReadWriteField
+from unicef_restlib.serializers import WritableNestedSerializerMixin
 
 from etools.applications.action_points.categories.serializers import CategorySerializer
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.action_points.serializers import CommentSerializer, HistorySerializer
 from etools.applications.audit.models import Engagement
 from etools.applications.audit.serializers.auditor import PurchaseOrderItemSerializer, PurchaseOrderSerializer
-from etools.applications.audit.serializers.engagement import PartnerOrganizationLightSerializer
+from etools.applications.audit.serializers.engagement import (
+    AuditSerializer as BaseAuditSerializer,
+    MicroAssessmentSerializer as BaseMicroAssessmentSerializer,
+    PartnerOrganizationLightSerializer,
+    SpecialAuditSerializer as BaseSpecialAuditSerializer,
+    SpotCheckSerializer as BaseSpotCheckSerializer,
+    StaffSpotCheckSerializer as BaseStaffSpotCheckSerializer,
+)
 from etools.applications.audit.serializers.mixins import EngagementDatesValidation
 from etools.applications.organizations.models import Organization
 from etools.applications.partners.models import Agreement, Intervention, PartnerOrganization
@@ -20,16 +28,9 @@ from etools.applications.partners.serializers.interventions_v2 import MinimalInt
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.reports.models import Office, Section
 from etools.applications.reports.serializers.v1 import ResultSerializer, SectionSerializer
-from etools.applications.reports.serializers.v2 import OfficeSerializer, OfficeLightSerializer
-from etools.applications.rss_admin.services import ProgrammeDocumentService, EngagementService
+from etools.applications.reports.serializers.v2 import OfficeLightSerializer, OfficeSerializer
+from etools.applications.rss_admin.services import EngagementService, ProgrammeDocumentService
 from etools.applications.users.serializers_v3 import MinimalUserSerializer
-from etools.applications.audit.serializers.engagement import (
-    AuditSerializer as BaseAuditSerializer,
-    SpotCheckSerializer as BaseSpotCheckSerializer,
-    StaffSpotCheckSerializer as BaseStaffSpotCheckSerializer,
-    MicroAssessmentSerializer as BaseMicroAssessmentSerializer,
-    SpecialAuditSerializer as BaseSpecialAuditSerializer,
-)
 
 
 class PartnerOrganizationRssSerializer(serializers.ModelSerializer):
@@ -189,7 +190,7 @@ class TripApproverUpdateSerializer(serializers.ModelSerializer):
 
 class EngagementLightRssSerializer(serializers.ModelSerializer):
     """Permission-agnostic engagement list serializer for RSS Admin.
-    
+
     Provides same fields as audit EngagementLightSerializer but without
     field-level permission filtering. This matches the audit module's
     EngagementLightSerializer exactly.
@@ -355,6 +356,8 @@ class EngagementAttachmentsUpdateSerializer(serializers.ModelSerializer):
             engagement_file=engagement_file,
             report_file=report_file,
         )
+
+
 class SitesBulkUploadSerializer(serializers.Serializer):
     import_file = serializers.FileField()
 
@@ -389,7 +392,7 @@ class MapPartnerToWorkspaceSerializer(serializers.Serializer):
 
 class ActionPointRssListSerializer(serializers.ModelSerializer):
     """Simple list serializer for RSS Admin action points (no permission filtering)."""
-    
+
     reference_number = serializers.ReadOnlyField()
     author = MinimalUserSerializer(read_only=True)
     assigned_by = MinimalUserSerializer(read_only=True)
@@ -403,7 +406,7 @@ class ActionPointRssListSerializer(serializers.ModelSerializer):
     location = SeparatedReadWriteField(read_field=LocationLightSerializer(read_only=True))
     section = SeparatedReadWriteField(read_field=SectionSerializer(read_only=True))
     office = SeparatedReadWriteField(read_field=OfficeSerializer(read_only=True))
-    
+
     class Meta:
         model = ActionPoint
         fields = [
@@ -415,9 +418,9 @@ class ActionPointRssListSerializer(serializers.ModelSerializer):
         ]
 
 
-class ActionPointRssDetailSerializer(serializers.ModelSerializer):
+class ActionPointRssDetailSerializer(WritableNestedSerializerMixin, serializers.ModelSerializer):
     """Simple detail serializer for RSS Admin action points (no permission filtering)."""
-    
+
     reference_number = serializers.ReadOnlyField()
     author = MinimalUserSerializer(read_only=True)
     assigned_by = MinimalUserSerializer(read_only=True)
@@ -431,14 +434,14 @@ class ActionPointRssDetailSerializer(serializers.ModelSerializer):
     location = SeparatedReadWriteField(read_field=LocationLightSerializer(read_only=True))
     section = SeparatedReadWriteField(read_field=SectionSerializer(read_only=True))
     office = SeparatedReadWriteField(read_field=OfficeSerializer(read_only=True))
-    comments = CommentSerializer(many=True, read_only=True)
+    comments = CommentSerializer(many=True, required=False)
     history = HistorySerializer(many=True, source='get_meaningful_history', read_only=True)
     verified_by = MinimalUserSerializer(read_only=True)
     potential_verifier = SeparatedReadWriteField(read_field=MinimalUserSerializer())
     related_object_str = serializers.ReadOnlyField()
     related_object_url = serializers.ReadOnlyField()
-    
-    class Meta:
+
+    class Meta(WritableNestedSerializerMixin.Meta):
         model = ActionPoint
         fields = [
             'id', 'reference_number', 'category', 'author', 'assigned_by', 'assigned_to',
