@@ -364,9 +364,9 @@ class TestFRHeaderView(BaseTenantTestCase):
                          'One or more of the FRs are used by another Document '
                          'or could not be found in eTools.')
 
-    def test_get_with_gpd_fr(self):
+    def test_get_with_gdd_fr(self):
         data = {'values': ','.join([self.fr_4.fr_number, self.fr_5.fr_number]),
-                'gpd': self.gdd.id}
+                'gdd': self.gdd.id}
         status_code, result = self.run_request(data)
         self.assertEqual(status_code, status.HTTP_200_OK)
         self.assertEqual(len(result['frs']), 2)
@@ -381,7 +381,7 @@ class TestFRHeaderView(BaseTenantTestCase):
 
     def test_get_with_gpd_not_found(self):
         data = {'values': ','.join([self.fr_4.fr_number, self.fr_5.fr_number]),
-                'gpd': 12345}
+                'gdd': 12345}
         status_code, result = self.run_request(data)
         self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(result['error'], 'GPD with id 12345 could not be found.')
