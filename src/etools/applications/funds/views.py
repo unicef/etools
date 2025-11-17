@@ -56,9 +56,9 @@ class FRsView(APIView):
     def get(self, request, format=None):
         values = request.query_params.get("values", '').split(",")
         intervention_id = request.query_params.get("intervention", None)
-        gpd_id = request.query_params.get("gpd", None)
+        gdd_id = request.query_params.get("gdd", None)
 
-        if intervention_id and gpd_id:
+        if intervention_id and gdd_id:
             return self.bad_request('Cannot specify both intervention and GPD ids,')
 
         if not values[0]:
@@ -117,14 +117,14 @@ class FRsView(APIView):
                 if intervention.agreement.partner.vendor_number != all_frs_vendor_numbers[0]:
                     return self.bad_request(error_text)
 
-        elif gpd_id is not None:
+        elif gdd_id is not None:
             try:
-                gpd = GDD.objects.get(pk=gpd_id)
+                gdd = GDD.objects.get(pk=gdd_id)
             except GDD.DoesNotExist:
-                return self.bad_request(f'GPD with id {gpd_id} could not be found.')
+                return self.bad_request(f'GPD with id {gdd_id} could not be found.')
             else:
-                if (gpd.agreement and gpd.agreement.partner.vendor_number != all_frs_vendor_numbers[0] or
-                        gpd.partner.vendor_number != all_frs_vendor_numbers[0]):
+                if (gdd.agreement and gdd.agreement.partner.vendor_number != all_frs_vendor_numbers[0] or
+                        gdd.partner.vendor_number != all_frs_vendor_numbers[0]):
                     return self.bad_request(error_text)
 
         serializer = FRsSerializer(qs)
