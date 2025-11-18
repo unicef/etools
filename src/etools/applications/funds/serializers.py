@@ -60,7 +60,7 @@ class FRsSerializer(serializers.Serializer):
         return sum([i.total_amt_local for i in obj.all()]) if self.all_fr_currencies_match(obj) else 0
 
     def get_total_outstanding_amt(self, obj):
-        return sum([i.outstanding_amt for i in obj.all()]) if self.all_fr_currencies_match(obj) else 0
+        return sum([i.outstanding_amt_local for i in obj.all()]) if self.all_fr_currencies_match(obj) else 0
 
     def get_total_intervention_amt(self, obj):
         return sum([i.intervention_amt for i in obj.all()]) if self.all_fr_currencies_match(obj) else 0
