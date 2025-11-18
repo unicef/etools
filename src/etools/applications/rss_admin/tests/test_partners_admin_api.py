@@ -9,6 +9,8 @@ import mock
 from rest_framework import status
 from unicef_locations.tests.factories import LocationFactory
 
+from etools.applications.action_points.models import ActionPoint
+from etools.applications.action_points.tests.factories import ActionPointFactory
 from etools.applications.attachments.tests.factories import AttachmentFactory
 from etools.applications.audit.models import Engagement
 from etools.applications.audit.tests.factories import (
@@ -30,8 +32,6 @@ from etools.applications.reports.tests.factories import (
 )
 from etools.applications.users.tests.factories import GroupFactory, RealmFactory, UserFactory
 from etools.libraries.djangolib.fields import CURRENCY_LIST
-from etools.applications.action_points.models import ActionPoint
-from etools.applications.action_points.tests.factories import ActionPointFactory
 
 
 @override_settings(RESTRICTED_ADMIN=False)
@@ -879,11 +879,11 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
 
         url = reverse('rss_admin:rss-admin-action-points-list')
         response = self.forced_auth_req('get', url, user=self.user, data={'page_size': 25, 'page': 1})
-        
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('results', response.data)
         self.assertIn('count', response.data)
-        
+
         ids = self._ids(response)
         self.assertIn(ap1.id, ids)
         self.assertIn(ap2.id, ids)
@@ -895,15 +895,15 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         section = SectionFactory()
         office = OfficeFactory()
         ap = ActionPointFactory(
-            section=section, 
-            office=office, 
+            section=section,
+            office=office,
             status='open',
             description='Test action point'
         )
 
         url = reverse('rss_admin:rss-admin-action-points-detail', kwargs={'pk': ap.pk})
         response = self.forced_auth_req('get', url, user=self.user)
-        
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['id'], ap.id)
         self.assertEqual(response.data['status'], 'open')
@@ -921,7 +921,7 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         url = reverse('rss_admin:rss-admin-action-points-detail', kwargs={'pk': ap.pk})
         payload = {'description': 'Updated description'}
         response = self.forced_auth_req('patch', url, user=self.user, data=payload)
-        
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # Re-fetch from database instead of refresh_from_db to avoid FSM issues
         updated_ap = ActionPoint.objects.get(pk=ap.pk)
@@ -937,7 +937,7 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
 
         url = reverse('rss_admin:rss-admin-action-points-list')
         response = self.forced_auth_req('get', url, user=self.user, data={'status': 'open'})
-        
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         ids = self._ids(response)
         self.assertIn(ap_open.id, ids)
@@ -957,7 +957,7 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
 
         url = reverse('rss_admin:rss-admin-action-points-list')
         response = self.forced_auth_req('get', url, user=self.user, data={'section': section1.id})
-        
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         ids = self._ids(response)
         self.assertIn(ap1.id, ids)
@@ -976,7 +976,7 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         ap_future = ActionPointFactory(section=section, office=office, due_date=today + timedelta(days=10))
 
         url = reverse('rss_admin:rss-admin-action-points-list')
-        
+
         # Test due_date__lte (past and today)
         response = self.forced_auth_req('get', url, user=self.user, data={'due_date__lte': str(today)})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -1001,7 +1001,7 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
 
         url = reverse('rss_admin:rss-admin-action-points-list')
         response = self.forced_auth_req('get', url, user=self.user, data={'high_priority': 'true'})
-        
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         ids = self._ids(response)
         self.assertIn(ap_high.id, ids)
@@ -1019,7 +1019,7 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
 
         url = reverse('rss_admin:rss-admin-action-points-list')
         response = self.forced_auth_req('get', url, user=self.user, data={'partner': partner1.id})
-        
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         ids = self._ids(response)
         self.assertIn(ap1.id, ids)
@@ -1037,7 +1037,7 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
 
         url = reverse('rss_admin:rss-admin-action-points-list')
         response = self.forced_auth_req('get', url, user=self.user, data={'engagement': engagement1.id})
-        
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         ids = self._ids(response)
         self.assertIn(ap1.id, ids)
@@ -1050,19 +1050,19 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         office = OfficeFactory()
         user1 = UserFactory(first_name='John', last_name='Doe', email='john.doe@example.com')
         user2 = UserFactory(first_name='Jane', last_name='Smith', email='jane.smith@example.com')
-        
+
         ap1 = ActionPointFactory(section=section, office=office, assigned_to=user1)
         ap2 = ActionPointFactory(section=section, office=office, assigned_to=user2)
 
         url = reverse('rss_admin:rss-admin-action-points-list')
-        
+
         # Verify action points exist in list
         response = self.forced_auth_req('get', url, user=self.user, data={})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         all_ids = self._ids(response)
         self.assertIn(ap1.id, all_ids, "Action point 1 should exist in list")
         self.assertIn(ap2.id, all_ids, "Action point 2 should exist in list")
-        
+
         # Test that search parameter is accepted (search functionality is configured)
         response = self.forced_auth_req('get', url, user=self.user, data={'search': 'test'})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -1075,11 +1075,11 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         office = OfficeFactory()
         today = timezone.now().date()
         ap1 = ActionPointFactory(section=section, office=office, due_date=today - timedelta(days=5))
-        ap2 = ActionPointFactory(section=section, office=office, due_date=today)
+        ActionPointFactory(section=section, office=office, due_date=today)  # ap2
         ap3 = ActionPointFactory(section=section, office=office, due_date=today + timedelta(days=5))
 
         url = reverse('rss_admin:rss-admin-action-points-list')
-        
+
         # Order by due_date ascending
         response = self.forced_auth_req('get', url, user=self.user, data={'ordering': 'due_date'})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -1099,13 +1099,13 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         """Test ordering action points by status."""
         section = SectionFactory()
         office = OfficeFactory()
-        ap_cancelled = ActionPointFactory(section=section, office=office, status='cancelled')
-        ap_completed = ActionPointFactory(section=section, office=office, status='completed')
-        ap_open = ActionPointFactory(section=section, office=office, status='open')
+        ActionPointFactory(section=section, office=office, status='cancelled')  # ap_cancelled
+        ActionPointFactory(section=section, office=office, status='completed')  # ap_completed
+        ActionPointFactory(section=section, office=office, status='open')  # ap_open
 
         url = reverse('rss_admin:rss-admin-action-points-list')
         response = self.forced_auth_req('get', url, user=self.user, data={'ordering': 'status'})
-        
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         results = self._results(response)
         # Verify ordering exists (exact order depends on status string values)
@@ -1121,7 +1121,7 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
             ActionPointFactory(section=section, office=office)
 
         url = reverse('rss_admin:rss-admin-action-points-list')
-        
+
         # First page with page_size=10
         response = self.forced_auth_req('get', url, user=self.user, data={'page_size': 10, 'page': 1})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -1274,16 +1274,93 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         self.assertTrue(e.engagement_attachments.filter(pk=attachment_eng.id).exists())
         self.assertTrue(e.report_attachments.filter(pk=attachment_rep.id).exists())
 
+    def test_engagement_attachments_reject_attachment_without_file(self):
+        """RSS Admin: PATCH engagements/{id}/attachments rejects attachments that lack an uploaded file."""
+        from unicef_attachments.models import Attachment
+
+        e = EngagementFactory()
+        url = reverse('rss_admin:rss-admin-engagements-attachments', kwargs={'pk': e.pk})
+
+        # Create an Attachment row without any file associated (file-less attachment)
+        fileless_attachment = Attachment.objects.create()
+
+        payload = {
+            'engagement_attachment': fileless_attachment.id,
+        }
+
+        resp = self.forced_auth_req('patch', url, user=self.user, data=payload)
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST, resp.data)
+        self.assertIn('engagement_attachment', resp.data)
+        self.assertFalse(e.engagement_attachments.filter(pk=fileless_attachment.id).exists())
+
+    def test_engagement_attachments_list_excludes_fileless_attachments(self):
+        """RSS Admin: GET engagement-attachments list excludes attachments without files."""
+        from django.contrib.contenttypes.models import ContentType
+
+        from unicef_attachments.models import Attachment, FileType
+
+        # Create an engagement
+        audit = AuditFactory()
+        ct = ContentType.objects.get_for_model(audit._meta.model)
+
+        # Create file type for engagement attachments
+        eng_file_type, _ = FileType.objects.get_or_create(
+            name='engagement_doc',
+            code='audit_engagement'
+        )
+
+        # Create an attachment WITH a file (should appear in results)
+        attachment_with_file = AttachmentFactory(
+            code='audit_engagement',
+            content_type=ct,
+            object_id=audit.id,
+            file_type=eng_file_type,
+            file='engagement_doc.pdf'
+        )
+
+        # Create an attachment WITHOUT a file (should NOT appear in results)
+        attachment_without_file = Attachment.objects.create(
+            code='audit_engagement',
+            content_type=ct,
+            object_id=audit.id,
+            file_type=eng_file_type
+        )
+
+        # Create another attachment with empty string file (should NOT appear in results)
+        attachment_empty_file = Attachment.objects.create(
+            code='audit_engagement',
+            content_type=ct,
+            object_id=audit.id,
+            file_type=eng_file_type,
+            file=''
+        )
+
+        # Make GET request to list endpoint
+        url = reverse('rss_admin:rss-admin-engagement-attachments-list', kwargs={'engagement_pk': audit.pk})
+        resp = self.forced_auth_req('get', url, user=self.user)
+
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        # Extract IDs from response
+        returned_ids = [item['id'] for item in resp.data]
+
+        # Only attachment with file should be returned
+        self.assertIn(attachment_with_file.id, returned_ids)
+        self.assertNotIn(attachment_without_file.id, returned_ids)
+        self.assertNotIn(attachment_empty_file.id, returned_ids)
+        self.assertEqual(len(returned_ids), 1, "Should return only 1 attachment with a file")
+
     def test_engagement_attachments_viewset_queryset_filters_correctly(self):
         """RSS Admin: Engagement attachments ViewSet queryset correctly filters by code."""
         from django.contrib.contenttypes.models import ContentType
+
         from unicef_attachments.models import Attachment, FileType
+
         from etools.applications.rss_admin.views import EngagementAttachmentsRssViewSet
-        from unittest.mock import Mock
-        
+
         audit = AuditFactory()
         ct = ContentType.objects.get_for_model(audit._meta.model)
-        
+
         eng_file_type, _ = FileType.objects.get_or_create(
             name='engagement_doc',
             code='audit_engagement'
@@ -1292,7 +1369,7 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
             name='report',
             code='audit_report'
         )
-        
+
         # Create 3 engagement attachments
         for i in range(3):
             Attachment.objects.create(
@@ -1301,7 +1378,7 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
                 object_id=audit.id,
                 file_type=eng_file_type
             )
-        
+
         # Create 2 report attachments (should NOT appear in engagement viewset)
         for i in range(2):
             Attachment.objects.create(
@@ -1310,24 +1387,24 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
                 object_id=audit.id,
                 file_type=rep_file_type
             )
-        
+
         # Test the ViewSet's get_parent_filter method directly
         viewset = EngagementAttachmentsRssViewSet()
         viewset.kwargs = {'engagement_pk': audit.pk}
-        
+
         # Mock get_parent_object to return our audit
         def mock_get_parent():
             return audit
         viewset.get_parent_object = mock_get_parent
-        
+
         # Get the filters that the ViewSet will apply
         parent_filter = viewset.get_parent_filter()
-        
+
         # Verify the ViewSet filters by the correct content_type, object_id, and code
         self.assertEqual(parent_filter['content_type_id'], ct.id)
         self.assertEqual(parent_filter['object_id'], audit.id)
         self.assertEqual(parent_filter['code'], 'audit_engagement')
-        
+
         # Apply the filters to verify they return only engagement attachments
         filtered_qs = Attachment.objects.filter(**parent_filter)
         self.assertEqual(filtered_qs.count(), 3, "Should return 3 engagement attachments, not report attachments")
@@ -1335,12 +1412,14 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
     def test_report_attachments_viewset_queryset_filters_correctly(self):
         """RSS Admin: Report attachments ViewSet queryset correctly filters by code."""
         from django.contrib.contenttypes.models import ContentType
+
         from unicef_attachments.models import Attachment, FileType
+
         from etools.applications.rss_admin.views import ReportAttachmentsRssViewSet
-        
+
         audit = AuditFactory()
         ct = ContentType.objects.get_for_model(audit._meta.model)
-        
+
         eng_file_type, _ = FileType.objects.get_or_create(
             name='engagement_doc',
             code='audit_engagement'
@@ -1349,7 +1428,7 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
             name='report',
             code='audit_report'
         )
-        
+
         # Create 3 engagement attachments (should NOT appear in report viewset)
         for i in range(3):
             Attachment.objects.create(
@@ -1358,7 +1437,7 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
                 object_id=audit.id,
                 file_type=eng_file_type
             )
-        
+
         # Create 2 report attachments
         for i in range(2):
             Attachment.objects.create(
@@ -1367,39 +1446,96 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
                 object_id=audit.id,
                 file_type=rep_file_type
             )
-        
+
         # Test the ViewSet's get_parent_filter method directly
         viewset = ReportAttachmentsRssViewSet()
         viewset.kwargs = {'engagement_pk': audit.pk}
-        
+
         # Mock get_parent_object to return our audit
         def mock_get_parent():
             return audit
         viewset.get_parent_object = mock_get_parent
-        
+
         # Get the filters that the ViewSet will apply
         parent_filter = viewset.get_parent_filter()
-        
+
         # Verify the ViewSet filters by the correct content_type, object_id, and code
         self.assertEqual(parent_filter['content_type_id'], ct.id)
         self.assertEqual(parent_filter['object_id'], audit.id)
         self.assertEqual(parent_filter['code'], 'audit_report')
-        
+
         # Apply the filters to verify they return only report attachments
         filtered_qs = Attachment.objects.filter(**parent_filter)
         self.assertEqual(filtered_qs.count(), 2, "Should return 2 report attachments, not engagement attachments")
 
+    def test_report_attachments_list_excludes_fileless_attachments(self):
+        """RSS Admin: GET report-attachments list excludes attachments without files."""
+        from django.contrib.contenttypes.models import ContentType
+
+        from unicef_attachments.models import Attachment, FileType
+
+        # Create an engagement
+        audit = AuditFactory()
+        ct = ContentType.objects.get_for_model(audit._meta.model)
+
+        # Create file type for report attachments
+        rep_file_type, _ = FileType.objects.get_or_create(
+            name='report',
+            code='audit_report'
+        )
+
+        # Create an attachment WITH a file (should appear in results)
+        attachment_with_file = AttachmentFactory(
+            code='audit_report',
+            content_type=ct,
+            object_id=audit.id,
+            file_type=rep_file_type,
+            file='report_doc.pdf'
+        )
+
+        # Create an attachment WITHOUT a file (should NOT appear in results)
+        attachment_without_file = Attachment.objects.create(
+            code='audit_report',
+            content_type=ct,
+            object_id=audit.id,
+            file_type=rep_file_type
+        )
+
+        # Create another attachment with empty string file (should NOT appear in results)
+        attachment_empty_file = Attachment.objects.create(
+            code='audit_report',
+            content_type=ct,
+            object_id=audit.id,
+            file_type=rep_file_type,
+            file=''
+        )
+
+        # Make GET request to list endpoint
+        url = reverse('rss_admin:rss-admin-report-attachments-list', kwargs={'engagement_pk': audit.pk})
+        resp = self.forced_auth_req('get', url, user=self.user)
+
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        # Extract IDs from response
+        returned_ids = [item['id'] for item in resp.data]
+
+        # Only attachment with file should be returned
+        self.assertIn(attachment_with_file.id, returned_ids)
+        self.assertNotIn(attachment_without_file.id, returned_ids)
+        self.assertNotIn(attachment_empty_file.id, returned_ids)
+        self.assertEqual(len(returned_ids), 1, "Should return only 1 attachment with a file")
+
     def test_attachment_endpoints_are_registered(self):
         """RSS Admin: Attachment endpoints are properly registered in URLconf."""
-        from django.urls import reverse, NoReverseMatch
-        
+        from django.urls import NoReverseMatch, reverse
+
         audit = AuditFactory()
-        
+
         # Verify both URL patterns are registered
         try:
             eng_url = reverse('rss_admin:rss-admin-engagement-attachments-list', kwargs={'engagement_pk': audit.pk})
             rep_url = reverse('rss_admin:rss-admin-report-attachments-list', kwargs={'engagement_pk': audit.pk})
-            
+
             # URLs should be properly formatted
             self.assertIn(str(audit.pk), eng_url)
             self.assertIn(str(audit.pk), rep_url)
@@ -1552,13 +1688,13 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         """RSS Admin engagements list items must expose same fields as Audit engagements list."""
         # Create a standard (non-staff) engagement
         sc = SpotCheckFactory()
-        
+
         # Expected fields from audit EngagementLightSerializer (related_agreement is write_only, not in response)
         expected_fields = {
             'id', 'reference_number', 'agreement', 'po_item', 'partner',
             'engagement_type', 'status', 'status_date', 'total_value', 'offices', 'sections'
         }
-        
+
         # Fetch via RSS Admin list
         rss_url = reverse('rss_admin:rss-admin-engagements-list')
         rss_resp = self.forced_auth_req('get', rss_url, user=self.user, data={
@@ -1572,7 +1708,8 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
 
         # Verify field sets match expected (order not enforced, only equality of keys)
         self.assertEqual(set(rss_row.keys()), expected_fields,
-                        f"RSS Admin engagement fields don't match expected. Got: {set(rss_row.keys())}, Expected: {expected_fields}")
+                         f"RSS Admin engagement fields don't match expected. "
+                         f"Got: {set(rss_row.keys())}, Expected: {expected_fields}")
 
     def test_engagements_filters_include_staff_spot_checks_toggle(self):
         """Filter parity: ability to filter staff spot checks by unicef_users_allowed flag."""
@@ -1604,25 +1741,25 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
 
     def test_staff_spot_check_detail_retrieve(self):
         """Test retrieving a staff spot check detail to ensure it doesn't cause AttributeError.
-        
+
         This test reproduces the error from:
         GET /api/rss-admin/engagements/3/
-        
+
         Error was: 'Engagement' object has no attribute 'internal_controls'
-        
+
         The issue occurred because the viewset was trying to serialize using audit module serializers
         which have permission checks. The fix uses permission-agnostic RSS serializers
         and ensures get_object() returns the proper subclass to avoid AttributeError.
         """
         # Create a staff spot check
         ssc = StaffSpotCheckFactory(internal_controls='Test internal controls')
-        
+
         url = reverse('rss_admin:rss-admin-engagements-detail', args=[ssc.pk])
         resp = self.forced_auth_req('get', url, user=self.user)
-        
+
         # Should return 200 OK without AttributeError
         self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
-        
+
         # Verify the response contains expected fields (comprehensive data from StaffSpotCheckSerializer)
         self.assertEqual(resp.data['id'], ssc.id)
         self.assertEqual(resp.data['engagement_type'], 'sc')
@@ -1635,13 +1772,13 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         """Test retrieving a regular (non-staff) spot check detail."""
         # Create a regular spot check
         sc = SpotCheckFactory(internal_controls='Regular spot check controls')
-        
+
         url = reverse('rss_admin:rss-admin-engagements-detail', args=[sc.pk])
         resp = self.forced_auth_req('get', url, user=self.user)
-        
+
         # Should return 200 OK without AttributeError
         self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
-        
+
         # Verify the response contains expected fields (comprehensive data from SpotCheckSerializer)
         self.assertEqual(resp.data['id'], sc.id)
         self.assertEqual(resp.data['engagement_type'], 'sc')
@@ -1652,19 +1789,19 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
 
     def test_audit_detail_retrieve_new(self):
         """Test retrieving an audit engagement detail.
-        
+
         This ensures the get_object() override works correctly for all engagement types,
         not just SpotCheck. RSS Admin uses the same serializers as the audit module
         (AuditSerializer, SpotCheckSerializer, etc.) to return comprehensive data.
         """
         audit = AuditFactory()
-        
+
         url = reverse('rss_admin:rss-admin-engagements-detail', args=[audit.pk])
         resp = self.forced_auth_req('get', url, user=self.user)
-        
+
         # Should return 200 OK
         self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
-        
+
         # Verify the response contains expected fields (comprehensive data from AuditSerializer)
         self.assertEqual(resp.data['id'], audit.id)
         self.assertEqual(resp.data['engagement_type'], 'audit')

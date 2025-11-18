@@ -348,6 +348,35 @@ class EngagementAttachmentsUpdateSerializer(serializers.ModelSerializer):
             'report_attachment',
         )
 
+    def validate(self, attrs):
+        """Ensure only attachments that have an uploaded file can be linked.
+
+        The audit app's own flows only ever link attachments created via file-upload
+        endpoints. RSS, however, accepts arbitrary Attachment IDs. To mirror the
+        audit behavior and avoid exposing broken rows, we reject attachments that
+        don't have a file.
+        """
+
+        def _has_file(attachment: Attachment | None) -> bool:
+            if not attachment:
+                return False
+            file_field = getattr(attachment, 'file', None)
+            # FileField is truthy when present; name is non-empty when a file is uploaded
+            return bool(file_field and getattr(file_field, 'name', ''))
+
+        errors = {}
+        engagement_file = attrs.get('engagement_attachment')
+        report_file = attrs.get('report_attachment')
+
+        if engagement_file and not _has_file(engagement_file):
+            errors['engagement_attachment'] = 'Attachment must have an uploaded file.'
+        if report_file and not _has_file(report_file):
+            errors['report_attachment'] = 'Attachment must have an uploaded file.'
+
+        if errors:
+            raise serializers.ValidationError(errors)
+        return attrs
+
     def update(self, instance, validated_data):
         engagement_file = validated_data.get('engagement_attachment')
         report_file = validated_data.get('report_attachment')

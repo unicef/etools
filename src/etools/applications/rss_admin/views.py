@@ -1,17 +1,12 @@
 import copy
 
-from django.db import connection
 # Field Monitoring imports for new features
-from django.contrib.gis.geos import Point
 from django.core.exceptions import ObjectDoesNotExist
-from django.db import connection, transaction
+from django.db import connection
 from django.db.models import Count
 
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, mixins, status, viewsets
-# openpyxl used for bulk site upload (reuse FM admin import logic)
-import openpyxl
-from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter, SearchFilter
@@ -19,36 +14,30 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from unicef_attachments.models import Attachment
 from unicef_restlib.pagination import DynamicPageNumberPagination
-from unicef_restlib.views import QueryStringFilterMixin, NestedViewSetMixin
+from unicef_restlib.views import NestedViewSetMixin, QueryStringFilterMixin
 
+from etools.applications.action_points.models import ActionPoint, ActionPointComment
+from etools.applications.action_points.serializers import CommentSerializer as APCommentSerializer
+from etools.applications.audit.conditions import AuditModuleCondition
 from etools.applications.audit.filters import DisplayStatusFilter, EngagementFilter, UniqueIDOrderingFilter
 from etools.applications.audit.models import Engagement
-from etools.applications.audit.serializers.engagement import (
-    EngagementAttachmentSerializer,
-    EngagementListSerializer,
-    ReportAttachmentSerializer,
-)
+from etools.applications.audit.serializers.engagement import EngagementAttachmentSerializer, ReportAttachmentSerializer
 from etools.applications.environment.helpers import tenant_switch_is_active
-from etools.applications.funds.models import FundsReservationHeader
-from etools.applications.field_monitoring.data_collection.models import (
-    ActivityOverallFinding,
-    ActivityQuestion,
-    ActivityQuestionOverallFinding,
-)
-from etools.applications.field_monitoring.fm_settings.models import LocationSite
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
 from etools.applications.field_monitoring.planning.serializers import MonitoringActivitySerializer
+from etools.applications.funds.models import FundsReservationHeader
 from etools.applications.partners.filters import InterventionEditableByFilter, ShowAmendmentsFilter
-from etools.applications.partners.models import Agreement, Intervention, PartnerOrganization, InterventionBudget
-from etools.applications.organizations.models import Organization
+from etools.applications.partners.models import Agreement, Intervention, InterventionBudget, PartnerOrganization
 from etools.applications.partners.serializers.interventions_v2 import (
     InterventionCreateUpdateSerializer,
     InterventionDetailSerializer,
     InterventionListSerializer,
 )
-from etools.libraries.djangolib.fields import CURRENCY_LIST
 from etools.applications.partners.tasks import send_pd_to_vision
 from etools.applications.partners.utils import send_agreement_suspended_notification
+from etools.applications.permissions2.conditions import ObjectStatusCondition
+from etools.applications.permissions2.views import PermittedSerializerMixin
+from etools.applications.rss_admin.importers import LocationSiteImporter
 from etools.applications.rss_admin.permissions import IsRssAdmin
 from etools.applications.rss_admin.serializers import (
     ActionPointRssDetailSerializer,
@@ -61,28 +50,21 @@ from etools.applications.rss_admin.serializers import (
     EngagementChangeStatusSerializer,
     EngagementInitiationUpdateSerializer,
     EngagementLightRssSerializer,
+    MapPartnerToWorkspaceSerializer,
     MicroAssessmentRssSerializer as MicroAssessmentSerializer,
     PartnerOrganizationRssSerializer,
-    MapPartnerToWorkspaceSerializer,
     SetOnTrackSerializer,
     SitesBulkUploadSerializer,
     SpecialAuditRssSerializer as SpecialAuditSerializer,
     SpotCheckRssSerializer as SpotCheckSerializer,
     StaffSpotCheckRssSerializer as StaffSpotCheckSerializer,
 )
-from etools.applications.rss_admin.services import PartnerService, EngagementService, FieldMonitoringService
-from etools.applications.rss_admin.importers import LocationSiteImporter
+from etools.applications.rss_admin.services import EngagementService, FieldMonitoringService, PartnerService
 from etools.applications.rss_admin.validation import RssAgreementValid, RssInterventionValid
 from etools.applications.utils.helpers import generate_hash
 from etools.applications.utils.pagination import AppendablePageNumberPagination
+from etools.libraries.djangolib.fields import CURRENCY_LIST
 from etools.libraries.djangolib.views import FilterQueryMixin
-from etools.applications.action_points.models import ActionPoint, ActionPointComment
-from etools.applications.action_points.serializers import (
-    CommentSerializer as APCommentSerializer,
-)
-from etools.applications.permissions2.views import PermittedSerializerMixin
-from etools.applications.permissions2.conditions import ObjectStatusCondition
-from etools.applications.audit.conditions import AuditModuleCondition
 
 
 class PartnerOrganizationRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet, FilterQueryMixin):
@@ -398,7 +380,7 @@ class EngagementRssViewSet(PermittedSerializerMixin,
     def get_queryset(self):
         queryset = super().get_queryset()
         queryset = queryset.prefetch_related('partner', 'agreement', 'agreement__auditor_firm__organization')
-        
+
         # Add additional prefetching for detail views
         if self.action == 'retrieve':
             queryset = queryset.prefetch_related(
@@ -412,12 +394,12 @@ class EngagementRssViewSet(PermittedSerializerMixin,
                 'partner__organization',
                 'agreement__auditor_firm',
             )
-        
+
         return queryset
 
     def get_object(self):
         """Override to ensure we get the proper subclass (SpotCheck, Audit, etc.) not base Engagement.
-        
+
         This is crucial for serializers like StaffSpotCheckSerializer which expect fields
         that only exist on subclasses (e.g., internal_controls on SpotCheck).
         """
@@ -440,18 +422,18 @@ class EngagementRssViewSet(PermittedSerializerMixin,
         # For list, use the default EngagementLightRssSerializer (permission-agnostic)
         if self.action == 'list':
             return EngagementLightRssSerializer
-        
+
         # For retrieve, use the appropriate audit module serializer based on engagement type
         if self.action == 'retrieve':
             obj = self.get_object()
             # Determine if it's a staff spot check (UNICEF-led)
             is_staff_spot_check = (
-                obj.engagement_type == Engagement.TYPES.sc and 
-                obj.agreement and 
-                obj.agreement.auditor_firm and 
+                obj.engagement_type == Engagement.TYPES.sc and
+                obj.agreement and
+                obj.agreement.auditor_firm and
                 obj.agreement.auditor_firm.unicef_users_allowed
             )
-            
+
             # Map engagement type to the appropriate serializer
             if is_staff_spot_check:
                 return StaffSpotCheckSerializer
@@ -522,6 +504,7 @@ class EngagementRssViewSet(PermittedSerializerMixin,
         instance = serializer.save()
         return Response(EngagementLightRssSerializer(instance, context={'request': request}).data, status=status.HTTP_200_OK)
 
+
 class ActionPointRssViewSet(mixins.ListModelMixin,
                             mixins.RetrieveModelMixin,
                             mixins.UpdateModelMixin,
@@ -550,7 +533,7 @@ class ActionPointRssViewSet(mixins.ListModelMixin,
         'status', 'intervention__title', 'location__name', 'partner__organization__name', 'cp_output__name',
     )
     ordering_fields = (
-        'cp_output__name', 'partner__organization__name', 'section__name', 'office__name', 
+        'cp_output__name', 'partner__organization__name', 'section__name', 'office__name',
         'assigned_to__first_name', 'assigned_to__last_name', 'due_date', 'status', 'pk', 'id'
     )
     filterset_fields = {
@@ -700,12 +683,18 @@ class BaseRssAttachmentsViewSet(NestedViewSetMixin,
                                 mixins.DestroyModelMixin,
                                 viewsets.GenericViewSet):
     """Base ViewSet for managing attachments in RSS Admin.
-    
+
     Provides CRUD operations for attachments without permission filtering.
     Reuses audit module's attachment serializers.
     """
     permission_classes = (IsRssAdmin,)
     queryset = Attachment.objects.all()
+
+    def get_queryset(self):
+        """Limit RSS attachment operations to attachments that actually have a file.
+        """
+        qs = super().get_queryset()
+        return qs.exclude(file__isnull=True).exclude(file='')
 
     def get_parent_filter(self):
         """Filter attachments by parent engagement."""
@@ -716,7 +705,7 @@ class BaseRssAttachmentsViewSet(NestedViewSetMixin,
         from django.contrib.contenttypes.models import ContentType
         if hasattr(parent, 'get_subclass'):
             parent = parent.get_subclass()
-        
+
         return {
             'content_type_id': ContentType.objects.get_for_model(parent._meta.model).id,
             'object_id': parent.pk
@@ -753,7 +742,7 @@ class BaseRssAttachmentsViewSet(NestedViewSetMixin,
 
 class EngagementAttachmentsRssViewSet(BaseRssAttachmentsViewSet):
     """ViewSet for managing engagement attachments in RSS Admin.
-    
+
     Reuses EngagementAttachmentSerializer from audit module.
     """
     serializer_class = EngagementAttachmentSerializer
@@ -770,7 +759,7 @@ class EngagementAttachmentsRssViewSet(BaseRssAttachmentsViewSet):
 
 class ReportAttachmentsRssViewSet(BaseRssAttachmentsViewSet):
     """ViewSet for managing report attachments in RSS Admin.
-    
+
     Reuses ReportAttachmentSerializer from audit module.
     """
     serializer_class = ReportAttachmentSerializer
