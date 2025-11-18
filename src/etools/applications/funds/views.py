@@ -40,6 +40,7 @@ from etools.applications.funds.serializers import (
     GrantSerializer,
 )
 from etools.applications.funds.tasks import sync_single_delegated_fr
+from etools.applications.governments.models import GDD
 from etools.applications.partners.filters import PartnerScopeFilter
 from etools.applications.partners.models import Intervention
 from etools.applications.partners.permissions import PartnershipManagerPermission
@@ -48,20 +49,23 @@ from etools.applications.partners.permissions import PartnershipManagerPermissio
 class FRsView(APIView):
     """
     Returns the FRs requested with the values query param,
-    The get endpoint in this view is meant to validate / validate and import FRs in order to be able to associate them
-    with interventions.
+    The get endpoint in this view is meant to validate and import FRs to be associated with interventions or gpds.
     """
     permission_classes = (permissions.IsAdminUser,)
 
     def get(self, request, format=None):
         values = request.query_params.get("values", '').split(",")
         intervention_id = request.query_params.get("intervention", None)
+        gdd_id = request.query_params.get("gdd", None)
+
+        if intervention_id and gdd_id:
+            return self.bad_request('Cannot specify both intervention and GPD ids,')
 
         if not values[0]:
             return self.bad_request('Values are required')
 
         if len(values) > len(set(values)):
-            return self.bad_request('You have duplicate records of the same FR, please make sure to add'
+            return self.bad_request('You have duplicated records of the same FR, please make sure to add'
                                     ' each FR only one time')
         qs = FundsReservationHeader.objects.filter(fr_number__in=values)
         not_found = set(values) - set(qs.values_list('fr_number', flat=True))
@@ -70,12 +74,13 @@ class FRsView(APIView):
             nf.sort()
             with transaction.atomic():
                 for delegated_fr in nf:
-                    # try to get this fr from vision
+                    # try to get this FR from vision
                     try:
                         sync_single_delegated_fr(request.user.profile.country.business_area_code, delegated_fr)
                     except VisionException as e:
-                        return self.bad_request('The FR {} could not be found in eTools and could not be synced '
-                                                'from Vision. {}'.format(delegated_fr, e))
+                        return self.bad_request(
+                            'The Fund Reservation {} could not be found. It can take up to 24 hours to appear'
+                            ' in eTools, please try again later.{}'.format(delegated_fr, e))
 
             qs._result_cache = None
 
@@ -99,16 +104,28 @@ class FRsView(APIView):
             return self.bad_request('The FRs selected relate to various partners, please make sure to select '
                                     'FRs that relate to the PD/SPD Partner')
 
+        error_text = 'The vendor number of the selected implementing partner in eTools '\
+                     'does not match the vendor number entered in the FR in VISION. '\
+                     'Please correct the vendor number to continue.'
+
         if intervention_id is not None:
             try:
                 intervention = Intervention.objects.get(pk=intervention_id)
             except Intervention.DoesNotExist:
-                return self.bad_request('Intervention could not be found')
+                return self.bad_request(f'Intervention with id {intervention_id} could not be found.')
             else:
                 if intervention.agreement.partner.vendor_number != all_frs_vendor_numbers[0]:
-                    return self.bad_request('The vendor number of the selected implementing partner in eTools '
-                                            'does not match the vendor number entered in the FR in VISION. '
-                                            'Please correct the vendor number to continue.')
+                    return self.bad_request(error_text)
+
+        elif gdd_id is not None:
+            try:
+                gdd = GDD.objects.get(pk=gdd_id)
+            except GDD.DoesNotExist:
+                return self.bad_request(f'GPD with id {gdd_id} could not be found.')
+            else:
+                if (gdd.agreement and gdd.agreement.partner.vendor_number != all_frs_vendor_numbers[0] or
+                        gdd.partner.vendor_number != all_frs_vendor_numbers[0]):
+                    return self.bad_request(error_text)
 
         serializer = FRsSerializer(qs)
 
