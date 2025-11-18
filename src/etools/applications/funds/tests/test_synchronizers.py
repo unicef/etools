@@ -85,17 +85,6 @@ class TestFundReservationsSynchronizer(BaseTenantTestCase):
             "line_item_text": "Line item text",
             "fr_ref_number": "123-987"
         }
-        self.fund_item = FundsReservationItemFactory(
-            fr_ref_number="123-987",
-            line_item=self.data["LINE_ITEM"],
-            wbs=self.data["WBS_ELEMENT"],
-            grant_number=self.data["GRANT_REF"],
-            fund=self.data["FUND"],
-            overall_amount=self.data["OVERALL_AMOUNT"],
-            overall_amount_dc=self.data["OVERALL_AMOUNT_DC"],
-            due_date=datetime.date(2015, 5, 18),
-            line_item_text=self.data["FR_LINE_ITEM_TEXT"],
-        )
         self.fund_header = FundsReservationHeaderFactory(
             vendor_code=self.data["VENDOR_CODE"],
             fr_number=self.data["FR_NUMBER"],
@@ -110,6 +99,18 @@ class TestFundReservationsSynchronizer(BaseTenantTestCase):
             outstanding_amt_local=self.data["OUTSTANDING_DCT_DC"],
             start_date=datetime.date(2015, 1, 13),
             end_date=datetime.date(2015, 12, 20),
+        )
+        self.fund_item = FundsReservationItemFactory(
+            fund_reservation=self.fund_header,
+            fr_ref_number="123-987",
+            line_item=self.data["LINE_ITEM"],
+            wbs=self.data["WBS_ELEMENT"],
+            grant_number=self.data["GRANT_REF"],
+            fund=self.data["FUND"],
+            overall_amount=self.data["OVERALL_AMOUNT"],
+            overall_amount_dc=self.data["OVERALL_AMOUNT_DC"],
+            due_date=datetime.date(2015, 5, 18),
+            line_item_text=self.data["FR_LINE_ITEM_TEXT"],
         )
         self.adapter = synchronizers.FundReservationsSynchronizer(business_area_code=self.country.business_area_code)
 
@@ -264,6 +265,22 @@ class TestFundReservationsSynchronizer(BaseTenantTestCase):
         self.assertEqual(
             fund_item_updated.overall_amount,
             Decimal(self.data["OVERALL_AMOUNT"])
+        )
+
+    def test_li_sync_update_ezhact_issue(self):
+        """Check that FundsReservationItem record is updated for fr_ref_number"""
+        self.fund_item.fr_ref_number = "Some PD ref instead"
+        self.fund_item.save()
+        self.adapter.set_mapping([self.data])
+        updated, to_create = self.adapter.li_sync()
+        self.assertEqual(updated, 1)
+        self.assertEqual(to_create, 0)
+        fund_item_updated = FundsReservationItem.objects.get(
+            pk=self.fund_item.pk
+        )
+        self.assertEqual(
+            fund_item_updated.fr_ref_number,
+            self.expected_line_item['fr_ref_number']
         )
 
     def test_li_sync_create(self):

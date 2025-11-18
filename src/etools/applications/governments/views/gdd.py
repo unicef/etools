@@ -22,22 +22,18 @@ from rest_framework.generics import (
     RetrieveUpdateAPIView,
     RetrieveUpdateDestroyAPIView,
 )
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.status import is_success
 from rest_framework.views import APIView
 from rest_framework_csv import renderers as r
 from unicef_restlib.views import QueryStringFilterMixin
-from unicef_vision.exceptions import VisionException
 
 from etools.applications.core.mixins import ExportModelMixin
 from etools.applications.core.renderers import CSVFlatRenderer
 from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.field_monitoring.permissions import IsEditAction, IsReadAction
-from etools.applications.funds.models import FundsReservationHeader
-from etools.applications.funds.serializers import FRsSerializer
-from etools.applications.funds.tasks import sync_single_delegated_fr
 from etools.applications.governments.exports import GDDCSVRenderer
 from etools.applications.governments.filters import (
     GDDEditableByFilter,
@@ -903,77 +899,6 @@ class GDDAttachmentUpdateDeleteView(GDDAutoTransitionsMixin, DetailedGDDResponse
         if obj.gdd.status != GDD.DRAFT:
             raise ValidationError(_("Deleting an attachment can only be done in Draft status"))
         return super().delete(request, *args, **kwargs)
-
-
-class GDDFRsView(APIView):
-    """
-    Returns the FRs requested with the values query param,
-    The get endpoint in this view is meant to validate / validate and
-    import FRs in order to be able to associate them with gdds.
-    """
-    permission_classes = (IsAdminUser,)
-
-    def get(self, request, format=None):
-        values = request.query_params.get("values", '').split(",")
-
-        if not values[0]:
-            return self.bad_request('Values are required')
-
-        if len(values) > len(set(values)):
-            return self.bad_request('You have duplicate records of the same FR, please make sure to add'
-                                    ' each FR only one time')
-        qs = FundsReservationHeader.objects.filter(fr_number__in=values)
-        not_found = set(values) - set(qs.values_list('fr_number', flat=True))
-        if not_found:
-            nf = list(not_found)
-            nf.sort()
-            with transaction.atomic():
-                for delegated_fr in nf:
-                    # try to get this FR from vision
-                    try:
-                        sync_single_delegated_fr(request.user.profile.country.business_area_code, delegated_fr)
-                    except VisionException as e:
-                        return self.bad_request('The FR {} could not be found in eTools and could not be synced '
-                                                'from Vision. {}'.format(delegated_fr, e))
-
-            qs._result_cache = None
-        gdd_id = request.query_params.get("gdd", None)
-        if gdd_id:
-            qs = qs.filter(Q(gdd_id=gdd_id) | Q(gdd__isnull=True) & Q(intervention__isnull=True))
-            not_found = set(values) - set(qs.values_list('fr_number', flat=True))
-            if not_found:
-                frs_not_found = FundsReservationHeader.objects.filter(fr_number__in=not_found)
-                errors = [f'FR #{0} is already being used by Document ref '
-                          f'[{fr.intervention if fr.intervention else fr.gdd}]' for fr in frs_not_found]
-                return self.bad_request(', '.join(errors))
-        else:
-            qs = qs.filter(gdd_id__isnull=True, intervention__isnull=True)
-
-        if qs.count() != len(values):
-            return self.bad_request('One or more of the FRs are already used or could not be found in eTools.')
-
-        all_frs_vendor_numbers = [fr.vendor_code for fr in qs.all()]
-        if len(set(all_frs_vendor_numbers)) != 1:
-            return self.bad_request('The FRs selected relate to various partners, please make sure to select '
-                                    'FRs that relate to the PD/SPD Partner')
-
-        if gdd_id is not None:
-            try:
-                gdd = GDD.objects.get(pk=gdd_id)
-            except GDD.DoesNotExist:
-                return self.bad_request('Digital Document could not be found')
-            else:
-                if gdd.partner.vendor_number != all_frs_vendor_numbers[0]:
-                    return self.bad_request('The vendor number of the selected implementing partner in eTools '
-                                            'does not match the vendor number entered in the FR in VISION. '
-                                            'Please correct the vendor number to continue.')
-
-        serializer = FRsSerializer(qs)
-
-        return Response(serializer.data)
-
-    def bad_request(self, error_message):
-        return Response(data={'error': _(error_message)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class GDDAmendmentListAPIView(ExportModelMixin, ValidatorViewMixin, ListCreateAPIView):

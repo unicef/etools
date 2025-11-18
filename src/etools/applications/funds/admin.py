@@ -19,6 +19,7 @@ class FRAdmin(admin.ModelAdmin):
     search_fields = ('fr_number',)
     list_display = ('fr_number', 'vendor_code')
     list_filter = ('completed_flag', 'delegated')
+    raw_id_fields = ('intervention', 'gdd')
 
 
 class FRAdminLi(admin.ModelAdmin):
