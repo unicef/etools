@@ -26,6 +26,11 @@ class BAPInterventionActivitySerializer(InterventionActivitySerializer):
 class BAPLowerResultWithActivitiesSerializer(LowerResultWithActivitiesSerializer):
     activities = BAPInterventionActivitySerializer(read_only=True, many=True)
 
+    name = serializers.SerializerMethodField()
+
+    def get_name(self, obj):
+        return f"{obj.code} {obj.name}" if getattr(obj, 'code', None) else obj.name
+
     class Meta(LowerResultWithActivitiesSerializer.Meta):
         fields = ['id', 'name', 'activities']
 
