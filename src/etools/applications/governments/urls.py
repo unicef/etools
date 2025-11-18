@@ -13,7 +13,6 @@ from etools.applications.governments.views.gdd import (
     GDDAmendmentListAPIView,
     GDDAttachmentListCreateView,
     GDDAttachmentUpdateDeleteView,
-    GDDFRsView,
     GDDKeyInterventionDetailUpdateView,
     GDDKeyInterventionListCreateView,
     GDDListCreateView,
@@ -357,11 +356,6 @@ urlpatterns = [
         'gdds/<int:gdd_pk>/attachments/<int:pk>/',
         view=GDDAttachmentUpdateDeleteView.as_view(http_method_names=['delete', 'patch']),
         name='gdd-attachments-update',
-    ),
-    path(
-        'frs/',
-        view=GDDFRsView.as_view(http_method_names=['get']),
-        name='frs',
     ),
 
     # ************** EXPORTS ****************************
