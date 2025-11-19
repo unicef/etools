@@ -21,7 +21,6 @@ class StockManagementCreateService:
         validated_data['unicef_release_order'] = f"{TRANSFER_MANUAL_CREATION_NAME} {timezone.now().strftime('%d-%m-%Y %H:%M:%S.%f')}"
         validated_data['transfer_type'] = models.Transfer.DELIVERY
         validated_data['status'] = models.Transfer.PENDING
-        validated_data['approval_status'] = models.Transfer.ApprovalStatus.PENDING
         validated_data['origin_point'] = models.PointOfInterest.objects.get_unicef_warehouses()
         validated_data['destination_point'] = validated_data.pop('location')
         instance = models.Transfer.objects.create(

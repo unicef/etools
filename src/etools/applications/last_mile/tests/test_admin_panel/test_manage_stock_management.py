@@ -187,7 +187,7 @@ class TestStockManagementViewSet(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         transfer_id = response.data.get("id")
         self.assertIsNotNone(transfer_id)
-        transfer = Transfer.all_objects.get(pk=transfer_id)
+        transfer = Transfer.objects.get(pk=transfer_id)
         self.assertEqual(transfer.partner_organization.pk, self.partner.pk)
         self.assertEqual(transfer.destination_point.pk, destination.pk)
         self.assertGreater(transfer.items.count(), 0)
@@ -681,7 +681,7 @@ class TestStockManagementViewSet(BaseTenantTestCase):
             "post", self.url, user=self.partner_staff, data=payload
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        transfer = Transfer.all_objects.get(pk=response.data.get("id"))
+        transfer = Transfer.objects.get(pk=response.data.get("id"))
         item = transfer.items.first()
         self.assertEqual(item.batch_id, "批次أ-测试-🏷️")
 
@@ -770,7 +770,7 @@ class TestStockManagementViewSet(BaseTenantTestCase):
             "post", self.url, user=self.partner_staff, data=payload
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        transfer = Transfer.all_objects.get(pk=response.data.get("id"))
+        transfer = Transfer.objects.get(pk=response.data.get("id"))
         self.assertEqual(transfer.items.count(), 3)
 
     def test_create_transfer_item_with_very_large_item_list(self):
@@ -1061,97 +1061,3 @@ class TestStockManagementViewSet(BaseTenantTestCase):
         self.assertIn('Item ID', content)
         self.assertIn('Item Name', content)
         self.assertIn('Item Quantity', content)
-
-    def test_create_transfer_item_has_pending_approval_status(self):
-        destination = PointOfInterestFactory(
-            partner_organizations=[self.partner], name="Pending Approval POI"
-        )
-        material = MaterialFactory()
-        payload = {
-            "partner_organization": self.partner.pk,
-            "location": destination.pk,
-            "items": [
-                {
-                    "material": material.pk,
-                    "quantity": 10,
-                    "uom": "CAR",
-                    "item_name": "BatchPending",
-                }
-            ],
-        }
-        response = self.forced_auth_req(
-            "post", self.url, user=self.partner_staff, data=payload
-        )
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        transfer_id = response.data.get("id")
-        transfer = Transfer.all_objects.get(pk=transfer_id)
-        self.assertEqual(transfer.approval_status, Transfer.ApprovalStatus.PENDING)
-
-    def test_list_transfer_items_only_approved_visible(self):
-        poi = PointOfInterestFactory(name="Approved Only POI")
-        transfer_approved = TransferFactory(
-            destination_point=poi,
-            status=Transfer.COMPLETED,
-            partner_organization=self.partner,
-            approval_status=Transfer.ApprovalStatus.APPROVED,
-        )
-        item_approved = ItemFactory(transfer=transfer_approved, hidden=False)
-
-        payload = {"poi_id": poi.id}
-        response = self.forced_auth_req(
-            "get", self.url, user=self.partner_staff, data=payload
-        )
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        results = response.data.get("results", [])
-        self.assertEqual(len(results), 1)
-        self.assertEqual(results[0]["id"], item_approved.id)
-
-    def test_pending_transfer_not_in_default_queryset(self):
-        destination = PointOfInterestFactory(
-            partner_organizations=[self.partner], name="Pending Transfer POI"
-        )
-        material = MaterialFactory()
-        payload = {
-            "partner_organization": self.partner.pk,
-            "location": destination.pk,
-            "items": [
-                {
-                    "material": material.pk,
-                    "quantity": 10,
-                    "uom": "CAR",
-                    "item_name": "PendingBatch",
-                }
-            ],
-        }
-        response = self.forced_auth_req(
-            "post", self.url, user=self.partner_staff, data=payload
-        )
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        transfer_id = response.data.get("id")
-
-        self.assertTrue(Transfer.all_objects.filter(pk=transfer_id).exists())
-        self.assertFalse(Transfer.objects.filter(pk=transfer_id).exists())
-
-    def test_rejected_transfer_not_in_default_queryset(self):
-        poi = PointOfInterestFactory(name="Rejected Transfer POI")
-        transfer_rejected = TransferFactory(
-            destination_point=poi,
-            status=Transfer.COMPLETED,
-            partner_organization=self.partner,
-            approval_status=Transfer.ApprovalStatus.REJECTED,
-        )
-
-        self.assertTrue(Transfer.all_objects.filter(pk=transfer_rejected.pk).exists())
-        self.assertFalse(Transfer.objects.filter(pk=transfer_rejected.pk).exists())
-
-    def test_approved_transfer_in_default_queryset(self):
-        poi = PointOfInterestFactory(name="Approved Transfer POI")
-        transfer_approved = TransferFactory(
-            destination_point=poi,
-            status=Transfer.COMPLETED,
-            partner_organization=self.partner,
-            approval_status=Transfer.ApprovalStatus.APPROVED,
-        )
-
-        self.assertTrue(Transfer.all_objects.filter(pk=transfer_approved.pk).exists())
-        self.assertTrue(Transfer.objects.filter(pk=transfer_approved.pk).exists())
