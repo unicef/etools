@@ -155,8 +155,8 @@ class AgreementRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet, FilterQ
         ('statuses', 'status__in'),
         ('cp_structures', 'country_programme__in'),
         ('partners', 'partner__in'),
-        ('start', 'start'),
-        ('end', 'end'),
+        ('start', 'start__gte'),
+        ('end', 'end__lte'),
         ('special_conditions_pca', 'special_conditions_pca'),
     )
 

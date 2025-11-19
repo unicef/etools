@@ -715,36 +715,40 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
 
         url = reverse('rss_admin:rss-admin-agreements-list')
 
-        # Test 1: Filter by start date exactly matching 2020-01-01
-        resp = self.forced_auth_req('get', url, user=self.user, data={'start': date_2020_01_01.isoformat()})
+        # Test 1: Filter by start date - agreements starting on or after 2021-01-01
+        resp = self.forced_auth_req('get', url, user=self.user, data={'start': date_2021_01_01.isoformat()})
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         ids = self._ids(resp)
-        # Should only include ag1 (exact match on start date)
-        self.assertIn(ag1.id, ids)
+        # Should include ag3 (starts 2021-01-01)
+        self.assertIn(ag3.id, ids)
+        # Should NOT include ag1 and ag2 (start before 2021-01-01)
+        self.assertNotIn(ag1.id, ids)
         self.assertNotIn(ag2.id, ids)
-        self.assertNotIn(ag3.id, ids)
 
-        # Test 2: Filter by end date exactly matching 2021-12-31
+        # Test 2: Filter by end date - agreements ending on or before 2021-12-31
         resp = self.forced_auth_req('get', url, user=self.user, data={'end': date_2021_12_31.isoformat()})
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         ids = self._ids(resp)
-        # Should include ag1 and ag3 (both end on 2021-12-31)
+        # Should include ag1 and ag3 (both end on or before 2021-12-31)
         self.assertIn(ag1.id, ids)
         self.assertIn(ag3.id, ids)
-        # Should NOT include ag2 (ends on 2022-12-31)
+        # Should NOT include ag2 (ends after 2021-12-31)
         self.assertNotIn(ag2.id, ids)
 
         # Test 3: Filter by both start and end dates
         resp = self.forced_auth_req('get', url, user=self.user, data={
-            'start': date_2021_01_01.isoformat(),
+            'start': date_2020_06_01.isoformat(),
             'end': date_2021_12_31.isoformat()
         })
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         ids = self._ids(resp)
-        # Should only include ag3 (starts 2021-01-01 AND ends 2021-12-31)
+        # Should include ag2 (starts >= 2020-06-01) and ag3 (starts >= 2020-06-01 AND ends <= 2021-12-31)
+        # ag1 starts before 2020-06-01, so excluded
+        # ag2 starts on 2020-06-01 but ends after 2021-12-31, so excluded by end filter
+        # ag3 starts on 2021-01-01 (>= 2020-06-01) and ends on 2021-12-31 (<= 2021-12-31), included
         self.assertIn(ag3.id, ids)
-        self.assertNotIn(ag1.id, ids)  # starts 2020-01-01 (doesn't match start filter)
-        self.assertNotIn(ag2.id, ids)  # starts 2020-06-01, ends 2022-12-31 (doesn't match either filter)
+        self.assertNotIn(ag1.id, ids)  # starts before 2020-06-01
+        self.assertNotIn(ag2.id, ids)  # ends after 2021-12-31
 
     def test_filter_agreements_by_number(self):
         url = reverse('rss_admin:rss-admin-agreements-list')
