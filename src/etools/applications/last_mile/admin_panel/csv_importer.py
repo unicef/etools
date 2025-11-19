@@ -108,7 +108,7 @@ class CsvImporter:
 
         return True, "Success"
 
-    def _process_stock_row(self, row_data, user):
+    def _process_stock_row(self, row_data):
         ip_number, material_number, quantity, uom, expiration_date, batch_id, p_code, *_ = row_data
 
         data = {
@@ -126,7 +126,7 @@ class CsvImporter:
         if not serializer.is_valid():
             return False, str(serializer.errors)
         try:
-            created, object_data = serializer.create(serializer.validated_data, user)
+            created, object_data = serializer.create(serializer.validated_data)
         except Exception as ex:
             return False, str(ex)
         if not created:
@@ -162,6 +162,6 @@ class CsvImporter:
         processor = partial(self._process_location_row, user=user)
         return self._perform_import(file, processor, "locations")
 
-    def import_stock(self, file, user):
-        processor = partial(self._process_stock_row, user=user)
+    def import_stock(self, file):
+        processor = partial(self._process_stock_row)
         return self._perform_import(file, processor, 'stock')

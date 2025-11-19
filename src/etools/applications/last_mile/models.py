@@ -291,18 +291,10 @@ class TransferQuerySet(models.QuerySet):
 
 
 class TransferManager(models.Manager.from_queryset(TransferQuerySet)):
-
-    def get_queryset(self):
-        return super().get_queryset().exclude(models.Q(approval_status=Transfer.ApprovalStatus.PENDING) | models.Q(approval_status=Transfer.ApprovalStatus.REJECTED))
+    pass
 
 
 class Transfer(TimeStampedModel, models.Model):
-
-    class ApprovalStatus(models.TextChoices):
-        PENDING = 'PENDING', _('Pending Approval')
-        APPROVED = 'APPROVED', _('Approved')
-        REJECTED = 'REJECTED', _('Rejected')
-
     PENDING = 'PENDING'
     COMPLETED = 'COMPLETED'
 
@@ -436,40 +428,7 @@ class Transfer(TimeStampedModel, models.Model):
         blank=True,
     )
 
-    approval_status = models.CharField(
-        _('Approval Status'),
-        max_length=10,
-        choices=ApprovalStatus.choices,
-        default=ApprovalStatus.APPROVED,
-        db_index=True,
-        help_text=_('The current approval status of this transfer. All the transfers are default approved.')
-    )
-    created_by = models.ForeignKey(
-        User,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='created_transfers'
-    )
-    created_on = models.DateTimeField(default=timezone.now)
-    approved_by = models.ForeignKey(
-        User,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='approved_transfers'
-    )
-    approved_on = models.DateTimeField(null=True, blank=True)
-    review_notes = models.TextField(
-        _('Review Notes'),
-        null=True,
-        blank=True,
-        help_text=_('Optional notes from the reviewer regarding approval or rejection.')
-    )
-
     objects = TransferManager()
-
-    all_objects = models.Manager()
 
     class Meta:
         ordering = ("-id",)
@@ -491,27 +450,6 @@ class Transfer(TimeStampedModel, models.Model):
         self.save(update_fields=['transfer_history'])
 
         return history
-
-    def approve(self, approver_user, notes=None):
-        if self.approval_status != self.ApprovalStatus.APPROVED:
-            self.approval_status = self.ApprovalStatus.APPROVED
-            self.approved_by = approver_user
-            self.approved_on = timezone.now()
-            if notes:
-                self.review_notes = notes
-
-    def reject(self, reviewer_user, notes=None):
-        if self.approval_status != self.ApprovalStatus.REJECTED:
-            self.approval_status = self.ApprovalStatus.REJECTED
-            self.approved_by = reviewer_user
-            self.approved_on = timezone.now()
-            if notes:
-                self.review_notes = notes
-
-    def reset_approval(self):
-        self.approval_status = self.ApprovalStatus.PENDING
-        self.approved_by = None
-        self.approved_on = None
 
 
 class TransferEvidence(TimeStampedModel, models.Model):
@@ -630,7 +568,7 @@ class ItemQuerySet(models.QuerySet):
         return self.annotate(
             material_number=models.F('material__number'),
             material_description=models.F('material__short_description'),
-        ).filter(transfer__approval_status=Transfer.ApprovalStatus.APPROVED).values()
+        ).values()
 
 
 class ItemManager(models.Manager):
@@ -867,7 +805,7 @@ class UserPointsOfInterest(TimeStampedModel, models.Model):
 
 class ItemAuditLogQuerySet(models.QuerySet):
     def prepare_for_lm_export(self) -> models.QuerySet:
-        return self.values("id", "created", "modified", "item_id", "action").annotate(
+        return self.values("id", "created", "modified", "item_id", "action", "changed_fields", "old_values", "new_values").annotate(
             transfer_id=models.F("transfer_info__transfer_id"),
         )
 

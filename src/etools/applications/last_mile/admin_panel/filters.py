@@ -80,8 +80,6 @@ class LocationsFilter(filters.FilterSet):
     is_active = filters.BooleanFilter(field_name="is_active")
     latitude = filters.CharFilter(method='filter_latitude', label='Latitude')
     longitude = filters.CharFilter(method='filter_longitude', label='Longitude')
-    has_pending = filters.BooleanFilter(method='filter_has_pending', label='Has Pending Items')
-    has_approved = filters.BooleanFilter(method='filter_has_approved', label='Has Approved Items')
 
     def filter_by_admin_level(self, queryset, name, value, admin_level):
         locations = Location.objects.filter(
@@ -126,32 +124,6 @@ class LocationsFilter(filters.FilterSet):
             longitude=Func(F('point'), function='ST_X', output_field=CharField())
         )
         return queryset.filter(longitude__startswith=value)
-
-    def filter_has_pending(self, queryset, name, value):
-        if value:
-            return queryset.filter(
-                destination_transfers__approval_status=Transfer.ApprovalStatus.PENDING,
-                destination_transfers__items__hidden=False
-            ).distinct()
-        else:
-            pois_with_pending = PointOfInterest.all_objects.filter(
-                destination_transfers__approval_status=Transfer.ApprovalStatus.PENDING,
-                destination_transfers__items__hidden=False
-            ).values_list('id', flat=True)
-            return queryset.exclude(id__in=pois_with_pending)
-
-    def filter_has_approved(self, queryset, name, value):
-        if value:
-            return queryset.filter(
-                destination_transfers__approval_status=Transfer.ApprovalStatus.APPROVED,
-                destination_transfers__items__hidden=False
-            ).distinct()
-        else:
-            pois_with_approved = PointOfInterest.all_objects.filter(
-                destination_transfers__approval_status=Transfer.ApprovalStatus.APPROVED,
-                destination_transfers__items__hidden=False
-            ).values_list('id', flat=True)
-            return queryset.exclude(id__in=pois_with_approved)
 
     class Meta:
         model = PointOfInterest
@@ -279,11 +251,6 @@ class ItemFilter(filters.FilterSet):
     quantity = filters.NumberFilter(field_name='quantity', lookup_expr='exact')
     uom = filters.CharFilter(field_name="uom", lookup_expr="icontains")
     batch_id = filters.CharFilter(field_name="batch_id", lookup_expr="icontains")
-    approval_status = filters.ChoiceFilter(
-        field_name='transfer__approval_status',
-        choices=Transfer.ApprovalStatus.choices,
-        label='Approval Status'
-    )
 
     class Meta:
         model = Item
@@ -294,8 +261,7 @@ class ItemFilter(filters.FilterSet):
             'material_number',
             'quantity',
             'uom',
-            'batch_id',
-            'approval_status'
+            'batch_id'
         ]
 
     def filter_mapped_description(self, queryset, name, value):
