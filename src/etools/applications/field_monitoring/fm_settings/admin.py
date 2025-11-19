@@ -75,7 +75,7 @@ class LocationSiteAdmin(XLSXImportMixin, admin.ModelAdmin):
     def process_row(self, sheet, row_idx):
         loc_site_dict = {}
         for col in sheet.iter_cols(0, sheet.max_column):
-            if col[0].value not in self.get_import_columns():
+            if col[0].value not in self.get_import_columns() or row_idx >= sheet.max_row:
                 continue
             loc_site_dict[self.import_field_mapping[col[0].value]] = str(col[row_idx].value).strip()
 
@@ -98,38 +98,46 @@ class LocationSiteAdmin(XLSXImportMixin, admin.ModelAdmin):
             yield
 
     @transaction.atomic
-    def import_data(self, workbook, batch_size=500):
+    def import_data(self, workbook, batch_size=1000):
         sheet = workbook.active
 
         batch_data = []
         counter = 1
         while counter < sheet.max_row:
             for row_idx in range(counter, batch_size + counter):
-                item = self.process_row(sheet, row_idx)
+                item = self.process_row(sheet, row_idx).__next__()
                 if item:
-                    batch_data.append(item.__next__())
+                    batch_data.append(item)
             # Process batch when size is reached
                 if len(batch_data) >= batch_size:
                     self._bulk_upsert_batch(batch_data)
                     batch_data = []
             counter += batch_size
 
+        # Process final batch
+        if batch_data:
+            self._bulk_upsert_batch(batch_data)
+
     @staticmethod
     def _bulk_upsert_batch(batch_data):
         if not batch_data:
             return
-
+        to_create, to_update = [], []
         p_codes = [item['p_code'] for item in batch_data]
 
         existing_records = LocationSite.objects.filter(p_code__in=p_codes)
         existing_p_codes = set(existing_records.values_list('p_code', flat=True))
 
-        to_create = [
-            LocationSite(**item) for item in batch_data if item['p_code'] not in existing_p_codes
-        ]
-        to_update = [
-            LocationSite(**item)for item in batch_data if item['p_code'] in existing_p_codes
-        ]
+        for item in batch_data:
+            site_obj = LocationSite(**item)
+            if item['p_code'] not in existing_p_codes:
+                to_create.append(site_obj)
+            else:
+                site_obj = existing_records.filter(p_code=item['p_code']).last()
+                for field in ['name', 'point']:
+                    site_obj.__setattr__(field, item[field])
+                to_update.append(site_obj)
+
         if to_create:
             LocationSite.objects.bulk_create(to_create)
             logging.info(f"Created {len(to_create)} new records")
@@ -148,7 +156,6 @@ class LocationSiteAdmin(XLSXImportMixin, admin.ModelAdmin):
         queryset.update(is_active=True)
         self.message_user(request, '{} Location Sites were activated.'.format(queryset.count()))
 
-    deactivate_sites.short_description = 'Deactivate selected Location Sites'
     activate_sites.short_description = 'Activate selected Location Sites'
 
 
