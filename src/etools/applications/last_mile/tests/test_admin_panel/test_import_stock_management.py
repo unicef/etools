@@ -72,7 +72,7 @@ class TestStockAdminViewSetImport(BaseTenantTestCase):
     @mock.patch('etools.applications.last_mile.models.PointOfInterest.objects.get_unicef_warehouses')
     def test_import_stock_successful(self, mock_get_unicef_warehouses):
         mock_get_unicef_warehouses.return_value = self.unicef_warehouse
-        self.assertEqual(Transfer.all_objects.count(), 0)
+        self.assertEqual(Transfer.objects.count(), 0)
         self.assertEqual(Item.objects.count(), 0)
 
         expiration_date = datetime(2099, 12, 31, 23, 59, 59)
@@ -94,15 +94,14 @@ class TestStockAdminViewSetImport(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, {"valid": True})
 
-        self.assertEqual(Transfer.all_objects.count(), 2)
+        self.assertEqual(Transfer.objects.count(), 2)
         self.assertEqual(Item.objects.count(), 2)
 
-        transfer1 = Transfer.all_objects.get(items__material=self.material1)
+        transfer1 = Transfer.objects.get(items__material=self.material1)
         self.assertEqual(transfer1.partner_organization, self.partner1)
         self.assertEqual(transfer1.destination_point, self.poi1)
         self.assertEqual(transfer1.origin_point, self.unicef_warehouse)
         self.assertEqual(transfer1.transfer_type, Transfer.DELIVERY)
-        self.assertEqual(transfer1.approval_status, "PENDING")
 
         item1 = transfer1.items.first()
         self.assertEqual(item1.material, self.material1)
@@ -156,7 +155,7 @@ class TestStockAdminViewSetImport(BaseTenantTestCase):
         self.assertTrue(response['Content-Disposition'].startswith('attachment; filename="checked_partial_fail_stock_import.xlsx"'))
         self.assertEqual(response['Content-Type'], 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
-        self.assertEqual(Transfer.all_objects.count(), initial_transfer_count + 1)
+        self.assertEqual(Transfer.objects.count(), initial_transfer_count + 1)
         self.assertTrue(Item.objects.filter(batch_id="BATCH001").exists())
 
         returned_file_content = io.BytesIO(response.content)
@@ -279,8 +278,7 @@ class TestStockAdminViewSetImport(BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, {"valid": True})
-        self.assertEqual(Transfer.all_objects.count(), 1)
-        self.assertEqual(Transfer.all_objects.first().approval_status, "PENDING")
+        self.assertEqual(Transfer.objects.count(), 1)
         self.assertTrue(Item.objects.filter(batch_id="BATCH_EXTRA").exists())
 
     @mock.patch('etools.applications.last_mile.models.PointOfInterest.objects.get_unicef_warehouses')
@@ -298,175 +296,7 @@ class TestStockAdminViewSetImport(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, {"valid": True})
 
-        self.assertEqual(Transfer.all_objects.count(), 1)
-        transfer = Transfer.all_objects.first()
+        self.assertEqual(Transfer.objects.count(), 1)
+        transfer = Transfer.objects.first()
         self.assertEqual(transfer.partner_organization, self.partner1)
         self.assertEqual(transfer.destination_point, self.poi2_for_partner2)
-        self.assertEqual(transfer.approval_status, "PENDING")
-
-    @mock.patch('etools.applications.last_mile.models.PointOfInterest.objects.get_unicef_warehouses')
-    def test_imported_transfer_has_pending_approval_status(self, mock_get_unicef_warehouses):
-        mock_get_unicef_warehouses.return_value = self.unicef_warehouse
-        expiration_date = datetime(2099, 12, 31)
-        data_rows = [
-            ["VN_STOCK_001", "MAT001", 100, "BOX", expiration_date, "BATCH_APPROVAL", "PCODE_STOCK_001"],
-        ]
-        xlsx_file = self._create_xlsx_file(data_rows)
-        xlsx_file.name = "approval_status_test.xlsx"
-
-        response = self.forced_auth_req('post', self.import_url, user=self.admin_user, data={'file': xlsx_file}, request_format='multipart')
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data, {"valid": True})
-
-        transfer = Transfer.all_objects.first()
-        self.assertIsNotNone(transfer)
-        self.assertEqual(transfer.approval_status, Transfer.ApprovalStatus.PENDING)
-
-    @mock.patch('etools.applications.last_mile.models.PointOfInterest.objects.get_unicef_warehouses')
-    def test_imported_pending_transfer_not_in_default_queryset(self, mock_get_unicef_warehouses):
-        mock_get_unicef_warehouses.return_value = self.unicef_warehouse
-        expiration_date = datetime(2099, 12, 31)
-        data_rows = [
-            ["VN_STOCK_001", "MAT001", 50, "EA", expiration_date, "BATCH_PENDING", "PCODE_STOCK_001"],
-        ]
-        xlsx_file = self._create_xlsx_file(data_rows)
-        xlsx_file.name = "pending_queryset_test.xlsx"
-
-        response = self.forced_auth_req('post', self.import_url, user=self.admin_user, data={'file': xlsx_file}, request_format='multipart')
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data, {"valid": True})
-
-        self.assertEqual(Transfer.all_objects.count(), 1)
-        self.assertEqual(Transfer.objects.count(), 0)
-
-    @mock.patch('etools.applications.last_mile.models.PointOfInterest.objects.get_unicef_warehouses')
-    def test_multiple_imports_all_have_pending_status(self, mock_get_unicef_warehouses):
-        mock_get_unicef_warehouses.return_value = self.unicef_warehouse
-        expiration_date = datetime(2099, 12, 31)
-        data_rows = [
-            ["VN_STOCK_001", "MAT001", 10, "BOX", expiration_date, "BATCH_A", "PCODE_STOCK_001"],
-            ["VN_STOCK_001", "MAT002", 20, "EA", expiration_date, "BATCH_B", "PCODE_STOCK_001"],
-            ["VN_STOCK_002", "MAT001", 30, "BOX", expiration_date, "BATCH_C", "PCODE_STOCK_002"],
-        ]
-        xlsx_file = self._create_xlsx_file(data_rows)
-        xlsx_file.name = "multiple_pending_imports.xlsx"
-
-        response = self.forced_auth_req('post', self.import_url, user=self.admin_user, data={'file': xlsx_file}, request_format='multipart')
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data, {"valid": True})
-
-        self.assertEqual(Transfer.all_objects.count(), 3)
-        self.assertEqual(Transfer.objects.count(), 0)
-
-        for transfer in Transfer.all_objects.all():
-            self.assertEqual(transfer.approval_status, Transfer.ApprovalStatus.PENDING)
-
-    @mock.patch('etools.applications.last_mile.models.PointOfInterest.objects.get_unicef_warehouses')
-    def test_imported_items_linked_to_pending_transfers(self, mock_get_unicef_warehouses):
-        mock_get_unicef_warehouses.return_value = self.unicef_warehouse
-        expiration_date = datetime(2099, 12, 31)
-        data_rows = [
-            ["VN_STOCK_001", "MAT001", 100, "BOX", expiration_date, "BATCH_LINK", "PCODE_STOCK_001"],
-        ]
-        xlsx_file = self._create_xlsx_file(data_rows)
-        xlsx_file.name = "item_link_test.xlsx"
-
-        response = self.forced_auth_req('post', self.import_url, user=self.admin_user, data={'file': xlsx_file}, request_format='multipart')
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        transfer = Transfer.all_objects.first()
-        self.assertIsNotNone(transfer)
-        self.assertEqual(transfer.approval_status, Transfer.ApprovalStatus.PENDING)
-
-        item = Item.objects.first()
-        self.assertIsNotNone(item)
-        self.assertEqual(item.transfer, transfer)
-        self.assertEqual(item.batch_id, "BATCH_LINK")
-        self.assertEqual(item.quantity, 100)
-
-    @mock.patch('etools.applications.last_mile.models.PointOfInterest.objects.get_unicef_warehouses')
-    def test_import_with_validation_error_no_pending_transfer_created(self, mock_get_unicef_warehouses):
-        mock_get_unicef_warehouses.return_value = self.unicef_warehouse
-        expiration_date = datetime(2099, 12, 31)
-        data_rows = [
-            ["VN_STOCK_999", "MAT001", 10, "BOX", expiration_date, "BATCH_ERR1", "PCODE_STOCK_001"],  # Invalid vendor
-            ["VN_STOCK_001", "MAT999", 20, "BOX", expiration_date, "BATCH_ERR2", "PCODE_STOCK_001"],  # Invalid material
-        ]
-        xlsx_file = self._create_xlsx_file(data_rows)
-        xlsx_file.name = "validation_error_test.xlsx"
-
-        initial_count = Transfer.all_objects.count()
-
-        response = self.forced_auth_req('post', self.import_url, user=self.admin_user, data={'file': xlsx_file}, request_format='multipart')
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        self.assertEqual(Transfer.all_objects.count(), initial_count)
-
-    @mock.patch('etools.applications.last_mile.models.PointOfInterest.objects.get_unicef_warehouses')
-    def test_import_creates_transfer_with_correct_transfer_type(self, mock_get_unicef_warehouses):
-        mock_get_unicef_warehouses.return_value = self.unicef_warehouse
-        expiration_date = datetime(2099, 12, 31)
-        data_rows = [
-            ["VN_STOCK_001", "MAT001", 100, "BOX", expiration_date, "BATCH_TYPE", "PCODE_STOCK_001"],
-        ]
-        xlsx_file = self._create_xlsx_file(data_rows)
-        xlsx_file.name = "transfer_type_test.xlsx"
-
-        response = self.forced_auth_req('post', self.import_url, user=self.admin_user, data={'file': xlsx_file}, request_format='multipart')
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        transfer = Transfer.all_objects.first()
-        self.assertIsNotNone(transfer)
-        self.assertEqual(transfer.transfer_type, Transfer.DELIVERY)
-        self.assertEqual(transfer.approval_status, Transfer.ApprovalStatus.PENDING)
-
-    @mock.patch('etools.applications.last_mile.models.PointOfInterest.objects.get_unicef_warehouses')
-    def test_import_sets_origin_and_destination_correctly(self, mock_get_unicef_warehouses):
-        mock_get_unicef_warehouses.return_value = self.unicef_warehouse
-        expiration_date = datetime(2099, 12, 31)
-        data_rows = [
-            ["VN_STOCK_001", "MAT001", 50, "EA", expiration_date, "BATCH_ORIGIN", "PCODE_STOCK_001"],
-        ]
-        xlsx_file = self._create_xlsx_file(data_rows)
-        xlsx_file.name = "origin_destination_test.xlsx"
-
-        response = self.forced_auth_req('post', self.import_url, user=self.admin_user, data={'file': xlsx_file}, request_format='multipart')
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        transfer = Transfer.all_objects.first()
-        self.assertIsNotNone(transfer)
-        self.assertEqual(transfer.origin_point, self.unicef_warehouse)
-        self.assertEqual(transfer.destination_point, self.poi1)
-        self.assertEqual(transfer.approval_status, Transfer.ApprovalStatus.PENDING)
-
-    @mock.patch('etools.applications.last_mile.models.PointOfInterest.objects.get_unicef_warehouses')
-    def test_import_partial_success_only_valid_rows_create_pending_transfers(self, mock_get_unicef_warehouses):
-        mock_get_unicef_warehouses.return_value = self.unicef_warehouse
-        expiration_date = datetime(2099, 12, 31)
-        data_rows = [
-            ["VN_STOCK_001", "MAT001", 100, "BOX", expiration_date, "BATCH_VALID1", "PCODE_STOCK_001"],  # Valid
-            ["VN_STOCK_999", "MAT001", 10, "BOX", expiration_date, "BATCH_INVALID", "PCODE_STOCK_001"],  # Invalid vendor
-            ["VN_STOCK_001", "MAT002", 50, "EA", expiration_date, "BATCH_VALID2", "PCODE_STOCK_001"],   # Valid
-        ]
-        xlsx_file = self._create_xlsx_file(data_rows)
-        xlsx_file.name = "partial_success_approval_test.xlsx"
-
-        response = self.forced_auth_req('post', self.import_url, user=self.admin_user, data={'file': xlsx_file}, request_format='multipart')
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        self.assertEqual(Transfer.all_objects.count(), 2)
-        for transfer in Transfer.all_objects.all():
-            self.assertEqual(transfer.approval_status, Transfer.ApprovalStatus.PENDING)
-
-        self.assertEqual(Item.objects.count(), 2)
-        self.assertTrue(Item.objects.filter(batch_id="BATCH_VALID1").exists())
-        self.assertTrue(Item.objects.filter(batch_id="BATCH_VALID2").exists())
-        self.assertFalse(Item.objects.filter(batch_id="BATCH_INVALID").exists())

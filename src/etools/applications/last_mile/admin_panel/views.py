@@ -1,7 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.db import connection
-from django.db.models import Count, F, IntegerField, OuterRef, Prefetch, Q, Subquery, Value
-from django.db.models.functions import Coalesce
+from django.db.models import F, Prefetch, Q
 from django.http import HttpResponse, StreamingHttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -44,7 +43,6 @@ from etools.applications.last_mile.admin_panel.serializers import (
     AlertTypeSerializer,
     AuthUserPermissionsDetailSerializer,
     BulkReviewPointOfInterestSerializer,
-    BulkReviewTransferSerializer,
     BulkUpdateLastMileProfileStatusSerializer,
     ImportFileSerializer,
     ItemStockManagementUpdateSerializer,
@@ -304,24 +302,6 @@ class LocationsViewSet(mixins.ListModelMixin,
                 'parent__parent__parent__geom',
                 'parent__parent__parent__parent__geom'
             )
-
-        pending_subquery = models.Item.objects.filter(
-            transfer__destination_point_id=OuterRef('id'),
-            transfer__approval_status=models.Transfer.ApprovalStatus.PENDING,
-            hidden=False
-        ).values('transfer__destination_point_id').annotate(count=Count('id')).values('count')
-
-        approved_subquery = models.Item.objects.filter(
-            transfer__destination_point_id=OuterRef('id'),
-            transfer__approval_status=models.Transfer.ApprovalStatus.APPROVED,
-            hidden=False
-        ).values('transfer__destination_point_id').annotate(count=Count('id')).values('count')
-
-        self.queryset = self.queryset.annotate(
-            pending_approval=Coalesce(Subquery(pending_subquery, output_field=IntegerField()), Value(0)),
-            approved=Coalesce(Subquery(approved_subquery, output_field=IntegerField()), Value(0))
-        )
-
         return self.queryset
 
     filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
@@ -337,8 +317,6 @@ class LocationsViewSet(mixins.ListModelMixin,
         'region',
         'district',
         'name',
-        'pending_approval',
-        'approved',
     ]
     search_fields = ('name',
                      'p_code',
@@ -639,8 +617,6 @@ class TransferItemViewSet(mixins.ListModelMixin, GenericViewSet, mixins.CreateMo
             return TransferItemCreateSerializer
         if self.action == "_import_file":
             return ImportFileSerializer
-        if self.action == 'bulk_review':
-            return BulkReviewTransferSerializer
         return ItemTransferAdminSerializer
 
     @action(detail=False, methods=['post'], url_path='import/xlsx')
@@ -648,19 +624,12 @@ class TransferItemViewSet(mixins.ListModelMixin, GenericViewSet, mixins.CreateMo
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         excel_file = serializer.validated_data['file']
-        valid, out = CsvImporter().import_stock(excel_file, request.user)
+        valid, out = CsvImporter().import_stock(excel_file)
         if not valid:
             resp = HttpResponse(out.getvalue(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
             resp['Content-Disposition'] = f'attachment; filename="checked_{excel_file.name}"'
             return resp
         return Response({"valid": valid}, status=status.HTTP_200_OK)
-
-    @action(detail=False, methods=['put'], url_path='bulk-review')
-    def bulk_review(self, request, *args, **kwargs):
-        serializer_data = BulkReviewTransferSerializer(data=request.data)
-        serializer_data.is_valid(raise_exception=True)
-        serializer_data.update(serializer_data.validated_data, request.user)
-        return Response(serializer_data.data, status=status.HTTP_200_OK)
 
 
 class ItemStockManagementView(mixins.UpdateModelMixin, mixins.RetrieveModelMixin, mixins.DestroyModelMixin, GenericViewSet):
