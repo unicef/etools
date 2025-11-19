@@ -67,43 +67,89 @@ class LocationSiteAdmin(XLSXImportMixin, admin.ModelAdmin):
         'Latitude': 'latitude',
         'Longitude': 'longitude',
     }
+    actions = ('deactivate_sites', 'activate_sites')
 
     def has_import_permission(self, request):
         return request.user.is_superuser
 
+    def process_row(self, sheet, row_idx):
+        loc_site_dict = {}
+        for col in sheet.iter_cols(0, sheet.max_column):
+            if col[0].value not in self.get_import_columns():
+                continue
+            loc_site_dict[self.import_field_mapping[col[0].value]] = str(col[row_idx].value).strip()
+
+        if 'name' not in loc_site_dict or not loc_site_dict['name'] or loc_site_dict['name'] == 'None':
+            yield
+        # extract name and p_code from xls name e.g.LOC: Bir El Hait_LBN34041:
+        _split = loc_site_dict['name'].split('_')
+        loc_site_dict['name'] = _split[0].split(':')[1].strip()
+
+        loc_site_dict['p_code'] = get_pcode(_split, loc_site_dict['name'])
+
+        long = loc_site_dict.pop('longitude')
+        lat = loc_site_dict.pop('latitude')
+        try:
+            loc_site_dict['point'] = Point(float(long), float(lat))
+            loc_site_dict['parent'] = LocationSite.get_parent_location(loc_site_dict['point'])
+            yield loc_site_dict
+        except (TypeError, ValueError):
+            logging.error(f'row# {row_idx}  Long/Lat Format error: {long}, {lat}. skipping row.. ')
+            yield
+
     @transaction.atomic
-    def import_data(self, workbook):
+    def import_data(self, workbook, batch_size=500):
         sheet = workbook.active
-        for row in range(1, sheet.max_row):
-            loc_site_dict = {}
-            for col in sheet.iter_cols(0, sheet.max_column):
-                if col[0].value not in self.get_import_columns():
-                    continue
-                loc_site_dict[self.import_field_mapping[col[0].value]] = str(col[row].value).strip()
 
-            if 'name' not in loc_site_dict or not loc_site_dict['name'] or loc_site_dict['name'] == 'None':
-                continue
-            # extract name and p_code from xls name e.g.LOC: Bir El Hait_LBN34041:
-            _split = loc_site_dict['name'].split('_')
-            loc_site_dict['name'] = _split[0].split(':')[1].strip()
+        batch_data = []
+        counter = 1
+        while counter < sheet.max_row:
+            for row_idx in range(counter, batch_size + counter):
+                item = self.process_row(sheet, row_idx)
+                if item:
+                    batch_data.append(item.__next__())
+            # Process batch when size is reached
+                if len(batch_data) >= batch_size:
+                    self._bulk_upsert_batch(batch_data)
+                    batch_data = []
+            counter += batch_size
 
-            loc_site_dict['p_code'] = get_pcode(_split, loc_site_dict['name'])
+    @staticmethod
+    def _bulk_upsert_batch(batch_data):
+        if not batch_data:
+            return
 
-            long = loc_site_dict.pop('longitude')
-            lat = loc_site_dict.pop('latitude')
-            try:
-                loc_site_dict['point'] = Point(float(long), float(lat))
-            except (TypeError, ValueError):
-                logging.error(f'row# {row}  Long/Lat Format error: {long}, {lat}. skipping row.. ')
-                continue
+        p_codes = [item['p_code'] for item in batch_data]
 
-            LocationSite.objects.update_or_create(
-                p_code=loc_site_dict['p_code'],
-                defaults={
-                    'point': loc_site_dict['point'],
-                    'name': loc_site_dict['name']
-                }
-            )
+        existing_records = LocationSite.objects.filter(p_code__in=p_codes)
+        existing_p_codes = set(existing_records.values_list('p_code', flat=True))
+
+        to_create = [
+            LocationSite(**item) for item in batch_data if item['p_code'] not in existing_p_codes
+        ]
+        to_update = [
+            LocationSite(**item)for item in batch_data if item['p_code'] in existing_p_codes
+        ]
+        if to_create:
+            LocationSite.objects.bulk_create(to_create)
+            logging.info(f"Created {len(to_create)} new records")
+
+        if to_update:
+            LocationSite.objects.bulk_update(to_update, fields=['name', 'point'])
+            logging.info(f"Updated {len(to_update)} existing records")
+
+    def deactivate_sites(self, request, queryset):
+        queryset.update(is_active=False)
+        self.message_user(request, '{} Location Sites were deactivated.'.format(queryset.count()))
+
+    deactivate_sites.short_description = 'Deactivate selected Location Sites'
+
+    def activate_sites(self, request, queryset):
+        queryset.update(is_active=True)
+        self.message_user(request, '{} Location Sites were activated.'.format(queryset.count()))
+
+    deactivate_sites.short_description = 'Deactivate selected Location Sites'
+    activate_sites.short_description = 'Activate selected Location Sites'
 
 
 @admin.register(LogIssue)
