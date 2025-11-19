@@ -91,11 +91,23 @@ class PartnerOrganizationRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSe
         ('risk_ratings', 'rating__in'),
         ('rating', 'rating'),
         ('hidden', 'hidden'),
+        ('sea_risk_rating', 'sea_risk_rating_name__in'),
+        ('psea_assessment_date_before', 'psea_assessment_date__date__lte'),
+        ('psea_assessment_date_after', 'psea_assessment_date__date__gte'),
         ('organization__vendor_number', 'organization__vendor_number__icontains'),
     )
 
     def get_queryset(self):
         qs = super().get_queryset()
+
+        # Exclude hidden partners by default unless show_hidden is explicitly set to true
+        # OR if 'hidden' filter is explicitly passed
+        show_hidden = self.request.query_params.get('show_hidden', '').lower() in ['true', '1', 'yes']
+        hidden_filter_passed = 'hidden' in self.request.query_params
+
+        if not show_hidden and not hidden_filter_passed:
+            qs = qs.filter(hidden=False)
+
         return self.apply_filter_queries(qs, self.filter_params)
 
     @action(detail=False, methods=['post'], url_path='map-to-workspace')
@@ -130,8 +142,6 @@ class AgreementRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet, FilterQ
     pagination_class = AppendablePageNumberPagination
     search_fields = (
         'agreement_number',
-        'partner__organization__name',
-        'partner__organization__vendor_number',
     )
     ordering_fields = (
         'agreement_number', 'partner__organization__name', 'status', 'start', 'end'
@@ -143,7 +153,7 @@ class AgreementRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet, FilterQ
         ('types', 'agreement_type__in'),
         ('status', 'status__in'),
         ('statuses', 'status__in'),
-        ('cpStructures', 'country_programme__in'),
+        ('cp_structures', 'country_programme__in'),
         ('partners', 'partner__in'),
         ('start', 'start'),
         ('end', 'end'),

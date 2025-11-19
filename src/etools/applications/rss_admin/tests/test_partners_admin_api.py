@@ -105,6 +105,104 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         self.assertIn(visible_partner.id, ids_visible)
         self.assertNotIn(hidden_partner.id, ids_visible)
 
+    def test_partners_hidden_by_default(self):
+        """Test that hidden partners are excluded by default (without show_hidden parameter)."""
+        hidden_partner = PartnerFactory(hidden=True)
+        visible_partner = PartnerFactory(hidden=False)
+        url = reverse('rss_admin:rss-admin-partners-list')
+
+        # Request without show_hidden parameter - should only return visible partners
+        resp = self.forced_auth_req('get', url, user=self.user)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        ids = [row['id'] for row in resp.data]
+        self.assertIn(visible_partner.id, ids)
+        self.assertNotIn(hidden_partner.id, ids)
+
+    def test_partners_show_hidden_true(self):
+        """Test that show_hidden=true includes hidden partners."""
+        hidden_partner = PartnerFactory(hidden=True)
+        visible_partner = PartnerFactory(hidden=False)
+        url = reverse('rss_admin:rss-admin-partners-list')
+
+        # Request with show_hidden=true - should return both hidden and visible partners
+        resp = self.forced_auth_req('get', url, user=self.user, data={'show_hidden': 'true'})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        ids = [row['id'] for row in resp.data]
+        self.assertIn(visible_partner.id, ids)
+        self.assertIn(hidden_partner.id, ids)
+
+    def test_filter_partners_by_sea_risk_rating(self):
+        """Test filtering partners by PSEA risk rating."""
+        from etools.applications.partners.models import PartnerOrganization
+
+        # Create partners with different PSEA risk ratings
+        partner_high_risk = PartnerFactory(sea_risk_rating_name=PartnerOrganization.PSEA_RATING_HIGH)
+        partner_medium_risk = PartnerFactory(sea_risk_rating_name=PartnerOrganization.PSEA_RATING_MEDIUM)
+        partner_low_risk = PartnerFactory(sea_risk_rating_name=PartnerOrganization.PSEA_RATING_LOW)
+
+        url = reverse('rss_admin:rss-admin-partners-list')
+
+        # Filter by high risk
+        resp = self.forced_auth_req('get', url, user=self.user, data={
+            'sea_risk_rating': PartnerOrganization.PSEA_RATING_HIGH
+        })
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        ids = [row['id'] for row in resp.data]
+        self.assertIn(partner_high_risk.id, ids)
+        self.assertNotIn(partner_medium_risk.id, ids)
+        self.assertNotIn(partner_low_risk.id, ids)
+
+    def test_filter_partners_by_psea_assessment_date_before(self):
+        """Test filtering partners by PSEA assessment date before a specific date."""
+        from datetime import timedelta
+
+        today = timezone.now()
+        past_date = today - timedelta(days=60)
+        recent_date = today - timedelta(days=30)
+
+        # Create partners with different assessment dates
+        partner_old = PartnerFactory(psea_assessment_date=past_date)
+        partner_recent = PartnerFactory(psea_assessment_date=recent_date)
+        partner_today = PartnerFactory(psea_assessment_date=today)
+
+        url = reverse('rss_admin:rss-admin-partners-list')
+
+        # Filter for assessments before recent_date (should include partner_old only)
+        resp = self.forced_auth_req('get', url, user=self.user, data={
+            'psea_assessment_date_before': recent_date.date().isoformat()
+        })
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        ids = [row['id'] for row in resp.data]
+        self.assertIn(partner_old.id, ids)
+        # partner_recent should be included (lte includes the date itself)
+        self.assertIn(partner_recent.id, ids)
+        self.assertNotIn(partner_today.id, ids)
+
+    def test_filter_partners_by_psea_assessment_date_after(self):
+        """Test filtering partners by PSEA assessment date after a specific date."""
+        from datetime import timedelta
+
+        today = timezone.now()
+        past_date = today - timedelta(days=60)
+        recent_date = today - timedelta(days=30)
+
+        # Create partners with different assessment dates
+        partner_old = PartnerFactory(psea_assessment_date=past_date)
+        partner_recent = PartnerFactory(psea_assessment_date=recent_date)
+        partner_today = PartnerFactory(psea_assessment_date=today)
+
+        url = reverse('rss_admin:rss-admin-partners-list')
+
+        # Filter for assessments after recent_date (should include partner_recent and partner_today)
+        resp = self.forced_auth_req('get', url, user=self.user, data={
+            'psea_assessment_date_after': recent_date.date().isoformat()
+        })
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        ids = [row['id'] for row in resp.data]
+        self.assertNotIn(partner_old.id, ids)
+        self.assertIn(partner_recent.id, ids)
+        self.assertIn(partner_today.id, ids)
+
     def test_filter_partners_types_cso_and_ordering(self):
         p_type1 = PartnerFactory(organization__name='Zebra Institute')
         p_type1.organization.organization_type = 'Government'
@@ -564,7 +662,7 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
 
         url = reverse('rss_admin:rss-admin-agreements-list')
         resp = self.forced_auth_req('get', url, user=self.user, data={
-            'cpStructures': cp.id,
+            'cp_structures': cp.id,
             'status': 'draft',
             'special_conditions_pca': True,
             'start': ag1.start.isoformat(),
@@ -574,6 +672,79 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         ids = self._ids(resp)
         self.assertIn(ag1.id, ids)
+
+    def test_filter_agreements_by_start_and_end_dates(self):
+        """Test filtering agreements by start and end dates."""
+        from datetime import timedelta
+
+        today = timezone.now().date()
+        date_2020_01_01 = today - timedelta(days=365)
+        date_2020_06_01 = today - timedelta(days=180)
+        date_2021_01_01 = today - timedelta(days=90)
+        date_2021_12_31 = today + timedelta(days=90)
+        date_2022_12_31 = today + timedelta(days=365)
+
+        # Create agreements with different date ranges
+        # Use MOU type to avoid auto-date setting from country_programme (PCA does this)
+        # Agreement 1: starts 2020-01-01, ends 2021-12-31
+        ag1 = AgreementFactory(
+            partner=self.partner,
+            status='signed',
+            agreement_type='MOU',
+            start=date_2020_01_01,
+            end=date_2021_12_31
+        )
+
+        # Agreement 2: starts 2020-06-01, ends 2022-12-31
+        ag2 = AgreementFactory(
+            partner=self.partner,
+            status='signed',
+            agreement_type='MOU',
+            start=date_2020_06_01,
+            end=date_2022_12_31
+        )
+
+        # Agreement 3: starts 2021-01-01, ends 2021-12-31
+        ag3 = AgreementFactory(
+            partner=self.partner,
+            status='signed',
+            agreement_type='MOU',
+            start=date_2021_01_01,
+            end=date_2021_12_31
+        )
+
+        url = reverse('rss_admin:rss-admin-agreements-list')
+
+        # Test 1: Filter by start date exactly matching 2020-01-01
+        resp = self.forced_auth_req('get', url, user=self.user, data={'start': date_2020_01_01.isoformat()})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        ids = self._ids(resp)
+        # Should only include ag1 (exact match on start date)
+        self.assertIn(ag1.id, ids)
+        self.assertNotIn(ag2.id, ids)
+        self.assertNotIn(ag3.id, ids)
+
+        # Test 2: Filter by end date exactly matching 2021-12-31
+        resp = self.forced_auth_req('get', url, user=self.user, data={'end': date_2021_12_31.isoformat()})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        ids = self._ids(resp)
+        # Should include ag1 and ag3 (both end on 2021-12-31)
+        self.assertIn(ag1.id, ids)
+        self.assertIn(ag3.id, ids)
+        # Should NOT include ag2 (ends on 2022-12-31)
+        self.assertNotIn(ag2.id, ids)
+
+        # Test 3: Filter by both start and end dates
+        resp = self.forced_auth_req('get', url, user=self.user, data={
+            'start': date_2021_01_01.isoformat(),
+            'end': date_2021_12_31.isoformat()
+        })
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        ids = self._ids(resp)
+        # Should only include ag3 (starts 2021-01-01 AND ends 2021-12-31)
+        self.assertIn(ag3.id, ids)
+        self.assertNotIn(ag1.id, ids)  # starts 2020-01-01 (doesn't match start filter)
+        self.assertNotIn(ag2.id, ids)  # starts 2020-06-01, ends 2022-12-31 (doesn't match either filter)
 
     def test_filter_agreements_by_number(self):
         url = reverse('rss_admin:rss-admin-agreements-list')
