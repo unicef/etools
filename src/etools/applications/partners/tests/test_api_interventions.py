@@ -466,7 +466,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
         self.assertEqual(response['frs_details']['total_actual_amt'],
                          float(sum([self.fr_1.actual_amt_local, self.fr_2.actual_amt_local])))
         self.assertEqual(response['frs_details']['total_outstanding_amt'],
-                         float(sum([self.fr_1.outstanding_amt, self.fr_2.outstanding_amt])))
+                         float(sum([self.fr_1.outstanding_amt_local, self.fr_2.outstanding_amt_local])))
         self.assertEqual(response['frs_details']['total_frs_amt'],
                          float(sum([self.fr_1.total_amt_local, self.fr_2.total_amt_local])))
         self.assertEqual(response['frs_details']['total_intervention_amt'],
@@ -493,7 +493,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
         self.assertEqual(response['frs_details']['total_actual_amt'],
                          float(sum([self.fr_1.actual_amt_local, self.fr_2.actual_amt_local])))
         self.assertEqual(response['frs_details']['total_outstanding_amt'],
-                         float(sum([self.fr_1.outstanding_amt, self.fr_2.outstanding_amt])))
+                         float(sum([self.fr_1.outstanding_amt_local, self.fr_2.outstanding_amt_local])))
         self.assertEqual(response['frs_details']['total_frs_amt'],
                          float(sum([self.fr_1.total_amt_local, self.fr_2.total_amt_local])))
         self.assertEqual(response['frs_details']['total_intervention_amt'],

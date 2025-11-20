@@ -166,7 +166,7 @@ class TestStockAdminViewSetImport(BaseTenantTestCase):
         self.assertEqual(sheet.cell(row=3, column=errors_col_idx).value, "Success")
         self.assertIn("Partner Organization not found", sheet.cell(row=4, column=errors_col_idx).value)
         self.assertIn("Material not found", sheet.cell(row=5, column=errors_col_idx).value)
-        self.assertIn("The quantity must be greater than 0", sheet.cell(row=6, column=errors_col_idx).value)
+        self.assertIn("invalid_quantity", sheet.cell(row=6, column=errors_col_idx).value)
         self.assertIn("Point of interest not found", sheet.cell(row=7, column=errors_col_idx).value)
         self.assertIn("Datetime has wrong format. Use one of these formats instead: YYYY-MM-DDThh:mm", sheet.cell(row=8, column=errors_col_idx).value)
 
@@ -250,7 +250,7 @@ class TestStockAdminViewSetImport(BaseTenantTestCase):
         returned_file = io.BytesIO(response.content)
         workbook = openpyxl.load_workbook(returned_file)
         sheet = workbook.active
-        self.assertIn("The quantity must be greater than 0", sheet.cell(row=3, column=sheet.max_column).value)
+        self.assertIn("invalid_quantity", sheet.cell(row=3, column=sheet.max_column).value)
 
     def test_import_empty_file_succeeds_with_no_changes(self):
         initial_transfer_count = Transfer.objects.count()
