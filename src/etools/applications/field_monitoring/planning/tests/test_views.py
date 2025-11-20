@@ -36,6 +36,7 @@ from etools.applications.field_monitoring.planning.actions.duplicate_monitoring_
 from etools.applications.field_monitoring.planning.models import MonitoringActivity, YearPlan
 from etools.applications.field_monitoring.planning.serializers import MonitoringActivityLightSerializer
 from etools.applications.field_monitoring.planning.tests.factories import (
+    FacilityTypeFactory,
     MonitoringActivityActionPointFactory,
     MonitoringActivityFactory,
     QuestionTemplateFactory,
@@ -1762,6 +1763,28 @@ class VisitGoalsTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenantTest
         valid_goals.reverse()
 
         self._test_list(self.unicef_user, valid_goals)
+
+
+class FacilityTypesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenantTestCase):
+    base_view = 'field_monitoring_planning:facility-types'
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_list_returns_related_sections(self):
+        section_a = SectionFactory(name='Section A')
+        section_b = SectionFactory(name='Section B')
+        facility_a = FacilityTypeFactory(name='Facility A', related_sections=[section_a])
+        facility_b = FacilityTypeFactory(name='Facility B', related_sections=[section_b])
+
+        response = self._test_list(self.unicef_user, [facility_a, facility_b])
+
+        payload = response.data['results'] if isinstance(response.data, dict) and 'results' in response.data else response.data
+        facility_payload = next(item for item in payload if item['id'] == facility_a.id)
+
+        self.assertEqual(facility_payload['name'], facility_a.name)
+        self.assertEqual(
+            [section_a.id],
+            sorted(section['id'] for section in facility_payload['related_sections'])
+        )
 
 
 class MonitoringActivityActionPointLocationValidationTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
