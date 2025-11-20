@@ -2,7 +2,6 @@ import logging
 
 from django.contrib import admin
 from django.contrib.gis.geos import Point
-from django.db import transaction
 from django.utils.translation import gettext_lazy as _
 
 from ordered_model.admin import OrderedModelAdmin
@@ -16,6 +15,7 @@ from etools.applications.field_monitoring.fm_settings.models import (
     Question,
 )
 from etools.applications.utils.helpers import generate_hash
+from etools.config.celery import app
 from etools.libraries.djangolib.admin import XLSXImportMixin
 
 
@@ -54,6 +54,40 @@ def get_pcode(_split, name):
     return p_code
 
 
+@app.task
+def bulk_upsert_location_sites(batch_data):
+    if not batch_data:
+        return
+    to_create, to_update = [], []
+    p_codes = [item['p_code'] for item in batch_data]
+
+    existing_records = LocationSite.objects.filter(p_code__in=p_codes)
+    existing_p_codes = set(existing_records.values_list('p_code', flat=True))
+
+    for item in batch_data:
+        long = item.pop('longitude')
+        lat = item.pop('latitude')
+        item['point'] = Point(float(long), float(lat))
+
+        site_obj = LocationSite(**item)
+        if item['p_code'] not in existing_p_codes:
+            site_obj.parent = LocationSite.get_parent_location(item['point'])
+            to_create.append(site_obj)
+        else:
+            site_obj = existing_records.filter(p_code=item['p_code']).last()
+            for field in ['name', 'point']:
+                site_obj.__setattr__(field, item[field])
+            to_update.append(site_obj)
+
+    if to_create:
+        LocationSite.objects.bulk_create(to_create)
+        logging.info(f"Created {len(to_create)} new records")
+
+    if to_update:
+        LocationSite.objects.bulk_update(to_update, fields=['name', 'point'])
+        logging.info(f"Updated {len(to_update)} existing records")
+
+
 @admin.register(LocationSite)
 class LocationSiteAdmin(XLSXImportMixin, admin.ModelAdmin):
     list_display = ('parent', 'name', 'p_code', 'is_active',)
@@ -74,30 +108,34 @@ class LocationSiteAdmin(XLSXImportMixin, admin.ModelAdmin):
 
     def process_row(self, sheet, row_idx):
         loc_site_dict = {}
-        for col in sheet.iter_cols(0, sheet.max_column):
-            if col[0].value not in self.get_import_columns() or row_idx >= sheet.max_row:
-                continue
-            loc_site_dict[self.import_field_mapping[col[0].value]] = str(col[row_idx].value).strip()
-
-        if 'name' not in loc_site_dict or not loc_site_dict['name'] or loc_site_dict['name'] == 'None':
-            yield
-        # extract name and p_code from xls name e.g.LOC: Bir El Hait_LBN34041:
-        _split = loc_site_dict['name'].split('_')
-        loc_site_dict['name'] = _split[0].split(':')[1].strip()
-
-        loc_site_dict['p_code'] = get_pcode(_split, loc_site_dict['name'])
-
-        long = loc_site_dict.pop('longitude')
-        lat = loc_site_dict.pop('latitude')
         try:
-            loc_site_dict['point'] = Point(float(long), float(lat))
-            loc_site_dict['parent'] = LocationSite.get_parent_location(loc_site_dict['point'])
-            yield loc_site_dict
-        except (TypeError, ValueError):
-            logging.error(f'row# {row_idx}  Long/Lat Format error: {long}, {lat}. skipping row.. ')
-            yield
+            for col in sheet.iter_cols(0, sheet.max_column):
+                if col[0].value not in self.get_import_columns() or row_idx >= sheet.max_row:
+                    continue
+                loc_site_dict[self.import_field_mapping[col[0].value]] = str(col[row_idx].value).strip()
 
-    @transaction.atomic
+            if 'name' not in loc_site_dict or not loc_site_dict['name'] or loc_site_dict['name'] == 'None':
+                yield
+            # extract name and p_code from xls name e.g.LOC: Bir El Hait_LBN34041:
+            _split = loc_site_dict['name'].split('_')
+            loc_site_dict['name'] = _split[0].split(':')[1].strip()
+
+            loc_site_dict['p_code'] = get_pcode(_split, loc_site_dict['name'])
+            if loc_site_dict['p_code'].__len__() > 32:
+                raise Exception(f'PCODE {loc_site_dict["p_code"]} exceeds 32 characters')
+
+            try:
+                Point(float(loc_site_dict.get('longitude')), float(loc_site_dict.get('latitude')))
+            except (TypeError, ValueError):
+                raise Exception(f'Location Site name {loc_site_dict["name"]} has Long/Lat Format error. skipping.. ')
+
+            yield loc_site_dict
+
+        except Exception as e:
+            message = f'Row# {row_idx} has formatting error: {e.__str__()}. Aborting import.'
+            logging.error(message)
+            raise Exception(message)
+
     def import_data(self, workbook, batch_size=1000):
         sheet = workbook.active
 
@@ -110,41 +148,13 @@ class LocationSiteAdmin(XLSXImportMixin, admin.ModelAdmin):
                     batch_data.append(item)
             # Process batch when size is reached
                 if len(batch_data) >= batch_size:
-                    self._bulk_upsert_batch(batch_data)
+                    bulk_upsert_location_sites.delay(batch_data)
                     batch_data = []
             counter += batch_size
 
         # Process final batch
         if batch_data:
-            self._bulk_upsert_batch(batch_data)
-
-    @staticmethod
-    def _bulk_upsert_batch(batch_data):
-        if not batch_data:
-            return
-        to_create, to_update = [], []
-        p_codes = [item['p_code'] for item in batch_data]
-
-        existing_records = LocationSite.objects.filter(p_code__in=p_codes)
-        existing_p_codes = set(existing_records.values_list('p_code', flat=True))
-
-        for item in batch_data:
-            site_obj = LocationSite(**item)
-            if item['p_code'] not in existing_p_codes:
-                to_create.append(site_obj)
-            else:
-                site_obj = existing_records.filter(p_code=item['p_code']).last()
-                for field in ['name', 'point']:
-                    site_obj.__setattr__(field, item[field])
-                to_update.append(site_obj)
-
-        if to_create:
-            LocationSite.objects.bulk_create(to_create)
-            logging.info(f"Created {len(to_create)} new records")
-
-        if to_update:
-            LocationSite.objects.bulk_update(to_update, fields=['name', 'point'])
-            logging.info(f"Updated {len(to_update)} existing records")
+            bulk_upsert_location_sites.delay(batch_data)
 
     def deactivate_sites(self, request, queryset):
         queryset.update(is_active=False)
