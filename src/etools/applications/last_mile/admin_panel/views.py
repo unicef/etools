@@ -614,7 +614,8 @@ class TransferItemViewSet(mixins.ListModelMixin, GenericViewSet, mixins.CreateMo
         'material__original_uom',
         'quantity',
         'expiry_date',
-        'last_updated'
+        'last_updated',
+        'transfer__approval_status',
     )
 
     def get_queryset(self):
