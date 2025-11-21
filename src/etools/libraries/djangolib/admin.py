@@ -1,5 +1,3 @@
-import traceback
-
 from django import forms
 from django.conf import settings
 from django.contrib import admin
@@ -176,10 +174,10 @@ class XLSXImportMixin:
                 wb = openpyxl.load_workbook(import_file)
                 self.import_data(wb)
                 wb.close()
-            except Exception:
+            except Exception as e:
                 form._errors.update(
                     {'Import': _(" Error encountered while trying to import data from: %s " % import_file.name),
-                     '|': traceback.format_exc()
+                     '\n! ': e.__str__()
                      })
                 return TemplateResponse(request, [self.import_template_name], self.get_context(request, form))
 
