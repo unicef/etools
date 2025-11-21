@@ -73,7 +73,7 @@ class FRsView(APIView):
             nf = list(not_found)
             nf.sort()
             message = ('The Fund Reservation {} could not be found in eTools or in VISION. '
-                       'Please make sure it has been created first in the VISION platform.{}')
+                       'Please make sure it has been created in the VISION platform first.{}')
             with transaction.atomic():
                 for delegated_fr in nf:
                     # try to get this FR from vision
