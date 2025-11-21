@@ -805,7 +805,7 @@ class UserPointsOfInterest(TimeStampedModel, models.Model):
 
 class ItemAuditLogQuerySet(models.QuerySet):
     def prepare_for_lm_export(self) -> models.QuerySet:
-        return self.values("id", "created", "modified", "item_id", "action", "changed_fields", "old_values", "new_values").annotate(
+        return self.values("id", "created", "modified", "item_id", "action").annotate(
             transfer_id=models.F("transfer_info__transfer_id"),
         )
 

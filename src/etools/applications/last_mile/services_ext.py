@@ -115,6 +115,7 @@ class DataExportService:
         "item": models.Item.objects,
         "item_history": models.ItemTransferHistory.objects,
         "poi_type": models.PointOfInterestType.objects,
+        "item_audit_log": models.ItemAuditLog.objects
     }
 
     def get_export_queryset(self, model_type: str, last_modified: str = None) -> QuerySet:
