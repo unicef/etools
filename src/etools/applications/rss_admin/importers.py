@@ -69,5 +69,3 @@ class LocationSiteImporter:
                 updated += 1
 
         return True, {'created': created, 'updated': updated, 'skipped': skipped}
-
-

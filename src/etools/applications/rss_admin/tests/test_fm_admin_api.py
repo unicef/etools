@@ -19,7 +19,6 @@ from etools.applications.field_monitoring.fm_settings.tests.factories import Que
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
 from etools.applications.field_monitoring.planning.tests.factories import MonitoringActivityFactory
 from etools.applications.partners.tests.factories import PartnerFactory
-from etools.applications.reports.tests.factories import OfficeFactory, SectionFactory
 from etools.applications.users.tests.factories import UserFactory
 
 
@@ -132,21 +131,21 @@ class TestRssAdminFieldMonitoringApi(BaseTenantTestCase):
         # Create 30 activities
         for i in range(30):
             MonitoringActivityFactory()
-        
+
         url = reverse('rss_admin:rss-admin-monitoring-activities-list')
         resp = self.forced_auth_req('get', url, user=self.user, data={'page': 1, 'page_size': 10})
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        
+
         # Check pagination structure
         self.assertIn('results', resp.data)
         self.assertIn('count', resp.data)
         self.assertIn('next', resp.data)
         self.assertIn('previous', resp.data)
-        
+
         # Check page size
         self.assertEqual(len(resp.data['results']), 10)
         self.assertEqual(resp.data['count'], 30)
-        
+
         # Test second page
         resp = self.forced_auth_req('get', url, user=self.user, data={'page': 2, 'page_size': 10})
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
@@ -156,9 +155,9 @@ class TestRssAdminFieldMonitoringApi(BaseTenantTestCase):
         """Test filtering by status"""
         activity_draft = MonitoringActivityFactory(status=MonitoringActivity.STATUS_DRAFT)
         activity_completed = MonitoringActivityFactory(status=MonitoringActivity.STATUS_COMPLETED)
-        
+
         url = reverse('rss_admin:rss-admin-monitoring-activities-list')
-        
+
         # Filter by draft status
         resp = self.forced_auth_req('get', url, user=self.user, data={'status': MonitoringActivity.STATUS_DRAFT})
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
@@ -166,7 +165,7 @@ class TestRssAdminFieldMonitoringApi(BaseTenantTestCase):
         result_ids = [r['id'] for r in results]
         self.assertIn(activity_draft.id, result_ids)
         self.assertNotIn(activity_completed.id, result_ids)
-        
+
         # Filter by completed status
         resp = self.forced_auth_req('get', url, user=self.user, data={'status': MonitoringActivity.STATUS_COMPLETED})
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
@@ -179,11 +178,11 @@ class TestRssAdminFieldMonitoringApi(BaseTenantTestCase):
         """Test filtering by monitor_type"""
         activity_staff = MonitoringActivityFactory(monitor_type=MonitoringActivity.MONITOR_TYPE_CHOICES.staff)
         activity_tpm = MonitoringActivityFactory(monitor_type=MonitoringActivity.MONITOR_TYPE_CHOICES.tpm)
-        
+
         url = reverse('rss_admin:rss-admin-monitoring-activities-list')
-        
+
         # Filter by staff monitor type
-        resp = self.forced_auth_req('get', url, user=self.user, 
+        resp = self.forced_auth_req('get', url, user=self.user,
                                     data={'monitor_type': MonitoringActivity.MONITOR_TYPE_CHOICES.staff})
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         results = resp.data.get('results', resp.data)
@@ -197,9 +196,9 @@ class TestRssAdminFieldMonitoringApi(BaseTenantTestCase):
         location2 = LocationFactory()
         activity1 = MonitoringActivityFactory(location=location1)
         activity2 = MonitoringActivityFactory(location=location2)
-        
+
         url = reverse('rss_admin:rss-admin-monitoring-activities-list')
-        
+
         # Filter by location1
         resp = self.forced_auth_req('get', url, user=self.user, data={'location': location1.id})
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
@@ -211,17 +210,17 @@ class TestRssAdminFieldMonitoringApi(BaseTenantTestCase):
     def test_monitoring_activities_list_filter_by_date_range(self):
         """Test filtering by date range"""
         from datetime import date, timedelta
-        
+
         today = date.today()
         past_date = today - timedelta(days=30)
         future_date = today + timedelta(days=30)
-        
+
         activity_past = MonitoringActivityFactory(start_date=past_date, end_date=past_date)
         activity_current = MonitoringActivityFactory(start_date=today, end_date=today)
         activity_future = MonitoringActivityFactory(start_date=future_date, end_date=future_date)
-        
+
         url = reverse('rss_admin:rss-admin-monitoring-activities-list')
-        
+
         # Filter by start_date >= today
         resp = self.forced_auth_req('get', url, user=self.user, data={'start_date__gte': str(today)})
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
@@ -230,7 +229,7 @@ class TestRssAdminFieldMonitoringApi(BaseTenantTestCase):
         self.assertNotIn(activity_past.id, result_ids)
         self.assertIn(activity_current.id, result_ids)
         self.assertIn(activity_future.id, result_ids)
-        
+
         # Filter by end_date <= today
         resp = self.forced_auth_req('get', url, user=self.user, data={'end_date__lte': str(today)})
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
@@ -243,14 +242,14 @@ class TestRssAdminFieldMonitoringApi(BaseTenantTestCase):
     def test_monitoring_activities_list_ordering(self):
         """Test ordering functionality"""
         from datetime import date, timedelta
-        
+
         today = date.today()
         activity1 = MonitoringActivityFactory(start_date=today - timedelta(days=2))
         activity2 = MonitoringActivityFactory(start_date=today - timedelta(days=1))
         activity3 = MonitoringActivityFactory(start_date=today)
-        
+
         url = reverse('rss_admin:rss-admin-monitoring-activities-list')
-        
+
         # Order by start_date ascending
         resp = self.forced_auth_req('get', url, user=self.user, data={'ordering': 'start_date'})
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
@@ -258,7 +257,7 @@ class TestRssAdminFieldMonitoringApi(BaseTenantTestCase):
         self.assertEqual(results[0]['id'], activity1.id)
         self.assertEqual(results[1]['id'], activity2.id)
         self.assertEqual(results[2]['id'], activity3.id)
-        
+
         # Order by start_date descending
         resp = self.forced_auth_req('get', url, user=self.user, data={'ordering': '-start_date'})
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
@@ -270,10 +269,10 @@ class TestRssAdminFieldMonitoringApi(BaseTenantTestCase):
     def test_monitoring_activities_list_search(self):
         """Test search functionality"""
         activity1 = MonitoringActivityFactory()
-        activity2 = MonitoringActivityFactory()
-        
+        MonitoringActivityFactory()
+
         url = reverse('rss_admin:rss-admin-monitoring-activities-list')
-        
+
         # Search by number (partial match)
         search_term = activity1.number[:6]
         resp = self.forced_auth_req('get', url, user=self.user, data={'search': search_term})
@@ -284,18 +283,18 @@ class TestRssAdminFieldMonitoringApi(BaseTenantTestCase):
 
     def test_monitoring_activities_list_structure(self):
         """Test that list response has the correct structure matching field-monitoring endpoint"""
-        activity = MonitoringActivityFactory(
+        MonitoringActivityFactory(
             partners=[self.partner],
             status=MonitoringActivity.STATUS_DRAFT
         )
-        
+
         url = reverse('rss_admin:rss-admin-monitoring-activities-list')
         resp = self.forced_auth_req('get', url, user=self.user)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        
+
         results = resp.data.get('results', resp.data)
         self.assertTrue(len(results) > 0)
-        
+
         # Check structure of first result (should use MonitoringActivityLightSerializer)
         first = results[0]
         expected_fields = [
@@ -314,11 +313,11 @@ class TestRssAdminFieldMonitoringApi(BaseTenantTestCase):
             partners=[self.partner],
             status=MonitoringActivity.STATUS_DRAFT
         )
-        
+
         url = reverse('rss_admin:rss-admin-monitoring-activities-detail', kwargs={'pk': activity.pk})
         resp = self.forced_auth_req('get', url, user=self.user)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        
+
         # Check structure (should use MonitoringActivitySerializer)
         expected_fields = [
             'id', 'reference_number', 'permissions', 'transitions',
@@ -331,10 +330,10 @@ class TestRssAdminFieldMonitoringApi(BaseTenantTestCase):
         """Test that non-staff users get 403"""
         # Create a non-staff user
         non_staff_user = UserFactory(is_staff=False)
-        
-        activity = MonitoringActivityFactory()
+
+        MonitoringActivityFactory()
         url = reverse('rss_admin:rss-admin-monitoring-activities-list')
-        
+
         # Non-staff user should get 403
         resp = self.forced_auth_req('get', url, user=non_staff_user)
         self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)
@@ -343,19 +342,19 @@ class TestRssAdminFieldMonitoringApi(BaseTenantTestCase):
         """Test that non-staff users get 403 on detail"""
         # Create a non-staff user
         non_staff_user = UserFactory(is_staff=False)
-        
+
         activity = MonitoringActivityFactory()
         url = reverse('rss_admin:rss-admin-monitoring-activities-detail', kwargs={'pk': activity.pk})
-        
+
         # Non-staff user should get 403
         resp = self.forced_auth_req('get', url, user=non_staff_user)
         self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_monitoring_activities_list_permissions_staff(self):
         """Test that staff users can access list"""
-        activity = MonitoringActivityFactory()
+        MonitoringActivityFactory()
         url = reverse('rss_admin:rss-admin-monitoring-activities-list')
-        
+
         # Staff user should get 200
         resp = self.forced_auth_req('get', url, user=self.user)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
@@ -364,7 +363,7 @@ class TestRssAdminFieldMonitoringApi(BaseTenantTestCase):
         """Test that staff users can access detail"""
         activity = MonitoringActivityFactory()
         url = reverse('rss_admin:rss-admin-monitoring-activities-detail', kwargs={'pk': activity.pk})
-        
+
         # Staff user should get 200
         resp = self.forced_auth_req('get', url, user=self.user)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
@@ -372,11 +371,11 @@ class TestRssAdminFieldMonitoringApi(BaseTenantTestCase):
     def test_monitoring_activities_combined_filters(self):
         """Test combining multiple filters"""
         from datetime import date, timedelta
-        
+
         today = date.today()
         location = LocationFactory()
         partner = PartnerFactory()
-        
+
         # Create activities with different combinations
         activity_match = MonitoringActivityFactory(
             status=MonitoringActivity.STATUS_DRAFT,
@@ -388,9 +387,9 @@ class TestRssAdminFieldMonitoringApi(BaseTenantTestCase):
             status=MonitoringActivity.STATUS_COMPLETED,
             start_date=today - timedelta(days=10)
         )
-        
+
         url = reverse('rss_admin:rss-admin-monitoring-activities-list')
-        
+
         # Combine filters
         resp = self.forced_auth_req('get', url, user=self.user, data={
             'status': MonitoringActivity.STATUS_DRAFT,
