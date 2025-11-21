@@ -23,6 +23,7 @@ from etools.applications.field_monitoring.planning.models import (
     FacilityType,
     MonitoringActivity,
     MonitoringActivityActionPoint,
+    MonitoringActivityFacilityType,
     QuestionTemplate,
     TPMConcern,
     VisitGoal,
@@ -103,9 +104,37 @@ class VisitGoalSerializer(serializers.ModelSerializer):
 
 
 class FacilityTypeSerializer(serializers.ModelSerializer):
+    related_sections = SectionSerializer(many=True, read_only=True)
+
     class Meta:
         model = FacilityType
-        fields = ['id', 'name']
+        fields = ['id', 'name', 'related_sections']
+
+
+class MonitoringActivityFacilityTypeSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the intermediate model that stores facility types with durations.
+    """
+    facility_type_id_input = serializers.PrimaryKeyRelatedField(
+        queryset=FacilityType.objects.all(),
+        source='facility_type',
+        write_only=True,
+        required=True
+    )
+
+    class Meta:
+        model = MonitoringActivityFacilityType
+        fields = ['facility_type_durations']
+        extra_kwargs = {
+            'facility_type_id_input': {'write_only': True}
+        }
+
+    def to_representation(self, instance):
+        """Return simplified representation: just id and durations."""
+        return {
+            'id': instance.facility_type.id,
+            'durations': instance.facility_type_durations
+        }
 
 
 class TPMPartnerSerializer(serializers.ModelSerializer):
@@ -144,6 +173,8 @@ class MonitoringActivityLightSerializer(serializers.ModelSerializer):
         required=False
     )
 
+    facility_types = serializers.SerializerMethodField()
+
     class Meta:
         model = MonitoringActivity
         fields = (
@@ -162,6 +193,13 @@ class MonitoringActivityLightSerializer(serializers.ModelSerializer):
             'objective',
             'facility_types'
         )
+
+    def get_facility_types(self, obj):
+        """
+        Return facility types with their durations from the through model.
+        """
+        facility_type_relations = obj.facility_type_relations.select_related('facility_type').all()
+        return MonitoringActivityFacilityTypeSerializer(facility_type_relations, many=True).data
 
     def get_overlapping_entities(self, obj):
         request = self.context.get("request")
@@ -275,11 +313,63 @@ class MonitoringActivitySerializer(UserContextSerializerMixin, MonitoringActivit
         if set(instance.team_members.values_list('id', flat=True)) - set(v.id for v in value):
             raise serializers.ValidationError({'team_members': _('Team members removal not allowed')})
 
+    def _update_facility_types(self, instance, facility_types_data):
+        """
+        Update facility types with durations using the through model.
+        Accepts simplified format: [{"id": 9, "durations": ["Temporary", "Permanent"]}]
+        """
+        if facility_types_data is None:
+            return
+
+        # Delete existing facility type relations
+        MonitoringActivityFacilityType.objects.filter(monitoring_activity=instance).delete()
+
+        # Create new facility type relations with durations
+        for facility_type_data in facility_types_data:
+            # Accept simplified format: {"id": 9, "durations": [...]}
+            facility_type_id = facility_type_data.get('id')
+            if not facility_type_id:
+                continue
+
+            facility_type = FacilityType.objects.get(id=facility_type_id)
+            facility_type_durations = facility_type_data.get('durations', [])
+
+            MonitoringActivityFacilityType.objects.create(
+                monitoring_activity=instance,
+                facility_type=facility_type,
+                facility_type_durations=facility_type_durations
+            )
+
+    def to_internal_value(self, data):
+        """Handle facility_types in the write format: [{"id": 9, "durations": [...]}]"""
+        # Make a copy to avoid mutating the original
+        data_copy = data.copy()
+        facility_types = data_copy.pop('facility_types', None)
+        validated_data = super().to_internal_value(data_copy)
+        if facility_types is not None:
+            validated_data['facility_types'] = facility_types
+        return validated_data
+
+    def create(self, validated_data):
+        facility_types_data = validated_data.pop('facility_types', None)
+        instance = super().create(validated_data)
+
+        if facility_types_data:
+            self._update_facility_types(instance, facility_types_data)
+
+        return instance
+
     def update(self, instance, validated_data):
         team_members = validated_data.get('team_members', None)
         self._validate_team_members(instance, team_members)
 
-        return super().update(instance, validated_data)
+        facility_types_data = validated_data.pop('facility_types', None)
+        instance = super().update(instance, validated_data)
+
+        if facility_types_data is not None:
+            self._update_facility_types(instance, facility_types_data)
+
+        return instance
 
 
 class ActivityAttachmentSerializer(BaseAttachmentSerializer):
