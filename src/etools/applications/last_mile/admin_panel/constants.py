@@ -8,7 +8,7 @@ ALERT_TYPES = {
     "LMSM Dispensing Notification": "Dispensing Notification"
 }
 
-TRANSFER_MANUAL_CREATION_NAME = "MT @"
+TRANSFER_MANUAL_CREATION_NAME = "INITIAL STOCK UPLOAD @"
 
 USER_ADMIN_PANEL = 'users-admin-panel'
 UPDATE_USER_PROFILE_ADMIN_PANEL = 'update-user-profile-admin-panel'
@@ -37,6 +37,7 @@ TRANSFER_HISTORY_ADMIN_PANEL = 'transfer-history'
 TRANSFER_EVIDENCE_ADMIN_PANEL = 'transfer-evidence'
 TRANSFER_REVERSE_ADMIN_PANEL = 'transfer-items-reverse'
 TRANSFER_HISTORY_ADMIN_PANEL_PERMISSION = 'lmsm_admin_panel_manage_transfer_history'
+TRANSFER_BULK_REVIEW_ADMIN_PANEL = 'transfer-bulk-review'
 
 APPROVE_USERS_ADMIN_PANEL_PERMISSION = 'lmsm_admin_panel_approve_users'
 APPROVE_LOCATIONS_ADMIN_PANEL_PERMISSION = 'lmsm_admin_panel_approve_locations'

@@ -78,12 +78,19 @@ class IsLMSMAdmin(IsAuthenticated):
         LOCATIONS_BULK_REVIEW_ADMIN_PANEL: [
             APPROVE_LOCATIONS_ADMIN_PANEL_PERMISSION
         ],
+        # Can approve transfers
+        TRANSFER_BULK_REVIEW_ADMIN_PANEL: [
+            APPROVE_STOCK_MANAGEMENT_ADMIN_PANEL_PERMISSION
+        ],
     }
 
     def special_case_permissions(self, view):
         if view.basename == LOCATIONS_ADMIN_PANEL:
             if view.name == 'Bulk review':
                 return LOCATIONS_BULK_REVIEW_ADMIN_PANEL
+        if view.basename == STOCK_MANAGEMENT_ADMIN_PANEL:
+            if view.name == 'Bulk review':
+                return TRANSFER_BULK_REVIEW_ADMIN_PANEL
         return view.basename
 
     def get_required_permissions(self, view_basename: str) -> set:
