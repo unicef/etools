@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-08-07 14:14+0000\n"
+"POT-Creation-Date: 2025-11-21 12:41+0000\n"
 "Language: ru\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -1549,6 +1549,10 @@ msgid "This period overlaps an existing reporting period."
 msgstr "Этот период перекрывается с существующим отчетным периодом."
 
 #, python-format
+msgid "Invalid currency: %(value)s."
+msgstr ""
+
+#, python-format
 msgid "One or more of the FRs selected is related to a different PD/SPD, %s"
 msgstr "Один или несколько выбранных FR связаны с другим PD/SPD, %s"
 
@@ -1923,9 +1927,9 @@ msgid ""
 "Programme Document will not change status until the related PCA is in Signed "
 "status"
 msgstr ""
-"СоП, связанное с этим ПД, находится в статусе \"Черновик\", \"Приостановлен"
-"\" или \"Прекращен\". Данный программный документ невозможно изменить пока "
-"связанное с ним Соглашение не перейдет в статус \"Подписан\"."
+"СоП, связанное с этим ПД, находится в статусе \"Черновик\", "
+"\"Приостановлен\" или \"Прекращен\". Данный программный документ невозможно "
+"изменить пока связанное с ним Соглашение не перейдет в статус \"Подписан\"."
 
 msgid "PD cannot transition to signed if the Partner is Blocked in Vision"
 msgstr "ПД не может перейти к подписанию, если партнер заблокирован в VISION"

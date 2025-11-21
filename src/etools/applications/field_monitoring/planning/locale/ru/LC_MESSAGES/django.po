@@ -2,13 +2,13 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
+# 
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-18 16:39+0200\n"
+"POT-Creation-Date: 2025-11-18 12:28+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -167,6 +167,39 @@ msgstr "Шаблон вопроса"
 msgid "Question Templates"
 msgstr "Шаблоны вопросов"
 
+msgid "Related Sections"
+msgstr "Связанные разделы"
+
+msgid "Temporary"
+msgstr "Временный"
+
+msgid "Semi-permanent"
+msgstr "Полупостоянный"
+
+msgid "Permanent"
+msgstr "Постоянный"
+
+msgid "Monitoring Activity"
+msgstr "Мониторинг активности"
+
+msgid "Facility Type"
+msgstr "Тип объекта"
+
+msgid "Facility Type Durations"
+msgstr "Длительность типа объекта"
+
+msgid "One or more duration options for this facility type"
+msgstr "Одна или несколько опций длительности для этого типа объекта"
+
+msgid "Monitoring Activity Facility Type"
+msgstr "Тип объекта мониторинга"
+
+msgid "Monitoring Activity Facility Types"
+msgstr "Типы объектов мониторинга"
+
+msgid "No duration"
+msgstr "Без длительности"
+
 msgid "Staff"
 msgstr "Персонал"
 
@@ -234,10 +267,7 @@ msgid "Objective"
 msgstr "Цель"
 
 msgid "Facility types"
-msgstr ""
-
-msgid "Monitoring Activity"
-msgstr "Мониторинг активности"
+msgstr "Типы объектов"
 
 msgid "Monitoring Activities"
 msgstr "Мониторинг деятельности"
@@ -322,6 +352,9 @@ msgstr "Шаблоны"
 
 msgid "Attachments"
 msgstr "Вложения"
+
+#~ msgid "Related Section"
+#~ msgstr "Связанный раздел"
 
 #~ msgid "Type Of Facility"
 #~ msgstr "Тип объекта"
