@@ -837,7 +837,7 @@ class InterventionCreateUpdateSerializer(
 
     def validate_currency(self, value):
         if value not in CURRENCY_LIST:
-            raise ValidationError(_(f"Invalid currency: {value}."))
+            raise ValidationError(_("Invalid currency: %(value)s.") % {'value': value})
         return value
 
     def validate_frs(self, frs):
