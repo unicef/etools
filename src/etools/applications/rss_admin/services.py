@@ -2,8 +2,7 @@ from typing import Iterable, Tuple
 
 from etools_validator.exceptions import TransitionError
 
-from etools.applications.partners.models import Intervention, PartnerOrganization
-from etools.applications.organizations.models import Organization
+from etools.applications.audit.models import Engagement
 from etools.applications.audit.serializers.engagement import (
     AuditSerializer,
     MicroAssessmentSerializer,
@@ -11,12 +10,13 @@ from etools.applications.audit.serializers.engagement import (
     SpotCheckSerializer,
     StaffSpotCheckSerializer,
 )
-from etools.applications.audit.models import Engagement
 from etools.applications.field_monitoring.data_collection.models import (
     ActivityOverallFinding,
     ActivityQuestion,
     ActivityQuestionOverallFinding,
 )
+from etools.applications.organizations.models import Organization
+from etools.applications.partners.models import Intervention, PartnerOrganization
 from etools.applications.partners.validation.interventions import transition_to_closed
 
 
