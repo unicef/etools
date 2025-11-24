@@ -8,6 +8,7 @@ from etools.applications.action_points.categories.models import Category
 from etools.applications.action_points.tests.factories import ActionPointCategoryFactory, ActionPointFactory
 from etools.applications.field_monitoring.fm_settings.tests.factories import QuestionFactory
 from etools.applications.field_monitoring.planning.models import (
+    FacilityType,
     MonitoringActivity,
     MonitoringActivityGroup,
     QuestionTemplate,
@@ -209,3 +210,16 @@ class MonitoringActivityGroupFactory(factory.django.DjangoModelFactory):
         if extracted:
             for activity in extracted:
                 self.monitoring_activities.add(activity)
+
+
+class FacilityTypeFactory(factory.django.DjangoModelFactory):
+    name = factory.Sequence(lambda n: f'Facility Type {n}')
+
+    class Meta:
+        model = FacilityType
+
+    @factory.post_generation
+    def related_sections(self, create, extracted, **kwargs):
+        if not create or not extracted:
+            return
+        self.related_sections.add(*extracted)

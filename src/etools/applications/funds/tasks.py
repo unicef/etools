@@ -14,6 +14,9 @@ def sync_single_delegated_fr(business_area_code, fr_number):
         business_area_code=business_area_code
     )
     handler.sync()
+    if handler.log.total_processed == 0:
+        return False
+    return True
 
 
 @app.task(name="sync_business_area_delegated_frs")
