@@ -134,12 +134,12 @@ class TestFRHeaderView(BaseTenantTestCase):
         self.assertEqual(result['error'], 'Values are required')
 
     @VCR.use_cassette(str(Path(__file__).parent / 'vcr_cassettes/fund_reservation_invalid.yml'))
-    def test_get_fail_with_non_existant_values(self):
+    def test_get_fail_with_non_existent_values(self):
         data = {'values': ','.join(['another bad value', 'im a bad value', ])}
         status_code, result = self.run_request(data)
         self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(result['error'], 'One or more of the FRs are used by another Document or '
-                                          'could not be found in eTools.')
+        self.assertEqual(result['error'], 'The Fund Reservation another bad value could not be found in eTools or in VISION. '
+                                          'Please make sure it has been created in the VISION platform first.')
     # TODO: add tests to cover, frs correctly brought in from unittest.mock. with correct vendor numbers, FR missing from vision,
     # FR with multiple line items, and FR with only one line item.
 
@@ -171,8 +171,8 @@ class TestFRHeaderView(BaseTenantTestCase):
                 'gpd': self.gdd.id}
         status_code, result = self.run_request(data)
         self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('The Fund Reservation {} could not be found. It can take up to 24 hours to appear'
-                      ' in eTools, please try again later.'.format(9999), result['error'])
+        self.assertIn('The Fund Reservation {} could not be found in eTools or in VISION. '
+                      'Please make sure it has been created in the VISION platform first.'.format(9999), result['error'])
 
     def test_get_fail_with_intervention_id(self):
         other_intervention = InterventionFactory()
@@ -197,9 +197,7 @@ class TestFRHeaderView(BaseTenantTestCase):
         data = {'values': ','.join([self.fr_2.fr_number, self.fr_1.fr_number])}
         status_code, result = self.run_request(data)
         self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(result['error'],
-                         'One or more of the FRs are used by another Document '
-                         'or could not be found in eTools.')
+        self.assertEqual(result['error'], 'One or more of the FRs requested are used by another Document.')
 
     def test_get_with_intervention_fr(self):
         self.fr_1.intervention = self.intervention
@@ -360,9 +358,7 @@ class TestFRHeaderView(BaseTenantTestCase):
         data = {'values': ','.join([self.fr_2.fr_number, self.fr_4.fr_number])}
         status_code, result = self.run_request(data)
         self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(result['error'],
-                         'One or more of the FRs are used by another Document '
-                         'or could not be found in eTools.')
+        self.assertEqual(result['error'], 'One or more of the FRs requested are used by another Document.')
 
     def test_get_with_gdd_fr(self):
         data = {'values': ','.join([self.fr_4.fr_number, self.fr_5.fr_number]),
