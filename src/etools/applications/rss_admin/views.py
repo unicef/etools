@@ -1,15 +1,31 @@
 import copy
 
+# Field Monitoring imports for new features
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import connection
+from django.db.models import Count
 
-from rest_framework import filters, status, viewsets
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters, mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
+from rest_framework.filters import OrderingFilter, SearchFilter
+from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
-from unicef_restlib.views import QueryStringFilterMixin
+from unicef_attachments.models import Attachment
+from unicef_restlib.pagination import DynamicPageNumberPagination
+from unicef_restlib.views import NestedViewSetMixin, QueryStringFilterMixin
 
+from etools.applications.action_points.models import ActionPoint, ActionPointComment
+from etools.applications.action_points.serializers import CommentSerializer as APCommentSerializer
+from etools.applications.audit.conditions import AuditModuleCondition
+from etools.applications.audit.filters import DisplayStatusFilter, EngagementFilter, UniqueIDOrderingFilter
+from etools.applications.audit.models import Engagement
+from etools.applications.audit.serializers.engagement import EngagementAttachmentSerializer, ReportAttachmentSerializer
 from etools.applications.environment.helpers import tenant_switch_is_active
+from etools.applications.field_monitoring.planning.models import MonitoringActivity
+from etools.applications.field_monitoring.planning.serializers import MonitoringActivitySerializer
+from etools.applications.funds.models import FundsReservationHeader
 from etools.applications.partners.filters import InterventionEditableByFilter, ShowAmendmentsFilter
 from etools.applications.partners.models import Agreement, Intervention, InterventionBudget, PartnerOrganization
 from etools.applications.partners.serializers.interventions_v2 import (
@@ -19,13 +35,33 @@ from etools.applications.partners.serializers.interventions_v2 import (
 )
 from etools.applications.partners.tasks import send_pd_to_vision
 from etools.applications.partners.utils import send_agreement_suspended_notification
+from etools.applications.permissions2.conditions import ObjectStatusCondition
+from etools.applications.permissions2.views import PermittedSerializerMixin
+from etools.applications.rss_admin.importers import LocationSiteImporter
 from etools.applications.rss_admin.permissions import IsRssAdmin
 from etools.applications.rss_admin.serializers import (
+    ActionPointRssDetailSerializer,
+    ActionPointRssListSerializer,
     AgreementRssSerializer,
+    AnswerHactSerializer,
+    AuditRssSerializer as AuditSerializer,
     BulkCloseProgrammeDocumentsSerializer,
+    EngagementAttachmentsUpdateSerializer,
+    EngagementChangeStatusSerializer,
+    EngagementInitiationUpdateSerializer,
+    EngagementLightRssSerializer,
+    MapPartnerToWorkspaceSerializer,
+    MicroAssessmentRssSerializer as MicroAssessmentSerializer,
     PartnerOrganizationRssSerializer,
+    SetOnTrackSerializer,
+    SitesBulkUploadSerializer,
+    SpecialAuditRssSerializer as SpecialAuditSerializer,
+    SpotCheckRssSerializer as SpotCheckSerializer,
+    StaffSpotCheckRssSerializer as StaffSpotCheckSerializer,
 )
+from etools.applications.rss_admin.services import EngagementService, FieldMonitoringService, PartnerService
 from etools.applications.rss_admin.validation import RssAgreementValid, RssInterventionValid
+from etools.applications.utils.helpers import generate_hash
 from etools.applications.utils.pagination import AppendablePageNumberPagination
 from etools.libraries.djangolib.fields import CURRENCY_LIST
 from etools.libraries.djangolib.views import FilterQueryMixin
@@ -55,12 +91,47 @@ class PartnerOrganizationRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSe
         ('risk_ratings', 'rating__in'),
         ('rating', 'rating'),
         ('hidden', 'hidden'),
+        ('sea_risk_rating', 'sea_risk_rating_name__in'),
+        ('psea_assessment_date_before', 'psea_assessment_date__date__lte'),
+        ('psea_assessment_date_after', 'psea_assessment_date__date__gte'),
         ('organization__vendor_number', 'organization__vendor_number__icontains'),
     )
 
     def get_queryset(self):
         qs = super().get_queryset()
+
+        # Exclude hidden partners by default unless show_hidden is explicitly set to true
+        # OR if 'hidden' filter is explicitly passed
+        show_hidden = self.request.query_params.get('show_hidden', '').lower() in ['true', '1', 'yes']
+        hidden_filter_passed = 'hidden' in self.request.query_params
+
+        if not show_hidden and not hidden_filter_passed:
+            qs = qs.filter(hidden=False)
+
         return self.apply_filter_queries(qs, self.filter_params)
+
+    @action(detail=False, methods=['post'], url_path='map-to-workspace')
+    def map_to_workspace(self, request, *args, **kwargs):
+        """Map an existing Organization (by vendor number) as a Partner in the current workspace.
+
+        If a PartnerOrganization already exists for the vendor number in this tenant, it is returned.
+        Optionally updates lead_office/lead_section if provided.
+        """
+        payload = MapPartnerToWorkspaceSerializer(data=request.data)
+        payload.is_valid(raise_exception=True)
+
+        vendor_number = payload.validated_data['vendor_number']
+        lead_office = payload.validated_data.get('lead_office')
+        lead_section = payload.validated_data.get('lead_section')
+
+        partner, created = PartnerService.map_partner_to_workspace(
+            vendor_number=vendor_number,
+            lead_office=lead_office,
+            lead_section=lead_section,
+        )
+
+        status_code = status.HTTP_201_CREATED if created else status.HTTP_200_OK
+        return Response(PartnerOrganizationRssSerializer(partner, context={'request': request}).data, status=status_code)
 
 
 class AgreementRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet, FilterQueryMixin):
@@ -71,8 +142,6 @@ class AgreementRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet, FilterQ
     pagination_class = AppendablePageNumberPagination
     search_fields = (
         'agreement_number',
-        'partner__organization__name',
-        'partner__organization__vendor_number',
     )
     ordering_fields = (
         'agreement_number', 'partner__organization__name', 'status', 'start', 'end'
@@ -84,10 +153,10 @@ class AgreementRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet, FilterQ
         ('types', 'agreement_type__in'),
         ('status', 'status__in'),
         ('statuses', 'status__in'),
-        ('cpStructures', 'country_programme__in'),
+        ('cp_structures', 'country_programme__in'),
         ('partners', 'partner__in'),
-        ('start', 'start'),
-        ('end', 'end'),
+        ('start', 'start__gte'),
+        ('end', 'end__lte'),
         ('special_conditions_pca', 'special_conditions_pca'),
     )
 
@@ -194,6 +263,50 @@ class ProgrammeDocumentRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet,
         result = serializer.update(serializer.validated_data, request.user)
         return Response(result, status=status.HTTP_200_OK)
 
+    def _apply_fr_numbers(self, data):
+        """Minimal: allow 'fr_numbers' to map to 'frs' IDs for PATCH/PUT."""
+        fr_numbers = data.get('fr_numbers')
+        if fr_numbers is None:
+            return data
+        if not isinstance(fr_numbers, (list, tuple)):
+            raise ValidationError({'fr_numbers': ["Must be a list of FR numbers"]})
+        numbers = list(fr_numbers)
+        qs = FundsReservationHeader.objects.filter(fr_number__in=numbers)
+        found = list(qs.values_list('fr_number', flat=True))
+        missing = [n for n in numbers if n not in found]
+        if missing:
+            raise ValidationError({'fr_numbers': [f"Unknown FR numbers: {', '.join(missing)}"]})
+        new_data = data.copy()
+        new_data['frs'] = list(qs.values_list('pk', flat=True))
+        new_data.pop('fr_numbers', None)
+        return new_data
+
+    def update(self, request, *args, **kwargs):
+        return self._update_with_fr_numbers(request, partial=False)
+
+    def partial_update(self, request, *args, **kwargs):
+        return self._update_with_fr_numbers(request, partial=True)
+
+    def _update_with_fr_numbers(self, request, *, partial: bool):
+        instance = self.get_object()
+        payload = self._apply_fr_numbers(request.data)
+
+        currency = payload.pop('currency', None)
+        if currency is not None:
+            if currency not in CURRENCY_LIST:
+                return Response({'detail': f'Invalid currency: {currency}.'}, status=status.HTTP_400_BAD_REQUEST)
+            InterventionBudget.objects.update_or_create(
+                intervention=instance,
+                defaults={'currency': currency},
+            )
+
+        serializer = self.get_serializer(instance=instance, data=payload, partial=partial, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        refreshed = Intervention.objects.select_related('planned_budget').get(pk=instance.pk)
+        return Response(InterventionDetailSerializer(refreshed, context={'request': request}).data, status=status.HTTP_200_OK)
+
     @action(detail=True, methods=['post'], url_path='assign-frs')
     def assign_frs(self, request, pk=None):
         instance = self.get_object()
@@ -239,3 +352,433 @@ class ProgrammeDocumentRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet,
             return Response({'detail': 'Vision sync disabled by tenant switch'}, status=status.HTTP_403_FORBIDDEN)
         send_pd_to_vision.delay(connection.tenant.name, instance.pk)
         return Response({'detail': 'PD queued for Vision upload'}, status=status.HTTP_202_ACCEPTED)
+
+
+class EngagementRssViewSet(PermittedSerializerMixin,
+                           mixins.ListModelMixin,
+                           mixins.RetrieveModelMixin,
+                           viewsets.GenericViewSet):
+    queryset = Engagement.objects.all()
+    serializer_class = EngagementLightRssSerializer
+    permission_classes = (IsRssAdmin,)
+    pagination_class = DynamicPageNumberPagination
+    filter_backends = (
+        SearchFilter,
+        DisplayStatusFilter,
+        DjangoFilterBackend,
+        UniqueIDOrderingFilter,
+        OrderingFilter,
+    )
+    search_fields = (
+        'reference_number',
+        'partner__organization__name',
+        'partner__organization__vendor_number',
+        'partner__organization__short_name',
+        'agreement__auditor_firm__organization__name',
+        'offices__name',
+        '=id',
+    )
+    ordering_fields = (
+        'agreement__order_number',
+        'agreement__auditor_firm__organization__name',
+        'partner__organization__name',
+        'engagement_type',
+        'status',
+    )
+    filterset_class = EngagementFilter
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        queryset = queryset.prefetch_related('partner', 'agreement', 'agreement__auditor_firm__organization')
+
+        # Add additional prefetching for detail views
+        if self.action == 'retrieve':
+            queryset = queryset.prefetch_related(
+                'staff_members',
+                'active_pd',
+                'authorized_officers',
+                'users_notified',
+                'offices',
+                'sections',
+            ).select_related(
+                'partner__organization',
+                'agreement__auditor_firm',
+            )
+
+        return queryset
+
+    def get_object(self):
+        """Override to ensure we get the proper subclass (SpotCheck, Audit, etc.) not base Engagement.
+
+        This is crucial for serializers like StaffSpotCheckSerializer which expect fields
+        that only exist on subclasses (e.g., internal_controls on SpotCheck).
+        """
+        obj = super().get_object()
+        if hasattr(obj, 'get_subclass'):
+            return obj.get_subclass()
+        return obj
+
+    def get_permission_context(self):
+        context = super().get_permission_context()
+        context.append(AuditModuleCondition())
+        return context
+
+    def get_obj_permission_context(self, obj):
+        context = super().get_obj_permission_context(obj)
+        context.append(ObjectStatusCondition(obj))
+        return context
+
+    def get_serializer_class(self):
+        # For list, use the default EngagementLightRssSerializer (permission-agnostic)
+        if self.action == 'list':
+            return EngagementLightRssSerializer
+
+        # For retrieve, use the appropriate audit module serializer based on engagement type
+        if self.action == 'retrieve':
+            obj = self.get_object()
+            # Determine if it's a staff spot check (UNICEF-led)
+            is_staff_spot_check = (
+                obj.engagement_type == Engagement.TYPES.sc and
+                obj.agreement and
+                obj.agreement.auditor_firm and
+                obj.agreement.auditor_firm.unicef_users_allowed
+            )
+
+            # Map engagement type to the appropriate serializer
+            if is_staff_spot_check:
+                return StaffSpotCheckSerializer
+            elif obj.engagement_type == Engagement.TYPES.audit:
+                return AuditSerializer
+            elif obj.engagement_type == Engagement.TYPES.sc:
+                return SpotCheckSerializer
+            elif obj.engagement_type == Engagement.TYPES.ma:
+                return MicroAssessmentSerializer
+            elif obj.engagement_type == Engagement.TYPES.sa:
+                return SpecialAuditSerializer
+
+        return super().get_serializer_class()
+
+    @action(detail=True, methods=['post'], url_path='change-status')
+    def change_status(self, request, pk=None):
+        engagement = self.get_object()
+        if hasattr(engagement, 'get_subclass'):
+            engagement = engagement.get_subclass()
+        serializer = EngagementChangeStatusSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        action = serializer.validated_data['action']
+        EngagementService.execute_action(
+            engagement=engagement,
+            action=action,
+            send_back_comment=serializer.validated_data.get('send_back_comment'),
+            cancel_comment=serializer.validated_data.get('cancel_comment'),
+        )
+        return Response(EngagementLightRssSerializer(engagement, context={'request': request}).data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['patch'], url_path='initiation', url_name='initiation')
+    def update_initiation(self, request, pk=None):
+        """Update Engagement initiation data (FACE dates, totals, currency/exchange).
+
+        Example payload keys: start_date, end_date, partner_contacted_at, total_value, exchange_rate, currency_of_report
+        """
+        engagement = self.get_object()
+        if hasattr(engagement, 'get_subclass'):
+            engagement = engagement.get_subclass()
+
+        serializer = EngagementInitiationUpdateSerializer(
+            instance=engagement,
+            data=request.data,
+            partial=True,
+            context={'request': request},
+        )
+        serializer.is_valid(raise_exception=True)
+        instance = serializer.save()
+        return Response(EngagementLightRssSerializer(instance, context={'request': request}).data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['patch'], url_path='attachments', url_name='attachments')
+    def update_attachments(self, request, pk=None):
+        """Attach uploaded files to the Engagement (financial assurance context).
+
+        Payload accepts one or both keys: engagement_attachment (id) and report_attachment (id).
+        """
+        engagement = self.get_object()
+        if hasattr(engagement, 'get_subclass'):
+            engagement = engagement.get_subclass()
+
+        serializer = EngagementAttachmentsUpdateSerializer(
+            instance=engagement,
+            data=request.data,
+            partial=True,
+            context={'request': request},
+        )
+        serializer.is_valid(raise_exception=True)
+        instance = serializer.save()
+        return Response(EngagementLightRssSerializer(instance, context={'request': request}).data, status=status.HTTP_200_OK)
+
+
+class ActionPointRssViewSet(mixins.ListModelMixin,
+                            mixins.RetrieveModelMixin,
+                            mixins.UpdateModelMixin,
+                            viewsets.GenericViewSet):
+    queryset = ActionPoint.objects.select_related(
+        'assigned_to', 'assigned_by', 'author', 'section', 'office', 'location',
+        'partner', 'partner__organization', 'intervention', 'cp_output',
+        'engagement', 'psea_assessment', 'tpm_activity', 'travel_activity'
+    ).prefetch_related(
+        'comments',
+        'comments__user',
+        'comments__supporting_document'
+    )
+    permission_classes = (IsRssAdmin,)
+    serializer_class = ActionPointRssDetailSerializer
+    pagination_class = DynamicPageNumberPagination
+    filter_backends = (
+        OrderingFilter,
+        SearchFilter,
+        DjangoFilterBackend,
+    )
+    search_fields = (
+        'assigned_to__email', 'assigned_to__first_name', 'assigned_to__last_name',
+        'assigned_by__email', 'assigned_by__first_name', 'assigned_by__last_name',
+        'section__name', 'office__name', '=id', 'reference_number',
+        'status', 'intervention__title', 'location__name', 'partner__organization__name', 'cp_output__name',
+    )
+    ordering_fields = (
+        'cp_output__name', 'partner__organization__name', 'section__name', 'office__name',
+        'assigned_to__first_name', 'assigned_to__last_name', 'due_date', 'status', 'pk', 'id'
+    )
+    filterset_fields = {
+        'assigned_by': ['exact'],
+        'assigned_to': ['exact'],
+        'high_priority': ['exact'],
+        'author': ['exact'],
+        'section': ['exact', 'in'],
+        'location': ['exact'],
+        'office': ['exact'],
+        'partner': ['exact'],
+        'intervention': ['exact'],
+        'cp_output': ['exact'],
+        'engagement': ['exact'],
+        'psea_assessment': ['exact'],
+        'tpm_activity': ['exact'],
+        'travel_activity': ['exact'],
+        'status': ['exact', 'in'],
+        'due_date': ['exact', 'lte', 'gte'],
+    }
+
+    def get_serializer_class(self):
+        """Use list serializer for list action, detail serializer otherwise."""
+        if self.action == 'list':
+            return ActionPointRssListSerializer
+        return ActionPointRssDetailSerializer
+
+    @action(detail=True, methods=['post'], url_path='add-attachment')
+    def add_attachment(self, request, pk=None):
+        action_point = self.get_object()
+        if not (action_point.high_priority and action_point.status == ActionPoint.STATUS_COMPLETED):
+            return Response({'detail': 'Only completed high priority action points are allowed.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        comment_id = request.data.get('comment')
+        attachment_id = request.data.get('supporting_document')
+
+        if not comment_id or not attachment_id:
+            return Response({'detail': 'Fields "comment" and "supporting_document" are required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            comment = action_point.comments.get(pk=comment_id)
+        except ActionPointComment.DoesNotExist:
+            return Response({'detail': 'Comment not found for this Action Point.'}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = APCommentSerializer(
+            instance=comment,
+            data={'supporting_document': attachment_id},
+            partial=True,
+            context={'request': request},
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(ActionPointRssDetailSerializer(action_point, context={'request': request}).data, status=status.HTTP_200_OK)
+
+
+class LocationSiteAdminViewSet(viewsets.ViewSet):
+    permission_classes = (IsRssAdmin,)
+
+    @staticmethod
+    def _get_pcode(split_name, name):
+        p_code = split_name[1].strip() if len(split_name) > 1 else None
+        if not p_code or p_code == "None":
+            return generate_hash(name, 12)
+        return p_code
+
+    @action(detail=False, methods=['post'], url_path='bulk-upload')
+    def bulk_upload(self, request):
+        serializer = SitesBulkUploadSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        upload = serializer.validated_data['import_file']
+        ok, result = LocationSiteImporter().import_file(upload)
+        if not ok:
+            return Response(result, status=status.HTTP_400_BAD_REQUEST)
+        return Response(result, status=status.HTTP_200_OK)
+
+
+class MonitoringActivityRssViewSet(viewsets.ModelViewSet):
+    queryset = MonitoringActivity.objects\
+        .annotate(checklists_count=Count('checklists'))\
+        .select_related('tpm_partner', 'tpm_partner__organization',
+                        'visit_lead', 'location', 'location_site')\
+        .prefetch_related('team_members', 'partners', 'partners__organization',
+                          'report_reviewers', 'interventions', 'cp_outputs',
+                          'sections', 'visit_goals', 'facility_types')\
+        .order_by("-id")
+    serializer_class = MonitoringActivitySerializer
+    permission_classes = (IsRssAdmin,)
+    pagination_class = DynamicPageNumberPagination
+    filter_backends = (
+        DjangoFilterBackend,
+        filters.OrderingFilter,
+        filters.SearchFilter,
+    )
+    filterset_fields = {
+        'monitor_type': ['exact'],
+        'tpm_partner': ['exact', 'in'],
+        'visit_lead': ['exact', 'in'],
+        'location': ['exact', 'in'],
+        'location_site': ['exact', 'in'],
+        'start_date': ['gte', 'lte'],
+        'end_date': ['gte', 'lte'],
+        'status': ['exact', 'in'],
+    }
+    ordering_fields = (
+        'start_date', 'end_date', 'location', 'location_site', 'monitor_type', 'checklists_count', 'status'
+    )
+    search_fields = ('number',)
+
+    def get_serializer_class(self):
+        from etools.applications.field_monitoring.planning.serializers import MonitoringActivityLightSerializer
+        if self.action == 'list':
+            return MonitoringActivityLightSerializer
+        return MonitoringActivitySerializer
+
+    @action(detail=True, methods=['post'], url_path='answer-hact')
+    def answer_hact(self, request, pk=None):
+        activity = self.get_object()
+        serializer = AnswerHactSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        partner = serializer.validated_data['partner']
+        value = serializer.validated_data['value']
+
+        aq_of = FieldMonitoringService.save_hact_answer(activity=activity, partner=partner, value=value)
+        if not aq_of:
+            return Response({'detail': 'No HACT question found for this activity and partner'},
+                            status=status.HTTP_404_NOT_FOUND)
+        return Response({'detail': 'HACT answer saved'}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'], url_path='set-on-track')
+    def set_on_track(self, request, pk=None):
+        activity = self.get_object()
+        serializer = SetOnTrackSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        partner = serializer.validated_data['partner']
+        on_track = serializer.validated_data['on_track']
+
+        aof = FieldMonitoringService.set_on_track(activity=activity, partner=partner, on_track=on_track)
+        return Response({'detail': 'Monitoring status updated', 'on_track': aof.on_track}, status=status.HTTP_200_OK)
+
+
+class BaseRssAttachmentsViewSet(NestedViewSetMixin,
+                                mixins.ListModelMixin,
+                                mixins.CreateModelMixin,
+                                mixins.RetrieveModelMixin,
+                                mixins.UpdateModelMixin,
+                                mixins.DestroyModelMixin,
+                                viewsets.GenericViewSet):
+    """Base ViewSet for managing attachments in RSS Admin.
+
+    Provides CRUD operations for attachments without permission filtering.
+    Reuses audit module's attachment serializers.
+    """
+    permission_classes = (IsRssAdmin,)
+    queryset = Attachment.objects.all()
+
+    def get_queryset(self):
+        """Limit RSS attachment operations to attachments that actually have a file.
+        """
+        qs = super().get_queryset()
+        return qs.exclude(file__isnull=True).exclude(file='')
+
+    def get_parent_filter(self):
+        """Filter attachments by parent engagement."""
+        parent = self.get_parent_object()
+        if not parent:
+            return {}
+
+        from django.contrib.contenttypes.models import ContentType
+        if hasattr(parent, 'get_subclass'):
+            parent = parent.get_subclass()
+
+        return {
+            'content_type_id': ContentType.objects.get_for_model(parent._meta.model).id,
+            'object_id': parent.pk
+        }
+
+    def get_object(self, pk=None):
+        """Get attachment object, filtering by parent engagement."""
+        if self.request.method in ['GET', 'PATCH', 'DELETE']:
+            self.queryset = self.filter_queryset(self.get_queryset())
+        if pk:
+            return get_object_or_404(self.queryset, **{"pk": pk})
+        elif self.kwargs.get("pk"):
+            return get_object_or_404(self.queryset, **{"pk": self.kwargs.get("pk")})
+
+        return super().get_object()
+
+    def perform_create(self, serializer):
+        """Create attachment and link it to parent engagement."""
+        serializer.instance = self.get_object(
+            pk=serializer.validated_data.get("pk")
+        )
+        parent = self.get_parent_object()
+        if hasattr(parent, 'get_subclass'):
+            parent = parent.get_subclass()
+        serializer.save(content_object=parent)
+
+    def perform_update(self, serializer):
+        """Update attachment."""
+        parent = self.get_parent_object()
+        if hasattr(parent, 'get_subclass'):
+            parent = parent.get_subclass()
+        serializer.save(content_object=parent)
+
+
+class EngagementAttachmentsRssViewSet(BaseRssAttachmentsViewSet):
+    """ViewSet for managing engagement attachments in RSS Admin.
+
+    Reuses EngagementAttachmentSerializer from audit module.
+    """
+    serializer_class = EngagementAttachmentSerializer
+
+    def get_view_name(self):
+        return 'Related Documents'
+
+    def get_parent_filter(self):
+        """Filter for engagement-specific attachments (code='audit_engagement')."""
+        filters = super().get_parent_filter()
+        filters.update({'code': 'audit_engagement'})
+        return filters
+
+
+class ReportAttachmentsRssViewSet(BaseRssAttachmentsViewSet):
+    """ViewSet for managing report attachments in RSS Admin.
+
+    Reuses ReportAttachmentSerializer from audit module.
+    """
+    serializer_class = ReportAttachmentSerializer
+
+    def get_view_name(self):
+        return 'Report Attachments'
+
+    def get_parent_filter(self):
+        """Filter for report-specific attachments (code='audit_report')."""
+        filters = super().get_parent_filter()
+        filters.update({'code': 'audit_report'})
+        return filters

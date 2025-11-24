@@ -59,6 +59,7 @@ class TestFundsReservationManagement(BaseTestCase):
                 intervention=self.draft_intervention,
                 vendor_code=self.partner.vendor_number,
             )
+            return True
 
         sync_mock.side_effect = generate_frs
 

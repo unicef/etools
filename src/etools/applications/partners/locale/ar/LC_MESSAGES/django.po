@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-08-07 14:14+0000\n"
+"POT-Creation-Date: 2025-11-21 12:41+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1533,6 +1533,10 @@ msgstr "يجب أن يكون تاريخ الاستحقاق في تاريخ ال�
 
 msgid "This period overlaps an existing reporting period."
 msgstr "تتداخل هذه الفترة مع فترة إعداد التقارير الحالية."
+
+#, python-format
+msgid "Invalid currency: %(value)s."
+msgstr ""
 
 #, python-format
 msgid "One or more of the FRs selected is related to a different PD/SPD, %s"

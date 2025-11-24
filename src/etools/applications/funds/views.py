@@ -72,15 +72,17 @@ class FRsView(APIView):
         if not_found:
             nf = list(not_found)
             nf.sort()
+            message = ('The Fund Reservation {} could not be found in eTools or in VISION. '
+                       'Please make sure it has been created in the VISION platform first.{}')
             with transaction.atomic():
                 for delegated_fr in nf:
                     # try to get this FR from vision
                     try:
-                        sync_single_delegated_fr(request.user.profile.country.business_area_code, delegated_fr)
+                        synced_from_vision = sync_single_delegated_fr(request.user.profile.country.business_area_code, delegated_fr)
+                        if not synced_from_vision:
+                            return self.bad_request(message.format(delegated_fr, ''))
                     except VisionException as e:
-                        return self.bad_request(
-                            'The Fund Reservation {} could not be found. It can take up to 24 hours to appear'
-                            ' in eTools, please try again later.{}'.format(delegated_fr, e))
+                        return self.bad_request(message.format(delegated_fr, e))
 
             qs._result_cache = None
 
@@ -96,8 +98,7 @@ class FRsView(APIView):
             qs = qs.filter(intervention__isnull=True, gdd__isnull=True)
 
         if qs.count() != len(values):
-            return self.bad_request('One or more of the FRs are used by another Document '
-                                    'or could not be found in eTools.')
+            return self.bad_request('One or more of the FRs requested are used by another Document.')
 
         all_frs_vendor_numbers = [fr.vendor_code for fr in qs.all()]
         if len(set(all_frs_vendor_numbers)) != 1:
