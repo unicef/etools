@@ -84,7 +84,7 @@ class AdminPanelValidator:
             raise ValidationError(_(USER_CANT_APPROVE))
 
     def validate_status(self, status: str) -> None:
-        if status not in [Profile.ApprovalStatus.APPROVED, Profile.ApprovalStatus.REJECTED]:
+        if status not in [Profile.ApprovalStatus.PENDING]:
             raise ValidationError(_(STATUS_NOT_CORRECT))
 
     def validate_items(self, items: list):
