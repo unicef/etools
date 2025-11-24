@@ -357,6 +357,7 @@ class ProgrammeDocumentRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet,
 class EngagementRssViewSet(PermittedSerializerMixin,
                            mixins.ListModelMixin,
                            mixins.RetrieveModelMixin,
+                           mixins.UpdateModelMixin,
                            viewsets.GenericViewSet):
     queryset = Engagement.objects.all()
     serializer_class = EngagementLightRssSerializer
@@ -433,8 +434,8 @@ class EngagementRssViewSet(PermittedSerializerMixin,
         if self.action == 'list':
             return EngagementLightRssSerializer
 
-        # For retrieve, use the appropriate audit module serializer based on engagement type
-        if self.action == 'retrieve':
+        # For retrieve and update, use the appropriate audit module serializer based on engagement type
+        if self.action in ['retrieve', 'update', 'partial_update']:
             obj = self.get_object()
             # Determine if it's a staff spot check (UNICEF-led)
             is_staff_spot_check = (

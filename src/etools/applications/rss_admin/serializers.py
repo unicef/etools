@@ -229,12 +229,20 @@ class AuditRssSerializer(BaseAuditSerializer):
     def _readable_fields(self):
         return [field for field in self.fields.values()]
 
+    @property
+    def _writable_fields(self):
+        return [field for field in self.fields.values() if not field.read_only]
+
 
 class SpotCheckRssSerializer(BaseSpotCheckSerializer):
     """Permission-agnostic spot check serializer for RSS Admin."""
     @property
     def _readable_fields(self):
         return [field for field in self.fields.values()]
+
+    @property
+    def _writable_fields(self):
+        return [field for field in self.fields.values() if not field.read_only]
 
 
 class StaffSpotCheckRssSerializer(BaseStaffSpotCheckSerializer):
@@ -243,6 +251,10 @@ class StaffSpotCheckRssSerializer(BaseStaffSpotCheckSerializer):
     def _readable_fields(self):
         return [field for field in self.fields.values()]
 
+    @property
+    def _writable_fields(self):
+        return [field for field in self.fields.values() if not field.read_only]
+
 
 class MicroAssessmentRssSerializer(BaseMicroAssessmentSerializer):
     """Permission-agnostic micro assessment serializer for RSS Admin."""
@@ -250,12 +262,20 @@ class MicroAssessmentRssSerializer(BaseMicroAssessmentSerializer):
     def _readable_fields(self):
         return [field for field in self.fields.values()]
 
+    @property
+    def _writable_fields(self):
+        return [field for field in self.fields.values() if not field.read_only]
+
 
 class SpecialAuditRssSerializer(BaseSpecialAuditSerializer):
     """Permission-agnostic special audit serializer for RSS Admin."""
     @property
     def _readable_fields(self):
         return [field for field in self.fields.values()]
+
+    @property
+    def _writable_fields(self):
+        return [field for field in self.fields.values() if not field.read_only]
 
 
 class EngagementChangeStatusSerializer(serializers.Serializer):
