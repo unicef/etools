@@ -341,6 +341,8 @@ class LocationsViewSet(mixins.ListModelMixin,
         'name',
         'pending_approval',
         'approved',
+        'is_active',
+        'status',
     ]
     search_fields = ('name',
                      'p_code',
