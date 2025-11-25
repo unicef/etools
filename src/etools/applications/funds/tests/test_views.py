@@ -138,8 +138,9 @@ class TestFRHeaderView(BaseTenantTestCase):
         data = {'values': ','.join(['another bad value', 'im a bad value', ])}
         status_code, result = self.run_request(data)
         self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(result['error'], 'The Fund Reservation another bad value could not be found in eTools or in VISION. '
-                                          'Please make sure it has been created in the VISION platform first.')
+        self.assertEqual(result['error'],
+                         "The Fund Reservation another bad value could not be found. "
+                         "It can take up to 24 hours to appear in eTools, please try again later.")
     # TODO: add tests to cover, frs correctly brought in from unittest.mock. with correct vendor numbers, FR missing from vision,
     # FR with multiple line items, and FR with only one line item.
 
@@ -171,8 +172,7 @@ class TestFRHeaderView(BaseTenantTestCase):
                 'gpd': self.gdd.id}
         status_code, result = self.run_request(data)
         self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('The Fund Reservation {} could not be found in eTools or in VISION. '
-                      'Please make sure it has been created in the VISION platform first.'.format(9999), result['error'])
+        self.assertIn('The Fund Reservation {} could not be found. It can take up to 24 hours to appear in eTools, please try again later.'.format(9999), result['error'])
 
     def test_get_fail_with_intervention_id(self):
         other_intervention = InterventionFactory()
