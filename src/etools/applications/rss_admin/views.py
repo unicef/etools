@@ -23,6 +23,7 @@ from etools.applications.audit.filters import DisplayStatusFilter, EngagementFil
 from etools.applications.audit.models import Engagement
 from etools.applications.audit.serializers.engagement import EngagementAttachmentSerializer, ReportAttachmentSerializer
 from etools.applications.environment.helpers import tenant_switch_is_active
+from etools.applications.field_monitoring.data_collection.models import ActivityQuestionOverallFinding
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
 from etools.applications.field_monitoring.planning.serializers import MonitoringActivitySerializer
 from etools.applications.funds.models import FundsReservationHeader
@@ -50,6 +51,7 @@ from etools.applications.rss_admin.serializers import (
     EngagementChangeStatusSerializer,
     EngagementInitiationUpdateSerializer,
     EngagementLightRssSerializer,
+    HactQuestionOverallFindingSerializer,
     MapPartnerToWorkspaceSerializer,
     MicroAssessmentRssSerializer as MicroAssessmentSerializer,
     PartnerOrganizationRssSerializer,
@@ -684,6 +686,37 @@ class MonitoringActivityRssViewSet(viewsets.ModelViewSet):
 
         aof = FieldMonitoringService.set_on_track(activity=activity, partner=partner, on_track=on_track)
         return Response({'detail': 'Monitoring status updated', 'on_track': aof.on_track}, status=status.HTTP_200_OK)
+
+
+class HactFindingsRssViewSet(NestedViewSetMixin,
+                             mixins.ListModelMixin,
+                             mixins.UpdateModelMixin,
+                             viewsets.GenericViewSet):
+    """RSS Admin viewset for HACT question findings.
+
+    Provides read access to HACT questions with their answers and answer options.
+    Allows updating answers via PATCH.
+    """
+    permission_classes = (IsRssAdmin,)
+    queryset = ActivityQuestionOverallFinding.objects.select_related(
+        'activity_question__question',
+        'activity_question__partner',
+        'activity_question__partner__organization',
+        'activity_question__intervention',
+        'activity_question__cp_output',
+    ).prefetch_related(
+        'activity_question__question__options',
+    )
+    serializer_class = HactQuestionOverallFindingSerializer
+    pagination_class = None  # Return all HACT questions without pagination
+
+    def get_parent_filter(self):
+        """Filter to only HACT questions for this monitoring activity."""
+        return {
+            'activity_question__monitoring_activity_id': self.kwargs['monitoring_activity_pk'],
+            'activity_question__is_hact': True,
+            'activity_question__is_enabled': True,
+        }
 
 
 class BaseRssAttachmentsViewSet(NestedViewSetMixin,

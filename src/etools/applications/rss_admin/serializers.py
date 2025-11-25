@@ -11,6 +11,8 @@ from unicef_restlib.serializers import WritableNestedSerializerMixin
 from etools.applications.action_points.categories.serializers import CategorySerializer
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.action_points.serializers import CommentSerializer, HistorySerializer
+from etools.applications.field_monitoring.data_collection.models import ActivityQuestion, ActivityQuestionOverallFinding
+from etools.applications.field_monitoring.fm_settings.serializers import QuestionSerializer
 from etools.applications.audit.models import Engagement
 from etools.applications.audit.serializers.auditor import PurchaseOrderItemSerializer, PurchaseOrderSerializer
 from etools.applications.audit.serializers.engagement import (
@@ -28,7 +30,7 @@ from etools.applications.partners.serializers.interventions_v2 import MinimalInt
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.reports.models import Office, Section
 from etools.applications.reports.serializers.v1 import ResultSerializer, SectionSerializer
-from etools.applications.reports.serializers.v2 import OfficeLightSerializer, OfficeSerializer
+from etools.applications.reports.serializers.v2 import MinimalOutputListSerializer, OfficeLightSerializer, OfficeSerializer
 from etools.applications.rss_admin.services import EngagementService, ProgrammeDocumentService
 from etools.applications.users.serializers_v3 import MinimalUserSerializer
 
@@ -500,3 +502,29 @@ class ActionPointRssDetailSerializer(WritableNestedSerializerMixin, serializers.
             'tpm_activity', 'travel_activity', 'date_of_verification', 'comments', 'history',
             'related_object_str', 'related_object_url', 'potential_verifier', 'verified_by', 'is_adequate',
         ]
+
+
+class HactActivityQuestionSerializer(serializers.ModelSerializer):
+    """Serializer for HACT questions with answer options."""
+    partner = MinimalPartnerOrganizationListSerializer(read_only=True)
+    cp_output = MinimalOutputListSerializer(read_only=True)
+    intervention = MinimalInterventionListSerializer(read_only=True)
+    question = QuestionSerializer(read_only=True)
+
+    class Meta:
+        model = ActivityQuestion
+        fields = (
+            'id', 'question',
+            'text', 'is_hact',
+            'is_enabled', 'specific_details',
+            'partner', 'intervention', 'cp_output',
+        )
+
+
+class HactQuestionOverallFindingSerializer(serializers.ModelSerializer):
+    """Serializer for HACT question overall findings (answers)."""
+    activity_question = HactActivityQuestionSerializer(read_only=True)
+
+    class Meta:
+        model = ActivityQuestionOverallFinding
+        fields = ('id', 'activity_question', 'value',)

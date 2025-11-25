@@ -15,7 +15,7 @@ from etools.applications.field_monitoring.data_collection.models import (
 )
 from etools.applications.field_monitoring.data_collection.tests.factories import ActivityQuestionFactory
 from etools.applications.field_monitoring.fm_settings.models import LocationSite
-from etools.applications.field_monitoring.fm_settings.tests.factories import QuestionFactory
+from etools.applications.field_monitoring.fm_settings.tests.factories import OptionFactory, QuestionFactory
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
 from etools.applications.field_monitoring.planning.tests.factories import MonitoringActivityFactory
 from etools.applications.partners.tests.factories import PartnerFactory
@@ -401,3 +401,115 @@ class TestRssAdminFieldMonitoringApi(BaseTenantTestCase):
         result_ids = [r['id'] for r in results]
         self.assertIn(activity_match.id, result_ids)
         self.assertNotIn(activity_no_match.id, result_ids)
+
+    def test_hact_findings_list(self):
+        """Test that HACT findings endpoint returns HACT questions with answers"""
+        activity = MonitoringActivityFactory(partners=[self.partner])
+
+        # Create HACT question with answer
+        hact_question = QuestionFactory(is_hact=True, level='partner', is_active=True)
+        activity_question = ActivityQuestionFactory(
+            monitoring_activity=activity,
+            question=hact_question,
+            partner=self.partner,
+            is_hact=True,
+            is_enabled=True,
+        )
+        ActivityQuestionOverallFinding.objects.create(activity_question=activity_question, value=True)
+
+        # Create non-HACT question (should be excluded)
+        non_hact_question = QuestionFactory(is_hact=False, level='partner', is_active=True)
+        ActivityQuestionFactory(
+            monitoring_activity=activity,
+            question=non_hact_question,
+            partner=self.partner,
+            is_hact=False,
+            is_enabled=True,
+        )
+
+        url = reverse('rss_admin:rss-admin-hact-findings-list', kwargs={'monitoring_activity_pk': activity.pk})
+        resp = self.forced_auth_req('get', url, user=self.user)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        # Should only return HACT questions
+        self.assertEqual(len(resp.data), 1)
+        self.assertTrue(resp.data[0]['activity_question']['is_hact'])
+        self.assertEqual(resp.data[0]['value'], True)
+
+        # Check that question details and options are included
+        self.assertIn('question', resp.data[0]['activity_question'])
+        self.assertIn('partner', resp.data[0]['activity_question'])
+
+    def test_hact_findings_patch(self):
+        """Test updating HACT question answer via PATCH"""
+        activity = MonitoringActivityFactory(partners=[self.partner])
+
+        # Create HACT question with initial answer
+        hact_question = QuestionFactory(is_hact=True, level='partner', is_active=True)
+        activity_question = ActivityQuestionFactory(
+            monitoring_activity=activity,
+            question=hact_question,
+            partner=self.partner,
+            is_hact=True,
+            is_enabled=True,
+        )
+        overall_finding = ActivityQuestionOverallFinding.objects.create(
+            activity_question=activity_question,
+            value=False
+        )
+
+        url = reverse('rss_admin:rss-admin-hact-findings-detail',
+                      kwargs={'monitoring_activity_pk': activity.pk, 'pk': overall_finding.pk})
+
+        # Update the answer
+        payload = {'value': True}
+        resp = self.forced_auth_req('patch', url, user=self.user, data=payload)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        # Verify the update
+        overall_finding.refresh_from_db()
+        self.assertEqual(overall_finding.value, True)
+
+    def test_hact_findings_non_staff_forbidden(self):
+        """Test that non-staff users cannot access HACT findings"""
+        non_staff_user = UserFactory(is_staff=False)
+        activity = MonitoringActivityFactory()
+
+        url = reverse('rss_admin:rss-admin-hact-findings-list', kwargs={'monitoring_activity_pk': activity.pk})
+        resp = self.forced_auth_req('get', url, user=non_staff_user)
+        self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_hact_findings_with_question_options(self):
+        """Test that HACT findings include question options for choice questions"""
+        activity = MonitoringActivityFactory(partners=[self.partner])
+
+        # Create HACT question with options
+        hact_question = QuestionFactory(
+            is_hact=True,
+            level='partner',
+            is_active=True,
+        )
+        # Add some options to the question
+        OptionFactory(question=hact_question, label='Yes', value=1)
+        OptionFactory(question=hact_question, label='No', value=0)
+
+        activity_question = ActivityQuestionFactory(
+            monitoring_activity=activity,
+            question=hact_question,
+            partner=self.partner,
+            is_hact=True,
+            is_enabled=True,
+        )
+        ActivityQuestionOverallFinding.objects.create(
+            activity_question=activity_question,
+            value={'option': 'yes'}
+        )
+
+        url = reverse('rss_admin:rss-admin-hact-findings-list', kwargs={'monitoring_activity_pk': activity.pk})
+        resp = self.forced_auth_req('get', url, user=self.user)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        # Check that options are included
+        self.assertIn('question', resp.data[0]['activity_question'])
+        self.assertIn('options', resp.data[0]['activity_question']['question'])
+        self.assertEqual(len(resp.data[0]['activity_question']['question']['options']), 2)

@@ -7,6 +7,7 @@ from etools.applications.rss_admin.views import (
     AgreementRssViewSet,
     EngagementAttachmentsRssViewSet,
     EngagementRssViewSet,
+    HactFindingsRssViewSet,
     LocationSiteAdminViewSet,
     MonitoringActivityRssViewSet,
     PartnerOrganizationRssViewSet,
@@ -32,6 +33,11 @@ router.register(
 router.register(r'action-points', ActionPointRssViewSet, basename='rss-admin-action-points')
 router.register(r'sites', LocationSiteAdminViewSet, basename='rss-admin-sites')
 router.register(r'monitoring-activities', MonitoringActivityRssViewSet, basename='rss-admin-monitoring-activities')
+router.register(
+    r'monitoring-activities/(?P<monitoring_activity_pk>\d+)/hact-findings',
+    HactFindingsRssViewSet,
+    basename='rss-admin-hact-findings'
+)
 
 app_name = 'rss_admin'
 
