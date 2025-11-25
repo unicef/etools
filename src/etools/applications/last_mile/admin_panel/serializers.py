@@ -315,7 +315,7 @@ class PointOfInterestCustomSerializer(serializers.ModelSerializer):
         default=serializers.CurrentUserDefault()
     )
 
-    is_active = serializers.HiddenField(
+    is_active = serializers.BooleanField(
         default=False
     )
 
