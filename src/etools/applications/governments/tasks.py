@@ -25,9 +25,9 @@ class GDDVisionUploader(VisionUploader):
 
     def validate_instance(self):
         """
-        # PD is not in Development, Review, pending_approval.
-        # We also need to make sure that this pd has GDDActivities.
-        # The PD cannot be and amendment "amendment_open" will not pass validation.
+        # GPD is not in Development, Review, pending_approval.
+        # We also need to make sure that this gpd has GDDActivities.
+        # The GPD cannot be and amendment "amendment_open" will not pass validation.
         """
         if self.instance.status in [GDD.DRAFT, GDD.REVIEW, GDD.PENDING_APPROVAL]:
             return False
