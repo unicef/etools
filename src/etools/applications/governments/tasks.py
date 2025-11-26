@@ -84,7 +84,7 @@ def send_gdd_to_vision(tenant_name: str, gdd_pk: int, retry_counter=0):
             )
         else:
             logger.exception(f'Received {status_code} from vision synchronizer after 3 attempts. '
-                             f'PD number: {gdd_pk}. Business area code: {tenant.business_area_code}')
+                             f'GPD id: {gdd_pk}. Business area code: {tenant.business_area_code}')
     finally:
         connection.set_tenant(original_tenant)
 
