@@ -27,7 +27,7 @@ from etools.applications.field_monitoring.data_collection.models import Activity
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
 from etools.applications.field_monitoring.planning.serializers import MonitoringActivitySerializer
 from etools.applications.funds.models import FundsReservationHeader
-from etools.applications.partners.filters import InterventionEditableByFilter, ShowAmendmentsFilter
+from etools.applications.partners.filters import InterventionEditableByFilter, PartnerNameOrderingFilter, ShowAmendmentsFilter
 from etools.applications.partners.models import Agreement, Intervention, InterventionBudget, PartnerOrganization
 from etools.applications.partners.serializers.interventions_v2 import (
     InterventionCreateUpdateSerializer,
@@ -83,7 +83,7 @@ class PartnerOrganizationRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSe
         'phone_number',
     )
     ordering_fields = (
-        'organization__name', 'organization__vendor_number', 'rating', 'hidden'
+        'name', 'vendor_number', 'rating', 'hidden'  # Use annotated fields from PartnerOrganizationManager
     )
 
     # PMP-style filters mapping
@@ -194,6 +194,7 @@ class ProgrammeDocumentRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet,
     filter_backends = (
         filters.SearchFilter,
         filters.OrderingFilter,
+        PartnerNameOrderingFilter,  # Allows ?ordering=partner_name as alias for agreement__partner__organization__name
         ShowAmendmentsFilter,
         InterventionEditableByFilter,
     )
@@ -207,7 +208,7 @@ class ProgrammeDocumentRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet,
     )
     ordering_fields = (
         'number', 'document_type', 'status', 'title', 'start', 'end',
-        'agreement__partner__organization__name'
+        'agreement__partner__organization__name'  # Can also use ?ordering=partner_name via PartnerNameOrderingFilter
     )
 
     filters = (
