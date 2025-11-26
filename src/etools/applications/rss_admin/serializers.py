@@ -11,7 +11,13 @@ from unicef_restlib.serializers import WritableNestedSerializerMixin
 from etools.applications.action_points.categories.serializers import CategorySerializer
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.action_points.serializers import CommentSerializer, HistorySerializer
-from etools.applications.field_monitoring.data_collection.models import ActivityQuestion, ActivityQuestionOverallFinding
+from etools.applications.field_monitoring.data_collection.models import (
+    ActivityOverallFinding,
+    ActivityQuestion,
+    ActivityQuestionOverallFinding,
+    ChecklistOverallFinding,
+    Finding,
+)
 from etools.applications.field_monitoring.fm_settings.serializers import QuestionSerializer
 from etools.applications.audit.models import Engagement
 from etools.applications.audit.serializers.auditor import PurchaseOrderItemSerializer, PurchaseOrderSerializer
@@ -622,3 +628,95 @@ class HactQuestionOverallFindingSerializer(serializers.ModelSerializer):
     class Meta:
         model = ActivityQuestionOverallFinding
         fields = ('id', 'activity_question', 'value',)
+
+
+class ActivityQuestionFindingRssSerializer(serializers.ModelSerializer):
+    """Serializer for individual findings from checklists."""
+    author = MinimalUserSerializer(read_only=True, source='started_checklist.author')
+
+    class Meta:
+        model = Finding
+        fields = ('id', 'value', 'author')
+
+
+class CompletedActivityQuestionFindingRssSerializer(ActivityQuestionFindingRssSerializer):
+    """Serializer for completed findings with checklist and method information."""
+    checklist = serializers.ReadOnlyField(source='started_checklist.id')
+    method = serializers.ReadOnlyField(source='started_checklist.method_id')
+
+    class Meta(ActivityQuestionFindingRssSerializer.Meta):
+        fields = ActivityQuestionFindingRssSerializer.Meta.fields + ('checklist', 'method',)
+
+
+class CompletedActivityQuestionRssSerializer(HactActivityQuestionSerializer):
+    """Serializer for activity questions with completed findings."""
+    findings = CompletedActivityQuestionFindingRssSerializer(many=True, read_only=True, source='completed_findings')
+
+    class Meta(HactActivityQuestionSerializer.Meta):
+        fields = HactActivityQuestionSerializer.Meta.fields + ('findings',)
+
+
+class ActivityQuestionOverallFindingRssSerializer(serializers.ModelSerializer):
+    """Serializer for activity question overall findings matching field monitoring structure."""
+    activity_question = CompletedActivityQuestionRssSerializer(read_only=True)
+
+    class Meta:
+        model = ActivityQuestionOverallFinding
+        fields = ('id', 'activity_question', 'value',)
+
+
+class CompletedChecklistOverallFindingRssSerializer(serializers.ModelSerializer):
+    """Serializer for checklist overall findings."""
+    author = MinimalUserSerializer(read_only=True, source='started_checklist.author')
+    checklist = serializers.ReadOnlyField(source='started_checklist.id')
+    method = serializers.ReadOnlyField(source='started_checklist.method_id')
+    information_source = serializers.ReadOnlyField(source='started_checklist.information_source')
+
+    class Meta:
+        model = ChecklistOverallFinding
+        fields = ('author', 'method', 'checklist', 'information_source', 'narrative_finding')
+
+
+class ActivityOverallFindingRssSerializer(serializers.ModelSerializer):
+    """Serializer for activity overall findings matching field monitoring structure."""
+    attachments = serializers.SerializerMethodField()
+    findings = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ActivityOverallFinding
+        fields = (
+            'id', 'partner', 'cp_output', 'intervention',
+            'narrative_finding', 'on_track',
+            'attachments', 'findings'
+        )
+        read_only_fields = ('partner', 'cp_output', 'intervention')
+
+    def _get_checklist_overall_findings(self, obj):
+        """Get checklist overall findings for this activity context."""
+        import itertools
+        return [
+            finding
+            for finding in itertools.chain(*(
+                c.overall_findings.all()
+                for c in obj.monitoring_activity.checklists.all()
+            ))
+            if (
+                finding.partner_id == obj.partner_id and
+                finding.cp_output_id == obj.cp_output_id and
+                finding.intervention_id == obj.intervention_id
+            )
+        ]
+
+    def get_attachments(self, obj):
+        """Extract attachments from checklists overall findings."""
+        import itertools
+        from unicef_attachments.serializers import BaseAttachmentSerializer
+        attachments = itertools.chain(*(
+            finding.attachments.all() for finding in self._get_checklist_overall_findings(obj)
+        ))
+        return BaseAttachmentSerializer(instance=attachments, many=True).data
+
+    def get_findings(self, obj):
+        """Get completed checklist findings."""
+        findings = self._get_checklist_overall_findings(obj)
+        return CompletedChecklistOverallFindingRssSerializer(instance=findings, many=True).data

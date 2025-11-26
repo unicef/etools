@@ -23,7 +23,13 @@ from etools.applications.audit.filters import DisplayStatusFilter, EngagementFil
 from etools.applications.audit.models import Engagement
 from etools.applications.audit.serializers.engagement import EngagementAttachmentSerializer, ReportAttachmentSerializer
 from etools.applications.environment.helpers import tenant_switch_is_active
-from etools.applications.field_monitoring.data_collection.models import ActivityQuestionOverallFinding
+from django.db.models import Prefetch
+from etools.applications.field_monitoring.data_collection.models import (
+    ActivityOverallFinding,
+    ActivityQuestion,
+    ActivityQuestionOverallFinding,
+    Finding,
+)
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
 from etools.applications.field_monitoring.planning.serializers import MonitoringActivitySerializer
 from etools.applications.funds.models import FundsReservationHeader
@@ -43,6 +49,8 @@ from etools.applications.rss_admin.permissions import IsRssAdmin
 from etools.applications.rss_admin.serializers import (
     ActionPointRssDetailSerializer,
     ActionPointRssListSerializer,
+    ActivityOverallFindingRssSerializer,
+    ActivityQuestionOverallFindingRssSerializer,
     AgreementRssSerializer,
     AnswerHactSerializer,
     AuditRssSerializer as AuditSerializer,
@@ -689,14 +697,14 @@ class MonitoringActivityRssViewSet(viewsets.ModelViewSet):
         return Response({'detail': 'Monitoring status updated', 'on_track': aof.on_track}, status=status.HTTP_200_OK)
 
 
-class HactFindingsRssViewSet(NestedViewSetMixin,
-                             mixins.ListModelMixin,
-                             mixins.UpdateModelMixin,
-                             viewsets.GenericViewSet):
-    """RSS Admin viewset for HACT question findings.
+class ActivityFindingsRssViewSet(NestedViewSetMixin,
+                                 mixins.ListModelMixin,
+                                 mixins.UpdateModelMixin,
+                                 viewsets.GenericViewSet):
+    """RSS Admin viewset for HACT activity question findings.
 
-    Provides read access to HACT questions with their answers and answer options.
-    Allows updating answers via PATCH.
+    Matches the structure of field monitoring data collection findings endpoint.
+    Filtered to HACT questions only.
     """
     permission_classes = (IsRssAdmin,)
     queryset = ActivityQuestionOverallFinding.objects.select_related(
@@ -706,10 +714,17 @@ class HactFindingsRssViewSet(NestedViewSetMixin,
         'activity_question__intervention',
         'activity_question__cp_output',
     ).prefetch_related(
+        Prefetch(
+            'activity_question__findings',
+            Finding.objects.filter(value__isnull=False).prefetch_related(
+                'started_checklist', 'started_checklist__author',
+            ),
+            to_attr='completed_findings'
+        ),
         'activity_question__question__options',
     )
-    serializer_class = HactQuestionOverallFindingSerializer
-    pagination_class = None  # Return all HACT questions without pagination
+    serializer_class = ActivityQuestionOverallFindingRssSerializer
+    pagination_class = None
 
     def get_parent_filter(self):
         """Filter to only HACT questions for this monitoring activity."""
@@ -717,6 +732,42 @@ class HactFindingsRssViewSet(NestedViewSetMixin,
             'activity_question__monitoring_activity_id': self.kwargs['monitoring_activity_pk'],
             'activity_question__is_hact': True,
             'activity_question__is_enabled': True,
+        }
+
+
+class ActivityOverallFindingsRssViewSet(NestedViewSetMixin,
+                                        mixins.ListModelMixin,
+                                        mixins.UpdateModelMixin,
+                                        viewsets.GenericViewSet):
+    """RSS Admin viewset for HACT activity overall findings.
+
+    Matches the structure of field monitoring data collection overall-findings endpoint.
+    Filtered to HACT questions only.
+    """
+    permission_classes = (IsRssAdmin,)
+    queryset = ActivityOverallFinding.objects.prefetch_related(
+        'partner', 'cp_output', 'intervention',
+        'monitoring_activity__checklists__overall_findings__attachments',
+        'monitoring_activity__checklists__author',
+    )
+    serializer_class = ActivityOverallFindingRssSerializer
+    pagination_class = None
+
+    def get_parent_filter(self):
+        """Filter to HACT-related overall findings for this monitoring activity."""
+        from django.db.models import Exists, OuterRef
+        
+        # Get activity questions that are HACT
+        hact_questions = ActivityQuestion.objects.filter(
+            monitoring_activity_id=self.kwargs['monitoring_activity_pk'],
+            is_hact=True,
+            is_enabled=True
+        )
+        
+        # Filter overall findings that match HACT question contexts
+        return {
+            'monitoring_activity_id': self.kwargs['monitoring_activity_pk'],
+            'partner__in': hact_questions.values_list('partner', flat=True).distinct(),
         }
 
 

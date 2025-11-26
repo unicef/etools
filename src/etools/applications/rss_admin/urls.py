@@ -4,10 +4,11 @@ from rest_framework.routers import DefaultRouter
 
 from etools.applications.rss_admin.views import (
     ActionPointRssViewSet,
+    ActivityFindingsRssViewSet,
+    ActivityOverallFindingsRssViewSet,
     AgreementRssViewSet,
     EngagementAttachmentsRssViewSet,
     EngagementRssViewSet,
-    HactFindingsRssViewSet,
     LocationSiteAdminViewSet,
     MonitoringActivityRssViewSet,
     PartnerOrganizationRssViewSet,
@@ -34,9 +35,14 @@ router.register(r'action-points', ActionPointRssViewSet, basename='rss-admin-act
 router.register(r'sites', LocationSiteAdminViewSet, basename='rss-admin-sites')
 router.register(r'monitoring-activities', MonitoringActivityRssViewSet, basename='rss-admin-monitoring-activities')
 router.register(
-    r'monitoring-activities/(?P<monitoring_activity_pk>\d+)/hact-findings',
-    HactFindingsRssViewSet,
-    basename='rss-admin-hact-findings'
+    r'monitoring-activities/(?P<monitoring_activity_pk>\d+)/findings',
+    ActivityFindingsRssViewSet,
+    basename='rss-admin-activity-findings'
+)
+router.register(
+    r'monitoring-activities/(?P<monitoring_activity_pk>\d+)/overall-findings',
+    ActivityOverallFindingsRssViewSet,
+    basename='rss-admin-activity-overall-findings'
 )
 
 app_name = 'rss_admin'

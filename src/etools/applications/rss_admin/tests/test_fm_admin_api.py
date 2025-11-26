@@ -402,8 +402,8 @@ class TestRssAdminFieldMonitoringApi(BaseTenantTestCase):
         self.assertIn(activity_match.id, result_ids)
         self.assertNotIn(activity_no_match.id, result_ids)
 
-    def test_hact_findings_list(self):
-        """Test that HACT findings endpoint returns HACT questions with answers"""
+    def test_activity_findings_list(self):
+        """Test that activity findings endpoint returns HACT questions with answers (matching field monitoring structure)"""
         activity = MonitoringActivityFactory(partners=[self.partner])
 
         # Create HACT question with answer
@@ -427,7 +427,7 @@ class TestRssAdminFieldMonitoringApi(BaseTenantTestCase):
             is_enabled=True,
         )
 
-        url = reverse('rss_admin:rss-admin-hact-findings-list', kwargs={'monitoring_activity_pk': activity.pk})
+        url = reverse('rss_admin:rss-admin-activity-findings-list', kwargs={'monitoring_activity_pk': activity.pk})
         resp = self.forced_auth_req('get', url, user=self.user)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
@@ -439,8 +439,9 @@ class TestRssAdminFieldMonitoringApi(BaseTenantTestCase):
         # Check that question details and options are included
         self.assertIn('question', resp.data[0]['activity_question'])
         self.assertIn('partner', resp.data[0]['activity_question'])
+        self.assertIn('findings', resp.data[0]['activity_question'])  # New field from field monitoring structure
 
-    def test_hact_findings_patch(self):
+    def test_activity_findings_patch(self):
         """Test updating HACT question answer via PATCH"""
         activity = MonitoringActivityFactory(partners=[self.partner])
 
@@ -458,7 +459,7 @@ class TestRssAdminFieldMonitoringApi(BaseTenantTestCase):
             value=False
         )
 
-        url = reverse('rss_admin:rss-admin-hact-findings-detail',
+        url = reverse('rss_admin:rss-admin-activity-findings-detail',
                       kwargs={'monitoring_activity_pk': activity.pk, 'pk': overall_finding.pk})
 
         # Update the answer
@@ -470,17 +471,17 @@ class TestRssAdminFieldMonitoringApi(BaseTenantTestCase):
         overall_finding.refresh_from_db()
         self.assertEqual(overall_finding.value, True)
 
-    def test_hact_findings_non_staff_forbidden(self):
-        """Test that non-staff users cannot access HACT findings"""
+    def test_activity_findings_non_staff_forbidden(self):
+        """Test that non-staff users cannot access activity findings"""
         non_staff_user = UserFactory(is_staff=False)
         activity = MonitoringActivityFactory()
 
-        url = reverse('rss_admin:rss-admin-hact-findings-list', kwargs={'monitoring_activity_pk': activity.pk})
+        url = reverse('rss_admin:rss-admin-activity-findings-list', kwargs={'monitoring_activity_pk': activity.pk})
         resp = self.forced_auth_req('get', url, user=non_staff_user)
         self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_hact_findings_with_question_options(self):
-        """Test that HACT findings include question options for choice questions"""
+    def test_activity_findings_with_question_options(self):
+        """Test that activity findings include question options for choice questions"""
         activity = MonitoringActivityFactory(partners=[self.partner])
 
         # Create HACT question with options
@@ -505,7 +506,7 @@ class TestRssAdminFieldMonitoringApi(BaseTenantTestCase):
             value={'option': 'yes'}
         )
 
-        url = reverse('rss_admin:rss-admin-hact-findings-list', kwargs={'monitoring_activity_pk': activity.pk})
+        url = reverse('rss_admin:rss-admin-activity-findings-list', kwargs={'monitoring_activity_pk': activity.pk})
         resp = self.forced_auth_req('get', url, user=self.user)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
@@ -513,3 +514,74 @@ class TestRssAdminFieldMonitoringApi(BaseTenantTestCase):
         self.assertIn('question', resp.data[0]['activity_question'])
         self.assertIn('options', resp.data[0]['activity_question']['question'])
         self.assertEqual(len(resp.data[0]['activity_question']['question']['options']), 2)
+
+    def test_activity_overall_findings_list(self):
+        """Test that activity overall findings endpoint returns HACT-related overall findings"""
+        activity = MonitoringActivityFactory(partners=[self.partner])
+
+        # Create HACT question
+        hact_question = QuestionFactory(is_hact=True, level='partner', is_active=True)
+        activity_question = ActivityQuestionFactory(
+            monitoring_activity=activity,
+            question=hact_question,
+            partner=self.partner,
+            is_hact=True,
+            is_enabled=True,
+        )
+
+        # Create activity overall finding
+        overall_finding = ActivityOverallFinding.objects.create(
+            monitoring_activity=activity,
+            partner=self.partner,
+            narrative_finding='Test finding',
+            on_track=True
+        )
+
+        url = reverse('rss_admin:rss-admin-activity-overall-findings-list', kwargs={'monitoring_activity_pk': activity.pk})
+        resp = self.forced_auth_req('get', url, user=self.user)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        # Should return overall findings for HACT partners
+        self.assertEqual(len(resp.data), 1)
+        self.assertEqual(resp.data[0]['partner'], self.partner.pk)
+        self.assertEqual(resp.data[0]['narrative_finding'], 'Test finding')
+        self.assertEqual(resp.data[0]['on_track'], True)
+
+        # Check structure matches field monitoring
+        self.assertIn('attachments', resp.data[0])
+        self.assertIn('findings', resp.data[0])
+
+    def test_activity_overall_findings_patch(self):
+        """Test updating activity overall finding via PATCH"""
+        activity = MonitoringActivityFactory(partners=[self.partner])
+
+        # Create HACT question to make this partner eligible
+        hact_question = QuestionFactory(is_hact=True, level='partner', is_active=True)
+        ActivityQuestionFactory(
+            monitoring_activity=activity,
+            question=hact_question,
+            partner=self.partner,
+            is_hact=True,
+            is_enabled=True,
+        )
+
+        # Create activity overall finding
+        overall_finding = ActivityOverallFinding.objects.create(
+            monitoring_activity=activity,
+            partner=self.partner,
+            narrative_finding='Initial finding',
+            on_track=False
+        )
+
+        url = reverse('rss_admin:rss-admin-activity-overall-findings-detail',
+                      kwargs={'monitoring_activity_pk': activity.pk, 'pk': overall_finding.pk})
+
+        # Update the finding
+        payload = {'narrative_finding': 'Updated finding', 'on_track': True}
+        resp = self.forced_auth_req('patch', url, user=self.user, data=payload)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        # Verify the update
+        overall_finding.refresh_from_db()
+        self.assertEqual(overall_finding.narrative_finding, 'Updated finding')
+        self.assertEqual(overall_finding.on_track, True)
