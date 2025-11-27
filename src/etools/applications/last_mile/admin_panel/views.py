@@ -151,6 +151,8 @@ class UserViewSet(ExportMixin,
         if show_all_users != "1":
             queryset = queryset.non_unicef_users()
 
+        queryset = queryset.without_rejected()
+
         return queryset.distinct()
 
     filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
@@ -339,6 +341,8 @@ class LocationsViewSet(mixins.ListModelMixin,
         'name',
         'pending_approval',
         'approved',
+        'is_active',
+        'status',
     ]
     search_fields = ('name',
                      'p_code',

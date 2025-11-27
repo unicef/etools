@@ -174,7 +174,9 @@ class UserAdminCreateSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        data['point_of_interests'] = [poi.id for poi in instance.profile.organization.partner.points_of_interest.all()]
+        data['point_of_interests'] = []
+        if (hasattr(instance.profile, 'organization') and instance.profile.organization and hasattr(instance.profile.organization, 'partner') and instance.profile.organization.partner):
+            data['point_of_interests'] = [poi.id for poi in instance.profile.organization.partner.points_of_interest.all()]
         return data
 
 
@@ -285,7 +287,9 @@ class UserAdminUpdateSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        data['point_of_interests'] = [poi.id for poi in instance.profile.organization.partner.points_of_interest.all()]
+        data['point_of_interests'] = []
+        if (hasattr(instance.profile, 'organization') and instance.profile.organization and hasattr(instance.profile.organization, 'partner') and instance.profile.organization.partner):
+            data['point_of_interests'] = [poi.id for poi in instance.profile.organization.partner.points_of_interest.all()]
         return data
 
 
@@ -311,7 +315,7 @@ class PointOfInterestCustomSerializer(serializers.ModelSerializer):
         default=serializers.CurrentUserDefault()
     )
 
-    is_active = serializers.HiddenField(
+    is_active = serializers.BooleanField(
         default=False
     )
 
@@ -603,14 +607,13 @@ class UserAlertNotificationsExportSerializer(serializers.ModelSerializer):
     alert_types = serializers.SerializerMethodField(read_only=True)
 
     def get_alert_types(self, obj):
-        alert_types_map = self.context.get('ALERT_TYPES', {})
         alert_notifications = ""
 
         realms = obj.realms.all() if hasattr(obj, 'realms') else []
 
         for realm in realms:
             if realm.group:
-                alert_notifications += f"{alert_types_map.get(realm.group.name, realm.group.name)},"
+                alert_notifications += f"{ALERT_TYPES.get(realm.group.name, realm.group.name)},"
 
         return alert_notifications
 
@@ -625,7 +628,6 @@ class AlertNotificationSerializer(serializers.ModelSerializer):
     email = serializers.EmailField()
 
     def get_alert_types(self, obj):
-        alert_types_map = self.context.get('ALERT_TYPES', {})
         data = []
 
         realms = obj.realms.all() if hasattr(obj, 'realms') else []
@@ -634,7 +636,7 @@ class AlertNotificationSerializer(serializers.ModelSerializer):
             if realm.group:
                 data.append({
                     "id": realm.group.id,
-                    "name": alert_types_map.get(realm.group.name, realm.group.name)
+                    "name": ALERT_TYPES.get(realm.group.name, realm.group.name)
                 })
 
         return data

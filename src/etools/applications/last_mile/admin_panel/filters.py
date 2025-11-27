@@ -78,6 +78,7 @@ class LocationsFilter(filters.FilterSet):
     primary_type = filters.CharFilter(field_name="poi_type__name", lookup_expr="icontains")
     secondary_type = filters.CharFilter(field_name="secondary_type__name", lookup_expr="icontains")
     is_active = filters.BooleanFilter(field_name="is_active")
+    status = filters.CharFilter(field_name="status", lookup_expr="icontains")
     latitude = filters.CharFilter(method='filter_latitude', label='Latitude')
     longitude = filters.CharFilter(method='filter_longitude', label='Longitude')
     has_pending = filters.BooleanFilter(method='filter_has_pending', label='Has Pending Items')
@@ -155,7 +156,7 @@ class LocationsFilter(filters.FilterSet):
 
     class Meta:
         model = PointOfInterest
-        fields = ('name', 'p_code', 'primary_type', 'is_active', 'secondary_type')
+        fields = ('name', 'p_code', 'primary_type', 'is_active', 'secondary_type', 'status')
 
 
 class UserLocationsFilter(filters.FilterSet):
