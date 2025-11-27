@@ -11,14 +11,6 @@ from unicef_restlib.serializers import WritableNestedSerializerMixin
 from etools.applications.action_points.categories.serializers import CategorySerializer
 from etools.applications.action_points.models import ActionPoint
 from etools.applications.action_points.serializers import CommentSerializer, HistorySerializer
-from etools.applications.field_monitoring.data_collection.models import (
-    ActivityOverallFinding,
-    ActivityQuestion,
-    ActivityQuestionOverallFinding,
-    ChecklistOverallFinding,
-    Finding,
-)
-from etools.applications.field_monitoring.fm_settings.serializers import QuestionSerializer
 from etools.applications.audit.models import Engagement
 from etools.applications.audit.serializers.auditor import PurchaseOrderItemSerializer, PurchaseOrderSerializer
 from etools.applications.audit.serializers.engagement import (
@@ -30,13 +22,25 @@ from etools.applications.audit.serializers.engagement import (
     StaffSpotCheckSerializer as BaseStaffSpotCheckSerializer,
 )
 from etools.applications.audit.serializers.mixins import EngagementDatesValidation
+from etools.applications.field_monitoring.data_collection.models import (
+    ActivityOverallFinding,
+    ActivityQuestion,
+    ActivityQuestionOverallFinding,
+    ChecklistOverallFinding,
+    Finding,
+)
+from etools.applications.field_monitoring.fm_settings.serializers import QuestionSerializer
 from etools.applications.organizations.models import Organization
 from etools.applications.partners.models import Agreement, Intervention, PartnerOrganization
 from etools.applications.partners.serializers.interventions_v2 import MinimalInterventionListSerializer
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.reports.models import Office, Section
 from etools.applications.reports.serializers.v1 import ResultSerializer, SectionSerializer
-from etools.applications.reports.serializers.v2 import MinimalOutputListSerializer, OfficeLightSerializer, OfficeSerializer
+from etools.applications.reports.serializers.v2 import (
+    MinimalOutputListSerializer,
+    OfficeLightSerializer,
+    OfficeSerializer,
+)
 from etools.applications.rss_admin.services import EngagementService, ProgrammeDocumentService
 from etools.applications.users.serializers_v3 import MinimalUserSerializer
 
@@ -710,6 +714,7 @@ class ActivityOverallFindingRssSerializer(serializers.ModelSerializer):
     def get_attachments(self, obj):
         """Extract attachments from checklists overall findings."""
         import itertools
+
         from unicef_attachments.serializers import BaseAttachmentSerializer
         attachments = itertools.chain(*(
             finding.attachments.all() for finding in self._get_checklist_overall_findings(obj)
