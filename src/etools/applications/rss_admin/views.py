@@ -449,7 +449,13 @@ class EngagementRssViewSet(PermittedSerializerMixin,
 
         # For retrieve and update, use the appropriate audit module serializer based on engagement type
         if self.action in ['retrieve', 'update', 'partial_update']:
-            obj = self.get_object()
+            try:
+                obj = self.get_object()
+                if not obj:
+                    return AuditSerializer
+            except (AttributeError, KeyError):
+                return AuditSerializer
+
             # Determine if it's a staff spot check (UNICEF-led)
             is_staff_spot_check = (
                 obj.engagement_type == Engagement.TYPES.sc and
