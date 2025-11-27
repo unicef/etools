@@ -40,14 +40,14 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
         """Test that PATCH method works for audit engagement"""
         audit = AuditFactory(status=Engagement.STATUSES.partner_contacted)
         url = reverse('rss_admin:rss-admin-engagements-detail', kwargs={'pk': audit.pk})
-        
+
         # Update some fields
         payload = {
             'total_value': 5000.00,
         }
         resp = self.forced_auth_req('patch', url, user=self.user, data=payload)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        
+
         # Verify the update
         audit.refresh_from_db()
         self.assertEqual(float(audit.total_value), 5000.00)
@@ -56,14 +56,14 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
         """Test that PATCH method works for spot check engagement"""
         spot_check = SpotCheckFactory(status=Engagement.STATUSES.partner_contacted)
         url = reverse('rss_admin:rss-admin-engagements-detail', kwargs={'pk': spot_check.pk})
-        
+
         # Update some fields
         payload = {
             'total_value': 3000.00,
         }
         resp = self.forced_auth_req('patch', url, user=self.user, data=payload)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        
+
         # Verify the update
         spot_check.refresh_from_db()
         self.assertEqual(float(spot_check.total_value), 3000.00)
@@ -72,14 +72,14 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
         """Test that PATCH method works for staff spot check engagement"""
         staff_sc = StaffSpotCheckFactory(status=Engagement.STATUSES.partner_contacted)
         url = reverse('rss_admin:rss-admin-engagements-detail', kwargs={'pk': staff_sc.pk})
-        
+
         # Update some fields
         payload = {
             'total_value': 2000.00,
         }
         resp = self.forced_auth_req('patch', url, user=self.user, data=payload)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        
+
         # Verify the update
         staff_sc.refresh_from_db()
         self.assertEqual(float(staff_sc.total_value), 2000.00)
@@ -89,7 +89,7 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
         non_staff_user = UserFactory(is_staff=False)
         audit = AuditFactory()
         url = reverse('rss_admin:rss-admin-engagements-detail', kwargs={'pk': audit.pk})
-        
+
         payload = {
             'total_value': 5000.00,
         }
@@ -100,7 +100,7 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
         """Test that PATCH method can update multiple fields at once"""
         audit = AuditFactory(status=Engagement.STATUSES.partner_contacted)
         url = reverse('rss_admin:rss-admin-engagements-detail', kwargs={'pk': audit.pk})
-        
+
         # Update multiple fields
         payload = {
             'total_value': 7500.00,
@@ -108,7 +108,7 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
         }
         resp = self.forced_auth_req('patch', url, user=self.user, data=payload)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        
+
         # Verify the updates
         audit.refresh_from_db()
         self.assertEqual(float(audit.total_value), 7500.00)
@@ -118,13 +118,13 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
         """Test that PATCH response includes full engagement data"""
         audit = AuditFactory(status=Engagement.STATUSES.partner_contacted)
         url = reverse('rss_admin:rss-admin-engagements-detail', kwargs={'pk': audit.pk})
-        
+
         payload = {
             'total_value': 4500.00,
         }
         resp = self.forced_auth_req('patch', url, user=self.user, data=payload)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        
+
         # Check that response includes key fields
         self.assertIn('id', resp.data)
         self.assertIn('engagement_type', resp.data)
@@ -135,19 +135,19 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
         """Test that PATCH persists complex engagement fields like those in the curl example"""
         from datetime import date
         audit = AuditFactory(status=Engagement.STATUSES.partner_contacted)
-        
+
         url = reverse('rss_admin:rss-admin-engagements-detail', kwargs={'pk': audit.pk})
-        
+
         # Payload matching the curl example
         payload = {
             'start_date': '2018-10-15',
             'end_date': '2018-12-15',
             'total_value': 1234.00,
         }
-        
+
         resp = self.forced_auth_req('patch', url, user=self.user, data=payload)
         self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
-        
+
         # Verify data persisted in database
         audit.refresh_from_db()
         self.assertEqual(audit.start_date, date(2018, 10, 15))
@@ -157,19 +157,19 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
     def test_engagement_patch_audit_specific_fields(self):
         """Test updating audit-specific fields that might have permission restrictions"""
         audit = AuditFactory(status=Engagement.STATUSES.partner_contacted)
-        
+
         url = reverse('rss_admin:rss-admin-engagements-detail', kwargs={'pk': audit.pk})
-        
+
         # Test fields that might be restricted by permissions
         initial_total_value = audit.total_value
         payload = {
             'total_value': 9999.00,
             'exchange_rate': 1.5,
         }
-        
+
         resp = self.forced_auth_req('patch', url, user=self.user, data=payload)
         self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
-        
+
         # Verify changes persisted
         audit.refresh_from_db()
         self.assertEqual(float(audit.total_value), 9999.00)
@@ -182,9 +182,9 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
             status=Engagement.STATUSES.partner_contacted,
             total_value=999.00
         )
-        
+
         url = reverse('rss_admin:rss-admin-engagements-detail', kwargs={'pk': audit.pk})
-        
+
         # Exact payload from curl (with WRONG field names that frontend is sending)
         payload = {
             'status': 'final',  # WRONG: Invalid transition (can't go directly from partner_contacted to final)
@@ -195,12 +195,12 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
             'total_value_usd': '1234',  # WRONG: Should be 'total_value'
             'total_value_local': '1235',  # WRONG: Not a field
         }
-        
+
         resp = self.forced_auth_req('patch', url, user=self.user, data=payload)
         # Invalid status transition will fail
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('Invalid status transition', str(resp.data))
-        
+
         # Try again without invalid status transition
         payload_without_status = {
             'scheduled_year': '2024',  # WRONG field name - will be ignored
@@ -208,26 +208,26 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
             'end_date': '2018-12-15',  # CORRECT
             'total_value_usd': '1234',  # WRONG field name - will be ignored
         }
-        
+
         resp2 = self.forced_auth_req('patch', url, user=self.user, data=payload_without_status)
         self.assertEqual(resp2.status_code, status.HTTP_200_OK, resp2.data)
-        
+
         # Verify that ONLY valid fields persisted
         audit.refresh_from_db()
         self.assertEqual(str(audit.start_date), '2018-10-15')
         self.assertEqual(str(audit.end_date), '2018-12-15')
         # Invalid field names were ignored, so total_value remains unchanged
         self.assertEqual(float(audit.total_value), 999.00)  # NOT changed to 1234
-        
+
     def test_engagement_patch_with_correct_field_names(self):
         """Test with CORRECT field names to show the difference"""
         audit = AuditFactory(
             status=Engagement.STATUSES.partner_contacted,
             total_value=999.00
         )
-        
+
         url = reverse('rss_admin:rss-admin-engagements-detail', kwargs={'pk': audit.pk})
-        
+
         # CORRECT payload with proper field names
         payload = {
             # 'status' should be updated via change-status endpoint, not here
@@ -237,10 +237,10 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
             'end_date': '2018-12-15',
             'total_value': 1234.00,  # CORRECT field name
         }
-        
+
         resp = self.forced_auth_req('patch', url, user=self.user, data=payload)
         self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
-        
+
         # Verify ALL fields persisted
         audit.refresh_from_db()
         self.assertEqual(audit.year_of_audit, 2024)
@@ -263,22 +263,22 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
             audit_opinion='qualified',
             currency_of_report='USD'
         )
-        
+
         # Add required report attachment with proper file_type
         file_type = AttachmentFileTypeFactory(name='report', code='audit_report')
         attachment = AttachmentFactory(code='audit_report', file='test.pdf', file_type=file_type)
         audit.report_attachments.add(attachment)
-        
+
         url = reverse('rss_admin:rss-admin-engagements-detail', kwargs={'pk': audit.pk})
-        
+
         # Change status from partner_contacted to report_submitted
         payload = {
             'status': Engagement.STATUSES.report_submitted
         }
-        
+
         resp = self.forced_auth_req('patch', url, user=self.user, data=payload)
         self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
-        
+
         # Verify status changed and FSM side effects occurred
         audit.refresh_from_db()
         self.assertEqual(audit.status, Engagement.STATUSES.report_submitted)
@@ -288,16 +288,16 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
         """Test that changing status via PATCH triggers FSM finalize transition"""
         audit = AuditFactory(status=Engagement.STATUSES.report_submitted)
         url = reverse('rss_admin:rss-admin-engagements-detail', kwargs={'pk': audit.pk})
-        
+
         # Change status to final
         payload = {
             'status': Engagement.STATUSES.final
         }
-        
+
         with mock.patch.object(audit.__class__, 'generate_final_report'):
             resp = self.forced_auth_req('patch', url, user=self.user, data=payload)
             self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
-        
+
         # Verify status changed and FSM side effects occurred
         audit.refresh_from_db()
         self.assertEqual(audit.status, Engagement.STATUSES.final)
@@ -307,21 +307,21 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
         """Test that send_back transition via PATCH requires a comment"""
         audit = AuditFactory(status=Engagement.STATUSES.report_submitted)
         url = reverse('rss_admin:rss-admin-engagements-detail', kwargs={'pk': audit.pk})
-        
+
         # Try to send back without comment - should fail
         payload = {
             'status': Engagement.STATUSES.partner_contacted
         }
-        
+
         resp = self.forced_auth_req('patch', url, user=self.user, data=payload)
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('send_back_comment', str(resp.data))
-        
+
         # Now with comment - should succeed
         payload['send_back_comment'] = 'Please revise the report'
         resp = self.forced_auth_req('patch', url, user=self.user, data=payload)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        
+
         audit.refresh_from_db()
         self.assertEqual(audit.status, Engagement.STATUSES.partner_contacted)
         self.assertEqual(audit.send_back_comment, 'Please revise the report')
@@ -331,21 +331,21 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
         """Test that cancel transition via PATCH requires a comment"""
         audit = AuditFactory(status=Engagement.STATUSES.partner_contacted)
         url = reverse('rss_admin:rss-admin-engagements-detail', kwargs={'pk': audit.pk})
-        
+
         # Try to cancel without comment - should fail
         payload = {
             'status': Engagement.STATUSES.cancelled
         }
-        
+
         resp = self.forced_auth_req('patch', url, user=self.user, data=payload)
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('cancel_comment', str(resp.data))
-        
+
         # Now with comment - should succeed
         payload['cancel_comment'] = 'Engagement no longer needed'
         resp = self.forced_auth_req('patch', url, user=self.user, data=payload)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        
+
         audit.refresh_from_db()
         self.assertEqual(audit.status, Engagement.STATUSES.cancelled)
         self.assertEqual(audit.cancel_comment, 'Engagement no longer needed')
@@ -355,16 +355,16 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
         """Test that invalid status transitions are rejected"""
         audit = AuditFactory(status=Engagement.STATUSES.partner_contacted)
         url = reverse('rss_admin:rss-admin-engagements-detail', kwargs={'pk': audit.pk})
-        
+
         # Try to jump directly to final (invalid transition)
         payload = {
             'status': Engagement.STATUSES.final
         }
-        
+
         resp = self.forced_auth_req('patch', url, user=self.user, data=payload)
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('Invalid status transition', str(resp.data))
-        
+
         # Verify status didn't change
         audit.refresh_from_db()
         self.assertEqual(audit.status, Engagement.STATUSES.partner_contacted)
@@ -384,23 +384,23 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
             audit_opinion='qualified',
             currency_of_report='USD'
         )
-        
+
         # Add required report attachment
         file_type = AttachmentFileTypeFactory(name='report', code='audit_report')
         attachment = AttachmentFactory(code='audit_report', file='test.pdf', file_type=file_type)
         audit.report_attachments.add(attachment)
-        
+
         url = reverse('rss_admin:rss-admin-engagements-detail', kwargs={'pk': audit.pk})
-        
+
         # Change status and other fields together
         payload = {
             'status': Engagement.STATUSES.report_submitted,
             'total_value': 5000.00
         }
-        
+
         resp = self.forced_auth_req('patch', url, user=self.user, data=payload)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        
+
         # Verify both changes took effect
         audit.refresh_from_db()
         self.assertEqual(audit.status, Engagement.STATUSES.report_submitted)
@@ -410,16 +410,16 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
     def test_engagement_patch_shared_ip_with(self):
         """Test updating shared_ip_with field with agency choices"""
         audit = AuditFactory(status=Engagement.STATUSES.partner_contacted)
-        
+
         url = reverse('rss_admin:rss-admin-engagements-detail', kwargs={'pk': audit.pk})
-        
+
         payload = {
             'shared_ip_with': ['UNDP', 'FAO'],  # Agency choice strings, not partner IDs
         }
-        
+
         resp = self.forced_auth_req('patch', url, user=self.user, data=payload)
         self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
-        
+
         # Verify the data was set
         audit.refresh_from_db()
         self.assertEqual(audit.shared_ip_with, ['UNDP', 'FAO'])
@@ -432,9 +432,9 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
             total_value=100.00,
             exchange_rate=1.0
         )
-        
+
         url = reverse('rss_admin:rss-admin-engagements-detail', kwargs={'pk': audit.pk})
-        
+
         # Step 1: PATCH with new values
         payload = {
             'start_date': '2018-10-15',
@@ -443,28 +443,28 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
             'exchange_rate': 1.25,
             'shared_ip_with': ['UNDP'],
         }
-        
+
         patch_resp = self.forced_auth_req('patch', url, user=self.user, data=payload)
         self.assertEqual(patch_resp.status_code, status.HTTP_200_OK, patch_resp.data)
-        
+
         # Step 2: Check the PATCH response has the updated values
         self.assertEqual(patch_resp.data['start_date'], '2018-10-15')
         self.assertEqual(patch_resp.data['end_date'], '2018-12-15')
         self.assertEqual(float(patch_resp.data['total_value']), 5678.00)
         self.assertEqual(float(patch_resp.data['exchange_rate']), 1.25)
         self.assertEqual(patch_resp.data['shared_ip_with'], ['UNDP'])
-        
+
         # Step 3: GET the engagement again to verify persistence
         get_resp = self.forced_auth_req('get', url, user=self.user)
         self.assertEqual(get_resp.status_code, status.HTTP_200_OK)
-        
+
         # Step 4: Verify all fields persisted in the GET response
         self.assertEqual(get_resp.data['start_date'], '2018-10-15')
         self.assertEqual(get_resp.data['end_date'], '2018-12-15')
         self.assertEqual(float(get_resp.data['total_value']), 5678.00)
         self.assertEqual(float(get_resp.data['exchange_rate']), 1.25)
         self.assertEqual(get_resp.data['shared_ip_with'], ['UNDP'])
-        
+
         # Step 5: Verify in database
         audit.refresh_from_db()
         self.assertEqual(audit.start_date, date(2018, 10, 15))
@@ -472,4 +472,3 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
         self.assertEqual(float(audit.total_value), 5678.00)
         self.assertEqual(float(audit.exchange_rate), 1.25)
         self.assertEqual(audit.shared_ip_with, ['UNDP'])
-

@@ -233,26 +233,26 @@ class EngagementLightRssSerializer(serializers.ModelSerializer):
 # RSS Admin engagement serializers without permission filtering
 class EngagementStatusUpdateMixin:
     """Mixin to handle status changes via PATCH while triggering FSM transitions.
-    
+
     When status is changed via PATCH, this intercepts it and calls the appropriate
     FSM transition method to ensure all business logic, validations, and side effects
     (notifications, date updates, etc.) are properly executed.
     """
-    
+
     def update(self, instance, validated_data):
         """Override update to handle status changes through FSM transitions."""
         new_status = validated_data.get('status')
-        
+
         # If status is being changed, route through FSM transition
         if new_status and new_status != instance.status:
             old_status = instance.status
-            
+
             # Remove status from validated_data - we'll handle it via FSM
             validated_data.pop('status', None)
-            
+
             # Update all other fields first
             instance = super().update(instance, validated_data)
-            
+
             # Map status transitions to FSM methods
             transition_map = {
                 (Engagement.STATUSES.partner_contacted, Engagement.STATUSES.report_submitted): 'submit',
@@ -261,19 +261,19 @@ class EngagementStatusUpdateMixin:
                 (Engagement.STATUSES.report_submitted, Engagement.STATUSES.cancelled): 'cancel',
                 (Engagement.STATUSES.report_submitted, Engagement.STATUSES.final): 'finalize',
             }
-            
+
             transition_key = (old_status, new_status)
             transition_method = transition_map.get(transition_key)
-            
+
             if not transition_method:
                 raise serializers.ValidationError({
                     'status': f'Invalid status transition from {old_status} to {new_status}'
                 })
-            
+
             # Call the appropriate FSM transition method
             try:
                 method = getattr(instance, transition_method)
-                
+
                 # send_back and cancel require comments
                 if transition_method == 'send_back':
                     comment = validated_data.get('send_back_comment', '')
@@ -291,21 +291,21 @@ class EngagementStatusUpdateMixin:
                     method(comment)
                 else:
                     method()
-                
+
                 # Save after transition
                 instance.save()
-                
+
                 # Refresh from DB to ensure all fields are properly loaded
                 # (FSM transitions may update datetime fields that need conversion)
                 instance.refresh_from_db()
-                
+
             except Exception as e:
                 raise serializers.ValidationError({
                     'status': f'Status transition failed: {str(e)}'
                 })
-            
+
             return instance
-        
+
         # No status change, proceed normally
         return super().update(instance, validated_data)
 
@@ -318,7 +318,7 @@ class AuditRssSerializer(EngagementStatusUpdateMixin, BaseAuditSerializer):
         required=False,
         allow_null=True
     )
-    
+
     @property
     def _readable_fields(self):
         return [field for field in self.fields.values()]
@@ -331,7 +331,7 @@ class AuditRssSerializer(EngagementStatusUpdateMixin, BaseAuditSerializer):
 class SpotCheckRssSerializer(EngagementStatusUpdateMixin, BaseSpotCheckSerializer):
     """Permission-agnostic spot check serializer for RSS Admin."""
     status = serializers.ChoiceField(choices=Engagement.STATUSES, required=False, allow_null=True)
-    
+
     @property
     def _readable_fields(self):
         return [field for field in self.fields.values()]
@@ -344,7 +344,7 @@ class SpotCheckRssSerializer(EngagementStatusUpdateMixin, BaseSpotCheckSerialize
 class StaffSpotCheckRssSerializer(EngagementStatusUpdateMixin, BaseStaffSpotCheckSerializer):
     """Permission-agnostic staff spot check serializer for RSS Admin."""
     status = serializers.ChoiceField(choices=Engagement.STATUSES, required=False, allow_null=True)
-    
+
     @property
     def _readable_fields(self):
         return [field for field in self.fields.values()]
@@ -357,7 +357,7 @@ class StaffSpotCheckRssSerializer(EngagementStatusUpdateMixin, BaseStaffSpotChec
 class MicroAssessmentRssSerializer(EngagementStatusUpdateMixin, BaseMicroAssessmentSerializer):
     """Permission-agnostic micro assessment serializer for RSS Admin."""
     status = serializers.ChoiceField(choices=Engagement.STATUSES, required=False, allow_null=True)
-    
+
     @property
     def _readable_fields(self):
         return [field for field in self.fields.values()]
@@ -370,7 +370,7 @@ class MicroAssessmentRssSerializer(EngagementStatusUpdateMixin, BaseMicroAssessm
 class SpecialAuditRssSerializer(EngagementStatusUpdateMixin, BaseSpecialAuditSerializer):
     """Permission-agnostic special audit serializer for RSS Admin."""
     status = serializers.ChoiceField(choices=Engagement.STATUSES, required=False, allow_null=True)
-    
+
     @property
     def _readable_fields(self):
         return [field for field in self.fields.values()]

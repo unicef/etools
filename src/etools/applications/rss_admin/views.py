@@ -59,7 +59,6 @@ from etools.applications.rss_admin.serializers import (
     EngagementChangeStatusSerializer,
     EngagementInitiationUpdateSerializer,
     EngagementLightRssSerializer,
-    HactQuestionOverallFindingSerializer,
     MapPartnerToWorkspaceSerializer,
     MicroAssessmentRssSerializer as MicroAssessmentSerializer,
     PartnerOrganizationRssSerializer,
@@ -755,15 +754,13 @@ class ActivityOverallFindingsRssViewSet(NestedViewSetMixin,
 
     def get_parent_filter(self):
         """Filter to HACT-related overall findings for this monitoring activity."""
-        from django.db.models import Exists, OuterRef
-        
         # Get activity questions that are HACT
         hact_questions = ActivityQuestion.objects.filter(
             monitoring_activity_id=self.kwargs['monitoring_activity_pk'],
             is_hact=True,
             is_enabled=True
         )
-        
+
         # Filter overall findings that match HACT question contexts
         return {
             'monitoring_activity_id': self.kwargs['monitoring_activity_pk'],

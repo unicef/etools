@@ -521,7 +521,7 @@ class TestRssAdminFieldMonitoringApi(BaseTenantTestCase):
 
         # Create HACT question
         hact_question = QuestionFactory(is_hact=True, level='partner', is_active=True)
-        activity_question = ActivityQuestionFactory(
+        ActivityQuestionFactory(  # noqa: F841
             monitoring_activity=activity,
             question=hact_question,
             partner=self.partner,
@@ -530,7 +530,7 @@ class TestRssAdminFieldMonitoringApi(BaseTenantTestCase):
         )
 
         # Create activity overall finding
-        overall_finding = ActivityOverallFinding.objects.create(
+        ActivityOverallFinding.objects.create(  # noqa: F841
             monitoring_activity=activity,
             partner=self.partner,
             narrative_finding='Test finding',
