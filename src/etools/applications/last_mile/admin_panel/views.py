@@ -906,6 +906,12 @@ class MaterialListView(mixins.ListModelMixin, GenericViewSet):
     permission_classes = [IsLMSMAdmin]
 
     def get_queryset(self):
+        partner_id = self.request.query_params.get('partner_id')
+        if partner_id:
+            partner = models.PartnerOrganization.objects.filter(id=partner_id).first()
+            if not partner:
+                return models.Material.objects.none()
+            return models.Material.objects.filter(partner_material__partner_organization=partner).distinct().order_by('id')
         return models.Material.objects.all().order_by('id')
 
 
