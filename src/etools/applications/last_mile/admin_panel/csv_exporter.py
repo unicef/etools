@@ -76,7 +76,8 @@ class LocationsCSVExporter(BaseCSVExporter):
             "lat": "Latitude",
             "lng": "Longitude",
             "status": "Status",
-            "implementing_partner": "Implementing Partner",
+            "implementing_partner_names": "Implementing Partner Name",
+            "implementing_partner_numbers": "Implementing Partner Number",
             "region": "Region",
             "district": "District",
             "country": "Country",
@@ -84,7 +85,10 @@ class LocationsCSVExporter(BaseCSVExporter):
             "transfer_ref": "Transfer Reference",
             "item_id": "Item ID",
             "item_name": "Item Name",
-            "item_qty": "Item Quantity"
+            "item_qty": "Item Quantity",
+            "item_batch_number": "Item Batch Number",
+            "item_expiry_date": "Item Expiry Date",
+            "approval_status": "Approval Status",
         }
 
         first_item = self._get_first_item(queryset)

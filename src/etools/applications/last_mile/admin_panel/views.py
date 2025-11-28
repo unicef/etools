@@ -287,7 +287,7 @@ class LocationsViewSet(mixins.ListModelMixin,
     ).prefetch_related(
         'partner_organizations',
         'partner_organizations__organization',
-        'destination_transfers'
+        'destination_transfers',
     ).all().order_by('id')
 
     def get_queryset(self):
