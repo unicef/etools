@@ -13,6 +13,7 @@ from etools.applications.last_mile.admin_panel.services.lm_profile_status_update
 from etools.applications.last_mile.admin_panel.services.lm_user_creator import LMUserCreator
 from etools.applications.last_mile.admin_panel.services.reverse_transfer import ReverseTransfer
 from etools.applications.last_mile.admin_panel.services.stock_management_create import StockManagementCreateService
+from etools.applications.last_mile.admin_panel.services.transfer_approval import TransferApprovalService
 from etools.applications.last_mile.admin_panel.validators import AdminPanelValidator
 from etools.applications.last_mile.permissions import LastMileUserPermissionRetriever
 from etools.applications.last_mile.serializers import PointOfInterestTypeSerializer
@@ -173,7 +174,9 @@ class UserAdminCreateSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        data['point_of_interests'] = [poi.id for poi in instance.profile.organization.partner.points_of_interest.all()]
+        data['point_of_interests'] = []
+        if (hasattr(instance.profile, 'organization') and instance.profile.organization and hasattr(instance.profile.organization, 'partner') and instance.profile.organization.partner):
+            data['point_of_interests'] = [poi.id for poi in instance.profile.organization.partner.points_of_interest.all()]
         return data
 
 
@@ -284,7 +287,9 @@ class UserAdminUpdateSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        data['point_of_interests'] = [poi.id for poi in instance.profile.organization.partner.points_of_interest.all()]
+        data['point_of_interests'] = []
+        if (hasattr(instance.profile, 'organization') and instance.profile.organization and hasattr(instance.profile.organization, 'partner') and instance.profile.organization.partner):
+            data['point_of_interests'] = [poi.id for poi in instance.profile.organization.partner.points_of_interest.all()]
         return data
 
 
@@ -310,7 +315,7 @@ class PointOfInterestCustomSerializer(serializers.ModelSerializer):
         default=serializers.CurrentUserDefault()
     )
 
-    is_active = serializers.HiddenField(
+    is_active = serializers.BooleanField(
         default=False
     )
 
@@ -390,6 +395,18 @@ class PointOfInterestAdminSerializer(serializers.ModelSerializer):
     country = serializers.CharField(read_only=True)
     region = serializers.CharField(read_only=True)
     district = serializers.CharField(read_only=True)
+    pending_approval = serializers.SerializerMethodField(read_only=True)
+    approved = serializers.SerializerMethodField(read_only=True)
+
+    def get_pending_approval(self, obj):
+        if hasattr(obj, 'pending_approval') and obj.pending_approval is not None:
+            return obj.pending_approval
+        return 0
+
+    def get_approved(self, obj):
+        if hasattr(obj, 'approved') and obj.approved is not None:
+            return obj.approved
+        return 0
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
@@ -590,14 +607,13 @@ class UserAlertNotificationsExportSerializer(serializers.ModelSerializer):
     alert_types = serializers.SerializerMethodField(read_only=True)
 
     def get_alert_types(self, obj):
-        alert_types_map = self.context.get('ALERT_TYPES', {})
         alert_notifications = ""
 
         realms = obj.realms.all() if hasattr(obj, 'realms') else []
 
         for realm in realms:
             if realm.group:
-                alert_notifications += f"{alert_types_map.get(realm.group.name, realm.group.name)},"
+                alert_notifications += f"{ALERT_TYPES.get(realm.group.name, realm.group.name)},"
 
         return alert_notifications
 
@@ -612,7 +628,6 @@ class AlertNotificationSerializer(serializers.ModelSerializer):
     email = serializers.EmailField()
 
     def get_alert_types(self, obj):
-        alert_types_map = self.context.get('ALERT_TYPES', {})
         data = []
 
         realms = obj.realms.all() if hasattr(obj, 'realms') else []
@@ -621,7 +636,7 @@ class AlertNotificationSerializer(serializers.ModelSerializer):
             if realm.group:
                 data.append({
                     "id": realm.group.id,
-                    "name": alert_types_map.get(realm.group.name, realm.group.name)
+                    "name": ALERT_TYPES.get(realm.group.name, realm.group.name)
                 })
 
         return data
@@ -741,6 +756,7 @@ class ItemTransferAdminSerializer(serializers.ModelSerializer):
     material = MaterialAdminSerializer()
     description = serializers.SerializerMethodField(read_only=True)
     transfer_name = serializers.SerializerMethodField(read_only=True)
+    approval_status = serializers.SerializerMethodField(read_only=True)
 
     def get_transfer_name(self, obj):
         if not obj.transfer:
@@ -750,9 +766,12 @@ class ItemTransferAdminSerializer(serializers.ModelSerializer):
     def get_description(self, obj):
         return obj.description
 
+    def get_approval_status(self, obj):
+        return obj.transfer.approval_status if obj.transfer else "REJECTED"
+
     class Meta:
         model = models.Item
-        fields = ('id', 'material', 'quantity', 'modified', 'uom', 'batch_id', 'description', "transfer_name", "base_uom", "base_quantity", "expiry_date")
+        fields = ('id', 'material', 'quantity', 'modified', 'uom', 'batch_id', 'description', "transfer_name", "base_uom", "base_quantity", "expiry_date", "approval_status")
 
 
 class TransferItemSerializer(serializers.ModelSerializer):
@@ -797,6 +816,7 @@ class TransferItemCreateSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         self.adminValidator.validate_items(validated_data.get('items', []))
         self.adminValidator.validate_partner_location(validated_data.get('location'), validated_data.get('partner_organization'))
+        validated_data['created_by'] = self.context['request'].user
         return StockManagementCreateService().create_stock_management(validated_data)
 
     class Meta:
@@ -1121,9 +1141,10 @@ class StockManagementImportSerializer(serializers.Serializer):
         except models.PointOfInterest.DoesNotExist:
             raise serializers.ValidationError("Point of interest not found by p_code")
 
-    def create(self, validated_data):
+    def create(self, validated_data, created_by):
         validated_data['partner_organization'] = validated_data.pop('ip_number')
         validated_data['location'] = validated_data.pop('p_code')
+        validated_data['created_by'] = created_by
         validated_data['items'] = [{
             'material': validated_data.pop('material_number'),
             'quantity': validated_data.pop('quantity'),
@@ -1257,3 +1278,29 @@ class TransferReverseAdminSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         reversed_transfer = ReverseTransfer(transfer_id=instance.pk).reverse()
         return reversed_transfer
+
+
+class BulkReviewTransferSerializer(serializers.Serializer):
+    approval_status = serializers.ChoiceField(choices=models.Transfer.ApprovalStatus.choices)
+    items = serializers.PrimaryKeyRelatedField(queryset=models.Item.all_objects.select_related('transfer').all(), many=True, write_only=True)
+    review_notes = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+
+    admin_validator = AdminPanelValidator()
+
+    def validate_approval_status(self, value):
+        self.admin_validator.validate_status(value)
+        return value
+
+    @transaction.atomic
+    def update(self, validated_data, approver_user):
+        items = validated_data.pop('items')
+        approval_status = validated_data.get('approval_status')
+        review_notes = validated_data.get('review_notes')
+        TransferApprovalService().bulk_review(
+            items=items,
+            approval_status=approval_status,
+            approver_user=approver_user,
+            review_notes=review_notes
+        )
+
+        return validated_data

@@ -126,6 +126,9 @@ class UserQuerySet(models.QuerySet):
     def without_points_of_interest(self):
         return self.filter(profile__organization__partner__points_of_interest__isnull=True)
 
+    def without_rejected(self):
+        return self.exclude(last_mile_profile__status="REJECTED")
+
 
 class UsersManager(UserManager.from_queryset(UserQuerySet)):
 
