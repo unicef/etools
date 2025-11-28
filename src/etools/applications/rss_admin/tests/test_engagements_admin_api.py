@@ -472,3 +472,39 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
         self.assertEqual(float(audit.total_value), 5678.00)
         self.assertEqual(float(audit.exchange_rate), 1.25)
         self.assertEqual(audit.shared_ip_with, ['UNDP'])
+
+    def test_engagement_patch_error_format_consistency(self):
+        """Test that all errors follow the format: {'field': ['error message']}"""
+        audit = AuditFactory(status=Engagement.STATUSES.partner_contacted)
+        url = reverse('rss_admin:rss-admin-engagements-detail', kwargs={'pk': audit.pk})
+
+        # Test 1: Invalid status transition
+        payload = {'status': Engagement.STATUSES.final}
+        resp = self.forced_auth_req('patch', url, user=self.user, data=payload)
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('status', resp.data)
+        self.assertIsInstance(resp.data['status'], list, "Error should be a list")
+        self.assertTrue(len(resp.data['status']) > 0)
+        self.assertIn('Invalid status transition', resp.data['status'][0])
+
+        # Test 2: Missing send_back_comment
+        audit.status = Engagement.STATUSES.report_submitted
+        audit.save()
+        payload = {'status': Engagement.STATUSES.partner_contacted}
+        resp = self.forced_auth_req('patch', url, user=self.user, data=payload)
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('send_back_comment', resp.data)
+        self.assertIsInstance(resp.data['send_back_comment'], list, "Error should be a list")
+        self.assertTrue(len(resp.data['send_back_comment']) > 0)
+        self.assertIn('required', resp.data['send_back_comment'][0])
+
+        # Test 3: Missing cancel_comment
+        audit.status = Engagement.STATUSES.partner_contacted
+        audit.save()
+        payload = {'status': Engagement.STATUSES.cancelled}
+        resp = self.forced_auth_req('patch', url, user=self.user, data=payload)
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('cancel_comment', resp.data)
+        self.assertIsInstance(resp.data['cancel_comment'], list, "Error should be a list")
+        self.assertTrue(len(resp.data['cancel_comment']) > 0)
+        self.assertIn('required', resp.data['cancel_comment'][0])
