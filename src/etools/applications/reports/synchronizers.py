@@ -367,7 +367,8 @@ class RAMSynchronizer(VisionDataTenantSynchronizer):
         # get all the indicators that are present in our db:
         records, wbss = self._clean_records(records)
 
-        self.log.data = records if type(records) in [dict, list] else json.loads(records)
+        if hasattr(self, 'log'):
+            self.log.data = records if type(records) in [dict, list] else json.loads(records)
 
         results = Result.objects.filter(result_type__name='Output', wbs__in=wbss).all()
         result_map = dict([(r.wbs, r) for r in results])
