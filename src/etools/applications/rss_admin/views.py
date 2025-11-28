@@ -273,11 +273,14 @@ class ProgrammeDocumentRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet,
     def bulk_close(self, request, *args, **kwargs):
         serializer = BulkCloseProgrammeDocumentsSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        result = serializer.update(serializer.validated_data, request.user)
+        result = serializer.save()
         return Response(result, status=status.HTTP_200_OK)
 
     def _apply_fr_numbers(self, data):
-        """Minimal: allow 'fr_numbers' to map to 'frs' IDs for PATCH/PUT."""
+        """Minimal: allow 'fr_numbers' to map to 'frs' IDs for PATCH/PUT.
+
+        Also validates that FRs are not already assigned to other interventions.
+        """
         fr_numbers = data.get('fr_numbers')
         if fr_numbers is None:
             return data
@@ -289,6 +292,16 @@ class ProgrammeDocumentRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet,
         missing = [n for n in numbers if n not in found]
         if missing:
             raise ValidationError({'fr_numbers': [f"Unknown FR numbers: {', '.join(missing)}"]})
+
+        # Validate that FRs are not already assigned to other interventions
+        instance = getattr(self, 'instance', None) or self.get_object()
+        for fr in qs:
+            if fr.intervention:
+                if (instance is None) or (not instance.id) or (fr.intervention.id != instance.id):
+                    raise ValidationError({
+                        'fr_numbers': [f"FR {fr.fr_number} is already assigned to {fr.intervention.number}"]
+                    })
+
         new_data = data.copy()
         new_data['frs'] = list(qs.values_list('pk', flat=True))
         new_data.pop('fr_numbers', None)

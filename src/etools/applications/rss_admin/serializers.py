@@ -179,21 +179,27 @@ class InterventionRssSerializer(serializers.ModelSerializer):
 
 
 class BulkCloseProgrammeDocumentsSerializer(serializers.Serializer):
-    programme_documents = serializers.PrimaryKeyRelatedField(queryset=Intervention.objects.all(), many=True, write_only=True)
+    programme_documents = serializers.PrimaryKeyRelatedField(queryset=Intervention.objects.all(), many=True)
 
-    def validate_programme_documents(self, programme_documents):
-        # Ensure only PDs are processed via this endpoint
-        invalid_ids = [i.id for i in programme_documents if i.document_type != Intervention.PD]
-        if invalid_ids:
-            raise serializers.ValidationError({
-                'non_pd_ids': invalid_ids,
-                'errors': ['Only Programme Documents (PD) can be bulk-closed']
-            })
-        return programme_documents
+    def validate(self, attrs):
+        """Validate the list of programme documents.
 
-    def update(self, validated_data, user):
-        interventions = validated_data.get('programme_documents', [])
-        return ProgrammeDocumentService.bulk_close(interventions)
+        Returns errors in list format for consistency with other endpoints.
+        """
+        programme_documents = attrs.get('programme_documents', [])
+        if not programme_documents:
+            raise serializers.ValidationError(['No programme documents provided'])
+        return attrs
+
+    def save(self):
+        """Process the bulk close operation.
+
+        Returns result with closed_ids and errors (if any).
+        For bulk operations, we return 200 OK even with partial failures.
+        """
+        interventions = self.validated_data.get('programme_documents', [])
+        result = ProgrammeDocumentService.bulk_close(interventions)
+        return result
 
 
 class TripApproverUpdateSerializer(serializers.ModelSerializer):

@@ -876,25 +876,27 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
             pd.refresh_from_db()
             self.assertEqual(pd.status, Intervention.CLOSED)
 
-    def test_bulk_close_rejects_non_pd(self):
+    def test_bulk_close_accepts_any_document_type(self):
+        """Test that bulk close now accepts any document type (PD, SPD, SSFA, etc)"""
+        # Create valid SPD with proper dates and review
         spd = InterventionFactory(
             agreement=self.agreement,
             document_type=Intervention.SPD,
             status=Intervention.ENDED,
         )
+        spd.end = spd.created.date()
+        spd.final_review_approved = True
+        spd.save()
+
         url = reverse('rss_admin:rss-admin-programme-documents-bulk-close')
         payload = {'programme_documents': [spd.id]}
         resp = self.forced_auth_req('put', url, user=self.user, data=payload)
-        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
-        # Assert error structure and message
-        self.assertIn('programme_documents', resp.data)
-        self.assertIn('non_pd_ids', resp.data['programme_documents'])
-        non_pd_ids = resp.data['programme_documents']['non_pd_ids']
-        self.assertIn(str(spd.id), [str(x) for x in non_pd_ids])
-        self.assertIn('errors', resp.data['programme_documents'])
-        self.assertTrue(any('Programme Documents (PD)' in msg for msg in resp.data['programme_documents']['errors']))
+        # Now SPDs are accepted and can be closed
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertIn(spd.id, resp.data['closed_ids'])
 
     def test_bulk_close_errors_when_not_ended(self):
+        """Test that bulk close returns errors for interventions not in ENDED status"""
         pd = InterventionFactory(
             agreement=self.agreement,
             document_type=Intervention.PD,
@@ -903,8 +905,14 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         url = reverse('rss_admin:rss-admin-programme-documents-bulk-close')
         payload = {'programme_documents': [pd.id]}
         resp = self.forced_auth_req('put', url, user=self.user, data=payload)
+
+        # Bulk operations return 200 OK with errors in response body for partial failures
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertIn('errors', resp.data)
         self.assertIn(pd.id, [e['id'] for e in resp.data['errors']])
+        # Verify error message
+        error_for_pd = next(e for e in resp.data['errors'] if e['id'] == pd.id)
+        self.assertTrue(any('not in ENDED status' in str(err) for err in error_for_pd['errors']))
 
     # ------------------------
     # Additional status tests
@@ -972,6 +980,80 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         self.assertIn('grouped_errors', resp.data)
         group = next(g for g in resp.data['grouped_errors'] if 'End date is in the future' in g['message'])
         self.assertEqual(set(group['ids']), {pd1.id, pd2.id})
+
+    def test_bulk_close_works_with_spds(self):
+        """Test that bulk close works with SPDs, not just PDs"""
+        # Create SPDs in ENDED status with valid past end date
+        spd1 = InterventionFactory(
+            agreement=self.agreement,
+            status=Intervention.ENDED,
+            document_type=Intervention.SPD
+        )
+        spd1.end = spd1.created.date()
+        spd1.final_review_approved = True
+        spd1.save()
+
+        spd2 = InterventionFactory(
+            agreement=self.agreement,
+            status=Intervention.ENDED,
+            document_type=Intervention.SPD
+        )
+        spd2.end = spd2.created.date()
+        spd2.final_review_approved = True
+        spd2.save()
+
+        url = reverse('rss_admin:rss-admin-programme-documents-bulk-close')
+        payload = {'programme_documents': [spd1.pk, spd2.pk]}
+        resp = self.forced_auth_req('put', url, user=self.user, data=payload)
+
+        self.assertEqual(resp.status_code, status.HTTP_200_OK, f"Error: {resp.data}")
+        # Should succeed with both SPDs
+        self.assertEqual(len(resp.data['closed_ids']), 2)
+        self.assertIn(spd1.pk, resp.data['closed_ids'])
+        self.assertIn(spd2.pk, resp.data['closed_ids'])
+
+        # Verify they were closed
+        spd1.refresh_from_db()
+        spd2.refresh_from_db()
+        self.assertEqual(spd1.status, Intervention.CLOSED)
+        self.assertEqual(spd2.status, Intervention.CLOSED)
+
+    def test_fr_validation_already_assigned(self):
+        """Test that FR validation catches FRs assigned to other interventions"""
+        # Create two interventions
+        intervention1 = InterventionFactory(agreement=self.agreement)
+        intervention2 = InterventionFactory(agreement=self.agreement)
+
+        # Create FR and assign it to intervention1
+        fr = FundsReservationHeaderFactory(intervention=intervention1)
+
+        # Try to assign the same FR to intervention2 via PATCH
+        url = reverse('rss_admin:rss-admin-programme-documents-detail', kwargs={'pk': intervention2.pk})
+        payload = {'fr_numbers': [fr.fr_number]}
+        resp = self.forced_auth_req('patch', url, user=self.user, data=payload)
+
+        # Should fail with proper error message
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('fr_numbers', resp.data)
+        self.assertIsInstance(resp.data['fr_numbers'], list)
+        error_message = resp.data['fr_numbers'][0]
+        self.assertIn(fr.fr_number, error_message)
+        self.assertIn(intervention1.number, error_message)
+        self.assertIn('already assigned', error_message.lower())
+
+    def test_fr_validation_missing_fr(self):
+        """Test that FR validation catches non-existent FR numbers"""
+        intervention = InterventionFactory(agreement=self.agreement)
+
+        url = reverse('rss_admin:rss-admin-programme-documents-detail', kwargs={'pk': intervention.pk})
+        payload = {'fr_numbers': ['INVALID_FR_NUMBER']}
+        resp = self.forced_auth_req('patch', url, user=self.user, data=payload)
+
+        # Should fail with proper error message
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('fr_numbers', resp.data)
+        self.assertIsInstance(resp.data['fr_numbers'], list)
+        self.assertIn('Unknown FR numbers', resp.data['fr_numbers'][0])
 
     def test_assign_frs_to_pd(self):
         fr1 = FundsReservationHeaderFactory(intervention=None)
