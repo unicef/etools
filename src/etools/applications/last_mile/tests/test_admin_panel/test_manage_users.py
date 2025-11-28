@@ -695,3 +695,26 @@ class TestUsersViewSet(BaseTenantTestCase):
 
         self.assertEqual(self.active_location_2.users.all().count(), 2)
         self.assertEqual(self.active_location_3.users.all().count(), 1)
+
+    def test_reject_users_and_no_return_rejected(self):
+        get_user_model().objects.exclude(id=self.approver_user.id).delete()
+        user_to_manage = UserPermissionFactory(
+            username='user_manage3_profiletest',
+            email='manage3_profiletest@example.com',
+            realms__data=['LMSM Admin Panel'],
+            profile__organization=self.organization,
+        )
+        user_to_manage.is_active = False
+        user_to_manage.save()
+        LastMileProfileFactory(user=user_to_manage, status=Profile.ApprovalStatus.REJECTED)
+        payload = {"user_ids": [user_to_manage.pk], "status": Profile.ApprovalStatus.REJECTED}
+        response = self.forced_auth_req('patch', self.bulk_url, user=self.approver_user, data=payload)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        user_to_manage.refresh_from_db()
+        self.assertFalse(user_to_manage.is_active)
+        self.assertEqual(user_to_manage.last_mile_profile.status, Profile.ApprovalStatus.REJECTED)
+
+        response = self.forced_auth_req('get', self.url, user=self.approver_user)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        response_data = response.data
+        self.assertEqual(len(response_data['results']), 1)  # Because we still have the approver_user

@@ -22,6 +22,8 @@ from etools.applications.funds.tests.factories import (
     FundsReservationItemFactory,
     GrantFactory,
 )
+from etools.applications.governments.tests.factories import GDDFactory
+from etools.applications.organizations.models import OrganizationType
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.models import Agreement, Intervention
 from etools.applications.partners.tests.factories import (
@@ -43,11 +45,17 @@ class TestFRHeaderView(BaseTenantTestCase):
         agreement = AgreementFactory(partner=partner)
         cls.intervention = InterventionFactory(agreement=agreement)
 
+        cls.government = PartnerFactory(
+            organization=OrganizationFactory(name='Partner 1', vendor_number="P1", organization_type=OrganizationType.GOVERNMENT))
+        cls.gdd = GDDFactory(partner=cls.government)
+
     def setUp(self):
         vendor_code = self.intervention.agreement.partner.vendor_number
         self.fr_1 = FundsReservationHeaderFactory(intervention=None, currency="USD", vendor_code=vendor_code)
         self.fr_2 = FundsReservationHeaderFactory(intervention=None, currency="USD", vendor_code=vendor_code)
         self.fr_3 = FundsReservationHeaderFactory(intervention=None, currency="RON")
+        self.fr_4 = FundsReservationHeaderFactory(intervention=None, currency="AFG", vendor_code=self.government.vendor_number)
+        self.fr_5 = FundsReservationHeaderFactory(intervention=None, currency="AFG", vendor_code=self.government.vendor_number)
 
     def run_request(self, data):
         response = self.forced_auth_req(
@@ -67,7 +75,7 @@ class TestFRHeaderView(BaseTenantTestCase):
         self.assertEqual(status_code, status.HTTP_200_OK)
         self.assertEqual(len(result['frs']), 1)
         self.assertEqual(result['total_actual_amt'], float(self.fr_1.actual_amt_local))
-        self.assertEqual(result['total_outstanding_amt'], float(self.fr_1.outstanding_amt))
+        self.assertEqual(result['total_outstanding_amt'], float(self.fr_1.outstanding_amt_local))
         self.assertEqual(result['total_frs_amt'], float(self.fr_1.total_amt_local))
         self.assertEqual(result['total_intervention_amt'], float(self.fr_1.intervention_amt))
 
@@ -85,7 +93,7 @@ class TestFRHeaderView(BaseTenantTestCase):
         self.assertEqual(result['total_actual_amt'],
                          float(sum([self.fr_1.actual_amt_local, self.fr_2.actual_amt_local])))
         self.assertEqual(result['total_outstanding_amt'],
-                         float(sum([self.fr_1.outstanding_amt, self.fr_2.outstanding_amt])))
+                         float(sum([self.fr_1.outstanding_amt_local, self.fr_2.outstanding_amt_local])))
         self.assertEqual(result['total_frs_amt'],
                          float(sum([self.fr_1.total_amt_local, self.fr_2.total_amt_local])))
         self.assertEqual(result['total_intervention_amt'],
@@ -126,12 +134,13 @@ class TestFRHeaderView(BaseTenantTestCase):
         self.assertEqual(result['error'], 'Values are required')
 
     @VCR.use_cassette(str(Path(__file__).parent / 'vcr_cassettes/fund_reservation_invalid.yml'))
-    def test_get_fail_with_non_existant_values(self):
+    def test_get_fail_with_non_existent_values(self):
         data = {'values': ','.join(['another bad value', 'im a bad value', ])}
         status_code, result = self.run_request(data)
         self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(result['error'], 'One or more of the FRs are used by another Document or '
-                                          'could not be found in eTools.')
+        self.assertEqual(result['error'],
+                         "The Fund Reservation another bad value could not be found. "
+                         "It can take up to 24 hours to appear in eTools, please try again later.")
     # TODO: add tests to cover, frs correctly brought in from unittest.mock. with correct vendor numbers, FR missing from vision,
     # FR with multiple line items, and FR with only one line item.
 
@@ -157,6 +166,14 @@ class TestFRHeaderView(BaseTenantTestCase):
         self.assertEqual(status_code, status.HTTP_200_OK)
         self.assertEqual(len(result['frs']), 2)
 
+    @VCR.use_cassette(str(Path(__file__).parent / 'vcr_cassettes/fund_reservation_not_found.yml'))
+    def test_get_fail_sync_vision_not_found(self):
+        data = {'values': ','.join(['9999', self.fr_4.fr_number]),
+                'gpd': self.gdd.id}
+        status_code, result = self.run_request(data)
+        self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('The Fund Reservation {} could not be found. It can take up to 24 hours to appear in eTools, please try again later.'.format(9999), result['error'])
+
     def test_get_fail_with_intervention_id(self):
         other_intervention = InterventionFactory()
         fth_value = 'im a bad value'
@@ -180,9 +197,7 @@ class TestFRHeaderView(BaseTenantTestCase):
         data = {'values': ','.join([self.fr_2.fr_number, self.fr_1.fr_number])}
         status_code, result = self.run_request(data)
         self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(result['error'],
-                         'One or more of the FRs are used by another Document '
-                         'or could not be found in eTools.')
+        self.assertEqual(result['error'], 'One or more of the FRs requested are used by another Document.')
 
     def test_get_with_intervention_fr(self):
         self.fr_1.intervention = self.intervention
@@ -195,7 +210,7 @@ class TestFRHeaderView(BaseTenantTestCase):
         self.assertEqual(result['total_actual_amt'], float(sum([self.fr_1.actual_amt_local,
                                                                 self.fr_2.actual_amt_local])))
         self.assertEqual(result['total_outstanding_amt'],
-                         float(sum([self.fr_1.outstanding_amt, self.fr_2.outstanding_amt])))
+                         float(sum([self.fr_1.outstanding_amt_local, self.fr_2.outstanding_amt_local])))
         self.assertEqual(result['total_frs_amt'],
                          float(sum([self.fr_1.total_amt_local, self.fr_2.total_amt_local])))
         self.assertEqual(result['total_intervention_amt'],
@@ -336,6 +351,36 @@ class TestFRHeaderView(BaseTenantTestCase):
         self.assertEqual(status_code, status.HTTP_200_OK)
         self.assertEqual(result['currencies_match'], False)
         self.assertEqual(result['total_intervention_amt'], 0)
+
+    def test_get_fail_with_gpd_fr(self):
+        self.fr_4.gdd = self.gdd
+        self.fr_4.save(update_fields=['gdd'])
+        data = {'values': ','.join([self.fr_2.fr_number, self.fr_4.fr_number])}
+        status_code, result = self.run_request(data)
+        self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(result['error'], 'One or more of the FRs requested are used by another Document.')
+
+    def test_get_with_gdd_fr(self):
+        data = {'values': ','.join([self.fr_4.fr_number, self.fr_5.fr_number]),
+                'gdd': self.gdd.id}
+        status_code, result = self.run_request(data)
+        self.assertEqual(status_code, status.HTTP_200_OK)
+        self.assertEqual(len(result['frs']), 2)
+        self.assertEqual(result['total_actual_amt'], float(sum([self.fr_4.actual_amt_local,
+                                                                self.fr_5.actual_amt_local])))
+        self.assertEqual(result['total_outstanding_amt'],
+                         float(sum([self.fr_4.outstanding_amt_local, self.fr_5.outstanding_amt_local])))
+        self.assertEqual(result['total_frs_amt'],
+                         float(sum([self.fr_4.total_amt_local, self.fr_5.total_amt_local])))
+        self.assertEqual(result['total_intervention_amt'],
+                         float(sum([self.fr_4.intervention_amt, self.fr_5.intervention_amt])))
+
+    def test_get_with_gpd_not_found(self):
+        data = {'values': ','.join([self.fr_4.fr_number, self.fr_5.fr_number]),
+                'gdd': 12345}
+        status_code, result = self.run_request(data)
+        self.assertEqual(status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(result['error'], 'GPD with id 12345 could not be found.')
 
 
 class TestExternalReservationAPIView(BaseTenantTestCase):
