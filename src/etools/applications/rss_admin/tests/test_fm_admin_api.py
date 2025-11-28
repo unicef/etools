@@ -585,3 +585,145 @@ class TestRssAdminFieldMonitoringApi(BaseTenantTestCase):
         overall_finding.refresh_from_db()
         self.assertEqual(overall_finding.narrative_finding, 'Updated finding')
         self.assertEqual(overall_finding.on_track, True)
+
+    def test_activity_findings_patch_single(self):
+        """Test PATCH on a single finding"""
+        activity = MonitoringActivityFactory(partners=[self.partner])
+
+        # Create HACT question with overall finding
+        hact_question = QuestionFactory(is_hact=True, level='partner', is_active=True)
+        activity_question = ActivityQuestionFactory(
+            monitoring_activity=activity,
+            question=hact_question,
+            partner=self.partner,
+            is_hact=True,
+            is_enabled=True,
+        )
+        overall_finding = ActivityQuestionOverallFinding.objects.create(
+            activity_question=activity_question
+        )
+
+        url = reverse(
+            'rss_admin:rss-admin-activity-findings-detail',
+            kwargs={'monitoring_activity_pk': activity.pk, 'pk': overall_finding.pk}
+        )
+
+        # PATCH to update the value
+        payload = {'value': 'Updated finding value'}
+        resp = self.forced_auth_req('patch', url, user=self.user, data=payload)
+
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        overall_finding.refresh_from_db()
+        self.assertEqual(overall_finding.value, 'Updated finding value')
+
+    def test_activity_findings_patch_bulk(self):
+        """Test bulk PATCH on multiple findings"""
+        activity = MonitoringActivityFactory(partners=[self.partner])
+
+        # Create multiple HACT questions with overall findings
+        hact_question1 = QuestionFactory(is_hact=True, level='partner', is_active=True)
+        activity_question1 = ActivityQuestionFactory(
+            monitoring_activity=activity,
+            question=hact_question1,
+            partner=self.partner,
+            is_hact=True,
+            is_enabled=True,
+        )
+        overall_finding1 = ActivityQuestionOverallFinding.objects.create(
+            activity_question=activity_question1
+        )
+
+        hact_question2 = QuestionFactory(is_hact=True, level='partner', is_active=True)
+        activity_question2 = ActivityQuestionFactory(
+            monitoring_activity=activity,
+            question=hact_question2,
+            partner=self.partner,
+            is_hact=True,
+            is_enabled=True,
+        )
+        overall_finding2 = ActivityQuestionOverallFinding.objects.create(
+            activity_question=activity_question2
+        )
+
+        url = reverse('rss_admin:rss-admin-activity-findings-list', kwargs={'monitoring_activity_pk': activity.pk})
+
+        # Bulk PATCH to update multiple findings
+        payload = [
+            {'id': overall_finding1.pk, 'value': 'Bulk update value 1'},
+            {'id': overall_finding2.pk, 'value': 'Bulk update value 2'}
+        ]
+        resp = self.forced_auth_req('patch', url, user=self.user, data=payload)
+
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        # Verify both findings were updated
+        overall_finding1.refresh_from_db()
+        overall_finding2.refresh_from_db()
+        self.assertEqual(overall_finding1.value, 'Bulk update value 1')
+        self.assertEqual(overall_finding2.value, 'Bulk update value 2')
+
+    def test_activity_findings_patch_bulk_requires_list(self):
+        """Test that bulk PATCH requires a list, not a single object"""
+        activity = MonitoringActivityFactory(partners=[self.partner])
+
+        hact_question = QuestionFactory(is_hact=True, level='partner', is_active=True)
+        activity_question = ActivityQuestionFactory(
+            monitoring_activity=activity,
+            question=hact_question,
+            partner=self.partner,
+            is_hact=True,
+            is_enabled=True,
+        )
+        overall_finding = ActivityQuestionOverallFinding.objects.create(
+            activity_question=activity_question
+        )
+
+        url = reverse('rss_admin:rss-admin-activity-findings-list', kwargs={'monitoring_activity_pk': activity.pk})
+
+        # Send a single object instead of a list - should fail
+        payload = {'id': overall_finding.pk, 'value': 'Single object'}
+        resp = self.forced_auth_req('patch', url, user=self.user, data=payload)
+
+        # Should return 400 Bad Request because it expects a list
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_activity_findings_patch_bulk_only_updates_specified_ids(self):
+        """Test that bulk PATCH only updates findings with specified IDs"""
+        activity = MonitoringActivityFactory(partners=[self.partner])
+
+        # Create three findings
+        findings = []
+        for i in range(3):
+            hact_question = QuestionFactory(is_hact=True, level='partner', is_active=True)
+            activity_question = ActivityQuestionFactory(
+                monitoring_activity=activity,
+                question=hact_question,
+                partner=self.partner,
+                is_hact=True,
+                is_enabled=True,
+            )
+            finding = ActivityQuestionOverallFinding.objects.create(
+                activity_question=activity_question,
+                value=f'Original value {i}'
+            )
+            findings.append(finding)
+
+        url = reverse('rss_admin:rss-admin-activity-findings-list', kwargs={'monitoring_activity_pk': activity.pk})
+
+        # Only update the first two
+        payload = [
+            {'id': findings[0].pk, 'value': 'Updated 0'},
+            {'id': findings[1].pk, 'value': 'Updated 1'}
+        ]
+        resp = self.forced_auth_req('patch', url, user=self.user, data=payload)
+
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        # Verify only the first two were updated
+        findings[0].refresh_from_db()
+        findings[1].refresh_from_db()
+        findings[2].refresh_from_db()
+
+        self.assertEqual(findings[0].value, 'Updated 0')
+        self.assertEqual(findings[1].value, 'Updated 1')
+        self.assertEqual(findings[2].value, 'Original value 2')  # Unchanged

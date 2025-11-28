@@ -2,7 +2,7 @@ import copy
 
 # Field Monitoring imports for new features
 from django.core.exceptions import ObjectDoesNotExist
-from django.db import connection
+from django.db import connection, transaction
 from django.db.models import Count, Prefetch
 
 from django_filters.rest_framework import DjangoFilterBackend
@@ -705,14 +705,43 @@ class MonitoringActivityRssViewSet(viewsets.ModelViewSet):
         return Response({'detail': 'Monitoring status updated', 'on_track': aof.on_track}, status=status.HTTP_200_OK)
 
 
+class BulkUpdateMixin:
+    """Mixin to enable bulk PATCH updates on a viewset.
+
+    Matches the field monitoring BulkUpdateMixin implementation.
+    Accepts a list of objects with IDs and updates them in a transaction.
+    """
+    @transaction.atomic
+    def patch(self, request, *args, **kwargs):
+        """Bulk update action. IDs are required to correctly identify instances to update."""
+        if not isinstance(request.data, list):
+            return Response({'error': 'Expected a list of items'}, status=status.HTTP_400_BAD_REQUEST)
+
+        objects_to_update = self.filter_queryset(self.get_queryset()).filter(**{
+            'id__in': [d['id'] for d in request.data],
+        })
+        data_by_id = {i.pop('id'): i for i in request.data}
+
+        updated_objects = []
+
+        for obj in objects_to_update:
+            serializer = self.get_serializer(instance=obj, data=data_by_id[obj.id], partial=True)
+            serializer.is_valid(raise_exception=True)
+            updated_objects.append(serializer.save())
+
+        return Response(self.get_serializer(instance=updated_objects, many=True).data, status=status.HTTP_200_OK)
+
+
 class ActivityFindingsRssViewSet(NestedViewSetMixin,
                                  mixins.ListModelMixin,
                                  mixins.UpdateModelMixin,
+                                 BulkUpdateMixin,
                                  viewsets.GenericViewSet):
     """RSS Admin viewset for HACT activity question findings.
 
     Matches the structure of field monitoring data collection findings endpoint.
     Filtered to HACT questions only.
+    Supports both single PATCH (via UpdateModelMixin) and bulk PATCH (via BulkUpdateMixin).
     """
     permission_classes = (IsRssAdmin,)
     queryset = ActivityQuestionOverallFinding.objects.select_related(
