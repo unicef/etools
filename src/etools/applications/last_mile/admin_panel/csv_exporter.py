@@ -5,7 +5,7 @@ from typing import Any, Dict, Iterator, List
 
 class BaseCSVExporter:
 
-    DEFAULT_CHUNK_SIZE = 100
+    DEFAULT_CHUNK_SIZE = 1000
 
     def __init__(self, chunk_size: int = DEFAULT_CHUNK_SIZE):
         self.chunk_size = chunk_size
@@ -16,6 +16,9 @@ class BaseCSVExporter:
         writer.writerow(row_data)
         output.seek(0)
         return output.read()
+
+    def _serialize_items_batch(self, items: List[Any], serializer_class: Any) -> List[Dict[str, Any]]:
+        return serializer_class(items, many=True).data
 
     def _serialize_item(self, item: Any, serializer_class: Any) -> Dict[str, Any]:
         return serializer_class(item).data
@@ -45,10 +48,21 @@ class UsersCSVExporter(BaseCSVExporter):
 
         yield self._write_csv_row(headers.values())
 
+        chunk = []
         for user in queryset.iterator(chunk_size=self.chunk_size):
-            serialized_data = self._serialize_item(user, serializer_class)
-            row_values = self._extract_values(serialized_data, headers.keys())
-            yield self._write_csv_row(row_values)
+            chunk.append(user)
+            if len(chunk) >= self.chunk_size:
+                serialized_data_list = self._serialize_items_batch(chunk, serializer_class)
+                for serialized_data in serialized_data_list:
+                    row_values = self._extract_values(serialized_data, headers.keys())
+                    yield self._write_csv_row(row_values)
+                chunk = []
+
+        if chunk:
+            serialized_data_list = self._serialize_items_batch(chunk, serializer_class)
+            for serialized_data in serialized_data_list:
+                row_values = self._extract_values(serialized_data, headers.keys())
+                yield self._write_csv_row(row_values)
 
 
 class LocationsCSVExporter(BaseCSVExporter):
@@ -104,24 +118,43 @@ class LocationsCSVExporter(BaseCSVExporter):
         if has_row_expansion:
             yield self._write_csv_row(expanded_headers.values())
 
-            first_rows = serializer.generate_rows(first_item)
-            for row_data in first_rows:
-                row_values = self._extract_values(row_data, expanded_headers.keys())
-                yield self._write_csv_row(row_values)
+            chunk = []
+            for item in queryset.iterator(chunk_size=self.chunk_size):
+                chunk.append(item)
+                if len(chunk) >= self.chunk_size:
+                    for obj in chunk:
+                        item_serializer = serializer_class(obj)
+                        rows = item_serializer.generate_rows(obj)
+                        for row_data in rows:
+                            row_values = self._extract_values(row_data, expanded_headers.keys())
+                            yield self._write_csv_row(row_values)
+                    chunk = []
 
-            for item in queryset[1:].iterator(chunk_size=self.chunk_size):
-                item_serializer = serializer_class(item)
-                rows = item_serializer.generate_rows(item)
-                for row_data in rows:
-                    row_values = self._extract_values(row_data, expanded_headers.keys())
-                    yield self._write_csv_row(row_values)
+            if chunk:
+                for obj in chunk:
+                    item_serializer = serializer_class(obj)
+                    rows = item_serializer.generate_rows(obj)
+                    for row_data in rows:
+                        row_values = self._extract_values(row_data, expanded_headers.keys())
+                        yield self._write_csv_row(row_values)
         else:
             yield self._write_csv_row(standard_headers.values())
 
+            chunk = []
             for item in queryset.iterator(chunk_size=self.chunk_size):
-                serialized_data = self._serialize_item(item, serializer_class)
-                row_values = self._extract_values(serialized_data, standard_headers.keys())
-                yield self._write_csv_row(row_values)
+                chunk.append(item)
+                if len(chunk) >= self.chunk_size:
+                    serialized_data_list = self._serialize_items_batch(chunk, serializer_class)
+                    for serialized_data in serialized_data_list:
+                        row_values = self._extract_values(serialized_data, standard_headers.keys())
+                        yield self._write_csv_row(row_values)
+                    chunk = []
+
+            if chunk:
+                serialized_data_list = self._serialize_items_batch(chunk, serializer_class)
+                for serialized_data in serialized_data_list:
+                    row_values = self._extract_values(serialized_data, standard_headers.keys())
+                    yield self._write_csv_row(row_values)
 
 
 class UserLocationsCSVExporter(BaseCSVExporter):
@@ -138,10 +171,21 @@ class UserLocationsCSVExporter(BaseCSVExporter):
 
         yield self._write_csv_row(headers.values())
 
+        chunk = []
         for user in queryset.iterator(chunk_size=self.chunk_size):
-            serialized_data = self._serialize_item(user, serializer_class)
-            row_values = self._extract_values(serialized_data, headers.keys())
-            yield self._write_csv_row(row_values)
+            chunk.append(user)
+            if len(chunk) >= self.chunk_size:
+                serialized_data_list = self._serialize_items_batch(chunk, serializer_class)
+                for serialized_data in serialized_data_list:
+                    row_values = self._extract_values(serialized_data, headers.keys())
+                    yield self._write_csv_row(row_values)
+                chunk = []
+
+        if chunk:
+            serialized_data_list = self._serialize_items_batch(chunk, serializer_class)
+            for serialized_data in serialized_data_list:
+                row_values = self._extract_values(serialized_data, headers.keys())
+                yield self._write_csv_row(row_values)
 
 
 class POITypesCSVExporter(BaseCSVExporter):

@@ -1051,7 +1051,8 @@ class TestStockManagementViewSet(BaseTenantTestCase):
         self.assertIn('Latitude', content)
         self.assertIn('Longitude', content)
         self.assertIn('Status', content)
-        self.assertIn('Implementing Partner', content)
+        self.assertIn('Implementing Partner Name', content)
+        self.assertIn('Implementing Partner Number', content)
         self.assertIn('Region', content)
         self.assertIn('District', content)
         self.assertIn('Country', content)
@@ -1061,6 +1062,10 @@ class TestStockManagementViewSet(BaseTenantTestCase):
         self.assertIn('Item ID', content)
         self.assertIn('Item Name', content)
         self.assertIn('Item Quantity', content)
+        self.assertIn('Item Batch Number', content)
+        self.assertIn('Item Expiry Date', content)
+        self.assertIn('Approval Status', content)
+
 
     def test_create_transfer_item_has_pending_approval_status(self):
         destination = PointOfInterestFactory(
