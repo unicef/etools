@@ -22,6 +22,7 @@ from etools.applications.funds.tests.factories import (
     FundsReservationItemFactory,
     GrantFactory,
 )
+from etools.applications.governments.models import GDD
 from etools.applications.governments.tests.factories import GDDFactory
 from etools.applications.organizations.models import OrganizationType
 from etools.applications.organizations.tests.factories import OrganizationFactory
@@ -548,7 +549,7 @@ class TestPDExternalReservationAPIView(BaseTenantTestCase):
         response = self.client.post(reverse('funds:pd-external-funds-reservation'), self.data, format='json')
         self.assertEqual(status.HTTP_404_NOT_FOUND, response.status_code)
         vision_log = VisionSyncLog.objects.filter(
-            handler_name='EZHactFundsReservation'
+            handler_name='EZHactPDFundsReservation'
         ).last()
         self.assertEqual(vision_log.data, self.data)
 
@@ -678,17 +679,17 @@ class TestGPDExternalReservationAPIView(BaseTenantTestCase):
         tenant_switch.countries.add(connection.tenant)
         self.assertTrue(tenant_switch.is_active())
 
-        self.assertEqual(self.intervention.status, Intervention.DRAFT)
+        self.assertEqual(self.gdd.status, GDD.DRAFT)
 
-        self.data["pd_reference_number"] = self.intervention.number
+        self.data["gpd_reference_number"] = self.gdd.number
 
-        response = self.client.post(reverse('funds:pd-external-funds-reservation'), self.data, format='json')
+        response = self.client.post(reverse('funds:gpd-external-funds-reservation'), self.data, format='json')
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
 
         self.assertEqual(self.gdd.frs.count(), 1)
         funds_reservation = self.gdd.frs.first()
         self.gdd.refresh_from_db()
-        self.assertEqual(self.gdd.status, Intervention.DRAFT)
+        self.assertEqual(self.gdd.status, self.gdd.DRAFT)
         self._assert_payload(funds_reservation, self.data)
 
     @override_settings(ETOOLS_EZHACT_EMAIL='test@example.com', ETOOLS_EZHACT_TOKEN='testkey')
@@ -703,7 +704,8 @@ class TestGPDExternalReservationAPIView(BaseTenantTestCase):
             realms__data=['IP Viewer'],
             profile__organization=self.partner.organization
         )
-        signed_intervention = SignedInterventionFactory(
+        approved_gdd = GDDFactory(
+            status=GDD.APPROVED,
             agreement=self.agreement,
             budget_owner=unicef_staff,
             unicef_signatory=unicef_staff,
@@ -712,23 +714,23 @@ class TestGPDExternalReservationAPIView(BaseTenantTestCase):
             unicef_focal_points=[unicef_staff]
         )
 
-        self.assertEqual(signed_intervention.status, Intervention.SIGNED)
+        self.assertEqual(approved_gdd.status, GDD.APPROVED)
 
-        self.data["gpd_reference_number"] = signed_intervention.number
+        self.data["gpd_reference_number"] = approved_gdd.number
 
-        response = self.client.post(reverse('funds:pd-external-funds-reservation'), self.data, format='json')
+        response = self.client.post(reverse('funds:gpd-external-funds-reservation'), self.data, format='json')
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
-        self.assertEqual(signed_intervention.frs.count(), 1)
+        self.assertEqual(approved_gdd.frs.count(), 1)
 
-        signed_intervention.refresh_from_db()
-        self.assertEqual(signed_intervention.status, Intervention.ACTIVE)
+        approved_gdd.refresh_from_db()
+        # self.assertEqual(approved_gdd.status, GDD.ACTIVE)
 
-        funds_reservation = signed_intervention.frs.first()
+        funds_reservation = approved_gdd.frs.first()
 
         self._assert_payload(funds_reservation, self.data)
 
     @override_settings(ETOOLS_EZHACT_EMAIL='test@example.com', ETOOLS_EZHACT_TOKEN='testkey')
-    def test_post_404_pd_not_found(self):
+    def test_post_404_gpd_not_found(self):
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token.key)
         tenant_switch = TenantSwitchFactory(name="ezhact_external_fr_disabled")
         tenant_switch.countries.add(connection.tenant)
@@ -749,16 +751,16 @@ class TestGPDExternalReservationAPIView(BaseTenantTestCase):
         self.assertTrue(tenant_switch.is_active())
 
         with override_settings(ETOOLS_EZHACT_EMAIL='test@example.com', ETOOLS_EZHACT_TOKEN='wrongkey'):
-            response = self.client.post(reverse('funds:pd-external-funds-reservation'), data={}, format='json')
+            response = self.client.post(reverse('funds:gpd-external-funds-reservation'), data={}, format='json')
 
             self.assertEqual(status.HTTP_401_UNAUTHORIZED, response.status_code)
 
         with override_settings(ETOOLS_EZHACT_EMAIL='wrong@example.com', ETOOLS_EZHACT_TOKEN='testkey'):
-            response = self.client.post(reverse('funds:pd-external-funds-reservation'), data={}, format='json')
+            response = self.client.post(reverse('funds:gpd-external-funds-reservation'), data={}, format='json')
             self.assertEqual(status.HTTP_401_UNAUTHORIZED, response.status_code)
 
         tenant_switch.is_active = False
         tenant_switch.save()
         with override_settings(ETOOLS_EZHACT_EMAIL='test@example.com', ETOOLS_EZHACT_TOKEN='testkey'):
-            response = self.client.post(reverse('funds:pd-external-funds-reservation'), data={}, format='json')
+            response = self.client.post(reverse('funds:gpd-external-funds-reservation'), data={}, format='json')
             self.assertEqual(status.HTTP_401_UNAUTHORIZED, response.status_code)

@@ -35,7 +35,7 @@ urlpatterns = (
     re_path(r'^external-reservation/$',
             view=PDExternalReservationAPIView.as_view(),
             name='pd-external-funds-reservation'),
-    re_path(r'^gpd-external-reservation-gpd/$',
+    re_path(r'^gpd-external-reservation/$',
             view=GPDExternalReservationAPIView.as_view(),
             name='gpd-external-funds-reservation'),
 )
