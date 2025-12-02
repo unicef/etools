@@ -491,7 +491,7 @@ class TestPDExternalReservationAPIView(BaseTenantTestCase):
 
         self.data["pd_reference_number"] = self.intervention.number
 
-        response = self.client.post(reverse('funds:external-funds-reservation'), self.data, format='json')
+        response = self.client.post(reverse('funds:pd-external-funds-reservation'), self.data, format='json')
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
 
         self.assertEqual(self.intervention.frs.count(), 1)
@@ -525,7 +525,7 @@ class TestPDExternalReservationAPIView(BaseTenantTestCase):
 
         self.data["pd_reference_number"] = signed_intervention.number
 
-        response = self.client.post(reverse('funds:external-funds-reservation'), self.data, format='json')
+        response = self.client.post(reverse('funds:pd-external-funds-reservation'), self.data, format='json')
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
         self.assertEqual(signed_intervention.frs.count(), 1)
 
@@ -545,7 +545,7 @@ class TestPDExternalReservationAPIView(BaseTenantTestCase):
 
         self.data["pd_reference_number"] = 'inexistent ref number'
 
-        response = self.client.post(reverse('funds:external-funds-reservation'), self.data, format='json')
+        response = self.client.post(reverse('funds:pd-external-funds-reservation'), self.data, format='json')
         self.assertEqual(status.HTTP_404_NOT_FOUND, response.status_code)
         vision_log = VisionSyncLog.objects.filter(
             handler_name='EZHactFundsReservation'
@@ -558,18 +558,18 @@ class TestPDExternalReservationAPIView(BaseTenantTestCase):
         self.assertTrue(tenant_switch.is_active())
 
         with override_settings(ETOOLS_EZHACT_EMAIL='test@example.com', ETOOLS_EZHACT_TOKEN='wrongkey'):
-            response = self.client.post(reverse('funds:external-funds-reservation'), data={}, format='json')
+            response = self.client.post(reverse('funds:pd-external-funds-reservation'), data={}, format='json')
 
             self.assertEqual(status.HTTP_401_UNAUTHORIZED, response.status_code)
 
         with override_settings(ETOOLS_EZHACT_EMAIL='wrong@example.com', ETOOLS_EZHACT_TOKEN='testkey'):
-            response = self.client.post(reverse('funds:external-funds-reservation'), data={}, format='json')
+            response = self.client.post(reverse('funds:pd-external-funds-reservation'), data={}, format='json')
             self.assertEqual(status.HTTP_401_UNAUTHORIZED, response.status_code)
 
         tenant_switch.is_active = False
         tenant_switch.save()
         with override_settings(ETOOLS_EZHACT_EMAIL='test@example.com', ETOOLS_EZHACT_TOKEN='testkey'):
-            response = self.client.post(reverse('funds:external-funds-reservation'), data={}, format='json')
+            response = self.client.post(reverse('funds:pd-external-funds-reservation'), data={}, format='json')
             self.assertEqual(status.HTTP_401_UNAUTHORIZED, response.status_code)
 
 
@@ -736,7 +736,7 @@ class TestGPDExternalReservationAPIView(BaseTenantTestCase):
 
         self.data["gpd_reference_number"] = 'inexistent ref number'
 
-        response = self.client.post(reverse('funds:external-funds-reservation'), self.data, format='json')
+        response = self.client.post(reverse('funds:gpd-external-funds-reservation'), self.data, format='json')
         self.assertEqual(status.HTTP_404_NOT_FOUND, response.status_code)
         vision_log = VisionSyncLog.objects.filter(
             handler_name='EZHactGPDFundsReservation'
@@ -749,16 +749,16 @@ class TestGPDExternalReservationAPIView(BaseTenantTestCase):
         self.assertTrue(tenant_switch.is_active())
 
         with override_settings(ETOOLS_EZHACT_EMAIL='test@example.com', ETOOLS_EZHACT_TOKEN='wrongkey'):
-            response = self.client.post(reverse('funds:external-funds-reservation'), data={}, format='json')
+            response = self.client.post(reverse('funds:pd-external-funds-reservation'), data={}, format='json')
 
             self.assertEqual(status.HTTP_401_UNAUTHORIZED, response.status_code)
 
         with override_settings(ETOOLS_EZHACT_EMAIL='wrong@example.com', ETOOLS_EZHACT_TOKEN='testkey'):
-            response = self.client.post(reverse('funds:external-funds-reservation'), data={}, format='json')
+            response = self.client.post(reverse('funds:pd-external-funds-reservation'), data={}, format='json')
             self.assertEqual(status.HTTP_401_UNAUTHORIZED, response.status_code)
 
         tenant_switch.is_active = False
         tenant_switch.save()
         with override_settings(ETOOLS_EZHACT_EMAIL='test@example.com', ETOOLS_EZHACT_TOKEN='testkey'):
-            response = self.client.post(reverse('funds:external-funds-reservation'), data={}, format='json')
+            response = self.client.post(reverse('funds:pd-external-funds-reservation'), data={}, format='json')
             self.assertEqual(status.HTTP_401_UNAUTHORIZED, response.status_code)
