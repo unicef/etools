@@ -1066,7 +1066,6 @@ class TestStockManagementViewSet(BaseTenantTestCase):
         self.assertIn('Item Expiry Date', content)
         self.assertIn('Approval Status', content)
 
-
     def test_create_transfer_item_has_pending_approval_status(self):
         destination = PointOfInterestFactory(
             partner_organizations=[self.partner], name="Pending Approval POI"
