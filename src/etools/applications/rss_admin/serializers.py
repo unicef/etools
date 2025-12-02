@@ -22,13 +22,25 @@ from etools.applications.audit.serializers.engagement import (
     StaffSpotCheckSerializer as BaseStaffSpotCheckSerializer,
 )
 from etools.applications.audit.serializers.mixins import EngagementDatesValidation
+from etools.applications.field_monitoring.data_collection.models import (
+    ActivityOverallFinding,
+    ActivityQuestion,
+    ActivityQuestionOverallFinding,
+    ChecklistOverallFinding,
+    Finding,
+)
+from etools.applications.field_monitoring.fm_settings.serializers import QuestionSerializer
 from etools.applications.organizations.models import Organization
 from etools.applications.partners.models import Agreement, Intervention, PartnerOrganization
 from etools.applications.partners.serializers.interventions_v2 import MinimalInterventionListSerializer
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.reports.models import Office, Section
 from etools.applications.reports.serializers.v1 import ResultSerializer, SectionSerializer
-from etools.applications.reports.serializers.v2 import OfficeLightSerializer, OfficeSerializer
+from etools.applications.reports.serializers.v2 import (
+    MinimalOutputListSerializer,
+    OfficeLightSerializer,
+    OfficeSerializer,
+)
 from etools.applications.rss_admin.services import EngagementService, ProgrammeDocumentService
 from etools.applications.users.serializers_v3 import MinimalUserSerializer
 
@@ -223,39 +235,153 @@ class EngagementLightRssSerializer(serializers.ModelSerializer):
 
 
 # RSS Admin engagement serializers without permission filtering
-class AuditRssSerializer(BaseAuditSerializer):
+class EngagementStatusUpdateMixin:
+    """Mixin to handle status changes via PATCH while triggering FSM transitions.
+
+    When status is changed via PATCH, this intercepts it and calls the appropriate
+    FSM transition method to ensure all business logic, validations, and side effects
+    (notifications, date updates, etc.) are properly executed.
+    """
+
+    def update(self, instance, validated_data):
+        """Override update to handle status changes through FSM transitions."""
+        new_status = validated_data.get('status')
+
+        # If status is being changed, route through FSM transition
+        if new_status and new_status != instance.status:
+            old_status = instance.status
+
+            # Remove status from validated_data - we'll handle it via FSM
+            validated_data.pop('status', None)
+
+            # Update all other fields first
+            instance = super().update(instance, validated_data)
+
+            # Map status transitions to FSM methods
+            transition_map = {
+                (Engagement.STATUSES.partner_contacted, Engagement.STATUSES.report_submitted): 'submit',
+                (Engagement.STATUSES.report_submitted, Engagement.STATUSES.partner_contacted): 'send_back',
+                (Engagement.STATUSES.partner_contacted, Engagement.STATUSES.cancelled): 'cancel',
+                (Engagement.STATUSES.report_submitted, Engagement.STATUSES.cancelled): 'cancel',
+                (Engagement.STATUSES.report_submitted, Engagement.STATUSES.final): 'finalize',
+            }
+
+            transition_key = (old_status, new_status)
+            transition_method = transition_map.get(transition_key)
+
+            if not transition_method:
+                raise serializers.ValidationError({
+                    'status': f'Invalid status transition from {old_status} to {new_status}'
+                })
+
+            # Call the appropriate FSM transition method
+            try:
+                method = getattr(instance, transition_method)
+
+                # send_back and cancel require comments
+                if transition_method == 'send_back':
+                    comment = validated_data.get('send_back_comment', '')
+                    if not comment:
+                        raise serializers.ValidationError({
+                            'send_back_comment': 'This field is required when sending back'
+                        })
+                    method(comment)
+                elif transition_method == 'cancel':
+                    comment = validated_data.get('cancel_comment', '')
+                    if not comment:
+                        raise serializers.ValidationError({
+                            'cancel_comment': 'This field is required when cancelling'
+                        })
+                    method(comment)
+                else:
+                    method()
+
+                # Save after transition
+                instance.save()
+
+                # Refresh from DB to ensure all fields are properly loaded
+                # (FSM transitions may update datetime fields that need conversion)
+                instance.refresh_from_db()
+
+            except Exception as e:
+                raise serializers.ValidationError({
+                    'status': f'Status transition failed: {str(e)}'
+                })
+
+            return instance
+
+        # No status change, proceed normally
+        return super().update(instance, validated_data)
+
+
+class AuditRssSerializer(EngagementStatusUpdateMixin, BaseAuditSerializer):
     """Permission-agnostic audit serializer for RSS Admin."""
+    # Override status to be writable and map to actual status field (not displayed_status)
+    status = serializers.ChoiceField(
+        choices=Engagement.STATUSES,
+        required=False,
+        allow_null=True
+    )
+
     @property
     def _readable_fields(self):
         return [field for field in self.fields.values()]
 
+    @property
+    def _writable_fields(self):
+        return [field for field in self.fields.values() if not field.read_only]
 
-class SpotCheckRssSerializer(BaseSpotCheckSerializer):
+
+class SpotCheckRssSerializer(EngagementStatusUpdateMixin, BaseSpotCheckSerializer):
     """Permission-agnostic spot check serializer for RSS Admin."""
+    status = serializers.ChoiceField(choices=Engagement.STATUSES, required=False, allow_null=True)
+
     @property
     def _readable_fields(self):
         return [field for field in self.fields.values()]
 
+    @property
+    def _writable_fields(self):
+        return [field for field in self.fields.values() if not field.read_only]
 
-class StaffSpotCheckRssSerializer(BaseStaffSpotCheckSerializer):
+
+class StaffSpotCheckRssSerializer(EngagementStatusUpdateMixin, BaseStaffSpotCheckSerializer):
     """Permission-agnostic staff spot check serializer for RSS Admin."""
+    status = serializers.ChoiceField(choices=Engagement.STATUSES, required=False, allow_null=True)
+
     @property
     def _readable_fields(self):
         return [field for field in self.fields.values()]
 
+    @property
+    def _writable_fields(self):
+        return [field for field in self.fields.values() if not field.read_only]
 
-class MicroAssessmentRssSerializer(BaseMicroAssessmentSerializer):
+
+class MicroAssessmentRssSerializer(EngagementStatusUpdateMixin, BaseMicroAssessmentSerializer):
     """Permission-agnostic micro assessment serializer for RSS Admin."""
+    status = serializers.ChoiceField(choices=Engagement.STATUSES, required=False, allow_null=True)
+
     @property
     def _readable_fields(self):
         return [field for field in self.fields.values()]
 
+    @property
+    def _writable_fields(self):
+        return [field for field in self.fields.values() if not field.read_only]
 
-class SpecialAuditRssSerializer(BaseSpecialAuditSerializer):
+
+class SpecialAuditRssSerializer(EngagementStatusUpdateMixin, BaseSpecialAuditSerializer):
     """Permission-agnostic special audit serializer for RSS Admin."""
+    status = serializers.ChoiceField(choices=Engagement.STATUSES, required=False, allow_null=True)
+
     @property
     def _readable_fields(self):
         return [field for field in self.fields.values()]
+
+    @property
+    def _writable_fields(self):
+        return [field for field in self.fields.values() if not field.read_only]
 
 
 class EngagementChangeStatusSerializer(serializers.Serializer):
@@ -480,3 +606,122 @@ class ActionPointRssDetailSerializer(WritableNestedSerializerMixin, serializers.
             'tpm_activity', 'travel_activity', 'date_of_verification', 'comments', 'history',
             'related_object_str', 'related_object_url', 'potential_verifier', 'verified_by', 'is_adequate',
         ]
+
+
+class HactActivityQuestionSerializer(serializers.ModelSerializer):
+    """Serializer for HACT questions with answer options."""
+    partner = MinimalPartnerOrganizationListSerializer(read_only=True)
+    cp_output = MinimalOutputListSerializer(read_only=True)
+    intervention = MinimalInterventionListSerializer(read_only=True)
+    question = QuestionSerializer(read_only=True)
+
+    class Meta:
+        model = ActivityQuestion
+        fields = (
+            'id', 'question',
+            'text', 'is_hact',
+            'is_enabled', 'specific_details',
+            'partner', 'intervention', 'cp_output',
+        )
+
+
+class HactQuestionOverallFindingSerializer(serializers.ModelSerializer):
+    """Serializer for HACT question overall findings (answers)."""
+    activity_question = HactActivityQuestionSerializer(read_only=True)
+
+    class Meta:
+        model = ActivityQuestionOverallFinding
+        fields = ('id', 'activity_question', 'value',)
+
+
+class ActivityQuestionFindingRssSerializer(serializers.ModelSerializer):
+    """Serializer for individual findings from checklists."""
+    author = MinimalUserSerializer(read_only=True, source='started_checklist.author')
+
+    class Meta:
+        model = Finding
+        fields = ('id', 'value', 'author')
+
+
+class CompletedActivityQuestionFindingRssSerializer(ActivityQuestionFindingRssSerializer):
+    """Serializer for completed findings with checklist and method information."""
+    checklist = serializers.ReadOnlyField(source='started_checklist.id')
+    method = serializers.ReadOnlyField(source='started_checklist.method_id')
+
+    class Meta(ActivityQuestionFindingRssSerializer.Meta):
+        fields = ActivityQuestionFindingRssSerializer.Meta.fields + ('checklist', 'method',)
+
+
+class CompletedActivityQuestionRssSerializer(HactActivityQuestionSerializer):
+    """Serializer for activity questions with completed findings."""
+    findings = CompletedActivityQuestionFindingRssSerializer(many=True, read_only=True, source='completed_findings')
+
+    class Meta(HactActivityQuestionSerializer.Meta):
+        fields = HactActivityQuestionSerializer.Meta.fields + ('findings',)
+
+
+class ActivityQuestionOverallFindingRssSerializer(serializers.ModelSerializer):
+    """Serializer for activity question overall findings matching field monitoring structure."""
+    activity_question = CompletedActivityQuestionRssSerializer(read_only=True)
+
+    class Meta:
+        model = ActivityQuestionOverallFinding
+        fields = ('id', 'activity_question', 'value',)
+
+
+class CompletedChecklistOverallFindingRssSerializer(serializers.ModelSerializer):
+    """Serializer for checklist overall findings."""
+    author = MinimalUserSerializer(read_only=True, source='started_checklist.author')
+    checklist = serializers.ReadOnlyField(source='started_checklist.id')
+    method = serializers.ReadOnlyField(source='started_checklist.method_id')
+    information_source = serializers.ReadOnlyField(source='started_checklist.information_source')
+
+    class Meta:
+        model = ChecklistOverallFinding
+        fields = ('author', 'method', 'checklist', 'information_source', 'narrative_finding')
+
+
+class ActivityOverallFindingRssSerializer(serializers.ModelSerializer):
+    """Serializer for activity overall findings matching field monitoring structure."""
+    attachments = serializers.SerializerMethodField()
+    findings = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ActivityOverallFinding
+        fields = (
+            'id', 'partner', 'cp_output', 'intervention',
+            'narrative_finding', 'on_track',
+            'attachments', 'findings'
+        )
+        read_only_fields = ('partner', 'cp_output', 'intervention')
+
+    def _get_checklist_overall_findings(self, obj):
+        """Get checklist overall findings for this activity context."""
+        import itertools
+        return [
+            finding
+            for finding in itertools.chain(*(
+                c.overall_findings.all()
+                for c in obj.monitoring_activity.checklists.all()
+            ))
+            if (
+                finding.partner_id == obj.partner_id and
+                finding.cp_output_id == obj.cp_output_id and
+                finding.intervention_id == obj.intervention_id
+            )
+        ]
+
+    def get_attachments(self, obj):
+        """Extract attachments from checklists overall findings."""
+        import itertools
+
+        from unicef_attachments.serializers import BaseAttachmentSerializer
+        attachments = itertools.chain(*(
+            finding.attachments.all() for finding in self._get_checklist_overall_findings(obj)
+        ))
+        return BaseAttachmentSerializer(instance=attachments, many=True).data
+
+    def get_findings(self, obj):
+        """Get completed checklist findings."""
+        findings = self._get_checklist_overall_findings(obj)
+        return CompletedChecklistOverallFindingRssSerializer(instance=findings, many=True).data
