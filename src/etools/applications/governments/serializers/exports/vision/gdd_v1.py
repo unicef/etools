@@ -33,13 +33,15 @@ class KeyInterventionWithActivitiesSerializer(KeyInterventionSerializer):
 
 
 class BAPGDDActivitySerializer(serializers.ModelSerializer):
+    name = serializers.CharField(source='ewp_activity.title', read_only=True)
+
     class Meta:
         model = GDDActivity
-        fields = ['id', 'name', 'unicef_cash', 'cso_cash', 'is_active']
+        fields = ['id', 'name', 'code', 'unicef_cash', 'cso_cash', 'is_active']
 
 
-class BAPLowerResultWithActivitiesSerializer(KeyInterventionWithActivitiesSerializer):
-    activities = BAPGDDActivitySerializer(read_only=True, many=True)
+class BAPKeyInterventionWithActivitiesSerializer(KeyInterventionWithActivitiesSerializer):
+    activities = BAPGDDActivitySerializer(read_only=True, many=True, source='gdd_activities')
 
     class Meta(KeyInterventionWithActivitiesSerializer.Meta):
         fields = ['id', 'name', 'activities']
@@ -47,15 +49,16 @@ class BAPLowerResultWithActivitiesSerializer(KeyInterventionWithActivitiesSerial
 
 class BAPGDDResultNestedSerializer(GDDResultNestedSerializer):
 
-    ll_results = BAPLowerResultWithActivitiesSerializer(many=True, read_only=True)
+    gdd_key_interventions = BAPKeyInterventionWithActivitiesSerializer(many=True, read_only=True)
 
     class Meta(GDDResultNestedSerializer.Meta):
-        fields = ['id', 'll_results']
+        fields = ['id', 'gdd_key_interventions']
 
 
 class GDDVisionExportSerializer(GDDDetailSerializer):
     permissions = None
     available_actions = None
+    document_type = serializers.CharField(read_only=True)
     business_area = serializers.SerializerMethodField()
     offices = serializers.SerializerMethodField()
     number = serializers.SerializerMethodField()
@@ -82,3 +85,6 @@ class GDDVisionExportSerializer(GDDDetailSerializer):
 
     def get_offices(self, obj):
         return [o.id for o in obj.offices.all()]
+
+    def get_document_type(self, obj):
+        return 'GPD'

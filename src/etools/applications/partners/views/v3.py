@@ -212,7 +212,7 @@ class PMPDropdownsListApiView(APIView):
                 GDD.GDD_STATUS,
                 sort_choices=False,
             ),
-            'currencies': choices_to_json_ready(CURRENCIES),
+            'currencies': sorted([{'value': k, 'label': k} for k, v in CURRENCIES], key=lambda x: x['value']),
             'local_currency': self.get_local_currency(),
             'location_types': GatewayType.objects.values(
                 'id',

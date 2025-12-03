@@ -1,9 +1,11 @@
 from decimal import DivisionByZero, InvalidOperation
+from functools import cached_property
 
 from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
 from django.db import connection, models
+from django.db.models import Sum
 from django.db.transaction import atomic
 from django.utils import timezone
 from django.utils.encoding import force_str
@@ -114,7 +116,10 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
     start_date = models.DateField(verbose_name=_('Start date of first reporting FACE'), blank=True, null=True)
     end_date = models.DateField(verbose_name=_('End date of last reporting FACE'), blank=True, null=True)
     total_value = models.DecimalField(
-        verbose_name=_('Total value of selected FACE form(s)'), default=0, decimal_places=2, max_digits=20
+        verbose_name=_('Total value of selected FACE form(s) ($)'), default=0, decimal_places=2, max_digits=20
+    )
+    total_value_local = models.DecimalField(
+        verbose_name=_('Total value of selected FACE form(s) (local)'), default=0, decimal_places=2, max_digits=20
     )
     exchange_rate = models.DecimalField(
         verbose_name=_('Exchange Rate'), default=0, decimal_places=2, max_digits=20
@@ -142,23 +147,42 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
         verbose_name=_('Date Comments Received from UNICEF'), null=True, blank=True
     )
 
+    face_forms = models.ManyToManyField(
+        'audit.FaceForm', verbose_name=_('Face Forms'), blank=True, related_name='engagements',
+    )
+
     date_of_report_submit = models.DateField(verbose_name=_('Date Report Submitted'), null=True, blank=True)
     date_of_final_report = models.DateField(verbose_name=_('Date Report Finalized'), null=True, blank=True)
     date_of_cancel = models.DateField(verbose_name=_('Date Report Cancelled'), null=True, blank=True)
-
+    # USD currency
     amount_refunded = models.DecimalField(
-        verbose_name=_('Amount Refunded'), blank=True, default=0, decimal_places=2, max_digits=20
+        verbose_name=_('Amount Refunded ($)'), blank=True, default=0, decimal_places=2, max_digits=20
     )
     additional_supporting_documentation_provided = models.DecimalField(
-        verbose_name=_('Additional Supporting Documentation Provided'), blank=True, default=0,
+        verbose_name=_('Additional Supporting Documentation Provided ($)'), blank=True, default=0,
         decimal_places=2, max_digits=20
     )
     justification_provided_and_accepted = models.DecimalField(
-        verbose_name=_('Justification Provided and Accepted'), blank=True, default=0, decimal_places=2, max_digits=20
+        verbose_name=_('Justification Provided and Accepted ($)'), blank=True, default=0, decimal_places=2, max_digits=20
     )
     write_off_required = models.DecimalField(
-        verbose_name=_('Impairment'), blank=True, default=0, decimal_places=2, max_digits=20
+        verbose_name=_('Impairment ($)'), blank=True, default=0, decimal_places=2, max_digits=20
     )
+    # local currency
+    amount_refunded_local = models.DecimalField(
+        verbose_name=_('Amount Refunded (local)'), blank=True, default=0, decimal_places=2, max_digits=20
+    )
+    additional_supporting_documentation_provided_local = models.DecimalField(
+        verbose_name=_('Additional Supporting Documentation Provided (local)'), blank=True, default=0,
+        decimal_places=2, max_digits=20
+    )
+    justification_provided_and_accepted_local = models.DecimalField(
+        verbose_name=_('Justification Provided and Accepted (local)'), blank=True, default=0, decimal_places=2, max_digits=20
+    )
+    write_off_required_local = models.DecimalField(
+        verbose_name=_('Impairment (Local)'), blank=True, default=0, decimal_places=2, max_digits=20
+    )
+
     explanation_for_additional_information = models.TextField(
         verbose_name=_('Provide explanation for additional information received from the IP or add attachments'),
         blank=True
@@ -199,6 +223,7 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
         max_length=100,
         null=True,
     )
+    conducted_by_sai = models.BooleanField(verbose_name=_('Conducted by SAI'), blank=True, null=True)
 
     objects = InheritanceManager()
 
@@ -209,6 +234,36 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
 
     def __str__(self):
         return '{} {}'.format(self.get_engagement_type_display(), self.reference_number)
+
+    def update_totals(self):
+        if self.engagement_type == self.TYPE_SPECIAL_AUDIT and self.total_value:
+            self.exchange_rate = self.total_value_local / self.total_value
+
+        elif self.engagement_type in [self.TYPE_AUDIT, self.TYPE_SPOT_CHECK]:
+            if self.prior_face_forms:  # if not face_forms.exist()
+                return
+
+            face_form_qs = self.face_forms.all()
+
+            usd_qs = face_form_qs.filter(currency='USD')
+            local_qs = face_form_qs.exclude(currency='USD')
+
+            if face_form_qs.count() == usd_qs.count() or face_form_qs.count() == local_qs.count():
+                self.total_value = face_form_qs.aggregate(Sum("amount_usd"))['amount_usd__sum']
+                self.total_value_local = face_form_qs.aggregate(Sum("amount_local"))['amount_local__sum']
+
+                latest_face = face_form_qs.order_by('-end_date').first()
+                if latest_face.exchange_rate:
+                    self.exchange_rate = latest_face.exchange_rate
+            else:
+                self.total_value = face_form_qs.aggregate(Sum("amount_usd"))['amount_usd__sum']
+                if local_qs.count() > 0:
+                    latest_face = local_qs.order_by('-end_date').first()
+                    self.exchange_rate = latest_face.exchange_rate
+                    usd_to_local = usd_qs.aggregate(Sum("amount_local"))['amount_local__sum'] / self.exchange_rate
+                    self.total_value_local = usd_to_local + local_qs.aggregate(Sum("amount_local"))['amount_local__sum']
+
+        self.save(update_fields=['total_value', 'total_value_local', 'exchange_rate'])
 
     @property
     def displayed_status(self):
@@ -227,6 +282,15 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
             return self.DISPLAY_STATUSES.field_visit
 
         return self.status
+
+    @cached_property
+    def count_open_high_priority(self):
+        return self.action_points.filter(status=ActionPoint.STATUS_OPEN, high_priority=True).count()
+
+    # TODO rename to has_face_forms
+    @cached_property
+    def prior_face_forms(self):
+        return not self.face_forms.exists()
 
     @property
     def displayed_status_date(self):
@@ -309,6 +373,12 @@ class Engagement(InheritedModelMixin, TimeStampedModel, models.Model):
         return build_frontend_url('ap', 'engagements', self.id, 'overview', **kwargs)
 
     def save(self, *args, **kwargs):
+        if self.exchange_rate:
+            self.amount_refunded = self.amount_refunded_local / self.exchange_rate if self.amount_refunded_local else 0
+            self.additional_supporting_documentation_provided = self.additional_supporting_documentation_provided_local / self.exchange_rate if self.additional_supporting_documentation_provided_local else 0
+            self.justification_provided_and_accepted = self.justification_provided_and_accepted_local / self.exchange_rate if self.justification_provided_and_accepted_local else 0
+            self.write_off_required = self.write_off_required_local / self.exchange_rate if self.write_off_required_local else 0
+
         super().save(*args, **kwargs)
         if not self.reference_number:
             self.reference_number = self.get_reference_number()
@@ -434,12 +504,19 @@ class TestSubjectAreas(Risk):
 
 
 class SpotCheck(Engagement):
-    total_amount_tested = models.DecimalField(verbose_name=_('Total Amount Tested'), blank=True, default=0,
-                                              decimal_places=2, max_digits=20)
+    total_amount_tested = models.DecimalField(
+        verbose_name=_('Total Amount Tested ($)'), blank=True, default=0,
+        decimal_places=2, max_digits=20)
     total_amount_of_ineligible_expenditure = models.DecimalField(
-        verbose_name=_('Total Amount of Ineligible Expenditure'), default=0, blank=True,
-        decimal_places=2, max_digits=20,
-    )
+        verbose_name=_('Total Amount of Ineligible Expenditure ($)'), default=0, blank=True,
+        decimal_places=2, max_digits=20)
+    total_amount_tested_local = models.DecimalField(
+        verbose_name=_('Total Amount Tested (local)'), blank=True, default=0,
+        decimal_places=2, max_digits=20)
+    total_amount_of_ineligible_expenditure_local = models.DecimalField(
+        verbose_name=_('Total Amount of Ineligible Expenditure (local)'), default=0, blank=True,
+        decimal_places=2, max_digits=20)
+
     internal_controls = models.TextField(verbose_name=_('Internal Controls'), blank=True)
     final_report = CodedGenericRelation(
         Attachment,
@@ -460,8 +537,30 @@ class SpotCheck(Engagement):
         return self.total_amount_of_ineligible_expenditure - self.additional_supporting_documentation_provided \
             - self.justification_provided_and_accepted - self.write_off_required - self.amount_refunded
 
+    @property
+    def pending_unsupported_amount_local(self):
+        return self.total_amount_of_ineligible_expenditure_local - self.additional_supporting_documentation_provided_local \
+            - self.justification_provided_and_accepted_local - self.write_off_required_local - self.amount_refunded_local
+
+    @property
+    def percent_of_audited_expenditure(self):
+        try:
+            return 100 * self.total_amount_of_ineligible_expenditure / self.total_amount_tested
+        except (TypeError, DivisionByZero, InvalidOperation):
+            return 0
+
+    def update_financial_findings(self):
+        findings = self.financial_finding_set.aggregate(usd=Sum('amount'), local=Sum('local_amount'))
+        self.total_amount_of_ineligible_expenditure = findings['usd'] if findings['usd'] else 0
+        self.total_amount_of_ineligible_expenditure_local = findings['local'] if findings['local'] else 0
+
+        self.save(update_fields=['total_amount_of_ineligible_expenditure', 'total_amount_of_ineligible_expenditure_local'])
+
     def save(self, *args, **kwargs):
         self.engagement_type = Engagement.TYPES.sc
+
+        if self.exchange_rate:
+            self.total_amount_tested = self.total_amount_tested_local / self.exchange_rate
         return super().save(*args, **kwargs)
 
     @transition(
@@ -671,19 +770,13 @@ class Audit(Engagement):
                                              decimal_places=2, max_digits=20)
     # local currency
     audited_expenditure_local = models.DecimalField(verbose_name=_('Audited Expenditure Local Currency'),
-                                                    blank=True, null=True, decimal_places=2, max_digits=20)
+                                                    blank=True, default=0, decimal_places=2, max_digits=20)
     financial_findings_local = models.DecimalField(verbose_name=_('Financial Findings Local Currency'),
-                                                   blank=True, null=True, decimal_places=2, max_digits=20)
-    audit_opinion = models.CharField(
-        verbose_name=_('Audit Opinion'), max_length=20, choices=OPTIONS, default='', blank=True,
-    )
-
-    final_report = CodedGenericRelation(
-        Attachment,
-        verbose_name=_('Audit Final Report'),
-        code='audit_final_report',
-        blank=True,
-    )
+                                                   blank=True, default=0, decimal_places=2, max_digits=20)
+    audit_opinion = models.CharField(verbose_name=_('Audit Opinion'), max_length=20, choices=OPTIONS,
+                                     default='', blank=True)
+    final_report = CodedGenericRelation(Attachment, verbose_name=_('Audit Final Report'),
+                                        code='audit_final_report', blank=True, )
 
     objects = models.Manager()
 
@@ -694,13 +787,30 @@ class Audit(Engagement):
 
     def save(self, *args, **kwargs):
         self.engagement_type = Engagement.TYPES.audit
+
+        if self.exchange_rate:
+            self.audited_expenditure = self.audited_expenditure_local / self.exchange_rate
+
         return super().save(*args, **kwargs)
+
+    def update_financial_findings(self):
+        findings = self.financial_finding_set.aggregate(usd=Sum('amount'), local=Sum('local_amount'))
+        self.financial_findings = findings['usd'] if findings['usd'] else 0
+        self.financial_findings_local = findings['local'] if findings['local'] else 0
+
+        self.save(update_fields=['financial_findings', 'financial_findings_local'])
 
     @property
     def pending_unsupported_amount(self):
         return self.financial_findings - self.amount_refunded \
             - self.additional_supporting_documentation_provided \
             - self.justification_provided_and_accepted - self.write_off_required
+
+    @property
+    def pending_unsupported_amount_local(self):
+        return self.financial_findings_local - self.amount_refunded_local \
+            - self.additional_supporting_documentation_provided_local \
+            - self.justification_provided_and_accepted_local - self.write_off_required_local
 
     @property
     def percent_of_audited_expenditure(self):
@@ -738,7 +848,7 @@ class Audit(Engagement):
             'audit_final_report',
             AuditSerializer,
             AuditPDFSerializer,
-            'audit/audit_pdf.html',
+            'audit/face_audit_pdf.html',
             'audit_final_report.pdf',
         )
 
@@ -783,6 +893,45 @@ class FinancialFinding(models.Model):
             self.audit.reference_number,
             self.get_title_display(),
         )
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self.audit.update_financial_findings()
+
+    def delete(self, using=None, keep_parents=False):
+        super().delete(using=None, keep_parents=True)
+        self.audit.update_financial_findings()
+
+
+class SpotCheckFinancialFinding(models.Model):
+    spot_check = models.ForeignKey(
+        SpotCheck, verbose_name=_('SpotCheck'), related_name='financial_finding_set',
+        on_delete=models.CASCADE,
+    )
+
+    title = models.CharField(verbose_name=_('Title (Category)'), max_length=255, choices=FinancialFinding.TITLE_CHOICES)
+    local_amount = models.DecimalField(verbose_name=_('Amount (local)'), decimal_places=2, max_digits=20)
+    amount = models.DecimalField(verbose_name=_('Amount (USD)'), decimal_places=2, max_digits=20)
+    description = models.TextField(verbose_name=_('Description'))
+    recommendation = models.TextField(verbose_name=_('Recommendation'), blank=True)
+    ip_comments = models.TextField(verbose_name=_('IP Comments'), blank=True)
+
+    class Meta:
+        ordering = ('id', )
+
+    def __str__(self):
+        return '{}: {}'.format(
+            self.spot_check.reference_number,
+            self.get_title_display(),
+        )
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self.spot_check.update_financial_findings()
+
+    def delete(self, using=None, keep_parents=False):
+        super().delete(using=None, keep_parents=True)
+        self.spot_check.update_financial_findings()
 
 
 class KeyInternalControl(models.Model):
@@ -927,3 +1076,30 @@ Auditor = GroupWrapper(code='auditor',
 
 UNICEFUser = GroupWrapper(code='unicef_user',
                           name='UNICEF User')
+
+
+class FaceForm(TimeStampedModel, models.Model):
+    face_number = models.CharField(max_length=255, verbose_name=_('Face Form Number'))
+    face_accounted = models.CharField(max_length=255, verbose_name=_('Face Accounted'), null=True, blank=True)
+
+    partner = models.ForeignKey(PartnerOrganization, verbose_name=_('Partner'), related_name='faceforms', on_delete=models.CASCADE)
+
+    start_date = models.DateField(null=True, blank=True, verbose_name=_('Start Date'))
+    end_date = models.DateField(null=True, blank=True, verbose_name=_('End Date'))
+    date_of_liquidation = models.DateField(null=True, blank=True, verbose_name=_('Date of Liquidation'))
+    modality = models.CharField(null=True, blank=True, max_length=255, verbose_name=_('Modality'))
+
+    currency = CurrencyField(verbose_name=_("Currency of Report"), null=True, blank=True)
+    amount_usd = models.DecimalField(verbose_name=_('Amount ($)'), default=0, decimal_places=2, max_digits=20)
+    amount_local = models.DecimalField(verbose_name=_('Amount (local)'), default=0, decimal_places=2, max_digits=20)
+    exchange_rate = models.DecimalField(verbose_name=_('Exchange Rate'), default=0, decimal_places=2, max_digits=20)
+
+    class Meta:
+        verbose_name = _('Face Form')
+        verbose_name_plural = _('Face Forms')
+
+    def __str__(self):
+        return self.face_number
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)

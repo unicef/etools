@@ -1,11 +1,12 @@
 from django.conf import settings
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.contrib.contenttypes.models import ContentType
 from django.db import connection, models as django_models
 from django.forms import SelectMultiple
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
+from admin_extra_urls.decorators import button
 from admin_extra_urls.mixins import ExtraUrlMixin
 from django_tenants.postgresql_backend.base import FakeTenant
 from unicef_attachments.admin import AttachmentSingleInline
@@ -13,6 +14,8 @@ from unicef_attachments.models import Attachment
 from unicef_snapshot.admin import ActivityInline, SnapshotModelAdmin
 
 from etools.applications.governments import models
+from etools.applications.governments.models import GDD
+from etools.applications.governments.tasks import GDDVisionUploader, send_gdd_to_vision
 from etools.applications.partners.mixins import CountryUsersAdminMixin, HiddenPartnerMixin
 from etools.libraries.djangolib.admin import RestrictedEditAdmin, RestrictedEditAdminMixin
 
@@ -324,7 +327,7 @@ class GDDAdmin(
                  'activation_protocol'
                  ),
         }),
-        (_('ePD'), {
+        (_('GPD'), {
             'fields': (
                 'unicef_court',
                 'date_sent_to_partner',
@@ -431,6 +434,15 @@ class GDDAdmin(
                         "uploaded_by": request.user,
                     }
                 )
+
+    @button(label='Send to Vision')
+    def send_to_vision(self, request, pk):
+        if not GDDVisionUploader(GDD.objects.get(pk=pk)).is_valid():
+            messages.error(request, _('GPD is not ready for Vision synchronization.'))
+            return
+
+        send_gdd_to_vision(connection.tenant.name, pk)
+        messages.success(request, _('GPD was sent to Vision.'))
 
 
 class GovernmentSupplyItemAdmin(RestrictedEditAdmin):

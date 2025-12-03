@@ -50,7 +50,10 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
 
         # Verify the update
         audit.refresh_from_db()
-        self.assertEqual(float(audit.total_value), 5000.00)
+        # TODO face forms integration calculates totals from selected face forms,
+        #  editing several total fields e.g. total_value/total_value_local and more..
+        #  is pointless as will not get saved
+        # self.assertEqual(float(audit.total_value), 5000.00)
 
     def test_engagement_patch_spot_check(self):
         """Test that PATCH method works for spot check engagement"""
@@ -66,7 +69,10 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
 
         # Verify the update
         spot_check.refresh_from_db()
-        self.assertEqual(float(spot_check.total_value), 3000.00)
+        # TODO face forms integration calculates totals from selected face forms,
+        #  editing several total fields e.g. total_value/total_value_local and more..
+        #  is pointless as will not get saved
+        # self.assertEqual(float(spot_check.total_value), 3000.00)
 
     def test_engagement_patch_staff_spot_check(self):
         """Test that PATCH method works for staff spot check engagement"""
@@ -82,7 +88,10 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
 
         # Verify the update
         staff_sc.refresh_from_db()
-        self.assertEqual(float(staff_sc.total_value), 2000.00)
+        # TODO face forms integration calculates totals from selected face forms,
+        #  editing several total fields e.g. total_value/total_value_local and more..
+        #  is pointless as will not get saved
+        # self.assertEqual(float(staff_sc.total_value), 2000.00)
 
     def test_engagement_patch_non_staff_forbidden(self):
         """Test that non-staff users cannot PATCH engagements"""
@@ -111,7 +120,10 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
 
         # Verify the updates
         audit.refresh_from_db()
-        self.assertEqual(float(audit.total_value), 7500.00)
+        # TODO face forms integration calculates totals from selected face forms,
+        #  editing several total fields e.g. total_value/total_value_local and more..
+        #  is pointless as will not get saved
+        # self.assertEqual(float(audit.total_value), 7500.00)
         self.assertEqual(float(audit.exchange_rate), 1.25)
 
     def test_engagement_patch_returns_full_serialized_data(self):
@@ -152,11 +164,14 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
         audit.refresh_from_db()
         self.assertEqual(audit.start_date, date(2018, 10, 15))
         self.assertEqual(audit.end_date, date(2018, 12, 15))
-        self.assertEqual(float(audit.total_value), 1234.00)
+        # TODO face forms integration calculates totals from selected face forms,
+        #  editing several total fields e.g. total_value/total_value_local and more..
+        #  is pointless as will not get saved
+        # self.assertEqual(float(audit.total_value), 1234.00)
 
     def test_engagement_patch_audit_specific_fields(self):
         """Test updating audit-specific fields that might have permission restrictions"""
-        audit = AuditFactory(status=Engagement.STATUSES.partner_contacted)
+        audit = AuditFactory(status=Engagement.STATUSES.partner_contacted, total_value=100)
 
         url = reverse('rss_admin:rss-admin-engagements-detail', kwargs={'pk': audit.pk})
 
@@ -172,9 +187,12 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
 
         # Verify changes persisted
         audit.refresh_from_db()
-        self.assertEqual(float(audit.total_value), 9999.00)
+        # TODO face forms integration calculates totals from selected face forms,
+        #  editing several total fields e.g. total_value/total_value_local and more..
+        #  is pointless as will not get saved
+        self.assertEqual(float(audit.total_value), 100.00)
+        self.assertEqual(float(audit.total_value), initial_total_value)
         self.assertEqual(float(audit.exchange_rate), 1.5)
-        self.assertNotEqual(float(audit.total_value), float(initial_total_value))
 
     def test_engagement_patch_exact_curl_payload(self):
         """Test with the exact payload from the curl request to show field name issues"""
@@ -247,7 +265,11 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
         self.assertEqual(audit.shared_ip_with, ['UNDP'])
         self.assertEqual(str(audit.start_date), '2018-10-15')
         self.assertEqual(str(audit.end_date), '2018-12-15')
-        self.assertEqual(float(audit.total_value), 1234.00)  # NOW it changed!
+        # TODO face forms integration calculates totals from selected face forms,
+        #  editing several total fields e.g. total_value/total_value_local and more..
+        #  is pointless as will not get saved
+        # self.assertEqual(float(audit.total_value), 1234.00)  # NOW it changed!
+        self.assertEqual(float(audit.total_value), 999.00)  # NOT changed!
 
     def test_engagement_patch_status_triggers_fsm_submit(self):
         """Test that changing status via PATCH triggers FSM submit transition"""
@@ -404,7 +426,11 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
         # Verify both changes took effect
         audit.refresh_from_db()
         self.assertEqual(audit.status, Engagement.STATUSES.report_submitted)
-        self.assertEqual(float(audit.total_value), 5000.00)
+        # TODO face forms integration calculates totals from selected face forms,
+        #  editing several total fields e.g. total_value/total_value_local and more..
+        #  is pointless as will not get saved
+        # self.assertEqual(float(audit.total_value), 5000.00)
+        self.assertEqual(float(audit.total_value), 1000.00)
         self.assertIsNotNone(audit.date_of_report_submit)  # FSM side effect
 
     def test_engagement_patch_shared_ip_with(self):
@@ -450,7 +476,10 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
         # Step 2: Check the PATCH response has the updated values
         self.assertEqual(patch_resp.data['start_date'], '2018-10-15')
         self.assertEqual(patch_resp.data['end_date'], '2018-12-15')
-        self.assertEqual(float(patch_resp.data['total_value']), 5678.00)
+        # TODO face forms integration calculates totals from selected face forms,
+        #  editing several total fields e.g. total_value/total_value_local and more..
+        #  is pointless as will not get saved
+        self.assertEqual(float(patch_resp.data['total_value']), 100.00)
         self.assertEqual(float(patch_resp.data['exchange_rate']), 1.25)
         self.assertEqual(patch_resp.data['shared_ip_with'], ['UNDP'])
 
@@ -461,7 +490,7 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
         # Step 4: Verify all fields persisted in the GET response
         self.assertEqual(get_resp.data['start_date'], '2018-10-15')
         self.assertEqual(get_resp.data['end_date'], '2018-12-15')
-        self.assertEqual(float(get_resp.data['total_value']), 5678.00)
+        self.assertEqual(float(get_resp.data['total_value']), 100.00)
         self.assertEqual(float(get_resp.data['exchange_rate']), 1.25)
         self.assertEqual(get_resp.data['shared_ip_with'], ['UNDP'])
 
@@ -469,6 +498,6 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
         audit.refresh_from_db()
         self.assertEqual(audit.start_date, date(2018, 10, 15))
         self.assertEqual(audit.end_date, date(2018, 12, 15))
-        self.assertEqual(float(audit.total_value), 5678.00)
+        self.assertEqual(float(audit.total_value), 100.00)
         self.assertEqual(float(audit.exchange_rate), 1.25)
         self.assertEqual(audit.shared_ip_with, ['UNDP'])
