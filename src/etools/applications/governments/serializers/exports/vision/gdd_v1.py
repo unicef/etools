@@ -58,7 +58,7 @@ class BAPGDDResultNestedSerializer(GDDResultNestedSerializer):
 class GDDVisionExportSerializer(GDDDetailSerializer):
     permissions = None
     available_actions = None
-    document_type = serializers.CharField(read_only=True)
+    document_type = serializers.SerializerMethodField()
     business_area = serializers.SerializerMethodField()
     offices = serializers.SerializerMethodField()
     number = serializers.SerializerMethodField()
