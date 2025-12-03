@@ -5,6 +5,7 @@ from etools.applications.field_monitoring.planning.models import (
     FacilityType,
     MonitoringActivity,
     MonitoringActivityActionPoint,
+    MonitoringActivityFacilityType,
     MonitoringActivityGroup,
     QuestionTemplate,
     TPMConcern,
@@ -35,7 +36,33 @@ class VisitGoalAdmin(admin.ModelAdmin):
 
 @admin.register(FacilityType)
 class FacilityTypeAdmin(admin.ModelAdmin):
-    list_display = ('name',)
+    list_display = ('name', 'get_related_sections')
+    list_filter = ('related_sections',)
+    filter_horizontal = ('related_sections',)
+    search_fields = ('name', 'related_sections__name')
+
+    def get_related_sections(self, obj):
+        """Display related sections as comma-separated string."""
+        return ', '.join(section.name for section in obj.related_sections.all())
+    get_related_sections.short_description = 'Related Sections'
+
+
+@admin.register(MonitoringActivityFacilityType)
+class MonitoringActivityFacilityTypeAdmin(admin.ModelAdmin):
+    list_display = ('monitoring_activity', 'facility_type', 'get_facility_type_durations')
+    list_filter = ('facility_type', 'monitoring_activity__status')
+    list_select_related = ('monitoring_activity', 'facility_type')
+    raw_id_fields = ('monitoring_activity', 'facility_type')
+    search_fields = (
+        'monitoring_activity__number',
+        'monitoring_activity__reference_number',
+        'facility_type__name'
+    )
+
+    def get_facility_type_durations(self, obj):
+        """Display facility type durations as a comma-separated string."""
+        return ', '.join(obj.facility_type_durations) if obj.facility_type_durations else 'No duration'
+    get_facility_type_durations.short_description = 'Durations'
 
 
 @admin.register(MonitoringActivity)
