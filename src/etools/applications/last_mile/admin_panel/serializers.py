@@ -482,6 +482,13 @@ class PointOfInterestExportSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
+        partners = instance.partner_organizations.all().prefetch_related('organization')
+        implementing_partner_names = ",".join([f"{partner.organization.name}" if partner.organization else partner.name if partner.name else "-" for partner in partners])
+        implementing_partner_numbers = ",".join([f"{partner.organization.vendor_number}" if partner.organization else partner.name if partner.name else "-" for partner in partners])
+        data.update({
+            "implementing_partner_names": implementing_partner_names,
+            "implementing_partner_numbers": implementing_partner_numbers
+        })
         if instance.parent:
             parent_locations = ParentLocationsSerializer(instance.parent).data
             data.update(parent_locations)
@@ -493,8 +500,8 @@ class PointOfInterestExportSerializer(serializers.ModelSerializer):
     def generate_rows(self, instance):
         base = self.base_representation(instance)
         transfers = (
-            instance.destination_transfers
-            .all()
+            models.Transfer.all_objects
+            .filter(destination_point=instance)
             .prefetch_related('items')
         )
 
@@ -508,6 +515,9 @@ class PointOfInterestExportSerializer(serializers.ModelSerializer):
                     "item_id": item.id,
                     "item_name": getattr(item, "description", None),
                     "item_qty": getattr(item, "quantity", None),
+                    "item_batch_number": getattr(item, "batch_id", None),
+                    "item_expiry_date": getattr(item, "expiry_date", None),
+                    'approval_status': transfer.approval_status,
                 })
                 rows.append(row)
 
