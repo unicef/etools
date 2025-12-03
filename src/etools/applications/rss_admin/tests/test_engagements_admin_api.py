@@ -508,3 +508,45 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
         self.assertIsInstance(resp.data['cancel_comment'], list, "Error should be a list")
         self.assertTrue(len(resp.data['cancel_comment']) > 0)
         self.assertIn('required', resp.data['cancel_comment'][0])
+
+    def test_engagement_attachments_include_filename(self):
+        """Test that engagement and report attachment endpoints include filename field"""
+        audit = AuditFactory(status=Engagement.STATUSES.partner_contacted)
+        
+        # Create engagement attachment
+        engagement_file_type = AttachmentFileTypeFactory(code='audit_engagement')
+        engagement_attachment = AttachmentFactory(
+            code='audit_engagement',
+            content_object=audit,
+            file_type=engagement_file_type,
+            file='test_engagement_document.pdf'
+        )
+        
+        # Create report attachment
+        report_file_type = AttachmentFileTypeFactory(code='audit_report')
+        report_attachment = AttachmentFactory(
+            code='audit_report',
+            content_object=audit,
+            file_type=report_file_type,
+            file='test_audit_report.pdf'
+        )
+        
+        # Test engagement-attachments endpoint
+        engagement_url = reverse('rss_admin:rss-admin-engagements-engagement-attachments-list', 
+                                kwargs={'engagement_pk': audit.pk})
+        resp = self.forced_auth_req('get', engagement_url, user=self.user)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(resp.data), 1)
+        self.assertIn('filename', resp.data[0])
+        self.assertIsNotNone(resp.data[0]['filename'])
+        self.assertEqual(resp.data[0]['id'], engagement_attachment.id)
+        
+        # Test report-attachments endpoint
+        report_url = reverse('rss_admin:rss-admin-engagements-report-attachments-list',
+                           kwargs={'engagement_pk': audit.pk})
+        resp = self.forced_auth_req('get', report_url, user=self.user)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(resp.data), 1)
+        self.assertIn('filename', resp.data[0])
+        self.assertIsNotNone(resp.data[0]['filename'])
+        self.assertEqual(resp.data[0]['id'], report_attachment.id)

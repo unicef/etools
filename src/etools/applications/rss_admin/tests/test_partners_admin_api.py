@@ -411,6 +411,76 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         ids = [row['id'] for row in results]
         self.assertIn(self.pd.id, ids)
 
+    def test_filter_programme_documents_by_date_ranges(self):
+        """Test date filters: start (starts after), end (ends before), end_after (ends after)"""
+        from datetime import date, timedelta
+        
+        today = date.today()
+        past = today - timedelta(days=365)
+        future = today + timedelta(days=365)
+        
+        # PD 1: started in past, ends in future
+        pd1 = InterventionFactory(
+            agreement=self.agreement,
+            document_type=Intervention.PD,
+            start=past,
+            end=future
+        )
+        
+        # PD 2: started today, ends in future
+        pd2 = InterventionFactory(
+            agreement=self.agreement,
+            document_type=Intervention.PD,
+            start=today,
+            end=future
+        )
+        
+        # PD 3: started in past, ended in past
+        pd3 = InterventionFactory(
+            agreement=self.agreement,
+            document_type=Intervention.PD,
+            start=past,
+            end=past + timedelta(days=30)
+        )
+        
+        url = reverse('rss_admin:rss-admin-programme-documents-list')
+        
+        # Test 1: start filter (starts after today) - should include pd2 only
+        resp = self.forced_auth_req('get', url, user=self.user, data={'start': today.isoformat()})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        ids = [row['id'] for row in self._results(resp)]
+        self.assertIn(pd2.id, ids)
+        self.assertNotIn(pd1.id, ids)
+        self.assertNotIn(pd3.id, ids)
+        
+        # Test 2: end filter (ends before today) - should include pd3 only
+        resp = self.forced_auth_req('get', url, user=self.user, data={'end': today.isoformat()})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        ids = [row['id'] for row in self._results(resp)]
+        self.assertIn(pd3.id, ids)
+        self.assertNotIn(pd1.id, ids)
+        self.assertNotIn(pd2.id, ids)
+        
+        # Test 3: end_after filter (ends after today) - should include pd1 and pd2
+        resp = self.forced_auth_req('get', url, user=self.user, data={'end_after': today.isoformat()})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        ids = [row['id'] for row in self._results(resp)]
+        self.assertIn(pd1.id, ids)
+        self.assertIn(pd2.id, ids)
+        self.assertNotIn(pd3.id, ids)
+        
+        # Test 4: Combined filters - active PDs (started before today, end after today)
+        yesterday = today - timedelta(days=1)
+        resp = self.forced_auth_req('get', url, user=self.user, data={
+            'start': yesterday.isoformat(),
+            'end_after': today.isoformat()
+        })
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        ids = [row['id'] for row in self._results(resp)]
+        self.assertIn(pd2.id, ids)
+        self.assertNotIn(pd1.id, ids)
+        self.assertNotIn(pd3.id, ids)
+
     def test_filter_programme_documents_offices_plural(self):
         office = OfficeFactory()
         self.pd.offices.add(office)
