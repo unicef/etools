@@ -750,10 +750,9 @@ class ActivityFindingsRssViewSet(NestedViewSetMixin,
                                  mixins.UpdateModelMixin,
                                  BulkUpdateMixin,
                                  viewsets.GenericViewSet):
-    """RSS Admin viewset for HACT activity question findings.
+    """RSS Admin viewset for activity question findings.
 
     Matches the structure of field monitoring data collection findings endpoint.
-    Filtered to HACT questions only.
     Supports both single PATCH (via UpdateModelMixin) and bulk PATCH (via BulkUpdateMixin).
     """
     permission_classes = (IsRssAdmin,)
@@ -777,22 +776,27 @@ class ActivityFindingsRssViewSet(NestedViewSetMixin,
     pagination_class = None
 
     def get_parent_filter(self):
-        """Filter to only HACT questions for this monitoring activity."""
+        """Filter to questions for this monitoring activity (matches eTools behavior)."""
         return {
             'activity_question__monitoring_activity_id': self.kwargs['monitoring_activity_pk'],
-            'activity_question__is_hact': True,
-            'activity_question__is_enabled': True,
         }
+
+    def filter_queryset(self, queryset):
+        """Apply parent filter since NestedViewSetMixin requires parent chain setup."""
+        queryset = super().filter_queryset(queryset)
+        parent_filter = self.get_parent_filter()
+        if parent_filter:
+            queryset = queryset.filter(**parent_filter)
+        return queryset
 
 
 class ActivityOverallFindingsRssViewSet(NestedViewSetMixin,
                                         mixins.ListModelMixin,
                                         mixins.UpdateModelMixin,
                                         viewsets.GenericViewSet):
-    """RSS Admin viewset for HACT activity overall findings.
+    """RSS Admin viewset for activity overall findings.
 
     Matches the structure of field monitoring data collection overall-findings endpoint.
-    Filtered to HACT questions only.
     """
     permission_classes = (IsRssAdmin,)
     queryset = ActivityOverallFinding.objects.prefetch_related(
@@ -804,19 +808,18 @@ class ActivityOverallFindingsRssViewSet(NestedViewSetMixin,
     pagination_class = None
 
     def get_parent_filter(self):
-        """Filter to HACT-related overall findings for this monitoring activity."""
-        # Get activity questions that are HACT
-        hact_questions = ActivityQuestion.objects.filter(
-            monitoring_activity_id=self.kwargs['monitoring_activity_pk'],
-            is_hact=True,
-            is_enabled=True
-        )
-
-        # Filter overall findings that match HACT question contexts
+        """Filter to overall findings for this monitoring activity (matches eTools behavior)."""
         return {
             'monitoring_activity_id': self.kwargs['monitoring_activity_pk'],
-            'partner__in': hact_questions.values_list('partner', flat=True).distinct(),
         }
+
+    def filter_queryset(self, queryset):
+        """Apply parent filter since NestedViewSetMixin requires parent chain setup."""
+        queryset = super().filter_queryset(queryset)
+        parent_filter = self.get_parent_filter()
+        if parent_filter:
+            queryset = queryset.filter(**parent_filter)
+        return queryset
 
 
 class BaseRssAttachmentsViewSet(NestedViewSetMixin,

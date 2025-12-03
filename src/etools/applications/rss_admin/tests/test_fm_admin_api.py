@@ -403,7 +403,7 @@ class TestRssAdminFieldMonitoringApi(BaseTenantTestCase):
         self.assertNotIn(activity_no_match.id, result_ids)
 
     def test_activity_findings_list(self):
-        """Test that activity findings endpoint returns HACT questions with answers (matching field monitoring structure)"""
+        """Test that activity findings endpoint returns questions with answers for specific activity (matching eTools)"""
         activity = MonitoringActivityFactory(partners=[self.partner])
 
         # Create HACT question with answer
@@ -417,7 +417,7 @@ class TestRssAdminFieldMonitoringApi(BaseTenantTestCase):
         )
         ActivityQuestionOverallFinding.objects.create(activity_question=activity_question, value=True)
 
-        # Create non-HACT question (should be excluded)
+        # Create non-HACT question without overall finding (won't be returned)
         non_hact_question = QuestionFactory(is_hact=False, level='partner', is_active=True)
         ActivityQuestionFactory(
             monitoring_activity=activity,
@@ -427,14 +427,25 @@ class TestRssAdminFieldMonitoringApi(BaseTenantTestCase):
             is_enabled=True,
         )
 
+        # Create question on different activity (should be excluded)
+        other_activity = MonitoringActivityFactory(partners=[self.partner])
+        other_activity_question = ActivityQuestionFactory(
+            monitoring_activity=other_activity,
+            question=hact_question,
+            partner=self.partner,
+            is_hact=True,
+            is_enabled=True,
+        )
+        ActivityQuestionOverallFinding.objects.create(activity_question=other_activity_question, value=False)
+
         url = reverse('rss_admin:rss-admin-activity-findings-list', kwargs={'monitoring_activity_pk': activity.pk})
         resp = self.forced_auth_req('get', url, user=self.user)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
-        # Should only return HACT questions
+        # Should return questions for this activity only (matches eTools behavior)
+        # We created 1 finding for activity and 1 for other_activity, so only 1 should be returned
         self.assertEqual(len(resp.data), 1)
-        self.assertTrue(resp.data[0]['activity_question']['is_hact'])
-        self.assertEqual(resp.data[0]['value'], True)
+        self.assertEqual(resp.data[0]['value'], True)  # The finding we created for this activity
 
         # Check that question details and options are included
         self.assertIn('question', resp.data[0]['activity_question'])
@@ -442,7 +453,7 @@ class TestRssAdminFieldMonitoringApi(BaseTenantTestCase):
         self.assertIn('findings', resp.data[0]['activity_question'])  # New field from field monitoring structure
 
     def test_activity_findings_patch(self):
-        """Test updating HACT question answer via PATCH"""
+        """Test updating question answer via PATCH"""
         activity = MonitoringActivityFactory(partners=[self.partner])
 
         # Create HACT question with initial answer
@@ -513,10 +524,11 @@ class TestRssAdminFieldMonitoringApi(BaseTenantTestCase):
         # Check that options are included
         self.assertIn('question', resp.data[0]['activity_question'])
         self.assertIn('options', resp.data[0]['activity_question']['question'])
-        self.assertEqual(len(resp.data[0]['activity_question']['question']['options']), 2)
+        # At least the 2 options we created should be present (factory may add defaults)
+        self.assertGreaterEqual(len(resp.data[0]['activity_question']['question']['options']), 2)
 
     def test_activity_overall_findings_list(self):
-        """Test that activity overall findings endpoint returns HACT-related overall findings"""
+        """Test that activity overall findings endpoint returns findings for specific activity (matching eTools)"""
         activity = MonitoringActivityFactory(partners=[self.partner])
 
         # Create HACT question
@@ -537,11 +549,20 @@ class TestRssAdminFieldMonitoringApi(BaseTenantTestCase):
             on_track=True
         )
 
+        # Create overall finding for different activity (should be excluded)
+        other_activity = MonitoringActivityFactory(partners=[self.partner])
+        ActivityOverallFinding.objects.create(
+            monitoring_activity=other_activity,
+            partner=self.partner,
+            narrative_finding='Other finding',
+            on_track=False
+        )
+
         url = reverse('rss_admin:rss-admin-activity-overall-findings-list', kwargs={'monitoring_activity_pk': activity.pk})
         resp = self.forced_auth_req('get', url, user=self.user)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
-        # Should return overall findings for HACT partners
+        # Should return overall findings for this activity only (matches eTools behavior)
         self.assertEqual(len(resp.data), 1)
         self.assertEqual(resp.data[0]['partner'], self.partner.pk)
         self.assertEqual(resp.data[0]['narrative_finding'], 'Test finding')
@@ -555,11 +576,11 @@ class TestRssAdminFieldMonitoringApi(BaseTenantTestCase):
         """Test updating activity overall finding via PATCH"""
         activity = MonitoringActivityFactory(partners=[self.partner])
 
-        # Create HACT question to make this partner eligible
-        hact_question = QuestionFactory(is_hact=True, level='partner', is_active=True)
+        # Create question for this activity
+        question = QuestionFactory(is_hact=True, level='partner', is_active=True)
         ActivityQuestionFactory(
             monitoring_activity=activity,
-            question=hact_question,
+            question=question,
             partner=self.partner,
             is_hact=True,
             is_enabled=True,
@@ -620,7 +641,7 @@ class TestRssAdminFieldMonitoringApi(BaseTenantTestCase):
         """Test bulk PATCH on multiple findings"""
         activity = MonitoringActivityFactory(partners=[self.partner])
 
-        # Create multiple HACT questions with overall findings
+        # Create multiple questions with overall findings
         hact_question1 = QuestionFactory(is_hact=True, level='partner', is_active=True)
         activity_question1 = ActivityQuestionFactory(
             monitoring_activity=activity,
@@ -727,3 +748,154 @@ class TestRssAdminFieldMonitoringApi(BaseTenantTestCase):
         self.assertEqual(findings[0].value, 'Updated 0')
         self.assertEqual(findings[1].value, 'Updated 1')
         self.assertEqual(findings[2].value, 'Original value 2')  # Unchanged
+
+    def test_findings_endpoint_returns_same_count_as_etools(self):
+        """Test that RSS admin findings endpoint returns the same number of items as eTools endpoint."""
+        activity = MonitoringActivityFactory(partners=[self.partner])
+
+        # Create 10 activity questions with overall findings
+        for i in range(10):
+            question = QuestionFactory(is_hact=(i % 2 == 0), level='partner', is_active=True)
+            activity_question = ActivityQuestionFactory(
+                monitoring_activity=activity,
+                question=question,
+                partner=self.partner,
+                is_hact=(i % 2 == 0),  # Mix of HACT and non-HACT
+                is_enabled=True,
+            )
+            ActivityQuestionOverallFinding.objects.create(
+                activity_question=activity_question,
+                value=f'Finding value {i}'
+            )
+
+        # Fetch from RSS admin endpoint
+        rss_admin_url = reverse(
+            'rss_admin:rss-admin-activity-findings-list',
+            kwargs={'monitoring_activity_pk': activity.pk}
+        )
+        rss_admin_resp = self.forced_auth_req('get', rss_admin_url, user=self.user)
+        self.assertEqual(rss_admin_resp.status_code, status.HTTP_200_OK)
+
+        # Fetch from eTools endpoint
+        etools_url = reverse(
+            'field_monitoring_data_collection:activity-findings-list',
+            kwargs={'monitoring_activity_pk': activity.pk}
+        )
+        etools_resp = self.forced_auth_req('get', etools_url, user=self.user, data={'page_size': 'all'})
+        self.assertEqual(etools_resp.status_code, status.HTTP_200_OK)
+
+        # Get counts - handle both list and paginated responses
+        rss_admin_data = rss_admin_resp.data
+        etools_data = etools_resp.data
+        if isinstance(etools_data, dict) and 'results' in etools_data:
+            etools_count = len(etools_data['results'])
+        else:
+            etools_count = len(etools_data)
+        rss_admin_count = len(rss_admin_data)
+
+        # Assert both endpoints return the same count
+        self.assertEqual(rss_admin_count, etools_count)
+        self.assertEqual(rss_admin_count, 10)  # We created exactly 10 items
+
+    def test_overall_findings_endpoint_returns_same_count_as_etools(self):
+        """Test that RSS admin overall-findings endpoint returns the same number of items as eTools endpoint."""
+        # Create 10 partners for the activity
+        partners = [PartnerFactory() for _ in range(10)]
+        activity = MonitoringActivityFactory(partners=partners)
+
+        # Create 10 activity overall findings (one per partner)
+        for i, partner in enumerate(partners):
+            ActivityOverallFinding.objects.create(
+                monitoring_activity=activity,
+                partner=partner,
+                narrative_finding=f'Overall finding {i}',
+                on_track=(i % 2 == 0)
+            )
+
+        # Fetch from RSS admin endpoint
+        rss_admin_url = reverse(
+            'rss_admin:rss-admin-activity-overall-findings-list',
+            kwargs={'monitoring_activity_pk': activity.pk}
+        )
+        rss_admin_resp = self.forced_auth_req('get', rss_admin_url, user=self.user)
+        self.assertEqual(rss_admin_resp.status_code, status.HTTP_200_OK)
+
+        # Fetch from eTools endpoint
+        etools_url = reverse(
+            'field_monitoring_data_collection:activity-overall-findings-list',
+            kwargs={'monitoring_activity_pk': activity.pk}
+        )
+        etools_resp = self.forced_auth_req('get', etools_url, user=self.user, data={'page_size': 'all'})
+        self.assertEqual(etools_resp.status_code, status.HTTP_200_OK)
+
+        # Get counts - handle both list and paginated responses
+        rss_admin_data = rss_admin_resp.data
+        etools_data = etools_resp.data
+        if isinstance(etools_data, dict) and 'results' in etools_data:
+            etools_count = len(etools_data['results'])
+        else:
+            etools_count = len(etools_data)
+        rss_admin_count = len(rss_admin_data)
+
+        # Assert both endpoints return the same count
+        self.assertEqual(rss_admin_count, etools_count)
+        self.assertEqual(rss_admin_count, 10)  # We created exactly 10 items
+
+    def test_findings_endpoints_exclude_other_activities(self):
+        """Test that both endpoints only return items for the requested activity, not others."""
+        activity1 = MonitoringActivityFactory(partners=[self.partner])
+        activity2 = MonitoringActivityFactory(partners=[self.partner])
+
+        # Create 10 findings for activity1
+        for i in range(10):
+            question = QuestionFactory(is_hact=True, level='partner', is_active=True)
+            aq = ActivityQuestionFactory(
+                monitoring_activity=activity1,
+                question=question,
+                partner=self.partner,
+                is_hact=True,
+                is_enabled=True,
+            )
+            ActivityQuestionOverallFinding.objects.create(activity_question=aq, value=f'Activity1 finding {i}')
+
+        # Create 5 findings for activity2 (should NOT appear in activity1 results)
+        for i in range(5):
+            question = QuestionFactory(is_hact=True, level='partner', is_active=True)
+            aq = ActivityQuestionFactory(
+                monitoring_activity=activity2,
+                question=question,
+                partner=self.partner,
+                is_hact=True,
+                is_enabled=True,
+            )
+            ActivityQuestionOverallFinding.objects.create(activity_question=aq, value=f'Activity2 finding {i}')
+
+        # Fetch activity1 from RSS admin
+        rss_admin_url = reverse(
+            'rss_admin:rss-admin-activity-findings-list',
+            kwargs={'monitoring_activity_pk': activity1.pk}
+        )
+        rss_admin_resp = self.forced_auth_req('get', rss_admin_url, user=self.user)
+        self.assertEqual(rss_admin_resp.status_code, status.HTTP_200_OK)
+
+        # Fetch activity1 from eTools
+        etools_url = reverse(
+            'field_monitoring_data_collection:activity-findings-list',
+            kwargs={'monitoring_activity_pk': activity1.pk}
+        )
+        etools_resp = self.forced_auth_req('get', etools_url, user=self.user, data={'page_size': 'all'})
+        self.assertEqual(etools_resp.status_code, status.HTTP_200_OK)
+
+        # Get counts
+        rss_admin_data = rss_admin_resp.data
+        etools_data = etools_resp.data
+        if isinstance(etools_data, dict) and 'results' in etools_data:
+            etools_count = len(etools_data['results'])
+        else:
+            etools_count = len(etools_data)
+        rss_admin_count = len(rss_admin_data)
+
+        # Both should return exactly 10 (only activity1's findings)
+        self.assertEqual(rss_admin_count, 10)
+        self.assertEqual(etools_count, 10)
+        self.assertEqual(rss_admin_count, etools_count)

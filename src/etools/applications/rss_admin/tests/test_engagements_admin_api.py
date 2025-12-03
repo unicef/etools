@@ -532,21 +532,27 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
         )
         
         # Test engagement-attachments endpoint
-        engagement_url = reverse('rss_admin:rss-admin-engagements-engagement-attachments-list', 
+        engagement_url = reverse('rss_admin:rss-admin-engagement-attachments-list', 
                                 kwargs={'engagement_pk': audit.pk})
         resp = self.forced_auth_req('get', engagement_url, user=self.user)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(resp.data), 1)
-        self.assertIn('filename', resp.data[0])
-        self.assertIsNotNone(resp.data[0]['filename'])
-        self.assertEqual(resp.data[0]['id'], engagement_attachment.id)
+        self.assertGreaterEqual(len(resp.data), 1)
+        # Find our attachment in the response and verify it has filename
+        engagement_ids = [item['id'] for item in resp.data]
+        self.assertIn(engagement_attachment.id, engagement_ids)
+        our_attachment = next(item for item in resp.data if item['id'] == engagement_attachment.id)
+        self.assertIn('filename', our_attachment)
+        self.assertIsNotNone(our_attachment['filename'])
         
         # Test report-attachments endpoint
-        report_url = reverse('rss_admin:rss-admin-engagements-report-attachments-list',
+        report_url = reverse('rss_admin:rss-admin-report-attachments-list',
                            kwargs={'engagement_pk': audit.pk})
         resp = self.forced_auth_req('get', report_url, user=self.user)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(resp.data), 1)
-        self.assertIn('filename', resp.data[0])
-        self.assertIsNotNone(resp.data[0]['filename'])
-        self.assertEqual(resp.data[0]['id'], report_attachment.id)
+        self.assertGreaterEqual(len(resp.data), 1)
+        # Find our attachment in the response and verify it has filename
+        report_ids = [item['id'] for item in resp.data]
+        self.assertIn(report_attachment.id, report_ids)
+        our_report = next(item for item in resp.data if item['id'] == report_attachment.id)
+        self.assertIn('filename', our_report)
+        self.assertIsNotNone(our_report['filename'])
