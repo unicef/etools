@@ -179,21 +179,27 @@ class InterventionRssSerializer(serializers.ModelSerializer):
 
 
 class BulkCloseProgrammeDocumentsSerializer(serializers.Serializer):
-    programme_documents = serializers.PrimaryKeyRelatedField(queryset=Intervention.objects.all(), many=True, write_only=True)
+    programme_documents = serializers.PrimaryKeyRelatedField(queryset=Intervention.objects.all(), many=True)
 
-    def validate_programme_documents(self, programme_documents):
-        # Ensure only PDs are processed via this endpoint
-        invalid_ids = [i.id for i in programme_documents if i.document_type != Intervention.PD]
-        if invalid_ids:
-            raise serializers.ValidationError({
-                'non_pd_ids': invalid_ids,
-                'errors': ['Only Programme Documents (PD) can be bulk-closed']
-            })
-        return programme_documents
+    def validate(self, attrs):
+        """Validate the list of programme documents.
 
-    def update(self, validated_data, user):
-        interventions = validated_data.get('programme_documents', [])
-        return ProgrammeDocumentService.bulk_close(interventions)
+        Returns errors in list format for consistency with other endpoints.
+        """
+        programme_documents = attrs.get('programme_documents', [])
+        if not programme_documents:
+            raise serializers.ValidationError(['No programme documents provided'])
+        return attrs
+
+    def save(self):
+        """Process the bulk close operation.
+
+        Returns result with closed_ids and errors (if any).
+        For bulk operations, we return 200 OK even with partial failures.
+        """
+        interventions = self.validated_data.get('programme_documents', [])
+        result = ProgrammeDocumentService.bulk_close(interventions)
+        return result
 
 
 class TripApproverUpdateSerializer(serializers.ModelSerializer):
@@ -271,27 +277,30 @@ class EngagementStatusUpdateMixin:
 
             if not transition_method:
                 raise serializers.ValidationError({
-                    'status': f'Invalid status transition from {old_status} to {new_status}'
+                    'status': [f'Invalid status transition from {old_status} to {new_status}']
                 })
 
             # Call the appropriate FSM transition method
+            # send_back and cancel require comments - validate before trying FSM transition
+            if transition_method == 'send_back':
+                comment = validated_data.get('send_back_comment', '')
+                if not comment:
+                    raise serializers.ValidationError({
+                        'send_back_comment': ['This field is required when sending back']
+                    })
+            elif transition_method == 'cancel':
+                comment = validated_data.get('cancel_comment', '')
+                if not comment:
+                    raise serializers.ValidationError({
+                        'cancel_comment': ['This field is required when cancelling']
+                    })
+
             try:
                 method = getattr(instance, transition_method)
 
-                # send_back and cancel require comments
-                if transition_method == 'send_back':
-                    comment = validated_data.get('send_back_comment', '')
-                    if not comment:
-                        raise serializers.ValidationError({
-                            'send_back_comment': 'This field is required when sending back'
-                        })
-                    method(comment)
-                elif transition_method == 'cancel':
-                    comment = validated_data.get('cancel_comment', '')
-                    if not comment:
-                        raise serializers.ValidationError({
-                            'cancel_comment': 'This field is required when cancelling'
-                        })
+                # Call the FSM transition method with comment if needed
+                if transition_method in ['send_back', 'cancel']:
+                    comment = validated_data.get(f'{transition_method}_comment', '')
                     method(comment)
                 else:
                     method()
@@ -305,7 +314,7 @@ class EngagementStatusUpdateMixin:
 
             except Exception as e:
                 raise serializers.ValidationError({
-                    'status': f'Status transition failed: {str(e)}'
+                    'status': [f'Status transition failed: {str(e)}']
                 })
 
             return instance
@@ -408,7 +417,7 @@ class EngagementChangeStatusSerializer(serializers.Serializer):
         status_value = attrs.get('status')
 
         if not action and not status_value:
-            raise serializers.ValidationError({'action': 'Provide either action or status'})
+            raise serializers.ValidationError({'action': ['Provide either action or status']})
 
         # Map status to action if only status is provided
         if not action and status_value:
@@ -420,14 +429,14 @@ class EngagementChangeStatusSerializer(serializers.Serializer):
             }
             action = mapping.get(status_value)
             if not action:
-                raise serializers.ValidationError({'status': f'Unsupported target status: {status_value}'})
+                raise serializers.ValidationError({'status': [f'Unsupported target status: {status_value}']})
             attrs['action'] = action
 
         # Ensure required comments for certain actions
         if action == self.ACTION_SEND_BACK and not attrs.get('send_back_comment'):
-            raise serializers.ValidationError({'send_back_comment': 'This field is required for send_back'})
+            raise serializers.ValidationError({'send_back_comment': ['This field is required for send_back']})
         if action == self.ACTION_CANCEL and not attrs.get('cancel_comment'):
-            raise serializers.ValidationError({'cancel_comment': 'This field is required for cancel'})
+            raise serializers.ValidationError({'cancel_comment': ['This field is required for cancel']})
 
         return attrs
 
@@ -541,7 +550,7 @@ class MapPartnerToWorkspaceSerializer(serializers.Serializer):
         try:
             Organization.objects.get(vendor_number=value)
         except Organization.DoesNotExist:
-            raise serializers.ValidationError("Unknown vendor number")
+            raise serializers.ValidationError(["Unknown vendor number"])
         return value
 
 
