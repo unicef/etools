@@ -25,7 +25,6 @@ from etools.applications.audit.serializers.engagement import EngagementAttachmen
 from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.field_monitoring.data_collection.models import (
     ActivityOverallFinding,
-    ActivityQuestion,
     ActivityQuestionOverallFinding,
     Finding,
 )

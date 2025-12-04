@@ -512,7 +512,7 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
     def test_engagement_attachments_include_filename(self):
         """Test that engagement and report attachment endpoints include filename field"""
         audit = AuditFactory(status=Engagement.STATUSES.partner_contacted)
-        
+
         # Create engagement attachment
         engagement_file_type = AttachmentFileTypeFactory(code='audit_engagement')
         engagement_attachment = AttachmentFactory(
@@ -521,7 +521,7 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
             file_type=engagement_file_type,
             file='test_engagement_document.pdf'
         )
-        
+
         # Create report attachment
         report_file_type = AttachmentFileTypeFactory(code='audit_report')
         report_attachment = AttachmentFactory(
@@ -530,10 +530,10 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
             file_type=report_file_type,
             file='test_audit_report.pdf'
         )
-        
+
         # Test engagement-attachments endpoint
-        engagement_url = reverse('rss_admin:rss-admin-engagement-attachments-list', 
-                                kwargs={'engagement_pk': audit.pk})
+        engagement_url = reverse('rss_admin:rss-admin-engagement-attachments-list',
+                                 kwargs={'engagement_pk': audit.pk})
         resp = self.forced_auth_req('get', engagement_url, user=self.user)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertGreaterEqual(len(resp.data), 1)
@@ -543,10 +543,10 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
         our_attachment = next(item for item in resp.data if item['id'] == engagement_attachment.id)
         self.assertIn('filename', our_attachment)
         self.assertIsNotNone(our_attachment['filename'])
-        
+
         # Test report-attachments endpoint
         report_url = reverse('rss_admin:rss-admin-report-attachments-list',
-                           kwargs={'engagement_pk': audit.pk})
+                             kwargs={'engagement_pk': audit.pk})
         resp = self.forced_auth_req('get', report_url, user=self.user)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertGreaterEqual(len(resp.data), 1)
