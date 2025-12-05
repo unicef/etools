@@ -133,10 +133,11 @@ class DataExportService:
                 raise InvalidDateFormatError("Invalid ISO 8601 format for 'last_modified'.")
 
         country_name = connection.tenant.name if hasattr(connection, 'tenant') else None
+        country_code = connection.tenant.country_short_code if hasattr(connection, 'tenant') else None
         queryset = queryset.prepare_for_lm_export()
 
         if country_name:
-            queryset = queryset.annotate(country=Value(country_name))
+            queryset = queryset.annotate(country=Value(country_name), country_code=Value(country_code))
 
         queryset = queryset.order_by('id')
         return queryset
