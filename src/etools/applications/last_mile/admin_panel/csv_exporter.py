@@ -5,7 +5,7 @@ from typing import Any, Dict, Iterator, List
 
 class BaseCSVExporter:
 
-    DEFAULT_CHUNK_SIZE = 100
+    DEFAULT_CHUNK_SIZE = 1000
 
     def __init__(self, chunk_size: int = DEFAULT_CHUNK_SIZE):
         self.chunk_size = chunk_size
@@ -17,6 +17,9 @@ class BaseCSVExporter:
         output.seek(0)
         return output.read()
 
+    def _serialize_items_batch(self, items: List[Any], serializer_class: Any) -> List[Dict[str, Any]]:
+        return serializer_class(items, many=True).data
+
     def _serialize_item(self, item: Any, serializer_class: Any) -> Dict[str, Any]:
         return serializer_class(item).data
 
@@ -27,6 +30,42 @@ class BaseCSVExporter:
         for item in queryset[:1]:
             return item
         return None
+
+    def _process_chunk_with_batch_serialization(
+        self, chunk: List[Any], serializer_class: Any, headers: Dict[str, str]
+    ) -> Iterator[str]:
+        serialized_data_list = self._serialize_items_batch(chunk, serializer_class)
+        for serialized_data in serialized_data_list:
+            row_values = self._extract_values(serialized_data, headers.keys())
+            yield self._write_csv_row(row_values)
+
+    def _process_chunk_with_row_expansion(
+        self, chunk: List[Any], serializer_class: Any, headers: Dict[str, str]
+    ) -> Iterator[str]:
+        for obj in chunk:
+            item_serializer = serializer_class(obj)
+            rows = item_serializer.generate_rows(obj)
+            for row_data in rows:
+                row_values = self._extract_values(row_data, headers.keys())
+                yield self._write_csv_row(row_values)
+
+    def _iterate_with_chunking(
+        self, queryset, serializer_class: Any, headers: Dict[str, str], use_row_expansion: bool = False
+    ) -> Iterator[str]:
+        chunk = []
+        process_method = (
+            self._process_chunk_with_row_expansion if use_row_expansion
+            else self._process_chunk_with_batch_serialization
+        )
+
+        for item in queryset.iterator(chunk_size=self.chunk_size):
+            chunk.append(item)
+            if len(chunk) >= self.chunk_size:
+                yield from process_method(chunk, serializer_class, headers)
+                chunk = []
+
+        if chunk:
+            yield from process_method(chunk, serializer_class, headers)
 
 
 class UsersCSVExporter(BaseCSVExporter):
@@ -44,11 +83,7 @@ class UsersCSVExporter(BaseCSVExporter):
         }
 
         yield self._write_csv_row(headers.values())
-
-        for user in queryset.iterator(chunk_size=self.chunk_size):
-            serialized_data = self._serialize_item(user, serializer_class)
-            row_values = self._extract_values(serialized_data, headers.keys())
-            yield self._write_csv_row(row_values)
+        yield from self._iterate_with_chunking(queryset, serializer_class, headers)
 
 
 class LocationsCSVExporter(BaseCSVExporter):
@@ -76,7 +111,8 @@ class LocationsCSVExporter(BaseCSVExporter):
             "lat": "Latitude",
             "lng": "Longitude",
             "status": "Status",
-            "implementing_partner": "Implementing Partner",
+            "implementing_partner_names": "Implementing Partner Name",
+            "implementing_partner_numbers": "Implementing Partner Number",
             "region": "Region",
             "district": "District",
             "country": "Country",
@@ -84,7 +120,10 @@ class LocationsCSVExporter(BaseCSVExporter):
             "transfer_ref": "Transfer Reference",
             "item_id": "Item ID",
             "item_name": "Item Name",
-            "item_qty": "Item Quantity"
+            "item_qty": "Item Quantity",
+            "item_batch_number": "Item Batch Number",
+            "item_expiry_date": "Item Expiry Date",
+            "approval_status": "Approval Status",
         }
 
         first_item = self._get_first_item(queryset)
@@ -99,25 +138,12 @@ class LocationsCSVExporter(BaseCSVExporter):
 
         if has_row_expansion:
             yield self._write_csv_row(expanded_headers.values())
-
-            first_rows = serializer.generate_rows(first_item)
-            for row_data in first_rows:
-                row_values = self._extract_values(row_data, expanded_headers.keys())
-                yield self._write_csv_row(row_values)
-
-            for item in queryset[1:].iterator(chunk_size=self.chunk_size):
-                item_serializer = serializer_class(item)
-                rows = item_serializer.generate_rows(item)
-                for row_data in rows:
-                    row_values = self._extract_values(row_data, expanded_headers.keys())
-                    yield self._write_csv_row(row_values)
+            yield from self._iterate_with_chunking(
+                queryset, serializer_class, expanded_headers, use_row_expansion=True
+            )
         else:
             yield self._write_csv_row(standard_headers.values())
-
-            for item in queryset.iterator(chunk_size=self.chunk_size):
-                serialized_data = self._serialize_item(item, serializer_class)
-                row_values = self._extract_values(serialized_data, standard_headers.keys())
-                yield self._write_csv_row(row_values)
+            yield from self._iterate_with_chunking(queryset, serializer_class, standard_headers)
 
 
 class UserLocationsCSVExporter(BaseCSVExporter):
@@ -133,11 +159,7 @@ class UserLocationsCSVExporter(BaseCSVExporter):
         }
 
         yield self._write_csv_row(headers.values())
-
-        for user in queryset.iterator(chunk_size=self.chunk_size):
-            serialized_data = self._serialize_item(user, serializer_class)
-            row_values = self._extract_values(serialized_data, headers.keys())
-            yield self._write_csv_row(row_values)
+        yield from self._iterate_with_chunking(queryset, serializer_class, headers)
 
 
 class POITypesCSVExporter(BaseCSVExporter):
