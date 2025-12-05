@@ -1,5 +1,5 @@
 import datetime
-from unittest import skip
+from unittest import mock, skip
 
 from django.contrib.auth.models import AnonymousUser
 from django.db import connection
@@ -32,7 +32,7 @@ from etools.applications.organizations.models import OrganizationType
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.reports.models import ResultType
-from etools.applications.reports.tests.factories import CountryProgrammeFactory, SectionFactory
+from etools.applications.reports.tests.factories import CountryProgrammeFactory, OfficeFactory, SectionFactory
 from etools.applications.users.tests.factories import CountryFactory, GroupFactory, RealmFactory, UserFactory
 from etools.libraries.djangolib.utils import get_environment
 
@@ -93,7 +93,7 @@ class TestList(BaseGDDTestCase):
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]["id"], gdd.pk)
 
-    def test_intervention_list_without_show_amendments_flag(self):
+    def test_gdd_list_without_show_amendments_flag(self):
         GDDAmendmentFactory()
         with self.assertNumQueries(9):
             response = self.forced_auth_req(
@@ -105,7 +105,7 @@ class TestList(BaseGDDTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
 
-    def test_intervention_list_with_show_amendments_flag(self):
+    def test_gdd_list_with_show_amendments_flag(self):
         for i in range(20):
             GDDAmendmentFactory()
 
@@ -120,7 +120,7 @@ class TestList(BaseGDDTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 40)
 
-    def test_intervention_list_with_pagination(self):
+    def test_gdd_list_with_pagination(self):
         for i in range(30):
             GDDFactory()
 
@@ -151,7 +151,7 @@ class TestList(BaseGDDTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    # def test_list_interventions_for_empty_result_link(self):
+    # def test_list_gdds_for_empty_result_link(self):
     #     GDDResultLinkFactory(cp_output=None)
     #     response = self.forced_auth_req(
     #         'get',
@@ -236,14 +236,14 @@ class TestList(BaseGDDTestCase):
             )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)
-        intervention_data = sorted(response.data, key=lambda i: i['id'])[0]
-        self.assertIn('country_programme', intervention_data)
-        self.assertEqual(country_programme.id, intervention_data['country_programme'])
+        gdd_data = sorted(response.data, key=lambda i: i['id'])[0]
+        self.assertIn('country_programme', gdd_data)
+        self.assertEqual(country_programme.id, gdd_data['country_programme'])
 
-    def test_intervention_list_filter_by_budget_owner(self):
+    def test_gdd_list_filter_by_budget_owner(self):
         first_budget_owner = UserFactory()
         second_budget_owner = UserFactory()
-        interventions = [
+        gdds = [
             GDDFactory(budget_owner=first_budget_owner).id,
             GDDFactory(budget_owner=second_budget_owner).id,
         ]
@@ -260,7 +260,7 @@ class TestList(BaseGDDTestCase):
         self.assertEqual(len(response.data), 2)
         self.assertCountEqual(
             [i['id'] for i in response.data],
-            interventions,
+            gdds,
         )
 
 
@@ -604,7 +604,7 @@ class TestCreate(BaseGDDTestCase):
         else:
             self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
 
-    def test_add_intervention_by_partner_member(self):
+    def test_add_gdd_by_partner_member(self):
         partner_user = UserFactory(
             realms__data=['IP Viewer'],
             profile__organization=self.partner.organization,
@@ -617,7 +617,7 @@ class TestCreate(BaseGDDTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
 
-    def test_add_intervention_by_anonymous(self):
+    def test_add_gdd_by_anonymous(self):
         response = self.forced_auth_req(
             "post",
             reverse('governments:gdd-list'),
@@ -626,7 +626,7 @@ class TestCreate(BaseGDDTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, response.data)
 
-    def test_add_minimal_intervention(self):
+    def test_add_minimal_gdd(self):
         response = self.forced_auth_req(
             "post",
             reverse('governments:gdd-list'),
@@ -943,98 +943,6 @@ class TestUpdate(BaseGDDTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn("send_to_partner", response.data["available_actions"])
 
-    # def test_update_hq_cash_local(self):
-    #     gdd = GDDFactory()
-    #     gdd.unicef_focal_points.add(self.unicef_user)
-    #     budget = gdd.planned_budget
-    #
-    #     GDDActivityFactory(
-    #         result__result_link=GDDResultLinkFactory(
-    #             cp_output__result_type__name=ResultType.OUTPUT,
-    #             gdd=gdd
-    #         ),
-    #         unicef_cash=40,
-    #     )
-    #
-    #     budget.refresh_from_db()
-    #     self.assertEqual(budget.total_hq_cash_local, 0)
-    #     self.assertEqual(budget.unicef_cash_local, 40)
-    #
-    #     response = self.forced_auth_req(
-    #         "patch",
-    #         reverse('governments:gdd-detail', args=[gdd.pk]),
-    #         user=self.unicef_user,
-    #         data={'planned_budget': {
-    #             "id": budget.pk,
-    #             "total_hq_cash_local": "10.00",
-    #         }}
-    #     )
-    #     self.assertEqual(response.status_code, status.HTTP_200_OK)
-    #     budget.refresh_from_db()
-    #     self.assertEqual(budget.total_hq_cash_local, 10)
-    #     self.assertEqual(budget.unicef_cash_local, 50)
-    #
-    # def test_fields_required_on_unicef_accept(self):
-    #     gdd = GDDFactory(
-    #         ip_program_contribution='contribution',
-    #         status=GDD.DRAFT,
-    #         unicef_accepted=False,
-    #         partner_accepted=False,
-    #         agreement__partner=self.partner,
-    #         date_sent_to_partner=timezone.now(),
-    #         partner_authorized_officer_signatory=None,
-    #         signed_by_partner_date=None,
-    #         signed_by_unicef_date=None,
-    #     )
-    #     ReportingRequirementFactory(gdd=gdd, start_date=gdd.start, end_date=gdd.end)
-    #     gdd.flat_locations.add(LocationFactory())
-    #     gdd.unicef_focal_points.add(self.unicef_user)
-    #     staff_member = UserFactory(
-    #         realms__data=['IP Viewer'],
-    #         profile__organization=self.partner.organization
-    #     )
-    #     gdd.partner_focal_points.add(staff_member)
-    #     response = self.forced_auth_req(
-    #         "patch",
-    #         reverse('governments:gdd-detail', args=[gdd.pk]),
-    #         user=self.unicef_user,
-    #         data={}
-    #     )
-    #     self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
-    #
-    #     gdd.unicef_court = False
-    #     gdd.save()
-    #     gdd.sections.add(SectionFactory())
-    #     result_link = GDDResultLinkFactory(
-    #         gdd=gdd,
-    #         cp_output__result_type__name=ResultType.OUTPUT,
-    #         ram_indicators=[IndicatorFactory()],
-    #     )
-    #     pd_output = LowerResultFactory(result_link=result_link)
-    #     AppliedIndicatorFactory(lower_result=pd_output, section=gdd.sections.first())
-    #     activity = GDDActivityFactory(result=pd_output)
-    #     activity.time_frames.add(gdd.quarters.first())
-    #     response = self.forced_auth_req(
-    #         "patch",
-    #         reverse('governments:gdd-accept', args=[gdd.pk]),
-    #         user=staff_member,
-    #     )
-    #     self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
-    #     response = self.forced_auth_req(
-    #         "patch",
-    #         reverse('governments:gdd-accept', args=[gdd.pk]),
-    #         user=self.unicef_user,
-    #     )
-    #     self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST, response.data)
-    #     self.assertIn('Required fields not completed in draft', response.data[0]['description'])
-    #
-    #     # check pending_approval fields are not required in this case
-    #     for field in [
-    #         'signed_pd_attachment', 'date_sent_to_partner', 'signed_by_unicef_date',
-    #         'signed_by_partner_date', 'partner_authorized_officer_signatory',
-    #     ]:
-    #         self.assertNotIn(field, response.data[0])
-    #
     def test_update_context_characters_limitation_ok(self):
         gdd = GDDFactory()
         gdd.unicef_focal_points.add(self.unicef_user)
@@ -1076,43 +984,50 @@ class TestUpdate(BaseGDDTestCase):
         else:
             self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
 
+    @mock.patch("etools.applications.governments.tasks.send_gdd_to_vision.delay")
+    def test_transition_gdd_to_approved(self, send_to_vision_mock):
+        partner = PartnerFactory(organization__organization_type=OrganizationType.GOVERNMENT)
+        partner_staff_member = UserFactory(
+            is_staff=False,
+            realms__data=['IP Viewer'],
+            profile__organization=partner.organization
+        )
+        country_programme = CountryProgrammeFactory()
+        user = UserFactory(is_staff=True, realms__data=['UNICEF User', 'Partnership Manager'])
 
-# class TestDelete(BaseGDDTestCase):
-#     def setUp(self):
-#         super().setUp()
-#         self.gdd = GDDFactory()
-#         self.unicef_user = UserFactory(is_staff=True)
-#         self.partner_user = UserFactory(
-#             realms__data=['IP Viewer'],
-#             profile__organization=self.gdd.partner.organization
-#         )
-#         self.gdd.partner_focal_points.add(self.partner_user)
-#         self.intervention_qs = GDD.objects.filter(
-#             pk=self.gdd.pk,
-#         )
-#
-#     def test_with_date_sent_to_partner_reset(self):
-#         # attempt clear date sent, but with snapshot
-#         pre_save = create_dict_with_relations(self.gdd)
-#         self.gdd.date_sent_to_partner = None
-#         self.gdd.save()
-#         create_snapshot(self.gdd, pre_save, self.unicef_user)
-#
-#         self.assertTrue(self.intervention_qs.exists())
-#         response = self.forced_auth_req(
-#             "delete",
-#             reverse('governments:gdd-delete', args=[self.gdd.pk]),
-#             user=self.unicef_user,
-#         )
-#         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-#         self.assertFalse(self.intervention_qs.exists())
-#
-#     def test_delete_partner(self):
-#         self.assertTrue(self.intervention_qs.exists())
-#         response = self.forced_auth_req(
-#             "delete",
-#             reverse('governments:gdd-delete', args=[self.gdd.pk]),
-#             user=self.partner_user,
-#         )
-#         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-#         self.assertTrue(self.intervention_qs.exists())
+        gdd = GDDFactory(
+            status=GDD.PENDING_APPROVAL,
+            partner=partner,
+            country_programme=country_programme,
+            start=datetime.date.today() + datetime.timedelta(days=1),
+            end=datetime.date.today() + datetime.timedelta(days=365),
+            date_sent_to_partner=datetime.date.today(),
+            budget_owner=UserFactory(),
+            partner_accepted=True,
+            unicef_accepted=True,
+        )
+        gdd.flat_locations.add(LocationFactory())
+        gdd.sections.add(SectionFactory())
+        gdd.offices.add(OfficeFactory())
+        gdd.partner_focal_points.add(partner_staff_member)
+        gdd.unicef_focal_points.add(user)
+        GDDReviewFactory(
+            gdd=gdd,
+            overall_approval=True,
+            submitted_by=UserFactory(),
+            review_type='non-prc',
+        )
+        self.assertEqual(gdd.status, GDD.PENDING_APPROVAL)
+        with self.captureOnCommitCallbacks(execute=True) as callbacks:
+            response = self.forced_auth_req(
+                "patch",
+                reverse('governments:gdd-detail', args=[gdd.pk]),
+                user=user,
+                data={'signature_required': False}
+            )
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+
+        gdd.refresh_from_db()
+        self.assertEqual(gdd.status, GDD.APPROVED)
+        send_to_vision_mock.assert_called()
+        self.assertEqual(len(callbacks), 1)

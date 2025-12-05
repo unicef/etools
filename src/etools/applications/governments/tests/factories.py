@@ -78,6 +78,16 @@ class GDDFactory(factory.django.DjangoModelFactory):
     other_partners_involved = "other_partners_involved"
     other_details = "other_details"
 
+    @factory.post_generation
+    def partner_focal_points(self, create, extracted, **kwargs):
+        if extracted:
+            self.partner_focal_points.add(*extracted)
+
+    @factory.post_generation
+    def unicef_focal_points(self, create, extracted, **kwargs):
+        if extracted:
+            self.unicef_focal_points.add(*extracted)
+
 
 class GDDAmendmentFactory(factory.django.DjangoModelFactory):
     class Meta:
