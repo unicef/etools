@@ -539,7 +539,7 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(self.incoming.items.count(), 2)
         self.assertEqual(self.incoming.items.order_by('id').first().id, item_1.pk)
         self.assertEqual(self.incoming.items.order_by('id').first().base_quantity, 11)
-        self.assertEqual(self.incoming.items.order_by('id').first().base_uom, self.incoming.items.first().material.original_uom)
+        self.assertEqual(self.incoming.items.order_by('id').first().base_uom, self.incoming.items.order_by('id').first().material.original_uom)
         self.assertTrue(models.TransferHistory.objects.filter(origin_transfer_id=self.incoming.id).exists())
         item_1.refresh_from_db()
         self.assertEqual(self.incoming.items.first().quantity, item_1.quantity)
