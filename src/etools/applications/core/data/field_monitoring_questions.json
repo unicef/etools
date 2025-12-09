@@ -706,6 +706,7 @@
 },
 {
   "model": "field_monitoring_settings.question",
+  "pk": 1036,
   "fields": {
     "answer_type": "likert_scale",
     "choices_size": null,
@@ -720,11 +721,13 @@
       2,
       3
     ],
+    "order": 1036,
     "sections": []
   }
 },
 {
   "model": "field_monitoring_settings.question",
+  "pk": 1037,
   "fields": {
     "answer_type": "likert_scale",
     "choices_size": null,
@@ -738,11 +741,13 @@
       1,
       2
     ],
+    "order": 1037,
     "sections": []
   }
 },
 {
   "model": "field_monitoring_settings.question",
+  "pk": 1038,
   "fields": {
     "answer_type": "likert_scale",
     "choices_size": null,
@@ -757,11 +762,13 @@
       2,
       3
     ],
+    "order": 1038,
     "sections": []
   }
 },
 {
   "model": "field_monitoring_settings.question",
+  "pk": 1039,
   "fields": {
     "answer_type": "likert_scale",
     "choices_size": null,
@@ -776,11 +783,13 @@
       2,
       3
     ],
+    "order": 1039,
     "sections": []
   }
 },
 {
   "model": "field_monitoring_settings.question",
+  "pk": 1040,
   "fields": {
     "answer_type": "likert_scale",
     "choices_size": null,
@@ -795,11 +804,13 @@
       2,
       3
     ],
+    "order": 1040,
     "sections": []
   }
 },
 {
   "model": "field_monitoring_settings.question",
+  "pk": 1041,
   "fields": {
     "answer_type": "text",
     "choices_size": null,
@@ -813,11 +824,13 @@
       1,
       3
     ],
+    "order": 1041,
     "sections": []
   }
 },
 {
   "model": "field_monitoring_settings.question",
+  "pk": 1042,
   "fields": {
     "answer_type": "likert_scale",
     "choices_size": null,
@@ -832,11 +845,13 @@
       2,
       3
     ],
+    "order": 1042,
     "sections": []
   }
 },
 {
   "model": "field_monitoring_settings.question",
+  "pk": 1043,
   "fields": {
     "answer_type": "likert_scale",
     "choices_size": null,
@@ -850,11 +865,13 @@
       1,
       2
     ],
+    "order": 1043,
     "sections": []
   }
 },
 {
   "model": "field_monitoring_settings.question",
+  "pk": 1044,
   "fields": {
     "answer_type": "likert_scale",
     "choices_size": null,
@@ -869,11 +886,13 @@
       2,
       3
     ],
+    "order": 1044,
     "sections": []
   }
 },
 {
   "model": "field_monitoring_settings.question",
+  "pk": 1045,
   "fields": {
     "answer_type": "likert_scale",
     "choices_size": null,
@@ -888,11 +907,13 @@
       2,
       3
     ],
+    "order": 1045,
     "sections": []
   }
 },
 {
   "model": "field_monitoring_settings.question",
+  "pk": 1046,
   "fields": {
     "answer_type": "likert_scale",
     "choices_size": null,
@@ -907,11 +928,13 @@
       2,
       3
     ],
+    "order": 1046,
     "sections": []
   }
 },
 {
   "model": "field_monitoring_settings.question",
+  "pk": 1047,
   "fields": {
     "answer_type": "text",
     "choices_size": null,
@@ -925,6 +948,7 @@
       1,
       3
     ],
+    "order": 1047,
     "sections": []
   }
 },
@@ -1791,5 +1815,463 @@
     "label": "76%-100% of beneficiaries are aware",
     "value": "5"
   }
+},
+
+
+{
+  "model": "field_monitoring_settings.question",
+  "pk": 1048,
+  "fields": {
+    "answer_type": "multiple_choice",
+    "choices_size": null,
+    "level": "output",
+    "category": 5,
+    "text": "Were there any access constraints that hindered reaching the population? If so, please specify from the following:",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [3],
+    "order": 1048,
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 2001,
+  "fields": {
+    "question": 1048,
+    "label": "Denial of humanitarian needs or entitlements to humanitarian assistance",
+    "value": "1"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 2002,
+  "fields": {
+    "question": 1048,
+    "label": "Restrictions on movement of agencies, personnel, or goods into the affected country",
+    "value": "2"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 2003,
+  "fields": {
+    "question": 1048,
+    "label": "Restrictions on movement of agencies, personnel, or goods within the affected country",
+    "value": "3"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 2004,
+  "fields": {
+    "question": 1048,
+    "label": "Military operations and ongoing hostilities impeding humanitarian operations",
+    "value": "4"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 2005,
+  "fields": {
+    "question": 1048,
+    "label": "Violence against humanitarian personnel, assets, and facilities",
+    "value": "5"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 2006,
+  "fields": {
+    "question": 1048,
+    "label": "Interference in the implementation of humanitarian activities",
+    "value": "6"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 2007,
+  "fields": {
+    "question": 1048,
+    "label": "Presence of mines and UXOs",
+    "value": "7"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 2008,
+  "fields": {
+    "question": 1048,
+    "label": "Challenging physical environments",
+    "value": "8"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 2009,
+  "fields": {
+    "question": 1048,
+    "label": "Restrictions on / obstruction of access to services and assistance for conflict-affected populations",
+    "value": "9"
+  }
+},
+
+
+{
+  "model": "field_monitoring_settings.question",
+  "pk": 1049,
+  "fields": {
+    "answer_type": "multiple_choice",
+    "choices_size": null,
+    "level": "output",
+    "category": 5,
+    "text": "Please indicate if the access restriction data is being reported to any of the following:",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [3],
+    "order": 1049,
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 2010,
+  "fields": {
+    "question": 1049,
+    "label": "OCHA Access Monitoring Reporting Framework (AMRF)",
+    "value": "1"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 2011,
+  "fields": {
+    "question": 1049,
+    "label": "UNICEF internal access tracking tool",
+    "value": "2"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 2012,
+  "fields": {
+    "question": 1049,
+    "label": "There isn’t a monitoring tool in country",
+    "value": "3"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 2013,
+  "fields": {
+    "question": 1049,
+    "label": "I don’t know",
+    "value": "4"
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "pk": 1050,
+  "fields": {
+    "answer_type": "multiple_choice",
+    "choices_size": null,
+    "level": "partner",
+    "category": 5,
+    "text": "Were there any access constraints that hindered reaching the population? If so, please specify from the following:",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [3],
+    "order": 1050,
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 2014,
+  "fields": {
+    "question": 1050,
+    "label": "Denial of humanitarian needs or entitlements to humanitarian assistance",
+    "value": "1"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 2015,
+  "fields": {
+    "question": 1050,
+    "label": "Restrictions on movement of agencies, personnel, or goods into the affected country",
+    "value": "2"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 2016,
+  "fields": {
+    "question": 1050,
+    "label": "Restrictions on movement of agencies, personnel, or goods within the affected country",
+    "value": "3"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 2017,
+  "fields": {
+    "question": 1050,
+    "label": "Military operations and ongoing hostilities impeding humanitarian operations",
+    "value": "4"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 2018,
+  "fields": {
+    "question": 1050,
+    "label": "Violence against humanitarian personnel, assets, and facilities",
+    "value": "5"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 2019,
+  "fields": {
+    "question": 1050,
+    "label": "Interference in the implementation of humanitarian activities",
+    "value": "6"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 2020,
+  "fields": {
+    "question": 1050,
+    "label": "Presence of mines and UXOs",
+    "value": "7"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 2021,
+  "fields": {
+    "question": 1050,
+    "label": "Challenging physical environments",
+    "value": "8"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 2022,
+  "fields": {
+    "question": 1050,
+    "label": "Restrictions on / obstruction of access to services and assistance for conflict-affected populations",
+    "value": "9"
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "pk": 1051,
+  "fields": {
+    "answer_type": "multiple_choice",
+    "choices_size": null,
+    "level": "partner",
+    "category": 5,
+    "text": "Please indicate if the access restriction data is being reported to any of the following:",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [3],
+    "order": 1051,
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 2023,
+  "fields": {
+    "question": 1051,
+    "label": "OCHA Access Monitoring Reporting Framework (AMRF)",
+    "value": "1"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 2024,
+  "fields": {
+    "question": 1051,
+    "label": "UNICEF internal access tracking tool",
+    "value": "2"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 2025,
+  "fields": {
+    "question": 1051,
+    "label": "There isn't a monitoring tool in country",
+    "value": "3"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 2026,
+  "fields": {
+    "question": 1051,
+    "label": "I don't know",
+    "value": "4"
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "pk": 1052,
+  "fields": {
+    "answer_type": "multiple_choice",
+    "choices_size": null,
+    "level": "intervention",
+    "category": 5,
+    "text": "Were there any access constraints that hindered reaching the population? If so, please specify from the following:",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [3],
+    "order": 1052,
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 2027,
+  "fields": {
+    "question": 1052,
+    "label": "Denial of humanitarian needs or entitlements to humanitarian assistance",
+    "value": "1"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 2028,
+  "fields": {
+    "question": 1052,
+    "label": "Restrictions on movement of agencies, personnel, or goods into the affected country",
+    "value": "2"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 2029,
+  "fields": {
+    "question": 1052,
+    "label": "Restrictions on movement of agencies, personnel, or goods within the affected country",
+    "value": "3"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 2030,
+  "fields": {
+    "question": 1052,
+    "label": "Military operations and ongoing hostilities impeding humanitarian operations",
+    "value": "4"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 2031,
+  "fields": {
+    "question": 1052,
+    "label": "Violence against humanitarian personnel, assets, and facilities",
+    "value": "5"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 2032,
+  "fields": {
+    "question": 1052,
+    "label": "Interference in the implementation of humanitarian activities",
+    "value": "6"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 2033,
+  "fields": {
+    "question": 1052,
+    "label": "Presence of mines and UXOs",
+    "value": "7"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 2034,
+  "fields": {
+    "question": 1052,
+    "label": "Challenging physical environments",
+    "value": "8"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 2035,
+  "fields": {
+    "question": 1052,
+    "label": "Restrictions on / obstruction of access to services and assistance for conflict-affected populations",
+    "value": "9"
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "pk": 1053,
+  "fields": {
+    "answer_type": "multiple_choice",
+    "choices_size": null,
+    "level": "intervention",
+    "category": 5,
+    "text": "Please indicate if the access restriction data is being reported to any of the following:",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [3],
+    "order": 1053,
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 2036,
+  "fields": {
+    "question": 1053,
+    "label": "OCHA Access Monitoring Reporting Framework (AMRF)",
+    "value": "1"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 2037,
+  "fields": {
+    "question": 1053,
+    "label": "UNICEF internal access tracking tool",
+    "value": "2"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 2038,
+  "fields": {
+    "question": 1053,
+    "label": "There isn't a monitoring tool in country",
+    "value": "3"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 2039,
+  "fields": {
+    "question": 1053,
+    "label": "I don't know",
+    "value": "4"
+  }
 }
+
 ]
