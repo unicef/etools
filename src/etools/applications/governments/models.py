@@ -21,6 +21,7 @@ from unicef_snapshot.models import Activity
 
 from etools.applications.audit.models import get_current_year
 from etools.applications.core.permissions import import_permissions
+from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.environment.notifications import send_notification_with_template
 from etools.applications.funds.models import FundsReservationHeader
 from etools.applications.governments.amendment_utils import (
@@ -35,7 +36,14 @@ from etools.applications.governments.validation import gdds as gdd_validation
 from etools.applications.locations.models import Location
 from etools.applications.organizations.models import OrganizationType
 from etools.applications.partners.amendment_utils import calculate_difference, copy_instance, merge_instance
-from etools.applications.partners.models import _get_partner_base_path, Agreement, FileType, PartnerOrganization
+from etools.applications.partners.models import (
+    _get_partner_base_path,
+    Agreement,
+    FileType,
+    PartnerOrganization,
+    side_effect_one,
+    side_effect_two,
+)
 from etools.applications.reports.models import CountryProgramme, Indicator, Office, Result, Section
 from etools.applications.t2f.models import Travel, TravelActivity, TravelType
 from etools.applications.users.models import User
@@ -85,6 +93,13 @@ def get_gdd_amendment_file_path(instance, filename):
         str(instance.id),
         filename
     ])
+
+
+def send_gdd_to_vision_side_effect(i, old_instance=None, user=None):
+    from etools.applications.governments.tasks import send_gdd_to_vision
+
+    if not tenant_switch_is_active('disable_pd_vision_sync'):
+        transaction.on_commit(lambda: send_gdd_to_vision.delay(connection.tenant.name, i.pk))
 
 
 def get_default_cash_transfer_modalities():
@@ -267,6 +282,19 @@ class GDD(TimeStampedModel):
         APPROVED: [ACTIVE, TERMINATED],
         ACTIVE: [ENDED, TERMINATED],
         ENDED: [CLOSED]
+    }
+
+    TRANSITION_SIDE_EFFECTS = {
+        DRAFT: [],
+        REVIEW: [],
+        PENDING_APPROVAL: [],
+        APPROVED: [send_gdd_to_vision_side_effect, side_effect_one, side_effect_two],
+        ACTIVE: [],
+        SUSPENDED: [],
+        ENDED: [],
+        CLOSED: [],
+        TERMINATED: [],
+        CANCELLED: [],
     }
 
     GDD_STATUS = (
