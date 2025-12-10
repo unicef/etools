@@ -852,7 +852,7 @@
 },
 {
   "model": "field_monitoring_settings.question",
-  "pk": 2044,
+  "pk": 2043,
   "fields": {
     "answer_type": "likert_scale",
     "choices_size": null,
@@ -866,13 +866,13 @@
       1,
       2
     ],
-    "order": 2044,
+    "order": 2043,
     "sections": []
   }
 },
 {
   "model": "field_monitoring_settings.question",
-  "pk": 1044,
+  "pk": 2044,
   "fields": {
     "answer_type": "likert_scale",
     "choices_size": null,
@@ -887,7 +887,7 @@
       2,
       3
     ],
-    "order": 1044,
+    "order": 2044,
     "sections": []
   }
 },
