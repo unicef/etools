@@ -1819,7 +1819,7 @@
 },
 {
   "model": "field_monitoring_settings.question",
-  "pk": 1048,
+  "pk": 2048,
   "fields": {
     "answer_type": "multiple_choice",
     "choices_size": null,
@@ -1830,42 +1830,42 @@
     "is_custom": false,
     "is_active": true,
     "methods": [3],
-    "order": 1048,
+    "order": 2048,
     "sections": []
   }
 },
 {
   "model": "field_monitoring_settings.option",
-  "pk": 2001,
+  "pk": 3001,
   "fields": {
-    "question": 1048,
+    "question": 2048,
     "label": "Refus des besoins humanitaires ou des droits à l'assistance humanitaire",
     "value": "1"
   }
 },
 {
   "model": "field_monitoring_settings.option",
-  "pk": 2002,
+  "pk": 3002,
   "fields": {
-    "question": 1048,
+    "question": 2048,
     "label": "Restrictions sur le mouvement des agences, du personnel ou des biens vers le pays affecté",
     "value": "2"
   }
 },
 {
   "model": "field_monitoring_settings.option",
-  "pk": 2003,
+  "pk": 3003,
   "fields": {
-    "question": 1048,
+    "question": 2048,
     "label": "Restrictions sur le mouvement des agences, du personnel ou des biens à l'intérieur du pays affecté",
     "value": "3"
   }
 },
 {
   "model": "field_monitoring_settings.option",
-  "pk": 2004,
+  "pk": 3004,
   "fields": {
-    "question": 1048,
+    "question": 2048,
     "label": "Opérations militaires et hostilités en cours entravant les opérations humanitaires",
     "value": "4"
   }
@@ -1874,43 +1874,43 @@
   "model": "field_monitoring_settings.option",
   "pk": 2005,
   "fields": {
-    "question": 1048,
+    "question": 2048,
     "label": "Violence contre le personnel humanitaire, les biens et les installations",
     "value": "5"
   }
 },
 {
   "model": "field_monitoring_settings.option",
-  "pk": 2006,
+  "pk": 3006,
   "fields": {
-    "question": 1048,
+    "question": 2048,
     "label": "Ingérence dans la mise en œuvre des activités humanitaires",
     "value": "6"
   }
 },
 {
   "model": "field_monitoring_settings.option",
-  "pk": 2007,
+  "pk": 3007,
   "fields": {
-    "question": 1048,
+    "question": 2048,
     "label": "Présence de mines et d'engins non explosés (UXO)",
     "value": "7"
   }
 },
 {
   "model": "field_monitoring_settings.option",
-  "pk": 2008,
+  "pk": 3008,
   "fields": {
-    "question": 1048,
+    "question": 2048,
     "label": "Environnements physiques difficiles",
     "value": "8"
   }
 },
 {
   "model": "field_monitoring_settings.option",
-  "pk": 2009,
+  "pk": 3009,
   "fields": {
-    "question": 1048,
+    "question": 2048,
     "label": "Obstacles à l'accès aux services et à l'assistance pour les populations en zones de conflit",
     "value": "9"
   }
