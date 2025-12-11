@@ -1818,7 +1818,7 @@
 },
 {
   "model": "field_monitoring_settings.question",
-  "pk": 1048,
+  "pk": 2048,
   "fields": {
     "answer_type": "multiple_choice",
     "choices_size": null,
@@ -1829,87 +1829,87 @@
     "is_custom": false,
     "is_active": true,
     "methods": [3],
-    "order": 1048,
+    "order": 2048,
     "sections": []
   }
 },
 {
   "model": "field_monitoring_settings.option",
-  "pk": 2001,
+  "pk": 3001,
   "fields": {
-    "question": 1048,
+    "question": 2048,
     "label": "Negación de necesidades humanitarias o derechos a la asistencia humanitaria",
     "value": "1"
   }
 },
 {
   "model": "field_monitoring_settings.option",
-  "pk": 2002,
+  "pk": 3002,
   "fields": {
-    "question": 1048,
+    "question": 2048,
     "label": "Restricciones al movimiento de agencias, personal o bienes hacia el país afectado",
     "value": "2"
   }
 },
 {
   "model": "field_monitoring_settings.option",
-  "pk": 2003,
+  "pk": 3003,
   "fields": {
-    "question": 1048,
+    "question": 2048,
     "label": "Restricciones al movimiento de agencias, personal o bienes dentro del país afectado",
     "value": "3"
   }
 },
 {
   "model": "field_monitoring_settings.option",
-  "pk": 2004,
+  "pk": 3004,
   "fields": {
-    "question": 1048,
+    "question": 2048,
     "label": "Operaciones militares y hostilidades en curso que dificultan las operaciones humanitarias",
     "value": "4"
   }
 },
 {
   "model": "field_monitoring_settings.option",
-  "pk": 2005,
+  "pk": 3005,
   "fields": {
-    "question": 1048,
+    "question": 2048,
     "label": "Violencia contra el personal, bienes e instalaciones humanitarias",
     "value": "5"
   }
 },
 {
   "model": "field_monitoring_settings.option",
-  "pk": 2006,
+  "pk": 3006,
   "fields": {
-    "question": 1048,
+    "question": 2048,
     "label": "Interferencia en la implementación de actividades humanitarias",
     "value": "6"
   }
 },
 {
   "model": "field_monitoring_settings.option",
-  "pk": 2007,
+  "pk": 3007,
   "fields": {
-    "question": 1048,
+    "question": 2048,
     "label": "Presencia de minas y artefactos explosivos sin detonar (UXO)",
     "value": "7"
   }
 },
 {
   "model": "field_monitoring_settings.option",
-  "pk": 2008,
+  "pk": 3008,
   "fields": {
-    "question": 1048,
+    "question": 2048,
     "label": "Entornos físicos desafiantes",
     "value": "8"
   }
 },
 {
   "model": "field_monitoring_settings.option",
-  "pk": 2009,
+  "pk": 3009,
   "fields": {
-    "question": 1048,
+    "question": 2048,
     "label": "Obstrucción del acceso a servicios y ayuda para poblaciones afectadas por conflictos",
     "value": "9"
   }
