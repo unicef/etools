@@ -1,7 +1,5 @@
 from django.utils import timezone
-from django.utils.decorators import method_decorator
 from django.utils.translation import gettext as _
-from django.views.decorators.cache import cache_control, cache_page
 
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, mixins, status, views, viewsets
@@ -10,7 +8,6 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
-from unicef_locations.cache import etag_cached
 
 from etools.applications.field_monitoring.fm_settings.export.renderers import (
     LocationSiteCSVRenderer,
@@ -53,7 +50,6 @@ from etools.applications.field_monitoring.permissions import IsEditAction, IsFie
 from etools.applications.field_monitoring.views import FMBaseViewSet, LinkedAttachmentsViewSet
 from etools.applications.locations.models import Location
 from etools.applications.reports.views.v2 import OutputListAPIView
-from etools.libraries.tenant_support.utils import TenantSuffixedString
 
 
 class MethodsViewSet(
@@ -113,14 +109,11 @@ class LocationSitesViewSet(FMBaseViewSet, viewsets.ModelViewSet):
     def get_view_name(self):
         return _('Site Specific Locations')
 
-    @method_decorator(cache_control(
-        max_age=0,  # enable cache yet automatically treat all cached data as stale to request backend every time
-        public=True,  # reset cache control header to allow etags work with cache_page
-    ))
-    @etag_cached('fm-sites')
-    @method_decorator(cache_page(60 * 60 * 24, key_prefix=TenantSuffixedString('fm-sites')))
-    def list(self, request, *args, **kwargs):
-        return super().list(request, *args, **kwargs)
+    def get_queryset(self):
+        parentId = self.request.query_params.get('parentId')
+        if parentId:
+            return self.queryset.filter(parent_id=parentId)
+        return self.queryset
 
     @action(detail=False, methods=['get'], url_path='export')
     def export(self, request, *args, **kwargs):
