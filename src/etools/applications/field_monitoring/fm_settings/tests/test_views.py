@@ -1,5 +1,4 @@
 from django.contrib.gis.geos import GEOSGeometry
-from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
 from django.urls import reverse
