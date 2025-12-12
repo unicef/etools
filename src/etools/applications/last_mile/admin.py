@@ -611,7 +611,22 @@ class PartnerMaterialAdmin(admin.ModelAdmin):
     list_filter = ('material',)
 
 
-admin.site.register(models.PointOfInterestType)
+@admin.register(models.PointOfInterestType)
+class PointOfInterestTypeAdmin(admin.ModelAdmin):
+    list_display = ('name', 'category', 'created', 'modified')
+    list_filter = ('category',)
+    search_fields = ('name', 'category')
+
+
+@admin.register(models.PointOfInterestTypeMapping)
+class PointOfInterestTypeMappingAdmin(admin.ModelAdmin):
+    list_display = ('primary_type', 'secondary_type', 'created', 'modified')
+    list_filter = ('primary_type', 'secondary_type')
+    search_fields = ('primary_type__name', 'secondary_type__name')
+    autocomplete_fields = ('primary_type', 'secondary_type')
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('primary_type', 'secondary_type')
 
 
 @admin.register(models.AuditConfiguration)

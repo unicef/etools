@@ -706,6 +706,7 @@
 },
 {
   "model": "field_monitoring_settings.question",
+  "pk": 2036,
   "fields": {
     "answer_type": "likert_scale",
     "choices_size": null,
@@ -720,11 +721,13 @@
       2,
       3
     ],
+    "order": 2036,
     "sections": []
   }
 },
 {
   "model": "field_monitoring_settings.question",
+  "pk": 2037,
   "fields": {
     "answer_type": "likert_scale",
     "choices_size": null,
@@ -738,11 +741,13 @@
       1,
       2
     ],
+    "order": 2037,
     "sections": []
   }
 },
 {
   "model": "field_monitoring_settings.question",
+  "pk": 2038,
   "fields": {
     "answer_type": "likert_scale",
     "choices_size": null,
@@ -757,11 +762,13 @@
       2,
       3
     ],
+    "order": 2038,
     "sections": []
   }
 },
 {
   "model": "field_monitoring_settings.question",
+  "pk": 2039,
   "fields": {
     "answer_type": "likert_scale",
     "choices_size": null,
@@ -776,11 +783,13 @@
       2,
       3
     ],
+    "order": 2039,
     "sections": []
   }
 },
 {
   "model": "field_monitoring_settings.question",
+  "pk": 2040,
   "fields": {
     "answer_type": "likert_scale",
     "choices_size": null,
@@ -795,11 +804,13 @@
       2,
       3
     ],
+    "order": 2040,
     "sections": []
   }
 },
 {
   "model": "field_monitoring_settings.question",
+  "pk": 2041,
   "fields": {
     "answer_type": "text",
     "choices_size": null,
@@ -813,11 +824,13 @@
       1,
       3
     ],
+    "order": 2041,
     "sections": []
   }
 },
 {
   "model": "field_monitoring_settings.question",
+  "pk": 2042,
   "fields": {
     "answer_type": "likert_scale",
     "choices_size": null,
@@ -832,11 +845,13 @@
       2,
       3
     ],
+    "order": 2042,
     "sections": []
   }
 },
 {
   "model": "field_monitoring_settings.question",
+  "pk": 2043,
   "fields": {
     "answer_type": "likert_scale",
     "choices_size": null,
@@ -850,11 +865,13 @@
       1,
       2
     ],
+    "order": 2043,
     "sections": []
   }
 },
 {
   "model": "field_monitoring_settings.question",
+  "pk": 2044,
   "fields": {
     "answer_type": "likert_scale",
     "choices_size": null,
@@ -869,11 +886,13 @@
       2,
       3
     ],
+    "order": 2044,
     "sections": []
   }
 },
 {
   "model": "field_monitoring_settings.question",
+  "pk": 2045,
   "fields": {
     "answer_type": "likert_scale",
     "choices_size": null,
@@ -888,11 +907,13 @@
       2,
       3
     ],
+    "order": 2045,
     "sections": []
   }
 },
 {
   "model": "field_monitoring_settings.question",
+  "pk": 2046,
   "fields": {
     "answer_type": "likert_scale",
     "choices_size": null,
@@ -907,11 +928,13 @@
       2,
       3
     ],
+    "order": 2046,
     "sections": []
   }
 },
 {
   "model": "field_monitoring_settings.question",
+  "pk": 2047,
   "fields": {
     "answer_type": "text",
     "choices_size": null,
@@ -925,6 +948,7 @@
       1,
       3
     ],
+    "order": 2047,
     "sections": []
   }
 },
@@ -1789,6 +1813,837 @@
   "fields": {
     "question": 1035,
     "label": "76%-100% de los beneficiarios están al tanto",
+    "value": "5"
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "pk": 2048,
+  "fields": {
+    "answer_type": "multiple_choice",
+    "choices_size": null,
+    "level": "output",
+    "category": 5,
+    "text": "¿Hubo restricciones de acceso que dificultaron llegar a la población? Si es así, por favor especifique entre las siguientes:",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [3],
+    "order": 2048,
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3001,
+  "fields": {
+    "question": 2048,
+    "label": "Negación de necesidades humanitarias o derechos a la asistencia humanitaria",
+    "value": "1"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3002,
+  "fields": {
+    "question": 2048,
+    "label": "Restricciones al movimiento de agencias, personal o bienes hacia el país afectado",
+    "value": "2"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3003,
+  "fields": {
+    "question": 2048,
+    "label": "Restricciones al movimiento de agencias, personal o bienes dentro del país afectado",
+    "value": "3"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3004,
+  "fields": {
+    "question": 2048,
+    "label": "Operaciones militares y hostilidades en curso que dificultan las operaciones humanitarias",
+    "value": "4"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3005,
+  "fields": {
+    "question": 2048,
+    "label": "Violencia contra el personal, bienes e instalaciones humanitarias",
+    "value": "5"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3006,
+  "fields": {
+    "question": 2048,
+    "label": "Interferencia en la implementación de actividades humanitarias",
+    "value": "6"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3007,
+  "fields": {
+    "question": 2048,
+    "label": "Presencia de minas y artefactos explosivos sin detonar (UXO)",
+    "value": "7"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3008,
+  "fields": {
+    "question": 2048,
+    "label": "Entornos físicos desafiantes",
+    "value": "8"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3009,
+  "fields": {
+    "question": 2048,
+    "label": "Obstrucción del acceso a servicios y ayuda para poblaciones afectadas por conflictos",
+    "value": "9"
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "pk": 2049,
+  "fields": {
+    "answer_type": "multiple_choice",
+    "choices_size": null,
+    "level": "output",
+    "category": 5,
+    "text": "Además, por favor indique si los datos sobre restricciones de acceso se están reportando a alguno de los siguientes:",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [3],
+    "order": 2049,
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3010,
+  "fields": {
+    "question": 2049,
+    "label": "Marco de Reporte de Monitoreo de Acceso de OCHA (AMRF)",
+    "value": "1"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3011,
+  "fields": {
+    "question": 2049,
+    "label": "Herramienta interna de seguimiento de acceso de UNICEF",
+    "value": "2"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3012,
+  "fields": {
+    "question": 2049,
+    "label": "No existe una herramienta de monitoreo en el país",
+    "value": "3"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3013,
+  "fields": {
+    "question": 2049,
+    "label": "No lo sé",
+    "value": "4"
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "pk": 2050,
+  "fields": {
+    "answer_type": "multiple_choice",
+    "choices_size": null,
+    "level": "partner",
+    "category": 5,
+    "text": "¿Hubo restricciones de acceso que dificultaron llegar a la población? Si es así, por favor especifique entre las siguientes:",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [3],
+    "order": 2050,
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3014,
+  "fields": {
+    "question": 2050,
+    "label": "Negación de necesidades humanitarias o derechos a la asistencia humanitaria",
+    "value": "1"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3015,
+  "fields": {
+    "question": 2050,
+    "label": "Restricciones al movimiento de agencias, personal o bienes hacia el país afectado",
+    "value": "2"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3016,
+  "fields": {
+    "question": 2050,
+    "label": "Restricciones al movimiento de agencias, personal o bienes dentro del país afectado",
+    "value": "3"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3017,
+  "fields": {
+    "question": 2050,
+    "label": "Operaciones militares y hostilidades en curso que dificultan las operaciones humanitarias",
+    "value": "4"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3018,
+  "fields": {
+    "question": 2050,
+    "label": "Violencia contra el personal, bienes e instalaciones humanitarias",
+    "value": "5"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3019,
+  "fields": {
+    "question": 2050,
+    "label": "Interferencia en la implementación de actividades humanitarias",
+    "value": "6"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3020,
+  "fields": {
+    "question": 2050,
+    "label": "Presencia de minas y artefactos explosivos sin detonar (UXO)",
+    "value": "7"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3021,
+  "fields": {
+    "question": 2050,
+    "label": "Entornos físicos desafiantes",
+    "value": "8"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3022,
+  "fields": {
+    "question": 2050,
+    "label": "Obstrucción del acceso a servicios y ayuda para poblaciones afectadas por conflictos",
+    "value": "9"
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "pk": 2051,
+  "fields": {
+    "answer_type": "multiple_choice",
+    "choices_size": null,
+    "level": "partner",
+    "category": 5,
+    "text": "Además, por favor indique si los datos sobre restricciones de acceso se están reportando a alguno de los siguientes:",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [3],
+    "order": 2051,
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3023,
+  "fields": {
+    "question": 2051,
+    "label": "Marco de Reporte de Monitoreo de Acceso de OCHA (AMRF)",
+    "value": "1"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3024,
+  "fields": {
+    "question": 2051,
+    "label": "Herramienta interna de seguimiento de acceso de UNICEF",
+    "value": "2"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3025,
+  "fields": {
+    "question": 2051,
+    "label": "No existe una herramienta de monitoreo en el país",
+    "value": "3"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3026,
+  "fields": {
+    "question": 2051,
+    "label": "No lo sé",
+    "value": "4"
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "pk": 2052,
+  "fields": {
+    "answer_type": "multiple_choice",
+    "choices_size": null,
+    "level": "intervention",
+    "category": 5,
+    "text": "¿Hubo restricciones de acceso que dificultaron llegar a la población? Si es así, por favor especifique entre las siguientes:",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [3],
+    "order": 2052,
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3027,
+  "fields": {
+    "question": 2052,
+    "label": "Negación de necesidades humanitarias o derechos a la asistencia humanitaria",
+    "value": "1"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3028,
+  "fields": {
+    "question": 2052,
+    "label": "Restricciones al movimiento de agencias, personal o bienes hacia el país afectado",
+    "value": "2"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3029,
+  "fields": {
+    "question": 2052,
+    "label": "Restricciones al movimiento de agencias, personal o bienes dentro del país afectado",
+    "value": "3"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3030,
+  "fields": {
+    "question": 2052,
+    "label": "Operaciones militares y hostilidades en curso que dificultan las operaciones humanitarias",
+    "value": "4"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3031,
+  "fields": {
+    "question": 2052,
+    "label": "Violencia contra el personal, bienes e instalaciones humanitarias",
+    "value": "5"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3032,
+  "fields": {
+    "question": 2052,
+    "label": "Interferencia en la implementación de actividades humanitarias",
+    "value": "6"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3033,
+  "fields": {
+    "question": 2052,
+    "label": "Presencia de minas y artefactos explosivos sin detonar (UXO)",
+    "value": "7"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3034,
+  "fields": {
+    "question": 2052,
+    "label": "Entornos físicos desafiantes",
+    "value": "8"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3035,
+  "fields": {
+    "question": 2052,
+    "label": "Obstrucción del acceso a servicios y ayuda para poblaciones afectadas por conflictos",
+    "value": "9"
+  }
+},
+{
+  "model": "field_monitoring_settings.question",
+  "pk": 1053,
+  "fields": {
+    "answer_type": "multiple_choice",
+    "choices_size": null,
+    "level": "intervention",
+    "category": 5,
+    "text": "Además, por favor indique si los datos sobre restricciones de acceso se están reportando a alguno de los siguientes:",
+    "is_hact": false,
+    "is_custom": false,
+    "is_active": true,
+    "methods": [3],
+    "order": 1053,
+    "sections": []
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 2036,
+  "fields": {
+    "question": 1053,
+    "label": "Marco de Reporte de Monitoreo de Acceso de OCHA (AMRF)",
+    "value": "1"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 2037,
+  "fields": {
+    "question": 1053,
+    "label": "Herramienta interna de seguimiento de acceso de UNICEF",
+    "value": "2"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 2038,
+  "fields": {
+    "question": 1053,
+    "label": "No existe una herramienta de monitoreo en el país",
+    "value": "3"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 2039,
+  "fields": {
+    "question": 1053,
+    "label": "No lo sé",
+    "value": "4"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3040,
+  "fields": {
+    "question": 2036,
+    "label": "Faltante",
+    "value": "1"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3041,
+  "fields": {
+    "question": 2036,
+    "label": "Dañado o insuficiente",
+    "value": "2"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3042,
+  "fields": {
+    "question": 2036,
+    "label": "Restringido",
+    "value": "3"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3043,
+  "fields": {
+    "question": 2036,
+    "label": "Adecuado/ suficiente",
+    "value": "4"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3044,
+  "fields": {
+    "question": 2036,
+    "label": "Exceso de suministro",
+    "value": "5"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3045,
+  "fields": {
+    "question": 2042,
+    "label": "Faltante",
+    "value": "1"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3046,
+  "fields": {
+    "question": 2042,
+    "label": "Dañado o insuficiente",
+    "value": "2"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3047,
+  "fields": {
+    "question": 2042,
+    "label": "Restringido",
+    "value": "3"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3048,
+  "fields": {
+    "question": 2042,
+    "label": "Adecuado/ suficiente",
+    "value": "4"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3049,
+  "fields": {
+    "question": 2042,
+    "label": "Exceso de suministro",
+    "value": "5"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3050,
+  "fields": {
+    "question": 2037,
+    "label": "Retraso crítico",
+    "value": "1"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3051,
+  "fields": {
+    "question": 2037,
+    "label": "Retraso/ impredecible",
+    "value": "2"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3052,
+  "fields": {
+    "question": 2037,
+    "label": "A tiempo o temprano",
+    "value": "3"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3053,
+  "fields": {
+    "question": 2043,
+    "label": "Retraso crítico",
+    "value": "1"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3054,
+  "fields": {
+    "question": 2043,
+    "label": "Retraso/ impredecible",
+    "value": "2"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3055,
+  "fields": {
+    "question": 2043,
+    "label": "A tiempo o temprano",
+    "value": "3"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3056,
+  "fields": {
+    "question": 2038,
+    "label": "Muy insatisfecho",
+    "value": "1"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3057,
+  "fields": {
+    "question": 2038,
+    "label": "Insatisfecho",
+    "value": "2"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3058,
+  "fields": {
+    "question": 2038,
+    "label": "Neutral",
+    "value": "3"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3059,
+  "fields": {
+    "question": 2038,
+    "label": "Satisfecho",
+    "value": "4"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3060,
+  "fields": {
+    "question": 2038,
+    "label": "Muy satisfecho",
+    "value": "5"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3061,
+  "fields": {
+    "question": 2044,
+    "label": "Muy insatisfecho",
+    "value": "1"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3062,
+  "fields": {
+    "question": 2044,
+    "label": "Insatisfecho",
+    "value": "2"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3063,
+  "fields": {
+    "question": 2044,
+    "label": "Neutral",
+    "value": "3"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3064,
+  "fields": {
+    "question": 2044,
+    "label": "Satisfecho",
+    "value": "4"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3065,
+  "fields": {
+    "question": 2044,
+    "label": "Muy satisfecho",
+    "value": "5"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3066,
+  "fields": {
+    "question": 2039,
+    "label": "Por debajo de los estándares",
+    "value": "1"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3067,
+  "fields": {
+    "question": 2039,
+    "label": "Inconsistente",
+    "value": "2"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3068,
+  "fields": {
+    "question": 2039,
+    "label": "Cumple o excede los estándares",
+    "value": "3"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3069,
+  "fields": {
+    "question": 2045,
+    "label": "Por debajo de los estándares",
+    "value": "1"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3070,
+  "fields": {
+    "question": 2045,
+    "label": "Inconsistente",
+    "value": "2"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3071,
+  "fields": {
+    "question": 2045,
+    "label": "Cumple o excede los estándares",
+    "value": "3"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3072,
+  "fields": {
+    "question": 2040,
+    "label": "Rechazado por los usuarios",
+    "value": "1"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3073,
+  "fields": {
+    "question": 2040,
+    "label": "Uso deficiente o ineficaz",
+    "value": "2"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3074,
+  "fields": {
+    "question": 2040,
+    "label": "Uso limitado o efectivo",
+    "value": "3"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3075,
+  "fields": {
+    "question": 2040,
+    "label": "Uso adecuado y eficaz",
+    "value": "4"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3076,
+  "fields": {
+    "question": 2040,
+    "label": "Uso fuerte y eficaz",
+    "value": "5"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3077,
+  "fields": {
+    "question": 2046,
+    "label": "Rechazado por los usuarios",
+    "value": "1"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3078,
+  "fields": {
+    "question": 2046,
+    "label": "Uso deficiente o ineficaz",
+    "value": "2"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3079,
+  "fields": {
+    "question": 2046,
+    "label": "Uso limitado o efectivo",
+    "value": "3"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3080,
+  "fields": {
+    "question": 2046,
+    "label": "Uso adecuado y eficaz",
+    "value": "4"
+  }
+},
+{
+  "model": "field_monitoring_settings.option",
+  "pk": 3081,
+  "fields": {
+    "question": 2046,
+    "label": "Uso fuerte y eficaz",
     "value": "5"
   }
 }
