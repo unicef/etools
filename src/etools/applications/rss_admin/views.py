@@ -25,6 +25,7 @@ from etools.applications.audit.serializers.engagement import EngagementAttachmen
 from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.field_monitoring.data_collection.models import (
     ActivityOverallFinding,
+    ActivityQuestion,
     ActivityQuestionOverallFinding,
     Finding,
 )
@@ -70,6 +71,7 @@ from etools.applications.rss_admin.serializers import (
     SpotCheckRssSerializer as SpotCheckSerializer,
     StaffSpotCheckRssSerializer as StaffSpotCheckSerializer,
 )
+from etools.applications.rss_admin.admin_logging import get_changed_fields, log_change
 from etools.applications.rss_admin.services import EngagementService, FieldMonitoringService, PartnerService
 from etools.applications.rss_admin.validation import RssAgreementValid, RssInterventionValid
 from etools.applications.utils.helpers import generate_hash
@@ -490,11 +492,38 @@ class EngagementRssViewSet(PermittedSerializerMixin,
 
         return super().get_serializer_class()
 
+    def perform_update(self, serializer):
+        """Override to log changes using Django's LogEntry."""
+        # Get the current state from DB before saving
+        if serializer.instance.pk:
+            old_instance = serializer.instance.__class__.objects.get(pk=serializer.instance.pk)
+        else:
+            old_instance = None
+        
+        serializer.save()
+        
+        # Refresh the instance to get the updated state
+        serializer.instance.refresh_from_db()
+        
+        # Log the changes if we had an existing instance
+        if old_instance:
+            changed_fields = get_changed_fields(old_instance, serializer.instance)
+            if changed_fields:
+                log_change(
+                    user=self.request.user,
+                    obj=serializer.instance,
+                    changed_fields=changed_fields,
+                )
+
     @action(detail=True, methods=['post'], url_path='change-status')
     def change_status(self, request, pk=None):
         engagement = self.get_object()
         if hasattr(engagement, 'get_subclass'):
             engagement = engagement.get_subclass()
+        
+        # Store old status for logging
+        old_status = engagement.status
+        
         serializer = EngagementChangeStatusSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         action = serializer.validated_data['action']
@@ -504,6 +533,18 @@ class EngagementRssViewSet(PermittedSerializerMixin,
             send_back_comment=serializer.validated_data.get('send_back_comment'),
             cancel_comment=serializer.validated_data.get('cancel_comment'),
         )
+        
+        # Refresh to get updated status
+        engagement.refresh_from_db()
+        
+        # Log the status change
+        if old_status != engagement.status:
+            log_change(
+                user=request.user,
+                obj=engagement,
+                change_message=f"Status changed via RSS admin: {old_status} -> {engagement.status} (action: {action})",
+            )
+        
         return Response(EngagementLightRssSerializer(engagement, context={'request': request}).data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['patch'], url_path='initiation', url_name='initiation')
@@ -516,6 +557,11 @@ class EngagementRssViewSet(PermittedSerializerMixin,
         if hasattr(engagement, 'get_subclass'):
             engagement = engagement.get_subclass()
 
+        # Store old instance for logging
+        old_instance = copy.copy(engagement)
+        if old_instance.pk:
+            old_instance = engagement.__class__.objects.get(pk=old_instance.pk)
+
         serializer = EngagementInitiationUpdateSerializer(
             instance=engagement,
             data=request.data,
@@ -524,6 +570,17 @@ class EngagementRssViewSet(PermittedSerializerMixin,
         )
         serializer.is_valid(raise_exception=True)
         instance = serializer.save()
+        
+        # Log the changes
+        changed_fields = get_changed_fields(old_instance, instance)
+        if changed_fields:
+            log_change(
+                user=request.user,
+                obj=instance,
+                change_message="Initiation data updated via RSS admin",
+                changed_fields=changed_fields,
+            )
+        
         return Response(EngagementLightRssSerializer(instance, context={'request': request}).data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['patch'], url_path='attachments', url_name='attachments')
@@ -544,6 +601,21 @@ class EngagementRssViewSet(PermittedSerializerMixin,
         )
         serializer.is_valid(raise_exception=True)
         instance = serializer.save()
+        
+        # Log the attachment changes
+        attachment_ids = []
+        if 'engagement_attachment' in request.data:
+            attachment_ids.append(f"engagement_attachment: {request.data['engagement_attachment']}")
+        if 'report_attachment' in request.data:
+            attachment_ids.append(f"report_attachment: {request.data['report_attachment']}")
+        
+        if attachment_ids:
+            log_change(
+                user=request.user,
+                obj=instance,
+                change_message=f"Attachments updated via RSS admin: {', '.join(attachment_ids)}",
+            )
+        
         return Response(EngagementLightRssSerializer(instance, context={'request': request}).data, status=status.HTTP_200_OK)
 
 
