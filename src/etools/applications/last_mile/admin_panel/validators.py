@@ -17,6 +17,9 @@ from etools.applications.last_mile.admin_panel.constants import (
     PARTNER_NOT_UNDER_LOCATION,
     PARTNER_NOT_UNDER_ORGANIZATION,
     POI_TYPE_ALREADY_EXISTS,
+    PRIMARY_TYPE_ID_INVALID,
+    PRIMARY_TYPE_ID_REQUIRED,
+    PRIMARY_TYPE_NOT_FOUND,
     REALM_ALREADY_EXISTS,
     STATUS_NOT_CORRECT,
     TRANSFER_HAS_NO_ITEMS,
@@ -139,3 +142,17 @@ class AdminPanelValidator:
             int(organization_id)
         except ValueError:
             raise ValidationError(_(INVALID_ORGANIZATION_ID))
+
+    def validate_primary_type_id(self, primary_type_id):
+        if not primary_type_id:
+            raise ValidationError(_(PRIMARY_TYPE_ID_REQUIRED))
+
+        try:
+            primary_type_id_int = int(primary_type_id)
+        except (ValueError, TypeError):
+            raise ValidationError(_(PRIMARY_TYPE_ID_INVALID))
+
+        if not PointOfInterestType.objects.filter(id=primary_type_id_int).exists():
+            raise ValidationError(_(PRIMARY_TYPE_NOT_FOUND))
+
+        return primary_type_id_int

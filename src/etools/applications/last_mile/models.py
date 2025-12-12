@@ -60,6 +60,36 @@ class PointOfInterestType(TimeStampedModel, models.Model):
     objects = BaseExportQuerySet.as_manager()
 
 
+class PointOfInterestTypeMapping(TimeStampedModel, models.Model):
+    primary_type = models.ForeignKey(
+        PointOfInterestType,
+        verbose_name=_("Primary Type"),
+        related_name='allowed_secondary_types',
+        on_delete=models.CASCADE
+    )
+    secondary_type = models.ForeignKey(
+        PointOfInterestType,
+        verbose_name=_("Secondary Type"),
+        related_name='allowed_for_primary_types',
+        on_delete=models.CASCADE
+    )
+
+    class Meta:
+        unique_together = ('primary_type', 'secondary_type')
+        verbose_name = _("Point of Interest Type Mapping")
+        verbose_name_plural = _("Point of Interest Type Mappings")
+        ordering = ['primary_type__name', 'secondary_type__name']
+
+    def __str__(self):
+        return f"{self.primary_type.name} → {self.secondary_type.name}"
+
+    @classmethod
+    def get_allowed_secondary_types(cls, primary_type_id):
+        return cls.objects.filter(
+            primary_type_id=primary_type_id
+        ).values_list('secondary_type_id', flat=True)
+
+
 class PointOfInterestQuerySet(models.QuerySet):
 
     def prepare_for_lm_export(self) -> models.QuerySet:

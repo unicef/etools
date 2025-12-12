@@ -13,6 +13,14 @@ class PointOfInterestTypeFactory(factory.django.DjangoModelFactory):
         model = models.PointOfInterestType
 
 
+class PointOfInterestTypeMappingFactory(factory.django.DjangoModelFactory):
+    primary_type = factory.SubFactory(PointOfInterestTypeFactory)
+    secondary_type = factory.SubFactory(PointOfInterestTypeFactory)
+
+    class Meta:
+        model = models.PointOfInterestTypeMapping
+
+
 class PointOfInterestFactory(factory.django.DjangoModelFactory):
     name = factory.Sequence(lambda n: 'Location {}'.format(n))
     poi_type = factory.SubFactory(PointOfInterestTypeFactory)
