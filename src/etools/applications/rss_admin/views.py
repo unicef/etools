@@ -183,8 +183,9 @@ class AgreementRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet, FilterQ
         if not validator.is_valid:
             raise ValidationError(validator.errors)
 
+    @transaction.atomic
     def perform_update(self, serializer):
-        old_instance = copy.copy(serializer.instance)
+        old_instance = Agreement.objects.get(pk=serializer.instance.pk) if serializer.instance.pk else None
         serializer.save()
         validator = RssAgreementValid(
             serializer.instance,
@@ -194,7 +195,7 @@ class AgreementRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet, FilterQ
         if not validator.is_valid:
             raise ValidationError(validator.errors)
         # notify on suspension
-        if serializer.instance.status == serializer.instance.SUSPENDED and old_instance.status != serializer.instance.SUSPENDED:
+        if serializer.instance.status == serializer.instance.SUSPENDED and old_instance and old_instance.status != serializer.instance.SUSPENDED:
             send_agreement_suspended_notification(serializer.instance, self.request.user)
 
 
@@ -263,8 +264,9 @@ class ProgrammeDocumentRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet,
         if not validator.is_valid:
             raise ValidationError(validator.errors)
 
+    @transaction.atomic
     def perform_update(self, serializer):
-        old_instance = copy.copy(serializer.instance)
+        old_instance = Intervention.objects.get(pk=serializer.instance.pk) if serializer.instance.pk else None
         serializer.save()
         validator = RssInterventionValid(serializer.instance, old=old_instance, user=self.request.user)
         if not validator.is_valid:
@@ -325,6 +327,15 @@ class ProgrammeDocumentRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet,
             InterventionBudget.objects.update_or_create(
                 intervention=instance,
                 defaults={'currency': currency},
+            )
+
+        # If after handling FR numbers and currency there is nothing left to update on the Intervention,
+        # avoid running the global validator and just return the refreshed detail.
+        if not payload:
+            refreshed = Intervention.objects.select_related('planned_budget').get(pk=instance.pk)
+            return Response(
+                InterventionDetailSerializer(refreshed, context={'request': request}).data,
+                status=status.HTTP_200_OK,
             )
 
         serializer = self.get_serializer(instance=instance, data=payload, partial=partial, context={'request': request})

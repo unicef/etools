@@ -40,12 +40,17 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
-        cls.user = UserFactory(is_staff=True)
+        cls.user = UserFactory(is_staff=True, realms__data=['UNICEF User', 'Partnership Manager'])
         cls.partner = PartnerFactory()
         # Ensure partner passes PCA/SSFA validation in AgreementValid
         cls.partner.organization.organization_type = "Civil Society Organization"
         cls.partner.organization.save(update_fields=['organization_type'])
         cls.agreement = AgreementFactory(partner=cls.partner)
+        # Set required fields for agreement validation
+        cls.agreement.partner_manager = UserFactory()
+        cls.agreement.save(update_fields=['partner_manager'])
+        officer = UserFactory()
+        cls.agreement.authorized_officers.add(officer)
         cls.pd = InterventionFactory(agreement=cls.agreement, document_type=Intervention.PD)
         cls.spd = InterventionFactory(agreement=cls.agreement, document_type=Intervention.SPD)
 
@@ -634,6 +639,8 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         # attempt to move to terminated without termination_doc_attachment
         resp = self.forced_auth_req('patch', url, user=self.user, data={'status': Intervention.TERMINATED})
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        pd.refresh_from_db()
+        self.assertEqual(pd.status, Intervention.ACTIVE)
 
         # add required attachment then retry
         attachment = AttachmentFactory(file='termination.pdf')
@@ -642,6 +649,8 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
             'status': Intervention.TERMINATED,
         })
         self.assertEqual(resp2.status_code, status.HTTP_200_OK, resp2.data)
+        pd.refresh_from_db()
+        self.assertEqual(pd.status, Intervention.TERMINATED)
 
     def test_pd_activate_requires_agreement_signed(self):
         """Condition: PD cannot transition to active if Agreement is not signed (returns 400)."""
@@ -649,6 +658,24 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         url = reverse('rss_admin:rss-admin-programme-documents-detail', kwargs={'pk': pd.pk})
         resp = self.forced_auth_req('patch', url, user=self.user, data={'status': Intervention.ACTIVE})
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        pd.refresh_from_db()
+        self.assertEqual(pd.status, Intervention.SIGNATURE)
+
+    def test_agreement_invalid_transition_does_not_persist_status(self):
+        """Agreement: invalid transition to signed should not persist status change."""
+        from datetime import date, timedelta
+
+        # Make agreement invalid for transition to signed (start date in future and no end date)
+        self.agreement.status = 'draft'
+        self.agreement.start = date.today() + timedelta(days=10)
+        self.agreement.end = None
+        self.agreement.save(update_fields=['status', 'start', 'end'])
+
+        url = reverse('rss_admin:rss-admin-agreements-detail', kwargs={'pk': self.agreement.pk})
+        resp = self.forced_auth_req('patch', url, user=self.user, data={'status': 'signed'})
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        self.agreement.refresh_from_db()
+        self.assertEqual(self.agreement.status, 'draft')
 
     def test_list_partners_paginated(self):
         url = reverse('rss_admin:rss-admin-partners-list')
