@@ -71,3 +71,26 @@ class GDDVisionExportSerializer(GDDDetailSerializer):
 
     def get_document_type(self, obj):
         return 'GPD'
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data["management_budgets"] = {
+            "total": None,
+            "act1_total": None,
+            "act2_total": None,
+            "act3_total": None,
+            "act1_unicef": None,
+            "act2_unicef": None,
+            "act3_unicef": None,
+            "act1_partner": None,
+            "act2_partner": None,
+            "act3_partner": None,
+            "unicef_total": None,
+            "partner_total": None
+        }
+        data["planned_budget"]["intervention"] = data["planned_budget"]['gdd']
+        data["planned_budget"].pop('gdd')
+        data["planned_budget"]["total_hq_cash_local"] = None
+        data["planned_budget"]["programme_effectiveness"] = None
+        data["planned_budget"]["total_unicef_cash_local_wo_hq"] = None
+        return data
