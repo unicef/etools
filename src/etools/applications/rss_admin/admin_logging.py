@@ -127,4 +127,3 @@ def get_changed_fields(old_instance: models.Model, new_instance: models.Model) -
             changed[field_name] = (old_value, new_value)
 
     return changed
-
