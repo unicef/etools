@@ -1,5 +1,7 @@
 from unittest import mock
 
+from django.contrib.admin.models import CHANGE, LogEntry
+from django.contrib.contenttypes.models import ContentType
 from django.test import override_settings
 from django.urls import reverse
 
@@ -556,3 +558,112 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
         our_report = next(item for item in resp.data if item['id'] == report_attachment.id)
         self.assertIn('filename', our_report)
         self.assertIsNotNone(our_report['filename'])
+
+    def test_engagement_logs_endpoint(self):
+        """Test that engagement logs endpoint returns log entries"""
+        audit = AuditFactory()
+        url = reverse('rss_admin:rss-admin-engagements-logs', kwargs={'pk': audit.pk})
+
+        # Initially, there should be no logs
+        resp = self.forced_auth_req('get', url, user=self.user)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        if 'results' in resp.data:
+            initial_count = len(resp.data['results'])
+        else:
+            initial_count = len(resp.data)
+
+        # Make a change to create a log entry
+        payload = {'total_value': 1000.00}
+        patch_url = reverse('rss_admin:rss-admin-engagements-detail', kwargs={'pk': audit.pk})
+        self.forced_auth_req('patch', patch_url, user=self.user, data=payload)
+
+        # Now check logs again
+        resp = self.forced_auth_req('get', url, user=self.user)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        # Verify log structure
+        if 'results' in resp.data:
+            logs = resp.data['results']
+            self.assertGreater(len(logs), initial_count)
+            log_entry = logs[0]  # Most recent log
+        else:
+            logs = resp.data
+            self.assertGreater(len(logs), initial_count)
+            log_entry = logs[0]
+
+        # Verify log entry has required fields
+        self.assertIn('id', log_entry)
+        self.assertIn('action_time', log_entry)
+        self.assertIn('user', log_entry)
+        self.assertIn('action_flag', log_entry)
+        self.assertIn('action_flag_display', log_entry)
+        self.assertIn('change_message', log_entry)
+        self.assertIn('content_type_display', log_entry)
+        self.assertIn('object_id', log_entry)
+        self.assertIn('object_repr', log_entry)
+
+        # Verify user information
+        if log_entry['user']:
+            self.assertIn('id', log_entry['user'])
+            self.assertIn('username', log_entry['user'])
+
+        # Verify action flag display
+        self.assertIn(log_entry['action_flag_display'], ['Addition', 'Change', 'Deletion'])
+
+    def test_engagement_logs_pagination(self):
+        """Test that engagement logs endpoint supports pagination"""
+        audit = AuditFactory()
+        url = reverse('rss_admin:rss-admin-engagements-logs', kwargs={'pk': audit.pk})
+
+        # Make multiple changes to create multiple log entries
+        for i in range(3):
+            payload = {'total_value': float(1000 + i * 100)}
+            patch_url = reverse('rss_admin:rss-admin-engagements-detail', kwargs={'pk': audit.pk})
+            self.forced_auth_req('patch', patch_url, user=self.user, data=payload)
+
+        # Request with pagination
+        resp = self.forced_auth_req('get', url, user=self.user, data={'page_size': 2})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        # Should have pagination structure
+        if 'results' in resp.data:
+            self.assertIn('count', resp.data)
+            self.assertIn('next', resp.data)
+            self.assertIn('previous', resp.data)
+            self.assertIn('results', resp.data)
+            self.assertLessEqual(len(resp.data['results']), 2)
+
+    def test_engagement_logs_creates_entry_on_update(self):
+        """Test that updating an engagement creates a log entry"""
+        audit = AuditFactory(total_value=500.00)
+        content_type = ContentType.objects.get_for_model(audit.__class__)
+
+        # Count initial log entries
+        initial_logs = LogEntry.objects.filter(
+            content_type=content_type,
+            object_id=str(audit.pk)
+        ).count()
+
+        # Update the engagement
+        url = reverse('rss_admin:rss-admin-engagements-detail', kwargs={'pk': audit.pk})
+        payload = {'total_value': 1500.00}
+        resp = self.forced_auth_req('patch', url, user=self.user, data=payload)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        # Verify a log entry was created
+        new_logs = LogEntry.objects.filter(
+            content_type=content_type,
+            object_id=str(audit.pk)
+        ).count()
+        self.assertGreater(new_logs, initial_logs)
+
+        # Verify the log entry has correct information
+        log_entry = LogEntry.objects.filter(
+            content_type=content_type,
+            object_id=str(audit.pk)
+        ).order_by('-action_time').first()
+
+        self.assertIsNotNone(log_entry)
+        self.assertEqual(log_entry.user, self.user)
+        self.assertEqual(log_entry.action_flag, CHANGE)
+        self.assertIn('total_value', log_entry.change_message.lower())

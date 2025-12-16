@@ -62,6 +62,7 @@ from etools.applications.rss_admin.serializers import (
     EngagementChangeStatusSerializer,
     EngagementInitiationUpdateSerializer,
     EngagementLightRssSerializer,
+    LogEntrySerializer,
     MapPartnerToWorkspaceSerializer,
     MicroAssessmentRssSerializer as MicroAssessmentSerializer,
     PartnerOrganizationRssSerializer,
@@ -196,6 +197,35 @@ class AgreementRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet, FilterQ
         # notify on suspension
         if serializer.instance.status == serializer.instance.SUSPENDED and old_instance and old_instance.status != serializer.instance.SUSPENDED:
             send_agreement_suspended_notification(serializer.instance, self.request.user)
+
+    @action(detail=True, methods=['get'], url_path='logs')
+    def logs(self, request, pk=None):
+        """Retrieve change logs for this agreement.
+
+        Returns paginated list of LogEntry records for this agreement.
+        Supports standard pagination parameters.
+        """
+        from django.contrib.admin.models import LogEntry
+        from django.contrib.contenttypes.models import ContentType
+
+        agreement = self.get_object()
+        content_type = ContentType.objects.get_for_model(agreement.__class__)
+
+        # Get all log entries for this agreement
+        log_entries = LogEntry.objects.filter(
+            content_type=content_type,
+            object_id=str(agreement.pk)
+        ).select_related('user', 'content_type').order_by('-action_time')
+
+        # Apply pagination
+        page = self.paginate_queryset(log_entries)
+        if page is not None:
+            serializer = LogEntrySerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        # If no pagination, return all (not recommended for large datasets)
+        serializer = LogEntrySerializer(log_entries, many=True)
+        return Response(serializer.data)
 
 
 class ProgrammeDocumentRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet, FilterQueryMixin):
@@ -389,6 +419,35 @@ class ProgrammeDocumentRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet,
             return Response({'detail': 'Vision sync disabled by tenant switch'}, status=status.HTTP_403_FORBIDDEN)
         send_pd_to_vision.delay(connection.tenant.name, instance.pk)
         return Response({'detail': 'PD queued for Vision upload'}, status=status.HTTP_202_ACCEPTED)
+
+    @action(detail=True, methods=['get'], url_path='logs')
+    def logs(self, request, pk=None):
+        """Retrieve change logs for this programme document.
+
+        Returns paginated list of LogEntry records for this programme document.
+        Supports standard pagination parameters.
+        """
+        from django.contrib.admin.models import LogEntry
+        from django.contrib.contenttypes.models import ContentType
+
+        intervention = self.get_object()
+        content_type = ContentType.objects.get_for_model(intervention.__class__)
+
+        # Get all log entries for this intervention
+        log_entries = LogEntry.objects.filter(
+            content_type=content_type,
+            object_id=str(intervention.pk)
+        ).select_related('user', 'content_type').order_by('-action_time')
+
+        # Apply pagination
+        page = self.paginate_queryset(log_entries)
+        if page is not None:
+            serializer = LogEntrySerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        # If no pagination, return all (not recommended for large datasets)
+        serializer = LogEntrySerializer(log_entries, many=True)
+        return Response(serializer.data)
 
 
 class EngagementRssViewSet(PermittedSerializerMixin,
@@ -627,6 +686,38 @@ class EngagementRssViewSet(PermittedSerializerMixin,
             )
 
         return Response(EngagementLightRssSerializer(instance, context={'request': request}).data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['get'], url_path='logs')
+    def logs(self, request, pk=None):
+        """Retrieve change logs for this engagement.
+
+        Returns paginated list of LogEntry records for this engagement.
+        Supports standard pagination parameters.
+        """
+        from django.contrib.admin.models import LogEntry
+        from django.contrib.contenttypes.models import ContentType
+
+        engagement = self.get_object()
+        if hasattr(engagement, 'get_subclass'):
+            engagement = engagement.get_subclass()
+
+        content_type = ContentType.objects.get_for_model(engagement.__class__)
+
+        # Get all log entries for this engagement
+        log_entries = LogEntry.objects.filter(
+            content_type=content_type,
+            object_id=str(engagement.pk)
+        ).select_related('user', 'content_type').order_by('-action_time')
+
+        # Apply pagination
+        page = self.paginate_queryset(log_entries)
+        if page is not None:
+            serializer = LogEntrySerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        # If no pagination, return all (not recommended for large datasets)
+        serializer = LogEntrySerializer(log_entries, many=True)
+        return Response(serializer.data)
 
 
 class ActionPointRssViewSet(mixins.ListModelMixin,
