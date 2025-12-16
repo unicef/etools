@@ -5,54 +5,37 @@ from rest_framework import serializers
 from etools.applications.governments.models import GDDActivity, GDDKeyIntervention
 from etools.applications.governments.serializers.gdd import GDDDetailSerializer
 from etools.applications.governments.serializers.result_structure import GDDResultNestedSerializer
-from etools.applications.reports.serializers.v2 import InterventionActivitySerializer
 
 
-class KeyInterventionSerializer(serializers.ModelSerializer):
+class BAPGDDActivitySerializer(serializers.ModelSerializer):
+    name = serializers.SerializerMethodField()
 
-    code = serializers.CharField(read_only=True)
+    class Meta:
+        model = GDDActivity
+        fields = ['id', 'name', 'unicef_cash', 'cso_cash', 'is_active']
+
+    def get_name(self, obj):
+        return f'{obj.code} {obj.ewp_activity.title}'
+
+
+class BAPKeyInterventionWithActivitiesSerializer(serializers.ModelSerializer):
+    activities = BAPGDDActivitySerializer(read_only=True, many=True, source='gdd_activities')
 
     class Meta:
         model = GDDKeyIntervention
         fields = [
             "id",
             "name",
-            "code",
-            "result_link",
-            "total",
-            "created",
-            "modified",
+            "activities"
         ]
-
-
-class KeyInterventionWithActivitiesSerializer(KeyInterventionSerializer):
-    activities = InterventionActivitySerializer(read_only=True, many=True)
-
-    class Meta(KeyInterventionSerializer.Meta):
-        fields = KeyInterventionSerializer.Meta.fields + ["activities"]
-
-
-class BAPGDDActivitySerializer(serializers.ModelSerializer):
-    name = serializers.CharField(source='ewp_activity.title', read_only=True)
-
-    class Meta:
-        model = GDDActivity
-        fields = ['id', 'name', 'code', 'unicef_cash', 'cso_cash', 'is_active']
-
-
-class BAPKeyInterventionWithActivitiesSerializer(KeyInterventionWithActivitiesSerializer):
-    activities = BAPGDDActivitySerializer(read_only=True, many=True, source='gdd_activities')
-
-    class Meta(KeyInterventionWithActivitiesSerializer.Meta):
-        fields = ['id', 'name', 'activities']
 
 
 class BAPGDDResultNestedSerializer(GDDResultNestedSerializer):
 
-    gdd_key_interventions = BAPKeyInterventionWithActivitiesSerializer(many=True, read_only=True)
+    ll_results = BAPKeyInterventionWithActivitiesSerializer(many=True, read_only=True, source='gdd_key_interventions')
 
     class Meta(GDDResultNestedSerializer.Meta):
-        fields = ['id', 'gdd_key_interventions']
+        fields = ['id', 'll_results']
 
 
 class GDDVisionExportSerializer(GDDDetailSerializer):
@@ -88,3 +71,26 @@ class GDDVisionExportSerializer(GDDDetailSerializer):
 
     def get_document_type(self, obj):
         return 'GPD'
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data["management_budgets"] = {
+            "total": None,
+            "act1_total": None,
+            "act2_total": None,
+            "act3_total": None,
+            "act1_unicef": None,
+            "act2_unicef": None,
+            "act3_unicef": None,
+            "act1_partner": None,
+            "act2_partner": None,
+            "act3_partner": None,
+            "unicef_total": None,
+            "partner_total": None
+        }
+        data["planned_budget"]["intervention"] = data["planned_budget"]['gdd']
+        data["planned_budget"].pop('gdd')
+        data["planned_budget"]["total_hq_cash_local"] = None
+        data["planned_budget"]["programme_effectiveness"] = None
+        data["planned_budget"]["total_unicef_cash_local_wo_hq"] = None
+        return data
