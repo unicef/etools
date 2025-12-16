@@ -68,6 +68,11 @@ BATCH_ID_TOO_LONG = "batch_id_too_long"
 INVALID_EXPIRATION_DATE = "invalid_expiration_date"
 INVALID_ORGANIZATION_ID = "invalid_organization_id"
 USER_CANT_APPROVE = "user_cant_approve"
+STOCK_EXISTS_UNDER_LOCATION = 'stock_exists_under_location'
+REQUIRED_SECONDARY_TYPE = 'required_secondary_type'
+PRIMARY_TYPE_ID_REQUIRED = 'primary_type_id_required'
+PRIMARY_TYPE_ID_INVALID = 'primary_type_id_invalid'
+PRIMARY_TYPE_NOT_FOUND = 'primary_type_not_found'
 
 LIST_INTERESTED_LASTMILE_PERMS = [
     USER_ADMIN_PANEL_PERMISSION,
