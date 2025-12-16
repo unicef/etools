@@ -72,7 +72,7 @@ def send_gdd_to_vision(tenant_name: str, gdd_pk: int, retry_counter=0):
 
         status_code, _data = response
         if status_code in [200, 201]:
-            logger.info('Completed pd synchronization')
+            logger.info('Completed gpd synchronization')
             return
 
         if retry_counter < 2:

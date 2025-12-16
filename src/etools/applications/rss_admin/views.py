@@ -2,7 +2,7 @@ import copy
 
 # Field Monitoring imports for new features
 from django.core.exceptions import ObjectDoesNotExist
-from django.db import connection
+from django.db import connection, transaction
 from django.db.models import Count, Prefetch
 
 from django_filters.rest_framework import DjangoFilterBackend
@@ -25,7 +25,6 @@ from etools.applications.audit.serializers.engagement import EngagementAttachmen
 from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.field_monitoring.data_collection.models import (
     ActivityOverallFinding,
-    ActivityQuestion,
     ActivityQuestionOverallFinding,
     Finding,
 )
@@ -237,8 +236,8 @@ class ProgrammeDocumentRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet,
         ('country_programme', 'country_programme__in'),
         ('country_programmes', 'country_programme__in'),
         ('cp_outputs', 'result_links__cp_output__in'),
-        ('start', 'start'),
-        ('end', 'end'),
+        ('start', 'start__gte'),
+        ('end', 'end__lte'),
         ('end_after', 'end__gte'),
         ('contingency_pd', 'contingency_pd'),
     )
@@ -273,11 +272,14 @@ class ProgrammeDocumentRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet,
     def bulk_close(self, request, *args, **kwargs):
         serializer = BulkCloseProgrammeDocumentsSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        result = serializer.update(serializer.validated_data, request.user)
+        result = serializer.save()
         return Response(result, status=status.HTTP_200_OK)
 
     def _apply_fr_numbers(self, data):
-        """Minimal: allow 'fr_numbers' to map to 'frs' IDs for PATCH/PUT."""
+        """Minimal: allow 'fr_numbers' to map to 'frs' IDs for PATCH/PUT.
+
+        Also validates that FRs are not already assigned to other interventions.
+        """
         fr_numbers = data.get('fr_numbers')
         if fr_numbers is None:
             return data
@@ -289,6 +291,16 @@ class ProgrammeDocumentRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet,
         missing = [n for n in numbers if n not in found]
         if missing:
             raise ValidationError({'fr_numbers': [f"Unknown FR numbers: {', '.join(missing)}"]})
+
+        # Validate that FRs are not already assigned to other interventions
+        instance = getattr(self, 'instance', None) or self.get_object()
+        for fr in qs:
+            if fr.intervention:
+                if (instance is None) or (not instance.id) or (fr.intervention.id != instance.id):
+                    raise ValidationError({
+                        'fr_numbers': [f"FR {fr.fr_number} is already assigned to {fr.intervention.number}"]
+                    })
+
         new_data = data.copy()
         new_data['frs'] = list(qs.values_list('pk', flat=True))
         new_data.pop('fr_numbers', None)
@@ -705,14 +717,42 @@ class MonitoringActivityRssViewSet(viewsets.ModelViewSet):
         return Response({'detail': 'Monitoring status updated', 'on_track': aof.on_track}, status=status.HTTP_200_OK)
 
 
+class BulkUpdateMixin:
+    """Mixin to enable bulk PATCH updates on a viewset.
+
+    Matches the field monitoring BulkUpdateMixin implementation.
+    Accepts a list of objects with IDs and updates them in a transaction.
+    """
+    @transaction.atomic
+    def patch(self, request, *args, **kwargs):
+        """Bulk update action. IDs are required to correctly identify instances to update."""
+        if not isinstance(request.data, list):
+            return Response({'error': 'Expected a list of items'}, status=status.HTTP_400_BAD_REQUEST)
+
+        objects_to_update = self.filter_queryset(self.get_queryset()).filter(**{
+            'id__in': [d['id'] for d in request.data],
+        })
+        data_by_id = {i.pop('id'): i for i in request.data}
+
+        updated_objects = []
+
+        for obj in objects_to_update:
+            serializer = self.get_serializer(instance=obj, data=data_by_id[obj.id], partial=True)
+            serializer.is_valid(raise_exception=True)
+            updated_objects.append(serializer.save())
+
+        return Response(self.get_serializer(instance=updated_objects, many=True).data, status=status.HTTP_200_OK)
+
+
 class ActivityFindingsRssViewSet(NestedViewSetMixin,
                                  mixins.ListModelMixin,
                                  mixins.UpdateModelMixin,
+                                 BulkUpdateMixin,
                                  viewsets.GenericViewSet):
-    """RSS Admin viewset for HACT activity question findings.
+    """RSS Admin viewset for activity question findings.
 
     Matches the structure of field monitoring data collection findings endpoint.
-    Filtered to HACT questions only.
+    Supports both single PATCH (via UpdateModelMixin) and bulk PATCH (via BulkUpdateMixin).
     """
     permission_classes = (IsRssAdmin,)
     queryset = ActivityQuestionOverallFinding.objects.select_related(
@@ -735,22 +775,27 @@ class ActivityFindingsRssViewSet(NestedViewSetMixin,
     pagination_class = None
 
     def get_parent_filter(self):
-        """Filter to only HACT questions for this monitoring activity."""
+        """Filter to questions for this monitoring activity (matches eTools behavior)."""
         return {
             'activity_question__monitoring_activity_id': self.kwargs['monitoring_activity_pk'],
-            'activity_question__is_hact': True,
-            'activity_question__is_enabled': True,
         }
+
+    def filter_queryset(self, queryset):
+        """Apply parent filter since NestedViewSetMixin requires parent chain setup."""
+        queryset = super().filter_queryset(queryset)
+        parent_filter = self.get_parent_filter()
+        if parent_filter:
+            queryset = queryset.filter(**parent_filter)
+        return queryset
 
 
 class ActivityOverallFindingsRssViewSet(NestedViewSetMixin,
                                         mixins.ListModelMixin,
                                         mixins.UpdateModelMixin,
                                         viewsets.GenericViewSet):
-    """RSS Admin viewset for HACT activity overall findings.
+    """RSS Admin viewset for activity overall findings.
 
     Matches the structure of field monitoring data collection overall-findings endpoint.
-    Filtered to HACT questions only.
     """
     permission_classes = (IsRssAdmin,)
     queryset = ActivityOverallFinding.objects.prefetch_related(
@@ -762,19 +807,18 @@ class ActivityOverallFindingsRssViewSet(NestedViewSetMixin,
     pagination_class = None
 
     def get_parent_filter(self):
-        """Filter to HACT-related overall findings for this monitoring activity."""
-        # Get activity questions that are HACT
-        hact_questions = ActivityQuestion.objects.filter(
-            monitoring_activity_id=self.kwargs['monitoring_activity_pk'],
-            is_hact=True,
-            is_enabled=True
-        )
-
-        # Filter overall findings that match HACT question contexts
+        """Filter to overall findings for this monitoring activity (matches eTools behavior)."""
         return {
             'monitoring_activity_id': self.kwargs['monitoring_activity_pk'],
-            'partner__in': hact_questions.values_list('partner', flat=True).distinct(),
         }
+
+    def filter_queryset(self, queryset):
+        """Apply parent filter since NestedViewSetMixin requires parent chain setup."""
+        queryset = super().filter_queryset(queryset)
+        parent_filter = self.get_parent_filter()
+        if parent_filter:
+            queryset = queryset.filter(**parent_filter)
+        return queryset
 
 
 class BaseRssAttachmentsViewSet(NestedViewSetMixin,

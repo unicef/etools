@@ -501,3 +501,87 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
         self.assertEqual(float(audit.total_value), 100.00)
         self.assertEqual(float(audit.exchange_rate), 1.25)
         self.assertEqual(audit.shared_ip_with, ['UNDP'])
+
+    def test_engagement_patch_error_format_consistency(self):
+        """Test that all errors follow the format: {'field': ['error message']}"""
+        audit = AuditFactory(status=Engagement.STATUSES.partner_contacted)
+        url = reverse('rss_admin:rss-admin-engagements-detail', kwargs={'pk': audit.pk})
+
+        # Test 1: Invalid status transition
+        payload = {'status': Engagement.STATUSES.final}
+        resp = self.forced_auth_req('patch', url, user=self.user, data=payload)
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('status', resp.data)
+        self.assertIsInstance(resp.data['status'], list, "Error should be a list")
+        self.assertTrue(len(resp.data['status']) > 0)
+        self.assertIn('Invalid status transition', resp.data['status'][0])
+
+        # Test 2: Missing send_back_comment
+        audit.status = Engagement.STATUSES.report_submitted
+        audit.save()
+        payload = {'status': Engagement.STATUSES.partner_contacted}
+        resp = self.forced_auth_req('patch', url, user=self.user, data=payload)
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('send_back_comment', resp.data)
+        self.assertIsInstance(resp.data['send_back_comment'], list, "Error should be a list")
+        self.assertTrue(len(resp.data['send_back_comment']) > 0)
+        self.assertIn('required', resp.data['send_back_comment'][0])
+
+        # Test 3: Missing cancel_comment
+        audit.status = Engagement.STATUSES.partner_contacted
+        audit.save()
+        payload = {'status': Engagement.STATUSES.cancelled}
+        resp = self.forced_auth_req('patch', url, user=self.user, data=payload)
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('cancel_comment', resp.data)
+        self.assertIsInstance(resp.data['cancel_comment'], list, "Error should be a list")
+        self.assertTrue(len(resp.data['cancel_comment']) > 0)
+        self.assertIn('required', resp.data['cancel_comment'][0])
+
+    def test_engagement_attachments_include_filename(self):
+        """Test that engagement and report attachment endpoints include filename field"""
+        audit = AuditFactory(status=Engagement.STATUSES.partner_contacted)
+
+        # Create engagement attachment
+        engagement_file_type = AttachmentFileTypeFactory(code='audit_engagement')
+        engagement_attachment = AttachmentFactory(
+            code='audit_engagement',
+            content_object=audit,
+            file_type=engagement_file_type,
+            file='test_engagement_document.pdf'
+        )
+
+        # Create report attachment
+        report_file_type = AttachmentFileTypeFactory(code='audit_report')
+        report_attachment = AttachmentFactory(
+            code='audit_report',
+            content_object=audit,
+            file_type=report_file_type,
+            file='test_audit_report.pdf'
+        )
+
+        # Test engagement-attachments endpoint
+        engagement_url = reverse('rss_admin:rss-admin-engagement-attachments-list',
+                                 kwargs={'engagement_pk': audit.pk})
+        resp = self.forced_auth_req('get', engagement_url, user=self.user)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertGreaterEqual(len(resp.data), 1)
+        # Find our attachment in the response and verify it has filename
+        engagement_ids = [item['id'] for item in resp.data]
+        self.assertIn(engagement_attachment.id, engagement_ids)
+        our_attachment = next(item for item in resp.data if item['id'] == engagement_attachment.id)
+        self.assertIn('filename', our_attachment)
+        self.assertIsNotNone(our_attachment['filename'])
+
+        # Test report-attachments endpoint
+        report_url = reverse('rss_admin:rss-admin-report-attachments-list',
+                             kwargs={'engagement_pk': audit.pk})
+        resp = self.forced_auth_req('get', report_url, user=self.user)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertGreaterEqual(len(resp.data), 1)
+        # Find our attachment in the response and verify it has filename
+        report_ids = [item['id'] for item in resp.data]
+        self.assertIn(report_attachment.id, report_ids)
+        our_report = next(item for item in resp.data if item['id'] == report_attachment.id)
+        self.assertIn('filename', our_report)
+        self.assertIsNotNone(our_report['filename'])

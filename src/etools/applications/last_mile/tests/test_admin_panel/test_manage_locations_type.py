@@ -4,7 +4,7 @@ from rest_framework.reverse import reverse
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.last_mile.admin_panel.constants import *  # NOQA
 from etools.applications.last_mile.models import PointOfInterestType
-from etools.applications.last_mile.tests.factories import PointOfInterestTypeFactory
+from etools.applications.last_mile.tests.factories import PointOfInterestTypeFactory, PointOfInterestTypeMappingFactory
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.users.tests.factories import SimpleUserFactory, UserPermissionFactory
@@ -116,3 +116,141 @@ class TestLocationsTypesViewSet(BaseTenantTestCase):
     def test_export_csv_unauthorized(self):
         response = self.forced_auth_req('get', self.url + "export/csv/", user=self.simple_user)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
+class TestAllowedSecondaryTypesEndpoint(BaseTenantTestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.partner = PartnerFactory(organization=OrganizationFactory(name='Partner'))
+        cls.partner_staff = UserPermissionFactory(
+            realms__data=['LMSM Admin Panel'],
+            profile__organization=cls.partner.organization,
+            perms=[LOCATIONS_ADMIN_PANEL_PERMISSION]
+        )
+        cls.simple_user = SimpleUserFactory()
+
+        cls.warehouse_type = PointOfInterestTypeFactory(name='Warehouse', category='warehouse')
+        cls.health_facility_type = PointOfInterestTypeFactory(name='Health Facility', category='health')
+        cls.unmapped_type = PointOfInterestTypeFactory(name='Unmapped Type', category='other')
+
+        cls.main_warehouse = PointOfInterestTypeFactory(name='Main Warehouse', category='warehouse')
+        cls.district_warehouse = PointOfInterestTypeFactory(name='District Warehouse', category='warehouse')
+        cls.hospital = PointOfInterestTypeFactory(name='Hospital', category='health')
+        cls.otp = PointOfInterestTypeFactory(name='OTP', category='health')
+        cls.civil_hospital = PointOfInterestTypeFactory(name='Civil Hospital', category='health')
+
+        PointOfInterestTypeMappingFactory(
+            primary_type=cls.warehouse_type,
+            secondary_type=cls.main_warehouse
+        )
+        PointOfInterestTypeMappingFactory(
+            primary_type=cls.warehouse_type,
+            secondary_type=cls.district_warehouse
+        )
+
+        PointOfInterestTypeMappingFactory(
+            primary_type=cls.health_facility_type,
+            secondary_type=cls.hospital
+        )
+        PointOfInterestTypeMappingFactory(
+            primary_type=cls.health_facility_type,
+            secondary_type=cls.otp
+        )
+        PointOfInterestTypeMappingFactory(
+            primary_type=cls.health_facility_type,
+            secondary_type=cls.civil_hospital
+        )
+
+        cls.url = reverse(f'{ADMIN_PANEL_APP_NAME}:{LOCATIONS_TYPE_ADMIN_PANEL}-allowed-secondary-types')
+
+    def test_get_allowed_secondary_types_for_warehouse(self):
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            data={'primary_type_id': self.warehouse_type.id},
+            user=self.partner_staff
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+
+        secondary_type_names = {item['name'] for item in response.data}
+        self.assertIn('Main Warehouse', secondary_type_names)
+        self.assertIn('District Warehouse', secondary_type_names)
+        self.assertNotIn('Hospital', secondary_type_names)
+
+    def test_get_allowed_secondary_types_for_health_facility(self):
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            data={'primary_type_id': self.health_facility_type.id},
+            user=self.partner_staff
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 3)
+
+        secondary_type_names = {item['name'] for item in response.data}
+        self.assertIn('Hospital', secondary_type_names)
+        self.assertIn('OTP', secondary_type_names)
+        self.assertIn('Civil Hospital', secondary_type_names)
+        self.assertNotIn('Main Warehouse', secondary_type_names)
+
+    def test_get_allowed_secondary_types_no_mappings_returns_all(self):
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            data={'primary_type_id': self.unmapped_type.id},
+            user=self.partner_staff
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertGreaterEqual(len(response.data), 7)  # At least all the types we created
+
+    def test_get_allowed_secondary_types_missing_parameter(self):
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            user=self.partner_staff
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn(PRIMARY_TYPE_ID_REQUIRED, str(response.data))
+
+    def test_get_allowed_secondary_types_invalid_parameter(self):
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            data={'primary_type_id': 'invalid'},
+            user=self.partner_staff
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn(PRIMARY_TYPE_ID_INVALID, str(response.data))
+
+    def test_get_allowed_secondary_types_nonexistent_primary_type(self):
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            data={'primary_type_id': 99999},
+            user=self.partner_staff
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn(PRIMARY_TYPE_NOT_FOUND, str(response.data))
+
+    def test_get_allowed_secondary_types_unauthorized(self):
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            data={'primary_type_id': self.warehouse_type.id},
+            user=self.simple_user
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_get_allowed_secondary_types_ordered_by_name(self):
+        response = self.forced_auth_req(
+            'get',
+            self.url,
+            data={'primary_type_id': self.health_facility_type.id},
+            user=self.partner_staff
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        names = [item['name'] for item in response.data]
+        self.assertEqual(names, sorted(names))

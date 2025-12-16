@@ -287,7 +287,7 @@ class LocationsViewSet(mixins.ListModelMixin,
     ).prefetch_related(
         'partner_organizations',
         'partner_organizations__organization',
-        'destination_transfers'
+        'destination_transfers',
     ).all().order_by('id')
 
     def get_queryset(self):
@@ -721,6 +721,29 @@ class PointOfInterestTypeListView(mixins.ListModelMixin, mixins.CreateModelMixin
     @action(
         detail=False,
         methods=['get'],
+        url_path='allowed-secondary-types',
+    )
+    def allowed_secondary_types(self, request, *args, **kwargs):
+        validator = AdminPanelValidator()
+        primary_type_id = request.query_params.get('primary_type_id')
+
+        primary_type_id = validator.validate_primary_type_id(primary_type_id)
+
+        allowed_secondary_ids = models.PointOfInterestTypeMapping.get_allowed_secondary_types(primary_type_id)
+
+        if not allowed_secondary_ids:
+            queryset = models.PointOfInterestType.objects.all().order_by('name')
+        else:
+            queryset = models.PointOfInterestType.objects.filter(
+                id__in=allowed_secondary_ids
+            ).order_by('name')
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(
+        detail=False,
+        methods=['get'],
         url_path='export/csv',
         renderer_classes=(ExportCSVRenderer,),
     )
@@ -906,6 +929,12 @@ class MaterialListView(mixins.ListModelMixin, GenericViewSet):
     permission_classes = [IsLMSMAdmin]
 
     def get_queryset(self):
+        partner_id = self.request.query_params.get('partner_id')
+        if partner_id:
+            partner = models.PartnerOrganization.objects.filter(id=partner_id).first()
+            if not partner:
+                return models.Material.objects.none()
+            return models.Material.objects.filter(partner_material__partner_organization=partner).distinct().order_by('id')
         return models.Material.objects.all().order_by('id')
 
 
