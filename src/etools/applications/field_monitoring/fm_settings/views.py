@@ -40,6 +40,7 @@ from etools.applications.field_monitoring.fm_settings.serializers import (
     LocationFullSerializer,
     LocationLightWithActiveSerializer,
     LocationSiteSerializer,
+    LocationsWithSitesSerializer,
     LogIssueSerializer,
     MethodSerializer,
     QuestionSerializer,
@@ -110,9 +111,9 @@ class LocationSitesViewSet(FMBaseViewSet, viewsets.ModelViewSet):
         return _('Site Specific Locations')
 
     def get_queryset(self):
-        parentId = self.request.query_params.get('parentId')
-        if parentId:
-            return self.queryset.filter(parent_id=parentId)
+        parent_id = self.request.query_params.get('parent_id')
+        if parent_id:
+            return self.queryset.filter(parent_id=parent_id)
         return self.queryset
 
     @action(detail=False, methods=['get'], url_path='export')
@@ -129,6 +130,16 @@ class LocationSitesViewSet(FMBaseViewSet, viewsets.ModelViewSet):
         return Response(serializer.data, headers={
             'Content-Disposition': 'attachment;filename=location_sites_{}.csv'.format(timezone.now().date())
         })
+
+
+class LocationWithSitesViewSet(FMBaseViewSet, mixins.ListModelMixin, viewsets.GenericViewSet):
+    permission_classes = FMBaseViewSet.permission_classes + [IsReadAction]
+    queryset = Location.objects.filter(
+        is_active=True, sites__isnull=False, sites__is_active=True).prefetch_related('sites').order_by('name').distinct()
+    serializer_class = LocationsWithSitesSerializer
+    filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
+    filterset_fields = ('is_active',)
+    search_fields = ('name', 'p_code')
 
 
 class LocationsCountryView(views.APIView):
