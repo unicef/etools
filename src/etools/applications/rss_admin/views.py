@@ -203,7 +203,15 @@ class AgreementRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet, FilterQ
         """Retrieve change logs for this agreement.
 
         Returns paginated list of LogEntry records for this agreement.
-        Supports standard pagination parameters.
+        Supports standard pagination parameters: page, page_size.
+
+        Response structure:
+        {
+            "count": <total_count>,
+            "next": <url_to_next_page_or_null>,
+            "previous": <url_to_previous_page_or_null>,
+            "results": [<log_entries>]
+        }
         """
         from django.contrib.admin.models import LogEntry
         from django.contrib.contenttypes.models import ContentType
@@ -223,9 +231,14 @@ class AgreementRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet, FilterQ
             serializer = LogEntrySerializer(page, many=True)
             return self.get_paginated_response(serializer.data)
 
-        # If no pagination, return all (not recommended for large datasets)
+        # Return consistent structure even without pagination
         serializer = LogEntrySerializer(log_entries, many=True)
-        return Response(serializer.data)
+        return Response({
+            'count': log_entries.count(),
+            'next': None,
+            'previous': None,
+            'results': serializer.data,
+        })
 
 
 class ProgrammeDocumentRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet, FilterQueryMixin):
@@ -425,7 +438,15 @@ class ProgrammeDocumentRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet,
         """Retrieve change logs for this programme document.
 
         Returns paginated list of LogEntry records for this programme document.
-        Supports standard pagination parameters.
+        Supports standard pagination parameters: page, page_size.
+
+        Response structure:
+        {
+            "count": <total_count>,
+            "next": <url_to_next_page_or_null>,
+            "previous": <url_to_previous_page_or_null>,
+            "results": [<log_entries>]
+        }
         """
         from django.contrib.admin.models import LogEntry
         from django.contrib.contenttypes.models import ContentType
@@ -445,9 +466,14 @@ class ProgrammeDocumentRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet,
             serializer = LogEntrySerializer(page, many=True)
             return self.get_paginated_response(serializer.data)
 
-        # If no pagination, return all (not recommended for large datasets)
+        # Return consistent structure even without pagination
         serializer = LogEntrySerializer(log_entries, many=True)
-        return Response(serializer.data)
+        return Response({
+            'count': log_entries.count(),
+            'next': None,
+            'previous': None,
+            'results': serializer.data,
+        })
 
 
 class EngagementRssViewSet(PermittedSerializerMixin,
@@ -692,7 +718,15 @@ class EngagementRssViewSet(PermittedSerializerMixin,
         """Retrieve change logs for this engagement.
 
         Returns paginated list of LogEntry records for this engagement.
-        Supports standard pagination parameters.
+        Supports standard pagination parameters: page, page_size.
+
+        Response structure:
+        {
+            "count": <total_count>,
+            "next": <url_to_next_page_or_null>,
+            "previous": <url_to_previous_page_or_null>,
+            "results": [<log_entries>]
+        }
         """
         from django.contrib.admin.models import LogEntry
         from django.contrib.contenttypes.models import ContentType
@@ -715,9 +749,14 @@ class EngagementRssViewSet(PermittedSerializerMixin,
             serializer = LogEntrySerializer(page, many=True)
             return self.get_paginated_response(serializer.data)
 
-        # If no pagination, return all (not recommended for large datasets)
+        # Return consistent structure even without pagination
         serializer = LogEntrySerializer(log_entries, many=True)
-        return Response(serializer.data)
+        return Response({
+            'count': log_entries.count(),
+            'next': None,
+            'previous': None,
+            'results': serializer.data,
+        })
 
 
 class ActionPointRssViewSet(mixins.ListModelMixin,

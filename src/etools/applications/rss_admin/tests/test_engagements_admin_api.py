@@ -567,10 +567,14 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
         # Initially, there should be no logs
         resp = self.forced_auth_req('get', url, user=self.user)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        if 'results' in resp.data:
-            initial_count = len(resp.data['results'])
-        else:
-            initial_count = len(resp.data)
+
+        # Verify response structure always has pagination keys
+        self.assertIn('count', resp.data)
+        self.assertIn('next', resp.data)
+        self.assertIn('previous', resp.data)
+        self.assertIn('results', resp.data)
+
+        initial_count = len(resp.data['results'])
 
         # Make a change to create a log entry
         payload = {'total_value': 1000.00}
@@ -581,15 +585,15 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
         resp = self.forced_auth_req('get', url, user=self.user)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
-        # Verify log structure
-        if 'results' in resp.data:
-            logs = resp.data['results']
-            self.assertGreater(len(logs), initial_count)
-            log_entry = logs[0]  # Most recent log
-        else:
-            logs = resp.data
-            self.assertGreater(len(logs), initial_count)
-            log_entry = logs[0]
+        # Verify response structure
+        self.assertIn('count', resp.data)
+        self.assertIn('next', resp.data)
+        self.assertIn('previous', resp.data)
+        self.assertIn('results', resp.data)
+
+        logs = resp.data['results']
+        self.assertGreater(len(logs), initial_count)
+        log_entry = logs[0]  # Most recent log
 
         # Verify log entry has required fields
         self.assertIn('id', log_entry)
@@ -622,16 +626,15 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
             self.forced_auth_req('patch', patch_url, user=self.user, data=payload)
 
         # Request with pagination
-        resp = self.forced_auth_req('get', url, user=self.user, data={'page_size': 2})
+        resp = self.forced_auth_req('get', url, user=self.user, data={'page': 1, 'page_size': 2})
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
         # Should have pagination structure
-        if 'results' in resp.data:
-            self.assertIn('count', resp.data)
-            self.assertIn('next', resp.data)
-            self.assertIn('previous', resp.data)
-            self.assertIn('results', resp.data)
-            self.assertLessEqual(len(resp.data['results']), 2)
+        self.assertIn('count', resp.data)
+        self.assertIn('next', resp.data)
+        self.assertIn('previous', resp.data)
+        self.assertIn('results', resp.data)
+        self.assertLessEqual(len(resp.data['results']), 2)
 
     def test_engagement_logs_creates_entry_on_update(self):
         """Test that updating an engagement creates a log entry"""

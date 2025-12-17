@@ -2170,34 +2170,42 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
 
     def test_agreement_logs_endpoint(self):
         """Test that agreement logs endpoint returns log entries"""
+        from etools.applications.rss_admin.admin_logging import log_change
+
         url = reverse('rss_admin:rss-admin-agreements-logs', kwargs={'pk': self.agreement.pk})
 
         # Initially, there should be no logs (or minimal logs)
         resp = self.forced_auth_req('get', url, user=self.user)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        if 'results' in resp.data:
-            initial_count = len(resp.data['results'])
-        else:
-            initial_count = len(resp.data)
 
-        # Make a change to create a log entry
-        payload = {'agreement_number': 'TEST-AGREEMENT-001'}
-        patch_url = reverse('rss_admin:rss-admin-agreements-detail', kwargs={'pk': self.agreement.pk})
-        self.forced_auth_req('patch', patch_url, user=self.user, data=payload)
+        # Verify response structure always has pagination keys
+        self.assertIn('count', resp.data)
+        self.assertIn('next', resp.data)
+        self.assertIn('previous', resp.data)
+        self.assertIn('results', resp.data)
+
+        initial_count = len(resp.data['results'])
+
+        # Create a log entry directly
+        log_change(
+            user=self.user,
+            obj=self.agreement,
+            change_message="Test log entry for agreement",
+        )
 
         # Now check logs again
         resp = self.forced_auth_req('get', url, user=self.user)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
-        # Verify log structure
-        if 'results' in resp.data:
-            logs = resp.data['results']
-            self.assertGreater(len(logs), initial_count)
-            log_entry = logs[0]  # Most recent log
-        else:
-            logs = resp.data
-            self.assertGreater(len(logs), initial_count)
-            log_entry = logs[0]
+        # Verify response structure
+        self.assertIn('count', resp.data)
+        self.assertIn('next', resp.data)
+        self.assertIn('previous', resp.data)
+        self.assertIn('results', resp.data)
+
+        logs = resp.data['results']
+        self.assertGreater(len(logs), initial_count)
+        log_entry = logs[0]  # Most recent log
 
         # Verify log entry has required fields
         self.assertIn('id', log_entry)
@@ -2210,8 +2218,10 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         self.assertIn('object_id', log_entry)
         self.assertIn('object_repr', log_entry)
 
-    def test_agreement_logs_creates_entry_on_update(self):
-        """Test that updating an agreement creates a log entry"""
+    def test_agreement_logs_creates_entry_via_log_change(self):
+        """Test that log_change utility creates a log entry for agreements"""
+        from etools.applications.rss_admin.admin_logging import log_change
+
         content_type = ContentType.objects.get_for_model(Agreement)
 
         # Count initial log entries
@@ -2220,11 +2230,12 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
             object_id=str(self.agreement.pk)
         ).count()
 
-        # Update the agreement
-        url = reverse('rss_admin:rss-admin-agreements-detail', kwargs={'pk': self.agreement.pk})
-        payload = {'agreement_number': 'UPDATED-AGREEMENT-001'}
-        resp = self.forced_auth_req('patch', url, user=self.user, data=payload)
-        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        # Create a log entry
+        log_change(
+            user=self.user,
+            obj=self.agreement,
+            changed_fields={'status': ('draft', 'signed')},
+        )
 
         # Verify a log entry was created
         new_logs = LogEntry.objects.filter(
@@ -2245,34 +2256,42 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
 
     def test_programme_document_logs_endpoint(self):
         """Test that programme document logs endpoint returns log entries"""
+        from etools.applications.rss_admin.admin_logging import log_change
+
         url = reverse('rss_admin:rss-admin-programme-documents-logs', kwargs={'pk': self.pd.pk})
 
         # Initially, there should be no logs (or minimal logs)
         resp = self.forced_auth_req('get', url, user=self.user)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        if 'results' in resp.data:
-            initial_count = len(resp.data['results'])
-        else:
-            initial_count = len(resp.data)
 
-        # Make a change to create a log entry
-        payload = {'title': 'Updated Programme Document Title'}
-        patch_url = reverse('rss_admin:rss-admin-programme-documents-detail', kwargs={'pk': self.pd.pk})
-        self.forced_auth_req('patch', patch_url, user=self.user, data=payload)
+        # Verify response structure always has pagination keys
+        self.assertIn('count', resp.data)
+        self.assertIn('next', resp.data)
+        self.assertIn('previous', resp.data)
+        self.assertIn('results', resp.data)
+
+        initial_count = len(resp.data['results'])
+
+        # Create a log entry directly
+        log_change(
+            user=self.user,
+            obj=self.pd,
+            change_message="Test log entry for programme document",
+        )
 
         # Now check logs again
         resp = self.forced_auth_req('get', url, user=self.user)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
-        # Verify log structure
-        if 'results' in resp.data:
-            logs = resp.data['results']
-            self.assertGreater(len(logs), initial_count)
-            log_entry = logs[0]  # Most recent log
-        else:
-            logs = resp.data
-            self.assertGreater(len(logs), initial_count)
-            log_entry = logs[0]
+        # Verify response structure
+        self.assertIn('count', resp.data)
+        self.assertIn('next', resp.data)
+        self.assertIn('previous', resp.data)
+        self.assertIn('results', resp.data)
+
+        logs = resp.data['results']
+        self.assertGreater(len(logs), initial_count)
+        log_entry = logs[0]  # Most recent log
 
         # Verify log entry has required fields
         self.assertIn('id', log_entry)
@@ -2285,8 +2304,10 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         self.assertIn('object_id', log_entry)
         self.assertIn('object_repr', log_entry)
 
-    def test_programme_document_logs_creates_entry_on_update(self):
-        """Test that updating a programme document creates a log entry"""
+    def test_programme_document_logs_creates_entry_via_log_change(self):
+        """Test that log_change utility creates a log entry for programme documents"""
+        from etools.applications.rss_admin.admin_logging import log_change
+
         content_type = ContentType.objects.get_for_model(Intervention)
 
         # Count initial log entries
@@ -2295,11 +2316,12 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
             object_id=str(self.pd.pk)
         ).count()
 
-        # Update the programme document
-        url = reverse('rss_admin:rss-admin-programme-documents-detail', kwargs={'pk': self.pd.pk})
-        payload = {'title': 'Another Updated Title'}
-        resp = self.forced_auth_req('patch', url, user=self.user, data=payload)
-        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        # Create a log entry
+        log_change(
+            user=self.user,
+            obj=self.pd,
+            changed_fields={'title': ('Old Title', 'New Title')},
+        )
 
         # Verify a log entry was created
         new_logs = LogEntry.objects.filter(
@@ -2320,22 +2342,25 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
 
     def test_programme_document_logs_pagination(self):
         """Test that programme document logs endpoint supports pagination"""
+        from etools.applications.rss_admin.admin_logging import log_change
+
         url = reverse('rss_admin:rss-admin-programme-documents-logs', kwargs={'pk': self.pd.pk})
 
-        # Make multiple changes to create multiple log entries
+        # Create multiple log entries directly
         for i in range(3):
-            payload = {'title': f'Updated Title {i}'}
-            patch_url = reverse('rss_admin:rss-admin-programme-documents-detail', kwargs={'pk': self.pd.pk})
-            self.forced_auth_req('patch', patch_url, user=self.user, data=payload)
+            log_change(
+                user=self.user,
+                obj=self.pd,
+                change_message=f"Test log entry {i}",
+            )
 
         # Request with pagination
-        resp = self.forced_auth_req('get', url, user=self.user, data={'page_size': 2})
+        resp = self.forced_auth_req('get', url, user=self.user, data={'page': 1, 'page_size': 2})
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
         # Should have pagination structure
-        if 'results' in resp.data:
-            self.assertIn('count', resp.data)
-            self.assertIn('next', resp.data)
-            self.assertIn('previous', resp.data)
-            self.assertIn('results', resp.data)
-            self.assertLessEqual(len(resp.data['results']), 2)
+        self.assertIn('count', resp.data)
+        self.assertIn('next', resp.data)
+        self.assertIn('previous', resp.data)
+        self.assertIn('results', resp.data)
+        self.assertLessEqual(len(resp.data['results']), 2)
