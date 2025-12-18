@@ -98,7 +98,7 @@ class EngagementAttachmentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Attachment
-        fields = ("id", "attachment", "file_type", "created")
+        fields = ("id", "attachment", "file_type", "filename", "created")
 
     def update(self, instance, validated_data):
         validated_data['code'] = 'audit_engagement'
@@ -115,7 +115,7 @@ class ReportAttachmentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Attachment
-        fields = ("id", "attachment", "file_type", "created")
+        fields = ("id", "attachment", "file_type", "filename", "created")
 
     def update(self, instance, validated_data):
         validated_data['code'] = 'audit_report'

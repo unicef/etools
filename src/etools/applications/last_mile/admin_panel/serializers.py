@@ -8,7 +8,11 @@ from rest_framework.exceptions import ValidationError
 from rest_framework_gis.fields import GeometryField
 
 from etools.applications.last_mile import models
-from etools.applications.last_mile.admin_panel.constants import ALERT_TYPES
+from etools.applications.last_mile.admin_panel.constants import (
+    ALERT_TYPES,
+    REQUIRED_SECONDARY_TYPE,
+    STOCK_EXISTS_UNDER_LOCATION,
+)
 from etools.applications.last_mile.admin_panel.services.lm_profile_status_updater import LMProfileStatusUpdater
 from etools.applications.last_mile.admin_panel.services.lm_user_creator import LMUserCreator
 from etools.applications.last_mile.admin_panel.services.reverse_transfer import ReverseTransfer
@@ -319,9 +323,44 @@ class PointOfInterestCustomSerializer(serializers.ModelSerializer):
         default=False
     )
 
+    p_code = serializers.CharField(
+        required=False,
+        allow_null=True,
+    )
+
+    def validate_secondary_type(self, value):
+        if not self.instance and not value:
+            raise ValidationError(REQUIRED_SECONDARY_TYPE)
+        return value
+
+    def validate_is_active(self, value):
+        if self.instance and not value and self.instance.is_active:
+            has_stock = models.Item.objects.filter(
+                transfer__destination_point=self.instance,
+                hidden=False
+            ).exists()
+
+            if has_stock:
+                raise ValidationError(STOCK_EXISTS_UNDER_LOCATION)
+        return value
+
+    def validate(self, attrs):
+        poi_type = attrs.get('poi_type')
+        secondary_type = attrs.get('secondary_type')
+
+        if poi_type and secondary_type:
+            allowed_secondary_ids = models.PointOfInterestTypeMapping.get_allowed_secondary_types(poi_type.id)
+
+            if allowed_secondary_ids and secondary_type.id not in allowed_secondary_ids:
+                raise ValidationError({
+                    'secondary_type': f"'{secondary_type.name}' is not a valid secondary type for primary type '{poi_type.name}'."
+                })
+
+        return super().validate(attrs)
+
     class Meta:
         model = models.PointOfInterest
-        fields = ('name', 'partner_organizations', 'poi_type', 'secondary_type', 'point', 'created_by', 'is_active')
+        fields = ('name', 'partner_organizations', 'poi_type', 'secondary_type', 'point', 'created_by', 'is_active', 'p_code')
 
 
 class SimplePartnerOrganizationSerializer(serializers.ModelSerializer):
@@ -482,6 +521,13 @@ class PointOfInterestExportSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
+        partners = instance.partner_organizations.all().prefetch_related('organization')
+        implementing_partner_names = ",".join([f"{partner.organization.name}" if partner.organization else partner.name if partner.name else "-" for partner in partners])
+        implementing_partner_numbers = ",".join([f"{partner.organization.vendor_number}" if partner.organization else partner.name if partner.name else "-" for partner in partners])
+        data.update({
+            "implementing_partner_names": implementing_partner_names,
+            "implementing_partner_numbers": implementing_partner_numbers
+        })
         if instance.parent:
             parent_locations = ParentLocationsSerializer(instance.parent).data
             data.update(parent_locations)
@@ -493,8 +539,8 @@ class PointOfInterestExportSerializer(serializers.ModelSerializer):
     def generate_rows(self, instance):
         base = self.base_representation(instance)
         transfers = (
-            instance.destination_transfers
-            .all()
+            models.Transfer.all_objects
+            .filter(destination_point=instance)
             .prefetch_related('items')
         )
 
@@ -508,6 +554,9 @@ class PointOfInterestExportSerializer(serializers.ModelSerializer):
                     "item_id": item.id,
                     "item_name": getattr(item, "description", None),
                     "item_qty": getattr(item, "quantity", None),
+                    "item_batch_number": getattr(item, "batch_id", None),
+                    "item_expiry_date": getattr(item, "expiry_date", None),
+                    'approval_status': transfer.approval_status,
                 })
                 rows.append(row)
 

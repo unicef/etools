@@ -2,8 +2,8 @@ import copy
 
 # Field Monitoring imports for new features
 from django.core.exceptions import ObjectDoesNotExist
-from django.db import connection
-from django.db.models import Count
+from django.db import connection, transaction
+from django.db.models import Count, Prefetch
 
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, mixins, status, viewsets
@@ -23,10 +23,19 @@ from etools.applications.audit.filters import DisplayStatusFilter, EngagementFil
 from etools.applications.audit.models import Engagement
 from etools.applications.audit.serializers.engagement import EngagementAttachmentSerializer, ReportAttachmentSerializer
 from etools.applications.environment.helpers import tenant_switch_is_active
+from etools.applications.field_monitoring.data_collection.models import (
+    ActivityOverallFinding,
+    ActivityQuestionOverallFinding,
+    Finding,
+)
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
 from etools.applications.field_monitoring.planning.serializers import MonitoringActivitySerializer
 from etools.applications.funds.models import FundsReservationHeader
-from etools.applications.partners.filters import InterventionEditableByFilter, ShowAmendmentsFilter
+from etools.applications.partners.filters import (
+    InterventionEditableByFilter,
+    PartnerNameOrderingFilter,
+    ShowAmendmentsFilter,
+)
 from etools.applications.partners.models import Agreement, Intervention, InterventionBudget, PartnerOrganization
 from etools.applications.partners.serializers.interventions_v2 import (
     InterventionCreateUpdateSerializer,
@@ -42,6 +51,8 @@ from etools.applications.rss_admin.permissions import IsRssAdmin
 from etools.applications.rss_admin.serializers import (
     ActionPointRssDetailSerializer,
     ActionPointRssListSerializer,
+    ActivityOverallFindingRssSerializer,
+    ActivityQuestionOverallFindingRssSerializer,
     AgreementRssSerializer,
     AnswerHactSerializer,
     AuditRssSerializer as AuditSerializer,
@@ -81,7 +92,7 @@ class PartnerOrganizationRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSe
         'phone_number',
     )
     ordering_fields = (
-        'organization__name', 'organization__vendor_number', 'rating', 'hidden'
+        'name', 'vendor_number', 'rating', 'hidden'  # Use annotated fields from PartnerOrganizationManager
     )
 
     # PMP-style filters mapping
@@ -192,6 +203,7 @@ class ProgrammeDocumentRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet,
     filter_backends = (
         filters.SearchFilter,
         filters.OrderingFilter,
+        PartnerNameOrderingFilter,  # Allows ?ordering=partner_name as alias for agreement__partner__organization__name
         ShowAmendmentsFilter,
         InterventionEditableByFilter,
     )
@@ -205,7 +217,7 @@ class ProgrammeDocumentRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet,
     )
     ordering_fields = (
         'number', 'document_type', 'status', 'title', 'start', 'end',
-        'agreement__partner__organization__name'
+        'agreement__partner__organization__name'  # Can also use ?ordering=partner_name via PartnerNameOrderingFilter
     )
 
     filters = (
@@ -224,8 +236,8 @@ class ProgrammeDocumentRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet,
         ('country_programme', 'country_programme__in'),
         ('country_programmes', 'country_programme__in'),
         ('cp_outputs', 'result_links__cp_output__in'),
-        ('start', 'start'),
-        ('end', 'end'),
+        ('start', 'start__gte'),
+        ('end', 'end__lte'),
         ('end_after', 'end__gte'),
         ('contingency_pd', 'contingency_pd'),
     )
@@ -260,11 +272,14 @@ class ProgrammeDocumentRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet,
     def bulk_close(self, request, *args, **kwargs):
         serializer = BulkCloseProgrammeDocumentsSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        result = serializer.update(serializer.validated_data, request.user)
+        result = serializer.save()
         return Response(result, status=status.HTTP_200_OK)
 
     def _apply_fr_numbers(self, data):
-        """Minimal: allow 'fr_numbers' to map to 'frs' IDs for PATCH/PUT."""
+        """Minimal: allow 'fr_numbers' to map to 'frs' IDs for PATCH/PUT.
+
+        Also validates that FRs are not already assigned to other interventions.
+        """
         fr_numbers = data.get('fr_numbers')
         if fr_numbers is None:
             return data
@@ -276,6 +291,16 @@ class ProgrammeDocumentRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet,
         missing = [n for n in numbers if n not in found]
         if missing:
             raise ValidationError({'fr_numbers': [f"Unknown FR numbers: {', '.join(missing)}"]})
+
+        # Validate that FRs are not already assigned to other interventions
+        instance = getattr(self, 'instance', None) or self.get_object()
+        for fr in qs:
+            if fr.intervention:
+                if (instance is None) or (not instance.id) or (fr.intervention.id != instance.id):
+                    raise ValidationError({
+                        'fr_numbers': [f"FR {fr.fr_number} is already assigned to {fr.intervention.number}"]
+                    })
+
         new_data = data.copy()
         new_data['frs'] = list(qs.values_list('pk', flat=True))
         new_data.pop('fr_numbers', None)
@@ -357,6 +382,7 @@ class ProgrammeDocumentRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet,
 class EngagementRssViewSet(PermittedSerializerMixin,
                            mixins.ListModelMixin,
                            mixins.RetrieveModelMixin,
+                           mixins.UpdateModelMixin,
                            viewsets.GenericViewSet):
     queryset = Engagement.objects.all()
     serializer_class = EngagementLightRssSerializer
@@ -433,9 +459,15 @@ class EngagementRssViewSet(PermittedSerializerMixin,
         if self.action == 'list':
             return EngagementLightRssSerializer
 
-        # For retrieve, use the appropriate audit module serializer based on engagement type
-        if self.action == 'retrieve':
-            obj = self.get_object()
+        # For retrieve and update, use the appropriate audit module serializer based on engagement type
+        if self.action in ['retrieve', 'update', 'partial_update']:
+            try:
+                obj = self.get_object()
+                if not obj:
+                    return AuditSerializer
+            except (AttributeError, KeyError):
+                return AuditSerializer
+
             # Determine if it's a staff spot check (UNICEF-led)
             is_staff_spot_check = (
                 obj.engagement_type == Engagement.TYPES.sc and
@@ -683,6 +715,110 @@ class MonitoringActivityRssViewSet(viewsets.ModelViewSet):
 
         aof = FieldMonitoringService.set_on_track(activity=activity, partner=partner, on_track=on_track)
         return Response({'detail': 'Monitoring status updated', 'on_track': aof.on_track}, status=status.HTTP_200_OK)
+
+
+class BulkUpdateMixin:
+    """Mixin to enable bulk PATCH updates on a viewset.
+
+    Matches the field monitoring BulkUpdateMixin implementation.
+    Accepts a list of objects with IDs and updates them in a transaction.
+    """
+    @transaction.atomic
+    def patch(self, request, *args, **kwargs):
+        """Bulk update action. IDs are required to correctly identify instances to update."""
+        if not isinstance(request.data, list):
+            return Response({'error': 'Expected a list of items'}, status=status.HTTP_400_BAD_REQUEST)
+
+        objects_to_update = self.filter_queryset(self.get_queryset()).filter(**{
+            'id__in': [d['id'] for d in request.data],
+        })
+        data_by_id = {i.pop('id'): i for i in request.data}
+
+        updated_objects = []
+
+        for obj in objects_to_update:
+            serializer = self.get_serializer(instance=obj, data=data_by_id[obj.id], partial=True)
+            serializer.is_valid(raise_exception=True)
+            updated_objects.append(serializer.save())
+
+        return Response(self.get_serializer(instance=updated_objects, many=True).data, status=status.HTTP_200_OK)
+
+
+class ActivityFindingsRssViewSet(NestedViewSetMixin,
+                                 mixins.ListModelMixin,
+                                 mixins.UpdateModelMixin,
+                                 BulkUpdateMixin,
+                                 viewsets.GenericViewSet):
+    """RSS Admin viewset for activity question findings.
+
+    Matches the structure of field monitoring data collection findings endpoint.
+    Supports both single PATCH (via UpdateModelMixin) and bulk PATCH (via BulkUpdateMixin).
+    """
+    permission_classes = (IsRssAdmin,)
+    queryset = ActivityQuestionOverallFinding.objects.select_related(
+        'activity_question__question',
+        'activity_question__partner',
+        'activity_question__partner__organization',
+        'activity_question__intervention',
+        'activity_question__cp_output',
+    ).prefetch_related(
+        Prefetch(
+            'activity_question__findings',
+            Finding.objects.filter(value__isnull=False).prefetch_related(
+                'started_checklist', 'started_checklist__author',
+            ),
+            to_attr='completed_findings'
+        ),
+        'activity_question__question__options',
+    )
+    serializer_class = ActivityQuestionOverallFindingRssSerializer
+    pagination_class = None
+
+    def get_parent_filter(self):
+        """Filter to questions for this monitoring activity (matches eTools behavior)."""
+        return {
+            'activity_question__monitoring_activity_id': self.kwargs['monitoring_activity_pk'],
+        }
+
+    def filter_queryset(self, queryset):
+        """Apply parent filter since NestedViewSetMixin requires parent chain setup."""
+        queryset = super().filter_queryset(queryset)
+        parent_filter = self.get_parent_filter()
+        if parent_filter:
+            queryset = queryset.filter(**parent_filter)
+        return queryset
+
+
+class ActivityOverallFindingsRssViewSet(NestedViewSetMixin,
+                                        mixins.ListModelMixin,
+                                        mixins.UpdateModelMixin,
+                                        viewsets.GenericViewSet):
+    """RSS Admin viewset for activity overall findings.
+
+    Matches the structure of field monitoring data collection overall-findings endpoint.
+    """
+    permission_classes = (IsRssAdmin,)
+    queryset = ActivityOverallFinding.objects.prefetch_related(
+        'partner', 'cp_output', 'intervention',
+        'monitoring_activity__checklists__overall_findings__attachments',
+        'monitoring_activity__checklists__author',
+    )
+    serializer_class = ActivityOverallFindingRssSerializer
+    pagination_class = None
+
+    def get_parent_filter(self):
+        """Filter to overall findings for this monitoring activity (matches eTools behavior)."""
+        return {
+            'monitoring_activity_id': self.kwargs['monitoring_activity_pk'],
+        }
+
+    def filter_queryset(self, queryset):
+        """Apply parent filter since NestedViewSetMixin requires parent chain setup."""
+        queryset = super().filter_queryset(queryset)
+        parent_filter = self.get_parent_filter()
+        if parent_filter:
+            queryset = queryset.filter(**parent_filter)
+        return queryset
 
 
 class BaseRssAttachmentsViewSet(NestedViewSetMixin,
