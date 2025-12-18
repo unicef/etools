@@ -23,7 +23,8 @@ class TestUsersViewSet(BaseTenantTestCase):
 
     @classmethod
     def setUpTestData(cls):
-        cls.partner = PartnerFactory(organization=OrganizationFactory(name='Partner'))
+        cls.partner_organization = OrganizationFactory(name='Partner')
+        cls.partner = PartnerFactory(organization=cls.partner_organization)
         cls.organization = OrganizationFactory(name='Update Organization')
         cls.group = GroupFactory(name="IP LM Editor")
         cls.partner_staff = UserPermissionFactory(
@@ -316,6 +317,9 @@ class TestUsersViewSet(BaseTenantTestCase):
         url_with_param = self.url + f"{self.partner_staff.pk}/"
         data = {
             'point_of_interests': [],
+            'profile': {
+                'organization': self.partner_organization.id,
+            }
         }
         response = self.forced_auth_req('patch', url_with_param, user=self.partner_staff, data=data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -325,6 +329,9 @@ class TestUsersViewSet(BaseTenantTestCase):
         url_with_param = self.url + f"{self.partner_staff.pk}/"
         data = {
             'point_of_interests': [self.active_location_3.id, self.active_location_2.id],
+            'profile': {
+                'organization': self.partner_organization.id,
+            }
         }
         response = self.forced_auth_req('patch', url_with_param, user=self.partner_staff, data=data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -334,6 +341,9 @@ class TestUsersViewSet(BaseTenantTestCase):
         url_with_param = self.url + f"{self.partner_staff.pk}/"
         data = {
             'point_of_interests': [self.active_location_1.id],
+            'profile': {
+                'organization': self.partner_organization.id,
+            }
         }
         response = self.forced_auth_req('patch', url_with_param, user=self.partner_staff, data=data)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -343,6 +353,9 @@ class TestUsersViewSet(BaseTenantTestCase):
         url_with_param = self.url + f"{self.partner_staff.pk}/"
         data = {
             'point_of_interests': [self.active_location_2.id],
+            'profile': {
+                'organization': self.partner_organization.id,
+            }
         }
         response = self.forced_auth_req('patch', url_with_param, user=self.partner_staff, data=data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -350,6 +363,9 @@ class TestUsersViewSet(BaseTenantTestCase):
 
         data = {
             'point_of_interests': [self.active_location_2.id, self.active_location_3.id],
+            'profile': {
+                'organization': self.partner_organization.id,
+            }
         }
         response = self.forced_auth_req('patch', url_with_param, user=self.partner_staff, data=data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -359,6 +375,9 @@ class TestUsersViewSet(BaseTenantTestCase):
         url_with_param = self.url + f"{self.partner_staff.pk}/"
         data = {
             'point_of_interests': [self.active_location_2.id],
+            'profile': {
+                'organization': self.partner_organization.id,
+            }
         }
         response = self.forced_auth_req('patch', url_with_param, user=self.partner_staff, data=data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -367,6 +386,9 @@ class TestUsersViewSet(BaseTenantTestCase):
         url_with_param = self.url + f"{self.partner_staff_2.pk}/"
         data = {
             'point_of_interests': [self.active_location_2.id],
+            'profile': {
+                'organization': self.partner_organization.id,
+            }
         }
         response = self.forced_auth_req('patch', url_with_param, user=self.partner_staff_2, data=data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -376,6 +398,9 @@ class TestUsersViewSet(BaseTenantTestCase):
         url_with_param = self.url + f"{self.partner_staff.pk}/"
         data = {
             'point_of_interests': [99999],
+            'profile': {
+                'organization': self.partner_organization.id,
+            }
         }
         response = self.forced_auth_req('patch', url_with_param, user=self.partner_staff, data=data)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
