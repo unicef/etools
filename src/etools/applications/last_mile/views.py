@@ -25,6 +25,7 @@ from etools.applications.last_mile.tasks import notify_upload_waybill
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.utils.pbi_auth import get_access_token, get_embed_token, get_embed_url, TokenRetrieveException
+from etools.applications.locations.models import Location
 
 
 class PointOfInterestTypeViewSet(ReadOnlyModelViewSet):
@@ -85,6 +86,16 @@ class PointOfInterestViewSet(POIQuerysetMixin, ModelViewSet):
             connection.schema_name, destination_point.pk, waybill_file.pk, waybill_url
         )
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=False, methods=['get'], url_path='get-types')
+    def get_types(self, request, pk=None):
+        admin_levels = Location.objects.values('admin_level', 'admin_level_name').distinct().order_by('admin_level')
+
+        result = {
+            f"admin_level_{item['admin_level']}": item['admin_level_name']
+            for item in admin_levels if item['admin_level'] is not None
+        }
+        return Response(result, status=status.HTTP_200_OK)
 
 
 class HandoverPartnerListViewSet(mixins.ListModelMixin, GenericViewSet):
