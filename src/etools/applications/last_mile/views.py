@@ -90,12 +90,8 @@ class PointOfInterestViewSet(POIQuerysetMixin, ModelViewSet):
     @action(detail=False, methods=['get'], url_path='get-types')
     def get_types(self, request, pk=None):
         admin_levels = Location.objects.values('admin_level', 'admin_level_name').distinct().order_by('admin_level')
-
-        result = {
-            f"admin_level_{item['admin_level']}": item['admin_level_name']
-            for item in admin_levels if item['admin_level'] is not None
-        }
-        return Response(result, status=status.HTTP_200_OK)
+        serializer = serializers.LocationAdminLevelSerializer(admin_levels)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class HandoverPartnerListViewSet(mixins.ListModelMixin, GenericViewSet):

@@ -668,3 +668,12 @@ class TransferNotificationSerializer(serializers.ModelSerializer):
         fields = ('name', 'unicef_release_order', 'destination_check_in_at',
                   'origin_check_out_at', 'checked_in_by', 'checked_out_by', 'items',
                   'partner_organization', 'destination_point', 'origin_point', 'dispense_type')
+
+
+class LocationAdminLevelSerializer(serializers.Serializer):
+    def to_representation(self, queryset):
+        result = {}
+        for item in queryset:
+            if item.get('admin_level') is not None:
+                result[f"admin_level_{item['admin_level']}"] = item['admin_level_name']
+        return result
