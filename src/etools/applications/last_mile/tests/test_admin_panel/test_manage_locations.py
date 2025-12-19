@@ -1204,3 +1204,29 @@ class TestLocationsViewSet(BaseTenantTestCase):
         self.assertIn("country", response.data)
         self.assertIn("district", response.data)
         self.assertNotIn("region", response.data)
+
+    def test_get_parent_location_without_point_defaults_to_country(self):
+        Location.objects.all().delete()
+        country = LocationFactory(
+            name="Default Country",
+            admin_level=0,
+            admin_level_name="Country",
+            is_active=True
+        )
+
+        poi = PointOfInterestFactory.build(
+            name="Location Without Point",
+            partner_organizations=[self.partner],
+            poi_type=self.poi_type,
+            point=None,
+            parent=None
+        )
+
+        poi.save()
+        poi.partner_organizations.set([self.partner])
+
+        poi.refresh_from_db()
+        self.assertIsNotNone(poi.parent)
+        self.assertEqual(poi.parent.id, country.id)
+        self.assertEqual(poi.parent.admin_level, 0)
+        self.assertTrue(poi.parent.is_active)
