@@ -10,8 +10,11 @@ from etools.applications.action_points.models import ActionPoint
 from etools.applications.audit.conditions import (
     AuditModuleCondition,
     AuditStaffMemberCondition,
+    EngagementFaceFormPartnerContactedDisplayStatusCondition,
     EngagementStaffMemberCondition,
     EngagementUnicefCommentsReceivedCondition,
+    EngagementWithFaceFormsCondition,
+    EngagementWithoutFaceFormsCondition,
     IsUnicefUserCondition,
 )
 from etools.applications.audit.models import (
@@ -61,6 +64,8 @@ class Command(BaseCommand):
 
         'audit.engagement.status',
         'audit.engagement.status_date',
+        'audit.engagement.exchange_rate',
+        'audit.engagement.prior_face_forms',
 
         'purchase_order.purchaseorder.*',
         'purchase_order.auditorfirm.*',
@@ -74,12 +79,15 @@ class Command(BaseCommand):
         'audit.engagement.start_date',
         'audit.engagement.end_date',
         'audit.engagement.total_value',
+        'audit.engagement.total_value_local',
         'audit.engagement.joint_audit',
         'audit.engagement.year_of_audit',
         'audit.engagement.shared_ip_with',
         'audit.engagement.related_agreement',
         'audit.engagement.sections',
         'audit.engagement.offices',
+        'audit.engagement.face_forms',
+        'audit.engagement.conducted_by_sai'
     ]
 
     engagement_status_editable_date_fields = [
@@ -119,18 +127,43 @@ class Command(BaseCommand):
         'audit.engagementactionpoint.*',
     ]
 
-    follow_up_editable_page = [
+    report_edit_locals = [
+        'audit.audit.audited_expenditure_local',
+        'audit.spotcheck.total_amount_tested_local',
+    ]
+    report_locals = report_edit_locals + [
+        'audit.engagement.pending_unsupported_amount_local',
+        'audit.spotcheck.total_amount_of_ineligible_expenditure_local',
+    ]
+    report_edit_usd = [
+        'audit.audit.audited_expenditure',
+        'audit.spotcheck.total_amount_tested',
+    ]
+    report_usd = report_edit_usd + [
+        'audit.engagement.pending_unsupported_amount',
+        'audit.spotcheck.total_amount_of_ineligible_expenditure',
+    ]
+
+    follow_up_locals = [
+        'audit.engagement.amount_refunded_local',
+        'audit.engagement.additional_supporting_documentation_provided_local',
+        'audit.engagement.justification_provided_and_accepted_local',
+        'audit.engagement.write_off_required_local',
+    ]
+    follow_up_usd = [
         'audit.engagement.amount_refunded',
         'audit.engagement.additional_supporting_documentation_provided',
-        'audit.engagement.explanation_for_additional_information',
         'audit.engagement.justification_provided_and_accepted',
         'audit.engagement.write_off_required',
-        'audit.engagement.pending_unsupported_amount',
+    ]
+
+    follow_up_editable_page = [
+        'audit.engagement.explanation_for_additional_information',
     ]
 
     follow_up_page = follow_up_editable_page + [
-        'audit.spotcheck.total_amount_tested',
-        'audit.spotcheck.total_amount_of_ineligible_expenditure',
+        'audit.audit.financial_findings',
+        'audit.audit.financial_findings_local',
     ]
 
     engagement_overview_editable_page = (engagement_overview_editable_block + special_audit_block +
@@ -154,23 +187,18 @@ class Command(BaseCommand):
 
     audit_report_block = [
         'audit.audit.audit_opinion',
-        'audit.audit.audited_expenditure',
-        'audit.audit.financial_findings',
-        'audit.audit.audited_expenditure_local',
-        'audit.audit.financial_findings_local',
         'audit.audit.financial_finding_set',
         'audit.audit.key_internal_controls',
         'audit.audit.key_internal_weakness',
-        'audit.audit.exchange_rate',
         'audit.audit.currency_of_report',
+        'audit.audit.financial_findings',
+        'audit.audit.financial_findings_local',
     ]
 
     spot_check_report_block = [
         'audit.spotcheck.findings',
+        'audit.spotcheck.financial_finding_set',
         'audit.spotcheck.internal_controls',
-        'audit.spotcheck.total_amount_of_ineligible_expenditure',
-        'audit.spotcheck.total_amount_tested',
-        'audit.spotcheck.exchange_rate',
         'audit.spotcheck.currency_of_report',
     ]
 
@@ -182,7 +210,8 @@ class Command(BaseCommand):
     report_readonly_block = [
         'audit.audit.percent_of_audited_expenditure',
         'audit.audit.number_of_financial_findings',
-        'audit.audit.pending_unsupported_amount',
+
+        'audit.spotcheck.percent_of_audited_expenditure'
     ]
 
     report_editable_block = (microassessment_report_block + audit_report_block + spot_check_report_block +
@@ -231,6 +260,15 @@ class Command(BaseCommand):
 
     def engagement_comments_received_by_unicef(self):
         return [EngagementUnicefCommentsReceivedCondition.predicate]
+
+    def engagement_partner_contacted_display_status(self):
+        return [EngagementFaceFormPartnerContactedDisplayStatusCondition.predicate]
+
+    def engagement_with_face_forms(self):
+        return [EngagementWithFaceFormsCondition.predicate]
+
+    def engagement_without_face_forms(self):
+        return [EngagementWithoutFaceFormsCondition.predicate]
 
     def new_engagement(self):
         model = get_model_target(Engagement)
@@ -316,7 +354,7 @@ class Command(BaseCommand):
         partner_contacted_condition = self.engagement_status(Engagement.STATUSES.partner_contacted)
         self.add_permissions(self.auditor, 'edit', self.report_attachments_block, condition=partner_contacted_condition)
         self.add_permissions(
-            self.engagement_staff_auditor, 'view',
+            self.everybody, 'view',
             self.report_readonly_block,
             condition=partner_contacted_condition
         )
@@ -334,6 +372,16 @@ class Command(BaseCommand):
             condition=partner_contacted_condition
         )
         self.add_permissions(
+            self.engagement_staff_auditor, 'edit',
+            self.report_edit_locals,
+            condition=partner_contacted_condition + self.engagement_with_face_forms()
+        )
+        self.add_permissions(
+            self.engagement_staff_auditor, 'edit',
+            self.report_edit_usd,
+            condition=partner_contacted_condition + self.engagement_without_face_forms()
+        )
+        self.add_permissions(
             self.engagement_staff_auditor, 'action',
             'audit.engagement.submit',
             condition=partner_contacted_condition
@@ -344,6 +392,18 @@ class Command(BaseCommand):
             self.staff_members_block +
             self.users_notified_block,
             condition=partner_contacted_condition
+        )
+        self.add_permissions(
+            self.focal_point, 'edit',
+            ['audit.engagement.face_forms', 'audit.engagement.partner_contacted_at'],
+            condition=self.engagement_partner_contacted_display_status()
+        )
+
+        self.add_permissions(
+            self.focal_point, 'edit',
+            ['audit.specialaudit.total_value',
+             'audit.specialaudit.total_value_local'],
+            condition=self.engagement_partner_contacted_display_status()
         )
         self.add_permissions(
             self.focal_point, 'action',
@@ -394,6 +454,52 @@ class Command(BaseCommand):
         )
         self.add_permissions(
             self.all_unicef_users, 'view',
+            self.follow_up_locals,
+            condition=self.engagement_comments_received_by_unicef() + self.engagement_with_face_forms()
+        )
+        self.add_permissions(
+            self.all_unicef_users, 'view',
+            self.follow_up_usd,
+            condition=self.engagement_comments_received_by_unicef()
+        )
+
+        self.add_permissions(
+            self.everybody, 'view',
+            self.report_usd,
+            condition=partner_contacted_condition
+        )
+        self.add_permissions(
+            self.everybody, 'view',
+            self.report_usd,
+            condition=report_submitted_condition
+        )
+        self.add_permissions(
+            self.everybody, 'view',
+            self.report_usd,
+            condition=final_engagement_condition
+        )
+        self.add_permissions(
+            self.everybody, 'view',
+            self.report_locals,
+            condition=partner_contacted_condition + self.engagement_with_face_forms()
+        )
+        self.add_permissions(
+            self.everybody, 'view',
+            self.report_locals,
+            condition=report_submitted_condition + self.engagement_with_face_forms()
+        )
+        self.add_permissions(
+            self.everybody, 'view',
+            self.report_locals,
+            condition=final_engagement_condition + self.engagement_with_face_forms()
+        )
+        self.add_permissions(
+            self.everybody, 'view',
+            self.report_editable_block,
+            condition=partner_contacted_condition + self.engagement_with_face_forms()
+        )
+        self.add_permissions(
+            self.all_unicef_users, 'view',
             self.action_points_block,
             condition=self.engagement_comments_received_by_unicef()
         )
@@ -402,7 +508,16 @@ class Command(BaseCommand):
             self.follow_up_editable_page,
             condition=self.engagement_comments_received_by_unicef()
         )
-
+        self.add_permissions(
+            self.focal_point, 'edit',
+            self.follow_up_locals,
+            condition=self.engagement_comments_received_by_unicef() + self.engagement_with_face_forms()
+        )
+        self.add_permissions(
+            self.focal_point, 'edit',
+            self.follow_up_usd,
+            condition=self.engagement_comments_received_by_unicef() + self.engagement_without_face_forms()
+        )
         # action points related permissions. editable by focal point, author, assignee and assigner
         opened_action_point_condition = self.action_point_status(EngagementActionPoint.STATUSES.open)
 
