@@ -138,8 +138,8 @@ class TestVisionSyncTask(SimpleTestCase):
         etools.applications.vision.tasks.vision_sync_task()
 
         self._assertCountryMockCalls(countryMock)
-        self._assertGlobalHandlersSynced(mock_handler, 18)
-        self._assertTenantHandlersSynced(mock_handler, 18, 6, 6, 6)
+        self._assertGlobalHandlersSynced(mock_handler, 21)
+        self._assertTenantHandlersSynced(mock_handler, 21, 7, 7, 7)
         self._assertConnectionTenantSet(mock_django_db_connection)
         self._assertVisionLastSynced()
         self._assertLoggerMessages(mock_logger)
@@ -157,8 +157,8 @@ class TestVisionSyncTask(SimpleTestCase):
         etools.applications.vision.tasks.vision_sync_task(business_area_code='ZZZ Test0')
 
         self._assertCountryMockCalls(countryMock)
-        self._assertGlobalHandlersSynced(mock_handler, all_sync_task=6)
-        self._assertTenantHandlersSynced(mock_handler, 6, 6, 0, 0)
+        self._assertGlobalHandlersSynced(mock_handler, all_sync_task=7)
+        self._assertTenantHandlersSynced(mock_handler, 7, 7, 0, 0)
         self._assertConnectionTenantSet(mock_django_db_connection, selected_countries)
         self._assertVisionLastSynced(selected_countries)
         self._assertLoggerMessages(mock_logger, selected_countries)

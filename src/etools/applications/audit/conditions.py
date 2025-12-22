@@ -25,7 +25,8 @@ class EngagementStaffMemberCondition(SimpleCondition):
         self.user = user
 
     def is_satisfied(self):
-        return self.user in self.engagement.staff_members.all()
+        return (self.user in self.engagement.staff_members.all() and
+                self.user.profile.organization == self.engagement.agreement.auditor_firm.organization)
 
 
 class IsUnicefUserCondition(SimpleCondition):
@@ -46,3 +47,33 @@ class EngagementUnicefCommentsReceivedCondition(SimpleCondition):
 
     def is_satisfied(self):
         return self.engagement.date_of_comments_by_unicef is not None
+
+
+class EngagementFaceFormPartnerContactedDisplayStatusCondition(SimpleCondition):
+    predicate = 'audit_engagement.partner_contacted_display_status'
+
+    def __init__(self, engagement):
+        self.engagement = engagement
+
+    def is_satisfied(self):
+        return self.engagement.status == self.engagement.displayed_status == self.engagement.PARTNER_CONTACTED
+
+
+class EngagementWithFaceFormsCondition(SimpleCondition):
+    predicate = 'audit_engagement.with_face_forms'
+
+    def __init__(self, engagement):
+        self.engagement = engagement
+
+    def is_satisfied(self):
+        return self.engagement.face_forms.exists()
+
+
+class EngagementWithoutFaceFormsCondition(SimpleCondition):
+    predicate = 'audit_engagement.without_face_forms'
+
+    def __init__(self, engagement):
+        self.engagement = engagement
+
+    def is_satisfied(self):
+        return not self.engagement.face_forms.exists()
