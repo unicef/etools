@@ -112,7 +112,7 @@ class SendGPDToVisionTestCase(BaseTenantTestCase):
         sent_body = requests_mock.mock_calls[0][2]['data']
         payload = json.loads(sent_body)
         result_links = payload.get('result_links', [])
-        gdd_key_interventions = result_links[0].get('gdd_key_interventions', [])
+        gdd_key_interventions = result_links[0].get('ll_results', [])
         activities = gdd_key_interventions[0].get('activities', [])
 
         first_result = gdd_key_interventions[0]
