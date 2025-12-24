@@ -16,6 +16,7 @@ from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.users.models import Country
 from etools.applications.users.tests.factories import UserFactory
 from etools.applications.vision.models import VisionSyncLog
+from etools.libraries.djangolib.models import GroupWrapper
 
 
 class TestAggregateHactValues(BaseTenantTestCase):
@@ -127,6 +128,9 @@ class TestUpdateHactValues(BaseTenantTestCase):
 class TestNotifyHactUpdate(BaseTenantTestCase):
 
     def test_notify_hact_update(self):
+        # clearing groups cache
+        GroupWrapper.invalidate_instances()
+
         logs = VisionSyncLog.objects.all()
         self.assertEqual(logs.count(), 0)
         partner = PartnerFactory(organization=OrganizationFactory(name="Partner XYZ"), reported_cy=20000)
@@ -200,6 +204,6 @@ class TestNotifyHactUpdate(BaseTenantTestCase):
 
         expected_recipients = list([active_unicef_focal_user2.email, active_unicef_focal_user.email])
 
-        actual_call_args = mock_send.call_args[1]
-        assert set(actual_call_args["recipients"]) == set(expected_recipients), \
-            f"Expected {expected_recipients}, got {actual_call_args['recipients']}"
+        actual_call_args = mock_send.call_args.kwargs['recipients']
+        assert set(actual_call_args) == set(expected_recipients), \
+            f"Expected {expected_recipients}, got {actual_call_args}"
