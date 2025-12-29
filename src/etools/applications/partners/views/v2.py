@@ -77,7 +77,7 @@ class PMPStaticDropdownsListAPIView(APIView):
         intervention_status = choices_to_json_ready(Intervention.INTERVENTION_STATUS, sort_choices=False)
         intervention_amendment_types = choices_to_json_ready(InterventionAmendment.AMENDMENT_TYPES)
         location_types = Location.objects.values('admin_level_name', 'admin_level').order_by('admin_level').distinct()
-        currencies = choices_to_json_ready(CURRENCIES)
+        currencies = sorted([{'value': k, 'label': k} for k, v in CURRENCIES], key=lambda x: x['value'])
         attachment_types = AttachmentFileType.objects.values_list(
             "label",
             flat=True,
