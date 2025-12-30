@@ -5,6 +5,7 @@ from rest_framework import status
 from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.locations.models import Location
 from etools.applications.users.tests.factories import UserFactory
 
 
@@ -47,6 +48,29 @@ class TestLocationViews(BaseTenantTestCase):
                     location.admin_level_name,
                     location.p_code,
                 ))
+
+    def test_api_location_light_list_is_active_filter(self):
+        inactive_location = LocationFactory(is_active=False)
+
+        # Retrieve all
+        response = self.forced_auth_req('get', reverse('locations-light-list'), user=self.unicef_staff)
+        self.locations.append(inactive_location)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(sorted(response.data[0].keys()), ['admin_level', 'admin_level_name', "id", "is_active", "name", "name_display", "p_code", "parent"])
+        self.assertEqual(response.data.__len__(), self.locations.__len__())
+
+        # Retrieve active only
+        response = self.forced_auth_req(
+            'get', reverse('locations-light-list'), data={'is_active': True}, user=self.unicef_staff)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.__len__(), self.locations.__len__() - 1)
+
+        # Retrieve inactive
+        response = self.forced_auth_req(
+            'get', reverse('locations-light-list'), data={'is_active': False}, user=self.unicef_staff)
+        self.locations.append(inactive_location)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.__len__(), 1)
 
     def test_api_location_heavy_list(self):
         response = self.forced_auth_req('get', reverse('locations-list'), user=self.unicef_staff)

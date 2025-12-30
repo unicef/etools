@@ -3,6 +3,7 @@ from django.db import connection
 from django.utils.decorators import method_decorator
 from django.utils.text import slugify
 from django.views.decorators.cache import cache_control, cache_page
+from django_filters.rest_framework import DjangoFilterBackend
 
 from rest_framework import permissions
 from rest_framework.request import Request
@@ -33,6 +34,8 @@ class LocationsLightViewSet(views.LocationsLightViewSet):
     # TODO: check user filter?
     serializer_class = LocationLightWithActiveSerializer
     pagination_class = AppendablePageNumberPagination
+    filter_backends = (DjangoFilterBackend, )
+    filterset_fields = ('is_active', )
 
     @method_decorator(cache_control(
         max_age=0,  # enable cache yet automatically treat all cached data as stale to request backend every time
