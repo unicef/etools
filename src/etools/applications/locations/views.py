@@ -11,6 +11,7 @@ from unicef_locations.cache import etag_cached, get_cache_version
 from unicef_locations.serializers import LocationLightSerializer
 
 from etools.applications.locations.models import Location
+from etools.applications.utils.pagination import AppendablePageNumberPagination
 from etools.libraries.tenant_support.utils import TenantSuffixedString
 
 
@@ -31,6 +32,7 @@ def cache_key(request: Request):
 class LocationsLightViewSet(views.LocationsLightViewSet):
     # TODO: check user filter?
     serializer_class = LocationLightWithActiveSerializer
+    pagination_class = AppendablePageNumberPagination
 
     @method_decorator(cache_control(
         max_age=0,  # enable cache yet automatically treat all cached data as stale to request backend every time
