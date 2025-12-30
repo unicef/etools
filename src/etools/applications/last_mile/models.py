@@ -207,6 +207,8 @@ class PointOfInterest(TimeStampedModel, models.Model):
 
     @staticmethod
     def get_parent_location(point):
+        if not point:
+            return Location.objects.filter(admin_level=0, is_active=True).first()
         locations = Location.objects.all_with_geom().filter(geom__contains=point, is_active=True)
         if locations:
             matched_locations = list(filter(lambda l: l.is_leaf_node(), locations)) or locations

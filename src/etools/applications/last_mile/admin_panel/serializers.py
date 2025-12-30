@@ -219,14 +219,13 @@ class UserAdminUpdateSerializer(serializers.ModelSerializer):
             'point_of_interests',
         )
 
-    def _validate_pois_for_user(self, user, points_of_interest):
-        partner = user.partner
-        if not partner:
-            partner = user.profile.organization.partner if user.profile.organization else None
+    def _validate_pois_for_user(self, user, points_of_interest, updated_partner=None):
+        if not updated_partner:
+            updated_partner = user.profile.organization.partner if user.profile.organization else None
 
         allowed_poi_ids = set()
-        if partner:
-            partner_poi_ids = partner.points_of_interest.values_list('id', flat=True)
+        if updated_partner:
+            partner_poi_ids = updated_partner.points_of_interest.values_list('id', flat=True)
             allowed_poi_ids.update(partner_poi_ids)
 
         global_poi_ids = models.PointOfInterest.objects.filter(
@@ -251,7 +250,8 @@ class UserAdminUpdateSerializer(serializers.ModelSerializer):
 
         if 'point_of_interests' in validated_data:
             point_of_interests = validated_data.pop('point_of_interests')
-            self._validate_pois_for_user(instance, point_of_interests)
+            organization = profile_data.get('organization')
+            self._validate_pois_for_user(instance, point_of_interests, getattr(organization, 'partner', None))
             new_poi_ids = {poi.id for poi in point_of_interests}
             models.UserPointsOfInterest.objects.filter(user=instance).exclude(
                 point_of_interest_id__in=new_poi_ids
@@ -268,6 +268,8 @@ class UserAdminUpdateSerializer(serializers.ModelSerializer):
                     for poi_id in ids_to_create
                 ]
                 models.UserPointsOfInterest.objects.bulk_create(new_relations)
+        else:
+            models.UserPointsOfInterest.objects.filter(user=instance).delete()
 
         for attr, value in validated_data.items():
             if attr == 'password':
@@ -279,10 +281,12 @@ class UserAdminUpdateSerializer(serializers.ModelSerializer):
         country = Country.objects.get(schema_name=self.context.get('country_schema'))
 
         profile = getattr(instance, 'profile', None)
-        if profile:
+        old_organization = profile.organization if profile else None
+        if profile and old_organization:
             if 'organization' in profile_data and profile.organization != profile_data.get('organization'):
                 profile.organization = profile_data.get('organization')
-                Realm.objects.filter(user=instance, country=country).update(organization=profile_data.get('organization'))
+                if not Realm.objects.filter(user=instance, country=country, organization=profile_data.get('organization')).exists():
+                    Realm.objects.filter(user=instance, country=country, organization=old_organization).update(organization=profile_data.get('organization'))
             if 'country' in profile_data:
                 profile.country = country
             profile.save()
