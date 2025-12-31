@@ -5,7 +5,6 @@ from rest_framework import status
 from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
-from etools.applications.locations.models import Location
 from etools.applications.users.tests.factories import UserFactory
 
 
