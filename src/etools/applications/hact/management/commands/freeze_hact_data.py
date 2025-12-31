@@ -84,7 +84,8 @@ class Command(BaseCommand):
     @transaction.atomic
     def handle(self, *args, **options):
 
-        countries = Country.objects.filter(name__in=['Global', 'MENARO'])
+        countries = Country.objects.exclude(name__in=['Global', 'MENARO'])
+
         if options['schema']:
             countries = countries.filter(schema_name=options['schema'])
 
