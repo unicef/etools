@@ -692,11 +692,9 @@ class OrganizationListView(mixins.ListModelMixin, GenericViewSet):
 
         with_partner = Q(partner__isnull=False, partner__hidden=False)
 
-        with_audit = Q(auditorfirm__purchase_orders__engagement__isnull=False, auditorfirm__hidden=False)
-
         with_tpm = Q(tpmpartner__countries=connection.tenant, tpmpartner__hidden=False)
 
-        return queryset.filter(with_partner | with_audit | with_tpm).distinct()
+        return queryset.filter(with_partner | with_tpm).distinct()
 
     filter_backends = (SearchFilter,)
 

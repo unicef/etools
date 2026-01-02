@@ -601,7 +601,7 @@ class TestGPDExternalReservationAPIView(BaseTenantTestCase):
         cls.data = {
             "fr_items": [
                 {
-                    "fr_ref_number": "ref1",
+                    "fr_ref_number": "040000056770",
                     "line_item": 111,
                     "wbs": "3750/A0/04/110/002/001",
                     "donor": "UNDP USA",
@@ -614,7 +614,7 @@ class TestGPDExternalReservationAPIView(BaseTenantTestCase):
                     "line_item_text": "LEGAL AID TO CHILDREN IN CONFLICT WITH LAW"
                 },
                 {
-                    "fr_ref_number": "ref2",
+                    "fr_ref_number": "040000056770",
                     "line_item": 222,
                     "wbs": "3750/A0/04/110/002/001",
                     "donor": "N/A",

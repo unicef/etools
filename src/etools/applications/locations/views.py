@@ -4,6 +4,7 @@ from django.utils.decorators import method_decorator
 from django.utils.text import slugify
 from django.views.decorators.cache import cache_control, cache_page
 
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import permissions
 from rest_framework.request import Request
 from unicef_locations import views
@@ -11,6 +12,7 @@ from unicef_locations.cache import etag_cached, get_cache_version
 from unicef_locations.serializers import LocationLightSerializer
 
 from etools.applications.locations.models import Location
+from etools.applications.utils.pagination import AppendablePageNumberPagination
 from etools.libraries.tenant_support.utils import TenantSuffixedString
 
 
@@ -31,6 +33,9 @@ def cache_key(request: Request):
 class LocationsLightViewSet(views.LocationsLightViewSet):
     # TODO: check user filter?
     serializer_class = LocationLightWithActiveSerializer
+    pagination_class = AppendablePageNumberPagination
+    filter_backends = (DjangoFilterBackend, )
+    filterset_fields = ('is_active', )
 
     @method_decorator(cache_control(
         max_age=0,  # enable cache yet automatically treat all cached data as stale to request backend every time

@@ -67,8 +67,8 @@ class AuditTransitionsTestCaseMixin(EngagementTransitionsTestCaseMixin):
     endpoint = 'audits'
 
     def _fill_audit_specified_fields(self):
-        self.engagement.audited_expenditure = random.randint(1, 22)
-        self.engagement.financial_findings = random.randint(1, 22)
+        self.engagement.audited_expenditure_local = random.randint(1, 22)
+        self.engagement.financial_findings_local = random.randint(1, 22)
         self.engagement.audit_opinion = fuzzy.FuzzyText(length=20).fuzz()
         self.engagement.exchange_rate = fuzzy.FuzzyDecimal(0.5, 400).fuzz()
         self.engagement.currency_of_report = 'USD'
@@ -105,8 +105,8 @@ class SCTransitionsTestCaseMixin(EngagementTransitionsTestCaseMixin):
     endpoint = 'spot-checks'
 
     def _fill_sc_specified_fields(self):
-        self.engagement.total_amount_tested = random.randint(1, 22)
-        self.engagement.total_amount_of_ineligible_expenditure = random.randint(1, 22)
+        self.engagement.total_amount_tested_local = random.randint(1, 22)
+        self.engagement.total_amount_of_ineligible_expenditure_local = random.randint(1, 22)
         self.engagement.internal_controls = fuzzy.FuzzyText(length=50).fuzz()
         self.engagement.exchange_rate = fuzzy.FuzzyDecimal(0.5, 400).fuzz()
         self.engagement.currency_of_report = 'USD'
