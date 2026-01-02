@@ -46,6 +46,7 @@ from etools.applications.partners.tasks import send_pd_to_vision
 from etools.applications.partners.utils import send_agreement_suspended_notification
 from etools.applications.permissions2.conditions import ObjectStatusCondition
 from etools.applications.permissions2.views import PermittedSerializerMixin
+from etools.applications.rss_admin.admin_logging import get_changed_fields, log_change
 from etools.applications.rss_admin.importers import LocationSiteImporter
 from etools.applications.rss_admin.permissions import IsRssAdmin
 from etools.applications.rss_admin.serializers import (
@@ -61,6 +62,7 @@ from etools.applications.rss_admin.serializers import (
     EngagementChangeStatusSerializer,
     EngagementInitiationUpdateSerializer,
     EngagementLightRssSerializer,
+    LogEntrySerializer,
     MapPartnerToWorkspaceSerializer,
     MicroAssessmentRssSerializer as MicroAssessmentSerializer,
     PartnerOrganizationRssSerializer,
@@ -181,8 +183,9 @@ class AgreementRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet, FilterQ
         if not validator.is_valid:
             raise ValidationError(validator.errors)
 
+    @transaction.atomic
     def perform_update(self, serializer):
-        old_instance = copy.copy(serializer.instance)
+        old_instance = Agreement.objects.get(pk=serializer.instance.pk) if serializer.instance.pk else None
         serializer.save()
         validator = RssAgreementValid(
             serializer.instance,
@@ -192,8 +195,50 @@ class AgreementRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet, FilterQ
         if not validator.is_valid:
             raise ValidationError(validator.errors)
         # notify on suspension
-        if serializer.instance.status == serializer.instance.SUSPENDED and old_instance.status != serializer.instance.SUSPENDED:
+        if serializer.instance.status == serializer.instance.SUSPENDED and old_instance and old_instance.status != serializer.instance.SUSPENDED:
             send_agreement_suspended_notification(serializer.instance, self.request.user)
+
+    @action(detail=True, methods=['get'], url_path='logs')
+    def logs(self, request, pk=None):
+        """Retrieve change logs for this agreement.
+
+        Returns paginated list of LogEntry records for this agreement.
+        Supports standard pagination parameters: page, page_size.
+
+        Response structure:
+        {
+            "count": <total_count>,
+            "next": <url_to_next_page_or_null>,
+            "previous": <url_to_previous_page_or_null>,
+            "results": [<log_entries>]
+        }
+        """
+        from django.contrib.admin.models import LogEntry
+        from django.contrib.contenttypes.models import ContentType
+
+        agreement = self.get_object()
+        content_type = ContentType.objects.get_for_model(agreement.__class__)
+
+        # Get all log entries for this agreement
+        log_entries = LogEntry.objects.filter(
+            content_type=content_type,
+            object_id=str(agreement.pk)
+        ).select_related('user', 'content_type').order_by('-action_time')
+
+        # Apply pagination
+        page = self.paginate_queryset(log_entries)
+        if page is not None:
+            serializer = LogEntrySerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        # Return consistent structure even without pagination
+        serializer = LogEntrySerializer(log_entries, many=True)
+        return Response({
+            'count': log_entries.count(),
+            'next': None,
+            'previous': None,
+            'results': serializer.data,
+        })
 
 
 class ProgrammeDocumentRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet, FilterQueryMixin):
@@ -261,8 +306,9 @@ class ProgrammeDocumentRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet,
         if not validator.is_valid:
             raise ValidationError(validator.errors)
 
+    @transaction.atomic
     def perform_update(self, serializer):
-        old_instance = copy.copy(serializer.instance)
+        old_instance = Intervention.objects.get(pk=serializer.instance.pk) if serializer.instance.pk else None
         serializer.save()
         validator = RssInterventionValid(serializer.instance, old=old_instance, user=self.request.user)
         if not validator.is_valid:
@@ -325,6 +371,15 @@ class ProgrammeDocumentRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet,
                 defaults={'currency': currency},
             )
 
+        # If after handling FR numbers and currency there is nothing left to update on the Intervention,
+        # avoid running the global validator and just return the refreshed detail.
+        if not payload:
+            refreshed = Intervention.objects.select_related('planned_budget').get(pk=instance.pk)
+            return Response(
+                InterventionDetailSerializer(refreshed, context={'request': request}).data,
+                status=status.HTTP_200_OK,
+            )
+
         serializer = self.get_serializer(instance=instance, data=payload, partial=partial, context={'request': request})
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
@@ -377,6 +432,48 @@ class ProgrammeDocumentRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet,
             return Response({'detail': 'Vision sync disabled by tenant switch'}, status=status.HTTP_403_FORBIDDEN)
         send_pd_to_vision.delay(connection.tenant.name, instance.pk)
         return Response({'detail': 'PD queued for Vision upload'}, status=status.HTTP_202_ACCEPTED)
+
+    @action(detail=True, methods=['get'], url_path='logs')
+    def logs(self, request, pk=None):
+        """Retrieve change logs for this programme document.
+
+        Returns paginated list of LogEntry records for this programme document.
+        Supports standard pagination parameters: page, page_size.
+
+        Response structure:
+        {
+            "count": <total_count>,
+            "next": <url_to_next_page_or_null>,
+            "previous": <url_to_previous_page_or_null>,
+            "results": [<log_entries>]
+        }
+        """
+        from django.contrib.admin.models import LogEntry
+        from django.contrib.contenttypes.models import ContentType
+
+        intervention = self.get_object()
+        content_type = ContentType.objects.get_for_model(intervention.__class__)
+
+        # Get all log entries for this intervention
+        log_entries = LogEntry.objects.filter(
+            content_type=content_type,
+            object_id=str(intervention.pk)
+        ).select_related('user', 'content_type').order_by('-action_time')
+
+        # Apply pagination
+        page = self.paginate_queryset(log_entries)
+        if page is not None:
+            serializer = LogEntrySerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        # Return consistent structure even without pagination
+        serializer = LogEntrySerializer(log_entries, many=True)
+        return Response({
+            'count': log_entries.count(),
+            'next': None,
+            'previous': None,
+            'results': serializer.data,
+        })
 
 
 class EngagementRssViewSet(PermittedSerializerMixin,
@@ -490,11 +587,38 @@ class EngagementRssViewSet(PermittedSerializerMixin,
 
         return super().get_serializer_class()
 
+    def perform_update(self, serializer):
+        """Override to log changes using Django's LogEntry."""
+        # Get the current state from DB before saving
+        if serializer.instance.pk:
+            old_instance = serializer.instance.__class__.objects.get(pk=serializer.instance.pk)
+        else:
+            old_instance = None
+
+        serializer.save()
+
+        # Refresh the instance to get the updated state
+        serializer.instance.refresh_from_db()
+
+        # Log the changes if we had an existing instance
+        if old_instance:
+            changed_fields = get_changed_fields(old_instance, serializer.instance)
+            if changed_fields:
+                log_change(
+                    user=self.request.user,
+                    obj=serializer.instance,
+                    changed_fields=changed_fields,
+                )
+
     @action(detail=True, methods=['post'], url_path='change-status')
     def change_status(self, request, pk=None):
         engagement = self.get_object()
         if hasattr(engagement, 'get_subclass'):
             engagement = engagement.get_subclass()
+
+        # Store old status for logging
+        old_status = engagement.status
+
         serializer = EngagementChangeStatusSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         action = serializer.validated_data['action']
@@ -504,6 +628,18 @@ class EngagementRssViewSet(PermittedSerializerMixin,
             send_back_comment=serializer.validated_data.get('send_back_comment'),
             cancel_comment=serializer.validated_data.get('cancel_comment'),
         )
+
+        # Refresh to get updated status
+        engagement.refresh_from_db()
+
+        # Log the status change
+        if old_status != engagement.status:
+            log_change(
+                user=request.user,
+                obj=engagement,
+                change_message=f"Status changed via RSS admin: {old_status} -> {engagement.status} (action: {action})",
+            )
+
         return Response(EngagementLightRssSerializer(engagement, context={'request': request}).data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['patch'], url_path='initiation', url_name='initiation')
@@ -516,6 +652,11 @@ class EngagementRssViewSet(PermittedSerializerMixin,
         if hasattr(engagement, 'get_subclass'):
             engagement = engagement.get_subclass()
 
+        # Store old instance for logging
+        old_instance = copy.copy(engagement)
+        if old_instance.pk:
+            old_instance = engagement.__class__.objects.get(pk=old_instance.pk)
+
         serializer = EngagementInitiationUpdateSerializer(
             instance=engagement,
             data=request.data,
@@ -524,6 +665,17 @@ class EngagementRssViewSet(PermittedSerializerMixin,
         )
         serializer.is_valid(raise_exception=True)
         instance = serializer.save()
+
+        # Log the changes
+        changed_fields = get_changed_fields(old_instance, instance)
+        if changed_fields:
+            log_change(
+                user=request.user,
+                obj=instance,
+                change_message="Initiation data updated via RSS admin",
+                changed_fields=changed_fields,
+            )
+
         return Response(EngagementLightRssSerializer(instance, context={'request': request}).data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['patch'], url_path='attachments', url_name='attachments')
@@ -544,7 +696,67 @@ class EngagementRssViewSet(PermittedSerializerMixin,
         )
         serializer.is_valid(raise_exception=True)
         instance = serializer.save()
+
+        # Log the attachment changes
+        attachment_ids = []
+        if 'engagement_attachment' in request.data:
+            attachment_ids.append(f"engagement_attachment: {request.data['engagement_attachment']}")
+        if 'report_attachment' in request.data:
+            attachment_ids.append(f"report_attachment: {request.data['report_attachment']}")
+
+        if attachment_ids:
+            log_change(
+                user=request.user,
+                obj=instance,
+                change_message=f"Attachments updated via RSS admin: {', '.join(attachment_ids)}",
+            )
+
         return Response(EngagementLightRssSerializer(instance, context={'request': request}).data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['get'], url_path='logs')
+    def logs(self, request, pk=None):
+        """Retrieve change logs for this engagement.
+
+        Returns paginated list of LogEntry records for this engagement.
+        Supports standard pagination parameters: page, page_size.
+
+        Response structure:
+        {
+            "count": <total_count>,
+            "next": <url_to_next_page_or_null>,
+            "previous": <url_to_previous_page_or_null>,
+            "results": [<log_entries>]
+        }
+        """
+        from django.contrib.admin.models import LogEntry
+        from django.contrib.contenttypes.models import ContentType
+
+        engagement = self.get_object()
+        if hasattr(engagement, 'get_subclass'):
+            engagement = engagement.get_subclass()
+
+        content_type = ContentType.objects.get_for_model(engagement.__class__)
+
+        # Get all log entries for this engagement
+        log_entries = LogEntry.objects.filter(
+            content_type=content_type,
+            object_id=str(engagement.pk)
+        ).select_related('user', 'content_type').order_by('-action_time')
+
+        # Apply pagination
+        page = self.paginate_queryset(log_entries)
+        if page is not None:
+            serializer = LogEntrySerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        # Return consistent structure even without pagination
+        serializer = LogEntrySerializer(log_entries, many=True)
+        return Response({
+            'count': log_entries.count(),
+            'next': None,
+            'previous': None,
+            'results': serializer.data,
+        })
 
 
 class ActionPointRssViewSet(mixins.ListModelMixin,

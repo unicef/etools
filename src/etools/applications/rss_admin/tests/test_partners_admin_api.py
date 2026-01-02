@@ -1,5 +1,7 @@
 from datetime import timedelta
 
+from django.contrib.admin.models import CHANGE, LogEntry
+from django.contrib.contenttypes.models import ContentType
 from django.db import connection
 from django.test import override_settings
 from django.urls import reverse
@@ -22,7 +24,7 @@ from etools.applications.audit.tests.factories import (
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory, FundsReservationItemFactory
 from etools.applications.organizations.tests.factories import OrganizationFactory
-from etools.applications.partners.models import Intervention
+from etools.applications.partners.models import Agreement, Intervention
 from etools.applications.partners.tests.factories import AgreementFactory, InterventionFactory, PartnerFactory
 from etools.applications.reports.tests.factories import (
     CountryProgrammeFactory,
@@ -40,12 +42,17 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
-        cls.user = UserFactory(is_staff=True)
+        cls.user = UserFactory(is_staff=True, realms__data=['UNICEF User', 'Partnership Manager'])
         cls.partner = PartnerFactory()
         # Ensure partner passes PCA/SSFA validation in AgreementValid
         cls.partner.organization.organization_type = "Civil Society Organization"
         cls.partner.organization.save(update_fields=['organization_type'])
         cls.agreement = AgreementFactory(partner=cls.partner)
+        # Set required fields for agreement validation
+        cls.agreement.partner_manager = UserFactory()
+        cls.agreement.save(update_fields=['partner_manager'])
+        officer = UserFactory()
+        cls.agreement.authorized_officers.add(officer)
         cls.pd = InterventionFactory(agreement=cls.agreement, document_type=Intervention.PD)
         cls.spd = InterventionFactory(agreement=cls.agreement, document_type=Intervention.SPD)
 
@@ -634,6 +641,8 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         # attempt to move to terminated without termination_doc_attachment
         resp = self.forced_auth_req('patch', url, user=self.user, data={'status': Intervention.TERMINATED})
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        pd.refresh_from_db()
+        self.assertEqual(pd.status, Intervention.ACTIVE)
 
         # add required attachment then retry
         attachment = AttachmentFactory(file='termination.pdf')
@@ -642,6 +651,8 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
             'status': Intervention.TERMINATED,
         })
         self.assertEqual(resp2.status_code, status.HTTP_200_OK, resp2.data)
+        pd.refresh_from_db()
+        self.assertEqual(pd.status, Intervention.TERMINATED)
 
     def test_pd_activate_requires_agreement_signed(self):
         """Condition: PD cannot transition to active if Agreement is not signed (returns 400)."""
@@ -649,6 +660,24 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         url = reverse('rss_admin:rss-admin-programme-documents-detail', kwargs={'pk': pd.pk})
         resp = self.forced_auth_req('patch', url, user=self.user, data={'status': Intervention.ACTIVE})
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        pd.refresh_from_db()
+        self.assertEqual(pd.status, Intervention.SIGNATURE)
+
+    def test_agreement_invalid_transition_does_not_persist_status(self):
+        """Agreement: invalid transition to signed should not persist status change."""
+        from datetime import date, timedelta
+
+        # Make agreement invalid for transition to signed (start date in future and no end date)
+        self.agreement.status = 'draft'
+        self.agreement.start = date.today() + timedelta(days=10)
+        self.agreement.end = None
+        self.agreement.save(update_fields=['status', 'start', 'end'])
+
+        url = reverse('rss_admin:rss-admin-agreements-detail', kwargs={'pk': self.agreement.pk})
+        resp = self.forced_auth_req('patch', url, user=self.user, data={'status': 'signed'})
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        self.agreement.refresh_from_db()
+        self.assertEqual(self.agreement.status, 'draft')
 
     def test_list_partners_paginated(self):
         url = reverse('rss_admin:rss-admin-partners-list')
@@ -2138,3 +2167,200 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         self.assertIn('year_of_audit', resp.data)
         self.assertIn('audited_expenditure', resp.data)
         self.assertIn('audit_opinion', resp.data)
+
+    def test_agreement_logs_endpoint(self):
+        """Test that agreement logs endpoint returns log entries"""
+        from etools.applications.rss_admin.admin_logging import log_change
+
+        url = reverse('rss_admin:rss-admin-agreements-logs', kwargs={'pk': self.agreement.pk})
+
+        # Initially, there should be no logs (or minimal logs)
+        resp = self.forced_auth_req('get', url, user=self.user)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        # Verify response structure always has pagination keys
+        self.assertIn('count', resp.data)
+        self.assertIn('next', resp.data)
+        self.assertIn('previous', resp.data)
+        self.assertIn('results', resp.data)
+
+        initial_count = len(resp.data['results'])
+
+        # Create a log entry directly
+        log_change(
+            user=self.user,
+            obj=self.agreement,
+            change_message="Test log entry for agreement",
+        )
+
+        # Now check logs again
+        resp = self.forced_auth_req('get', url, user=self.user)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        # Verify response structure
+        self.assertIn('count', resp.data)
+        self.assertIn('next', resp.data)
+        self.assertIn('previous', resp.data)
+        self.assertIn('results', resp.data)
+
+        logs = resp.data['results']
+        self.assertGreater(len(logs), initial_count)
+        log_entry = logs[0]  # Most recent log
+
+        # Verify log entry has required fields
+        self.assertIn('id', log_entry)
+        self.assertIn('action_time', log_entry)
+        self.assertIn('user', log_entry)
+        self.assertIn('action_flag', log_entry)
+        self.assertIn('action_flag_display', log_entry)
+        self.assertIn('change_message', log_entry)
+        self.assertIn('content_type_display', log_entry)
+        self.assertIn('object_id', log_entry)
+        self.assertIn('object_repr', log_entry)
+
+    def test_agreement_logs_creates_entry_via_log_change(self):
+        """Test that log_change utility creates a log entry for agreements"""
+        from etools.applications.rss_admin.admin_logging import log_change
+
+        content_type = ContentType.objects.get_for_model(Agreement)
+
+        # Count initial log entries
+        initial_logs = LogEntry.objects.filter(
+            content_type=content_type,
+            object_id=str(self.agreement.pk)
+        ).count()
+
+        # Create a log entry
+        log_change(
+            user=self.user,
+            obj=self.agreement,
+            changed_fields={'status': ('draft', 'signed')},
+        )
+
+        # Verify a log entry was created
+        new_logs = LogEntry.objects.filter(
+            content_type=content_type,
+            object_id=str(self.agreement.pk)
+        ).count()
+        self.assertGreater(new_logs, initial_logs)
+
+        # Verify the log entry has correct information
+        log_entry = LogEntry.objects.filter(
+            content_type=content_type,
+            object_id=str(self.agreement.pk)
+        ).order_by('-action_time').first()
+
+        self.assertIsNotNone(log_entry)
+        self.assertEqual(log_entry.user, self.user)
+        self.assertEqual(log_entry.action_flag, CHANGE)
+
+    def test_programme_document_logs_endpoint(self):
+        """Test that programme document logs endpoint returns log entries"""
+        from etools.applications.rss_admin.admin_logging import log_change
+
+        url = reverse('rss_admin:rss-admin-programme-documents-logs', kwargs={'pk': self.pd.pk})
+
+        # Initially, there should be no logs (or minimal logs)
+        resp = self.forced_auth_req('get', url, user=self.user)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        # Verify response structure always has pagination keys
+        self.assertIn('count', resp.data)
+        self.assertIn('next', resp.data)
+        self.assertIn('previous', resp.data)
+        self.assertIn('results', resp.data)
+
+        initial_count = len(resp.data['results'])
+
+        # Create a log entry directly
+        log_change(
+            user=self.user,
+            obj=self.pd,
+            change_message="Test log entry for programme document",
+        )
+
+        # Now check logs again
+        resp = self.forced_auth_req('get', url, user=self.user)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        # Verify response structure
+        self.assertIn('count', resp.data)
+        self.assertIn('next', resp.data)
+        self.assertIn('previous', resp.data)
+        self.assertIn('results', resp.data)
+
+        logs = resp.data['results']
+        self.assertGreater(len(logs), initial_count)
+        log_entry = logs[0]  # Most recent log
+
+        # Verify log entry has required fields
+        self.assertIn('id', log_entry)
+        self.assertIn('action_time', log_entry)
+        self.assertIn('user', log_entry)
+        self.assertIn('action_flag', log_entry)
+        self.assertIn('action_flag_display', log_entry)
+        self.assertIn('change_message', log_entry)
+        self.assertIn('content_type_display', log_entry)
+        self.assertIn('object_id', log_entry)
+        self.assertIn('object_repr', log_entry)
+
+    def test_programme_document_logs_creates_entry_via_log_change(self):
+        """Test that log_change utility creates a log entry for programme documents"""
+        from etools.applications.rss_admin.admin_logging import log_change
+
+        content_type = ContentType.objects.get_for_model(Intervention)
+
+        # Count initial log entries
+        initial_logs = LogEntry.objects.filter(
+            content_type=content_type,
+            object_id=str(self.pd.pk)
+        ).count()
+
+        # Create a log entry
+        log_change(
+            user=self.user,
+            obj=self.pd,
+            changed_fields={'title': ('Old Title', 'New Title')},
+        )
+
+        # Verify a log entry was created
+        new_logs = LogEntry.objects.filter(
+            content_type=content_type,
+            object_id=str(self.pd.pk)
+        ).count()
+        self.assertGreater(new_logs, initial_logs)
+
+        # Verify the log entry has correct information
+        log_entry = LogEntry.objects.filter(
+            content_type=content_type,
+            object_id=str(self.pd.pk)
+        ).order_by('-action_time').first()
+
+        self.assertIsNotNone(log_entry)
+        self.assertEqual(log_entry.user, self.user)
+        self.assertEqual(log_entry.action_flag, CHANGE)
+
+    def test_programme_document_logs_pagination(self):
+        """Test that programme document logs endpoint supports pagination"""
+        from etools.applications.rss_admin.admin_logging import log_change
+
+        url = reverse('rss_admin:rss-admin-programme-documents-logs', kwargs={'pk': self.pd.pk})
+
+        # Create multiple log entries directly
+        for i in range(3):
+            log_change(
+                user=self.user,
+                obj=self.pd,
+                change_message=f"Test log entry {i}",
+            )
+
+        # Request with pagination
+        resp = self.forced_auth_req('get', url, user=self.user, data={'page': 1, 'page_size': 2})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        # Should have pagination structure
+        self.assertIn('count', resp.data)
+        self.assertIn('next', resp.data)
+        self.assertIn('previous', resp.data)
+        self.assertIn('results', resp.data)
+        self.assertLessEqual(len(resp.data['results']), 2)
