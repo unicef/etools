@@ -1,3 +1,4 @@
+from datetime import date, timedelta
 from io import BytesIO
 
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -209,8 +210,6 @@ class TestRssAdminFieldMonitoringApi(BaseTenantTestCase):
 
     def test_monitoring_activities_list_filter_by_date_range(self):
         """Test filtering by date range"""
-        from datetime import date, timedelta
-
         today = date.today()
         past_date = today - timedelta(days=30)
         future_date = today + timedelta(days=30)
@@ -241,8 +240,6 @@ class TestRssAdminFieldMonitoringApi(BaseTenantTestCase):
 
     def test_monitoring_activities_list_ordering(self):
         """Test ordering functionality"""
-        from datetime import date, timedelta
-
         today = date.today()
         activity1 = MonitoringActivityFactory(start_date=today - timedelta(days=2))
         activity2 = MonitoringActivityFactory(start_date=today - timedelta(days=1))
@@ -370,8 +367,6 @@ class TestRssAdminFieldMonitoringApi(BaseTenantTestCase):
 
     def test_monitoring_activities_combined_filters(self):
         """Test combining multiple filters"""
-        from datetime import date, timedelta
-
         today = date.today()
         location = LocationFactory()
         partner = PartnerFactory()

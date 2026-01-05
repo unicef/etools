@@ -1,14 +1,15 @@
-from datetime import timedelta
+from datetime import date, timedelta
 
 from django.contrib.admin.models import CHANGE, LogEntry
 from django.contrib.contenttypes.models import ContentType
 from django.db import connection
 from django.test import override_settings
-from django.urls import reverse
+from django.urls import NoReverseMatch, reverse
 from django.utils import timezone
 
 import mock
 from rest_framework import status
+from unicef_attachments.models import Attachment, FileType
 from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.action_points.models import ActionPoint
@@ -24,7 +25,7 @@ from etools.applications.audit.tests.factories import (
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory, FundsReservationItemFactory
 from etools.applications.organizations.tests.factories import OrganizationFactory
-from etools.applications.partners.models import Agreement, Intervention
+from etools.applications.partners.models import Agreement, Intervention, PartnerOrganization
 from etools.applications.partners.tests.factories import AgreementFactory, InterventionFactory, PartnerFactory
 from etools.applications.reports.tests.factories import (
     CountryProgrammeFactory,
@@ -32,6 +33,8 @@ from etools.applications.reports.tests.factories import (
     ReportingRequirementFactory,
     SectionFactory,
 )
+from etools.applications.rss_admin.admin_logging import log_change
+from etools.applications.rss_admin.views import EngagementAttachmentsRssViewSet, ReportAttachmentsRssViewSet
 from etools.applications.users.tests.factories import GroupFactory, RealmFactory, UserFactory
 from etools.libraries.djangolib.fields import CURRENCY_LIST
 
@@ -140,8 +143,6 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
 
     def test_filter_partners_by_sea_risk_rating(self):
         """Test filtering partners by PSEA risk rating."""
-        from etools.applications.partners.models import PartnerOrganization
-
         # Create partners with different PSEA risk ratings
         partner_high_risk = PartnerFactory(sea_risk_rating_name=PartnerOrganization.PSEA_RATING_HIGH)
         partner_medium_risk = PartnerFactory(sea_risk_rating_name=PartnerOrganization.PSEA_RATING_MEDIUM)
@@ -161,8 +162,6 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
 
     def test_filter_partners_by_psea_assessment_date_before(self):
         """Test filtering partners by PSEA assessment date before a specific date."""
-        from datetime import timedelta
-
         today = timezone.now()
         past_date = today - timedelta(days=60)
         recent_date = today - timedelta(days=30)
@@ -187,8 +186,6 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
 
     def test_filter_partners_by_psea_assessment_date_after(self):
         """Test filtering partners by PSEA assessment date after a specific date."""
-        from datetime import timedelta
-
         today = timezone.now()
         past_date = today - timedelta(days=60)
         recent_date = today - timedelta(days=30)
@@ -420,8 +417,6 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
 
     def test_filter_programme_documents_by_date_ranges(self):
         """Test date filters: start (starts after), end (ends before), end_after (ends after)"""
-        from datetime import date, timedelta
-
         today = date.today()
         past = today - timedelta(days=365)
         future = today + timedelta(days=365)
@@ -665,8 +660,6 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
 
     def test_agreement_invalid_transition_does_not_persist_status(self):
         """Agreement: invalid transition to signed should not persist status change."""
-        from datetime import date, timedelta
-
         # Make agreement invalid for transition to signed (start date in future and no end date)
         self.agreement.status = 'draft'
         self.agreement.start = date.today() + timedelta(days=10)
@@ -774,8 +767,6 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
 
     def test_filter_agreements_by_start_and_end_dates(self):
         """Test filtering agreements by start and end dates."""
-        from datetime import timedelta
-
         today = timezone.now().date()
         date_2020_01_01 = today - timedelta(days=365)
         date_2020_06_01 = today - timedelta(days=180)
@@ -1632,8 +1623,6 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
 
     def test_engagement_attachments_reject_attachment_without_file(self):
         """RSS Admin: PATCH engagements/{id}/attachments rejects attachments that lack an uploaded file."""
-        from unicef_attachments.models import Attachment
-
         e = EngagementFactory()
         url = reverse('rss_admin:rss-admin-engagements-attachments', kwargs={'pk': e.pk})
 
@@ -1651,10 +1640,6 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
 
     def test_engagement_attachments_list_excludes_fileless_attachments(self):
         """RSS Admin: GET engagement-attachments list excludes attachments without files."""
-        from django.contrib.contenttypes.models import ContentType
-
-        from unicef_attachments.models import Attachment, FileType
-
         # Create an engagement
         audit = AuditFactory()
         ct = ContentType.objects.get_for_model(audit._meta.model)
@@ -1708,12 +1693,6 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
 
     def test_engagement_attachments_viewset_queryset_filters_correctly(self):
         """RSS Admin: Engagement attachments ViewSet queryset correctly filters by code."""
-        from django.contrib.contenttypes.models import ContentType
-
-        from unicef_attachments.models import Attachment, FileType
-
-        from etools.applications.rss_admin.views import EngagementAttachmentsRssViewSet
-
         audit = AuditFactory()
         ct = ContentType.objects.get_for_model(audit._meta.model)
 
@@ -1767,12 +1746,6 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
 
     def test_report_attachments_viewset_queryset_filters_correctly(self):
         """RSS Admin: Report attachments ViewSet queryset correctly filters by code."""
-        from django.contrib.contenttypes.models import ContentType
-
-        from unicef_attachments.models import Attachment, FileType
-
-        from etools.applications.rss_admin.views import ReportAttachmentsRssViewSet
-
         audit = AuditFactory()
         ct = ContentType.objects.get_for_model(audit._meta.model)
 
@@ -1826,10 +1799,6 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
 
     def test_report_attachments_list_excludes_fileless_attachments(self):
         """RSS Admin: GET report-attachments list excludes attachments without files."""
-        from django.contrib.contenttypes.models import ContentType
-
-        from unicef_attachments.models import Attachment, FileType
-
         # Create an engagement
         audit = AuditFactory()
         ct = ContentType.objects.get_for_model(audit._meta.model)
@@ -1883,8 +1852,6 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
 
     def test_attachment_endpoints_are_registered(self):
         """RSS Admin: Attachment endpoints are properly registered in URLconf."""
-        from django.urls import NoReverseMatch, reverse
-
         audit = AuditFactory()
 
         # Verify both URL patterns are registered
@@ -2006,7 +1973,6 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         resp = self.forced_auth_req('post', url, user=self.user, data={'vendor_number': org.vendor_number})
         self.assertEqual(resp.status_code, status.HTTP_201_CREATED, resp.data)
         # PartnerOrganization now exists in this tenant for the organization
-        from etools.applications.partners.models import PartnerOrganization
         self.assertTrue(PartnerOrganization.objects.filter(organization=org).exists())
 
     def test_map_partner_to_workspace_idempotent(self):
@@ -2026,7 +1992,6 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         payload = {'vendor_number': org.vendor_number, 'lead_office': office.id, 'lead_section': section.id}
         resp = self.forced_auth_req('post', url, user=self.user, data=payload)
         self.assertIn(resp.status_code, (status.HTTP_201_CREATED, status.HTTP_200_OK))
-        from etools.applications.partners.models import PartnerOrganization
         partner = PartnerOrganization.objects.get(organization=org)
         self.assertEqual(partner.lead_office_id, office.id)
         self.assertEqual(partner.lead_section_id, section.id)
@@ -2170,8 +2135,6 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
 
     def test_agreement_logs_endpoint(self):
         """Test that agreement logs endpoint returns log entries"""
-        from etools.applications.rss_admin.admin_logging import log_change
-
         url = reverse('rss_admin:rss-admin-agreements-logs', kwargs={'pk': self.agreement.pk})
 
         # Initially, there should be no logs (or minimal logs)
@@ -2220,8 +2183,6 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
 
     def test_agreement_logs_creates_entry_via_log_change(self):
         """Test that log_change utility creates a log entry for agreements"""
-        from etools.applications.rss_admin.admin_logging import log_change
-
         content_type = ContentType.objects.get_for_model(Agreement)
 
         # Count initial log entries
@@ -2256,8 +2217,6 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
 
     def test_programme_document_logs_endpoint(self):
         """Test that programme document logs endpoint returns log entries"""
-        from etools.applications.rss_admin.admin_logging import log_change
-
         url = reverse('rss_admin:rss-admin-programme-documents-logs', kwargs={'pk': self.pd.pk})
 
         # Initially, there should be no logs (or minimal logs)
@@ -2306,8 +2265,6 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
 
     def test_programme_document_logs_creates_entry_via_log_change(self):
         """Test that log_change utility creates a log entry for programme documents"""
-        from etools.applications.rss_admin.admin_logging import log_change
-
         content_type = ContentType.objects.get_for_model(Intervention)
 
         # Count initial log entries
@@ -2342,8 +2299,6 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
 
     def test_programme_document_logs_pagination(self):
         """Test that programme document logs endpoint supports pagination"""
-        from etools.applications.rss_admin.admin_logging import log_change
-
         url = reverse('rss_admin:rss-admin-programme-documents-logs', kwargs={'pk': self.pd.pk})
 
         # Create multiple log entries directly

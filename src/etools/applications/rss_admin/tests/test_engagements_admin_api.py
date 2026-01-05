@@ -1,3 +1,4 @@
+from datetime import date
 from unittest import mock
 
 from django.contrib.admin.models import CHANGE, LogEntry
@@ -147,7 +148,6 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
 
     def test_engagement_patch_complex_fields(self):
         """Test that PATCH persists complex engagement fields like those in the curl example"""
-        from datetime import date
         audit = AuditFactory(status=Engagement.STATUSES.partner_contacted)
 
         url = reverse('rss_admin:rss-admin-engagements-detail', kwargs={'pk': audit.pk})
@@ -275,7 +275,6 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
 
     def test_engagement_patch_status_triggers_fsm_submit(self):
         """Test that changing status via PATCH triggers FSM submit transition"""
-        from datetime import date
         audit = AuditFactory(
             status=Engagement.STATUSES.partner_contacted,
             date_of_field_visit=date(2024, 1, 15),
@@ -395,7 +394,6 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
 
     def test_engagement_patch_status_with_other_fields(self):
         """Test that status change can be combined with other field updates"""
-        from datetime import date
         audit = AuditFactory(
             status=Engagement.STATUSES.partner_contacted,
             total_value=1000,
@@ -454,7 +452,6 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
 
     def test_engagement_patch_persistence_across_requests(self):
         """Test that PATCH changes persist when retrieving the engagement again"""
-        from datetime import date
         audit = AuditFactory(
             status=Engagement.STATUSES.partner_contacted,
             total_value=100.00,

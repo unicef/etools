@@ -1,6 +1,7 @@
 import copy
 
-# Field Monitoring imports for new features
+from django.contrib.admin.models import LogEntry
+from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import connection, transaction
 from django.db.models import Count, Prefetch
@@ -29,7 +30,10 @@ from etools.applications.field_monitoring.data_collection.models import (
     Finding,
 )
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
-from etools.applications.field_monitoring.planning.serializers import MonitoringActivitySerializer
+from etools.applications.field_monitoring.planning.serializers import (
+    MonitoringActivityLightSerializer,
+    MonitoringActivitySerializer,
+)
 from etools.applications.funds.models import FundsReservationHeader
 from etools.applications.partners.filters import (
     InterventionEditableByFilter,
@@ -46,7 +50,7 @@ from etools.applications.partners.tasks import send_pd_to_vision
 from etools.applications.partners.utils import send_agreement_suspended_notification
 from etools.applications.permissions2.conditions import ObjectStatusCondition
 from etools.applications.permissions2.views import PermittedSerializerMixin
-from etools.applications.rss_admin.admin_logging import get_changed_fields, log_change
+from etools.applications.rss_admin.admin_logging import extract_requested_changes, get_changed_fields, log_change
 from etools.applications.rss_admin.importers import LocationSiteImporter
 from etools.applications.rss_admin.permissions import IsRssAdmin
 from etools.applications.rss_admin.serializers import (
@@ -78,6 +82,39 @@ from etools.applications.utils.helpers import generate_hash
 from etools.applications.utils.pagination import AppendablePageNumberPagination
 from etools.libraries.djangolib.fields import CURRENCY_LIST
 from etools.libraries.djangolib.views import FilterQueryMixin
+
+
+class AdminLogEntriesMixin:
+    """Helpers for @action(detail=True) admin logs endpoints.
+
+    Notes:
+    - Some viewsets use `AppendablePageNumberPagination` which disables pagination unless `?page=` is provided.
+      To keep the API response stable, we return a paginated-shaped payload even when pagination is not applied.
+    """
+
+    def _get_admin_log_entries(self, obj):
+        if hasattr(obj, 'get_subclass'):
+            obj = obj.get_subclass()
+
+        content_type = ContentType.objects.get_for_model(obj.__class__)
+        return LogEntry.objects.filter(
+            content_type=content_type,
+            object_id=str(obj.pk),
+        ).select_related('user', 'content_type').order_by('-action_time')
+
+    def _paginate_and_respond_consistently(self, queryset, serializer_class):
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = serializer_class(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = serializer_class(queryset, many=True)
+        return Response({
+            'count': queryset.count(),
+            'next': None,
+            'previous': None,
+            'results': serializer.data,
+        })
 
 
 class PartnerOrganizationRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet, FilterQueryMixin):
@@ -147,7 +184,7 @@ class PartnerOrganizationRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSe
         return Response(PartnerOrganizationRssSerializer(partner, context={'request': request}).data, status=status_code)
 
 
-class AgreementRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet, FilterQueryMixin):
+class AgreementRssViewSet(AdminLogEntriesMixin, QueryStringFilterMixin, viewsets.ModelViewSet, FilterQueryMixin):
     queryset = Agreement.objects.all()
     serializer_class = AgreementRssSerializer
     permission_classes = (IsRssAdmin,)
@@ -213,35 +250,11 @@ class AgreementRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet, FilterQ
             "results": [<log_entries>]
         }
         """
-        from django.contrib.admin.models import LogEntry
-        from django.contrib.contenttypes.models import ContentType
-
-        agreement = self.get_object()
-        content_type = ContentType.objects.get_for_model(agreement.__class__)
-
-        # Get all log entries for this agreement
-        log_entries = LogEntry.objects.filter(
-            content_type=content_type,
-            object_id=str(agreement.pk)
-        ).select_related('user', 'content_type').order_by('-action_time')
-
-        # Apply pagination
-        page = self.paginate_queryset(log_entries)
-        if page is not None:
-            serializer = LogEntrySerializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-
-        # Return consistent structure even without pagination
-        serializer = LogEntrySerializer(log_entries, many=True)
-        return Response({
-            'count': log_entries.count(),
-            'next': None,
-            'previous': None,
-            'results': serializer.data,
-        })
+        log_entries = self._get_admin_log_entries(self.get_object())
+        return self._paginate_and_respond_consistently(log_entries, LogEntrySerializer)
 
 
-class ProgrammeDocumentRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet, FilterQueryMixin):
+class ProgrammeDocumentRssViewSet(AdminLogEntriesMixin, QueryStringFilterMixin, viewsets.ModelViewSet, FilterQueryMixin):
     queryset = Intervention.objects.all()
     serializer_class = InterventionListSerializer
     permission_classes = (IsRssAdmin,)
@@ -262,7 +275,7 @@ class ProgrammeDocumentRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet,
     )
     ordering_fields = (
         'number', 'document_type', 'status', 'title', 'start', 'end',
-        'agreement__partner__organization__name'  # Can also use ?ordering=partner_name via PartnerNameOrderingFilter
+        'agreement__partner__organization__name'
     )
 
     filters = (
@@ -448,35 +461,12 @@ class ProgrammeDocumentRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet,
             "results": [<log_entries>]
         }
         """
-        from django.contrib.admin.models import LogEntry
-        from django.contrib.contenttypes.models import ContentType
-
-        intervention = self.get_object()
-        content_type = ContentType.objects.get_for_model(intervention.__class__)
-
-        # Get all log entries for this intervention
-        log_entries = LogEntry.objects.filter(
-            content_type=content_type,
-            object_id=str(intervention.pk)
-        ).select_related('user', 'content_type').order_by('-action_time')
-
-        # Apply pagination
-        page = self.paginate_queryset(log_entries)
-        if page is not None:
-            serializer = LogEntrySerializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-
-        # Return consistent structure even without pagination
-        serializer = LogEntrySerializer(log_entries, many=True)
-        return Response({
-            'count': log_entries.count(),
-            'next': None,
-            'previous': None,
-            'results': serializer.data,
-        })
+        log_entries = self._get_admin_log_entries(self.get_object())
+        return self._paginate_and_respond_consistently(log_entries, LogEntrySerializer)
 
 
-class EngagementRssViewSet(PermittedSerializerMixin,
+class EngagementRssViewSet(AdminLogEntriesMixin,
+                           PermittedSerializerMixin,
                            mixins.ListModelMixin,
                            mixins.RetrieveModelMixin,
                            mixins.UpdateModelMixin,
@@ -595,6 +585,12 @@ class EngagementRssViewSet(PermittedSerializerMixin,
         else:
             old_instance = None
 
+        requested_changes = extract_requested_changes(
+            old_instance=old_instance,
+            request_data=self.request.data,
+            field_names={'total_value'},
+        )
+
         serializer.save()
 
         # Refresh the instance to get the updated state
@@ -603,6 +599,9 @@ class EngagementRssViewSet(PermittedSerializerMixin,
         # Log the changes if we had an existing instance
         if old_instance:
             changed_fields = get_changed_fields(old_instance, serializer.instance)
+            if requested_changes:
+                # Keep actual changes, but also include specific requested fields that are not persisted.
+                changed_fields = {**requested_changes, **changed_fields}
             if changed_fields:
                 log_change(
                     user=self.request.user,
@@ -728,35 +727,8 @@ class EngagementRssViewSet(PermittedSerializerMixin,
             "results": [<log_entries>]
         }
         """
-        from django.contrib.admin.models import LogEntry
-        from django.contrib.contenttypes.models import ContentType
-
-        engagement = self.get_object()
-        if hasattr(engagement, 'get_subclass'):
-            engagement = engagement.get_subclass()
-
-        content_type = ContentType.objects.get_for_model(engagement.__class__)
-
-        # Get all log entries for this engagement
-        log_entries = LogEntry.objects.filter(
-            content_type=content_type,
-            object_id=str(engagement.pk)
-        ).select_related('user', 'content_type').order_by('-action_time')
-
-        # Apply pagination
-        page = self.paginate_queryset(log_entries)
-        if page is not None:
-            serializer = LogEntrySerializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-
-        # Return consistent structure even without pagination
-        serializer = LogEntrySerializer(log_entries, many=True)
-        return Response({
-            'count': log_entries.count(),
-            'next': None,
-            'previous': None,
-            'results': serializer.data,
-        })
+        log_entries = self._get_admin_log_entries(self.get_object())
+        return self._paginate_and_respond_consistently(log_entries, LogEntrySerializer)
 
 
 class ActionPointRssViewSet(mixins.ListModelMixin,
@@ -898,7 +870,6 @@ class MonitoringActivityRssViewSet(viewsets.ModelViewSet):
     search_fields = ('number',)
 
     def get_serializer_class(self):
-        from etools.applications.field_monitoring.planning.serializers import MonitoringActivityLightSerializer
         if self.action == 'list':
             return MonitoringActivityLightSerializer
         return MonitoringActivitySerializer
@@ -1060,7 +1031,6 @@ class BaseRssAttachmentsViewSet(NestedViewSetMixin,
         if not parent:
             return {}
 
-        from django.contrib.contenttypes.models import ContentType
         if hasattr(parent, 'get_subclass'):
             parent = parent.get_subclass()
 

@@ -13,6 +13,47 @@ from django.db import models
 from django.utils.encoding import force_str
 
 
+def extract_requested_changes(
+    old_instance: models.Model,
+    request_data,
+    field_names: set[str] | list[str] | tuple[str, ...],
+) -> dict:
+    """Extract attempted field changes from request payload.
+
+    Why:
+    Some fields are intentionally not persisted by underlying serializers (eg derived totals),
+    but we still want the admin LogEntry to reflect what RSS Admin attempted to change.
+
+    Args:
+        old_instance: Model instance loaded from DB before save
+        request_data: DRF request.data (dict-like)
+        field_names: Iterable of field names to consider
+
+    Returns:
+        Dict mapping field name -> (old_value, requested_new_value)
+    """
+    requested_changes = {}
+    if not old_instance:
+        return requested_changes
+
+    for field_name in field_names:
+        if field_name not in request_data:
+            continue
+
+        old_value = getattr(old_instance, field_name, None)
+        raw_new_value = request_data.get(field_name)
+        try:
+            model_field = old_instance._meta.get_field(field_name)
+            new_value = model_field.to_python(raw_new_value)
+        except Exception:
+            new_value = raw_new_value
+
+        if old_value != new_value:
+            requested_changes[field_name] = (old_value, new_value)
+
+    return requested_changes
+
+
 def log_change(
     user,
     obj: models.Model,

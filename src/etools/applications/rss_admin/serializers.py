@@ -1,10 +1,12 @@
+import itertools
+
 from django.contrib.admin.models import ADDITION, CHANGE, DELETION, LogEntry
 from django.contrib.auth import get_user_model
 
 from rest_framework import serializers
 from unicef_attachments.fields import AttachmentSingleFileField
 from unicef_attachments.models import Attachment
-from unicef_attachments.serializers import AttachmentSerializerMixin
+from unicef_attachments.serializers import AttachmentSerializerMixin, BaseAttachmentSerializer
 from unicef_locations.serializers import LocationLightSerializer
 from unicef_restlib.fields import SeparatedReadWriteField
 from unicef_restlib.serializers import WritableNestedSerializerMixin
@@ -707,7 +709,6 @@ class ActivityOverallFindingRssSerializer(serializers.ModelSerializer):
 
     def _get_checklist_overall_findings(self, obj):
         """Get checklist overall findings for this activity context."""
-        import itertools
         return [
             finding
             for finding in itertools.chain(*(
@@ -723,9 +724,6 @@ class ActivityOverallFindingRssSerializer(serializers.ModelSerializer):
 
     def get_attachments(self, obj):
         """Extract attachments from checklists overall findings."""
-        import itertools
-
-        from unicef_attachments.serializers import BaseAttachmentSerializer
         attachments = itertools.chain(*(
             finding.attachments.all() for finding in self._get_checklist_overall_findings(obj)
         ))
@@ -739,7 +737,21 @@ class ActivityOverallFindingRssSerializer(serializers.ModelSerializer):
 
 class LogEntrySerializer(serializers.ModelSerializer):
     """Serializer for Django LogEntry model to display admin change logs."""
-    user = serializers.SerializerMethodField()
+    class LogEntryUserSerializer(serializers.ModelSerializer):
+        """Nested serializer for LogEntry.user (nullable)."""
+
+        class Meta:
+            model = get_user_model()
+            fields = (
+                'id',
+                'username',
+                'email',
+                'first_name',
+                'last_name',
+            )
+            read_only_fields = fields
+
+    user = LogEntryUserSerializer(read_only=True, allow_null=True)
     action_flag_display = serializers.SerializerMethodField()
     content_type_display = serializers.SerializerMethodField()
 
@@ -757,18 +769,6 @@ class LogEntrySerializer(serializers.ModelSerializer):
             'object_repr',
         )
         read_only_fields = fields
-
-    def get_user(self, obj):
-        """Return user information."""
-        if obj.user:
-            return {
-                'id': obj.user.id,
-                'username': obj.user.username,
-                'email': getattr(obj.user, 'email', ''),
-                'first_name': getattr(obj.user, 'first_name', ''),
-                'last_name': getattr(obj.user, 'last_name', ''),
-            }
-        return None
 
     def get_action_flag_display(self, obj):
         """Return human-readable action flag."""
