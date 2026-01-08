@@ -2,13 +2,13 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
+# 
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-11-21 12:41+0000\n"
+"POT-Creation-Date: 2026-01-08 11:54+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -999,6 +999,9 @@ msgstr "Tipo de revisão da UNICEF"
 
 msgid "Capacity Development"
 msgstr "Desenvolvimento de capacidades"
+
+msgid "Accountability to Affected Populations (AAP)"
+msgstr "Prestação de contas às populações afetadas (AAP)"
 
 msgid "Other Info"
 msgstr "Outras informações"
