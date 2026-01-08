@@ -120,6 +120,9 @@ class UserQuerySet(models.QuerySet):
     def non_unicef_users(self):
         return self.exclude(email__endswith=settings.UNICEF_USER_EMAIL)
 
+    def only_unicef_users(self):
+        return self.filter(email__endswith=settings.UNICEF_USER_EMAIL)
+
     def with_points_of_interest(self):
         return self.filter(profile__organization__partner__points_of_interest__isnull=False)
 
