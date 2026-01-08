@@ -270,6 +270,7 @@ class InterventionPermissions(PMPPermissions):
                               "cash_transfer_modalities",
                               "unicef_review_type",
                               "capacity_development",
+                              "accountability_to_affected_populations",
                               "other_info",
                               "other_partners_involved",
                               "technical_guidance",
