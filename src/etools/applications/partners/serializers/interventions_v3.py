@@ -571,6 +571,7 @@ class InterventionDetailSerializer(
             "budget_owner",
             "cancel_justification",
             "capacity_development",
+            "accountability_to_affected_populations",
             "cash_transfer_modalities",
             "cfei_number",
             "cluster_names",

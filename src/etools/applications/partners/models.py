@@ -2112,6 +2112,11 @@ class Intervention(TimeStampedModel):
         blank=True,
         null=True,
     )
+    accountability_to_affected_populations = models.TextField(
+        verbose_name=_("Accountability to Affected Populations (AAP)"),
+        blank=True,
+        null=True,
+    )
     other_info = models.TextField(
         verbose_name=_("Other Info"),
         blank=True,

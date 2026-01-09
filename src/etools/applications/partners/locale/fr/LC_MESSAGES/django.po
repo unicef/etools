@@ -2,13 +2,13 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
+# 
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-11-21 12:41+0000\n"
+"POT-Creation-Date: 2026-01-08 11:54+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -990,6 +990,9 @@ msgstr "UNICEF Type d'examen"
 
 msgid "Capacity Development"
 msgstr "Développement des capacités"
+
+msgid "Accountability to Affected Populations (AAP)"
+msgstr "Redevabilité envers les populations affectées (AAP)"
 
 msgid "Other Info"
 msgstr "Autres informations"

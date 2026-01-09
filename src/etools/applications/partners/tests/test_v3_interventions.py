@@ -2117,6 +2117,7 @@ class TestInterventionUpdate(BaseInterventionTestCase):
         mapping = (
             ("technical_guidance", "Tech guidance"),
             ("capacity_development", "Capacity dev"),
+            ("accountability_to_affected_populations", "AAP"),
             ("other_partners_involved", "Other partners"),
             ("other_info", "Other info"),
         )
