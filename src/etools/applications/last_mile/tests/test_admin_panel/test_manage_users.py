@@ -844,3 +844,23 @@ class TestUsersViewSet(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_data = response.data
         self.assertEqual(len(response_data['results']), 1)  # Because we still have the approver_user
+
+    def test_get_users_only_unicef(self):
+        response = self.forced_auth_req('get', self.url, user=self.partner_staff, data={'onlyUnicefUsers': '1'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('count'), 1)
+        self.assertEqual(response.data.get('results')[0].get('email'), self.unicef_user.email)
+
+    def test_get_users_show_all_users(self):
+        response = self.forced_auth_req('get', self.url, user=self.partner_staff, data={'showAllUsers': '1'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('count'), 6)
+
+    def test_get_users_only_unicef_precedence_over_show_all(self):
+        response = self.forced_auth_req('get', self.url, user=self.partner_staff, data={
+            'showAllUsers': '1',
+            'onlyUnicefUsers': '1'
+        })
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('count'), 1)
+        self.assertEqual(response.data.get('results')[0].get('email'), self.unicef_user.email)
