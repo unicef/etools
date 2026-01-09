@@ -977,6 +977,59 @@ class TestVisionIngestTransfersApiView(BaseTenantTestCase):
         self.assertEqual(new_transfer.items.count(), 1)
         self.assertEqual(new_transfer.partner_organization, self.partner2)
 
+    def test_item_with_uom_ea_gets_conversion_factor_one(self):
+        payload = [
+            {
+                "Event": "LD",
+                "ReleaseOrder": "RO-EA-UOM",
+                "ImplementingPartner": "IP12345",
+                "MaterialNumber": "MAT-001",
+                "ReleaseOrderItem": "10",
+                "Quantity": 100,
+                "BatchNumber": "B-EA-TEST",
+                "UOM": "EA",
+                "ItemDescription": "Test item with EA UOM",
+            }
+        ]
+
+        response = self.forced_auth_req(
+            method="post", url=self.url, data=payload, user=self.api_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(models.Item.objects.count(), 1)
+
+        item = models.Item.objects.first()
+        self.assertEqual(item.uom, "EA")
+        self.assertEqual(item.conversion_factor, 1.0)
+
+    def test_item_with_uom_ea_and_batch_id_gets_conversion_factor_one(self):
+        payload = [
+            {
+                "Event": "LD",
+                "ReleaseOrder": "RO-EA-BATCH",
+                "ImplementingPartner": "IP12345",
+                "MaterialNumber": "MAT-001",
+                "ReleaseOrderItem": "20",
+                "Quantity": 50,
+                "BatchNumber": "BATCH-123",
+                "UOM": "EA",
+                "ItemDescription": "Test item with EA UOM and batch",
+            }
+        ]
+
+        response = self.forced_auth_req(
+            method="post", url=self.url, data=payload, user=self.api_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(models.Item.objects.count(), 1)
+
+        item = models.Item.objects.first()
+        self.assertEqual(item.uom, "EA")
+        self.assertEqual(item.conversion_factor, 1.0)
+        self.assertIsNotNone(item.batch_id)
+
 
 class TestVisionIngestMaterialsApiView(BaseTenantTestCase):
 

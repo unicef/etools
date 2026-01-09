@@ -272,6 +272,9 @@ class TransferIngestService:
                 if item_data.get('uom') == material.original_uom:
                     item_data.pop('uom', None)
 
+                if item_data.get('uom') == "EA":
+                    item_data['conversion_factor'] = 1.0
+
                 if not item_data.get('batch_id'):
                     item_data['conversion_factor'] = 1.0
                     item_data['uom'] = "EA"

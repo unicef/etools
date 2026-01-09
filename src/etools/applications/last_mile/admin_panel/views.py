@@ -148,7 +148,10 @@ class UserViewSet(ExportMixin,
             queryset = queryset.without_points_of_interest()
 
         show_all_users = self.request.query_params.get('showAllUsers')
-        if show_all_users != "1":
+        only_unicef_users = self.request.query_params.get('onlyUnicefUsers')
+        if only_unicef_users == "1":
+            queryset = queryset.only_unicef_users()
+        if show_all_users != "1" and not only_unicef_users == "1":
             queryset = queryset.non_unicef_users()
 
         queryset = queryset.without_rejected()
