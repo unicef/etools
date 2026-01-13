@@ -1,6 +1,7 @@
 from datetime import date
 
 from django.db import connection
+from django.db.models import Q
 from django.db.models.functions import TruncYear
 
 from django_filters import rest_framework as filters
@@ -79,8 +80,6 @@ class UserTPMPartnerFilter(BaseFilterBackend):
 
 class UserNameFilter(BaseFilterBackend):
     def filter_queryset(self, request, queryset, view):
-        from django.db.models import Q
-        
         with_name = request.query_params.get('with_name', '').lower()
         if with_name != 'true':
             return queryset
