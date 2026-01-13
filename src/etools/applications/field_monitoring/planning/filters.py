@@ -77,6 +77,20 @@ class UserTPMPartnerFilter(BaseFilterBackend):
         ).distinct()
 
 
+class UserNameFilter(BaseFilterBackend):
+    def filter_queryset(self, request, queryset, view):
+        from django.db.models import Q
+        
+        with_name = request.query_params.get('with_name', '').lower()
+        if with_name != 'true':
+            return queryset
+
+        return queryset.filter(
+            Q(first_name__isnull=False, first_name__gt='') |
+            Q(last_name__isnull=False, last_name__gt='')
+        )
+
+
 class CPOutputsFilterSet(filters.FilterSet):
     partners__in = filters.BaseInFilter(
         field_name='intervention_links__intervention__agreement__partner', distinct=True
