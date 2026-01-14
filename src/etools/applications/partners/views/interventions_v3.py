@@ -581,7 +581,7 @@ class InterventionActivityViewMixin(DetailedInterventionResponseMixin):
 
     def get_root_object(self):
         return Intervention.objects.prefetch_related(
-            'frs', 'frs__fr_items', 'flat_locations', 'sites','planned_visits__sites').filter(
+            'frs', 'frs__fr_items', 'flat_locations', 'sites', 'planned_visits__sites').filter(
             pk=self.kwargs.get('intervention_pk'),
         ).first()
 
