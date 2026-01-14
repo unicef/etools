@@ -48,6 +48,46 @@ class TestLocationViews(BaseTenantTestCase):
                     location.p_code,
                 ))
 
+    def test_api_location_light_list_is_active_filter(self):
+        inactive_location = LocationFactory(is_active=False)
+
+        # Retrieve all
+        response = self.forced_auth_req('get', reverse('locations-light-list'), user=self.unicef_staff)
+        self.locations.append(inactive_location)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(sorted(response.data[0].keys()), ['admin_level', 'admin_level_name', "id", "is_active", "name", "name_display", "p_code", "parent"])
+        self.assertEqual(response.data.__len__(), self.locations.__len__())
+
+        # Retrieve active only
+        response = self.forced_auth_req(
+            'get', reverse('locations-light-list'), data={'is_active': True}, user=self.unicef_staff)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.__len__(), self.locations.__len__() - 1)
+
+        # Retrieve inactive
+        response = self.forced_auth_req(
+            'get', reverse('locations-light-list'), data={'is_active': False}, user=self.unicef_staff)
+        self.locations.append(inactive_location)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.__len__(), 1)
+
+    def test_api_location_light_search(self):
+        location = LocationFactory(name='Test new place', p_code='11AFG')
+
+        # Search partial name
+        response = self.forced_auth_req(
+            'get', reverse('locations-light-list'), data={'search': 'place'}, user=self.unicef_staff)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.__len__(), 1)
+        self.assertEqual(response.data[0]['id'], location.id.__str__())
+
+        # Search partial p_code
+        response = self.forced_auth_req(
+            'get', reverse('locations-light-list'), data={'search': '11A'}, user=self.unicef_staff)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.__len__(), 1)
+        self.assertEqual(response.data[0]['id'], location.id.__str__())
+
     def test_api_location_heavy_list(self):
         response = self.forced_auth_req('get', reverse('locations-list'), user=self.unicef_staff)
 
