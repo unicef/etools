@@ -6,6 +6,7 @@ from django.views.decorators.cache import cache_control, cache_page
 
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import permissions
+from rest_framework.filters import SearchFilter
 from rest_framework.request import Request
 from unicef_locations import views
 from unicef_locations.cache import etag_cached, get_cache_version
@@ -34,8 +35,9 @@ class LocationsLightViewSet(views.LocationsLightViewSet):
     # TODO: check user filter?
     serializer_class = LocationLightWithActiveSerializer
     pagination_class = AppendablePageNumberPagination
-    filter_backends = (DjangoFilterBackend, )
+    filter_backends = (DjangoFilterBackend, SearchFilter)
     filterset_fields = ('is_active', )
+    search_fields = ('name', 'p_code')
 
     @method_decorator(cache_control(
         max_age=0,  # enable cache yet automatically treat all cached data as stale to request backend every time
