@@ -6,11 +6,11 @@ from django.contrib.contenttypes.models import ContentType
 from django.test import override_settings
 from django.urls import reverse
 
-from rest_framework import status
+from rest_framework import serializers, status
 
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
-from etools.applications.audit.models import Engagement
-from etools.applications.audit.tests.factories import AuditFactory, SpotCheckFactory, StaffSpotCheckFactory
+from etools.applications.audit.models import Engagement, Finding
+from etools.applications.audit.tests.factories import AuditFactory, FindingFactory, SpotCheckFactory, StaffSpotCheckFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.users.tests.factories import UserFactory
 
@@ -536,6 +536,79 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
         self.assertIsInstance(resp.data['cancel_comment'], list, "Error should be a list")
         self.assertTrue(len(resp.data['cancel_comment']) > 0)
         self.assertIn('required', resp.data['cancel_comment'][0])
+
+        # Test 4: Transition checks should return a clean, user-friendly message
+        sc = SpotCheckFactory(status=Engagement.STATUSES.report_submitted)
+        FindingFactory(spot_check=sc, priority=Finding.PRIORITIES.high)
+        sc_url = reverse('rss_admin:rss-admin-engagements-detail', kwargs={'pk': sc.pk})
+        payload = {'status': Engagement.STATUSES.final}
+        resp = self.forced_auth_req('patch', sc_url, user=self.user, data=payload)
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST, resp.data)
+        self.assertIn('status', resp.data)
+        self.assertIsInstance(resp.data['status'], list, "Error should be a list")
+        self.assertTrue(len(resp.data['status']) > 0)
+        self.assertIn('Unable to change status', resp.data['status'][0])
+        self.assertIn('High-priority findings require at least one open high-priority Action Point', resp.data['status'][0])
+        # Ensure raw DRF internals are not leaked in the message
+        self.assertNotIn('ErrorDetail', resp.data['status'][0])
+
+    def test_engagement_patch_status_transition_error_messages_are_user_friendly(self):
+        """Transition failures should not leak DRF ErrorDetail(...) internals and should be concise."""
+        sc = SpotCheckFactory(status=Engagement.STATUSES.report_submitted)
+        url = reverse('rss_admin:rss-admin-engagements-detail', kwargs={'pk': sc.pk})
+
+        # Case 1: ValidationError with dict + action_points key
+        with mock.patch.object(
+            sc.__class__,
+            'finalize',
+            autospec=True,
+            side_effect=serializers.ValidationError({'action_points': ['Must create a high priority action point']})
+        ):
+            resp = self.forced_auth_req('patch', url, user=self.user, data={'status': Engagement.STATUSES.final})
+            self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST, resp.data)
+            self.assertIn('status', resp.data)
+            self.assertIn('Unable to change status', resp.data['status'][0])
+            self.assertIn('Must create a high priority action point', resp.data['status'][0])
+            self.assertNotIn('ErrorDetail', resp.data['status'][0])
+
+        # Case 2: ValidationError with dict (other keys) should be flattened
+        with mock.patch.object(
+            sc.__class__,
+            'finalize',
+            autospec=True,
+            side_effect=serializers.ValidationError({'some_field': ['Some failure'], 'other_field': 'Other failure'})
+        ):
+            resp = self.forced_auth_req('patch', url, user=self.user, data={'status': Engagement.STATUSES.final})
+            self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST, resp.data)
+            msg = resp.data['status'][0]
+            self.assertIn('Unable to change status', msg)
+            self.assertIn('some field: Some failure', msg)
+            self.assertIn('other field: Other failure', msg)
+            self.assertNotIn('ErrorDetail', msg)
+
+        # Case 3: ValidationError with list should use first message
+        with mock.patch.object(
+            sc.__class__,
+            'finalize',
+            autospec=True,
+            side_effect=serializers.ValidationError(['Boom'])
+        ):
+            resp = self.forced_auth_req('patch', url, user=self.user, data={'status': Engagement.STATUSES.final})
+            self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST, resp.data)
+            self.assertIn('Unable to change status', resp.data['status'][0])
+            self.assertIn('Boom', resp.data['status'][0])
+
+        # Case 4: Generic exception should still be readable
+        with mock.patch.object(
+            sc.__class__,
+            'finalize',
+            autospec=True,
+            side_effect=Exception('Unexpected failure')
+        ):
+            resp = self.forced_auth_req('patch', url, user=self.user, data={'status': Engagement.STATUSES.final})
+            self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST, resp.data)
+            self.assertIn('Unable to change status', resp.data['status'][0])
+            self.assertIn('Unexpected failure', resp.data['status'][0])
 
     def test_engagement_attachments_include_filename(self):
         """Test that engagement and report attachment endpoints include filename field"""

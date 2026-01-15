@@ -254,6 +254,46 @@ class EngagementStatusUpdateMixin:
 
     def update(self, instance, validated_data):
         """Override update to handle status changes through FSM transitions."""
+        def _friendly_transition_error(exc: Exception) -> str:
+            """
+            Turn various validation/transition exceptions into a clean user-facing message.
+
+            RSS Admin previously used str(exc) which often includes internal DRF ErrorDetail(...) noise.
+
+            Ex : Field Status: Status transition failed: (action points: ErrorDetail(string='Action Points 
+            with High Priority to be opened if High Priority findings provided., code="invalid))
+
+            Will be returned as:
+            Field Status: Unable to change status. High-priority findings require at least one open high-priority Action Point.
+
+            """
+            # DRF ValidationError: prefer structured details
+            if isinstance(exc, serializers.ValidationError):
+                detail = getattr(exc, 'detail', None)
+                if isinstance(detail, dict) and detail:
+                    # Prefer the most common transition check key
+                    if 'action_points' in detail:
+                        msg = detail['action_points']
+                        # msg can be ErrorDetail or list; normalize
+                        if isinstance(msg, (list, tuple)) and msg:
+                            return str(msg[0])
+                        return str(msg)
+
+                    # Otherwise, join first message from each key for a concise summary
+                    parts = []
+                    for k, v in detail.items():
+                        if isinstance(v, (list, tuple)) and v:
+                            parts.append(f"{k.replace('_', ' ')}: {v[0]}")
+                        else:
+                            parts.append(f"{k.replace('_', ' ')}: {v}")
+                    return "; ".join(map(str, parts))
+
+                if isinstance(detail, (list, tuple)) and detail:
+                    return str(detail[0])
+
+            # Fallback: plain exception message
+            return str(exc) or "Unable to complete this status change."
+
         new_status = validated_data.get('status')
 
         # If status is being changed, route through FSM transition
@@ -317,7 +357,7 @@ class EngagementStatusUpdateMixin:
 
             except Exception as e:
                 raise serializers.ValidationError({
-                    'status': [f'Status transition failed: {str(e)}']
+                    'status': [f"Unable to change status. {_friendly_transition_error(e)}"]
                 })
 
             return instance
