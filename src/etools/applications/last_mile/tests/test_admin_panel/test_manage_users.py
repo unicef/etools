@@ -16,6 +16,7 @@ from etools.applications.last_mile.tests.factories import (
 )
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.tests.factories import PartnerFactory
+from etools.applications.users.models import Country, Realm
 from etools.applications.users.tests.factories import GroupFactory, SimpleUserFactory, UserPermissionFactory
 
 
@@ -23,7 +24,8 @@ class TestUsersViewSet(BaseTenantTestCase):
 
     @classmethod
     def setUpTestData(cls):
-        cls.partner = PartnerFactory(organization=OrganizationFactory(name='Partner'))
+        cls.partner_organization = OrganizationFactory(name='Partner')
+        cls.partner = PartnerFactory(organization=cls.partner_organization)
         cls.organization = OrganizationFactory(name='Update Organization')
         cls.group = GroupFactory(name="IP LM Editor")
         cls.partner_staff = UserPermissionFactory(
@@ -267,15 +269,16 @@ class TestUsersViewSet(BaseTenantTestCase):
     def test_update_user(self):
         self.assertEqual(self.partner_staff.points_of_interest.count(), 0)
         url_with_param = self.url + f"{self.partner_staff.pk}/"
+
+        original_organization = self.partner_staff.profile.organization
+
         data = {
             'first_name': 'John',
             'last_name': 'Doe',
             'email': '2xk6x@example.com',
             'is_active': True,
             'point_of_interests': [self.active_location_2.id],
-            'profile': {
-                'organization': self.organization.id,
-            }
+            'organization': self.organization.id,
         }
         response = self.forced_auth_req('put', url_with_param, user=self.partner_staff, data=data)
         self.partner_staff.refresh_from_db()
@@ -288,20 +291,38 @@ class TestUsersViewSet(BaseTenantTestCase):
         self.assertEqual(self.partner_staff.profile.country.id, response.data.get('country'))
         self.assertEqual(self.partner_staff.points_of_interest.count(), 1)
 
+        self.assertNotEqual(original_organization.id, self.organization.id)
+        self.assertEqual(self.partner_staff.profile.organization.id, self.organization.id)
+        old_org_realms = Realm.objects.filter(user=self.partner_staff, organization=original_organization)
+        self.assertEqual(old_org_realms.count(), 0)
+        new_org_realms = Realm.objects.filter(user=self.partner_staff, organization=self.organization)
+        self.assertGreater(new_org_realms.count(), 0)
+
     def test_partial_update_user(self):
-        url_with_param = self.url + f"{self.partner_staff.pk}/"
+        test_user = UserPermissionFactory(
+            realms__data=['LMSM Admin Panel', 'IP LM Editor'],
+            profile__organization=self.partner.organization,
+            perms=[USER_ADMIN_PANEL_PERMISSION]
+        )
+
+        UserPointOfInterestFactory(user=test_user, point_of_interest=self.active_location_2)
+        UserPointOfInterestFactory(user=test_user, point_of_interest=self.active_location_3)
+        self.assertEqual(test_user.points_of_interest.count(), 2)
+
+        url_with_param = self.url + f"{test_user.pk}/"
         data = {
             'first_name': 'John',
             'last_name': 'Doe',
         }
-        response = self.forced_auth_req('patch', url_with_param, user=self.partner_staff, data=data)
-        self.partner_staff.refresh_from_db()
+        response = self.forced_auth_req('patch', url_with_param, user=test_user, data=data)
+        test_user.refresh_from_db()
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(self.partner_staff.first_name, response.data.get('first_name'))
-        self.assertEqual(self.partner_staff.last_name, response.data.get('last_name'))
-        self.assertEqual(self.partner_staff.email, response.data.get('email'))
-        self.assertEqual(self.partner_staff.is_active, response.data.get('is_active'))
-        self.assertEqual(self.partner_staff.profile.organization.id, response.data.get('organization'))
+        self.assertEqual(test_user.first_name, response.data.get('first_name'))
+        self.assertEqual(test_user.last_name, response.data.get('last_name'))
+        self.assertEqual(test_user.email, response.data.get('email'))
+        self.assertEqual(test_user.is_active, response.data.get('is_active'))
+        self.assertEqual(test_user.profile.organization.id, response.data.get('organization'))
+        self.assertEqual(test_user.points_of_interest.count(), 0)
 
     def test_update_user_location(self):
         url_with_param = self.url + f"{self.partner_staff.pk}/"
@@ -316,6 +337,9 @@ class TestUsersViewSet(BaseTenantTestCase):
         url_with_param = self.url + f"{self.partner_staff.pk}/"
         data = {
             'point_of_interests': [],
+            'profile': {
+                'organization': self.partner_organization.id,
+            }
         }
         response = self.forced_auth_req('patch', url_with_param, user=self.partner_staff, data=data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -325,6 +349,9 @@ class TestUsersViewSet(BaseTenantTestCase):
         url_with_param = self.url + f"{self.partner_staff.pk}/"
         data = {
             'point_of_interests': [self.active_location_3.id, self.active_location_2.id],
+            'profile': {
+                'organization': self.partner_organization.id,
+            }
         }
         response = self.forced_auth_req('patch', url_with_param, user=self.partner_staff, data=data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -334,6 +361,9 @@ class TestUsersViewSet(BaseTenantTestCase):
         url_with_param = self.url + f"{self.partner_staff.pk}/"
         data = {
             'point_of_interests': [self.active_location_1.id],
+            'profile': {
+                'organization': self.partner_organization.id,
+            }
         }
         response = self.forced_auth_req('patch', url_with_param, user=self.partner_staff, data=data)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -343,6 +373,9 @@ class TestUsersViewSet(BaseTenantTestCase):
         url_with_param = self.url + f"{self.partner_staff.pk}/"
         data = {
             'point_of_interests': [self.active_location_2.id],
+            'profile': {
+                'organization': self.partner_organization.id,
+            }
         }
         response = self.forced_auth_req('patch', url_with_param, user=self.partner_staff, data=data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -350,6 +383,9 @@ class TestUsersViewSet(BaseTenantTestCase):
 
         data = {
             'point_of_interests': [self.active_location_2.id, self.active_location_3.id],
+            'profile': {
+                'organization': self.partner_organization.id,
+            }
         }
         response = self.forced_auth_req('patch', url_with_param, user=self.partner_staff, data=data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -359,6 +395,9 @@ class TestUsersViewSet(BaseTenantTestCase):
         url_with_param = self.url + f"{self.partner_staff.pk}/"
         data = {
             'point_of_interests': [self.active_location_2.id],
+            'profile': {
+                'organization': self.partner_organization.id,
+            }
         }
         response = self.forced_auth_req('patch', url_with_param, user=self.partner_staff, data=data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -367,6 +406,9 @@ class TestUsersViewSet(BaseTenantTestCase):
         url_with_param = self.url + f"{self.partner_staff_2.pk}/"
         data = {
             'point_of_interests': [self.active_location_2.id],
+            'profile': {
+                'organization': self.partner_organization.id,
+            }
         }
         response = self.forced_auth_req('patch', url_with_param, user=self.partner_staff_2, data=data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -376,6 +418,9 @@ class TestUsersViewSet(BaseTenantTestCase):
         url_with_param = self.url + f"{self.partner_staff.pk}/"
         data = {
             'point_of_interests': [99999],
+            'profile': {
+                'organization': self.partner_organization.id,
+            }
         }
         response = self.forced_auth_req('patch', url_with_param, user=self.partner_staff, data=data)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -696,6 +741,87 @@ class TestUsersViewSet(BaseTenantTestCase):
         self.assertEqual(self.active_location_2.users.all().count(), 2)
         self.assertEqual(self.active_location_3.users.all().count(), 1)
 
+    def test_update_user_organization_when_realm_exists(self):
+        url_with_param = self.url + f"{self.partner_staff.pk}/"
+
+        country = Country.objects.get(schema_name="test")
+
+        group = self.partner_staff.realms.first().group
+        Realm.objects.create(
+            user=self.partner_staff,
+            country=country,
+            organization=self.organization,
+            group=group,
+            is_active=False
+        )
+
+        original_organization = self.partner_staff.profile.organization
+        realm_count_before = Realm.objects.filter(user=self.partner_staff).count()
+
+        data = {
+            'first_name': 'UpdatedName',
+            'organization': self.organization.id,
+        }
+        response = self.forced_auth_req('patch', url_with_param, user=self.partner_staff, data=data)
+        self.partner_staff.refresh_from_db()
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertEqual(self.partner_staff.profile.organization.id, self.organization.id)
+
+        realm_count_after = Realm.objects.filter(user=self.partner_staff).count()
+        self.assertEqual(realm_count_before, realm_count_after)
+
+        old_org_realms = Realm.objects.filter(user=self.partner_staff, organization=original_organization)
+        self.assertGreater(old_org_realms.count(), 0)
+
+    def test_update_user_organization_with_multiple_realms(self):
+        test_user = UserPermissionFactory(
+            realms__data=['LMSM Admin Panel', 'IP LM Editor'],
+            profile__organization=self.partner.organization,
+            perms=[USER_ADMIN_PANEL_PERMISSION]
+        )
+
+        url_with_param = self.url + f"{test_user.pk}/"
+
+        country = Country.objects.get(schema_name="test")
+
+        third_organization = OrganizationFactory(name='Third Organization')
+        group = test_user.realms.first().group
+        third_org_realm = Realm.objects.create(
+            user=test_user,
+            country=country,
+            organization=third_organization,
+            group=group,
+            is_active=True
+        )
+
+        original_organization = test_user.profile.organization
+        original_org_realm_count = Realm.objects.filter(
+            user=test_user,
+            organization=original_organization
+        ).count()
+
+        data = {
+            'first_name': 'UpdatedName',
+            'organization': self.organization.id,
+        }
+        response = self.forced_auth_req('patch', url_with_param, user=test_user, data=data)
+        test_user.refresh_from_db()
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertEqual(test_user.profile.organization.id, self.organization.id)
+
+        old_org_realms = Realm.objects.filter(user=test_user, organization=original_organization)
+        self.assertEqual(old_org_realms.count(), 0, "Old organization Realms should be updated to new organization")
+
+        new_org_realms = Realm.objects.filter(user=test_user, organization=self.organization)
+        self.assertEqual(new_org_realms.count(), original_org_realm_count, "All old org Realms should now belong to new org")
+
+        third_org_realm.refresh_from_db()
+        self.assertEqual(third_org_realm.organization.id, third_organization.id)
+        third_org_realms = Realm.objects.filter(user=test_user, organization=third_organization)
+        self.assertEqual(third_org_realms.count(), 1, "Third organization Realm should remain unchanged")
+
     def test_reject_users_and_no_return_rejected(self):
         get_user_model().objects.exclude(id=self.approver_user.id).delete()
         user_to_manage = UserPermissionFactory(
@@ -718,3 +844,23 @@ class TestUsersViewSet(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_data = response.data
         self.assertEqual(len(response_data['results']), 1)  # Because we still have the approver_user
+
+    def test_get_users_only_unicef(self):
+        response = self.forced_auth_req('get', self.url, user=self.partner_staff, data={'onlyUnicefUsers': '1'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('count'), 1)
+        self.assertEqual(response.data.get('results')[0].get('email'), self.unicef_user.email)
+
+    def test_get_users_show_all_users(self):
+        response = self.forced_auth_req('get', self.url, user=self.partner_staff, data={'showAllUsers': '1'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('count'), 6)
+
+    def test_get_users_only_unicef_precedence_over_show_all(self):
+        response = self.forced_auth_req('get', self.url, user=self.partner_staff, data={
+            'showAllUsers': '1',
+            'onlyUnicefUsers': '1'
+        })
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('count'), 1)
+        self.assertEqual(response.data.get('results')[0].get('email'), self.unicef_user.email)

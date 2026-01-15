@@ -138,7 +138,6 @@ class LocationWithSitesViewSet(FMBaseViewSet, mixins.ListModelMixin, viewsets.Ge
         is_active=True, sites__isnull=False, sites__is_active=True).prefetch_related('sites').order_by('name').distinct()
     serializer_class = LocationsWithSitesSerializer
     filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
-    filterset_fields = ('is_active',)
     search_fields = ('name', 'p_code')
 
 

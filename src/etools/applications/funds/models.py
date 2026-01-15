@@ -134,14 +134,14 @@ class FundsReservationHeader(TimeStampedModel):
         max_digits=20,
         decimal_places=2,
     )
-    # actual is also referred to as "disbursment"
+    # actual is also referred to as "disbursement"
     actual_amt = models.DecimalField(
         verbose_name=_('Actual Cash Transfer'),
         default=0,
         max_digits=20,
         decimal_places=2,
     )
-    # actual is also referred to as "disbursment"
+    # actual is also referred to as "disbursement"
     actual_amt_local = models.DecimalField(
         verbose_name=_('Actual Cash Transfer Local'),
         default=0,

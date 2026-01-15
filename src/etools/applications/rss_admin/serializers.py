@@ -1,9 +1,12 @@
+import itertools
+
+from django.contrib.admin.models import ADDITION, CHANGE, DELETION, LogEntry
 from django.contrib.auth import get_user_model
 
 from rest_framework import serializers
 from unicef_attachments.fields import AttachmentSingleFileField
 from unicef_attachments.models import Attachment
-from unicef_attachments.serializers import AttachmentSerializerMixin
+from unicef_attachments.serializers import AttachmentSerializerMixin, BaseAttachmentSerializer
 from unicef_locations.serializers import LocationLightSerializer
 from unicef_restlib.fields import SeparatedReadWriteField
 from unicef_restlib.serializers import WritableNestedSerializerMixin
@@ -706,7 +709,6 @@ class ActivityOverallFindingRssSerializer(serializers.ModelSerializer):
 
     def _get_checklist_overall_findings(self, obj):
         """Get checklist overall findings for this activity context."""
-        import itertools
         return [
             finding
             for finding in itertools.chain(*(
@@ -722,9 +724,6 @@ class ActivityOverallFindingRssSerializer(serializers.ModelSerializer):
 
     def get_attachments(self, obj):
         """Extract attachments from checklists overall findings."""
-        import itertools
-
-        from unicef_attachments.serializers import BaseAttachmentSerializer
         attachments = itertools.chain(*(
             finding.attachments.all() for finding in self._get_checklist_overall_findings(obj)
         ))
@@ -734,3 +733,54 @@ class ActivityOverallFindingRssSerializer(serializers.ModelSerializer):
         """Get completed checklist findings."""
         findings = self._get_checklist_overall_findings(obj)
         return CompletedChecklistOverallFindingRssSerializer(instance=findings, many=True).data
+
+
+class LogEntrySerializer(serializers.ModelSerializer):
+    """Serializer for Django LogEntry model to display admin change logs."""
+    class LogEntryUserSerializer(serializers.ModelSerializer):
+        """Nested serializer for LogEntry.user (nullable)."""
+
+        class Meta:
+            model = get_user_model()
+            fields = (
+                'id',
+                'username',
+                'email',
+                'first_name',
+                'last_name',
+            )
+            read_only_fields = fields
+
+    user = LogEntryUserSerializer(read_only=True, allow_null=True)
+    action_flag_display = serializers.SerializerMethodField()
+    content_type_display = serializers.SerializerMethodField()
+
+    class Meta:
+        model = LogEntry
+        fields = (
+            'id',
+            'action_time',
+            'user',
+            'action_flag',
+            'action_flag_display',
+            'change_message',
+            'content_type_display',
+            'object_id',
+            'object_repr',
+        )
+        read_only_fields = fields
+
+    def get_action_flag_display(self, obj):
+        """Return human-readable action flag."""
+        action_flags = {
+            ADDITION: 'Addition',
+            CHANGE: 'Change',
+            DELETION: 'Deletion',
+        }
+        return action_flags.get(obj.action_flag, 'Unknown')
+
+    def get_content_type_display(self, obj):
+        """Return human-readable content type."""
+        if obj.content_type:
+            return f"{obj.content_type.app_label}.{obj.content_type.model}"
+        return None

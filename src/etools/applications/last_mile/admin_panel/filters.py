@@ -70,6 +70,7 @@ class UserFilter(filters.FilterSet):
 class LocationsFilter(filters.FilterSet):
     name = filters.CharFilter(field_name="name", lookup_expr="icontains")
     p_code = filters.CharFilter(field_name="p_code", lookup_expr="icontains")
+    l_consignee_code = filters.CharFilter(field_name="l_consignee_code", lookup_expr="icontains")
     district = filters.CharFilter(method='filter_district', label='District')
     region = filters.CharFilter(method='filter_region', label='Region')
     country = filters.CharFilter(method='filter_country', label='Country')
@@ -156,7 +157,7 @@ class LocationsFilter(filters.FilterSet):
 
     class Meta:
         model = PointOfInterest
-        fields = ('name', 'p_code', 'primary_type', 'is_active', 'secondary_type', 'status')
+        fields = ('name', 'p_code', 'primary_type', 'is_active', 'secondary_type', 'status', 'l_consignee_code')
 
 
 class UserLocationsFilter(filters.FilterSet):

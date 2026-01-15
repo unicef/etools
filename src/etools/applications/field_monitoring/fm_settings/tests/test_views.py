@@ -307,6 +307,69 @@ class LocationSitesViewTestCase(TestExportMixin, FMBaseTestCaseMixin, BaseTenant
         self._test_export(self.unicef_user, 'field_monitoring_settings:sites-export')
 
 
+class TestLocationWithSitesView(FMBaseTestCaseMixin, BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+
+        cls.location_1 = LocationFactory(name='Location 1', p_code='TST001')
+        cls.location_2 = LocationFactory(name='Location 2', p_code='TST002')
+        cls.location_inactive = LocationFactory(name='Location 3', p_code='TST002', is_active=False)
+
+    def test_list(self):
+        LocationSiteFactory()
+
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_settings:locations-with-sites-list'),
+            user=self.unicef_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 1)
+
+    def test_list_multiple(self):
+        for parent in [self.location_1, self.location_2, self.location_inactive]:
+            LocationSiteFactory(parent=parent)
+
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_settings:locations-with-sites-list'),
+            user=self.unicef_user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 2, 'Sites with inactive Parents are not retrieved')
+
+    def test_list_search(self):
+        LocationSiteFactory(parent=self.location_1, name='Site 1')
+        LocationSiteFactory(parent=self.location_2, name='Site 2', is_active=False)
+
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_settings:locations-with-sites-list'),
+            user=self.unicef_user,
+            data={'search': 'location 1'}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 1)
+        self.assertEqual(
+            response.data['results'][0]['name_display'],
+            '{} ({}: {})'.format(self.location_1.name, self.location_1.admin_level_name, self.location_1.p_code)
+        )
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_settings:locations-with-sites-list'),
+            user=self.unicef_user,
+            data={'search': 'tst002'}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 0, 'Only locations with active sites')
+
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_settings:locations-with-sites-list'),
+            user=self.unicef_user,
+            data={'search': '3'}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 0, 'Inactive not retrieved')
+
+
 class LocationsCountryViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
     def test_retrieve(self):
         country = LocationFactory(admin_level=0, point="POINT(20 20)")

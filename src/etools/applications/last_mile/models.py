@@ -140,6 +140,14 @@ class PointOfInterest(TimeStampedModel, models.Model):
     )
     name = models.CharField(verbose_name=_("Name"), max_length=254)
     p_code = models.CharField(verbose_name=_("P Code"), max_length=32, unique=True)
+    l_consignee_code = models.CharField(
+        verbose_name=_("L-Consignee Code"),
+        max_length=255,
+        null=True,
+        blank=True,
+        db_index=True,
+        help_text=_("L-Consignee code for identifying destination locations in transfers")
+    )
     description = models.CharField(verbose_name=_("Description"), max_length=254)
     poi_type = models.ForeignKey(
         PointOfInterestType,
@@ -207,6 +215,8 @@ class PointOfInterest(TimeStampedModel, models.Model):
 
     @staticmethod
     def get_parent_location(point):
+        if not point:
+            return Location.objects.filter(admin_level=0, is_active=True).first()
         locations = Location.objects.all_with_geom().filter(geom__contains=point, is_active=True)
         if locations:
             matched_locations = list(filter(lambda l: l.is_leaf_node(), locations)) or locations
@@ -459,6 +469,14 @@ class Transfer(TimeStampedModel, models.Model):
     waybill_id = models.CharField(max_length=255, null=True, blank=True)
 
     pd_number = models.CharField(max_length=255, null=True, blank=True)
+
+    l_consignee_code = models.CharField(
+        verbose_name=_("L-Consignee Code"),
+        max_length=255,
+        null=True,
+        blank=True,
+        help_text=_("L-Consignee code used to determine destination location for this transfer")
+    )
 
     initial_items = models.JSONField(
         verbose_name=_("Initial Items"),

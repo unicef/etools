@@ -22,6 +22,7 @@ from etools.applications.last_mile import models, serializers
 from etools.applications.last_mile.filters import POIFilter, TransferFilter
 from etools.applications.last_mile.permissions import IsIPLMEditor
 from etools.applications.last_mile.tasks import notify_upload_waybill
+from etools.applications.locations.models import Location
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.utils.pbi_auth import get_access_token, get_embed_token, get_embed_url, TokenRetrieveException
@@ -69,7 +70,7 @@ class PointOfInterestViewSet(POIQuerysetMixin, ModelViewSet):
 
     def get_queryset(self):
         return self.get_poi_queryset(exclude_partner_prefetch=True).only(
-            'parent__name', 'p_code', 'name', 'is_active', 'description', 'poi_type', 'secondary_type', 'status', 'created_on', 'approved_on', 'review_notes', 'created_by_id', 'approved_by_id'
+            'parent__name', 'p_code', 'name', 'is_active', 'description', 'poi_type', 'secondary_type', 'status', 'created_on', 'approved_on', 'review_notes', 'created_by_id', 'approved_by_id', 'l_consignee_code'
         )
 
     @action(detail=True, methods=['post'], url_path='upload-waybill',
@@ -85,6 +86,12 @@ class PointOfInterestViewSet(POIQuerysetMixin, ModelViewSet):
             connection.schema_name, destination_point.pk, waybill_file.pk, waybill_url
         )
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=False, methods=['get'], url_path='get-types')
+    def get_types(self, request, pk=None):
+        admin_levels = Location.objects.values('admin_level', 'admin_level_name').distinct().order_by('admin_level')
+        serializer = serializers.LocationAdminLevelSerializer(admin_levels)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class HandoverPartnerListViewSet(mixins.ListModelMixin, GenericViewSet):
@@ -267,9 +274,21 @@ class TransferViewSet(
 
         qs = self.get_queryset().filter(status=models.Transfer.PENDING)
 
-        if location.poi_type.category == 'warehouse':
-            qs = qs.filter(Q(destination_point=location) | Q(destination_point__isnull=True))
+        # Filter based on L-Consignee code logic
+        if location.l_consignee_code:
+            # If this location has an L-Consignee code, show transfers with matching code
+            qs = qs.filter(
+                Q(l_consignee_code=location.l_consignee_code) |
+                Q(destination_point=location)
+            )
+        elif location.poi_type.category == 'warehouse':
+            # Warehouse can receive transfers without L-Consignee code or with destination set to this warehouse
+            qs = qs.filter(
+                Q(destination_point=location) |
+                (Q(destination_point__isnull=True) & (Q(l_consignee_code__isnull=True) | Q(l_consignee_code='')))
+            )
         else:
+            # Non-warehouse locations without L-Consignee code can only receive transfers specifically sent to them
             qs = qs.filter(destination_point=location)
 
         qs = qs.exclude(origin_point=location).select_related("destination_point__parent", "origin_point__parent").order_by("-created")
