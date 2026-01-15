@@ -70,7 +70,7 @@ class PointOfInterestViewSet(POIQuerysetMixin, ModelViewSet):
 
     def get_queryset(self):
         return self.get_poi_queryset(exclude_partner_prefetch=True).only(
-            'parent__name', 'p_code', 'name', 'is_active', 'description', 'poi_type', 'secondary_type', 'status', 'created_on', 'approved_on', 'review_notes', 'created_by_id', 'approved_by_id'
+            'parent__name', 'p_code', 'name', 'is_active', 'description', 'poi_type', 'secondary_type', 'status', 'created_on', 'approved_on', 'review_notes', 'created_by_id', 'approved_by_id', 'l_consignee_code'
         )
 
     @action(detail=True, methods=['post'], url_path='upload-waybill',
@@ -274,9 +274,21 @@ class TransferViewSet(
 
         qs = self.get_queryset().filter(status=models.Transfer.PENDING)
 
-        if location.poi_type.category == 'warehouse':
-            qs = qs.filter(Q(destination_point=location) | Q(destination_point__isnull=True))
+        # Filter based on L-Consignee code logic
+        if location.l_consignee_code:
+            # If this location has an L-Consignee code, show transfers with matching code
+            qs = qs.filter(
+                Q(l_consignee_code=location.l_consignee_code) |
+                Q(destination_point=location)
+            )
+        elif location.poi_type.category == 'warehouse':
+            # Warehouse can receive transfers without L-Consignee code or with destination set to this warehouse
+            qs = qs.filter(
+                Q(destination_point=location) |
+                (Q(destination_point__isnull=True) & (Q(l_consignee_code__isnull=True) | Q(l_consignee_code='')))
+            )
         else:
+            # Non-warehouse locations without L-Consignee code can only receive transfers specifically sent to them
             qs = qs.filter(destination_point=location)
 
         qs = qs.exclude(origin_point=location).select_related("destination_point__parent", "origin_point__parent").order_by("-created")

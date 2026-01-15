@@ -434,6 +434,32 @@ class TransferCheckinSerializer(TransferBaseSerializer):
 
         if instance.status == models.Transfer.COMPLETED:
             raise ValidationError(_('The transfer was already checked-in.'))
+
+        # Validate L-Consignee code restrictions
+        current_location = self.context.get("location")
+
+        if instance.l_consignee_code:
+            # If transfer has an L-Consignee code, it can only be checked in at that specific location
+            if not current_location or current_location.l_consignee_code != instance.l_consignee_code:
+                raise ValidationError(
+                    _('This transfer can only be checked in at the location with L-Consignee code: {}').format(
+                        instance.l_consignee_code
+                    )
+                )
+        elif instance.destination_point:
+            # If transfer already has a destination_point set (from L-Consignee code during ingestion),
+            # it can only be checked in at that location
+            if current_location and current_location.id != instance.destination_point.id:
+                raise ValidationError(
+                    _('This transfer can only be checked in at: {}').format(
+                        instance.destination_point.name
+                    )
+                )
+        else:
+            # If no L-Consignee code, transfer can be checked in at any warehouse location
+            if current_location and not current_location.is_warehouse():
+                raise ValidationError(_('This transfer can only be checked in at warehouse locations.'))
+
         validated_data['status'] = models.Transfer.COMPLETED
         validated_data['checked_in_by'] = self.context.get('request').user
         validated_data["destination_point"] = self.context["location"]
