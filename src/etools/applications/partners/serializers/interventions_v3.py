@@ -268,6 +268,7 @@ class InterventionDetailSerializer(
     location_names = serializers.SerializerMethodField()
     location_p_codes = serializers.SerializerMethodField()
     locations = serializers.SerializerMethodField()
+    locations_full = serializers.SerializerMethodField()
     partner = serializers.CharField(source='agreement.partner.name')
     partner_id = serializers.CharField(source='agreement.partner.id', read_only=True)
     partner_vendor = serializers.CharField(source='agreement.partner.vendor_number')
@@ -346,6 +347,14 @@ class InterventionDetailSerializer(
                 loc.admin_level_name,
                 loc.p_code
             ) for loc in obj.flat_locations.all()
+        ]
+
+    def get_locations_full(self, obj):
+        return [
+            {
+                'id': loc.id,
+                'name': '{} [{} - {}]'.format(loc.name, loc.admin_level_name, loc.p_code)
+            } for loc in obj.flat_locations.all()
         ]
 
     def get_section_names(self, obj):
@@ -618,6 +627,7 @@ class InterventionDetailSerializer(
             "ip_program_contribution",
             "location_names",
             "location_p_codes",
+            "locations_full",
             "locations",
             "management_budgets",
             "metadata",
