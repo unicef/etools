@@ -9,6 +9,7 @@ from django.db.models import Count, Exists, OuterRef, Prefetch, Q
 from django.db.models.base import ModelBase
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
+from django.utils import timezone
 
 from django_fsm import FSMField, transition
 from model_utils import Choices, FieldTracker
@@ -337,6 +338,7 @@ class MonitoringActivity(
 
     start_date = models.DateField(verbose_name=_('Start Date'), blank=True, null=True)
     end_date = models.DateField(verbose_name=_('End Date'), blank=True, null=True)
+    completion_date = models.DateField(verbose_name=_('Mission completion date'), blank=True, null=True)
 
     status = FSMField(verbose_name=_('Status'), max_length=20, choices=STATUSES, default=STATUSES.draft)
 
@@ -373,6 +375,10 @@ class MonitoringActivity(
 
     @transaction.atomic()
     def save(self, **kwargs):
+        # Set completion_date when status is completed and completion_date is not already set
+        if self.status == self.STATUSES.completed and not self.completion_date:
+            self.completion_date = timezone.now().date()
+
         super().save(**kwargs)
 
         if not self.number:
@@ -778,6 +784,15 @@ class MonitoringActivity(
                                       self.status in [self.STATUSES.completed, self.STATUSES.report_finalization]):
             self.reviewed_by = user
             self.save()
+
+    def get_completion_date(self):
+        """
+        Get the date when the mission status was set to 'completed'.
+        Returns None if the mission is not completed or completion date is not set.
+        """
+        if self.status != self.STATUSES.completed:
+            return None
+        return self.completion_date
 
     def activity_overall_findings(self):
         return self.overall_findings.annotate_for_activity_export()
