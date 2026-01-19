@@ -1,10 +1,10 @@
 from django.contrib.auth.models import Permission
 
-from etools.applications.users.models import Realm
 from etools.applications.last_mile.admin_panel.constants import (
     LIST_INTERESTED_LASTMILE_PERMS,
-    LIST_INTERESTED_LASTMILE_PERMS_WITHOUT_APPROVE
+    LIST_INTERESTED_LASTMILE_PERMS_WITHOUT_APPROVE,
 )
+from etools.applications.users.models import Realm
 
 
 class LMSMPermissionsService:
