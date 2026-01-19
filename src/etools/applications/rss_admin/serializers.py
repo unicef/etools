@@ -2,6 +2,7 @@ import itertools
 
 from django.contrib.admin.models import ADDITION, CHANGE, DELETION, LogEntry
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError as DjangoValidationError
 
 from rest_framework import serializers
 from unicef_attachments.fields import AttachmentSingleFileField
@@ -24,6 +25,7 @@ from etools.applications.audit.serializers.engagement import (
     SpotCheckSerializer as BaseSpotCheckSerializer,
     StaffSpotCheckSerializer as BaseStaffSpotCheckSerializer,
 )
+from etools.applications.audit.utils import get_partner_contacted_display_progress_order, rollback_engagement_display_status
 from etools.applications.audit.serializers.mixins import EngagementDatesValidation
 from etools.applications.field_monitoring.data_collection.models import (
     ActivityOverallFinding,
@@ -46,6 +48,26 @@ from etools.applications.reports.serializers.v2 import (
 )
 from etools.applications.rss_admin.services import EngagementService, ProgrammeDocumentService
 from etools.applications.users.serializers_v3 import MinimalUserSerializer
+
+
+def rss_display_status_field():
+    """Shared `status` field for RSS Admin engagement detail serializers.
+
+    Read: computed display status (matches list + audit module behavior).
+    Write: accept display status values for RSS Admin PATCH handling.
+    """
+    return SeparatedReadWriteField(
+        read_field=serializers.ChoiceField(
+            choices=Engagement.DISPLAY_STATUSES,
+            source='displayed_status',
+            read_only=True,
+        ),
+        write_field=serializers.ChoiceField(
+            choices=Engagement.DISPLAY_STATUSES,
+            required=False,
+            allow_null=True,
+        ),
+    )
 
 
 class PartnerOrganizationRssSerializer(serializers.ModelSerializer):
@@ -254,6 +276,42 @@ class EngagementStatusUpdateMixin:
 
     def update(self, instance, validated_data):
         """Override update to handle status changes through FSM transitions."""
+        def _handle_display_status_patch(instance, validated_data, new_status):
+            """
+            Handle FE "display status" PATCH while underlying FSM/db status is partner_contacted.
+
+            Returns:
+                - Engagement instance if handled
+                - None if not applicable
+            """
+            if not (
+                new_status
+                and new_status in get_partner_contacted_display_progress_order()
+                and instance.status == Engagement.STATUSES.partner_contacted
+            ):
+                return None
+
+            requested_display_status = new_status
+
+            # Don't let DRF treat this as an FSM/db status change.
+            validated_data.pop('status', None)
+
+            # Apply other updates first (if any).
+            instance = super().update(instance, validated_data)
+
+            try:
+                fields_to_clear = rollback_engagement_display_status(instance, requested_display_status)
+            except DjangoValidationError as e:
+                # Convert Django ValidationError into DRF format: {'field': ['msg']}
+                if hasattr(e, 'message_dict') and e.message_dict:
+                    raise serializers.ValidationError(e.message_dict)
+                raise serializers.ValidationError({'status': [str(e)]})
+
+            if fields_to_clear:
+                instance.save(update_fields=fields_to_clear)
+                instance.refresh_from_db()
+            return instance
+
         def _friendly_transition_error(exc: Exception) -> str:
             """
             Turn various validation/transition exceptions into a clean user-facing message.
@@ -295,6 +353,10 @@ class EngagementStatusUpdateMixin:
             return str(exc) or "Unable to complete this status change."
 
         new_status = validated_data.get('status')
+
+        handled = _handle_display_status_patch(instance, validated_data, new_status)
+        if handled is not None:
+            return handled
 
         # If status is being changed, route through FSM transition
         if new_status and new_status != instance.status:
@@ -368,12 +430,9 @@ class EngagementStatusUpdateMixin:
 
 class AuditRssSerializer(EngagementStatusUpdateMixin, BaseAuditSerializer):
     """Permission-agnostic audit serializer for RSS Admin."""
-    # Override status to be writable and map to actual status field (not displayed_status)
-    status = serializers.ChoiceField(
-        choices=Engagement.STATUSES,
-        required=False,
-        allow_null=True
-    )
+    # Keep parity with audit module: represent `status` as computed display status,
+    # while still accepting PATCH writes for RSS Admin status handling.
+    status = rss_display_status_field()
 
     @property
     def _readable_fields(self):
@@ -386,7 +445,7 @@ class AuditRssSerializer(EngagementStatusUpdateMixin, BaseAuditSerializer):
 
 class SpotCheckRssSerializer(EngagementStatusUpdateMixin, BaseSpotCheckSerializer):
     """Permission-agnostic spot check serializer for RSS Admin."""
-    status = serializers.ChoiceField(choices=Engagement.STATUSES, required=False, allow_null=True)
+    status = rss_display_status_field()
 
     @property
     def _readable_fields(self):
@@ -399,7 +458,7 @@ class SpotCheckRssSerializer(EngagementStatusUpdateMixin, BaseSpotCheckSerialize
 
 class StaffSpotCheckRssSerializer(EngagementStatusUpdateMixin, BaseStaffSpotCheckSerializer):
     """Permission-agnostic staff spot check serializer for RSS Admin."""
-    status = serializers.ChoiceField(choices=Engagement.STATUSES, required=False, allow_null=True)
+    status = rss_display_status_field()
 
     @property
     def _readable_fields(self):
@@ -412,7 +471,7 @@ class StaffSpotCheckRssSerializer(EngagementStatusUpdateMixin, BaseStaffSpotChec
 
 class MicroAssessmentRssSerializer(EngagementStatusUpdateMixin, BaseMicroAssessmentSerializer):
     """Permission-agnostic micro assessment serializer for RSS Admin."""
-    status = serializers.ChoiceField(choices=Engagement.STATUSES, required=False, allow_null=True)
+    status = rss_display_status_field()
 
     @property
     def _readable_fields(self):
@@ -425,7 +484,7 @@ class MicroAssessmentRssSerializer(EngagementStatusUpdateMixin, BaseMicroAssessm
 
 class SpecialAuditRssSerializer(EngagementStatusUpdateMixin, BaseSpecialAuditSerializer):
     """Permission-agnostic special audit serializer for RSS Admin."""
-    status = serializers.ChoiceField(choices=Engagement.STATUSES, required=False, allow_null=True)
+    status = rss_display_status_field()
 
     @property
     def _readable_fields(self):

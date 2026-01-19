@@ -610,6 +610,67 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
             self.assertIn('Unable to change status', resp.data['status'][0])
             self.assertIn('Unexpected failure', resp.data['status'][0])
 
+    def test_engagement_patch_display_status_backward_wipes_dates(self):
+        """PATCHing a display status backwards should wipe later milestone dates (no forward moves)."""
+        audit = AuditFactory(
+            status=Engagement.STATUSES.partner_contacted,
+            date_of_field_visit=date(2024, 1, 15),
+            date_of_draft_report_to_ip=date(2024, 1, 20),
+            date_of_comments_by_ip=date(2024, 1, 25),
+            date_of_draft_report_to_unicef=date(2024, 1, 30),
+            date_of_comments_by_unicef=date(2024, 2, 5),
+        )
+        url = reverse('rss_admin:rss-admin-engagements-detail', kwargs={'pk': audit.pk})
+
+        # Move backwards to draft_issued_to_partner: should clear later milestones
+        payload = {'status': Engagement.DISPLAY_STATUSES.draft_issued_to_partner}
+        resp = self.forced_auth_req('patch', url, user=self.user, data=payload)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
+
+        audit.refresh_from_db()
+        self.assertEqual(audit.status, Engagement.STATUSES.partner_contacted)
+        self.assertIsNotNone(audit.date_of_draft_report_to_ip)
+        self.assertIsNone(audit.date_of_comments_by_ip)
+        self.assertIsNone(audit.date_of_draft_report_to_unicef)
+        self.assertIsNone(audit.date_of_comments_by_unicef)
+        self.assertEqual(audit.displayed_status, Engagement.DISPLAY_STATUSES.draft_issued_to_partner)
+
+        # Move backwards to partner_contacted: should clear all later milestones
+        resp = self.forced_auth_req('patch', url, user=self.user, data={'status': Engagement.DISPLAY_STATUSES.partner_contacted})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
+        audit.refresh_from_db()
+        self.assertIsNone(audit.date_of_field_visit)
+        self.assertIsNone(audit.date_of_draft_report_to_ip)
+        self.assertIsNone(audit.date_of_comments_by_ip)
+        self.assertIsNone(audit.date_of_draft_report_to_unicef)
+        self.assertIsNone(audit.date_of_comments_by_unicef)
+        self.assertEqual(audit.displayed_status, Engagement.DISPLAY_STATUSES.partner_contacted)
+
+    def test_engagement_patch_display_status_forward_is_rejected(self):
+        audit = AuditFactory(status=Engagement.STATUSES.partner_contacted)
+        url = reverse('rss_admin:rss-admin-engagements-detail', kwargs={'pk': audit.pk})
+
+        # Forward move (partner_contacted -> field_visit) without dates must be rejected
+        resp = self.forced_auth_req('patch', url, user=self.user, data={'status': Engagement.DISPLAY_STATUSES.field_visit})
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST, resp.data)
+        self.assertIn('status', resp.data)
+        self.assertIn('Cannot move status forward', resp.data['status'][0])
+
+    def test_engagement_patch_display_status_missing_required_date_is_rejected(self):
+        """Backward move can still be invalid if the required milestone date for the target stage is missing."""
+        audit = AuditFactory(
+            status=Engagement.STATUSES.partner_contacted,
+            # Inconsistent but possible data: later milestone set while earlier one is missing
+            date_of_comments_by_unicef=date(2024, 2, 5),
+            date_of_draft_report_to_ip=None,
+        )
+        url = reverse('rss_admin:rss-admin-engagements-detail', kwargs={'pk': audit.pk})
+
+        resp = self.forced_auth_req('patch', url, user=self.user, data={'status': Engagement.DISPLAY_STATUSES.draft_issued_to_partner})
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST, resp.data)
+        self.assertIn('status', resp.data)
+        self.assertIn('required date', resp.data['status'][0])
+
     def test_engagement_attachments_include_filename(self):
         """Test that engagement and report attachment endpoints include filename field"""
         audit = AuditFactory(status=Engagement.STATUSES.partner_contacted)
