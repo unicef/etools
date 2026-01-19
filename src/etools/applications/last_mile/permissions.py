@@ -117,6 +117,27 @@ class IsIPLMEditor(IsAuthenticated):
     def has_permission(self, request, view):
         return super().has_permission(request, view) and request.user.groups.filter(name='IP LM Editor').exists()
 
+class IsIPLMEditorOrViewerReadOnly(IsAuthenticated):
+
+    def has_permission(self, request, view):
+        if not super().has_permission(request, view):
+            return False
+
+        user_groups = request.user.groups.values_list('name', flat=True)
+        is_editor = 'IP LM Editor' in user_groups
+        is_viewer = 'IP LM Viewer' in user_groups
+
+        if not (is_editor or is_viewer):
+            return False
+
+        if is_editor:
+            return True
+
+        if is_viewer:
+            return request.method in ['GET', 'HEAD', 'OPTIONS']
+
+        return False
+
 
 class LMSMAPIPermission(IsAuthenticated):
 
