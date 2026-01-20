@@ -35,6 +35,7 @@ from etools.applications.field_monitoring.planning.serializers import (
     MonitoringActivityLightSerializer,
     MonitoringActivitySerializer,
 )
+from etools.applications.rss_admin.filters import MonitoringActivityRssFilterSet
 from etools.applications.funds.models import FundsReservationHeader
 from etools.applications.partners.filters import (
     InterventionEditableByFilter,
@@ -856,16 +857,7 @@ class MonitoringActivityRssViewSet(viewsets.ModelViewSet):
         filters.OrderingFilter,
         filters.SearchFilter,
     )
-    filterset_fields = {
-        'monitor_type': ['exact'],
-        'tpm_partner': ['exact', 'in'],
-        'visit_lead': ['exact', 'in'],
-        'location': ['exact', 'in'],
-        'location_site': ['exact', 'in'],
-        'start_date': ['gte', 'lte'],
-        'end_date': ['gte', 'lte'],
-        'status': ['exact', 'in'],
-    }
+    filterset_class = MonitoringActivityRssFilterSet
     ordering_fields = (
         'start_date', 'end_date', 'location', 'location_site', 'monitor_type', 'checklists_count', 'status'
     )
