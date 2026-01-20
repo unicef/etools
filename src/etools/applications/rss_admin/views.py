@@ -17,6 +17,7 @@ from unicef_attachments.models import Attachment
 from unicef_restlib.pagination import DynamicPageNumberPagination
 from unicef_restlib.views import NestedViewSetMixin, QueryStringFilterMixin
 
+from etools.applications.action_points.filters import RelatedModuleFilter
 from etools.applications.action_points.models import ActionPoint, ActionPointComment
 from etools.applications.action_points.serializers import CommentSerializer as APCommentSerializer
 from etools.applications.audit.conditions import AuditModuleCondition
@@ -750,6 +751,7 @@ class ActionPointRssViewSet(mixins.ListModelMixin,
     filter_backends = (
         OrderingFilter,
         SearchFilter,
+        RelatedModuleFilter,
         DjangoFilterBackend,
     )
     search_fields = (
