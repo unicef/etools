@@ -626,6 +626,7 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
         payload = {'status': Engagement.DISPLAY_STATUSES.draft_issued_to_partner}
         resp = self.forced_auth_req('patch', url, user=self.user, data=payload)
         self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
+        self.assertEqual(resp.data['status'], Engagement.DISPLAY_STATUSES.draft_issued_to_partner)
 
         audit.refresh_from_db()
         self.assertEqual(audit.status, Engagement.STATUSES.partner_contacted)
@@ -638,6 +639,7 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
         # Move backwards to partner_contacted: should clear all later milestones
         resp = self.forced_auth_req('patch', url, user=self.user, data={'status': Engagement.DISPLAY_STATUSES.partner_contacted})
         self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
+        self.assertEqual(resp.data['status'], Engagement.DISPLAY_STATUSES.partner_contacted)
         audit.refresh_from_db()
         self.assertIsNone(audit.date_of_field_visit)
         self.assertIsNone(audit.date_of_draft_report_to_ip)
@@ -670,6 +672,60 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST, resp.data)
         self.assertIn('status', resp.data)
         self.assertIn('required date', resp.data['status'][0])
+
+    def test_engagement_patch_display_status_persists_and_detail_matches(self):
+        """Successful display-status PATCH should persist and detail response should reflect it."""
+        audit = AuditFactory(
+            status=Engagement.STATUSES.partner_contacted,
+            date_of_field_visit=date(2024, 1, 15),
+            date_of_draft_report_to_ip=date(2024, 1, 20),
+            date_of_comments_by_ip=date(2024, 1, 25),
+            date_of_draft_report_to_unicef=date(2024, 1, 30),
+            date_of_comments_by_unicef=date(2024, 2, 5),
+        )
+        detail_url = reverse('rss_admin:rss-admin-engagements-detail', kwargs={'pk': audit.pk})
+
+        patch_resp = self.forced_auth_req(
+            'patch',
+            detail_url,
+            user=self.user,
+            data={'status': Engagement.DISPLAY_STATUSES.draft_issued_to_partner},
+        )
+        self.assertEqual(patch_resp.status_code, status.HTTP_200_OK, patch_resp.data)
+        self.assertEqual(patch_resp.data['status'], Engagement.DISPLAY_STATUSES.draft_issued_to_partner)
+
+        # Verify persisted state
+        audit.refresh_from_db()
+        self.assertEqual(audit.displayed_status, Engagement.DISPLAY_STATUSES.draft_issued_to_partner)
+
+        # Detail endpoint should return same displayed status
+        get_resp = self.forced_auth_req('get', detail_url, user=self.user)
+        self.assertEqual(get_resp.status_code, status.HTTP_200_OK, get_resp.data)
+        self.assertEqual(get_resp.data['status'], Engagement.DISPLAY_STATUSES.draft_issued_to_partner)
+
+    def test_engagement_list_and_detail_return_same_status_value(self):
+        """List and detail endpoints should expose the same displayed status value under `status`."""
+        audit = AuditFactory(
+            status=Engagement.STATUSES.partner_contacted,
+            date_of_field_visit=date(2024, 1, 15),
+            date_of_draft_report_to_ip=date(2024, 1, 20),
+            date_of_comments_by_ip=date(2024, 1, 25),
+        )
+        expected = audit.displayed_status
+
+        list_url = reverse('rss_admin:rss-admin-engagements-list')
+        list_resp = self.forced_auth_req('get', list_url, user=self.user, data={'search': audit.pk, 'page_size': 50})
+        self.assertEqual(list_resp.status_code, status.HTTP_200_OK, list_resp.data)
+        results = list_resp.data.get('results', list_resp.data)
+        row = next(r for r in results if r['id'] == audit.pk)
+
+        detail_url = reverse('rss_admin:rss-admin-engagements-detail', kwargs={'pk': audit.pk})
+        detail_resp = self.forced_auth_req('get', detail_url, user=self.user)
+        self.assertEqual(detail_resp.status_code, status.HTTP_200_OK, detail_resp.data)
+
+        self.assertEqual(row['status'], expected)
+        self.assertEqual(detail_resp.data['status'], expected)
+        self.assertEqual(row['status'], detail_resp.data['status'])
 
     def test_engagement_attachments_include_filename(self):
         """Test that engagement and report attachment endpoints include filename field"""

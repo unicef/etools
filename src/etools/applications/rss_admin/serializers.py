@@ -50,23 +50,25 @@ from etools.applications.rss_admin.services import EngagementService, ProgrammeD
 from etools.applications.users.serializers_v3 import MinimalUserSerializer
 
 
-def rss_display_status_field():
-    """Shared `status` field for RSS Admin engagement detail serializers.
+class RssEngagementDisplayStatusField(serializers.ChoiceField):
+    """Read displayed_status, write into `status` key.
 
-    Read: computed display status (matches list + audit module behavior).
-    Write: accept display status values for RSS Admin PATCH handling.
+    DRF normally reads the underlying model field value for the serializer field name (`status`),
+    which is the FSM/db status. For RSS Admin we want list + detail to expose the computed
+    display status, while still accepting PATCH writes under the same JSON key.
     """
-    return SeparatedReadWriteField(
-        read_field=serializers.ChoiceField(
-            choices=Engagement.DISPLAY_STATUSES,
-            source='displayed_status',
-            read_only=True,
-        ),
-        write_field=serializers.ChoiceField(
-            choices=Engagement.DISPLAY_STATUSES,
-            required=False,
-            allow_null=True,
-        ),
+
+    def get_attribute(self, instance):
+        # Use computed display status for representation, not the raw FSM/db status.
+        return instance.displayed_status
+
+
+def rss_display_status_field():
+    """Shared `status` field for RSS Admin engagement detail serializers."""
+    return RssEngagementDisplayStatusField(
+        choices=Engagement.DISPLAY_STATUSES,
+        required=False,
+        allow_null=True,
     )
 
 
@@ -297,7 +299,8 @@ class EngagementStatusUpdateMixin:
             validated_data.pop('status', None)
 
             # Apply other updates first (if any).
-            instance = super().update(instance, validated_data)
+            # NOTE: can't use bare super() in nested function (no __class__ cell).
+            instance = super(EngagementStatusUpdateMixin, self).update(instance, validated_data)
 
             try:
                 fields_to_clear = rollback_engagement_display_status(instance, requested_display_status)
