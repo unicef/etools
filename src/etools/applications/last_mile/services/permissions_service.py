@@ -13,7 +13,8 @@ class LMSMPermissionsService:
     LMSM_HQ_ADMIN = "LMSM HQ Admin"
     IP_LM_EDITOR = "IP LM Editor"
     LMSMAPI = "LMSMApi"
-    LMSM_GROUPS = [LMSM_CO_ADMIN, LMSM_HQ_ADMIN, IP_LM_EDITOR, LMSMAPI]
+    IP_LM_VIEWR = "IP LM Viewer"
+    LMSM_GROUPS = [LMSM_CO_ADMIN, LMSM_HQ_ADMIN, IP_LM_EDITOR, LMSMAPI, IP_LM_VIEWR]
 
     def assign_permissions_for_co_admin(self, user):
         for perm_codename in LIST_INTERESTED_LASTMILE_PERMS_WITHOUT_APPROVE:

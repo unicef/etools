@@ -443,17 +443,22 @@ class PowerBIDataView(APIView):
         return {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + self.get_pbi_access_token()}
 
     def get(self, request, *args, **kwargs):
+        user = request.user
+        if user.is_lmsm_admin:
+            report_id = settings.PBI_CONFIG["REPORT_ID_ADMIN"]
+        else:
+            report_id = settings.PBI_CONFIG["REPORT_ID"]
         try:
-            embed_url, dataset_id = get_embed_url(self.pbi_headers)
-            embed_token = get_embed_token(dataset_id, self.pbi_headers)
+            embed_url, dataset_id = get_embed_url(self.pbi_headers, report_id)
+            embed_token = get_embed_token(dataset_id, self.pbi_headers, report_id)
         except TokenRetrieveException:
             return Response("Temporary unavailable, PowerBI information cannot be retrieved from Microsoft Servers",
                             status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
         resp_data = {
-            "report_id": settings.PBI_CONFIG["REPORT_ID"],
+            "report_id": report_id,
             "embed_url": embed_url,
             "access_token": embed_token,
-            "vendor_number": request.user.profile.organization.vendor_number
+            "vendor_number": user.profile.organization.vendor_number
         }
         return Response(resp_data, status=status.HTTP_200_OK)
