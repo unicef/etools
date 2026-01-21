@@ -276,159 +276,199 @@ class EngagementStatusUpdateMixin:
     (notifications, date updates, etc.) are properly executed.
     """
 
-    def update(self, instance, validated_data):
-        """Override update to handle status changes through FSM transitions."""
-        def _handle_display_status_patch(instance, validated_data, new_status):
-            """
-            Handle FE "display status" PATCH while underlying FSM/db status is partner_contacted.
+    def _base_update(self, instance, validated_data):
+        """Call the parent serializer update (bypass this mixin override)."""
+        return super(EngagementStatusUpdateMixin, self).update(instance, validated_data)
 
-            Returns:
-                - Engagement instance if handled
-                - None if not applicable
-            """
-            if not (
-                new_status
-                and new_status in get_partner_contacted_display_progress_order()
-                and instance.status == Engagement.STATUSES.partner_contacted
-            ):
-                return None
+    def _handle_display_status_patch(self, instance, validated_data, new_status):
+        """
+        Handle FE "display status" PATCH while underlying FSM/db status is partner_contacted.
 
-            requested_display_status = new_status
+        Returns:
+            - Engagement instance if handled
+            - None if not applicable
+        """
+        if not (
+            new_status
+            and new_status in get_partner_contacted_display_progress_order()
+            and instance.status == Engagement.STATUSES.partner_contacted
+        ):
+            return None
 
-            # Don't let DRF treat this as an FSM/db status change.
+        requested_display_status = new_status
+
+        # Don't let DRF treat this as an FSM/db status change.
+        validated_data.pop('status', None)
+
+        # Apply other updates first (if any).
+        instance = self._base_update(instance, validated_data)
+
+        try:
+            fields_to_clear = rollback_engagement_display_status(instance, requested_display_status)
+        except DjangoValidationError as e:
+            # Convert Django ValidationError into DRF format: {'field': ['msg']}
+            if hasattr(e, 'message_dict') and e.message_dict:
+                raise serializers.ValidationError(e.message_dict)
+            raise serializers.ValidationError({'status': [str(e)]})
+
+        if fields_to_clear:
+            instance.save(update_fields=fields_to_clear)
+            instance.refresh_from_db()
+        return instance
+
+    def _handle_rss_admin_only_transitions(self, instance, validated_data, new_status):
+        """RSS Admin-only transitions (does not change audit FSM rules)."""
+        # Allow reopening cancelled -> partner_contacted (requires send_back_comment)
+        if instance.status == Engagement.STATUSES.cancelled and new_status == Engagement.DISPLAY_STATUSES.partner_contacted:
             validated_data.pop('status', None)
+            comment = validated_data.get('send_back_comment', '')
+            if not comment:
+                raise serializers.ValidationError({'send_back_comment': ['This field is required when sending back']})
 
-            # Apply other updates first (if any).
-            # NOTE: can't use bare super() in nested function (no __class__ cell).
-            instance = super(EngagementStatusUpdateMixin, self).update(instance, validated_data)
+            # Update other fields first
+            instance = self._base_update(instance, validated_data)
 
-            try:
-                fields_to_clear = rollback_engagement_display_status(instance, requested_display_status)
-            except DjangoValidationError as e:
-                # Convert Django ValidationError into DRF format: {'field': ['msg']}
-                if hasattr(e, 'message_dict') and e.message_dict:
-                    raise serializers.ValidationError(e.message_dict)
-                raise serializers.ValidationError({'status': [str(e)]})
-
-            if fields_to_clear:
-                instance.save(update_fields=fields_to_clear)
-                instance.refresh_from_db()
+            instance.status = Engagement.STATUSES.partner_contacted
+            instance.date_of_cancel = None
+            instance.cancel_comment = ''
+            instance.send_back_comment = comment
+            instance.save(update_fields=['status', 'date_of_cancel', 'cancel_comment', 'send_back_comment'])
+            instance.refresh_from_db()
             return instance
 
-        def _friendly_transition_error(exc: Exception) -> str:
-            """
-            Turn various validation/transition exceptions into a clean user-facing message.
+        # Allow cancelling final -> cancelled (requires cancel_comment)
+        if instance.status == Engagement.STATUSES.final and new_status == Engagement.DISPLAY_STATUSES.cancelled:
+            validated_data.pop('status', None)
+            comment = validated_data.get('cancel_comment', '')
+            if not comment:
+                raise serializers.ValidationError({'cancel_comment': ['This field is required when cancelling']})
 
-            RSS Admin previously used str(exc) which often includes internal DRF ErrorDetail(...) noise.
+            instance = self._base_update(instance, validated_data)
+            from django.utils import timezone
+            instance.status = Engagement.STATUSES.cancelled
+            instance.date_of_cancel = timezone.now()
+            instance.cancel_comment = comment
+            instance.save(update_fields=['status', 'date_of_cancel', 'cancel_comment'])
+            instance.refresh_from_db()
+            return instance
 
-            Ex : Field Status: Status transition failed: (action points: ErrorDetail(string='Action Points 
-            with High Priority to be opened if High Priority findings provided., code="invalid))
+        return None
 
-            Will be returned as:
-            Field Status: Unable to change status. High-priority findings require at least one open high-priority Action Point.
+    @staticmethod
+    def _friendly_transition_error(exc: Exception) -> str:
+        """
+        Turn various validation/transition exceptions into a clean user-facing message.
 
-            """
-            # DRF ValidationError: prefer structured details
-            if isinstance(exc, serializers.ValidationError):
-                detail = getattr(exc, 'detail', None)
-                if isinstance(detail, dict) and detail:
-                    # Prefer the most common transition check key
-                    if 'action_points' in detail:
-                        msg = detail['action_points']
-                        # msg can be ErrorDetail or list; normalize
-                        if isinstance(msg, (list, tuple)) and msg:
-                            return str(msg[0])
-                        return str(msg)
+        RSS Admin previously used str(exc) which often includes internal DRF ErrorDetail(...) noise.
+        """
+        # DRF ValidationError: prefer structured details
+        if isinstance(exc, serializers.ValidationError):
+            detail = getattr(exc, 'detail', None)
+            if isinstance(detail, dict) and detail:
+                # Prefer the most common transition check key
+                if 'action_points' in detail:
+                    msg = detail['action_points']
+                    # msg can be ErrorDetail or list; normalize
+                    if isinstance(msg, (list, tuple)) and msg:
+                        return str(msg[0])
+                    return str(msg)
 
-                    # Otherwise, join first message from each key for a concise summary
-                    parts = []
-                    for k, v in detail.items():
-                        if isinstance(v, (list, tuple)) and v:
-                            parts.append(f"{k.replace('_', ' ')}: {v[0]}")
-                        else:
-                            parts.append(f"{k.replace('_', ' ')}: {v}")
-                    return "; ".join(map(str, parts))
+                # Otherwise, join first message from each key for a concise summary
+                parts = []
+                for k, v in detail.items():
+                    if isinstance(v, (list, tuple)) and v:
+                        parts.append(f"{k.replace('_', ' ')}: {v[0]}")
+                    else:
+                        parts.append(f"{k.replace('_', ' ')}: {v}")
+                return "; ".join(map(str, parts))
 
-                if isinstance(detail, (list, tuple)) and detail:
-                    return str(detail[0])
+            if isinstance(detail, (list, tuple)) and detail:
+                return str(detail[0])
 
-            # Fallback: plain exception message
-            return str(exc) or "Unable to complete this status change."
+        # Fallback: plain exception message
+        return str(exc) or "Unable to complete this status change."
 
+    def _handle_fsm_status_transition(self, instance, validated_data, new_status):
+        """Handle real FSM/db status transitions via model transition methods."""
+        if not new_status or new_status == instance.status:
+            return None
+
+        old_status = instance.status
+
+        # Remove status from validated_data - we'll handle it via FSM
+        validated_data.pop('status', None)
+
+        # Update all other fields first
+        instance = self._base_update(instance, validated_data)
+
+        # Map status transitions to FSM methods
+        transition_map = {
+            (Engagement.STATUSES.partner_contacted, Engagement.STATUSES.report_submitted): 'submit',
+            (Engagement.STATUSES.report_submitted, Engagement.STATUSES.partner_contacted): 'send_back',
+            (Engagement.STATUSES.partner_contacted, Engagement.STATUSES.cancelled): 'cancel',
+            (Engagement.STATUSES.report_submitted, Engagement.STATUSES.cancelled): 'cancel',
+            (Engagement.STATUSES.report_submitted, Engagement.STATUSES.final): 'finalize',
+        }
+
+        transition_key = (old_status, new_status)
+        transition_method = transition_map.get(transition_key)
+
+        if not transition_method:
+            raise serializers.ValidationError({
+                'status': [f'Invalid status transition from {old_status} to {new_status}']
+            })
+
+        # send_back and cancel require comments - validate before trying FSM transition
+        if transition_method == 'send_back':
+            comment = validated_data.get('send_back_comment', '')
+            if not comment:
+                raise serializers.ValidationError({'send_back_comment': ['This field is required when sending back']})
+        elif transition_method == 'cancel':
+            comment = validated_data.get('cancel_comment', '')
+            if not comment:
+                raise serializers.ValidationError({'cancel_comment': ['This field is required when cancelling']})
+
+        try:
+            method = getattr(instance, transition_method)
+
+            # Call the FSM transition method with comment if needed
+            if transition_method in ['send_back', 'cancel']:
+                comment = validated_data.get(f'{transition_method}_comment', '')
+                method(comment)
+            else:
+                method()
+
+            # Save after transition
+            instance.save()
+
+            # Refresh from DB to ensure all fields are properly loaded
+            instance.refresh_from_db()
+
+        except Exception as e:
+            raise serializers.ValidationError({
+                'status': [f"Unable to change status. {self._friendly_transition_error(e)}"]
+            })
+
+        return instance
+
+    def update(self, instance, validated_data):
+        """Override update to handle status changes through FSM transitions."""
         new_status = validated_data.get('status')
 
-        handled = _handle_display_status_patch(instance, validated_data, new_status)
+        handled = self._handle_display_status_patch(instance, validated_data, new_status)
         if handled is not None:
             return handled
 
-        # If status is being changed, route through FSM transition
-        if new_status and new_status != instance.status:
-            old_status = instance.status
+        handled = self._handle_rss_admin_only_transitions(instance, validated_data, new_status)
+        if handled is not None:
+            return handled
 
-            # Remove status from validated_data - we'll handle it via FSM
-            validated_data.pop('status', None)
-
-            # Update all other fields first
-            instance = super().update(instance, validated_data)
-
-            # Map status transitions to FSM methods
-            transition_map = {
-                (Engagement.STATUSES.partner_contacted, Engagement.STATUSES.report_submitted): 'submit',
-                (Engagement.STATUSES.report_submitted, Engagement.STATUSES.partner_contacted): 'send_back',
-                (Engagement.STATUSES.partner_contacted, Engagement.STATUSES.cancelled): 'cancel',
-                (Engagement.STATUSES.report_submitted, Engagement.STATUSES.cancelled): 'cancel',
-                (Engagement.STATUSES.report_submitted, Engagement.STATUSES.final): 'finalize',
-            }
-
-            transition_key = (old_status, new_status)
-            transition_method = transition_map.get(transition_key)
-
-            if not transition_method:
-                raise serializers.ValidationError({
-                    'status': [f'Invalid status transition from {old_status} to {new_status}']
-                })
-
-            # Call the appropriate FSM transition method
-            # send_back and cancel require comments - validate before trying FSM transition
-            if transition_method == 'send_back':
-                comment = validated_data.get('send_back_comment', '')
-                if not comment:
-                    raise serializers.ValidationError({
-                        'send_back_comment': ['This field is required when sending back']
-                    })
-            elif transition_method == 'cancel':
-                comment = validated_data.get('cancel_comment', '')
-                if not comment:
-                    raise serializers.ValidationError({
-                        'cancel_comment': ['This field is required when cancelling']
-                    })
-
-            try:
-                method = getattr(instance, transition_method)
-
-                # Call the FSM transition method with comment if needed
-                if transition_method in ['send_back', 'cancel']:
-                    comment = validated_data.get(f'{transition_method}_comment', '')
-                    method(comment)
-                else:
-                    method()
-
-                # Save after transition
-                instance.save()
-
-                # Refresh from DB to ensure all fields are properly loaded
-                # (FSM transitions may update datetime fields that need conversion)
-                instance.refresh_from_db()
-
-            except Exception as e:
-                raise serializers.ValidationError({
-                    'status': [f"Unable to change status. {_friendly_transition_error(e)}"]
-                })
-
-            return instance
+        handled = self._handle_fsm_status_transition(instance, validated_data, new_status)
+        if handled is not None:
+            return handled
 
         # No status change, proceed normally
-        return super().update(instance, validated_data)
+        return self._base_update(instance, validated_data)
 
 
 class AuditRssSerializer(EngagementStatusUpdateMixin, BaseAuditSerializer):

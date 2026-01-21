@@ -350,6 +350,47 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
         self.assertEqual(audit.send_back_comment, 'Please revise the report')
         self.assertIsNone(audit.date_of_report_submit)  # FSM clears this
 
+    def test_engagement_patch_status_reopen_cancelled_requires_comment(self):
+        """Reopening a cancelled engagement via PATCH uses send_back and requires a comment."""
+        audit = AuditFactory(status=Engagement.STATUSES.cancelled)
+        url = reverse('rss_admin:rss-admin-engagements-detail', kwargs={'pk': audit.pk})
+
+        # Missing comment should fail
+        resp = self.forced_auth_req('patch', url, user=self.user, data={'status': Engagement.DISPLAY_STATUSES.partner_contacted})
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST, resp.data)
+        self.assertIn('send_back_comment', resp.data)
+
+        # With comment should succeed
+        resp = self.forced_auth_req('patch', url, user=self.user, data={
+            'status': Engagement.DISPLAY_STATUSES.partner_contacted,
+            'send_back_comment': 'Reopening cancelled engagement',
+        })
+        self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
+        audit.refresh_from_db()
+        self.assertEqual(audit.status, Engagement.STATUSES.partner_contacted)
+        self.assertIsNone(audit.date_of_cancel)
+        self.assertEqual(audit.cancel_comment, '')
+
+    def test_engagement_patch_status_cancel_from_final_requires_comment(self):
+        """Cancelling a finalized engagement via PATCH should be allowed but requires cancel_comment."""
+        audit = AuditFactory(status=Engagement.STATUSES.final)
+        url = reverse('rss_admin:rss-admin-engagements-detail', kwargs={'pk': audit.pk})
+
+        # Missing comment should fail
+        resp = self.forced_auth_req('patch', url, user=self.user, data={'status': Engagement.DISPLAY_STATUSES.cancelled})
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST, resp.data)
+        self.assertIn('cancel_comment', resp.data)
+
+        # With comment should succeed
+        resp = self.forced_auth_req('patch', url, user=self.user, data={
+            'status': Engagement.DISPLAY_STATUSES.cancelled,
+            'cancel_comment': 'Cancelling finalized engagement',
+        })
+        self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
+        audit.refresh_from_db()
+        self.assertEqual(audit.status, Engagement.STATUSES.cancelled)
+        self.assertIsNotNone(audit.date_of_cancel)
+
     def test_engagement_patch_status_cancel_requires_comment(self):
         """Test that cancel transition via PATCH requires a comment"""
         audit = AuditFactory(status=Engagement.STATUSES.partner_contacted)
