@@ -561,9 +561,10 @@ class FaceFormListViewSet(
     serializer_class = FaceFormSerializer
 
     def get_queryset(self):
+        engagement_id = self.request.query_params.get('engagement', None)
         return (super().get_queryset()
                 .filter(partner_id=int(self.kwargs['partner_pk']))
-                .annotate(selected=Exists(Engagement.objects.filter(face_forms=OuterRef('pk'))))
+                .annotate(selected=Exists(Engagement.objects.exclude(id=engagement_id).filter(face_forms=OuterRef('pk'))))
                 .order_by('id'))
 
 
