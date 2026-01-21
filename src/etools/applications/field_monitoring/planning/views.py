@@ -47,6 +47,7 @@ from etools.applications.field_monitoring.planning.filters import (
     InterventionsFilterSet,
     MonitoringActivitiesFilterSet,
     ReferenceNumberOrderingFilter,
+    UserNameFilter,
     UserTPMPartnerFilter,
     UserTypeFilter,
 )
@@ -364,7 +365,7 @@ class FMUsersViewSet(
     Endpoint to be used for filtering users by their type (unicef/tpm) and partner in case of tpm
     """
 
-    filter_backends = (SearchFilter, UserTypeFilter, UserTPMPartnerFilter)
+    filter_backends = (SearchFilter, UserTypeFilter, UserTPMPartnerFilter, UserNameFilter)
     search_fields = ('email',)
     queryset = get_user_model().objects\
         .base_qs() \
