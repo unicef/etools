@@ -327,8 +327,25 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
         self.assertIsNotNone(audit.date_of_final_report)  # FSM sets this
 
     def test_engagement_patch_status_send_back_requires_comment(self):
-        """Test that send_back transition via PATCH requires a comment"""
-        audit = AuditFactory(status=Engagement.STATUSES.report_submitted)
+        """Test that send_back transition via PATCH requires a comment.
+
+        When sending back to IP Contacted, RSS Admin should also wipe later milestone dates
+        so computed displayed_status doesn't remain on "Comments Received from UNICEF", etc.
+        """
+        from datetime import date
+
+        audit = AuditFactory(
+            status=Engagement.STATUSES.report_submitted,
+            start_date=date(2022, 11, 20),
+            end_date=date(2022, 11, 24),
+            partner_contacted_at=date(2022, 11, 25),
+            date_of_field_visit=date(2022, 11, 26),
+            date_of_draft_report_to_ip=date(2022, 11, 29),
+            date_of_comments_by_ip=date(2022, 12, 12),
+            date_of_draft_report_to_unicef=date(2022, 12, 22),
+            date_of_comments_by_unicef=date(2022, 12, 22),
+            date_of_report_submit=date(2022, 12, 30),
+        )
         url = reverse('rss_admin:rss-admin-engagements-detail', kwargs={'pk': audit.pk})
 
         # Try to send back without comment - should fail
@@ -349,6 +366,13 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
         self.assertEqual(audit.status, Engagement.STATUSES.partner_contacted)
         self.assertEqual(audit.send_back_comment, 'Please revise the report')
         self.assertIsNone(audit.date_of_report_submit)  # FSM clears this
+        # RSS Admin should wipe later milestone dates so displayed_status becomes "IP Contacted"
+        self.assertIsNone(audit.date_of_comments_by_unicef)
+        self.assertIsNone(audit.date_of_draft_report_to_unicef)
+        self.assertIsNone(audit.date_of_comments_by_ip)
+        self.assertIsNone(audit.date_of_draft_report_to_ip)
+        self.assertIsNone(audit.date_of_field_visit)
+        self.assertEqual(resp.data.get('status'), Engagement.DISPLAY_STATUSES.partner_contacted)
 
     def test_engagement_patch_status_reopen_cancelled_requires_comment(self):
         """Reopening a cancelled engagement via PATCH uses send_back and requires a comment."""

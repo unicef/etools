@@ -282,7 +282,8 @@ class EngagementStatusUpdateMixin:
 
     def _handle_display_status_patch(self, instance, validated_data, new_status):
         """
-        Handle FE "display status" PATCH while underlying FSM/db status is partner_contacted.
+        Handle Displayed Status Transition (Non FSM)
+        The underlying FSM/DB workflow state is already `partner_contacted`.
 
         Returns:
             - Engagement instance if handled
@@ -317,7 +318,15 @@ class EngagementStatusUpdateMixin:
         return instance
 
     def _handle_rss_admin_only_transitions(self, instance, validated_data, new_status):
-        """RSS Admin-only transitions (does not change audit FSM rules)."""
+        """
+        Handle real (FSM) workflow transitions without modifying the global audit FSM rules.
+
+        - `cancelled -> partner_contacted`
+        - `final -> cancelled`
+
+        This is separate from `_handle_display_status_patch` because these are real workflow state
+        changes (FSM/DB status changes), not merely changes to the computed progress stage.
+        """
         # Allow reopening cancelled -> partner_contacted (requires send_back_comment)
         if instance.status == Engagement.STATUSES.cancelled and new_status == Engagement.DISPLAY_STATUSES.partner_contacted:
             validated_data.pop('status', None)
@@ -334,6 +343,12 @@ class EngagementStatusUpdateMixin:
             instance.send_back_comment = comment
             instance.save(update_fields=['status', 'date_of_cancel', 'cancel_comment', 'send_back_comment'])
             instance.refresh_from_db()
+
+            # Wipe milestone dates so computed display status reverts to "IP Contacted".
+            fields_to_clear = rollback_engagement_display_status(instance, Engagement.DISPLAY_STATUSES.partner_contacted)
+            if fields_to_clear:
+                instance.save(update_fields=fields_to_clear)
+                instance.refresh_from_db()
             return instance
 
         # Allow cancelling final -> cancelled (requires cancel_comment)
@@ -443,6 +458,16 @@ class EngagementStatusUpdateMixin:
 
             # Refresh from DB to ensure all fields are properly loaded
             instance.refresh_from_db()
+
+            # Special case: report_submitted -> partner_contacted should also wipe later milestone dates.
+            # Otherwise computed displayed_status remains at the latest milestone (e.g. comments_received_by_unicef).
+            if transition_method == 'send_back' and instance.status == Engagement.STATUSES.partner_contacted:
+                fields_to_clear = rollback_engagement_display_status(
+                    instance, Engagement.DISPLAY_STATUSES.partner_contacted
+                )
+                if fields_to_clear:
+                    instance.save(update_fields=fields_to_clear)
+                    instance.refresh_from_db()
 
         except Exception as e:
             raise serializers.ValidationError({
