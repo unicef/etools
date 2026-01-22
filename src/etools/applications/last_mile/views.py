@@ -20,7 +20,7 @@ from unicef_restlib.pagination import DynamicPageNumberPagination
 
 from etools.applications.last_mile import models, serializers
 from etools.applications.last_mile.filters import POIFilter, TransferFilter
-from etools.applications.last_mile.permissions import IsIPLMEditor
+from etools.applications.last_mile.permissions import IsIPLMEditorOrViewerReadOnly, IsLMSMGroup
 from etools.applications.last_mile.tasks import notify_upload_waybill
 from etools.applications.locations.models import Location
 from etools.applications.partners.models import PartnerOrganization
@@ -29,7 +29,7 @@ from etools.applications.utils.pbi_auth import get_access_token, get_embed_token
 
 
 class PointOfInterestTypeViewSet(ReadOnlyModelViewSet):
-    permission_classes = [IsIPLMEditor]
+    permission_classes = [IsIPLMEditorOrViewerReadOnly]
     queryset = models.PointOfInterestType.objects.all()
     serializer_class = serializers.PointOfInterestTypeSerializer
 
@@ -61,7 +61,7 @@ class POIQuerysetMixin:
 
 class PointOfInterestViewSet(POIQuerysetMixin, ModelViewSet):
     serializer_class = serializers.PointOfInterestSerializer
-    permission_classes = [IsIPLMEditor]
+    permission_classes = [IsIPLMEditorOrViewerReadOnly]
     pagination_class = DynamicPageNumberPagination
 
     filter_backends = (DjangoFilterBackend, SearchFilter)
@@ -96,7 +96,7 @@ class PointOfInterestViewSet(POIQuerysetMixin, ModelViewSet):
 
 class HandoverPartnerListViewSet(mixins.ListModelMixin, GenericViewSet):
     serializer_class = MinimalPartnerOrganizationListSerializer
-    permission_classes = [IsIPLMEditor]
+    permission_classes = [IsIPLMEditorOrViewerReadOnly]
     pagination_class = DynamicPageNumberPagination
 
     filter_backends = (SearchFilter,)
@@ -107,7 +107,7 @@ class HandoverPartnerListViewSet(mixins.ListModelMixin, GenericViewSet):
 
 
 class InventoryItemListView(POIQuerysetMixin, ListAPIView):
-    permission_classes = [IsIPLMEditor]
+    permission_classes = [IsIPLMEditorOrViewerReadOnly]
     serializer_class = serializers.ItemSimpleListSerializer
     pagination_class = DynamicPageNumberPagination
 
@@ -150,7 +150,7 @@ class InventoryItemListView(POIQuerysetMixin, ListAPIView):
 
 
 class InventoryMaterialsViewSet(POIQuerysetMixin, mixins.ListModelMixin, GenericViewSet):
-    permission_classes = [IsIPLMEditor]
+    permission_classes = [IsIPLMEditorOrViewerReadOnly]
     serializer_class = serializers.MaterialListSerializer
     pagination_class = DynamicPageNumberPagination
 
@@ -216,7 +216,7 @@ class TransferViewSet(
     queryset = models.Transfer.objects.all().order_by('created', '-id')
 
     pagination_class = DynamicPageNumberPagination
-    permission_classes = [IsIPLMEditor]
+    permission_classes = [IsIPLMEditorOrViewerReadOnly]
 
     filter_backends = (DjangoFilterBackend, SearchFilter)
     filterset_class = TransferFilter
@@ -406,7 +406,7 @@ class TransferViewSet(
 
 
 class ItemUpdateViewSet(mixins.UpdateModelMixin, mixins.RetrieveModelMixin, GenericViewSet):
-    permission_classes = [IsIPLMEditor]
+    permission_classes = [IsIPLMEditorOrViewerReadOnly]
     queryset = models.Item.objects.all()
     serializer_class = serializers.ItemUpdateSerializer
 
@@ -429,7 +429,7 @@ class ItemUpdateViewSet(mixins.UpdateModelMixin, mixins.RetrieveModelMixin, Gene
 
 
 class PowerBIDataView(APIView):
-    permission_classes = [IsIPLMEditor]
+    permission_classes = [IsLMSMGroup]
 
     @staticmethod
     def get_pbi_access_token():
@@ -443,17 +443,22 @@ class PowerBIDataView(APIView):
         return {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + self.get_pbi_access_token()}
 
     def get(self, request, *args, **kwargs):
+        user = request.user
+        if user.is_lmsm_admin:
+            report_id = settings.PBI_CONFIG["REPORT_ID_ADMIN"]
+        else:
+            report_id = settings.PBI_CONFIG["REPORT_ID"]
         try:
-            embed_url, dataset_id = get_embed_url(self.pbi_headers)
-            embed_token = get_embed_token(dataset_id, self.pbi_headers)
+            embed_url, dataset_id = get_embed_url(self.pbi_headers, report_id)
+            embed_token = get_embed_token(dataset_id, self.pbi_headers, report_id)
         except TokenRetrieveException:
             return Response("Temporary unavailable, PowerBI information cannot be retrieved from Microsoft Servers",
                             status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
         resp_data = {
-            "report_id": settings.PBI_CONFIG["REPORT_ID"],
+            "report_id": report_id,
             "embed_url": embed_url,
             "access_token": embed_token,
-            "vendor_number": request.user.profile.organization.vendor_number
+            "vendor_number": user.profile.organization.vendor_number
         }
         return Response(resp_data, status=status.HTTP_200_OK)

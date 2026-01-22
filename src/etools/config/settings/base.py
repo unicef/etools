@@ -704,6 +704,7 @@ PBI_CONFIG = {
     "AUTHENTICATION_MODE": 'ServicePrincipal',
     "WORKSPACE_ID": get_from_secrets_or_env('PBI_LMSM_WORKSPACE_ID', ''),
     "REPORT_ID": get_from_secrets_or_env('PBI_LMSM_REPORT_ID', ''),
+    "REPORT_ID_ADMIN": get_from_secrets_or_env('PBI_LMSM_REPORT_ID_ADMIN', ''),
     "TENANT_ID": get_from_secrets_or_env('PBI_LMSM_TENANT_ID', ''),
     "CLIENT_ID": get_from_secrets_or_env('PBI_LMSM_CLIENT_ID', ''),
     "CLIENT_SECRET": get_from_secrets_or_env('PBI_LMSM_CLIENT_SECRET', ''),
