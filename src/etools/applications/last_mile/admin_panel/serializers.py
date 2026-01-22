@@ -575,11 +575,8 @@ class PointOfInterestExportSerializer(serializers.ModelSerializer):
 
     @classmethod
     def bulk_generate_rows(cls, instances):
-        """Generate rows for multiple POIs with bulk transfer fetching"""
-        # Collect all POI IDs
         poi_ids = [poi.id for poi in instances]
 
-        # Fetch all transfers for all POIs in one query
         transfers_qs = (
             models.Transfer.all_objects
             .filter(destination_point_id__in=poi_ids)
@@ -587,12 +584,10 @@ class PointOfInterestExportSerializer(serializers.ModelSerializer):
             .prefetch_related('items')
         )
 
-        # Organize transfers by POI ID
         transfers_by_poi = defaultdict(list)
         for transfer in transfers_qs:
             transfers_by_poi[transfer.destination_point_id].append(transfer)
 
-        # Generate rows for all POIs
         all_rows = []
         serializer = cls()
 
