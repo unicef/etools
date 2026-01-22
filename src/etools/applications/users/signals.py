@@ -13,18 +13,12 @@ from etools.applications.users.tasks import sync_realms_to_prp
 
 @receiver(post_save, sender=Realm)
 def sync_realms_to_prp_on_update(instance: Realm, created: bool, **kwargs):
-    # Create an instance of the permissions service
-    permissions_service = LMSMPermissionsService()
-
-    # Check if this is an LMSM admin group and handle permissions (both activation and deactivation)
-    if permissions_service.is_lmsm_admin_group(instance.group.name):
-        permissions_service.handle_realm_save_permissions(instance, created)
-        return
-
     if instance.user.is_unicef_user():
         # only external users are allowed to be synced to prp
         return
-
+    # Lastmile realms not synced to prp
+    if instance.group.name in LMSMPermissionsService.LMSM_GROUPS:
+        return
     transaction.on_commit(
         lambda:
             sync_realms_to_prp.apply_async(
@@ -36,16 +30,12 @@ def sync_realms_to_prp_on_update(instance: Realm, created: bool, **kwargs):
 
 @receiver(post_delete, sender=Realm)
 def sync_realms_to_prp_on_delete(instance: Realm, **kwargs):
-    # Create an instance of the permissions service
-    permissions_service = LMSMPermissionsService()
-
-    # Check if this is an LMSM admin group and handle permissions and not sync to PRP
-    if permissions_service.is_lmsm_admin_group(instance.group.name):
-        permissions_service.handle_realm_deletion_permissions(instance)
-        return
-
     if instance.user.is_unicef_user():
         # only external users are allowed to be synced to prp
+        return
+
+    # Lastmile realms not synced to prp
+    if instance.group.name in LMSMPermissionsService.LMSM_GROUPS:
         return
 
     now = timezone.now()

@@ -18,24 +18,16 @@ class LMSMPermissionsService:
     LMSM_GROUPS = [LMSM_CO_ADMIN, LMSM_HQ_ADMIN, IP_LM_EDITOR, LMSMAPI, IP_LM_VIEWR, LMSM_ADMIN_PANEL]
 
     def assign_permissions_for_co_admin(self, user):
-        for perm_codename in LIST_INTERESTED_LASTMILE_PERMS_WITHOUT_APPROVE:
-            try:
-                perm = Permission.objects.get(codename=perm_codename)
-                if not user.user_permissions.filter(id=perm.id).exists():
-                    user.user_permissions.add(perm)
-            except Permission.DoesNotExist:
-                pass
+        permissions = Permission.objects.filter(codename__in=LIST_INTERESTED_LASTMILE_PERMS_WITHOUT_APPROVE)
+        if permissions:
+            user.user_permissions.add(*permissions)
 
     def assign_permissions_for_hq_admin(self, user):
-        for perm_codename in LIST_INTERESTED_LASTMILE_PERMS:
-            try:
-                perm = Permission.objects.get(codename=perm_codename)
-                if not user.user_permissions.filter(id=perm.id).exists():
-                    user.user_permissions.add(perm)
-            except Permission.DoesNotExist:
-                pass
+        permissions = Permission.objects.filter(codename__in=LIST_INTERESTED_LASTMILE_PERMS)
+        if permissions:
+            user.user_permissions.add(*permissions)
 
-    def handle_realm_save_permissions(self, realm_instance, created=False):
+    def handle_realm_save_permissions(self, realm_instance):
         if realm_instance.group.name not in [self.LMSM_CO_ADMIN, self.LMSM_HQ_ADMIN]:
             return False
 
@@ -79,22 +71,16 @@ class LMSMPermissionsService:
         return True
 
     def remove_all_lmsm_permissions(self, user):
-        for perm_codename in LIST_INTERESTED_LASTMILE_PERMS:
-            try:
-                perm = Permission.objects.get(codename=perm_codename)
-                user.user_permissions.remove(perm)
-            except Permission.DoesNotExist:
-                pass
+        permissions = Permission.objects.filter(codename__in=LIST_INTERESTED_LASTMILE_PERMS)
+
+        if permissions.exists():
+            user.user_permissions.remove(*permissions)
 
     def remove_approve_permissions(self, user):
         approve_perms = set(LIST_INTERESTED_LASTMILE_PERMS) - set(LIST_INTERESTED_LASTMILE_PERMS_WITHOUT_APPROVE)
-
-        for perm_codename in approve_perms:
-            try:
-                perm = Permission.objects.get(codename=perm_codename)
-                user.user_permissions.remove(perm)
-            except Permission.DoesNotExist:
-                pass
+        permissions = Permission.objects.filter(codename__in=approve_perms)
+        if permissions.exists():
+            user.user_permissions.remove(*permissions)
 
     def is_lmsm_admin_group(self, group_name):
         return group_name in self.LMSM_GROUPS
