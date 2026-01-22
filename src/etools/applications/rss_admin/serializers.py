@@ -496,72 +496,53 @@ class EngagementStatusUpdateMixin:
         return self._base_update(instance, validated_data)
 
 
-class AuditRssSerializer(EngagementStatusUpdateMixin, BaseAuditSerializer):
+class RssEngagementFieldsMixin(serializers.Serializer):
+    """
+    Shared fields/behaviour for RSS Admin engagement serializers.
+
+    NOTE: This is a Serializer subclass (not a plain mixin) so DRF will collect the declared fields.
+    We implement `update()` as a pass-through so the real ModelSerializer update logic from the
+    audit serializers still runs (and isn't replaced by Serializer.update()).
+    """
+
+    # RSS Admin wants the same "status" value across list/detail (computed/displayed status),
+    # but still accepts PATCH writes under the same JSON key.
+    status = rss_display_status_field()
+
+    # RSS Admin override: allow editing total_value directly.
+    total_value = serializers.DecimalField(max_digits=20, decimal_places=2, required=False)
+
+    @property
+    def _readable_fields(self):
+        return [field for field in self.fields.values()]
+
+    @property
+    def _writable_fields(self):
+        return [field for field in self.fields.values() if not field.read_only]
+
+    def update(self, instance, validated_data):
+        # Delegate to the next update() in MRO (the actual ModelSerializer update).
+        return super().update(instance, validated_data)
+
+
+class AuditRssSerializer(EngagementStatusUpdateMixin, RssEngagementFieldsMixin, BaseAuditSerializer):
     """Permission-agnostic audit serializer for RSS Admin."""
-    # Keep parity with audit module: represent `status` as computed display status,
-    # while still accepting PATCH writes for RSS Admin status handling.
-    status = rss_display_status_field()
-
-    @property
-    def _readable_fields(self):
-        return [field for field in self.fields.values()]
-
-    @property
-    def _writable_fields(self):
-        return [field for field in self.fields.values() if not field.read_only]
 
 
-class SpotCheckRssSerializer(EngagementStatusUpdateMixin, BaseSpotCheckSerializer):
+class SpotCheckRssSerializer(EngagementStatusUpdateMixin, RssEngagementFieldsMixin, BaseSpotCheckSerializer):
     """Permission-agnostic spot check serializer for RSS Admin."""
-    status = rss_display_status_field()
-
-    @property
-    def _readable_fields(self):
-        return [field for field in self.fields.values()]
-
-    @property
-    def _writable_fields(self):
-        return [field for field in self.fields.values() if not field.read_only]
 
 
-class StaffSpotCheckRssSerializer(EngagementStatusUpdateMixin, BaseStaffSpotCheckSerializer):
+class StaffSpotCheckRssSerializer(EngagementStatusUpdateMixin, RssEngagementFieldsMixin, BaseStaffSpotCheckSerializer):
     """Permission-agnostic staff spot check serializer for RSS Admin."""
-    status = rss_display_status_field()
-
-    @property
-    def _readable_fields(self):
-        return [field for field in self.fields.values()]
-
-    @property
-    def _writable_fields(self):
-        return [field for field in self.fields.values() if not field.read_only]
 
 
-class MicroAssessmentRssSerializer(EngagementStatusUpdateMixin, BaseMicroAssessmentSerializer):
+class MicroAssessmentRssSerializer(EngagementStatusUpdateMixin, RssEngagementFieldsMixin, BaseMicroAssessmentSerializer):
     """Permission-agnostic micro assessment serializer for RSS Admin."""
-    status = rss_display_status_field()
-
-    @property
-    def _readable_fields(self):
-        return [field for field in self.fields.values()]
-
-    @property
-    def _writable_fields(self):
-        return [field for field in self.fields.values() if not field.read_only]
 
 
-class SpecialAuditRssSerializer(EngagementStatusUpdateMixin, BaseSpecialAuditSerializer):
+class SpecialAuditRssSerializer(EngagementStatusUpdateMixin, RssEngagementFieldsMixin, BaseSpecialAuditSerializer):
     """Permission-agnostic special audit serializer for RSS Admin."""
-    status = rss_display_status_field()
-
-    @property
-    def _readable_fields(self):
-        return [field for field in self.fields.values()]
-
-    @property
-    def _writable_fields(self):
-        return [field for field in self.fields.values() if not field.read_only]
-
 
 class EngagementChangeStatusSerializer(serializers.Serializer):
     """Serializer to validate input for changing an Engagement status.
