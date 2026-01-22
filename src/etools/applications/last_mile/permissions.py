@@ -1,6 +1,7 @@
 from rest_framework.permissions import IsAuthenticated
 
 from etools.applications.last_mile.admin_panel.constants import *  # NOQA
+from etools.applications.last_mile.services.permissions_service import LMSMPermissionsService
 from etools.libraries.djangolib.utils import is_user_in_groups
 
 
@@ -147,6 +148,12 @@ class LMSMAPIPermission(IsAuthenticated):
         Return `True` if permission is granted, `False` otherwise.
         """
         return request.user.is_staff or is_user_in_groups(request.user, ['LMSMApi'])
+
+
+class IsLMSMGroup(IsAuthenticated):
+
+    def has_permission(self, request, view):
+        return super().has_permission(request, view) and request.user.groups.filter(name__in=LMSMPermissionsService.LMSM_GROUPS).exists()
 
 
 class LastMileUserPermissionRetriever():

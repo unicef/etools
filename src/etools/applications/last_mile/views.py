@@ -20,7 +20,7 @@ from unicef_restlib.pagination import DynamicPageNumberPagination
 
 from etools.applications.last_mile import models, serializers
 from etools.applications.last_mile.filters import POIFilter, TransferFilter
-from etools.applications.last_mile.permissions import IsIPLMEditorOrViewerReadOnly
+from etools.applications.last_mile.permissions import IsIPLMEditorOrViewerReadOnly, IsLMSMGroup
 from etools.applications.last_mile.tasks import notify_upload_waybill
 from etools.applications.locations.models import Location
 from etools.applications.partners.models import PartnerOrganization
@@ -429,7 +429,7 @@ class ItemUpdateViewSet(mixins.UpdateModelMixin, mixins.RetrieveModelMixin, Gene
 
 
 class PowerBIDataView(APIView):
-    permission_classes = [IsIPLMEditorOrViewerReadOnly]
+    permission_classes = [IsLMSMGroup]
 
     @staticmethod
     def get_pbi_access_token():
