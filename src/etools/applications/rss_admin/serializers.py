@@ -290,9 +290,9 @@ class EngagementStatusUpdateMixin:
             - None if not applicable
         """
         if not (
-            new_status
-            and new_status in get_partner_contacted_display_progress_order()
-            and instance.status == Engagement.STATUSES.partner_contacted
+            new_status and
+            new_status in get_partner_contacted_display_progress_order() and
+            instance.status == Engagement.STATUSES.partner_contacted
         ):
             return None
 
@@ -543,6 +543,7 @@ class MicroAssessmentRssSerializer(EngagementStatusUpdateMixin, RssEngagementFie
 
 class SpecialAuditRssSerializer(EngagementStatusUpdateMixin, RssEngagementFieldsMixin, BaseSpecialAuditSerializer):
     """Permission-agnostic special audit serializer for RSS Admin."""
+
 
 class EngagementChangeStatusSerializer(serializers.Serializer):
     """Serializer to validate input for changing an Engagement status.
