@@ -15,6 +15,7 @@ from etools.applications.organizations.models import Organization
 from etools.applications.partners.prp_api import PRPAPI
 from etools.applications.partners.serializers.prp_v1 import PRPSyncUserSerializer
 from etools.applications.users.mixins import PARTNER_ACTIVE_GROUPS
+from etools.applications.last_mile.services.permissions_service import LMSMPermissionsService
 from etools.applications.users.models import Country, Realm, User, UserProfile
 from etools.config.celery import app
 
@@ -227,7 +228,8 @@ def notify_user_on_realm_update(user_pk):
 
 @app.task
 def sync_realms_to_prp(user_pk, last_modified_at_timestamp, retry_counter=0):
-    last_modified_instance = Realm.objects.filter(user_id=user_pk).order_by('modified').last()
+    # We exclude LMSM Groups from check, because we don't sync them with PRP
+    last_modified_instance = Realm.objects.filter(user_id=user_pk).exclude(group__name__in=LMSMPermissionsService.LMSM_GROUPS).order_by('modified').last()
     if last_modified_instance and last_modified_instance.modified.timestamp() > last_modified_at_timestamp:
         # there were updates to user realms. skip
         return
