@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-08 11:54+0000\n"
+"POT-Creation-Date: 2026-01-23 08:15+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -606,6 +606,20 @@ msgstr "ميزانية خطة العمل التفصيلية"
 
 msgid "Supply Contribution (Planned)"
 msgstr "مساهمة التوريد (مخطط لها)"
+
+msgid "Open selection"
+msgstr "اختيار مفتوح"
+
+msgid "Direct selection"
+msgstr "اختيار مباشر"
+
+msgid ""
+"Select how the partner was selected in UNPP (Open selection or Direct "
+"selection)."
+msgstr "حدد كيف تم اختيار الشريك في UNPP (اختيار مفتوح أو اختيار مباشر)."
+
+msgid "Partner Selection Modality"
+msgstr "طريقة اختيار الشريك"
 
 msgid "Name"
 msgstr "اسم"

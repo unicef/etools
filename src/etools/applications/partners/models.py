@@ -2028,8 +2028,21 @@ class Intervention(TimeStampedModel):
         verbose_name=_("UNPP Number"),
         max_length=150,
         blank=True,
-        null=True,
-        default="",
+        null=True
+    )
+    SELECTION_MODALITY_OPEN = "open"
+    SELECTION_MODALITY_DIRECT = "direct"
+    SELECTION_MODALITY_CHOICES = (
+        (SELECTION_MODALITY_OPEN, _("Open selection")),
+        (SELECTION_MODALITY_DIRECT, _("Direct selection")),
+    )
+    partner_selection_modality = models.CharField(
+        verbose_name=_("Partner Selection Modality"),
+        help_text=_("Select how the partner was selected in UNPP (Open selection or Direct selection)."),
+        max_length=16,
+        choices=SELECTION_MODALITY_CHOICES,
+        blank=True,
+        null=True
     )
     context = models.TextField(
         verbose_name=_("Context"),

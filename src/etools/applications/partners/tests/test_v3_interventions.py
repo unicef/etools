@@ -709,6 +709,7 @@ class TestCreate(BaseInterventionTestCase):
             "reference_number_year": datetime.date.today().year,
             "humanitarian_flag": True,
             "cfei_number": "321",
+            "partner_selection_modality": Intervention.SELECTION_MODALITY_OPEN,
             "budget_owner": self.unicef_user.pk,
             "phone": self.unicef_user.profile.phone_number,
             "activation_protocol": "test",
@@ -725,6 +726,7 @@ class TestCreate(BaseInterventionTestCase):
         self.assertTrue(i.humanitarian_flag)
         self.assertTrue(data.get("humanitarian_flag"))
         self.assertEqual(data.get("cfei_number"), "321")
+        self.assertEqual(data.get("partner_selection_modality"), Intervention.SELECTION_MODALITY_OPEN)
         self.assertEqual(data.get("budget_owner"), self.user_serialized)
 
     def test_add_intervention_by_partner_member(self):
@@ -758,6 +760,8 @@ class TestCreate(BaseInterventionTestCase):
                 'document_type': Intervention.PD,
                 'title': 'My test intervention',
                 'agreement': self.agreement.pk,
+                'cfei_number': 'CEF/ABC/2025/001',
+                'partner_selection_modality': Intervention.SELECTION_MODALITY_DIRECT,
             }
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED, response.data)
@@ -771,6 +775,8 @@ class TestCreate(BaseInterventionTestCase):
                 'document_type': Intervention.PD,
                 'title': 'PD with Currency',
                 'agreement': self.agreement.pk,
+                'cfei_number': 'CEF/ABC/2025/001',
+                'partner_selection_modality': Intervention.SELECTION_MODALITY_OPEN,
                 'planned_budget': {
                     'currency': 'AFN',
                 }
@@ -793,6 +799,8 @@ class TestCreate(BaseInterventionTestCase):
                 'document_type': Intervention.PD,
                 'title': 'PD with Currency',
                 'agreement': self.agreement.pk,
+                'cfei_number': 'CEF/ABC/2025/001',
+                'partner_selection_modality': Intervention.SELECTION_MODALITY_OPEN,
                 'planned_budget': {
                     'currency': 'WRONG',
                 }
