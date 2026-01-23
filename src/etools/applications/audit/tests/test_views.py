@@ -2124,6 +2124,41 @@ class TestFaceFormsViewSet(BaseTenantTestCase):
         self.assertEqual(ff_list[1]['id'], ff_2.id)
         self.assertEqual(ff_list[1]['selected'], False)
 
+    def test_list_query_param_engagement(self):
+        ff_1 = FaceFormFactory(partner=self.partner)
+        ff_2 = FaceFormFactory(partner=self.partner)
+        # First face form is selected on audit
+        self.audit.face_forms.add(ff_1)
+
+        response = self.forced_auth_req(
+            'get',
+            '/api/audit/face-forms/{0}/'.format(self.partner.id),
+            user=self.unicef_focal_point
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 2)
+        ff_list = sorted(response.data['results'], key=lambda ff: ff['id'])
+        self.assertEqual(ff_list[0]['id'], ff_1.id)
+        self.assertEqual(ff_list[0]['selected'], True)
+
+        self.assertEqual(ff_list[1]['id'], ff_2.id)
+        self.assertEqual(ff_list[1]['selected'], False)
+
+        response = self.forced_auth_req(
+            'get',
+            '/api/audit/face-forms/{0}/'.format(self.partner.id),
+            data={'engagement': self.audit.id},
+            user=self.unicef_focal_point
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 2)
+        ff_list = sorted(response.data['results'], key=lambda ff: ff['id'])
+        self.assertEqual(ff_list[0]['id'], ff_1.id)
+        self.assertEqual(ff_list[0]['selected'], False)
+
+        self.assertEqual(ff_list[1]['id'], ff_2.id)
+        self.assertEqual(ff_list[1]['selected'], False)
+
 
 class TestEngagementSpecialPDFExportViewSet(EngagementTransitionsTestCaseMixin, BaseTenantTestCase):
     engagement_factory = SpecialAuditFactory
