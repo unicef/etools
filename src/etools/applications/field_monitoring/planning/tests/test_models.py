@@ -2,6 +2,7 @@ from datetime import date, timedelta
 from unittest import skip
 
 from django.core.management import call_command
+from django.utils import timezone
 
 from dateutil.utils import today
 from factory import fuzzy
@@ -140,6 +141,43 @@ class TestMonitoringActivityValidations(BaseTenantTestCase):
         overall_finding.value = 'answer'
         overall_finding.save()
         self.assertTrue(ActivityValid(activity, user=self.user).is_valid)
+
+    def test_completion_date_set_when_status_completed(self):
+        """Test that completion_date is automatically set when status is set to completed"""
+        activity = MonitoringActivityFactory(
+            status=MonitoringActivity.STATUSES.draft,
+            completion_date=None
+        )
+        self.assertIsNone(activity.completion_date)
+        
+        # Set status to completed
+        activity.status = MonitoringActivity.STATUSES.completed
+        activity.save()
+        
+        # completion_date should be set to today's date
+        self.assertIsNotNone(activity.completion_date)
+        self.assertEqual(activity.completion_date, timezone.now().date())
+        
+        # Refresh from database to ensure it was saved
+        activity.refresh_from_db()
+        self.assertEqual(activity.completion_date, timezone.now().date())
+
+    def test_completion_date_not_overwritten_if_already_set(self):
+        """Test that completion_date is not overwritten if it's already set"""
+        existing_date = date(2024, 1, 15)
+        activity = MonitoringActivityFactory(
+            status=MonitoringActivity.STATUSES.draft,
+            completion_date=existing_date
+        )
+        self.assertEqual(activity.completion_date, existing_date)
+        
+        # Set status to completed
+        activity.status = MonitoringActivity.STATUSES.completed
+        activity.save()
+        
+        # completion_date should remain the same
+        activity.refresh_from_db()
+        self.assertEqual(activity.completion_date, existing_date)
 
 
 class TestMonitoringActivityQuestionsFlow(BaseTenantTestCase):
