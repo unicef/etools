@@ -11,11 +11,11 @@ from celery.utils.log import get_task_logger
 from requests import HTTPError
 
 from etools.applications.environment.notifications import send_notification_with_template
+from etools.applications.last_mile.services.permissions_service import LMSMPermissionsService
 from etools.applications.organizations.models import Organization
 from etools.applications.partners.prp_api import PRPAPI
 from etools.applications.partners.serializers.prp_v1 import PRPSyncUserSerializer
 from etools.applications.users.mixins import PARTNER_ACTIVE_GROUPS
-from etools.applications.last_mile.services.permissions_service import LMSMPermissionsService
 from etools.applications.users.models import Country, Realm, User, UserProfile
 from etools.config.celery import app
 
