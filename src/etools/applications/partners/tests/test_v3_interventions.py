@@ -444,6 +444,8 @@ class TestDetail(BaseInterventionTestCase):
 
     def test_cfei_number_permissions_unicef_focal(self):
         self.intervention.unicef_focal_points.add(self.unicef_user)
+        self.intervention.cfei_number = None
+        self.intervention.save(update_fields=['cfei_number'])
         self.assertFalse(self.intervention.cfei_number)
         self.assertEqual(self.intervention.status, Intervention.DRAFT)
         response = self.forced_auth_req(
