@@ -515,7 +515,19 @@
             <tr>
               <td>{{ attachment.created }}</td>
               <td>{{ attachment.type.get_name_display }}</td>
-              <td>{% if attachment.attachment_file.last %}{{ domain }}{{ attachment.attachment_file.last.file_link }}{% else %}{{ attachment.attachment.url }}{% endif %}</td>
+              <td>         
+                {% with attachment.attachment_file.last as file %}
+                  {% if file %}
+                    <a href="{{ domain }}{{ file.file_link }}">{{ file.filename }}</a>
+                  {% else %}
+                    {% if attachment.attachment.filename %}
+                      <a href="{{ attachment.attachment.url }}">{{ attachment.attachment.filename }}</a>
+                    {% else %}
+                      <a href="{{ attachment.attachment.url }}">{{ attachment.attachment.url }}</a>
+                    {% endif %}
+                  {% endif %}
+                {% endwith %}
+              </td>
               <td>{% if not attachment.active %}{% translate "Yes" %}{% else %}{% translate "No" %}{% endif %}</td>
             </tr>
           {% endfor %}

@@ -332,6 +332,11 @@ class PointOfInterestCustomSerializer(serializers.ModelSerializer):
         allow_null=True,
     )
 
+    l_consignee_code = serializers.CharField(
+        required=False,
+        allow_null=True,
+    )
+
     def validate_secondary_type(self, value):
         if not self.instance and not value:
             raise ValidationError(REQUIRED_SECONDARY_TYPE)
@@ -364,7 +369,7 @@ class PointOfInterestCustomSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.PointOfInterest
-        fields = ('name', 'partner_organizations', 'poi_type', 'secondary_type', 'point', 'created_by', 'is_active', 'p_code')
+        fields = ('name', 'partner_organizations', 'poi_type', 'secondary_type', 'point', 'created_by', 'is_active', 'p_code', 'l_consignee_code')
 
 
 class SimplePartnerOrganizationSerializer(serializers.ModelSerializer):
