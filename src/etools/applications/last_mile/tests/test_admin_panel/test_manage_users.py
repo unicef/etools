@@ -864,3 +864,31 @@ class TestUsersViewSet(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data.get('count'), 1)
         self.assertEqual(response.data.get('results')[0].get('email'), self.unicef_user.email)
+
+    def test_get_user_returns_organizations_array(self):
+        country = Country.objects.get(schema_name="test")
+        second_org = OrganizationFactory(name='Get Test Org', vendor_number='VN12345')
+
+        group = GroupFactory(name="Test Group")
+        Realm.objects.create(
+            user=self.partner_staff,
+            country=country,
+            organization=second_org,
+            group=group,
+            is_active=True
+        )
+
+        url_with_param = self.url + f"{self.partner_staff.pk}/"
+        response = self.forced_auth_req('get', url_with_param, user=self.partner_staff)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertIn('organizations', response.data)
+        organizations = response.data['organizations']
+        self.assertIsInstance(organizations, list)
+
+        for org in organizations:
+            self.assertIn('id', org)
+            self.assertIn('name', org)
+            self.assertIn('vendor_number', org)
+
+        self.assertGreaterEqual(len(organizations), 1)

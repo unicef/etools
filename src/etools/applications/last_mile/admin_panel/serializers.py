@@ -64,10 +64,33 @@ class UserAdminSerializer(SimpleUserSerializer):
     point_of_interests = serializers.SerializerMethodField(read_only=True)
     last_mile_profile = LastMileProfileSerializer(read_only=True)
     alert_types = serializers.SerializerMethodField(read_only=True)
+    organizations = serializers.SerializerMethodField(read_only=True)
 
     def get_alert_types(self, obj):
         realms = getattr(obj, 'realms', [])
         return SimpleRealmSerializer(realms, many=True, read_only=True).data
+
+    def get_organizations(self, obj):
+        organizations = []
+        if hasattr(obj, 'realms'):
+            seen_orgs = set()
+            for realm in obj.realms.all():
+                if realm.organization and realm.organization.id not in seen_orgs:
+                    seen_orgs.add(realm.organization.id)
+                    organizations.append({
+                        'id': realm.organization.id,
+                        'name': realm.organization.name,
+                        'vendor_number': realm.organization.vendor_number
+                    })
+
+        if not organizations and hasattr(obj, 'profile') and obj.profile.organization:
+            organizations.append({
+                'id': obj.profile.organization.id,
+                'name': obj.profile.organization.name,
+                'vendor_number': obj.profile.organization.vendor_number
+            })
+
+        return organizations
 
     class Meta:
         model = get_user_model()
@@ -87,6 +110,7 @@ class UserAdminSerializer(SimpleUserSerializer):
             'point_of_interests',
             'last_mile_profile',
             'alert_types',
+            'organizations',
         )
 
     def get_point_of_interests(self, obj):
@@ -123,6 +147,12 @@ class UserAdminExportSerializer(serializers.ModelSerializer):
 
 
 class UserProfileCreationSerializer(serializers.ModelSerializer):
+    organizations = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=Organization.objects.all(),
+        required=False,
+        write_only=True
+    )
 
     class Meta:
         model = UserProfile
@@ -193,6 +223,12 @@ class UserAdminUpdateSerializer(serializers.ModelSerializer):
         source='profile.organization',
         required=False
     )
+    organizations = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=Organization.objects.all(),
+        required=False,
+        write_only=True
+    )
     country = serializers.PrimaryKeyRelatedField(
         queryset=Country.objects.all(),
         source='profile.country',
@@ -215,6 +251,7 @@ class UserAdminUpdateSerializer(serializers.ModelSerializer):
             'is_active',
             'password',
             'organization',
+            'organizations',
             'country',
             'point_of_interests',
         )
@@ -287,6 +324,15 @@ class UserAdminUpdateSerializer(serializers.ModelSerializer):
                 profile.organization = profile_data.get('organization')
                 if not Realm.objects.filter(user=instance, country=country, organization=profile_data.get('organization')).exists():
                     Realm.objects.filter(user=instance, country=country, organization=old_organization).update(organization=profile_data.get('organization'))
+            elif validated_data.get('organizations'):
+                # Delete old realms
+                Realm.objects.filter(user=instance, country=country).delete()
+                # Create new realms
+                new_realms = []
+                IP_LM_EDITOR_GROUP = Group.objects.get(name="IP LM Editor")
+                for org in validated_data.get('organizations'):
+                    new_realms.append(Realm(user=instance, country=country, organization=org, group=IP_LM_EDITOR_GROUP))
+                Realm.objects.bulk_create(new_realms)
             if 'country' in profile_data:
                 profile.country = country
             profile.save()
@@ -298,6 +344,26 @@ class UserAdminUpdateSerializer(serializers.ModelSerializer):
         data['point_of_interests'] = []
         if (hasattr(instance.profile, 'organization') and instance.profile.organization and hasattr(instance.profile.organization, 'partner') and instance.profile.organization.partner):
             data['point_of_interests'] = [poi.id for poi in instance.profile.organization.partner.points_of_interest.all()]
+
+        data['organizations'] = []
+        if hasattr(instance, 'realms'):
+            seen_orgs = set()
+            for realm in instance.realms.all():
+                if realm.organization and realm.organization.id not in seen_orgs:
+                    seen_orgs.add(realm.organization.id)
+                    data['organizations'].append({
+                        'id': realm.organization.id,
+                        'name': realm.organization.name,
+                        'vendor_number': realm.organization.vendor_number
+                    })
+
+        if not data['organizations'] and hasattr(instance, 'profile') and instance.profile.organization:
+            data['organizations'].append({
+                'id': instance.profile.organization.id,
+                'name': instance.profile.organization.name,
+                'vendor_number': instance.profile.organization.vendor_number
+            })
+
         return data
 
 
