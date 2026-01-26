@@ -149,15 +149,15 @@ class TestMonitoringActivityValidations(BaseTenantTestCase):
             completion_date=None
         )
         self.assertIsNone(activity.completion_date)
-        
+
         # Set status to completed
         activity.status = MonitoringActivity.STATUSES.completed
         activity.save()
-        
+
         # completion_date should be set to today's date
         self.assertIsNotNone(activity.completion_date)
         self.assertEqual(activity.completion_date, timezone.now().date())
-        
+
         # Refresh from database to ensure it was saved
         activity.refresh_from_db()
         self.assertEqual(activity.completion_date, timezone.now().date())
@@ -170,11 +170,11 @@ class TestMonitoringActivityValidations(BaseTenantTestCase):
             completion_date=existing_date
         )
         self.assertEqual(activity.completion_date, existing_date)
-        
+
         # Set status to completed
         activity.status = MonitoringActivity.STATUSES.completed
         activity.save()
-        
+
         # completion_date should remain the same
         activity.refresh_from_db()
         self.assertEqual(activity.completion_date, existing_date)

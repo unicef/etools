@@ -7,9 +7,9 @@ from django.contrib.postgres.fields import ArrayField
 from django.db import connection, models, transaction
 from django.db.models import Count, Exists, OuterRef, Prefetch, Q
 from django.db.models.base import ModelBase
+from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
-from django.utils import timezone
 
 from django_fsm import FSMField, transition
 from model_utils import Choices, FieldTracker
