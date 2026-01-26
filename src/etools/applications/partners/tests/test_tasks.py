@@ -1243,7 +1243,10 @@ class ActivePDTransferToNewCPTestCase(BaseTenantTestCase):
         transfer_active_pds_to_new_cp()
 
         pd.refresh_from_db()
-        self.assertListEqual(list(pd.country_programmes.all()), [self.old_cp, second_active_cp])
+        self.assertListEqual(
+            list(pd.country_programmes.all().order_by('id')),
+            sorted([self.old_cp, second_active_cp], key=lambda x: x.pk),
+        )
 
 
 @mock.patch('etools.applications.partners.tasks.logger', spec=['info', 'warning', 'error', 'exception'])
