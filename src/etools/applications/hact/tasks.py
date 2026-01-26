@@ -108,11 +108,11 @@ def update_audit_hact_count_for_country(business_area_code, starting_year):
         partners = PartnerOrganization.objects.hact_active()
         for partner in partners:
             logger.debug('Updating Partner {} on Audit Count'.format(partner.name))
-            for year in range(starting_year, datetime.today().year + 1):
+            for year in range(int(starting_year), datetime.today().year + 1):
                 audit_counts = partner.get_audits_completed_for_year(year)
                 logger.debug('{} Audit Counts for year {}:'.format(audit_counts, year))
                 hact_history, created = HactHistory.objects.get_or_create(partner=partner, year=year)
-                if created:
+                if created or not hact_history.partner_values:
                     continue
                 for index, li in enumerate(hact_history.partner_values):
                     if 'Audit Completed' in li:
@@ -122,7 +122,6 @@ def update_audit_hact_count_for_country(business_area_code, starting_year):
                                          'updating..'.format(existing_count, audit_counts))
                             hact_history.partner_values[index][1] = audit_counts
                             hact_history.save(update_fields=['partner_values'])
-
     except Exception as e:
         logger.info('HACT Sync', exc_info=True)
         log.exception_message = e
@@ -139,7 +138,7 @@ def update_audit_hact_count_for_country(business_area_code, starting_year):
 def update_audit_hact_count(*args, **kwargs):
 
     schema_names = kwargs.get('schema_names', [None])[0]
-    starting_year = kwargs.get('starting_year', [None])
+    starting_year = kwargs.get('starting_year', [None])[0]
 
     logger.info('Update Audit Hact Counting process started')
     countries = Country.objects.exclude(schema_name='public')
