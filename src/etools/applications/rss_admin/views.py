@@ -35,7 +35,6 @@ from etools.applications.field_monitoring.planning.serializers import (
     MonitoringActivityLightSerializer,
     MonitoringActivitySerializer,
 )
-from etools.applications.rss_admin.filters import MonitoringActivityRssFilterSet
 from etools.applications.funds.models import FundsReservationHeader
 from etools.applications.partners.filters import (
     InterventionEditableByFilter,
@@ -53,6 +52,7 @@ from etools.applications.partners.utils import send_agreement_suspended_notifica
 from etools.applications.permissions2.conditions import ObjectStatusCondition
 from etools.applications.permissions2.views import PermittedSerializerMixin
 from etools.applications.rss_admin.admin_logging import extract_requested_changes, get_changed_fields, log_change
+from etools.applications.rss_admin.filters import MonitoringActivityRssFilterSet
 from etools.applications.rss_admin.importers import LocationSiteImporter
 from etools.applications.rss_admin.permissions import IsRssAdmin
 from etools.applications.rss_admin.serializers import (

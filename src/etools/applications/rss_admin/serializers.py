@@ -25,8 +25,11 @@ from etools.applications.audit.serializers.engagement import (
     SpotCheckSerializer as BaseSpotCheckSerializer,
     StaffSpotCheckSerializer as BaseStaffSpotCheckSerializer,
 )
-from etools.applications.audit.utils import get_partner_contacted_display_progress_order, rollback_engagement_display_status
 from etools.applications.audit.serializers.mixins import EngagementDatesValidation
+from etools.applications.audit.utils import (
+    get_partner_contacted_display_progress_order,
+    rollback_engagement_display_status,
+)
 from etools.applications.field_monitoring.data_collection.models import (
     ActivityOverallFinding,
     ActivityQuestion,

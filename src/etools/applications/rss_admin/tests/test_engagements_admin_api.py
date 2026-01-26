@@ -10,7 +10,12 @@ from rest_framework import serializers, status
 
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
 from etools.applications.audit.models import Engagement, Finding
-from etools.applications.audit.tests.factories import AuditFactory, FindingFactory, SpotCheckFactory, StaffSpotCheckFactory
+from etools.applications.audit.tests.factories import (
+    AuditFactory,
+    FindingFactory,
+    SpotCheckFactory,
+    StaffSpotCheckFactory,
+)
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.users.tests.factories import UserFactory
 
