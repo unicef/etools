@@ -19,7 +19,8 @@ from etools.applications.field_monitoring.fm_settings.models import LocationSite
 from etools.applications.field_monitoring.fm_settings.tests.factories import OptionFactory, QuestionFactory
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
 from etools.applications.field_monitoring.planning.tests.factories import MonitoringActivityFactory
-from etools.applications.partners.tests.factories import PartnerFactory
+from etools.applications.partners.tests.factories import InterventionFactory, PartnerFactory
+from etools.applications.reports.tests.factories import OfficeFactory, ResultFactory, SectionFactory
 from etools.applications.users.tests.factories import UserFactory
 
 
@@ -190,6 +191,104 @@ class TestRssAdminFieldMonitoringApi(BaseTenantTestCase):
         result_ids = [r['id'] for r in results]
         self.assertIn(activity_staff.id, result_ids)
         self.assertNotIn(activity_tpm.id, result_ids)
+
+    def test_monitoring_activities_list_filter_by_team_members__in(self):
+        """Filter by team_members using CSV ids (team_members__in)."""
+        member1 = UserFactory(is_staff=True)
+        member2 = UserFactory(is_staff=True)
+        activity_match = MonitoringActivityFactory(team_members=[member1])
+        activity_no_match = MonitoringActivityFactory(team_members=[member2])
+
+        url = reverse('rss_admin:rss-admin-monitoring-activities-list')
+        resp = self.forced_auth_req('get', url, user=self.user, data={'team_members__in': str(member1.id)})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
+        results = resp.data.get('results', resp.data)
+        result_ids = [r['id'] for r in results]
+        self.assertIn(activity_match.id, result_ids)
+        self.assertNotIn(activity_no_match.id, result_ids)
+
+    def test_monitoring_activities_list_filter_by_partners__in(self):
+        """Filter by partners using CSV ids (partners__in)."""
+        partner1 = self.partner
+        partner2 = PartnerFactory()
+        activity_match = MonitoringActivityFactory(partners=[partner1])
+        activity_no_match = MonitoringActivityFactory(partners=[partner2])
+
+        url = reverse('rss_admin:rss-admin-monitoring-activities-list')
+        resp = self.forced_auth_req('get', url, user=self.user, data={'partners__in': str(partner1.id)})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
+        results = resp.data.get('results', resp.data)
+        result_ids = [r['id'] for r in results]
+        self.assertIn(activity_match.id, result_ids)
+        self.assertNotIn(activity_no_match.id, result_ids)
+
+        # Multiple partners should work (CSV)
+        resp = self.forced_auth_req('get', url, user=self.user, data={'partners__in': f'{partner1.id},{partner2.id}'})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
+        results = resp.data.get('results', resp.data)
+        result_ids = [r['id'] for r in results]
+        self.assertIn(activity_match.id, result_ids)
+        self.assertIn(activity_no_match.id, result_ids)
+
+    def test_monitoring_activities_list_filter_by_offices__in(self):
+        """Filter by offices (Field Office) using CSV ids (offices__in)."""
+        office1 = OfficeFactory()
+        office2 = OfficeFactory()
+        activity_match = MonitoringActivityFactory(offices=[office1])
+        activity_no_match = MonitoringActivityFactory(offices=[office2])
+
+        url = reverse('rss_admin:rss-admin-monitoring-activities-list')
+        resp = self.forced_auth_req('get', url, user=self.user, data={'offices__in': str(office1.id)})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
+        results = resp.data.get('results', resp.data)
+        result_ids = [r['id'] for r in results]
+        self.assertIn(activity_match.id, result_ids)
+        self.assertNotIn(activity_no_match.id, result_ids)
+
+    def test_monitoring_activities_list_filter_by_interventions__in(self):
+        """Filter by interventions (PD/SPD) using CSV ids (interventions__in)."""
+        intervention1 = InterventionFactory()
+        intervention2 = InterventionFactory()
+        activity_match = MonitoringActivityFactory(interventions=[intervention1])
+        activity_no_match = MonitoringActivityFactory(interventions=[intervention2])
+
+        url = reverse('rss_admin:rss-admin-monitoring-activities-list')
+        resp = self.forced_auth_req('get', url, user=self.user, data={'interventions__in': str(intervention1.id)})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
+        results = resp.data.get('results', resp.data)
+        result_ids = [r['id'] for r in results]
+        self.assertIn(activity_match.id, result_ids)
+        self.assertNotIn(activity_no_match.id, result_ids)
+
+    def test_monitoring_activities_list_filter_by_cp_outputs__in(self):
+        """Filter by CP Outputs using CSV ids (cp_outputs__in)."""
+        output1 = ResultFactory()
+        output2 = ResultFactory()
+        activity_match = MonitoringActivityFactory(cp_outputs=[output1])
+        activity_no_match = MonitoringActivityFactory(cp_outputs=[output2])
+
+        url = reverse('rss_admin:rss-admin-monitoring-activities-list')
+        resp = self.forced_auth_req('get', url, user=self.user, data={'cp_outputs__in': str(output1.id)})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
+        results = resp.data.get('results', resp.data)
+        result_ids = [r['id'] for r in results]
+        self.assertIn(activity_match.id, result_ids)
+        self.assertNotIn(activity_no_match.id, result_ids)
+
+    def test_monitoring_activities_list_filter_by_sections__in(self):
+        """Filter by sections using CSV ids (sections__in)."""
+        section1 = SectionFactory()
+        section2 = SectionFactory()
+        activity_match = MonitoringActivityFactory(sections=[section1])
+        activity_no_match = MonitoringActivityFactory(sections=[section2])
+
+        url = reverse('rss_admin:rss-admin-monitoring-activities-list')
+        resp = self.forced_auth_req('get', url, user=self.user, data={'sections__in': str(section1.id)})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
+        results = resp.data.get('results', resp.data)
+        result_ids = [r['id'] for r in results]
+        self.assertIn(activity_match.id, result_ids)
+        self.assertNotIn(activity_no_match.id, result_ids)
 
     def test_monitoring_activities_list_filter_by_location(self):
         """Test filtering by location"""
