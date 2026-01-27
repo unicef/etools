@@ -347,6 +347,12 @@ class InterventionExportSerializer(serializers.ModelSerializer):
     has_special_conditions_for_construction = serializers.SerializerMethodField(
         label="Special Conditions for Construction Works by Implementing Partners"
     )
+    cfei_number = serializers.CharField(
+        label=_("UNPP Number"),
+        read_only=True,
+        allow_null=True,
+        allow_blank=True,
+    )
 
     class Meta:
         model = Intervention
