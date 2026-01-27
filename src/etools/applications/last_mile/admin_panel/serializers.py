@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 from django.contrib.auth import get_user_model
 from django.contrib.gis.geos import Point
 from django.db import connection, transaction
@@ -570,6 +572,48 @@ class PointOfInterestExportSerializer(serializers.ModelSerializer):
                 rows.append(row)
 
         return rows or [base]
+
+    @classmethod
+    def bulk_generate_rows(cls, instances):
+        poi_ids = [poi.id for poi in instances]
+
+        transfers_qs = (
+            models.Transfer.all_objects
+            .filter(destination_point_id__in=poi_ids)
+            .select_related('destination_point')
+            .prefetch_related('items')
+        )
+
+        transfers_by_poi = defaultdict(list)
+        for transfer in transfers_qs:
+            transfers_by_poi[transfer.destination_point_id].append(transfer)
+
+        all_rows = []
+        serializer = cls()
+
+        for instance in instances:
+            base = serializer.base_representation(instance)
+            poi_transfers = transfers_by_poi.get(instance.id, [])
+
+            if poi_transfers:
+                for transfer in poi_transfers:
+                    for item in transfer.items.all():
+                        row = dict(base)
+                        row.update({
+                            "transfer_name": transfer.name,
+                            "transfer_ref": getattr(transfer, "unicef_release_order", None),
+                            "item_id": item.id,
+                            "item_name": getattr(item, "description", None),
+                            "item_qty": getattr(item, "quantity", None),
+                            "item_batch_number": getattr(item, "batch_id", None),
+                            "item_expiry_date": getattr(item, "expiry_date", None),
+                            'approval_status': transfer.approval_status,
+                        })
+                        all_rows.append(row)
+            else:
+                all_rows.append(base)
+
+        return all_rows
 
     class Meta:
         model = models.PointOfInterest
