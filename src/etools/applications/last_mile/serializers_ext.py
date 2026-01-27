@@ -48,7 +48,7 @@ class IngestRowSerializer(serializers.Serializer):
     WaybillNumber = serializers.CharField(required=False, allow_blank=True, max_length=50)
     DocumentCreationDate = serializers.CharField(required=False, allow_blank=True, max_length=50)
     ImplementingPartner = serializers.CharField(max_length=255)
-    LConsignee = serializers.CharField(max_length=255, required=False, allow_blank=True, allow_null=True)
+    ConsigneeCode = serializers.CharField(max_length=255, required=False, allow_blank=True, allow_null=True)
 
     ReleaseOrderItem = serializers.CharField(max_length=255)
     MaterialNumber = serializers.CharField(max_length=100)
@@ -86,7 +86,7 @@ class IngestRowSerializer(serializers.Serializer):
             'waybill_id': validated_data.get('WaybillNumber'),
             'origin_check_out_at': validated_data.get('DocumentCreationDate'),
             'vendor_number': validated_data.get('ImplementingPartner'),
-            'l_consignee_code': validated_data.get('LConsignee'),
+            'l_consignee_code': validated_data.get('ConsigneeCode'),
         }
 
         item_data = {

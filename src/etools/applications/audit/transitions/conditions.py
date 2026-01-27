@@ -195,7 +195,7 @@ class ActionPointsProvidedForHighPriorityFindingsCheck(BaseTransitionCheck):
                 not EngagementActionPoint.objects.filter(engagement=instance, high_priority=True).exists()
         ):
             errors['action_points'] = _(
-                'Action Points with High Priority to be opened if High Priority findings provided.'
+                'High-priority findings require at least one open high-priority Action Point.'
             )
 
         return errors
