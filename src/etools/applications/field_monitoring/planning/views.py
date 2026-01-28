@@ -323,6 +323,7 @@ class MonitoringActivitiesViewSet(
             "related_attachments": ma.get_export_related_attachments(request),
             "reported_attachments": ma.get_export_reported_attachments(request),
             "checklist_attachments": ma.get_export_checklist_attachments(request),
+            "mission_completion_date": ma.get_completion_date(),
 
         }
         return render_to_pdf_response(
