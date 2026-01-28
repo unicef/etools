@@ -80,3 +80,15 @@ def text_wrap(text, width=70):
     https://github.com/xhtml2pdf/xhtml2pdf/issues/379
     """
     return ' '.join(wrap(text, width, break_on_hyphens=False))
+
+
+@register.filter
+def active_only(queryset):
+    """
+    Filter a queryset to return only objects where is_active=True.
+    Used for filtering indicators in PDF exports to exclude inactive ones.
+    """
+    if hasattr(queryset, 'filter'):
+        return queryset.filter(is_active=True)
+    # If it's not a queryset, try to filter if it's iterable
+    return [item for item in queryset if getattr(item, 'is_active', True)]
