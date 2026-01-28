@@ -2299,7 +2299,7 @@ class TestLConsigneeCodeFunctionality(BaseTenantTestCase):
                 "Quantity": 100,
                 "UOM": "BOX",
                 "BatchNumber": "B1",
-                "LConsignee": "L-WH-001"  # L-Consignee code for warehouse
+                "ConsigneeCode": "L-WH-001"  # L-Consignee code for warehouse
             }
         ]
 
@@ -2328,7 +2328,7 @@ class TestLConsigneeCodeFunctionality(BaseTenantTestCase):
                 "Quantity": 50,
                 "UOM": "BOX",
                 "BatchNumber": "B2",
-                "LConsignee": "L-CL-001"  # L-Consignee code for clinic
+                "ConsigneeCode": "L-CL-001"  # L-Consignee code for clinic
             }
         ]
 

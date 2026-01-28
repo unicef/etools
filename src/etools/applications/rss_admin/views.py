@@ -17,6 +17,7 @@ from unicef_attachments.models import Attachment
 from unicef_restlib.pagination import DynamicPageNumberPagination
 from unicef_restlib.views import NestedViewSetMixin, QueryStringFilterMixin
 
+from etools.applications.action_points.filters import RelatedModuleFilter
 from etools.applications.action_points.models import ActionPoint, ActionPointComment
 from etools.applications.action_points.serializers import CommentSerializer as APCommentSerializer
 from etools.applications.audit.conditions import AuditModuleCondition
@@ -51,6 +52,7 @@ from etools.applications.partners.utils import send_agreement_suspended_notifica
 from etools.applications.permissions2.conditions import ObjectStatusCondition
 from etools.applications.permissions2.views import PermittedSerializerMixin
 from etools.applications.rss_admin.admin_logging import extract_requested_changes, get_changed_fields, log_change
+from etools.applications.rss_admin.filters import MonitoringActivityRssFilterSet
 from etools.applications.rss_admin.importers import LocationSiteImporter
 from etools.applications.rss_admin.permissions import IsRssAdmin
 from etools.applications.rss_admin.serializers import (
@@ -750,6 +752,7 @@ class ActionPointRssViewSet(mixins.ListModelMixin,
     filter_backends = (
         OrderingFilter,
         SearchFilter,
+        RelatedModuleFilter,
         DjangoFilterBackend,
     )
     search_fields = (
@@ -854,16 +857,7 @@ class MonitoringActivityRssViewSet(viewsets.ModelViewSet):
         filters.OrderingFilter,
         filters.SearchFilter,
     )
-    filterset_fields = {
-        'monitor_type': ['exact'],
-        'tpm_partner': ['exact', 'in'],
-        'visit_lead': ['exact', 'in'],
-        'location': ['exact', 'in'],
-        'location_site': ['exact', 'in'],
-        'start_date': ['gte', 'lte'],
-        'end_date': ['gte', 'lte'],
-        'status': ['exact', 'in'],
-    }
+    filterset_class = MonitoringActivityRssFilterSet
     ordering_fields = (
         'start_date', 'end_date', 'location', 'location_site', 'monitor_type', 'checklists_count', 'status'
     )
