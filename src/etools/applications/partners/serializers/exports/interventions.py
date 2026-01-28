@@ -255,6 +255,7 @@ class InterventionExportSerializer(serializers.ModelSerializer):
     sectors = serializers.SerializerMethodField(label=_("Sections"))
     locations = serializers.SerializerMethodField(label=_("Locations"))
     contingency_pd = serializers.SerializerMethodField(label=_("Contingency PD"))
+    humanitarian_spd = serializers.SerializerMethodField(label=_("Humanitarian SPD"))
     intervention_clusters = serializers.SerializerMethodField(
         label=_("Cluster"),
     )
@@ -367,6 +368,7 @@ class InterventionExportSerializer(serializers.ModelSerializer):
             "sectors",
             "locations",
             "contingency_pd",
+            "humanitarian_spd",
             "intervention_clusters",
             "unicef_focal_points",
             "partner_focal_points",
@@ -423,6 +425,9 @@ class InterventionExportSerializer(serializers.ModelSerializer):
 
     def get_contingency_pd(self, obj):
         return "Yes" if obj.contingency_pd else "No"
+
+    def get_humanitarian_spd(self, obj):
+        return "Yes" if obj.humanitarian_flag else "No"
 
     def get_locations(self, obj):
         return ', '.join([loc.name for loc in obj.flat_locations.all()])
