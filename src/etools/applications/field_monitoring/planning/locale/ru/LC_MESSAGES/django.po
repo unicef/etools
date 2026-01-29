@@ -2,13 +2,13 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
+# 
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-23 16:10+0000\n"
+"POT-Creation-Date: 2026-01-29 13:11+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -97,6 +97,9 @@ msgstr "Местные офисы"
 
 msgid "Status"
 msgstr "Статус"
+
+msgid "Mission completion date"
+msgstr "Дата завершения миссии"
 
 msgid "Primary Field Monitor is"
 msgstr ""
@@ -250,9 +253,6 @@ msgstr ""
 
 msgid "Field Office"
 msgstr "Полевой офис"
-
-msgid "Mission completion date"
-msgstr "Дата завершения миссии"
 
 msgid "Activity Attachments"
 msgstr "вложения активности"
