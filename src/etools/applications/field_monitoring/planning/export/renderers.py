@@ -33,7 +33,7 @@ class MonitoringActivityCSVRenderer(ListSeperatorCSVRenderMixin, FriendlyCSVRend
         'sections': _('Sections'),
         'offices': _('Field Offices'),
         'status': _('Status'),
-        'mission_completion_date': _('Mission Completion Date'),
+        'mission_completion_date': _('Mission completion date'),
         'monitor_type': _('Primary Field Monitor is'),
         'team_members': _('Team Members'),
         'tpm_partner': _('TPM Partner'),
