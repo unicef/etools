@@ -119,6 +119,17 @@
                             </div>
                         </td>
                     </tr>
+                    {% if mission_completion_date %}
+                    <tr>
+                        <td>
+                            <div>
+                                <span class="label">Mission completion date:</span>
+                                <span class="value">{{ mission_completion_date|date:"d-M-y" }}</span>
+                            </div>
+                        </td>
+                        <td></td>
+                    </tr>
+                    {% endif %}
                 </table>
                 <br/>
                 <div>

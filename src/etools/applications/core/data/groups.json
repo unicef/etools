@@ -110,5 +110,26 @@
       "name": "LMSM Dispensing Notification",
       "permissions": []
     }
+  },
+  {
+    "model": "auth.group",
+    "fields": {
+      "name": "IP LM Viewer",
+      "permissions": []
+    }
+  },
+  {
+    "model": "auth.group",
+    "fields": {
+      "name": "LMSM CO Admin",
+      "permissions": []
+    }
+  },
+  {
+    "model": "auth.group",
+    "fields": {
+      "name": "LMSM HQ Admin",
+      "permissions": []
+    }
   }
 ]

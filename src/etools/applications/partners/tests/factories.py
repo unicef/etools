@@ -127,6 +127,7 @@ class InterventionFactory(factory.django.DjangoModelFactory):
         factory_related_name='intervention'
     )
     capacity_development = "capacity_development"
+    accountability_to_affected_populations = "accountability_to_affected_populations"
     other_partners_involved = "other_partners_involved"
     other_details = "other_details"
 

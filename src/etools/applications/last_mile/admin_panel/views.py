@@ -148,7 +148,10 @@ class UserViewSet(ExportMixin,
             queryset = queryset.without_points_of_interest()
 
         show_all_users = self.request.query_params.get('showAllUsers')
-        if show_all_users != "1":
+        only_unicef_users = self.request.query_params.get('onlyUnicefUsers')
+        if only_unicef_users == "1":
+            queryset = queryset.only_unicef_users()
+        if show_all_users != "1" and not only_unicef_users == "1":
             queryset = queryset.non_unicef_users()
 
         queryset = queryset.without_rejected()
@@ -343,9 +346,11 @@ class LocationsViewSet(mixins.ListModelMixin,
         'approved',
         'is_active',
         'status',
+        'l_consignee_code',
     ]
     search_fields = ('name',
                      'p_code',
+                     'l_consignee_code',
                      'partner_organizations__organization__name',
                      'partner_organizations__organization__vendor_number',
                      'destination_transfers__name',
@@ -692,11 +697,9 @@ class OrganizationListView(mixins.ListModelMixin, GenericViewSet):
 
         with_partner = Q(partner__isnull=False, partner__hidden=False)
 
-        with_audit = Q(auditorfirm__purchase_orders__engagement__isnull=False, auditorfirm__hidden=False)
-
         with_tpm = Q(tpmpartner__countries=connection.tenant, tpmpartner__hidden=False)
 
-        return queryset.filter(with_partner | with_audit | with_tpm).distinct()
+        return queryset.filter(with_partner | with_tpm).distinct()
 
     filter_backends = (SearchFilter,)
 

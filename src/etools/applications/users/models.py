@@ -25,6 +25,7 @@ from django_tenants.models import TenantMixin
 from model_utils import FieldTracker
 from model_utils.models import TimeStampedModel
 
+from etools.applications.last_mile.admin_panel.constants import LMSM_ADMIN_GROUPS
 from etools.applications.organizations.models import Organization
 from etools.applications.users.mixins import PARTNER_ACTIVE_GROUPS
 from etools.libraries.djangolib.models import GroupWrapper
@@ -119,6 +120,9 @@ class UserQuerySet(models.QuerySet):
 
     def non_unicef_users(self):
         return self.exclude(email__endswith=settings.UNICEF_USER_EMAIL)
+
+    def only_unicef_users(self):
+        return self.filter(email__endswith=settings.UNICEF_USER_EMAIL)
 
     def with_points_of_interest(self):
         return self.filter(profile__organization__partner__points_of_interest__isnull=False)
@@ -289,6 +293,15 @@ class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
         elif not self.is_active and self.realms.filter(is_active=True).exists():
             self.is_active = True
         self.save(update_fields=['is_active'])
+
+    @cached_property
+    def is_lmsm_admin(self):
+        return self.realms.filter(
+            country=connection.tenant,
+            organization=self.profile.organization,
+            group__name__in=LMSM_ADMIN_GROUPS,
+            is_active=True
+        ).exists()
 
     @transaction.atomic
     def save(self, *args, **kwargs):

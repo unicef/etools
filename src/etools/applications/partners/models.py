@@ -886,6 +886,23 @@ class PartnerOrganization(TimeStampedModel):
             self.hact_values['spot_checks']['completed']['total'] = audit_spot_check.count()  # TODO 1.1.9c add spot checks from field monitoring
         self.save(update_fields=['hact_values'])
 
+    def get_audits_completed_for_year(self, year=None):
+        from etools.applications.audit.models import Audit, Engagement, SpecialAudit
+
+        year = year or datetime.datetime.now().year
+        audits = Audit.objects.filter(
+            partner=self,
+            year_of_audit=year,
+            date_of_draft_report_to_ip__isnull=False,
+        ).exclude(status=Engagement.CANCELLED).count()
+
+        s_audits = SpecialAudit.objects.filter(
+            partner=self,
+            year_of_audit=year,
+            date_of_draft_report_to_ip__isnull=False,
+        ).exclude(status=Engagement.CANCELLED).count()
+        return audits + s_audits
+
     @cached_property
     def audits_completed(self):
         from etools.applications.audit.models import Audit, Engagement, SpecialAudit
@@ -2109,6 +2126,11 @@ class Intervention(TimeStampedModel):
     )
     capacity_development = models.TextField(
         verbose_name=_("Capacity Development"),
+        blank=True,
+        null=True,
+    )
+    accountability_to_affected_populations = models.TextField(
+        verbose_name=_("Accountability to Affected Populations (AAP)"),
         blank=True,
         null=True,
     )

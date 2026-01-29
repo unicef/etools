@@ -177,8 +177,8 @@ class TransferIngestService:
         for row in validated_data:
             transfer_data = row['transfer_data']
             item_data = row['item_data']
+            l_consignee_code = transfer_data.get('l_consignee_code')
             release_order = transfer_data.get('unicef_release_order')
-
             vendor_number = transfer_data.pop('vendor_number')
             try:
                 organization = self.validator_ext.validate_organization(vendor_number)
@@ -186,6 +186,16 @@ class TransferIngestService:
             except ValueError as e:
                 self.report.skipped_transfers.append({"release_order": release_order, "reason": str(e)})
                 continue
+
+            if l_consignee_code:
+                destination_poi = models.PointOfInterest.objects.filter(
+                    l_consignee_code=l_consignee_code,
+                    is_active=True,
+                    status=models.PointOfInterest.ApprovalStatus.APPROVED
+                ).first()
+
+                if destination_poi:
+                    transfer_data['destination_point'] = destination_poi
 
             origin_poi = models.PointOfInterest.objects.get_unicef_warehouses()
 
@@ -271,6 +281,9 @@ class TransferIngestService:
 
                 if item_data.get('uom') == material.original_uom:
                     item_data.pop('uom', None)
+
+                if item_data.get('uom') == "EA" or material.original_uom == "EA":
+                    item_data['conversion_factor'] = 1.0
 
                 if not item_data.get('batch_id'):
                     item_data['conversion_factor'] = 1.0

@@ -875,6 +875,9 @@ class InterventionCreateUpdateSerializer(
     def validate_capacity_development(self, value):
         return self._validate_character_limitation(value)
 
+    def validate_accountability_to_affected_populations(self, value):
+        return self._validate_character_limitation(value)
+
     def validate_other_details(self, value):
         return self._validate_character_limitation(value)
 

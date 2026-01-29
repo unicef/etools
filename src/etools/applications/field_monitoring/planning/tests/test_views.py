@@ -1353,6 +1353,54 @@ class FMUsersViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase):
         self.assertEqual(response.data['results'][0]['user_type'], 'tpm')
         self.assertEqual(response.data['results'][0]['tpm_partner'], tpm_partner)
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_filter_with_name(self):
+        # Create users with different name configurations
+        user_with_both_names = UserFactory(first_name='John', last_name='Doe', unicef_user=True, is_staff=True)
+        user_with_first_name_only = UserFactory(first_name='Jane', last_name='', unicef_user=True, is_staff=True)
+        user_with_last_name_only = UserFactory(first_name='', last_name='Smith', unicef_user=True, is_staff=True)
+        user_with_no_names = UserFactory(first_name='', last_name='', unicef_user=True, is_staff=True)
+
+        # Test with with_name=true - should only return users with at least one non-empty name
+        response = self.make_list_request(
+            self.unicef_user,
+            data={'with_name': 'true'}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        user_ids = [user['id'] for user in response.data['results']]
+        # Verify users with names are included
+        self.assertIn(user_with_both_names.id, user_ids)
+        self.assertIn(user_with_first_name_only.id, user_ids)
+        self.assertIn(user_with_last_name_only.id, user_ids)
+        # Verify users without names are excluded
+        self.assertNotIn(user_with_no_names.id, user_ids)
+
+        # Test with with_name=false - should return all users (no filtering)
+        response = self.make_list_request(
+            self.unicef_user,
+            data={'with_name': 'false'}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        user_ids = [user['id'] for user in response.data['results']]
+        # Verify all users are included (no filtering applied)
+        self.assertIn(user_with_both_names.id, user_ids)
+        self.assertIn(user_with_first_name_only.id, user_ids)
+        self.assertIn(user_with_last_name_only.id, user_ids)
+        self.assertIn(user_with_no_names.id, user_ids)
+
+        # Test without with_name parameter - should return all users (no filtering)
+        response = self.make_list_request(
+            self.unicef_user,
+            data={}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        user_ids = [user['id'] for user in response.data['results']]
+        # Verify all users are included (no filtering applied)
+        self.assertIn(user_with_both_names.id, user_ids)
+        self.assertIn(user_with_first_name_only.id, user_ids)
+        self.assertIn(user_with_last_name_only.id, user_ids)
+        self.assertIn(user_with_no_names.id, user_ids)
+
 
 class CPOutputsViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenantTestCase):
     base_view = 'field_monitoring_planning:cp_outputs'

@@ -217,6 +217,9 @@
           <td class=""><span class="bold">{% translate "Capacity Development" %}:</span> {{ pd.capacity_development|escape|linebreaks }}</td>
         </tr>
         <tr>
+          <td class=""><span class="bold">{% translate "Accountability to Affected Populations (AAP)" %}:</span> {{ pd.accountability_to_affected_populations|escape|linebreaks }}</td>
+        </tr>
+        <tr>
           <td class=""><span class="bold">{% translate "Other Partners involved" %}:</span> {{ pd.other_partners_involved|escape|linebreaks }}</td>
         </tr>
         <tr>
@@ -284,7 +287,7 @@
             {% for pd_output in result_link.ll_results.all %}
             <tr>
             <td class="w-p30">{{ pd_output.name }}</td>
-              {% for indicator in pd_output.applied_indicators.all %}
+              {% for indicator in pd_output.applied_indicators.all|active_only %}
                     {%  if not forloop.first %}
                         <td><span> </span></td>
                     {% endif %}
@@ -292,27 +295,23 @@
                         {% if indicator.indicator.unit == "number" %}
                             {% with variable="#" %}
                                 <td class="w-p30">
-                                    {% if not indicator.is_active %} ({% translate 'Inactive' %}){% endif %}
                                     {{ variable }} {{ indicator.indicator.title }}
                                 </td>
                             {% endwith %}
                         {% elif indicator.indicator.unit == "percentage" and indicator.indicator.display_type == "percentage" %}
                             {% with variable="%" %}
                                 <td class="w-p30">
-                                    {% if not indicator.is_active %} ({% translate 'Inactive' %}){% endif %}
                                     {{ variable }} {{ indicator.indicator.title }}
                                 </td>
                             {% endwith %}
                         {% elif indicator.indicator.unit == "percentage" and indicator.indicator.display_type == "ratio" %}
                             {% with variable="÷" %}
                                 <td class="w-p30">
-                                    {% if not indicator.is_active %} ({% translate 'Inactive' %}){% endif %}
                                     {{ variable }} {{ indicator.indicator.title }}
                                 </td>
                             {% endwith %}
                         {% else %}
                             <td class="w-p30">
-                                {% if not indicator.is_active %} ({% translate 'Inactive' %}){% endif %}
                                 {{ indicator.indicator.title }}
                             </td>
                         {% endif %}
@@ -512,7 +511,19 @@
             <tr>
               <td>{{ attachment.created }}</td>
               <td>{{ attachment.type.get_name_display }}</td>
-              <td>{% if attachment.attachment_file.last %}{{ domain }}{{ attachment.attachment_file.last.file_link }}{% else %}{{ attachment.attachment.url }}{% endif %}</td>
+              <td>         
+                {% with attachment.attachment_file.last as file %}
+                  {% if file %}
+                    <a href="{{ domain }}{{ file.file_link }}">{{ file.filename }}</a>
+                  {% else %}
+                    {% if attachment.attachment.filename %}
+                      <a href="{{ attachment.attachment.url }}">{{ attachment.attachment.filename }}</a>
+                    {% else %}
+                      <a href="{{ attachment.attachment.url }}">{{ attachment.attachment.url }}</a>
+                    {% endif %}
+                  {% endif %}
+                {% endwith %}
+              </td>
               <td>{% if not attachment.active %}{% translate "Yes" %}{% else %}{% translate "No" %}{% endif %}</td>
             </tr>
           {% endfor %}

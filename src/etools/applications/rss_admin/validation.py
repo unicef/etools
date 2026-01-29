@@ -29,12 +29,28 @@ class _RelaxRigidMixin:
 
 
 class RssAgreementValid(_RelaxRigidMixin, AgreementValid):
-    """RSS Admin Agreement validator that allows fixing signature dates."""
+    """RSS Admin Agreement validator that allows fixing signature dates and incomplete agreements."""
 
     RELAXED_FIELDS = {'signed_by_unicef_date', 'signed_by_partner_date'}
+
+    def check_required_fields(self, agreement):
+        """Skip required field validation for RSS Admin when status isn't changing."""
+        if self.old and self.old.status == agreement.status:
+            # Status not changing, allow updates to fix incomplete agreements
+            return
+        # Status is changing or new instance, run normal validation
+        return super().check_required_fields(agreement)
 
 
 class RssInterventionValid(_RelaxRigidMixin, InterventionValid):
-    """RSS Admin Intervention validator that allows fixing signature dates."""
+    """RSS Admin Intervention validator that allows fixing signature dates and incomplete interventions."""
 
     RELAXED_FIELDS = {'signed_by_unicef_date', 'signed_by_partner_date'}
+
+    def check_required_fields(self, intervention):
+        """Skip required field validation for RSS Admin when status isn't changing."""
+        if self.old and self.old.status == intervention.status:
+            # Status not changing, allow updates to fix incomplete interventions
+            return
+        # Status is changing or new instance, run normal validation
+        return super().check_required_fields(intervention)
