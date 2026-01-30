@@ -304,26 +304,10 @@ class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
         ).exists()
 
     def get_organizations(self):
-        """
-        Get unique organizations for this user from their realms.
-        Falls back to profile.organization if no realms exist.
-        Returns a list of organization objects.
-        """
-        organizations = []
-        seen_org_ids = set()
-
-        # First try to get organizations from realms
         if hasattr(self, 'realms'):
-            for realm in self.realms.all():
-                if realm.organization and realm.organization.id not in seen_org_ids:
-                    seen_org_ids.add(realm.organization.id)
-                    organizations.append(realm.organization)
-
-        # Fall back to profile organization if no realms found
-        if not organizations and hasattr(self, 'profile') and self.profile.organization:
-            organizations.append(self.profile.organization)
-
-        return organizations
+            qs = Organization.objects.filter(realms__in=self.realms.filter(country=connection.tenant)).distinct()
+            return qs or []
+        return []
 
     @transaction.atomic
     def save(self, *args, **kwargs):
