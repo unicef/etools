@@ -30,6 +30,8 @@ from etools.applications.last_mile.admin_panel.constants import (
     USER_CANT_APPROVE,
     USER_DOES_NOT_EXIST,
     USER_NOT_PROVIDED,
+    EXPIRY_DATE_MANDATORY_WHEN_BATCH_ID_IS_PROVIDED,
+    BATCH_ID_MANDATORY_WHEN_EXPIRY_DATE_IS_PROVIDED,
 )
 from etools.applications.last_mile.models import Item, Material, PointOfInterest, PointOfInterestType, Profile, Transfer
 from etools.applications.partners.models import PartnerOrganization
@@ -102,6 +104,12 @@ class AdminPanelValidator:
                 raise ValidationError(_(UOM_NOT_PROVIDED))
             if uom not in uom_types:
                 raise ValidationError(_(UOM_NOT_VALID))
+            batch_id = item.get('item_name')
+            expiry_date = item.get('expiry_date')
+            if batch_id and not expiry_date:
+                raise ValidationError(_(EXPIRY_DATE_MANDATORY_WHEN_BATCH_ID_IS_PROVIDED))
+            if not batch_id and expiry_date:
+                raise ValidationError(_(BATCH_ID_MANDATORY_WHEN_EXPIRY_DATE_IS_PROVIDED))
 
     def validate_partner_location(self, location: PointOfInterest, partner: PartnerOrganization):
         if partner not in location.partner_organizations.all():

@@ -276,7 +276,7 @@ class LocationsViewSet(mixins.ListModelMixin,
     pagination_class = DynamicPageNumberPagination
     adminValidator = AdminPanelValidator()
 
-    queryset = models.PointOfInterest.all_objects.select_related(
+    queryset = models.PointOfInterest.all_objects.exclude(pk=1).select_related( # We exclude UNICEF Warehouse
         "parent",
         "poi_type",
         "secondary_type",

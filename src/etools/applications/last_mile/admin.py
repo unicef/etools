@@ -298,6 +298,10 @@ class ItemAdmin(XLSXImportMixin, admin.ModelAdmin):
             form.base_fields['uom'].required = False
         if 'conversion_factor' in form.base_fields:
             form.base_fields['conversion_factor'].required = False
+        if 'base_uom' in form.base_fields:
+            form.base_fields['base_uom'].required = False
+        if 'base_quantity' in form.base_fields:
+            form.base_fields['base_quantity'].required = False
         return form
 
     def destination_point_name(self, obj):
