@@ -1523,7 +1523,7 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
     @override_settings(RESTRICTED_ADMIN=True)
     def test_access_allowed_for_rss_admin_realm(self):
         user = UserFactory(is_staff=False)
-        group = GroupFactory(name='Rss Admin')
+        group = GroupFactory(name='RSS')
         RealmFactory(user=user, country=connection.tenant, group=group, is_active=True)
 
         url = reverse('rss_admin:rss-admin-partners-list')
