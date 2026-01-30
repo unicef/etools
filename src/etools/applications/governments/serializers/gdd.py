@@ -276,6 +276,7 @@ class GDDDetailSerializer(
     location_names = serializers.SerializerMethodField()
     location_p_codes = serializers.SerializerMethodField()
     locations = serializers.SerializerMethodField()
+    locations_full = serializers.SerializerMethodField()
     partner = serializers.CharField(source='partner.name', read_only=True)
     partner_id = serializers.CharField(source='partner.id')
     organization_id = serializers.CharField(source='partner.organization.id')
@@ -348,6 +349,14 @@ class GDDDetailSerializer(
                 loc.admin_level_name,
                 loc.p_code
             ) for loc in obj.flat_locations.all()
+        ]
+
+    def get_locations_full(self, obj):
+        return [
+            {
+                'id': loc.id,
+                'name': '{} [{} - {}]'.format(loc.name, loc.admin_level_name, loc.p_code)
+            } for loc in obj.flat_locations.all()
         ]
 
     def get_section_names(self, obj):
@@ -613,6 +622,7 @@ class GDDDetailSerializer(
             "location_names",
             "location_p_codes",
             "locations",
+            "locations_full",
             "metadata",
             "modified",
             "number",

@@ -19,6 +19,13 @@ class MonitoringActivityExportSerializer(serializers.Serializer):
     partners = CommaSeparatedExportField()
     interventions = CommaSeparatedExportField()
     cp_outputs = CommaSeparatedExportField()
+    mission_completion_date = serializers.SerializerMethodField()
 
     def get_ref_link(self, obj):
         return obj.get_object_url()
+
+    def get_mission_completion_date(self, obj):
+        completion_date = obj.get_completion_date()
+        if completion_date:
+            return completion_date.strftime('%Y/%m/%d')
+        return None
