@@ -29,6 +29,12 @@ from etools.applications.users.serializers import MinimalUserSerializer, SimpleU
 from etools.applications.users.validators import EmailValidator, LowerCaseEmailValidator
 
 
+class SimpleOrganizationWithVendorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Organization
+        fields = ('id', 'name', 'vendor_number')
+
+
 class SimplePointOfInterestSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.PointOfInterest
@@ -71,26 +77,9 @@ class UserAdminSerializer(SimpleUserSerializer):
         return SimpleRealmSerializer(realms, many=True, read_only=True).data
 
     def get_organizations(self, obj):
-        organizations = []
-        if hasattr(obj, 'realms'):
-            seen_orgs = set()
-            for realm in obj.realms.all():
-                if realm.organization and realm.organization.id not in seen_orgs:
-                    seen_orgs.add(realm.organization.id)
-                    organizations.append({
-                        'id': realm.organization.id,
-                        'name': realm.organization.name,
-                        'vendor_number': realm.organization.vendor_number
-                    })
+        organizations = obj.get_organizations()
 
-        if not organizations and hasattr(obj, 'profile') and obj.profile.organization:
-            organizations.append({
-                'id': obj.profile.organization.id,
-                'name': obj.profile.organization.name,
-                'vendor_number': obj.profile.organization.vendor_number
-            })
-
-        return organizations
+        return SimpleOrganizationWithVendorSerializer(organizations, many=True).data
 
     class Meta:
         model = get_user_model()
@@ -211,6 +200,10 @@ class UserAdminCreateSerializer(serializers.ModelSerializer):
         data['point_of_interests'] = []
         if (hasattr(instance.profile, 'organization') and instance.profile.organization and hasattr(instance.profile.organization, 'partner') and instance.profile.organization.partner):
             data['point_of_interests'] = [poi.id for poi in instance.profile.organization.partner.points_of_interest.all()]
+
+        organizations = instance.get_organizations()
+        data['organizations'] = SimpleOrganizationWithVendorSerializer(organizations, many=True).data
+
         return data
 
 
@@ -345,24 +338,8 @@ class UserAdminUpdateSerializer(serializers.ModelSerializer):
         if (hasattr(instance.profile, 'organization') and instance.profile.organization and hasattr(instance.profile.organization, 'partner') and instance.profile.organization.partner):
             data['point_of_interests'] = [poi.id for poi in instance.profile.organization.partner.points_of_interest.all()]
 
-        data['organizations'] = []
-        if hasattr(instance, 'realms'):
-            seen_orgs = set()
-            for realm in instance.realms.all():
-                if realm.organization and realm.organization.id not in seen_orgs:
-                    seen_orgs.add(realm.organization.id)
-                    data['organizations'].append({
-                        'id': realm.organization.id,
-                        'name': realm.organization.name,
-                        'vendor_number': realm.organization.vendor_number
-                    })
-
-        if not data['organizations'] and hasattr(instance, 'profile') and instance.profile.organization:
-            data['organizations'].append({
-                'id': instance.profile.organization.id,
-                'name': instance.profile.organization.name,
-                'vendor_number': instance.profile.organization.vendor_number
-            })
+        organizations = instance.get_organizations()
+        data['organizations'] = SimpleOrganizationWithVendorSerializer(organizations, many=True).data
 
         return data
 

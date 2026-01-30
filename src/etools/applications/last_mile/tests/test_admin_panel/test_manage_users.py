@@ -892,3 +892,56 @@ class TestUsersViewSet(BaseTenantTestCase):
             self.assertIn('vendor_number', org)
 
         self.assertGreaterEqual(len(organizations), 1)
+
+    def test_create_user_with_multiple_organizations(self):
+        country = Country.objects.get(schema_name="test")
+
+        org1 = OrganizationFactory(name='Org One', vendor_number='VN001')
+        org2 = OrganizationFactory(name='Org Two', vendor_number='VN002')
+        org3 = OrganizationFactory(name='Org Three', vendor_number='VN003')
+
+        user_data = {
+            'first_name': 'Multi',
+            'last_name': 'OrgUser',
+            'email': 'multi.org@example.com',
+            'username': 'multiorguser',
+            'password': 'securepass123',
+            'profile': {
+                'organizations': [org1.id, org2.id, org3.id],  # Multiple organizations
+                'job_title': 'Multi-Org Manager',
+                'phone_number': '9876543210',
+            },
+            'point_of_interests': []
+        }
+
+        response = self.forced_auth_req('post', self.url, user=self.partner_staff, data=user_data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        created_user = get_user_model().objects.get(email='multi.org@example.com')
+
+        self.assertEqual(created_user.profile.organization.id, org1.id)
+
+        url_with_param = self.url + f"{created_user.pk}/"
+        response = self.forced_auth_req('get', url_with_param, user=self.partner_staff)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertIn('organizations', response.data)
+        organizations = response.data['organizations']
+        self.assertIsInstance(organizations, list)
+
+        org_ids = [org['id'] for org in organizations]
+        self.assertIn(org1.id, org_ids)
+        self.assertIn(org2.id, org_ids)
+        self.assertIn(org3.id, org_ids)
+        self.assertEqual(len(organizations), 3)
+
+        for org in organizations:
+            self.assertIn('id', org)
+            self.assertIn('name', org)
+            self.assertIn('vendor_number', org)
+
+        user_realms = Realm.objects.filter(user=created_user, country=country)
+        self.assertEqual(user_realms.count(), 3)
+
+        realm_org_ids = set(realm.organization.id for realm in user_realms)
+        self.assertEqual(realm_org_ids, {org1.id, org2.id, org3.id})
