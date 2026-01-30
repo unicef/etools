@@ -613,9 +613,11 @@ class PartnerMaterialAdmin(admin.ModelAdmin):
 
 @admin.register(models.PointOfInterestType)
 class PointOfInterestTypeAdmin(admin.ModelAdmin):
-    list_display = ('name', 'category', 'created', 'modified')
-    list_filter = ('category',)
+    list_display = ('name', 'category', 'type_role', 'created', 'modified')
+    list_filter = ('category', 'type_role')
     search_fields = ('name', 'category')
+    fields = ('name', 'category', 'type_role')
+    ordering = ('type_role', 'name')
 
 
 @admin.register(models.PointOfInterestTypeMapping)
