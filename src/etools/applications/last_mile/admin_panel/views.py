@@ -112,10 +112,8 @@ class UserViewSet(ExportMixin,
         realms_prefetch = Prefetch(
             'realms',
             queryset=Realm.objects.filter(
-                is_active=True,
-                country__schema_name=schema_name,
-                group__name__in=ALERT_TYPES.keys()
-            ).select_related('group')
+                country__schema_name=schema_name
+            ).select_related('group', 'organization')
         )
 
         created_by_prefetch = Prefetch(
