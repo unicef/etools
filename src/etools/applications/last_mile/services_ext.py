@@ -195,6 +195,12 @@ class TransferIngestService:
                 ).first()
 
                 if destination_poi:
+                    if not destination_poi.partner_organizations.filter(id=organization.partner.id).exists():
+                        self.report.skipped_transfers.append({
+                            "release_order": release_order,
+                            "reason": f"Destination point '{destination_poi.name}' (L-consignee code: {l_consignee_code}) is not linked to partner organization '{organization.partner.name}'"
+                        })
+                        continue
                     transfer_data['destination_point'] = destination_poi
 
             origin_poi = models.PointOfInterest.objects.get_unicef_warehouses()

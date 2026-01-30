@@ -29,9 +29,9 @@ class CsvReportHandler:
 
     def validate_header_row(self, file_for=""):
         expected_headers = {
-            "users": ["Partner information ", "User Information ", None, None, "Location information "],
+            "users": ["Partner information ", "User Information ", None, None, "Location Information"],
             "locations": ["Partner information ", "Location Information "],
-            "stock": ["Partner information ", "Stock level information ", None, None, None, None, "Location Information "],
+            "stock": ["Partner Information ", "Stock Level Information ", None, None, None, None, "Location Information (This information can be found in the Admin Module under Manage Locations) "],
         }
 
         if file_for not in expected_headers:

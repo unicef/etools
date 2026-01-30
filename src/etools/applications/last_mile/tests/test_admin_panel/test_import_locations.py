@@ -51,9 +51,7 @@ class TestLocationAdminViewSetImport(BaseTenantTestCase):
 
     def _create_locations_xlsx_file(self, data_rows, headers=None):
         if headers is None:
-            headers = [
-                "Partner information ", "Location Information "
-            ]
+            headers = ["Partner information ", "Location Information "]
 
         stream = io.BytesIO()
         workbook = openpyxl.Workbook()
