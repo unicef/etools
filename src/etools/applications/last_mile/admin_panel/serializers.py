@@ -1203,7 +1203,6 @@ class StockManagementImportSerializer(serializers.Serializer):
         validated_data['partner_organization'] = validated_data.pop('ip_number')
         validated_data['location'] = validated_data.pop('p_code')
         validated_data['created_by'] = created_by
-        self.adminValidator.validate_items(validated_data['items'])
         validated_data['items'] = [{
             'material': validated_data.pop('material_number'),
             'quantity': validated_data.pop('quantity'),
