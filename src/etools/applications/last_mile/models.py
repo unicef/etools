@@ -3,6 +3,7 @@ from functools import cached_property
 from django.conf import settings
 from django.contrib.gis.db.models import PointField
 from django.core.cache import cache
+from django.core.exceptions import ValidationError
 from django.db import connection, models
 from django.db.models.signals import pre_save
 from django.utils import timezone
@@ -108,15 +109,11 @@ class PointOfInterestTypeMapping(TimeStampedModel, models.Model):
         return f"{self.primary_type.name} → {self.secondary_type.name}"
 
     def clean(self):
-        from django.core.exceptions import ValidationError
-
-        # Validate that primary_type has PRIMARY role
         if self.primary_type and self.primary_type.type_role != PointOfInterestType.TypeRole.PRIMARY:
             raise ValidationError({
                 'primary_type': _('Primary type must have type_role set to PRIMARY')
             })
 
-        # Validate that secondary_type has SECONDARY role
         if self.secondary_type and self.secondary_type.type_role != PointOfInterestType.TypeRole.SECONDARY:
             raise ValidationError({
                 'secondary_type': _('Secondary type must have type_role set to SECONDARY')
