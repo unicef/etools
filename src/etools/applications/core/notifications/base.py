@@ -174,11 +174,9 @@ defaults = {
                                         <!-- TODO: update image link with global -->
                                         <a href="https://unicef.org" target="_blank"
                                            style="color:#0099FF;text-decoration:underline;">
-
-                                           <img src='https://etools.unicef.org/pmp/images/UNICEF_logo.png'
+                                           <img src="https://etools.unicef.org/pmp/assets/images/UNICEF_logo.webp"
                                                 alt="Unicef" class="logo-unicef" width="101" height="24"
-                                                style="border:none;-ms-interpolation-mode:bicubic;max-width:100%;
-                                                       display:block;margin:0;padding:0;width:101px;height:24px;"/>
+                                                style="border:none;-ms-interpolation-mode:bicubic;max-width:100%;display:block;margin:0;padding:0;width:101px;height:24px;"/>
                                        </a>
                                       </td>
                                       <td class="links" style="font-family:sans-serif;font-size:14px;
