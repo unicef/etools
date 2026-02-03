@@ -86,7 +86,6 @@ class DummyGPDModel(models.Model):
     gpd_ref = models.CharField(max_length=25)
 
 
-
 class QuestionTargetMixin(models.Model):
     partner = models.ForeignKey(PartnerOrganization, blank=True, null=True, verbose_name=_('Partner'),
                                 on_delete=models.CASCADE, related_name='+')
@@ -96,7 +95,7 @@ class QuestionTargetMixin(models.Model):
                                      on_delete=models.CASCADE, related_name='+')
     # GPD placeholders
     ewp_activity = models.ForeignKey(DummyEWPActivityModel, null=True, blank=True, verbose_name=_('eWP Activity'),
-                                 on_delete=models.PROTECT, related_name='+')
+                                     on_delete=models.PROTECT, related_name='+')
     gpd = models.ForeignKey(DummyEWPActivityModel, null=True, blank=True, verbose_name=_('GPD'),
                             on_delete=models.PROTECT, related_name='+')
 
@@ -355,9 +354,9 @@ class MonitoringActivity(
 
     # GPD m2m for activities and gpds
     ewp_activities = models.ManyToManyField(DummyEWPActivityModel, verbose_name=_('eWP activities'),
-                                          related_name='monitoring_activities', blank=True)
-    gpds = models.ManyToManyField(DummyGPDModel, verbose_name=_('GDPs'), related_name='monitoring_activities',
-                                        blank=True)
+                                            related_name='monitoring_activities', blank=True)
+    gpds = models.ManyToManyField(DummyGPDModel, verbose_name=_('GDPs'),
+                                  related_name='monitoring_activities', blank=True)
 
     start_date = models.DateField(verbose_name=_('Start Date'), blank=True, null=True)
     end_date = models.DateField(verbose_name=_('End Date'), blank=True, null=True)
