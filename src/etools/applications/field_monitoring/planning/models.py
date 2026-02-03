@@ -306,7 +306,7 @@ class MonitoringActivity(
         ('partners', 'partner'),
         ('cp_outputs', 'output'),
         ('interventions', 'intervention'),
-        ('workplans', 'workplan'),
+        ('ewp_activities', 'ewp_activity'),
         ('gpds', 'gpd'),
     )
 
@@ -354,7 +354,7 @@ class MonitoringActivity(
                                         blank=True)
 
     # GPD m2m for activities and gpds
-    ewp_activity = models.ManyToManyField(DummyEWPActivityModel, verbose_name=_('eWP activities'),
+    ewp_activities = models.ManyToManyField(DummyEWPActivityModel, verbose_name=_('eWP activities'),
                                           related_name='monitoring_activities', blank=True)
     gpds = models.ManyToManyField(DummyGPDModel, verbose_name=_('GDPs'), related_name='monitoring_activities',
                                         blank=True)
