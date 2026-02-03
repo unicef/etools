@@ -60,6 +60,36 @@ class PointOfInterestType(TimeStampedModel, models.Model):
     objects = BaseExportQuerySet.as_manager()
 
 
+class PointOfInterestTypeMapping(TimeStampedModel, models.Model):
+    primary_type = models.ForeignKey(
+        PointOfInterestType,
+        verbose_name=_("Primary Type"),
+        related_name='allowed_secondary_types',
+        on_delete=models.CASCADE
+    )
+    secondary_type = models.ForeignKey(
+        PointOfInterestType,
+        verbose_name=_("Secondary Type"),
+        related_name='allowed_for_primary_types',
+        on_delete=models.CASCADE
+    )
+
+    class Meta:
+        unique_together = ('primary_type', 'secondary_type')
+        verbose_name = _("Point of Interest Type Mapping")
+        verbose_name_plural = _("Point of Interest Type Mappings")
+        ordering = ['primary_type__name', 'secondary_type__name']
+
+    def __str__(self):
+        return f"{self.primary_type.name} → {self.secondary_type.name}"
+
+    @classmethod
+    def get_allowed_secondary_types(cls, primary_type_id):
+        return cls.objects.filter(
+            primary_type_id=primary_type_id
+        ).values_list('secondary_type_id', flat=True)
+
+
 class PointOfInterestQuerySet(models.QuerySet):
 
     def prepare_for_lm_export(self) -> models.QuerySet:
@@ -110,6 +140,14 @@ class PointOfInterest(TimeStampedModel, models.Model):
     )
     name = models.CharField(verbose_name=_("Name"), max_length=254)
     p_code = models.CharField(verbose_name=_("P Code"), max_length=32, unique=True)
+    l_consignee_code = models.CharField(
+        verbose_name=_("L-Consignee Code"),
+        max_length=255,
+        null=True,
+        blank=True,
+        db_index=True,
+        help_text=_("L-Consignee code for identifying destination locations in transfers")
+    )
     description = models.CharField(verbose_name=_("Description"), max_length=254)
     poi_type = models.ForeignKey(
         PointOfInterestType,
@@ -177,6 +215,8 @@ class PointOfInterest(TimeStampedModel, models.Model):
 
     @staticmethod
     def get_parent_location(point):
+        if not point:
+            return Location.objects.filter(admin_level=0, is_active=True).first()
         locations = Location.objects.all_with_geom().filter(geom__contains=point, is_active=True)
         if locations:
             matched_locations = list(filter(lambda l: l.is_leaf_node(), locations)) or locations
@@ -291,10 +331,18 @@ class TransferQuerySet(models.QuerySet):
 
 
 class TransferManager(models.Manager.from_queryset(TransferQuerySet)):
-    pass
+
+    def get_queryset(self):
+        return super().get_queryset().exclude(models.Q(approval_status=Transfer.ApprovalStatus.PENDING) | models.Q(approval_status=Transfer.ApprovalStatus.REJECTED))
 
 
 class Transfer(TimeStampedModel, models.Model):
+
+    class ApprovalStatus(models.TextChoices):
+        PENDING = 'PENDING', _('Pending Approval')
+        APPROVED = 'APPROVED', _('Approved')
+        REJECTED = 'REJECTED', _('Rejected')
+
     PENDING = 'PENDING'
     COMPLETED = 'COMPLETED'
 
@@ -422,13 +470,54 @@ class Transfer(TimeStampedModel, models.Model):
 
     pd_number = models.CharField(max_length=255, null=True, blank=True)
 
+    l_consignee_code = models.CharField(
+        verbose_name=_("L-Consignee Code"),
+        max_length=255,
+        null=True,
+        blank=True,
+        help_text=_("L-Consignee code used to determine destination location for this transfer")
+    )
+
     initial_items = models.JSONField(
         verbose_name=_("Initial Items"),
         null=True,
         blank=True,
     )
 
+    approval_status = models.CharField(
+        _('Approval Status'),
+        max_length=10,
+        choices=ApprovalStatus.choices,
+        default=ApprovalStatus.APPROVED,
+        db_index=True,
+        help_text=_('The current approval status of this transfer. All the transfers are default approved.')
+    )
+    created_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='created_transfers'
+    )
+    created_on = models.DateTimeField(default=timezone.now)
+    approved_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='approved_transfers'
+    )
+    approved_on = models.DateTimeField(null=True, blank=True)
+    review_notes = models.TextField(
+        _('Review Notes'),
+        null=True,
+        blank=True,
+        help_text=_('Optional notes from the reviewer regarding approval or rejection.')
+    )
+
     objects = TransferManager()
+
+    all_objects = models.Manager()
 
     class Meta:
         ordering = ("-id",)
@@ -450,6 +539,27 @@ class Transfer(TimeStampedModel, models.Model):
         self.save(update_fields=['transfer_history'])
 
         return history
+
+    def approve(self, approver_user, notes=None):
+        if self.approval_status != self.ApprovalStatus.APPROVED:
+            self.approval_status = self.ApprovalStatus.APPROVED
+            self.approved_by = approver_user
+            self.approved_on = timezone.now()
+            if notes:
+                self.review_notes = notes
+
+    def reject(self, reviewer_user, notes=None):
+        if self.approval_status != self.ApprovalStatus.REJECTED:
+            self.approval_status = self.ApprovalStatus.REJECTED
+            self.approved_by = reviewer_user
+            self.approved_on = timezone.now()
+            if notes:
+                self.review_notes = notes
+
+    def reset_approval(self):
+        self.approval_status = self.ApprovalStatus.PENDING
+        self.approved_by = None
+        self.approved_on = None
 
 
 class TransferEvidence(TimeStampedModel, models.Model):
@@ -568,7 +678,7 @@ class ItemQuerySet(models.QuerySet):
         return self.annotate(
             material_number=models.F('material__number'),
             material_description=models.F('material__short_description'),
-        ).values()
+        ).filter(transfer__approval_status=Transfer.ApprovalStatus.APPROVED).values()
 
 
 class ItemManager(models.Manager):
@@ -805,7 +915,7 @@ class UserPointsOfInterest(TimeStampedModel, models.Model):
 
 class ItemAuditLogQuerySet(models.QuerySet):
     def prepare_for_lm_export(self) -> models.QuerySet:
-        return self.values("id", "created", "modified", "item_id", "action", "changed_fields", "old_values", "new_values").annotate(
+        return self.values("id", "created", "modified", "item_id", "action").annotate(
             transfer_id=models.F("transfer_info__transfer_id"),
         )
 

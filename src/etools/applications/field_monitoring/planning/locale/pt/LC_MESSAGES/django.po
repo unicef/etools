@@ -2,13 +2,13 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
+# 
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-18 16:39+0200\n"
+"POT-Creation-Date: 2026-01-29 13:11+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -98,6 +98,9 @@ msgstr "Escritórios de campo"
 msgid "Status"
 msgstr "Estado"
 
+msgid "Mission completion date"
+msgstr "Data de conclusão da missão"
+
 msgid "Primary Field Monitor is"
 msgstr ""
 
@@ -167,6 +170,39 @@ msgstr "Modelo de Pergunta"
 msgid "Question Templates"
 msgstr "Modelos de Pergunta"
 
+msgid "Related Sections"
+msgstr "Seções Relacionadas"
+
+msgid "Temporary"
+msgstr "Temporário"
+
+msgid "Semi-permanent"
+msgstr "Semi-permanente"
+
+msgid "Permanent"
+msgstr "Permanente"
+
+msgid "Monitoring Activity"
+msgstr "Atividade de Monitoramento"
+
+msgid "Facility Type"
+msgstr "Tipo de Instalação"
+
+msgid "Facility Type Durations"
+msgstr "Durações do Tipo de Instalação"
+
+msgid "One or more duration options for this facility type"
+msgstr "Uma ou mais opções de duração para este tipo de instalação"
+
+msgid "Monitoring Activity Facility Type"
+msgstr "Tipo de Instalação de Atividade de Monitoramento"
+
+msgid "Monitoring Activity Facility Types"
+msgstr "Tipos de Instalação de Atividade de Monitoramento"
+
+msgid "No duration"
+msgstr "Sem duração"
+
 msgid "Staff"
 msgstr "Pessoal"
 
@@ -234,10 +270,7 @@ msgid "Objective"
 msgstr "Objetivo"
 
 msgid "Facility types"
-msgstr ""
-
-msgid "Monitoring Activity"
-msgstr "Atividade de Monitoramento"
+msgstr "Tipos de instalação"
 
 msgid "Monitoring Activities"
 msgstr "Atividades de Monitoramento"
@@ -322,6 +355,9 @@ msgstr "Modelos"
 
 msgid "Attachments"
 msgstr "Anexos"
+
+#~ msgid "Related Section"
+#~ msgstr "Seção Relacionada"
 
 #~ msgid "Type Of Facility"
 #~ msgstr "Tipo de instalação"

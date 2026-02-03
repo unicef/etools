@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.db import connection
-from django.db.models import F, Prefetch, Q
+from django.db.models import Count, F, IntegerField, OuterRef, Prefetch, Q, Subquery, Value
+from django.db.models.functions import Coalesce
 from django.http import HttpResponse, StreamingHttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -43,6 +44,7 @@ from etools.applications.last_mile.admin_panel.serializers import (
     AlertTypeSerializer,
     AuthUserPermissionsDetailSerializer,
     BulkReviewPointOfInterestSerializer,
+    BulkReviewTransferSerializer,
     BulkUpdateLastMileProfileStatusSerializer,
     ImportFileSerializer,
     ItemStockManagementUpdateSerializer,
@@ -146,8 +148,13 @@ class UserViewSet(ExportMixin,
             queryset = queryset.without_points_of_interest()
 
         show_all_users = self.request.query_params.get('showAllUsers')
-        if show_all_users != "1":
+        only_unicef_users = self.request.query_params.get('onlyUnicefUsers')
+        if only_unicef_users == "1":
+            queryset = queryset.only_unicef_users()
+        if show_all_users != "1" and not only_unicef_users == "1":
             queryset = queryset.non_unicef_users()
+
+        queryset = queryset.without_rejected()
 
         return queryset.distinct()
 
@@ -283,7 +290,7 @@ class LocationsViewSet(mixins.ListModelMixin,
     ).prefetch_related(
         'partner_organizations',
         'partner_organizations__organization',
-        'destination_transfers'
+        'destination_transfers',
     ).all().order_by('id')
 
     def get_queryset(self):
@@ -302,6 +309,24 @@ class LocationsViewSet(mixins.ListModelMixin,
                 'parent__parent__parent__geom',
                 'parent__parent__parent__parent__geom'
             )
+
+        pending_subquery = models.Item.objects.filter(
+            transfer__destination_point_id=OuterRef('id'),
+            transfer__approval_status=models.Transfer.ApprovalStatus.PENDING,
+            hidden=False
+        ).values('transfer__destination_point_id').annotate(count=Count('id')).values('count')
+
+        approved_subquery = models.Item.objects.filter(
+            transfer__destination_point_id=OuterRef('id'),
+            transfer__approval_status=models.Transfer.ApprovalStatus.APPROVED,
+            hidden=False
+        ).values('transfer__destination_point_id').annotate(count=Count('id')).values('count')
+
+        self.queryset = self.queryset.annotate(
+            pending_approval=Coalesce(Subquery(pending_subquery, output_field=IntegerField()), Value(0)),
+            approved=Coalesce(Subquery(approved_subquery, output_field=IntegerField()), Value(0))
+        )
+
         return self.queryset
 
     filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
@@ -317,9 +342,15 @@ class LocationsViewSet(mixins.ListModelMixin,
         'region',
         'district',
         'name',
+        'pending_approval',
+        'approved',
+        'is_active',
+        'status',
+        'l_consignee_code',
     ]
     search_fields = ('name',
                      'p_code',
+                     'l_consignee_code',
                      'partner_organizations__organization__name',
                      'partner_organizations__organization__vendor_number',
                      'destination_transfers__name',
@@ -592,7 +623,8 @@ class TransferItemViewSet(mixins.ListModelMixin, GenericViewSet, mixins.CreateMo
         'material__original_uom',
         'quantity',
         'expiry_date',
-        'last_updated'
+        'last_updated',
+        'transfer__approval_status',
     )
 
     def get_queryset(self):
@@ -617,6 +649,8 @@ class TransferItemViewSet(mixins.ListModelMixin, GenericViewSet, mixins.CreateMo
             return TransferItemCreateSerializer
         if self.action == "_import_file":
             return ImportFileSerializer
+        if self.action == 'bulk_review':
+            return BulkReviewTransferSerializer
         return ItemTransferAdminSerializer
 
     @action(detail=False, methods=['post'], url_path='import/xlsx')
@@ -624,12 +658,19 @@ class TransferItemViewSet(mixins.ListModelMixin, GenericViewSet, mixins.CreateMo
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         excel_file = serializer.validated_data['file']
-        valid, out = CsvImporter().import_stock(excel_file)
+        valid, out = CsvImporter().import_stock(excel_file, request.user)
         if not valid:
             resp = HttpResponse(out.getvalue(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
             resp['Content-Disposition'] = f'attachment; filename="checked_{excel_file.name}"'
             return resp
         return Response({"valid": valid}, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['put'], url_path='bulk-review')
+    def bulk_review(self, request, *args, **kwargs):
+        serializer_data = BulkReviewTransferSerializer(data=request.data)
+        serializer_data.is_valid(raise_exception=True)
+        serializer_data.update(serializer_data.validated_data, request.user)
+        return Response(serializer_data.data, status=status.HTTP_200_OK)
 
 
 class ItemStockManagementView(mixins.UpdateModelMixin, mixins.RetrieveModelMixin, mixins.DestroyModelMixin, GenericViewSet):
@@ -656,11 +697,9 @@ class OrganizationListView(mixins.ListModelMixin, GenericViewSet):
 
         with_partner = Q(partner__isnull=False, partner__hidden=False)
 
-        with_audit = Q(auditorfirm__purchase_orders__engagement__isnull=False, auditorfirm__hidden=False)
-
         with_tpm = Q(tpmpartner__countries=connection.tenant, tpmpartner__hidden=False)
 
-        return queryset.filter(with_partner | with_audit | with_tpm).distinct()
+        return queryset.filter(with_partner | with_tpm).distinct()
 
     filter_backends = (SearchFilter,)
 
@@ -681,6 +720,29 @@ class PointOfInterestTypeListView(mixins.ListModelMixin, mixins.CreateModelMixin
 
     def get_queryset(self):
         return models.PointOfInterestType.objects.all().order_by('id')
+
+    @action(
+        detail=False,
+        methods=['get'],
+        url_path='allowed-secondary-types',
+    )
+    def allowed_secondary_types(self, request, *args, **kwargs):
+        validator = AdminPanelValidator()
+        primary_type_id = request.query_params.get('primary_type_id')
+
+        primary_type_id = validator.validate_primary_type_id(primary_type_id)
+
+        allowed_secondary_ids = models.PointOfInterestTypeMapping.get_allowed_secondary_types(primary_type_id)
+
+        if not allowed_secondary_ids:
+            queryset = models.PointOfInterestType.objects.all().order_by('name')
+        else:
+            queryset = models.PointOfInterestType.objects.filter(
+                id__in=allowed_secondary_ids
+            ).order_by('name')
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
     @action(
         detail=False,
@@ -870,6 +932,12 @@ class MaterialListView(mixins.ListModelMixin, GenericViewSet):
     permission_classes = [IsLMSMAdmin]
 
     def get_queryset(self):
+        partner_id = self.request.query_params.get('partner_id')
+        if partner_id:
+            partner = models.PartnerOrganization.objects.filter(id=partner_id).first()
+            if not partner:
+                return models.Material.objects.none()
+            return models.Material.objects.filter(partner_material__partner_organization=partner).distinct().order_by('id')
         return models.Material.objects.all().order_by('id')
 
 

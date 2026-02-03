@@ -384,6 +384,7 @@ CELERY_EMAIL_BACKEND = get_from_secrets_or_env('EMAIL_BACKEND', 'django.core.mai
 CELERY_TASK_ROUTES = {
     'etools.applications.vision.tasks.sync_handler': {'queue': 'vision_queue'},
     'etools.applications.hact.tasks.update_hact_for_country': {'queue': 'vision_queue'},
+    'etools.applications.hact.tasks.update_audit_hact_count': {'queue': 'vision_queue'},
     'etools.libraries.azure_graph_api.tasks.sync_delta_users': {'queue': 'vision_queue'},
     'etools.libraries.azure_graph_api.tasks.sync_all_users': {'queue': 'vision_queue'}
 }
@@ -704,6 +705,7 @@ PBI_CONFIG = {
     "AUTHENTICATION_MODE": 'ServicePrincipal',
     "WORKSPACE_ID": get_from_secrets_or_env('PBI_LMSM_WORKSPACE_ID', ''),
     "REPORT_ID": get_from_secrets_or_env('PBI_LMSM_REPORT_ID', ''),
+    "REPORT_ID_ADMIN": get_from_secrets_or_env('PBI_LMSM_REPORT_ID_ADMIN', ''),
     "TENANT_ID": get_from_secrets_or_env('PBI_LMSM_TENANT_ID', ''),
     "CLIENT_ID": get_from_secrets_or_env('PBI_LMSM_CLIENT_ID', ''),
     "CLIENT_SECRET": get_from_secrets_or_env('PBI_LMSM_CLIENT_SECRET', ''),

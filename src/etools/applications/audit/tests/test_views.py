@@ -2,6 +2,7 @@ import datetime
 import json
 import random
 from copy import copy
+from decimal import Decimal
 from unittest.mock import Mock, patch
 
 from django.conf import settings
@@ -17,7 +18,7 @@ from unicef_attachments.models import Attachment
 
 from etools.applications.action_points.tests.factories import ActionPointCategoryFactory, ActionPointFactory
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
-from etools.applications.audit.models import Auditor, Engagement, Risk, SpotCheck, UNICEFUser
+from etools.applications.audit.models import Audit, Auditor, Engagement, Risk, SpecialAudit, SpotCheck, UNICEFUser
 from etools.applications.audit.tests.base import AuditTestCaseMixin, EngagementTransitionsTestCaseMixin
 from etools.applications.audit.tests.factories import (
     AuditFactory,
@@ -25,6 +26,7 @@ from etools.applications.audit.tests.factories import (
     AuditorUserFactory,
     AuditPartnerFactory,
     EngagementFactory,
+    FaceFormFactory,
     MicroAssessmentFactory,
     PartnerWithAgreementsFactory,
     PurchaseOrderFactory,
@@ -41,6 +43,7 @@ from etools.applications.organizations.models import OrganizationType
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.reports.tests.factories import SectionFactory
 from etools.applications.users.tests.factories import CountryFactory, GroupFactory, OfficeFactory, RealmFactory
+from etools.libraries.djangolib.models import GroupWrapper
 
 
 class BaseTestCategoryRisksViewSet(EngagementTransitionsTestCaseMixin):
@@ -458,6 +461,22 @@ class TestEngagementsListViewSet(EngagementTransitionsTestCaseMixin, BaseTenantT
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
         self.assertNotEqual(response.data[0], {})
+        self.assertEqual(response.data[0]['open_high_priority_count'], 0)
+
+    def test_hact_view_open_high_priority_count(self):
+        self._init_finalized_engagement()
+        ActionPointFactory(engagement=self.engagement, status='open', high_priority=True)
+
+        response = self.forced_auth_req(
+            'get',
+            '/api/audit/engagements/hact/',
+            data={'partner': self.engagement.partner.id},
+            user=self.unicef_user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertNotEqual(response.data[0], {})
+        self.assertEqual(response.data[0]['open_high_priority_count'], 1)
 
     def test_csv_view(self):
         AuditFactory()
@@ -537,7 +556,10 @@ class BaseTestEngagementsCreateViewSet(EngagementTransitionsTestCaseMixin):
             'staff_members': self.engagement.staff_members.values_list('id', flat=True),
             'active_pd': self.engagement.active_pd.values_list('id', flat=True),
             'shared_ip_with': self.engagement.shared_ip_with,
+            'conducted_by_sai': False
         }
+        if self.create_data['engagement_type'] in [Engagement.TYPE_AUDIT, Engagement.TYPE_SPOT_CHECK]:
+            self.create_data['face_forms'] = [FaceFormFactory(currency='TEST').pk]
 
     def _do_create(self, user, data):
         data = data or {}
@@ -644,6 +666,48 @@ class TestAuditCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEngage
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('partner_contacted_at', response.data)
 
+    def test_face_form_validation(self):
+        data = copy(self.create_data)
+        data['face_forms'] = []
+        response = self._do_create(self.unicef_focal_point, data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('You must specify at least one FACE Form.', response.data['non_field_errors'])
+
+    def test_with_face_forms(self):
+        data = copy(self.create_data)
+        face_1 = FaceFormFactory(amount_usd=100.25, amount_local=9550.55, exchange_rate=95.27)
+        face_2 = FaceFormFactory(amount_usd=20.45, amount_local=2010.35, exchange_rate=98.28)
+        data['face_forms'] = [face_1.pk, face_2.pk]
+
+        response = self._do_create(self.unicef_focal_point, data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        audit = Audit.objects.get(pk=response.data['id'])
+        self.assertEqual(audit.face_forms.count(), response.data['face_forms'].__len__())
+        self.assertEqual(face_1.face_number, response.data['face_forms'][0]['face_number'])
+        self.assertEqual(face_1.amount_usd.__str__(), response.data['face_forms'][0]['amount_usd'])
+        self.assertEqual(face_1.amount_local.__str__(), response.data['face_forms'][0]['amount_local'])
+        self.assertEqual(audit.exchange_rate.__str__(), round(face_1.amount_local / face_1.amount_usd, 2).__str__())
+        self.assertEqual(audit.total_value, Decimal(response.data['total_value']))
+        self.assertEqual(audit.total_value_local, Decimal(response.data['total_value_local']))
+
+    def test_with_face_forms_different_currencies(self):
+        data = copy(self.create_data)
+        face_1 = FaceFormFactory(currency='USD', amount_usd=100.0, amount_local=100.0, exchange_rate=1.0)
+        face_2 = FaceFormFactory(currency='TEST', amount_usd=250.0, amount_local=1000.0, exchange_rate=4.0)
+        data['face_forms'] = [face_1.pk, face_2.pk]
+
+        response = self._do_create(self.unicef_focal_point, data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        audit = Audit.objects.get(pk=response.data['id'])
+        self.assertEqual(audit.face_forms.count(), response.data['face_forms'].__len__())
+
+        self.assertEqual(audit.exchange_rate, round(face_2.amount_local / face_2.amount_usd, 2))
+        self.assertEqual(audit.total_value, Decimal(response.data['total_value']))
+        self.assertEqual(audit.total_value_local, Decimal(response.data['total_value_local']))
+
+        self.assertEqual(audit.total_value, 350)
+        self.assertEqual(audit.total_value_local, 1000 + 100 / audit.exchange_rate)
+
 
 class TestSpotCheckCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEngagementsCreateViewSet,
                                  BaseTenantTestCase):
@@ -731,6 +795,13 @@ class TestSpotCheckCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEn
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('end_date', response.data)
 
+    def test_face_form_validation(self):
+        data = copy(self.create_data)
+        data['face_forms'] = []
+        response = self._do_create(self.unicef_focal_point, data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('You must specify at least one FACE Form.', response.data['non_field_errors'])
+
     def test_partner_contacted_at_validation(self):
         data = copy(self.create_data)
         data['partner_contacted_at'] = data['end_date'] - datetime.timedelta(days=1)
@@ -739,7 +810,7 @@ class TestSpotCheckCreateViewSet(TestEngagementCreateActivePDViewSet, BaseTestEn
         self.assertIn('partner_contacted_at', response.data)
 
 
-class SpecialAuditCreateViewSet(BaseTestEngagementsCreateViewSet, BaseTenantTestCase):
+class TestSpecialAuditCreateViewSet(BaseTestEngagementsCreateViewSet, BaseTenantTestCase):
     engagement_factory = SpecialAuditFactory
 
     def setUp(self):
@@ -777,6 +848,98 @@ class SpecialAuditCreateViewSet(BaseTestEngagementsCreateViewSet, BaseTenantTest
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('partner_contacted_at', response.data)
 
+    def test_face_forms_with_total(self):
+        data = copy(self.create_data)
+        face_1 = FaceFormFactory()
+        data['face_forms'] = [face_1.pk]
+        data['total_value'] = '333'
+        data['total_value_local'] = '444'
+
+        response = self._do_create(self.unicef_focal_point, data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        sp_audit = SpecialAudit.objects.get(pk=response.data['id'])
+        self.assertEqual(sp_audit.face_forms.count(), response.data['face_forms'].__len__())
+        self.assertEqual(face_1.face_number, response.data['face_forms'][0]['face_number'])
+        self.assertEqual(face_1.amount_usd.__str__(), response.data['face_forms'][0]['amount_usd'])
+        self.assertEqual(face_1.amount_local.__str__(), response.data['face_forms'][0]['amount_local'])
+        self.assertEqual(sp_audit.total_value, 333)
+        self.assertEqual(sp_audit.total_value_local, 444)
+        self.assertEqual(sp_audit.exchange_rate.__str__(), round(444 / 333, 2).__str__())
+        self.assertEqual(Decimal(data['total_value']), Decimal(response.data['total_value']))
+        self.assertEqual(Decimal(data['total_value_local']), Decimal(response.data['total_value_local']))
+
+
+class TestSpecialAuditUpdateViewSet(BaseTestEngagementsCreateViewSet, BaseTenantTestCase):
+    engagement_factory = SpecialAuditFactory
+
+    def setUp(self):
+        super().setUp()
+        self.create_data['specific_procedures'] = [
+            {
+                'description': 'some description',
+                'finding': '',
+            }
+        ]
+        self.sp_audit_id = self._do_create(self.unicef_focal_point, self.create_data).data['id']
+
+    def test_update_specific_procedure(self):
+        sp_audit = SpecialAudit.objects.get(pk=self.sp_audit_id)
+
+        procedure = sp_audit.specific_procedures.first()
+        self.assertEqual(procedure.description, 'some description')
+        self.assertEqual(procedure.finding, '')
+        data = {
+            'specific_procedures': [
+                {
+                    'id': procedure.id,
+                    'description': 'some description',
+                    'finding': 'Test finding',
+                }
+            ]
+        }
+        response = self.forced_auth_req(
+            'patch',
+            '/api/audit/special-audits/{}/'.format(self.sp_audit_id),
+            user=self.auditor, data=data
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        procedure.refresh_from_db()
+        self.assertEqual(procedure.finding, 'Test finding')
+
+
+class TestSpecialAuditMetadataViewSet(BaseTestEngagementsCreateViewSet, BaseTenantTestCase):
+    engagement_factory = SpecialAuditFactory
+    endpoint = 'special-audits'
+
+    def test_conducted_by_sai_options(self):
+        special_audit = SpecialAuditFactory(status=Engagement.STATUSES.partner_contacted)
+        response = self.forced_auth_req(
+            'options',
+            '/api/audit/{}/{}/'.format(self.endpoint, special_audit.pk),
+            user=self.unicef_focal_point
+        )
+        self.assertIn('GET', response.data['actions'])
+        self.assertIn('conducted_by_sai', response.data['actions']['GET'])
+        self.assertIn('PUT', response.data['actions'])
+        self.assertNotIn('conducted_by_sai', response.data['actions']['PUT'])
+
+    def test_total_value(self):
+        special_audit = SpecialAuditFactory(status=Engagement.STATUSES.partner_contacted)
+        response = self.forced_auth_req(
+            'options',
+            '/api/audit/{}/{}/'.format(self.endpoint, special_audit.pk),
+            user=self.unicef_focal_point
+        )
+        self.assertIn('GET', response.data['actions'])
+        self.assertIn('face_forms', response.data['actions']['GET'])
+        self.assertIn('total_value', response.data['actions']['GET'])
+        self.assertIn('total_value_local', response.data['actions']['GET'])
+        self.assertIn('PUT', response.data['actions'])
+        self.assertIn('total_value', response.data['actions']['PUT'])
+        self.assertIn('total_value_local', response.data['actions']['PUT'])
+        self.assertIn('face_forms', response.data['actions']['PUT'])
+
 
 class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenantTestCase):
     engagement_factory = AuditFactory
@@ -800,30 +963,54 @@ class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenan
         )
         return response
 
-    def test_percent_of_audited_expenditure_invalid(self):
-        response = self._do_update(self.auditor, {
-            'audited_expenditure': 1,
-            'financial_findings': 2
-        })
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(len(response.data), 1)
-        self.assertIn('financial_findings', response.data)
-
-    def test_percent_of_audited_expenditure_local_invalid(self):
+    def test_audited_expenditure_invalid_lower(self):
+        self.engagement.financial_findings_local = 2
+        self.engagement.save(update_fields=['financial_findings_local'])
+        face_1 = FaceFormFactory(amount_usd=100.25, amount_local=9550.55, exchange_rate=95.27)
+        self.engagement.face_forms.add(face_1)
         response = self._do_update(self.auditor, {
             'audited_expenditure_local': 1,
-            'financial_findings_local': 2
         })
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(len(response.data), 1)
-        self.assertIn('financial_findings_local', response.data)
+        self.assertIn('audited_expenditure_local', response.data)
+        self.assertIn('Cannot be lower than Financial Findings Local', response.data['audited_expenditure_local'])
 
-    def test_percent_of_audited_expenditure_valid(self):
+    def test_audited_expenditure_invalid_higher(self):
+        self.engagement.financial_findings_local = 2
+        self.engagement.total_value_local = 9550.55
+        self.engagement.save(update_fields=['financial_findings_local', 'total_value_local'])
+        face_1 = FaceFormFactory(amount_usd=100.25, amount_local=9550.55, exchange_rate=95.27)
+        self.engagement.face_forms.add(face_1)
         response = self._do_update(self.auditor, {
-            'audited_expenditure': 2,
-            'financial_findings': 1
+            'audited_expenditure_local': self.engagement.total_value_local + 1000,
+        })
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(len(response.data), 1)
+        self.assertIn('audited_expenditure_local', response.data)
+        self.assertIn('Cannot be higher than the value of Selected FACE Local', response.data['audited_expenditure_local'])
+
+    def test_audited_expenditure_valid(self):
+        self.engagement.financial_findings_local = 2
+        self.engagement.save(update_fields=['financial_findings_local'])
+        face_1 = FaceFormFactory(amount_usd=100.25, amount_local=9550.55, exchange_rate=95.27)
+        self.engagement.face_forms.add(face_1)
+        response = self._do_update(self.auditor, {
+            'audited_expenditure_local': 10,
         })
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['audited_expenditure_local'], '10.00')
+
+    def test_calculate_audited_expenditure(self):
+        self.engagement.exchange_rate = 95.27
+        self.engagement.save(update_fields=['exchange_rate'])
+        face_1 = FaceFormFactory(amount_usd=100.25, amount_local=9550.55, exchange_rate=95.27)
+        self.engagement.face_forms.add(face_1)
+        response = self._do_update(self.auditor, {
+            'audited_expenditure_local': 550,
+        })
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['audited_expenditure'], '5.77')
 
     def test_date_of_field_visit_after_partner_contacted_at_validation(self):
         self.engagement.partner_contacted_at = self.engagement.end_date + datetime.timedelta(days=1)
@@ -942,6 +1129,41 @@ class TestEngagementsUpdateViewSet(EngagementTransitionsTestCaseMixin, BaseTenan
         })
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
+    def test_update_financial_finding_set(self):
+        self.assertEqual(self.engagement.financial_finding_set.count(), 0)
+        self.assertEqual(self.engagement.financial_findings, 0)
+        self.assertEqual(self.engagement.financial_findings_local, 0)
+        data = {
+            "financial_finding_set": [
+                {
+                    "title": "vat-incorrectly-claimed",
+                    "local_amount": "96533.00",
+                    "amount": "1253.67",
+                    "description": "During the audit process..",
+                    "recommendation": "We recommend proper control procedures",
+                    "ip_comments": "payments accordingly"
+                }
+            ]
+        }
+        response = self._do_update(self.auditor, data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.engagement.refresh_from_db()
+        self.assertEqual(self.engagement.financial_findings, Decimal('1253.67'))
+        self.assertEqual(self.engagement.financial_findings_local, Decimal('96533.00'))
+        self.assertEqual(response.data['financial_findings'], '1253.67')
+        self.assertEqual(response.data['financial_findings_local'], '96533.00')
+
+        # test recalculations after removing financial finding
+        data['financial_finding_set'][0]['id'] = self.engagement.financial_finding_set.first().id
+        data['financial_finding_set'][0]['_delete'] = True
+        response = self._do_update(self.auditor, data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.engagement.refresh_from_db()
+        self.assertEqual(self.engagement.financial_findings, 0)
+        self.assertEqual(self.engagement.financial_findings_local, 0)
+        self.assertEqual(response.data['financial_findings'], '0.00')
+        self.assertEqual(response.data['financial_findings_local'], '0.00')
+
 
 class TestEngagementActionPointViewSet(EngagementTransitionsTestCaseMixin, BaseTenantTestCase):
     engagement_factory = MicroAssessmentFactory
@@ -1046,14 +1268,19 @@ class TestSpotCheckDetail(SCTransitionsTestCaseMixin, BaseTenantTestCase):
 
     def test_detail_pending_unsupported_amount(self):
         self._fill_sc_specified_fields()
-        self.engagement.total_amount_tested = 1000
-        self.engagement.total_amount_of_ineligible_expenditure = 300
-        self.engagement.amount_refunded = 100
-        self.engagement.additional_supporting_documentation_provided = 25
-        self.engagement.justification_provided_and_accepted = 75
-        self.engagement.writeoff = 50
+
         self.engagement.save()
         self._init_finalized_engagement()
+
+        self.engagement.total_amount_tested_local = 1000
+        self.engagement.total_amount_of_ineligible_expenditure_local = 300
+        self.engagement.total_amount_of_ineligible_expenditure = 150
+        self.engagement.exchange_rate = 2
+        self.engagement.amount_refunded_local = 100
+        self.engagement.additional_supporting_documentation_provided_local = 25
+        self.engagement.justification_provided_and_accepted_local = 75
+        self.engagement.write_off_required_local = 50
+        self.engagement.save()
 
         response = self.forced_auth_req(
             'get',
@@ -1065,8 +1292,121 @@ class TestSpotCheckDetail(SCTransitionsTestCaseMixin, BaseTenantTestCase):
             self.engagement.total_amount_of_ineligible_expenditure - self.engagement.additional_supporting_documentation_provided -
             self.engagement.justification_provided_and_accepted - self.engagement.write_off_required - self.engagement.amount_refunded
         )
-        self.assertEqual(expected_amount, float(response.data['pending_unsupported_amount']))
+        self.assertEqual("{:.2f}".format(expected_amount), response.data['pending_unsupported_amount'])
         self.assertEqual(expected_amount, self.engagement.pending_unsupported_amount)
+        self.assertEqual(float(response.data['total_amount_tested']), 500.00)
+        self.assertEqual(float(response.data['total_amount_of_ineligible_expenditure']), 150.00)
+
+        self.assertEqual(float(response.data['exchange_rate']), 2.00)
+
+        self.assertEqual(float(response.data['amount_refunded']), 50.00)
+        self.assertEqual(float(response.data['additional_supporting_documentation_provided']), 12.50)
+        self.assertEqual(float(response.data['justification_provided_and_accepted']), 37.50)
+        self.assertEqual(float(response.data['write_off_required']), 25.00)
+        self.assertEqual(
+            float(response.data['percent_of_audited_expenditure']),
+            100 * self.engagement.total_amount_of_ineligible_expenditure_local / self.engagement.total_amount_tested_local
+        )
+
+    def test_update_financial_finding_set(self):
+        self.engagement.exchange_rate = 2
+        self.engagement.save(update_fields=['exchange_rate'])
+
+        self.assertEqual(self.engagement.financial_finding_set.count(), 0)
+        self.assertEqual(self.engagement.total_amount_of_ineligible_expenditure_local, 0)
+        self.assertEqual(self.engagement.total_amount_of_ineligible_expenditure, 0)
+        face_1 = FaceFormFactory()
+        self.engagement.face_forms.add(face_1)
+        data = {
+            "financial_finding_set": [
+                {
+                    "title": "vat-incorrectly-claimed",
+                    "local_amount": "96533.00",
+                    "amount": "1253.67",
+                    "description": "During the audit process..",
+                    "recommendation": "We recommend proper control procedures",
+                    "ip_comments": "payments accordingly"
+                }
+            ]
+        }
+        response = self.forced_auth_req(
+            'patch',
+            '/api/audit/spot-checks/{}/'.format(self.engagement.id),
+            user=self.auditor, data=data
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.engagement.refresh_from_db()
+        self.assertEqual(self.engagement.total_amount_of_ineligible_expenditure, Decimal('1253.67'))
+        self.assertEqual(self.engagement.total_amount_of_ineligible_expenditure_local, Decimal('96533.00'))
+        self.assertEqual(response.data['total_amount_of_ineligible_expenditure'], '1253.67')
+        self.assertEqual(response.data['total_amount_of_ineligible_expenditure_local'], '96533.00')
+
+        # test recalculations after removing financial finding
+        data['financial_finding_set'][0]['id'] = self.engagement.financial_finding_set.first().id
+        data['financial_finding_set'][0]['_delete'] = True
+        response = self.forced_auth_req(
+            'patch',
+            '/api/audit/spot-checks/{}/'.format(self.engagement.id),
+            user=self.auditor, data=data
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.engagement.refresh_from_db()
+        self.assertEqual(self.engagement.total_amount_of_ineligible_expenditure, 0)
+        self.assertEqual(self.engagement.total_amount_of_ineligible_expenditure_local, 0)
+        self.assertEqual(response.data['total_amount_of_ineligible_expenditure'], '0.00')
+        self.assertEqual(response.data['total_amount_of_ineligible_expenditure_local'], '0.00')
+
+    def test_update_totals_local_validation(self):
+        self.engagement.exchange_rate = 2
+        self.engagement.save(update_fields=['exchange_rate'])
+
+        self.assertEqual(self.engagement.financial_finding_set.count(), 0)
+        self.assertEqual(self.engagement.total_amount_of_ineligible_expenditure_local, 0)
+        self.assertEqual(self.engagement.total_amount_of_ineligible_expenditure, 0)
+        face_1 = FaceFormFactory(amount_local=5400, amount_usd=400)
+        self.engagement.face_forms.add(face_1)
+        data = {
+            "financial_finding_set": [
+                {
+                    "title": "vat-incorrectly-claimed",
+                    "local_amount": "6533.00",
+                    "amount": "253.67",
+                    "description": "During the audit process..",
+                    "recommendation": "We recommend proper control procedures",
+                    "ip_comments": "payments accordingly"
+                }
+            ]
+        }
+        response = self.forced_auth_req(
+            'patch',
+            '/api/audit/spot-checks/{}/'.format(self.engagement.id),
+            user=self.auditor, data=data
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.engagement.refresh_from_db()
+        self.assertEqual(self.engagement.total_amount_of_ineligible_expenditure, Decimal('253.67'))
+        self.assertEqual(self.engagement.total_amount_of_ineligible_expenditure_local, Decimal('6533.00'))
+        self.assertEqual(response.data['total_amount_of_ineligible_expenditure'], '253.67')
+        self.assertEqual(response.data['total_amount_of_ineligible_expenditure_local'], '6533.00')
+
+        # test validation for total_amount_tested_local
+        data = {'total_amount_tested_local': self.engagement.total_amount_of_ineligible_expenditure_local - 1000}
+        response = self.forced_auth_req(
+            'patch',
+            '/api/audit/spot-checks/{}/'.format(self.engagement.id),
+            user=self.auditor, data=data
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('Cannot be lower than Financial Findings Local', response.data['total_amount_tested_local'])
+
+        data = {'total_amount_tested_local': self.engagement.total_value_local + 2000}
+        response = self.forced_auth_req(
+            'patch',
+            '/api/audit/spot-checks/{}/'.format(self.engagement.id),
+            user=self.auditor, data=data
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('Cannot be higher than the value of Selected FACE Local', response.data['total_amount_tested_local'])
 
 
 class TestStaffSpotCheck(AuditTestCaseMixin, BaseTenantTestCase):
@@ -1115,7 +1455,10 @@ class TestStaffSpotCheck(AuditTestCaseMixin, BaseTenantTestCase):
         inactive_unicef_focal_point = AuditFocalPointUserFactory()
         inactive_unicef_focal_point.realms.update(is_active=False)
 
-        spot_check = SpotCheckFactory(staff_members=active_staff_list + [inactive_unicef_focal_point])
+        spot_check = SpotCheckFactory(
+            staff_members=active_staff_list + [inactive_unicef_focal_point],
+            exchange_rate=2
+        )
 
         response = self.forced_auth_req(
             'get',
@@ -1124,6 +1467,8 @@ class TestStaffSpotCheck(AuditTestCaseMixin, BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['staff_members']), spot_check.staff_members.count())
+
+        self.assertEqual(response.data['exchange_rate'], '2.00')
         self.assertEqual(
             [inactive_unicef_focal_point.pk],
             [staff['id'] for staff in response.data['staff_members'] if not staff['has_active_realm']]
@@ -1174,6 +1519,57 @@ class TestStaffSpotCheck(AuditTestCaseMixin, BaseTenantTestCase):
             user=self.unicef_focal_point,
         )
         self.assertEqual(attachments_response.status_code, status.HTTP_200_OK)
+
+    def test_update_financial_finding_set(self):
+        auditor_firm = AuditPartnerFactory(unicef_users_allowed=True)
+        auditor = AuditorUserFactory(partner_firm=auditor_firm, realms__data=[UNICEFUser.name, Auditor.name])
+        auditor.profile.organization = auditor_firm.organization
+        auditor.profile.save()
+
+        staff_spot_check = SpotCheckFactory(staff_members=[auditor], status='partner_contacted')
+        staff_spot_check.exchange_rate = 2
+        staff_spot_check.save(update_fields=['exchange_rate'])
+
+        staff_spot_check.agreement.auditor_firm = auditor_firm
+        staff_spot_check.agreement.save(update_fields=['auditor_firm'])
+
+        self.assertEqual(staff_spot_check.financial_finding_set.count(), 0)
+        self.assertEqual(staff_spot_check.total_amount_of_ineligible_expenditure_local, 0)
+        self.assertEqual(staff_spot_check.total_amount_of_ineligible_expenditure, 0)
+        face_1 = FaceFormFactory()
+        staff_spot_check.face_forms.add(face_1)
+        response = self.forced_auth_req(
+            'options',
+            reverse('audit:staff-spot-checks-detail', args=[staff_spot_check.pk]),
+            user=auditor
+        )
+        self.assertIn('financial_finding_set', response.data['actions']['PUT'])
+        self.assertNotIn('total_amount_of_ineligible_expenditure_local', response.data['actions']['PUT'])
+
+        data = {
+            "financial_finding_set": [
+                {
+                    "title": "vat-incorrectly-claimed",
+                    "local_amount": "96533.00",
+                    "amount": "1253.67",
+                    "description": "During the audit process..",
+                    "recommendation": "We recommend proper control procedures",
+                    "ip_comm`ents": "payments accordingly"
+                }
+            ]
+        }
+        response = self.forced_auth_req(
+            'patch',
+            reverse('audit:staff-spot-checks-detail', args=[staff_spot_check.pk]),
+            user=auditor, data=data
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        staff_spot_check.refresh_from_db()
+        self.assertEqual(staff_spot_check.total_amount_of_ineligible_expenditure, Decimal('1253.67'))
+        self.assertEqual(staff_spot_check.total_amount_of_ineligible_expenditure_local, Decimal('96533.00'))
+        self.assertEqual(response.data['total_amount_of_ineligible_expenditure'], '1253.67')
+        self.assertEqual(response.data['total_amount_of_ineligible_expenditure_local'], '96533.00')
 
 
 class TestMetadataDetailViewSet(EngagementTransitionsTestCaseMixin):
@@ -1254,10 +1650,161 @@ class TestAuditMetadataDetailViewSet(TestMetadataDetailViewSet, BaseTenantTestCa
     def test_weaknesses_choices(self):
         self._test_risk_choices('key_internal_weakness', Risk.AUDIT_VALUES)
 
+    def test_conducted_by_sai(self):
+        response = self.forced_auth_req(
+            'options',
+            '/api/audit/{}/{}/'.format(self.endpoint, self.engagement.id),
+            user=self.auditor
+        )
+        self.assertIn('GET', response.data['actions'])
+        self.assertIn('conducted_by_sai', response.data['actions']['GET'])
+
+    def test_follow_up_without_face_view_comments_from_unicef(self):
+        audit = self.engagement_factory(
+            staff_members=[self.auditor], agreement__auditor_firm=self.auditor_firm,
+            date_of_comments_by_unicef=datetime.date.today()
+        )
+        self.assertFalse(audit.face_forms.exists())
+        self.assertEqual(audit.status, Audit.PARTNER_CONTACTED)
+        self.assertEqual(audit.displayed_status, Audit.DISPLAY_STATUSES.comments_received_by_unicef)
+
+        response = self.forced_auth_req(
+            'options',
+            '/api/audit/{}/{}/'.format(self.endpoint, audit.id),
+            user=self.auditor
+        )
+        # auditor cannot view/edit the follow up fields, usd or local
+        for field in ['amount_refunded', 'additional_supporting_documentation_provided',
+                      'justification_provided_and_accepted', 'write_off_required']:
+            self.assertNotIn(field, response.data['actions']['GET'])
+            self.assertNotIn(field, response.data['actions']['PUT'])
+
+        for field in ['amount_refunded_local', 'additional_supporting_documentation_provided_local',
+                      'justification_provided_and_accepted_local', 'write_off_required_local']:
+            self.assertNotIn(field, response.data['actions']['GET'])
+            self.assertNotIn(field, response.data['actions']['PUT'])
+
+        # auditor can view but not edit pending_unsupported_amount in usd
+        self.assertIn('pending_unsupported_amount', response.data['actions']['GET'])
+        self.assertNotIn('pending_unsupported_amount', response.data['actions']['PUT'])
+
+        # auditor cannot view nor edit pending_unsupported_amount_local
+        self.assertNotIn('pending_unsupported_amount_local', response.data['actions']['GET'])
+        self.assertNotIn('pending_unsupported_amount_local', response.data['actions']['PUT'])
+
+        # auditor can view and edit audited_expenditure in usd
+        self.assertIn('audited_expenditure', response.data['actions']['GET'])
+        self.assertIn('audited_expenditure', response.data['actions']['PUT'])
+
+        # auditor cannot view nor edit audited_expenditure local
+        self.assertNotIn('audited_expenditure_local', response.data['actions']['GET'])
+        self.assertNotIn('audited_expenditure_local', response.data['actions']['PUT'])
+
+        response = self.forced_auth_req(
+            'options',
+            '/api/audit/{}/{}/'.format(self.endpoint, audit.id),
+            user=self.unicef_focal_point
+        )
+
+        # unicef focal point can view/edit the follow up fields in usd but not local
+        for field in ['amount_refunded_local', 'additional_supporting_documentation_provided_local',
+                      'justification_provided_and_accepted_local', 'write_off_required_local']:
+            self.assertNotIn(field, response.data['actions']['GET'])
+            self.assertNotIn(field, response.data['actions']['PUT'])
+        for field in ['amount_refunded', 'additional_supporting_documentation_provided',
+                      'justification_provided_and_accepted', 'write_off_required']:
+            self.assertIn(field, response.data['actions']['GET'])
+            self.assertIn(field, response.data['actions']['PUT'])
+
+    def test_face_forms_editable(self):
+        audit = self.engagement_factory(
+            staff_members=[self.auditor], agreement__auditor_firm=self.auditor_firm
+        )
+        self.assertEqual(audit.status, Engagement.PARTNER_CONTACTED)
+        self.assertEqual(audit.displayed_status, Engagement.PARTNER_CONTACTED)
+
+        response = self.forced_auth_req(
+            'options',
+            '/api/audit/{}/{}/'.format(self.endpoint, audit.id),
+            user=self.auditor
+        )
+        self.assertIn('PUT', response.data['actions'])
+        self.assertNotIn('face_forms', response.data['actions']['PUT'])
+
+        response = self.forced_auth_req(
+            'options',
+            '/api/audit/{}/{}/'.format(self.endpoint, audit.id),
+            user=self.unicef_focal_point
+        )
+
+        self.assertIn('PUT', response.data['actions'])
+        self.assertIn('face_forms', response.data['actions']['PUT'])
+
+    def test_face_forms_not_editable(self):
+        audit = self.engagement_factory(
+            staff_members=[self.auditor], agreement__auditor_firm=self.auditor_firm,
+            date_of_comments_by_unicef=datetime.date.today()
+        )
+        self.assertEqual(audit.status, Engagement.PARTNER_CONTACTED)
+        self.assertEqual(audit.displayed_status, 'comments_received_by_unicef')
+        response = self.forced_auth_req(
+            'options',
+            '/api/audit/{}/{}/'.format(self.endpoint, audit.id),
+            user=self.unicef_focal_point
+        )
+
+        self.assertIn('PUT', response.data['actions'])
+        self.assertNotIn('face_forms', response.data['actions']['PUT'])
+
+    def test_report_not_editable_for_unicef_auditor(self):
+        audit = self.engagement_factory(
+            staff_members=[self.auditor], agreement__auditor_firm=self.auditor_firm,
+        )
+        face_1 = FaceFormFactory(amount_usd=100.25, amount_local=9550.55, exchange_rate=95.27)
+        audit.face_forms.add(face_1)
+
+        unicef_auditor = UserFactory(realms__data=['UNICEF User', 'UNICEF Audit Focal Point', 'Auditor'])
+        RealmFactory(
+            user=unicef_auditor, group=Auditor.as_group(),
+            organization=self.auditor_firm.organization, country=connection.tenant)
+        audit.staff_members.add(unicef_auditor)
+
+        self.assertEqual(unicef_auditor.profile.organization.name, 'UNICEF')
+        self.assertEqual(audit.status, Engagement.PARTNER_CONTACTED)
+
+        response = self.forced_auth_req(
+            'options',
+            '/api/audit/{}/{}/'.format(self.endpoint, audit.id),
+            user=unicef_auditor
+        )
+
+        self.assertIn('PUT', response.data['actions'])
+        for field in ['currency_of_report', 'date_of_field_visit', 'date_of_draft_report_to_ip',
+                      'date_of_comments_by_ip', 'date_of_draft_report_to_unicef', 'date_of_comments_by_unicef',
+                      'audited_expenditure_local', 'financial_finding_set', 'audit_opinion',
+                      'key_internal_weakness', 'key_internal_controls']:
+            self.assertNotIn(field, response.data['actions']['PUT'])
+
 
 class TestSpotCheckMetadataDetailViewSet(TestMetadataDetailViewSet, BaseTenantTestCase):
     engagement_factory = StaffSpotCheckFactory
     endpoint = 'spot-checks'
+
+    def test_currencies_display_text(self):
+        self.assertFalse(self.auditor.is_unicef_user())
+        spot_check = self.engagement_factory(
+            staff_members=[self.auditor], agreement__auditor_firm=self.auditor_firm
+        )
+        response = self.forced_auth_req(
+            'options',
+            '/api/audit/{}/{}/'.format(self.endpoint, spot_check.id),
+            user=self.auditor
+        )
+        self.assertIn('GET', response.data['actions'])
+        get = response.data['actions']['GET']
+        self.assertIn('currency_of_report', get)
+        self.assertEqual(get['currency_of_report']['choices'][0]['value'], 'GIP')
+        self.assertEqual(get['currency_of_report']['choices'][0]['display_name'], 'Gibraltar Pound')
 
     def test_users_notified_auditor_not_unicef(self):
         self.assertFalse(self.auditor.is_unicef_user())
@@ -1290,6 +1837,58 @@ class TestSpotCheckMetadataDetailViewSet(TestMetadataDetailViewSet, BaseTenantTe
         self.assertIn('users_notified', get)
         put = response.data['actions']['PUT']
         self.assertIn('users_notified', put)
+
+    def test_follow_up_without_face_view_comments_from_unicef(self):
+        spot_check = self.engagement_factory(
+            staff_members=[self.auditor], agreement__auditor_firm=self.auditor_firm,
+            date_of_comments_by_unicef=datetime.date.today()
+        )
+        response = self.forced_auth_req(
+            'options',
+            '/api/audit/{}/{}/'.format(self.endpoint, spot_check.id),
+            user=self.auditor
+        )
+        # auditor cannot view/edit the follow up fields, usd or local
+        for field in ['amount_refunded', 'additional_supporting_documentation_provided',
+                      'justification_provided_and_accepted', 'write_off_required',
+                      # 'total_amount_of_ineligible_expenditure', 'total_amount_tested',
+                      # 'pending_unsupported_amount'
+                      ]:
+            self.assertNotIn(field, response.data['actions']['GET'])
+            self.assertNotIn(field, response.data['actions']['PUT'])
+
+        # auditor can view the report fields, only usd and not local
+        for field in ['total_amount_of_ineligible_expenditure', 'pending_unsupported_amount']:
+            self.assertIn(field, response.data['actions']['GET'])
+            self.assertNotIn(field, response.data['actions']['PUT'])
+
+        for field in ['total_amount_of_ineligible_expenditure_local', 'total_amount_tested_local',
+                      'pending_unsupported_amount_local']:
+            self.assertNotIn(field, response.data['actions']['GET'])
+            self.assertNotIn(field, response.data['actions']['PUT'])
+
+        response = self.forced_auth_req(
+            'options',
+            '/api/audit/{}/{}/'.format(self.endpoint, spot_check.id),
+            user=self.unicef_focal_point
+        )
+        # unicef focal point can view/edit the follow up fields in usd but not local
+        for field in ['amount_refunded_local', 'additional_supporting_documentation_provided_local',
+                      'justification_provided_and_accepted_local', 'write_off_required_local'
+                      'pending_unsupported_amount_local', 'total_amount_of_ineligible_expenditure_local',
+                      'total_amount_tested_local']:
+            self.assertNotIn(field, response.data['actions']['GET'])
+            self.assertNotIn(field, response.data['actions']['PUT'])
+        for field in ['amount_refunded', 'additional_supporting_documentation_provided',
+                      'justification_provided_and_accepted', 'write_off_required']:
+            self.assertIn(field, response.data['actions']['GET'])
+            self.assertIn(field, response.data['actions']['PUT'])
+
+        # unicef focal point can view the report fields, only usd and not local
+        for field in ['total_amount_of_ineligible_expenditure', 'total_amount_tested',
+                      'pending_unsupported_amount']:
+            self.assertIn(field, response.data['actions']['GET'])
+            self.assertNotIn(field, response.data['actions']['PUT'])
 
 
 class TestAuditorFirmViewSet(AuditTestCaseMixin, BaseTenantTestCase):
@@ -1480,6 +2079,87 @@ class TestAuditorStaffMembersViewSet(AuditTestCaseMixin, BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
 
+class TestFaceFormsViewSet(BaseTenantTestCase):
+    def setUp(self):
+        super().setUp()
+        GroupWrapper.invalidate_instances()
+
+        self.partner = PartnerWithAgreementsFactory()
+        self.unicef_focal_point = AuditFocalPointUserFactory(first_name='UNICEF Audit Focal Point')
+
+        self.audit = AuditFactory(partner=self.partner)
+
+    def test_list(self):
+        ff_1 = FaceFormFactory(partner=self.partner)
+        ff_2 = FaceFormFactory(partner=self.partner)
+
+        response = self.forced_auth_req(
+            'get',
+            '/api/audit/face-forms/{0}/'.format(self.partner.id),
+            user=self.unicef_focal_point
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 2)
+        ff_list = sorted(response.data['results'], key=lambda ff: ff['id'])
+        self.assertEqual(ff_list[0]['id'], ff_1.id)
+        self.assertEqual(ff_list[0]['selected'], False)
+
+        self.assertEqual(ff_list[1]['id'], ff_2.id)
+        self.assertEqual(ff_list[1]['selected'], False)
+
+        # First face form is selected on audit
+        self.audit.face_forms.add(ff_1)
+
+        response = self.forced_auth_req(
+            'get',
+            '/api/audit/face-forms/{0}/'.format(self.partner.id),
+            user=self.unicef_focal_point
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 2)
+        ff_list = sorted(response.data['results'], key=lambda ff: ff['id'])
+        self.assertEqual(ff_list[0]['id'], ff_1.id)
+        self.assertEqual(ff_list[0]['selected'], True)
+
+        self.assertEqual(ff_list[1]['id'], ff_2.id)
+        self.assertEqual(ff_list[1]['selected'], False)
+
+    def test_list_query_param_engagement(self):
+        ff_1 = FaceFormFactory(partner=self.partner)
+        ff_2 = FaceFormFactory(partner=self.partner)
+        # First face form is selected on audit
+        self.audit.face_forms.add(ff_1)
+
+        response = self.forced_auth_req(
+            'get',
+            '/api/audit/face-forms/{0}/'.format(self.partner.id),
+            user=self.unicef_focal_point
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 2)
+        ff_list = sorted(response.data['results'], key=lambda ff: ff['id'])
+        self.assertEqual(ff_list[0]['id'], ff_1.id)
+        self.assertEqual(ff_list[0]['selected'], True)
+
+        self.assertEqual(ff_list[1]['id'], ff_2.id)
+        self.assertEqual(ff_list[1]['selected'], False)
+
+        response = self.forced_auth_req(
+            'get',
+            '/api/audit/face-forms/{0}/'.format(self.partner.id),
+            data={'engagement': self.audit.id},
+            user=self.unicef_focal_point
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 2)
+        ff_list = sorted(response.data['results'], key=lambda ff: ff['id'])
+        self.assertEqual(ff_list[0]['id'], ff_1.id)
+        self.assertEqual(ff_list[0]['selected'], False)
+
+        self.assertEqual(ff_list[1]['id'], ff_2.id)
+        self.assertEqual(ff_list[1]['selected'], False)
+
+
 class TestEngagementSpecialPDFExportViewSet(EngagementTransitionsTestCaseMixin, BaseTenantTestCase):
     engagement_factory = SpecialAuditFactory
 
@@ -1552,6 +2232,10 @@ class TestEngagementPDFExportViewSet(EngagementTransitionsTestCaseMixin, BaseTen
 
     def test_focal_point(self):
         self._test_pdf_view(self.unicef_focal_point)
+
+    def test_auditor_different_audit_firm(self):
+        new_auditor = AuditorUserFactory()
+        self._test_pdf_view(new_auditor)
 
 
 class TestEngagementCSVExportViewSet(EngagementTransitionsTestCaseMixin, BaseTenantTestCase):

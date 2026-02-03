@@ -30,14 +30,20 @@ from etools.applications.action_points.conditions import (
 from etools.applications.audit.conditions import (
     AuditModuleCondition,
     AuditStaffMemberCondition,
+    EngagementFaceFormPartnerContactedDisplayStatusCondition,
     EngagementStaffMemberCondition,
     EngagementUnicefCommentsReceivedCondition,
+    EngagementWithFaceFormsCondition,
+    EngagementWithoutFaceFormsCondition,
     IsUnicefUserCondition,
 )
 from etools.applications.audit.exports import (
     AuditDetailCSVRenderer,
     AuditorFirmCSVRenderer,
     EngagementCSVRenderer,
+    FaceAuditDetailCSVRenderer,
+    FaceSpecialAuditDetailCSVRenderer,
+    FaceSpotCheckDetailCSVRenderer,
     MicroAssessmentDetailCSVRenderer,
     SpecialAuditDetailCSVRenderer,
     SpotCheckDetailCSVRenderer,
@@ -54,6 +60,7 @@ from etools.applications.audit.models import (
     Auditor,
     Engagement,
     EngagementActionPoint,
+    FaceForm,
     MicroAssessment,
     SpecialAudit,
     SpotCheck,
@@ -86,6 +93,7 @@ from etools.applications.audit.serializers.engagement import (
     EngagementHactSerializer,
     EngagementListSerializer,
     EngagementSerializer,
+    FaceFormSerializer,
     MicroAssessmentSerializer,
     ReportAttachmentSerializer,
     SpecialAuditSerializer,
@@ -103,6 +111,7 @@ from etools.applications.audit.serializers.export import (
     SpotCheckDetailCSVSerializer,
     SpotCheckPDFSerializer,
 )
+from etools.applications.audit.serializers.face_export import FaceAuditPDFSerializer, FaceSpotCheckPDFSerializer
 from etools.applications.organizations.models import Organization
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
@@ -263,7 +272,7 @@ class PurchaseOrderViewSet(
 
 
 class EngagementPartnerView(generics.ListAPIView):
-    queryset = PartnerOrganization.objects.filter(hidden=False)
+    queryset = PartnerOrganization.objects.filter(name__isnull=False)
     serializer_class = MinimalPartnerOrganizationListSerializer
     permission_classes = (IsAuthenticated, )
 
@@ -320,6 +329,8 @@ class EngagementViewSet(
             'serializer_class': AuditSerializer,
             'pdf_serializer_class': AuditPDFSerializer,
             'pdf_template': 'audit/audit_pdf.html',
+            'face_pdf_serializer_class': FaceAuditPDFSerializer,
+            'face_pdf_template': 'audit/face_audit_pdf.html',
         },
         Engagement.TYPES.ma: {
             'serializer_class': MicroAssessmentSerializer,
@@ -330,11 +341,15 @@ class EngagementViewSet(
             'serializer_class': SpecialAuditSerializer,
             'pdf_serializer_class': SpecialAuditPDFSerializer,
             'pdf_template': 'audit/special_audit_pdf.html',
+            'face_pdf_serializer_class': SpecialAuditPDFSerializer,
+            'face_pdf_template': 'audit/special_audit_pdf.html',
         },
         Engagement.TYPES.sc: {
             'serializer_class': SpotCheckSerializer,
             'pdf_serializer_class': SpotCheckPDFSerializer,
             'pdf_template': 'audit/spotcheck_pdf.html',
+            'face_pdf_serializer_class': FaceSpotCheckPDFSerializer,
+            'face_pdf_template': 'audit/face_spotcheck_pdf.html',
         },
     }
 
@@ -352,7 +367,10 @@ class EngagementViewSet(
 
         user_groups = self.request.user.groups.all()
 
-        if UNICEFUser.as_group() in user_groups or UNICEFAuditFocalPoint.as_group() in user_groups:
+        # an auditor from a different audit firm can download the engagement pdf
+        if (UNICEFUser.as_group() in user_groups or UNICEFAuditFocalPoint.as_group() in user_groups or
+            (self.action == 'export_pdf' and self.request.user.realms.filter(
+                country=connection.tenant, group=Auditor.as_group(), is_active=True).exists())):
             # no need to filter queryset
             pass
         elif Auditor.as_group() in user_groups:
@@ -370,7 +388,7 @@ class EngagementViewSet(
         if self.action in ['list', 'export_list_csv']:
             queryset = queryset.filter(agreement__auditor_firm__unicef_users_allowed=self.unicef_engagements)
 
-        return queryset
+        return queryset.order_by('-id')
 
     def get_permission_context(self):
         context = super().get_permission_context()
@@ -387,6 +405,9 @@ class EngagementViewSet(
         context.extend([
             ObjectStatusCondition(obj),
             EngagementUnicefCommentsReceivedCondition(obj),
+            EngagementWithFaceFormsCondition(obj),
+            EngagementWithoutFaceFormsCondition(obj),
+            EngagementFaceFormPartnerContactedDisplayStatusCondition(obj),
             AuditStaffMemberCondition(obj.agreement.auditor_firm.organization, self.request.user),
             EngagementStaffMemberCondition(obj, self.request.user),
             IsUnicefUserCondition(self.request.user)
@@ -415,8 +436,12 @@ class EngagementViewSet(
         obj = self.get_object()
 
         engagement_params = self.ENGAGEMENT_MAPPING.get(obj.engagement_type, {})
-        pdf_serializer_class = engagement_params.get('pdf_serializer_class', None)
-        template = engagement_params.get('pdf_template', None)
+        if obj.prior_face_forms:  # if not face_forms.exist()
+            pdf_serializer_class = engagement_params.get('pdf_serializer_class', None)
+            template = engagement_params.get('pdf_template', None)
+        else:
+            pdf_serializer_class = engagement_params.get('face_pdf_serializer_class', None)
+            template = engagement_params.get('face_pdf_template', None)
 
         if not pdf_serializer_class or not template:
             raise NotImplementedError
@@ -480,6 +505,10 @@ class AuditViewSet(EngagementManagementMixin, EngagementViewSet):
 
     @action(detail=True, methods=['get'], url_path='csv', renderer_classes=[AuditDetailCSVRenderer])
     def export_csv(self, request, *args, **kwargs):
+        obj = self.get_object()
+
+        if not obj.prior_face_forms:
+            request.accepted_renderer = FaceAuditDetailCSVRenderer()
         return super().export_csv(request, *args, **kwargs)
 
 
@@ -491,6 +520,10 @@ class SpotCheckViewSet(EngagementManagementMixin, EngagementViewSet):
 
     @action(detail=True, methods=['get'], url_path='csv', renderer_classes=[SpotCheckDetailCSVRenderer])
     def export_csv(self, request, *args, **kwargs):
+        obj = self.get_object()
+
+        if not obj.prior_face_forms:
+            request.accepted_renderer = FaceSpotCheckDetailCSVRenderer()
         return super().export_csv(request, *args, **kwargs)
 
 
@@ -510,7 +543,29 @@ class SpecialAuditViewSet(EngagementManagementMixin, EngagementViewSet):
 
     @action(detail=True, methods=['get'], url_path='csv', renderer_classes=[SpecialAuditDetailCSVRenderer])
     def export_csv(self, request, *args, **kwargs):
+        obj = self.get_object()
+
+        if not obj.prior_face_forms or obj.total_value_local > 0:
+            request.accepted_renderer = FaceSpecialAuditDetailCSVRenderer()
         return super().export_csv(request, *args, **kwargs)
+
+
+class FaceFormListViewSet(
+    BaseAuditViewSet,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet
+):
+    metadata_class = PermissionBasedMetadata
+    permission_classes = BaseAuditViewSet.permission_classes
+    queryset = FaceForm.objects.select_related('partner')
+    serializer_class = FaceFormSerializer
+
+    def get_queryset(self):
+        engagement_id = self.request.query_params.get('engagement', None)
+        return (super().get_queryset()
+                .filter(partner_id=int(self.kwargs['partner_pk']))
+                .annotate(selected=Exists(Engagement.objects.exclude(id=engagement_id).filter(face_forms=OuterRef('pk'))))
+                .order_by('id'))
 
 
 class AuditorStaffMembersViewSet(

@@ -70,6 +70,7 @@ class UserFilter(filters.FilterSet):
 class LocationsFilter(filters.FilterSet):
     name = filters.CharFilter(field_name="name", lookup_expr="icontains")
     p_code = filters.CharFilter(field_name="p_code", lookup_expr="icontains")
+    l_consignee_code = filters.CharFilter(field_name="l_consignee_code", lookup_expr="icontains")
     district = filters.CharFilter(method='filter_district', label='District')
     region = filters.CharFilter(method='filter_region', label='Region')
     country = filters.CharFilter(method='filter_country', label='Country')
@@ -78,8 +79,11 @@ class LocationsFilter(filters.FilterSet):
     primary_type = filters.CharFilter(field_name="poi_type__name", lookup_expr="icontains")
     secondary_type = filters.CharFilter(field_name="secondary_type__name", lookup_expr="icontains")
     is_active = filters.BooleanFilter(field_name="is_active")
+    status = filters.CharFilter(field_name="status", lookup_expr="icontains")
     latitude = filters.CharFilter(method='filter_latitude', label='Latitude')
     longitude = filters.CharFilter(method='filter_longitude', label='Longitude')
+    has_pending = filters.BooleanFilter(method='filter_has_pending', label='Has Pending Items')
+    has_approved = filters.BooleanFilter(method='filter_has_approved', label='Has Approved Items')
 
     def filter_by_admin_level(self, queryset, name, value, admin_level):
         locations = Location.objects.filter(
@@ -125,9 +129,35 @@ class LocationsFilter(filters.FilterSet):
         )
         return queryset.filter(longitude__startswith=value)
 
+    def filter_has_pending(self, queryset, name, value):
+        if value:
+            return queryset.filter(
+                destination_transfers__approval_status=Transfer.ApprovalStatus.PENDING,
+                destination_transfers__items__hidden=False
+            ).distinct()
+        else:
+            pois_with_pending = PointOfInterest.all_objects.filter(
+                destination_transfers__approval_status=Transfer.ApprovalStatus.PENDING,
+                destination_transfers__items__hidden=False
+            ).values_list('id', flat=True)
+            return queryset.exclude(id__in=pois_with_pending)
+
+    def filter_has_approved(self, queryset, name, value):
+        if value:
+            return queryset.filter(
+                destination_transfers__approval_status=Transfer.ApprovalStatus.APPROVED,
+                destination_transfers__items__hidden=False
+            ).distinct()
+        else:
+            pois_with_approved = PointOfInterest.all_objects.filter(
+                destination_transfers__approval_status=Transfer.ApprovalStatus.APPROVED,
+                destination_transfers__items__hidden=False
+            ).values_list('id', flat=True)
+            return queryset.exclude(id__in=pois_with_approved)
+
     class Meta:
         model = PointOfInterest
-        fields = ('name', 'p_code', 'primary_type', 'is_active', 'secondary_type')
+        fields = ('name', 'p_code', 'primary_type', 'is_active', 'secondary_type', 'status', 'l_consignee_code')
 
 
 class UserLocationsFilter(filters.FilterSet):
@@ -251,6 +281,11 @@ class ItemFilter(filters.FilterSet):
     quantity = filters.NumberFilter(field_name='quantity', lookup_expr='exact')
     uom = filters.CharFilter(field_name="uom", lookup_expr="icontains")
     batch_id = filters.CharFilter(field_name="batch_id", lookup_expr="icontains")
+    approval_status = filters.ChoiceFilter(
+        field_name='transfer__approval_status',
+        choices=Transfer.ApprovalStatus.choices,
+        label='Approval Status'
+    )
 
     class Meta:
         model = Item
@@ -261,7 +296,8 @@ class ItemFilter(filters.FilterSet):
             'material_number',
             'quantity',
             'uom',
-            'batch_id'
+            'batch_id',
+            'approval_status'
         ]
 
     def filter_mapped_description(self, queryset, name, value):

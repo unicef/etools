@@ -2,13 +2,13 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
+# 
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-18 16:39+0200\n"
+"POT-Creation-Date: 2026-01-29 13:11+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -98,6 +98,9 @@ msgstr "المكاتب الميدانية"
 msgid "Status"
 msgstr "الحالة"
 
+msgid "Mission completion date"
+msgstr "تاريخ إتمام المهمة"
+
 msgid "Primary Field Monitor is"
 msgstr ""
 
@@ -167,6 +170,39 @@ msgstr "نماذج السؤال"
 msgid "Question Templates"
 msgstr "نماذج السؤال"
 
+msgid "Related Sections"
+msgstr "الأقسام المعنية"
+
+msgid "Temporary"
+msgstr "مؤقت"
+
+msgid "Semi-permanent"
+msgstr "شبه دائم"
+
+msgid "Permanent"
+msgstr "دائم"
+
+msgid "Monitoring Activity"
+msgstr "نشاط المراقبة"
+
+msgid "Facility Type"
+msgstr "نوع المنشأة"
+
+msgid "Facility Type Durations"
+msgstr "مدد نوع المنشأة"
+
+msgid "One or more duration options for this facility type"
+msgstr "خيار واحد أو أكثر للمدة لهذا النوع من المنشأة"
+
+msgid "Monitoring Activity Facility Type"
+msgstr "نوع منشأة نشاط المراقبة"
+
+msgid "Monitoring Activity Facility Types"
+msgstr "أنواع منشآت نشاط المراقبة"
+
+msgid "No duration"
+msgstr "بدون مدة"
+
 msgid "Staff"
 msgstr "الموظفين"
 
@@ -234,10 +270,7 @@ msgid "Objective"
 msgstr "أهداف"
 
 msgid "Facility types"
-msgstr ""
-
-msgid "Monitoring Activity"
-msgstr "نشاط المراقبة"
+msgstr "أنواع المنشآت"
 
 msgid "Monitoring Activities"
 msgstr "أنشطة المراقبة"
@@ -322,6 +355,9 @@ msgstr "النماذج"
 
 msgid "Attachments"
 msgstr "المرفقات"
+
+#~ msgid "Related Section"
+#~ msgstr "القسم المعني"
 
 #~ msgid "Type Of Facility"
 #~ msgstr "نوع المنشأة"

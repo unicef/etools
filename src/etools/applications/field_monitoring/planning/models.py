@@ -3,9 +3,11 @@ import logging
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.fields import GenericRelation
+from django.contrib.postgres.fields import ArrayField
 from django.db import connection, models, transaction
 from django.db.models import Count, Exists, OuterRef, Prefetch, Q
 from django.db.models.base import ModelBase
+from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 
@@ -134,9 +136,60 @@ class VisitGoal(models.Model):
 
 class FacilityType(models.Model):
     name = models.CharField(max_length=255)
+    related_sections = models.ManyToManyField(
+        Section,
+        blank=True,
+        verbose_name=_('Related Sections'),
+        related_name='facility_types'
+    )
 
     def __str__(self):
         return self.name
+
+
+class MonitoringActivityFacilityType(models.Model):
+    """
+    Intermediate model to store facility types with their durations for each monitoring activity.
+    Each facility type can have multiple duration options (Temporary, Semi-permanent, Permanent).
+    """
+    FACILITY_TYPE_DURATION_TEMPORARY = 'temporary'
+    FACILITY_TYPE_DURATION_SEMI_PERMANENT = 'semi_permanent'
+    FACILITY_TYPE_DURATION_PERMANENT = 'permanent'
+
+    FACILITY_TYPE_DURATION_CHOICES = [
+        (FACILITY_TYPE_DURATION_TEMPORARY, _('Temporary')),
+        (FACILITY_TYPE_DURATION_SEMI_PERMANENT, _('Semi-permanent')),
+        (FACILITY_TYPE_DURATION_PERMANENT, _('Permanent')),
+    ]
+
+    monitoring_activity = models.ForeignKey(
+        'MonitoringActivity',
+        on_delete=models.CASCADE,
+        related_name='facility_type_relations',
+        verbose_name=_('Monitoring Activity')
+    )
+    facility_type = models.ForeignKey(
+        FacilityType,
+        on_delete=models.CASCADE,
+        related_name='monitoring_activity_relations',
+        verbose_name=_('Facility Type')
+    )
+    facility_type_durations = ArrayField(
+        models.CharField(max_length=20, choices=FACILITY_TYPE_DURATION_CHOICES),
+        default=list,
+        blank=True,
+        verbose_name=_('Facility Type Durations'),
+        help_text=_('One or more duration options for this facility type')
+    )
+
+    class Meta:
+        verbose_name = _('Monitoring Activity Facility Type')
+        verbose_name_plural = _('Monitoring Activity Facility Types')
+        unique_together = [['monitoring_activity', 'facility_type']]
+
+    def __str__(self):
+        durations_str = ', '.join(self.facility_type_durations) if self.facility_type_durations else _('No duration')
+        return f'{self.facility_type.name} - {durations_str}'
 
 
 class MonitoringActivitiesQuerySet(models.QuerySet):
@@ -308,6 +361,7 @@ class MonitoringActivity(
 
     start_date = models.DateField(verbose_name=_('Start Date'), blank=True, null=True)
     end_date = models.DateField(verbose_name=_('End Date'), blank=True, null=True)
+    completion_date = models.DateField(verbose_name=_('Mission completion date'), blank=True, null=True)
 
     status = FSMField(verbose_name=_('Status'), max_length=20, choices=STATUSES, default=STATUSES.draft)
 
@@ -330,7 +384,8 @@ class MonitoringActivity(
         FacilityType,
         blank=True,
         verbose_name=_('Facility types'),
-        related_name='monitoring_activities'
+        related_name='monitoring_activities',
+        through='MonitoringActivityFacilityType'
     )
 
     class Meta:
@@ -343,6 +398,10 @@ class MonitoringActivity(
 
     @transaction.atomic()
     def save(self, **kwargs):
+        # Set completion_date when status is completed and completion_date is not already set
+        if self.status == self.STATUSES.completed and not self.completion_date:
+            self.completion_date = timezone.now().date()
+
         super().save(**kwargs)
 
         if not self.number:
@@ -748,6 +807,15 @@ class MonitoringActivity(
                                       self.status in [self.STATUSES.completed, self.STATUSES.report_finalization]):
             self.reviewed_by = user
             self.save()
+
+    def get_completion_date(self):
+        """
+        Get the date when the mission status was set to 'completed'.
+        Returns None if the mission is not completed or completion date is not set.
+        """
+        if self.status != self.STATUSES.completed:
+            return None
+        return self.completion_date
 
     def activity_overall_findings(self):
         return self.overall_findings.annotate_for_activity_export()

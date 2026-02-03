@@ -36,6 +36,7 @@ from etools.applications.field_monitoring.planning.actions.duplicate_monitoring_
 from etools.applications.field_monitoring.planning.models import MonitoringActivity, YearPlan
 from etools.applications.field_monitoring.planning.serializers import MonitoringActivityLightSerializer
 from etools.applications.field_monitoring.planning.tests.factories import (
+    FacilityTypeFactory,
     MonitoringActivityActionPointFactory,
     MonitoringActivityFactory,
     QuestionTemplateFactory,
@@ -129,7 +130,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             MonitoringActivityFactory(monitor_type='staff'),
         ]
 
-        with self.assertNumQueries(10):
+        with self.assertNumQueries(13):
             self._test_list(self.unicef_user, activities, data={'page': 1, 'page_size': 10})
 
     def test_list_as_tpm_user(self):
@@ -144,7 +145,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             MonitoringActivityFactory(
                 monitor_type='staff', status='assigned')
         ]
-        with self.assertNumQueries(10):
+        with self.assertNumQueries(12):
             self._test_list(tpm_staff, [activities[0], activities[1]], data={'page': 1, 'page_size': 10})
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
@@ -1352,6 +1353,54 @@ class FMUsersViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase):
         self.assertEqual(response.data['results'][0]['user_type'], 'tpm')
         self.assertEqual(response.data['results'][0]['tpm_partner'], tpm_partner)
 
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_filter_with_name(self):
+        # Create users with different name configurations
+        user_with_both_names = UserFactory(first_name='John', last_name='Doe', unicef_user=True, is_staff=True)
+        user_with_first_name_only = UserFactory(first_name='Jane', last_name='', unicef_user=True, is_staff=True)
+        user_with_last_name_only = UserFactory(first_name='', last_name='Smith', unicef_user=True, is_staff=True)
+        user_with_no_names = UserFactory(first_name='', last_name='', unicef_user=True, is_staff=True)
+
+        # Test with with_name=true - should only return users with at least one non-empty name
+        response = self.make_list_request(
+            self.unicef_user,
+            data={'with_name': 'true'}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        user_ids = [user['id'] for user in response.data['results']]
+        # Verify users with names are included
+        self.assertIn(user_with_both_names.id, user_ids)
+        self.assertIn(user_with_first_name_only.id, user_ids)
+        self.assertIn(user_with_last_name_only.id, user_ids)
+        # Verify users without names are excluded
+        self.assertNotIn(user_with_no_names.id, user_ids)
+
+        # Test with with_name=false - should return all users (no filtering)
+        response = self.make_list_request(
+            self.unicef_user,
+            data={'with_name': 'false'}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        user_ids = [user['id'] for user in response.data['results']]
+        # Verify all users are included (no filtering applied)
+        self.assertIn(user_with_both_names.id, user_ids)
+        self.assertIn(user_with_first_name_only.id, user_ids)
+        self.assertIn(user_with_last_name_only.id, user_ids)
+        self.assertIn(user_with_no_names.id, user_ids)
+
+        # Test without with_name parameter - should return all users (no filtering)
+        response = self.make_list_request(
+            self.unicef_user,
+            data={}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        user_ids = [user['id'] for user in response.data['results']]
+        # Verify all users are included (no filtering applied)
+        self.assertIn(user_with_both_names.id, user_ids)
+        self.assertIn(user_with_first_name_only.id, user_ids)
+        self.assertIn(user_with_last_name_only.id, user_ids)
+        self.assertIn(user_with_no_names.id, user_ids)
+
 
 class CPOutputsViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenantTestCase):
     base_view = 'field_monitoring_planning:cp_outputs'
@@ -1762,6 +1811,28 @@ class VisitGoalsTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenantTest
         valid_goals.reverse()
 
         self._test_list(self.unicef_user, valid_goals)
+
+
+class FacilityTypesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenantTestCase):
+    base_view = 'field_monitoring_planning:facility-types'
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_list_returns_related_sections(self):
+        section_a = SectionFactory(name='Section A')
+        section_b = SectionFactory(name='Section B')
+        facility_a = FacilityTypeFactory(name='Facility A', related_sections=[section_a])
+        facility_b = FacilityTypeFactory(name='Facility B', related_sections=[section_b])
+
+        response = self._test_list(self.unicef_user, [facility_a, facility_b])
+
+        payload = response.data['results'] if isinstance(response.data, dict) and 'results' in response.data else response.data
+        facility_payload = next(item for item in payload if item['id'] == facility_a.id)
+
+        self.assertEqual(facility_payload['name'], facility_a.name)
+        self.assertEqual(
+            [section_a.id],
+            sorted(section['id'] for section in facility_payload['related_sections'])
+        )
 
 
 class MonitoringActivityActionPointLocationValidationTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):

@@ -2,13 +2,13 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
+# 
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-08-07 14:14+0000\n"
+"POT-Creation-Date: 2026-01-08 11:54+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -985,6 +985,9 @@ msgstr "نوع مراجعة اليونيسف"
 msgid "Capacity Development"
 msgstr "تنمية القدرات"
 
+msgid "Accountability to Affected Populations (AAP)"
+msgstr "المساءلة أمام السكان المتأثرين (AAP)"
+
 msgid "Other Info"
 msgstr "معلومات اخرى"
 
@@ -1533,6 +1536,10 @@ msgstr "يجب أن يكون تاريخ الاستحقاق في تاريخ ال�
 
 msgid "This period overlaps an existing reporting period."
 msgstr "تتداخل هذه الفترة مع فترة إعداد التقارير الحالية."
+
+#, python-format
+msgid "Invalid currency: %(value)s."
+msgstr ""
 
 #, python-format
 msgid "One or more of the FRs selected is related to a different PD/SPD, %s"

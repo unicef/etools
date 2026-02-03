@@ -41,10 +41,10 @@ class TransferEvidenceAttachmentInline(AttachmentSingleInline):
 @admin.register(models.PointOfInterest)
 class PointOfInterestAdmin(XLSXImportMixin, admin.ModelAdmin):
     readonly_fields = ('partner_names', 'created_by', 'approved_by')
-    list_display = ('name', 'parent', 'poi_type', 'p_code')
+    list_display = ('name', 'parent', 'poi_type', 'p_code', 'l_consignee_code')
     list_select_related = ('parent', 'approved_by', 'created_by')
     list_filter = ('private', 'is_active', 'poi_type')
-    search_fields = ('name', 'p_code')
+    search_fields = ('name', 'p_code', 'l_consignee_code')
     raw_id_fields = ('partner_organizations',)
     formfield_overrides = {
         models.PointField: {'widget': forms.OSMWidget(attrs={'display_raw': True})},
@@ -155,13 +155,49 @@ class TransferInLine(RestrictedEditAdminMixin, admin.TabularInline):
     model = models.Transfer
     list_select_related = ('material',)
 
-    exclude = (
-        'comment', 'reason', 'proof_file', 'waybill_file', 'pd_number', 'waybill_id',
-        'purchase_order_id', 'is_shipment', 'origin_check_out_at', 'system_origin_check_out_at',
-        'destination_check_in_at', 'system_destination_check_in_at', "initial_items"
+    can_delete = False
+
+    fields = (
+        'name', 'status', 'transfer_type', 'transfer_subtype', 'unicef_release_order',
+        'partner_organization', 'from_partner_organization', 'recipient_partner_organization',
+        'origin_point', 'destination_point', 'dispense_type'
+    )
+    readonly_fields = (
+        'name', 'status', 'transfer_type', 'transfer_subtype', 'unicef_release_order',
+        'partner_organization', 'from_partner_organization', 'recipient_partner_organization',
+        'origin_point', 'destination_point', 'dispense_type'
     )
 
     show_change_link = True
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        qs = qs.select_related(
+            'partner_organization',
+            'partner_organization__organization',
+            'from_partner_organization',
+            'from_partner_organization__organization',
+            'recipient_partner_organization',
+            'recipient_partner_organization__organization',
+            'origin_point',
+            'destination_point'
+        ).only(
+            # Specify only the fields we need to minimize data transfer
+            'id', 'name', 'status', 'transfer_type', 'transfer_subtype', 'unicef_release_order',
+            'partner_organization_id', 'from_partner_organization_id', 'recipient_partner_organization_id',
+            'origin_point_id', 'destination_point_id', 'dispense_type', 'transfer_history_id',
+            # Partner organization fields
+            'partner_organization__id', 'partner_organization__organization_id',
+            'partner_organization__organization__name',
+            'from_partner_organization__id', 'from_partner_organization__organization_id',
+            'from_partner_organization__organization__name',
+            'recipient_partner_organization__id', 'recipient_partner_organization__organization_id',
+            'recipient_partner_organization__organization__name',
+            # Point of interest fields
+            'origin_point__id', 'origin_point__name',
+            'destination_point__id', 'destination_point__name'
+        )
+        return qs
 
     def has_add_permission(self, request, obj=None):
         return False
@@ -177,12 +213,12 @@ class TransferInLine(RestrictedEditAdminMixin, admin.TabularInline):
 class TransferAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
     list_display = (
         'display_name', 'partner_organization', 'status', 'transfer_type',
-        'transfer_subtype', 'origin_point', 'destination_point', 'from_partner_organization', 'recipient_partner_organization'
+        'transfer_subtype', 'origin_point', 'destination_point', 'l_consignee_code', 'from_partner_organization', 'recipient_partner_organization'
     )
     list_filter = ('status', 'transfer_type', 'transfer_subtype')
-    search_fields = ('name', 'status', 'origin_point__name', 'destination_point__name', 'partner_organization__organization__name')
+    search_fields = ('name', 'status', 'origin_point__name', 'destination_point__name', 'partner_organization__organization__name', 'l_consignee_code')
     raw_id_fields = ('partner_organization', 'checked_in_by', 'checked_out_by',
-                     'origin_point', 'destination_point', 'origin_transfer', 'from_partner_organization', 'recipient_partner_organization')
+                     'origin_point', 'destination_point', 'origin_transfer', 'from_partner_organization', 'recipient_partner_organization', 'transfer_history', 'created_by', 'approved_by')
     inlines = (ProofTransferAttachmentInline, ItemInline)
 
     def get_queryset(self, request):
@@ -246,7 +282,7 @@ class UserPointsOfInterestAdmin(admin.ModelAdmin):
 
 @admin.register(models.Item)
 class ItemAdmin(XLSXImportMixin, admin.ModelAdmin):
-    list_display = ('batch_id', 'material', 'wastage_type', 'transfer')
+    list_display = ('id', 'batch_id', 'material', 'wastage_type', 'transfer')
     raw_id_fields = ('transfer', 'material', 'origin_transfer')
     list_filter = ('wastage_type', 'hidden')
     readonly_fields = ('destination_point_name',)
@@ -462,13 +498,28 @@ class TransferHistoryAdmin(admin.ModelAdmin):
     readonly_fields = ('origin_transfer_id', 'origin_transfer_link')
     search_fields = ('origin_transfer__name',)
     inlines = [TransferInLine]
+    list_select_related = ('origin_transfer',)
+    show_full_result_count = False
+
+    raw_id_fields = ('origin_transfer',)
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        qs = qs.select_related('origin_transfer')
-        qs = qs.prefetch_related(
-            Prefetch('transfers', queryset=models.Transfer.objects.order_by('id'))
+
+        qs = qs.select_related(
+            'origin_transfer',
+            'origin_transfer__partner_organization',
+            'origin_transfer__partner_organization__organization',
         )
+
+        if request.resolver_match and request.resolver_match.url_name.endswith('_changelist'):
+            qs = qs.prefetch_related(
+                Prefetch(
+                    'transfers',
+                    queryset=models.Transfer.objects.only('id', 'name', 'transfer_history_id').order_by('id')
+                )
+            )
+
         return qs
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
@@ -481,10 +532,12 @@ class TransferHistoryAdmin(admin.ModelAdmin):
 
     def origin_transfer_name(self, obj):
         return obj.origin_transfer.name if obj.origin_transfer else '-'
+    origin_transfer_name.admin_order_field = 'origin_transfer__name'
 
     def list_sub_transfers(self, obj):
         all_transfer = obj.transfers.all()
-        if not all_transfer:
+        count = len(all_transfer)
+        if count == 0:
             return '-'
         return ", ".join([t.name if t.name else "Transfer Name Missing" for t in all_transfer])
 
@@ -508,6 +561,8 @@ class TransferHistoryAdmin(admin.ModelAdmin):
 class ItemTransferHistoryAdmin(admin.ModelAdmin):
     list_display = ('item_batch_id', 'transfer_unicef_release_order', 'transfer_count', 'view_items_link')
     search_fields = ('transfer__name', 'transfer__partner_organization__organization__name', 'transfer__destination_point__name', 'item__batch_id')
+
+    raw_id_fields = ('transfer', 'item')
 
     def transfer_unicef_release_order(self, obj):
         return obj.unicef_release_order
@@ -556,7 +611,22 @@ class PartnerMaterialAdmin(admin.ModelAdmin):
     list_filter = ('material',)
 
 
-admin.site.register(models.PointOfInterestType)
+@admin.register(models.PointOfInterestType)
+class PointOfInterestTypeAdmin(admin.ModelAdmin):
+    list_display = ('name', 'category', 'created', 'modified')
+    list_filter = ('category',)
+    search_fields = ('name', 'category')
+
+
+@admin.register(models.PointOfInterestTypeMapping)
+class PointOfInterestTypeMappingAdmin(admin.ModelAdmin):
+    list_display = ('primary_type', 'secondary_type', 'created', 'modified')
+    list_filter = ('primary_type', 'secondary_type')
+    search_fields = ('primary_type__name', 'secondary_type__name')
+    autocomplete_fields = ('primary_type', 'secondary_type')
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('primary_type', 'secondary_type')
 
 
 @admin.register(models.AuditConfiguration)
@@ -606,7 +676,11 @@ class ItemAuditLogAdmin(admin.ModelAdmin):
     date_hierarchy = 'created'
 
     def get_queryset(self, request):
-        return super().get_queryset(request).select_related('user')
+        return super().get_queryset(request).select_related(
+            'user',
+            'user__profile',
+            'user__profile__organization'
+        )
 
     def changed_fields_display(self, obj):
         if obj.changed_fields:

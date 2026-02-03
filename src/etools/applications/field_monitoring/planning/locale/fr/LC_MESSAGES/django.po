@@ -2,13 +2,13 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
+# 
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-18 16:39+0200\n"
+"POT-Creation-Date: 2026-01-29 13:11+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -98,6 +98,9 @@ msgstr "Bureaux de terrain"
 msgid "Status"
 msgstr "Statut"
 
+msgid "Mission completion date"
+msgstr "Date d'achèvement de la mission"
+
 msgid "Primary Field Monitor is"
 msgstr ""
 
@@ -167,6 +170,39 @@ msgstr "Modèle de questions"
 msgid "Question Templates"
 msgstr "Modèles de questions"
 
+msgid "Related Sections"
+msgstr "Sections associées"
+
+msgid "Temporary"
+msgstr "Temporaire"
+
+msgid "Semi-permanent"
+msgstr "Semi-permanent"
+
+msgid "Permanent"
+msgstr "Permanent"
+
+msgid "Monitoring Activity"
+msgstr "Activité de suivi"
+
+msgid "Facility Type"
+msgstr "Type d'installation"
+
+msgid "Facility Type Durations"
+msgstr "Durées du type d'installation"
+
+msgid "One or more duration options for this facility type"
+msgstr "Une ou plusieurs options de durée pour ce type d'installation"
+
+msgid "Monitoring Activity Facility Type"
+msgstr "Type d'installation d'activité de suivi"
+
+msgid "Monitoring Activity Facility Types"
+msgstr "Types d'installation d'activité de suivi"
+
+msgid "No duration"
+msgstr "Aucune durée"
+
 msgid "Staff"
 msgstr "Personnel"
 
@@ -234,10 +270,7 @@ msgid "Objective"
 msgstr "Objectif"
 
 msgid "Facility types"
-msgstr ""
-
-msgid "Monitoring Activity"
-msgstr "Activité de suivi"
+msgstr "Types d'installation"
 
 msgid "Monitoring Activities"
 msgstr "Activités de suivi"
@@ -322,6 +355,9 @@ msgstr "Modèles"
 
 msgid "Attachments"
 msgstr "Pièces jointes"
+
+#~ msgid "Related Section"
+#~ msgstr "Section associée"
 
 #~ msgid "Type Of Facility"
 #~ msgstr "Type d'installation"

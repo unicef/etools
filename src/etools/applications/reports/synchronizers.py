@@ -1,4 +1,5 @@
 import datetime
+import json
 import logging
 
 from django.db import transaction
@@ -146,11 +147,21 @@ class ResultStructureSynchronizer:
             rem_activity['parent'] = self._get_local_parent(rem_activity['wbs'], 'output')
             rem_activity['result_type'] = activity_type
 
-            new_activities[rem_activity['wbs']], _ = Result.objects.get_or_create(**rem_activity)
+            lookup = {
+                "wbs": rem_activity.get("wbs"),
+                "country_programme": rem_activity.get("country_programme"),
+            }
+            defaults = {k: v for k, v in rem_activity.items() if k not in lookup}
+            obj, created = Result.objects.get_or_create(**lookup, defaults=defaults)
+            if not created and self._update_changes(obj, rem_activity):
+                obj.save()
+                total_updated += 1
+            if created:
+                new_activities[rem_activity["wbs"]] = obj
+            loc_activities[rem_activity["wbs"]] = obj
 
         # add the newly created cps
-        loc_activities.update(new_activities)
-        self.outputs = loc_activities
+        self.activities = loc_activities
         return total_data, total_updated, len(new_activities)
 
     @transaction.atomic
@@ -365,6 +376,9 @@ class RAMSynchronizer(VisionDataTenantSynchronizer):
         fields_that_can_change = ['name', 'baseline', 'target', 'result__wbs']
         # get all the indicators that are present in our db:
         records, wbss = self._clean_records(records)
+
+        if hasattr(self, 'log'):
+            self.log.data = records if type(records) in [dict, list] else json.loads(records)
 
         results = Result.objects.filter(result_type__name='Output', wbs__in=wbss).all()
         result_map = dict([(r.wbs, r) for r in results])

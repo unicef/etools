@@ -49,6 +49,7 @@ from etools.applications.reports.serializers.v2 import (
     ReportingRequirementSerializer,
 )
 from etools.applications.users.serializers import MinimalUserSerializer
+from etools.libraries.djangolib.fields import CURRENCY_LIST
 from etools.libraries.pythonlib.hash import h11
 
 
@@ -817,6 +818,7 @@ class InterventionCreateUpdateSerializer(
         queryset=FundsReservationHeader.objects.prefetch_related('intervention').all(),
         required=False,
     )
+    currency = serializers.CharField(write_only=True, required=False)
     final_partnership_review = SingleInterventionAttachmentField(
         type_name=FileType.FINAL_PARTNERSHIP_REVIEW,
         read_field=InterventionAttachmentSerializer(),
@@ -832,6 +834,11 @@ class InterventionCreateUpdateSerializer(
             if data['frs'] is None:
                 data['frs'] = []
         return super().to_internal_value(data)
+
+    def validate_currency(self, value):
+        if value not in CURRENCY_LIST:
+            raise ValidationError(_("Invalid currency: %(value)s.") % {'value': value})
+        return value
 
     def validate_frs(self, frs):
         for fr in frs:
@@ -866,6 +873,9 @@ class InterventionCreateUpdateSerializer(
         return self._validate_character_limitation(value)
 
     def validate_capacity_development(self, value):
+        return self._validate_character_limitation(value)
+
+    def validate_accountability_to_affected_populations(self, value):
         return self._validate_character_limitation(value)
 
     def validate_other_details(self, value):
@@ -910,11 +920,19 @@ class InterventionCreateUpdateSerializer(
     @transaction.atomic
     def update(self, instance, validated_data):
         final_partnership_review = validated_data.pop('final_partnership_review', None)
+        new_currency = validated_data.pop('currency', None)
 
         if 'flat_locations' in validated_data:
             instance.update_applied_indicator_locations(validated_data['flat_locations'])
 
         updated = super().update(instance, validated_data)
+
+        # Handle currency update on planned budget via generic endpoint
+        if new_currency is not None:
+            InterventionBudget.objects.update_or_create(
+                intervention=updated,
+                defaults={"currency": new_currency},
+            )
 
         if final_partnership_review:
             self.get_fields()['final_partnership_review'].set_attachment(instance, final_partnership_review)

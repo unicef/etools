@@ -144,13 +144,15 @@ class EngagementSubmitReportRequiredFieldsCheck(BaseRequiredFieldsCheck):
 
 class SPSubmitReportRequiredFieldsCheck(EngagementSubmitReportRequiredFieldsCheck):
     fields = EngagementSubmitReportRequiredFieldsCheck.fields + [
-        'total_amount_tested', 'internal_controls', 'currency_of_report',
+        # 'total_amount_tested_local',
+        'internal_controls',
     ]
 
 
 class AuditSubmitReportRequiredFieldsCheck(EngagementSubmitReportRequiredFieldsCheck):
     fields = EngagementSubmitReportRequiredFieldsCheck.fields + [
-        'audited_expenditure', 'audit_opinion', 'currency_of_report',
+        # 'audited_expenditure_local',
+        'audit_opinion',
     ]
 
 
@@ -193,7 +195,7 @@ class ActionPointsProvidedForHighPriorityFindingsCheck(BaseTransitionCheck):
                 not EngagementActionPoint.objects.filter(engagement=instance, high_priority=True).exists()
         ):
             errors['action_points'] = _(
-                'Action Points with High Priority to be opened if High Priority findings provided.'
+                'High-priority findings require at least one open high-priority Action Point.'
             )
 
         return errors

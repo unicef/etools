@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: et-partners2-bk\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-08-07 14:14+0000\n"
+"POT-Creation-Date: 2026-01-08 11:54+0000\n"
 "Language: es\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -982,6 +982,9 @@ msgstr "UNICEF Tipo de revisión"
 msgid "Capacity Development"
 msgstr "Desarrollo de las capacidades"
 
+msgid "Accountability to Affected Populations (AAP)"
+msgstr "Rendición de cuentas a las poblaciones afectadas (AAP)"
+
 msgid "Other Info"
 msgstr "Otros datos"
 
@@ -1551,6 +1554,10 @@ msgstr "due_date debe ser igual o posterior a end_date"
 
 msgid "This period overlaps an existing reporting period."
 msgstr "Este período se superpone a un período de informe existente."
+
+#, python-format
+msgid "Invalid currency: %(value)s."
+msgstr ""
 
 #, python-format
 msgid "One or more of the FRs selected is related to a different PD/SPD, %s"

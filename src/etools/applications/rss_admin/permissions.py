@@ -15,5 +15,5 @@ class IsRssAdmin(BasePermission):
         return request.user.realms.filter(
             country=connection.tenant,
             is_active=True,
-            group__name__iexact='Rss Admin'
+            group__name__iexact='RSS'
         ).exists()

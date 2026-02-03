@@ -25,6 +25,7 @@ from etools.applications.last_mile.tests.factories import (
     PointOfInterestFactory,
     TransferFactory,
 )
+from etools.applications.locations.models import Location
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.tests.factories import AgreementFactory, PartnerFactory
 from etools.applications.users.tests.factories import UserFactory
@@ -539,7 +540,7 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(self.incoming.items.count(), 2)
         self.assertEqual(self.incoming.items.order_by('id').first().id, item_1.pk)
         self.assertEqual(self.incoming.items.order_by('id').first().base_quantity, 11)
-        self.assertEqual(self.incoming.items.order_by('id').first().base_uom, self.incoming.items.first().material.original_uom)
+        self.assertEqual(self.incoming.items.order_by('id').first().base_uom, self.incoming.items.order_by('id').first().material.original_uom)
         self.assertTrue(models.TransferHistory.objects.filter(origin_transfer_id=self.incoming.id).exists())
         item_1.refresh_from_db()
         self.assertEqual(self.incoming.items.first().quantity, item_1.quantity)
@@ -1194,6 +1195,90 @@ class TestItemUpdateViewSet(BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('Incorrect split values.', response.data['quantities'][0])
+
+
+class TestGetTypesView(BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.partner = PartnerFactory(organization=OrganizationFactory(name='Partner'))
+        cls.partner_staff = UserFactory(
+            realms__data=['IP LM Editor'],
+            profile__organization=cls.partner.organization,
+        )
+        cls.url = reverse('last_mile:pois-get-types')
+
+    def test_get_types_empty_database(self):
+        Location.objects.all().delete()
+
+        response = self.forced_auth_req('get', self.url, user=self.partner_staff)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, {})
+
+    def test_get_types_single_admin_level(self):
+        LocationFactory(admin_level=0, admin_level_name='Country')
+
+        response = self.forced_auth_req('get', self.url, user=self.partner_staff)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, {'admin_level_0': 'Country'})
+
+    def test_get_types_multiple_admin_levels(self):
+        LocationFactory(admin_level=0, admin_level_name='Country')
+        LocationFactory(admin_level=1, admin_level_name='Region')
+        LocationFactory(admin_level=2, admin_level_name='District')
+
+        response = self.forced_auth_req('get', self.url, user=self.partner_staff)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 3)
+        self.assertEqual(response.data['admin_level_0'], 'Country')
+        self.assertEqual(response.data['admin_level_1'], 'Region')
+        self.assertEqual(response.data['admin_level_2'], 'District')
+
+    def test_get_types_same_level_different_names(self):
+        LocationFactory(admin_level=1, admin_level_name='Province')
+        LocationFactory(admin_level=1, admin_level_name='Province')
+        LocationFactory(admin_level=1, admin_level_name='Region')
+
+        response = self.forced_auth_req('get', self.url, user=self.partner_staff)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('admin_level_1', response.data)
+        self.assertIn(response.data['admin_level_1'], ['Province', 'Region'])
+
+    def test_get_types_ordering(self):
+        LocationFactory(admin_level=2, admin_level_name='District')
+        LocationFactory(admin_level=0, admin_level_name='Country')
+        LocationFactory(admin_level=1, admin_level_name='Region')
+        LocationFactory(admin_level=3, admin_level_name='Village')
+
+        response = self.forced_auth_req('get', self.url, user=self.partner_staff)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 4)
+
+        keys = list(response.data.keys())
+        self.assertEqual(keys, ['admin_level_0', 'admin_level_1', 'admin_level_2', 'admin_level_3'])
+
+    def test_get_types_different_names_per_level(self):
+        LocationFactory(admin_level=0, admin_level_name='Country')
+        LocationFactory(admin_level=1, admin_level_name='State')
+        LocationFactory(admin_level=1, admin_level_name='Province')
+        LocationFactory(admin_level=2, admin_level_name='County')
+        LocationFactory(admin_level=2, admin_level_name='District')
+
+        response = self.forced_auth_req('get', self.url, user=self.partner_staff)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertGreaterEqual(len(response.data), 3)
+        self.assertIn('admin_level_0', response.data)
+        self.assertIn('admin_level_1', response.data)
+        self.assertIn('admin_level_2', response.data)
+
+    def test_get_types_unauthorized_user(self):
+        response = self.client.get(self.url)
+        self.assertIn(response.status_code, [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN])
 
 
 @tag('e2e')

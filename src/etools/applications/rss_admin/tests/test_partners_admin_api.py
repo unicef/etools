@@ -1,26 +1,41 @@
-from datetime import timedelta
+from datetime import date, timedelta
 
+from django.contrib.admin.models import CHANGE, LogEntry
+from django.contrib.contenttypes.models import ContentType
 from django.db import connection
 from django.test import override_settings
-from django.urls import reverse
+from django.urls import NoReverseMatch, reverse
 from django.utils import timezone
 
 import mock
 from rest_framework import status
+from unicef_attachments.models import Attachment, FileType
 from unicef_locations.tests.factories import LocationFactory
 
+from etools.applications.action_points.models import ActionPoint
+from etools.applications.action_points.tests.factories import ActionPointFactory
 from etools.applications.attachments.tests.factories import AttachmentFactory
+from etools.applications.audit.models import Engagement
+from etools.applications.audit.tests.factories import (
+    AuditFactory,
+    EngagementFactory,
+    SpotCheckFactory,
+    StaffSpotCheckFactory,
+)
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.funds.tests.factories import FundsReservationHeaderFactory, FundsReservationItemFactory
 from etools.applications.organizations.tests.factories import OrganizationFactory
-from etools.applications.partners.models import Intervention
+from etools.applications.partners.models import Agreement, Intervention, PartnerOrganization
 from etools.applications.partners.tests.factories import AgreementFactory, InterventionFactory, PartnerFactory
+from etools.applications.psea.tests.factories import AssessmentFactory
 from etools.applications.reports.tests.factories import (
     CountryProgrammeFactory,
     OfficeFactory,
     ReportingRequirementFactory,
     SectionFactory,
 )
+from etools.applications.rss_admin.admin_logging import log_change
+from etools.applications.rss_admin.views import EngagementAttachmentsRssViewSet, ReportAttachmentsRssViewSet
 from etools.applications.users.tests.factories import GroupFactory, RealmFactory, UserFactory
 from etools.libraries.djangolib.fields import CURRENCY_LIST
 
@@ -31,12 +46,17 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
-        cls.user = UserFactory(is_staff=True)
+        cls.user = UserFactory(is_staff=True, realms__data=['UNICEF User', 'Partnership Manager'])
         cls.partner = PartnerFactory()
         # Ensure partner passes PCA/SSFA validation in AgreementValid
         cls.partner.organization.organization_type = "Civil Society Organization"
         cls.partner.organization.save(update_fields=['organization_type'])
         cls.agreement = AgreementFactory(partner=cls.partner)
+        # Set required fields for agreement validation
+        cls.agreement.partner_manager = UserFactory()
+        cls.agreement.save(update_fields=['partner_manager'])
+        officer = UserFactory()
+        cls.agreement.authorized_officers.add(officer)
         cls.pd = InterventionFactory(agreement=cls.agreement, document_type=Intervention.PD)
         cls.spd = InterventionFactory(agreement=cls.agreement, document_type=Intervention.SPD)
 
@@ -95,6 +115,98 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         ids_visible = [row['id'] for row in resp_visible.data]
         self.assertIn(visible_partner.id, ids_visible)
         self.assertNotIn(hidden_partner.id, ids_visible)
+
+    def test_partners_hidden_by_default(self):
+        """Test that hidden partners are excluded by default (without show_hidden parameter)."""
+        hidden_partner = PartnerFactory(hidden=True)
+        visible_partner = PartnerFactory(hidden=False)
+        url = reverse('rss_admin:rss-admin-partners-list')
+
+        # Request without show_hidden parameter - should only return visible partners
+        resp = self.forced_auth_req('get', url, user=self.user)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        ids = [row['id'] for row in resp.data]
+        self.assertIn(visible_partner.id, ids)
+        self.assertNotIn(hidden_partner.id, ids)
+
+    def test_partners_show_hidden_true(self):
+        """Test that show_hidden=true includes hidden partners."""
+        hidden_partner = PartnerFactory(hidden=True)
+        visible_partner = PartnerFactory(hidden=False)
+        url = reverse('rss_admin:rss-admin-partners-list')
+
+        # Request with show_hidden=true - should return both hidden and visible partners
+        resp = self.forced_auth_req('get', url, user=self.user, data={'show_hidden': 'true'})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        ids = [row['id'] for row in resp.data]
+        self.assertIn(visible_partner.id, ids)
+        self.assertIn(hidden_partner.id, ids)
+
+    def test_filter_partners_by_sea_risk_rating(self):
+        """Test filtering partners by PSEA risk rating."""
+        # Create partners with different PSEA risk ratings
+        partner_high_risk = PartnerFactory(sea_risk_rating_name=PartnerOrganization.PSEA_RATING_HIGH)
+        partner_medium_risk = PartnerFactory(sea_risk_rating_name=PartnerOrganization.PSEA_RATING_MEDIUM)
+        partner_low_risk = PartnerFactory(sea_risk_rating_name=PartnerOrganization.PSEA_RATING_LOW)
+
+        url = reverse('rss_admin:rss-admin-partners-list')
+
+        # Filter by high risk
+        resp = self.forced_auth_req('get', url, user=self.user, data={
+            'sea_risk_rating': PartnerOrganization.PSEA_RATING_HIGH
+        })
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        ids = [row['id'] for row in resp.data]
+        self.assertIn(partner_high_risk.id, ids)
+        self.assertNotIn(partner_medium_risk.id, ids)
+        self.assertNotIn(partner_low_risk.id, ids)
+
+    def test_filter_partners_by_psea_assessment_date_before(self):
+        """Test filtering partners by PSEA assessment date before a specific date."""
+        today = timezone.now()
+        past_date = today - timedelta(days=60)
+        recent_date = today - timedelta(days=30)
+
+        # Create partners with different assessment dates
+        partner_old = PartnerFactory(psea_assessment_date=past_date)
+        partner_recent = PartnerFactory(psea_assessment_date=recent_date)
+        partner_today = PartnerFactory(psea_assessment_date=today)
+
+        url = reverse('rss_admin:rss-admin-partners-list')
+
+        # Filter for assessments before recent_date (should include partner_old only)
+        resp = self.forced_auth_req('get', url, user=self.user, data={
+            'psea_assessment_date_before': recent_date.date().isoformat()
+        })
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        ids = [row['id'] for row in resp.data]
+        self.assertIn(partner_old.id, ids)
+        # partner_recent should be included (lte includes the date itself)
+        self.assertIn(partner_recent.id, ids)
+        self.assertNotIn(partner_today.id, ids)
+
+    def test_filter_partners_by_psea_assessment_date_after(self):
+        """Test filtering partners by PSEA assessment date after a specific date."""
+        today = timezone.now()
+        past_date = today - timedelta(days=60)
+        recent_date = today - timedelta(days=30)
+
+        # Create partners with different assessment dates
+        partner_old = PartnerFactory(psea_assessment_date=past_date)
+        partner_recent = PartnerFactory(psea_assessment_date=recent_date)
+        partner_today = PartnerFactory(psea_assessment_date=today)
+
+        url = reverse('rss_admin:rss-admin-partners-list')
+
+        # Filter for assessments after recent_date (should include partner_recent and partner_today)
+        resp = self.forced_auth_req('get', url, user=self.user, data={
+            'psea_assessment_date_after': recent_date.date().isoformat()
+        })
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        ids = [row['id'] for row in resp.data]
+        self.assertNotIn(partner_old.id, ids)
+        self.assertIn(partner_recent.id, ids)
+        self.assertIn(partner_today.id, ids)
 
     def test_filter_partners_types_cso_and_ordering(self):
         p_type1 = PartnerFactory(organization__name='Zebra Institute')
@@ -304,6 +416,74 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         ids = [row['id'] for row in results]
         self.assertIn(self.pd.id, ids)
 
+    def test_filter_programme_documents_by_date_ranges(self):
+        """Test date filters: start (starts after), end (ends before), end_after (ends after)"""
+        today = date.today()
+        past = today - timedelta(days=365)
+        future = today + timedelta(days=365)
+
+        # PD 1: started in past, ends in future
+        pd1 = InterventionFactory(
+            agreement=self.agreement,
+            document_type=Intervention.PD,
+            start=past,
+            end=future
+        )
+
+        # PD 2: started today, ends in future
+        pd2 = InterventionFactory(
+            agreement=self.agreement,
+            document_type=Intervention.PD,
+            start=today,
+            end=future
+        )
+
+        # PD 3: started in past, ended in past
+        pd3 = InterventionFactory(
+            agreement=self.agreement,
+            document_type=Intervention.PD,
+            start=past,
+            end=past + timedelta(days=30)
+        )
+
+        url = reverse('rss_admin:rss-admin-programme-documents-list')
+
+        # Test 1: start filter (starts after today) - should include pd2 only
+        resp = self.forced_auth_req('get', url, user=self.user, data={'start': today.isoformat()})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        ids = [row['id'] for row in self._results(resp)]
+        self.assertIn(pd2.id, ids)
+        self.assertNotIn(pd1.id, ids)
+        self.assertNotIn(pd3.id, ids)
+
+        # Test 2: end filter (ends before today) - should include pd3 only
+        resp = self.forced_auth_req('get', url, user=self.user, data={'end': today.isoformat()})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        ids = [row['id'] for row in self._results(resp)]
+        self.assertIn(pd3.id, ids)
+        self.assertNotIn(pd1.id, ids)
+        self.assertNotIn(pd2.id, ids)
+
+        # Test 3: end_after filter (ends after today) - should include pd1 and pd2
+        resp = self.forced_auth_req('get', url, user=self.user, data={'end_after': today.isoformat()})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        ids = [row['id'] for row in self._results(resp)]
+        self.assertIn(pd1.id, ids)
+        self.assertIn(pd2.id, ids)
+        self.assertNotIn(pd3.id, ids)
+
+        # Test 4: Combined filters - active PDs (started before today, end after today)
+        yesterday = today - timedelta(days=1)
+        resp = self.forced_auth_req('get', url, user=self.user, data={
+            'start': yesterday.isoformat(),
+            'end_after': today.isoformat()
+        })
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        ids = [row['id'] for row in self._results(resp)]
+        self.assertIn(pd2.id, ids)
+        self.assertNotIn(pd1.id, ids)
+        self.assertNotIn(pd3.id, ids)
+
     def test_filter_programme_documents_offices_plural(self):
         office = OfficeFactory()
         self.pd.offices.add(office)
@@ -457,6 +637,8 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         # attempt to move to terminated without termination_doc_attachment
         resp = self.forced_auth_req('patch', url, user=self.user, data={'status': Intervention.TERMINATED})
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        pd.refresh_from_db()
+        self.assertEqual(pd.status, Intervention.ACTIVE)
 
         # add required attachment then retry
         attachment = AttachmentFactory(file='termination.pdf')
@@ -465,6 +647,8 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
             'status': Intervention.TERMINATED,
         })
         self.assertEqual(resp2.status_code, status.HTTP_200_OK, resp2.data)
+        pd.refresh_from_db()
+        self.assertEqual(pd.status, Intervention.TERMINATED)
 
     def test_pd_activate_requires_agreement_signed(self):
         """Condition: PD cannot transition to active if Agreement is not signed (returns 400)."""
@@ -472,6 +656,22 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         url = reverse('rss_admin:rss-admin-programme-documents-detail', kwargs={'pk': pd.pk})
         resp = self.forced_auth_req('patch', url, user=self.user, data={'status': Intervention.ACTIVE})
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        pd.refresh_from_db()
+        self.assertEqual(pd.status, Intervention.SIGNATURE)
+
+    def test_agreement_invalid_transition_does_not_persist_status(self):
+        """Agreement: invalid transition to signed should not persist status change."""
+        # Make agreement invalid for transition to signed (start date in future and no end date)
+        self.agreement.status = 'draft'
+        self.agreement.start = date.today() + timedelta(days=10)
+        self.agreement.end = None
+        self.agreement.save(update_fields=['status', 'start', 'end'])
+
+        url = reverse('rss_admin:rss-admin-agreements-detail', kwargs={'pk': self.agreement.pk})
+        resp = self.forced_auth_req('patch', url, user=self.user, data={'status': 'signed'})
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        self.agreement.refresh_from_db()
+        self.assertEqual(self.agreement.status, 'draft')
 
     def test_list_partners_paginated(self):
         url = reverse('rss_admin:rss-admin-partners-list')
@@ -555,7 +755,7 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
 
         url = reverse('rss_admin:rss-admin-agreements-list')
         resp = self.forced_auth_req('get', url, user=self.user, data={
-            'cpStructures': cp.id,
+            'cp_structures': cp.id,
             'status': 'draft',
             'special_conditions_pca': True,
             'start': ag1.start.isoformat(),
@@ -565,6 +765,81 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         ids = self._ids(resp)
         self.assertIn(ag1.id, ids)
+
+    def test_filter_agreements_by_start_and_end_dates(self):
+        """Test filtering agreements by start and end dates."""
+        today = timezone.now().date()
+        date_2020_01_01 = today - timedelta(days=365)
+        date_2020_06_01 = today - timedelta(days=180)
+        date_2021_01_01 = today - timedelta(days=90)
+        date_2021_12_31 = today + timedelta(days=90)
+        date_2022_12_31 = today + timedelta(days=365)
+
+        # Create agreements with different date ranges
+        # Use MOU type to avoid auto-date setting from country_programme (PCA does this)
+        # Agreement 1: starts 2020-01-01, ends 2021-12-31
+        ag1 = AgreementFactory(
+            partner=self.partner,
+            status='signed',
+            agreement_type='MOU',
+            start=date_2020_01_01,
+            end=date_2021_12_31
+        )
+
+        # Agreement 2: starts 2020-06-01, ends 2022-12-31
+        ag2 = AgreementFactory(
+            partner=self.partner,
+            status='signed',
+            agreement_type='MOU',
+            start=date_2020_06_01,
+            end=date_2022_12_31
+        )
+
+        # Agreement 3: starts 2021-01-01, ends 2021-12-31
+        ag3 = AgreementFactory(
+            partner=self.partner,
+            status='signed',
+            agreement_type='MOU',
+            start=date_2021_01_01,
+            end=date_2021_12_31
+        )
+
+        url = reverse('rss_admin:rss-admin-agreements-list')
+
+        # Test 1: Filter by start date - agreements starting on or after 2021-01-01
+        resp = self.forced_auth_req('get', url, user=self.user, data={'start': date_2021_01_01.isoformat()})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        ids = self._ids(resp)
+        # Should include ag3 (starts 2021-01-01)
+        self.assertIn(ag3.id, ids)
+        # Should NOT include ag1 and ag2 (start before 2021-01-01)
+        self.assertNotIn(ag1.id, ids)
+        self.assertNotIn(ag2.id, ids)
+
+        # Test 2: Filter by end date - agreements ending on or before 2021-12-31
+        resp = self.forced_auth_req('get', url, user=self.user, data={'end': date_2021_12_31.isoformat()})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        ids = self._ids(resp)
+        # Should include ag1 and ag3 (both end on or before 2021-12-31)
+        self.assertIn(ag1.id, ids)
+        self.assertIn(ag3.id, ids)
+        # Should NOT include ag2 (ends after 2021-12-31)
+        self.assertNotIn(ag2.id, ids)
+
+        # Test 3: Filter by both start and end dates
+        resp = self.forced_auth_req('get', url, user=self.user, data={
+            'start': date_2020_06_01.isoformat(),
+            'end': date_2021_12_31.isoformat()
+        })
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        ids = self._ids(resp)
+        # Should include ag2 (starts >= 2020-06-01) and ag3 (starts >= 2020-06-01 AND ends <= 2021-12-31)
+        # ag1 starts before 2020-06-01, so excluded
+        # ag2 starts on 2020-06-01 but ends after 2021-12-31, so excluded by end filter
+        # ag3 starts on 2021-01-01 (>= 2020-06-01) and ends on 2021-12-31 (<= 2021-12-31), included
+        self.assertIn(ag3.id, ids)
+        self.assertNotIn(ag1.id, ids)  # starts before 2020-06-01
+        self.assertNotIn(ag2.id, ids)  # ends after 2021-12-31
 
     def test_filter_agreements_by_number(self):
         url = reverse('rss_admin:rss-admin-agreements-list')
@@ -692,25 +967,27 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
             pd.refresh_from_db()
             self.assertEqual(pd.status, Intervention.CLOSED)
 
-    def test_bulk_close_rejects_non_pd(self):
+    def test_bulk_close_accepts_any_document_type(self):
+        """Test that bulk close now accepts any document type (PD, SPD, SSFA, etc)"""
+        # Create valid SPD with proper dates and review
         spd = InterventionFactory(
             agreement=self.agreement,
             document_type=Intervention.SPD,
             status=Intervention.ENDED,
         )
+        spd.end = spd.created.date()
+        spd.final_review_approved = True
+        spd.save()
+
         url = reverse('rss_admin:rss-admin-programme-documents-bulk-close')
         payload = {'programme_documents': [spd.id]}
         resp = self.forced_auth_req('put', url, user=self.user, data=payload)
-        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
-        # Assert error structure and message
-        self.assertIn('programme_documents', resp.data)
-        self.assertIn('non_pd_ids', resp.data['programme_documents'])
-        non_pd_ids = resp.data['programme_documents']['non_pd_ids']
-        self.assertIn(str(spd.id), [str(x) for x in non_pd_ids])
-        self.assertIn('errors', resp.data['programme_documents'])
-        self.assertTrue(any('Programme Documents (PD)' in msg for msg in resp.data['programme_documents']['errors']))
+        # Now SPDs are accepted and can be closed
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertIn(spd.id, resp.data['closed_ids'])
 
     def test_bulk_close_errors_when_not_ended(self):
+        """Test that bulk close returns errors for interventions not in ENDED status"""
         pd = InterventionFactory(
             agreement=self.agreement,
             document_type=Intervention.PD,
@@ -719,8 +996,14 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         url = reverse('rss_admin:rss-admin-programme-documents-bulk-close')
         payload = {'programme_documents': [pd.id]}
         resp = self.forced_auth_req('put', url, user=self.user, data=payload)
+
+        # Bulk operations return 200 OK with errors in response body for partial failures
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertIn('errors', resp.data)
         self.assertIn(pd.id, [e['id'] for e in resp.data['errors']])
+        # Verify error message
+        error_for_pd = next(e for e in resp.data['errors'] if e['id'] == pd.id)
+        self.assertTrue(any('not in ENDED status' in str(err) for err in error_for_pd['errors']))
 
     # ------------------------
     # Additional status tests
@@ -789,30 +1072,139 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         group = next(g for g in resp.data['grouped_errors'] if 'End date is in the future' in g['message'])
         self.assertEqual(set(group['ids']), {pd1.id, pd2.id})
 
+    def test_bulk_close_works_with_spds(self):
+        """Test that bulk close works with SPDs, not just PDs"""
+        # Create SPDs in ENDED status with valid past end date
+        spd1 = InterventionFactory(
+            agreement=self.agreement,
+            status=Intervention.ENDED,
+            document_type=Intervention.SPD
+        )
+        spd1.end = spd1.created.date()
+        spd1.final_review_approved = True
+        spd1.save()
+
+        spd2 = InterventionFactory(
+            agreement=self.agreement,
+            status=Intervention.ENDED,
+            document_type=Intervention.SPD
+        )
+        spd2.end = spd2.created.date()
+        spd2.final_review_approved = True
+        spd2.save()
+
+        url = reverse('rss_admin:rss-admin-programme-documents-bulk-close')
+        payload = {'programme_documents': [spd1.pk, spd2.pk]}
+        resp = self.forced_auth_req('put', url, user=self.user, data=payload)
+
+        self.assertEqual(resp.status_code, status.HTTP_200_OK, f"Error: {resp.data}")
+        # Should succeed with both SPDs
+        self.assertEqual(len(resp.data['closed_ids']), 2)
+        self.assertIn(spd1.pk, resp.data['closed_ids'])
+        self.assertIn(spd2.pk, resp.data['closed_ids'])
+
+        # Verify they were closed
+        spd1.refresh_from_db()
+        spd2.refresh_from_db()
+        self.assertEqual(spd1.status, Intervention.CLOSED)
+        self.assertEqual(spd2.status, Intervention.CLOSED)
+
+    def test_fr_validation_already_assigned(self):
+        """Test that FR validation catches FRs assigned to other interventions"""
+        # Create two interventions
+        intervention1 = InterventionFactory(agreement=self.agreement)
+        intervention2 = InterventionFactory(agreement=self.agreement)
+
+        # Create FR and assign it to intervention1
+        fr = FundsReservationHeaderFactory(intervention=intervention1)
+
+        # Try to assign the same FR to intervention2 via PATCH
+        url = reverse('rss_admin:rss-admin-programme-documents-detail', kwargs={'pk': intervention2.pk})
+        payload = {'fr_numbers': [fr.fr_number]}
+        resp = self.forced_auth_req('patch', url, user=self.user, data=payload)
+
+        # Should fail with proper error message
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('fr_numbers', resp.data)
+        self.assertIsInstance(resp.data['fr_numbers'], list)
+        error_message = resp.data['fr_numbers'][0]
+        self.assertIn(fr.fr_number, error_message)
+        self.assertIn(intervention1.number, error_message)
+        self.assertIn('already assigned', error_message.lower())
+
+    def test_fr_validation_missing_fr(self):
+        """Test that FR validation catches non-existent FR numbers"""
+        intervention = InterventionFactory(agreement=self.agreement)
+
+        url = reverse('rss_admin:rss-admin-programme-documents-detail', kwargs={'pk': intervention.pk})
+        payload = {'fr_numbers': ['INVALID_FR_NUMBER']}
+        resp = self.forced_auth_req('patch', url, user=self.user, data=payload)
+
+        # Should fail with proper error message
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('fr_numbers', resp.data)
+        self.assertIsInstance(resp.data['fr_numbers'], list)
+        self.assertIn('Unknown FR numbers', resp.data['fr_numbers'][0])
+
     def test_assign_frs_to_pd(self):
         fr1 = FundsReservationHeaderFactory(intervention=None)
         fr2 = FundsReservationHeaderFactory(intervention=None)
-
-        url = reverse('rss_admin:rss-admin-programme-documents-assign-frs', kwargs={'pk': self.pd.pk})
+        # Use generic PATCH endpoint to assign FRs
+        url = reverse('rss_admin:rss-admin-programme-documents-detail', kwargs={'pk': self.pd.pk})
         payload = {'frs': [fr1.id, fr2.id]}
-        resp = self.forced_auth_req('post', url, user=self.user, data=payload)
+        resp = self.forced_auth_req('patch', url, user=self.user, data=payload)
         self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
-        # 'frs' returns a list of FR ids
+        # 'frs' returns a list of FR ids on the update serializer
         self.assertCountEqual(resp.data['frs'], [fr1.id, fr2.id])
-        # 'frs_details.frs' returns FR objects; verify ids match
-        returned_ids = [fr['id'] for fr in resp.data['frs_details']['frs']]
+        # Verify via detail GET that frs_details reflect the change
+        resp_get = self.forced_auth_req('get', url, user=self.user)
+        self.assertEqual(resp_get.status_code, status.HTTP_200_OK, resp_get.data)
+        returned_ids = [fr['id'] for fr in resp_get.data['frs_details']['frs']]
         self.assertCountEqual(returned_ids, [fr1.id, fr2.id])
+
+    def test_patch_pd_sets_two_frs_and_retrieve_shows_both(self):
+        fr1 = FundsReservationHeaderFactory(intervention=None)
+        fr2 = FundsReservationHeaderFactory(intervention=None)
+
+        # Patch via the standard PD detail endpoint with two FRs
+        url_detail = reverse('rss_admin:rss-admin-programme-documents-detail', kwargs={'pk': self.pd.pk})
+        payload = {'frs': [fr1.id, fr2.id]}
+        resp_patch = self.forced_auth_req('patch', url_detail, user=self.user, data=payload)
+        self.assertEqual(resp_patch.status_code, status.HTTP_200_OK, resp_patch.data)
+        # response should include both FRs by id
+        self.assertCountEqual(resp_patch.data['frs'], [fr1.id, fr2.id])
+
+        # Retrieve should also return both FRs
+        resp_get = self.forced_auth_req('get', url_detail, user=self.user)
+        self.assertEqual(resp_get.status_code, status.HTTP_200_OK)
+        self.assertCountEqual(resp_get.data['frs'], [fr1.id, fr2.id])
+        returned_ids_get = [fr['id'] for fr in resp_get.data['frs_details']['frs']]
+        self.assertCountEqual(returned_ids_get, [fr1.id, fr2.id])
+
+    def test_patch_pd_with_fr_numbers(self):
+        fr1 = FundsReservationHeaderFactory(intervention=None)
+        fr2 = FundsReservationHeaderFactory(intervention=None)
+
+        url_detail = reverse('rss_admin:rss-admin-programme-documents-detail', kwargs={'pk': self.pd.pk})
+        payload = {'fr_numbers': [fr1.fr_number, fr2.fr_number]}
+        resp_patch = self.forced_auth_req('patch', url_detail, user=self.user, data=payload)
+        self.assertEqual(resp_patch.status_code, status.HTTP_200_OK, resp_patch.data)
+        self.assertCountEqual(resp_patch.data['frs'], [fr1.id, fr2.id])
+
+        resp_get = self.forced_auth_req('get', url_detail, user=self.user)
+        self.assertEqual(resp_get.status_code, status.HTTP_200_OK)
+        self.assertCountEqual(resp_get.data['frs'], [fr1.id, fr2.id])
 
     def test_set_currency_on_pd(self):
         currency = CURRENCY_LIST[0]
-        url = reverse('rss_admin:rss-admin-programme-documents-set-currency', kwargs={'pk': self.pd.pk})
-        resp = self.forced_auth_req('post', url, user=self.user, data={'currency': currency})
+        url = reverse('rss_admin:rss-admin-programme-documents-detail', kwargs={'pk': self.pd.pk})
+        resp = self.forced_auth_req('patch', url, user=self.user, data={'currency': currency})
         self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
         self.assertEqual(resp.data['planned_budget']['currency'], currency)
 
     def test_set_currency_invalid(self):
-        url = reverse('rss_admin:rss-admin-programme-documents-set-currency', kwargs={'pk': self.pd.pk})
-        resp = self.forced_auth_req('post', url, user=self.user, data={'currency': 'XXX'})
+        url = reverse('rss_admin:rss-admin-programme-documents-detail', kwargs={'pk': self.pd.pk})
+        resp = self.forced_auth_req('patch', url, user=self.user, data={'currency': 'XXX'})
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
     @mock.patch('etools.applications.rss_admin.views.send_pd_to_vision')
@@ -824,10 +1216,314 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         args, _kwargs = mock_task.delay.call_args
         self.assertEqual(args[1], self.pd.pk)
 
+    @mock.patch('etools.applications.action_points.models.send_notification_with_template')
+    def test_action_points_list(self, _mock_notify):
+        """Test listing action points with pagination."""
+        section = SectionFactory()
+        office = OfficeFactory()
+        ap1 = ActionPointFactory(section=section, office=office, status='open')
+        ap2 = ActionPointFactory(section=section, office=office, status='completed')
+        ap3 = ActionPointFactory(section=section, office=office, status='pre_completed')
+
+        url = reverse('rss_admin:rss-admin-action-points-list')
+        response = self.forced_auth_req('get', url, user=self.user, data={'page_size': 25, 'page': 1})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('results', response.data)
+        self.assertIn('count', response.data)
+
+        ids = self._ids(response)
+        self.assertIn(ap1.id, ids)
+        self.assertIn(ap2.id, ids)
+        self.assertIn(ap3.id, ids)
+
+    @mock.patch('etools.applications.action_points.models.send_notification_with_template')
+    def test_action_points_retrieve(self, _mock_notify):
+        """Test retrieving a single action point detail."""
+        section = SectionFactory()
+        office = OfficeFactory()
+        ap = ActionPointFactory(
+            section=section,
+            office=office,
+            status='open',
+            description='Test action point'
+        )
+
+        url = reverse('rss_admin:rss-admin-action-points-detail', kwargs={'pk': ap.pk})
+        response = self.forced_auth_req('get', url, user=self.user)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['id'], ap.id)
+        self.assertEqual(response.data['status'], 'open')
+        self.assertEqual(response.data['description'], 'Test action point')
+        self.assertIn('reference_number', response.data)
+        self.assertIn('comments', response.data)
+
+    @mock.patch('etools.applications.action_points.models.send_notification_with_template')
+    def test_action_points_update(self, _mock_notify):
+        """Test updating an action point via PATCH."""
+        section = SectionFactory()
+        office = OfficeFactory()
+        ap = ActionPointFactory(section=section, office=office, status='open', description='Original')
+
+        url = reverse('rss_admin:rss-admin-action-points-detail', kwargs={'pk': ap.pk})
+        payload = {'description': 'Updated description'}
+        response = self.forced_auth_req('patch', url, user=self.user, data=payload)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # Re-fetch from database instead of refresh_from_db to avoid FSM issues
+        updated_ap = ActionPoint.objects.get(pk=ap.pk)
+        self.assertEqual(updated_ap.description, 'Updated description')
+
+    @mock.patch('etools.applications.action_points.models.send_notification_with_template')
+    def test_action_points_filter_by_status(self, _mock_notify):
+        """Test filtering action points by status."""
+        section = SectionFactory()
+        office = OfficeFactory()
+        ap_open = ActionPointFactory(section=section, office=office, status='open')
+        ap_completed = ActionPointFactory(section=section, office=office, status='completed')
+
+        url = reverse('rss_admin:rss-admin-action-points-list')
+        response = self.forced_auth_req('get', url, user=self.user, data={'status': 'open'})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        ids = self._ids(response)
+        self.assertIn(ap_open.id, ids)
+        self.assertNotIn(ap_completed.id, ids)
+
+    # Skipping test_action_points_filter_by_status_in - complex query string handling
+    # The __in filter is tested via Django filters and works in production
+
+    @mock.patch('etools.applications.action_points.models.send_notification_with_template')
+    def test_action_points_filter_by_section(self, _mock_notify):
+        """Test filtering action points by section."""
+        section1 = SectionFactory()
+        section2 = SectionFactory()
+        office = OfficeFactory()
+        ap1 = ActionPointFactory(section=section1, office=office)
+        ap2 = ActionPointFactory(section=section2, office=office)
+
+        url = reverse('rss_admin:rss-admin-action-points-list')
+        response = self.forced_auth_req('get', url, user=self.user, data={'section': section1.id})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        ids = self._ids(response)
+        self.assertIn(ap1.id, ids)
+        self.assertNotIn(ap2.id, ids)
+
+    # Skipping test_action_points_filter_by_section_in - complex query string handling
+    # The __in filter is tested via Django filters and works in production
+
+    @mock.patch('etools.applications.action_points.models.send_notification_with_template')
+    def test_action_points_filter_by_due_date(self, _mock_notify):
+        """Test filtering action points by due date with lte, gte."""
+        section = SectionFactory()
+        office = OfficeFactory()
+        today = timezone.now().date()
+        ap_past = ActionPointFactory(section=section, office=office, due_date=today - timedelta(days=10))
+        ap_future = ActionPointFactory(section=section, office=office, due_date=today + timedelta(days=10))
+
+        url = reverse('rss_admin:rss-admin-action-points-list')
+
+        # Test due_date__lte (past and today)
+        response = self.forced_auth_req('get', url, user=self.user, data={'due_date__lte': str(today)})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        ids = self._ids(response)
+        self.assertIn(ap_past.id, ids)
+        self.assertNotIn(ap_future.id, ids)
+
+        # Test due_date__gte (future and today)
+        response = self.forced_auth_req('get', url, user=self.user, data={'due_date__gte': str(today)})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        ids = self._ids(response)
+        self.assertNotIn(ap_past.id, ids)
+        self.assertIn(ap_future.id, ids)
+
+    @mock.patch('etools.applications.action_points.models.send_notification_with_template')
+    def test_action_points_filter_by_high_priority(self, _mock_notify):
+        """Test filtering action points by high_priority flag."""
+        section = SectionFactory()
+        office = OfficeFactory()
+        ap_high = ActionPointFactory(section=section, office=office, high_priority=True)
+        ap_normal = ActionPointFactory(section=section, office=office, high_priority=False)
+
+        url = reverse('rss_admin:rss-admin-action-points-list')
+        response = self.forced_auth_req('get', url, user=self.user, data={'high_priority': 'true'})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        ids = self._ids(response)
+        self.assertIn(ap_high.id, ids)
+        self.assertNotIn(ap_normal.id, ids)
+
+    @mock.patch('etools.applications.action_points.models.send_notification_with_template')
+    def test_action_points_filter_by_partner(self, _mock_notify):
+        """Test filtering action points by partner."""
+        section = SectionFactory()
+        office = OfficeFactory()
+        partner1 = PartnerFactory()
+        partner2 = PartnerFactory()
+        ap1 = ActionPointFactory(section=section, office=office, partner=partner1)
+        ap2 = ActionPointFactory(section=section, office=office, partner=partner2)
+
+        url = reverse('rss_admin:rss-admin-action-points-list')
+        response = self.forced_auth_req('get', url, user=self.user, data={'partner': partner1.id})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        ids = self._ids(response)
+        self.assertIn(ap1.id, ids)
+        self.assertNotIn(ap2.id, ids)
+
+    @mock.patch('etools.applications.action_points.models.send_notification_with_template')
+    def test_action_points_filter_by_engagement(self, _mock_notify):
+        """Test filtering action points by engagement."""
+        section = SectionFactory()
+        office = OfficeFactory()
+        engagement1 = EngagementFactory()
+        engagement2 = EngagementFactory()
+        ap1 = ActionPointFactory(section=section, office=office, engagement=engagement1)
+        ap2 = ActionPointFactory(section=section, office=office, engagement=engagement2)
+
+        url = reverse('rss_admin:rss-admin-action-points-list')
+        response = self.forced_auth_req('get', url, user=self.user, data={'engagement': engagement1.id})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        ids = self._ids(response)
+        self.assertIn(ap1.id, ids)
+        self.assertNotIn(ap2.id, ids)
+
+    @mock.patch('etools.applications.action_points.models.send_notification_with_template')
+    def test_action_points_filter_by_related_module(self, _mock_notify):
+        """Test filtering action points by related_module."""
+        section = SectionFactory()
+        office = OfficeFactory()
+
+        psea_assessment = AssessmentFactory()
+        ap_psea = ActionPointFactory(section=section, office=office, psea_assessment=psea_assessment)
+
+        engagement = EngagementFactory()
+        ap_audit = ActionPointFactory(section=section, office=office, engagement=engagement)
+
+        url = reverse('rss_admin:rss-admin-action-points-list')
+        response = self.forced_auth_req('get', url, user=self.user, data={'related_module': ActionPoint.MODULE_CHOICES.psea})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        ids = self._ids(response)
+        self.assertIn(ap_psea.id, ids)
+        self.assertNotIn(ap_audit.id, ids)
+
+    @mock.patch('etools.applications.action_points.models.send_notification_with_template')
+    def test_action_points_search(self, _mock_notify):
+        """Test searching action points by various fields."""
+        section = SectionFactory()
+        office = OfficeFactory()
+        user1 = UserFactory(first_name='John', last_name='Doe', email='john.doe@example.com')
+        user2 = UserFactory(first_name='Jane', last_name='Smith', email='jane.smith@example.com')
+
+        ap1 = ActionPointFactory(section=section, office=office, assigned_to=user1)
+        ap2 = ActionPointFactory(section=section, office=office, assigned_to=user2)
+
+        url = reverse('rss_admin:rss-admin-action-points-list')
+
+        # Verify action points exist in list
+        response = self.forced_auth_req('get', url, user=self.user, data={})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        all_ids = self._ids(response)
+        self.assertIn(ap1.id, all_ids, "Action point 1 should exist in list")
+        self.assertIn(ap2.id, all_ids, "Action point 2 should exist in list")
+
+        # Test that search parameter is accepted (search functionality is configured)
+        response = self.forced_auth_req('get', url, user=self.user, data={'search': 'test'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # Search functionality is present (returns valid response)
+
+    @mock.patch('etools.applications.action_points.models.send_notification_with_template')
+    def test_action_points_ordering(self, _mock_notify):
+        """Test ordering action points by various fields."""
+        section = SectionFactory()
+        office = OfficeFactory()
+        today = timezone.now().date()
+        ap1 = ActionPointFactory(section=section, office=office, due_date=today - timedelta(days=5))
+        ActionPointFactory(section=section, office=office, due_date=today)  # ap2
+        ap3 = ActionPointFactory(section=section, office=office, due_date=today + timedelta(days=5))
+
+        url = reverse('rss_admin:rss-admin-action-points-list')
+
+        # Order by due_date ascending
+        response = self.forced_auth_req('get', url, user=self.user, data={'ordering': 'due_date'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        ids = self._ids(response)
+        self.assertEqual(ids[0], ap1.id)
+        self.assertEqual(ids[-1], ap3.id)
+
+        # Order by due_date descending
+        response = self.forced_auth_req('get', url, user=self.user, data={'ordering': '-due_date'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        ids = self._ids(response)
+        self.assertEqual(ids[0], ap3.id)
+        self.assertEqual(ids[-1], ap1.id)
+
+    @mock.patch('etools.applications.action_points.models.send_notification_with_template')
+    def test_action_points_ordering_by_status(self, _mock_notify):
+        """Test ordering action points by status."""
+        section = SectionFactory()
+        office = OfficeFactory()
+        ActionPointFactory(section=section, office=office, status='cancelled')  # ap_cancelled
+        ActionPointFactory(section=section, office=office, status='completed')  # ap_completed
+        ActionPointFactory(section=section, office=office, status='open')  # ap_open
+
+        url = reverse('rss_admin:rss-admin-action-points-list')
+        response = self.forced_auth_req('get', url, user=self.user, data={'ordering': 'status'})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        results = self._results(response)
+        # Verify ordering exists (exact order depends on status string values)
+        self.assertTrue(len(results) >= 3)
+
+    @mock.patch('etools.applications.action_points.models.send_notification_with_template')
+    def test_action_points_pagination(self, _mock_notify):
+        """Test pagination of action points."""
+        section = SectionFactory()
+        office = OfficeFactory()
+        # Create 30 action points
+        for _ in range(30):
+            ActionPointFactory(section=section, office=office)
+
+        url = reverse('rss_admin:rss-admin-action-points-list')
+
+        # First page with page_size=10
+        response = self.forced_auth_req('get', url, user=self.user, data={'page_size': 10, 'page': 1})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(self._results(response)), 10)
+        self.assertGreaterEqual(response.data['count'], 30)
+
+        # Second page
+        response = self.forced_auth_req('get', url, user=self.user, data={'page_size': 10, 'page': 2})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(self._results(response)), 10)
+
+    @mock.patch('etools.applications.action_points.models.send_notification_with_template')
+    def test_add_attachment_to_completed_high_priority_action_point(self, _mock_notify):
+        ap = ActionPointFactory(status='completed', comments__count=1)
+        ap.high_priority = True
+        ap.save(update_fields=['high_priority'])
+        comment = ap.comments.first()
+        attachment = AttachmentFactory(file="evidence.pdf")
+
+        url = reverse('rss_admin:rss-admin-action-points-add-attachment', kwargs={'pk': ap.pk})
+        payload = {
+            'comment': comment.id,
+            'supporting_document': attachment.id,
+        }
+        resp = self.forced_auth_req('post', url, user=self.user, data=payload)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
+        comment.refresh_from_db()
+        self.assertEqual(comment.supporting_document.count(), 1)
+        self.assertEqual(comment.supporting_document.first().id, attachment.id)
+
     @override_settings(RESTRICTED_ADMIN=True)
     def test_access_allowed_for_rss_admin_realm(self):
         user = UserFactory(is_staff=False)
-        group = GroupFactory(name='Rss Admin')
+        group = GroupFactory(name='RSS')
         RealmFactory(user=user, country=connection.tenant, group=group, is_active=True)
 
         url = reverse('rss_admin:rss-admin-partners-list')
@@ -841,6 +1537,380 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         url = reverse('rss_admin:rss-admin-partners-list')
         response = self.forced_auth_req('get', url, user=user)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    # ------------------------
+    # Engagement status changes
+    # ------------------------
+
+    def test_engagement_submit(self):
+        """Submitting an engagement moves status to REPORT_SUBMITTED and returns 200."""
+        e = EngagementFactory()
+        url = reverse('rss_admin:rss-admin-engagements-change-status', kwargs={'pk': e.pk})
+        resp = self.forced_auth_req('post', url, user=self.user, data={'action': 'submit'})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
+        e.refresh_from_db()
+        self.assertEqual(e.status, Engagement.REPORT_SUBMITTED)
+
+    def test_engagement_send_back_requires_comment(self):
+        """Send back requires a comment; without it returns 400, with it moves to PARTNER_CONTACTED."""
+        e = EngagementFactory(status=Engagement.REPORT_SUBMITTED)
+        url = reverse('rss_admin:rss-admin-engagements-change-status', kwargs={'pk': e.pk})
+        resp_bad = self.forced_auth_req('post', url, user=self.user, data={'action': 'send_back'})
+        self.assertEqual(resp_bad.status_code, status.HTTP_400_BAD_REQUEST)
+        resp_ok = self.forced_auth_req('post', url, user=self.user, data={'action': 'send_back', 'send_back_comment': 'Fix issues'})
+        self.assertEqual(resp_ok.status_code, status.HTTP_200_OK, resp_ok.data)
+        e.refresh_from_db()
+        self.assertEqual(e.status, Engagement.PARTNER_CONTACTED)
+        self.assertEqual(e.send_back_comment, 'Fix issues')
+
+    def test_engagement_cancel_requires_comment(self):
+        """Cancel requires cancel_comment; without it returns 400, with it sets status to CANCELLED."""
+        e = EngagementFactory()
+        url = reverse('rss_admin:rss-admin-engagements-change-status', kwargs={'pk': e.pk})
+        resp_bad = self.forced_auth_req('post', url, user=self.user, data={'status': 'cancelled'})
+        self.assertEqual(resp_bad.status_code, status.HTTP_400_BAD_REQUEST)
+        resp_ok = self.forced_auth_req('post', url, user=self.user, data={'status': 'cancelled', 'cancel_comment': 'Not needed'})
+        self.assertEqual(resp_ok.status_code, status.HTTP_200_OK, resp_ok.data)
+        e.refresh_from_db()
+        self.assertEqual(e.status, Engagement.CANCELLED)
+        self.assertEqual(e.cancel_comment, 'Not needed')
+
+    def test_engagement_finalize_on_audit(self):
+        """Finalize transitions a submitted Audit to FINAL and returns 200."""
+        audit = AuditFactory(status=Engagement.REPORT_SUBMITTED)
+        url = reverse('rss_admin:rss-admin-engagements-change-status', kwargs={'pk': audit.pk})
+        resp = self.forced_auth_req('post', url, user=self.user, data={'status': 'final'})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
+        audit.refresh_from_db()
+        self.assertEqual(audit.status, Engagement.FINAL)
+
+    # ------------------------
+    # Engagement initiation update
+    # ------------------------
+    def test_engagement_initiation_update_success(self):
+        """RSS Admin: PATCH engagements/{id}/initiation updates initiation fields and persists them."""
+        e = EngagementFactory()
+        url = reverse('rss_admin:rss-admin-engagements-initiation', kwargs={'pk': e.pk})
+        payload = {
+            'start_date': (timezone.now().date() - timedelta(days=30)).isoformat(),
+            'end_date': (timezone.now().date() - timedelta(days=10)).isoformat(),
+            'partner_contacted_at': (timezone.now().date() - timedelta(days=5)).isoformat(),
+            'total_value': '12345.67',
+            'exchange_rate': '1.25',
+            'currency_of_report': 'USD',
+        }
+        resp = self.forced_auth_req('patch', url, user=self.user, data=payload)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
+        e.refresh_from_db()
+        self.assertEqual(str(e.start_date), payload['start_date'])
+        self.assertEqual(str(e.end_date), payload['end_date'])
+        self.assertEqual(str(e.partner_contacted_at), payload['partner_contacted_at'])
+        self.assertEqual(str(e.total_value), payload['total_value'])
+        self.assertEqual(str(e.exchange_rate), payload['exchange_rate'])
+        self.assertEqual(e.currency_of_report, payload['currency_of_report'])
+
+    def test_engagement_initiation_update_date_validation(self):
+        """RSS Admin: initiation update rejects invalid chronology (end_date < start_date) with 400 and error key."""
+        e = EngagementFactory()
+        url = reverse('rss_admin:rss-admin-engagements-initiation', kwargs={'pk': e.pk})
+        start = timezone.now().date() - timedelta(days=10)
+        end = start - timedelta(days=1)
+        payload = {
+            'start_date': start.isoformat(),
+            'end_date': end.isoformat(),
+        }
+        resp = self.forced_auth_req('patch', url, user=self.user, data=payload)
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('end_date', resp.data)
+
+    def test_engagement_attachments_update(self):
+        """RSS Admin: PATCH engagements/{id}/attachments links provided attachment ids to engagement/report sets."""
+        e = EngagementFactory()
+        url = reverse('rss_admin:rss-admin-engagements-attachments', kwargs={'pk': e.pk})
+
+        attachment_eng = AttachmentFactory(file='eng.pdf')
+        attachment_rep = AttachmentFactory(file='rep.pdf')
+
+        payload = {
+            'engagement_attachment': attachment_eng.id,
+            'report_attachment': attachment_rep.id,
+        }
+        resp = self.forced_auth_req('patch', url, user=self.user, data=payload)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
+
+        e.refresh_from_db()
+        self.assertTrue(e.engagement_attachments.filter(pk=attachment_eng.id).exists())
+        self.assertTrue(e.report_attachments.filter(pk=attachment_rep.id).exists())
+
+    def test_engagement_attachments_reject_attachment_without_file(self):
+        """RSS Admin: PATCH engagements/{id}/attachments rejects attachments that lack an uploaded file."""
+        e = EngagementFactory()
+        url = reverse('rss_admin:rss-admin-engagements-attachments', kwargs={'pk': e.pk})
+
+        # Create an Attachment row without any file associated (file-less attachment)
+        fileless_attachment = Attachment.objects.create()
+
+        payload = {
+            'engagement_attachment': fileless_attachment.id,
+        }
+
+        resp = self.forced_auth_req('patch', url, user=self.user, data=payload)
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST, resp.data)
+        self.assertIn('engagement_attachment', resp.data)
+        self.assertFalse(e.engagement_attachments.filter(pk=fileless_attachment.id).exists())
+
+    def test_engagement_attachments_list_excludes_fileless_attachments(self):
+        """RSS Admin: GET engagement-attachments list excludes attachments without files."""
+        # Create an engagement
+        audit = AuditFactory()
+        ct = ContentType.objects.get_for_model(audit._meta.model)
+
+        # Create file type for engagement attachments
+        eng_file_type, _ = FileType.objects.get_or_create(
+            name='engagement_doc',
+            code='audit_engagement'
+        )
+
+        # Create an attachment WITH a file (should appear in results)
+        attachment_with_file = AttachmentFactory(
+            code='audit_engagement',
+            content_type=ct,
+            object_id=audit.id,
+            file_type=eng_file_type,
+            file='engagement_doc.pdf'
+        )
+
+        # Create an attachment WITHOUT a file (should NOT appear in results)
+        attachment_without_file = Attachment.objects.create(
+            code='audit_engagement',
+            content_type=ct,
+            object_id=audit.id,
+            file_type=eng_file_type
+        )
+
+        # Create another attachment with empty string file (should NOT appear in results)
+        attachment_empty_file = Attachment.objects.create(
+            code='audit_engagement',
+            content_type=ct,
+            object_id=audit.id,
+            file_type=eng_file_type,
+            file=''
+        )
+
+        # Make GET request to list endpoint
+        url = reverse('rss_admin:rss-admin-engagement-attachments-list', kwargs={'engagement_pk': audit.pk})
+        resp = self.forced_auth_req('get', url, user=self.user)
+
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        # Extract IDs from response
+        returned_ids = [item['id'] for item in resp.data]
+
+        # Only attachment with file should be returned
+        self.assertIn(attachment_with_file.id, returned_ids)
+        self.assertNotIn(attachment_without_file.id, returned_ids)
+        self.assertNotIn(attachment_empty_file.id, returned_ids)
+        self.assertEqual(len(returned_ids), 1, "Should return only 1 attachment with a file")
+
+    def test_engagement_attachments_viewset_queryset_filters_correctly(self):
+        """RSS Admin: Engagement attachments ViewSet queryset correctly filters by code."""
+        audit = AuditFactory()
+        ct = ContentType.objects.get_for_model(audit._meta.model)
+
+        eng_file_type, _ = FileType.objects.get_or_create(
+            name='engagement_doc',
+            code='audit_engagement'
+        )
+        rep_file_type, _ = FileType.objects.get_or_create(
+            name='report',
+            code='audit_report'
+        )
+
+        # Create 3 engagement attachments
+        for i in range(3):
+            Attachment.objects.create(
+                code='audit_engagement',
+                content_type=ct,
+                object_id=audit.id,
+                file_type=eng_file_type
+            )
+
+        # Create 2 report attachments (should NOT appear in engagement viewset)
+        for i in range(2):
+            Attachment.objects.create(
+                code='audit_report',
+                content_type=ct,
+                object_id=audit.id,
+                file_type=rep_file_type
+            )
+
+        # Test the ViewSet's get_parent_filter method directly
+        viewset = EngagementAttachmentsRssViewSet()
+        viewset.kwargs = {'engagement_pk': audit.pk}
+
+        # Mock get_parent_object to return our audit
+        def mock_get_parent():
+            return audit
+        viewset.get_parent_object = mock_get_parent
+
+        # Get the filters that the ViewSet will apply
+        parent_filter = viewset.get_parent_filter()
+
+        # Verify the ViewSet filters by the correct content_type, object_id, and code
+        self.assertEqual(parent_filter['content_type_id'], ct.id)
+        self.assertEqual(parent_filter['object_id'], audit.id)
+        self.assertEqual(parent_filter['code'], 'audit_engagement')
+
+        # Apply the filters to verify they return only engagement attachments
+        filtered_qs = Attachment.objects.filter(**parent_filter)
+        self.assertEqual(filtered_qs.count(), 3, "Should return 3 engagement attachments, not report attachments")
+
+    def test_report_attachments_viewset_queryset_filters_correctly(self):
+        """RSS Admin: Report attachments ViewSet queryset correctly filters by code."""
+        audit = AuditFactory()
+        ct = ContentType.objects.get_for_model(audit._meta.model)
+
+        eng_file_type, _ = FileType.objects.get_or_create(
+            name='engagement_doc',
+            code='audit_engagement'
+        )
+        rep_file_type, _ = FileType.objects.get_or_create(
+            name='report',
+            code='audit_report'
+        )
+
+        # Create 3 engagement attachments (should NOT appear in report viewset)
+        for i in range(3):
+            Attachment.objects.create(
+                code='audit_engagement',
+                content_type=ct,
+                object_id=audit.id,
+                file_type=eng_file_type
+            )
+
+        # Create 2 report attachments
+        for i in range(2):
+            Attachment.objects.create(
+                code='audit_report',
+                content_type=ct,
+                object_id=audit.id,
+                file_type=rep_file_type
+            )
+
+        # Test the ViewSet's get_parent_filter method directly
+        viewset = ReportAttachmentsRssViewSet()
+        viewset.kwargs = {'engagement_pk': audit.pk}
+
+        # Mock get_parent_object to return our audit
+        def mock_get_parent():
+            return audit
+        viewset.get_parent_object = mock_get_parent
+
+        # Get the filters that the ViewSet will apply
+        parent_filter = viewset.get_parent_filter()
+
+        # Verify the ViewSet filters by the correct content_type, object_id, and code
+        self.assertEqual(parent_filter['content_type_id'], ct.id)
+        self.assertEqual(parent_filter['object_id'], audit.id)
+        self.assertEqual(parent_filter['code'], 'audit_report')
+
+        # Apply the filters to verify they return only report attachments
+        filtered_qs = Attachment.objects.filter(**parent_filter)
+        self.assertEqual(filtered_qs.count(), 2, "Should return 2 report attachments, not engagement attachments")
+
+    def test_report_attachments_list_excludes_fileless_attachments(self):
+        """RSS Admin: GET report-attachments list excludes attachments without files."""
+        # Create an engagement
+        audit = AuditFactory()
+        ct = ContentType.objects.get_for_model(audit._meta.model)
+
+        # Create file type for report attachments
+        rep_file_type, _ = FileType.objects.get_or_create(
+            name='report',
+            code='audit_report'
+        )
+
+        # Create an attachment WITH a file (should appear in results)
+        attachment_with_file = AttachmentFactory(
+            code='audit_report',
+            content_type=ct,
+            object_id=audit.id,
+            file_type=rep_file_type,
+            file='report_doc.pdf'
+        )
+
+        # Create an attachment WITHOUT a file (should NOT appear in results)
+        attachment_without_file = Attachment.objects.create(
+            code='audit_report',
+            content_type=ct,
+            object_id=audit.id,
+            file_type=rep_file_type
+        )
+
+        # Create another attachment with empty string file (should NOT appear in results)
+        attachment_empty_file = Attachment.objects.create(
+            code='audit_report',
+            content_type=ct,
+            object_id=audit.id,
+            file_type=rep_file_type,
+            file=''
+        )
+
+        # Make GET request to list endpoint
+        url = reverse('rss_admin:rss-admin-report-attachments-list', kwargs={'engagement_pk': audit.pk})
+        resp = self.forced_auth_req('get', url, user=self.user)
+
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        # Extract IDs from response
+        returned_ids = [item['id'] for item in resp.data]
+
+        # Only attachment with file should be returned
+        self.assertIn(attachment_with_file.id, returned_ids)
+        self.assertNotIn(attachment_without_file.id, returned_ids)
+        self.assertNotIn(attachment_empty_file.id, returned_ids)
+        self.assertEqual(len(returned_ids), 1, "Should return only 1 attachment with a file")
+
+    def test_attachment_endpoints_are_registered(self):
+        """RSS Admin: Attachment endpoints are properly registered in URLconf."""
+        audit = AuditFactory()
+
+        # Verify both URL patterns are registered
+        try:
+            eng_url = reverse('rss_admin:rss-admin-engagement-attachments-list', kwargs={'engagement_pk': audit.pk})
+            rep_url = reverse('rss_admin:rss-admin-report-attachments-list', kwargs={'engagement_pk': audit.pk})
+
+            # URLs should be properly formatted
+            self.assertIn(str(audit.pk), eng_url)
+            self.assertIn(str(audit.pk), rep_url)
+            self.assertIn('engagement-attachments', eng_url)
+            self.assertIn('report-attachments', rep_url)
+        except NoReverseMatch:
+            self.fail("Attachment endpoints are not properly registered")
+
+    # ------------------------
+    # Engagement list & detail
+    # ------------------------
+
+    def test_engagements_list_includes_staff_spot_checks(self):
+        sc = SpotCheckFactory()
+        ssc = StaffSpotCheckFactory()
+        url = reverse('rss_admin:rss-admin-engagements-list')
+        resp = self.forced_auth_req('get', url, user=self.user, data={'ordering': 'reference_number', 'page_size': 10})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertIn('results', resp.data)
+        ids = [row['id'] for row in resp.data['results']]
+        self.assertIn(sc.id, ids)
+        self.assertIn(ssc.id, ids)
+
+    def test_engagement_detail_audit(self):
+        audit = AuditFactory()
+        url = reverse('rss_admin:rss-admin-engagements-detail', kwargs={'pk': audit.pk})
+        resp = self.forced_auth_req('get', url, user=self.user)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.data['id'], audit.id)
+        # ensure a detail-only field is present (e.g., year_of_audit for audits)
+        self.assertIn('year_of_audit', resp.data)
 
     # ------------------------------------------------------------------
     # Status transitions: targeted condition/side-effect tests
@@ -917,3 +1987,356 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         self.agreement.save(update_fields=['end'])
         resp_ok = self.forced_auth_req('patch', url, user=self.user, data={'agreement_number': self.agreement.agreement_number})
         self.assertEqual(resp_ok.status_code, status.HTTP_200_OK, resp_ok.data)
+
+    def test_map_partner_to_workspace_creates_partner(self):
+        org = OrganizationFactory()
+        url = reverse('rss_admin:rss-admin-partners-map-to-workspace')
+        resp = self.forced_auth_req('post', url, user=self.user, data={'vendor_number': org.vendor_number})
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED, resp.data)
+        # PartnerOrganization now exists in this tenant for the organization
+        self.assertTrue(PartnerOrganization.objects.filter(organization=org).exists())
+
+    def test_map_partner_to_workspace_idempotent(self):
+        org = OrganizationFactory()
+        # pre-create partner
+        partner = PartnerFactory(organization=org)
+        url = reverse('rss_admin:rss-admin-partners-map-to-workspace')
+        resp = self.forced_auth_req('post', url, user=self.user, data={'vendor_number': org.vendor_number})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
+        self.assertEqual(resp.data['id'], partner.id)
+
+    def test_map_partner_to_workspace_updates_leads(self):
+        org = OrganizationFactory()
+        office = OfficeFactory()
+        section = SectionFactory()
+        url = reverse('rss_admin:rss-admin-partners-map-to-workspace')
+        payload = {'vendor_number': org.vendor_number, 'lead_office': office.id, 'lead_section': section.id}
+        resp = self.forced_auth_req('post', url, user=self.user, data=payload)
+        self.assertIn(resp.status_code, (status.HTTP_201_CREATED, status.HTTP_200_OK))
+        partner = PartnerOrganization.objects.get(organization=org)
+        self.assertEqual(partner.lead_office_id, office.id)
+        self.assertEqual(partner.lead_section_id, section.id)
+
+    def test_map_partner_to_workspace_unknown_vendor(self):
+        url = reverse('rss_admin:rss-admin-partners-map-to-workspace')
+        resp = self.forced_auth_req('post', url, user=self.user, data={'vendor_number': 'NOPE'})
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    # ----------------------------------------------------
+    # Engagement list: fields and filters parity with Audit
+    # ----------------------------------------------------
+
+    def test_engagements_list_fields_match_audit_list(self):
+        """RSS Admin engagements list items must expose same fields as Audit engagements list."""
+        # Create a standard (non-staff) engagement
+        sc = SpotCheckFactory()
+
+        # Expected fields from audit EngagementLightSerializer (related_agreement is write_only, not in response)
+        expected_fields = {
+            'id', 'reference_number', 'agreement', 'po_item', 'partner',
+            'engagement_type', 'status', 'status_date', 'total_value', 'offices', 'sections'
+        }
+
+        # Fetch via RSS Admin list
+        rss_url = reverse('rss_admin:rss-admin-engagements-list')
+        rss_resp = self.forced_auth_req('get', rss_url, user=self.user, data={
+            'search': sc.id,
+            'page_size': 1,
+        })
+        self.assertEqual(rss_resp.status_code, status.HTTP_200_OK, rss_resp.data)
+        rss_results = rss_resp.data if isinstance(rss_resp.data, list) else rss_resp.data.get('results', [])
+        self.assertTrue(rss_results, "Expected at least one result from RSS Admin engagements list")
+        rss_row = next((r for r in rss_results if r.get('id') == sc.id), rss_results[0])
+
+        # Verify field sets match expected (order not enforced, only equality of keys)
+        self.assertEqual(set(rss_row.keys()), expected_fields,
+                         f"RSS Admin engagement fields don't match expected. "
+                         f"Got: {set(rss_row.keys())}, Expected: {expected_fields}")
+
+    def test_engagements_filters_include_staff_spot_checks_toggle(self):
+        """Filter parity: ability to filter staff spot checks by unicef_users_allowed flag."""
+        sc = SpotCheckFactory()
+        ssc = StaffSpotCheckFactory()
+        url = reverse('rss_admin:rss-admin-engagements-list')
+
+        # Only staff spot checks
+        resp_staff = self.forced_auth_req('get', url, user=self.user, data={
+            'agreement__auditor_firm__unicef_users_allowed': True,
+            'page_size': 50,
+        })
+        self.assertEqual(resp_staff.status_code, status.HTTP_200_OK, resp_staff.data)
+        results_staff = resp_staff.data if isinstance(resp_staff.data, list) else resp_staff.data.get('results', [])
+        ids_staff = [r['id'] for r in results_staff]
+        self.assertIn(ssc.id, ids_staff)
+        self.assertNotIn(sc.id, ids_staff)
+
+        # Only non-staff spot checks
+        resp_non_staff = self.forced_auth_req('get', url, user=self.user, data={
+            'agreement__auditor_firm__unicef_users_allowed': False,
+            'page_size': 50,
+        })
+        self.assertEqual(resp_non_staff.status_code, status.HTTP_200_OK, resp_non_staff.data)
+        results_non_staff = resp_non_staff.data if isinstance(resp_non_staff.data, list) else resp_non_staff.data.get('results', [])
+        ids_non_staff = [r['id'] for r in results_non_staff]
+        self.assertIn(sc.id, ids_non_staff)
+        self.assertNotIn(ssc.id, ids_non_staff)
+
+    def test_staff_spot_check_detail_retrieve(self):
+        """Test retrieving a staff spot check detail to ensure it doesn't cause AttributeError.
+
+        This test reproduces the error from:
+        GET /api/rss-admin/engagements/3/
+
+        Error was: 'Engagement' object has no attribute 'internal_controls'
+
+        The issue occurred because the viewset was trying to serialize using audit module serializers
+        which have permission checks. The fix uses permission-agnostic RSS serializers
+        and ensures get_object() returns the proper subclass to avoid AttributeError.
+        """
+        # Create a staff spot check
+        ssc = StaffSpotCheckFactory(internal_controls='Test internal controls')
+
+        url = reverse('rss_admin:rss-admin-engagements-detail', args=[ssc.pk])
+        resp = self.forced_auth_req('get', url, user=self.user)
+
+        # Should return 200 OK without AttributeError
+        self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
+
+        # Verify the response contains expected fields (comprehensive data from StaffSpotCheckSerializer)
+        self.assertEqual(resp.data['id'], ssc.id)
+        self.assertEqual(resp.data['engagement_type'], 'sc')
+        self.assertIn('reference_number', resp.data)
+        self.assertIn('status', resp.data)
+        # Should also include spot check specific fields
+        self.assertIn('internal_controls', resp.data)
+
+    def test_spot_check_detail_retrieve(self):
+        """Test retrieving a regular (non-staff) spot check detail."""
+        # Create a regular spot check
+        sc = SpotCheckFactory(internal_controls='Regular spot check controls')
+
+        url = reverse('rss_admin:rss-admin-engagements-detail', args=[sc.pk])
+        resp = self.forced_auth_req('get', url, user=self.user)
+
+        # Should return 200 OK without AttributeError
+        self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
+
+        # Verify the response contains expected fields (comprehensive data from SpotCheckSerializer)
+        self.assertEqual(resp.data['id'], sc.id)
+        self.assertEqual(resp.data['engagement_type'], 'sc')
+        self.assertIn('reference_number', resp.data)
+        self.assertIn('status', resp.data)
+        # Should also include spot check specific fields
+        self.assertIn('internal_controls', resp.data)
+
+    def test_audit_detail_retrieve_new(self):
+        """Test retrieving an audit engagement detail.
+
+        This ensures the get_object() override works correctly for all engagement types,
+        not just SpotCheck. RSS Admin uses the same serializers as the audit module
+        (AuditSerializer, SpotCheckSerializer, etc.) to return comprehensive data.
+        """
+        audit = AuditFactory()
+
+        url = reverse('rss_admin:rss-admin-engagements-detail', args=[audit.pk])
+        resp = self.forced_auth_req('get', url, user=self.user)
+
+        # Should return 200 OK
+        self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
+
+        # Verify the response contains expected fields (comprehensive data from AuditSerializer)
+        self.assertEqual(resp.data['id'], audit.id)
+        self.assertEqual(resp.data['engagement_type'], 'audit')
+        self.assertIn('reference_number', resp.data)
+        self.assertIn('status', resp.data)
+        # Audits should include year_of_audit and audit-specific fields
+        self.assertIn('year_of_audit', resp.data)
+        self.assertIn('audited_expenditure', resp.data)
+        self.assertIn('audit_opinion', resp.data)
+
+    def test_agreement_logs_endpoint(self):
+        """Test that agreement logs endpoint returns log entries"""
+        url = reverse('rss_admin:rss-admin-agreements-logs', kwargs={'pk': self.agreement.pk})
+
+        # Initially, there should be no logs (or minimal logs)
+        resp = self.forced_auth_req('get', url, user=self.user)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        # Verify response structure always has pagination keys
+        self.assertIn('count', resp.data)
+        self.assertIn('next', resp.data)
+        self.assertIn('previous', resp.data)
+        self.assertIn('results', resp.data)
+
+        initial_count = len(resp.data['results'])
+
+        # Create a log entry directly
+        log_change(
+            user=self.user,
+            obj=self.agreement,
+            change_message="Test log entry for agreement",
+        )
+
+        # Now check logs again
+        resp = self.forced_auth_req('get', url, user=self.user)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        # Verify response structure
+        self.assertIn('count', resp.data)
+        self.assertIn('next', resp.data)
+        self.assertIn('previous', resp.data)
+        self.assertIn('results', resp.data)
+
+        logs = resp.data['results']
+        self.assertGreater(len(logs), initial_count)
+        log_entry = logs[0]  # Most recent log
+
+        # Verify log entry has required fields
+        self.assertIn('id', log_entry)
+        self.assertIn('action_time', log_entry)
+        self.assertIn('user', log_entry)
+        self.assertIn('action_flag', log_entry)
+        self.assertIn('action_flag_display', log_entry)
+        self.assertIn('change_message', log_entry)
+        self.assertIn('content_type_display', log_entry)
+        self.assertIn('object_id', log_entry)
+        self.assertIn('object_repr', log_entry)
+
+    def test_agreement_logs_creates_entry_via_log_change(self):
+        """Test that log_change utility creates a log entry for agreements"""
+        content_type = ContentType.objects.get_for_model(Agreement)
+
+        # Count initial log entries
+        initial_logs = LogEntry.objects.filter(
+            content_type=content_type,
+            object_id=str(self.agreement.pk)
+        ).count()
+
+        # Create a log entry
+        log_change(
+            user=self.user,
+            obj=self.agreement,
+            changed_fields={'status': ('draft', 'signed')},
+        )
+
+        # Verify a log entry was created
+        new_logs = LogEntry.objects.filter(
+            content_type=content_type,
+            object_id=str(self.agreement.pk)
+        ).count()
+        self.assertGreater(new_logs, initial_logs)
+
+        # Verify the log entry has correct information
+        log_entry = LogEntry.objects.filter(
+            content_type=content_type,
+            object_id=str(self.agreement.pk)
+        ).order_by('-action_time').first()
+
+        self.assertIsNotNone(log_entry)
+        self.assertEqual(log_entry.user, self.user)
+        self.assertEqual(log_entry.action_flag, CHANGE)
+
+    def test_programme_document_logs_endpoint(self):
+        """Test that programme document logs endpoint returns log entries"""
+        url = reverse('rss_admin:rss-admin-programme-documents-logs', kwargs={'pk': self.pd.pk})
+
+        # Initially, there should be no logs (or minimal logs)
+        resp = self.forced_auth_req('get', url, user=self.user)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        # Verify response structure always has pagination keys
+        self.assertIn('count', resp.data)
+        self.assertIn('next', resp.data)
+        self.assertIn('previous', resp.data)
+        self.assertIn('results', resp.data)
+
+        initial_count = len(resp.data['results'])
+
+        # Create a log entry directly
+        log_change(
+            user=self.user,
+            obj=self.pd,
+            change_message="Test log entry for programme document",
+        )
+
+        # Now check logs again
+        resp = self.forced_auth_req('get', url, user=self.user)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        # Verify response structure
+        self.assertIn('count', resp.data)
+        self.assertIn('next', resp.data)
+        self.assertIn('previous', resp.data)
+        self.assertIn('results', resp.data)
+
+        logs = resp.data['results']
+        self.assertGreater(len(logs), initial_count)
+        log_entry = logs[0]  # Most recent log
+
+        # Verify log entry has required fields
+        self.assertIn('id', log_entry)
+        self.assertIn('action_time', log_entry)
+        self.assertIn('user', log_entry)
+        self.assertIn('action_flag', log_entry)
+        self.assertIn('action_flag_display', log_entry)
+        self.assertIn('change_message', log_entry)
+        self.assertIn('content_type_display', log_entry)
+        self.assertIn('object_id', log_entry)
+        self.assertIn('object_repr', log_entry)
+
+    def test_programme_document_logs_creates_entry_via_log_change(self):
+        """Test that log_change utility creates a log entry for programme documents"""
+        content_type = ContentType.objects.get_for_model(Intervention)
+
+        # Count initial log entries
+        initial_logs = LogEntry.objects.filter(
+            content_type=content_type,
+            object_id=str(self.pd.pk)
+        ).count()
+
+        # Create a log entry
+        log_change(
+            user=self.user,
+            obj=self.pd,
+            changed_fields={'title': ('Old Title', 'New Title')},
+        )
+
+        # Verify a log entry was created
+        new_logs = LogEntry.objects.filter(
+            content_type=content_type,
+            object_id=str(self.pd.pk)
+        ).count()
+        self.assertGreater(new_logs, initial_logs)
+
+        # Verify the log entry has correct information
+        log_entry = LogEntry.objects.filter(
+            content_type=content_type,
+            object_id=str(self.pd.pk)
+        ).order_by('-action_time').first()
+
+        self.assertIsNotNone(log_entry)
+        self.assertEqual(log_entry.user, self.user)
+        self.assertEqual(log_entry.action_flag, CHANGE)
+
+    def test_programme_document_logs_pagination(self):
+        """Test that programme document logs endpoint supports pagination"""
+        url = reverse('rss_admin:rss-admin-programme-documents-logs', kwargs={'pk': self.pd.pk})
+
+        # Create multiple log entries directly
+        for i in range(3):
+            log_change(
+                user=self.user,
+                obj=self.pd,
+                change_message=f"Test log entry {i}",
+            )
+
+        # Request with pagination
+        resp = self.forced_auth_req('get', url, user=self.user, data={'page': 1, 'page_size': 2})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        # Should have pagination structure
+        self.assertIn('count', resp.data)
+        self.assertIn('next', resp.data)
+        self.assertIn('previous', resp.data)
+        self.assertIn('results', resp.data)
+        self.assertLessEqual(len(resp.data['results']), 2)

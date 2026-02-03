@@ -1,6 +1,7 @@
 from rest_framework.permissions import IsAuthenticated
 
 from etools.applications.last_mile.admin_panel.constants import *  # NOQA
+from etools.applications.last_mile.services.permissions_service import LMSMPermissionsService
 from etools.libraries.djangolib.utils import is_user_in_groups
 
 
@@ -78,12 +79,19 @@ class IsLMSMAdmin(IsAuthenticated):
         LOCATIONS_BULK_REVIEW_ADMIN_PANEL: [
             APPROVE_LOCATIONS_ADMIN_PANEL_PERMISSION
         ],
+        # Can approve transfers
+        TRANSFER_BULK_REVIEW_ADMIN_PANEL: [
+            APPROVE_STOCK_MANAGEMENT_ADMIN_PANEL_PERMISSION
+        ],
     }
 
     def special_case_permissions(self, view):
         if view.basename == LOCATIONS_ADMIN_PANEL:
             if view.name == 'Bulk review':
                 return LOCATIONS_BULK_REVIEW_ADMIN_PANEL
+        if view.basename == STOCK_MANAGEMENT_ADMIN_PANEL:
+            if view.name == 'Bulk review':
+                return TRANSFER_BULK_REVIEW_ADMIN_PANEL
         return view.basename
 
     def get_required_permissions(self, view_basename: str) -> set:
@@ -111,6 +119,28 @@ class IsIPLMEditor(IsAuthenticated):
         return super().has_permission(request, view) and request.user.groups.filter(name='IP LM Editor').exists()
 
 
+class IsIPLMEditorOrViewerReadOnly(IsAuthenticated):
+
+    def has_permission(self, request, view):
+        if not super().has_permission(request, view):
+            return False
+
+        user_groups = request.user.groups.values_list('name', flat=True)
+        is_editor = 'IP LM Editor' in user_groups
+        is_viewer = 'IP LM Viewer' in user_groups
+
+        if not (is_editor or is_viewer):
+            return False
+
+        if is_editor:
+            return True
+
+        if is_viewer:
+            return request.method in ['GET', 'HEAD', 'OPTIONS']
+
+        return False
+
+
 class LMSMAPIPermission(IsAuthenticated):
 
     def has_permission(self, request, view):
@@ -118,6 +148,12 @@ class LMSMAPIPermission(IsAuthenticated):
         Return `True` if permission is granted, `False` otherwise.
         """
         return request.user.is_staff or is_user_in_groups(request.user, ['LMSMApi'])
+
+
+class IsLMSMGroup(IsAuthenticated):
+
+    def has_permission(self, request, view):
+        return super().has_permission(request, view) and request.user.groups.filter(name__in=LMSMPermissionsService.LMSM_GROUPS).exists()
 
 
 class LastMileUserPermissionRetriever():

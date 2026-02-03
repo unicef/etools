@@ -1,5 +1,4 @@
 from django.contrib.gis.geos import GEOSGeometry
-from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
 from django.urls import reverse
@@ -144,10 +143,6 @@ class LocationsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
 
 
 class LocationSitesViewTestCase(TestExportMixin, FMBaseTestCaseMixin, BaseTenantTestCase):
-    def setUp(self):
-        super().setUp()
-        cache.clear()
-
     def test_list(self):
         LocationSiteFactory()
 
@@ -159,147 +154,28 @@ class LocationSitesViewTestCase(TestExportMixin, FMBaseTestCaseMixin, BaseTenant
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 1)
 
-    def test_cache_headers_valid(self):
+    def test_list_multiple(self):
+        [LocationSiteFactory() for _i in range(12)]
+
         response = self.forced_auth_req(
             'get', reverse('field_monitoring_settings:sites-list'),
             user=self.unicef_user
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 10)
 
-        self.assertIn('Cache-Control', response)
-        self.assertIn('ETag', response)
-        self.assertIsNotNone(response['ETag'])
-        self.assertEqual('must-revalidate, max-age=0, public', response['Cache-Control'])
-
-    def test_cache_plus_etag(self):
-        [LocationSiteFactory() for _i in range(10)]
-        user = self.unicef_user
-        url = reverse('field_monitoring_settings:sites-list')
-
-        # first request. etag available in response
-        with self.assertNumQueries(3):
-            response = self.forced_auth_req('get', url, user=user)
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
-            self.assertIn('ETag', response)
-            etag = response['ETag']
-
-        # no etag in request, 200 response with no db requests
-        with self.assertNumQueries(0):
-            response = self.forced_auth_req('get', url, user=user)
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
-            self.assertIn('ETag', response)
-            self.assertEqual(response['ETag'], etag)
-
-        # etag provided in request, 304 response
-        with self.assertNumQueries(0):
-            response = self.forced_auth_req('get', url, user=user, HTTP_IF_NONE_MATCH=etag)
-            self.assertEqual(response.status_code, status.HTTP_304_NOT_MODIFIED)
-
-    def test_list_cached(self):
+    def test_full_list(self):
         [LocationSiteFactory() for _i in range(12)]
 
-        with self.assertNumQueries(3):
-            response = self.forced_auth_req(
-                'get', reverse('field_monitoring_settings:sites-list'),
-                user=self.unicef_user
-            )
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
-            self.assertEqual(len(response.data['results']), 10)
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_settings:sites-list'),
+            user=self.unicef_user,
+            data={'page_size': 'all'}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 12)
 
-        etag = response["ETag"]
-
-        # etag presented, so data will not be fetched from db
-        with self.assertNumQueries(0):
-            response = self.forced_auth_req(
-                'get', reverse('field_monitoring_settings:sites-list'),
-                user=self.unicef_user, HTTP_IF_NONE_MATCH=etag
-            )
-            self.assertEqual(response.status_code, status.HTTP_304_NOT_MODIFIED)
-
-        # no db queries despite no etag provided
-        with self.assertNumQueries(0):
-            response = self.forced_auth_req(
-                'get', reverse('field_monitoring_settings:sites-list'),
-                user=self.pme,
-            )
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
-            self.assertEqual(len(response.data['results']), 10)
-
-    def test_full_list_cached(self):
-        [LocationSiteFactory() for _i in range(12)]
-
-        with self.assertNumQueries(2):
-            response = self.forced_auth_req(
-                'get', reverse('field_monitoring_settings:sites-list'),
-                user=self.unicef_user,
-                data={'page_size': 'all'}
-            )
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
-            self.assertEqual(len(response.data), 12)
-
-        etag = response["ETag"]
-
-        # etag presented, so data will not be fetched from db
-        with self.assertNumQueries(0):
-            response = self.forced_auth_req(
-                'get', reverse('field_monitoring_settings:sites-list'),
-                user=self.unicef_user, HTTP_IF_NONE_MATCH=etag,
-                data={'page_size': 'all'}
-            )
-            self.assertEqual(response.status_code, status.HTTP_304_NOT_MODIFIED)
-
-        # no etag, different user, still no db queries
-        with self.assertNumQueries(0):
-            response = self.forced_auth_req(
-                'get', reverse('field_monitoring_settings:sites-list'),
-                user=self.pme,
-                data={'page_size': 'all'}
-            )
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
-            self.assertEqual(len(response.data), 12)
-
-        # no etag, data not cached, because previously we called full list with page_size: all
-        with self.assertNumQueries(3):
-            response = self.forced_auth_req(
-                'get', reverse('field_monitoring_settings:sites-list'),
-                user=self.pme,
-            )
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
-            self.assertEqual(len(response.data['results']), 10)
-
-    def test_full_list_cache_invalidation_on_create(self):
-        LocationSiteFactory()
-
-        with self.assertNumQueries(2):
-            response = self.forced_auth_req(
-                'get', reverse('field_monitoring_settings:sites-list'),
-                user=self.unicef_user,
-                data={'page_size': 'all'}
-            )
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
-            self.assertEqual(len(response.data), 1)
-
-        with self.assertNumQueries(0):
-            response = self.forced_auth_req(
-                'get', reverse('field_monitoring_settings:sites-list'),
-                user=self.unicef_user,
-                data={'page_size': 'all'}
-            )
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
-            self.assertEqual(len(response.data), 1)
-
-        LocationSiteFactory()
-
-        with self.assertNumQueries(2):
-            response = self.forced_auth_req(
-                'get', reverse('field_monitoring_settings:sites-list'),
-                user=self.unicef_user,
-                data={'page_size': 'all'}
-            )
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
-            self.assertEqual(len(response.data), 2)
-
-    def test_list_modified_create(self):
+    def test_list_reflects_create(self):
         LocationSiteFactory()
 
         response = self.forced_auth_req(
@@ -308,18 +184,17 @@ class LocationSitesViewTestCase(TestExportMixin, FMBaseTestCaseMixin, BaseTenant
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 1)
-        etag = response["ETag"]
 
         LocationSiteFactory()
 
         response = self.forced_auth_req(
             'get', reverse('field_monitoring_settings:sites-list'),
-            user=self.unicef_user, HTTP_IF_NONE_MATCH=etag
+            user=self.unicef_user
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 2)
 
-    def test_list_modified_update(self):
+    def test_list_reflects_update(self):
         location_site = LocationSiteFactory()
 
         response = self.forced_auth_req(
@@ -328,14 +203,13 @@ class LocationSitesViewTestCase(TestExportMixin, FMBaseTestCaseMixin, BaseTenant
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 1)
-        etag = response["ETag"]
 
         location_site.name += '_updated'
         location_site.save()
 
         response = self.forced_auth_req(
             'get', reverse('field_monitoring_settings:sites-list'),
-            user=self.unicef_user, HTTP_IF_NONE_MATCH=etag
+            user=self.unicef_user
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data['results']), 1)
@@ -431,6 +305,69 @@ class LocationSitesViewTestCase(TestExportMixin, FMBaseTestCaseMixin, BaseTenant
 
     def test_csv_export_no_sites(self):
         self._test_export(self.unicef_user, 'field_monitoring_settings:sites-export')
+
+
+class TestLocationWithSitesView(FMBaseTestCaseMixin, BaseTenantTestCase):
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+
+        cls.location_1 = LocationFactory(name='Location 1', p_code='TST001')
+        cls.location_2 = LocationFactory(name='Location 2', p_code='TST002')
+        cls.location_inactive = LocationFactory(name='Location 3', p_code='TST002', is_active=False)
+
+    def test_list(self):
+        LocationSiteFactory()
+
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_settings:locations-with-sites-list'),
+            user=self.unicef_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 1)
+
+    def test_list_multiple(self):
+        for parent in [self.location_1, self.location_2, self.location_inactive]:
+            LocationSiteFactory(parent=parent)
+
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_settings:locations-with-sites-list'),
+            user=self.unicef_user
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 2, 'Sites with inactive Parents are not retrieved')
+
+    def test_list_search(self):
+        LocationSiteFactory(parent=self.location_1, name='Site 1')
+        LocationSiteFactory(parent=self.location_2, name='Site 2', is_active=False)
+
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_settings:locations-with-sites-list'),
+            user=self.unicef_user,
+            data={'search': 'location 1'}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 1)
+        self.assertEqual(
+            response.data['results'][0]['name_display'],
+            '{} ({}: {})'.format(self.location_1.name, self.location_1.admin_level_name, self.location_1.p_code)
+        )
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_settings:locations-with-sites-list'),
+            user=self.unicef_user,
+            data={'search': 'tst002'}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 0, 'Only locations with active sites')
+
+        response = self.forced_auth_req(
+            'get', reverse('field_monitoring_settings:locations-with-sites-list'),
+            user=self.unicef_user,
+            data={'search': '3'}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 0, 'Inactive not retrieved')
 
 
 class LocationsCountryViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):

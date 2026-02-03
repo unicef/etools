@@ -212,6 +212,12 @@ class LocationSiteSerializer(LocationSiteLightSerializer):
         pass
 
 
+class LocationsWithSitesSerializer(LocationLightSerializer):
+
+    class Meta(LocationLightSerializer.Meta):
+        fields = ('id', 'name_display')
+
+
 class LocationFullSerializer(LocationLightWithActiveSerializer):
     point = serializers.SerializerMethodField()
     geom = serializers.SerializerMethodField()

@@ -17,7 +17,7 @@ dependencies = [
     'cryptography==42.0.7',
     'dj-database-url==2.1.0',
     'dj-static==0.0.6',
-    'Django==4.2.23',
+    'Django==4.2.26',
     'django-admin-extra-urls==4.1.1',
     'django-appconf==1.0.6',
     'django-celery-beat==2.6.0',
@@ -78,6 +78,7 @@ dependencies = [
     "setuptools>=70.1.1",
     "django-debug-toolbar==4.2.0",
     "tblib>=3.0.0",
+    "kombu==5.4.0",
 ]
 requires-python = ">=3.12"
 readme = "README.md"

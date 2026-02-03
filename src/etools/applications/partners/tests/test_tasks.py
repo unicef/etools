@@ -1243,7 +1243,10 @@ class ActivePDTransferToNewCPTestCase(BaseTenantTestCase):
         transfer_active_pds_to_new_cp()
 
         pd.refresh_from_db()
-        self.assertListEqual(list(pd.country_programmes.all()), [self.old_cp, second_active_cp])
+        self.assertListEqual(
+            list(pd.country_programmes.all().order_by('id')),
+            sorted([self.old_cp, second_active_cp], key=lambda x: x.pk),
+        )
 
 
 @mock.patch('etools.applications.partners.tasks.logger', spec=['info', 'warning', 'error', 'exception'])
@@ -1326,6 +1329,11 @@ class SendPDToVisionTestCase(BaseTenantTestCase):
         result_links = payload.get('result_links', [])
         ll_results = result_links[0].get('ll_results', [])
         activities = ll_results[0].get('activities', [])
+
+        first_result = ll_results[0]
+        self.assertEqual(
+            first_result.get('name'), f"{self.pd_output.code} {self.pd_output.name}",
+        )
 
         matched = {a.get('id'): a for a in activities}.get(self.activity.id)
         self.assertIsNotNone(matched, 'Created activity must be present in payload')

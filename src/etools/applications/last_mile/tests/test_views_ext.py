@@ -8,6 +8,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from applications.last_mile.tests.factories import (
+    ItemAuditConfigurationFactory,
     ItemFactory,
     ItemTransferHistoryFactory,
     MaterialFactory,
@@ -19,6 +20,7 @@ from freezegun import freeze_time
 from rest_framework import status
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.environment.tests.factories import TenantSwitchFactory
 from etools.applications.last_mile import models
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.tests.factories import PartnerFactory
@@ -975,6 +977,59 @@ class TestVisionIngestTransfersApiView(BaseTenantTestCase):
         self.assertEqual(new_transfer.items.count(), 1)
         self.assertEqual(new_transfer.partner_organization, self.partner2)
 
+    def test_item_with_uom_ea_gets_conversion_factor_one(self):
+        payload = [
+            {
+                "Event": "LD",
+                "ReleaseOrder": "RO-EA-UOM",
+                "ImplementingPartner": "IP12345",
+                "MaterialNumber": "MAT-001",
+                "ReleaseOrderItem": "10",
+                "Quantity": 100,
+                "BatchNumber": "B-EA-TEST",
+                "UOM": "EA",
+                "ItemDescription": "Test item with EA UOM",
+            }
+        ]
+
+        response = self.forced_auth_req(
+            method="post", url=self.url, data=payload, user=self.api_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(models.Item.objects.count(), 1)
+
+        item = models.Item.objects.first()
+        self.assertEqual(item.uom, "EA")
+        self.assertEqual(item.conversion_factor, 1.0)
+
+    def test_item_with_uom_ea_and_batch_id_gets_conversion_factor_one(self):
+        payload = [
+            {
+                "Event": "LD",
+                "ReleaseOrder": "RO-EA-BATCH",
+                "ImplementingPartner": "IP12345",
+                "MaterialNumber": "MAT-001",
+                "ReleaseOrderItem": "20",
+                "Quantity": 50,
+                "BatchNumber": "BATCH-123",
+                "UOM": "EA",
+                "ItemDescription": "Test item with EA UOM and batch",
+            }
+        ]
+
+        response = self.forced_auth_req(
+            method="post", url=self.url, data=payload, user=self.api_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(models.Item.objects.count(), 1)
+
+        item = models.Item.objects.first()
+        self.assertEqual(item.uom, "EA")
+        self.assertEqual(item.conversion_factor, 1.0)
+        self.assertIsNotNone(item.batch_id)
+
 
 class TestVisionIngestMaterialsApiView(BaseTenantTestCase):
 
@@ -1872,3 +1927,671 @@ class TestVisionUsersExport(BaseTenantTestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 0)
+
+
+class TestVisionLMSMExportItemAuditLog(BaseTenantTestCase):
+
+    url = reverse("last_mile:vision-export-data")
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+
+        cls.tenant = TenantSwitchFactory(
+            name="lmsm_item_audit_logs",
+            active=True,
+        )
+        cls.tenant.countries.add(connection.tenant)
+        cls.tenant.flush()
+
+        ItemAuditConfigurationFactory()
+
+        cls.api_user = UserFactory(is_superuser=True)
+        cls.unauthorized_user = UserFactory(is_superuser=False)
+
+        cls.partner = PartnerFactory(organization=OrganizationFactory(name='Test Partner'))
+        cls.poi = PointOfInterestFactory(partner_organizations=[cls.partner])
+
+        cls.split_time = timezone.now()
+
+        with freeze_time(cls.split_time - timedelta(days=2)):
+            cls.old_transfer = TransferFactory(
+                destination_point=cls.poi,
+                partner_organization=cls.partner,
+                unicef_release_order='URO-OLD-001'
+            )
+            cls.old_material = MaterialFactory(number='MAT-OLD-001')
+            cls.old_item = ItemFactory(
+                transfer=cls.old_transfer,
+                material=cls.old_material,
+                quantity=10
+            )
+
+        with freeze_time(cls.split_time + timedelta(days=1)):
+            cls.new_transfer = TransferFactory(
+                destination_point=cls.poi,
+                partner_organization=cls.partner,
+                unicef_release_order='URO-NEW-001'
+            )
+            cls.new_material = MaterialFactory(number='MAT-NEW-001')
+            cls.new_item = ItemFactory(
+                transfer=cls.new_transfer,
+                material=cls.new_material,
+                quantity=20
+            )
+
+    def _get_and_decode_streaming_response(self, response):
+        content_bytes = b"".join(response.streaming_content)
+        if not content_bytes:
+            return None
+        return json.loads(content_bytes.decode("utf-8"))
+
+    def setUp(self):
+        base_audit_ids = models.ItemAuditLog.objects.filter(
+            item_id__in=[self.old_item.id, self.new_item.id],
+            action=models.ItemAuditLog.ACTION_CREATE
+        ).values_list('id', flat=True)
+        models.ItemAuditLog.objects.exclude(id__in=base_audit_ids).delete()
+
+    def test_export_item_audit_log_successful(self):
+        response = self.forced_auth_req(
+            method="get",
+            url=self.url,
+            data={"type": "item_audit_log"},
+            user=self.api_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        data = self._get_and_decode_streaming_response(response)
+        self.assertIsInstance(data, list)
+        self.assertEqual(len(data), 2)
+
+        for item in data:
+            self.assertIn('id', item)
+            self.assertIn('created', item)
+            self.assertIn('modified', item)
+            self.assertIn('item_id', item)
+            self.assertIn('action', item)
+            self.assertIn('transfer_id', item)
+
+    def test_export_item_audit_log_with_last_modified_filter(self):
+        response = self.forced_auth_req(
+            method="get",
+            url=self.url,
+            data={
+                "type": "item_audit_log",
+                "last_modified": self.split_time.isoformat()
+            },
+            user=self.api_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = self._get_and_decode_streaming_response(response)
+
+        item_ids = [item['item_id'] for item in data]
+        self.assertIn(self.new_item.id, item_ids)
+        self.assertNotIn(self.old_item.id, item_ids)
+
+    def test_export_item_audit_log_includes_all_action_types(self):
+
+        self.old_item.quantity = 15
+        self.old_item.save()
+
+        self.new_item.hidden = True
+        self.new_item.save()
+
+        temp_item = ItemFactory(
+            transfer=self.new_transfer,
+            material=self.new_material,
+            quantity=30
+        )
+
+        temp_item.delete()
+
+        response = self.forced_auth_req(
+            method="get",
+            url=self.url,
+            data={"type": "item_audit_log"},
+            user=self.api_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = self._get_and_decode_streaming_response(response)
+
+        actions = set(item['action'] for item in data)
+        self.assertIn(models.ItemAuditLog.ACTION_CREATE, actions)
+        self.assertIn(models.ItemAuditLog.ACTION_UPDATE, actions)
+        self.assertIn(models.ItemAuditLog.ACTION_SOFT_DELETE, actions)
+        self.assertIn(models.ItemAuditLog.ACTION_DELETE, actions)
+
+    def test_export_item_audit_log_empty_result(self):
+        future_time = (timezone.now() + timedelta(days=30)).isoformat()
+
+        response = self.forced_auth_req(
+            method="get",
+            url=self.url,
+            data={
+                "type": "item_audit_log",
+                "last_modified": future_time
+            },
+            user=self.api_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = self._get_and_decode_streaming_response(response)
+        self.assertEqual(data, [])
+
+    def test_export_item_audit_log_ordering_by_id(self):
+        items_and_ids = []
+        for i in range(3):
+            item = ItemFactory(
+                transfer=self.new_transfer,
+                material=self.new_material,
+                quantity=50 + i
+            )
+            audit_log = models.ItemAuditLog.objects.filter(
+                item_id=item.id,
+                action=models.ItemAuditLog.ACTION_CREATE
+            ).first()
+            if audit_log:
+                items_and_ids.append(audit_log.id)
+
+        response = self.forced_auth_req(
+            method="get",
+            url=self.url,
+            data={"type": "item_audit_log"},
+            user=self.api_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = self._get_and_decode_streaming_response(response)
+
+        ids = [item['id'] for item in data]
+        self.assertEqual(ids, sorted(ids))
+
+    def test_export_item_audit_log_bulk_operations(self):
+        items = []
+        for i in range(10):
+            item = ItemFactory(
+                transfer=self.new_transfer,
+                material=self.new_material,
+                quantity=1000 + i,
+                batch_id=f'BULK-{i:03d}'
+            )
+            items.append(item)
+
+        for i, item in enumerate(items):
+            item.quantity = 2000 + i
+            item.save()
+
+        response = self.forced_auth_req(
+            method="get",
+            url=self.url,
+            data={"type": "item_audit_log"},
+            user=self.api_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = self._get_and_decode_streaming_response(response)
+
+        self.assertGreaterEqual(len(data), 22)  # 10*2 + 2 original
+
+        bulk_item_ids = [item.id for item in items]
+        bulk_audit_logs = [d for d in data if d['item_id'] in bulk_item_ids]
+
+        create_count = sum(1 for log in bulk_audit_logs if log['action'] == 'CREATE')
+        update_count = sum(1 for log in bulk_audit_logs if log['action'] == 'UPDATE')
+
+        self.assertEqual(create_count, 10)
+        self.assertEqual(update_count, 10)
+
+    def test_export_item_audit_log_with_null_transfer_info(self):
+        models.ItemAuditLog.objects.create(
+            item_id=99999,
+            action=models.ItemAuditLog.ACTION_CREATE,
+            transfer_info=None,
+            changed_fields=[],
+            old_values=None,
+            new_values={'quantity': 100}
+        )
+
+        response = self.forced_auth_req(
+            method="get",
+            url=self.url,
+            data={"type": "item_audit_log"},
+            user=self.api_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = self._get_and_decode_streaming_response(response)
+
+        null_transfer_logs = [d for d in data if d['item_id'] == 99999]
+        self.assertEqual(len(null_transfer_logs), 1)
+        self.assertIsNone(null_transfer_logs[0]['transfer_id'])
+
+    def test_export_item_audit_log_permissions(self):
+        response = self.forced_auth_req(
+            method="get",
+            url=self.url,
+            data={"type": "item_audit_log"},
+            user=self.unauthorized_user
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_export_item_audit_log_complex_scenario(self):
+        transfer3 = TransferFactory(
+            partner_organization=self.partner,
+            unicef_release_order='URO-003'
+        )
+
+        item1 = ItemFactory(transfer=transfer3, material=self.new_material, quantity=100)
+        item2 = ItemFactory(transfer=transfer3, material=self.old_material, quantity=200)
+
+        for i in range(3):
+            item1.quantity = 100 + (i + 1) * 10
+            item1.save()
+
+        item2.hidden = True
+        item2.save()
+
+        item3 = ItemFactory(transfer=transfer3, material=self.new_material, quantity=300)
+        item3_id = item3.id
+        item3.delete()
+
+        response = self.forced_auth_req(
+            method="get",
+            url=self.url,
+            data={"type": "item_audit_log"},
+            user=self.api_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = self._get_and_decode_streaming_response(response)
+
+        item1_logs = [d for d in data if d['item_id'] == item1.id]
+        item2_logs = [d for d in data if d['item_id'] == item2.id]
+        item3_logs = [d for d in data if d['item_id'] == item3_id]
+
+        self.assertEqual(len(item1_logs), 4)
+
+        self.assertEqual(len(item2_logs), 2)
+
+        self.assertEqual(len(item3_logs), 2)
+
+        transfer3_logs = [d for d in data if d['item_id'] in [item1.id, item2.id, item3_id]]
+        for log in transfer3_logs:
+            self.assertEqual(log['transfer_id'], transfer3.id)
+
+
+class TestLConsigneeCodeFunctionality(BaseTenantTestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+
+        cls.api_user = UserFactory(is_superuser=True)
+        cls.ip_lm_editor_group, _ = Group.objects.get_or_create(name="IP LM Editor")
+
+        cls.partner_org1 = OrganizationFactory(vendor_number="IP12345")
+        cls.partner1 = PartnerFactory(organization=cls.partner_org1)
+
+        cls.user = UserFactory(
+            realms__data=['IP LM Editor'],
+            profile__organization=cls.partner_org1
+        )
+
+        cls.warehouse_type = PointOfInterestTypeFactory(
+            name="Warehouse",
+            category="warehouse"
+        )
+        cls.clinic_type = PointOfInterestTypeFactory(
+            name="Clinic",
+            category="clinic"
+        )
+
+        cls.unicef_warehouse = PointOfInterestFactory(
+            id=1,
+            name="UNICEF Main Warehouse",
+            poi_type=cls.warehouse_type
+        )
+
+        cls.poi_with_l_code_warehouse = PointOfInterestFactory(
+            name="Warehouse with L-Code",
+            l_consignee_code="L-WH-001",
+            poi_type=cls.warehouse_type,
+            status=models.PointOfInterest.ApprovalStatus.APPROVED,
+            is_active=True
+        )
+        cls.poi_with_l_code_warehouse.partner_organizations.add(cls.partner1)
+
+        cls.poi_with_l_code_clinic = PointOfInterestFactory(
+            name="Clinic with L-Code",
+            l_consignee_code="L-CL-001",
+            poi_type=cls.clinic_type,
+            status=models.PointOfInterest.ApprovalStatus.APPROVED,
+            is_active=True
+        )
+        cls.poi_with_l_code_clinic.partner_organizations.add(cls.partner1)
+
+        cls.poi_without_l_code = PointOfInterestFactory(
+            name="Warehouse without L-Code",
+            l_consignee_code=None,
+            poi_type=cls.warehouse_type,
+            status=models.PointOfInterest.ApprovalStatus.APPROVED,
+            is_active=True
+        )
+        cls.poi_without_l_code.partner_organizations.add(cls.partner1)
+
+        cls.material1 = MaterialFactory(number="MAT-001", short_description="Medical Supplies")
+
+    def test_ingest_with_l_consignee_code_sets_destination_warehouse(self):
+        url = reverse("last_mile:vision-ingest-transfers")
+        payload = [
+            {
+                "Event": "LD",
+                "ReleaseOrder": "RO-L001",
+                "ImplementingPartner": "IP12345",
+                "PONumber": "PO-111",
+                "MaterialNumber": "MAT-001",
+                "ReleaseOrderItem": "10",
+                "ItemDescription": "Test item",
+                "Quantity": 100,
+                "UOM": "BOX",
+                "BatchNumber": "B1",
+                "ConsigneeCode": "L-WH-001"  # L-Consignee code for warehouse
+            }
+        ]
+
+        response = self.forced_auth_req(
+            method="post", url=url, data=payload, user=self.api_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(models.Transfer.objects.count(), 1)
+
+        transfer = models.Transfer.objects.first()
+        self.assertEqual(transfer.l_consignee_code, "L-WH-001")
+        self.assertEqual(transfer.destination_point, self.poi_with_l_code_warehouse)
+
+    def test_ingest_with_l_consignee_code_sets_destination_clinic(self):
+        url = reverse("last_mile:vision-ingest-transfers")
+        payload = [
+            {
+                "Event": "LD",
+                "ReleaseOrder": "RO-L002",
+                "ImplementingPartner": "IP12345",
+                "PONumber": "PO-222",
+                "MaterialNumber": "MAT-001",
+                "ReleaseOrderItem": "20",
+                "ItemDescription": "Test item",
+                "Quantity": 50,
+                "UOM": "BOX",
+                "BatchNumber": "B2",
+                "ConsigneeCode": "L-CL-001"  # L-Consignee code for clinic
+            }
+        ]
+
+        response = self.forced_auth_req(
+            method="post", url=url, data=payload, user=self.api_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(models.Transfer.objects.count(), 1)
+
+        transfer = models.Transfer.objects.first()
+        self.assertEqual(transfer.l_consignee_code, "L-CL-001")
+        self.assertEqual(transfer.destination_point, self.poi_with_l_code_clinic)
+
+    def test_ingest_without_l_consignee_code_no_destination(self):
+        url = reverse("last_mile:vision-ingest-transfers")
+        payload = [
+            {
+                "Event": "LD",
+                "ReleaseOrder": "RO-L003",
+                "ImplementingPartner": "IP12345",
+                "PONumber": "PO-333",
+                "MaterialNumber": "MAT-001",
+                "ReleaseOrderItem": "30",
+                "ItemDescription": "Test item",
+                "Quantity": 75,
+                "UOM": "BOX",
+                "BatchNumber": "B3"
+                # No LConsignee field
+            }
+        ]
+
+        response = self.forced_auth_req(
+            method="post", url=url, data=payload, user=self.api_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(models.Transfer.objects.count(), 1)
+
+        transfer = models.Transfer.objects.first()
+        self.assertIsNone(transfer.l_consignee_code)
+        self.assertIsNone(transfer.destination_point)
+
+    def test_incoming_transfers_warehouse_with_l_code(self):
+        transfer_matching = TransferFactory(
+            l_consignee_code="L-WH-001",
+            destination_point=self.poi_with_l_code_warehouse,
+            partner_organization=self.partner1,
+            status=models.Transfer.PENDING
+        )
+
+        transfer_different = TransferFactory(
+            l_consignee_code="L-OTHER-001",
+            destination_point=None,
+            partner_organization=self.partner1,
+            status=models.Transfer.PENDING
+        )
+
+        transfer_no_code = TransferFactory(
+            l_consignee_code=None,
+            destination_point=None,
+            partner_organization=self.partner1,
+            status=models.Transfer.PENDING
+        )
+
+        url = reverse("last_mile:transfers-incoming", kwargs={
+            "point_of_interest_pk": self.poi_with_l_code_warehouse.pk
+        })
+        response = self.forced_auth_req(method="get", url=url, user=self.user)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        transfer_ids = [t["id"] for t in response.data["results"]]
+
+        self.assertIn(transfer_matching.id, transfer_ids)
+        self.assertNotIn(transfer_different.id, transfer_ids)
+        self.assertNotIn(transfer_no_code.id, transfer_ids)
+
+    def test_incoming_transfers_warehouse_without_l_code(self):
+        transfer_with_code = TransferFactory(
+            l_consignee_code="L-ANY-001",
+            destination_point=None,
+            partner_organization=self.partner1,
+            status=models.Transfer.PENDING
+        )
+
+        transfer_without_code = TransferFactory(
+            l_consignee_code=None,
+            destination_point=None,
+            partner_organization=self.partner1,
+            status=models.Transfer.PENDING
+        )
+
+        transfer_to_warehouse = TransferFactory(
+            l_consignee_code=None,
+            destination_point=self.poi_without_l_code,
+            partner_organization=self.partner1,
+            status=models.Transfer.PENDING
+        )
+
+        url = reverse("last_mile:transfers-incoming", kwargs={
+            "point_of_interest_pk": self.poi_without_l_code.pk
+        })
+        response = self.forced_auth_req(method="get", url=url, user=self.user)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        transfer_ids = [t["id"] for t in response.data["results"]]
+
+        self.assertNotIn(transfer_with_code.id, transfer_ids)
+        self.assertIn(transfer_without_code.id, transfer_ids)
+        self.assertIn(transfer_to_warehouse.id, transfer_ids)
+
+    def test_check_in_transfer_with_l_code_at_matching_location(self):
+        transfer = TransferFactory(
+            l_consignee_code="L-WH-001",
+            destination_point=self.poi_with_l_code_warehouse,
+            partner_organization=self.partner1,
+            status=models.Transfer.PENDING,
+            transfer_type=models.Transfer.DELIVERY
+        )
+
+        item = ItemFactory(
+            transfer=transfer,
+            material=self.material1,
+            quantity=100
+        )
+
+        url = reverse("last_mile:transfers-new-check-in", kwargs={
+            "point_of_interest_pk": self.poi_with_l_code_warehouse.pk,
+            "pk": transfer.pk
+        })
+
+        data = {
+            "items": [
+                {
+                    "id": item.id,
+                    "quantity": 100
+                }
+            ]
+        }
+
+        response = self.forced_auth_req(
+            method="patch", url=url, data=data, user=self.user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        transfer.refresh_from_db()
+        self.assertEqual(transfer.status, models.Transfer.COMPLETED)
+        self.assertEqual(transfer.destination_point, self.poi_with_l_code_warehouse)
+
+    def test_check_in_transfer_with_l_code_at_wrong_location_fails(self):
+        transfer = TransferFactory(
+            l_consignee_code="L-WH-001",
+            destination_point=None,
+            partner_organization=self.partner1,
+            status=models.Transfer.PENDING,
+            transfer_type=models.Transfer.DELIVERY
+        )
+
+        item = ItemFactory(
+            transfer=transfer,
+            material=self.material1,
+            quantity=100
+        )
+
+        url = reverse("last_mile:transfers-new-check-in", kwargs={
+            "point_of_interest_pk": self.poi_without_l_code.pk,
+            "pk": transfer.pk
+        })
+
+        data = {
+            "items": [
+                {
+                    "id": item.id,
+                    "quantity": 100
+                }
+            ]
+        }
+
+        response = self.forced_auth_req(
+            method="patch", url=url, data=data, user=self.user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("L-WH-001", str(response.data))
+
+        transfer.refresh_from_db()
+        self.assertEqual(transfer.status, models.Transfer.PENDING)
+
+    def test_check_in_transfer_without_l_code_at_warehouse_succeeds(self):
+        transfer = TransferFactory(
+            l_consignee_code=None,
+            destination_point=None,
+            partner_organization=self.partner1,
+            status=models.Transfer.PENDING,
+            transfer_type=models.Transfer.DELIVERY
+        )
+
+        item = ItemFactory(
+            transfer=transfer,
+            material=self.material1,
+            quantity=100
+        )
+
+        url = reverse("last_mile:transfers-new-check-in", kwargs={
+            "point_of_interest_pk": self.poi_without_l_code.pk,
+            "pk": transfer.pk
+        })
+
+        data = {
+            "items": [
+                {
+                    "id": item.id,
+                    "quantity": 100
+                }
+            ]
+        }
+
+        response = self.forced_auth_req(
+            method="patch", url=url, data=data, user=self.user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        transfer.refresh_from_db()
+        self.assertEqual(transfer.status, models.Transfer.COMPLETED)
+        self.assertEqual(transfer.destination_point, self.poi_without_l_code)
+
+    def test_check_in_transfer_without_l_code_at_non_warehouse_fails(self):
+        transfer = TransferFactory(
+            l_consignee_code=None,
+            destination_point=None,
+            partner_organization=self.partner1,
+            status=models.Transfer.PENDING,
+            transfer_type=models.Transfer.DELIVERY
+        )
+
+        item = ItemFactory(
+            transfer=transfer,
+            material=self.material1,
+            quantity=100
+        )
+
+        url = reverse("last_mile:transfers-new-check-in", kwargs={
+            "point_of_interest_pk": self.poi_with_l_code_clinic.pk,
+            "pk": transfer.pk
+        })
+
+        data = {
+            "items": [
+                {
+                    "id": item.id,
+                    "quantity": 100
+                }
+            ]
+        }
+
+        response = self.forced_auth_req(
+            method="patch", url=url, data=data, user=self.user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("warehouse", str(response.data).lower())
+
+        transfer.refresh_from_db()
+        self.assertEqual(transfer.status, models.Transfer.PENDING)

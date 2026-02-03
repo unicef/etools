@@ -52,10 +52,11 @@ def get_access_token():
 
 
 @cache_result(timeout=1800, key='lmsm_pbi_embed_url')
-def get_embed_url(pbi_headers):
+def get_embed_url(pbi_headers, report_id=None):
     logger.debug('Embed url not found in cache, Getting Embed Url')
     workspace_id = pbi_config['WORKSPACE_ID']
-    report_id = pbi_config['REPORT_ID']
+    if not report_id:
+        report_id = pbi_config['REPORT_ID']
 
     url_to_call = f'https://api.powerbi.com/v1.0/myorg/groups/{workspace_id}/reports/{report_id}'
 
@@ -78,10 +79,11 @@ def get_embed_url(pbi_headers):
 
 
 @cache_result(timeout=1800, key='lmsm_pbi_embed_token')
-def get_embed_token(dataset_id, pbi_headers):
+def get_embed_token(dataset_id, pbi_headers, report_id=None):
     logger.debug('Token not found in cache, Getting Embed Token')
     workspace_id = pbi_config['WORKSPACE_ID']
-    report_id = pbi_config['REPORT_ID']
+    if not report_id:
+        report_id = pbi_config['REPORT_ID']
 
     embed_token_api = 'https://api.powerbi.com/v1.0/myorg/GenerateToken'
     request_body = {
