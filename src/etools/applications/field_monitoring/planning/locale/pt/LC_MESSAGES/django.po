@@ -2,13 +2,13 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-# 
+#
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-29 13:11+0000\n"
+"POT-Creation-Date: 2026-02-03 14:55+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -155,6 +155,12 @@ msgstr "Saída CP"
 msgid "Intervention"
 msgstr "Intervenção"
 
+msgid "eWP Activity"
+msgstr ""
+
+msgid "GPD"
+msgstr ""
+
 msgid "Question"
 msgstr "Pergunta"
 
@@ -253,6 +259,12 @@ msgstr ""
 
 msgid "Field Office"
 msgstr "Escritório de campo"
+
+msgid "eWP activities"
+msgstr ""
+
+msgid "GDPs"
+msgstr ""
 
 msgid "Activity Attachments"
 msgstr "Anexos de Atividade"
