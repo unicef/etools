@@ -174,6 +174,18 @@ class TransferIngestService:
         return self.report
 
     def _prepare_transfers_and_group_items(self, validated_data: List[Dict[str, Any]]):
+        poi_map = {}
+        active_pois = models.PointOfInterest.objects.filter(
+            is_active=True,
+            status=models.PointOfInterest.ApprovalStatus.APPROVED
+        ).prefetch_related('partner_organizations')
+
+        for poi in active_pois:
+            if poi.l_consignee_code:
+                poi_map[poi.l_consignee_code] = poi
+
+        origin_poi = models.PointOfInterest.objects.get_unicef_warehouses()
+
         for row in validated_data:
             transfer_data = row['transfer_data']
             item_data = row['item_data']
@@ -188,16 +200,17 @@ class TransferIngestService:
                 continue
 
             if l_consignee_code:
-                destination_poi = models.PointOfInterest.objects.filter(
-                    l_consignee_code=l_consignee_code,
-                    is_active=True,
-                    status=models.PointOfInterest.ApprovalStatus.APPROVED
-                ).first()
+                destination_poi = poi_map.get(l_consignee_code)
 
                 if destination_poi:
+                    partner_ids = {po.id for po in destination_poi.partner_organizations.all()}
+                    if organization.partner.id not in partner_ids:
+                        self.report.skipped_transfers.append({
+                            "release_order": release_order,
+                            "reason": f"Destination point '{destination_poi.name}' (L-consignee code: {l_consignee_code}) is not linked to partner organization '{organization.partner.name}'"
+                        })
+                        continue
                     transfer_data['destination_point'] = destination_poi
-
-            origin_poi = models.PointOfInterest.objects.get_unicef_warehouses()
 
             if release_order not in self.processed_release_orders:
                 try:
@@ -282,7 +295,7 @@ class TransferIngestService:
                 if item_data.get('uom') == material.original_uom:
                     item_data.pop('uom', None)
 
-                if item_data.get('uom') == "EA":
+                if item_data.get('uom') == "EA" or material.original_uom == "EA":
                     item_data['conversion_factor'] = 1.0
 
                 if not item_data.get('batch_id'):

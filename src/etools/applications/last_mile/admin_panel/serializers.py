@@ -12,6 +12,7 @@ from rest_framework_gis.fields import GeometryField
 from etools.applications.last_mile import models
 from etools.applications.last_mile.admin_panel.constants import (
     ALERT_TYPES,
+    L_CONSIGNEE_ALREADY_EXISTS,
     REQUIRED_SECONDARY_TYPE,
     STOCK_EXISTS_UNDER_LOCATION,
 )
@@ -342,6 +343,11 @@ class PointOfInterestCustomSerializer(serializers.ModelSerializer):
     def validate_secondary_type(self, value):
         if not self.instance and not value:
             raise ValidationError(REQUIRED_SECONDARY_TYPE)
+        return value
+
+    def validate_l_consignee_code(self, value):
+        if models.PointOfInterest.all_objects.filter(l_consignee_code=value).exists():
+            raise ValidationError(L_CONSIGNEE_ALREADY_EXISTS)
         return value
 
     def validate_is_active(self, value):
@@ -888,7 +894,7 @@ class TransferItemSerializer(serializers.ModelSerializer):
 
 
 class TransferItemDetailSerializer(serializers.Serializer):
-    item_name = serializers.CharField(required=True)
+    item_name = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     material = serializers.PrimaryKeyRelatedField(
         queryset=models.Material.objects.all(),
         required=True
@@ -1206,7 +1212,7 @@ class StockManagementImportSerializer(serializers.Serializer):
     material_number = serializers.CharField()
     quantity = serializers.IntegerField()
     uom = serializers.CharField()
-    expiration_date = serializers.DateTimeField()
+    expiration_date = serializers.DateTimeField(required=False, allow_null=True)
     batch_id = serializers.CharField(required=False, allow_null=True)
     p_code = serializers.CharField()
 

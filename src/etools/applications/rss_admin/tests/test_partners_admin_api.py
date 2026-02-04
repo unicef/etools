@@ -27,6 +27,7 @@ from etools.applications.funds.tests.factories import FundsReservationHeaderFact
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.models import Agreement, Intervention, PartnerOrganization
 from etools.applications.partners.tests.factories import AgreementFactory, InterventionFactory, PartnerFactory
+from etools.applications.psea.tests.factories import AssessmentFactory
 from etools.applications.reports.tests.factories import (
     CountryProgrammeFactory,
     OfficeFactory,
@@ -1391,6 +1392,26 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         self.assertNotIn(ap2.id, ids)
 
     @mock.patch('etools.applications.action_points.models.send_notification_with_template')
+    def test_action_points_filter_by_related_module(self, _mock_notify):
+        """Test filtering action points by related_module."""
+        section = SectionFactory()
+        office = OfficeFactory()
+
+        psea_assessment = AssessmentFactory()
+        ap_psea = ActionPointFactory(section=section, office=office, psea_assessment=psea_assessment)
+
+        engagement = EngagementFactory()
+        ap_audit = ActionPointFactory(section=section, office=office, engagement=engagement)
+
+        url = reverse('rss_admin:rss-admin-action-points-list')
+        response = self.forced_auth_req('get', url, user=self.user, data={'related_module': ActionPoint.MODULE_CHOICES.psea})
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        ids = self._ids(response)
+        self.assertIn(ap_psea.id, ids)
+        self.assertNotIn(ap_audit.id, ids)
+
+    @mock.patch('etools.applications.action_points.models.send_notification_with_template')
     def test_action_points_search(self, _mock_notify):
         """Test searching action points by various fields."""
         section = SectionFactory()
@@ -1502,7 +1523,7 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
     @override_settings(RESTRICTED_ADMIN=True)
     def test_access_allowed_for_rss_admin_realm(self):
         user = UserFactory(is_staff=False)
-        group = GroupFactory(name='Rss Admin')
+        group = GroupFactory(name='RSS')
         RealmFactory(user=user, country=connection.tenant, group=group, is_active=True)
 
         url = reverse('rss_admin:rss-admin-partners-list')

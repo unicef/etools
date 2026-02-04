@@ -305,6 +305,62 @@ class TestResultStructureSynchronizer(BaseTenantTestCase):
         self.assertEqual(Result.objects.count(), init_result_count + 1)
         self.assertTrue(result_qs.exists())
 
+    def test_update_activities_existing_wrong_type_updates_instead_of_creating_duplicate(self):
+        """If a Result exists for (wbs, country_programme) but has a wrong result_type,
+        we must update it instead of trying to create and crashing on unique constraint.
+        """
+        today = datetime.date.today()
+
+        cp_wbs = "C" * 10
+        outcome_wbs = cp_wbs + ("O" * 4)          # 14 chars
+        output_wbs = outcome_wbs + ("P" * 4)      # 18 chars
+        activity_wbs = output_wbs + ("A" * 4)     # 22 chars
+
+        cp = CountryProgrammeFactory(wbs=cp_wbs)
+        outcome = ResultFactory(
+            wbs=outcome_wbs,
+            country_programme=cp,
+            result_type=self.result_type_outcome,
+            name="Outcome",
+        )
+        output = ResultFactory(
+            wbs=output_wbs,
+            country_programme=cp,
+            result_type=self.result_type_output,
+            parent=outcome,
+            name="Output",
+        )
+        bad_existing = ResultFactory(
+            wbs=activity_wbs,
+            country_programme=cp,
+            result_type=self.result_type_output,  # wrong on purpose
+            parent=output,
+            name="WRONG TYPE",
+            from_date=today,
+            to_date=today + datetime.timedelta(days=30),
+        )
+
+        self.data["cps"] = {cp_wbs: {"wbs": cp_wbs, "name": cp.name, "from_date": cp.from_date, "to_date": cp.to_date}}
+        self.data["outcomes"] = {outcome_wbs: {"wbs": outcome_wbs, "name": "Outcome", "from_date": today, "to_date": today, "code": "X"}}
+        self.data["outputs"] = {output_wbs: {"wbs": output_wbs, "name": "Output", "from_date": today, "to_date": today}}
+        self.data["activities"] = {activity_wbs: {
+            "wbs": activity_wbs,
+            "name": "Correct Activity",
+            "from_date": today,
+            "to_date": today + datetime.timedelta(days=30),
+        }}
+
+        self.adapter.data = self.data
+
+        # Should not raise IntegrityError; should update existing row
+        self.adapter.update()
+
+        bad_existing.refresh_from_db()
+        self.assertEqual(bad_existing.result_type, self.result_type_activity)
+        self.assertEqual(bad_existing.parent_id, output.pk)
+        self.assertEqual(bad_existing.country_programme_id, cp.pk)
+        self.assertEqual(bad_existing.name, "Correct Activity")
+
     def test_update_all_exist(self):
         """Check response from all update which is a wrapper method
         that calls;
