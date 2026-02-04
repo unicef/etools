@@ -303,6 +303,12 @@ class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
             is_active=True
         ).exists()
 
+    def get_organizations(self):
+        if hasattr(self, 'realms'):
+            qs = Organization.objects.filter(realms__in=self.realms.filter(country=connection.tenant)).distinct()
+            return qs or []
+        return []
+
     @transaction.atomic
     def save(self, *args, **kwargs):
         if self.email != self.email.lower():

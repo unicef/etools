@@ -21,6 +21,8 @@ class LMUserCreator:
         validated_data['password'] = make_password(self.generate_password())
         group = Group.objects.get(name="IP LM Editor")
 
+        organizations = user_profile.pop('organizations', None)
+
         country = Country.objects.get(schema_name=country_schema)
 
         with transaction.atomic():
@@ -28,15 +30,24 @@ class LMUserCreator:
                 **validated_data
             )
             user.profile.country = country
-            user.profile.organization = user_profile['organization']
+            if user_profile.get('organization'):
+                user.profile.organization = user_profile['organization']
+            else:
+                user.profile.organization = organizations[0]
             user.profile.job_title = user_profile['job_title']
             user.profile.phone_number = user_profile['phone_number']
-            Realm.objects.create(
-                user=user,
-                country=country,
-                organization=user_profile['organization'],
-                group=group,
-            )
+            if user_profile.get('organization'):
+                Realm.objects.create(
+                    user=user,
+                    country=country,
+                    organization=user_profile['organization'],
+                    group=group,
+                )
+            else:
+                realms_to_create = []
+                for organization in organizations:
+                    realms_to_create.append(Realm(user=user, country=country, organization=organization, group=group))
+                Realm.objects.bulk_create(realms_to_create)
             user.is_active = False
             user.save()
             user.profile.save()

@@ -298,6 +298,10 @@ class ItemAdmin(XLSXImportMixin, admin.ModelAdmin):
             form.base_fields['uom'].required = False
         if 'conversion_factor' in form.base_fields:
             form.base_fields['conversion_factor'].required = False
+        if 'base_uom' in form.base_fields:
+            form.base_fields['base_uom'].required = False
+        if 'base_quantity' in form.base_fields:
+            form.base_fields['base_quantity'].required = False
         return form
 
     def destination_point_name(self, obj):
@@ -613,9 +617,11 @@ class PartnerMaterialAdmin(admin.ModelAdmin):
 
 @admin.register(models.PointOfInterestType)
 class PointOfInterestTypeAdmin(admin.ModelAdmin):
-    list_display = ('name', 'category', 'created', 'modified')
-    list_filter = ('category',)
+    list_display = ('name', 'category', 'type_role', 'created', 'modified')
+    list_filter = ('category', 'type_role')
     search_fields = ('name', 'category')
+    fields = ('name', 'category', 'type_role')
+    ordering = ('type_role', 'name')
 
 
 @admin.register(models.PointOfInterestTypeMapping)
