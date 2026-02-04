@@ -6,11 +6,16 @@ from django.contrib.contenttypes.models import ContentType
 from django.test import override_settings
 from django.urls import reverse
 
-from rest_framework import status
+from rest_framework import serializers, status
 
 from etools.applications.attachments.tests.factories import AttachmentFactory, AttachmentFileTypeFactory
-from etools.applications.audit.models import Engagement
-from etools.applications.audit.tests.factories import AuditFactory, SpotCheckFactory, StaffSpotCheckFactory
+from etools.applications.audit.models import Engagement, Finding
+from etools.applications.audit.tests.factories import (
+    AuditFactory,
+    FindingFactory,
+    SpotCheckFactory,
+    StaffSpotCheckFactory,
+)
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.users.tests.factories import UserFactory
 
@@ -53,10 +58,7 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
 
         # Verify the update
         audit.refresh_from_db()
-        # TODO face forms integration calculates totals from selected face forms,
-        #  editing several total fields e.g. total_value/total_value_local and more..
-        #  is pointless as will not get saved
-        # self.assertEqual(float(audit.total_value), 5000.00)
+        self.assertEqual(float(audit.total_value), 5000.00)
 
     def test_engagement_patch_spot_check(self):
         """Test that PATCH method works for spot check engagement"""
@@ -72,10 +74,7 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
 
         # Verify the update
         spot_check.refresh_from_db()
-        # TODO face forms integration calculates totals from selected face forms,
-        #  editing several total fields e.g. total_value/total_value_local and more..
-        #  is pointless as will not get saved
-        # self.assertEqual(float(spot_check.total_value), 3000.00)
+        self.assertEqual(float(spot_check.total_value), 3000.00)
 
     def test_engagement_patch_staff_spot_check(self):
         """Test that PATCH method works for staff spot check engagement"""
@@ -91,10 +90,7 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
 
         # Verify the update
         staff_sc.refresh_from_db()
-        # TODO face forms integration calculates totals from selected face forms,
-        #  editing several total fields e.g. total_value/total_value_local and more..
-        #  is pointless as will not get saved
-        # self.assertEqual(float(staff_sc.total_value), 2000.00)
+        self.assertEqual(float(staff_sc.total_value), 2000.00)
 
     def test_engagement_patch_non_staff_forbidden(self):
         """Test that non-staff users cannot PATCH engagements"""
@@ -123,10 +119,7 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
 
         # Verify the updates
         audit.refresh_from_db()
-        # TODO face forms integration calculates totals from selected face forms,
-        #  editing several total fields e.g. total_value/total_value_local and more..
-        #  is pointless as will not get saved
-        # self.assertEqual(float(audit.total_value), 7500.00)
+        self.assertEqual(float(audit.total_value), 7500.00)
         self.assertEqual(float(audit.exchange_rate), 1.25)
 
     def test_engagement_patch_returns_full_serialized_data(self):
@@ -166,10 +159,7 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
         audit.refresh_from_db()
         self.assertEqual(audit.start_date, date(2018, 10, 15))
         self.assertEqual(audit.end_date, date(2018, 12, 15))
-        # TODO face forms integration calculates totals from selected face forms,
-        #  editing several total fields e.g. total_value/total_value_local and more..
-        #  is pointless as will not get saved
-        # self.assertEqual(float(audit.total_value), 1234.00)
+        self.assertEqual(float(audit.total_value), 1234.00)
 
     def test_engagement_patch_audit_specific_fields(self):
         """Test updating audit-specific fields that might have permission restrictions"""
@@ -189,11 +179,8 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
 
         # Verify changes persisted
         audit.refresh_from_db()
-        # TODO face forms integration calculates totals from selected face forms,
-        #  editing several total fields e.g. total_value/total_value_local and more..
-        #  is pointless as will not get saved
-        self.assertEqual(float(audit.total_value), 100.00)
-        self.assertEqual(float(audit.total_value), initial_total_value)
+        self.assertEqual(float(audit.total_value), 9999.00)
+        self.assertNotEqual(float(audit.total_value), float(initial_total_value))
         self.assertEqual(float(audit.exchange_rate), 1.5)
 
     def test_engagement_patch_exact_curl_payload(self):
@@ -267,11 +254,7 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
         self.assertEqual(audit.shared_ip_with, ['UNDP'])
         self.assertEqual(str(audit.start_date), '2018-10-15')
         self.assertEqual(str(audit.end_date), '2018-12-15')
-        # TODO face forms integration calculates totals from selected face forms,
-        #  editing several total fields e.g. total_value/total_value_local and more..
-        #  is pointless as will not get saved
-        # self.assertEqual(float(audit.total_value), 1234.00)  # NOW it changed!
-        self.assertEqual(float(audit.total_value), 999.00)  # NOT changed!
+        self.assertEqual(float(audit.total_value), 1234.00)
 
     def test_engagement_patch_status_triggers_fsm_submit(self):
         """Test that changing status via PATCH triggers FSM submit transition"""
@@ -327,8 +310,25 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
         self.assertIsNotNone(audit.date_of_final_report)  # FSM sets this
 
     def test_engagement_patch_status_send_back_requires_comment(self):
-        """Test that send_back transition via PATCH requires a comment"""
-        audit = AuditFactory(status=Engagement.STATUSES.report_submitted)
+        """Test that send_back transition via PATCH requires a comment.
+
+        When sending back to IP Contacted, RSS Admin should also wipe later milestone dates
+        so computed displayed_status doesn't remain on "Comments Received from UNICEF", etc.
+        """
+        from datetime import date
+
+        audit = AuditFactory(
+            status=Engagement.STATUSES.report_submitted,
+            start_date=date(2022, 11, 20),
+            end_date=date(2022, 11, 24),
+            partner_contacted_at=date(2022, 11, 25),
+            date_of_field_visit=date(2022, 11, 26),
+            date_of_draft_report_to_ip=date(2022, 11, 29),
+            date_of_comments_by_ip=date(2022, 12, 12),
+            date_of_draft_report_to_unicef=date(2022, 12, 22),
+            date_of_comments_by_unicef=date(2022, 12, 22),
+            date_of_report_submit=date(2022, 12, 30),
+        )
         url = reverse('rss_admin:rss-admin-engagements-detail', kwargs={'pk': audit.pk})
 
         # Try to send back without comment - should fail
@@ -349,6 +349,54 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
         self.assertEqual(audit.status, Engagement.STATUSES.partner_contacted)
         self.assertEqual(audit.send_back_comment, 'Please revise the report')
         self.assertIsNone(audit.date_of_report_submit)  # FSM clears this
+        # RSS Admin should wipe later milestone dates so displayed_status becomes "IP Contacted"
+        self.assertIsNone(audit.date_of_comments_by_unicef)
+        self.assertIsNone(audit.date_of_draft_report_to_unicef)
+        self.assertIsNone(audit.date_of_comments_by_ip)
+        self.assertIsNone(audit.date_of_draft_report_to_ip)
+        self.assertIsNone(audit.date_of_field_visit)
+        self.assertEqual(resp.data.get('status'), Engagement.DISPLAY_STATUSES.partner_contacted)
+
+    def test_engagement_patch_status_reopen_cancelled_requires_comment(self):
+        """Reopening a cancelled engagement via PATCH uses send_back and requires a comment."""
+        audit = AuditFactory(status=Engagement.STATUSES.cancelled)
+        url = reverse('rss_admin:rss-admin-engagements-detail', kwargs={'pk': audit.pk})
+
+        # Missing comment should fail
+        resp = self.forced_auth_req('patch', url, user=self.user, data={'status': Engagement.DISPLAY_STATUSES.partner_contacted})
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST, resp.data)
+        self.assertIn('send_back_comment', resp.data)
+
+        # With comment should succeed
+        resp = self.forced_auth_req('patch', url, user=self.user, data={
+            'status': Engagement.DISPLAY_STATUSES.partner_contacted,
+            'send_back_comment': 'Reopening cancelled engagement',
+        })
+        self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
+        audit.refresh_from_db()
+        self.assertEqual(audit.status, Engagement.STATUSES.partner_contacted)
+        self.assertIsNone(audit.date_of_cancel)
+        self.assertEqual(audit.cancel_comment, '')
+
+    def test_engagement_patch_status_cancel_from_final_requires_comment(self):
+        """Cancelling a finalized engagement via PATCH should be allowed but requires cancel_comment."""
+        audit = AuditFactory(status=Engagement.STATUSES.final)
+        url = reverse('rss_admin:rss-admin-engagements-detail', kwargs={'pk': audit.pk})
+
+        # Missing comment should fail
+        resp = self.forced_auth_req('patch', url, user=self.user, data={'status': Engagement.DISPLAY_STATUSES.cancelled})
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST, resp.data)
+        self.assertIn('cancel_comment', resp.data)
+
+        # With comment should succeed
+        resp = self.forced_auth_req('patch', url, user=self.user, data={
+            'status': Engagement.DISPLAY_STATUSES.cancelled,
+            'cancel_comment': 'Cancelling finalized engagement',
+        })
+        self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
+        audit.refresh_from_db()
+        self.assertEqual(audit.status, Engagement.STATUSES.cancelled)
+        self.assertIsNotNone(audit.date_of_cancel)
 
     def test_engagement_patch_status_cancel_requires_comment(self):
         """Test that cancel transition via PATCH requires a comment"""
@@ -387,6 +435,9 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
         resp = self.forced_auth_req('patch', url, user=self.user, data=payload)
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('Invalid status transition', str(resp.data))
+        # Ensure we show human-friendly labels, not raw status codes
+        self.assertIn('IP Contacted', str(resp.data))
+        self.assertIn('Final Report', str(resp.data))
 
         # Verify status didn't change
         audit.refresh_from_db()
@@ -426,11 +477,7 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
         # Verify both changes took effect
         audit.refresh_from_db()
         self.assertEqual(audit.status, Engagement.STATUSES.report_submitted)
-        # TODO face forms integration calculates totals from selected face forms,
-        #  editing several total fields e.g. total_value/total_value_local and more..
-        #  is pointless as will not get saved
-        # self.assertEqual(float(audit.total_value), 5000.00)
-        self.assertEqual(float(audit.total_value), 1000.00)
+        self.assertEqual(float(audit.total_value), 5000.00)
         self.assertIsNotNone(audit.date_of_report_submit)  # FSM side effect
 
     def test_engagement_patch_shared_ip_with(self):
@@ -475,10 +522,7 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
         # Step 2: Check the PATCH response has the updated values
         self.assertEqual(patch_resp.data['start_date'], '2018-10-15')
         self.assertEqual(patch_resp.data['end_date'], '2018-12-15')
-        # TODO face forms integration calculates totals from selected face forms,
-        #  editing several total fields e.g. total_value/total_value_local and more..
-        #  is pointless as will not get saved
-        self.assertEqual(float(patch_resp.data['total_value']), 100.00)
+        self.assertEqual(float(patch_resp.data['total_value']), 5678.00)
         self.assertEqual(float(patch_resp.data['exchange_rate']), 1.25)
         self.assertEqual(patch_resp.data['shared_ip_with'], ['UNDP'])
 
@@ -489,7 +533,7 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
         # Step 4: Verify all fields persisted in the GET response
         self.assertEqual(get_resp.data['start_date'], '2018-10-15')
         self.assertEqual(get_resp.data['end_date'], '2018-12-15')
-        self.assertEqual(float(get_resp.data['total_value']), 100.00)
+        self.assertEqual(float(get_resp.data['total_value']), 5678.00)
         self.assertEqual(float(get_resp.data['exchange_rate']), 1.25)
         self.assertEqual(get_resp.data['shared_ip_with'], ['UNDP'])
 
@@ -497,7 +541,7 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
         audit.refresh_from_db()
         self.assertEqual(audit.start_date, date(2018, 10, 15))
         self.assertEqual(audit.end_date, date(2018, 12, 15))
-        self.assertEqual(float(audit.total_value), 100.00)
+        self.assertEqual(float(audit.total_value), 5678.00)
         self.assertEqual(float(audit.exchange_rate), 1.25)
         self.assertEqual(audit.shared_ip_with, ['UNDP'])
 
@@ -536,6 +580,196 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
         self.assertIsInstance(resp.data['cancel_comment'], list, "Error should be a list")
         self.assertTrue(len(resp.data['cancel_comment']) > 0)
         self.assertIn('required', resp.data['cancel_comment'][0])
+
+        # Test 4: Transition checks should return a clean, user-friendly message
+        sc = SpotCheckFactory(status=Engagement.STATUSES.report_submitted)
+        FindingFactory(spot_check=sc, priority=Finding.PRIORITIES.high)
+        sc_url = reverse('rss_admin:rss-admin-engagements-detail', kwargs={'pk': sc.pk})
+        payload = {'status': Engagement.STATUSES.final}
+        resp = self.forced_auth_req('patch', sc_url, user=self.user, data=payload)
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST, resp.data)
+        self.assertIn('status', resp.data)
+        self.assertIsInstance(resp.data['status'], list, "Error should be a list")
+        self.assertTrue(len(resp.data['status']) > 0)
+        self.assertIn('Unable to change status', resp.data['status'][0])
+        self.assertIn('High-priority findings require at least one open high-priority Action Point', resp.data['status'][0])
+        # Ensure raw DRF internals are not leaked in the message
+        self.assertNotIn('ErrorDetail', resp.data['status'][0])
+
+    def test_engagement_patch_status_transition_error_messages_are_user_friendly(self):
+        """Transition failures should not leak DRF ErrorDetail(...) internals and should be concise."""
+        sc = SpotCheckFactory(status=Engagement.STATUSES.report_submitted)
+        url = reverse('rss_admin:rss-admin-engagements-detail', kwargs={'pk': sc.pk})
+
+        # Case 1: ValidationError with dict + action_points key
+        with mock.patch.object(
+            sc.__class__,
+            'finalize',
+            autospec=True,
+            side_effect=serializers.ValidationError({'action_points': ['Must create a high priority action point']})
+        ):
+            resp = self.forced_auth_req('patch', url, user=self.user, data={'status': Engagement.STATUSES.final})
+            self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST, resp.data)
+            self.assertIn('status', resp.data)
+            self.assertIn('Unable to change status', resp.data['status'][0])
+            self.assertIn('Must create a high priority action point', resp.data['status'][0])
+            self.assertNotIn('ErrorDetail', resp.data['status'][0])
+
+        # Case 2: ValidationError with dict (other keys) should be flattened
+        with mock.patch.object(
+            sc.__class__,
+            'finalize',
+            autospec=True,
+            side_effect=serializers.ValidationError({'some_field': ['Some failure'], 'other_field': 'Other failure'})
+        ):
+            resp = self.forced_auth_req('patch', url, user=self.user, data={'status': Engagement.STATUSES.final})
+            self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST, resp.data)
+            msg = resp.data['status'][0]
+            self.assertIn('Unable to change status', msg)
+            self.assertIn('some field: Some failure', msg)
+            self.assertIn('other field: Other failure', msg)
+            self.assertNotIn('ErrorDetail', msg)
+
+        # Case 3: ValidationError with list should use first message
+        with mock.patch.object(
+            sc.__class__,
+            'finalize',
+            autospec=True,
+            side_effect=serializers.ValidationError(['Boom'])
+        ):
+            resp = self.forced_auth_req('patch', url, user=self.user, data={'status': Engagement.STATUSES.final})
+            self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST, resp.data)
+            self.assertIn('Unable to change status', resp.data['status'][0])
+            self.assertIn('Boom', resp.data['status'][0])
+
+        # Case 4: Generic exception should still be readable
+        with mock.patch.object(
+            sc.__class__,
+            'finalize',
+            autospec=True,
+            side_effect=Exception('Unexpected failure')
+        ):
+            resp = self.forced_auth_req('patch', url, user=self.user, data={'status': Engagement.STATUSES.final})
+            self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST, resp.data)
+            self.assertIn('Unable to change status', resp.data['status'][0])
+            self.assertIn('Unexpected failure', resp.data['status'][0])
+
+    def test_engagement_patch_display_status_backward_wipes_dates(self):
+        """PATCHing a display status backwards should wipe later milestone dates (no forward moves)."""
+        audit = AuditFactory(
+            status=Engagement.STATUSES.partner_contacted,
+            date_of_field_visit=date(2024, 1, 15),
+            date_of_draft_report_to_ip=date(2024, 1, 20),
+            date_of_comments_by_ip=date(2024, 1, 25),
+            date_of_draft_report_to_unicef=date(2024, 1, 30),
+            date_of_comments_by_unicef=date(2024, 2, 5),
+        )
+        url = reverse('rss_admin:rss-admin-engagements-detail', kwargs={'pk': audit.pk})
+
+        # Move backwards to draft_issued_to_partner: should clear later milestones
+        payload = {'status': Engagement.DISPLAY_STATUSES.draft_issued_to_partner}
+        resp = self.forced_auth_req('patch', url, user=self.user, data=payload)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
+        self.assertEqual(resp.data['status'], Engagement.DISPLAY_STATUSES.draft_issued_to_partner)
+
+        audit.refresh_from_db()
+        self.assertEqual(audit.status, Engagement.STATUSES.partner_contacted)
+        self.assertIsNotNone(audit.date_of_draft_report_to_ip)
+        self.assertIsNone(audit.date_of_comments_by_ip)
+        self.assertIsNone(audit.date_of_draft_report_to_unicef)
+        self.assertIsNone(audit.date_of_comments_by_unicef)
+        self.assertEqual(audit.displayed_status, Engagement.DISPLAY_STATUSES.draft_issued_to_partner)
+
+        # Move backwards to partner_contacted: should clear all later milestones
+        resp = self.forced_auth_req('patch', url, user=self.user, data={'status': Engagement.DISPLAY_STATUSES.partner_contacted})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
+        self.assertEqual(resp.data['status'], Engagement.DISPLAY_STATUSES.partner_contacted)
+        audit.refresh_from_db()
+        self.assertIsNone(audit.date_of_field_visit)
+        self.assertIsNone(audit.date_of_draft_report_to_ip)
+        self.assertIsNone(audit.date_of_comments_by_ip)
+        self.assertIsNone(audit.date_of_draft_report_to_unicef)
+        self.assertIsNone(audit.date_of_comments_by_unicef)
+        self.assertEqual(audit.displayed_status, Engagement.DISPLAY_STATUSES.partner_contacted)
+
+    def test_engagement_patch_display_status_forward_is_rejected(self):
+        audit = AuditFactory(status=Engagement.STATUSES.partner_contacted)
+        url = reverse('rss_admin:rss-admin-engagements-detail', kwargs={'pk': audit.pk})
+
+        # Forward move (partner_contacted -> field_visit) without dates must be rejected
+        resp = self.forced_auth_req('patch', url, user=self.user, data={'status': Engagement.DISPLAY_STATUSES.field_visit})
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST, resp.data)
+        self.assertIn('status', resp.data)
+        self.assertIn('Cannot move status forward', resp.data['status'][0])
+
+    def test_engagement_patch_display_status_missing_required_date_is_rejected(self):
+        """Backward move can still be invalid if the required milestone date for the target stage is missing."""
+        audit = AuditFactory(
+            status=Engagement.STATUSES.partner_contacted,
+            # Inconsistent but possible data: later milestone set while earlier one is missing
+            date_of_comments_by_unicef=date(2024, 2, 5),
+            date_of_draft_report_to_ip=None,
+        )
+        url = reverse('rss_admin:rss-admin-engagements-detail', kwargs={'pk': audit.pk})
+
+        resp = self.forced_auth_req('patch', url, user=self.user, data={'status': Engagement.DISPLAY_STATUSES.draft_issued_to_partner})
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST, resp.data)
+        self.assertIn('status', resp.data)
+        self.assertIn('required date', resp.data['status'][0])
+
+    def test_engagement_patch_display_status_persists_and_detail_matches(self):
+        """Successful display-status PATCH should persist and detail response should reflect it."""
+        audit = AuditFactory(
+            status=Engagement.STATUSES.partner_contacted,
+            date_of_field_visit=date(2024, 1, 15),
+            date_of_draft_report_to_ip=date(2024, 1, 20),
+            date_of_comments_by_ip=date(2024, 1, 25),
+            date_of_draft_report_to_unicef=date(2024, 1, 30),
+            date_of_comments_by_unicef=date(2024, 2, 5),
+        )
+        detail_url = reverse('rss_admin:rss-admin-engagements-detail', kwargs={'pk': audit.pk})
+
+        patch_resp = self.forced_auth_req(
+            'patch',
+            detail_url,
+            user=self.user,
+            data={'status': Engagement.DISPLAY_STATUSES.draft_issued_to_partner},
+        )
+        self.assertEqual(patch_resp.status_code, status.HTTP_200_OK, patch_resp.data)
+        self.assertEqual(patch_resp.data['status'], Engagement.DISPLAY_STATUSES.draft_issued_to_partner)
+
+        # Verify persisted state
+        audit.refresh_from_db()
+        self.assertEqual(audit.displayed_status, Engagement.DISPLAY_STATUSES.draft_issued_to_partner)
+
+        # Detail endpoint should return same displayed status
+        get_resp = self.forced_auth_req('get', detail_url, user=self.user)
+        self.assertEqual(get_resp.status_code, status.HTTP_200_OK, get_resp.data)
+        self.assertEqual(get_resp.data['status'], Engagement.DISPLAY_STATUSES.draft_issued_to_partner)
+
+    def test_engagement_list_and_detail_return_same_status_value(self):
+        """List and detail endpoints should expose the same displayed status value under `status`."""
+        audit = AuditFactory(
+            status=Engagement.STATUSES.partner_contacted,
+            date_of_field_visit=date(2024, 1, 15),
+            date_of_draft_report_to_ip=date(2024, 1, 20),
+            date_of_comments_by_ip=date(2024, 1, 25),
+        )
+        expected = audit.displayed_status
+
+        list_url = reverse('rss_admin:rss-admin-engagements-list')
+        list_resp = self.forced_auth_req('get', list_url, user=self.user, data={'search': audit.pk, 'page_size': 50})
+        self.assertEqual(list_resp.status_code, status.HTTP_200_OK, list_resp.data)
+        results = list_resp.data.get('results', list_resp.data)
+        row = next(r for r in results if r['id'] == audit.pk)
+
+        detail_url = reverse('rss_admin:rss-admin-engagements-detail', kwargs={'pk': audit.pk})
+        detail_resp = self.forced_auth_req('get', detail_url, user=self.user)
+        self.assertEqual(detail_resp.status_code, status.HTTP_200_OK, detail_resp.data)
+
+        self.assertEqual(row['status'], expected)
+        self.assertEqual(detail_resp.data['status'], expected)
+        self.assertEqual(row['status'], detail_resp.data['status'])
 
     def test_engagement_attachments_include_filename(self):
         """Test that engagement and report attachment endpoints include filename field"""

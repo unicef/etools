@@ -73,6 +73,7 @@ REQUIRED_SECONDARY_TYPE = 'required_secondary_type'
 PRIMARY_TYPE_ID_REQUIRED = 'primary_type_id_required'
 PRIMARY_TYPE_ID_INVALID = 'primary_type_id_invalid'
 PRIMARY_TYPE_NOT_FOUND = 'primary_type_not_found'
+L_CONSIGNEE_ALREADY_EXISTS = 'l_consignee_already_exists'
 
 LIST_INTERESTED_LASTMILE_PERMS = [
     USER_ADMIN_PANEL_PERMISSION,
