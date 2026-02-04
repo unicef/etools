@@ -20,6 +20,8 @@ from etools.applications.field_monitoring.fm_settings.models import Question
 from etools.applications.field_monitoring.fm_settings.serializers import LocationSiteSerializer, QuestionSerializer
 from etools.applications.field_monitoring.planning.activity_validation.permissions import ActivityPermissions
 from etools.applications.field_monitoring.planning.models import (
+    DummyEWPActivityModel,
+    DummyGPDModel,
     FacilityType,
     MonitoringActivity,
     MonitoringActivityActionPoint,
@@ -162,6 +164,8 @@ class MonitoringActivityLightSerializer(serializers.ModelSerializer):
     partners = SeparatedReadWriteField(read_field=MinimalPartnerOrganizationListSerializer(many=True))
     interventions = SeparatedReadWriteField(read_field=FMInterventionListSerializer(many=True))
     cp_outputs = SeparatedReadWriteField(read_field=MinimalOutputListSerializer(many=True))
+    ewp_activities = serializers.SerializerMethodField(read_only=True)
+    gpds = serializers.SerializerMethodField(read_only=True)
     sections = SeparatedReadWriteField(read_field=SectionSerializer(many=True), required=False)
 
     overlapping_entities = serializers.SerializerMethodField(read_only=True)
@@ -182,7 +186,7 @@ class MonitoringActivityLightSerializer(serializers.ModelSerializer):
             'monitor_type', 'remote_monitoring', 'tpm_partner',
             'visit_lead', 'team_members',
             'location', 'location_site',
-            'partners', 'interventions', 'cp_outputs',
+            'partners', 'interventions', 'cp_outputs', 'ewp_activities', 'gpds',
             'start_date', 'end_date',
             'checklists_count',
             'reject_reason', 'report_reject_reason', 'cancel_reason',
@@ -200,6 +204,14 @@ class MonitoringActivityLightSerializer(serializers.ModelSerializer):
         """
         facility_type_relations = obj.facility_type_relations.select_related('facility_type').all()
         return MonitoringActivityFacilityTypeSerializer(facility_type_relations, many=True).data
+
+    def get_ewp_activities(self, obj):
+        """Return eWP activity WBS codes as list of strings."""
+        return list(obj.ewp_activities.values_list('wbs', flat=True))
+
+    def get_gpds(self, obj):
+        """Return GPD refs as list of strings."""
+        return list(obj.gpds.values_list('gpd_ref', flat=True))
 
     def get_overlapping_entities(self, obj):
         request = self.context.get("request")
@@ -340,22 +352,68 @@ class MonitoringActivitySerializer(UserContextSerializerMixin, MonitoringActivit
                 facility_type_durations=facility_type_durations
             )
 
+    def _validate_string_list(self, value, field_name):
+        """Validate that value is a list of strings (or None)."""
+        if value is None:
+            return value
+        if not isinstance(value, list):
+            raise serializers.ValidationError({field_name: _('Must be a list.')})
+        for i, item in enumerate(value):
+            if not isinstance(item, str):
+                raise serializers.ValidationError({
+                    field_name: _('Item at index %(index)s must be a string.') % {'index': i}
+                })
+        return [s.strip() for s in value if s and str(s).strip()]
+
     def to_internal_value(self, data):
-        """Handle facility_types in the write format: [{"id": 9, "durations": [...]}]"""
-        # Make a copy to avoid mutating the original
+        """Handle facility_types, ewp_activities, gpds in write format."""
         data_copy = data.copy()
         facility_types = data_copy.pop('facility_types', None)
+        ewp_activities_raw = data_copy.pop('ewp_activities', None)
+        gpds_raw = data_copy.pop('gpds', None)
         validated_data = super().to_internal_value(data_copy)
         if facility_types is not None:
             validated_data['facility_types'] = facility_types
+        if ewp_activities_raw is not None:
+            validated_data['ewp_activities'] = self._validate_string_list(
+                ewp_activities_raw, 'ewp_activities'
+            )
+        if gpds_raw is not None:
+            validated_data['gpds'] = self._validate_string_list(gpds_raw, 'gpds')
         return validated_data
+
+    def _resolve_ewp_activities(self, wbs_list):
+        """Resolve list of WBS strings to DummyEWPActivityModel instances (get_or_create)."""
+        if not wbs_list:
+            return []
+        instances = []
+        for wbs in wbs_list:
+            obj, _ = DummyEWPActivityModel.objects.get_or_create(wbs=wbs)
+            instances.append(obj)
+        return instances
+
+    def _resolve_gpds(self, gpd_ref_list):
+        """Resolve list of gpd_ref strings to DummyGPDModel instances (get_or_create)."""
+        if not gpd_ref_list:
+            return []
+        instances = []
+        for gpd_ref in gpd_ref_list:
+            obj, _ = DummyGPDModel.objects.get_or_create(gpd_ref=gpd_ref)
+            instances.append(obj)
+        return instances
 
     def create(self, validated_data):
         facility_types_data = validated_data.pop('facility_types', None)
+        ewp_activities_data = validated_data.pop('ewp_activities', None)
+        gpds_data = validated_data.pop('gpds', None)
         instance = super().create(validated_data)
 
         if facility_types_data:
             self._update_facility_types(instance, facility_types_data)
+        if ewp_activities_data is not None:
+            instance.ewp_activities.set(self._resolve_ewp_activities(ewp_activities_data))
+        if gpds_data is not None:
+            instance.gpds.set(self._resolve_gpds(gpds_data))
 
         return instance
 
@@ -364,10 +422,16 @@ class MonitoringActivitySerializer(UserContextSerializerMixin, MonitoringActivit
         self._validate_team_members(instance, team_members)
 
         facility_types_data = validated_data.pop('facility_types', None)
+        ewp_activities_data = validated_data.pop('ewp_activities', None)
+        gpds_data = validated_data.pop('gpds', None)
         instance = super().update(instance, validated_data)
 
         if facility_types_data is not None:
             self._update_facility_types(instance, facility_types_data)
+        if ewp_activities_data is not None:
+            instance.ewp_activities.set(self._resolve_ewp_activities(ewp_activities_data))
+        if gpds_data is not None:
+            instance.gpds.set(self._resolve_gpds(gpds_data))
 
         return instance
 

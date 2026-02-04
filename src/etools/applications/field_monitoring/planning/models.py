@@ -79,11 +79,11 @@ class YearPlan(TimeStampedModel):
 
 class DummyEWPActivityModel(models.Model):
     # TODO validators=["add here a validator for the wbs no for activities"]
-    wbs = models.CharField(max_length=255)
+    wbs = models.CharField(max_length=255, unique=True)
 
 
 class DummyGPDModel(models.Model):
-    gpd_ref = models.CharField(max_length=25)
+    gpd_ref = models.CharField(max_length=25, unique=True )
 
 
 class QuestionTargetMixin(models.Model):
