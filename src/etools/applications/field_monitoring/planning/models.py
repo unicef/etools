@@ -754,8 +754,9 @@ class MonitoringActivity(
             answers_count=Count('findings', filter=Q(findings__value__isnull=False)),
         ).filter(answers_count=1).prefetch_related('findings')
         for question in valid_questions:
-            question.overall_finding.value = question.findings.all()[0].value
-            question.overall_finding.save()
+            if question.overall_finding.value is None:
+                question.overall_finding.value = question.findings.all()[0].value
+                question.overall_finding.save(update_fields=['value'])
 
         for overall_finding in self.overall_findings.all():
             narrative_findings = ChecklistOverallFinding.objects.filter(
@@ -766,8 +767,10 @@ class MonitoringActivity(
                 intervention=overall_finding.intervention,
             ).values_list('narrative_finding', flat=True)
             if len(narrative_findings) == 1:
-                overall_finding.narrative_finding = narrative_findings[0]
-                overall_finding.save()
+                # Same: do not overwrite existing narrative.
+                if not overall_finding.narrative_finding:
+                    overall_finding.narrative_finding = narrative_findings[0]
+                    overall_finding.save(update_fields=['narrative_finding'])
 
     def send_rejection_note(self, old_instance):
         if old_instance and old_instance.status == self.STATUSES.submitted:

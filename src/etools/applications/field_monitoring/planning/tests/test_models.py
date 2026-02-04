@@ -180,6 +180,90 @@ class TestMonitoringActivityValidations(BaseTenantTestCase):
         self.assertEqual(activity.completion_date, existing_date)
 
 
+class TestMonitoringActivityPortFindingsToSummary(BaseTenantTestCase):
+    def test_port_findings_to_summary_does_not_overwrite_existing_summary_values(self):
+        """
+        When moving an activity into report finalization, we prefill summary from checklist.
+        This must not overwrite existing user-edited summary values (e.g. "on-track" flipping back).
+        """
+        partner = PartnerFactory()
+        activity = MonitoringActivityFactory(partners=[partner])
+
+        # One enabled question + its summary overall finding already set (user edit).
+        question = QuestionFactory(level=Question.LEVELS.partner, is_active=True)
+        activity_question = ActivityQuestionFactory(
+            monitoring_activity=activity,
+            question=question,
+            partner=partner,
+            is_enabled=True,
+        )
+        aq_of = ActivityQuestionOverallFinding.objects.create(activity_question=activity_question, value='on-track')
+
+        # Checklist answer exists but must NOT override the existing summary.
+        checklist = StartedChecklistFactory(monitoring_activity=activity)
+        FindingFactory(started_checklist=checklist, activity_question=activity_question, value='constrained')
+
+        # Activity overall finding narrative already set (user edit); checklist has a single narrative too.
+        aof = ActivityOverallFinding.objects.create(
+            monitoring_activity=activity,
+            partner=partner,
+            narrative_finding='User narrative',
+            on_track=True,
+        )
+        ChecklistOverallFindingFactory(
+            started_checklist=checklist,
+            partner=partner,
+            narrative_finding='Checklist narrative',
+        )
+
+        # Run the prefill logic.
+        old_instance = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.data_collection)
+        activity.port_findings_to_summary(old_instance=old_instance)
+
+        # Assert summary stays intact.
+        aq_of.refresh_from_db()
+        self.assertEqual(aq_of.value, 'on-track')
+        aof.refresh_from_db()
+        self.assertEqual(aof.narrative_finding, 'User narrative')
+
+    def test_port_findings_to_summary_prefills_when_summary_is_empty(self):
+        """Sanity check: if summary is empty, it should be populated from checklist."""
+        partner = PartnerFactory()
+        activity = MonitoringActivityFactory(partners=[partner])
+
+        question = QuestionFactory(level=Question.LEVELS.partner, is_active=True)
+        activity_question = ActivityQuestionFactory(
+            monitoring_activity=activity,
+            question=question,
+            partner=partner,
+            is_enabled=True,
+        )
+        aq_of = ActivityQuestionOverallFinding.objects.create(activity_question=activity_question, value=None)
+
+        checklist = StartedChecklistFactory(monitoring_activity=activity)
+        FindingFactory(started_checklist=checklist, activity_question=activity_question, value='constrained')
+
+        aof = ActivityOverallFinding.objects.create(
+            monitoring_activity=activity,
+            partner=partner,
+            narrative_finding='',
+            on_track=None,
+        )
+        ChecklistOverallFindingFactory(
+            started_checklist=checklist,
+            partner=partner,
+            narrative_finding='Checklist narrative',
+        )
+
+        old_instance = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.data_collection)
+        activity.port_findings_to_summary(old_instance=old_instance)
+
+        aq_of.refresh_from_db()
+        self.assertEqual(aq_of.value, 'constrained')
+        aof.refresh_from_db()
+        self.assertEqual(aof.narrative_finding, 'Checklist narrative')
+
+
 class TestMonitoringActivityQuestionsFlow(BaseTenantTestCase):
     def setUp(self):
         super().setUp()

@@ -443,6 +443,20 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
         audit.refresh_from_db()
         self.assertEqual(audit.status, Engagement.STATUSES.partner_contacted)
 
+        # Also ensure invalid transitions to a DISPLAY_STATUS are human-labeled
+        audit.status = Engagement.STATUSES.report_submitted
+        audit.save(update_fields=['status'])
+        resp2 = self.forced_auth_req(
+            'patch',
+            url,
+            user=self.user,
+            data={'status': Engagement.DISPLAY_STATUSES.draft_issued_to_partner},
+        )
+        self.assertEqual(resp2.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('Invalid status transition', str(resp2.data))
+        self.assertIn('Report Submitted', str(resp2.data))
+        self.assertIn('Draft Report Issued to IP', str(resp2.data))
+
     def test_engagement_patch_status_with_other_fields(self):
         """Test that status change can be combined with other field updates"""
         audit = AuditFactory(
