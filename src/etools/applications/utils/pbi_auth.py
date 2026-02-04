@@ -51,7 +51,6 @@ def get_access_token():
         raise TokenRetrieveException('Error retrieving Access token\n' + str(ex))
 
 
-@cache_result(timeout=1800, key='lmsm_pbi_embed_url')
 def get_embed_url(pbi_headers, report_id=None):
     logger.debug('Embed url not found in cache, Getting Embed Url')
     workspace_id = pbi_config['WORKSPACE_ID']
@@ -78,7 +77,6 @@ def get_embed_url(pbi_headers, report_id=None):
     raise TokenRetrieveException('Connection error when retrieving Embed url\n')
 
 
-@cache_result(timeout=1800, key='lmsm_pbi_embed_token')
 def get_embed_token(dataset_id, pbi_headers, report_id=None):
     logger.debug('Token not found in cache, Getting Embed Token')
     workspace_id = pbi_config['WORKSPACE_ID']
