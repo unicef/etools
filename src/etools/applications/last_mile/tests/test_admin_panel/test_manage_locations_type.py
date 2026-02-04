@@ -134,11 +134,11 @@ class TestAllowedSecondaryTypesEndpoint(BaseTenantTestCase):
         cls.health_facility_type = PointOfInterestTypeFactory(name='Health Facility', category='health')
         cls.unmapped_type = PointOfInterestTypeFactory(name='Unmapped Type', category='other')
 
-        cls.main_warehouse = PointOfInterestTypeFactory(name='Main Warehouse', category='warehouse')
-        cls.district_warehouse = PointOfInterestTypeFactory(name='District Warehouse', category='warehouse')
-        cls.hospital = PointOfInterestTypeFactory(name='Hospital', category='health')
-        cls.otp = PointOfInterestTypeFactory(name='OTP', category='health')
-        cls.civil_hospital = PointOfInterestTypeFactory(name='Civil Hospital', category='health')
+        cls.main_warehouse = PointOfInterestTypeFactory(name='Main Warehouse', category='warehouse', type_role=PointOfInterestType.TypeRole.SECONDARY)
+        cls.district_warehouse = PointOfInterestTypeFactory(name='District Warehouse', category='warehouse', type_role=PointOfInterestType.TypeRole.SECONDARY)
+        cls.hospital = PointOfInterestTypeFactory(name='Hospital', category='health', type_role=PointOfInterestType.TypeRole.SECONDARY)
+        cls.otp = PointOfInterestTypeFactory(name='OTP', category='health', type_role=PointOfInterestType.TypeRole.SECONDARY)
+        cls.civil_hospital = PointOfInterestTypeFactory(name='Civil Hospital', category='health', type_role=PointOfInterestType.TypeRole.SECONDARY)
 
         PointOfInterestTypeMappingFactory(
             primary_type=cls.warehouse_type,
@@ -203,7 +203,7 @@ class TestAllowedSecondaryTypesEndpoint(BaseTenantTestCase):
             user=self.partner_staff
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertGreaterEqual(len(response.data), 7)  # At least all the types we created
+        self.assertGreaterEqual(len(response.data), 5)  # At least all the types we created that are primary type
 
     def test_get_allowed_secondary_types_missing_parameter(self):
         response = self.forced_auth_req(

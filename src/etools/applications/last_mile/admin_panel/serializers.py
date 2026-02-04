@@ -850,7 +850,7 @@ class TransferItemSerializer(serializers.ModelSerializer):
 
 
 class TransferItemDetailSerializer(serializers.Serializer):
-    item_name = serializers.CharField(required=True)
+    item_name = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     material = serializers.PrimaryKeyRelatedField(
         queryset=models.Material.objects.all(),
         required=True
@@ -1168,7 +1168,7 @@ class StockManagementImportSerializer(serializers.Serializer):
     material_number = serializers.CharField()
     quantity = serializers.IntegerField()
     uom = serializers.CharField()
-    expiration_date = serializers.DateTimeField()
+    expiration_date = serializers.DateTimeField(required=False, allow_null=True)
     batch_id = serializers.CharField(required=False, allow_null=True)
     p_code = serializers.CharField()
 
