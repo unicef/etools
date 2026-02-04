@@ -378,6 +378,7 @@ class InterventionAdmin(
                 'unicef_review_type',
                 'capacity_development',
                 'accountability_to_affected_populations',
+                'partner_selection_modality',
                 'other_info',
                 'other_partners_involved',
                 'technical_guidance',
