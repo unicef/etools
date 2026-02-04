@@ -3,6 +3,7 @@ from functools import cached_property
 from django.conf import settings
 from django.contrib.gis.db.models import PointField
 from django.core.cache import cache
+from django.core.exceptions import ValidationError
 from django.db import connection, models
 from django.db.models.signals import pre_save
 from django.utils import timezone
@@ -51,11 +52,33 @@ class BaseExportQuerySet(models.QuerySet):
 
 
 class PointOfInterestType(TimeStampedModel, models.Model):
+
+    class TypeRole(models.TextChoices):
+        PRIMARY = 'PRIMARY', _('Primary')
+        SECONDARY = 'SECONDARY', _('Secondary')
+
     name = models.CharField(verbose_name=_("Poi Type Name"), max_length=32)
     category = models.CharField(verbose_name=_("Poi Category"), max_length=32)
 
+    type_role = models.CharField(
+        verbose_name=_("Type Role"),
+        max_length=20,
+        choices=TypeRole.choices,
+        default=TypeRole.PRIMARY,
+        db_index=True,
+        help_text=_("The role/classification of this point of interest type")
+    )
+
     def __str__(self):
         return self.name
+
+    @property
+    def is_primary(self):
+        return self.type_role == self.TypeRole.PRIMARY
+
+    @property
+    def is_secondary(self):
+        return self.type_role == self.TypeRole.SECONDARY
 
     objects = BaseExportQuerySet.as_manager()
 
@@ -65,13 +88,15 @@ class PointOfInterestTypeMapping(TimeStampedModel, models.Model):
         PointOfInterestType,
         verbose_name=_("Primary Type"),
         related_name='allowed_secondary_types',
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        limit_choices_to={'type_role': PointOfInterestType.TypeRole.PRIMARY}
     )
     secondary_type = models.ForeignKey(
         PointOfInterestType,
         verbose_name=_("Secondary Type"),
         related_name='allowed_for_primary_types',
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        limit_choices_to={'type_role': PointOfInterestType.TypeRole.SECONDARY}
     )
 
     class Meta:
@@ -82,6 +107,21 @@ class PointOfInterestTypeMapping(TimeStampedModel, models.Model):
 
     def __str__(self):
         return f"{self.primary_type.name} → {self.secondary_type.name}"
+
+    def clean(self):
+        if self.primary_type and self.primary_type.type_role != PointOfInterestType.TypeRole.PRIMARY:
+            raise ValidationError({
+                'primary_type': _('Primary type must have type_role set to PRIMARY')
+            })
+
+        if self.secondary_type and self.secondary_type.type_role != PointOfInterestType.TypeRole.SECONDARY:
+            raise ValidationError({
+                'secondary_type': _('Secondary type must have type_role set to SECONDARY')
+            })
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
 
     @classmethod
     def get_allowed_secondary_types(cls, primary_type_id):
@@ -247,6 +287,14 @@ class PointOfInterest(TimeStampedModel, models.Model):
 
         return f"{start_p_code}{str(next_p_code).zfill(9)}"
 
+    def validate_l_consignee_code(self):
+        if self.l_consignee_code:
+            qs = PointOfInterest.all_objects.filter(l_consignee_code=self.l_consignee_code)
+            if self.pk:
+                qs = qs.exclude(pk=self.pk)
+            if qs.exists():
+                assert False, 'L-consignee code already exists'
+
     def save(self, **kwargs):
         if not self.p_code:
             self.p_code = self._autogenerate_pcode()
@@ -255,7 +303,7 @@ class PointOfInterest(TimeStampedModel, models.Model):
             assert self.parent_id, 'Unable to find location for {}'.format(self.point)
         elif self.tracker.has_changed('point') and self.pk:
             self.parent = self.get_parent_location(self.point)
-
+        self.validate_l_consignee_code()
         super().save(**kwargs)
 
     def approve(self, approver_user, notes=None):
