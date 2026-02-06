@@ -245,6 +245,36 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         self.assertNotEqual(response.data['cp_outputs'], [])
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_update_ewp_activities_and_gpds(self):
+        """PATCH with ewp_activities and gpds (arrays of strings) sets M2M and returns them in response."""
+        activity = MonitoringActivityFactory(monitor_type='staff')
+        data = {
+            'ewp_activities': ['WBS-2024-01', 'WBS-2024-02'],
+            'gpds': ['GPD-001', 'GPD-002'],
+        }
+        response = self._test_update(self.fm_user, activity, data=data, expected_status=status.HTTP_200_OK)
+        self.assertEqual(sorted(response.data['ewp_activities']), ['WBS-2024-01', 'WBS-2024-02'])
+        self.assertEqual(sorted(response.data['gpds']), ['GPD-001', 'GPD-002'])
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_update_ewp_activities_and_gpds_empty_clears(self):
+        """PATCH with empty ewp_activities and gpds clears the relations."""
+        from etools.applications.field_monitoring.planning.models import DummyEWPActivityModel, DummyGPDModel
+
+        ewp = DummyEWPActivityModel.objects.create(wbs='WBS-OLD')
+        gpd = DummyGPDModel.objects.create(gpd_ref='GPD-OLD')
+        activity = MonitoringActivityFactory(monitor_type='staff')
+        activity.ewp_activities.add(ewp)
+        activity.gpds.add(gpd)
+        data = {'ewp_activities': [], 'gpds': []}
+        response = self._test_update(self.fm_user, activity, data=data, expected_status=status.HTTP_200_OK)
+        self.assertEqual(response.data['ewp_activities'], [])
+        self.assertEqual(response.data['gpds'], [])
+        activity.refresh_from_db()
+        self.assertEqual(activity.ewp_activities.count(), 0)
+        self.assertEqual(activity.gpds.count(), 0)
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_update_draft_success(self):
         activity = MonitoringActivityFactory(monitor_type='tpm', tpm_partner=None)
 
