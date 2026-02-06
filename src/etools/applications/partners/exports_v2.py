@@ -121,7 +121,7 @@ class InterventionCSVRenderer(r.CSVRenderer):
     header = [
         "partner_name", "vendor_number", "status", "partner_type", "cso_type", "agreement_number", "country_programmes",
         "document_type", "number", "title", "start", "end", "offices", "sectors", "locations", "contingency_pd",
-        "intervention_clusters", "unicef_focal_points", "partner_focal_points", "budget_currency", "cso_contribution",
+        "humanitarian_spd", "intervention_clusters", "unicef_focal_points", "partner_focal_points", "budget_currency", "cso_contribution",
         "unicef_budget", "unicef_supply", "total_planned_budget", "fr_numbers", "fr_currency", "fr_posting_date",
         "fr_amount", "fr_actual_amount", "fr_outstanding_amt", "planned_visits", "submission_date",
         "submission_date_prc", "review_date_prc", "partner_authorized_officer_signatory", "signed_by_partner_date",
@@ -148,6 +148,7 @@ class InterventionCSVRenderer(r.CSVRenderer):
         "sectors": _("Sections"),
         "locations": _("Locations"),
         "contingency_pd": _("Contingency PD?"),
+        "humanitarian_spd": _("Humanitarian SPD"),
         "intervention_clusters": _("Cluster"),
         "unicef_focal_points": _("UNICEF Focal Points"),
         "partner_focal_points": _("CSO Authorized Officials"),
