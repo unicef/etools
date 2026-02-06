@@ -1,10 +1,8 @@
 from django.contrib import messages
 from django.contrib.gis import admin
 from django.core.exceptions import PermissionDenied
-from django.http import HttpResponseRedirect
 from django.template.response import TemplateResponse
-from django.urls import path, reverse
-from django.utils.translation import gettext_lazy as _
+from django.urls import path
 
 from admin_extra_urls.decorators import button
 from celery import chain
