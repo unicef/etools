@@ -287,14 +287,6 @@ class PointOfInterest(TimeStampedModel, models.Model):
 
         return f"{start_p_code}{str(next_p_code).zfill(9)}"
 
-    def validate_l_consignee_code(self):
-        if self.l_consignee_code:
-            qs = PointOfInterest.all_objects.filter(l_consignee_code=self.l_consignee_code)
-            if self.pk:
-                qs = qs.exclude(pk=self.pk)
-            if qs.exists():
-                assert False, 'L-consignee code already exists'
-
     def save(self, **kwargs):
         if not self.p_code:
             self.p_code = self._autogenerate_pcode()
@@ -303,7 +295,6 @@ class PointOfInterest(TimeStampedModel, models.Model):
             assert self.parent_id, 'Unable to find location for {}'.format(self.point)
         elif self.tracker.has_changed('point') and self.pk:
             self.parent = self.get_parent_location(self.point)
-        self.validate_l_consignee_code()
         super().save(**kwargs)
 
     def approve(self, approver_user, notes=None):
@@ -381,7 +372,10 @@ class TransferQuerySet(models.QuerySet):
 class TransferManager(models.Manager.from_queryset(TransferQuerySet)):
 
     def get_queryset(self):
-        return super().get_queryset().exclude(models.Q(approval_status=Transfer.ApprovalStatus.PENDING) | models.Q(approval_status=Transfer.ApprovalStatus.REJECTED))
+        return super().get_queryset().exclude(
+            models.Q(approval_status=Transfer.ApprovalStatus.PENDING) |
+            models.Q(approval_status=Transfer.ApprovalStatus.REJECTED)
+        ).exclude(is_hidden=True)
 
 
 class Transfer(TimeStampedModel, models.Model):
@@ -505,6 +499,7 @@ class Transfer(TimeStampedModel, models.Model):
         null=True
     )
     is_shipment = models.BooleanField(default=False)
+    is_hidden = models.BooleanField(default=False)
 
     transfer_history = models.ForeignKey(
         TransferHistory,
@@ -572,6 +567,11 @@ class Transfer(TimeStampedModel, models.Model):
 
     def __str__(self):
         return f'{self.id} {self.partner_organization.name}: {self.name if self.name else self.unicef_release_order}'
+
+    def hide_if_no_visible_items(self):
+        if not self.items.filter(hidden=False).exists():
+            self.is_hidden = True
+            self.save(update_fields=['is_hidden'])
 
     def set_checkout_status(self):
         if self.transfer_type in [self.WASTAGE, self.DISPENSE]:

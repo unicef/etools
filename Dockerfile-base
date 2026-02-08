@@ -34,7 +34,6 @@ RUN apk add --no-cache --virtual .build-deps --update \
 RUN pip install --no-cache-dir --upgrade \
     pip
 
-
 WORKDIR /etools/
 RUN pip install pdm
 ADD .pdm-python .
