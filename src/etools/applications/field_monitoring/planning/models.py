@@ -78,12 +78,11 @@ class YearPlan(TimeStampedModel):
 
 
 class DummyEWPActivityModel(models.Model):
-    # TODO validators=["add here a validator for the wbs no for activities"]
     wbs = models.CharField(max_length=255, unique=True)
 
 
 class DummyGPDModel(models.Model):
-    gpd_ref = models.CharField(max_length=25, unique=True )
+    gpd_ref = models.CharField(max_length=25, unique=True)
 
 
 class QuestionTargetMixin(models.Model):
@@ -93,10 +92,9 @@ class QuestionTargetMixin(models.Model):
                                   on_delete=models.CASCADE, related_name='+')
     intervention = models.ForeignKey(Intervention, blank=True, null=True, verbose_name=_('Intervention'),
                                      on_delete=models.CASCADE, related_name='+')
-    # GPD placeholders
     ewp_activity = models.ForeignKey(DummyEWPActivityModel, null=True, blank=True, verbose_name=_('eWP Activity'),
                                      on_delete=models.PROTECT, related_name='+')
-    gpd = models.ForeignKey(DummyEWPActivityModel, null=True, blank=True, verbose_name=_('GPD'),
+    gpd = models.ForeignKey(DummyGPDModel, null=True, blank=True, verbose_name=_('GPD'),
                             on_delete=models.PROTECT, related_name='+')
 
     @property
@@ -301,12 +299,13 @@ class MonitoringActivity(
 
     AUTO_TRANSITIONS = {}
 
+    # Format: (m2m_field_name, question_level, target_field_name)
     RELATIONS_MAPPING = (
-        ('partners', 'partner'),
-        ('cp_outputs', 'output'),
-        ('interventions', 'intervention'),
-        ('ewp_activities', 'ewp_activity'),
-        ('gpds', 'gpd'),
+        ('partners', 'partner', 'partner'),
+        ('cp_outputs', 'output', 'cp_output'),
+        ('interventions', 'intervention', 'intervention'),
+        ('ewp_activities', 'ewp_activity', 'ewp_activity'),
+        ('gpds', 'intervention', 'gpd'),  # gPDs use intervention level but gpd field
     )
 
     number = models.CharField(
@@ -509,7 +508,7 @@ class MonitoringActivity(
 
         questions = []
 
-        for relation, level in self.RELATIONS_MAPPING:
+        for relation, level, target_field in self.RELATIONS_MAPPING:
             for target in getattr(self, relation).all():
                 target_questions = applicable_questions.filter(level=level).prefetch_templates(
                     level, target_id=target.id
@@ -524,7 +523,7 @@ class MonitoringActivity(
                     if target_question.template:
                         activity_question.specific_details = target_question.template.specific_details
 
-                    setattr(activity_question, Question.get_target_relation_name(level), target)
+                    setattr(activity_question, target_field, target)
 
                     questions.append(activity_question)
 
@@ -538,14 +537,14 @@ class MonitoringActivity(
             from etools.applications.field_monitoring.data_collection.models import ActivityOverallFinding
 
             findings = []
-            for relation, level in self.RELATIONS_MAPPING:
+            for relation, level, target_field in self.RELATIONS_MAPPING:
                 for target in getattr(self, relation).all():
-                    if not self.questions.filter(**{Question.get_target_relation_name(level): target}).exists():
+                    if not self.questions.filter(**{target_field: target}).exists():
                         continue
 
                     finding = ActivityOverallFinding(monitoring_activity=self)
 
-                    setattr(finding, Question.get_target_relation_name(level), target)
+                    setattr(finding, target_field, target)
 
                     findings.append(finding)
 

@@ -352,18 +352,33 @@ class MonitoringActivitySerializer(UserContextSerializerMixin, MonitoringActivit
                 facility_type_durations=facility_type_durations
             )
 
-    def _validate_string_list(self, value, field_name):
-        """Validate that value is a list of strings (or None)."""
+    def _validate_string_list(self, value, field_name, max_length=None):
+        """
+        Validate and normalize a list of strings.
+        Returns list of stripped, non-empty strings.
+        """
         if value is None:
             return value
         if not isinstance(value, list):
             raise serializers.ValidationError({field_name: _('Must be a list.')})
+        
+        result = []
         for i, item in enumerate(value):
             if not isinstance(item, str):
                 raise serializers.ValidationError({
                     field_name: _('Item at index %(index)s must be a string.') % {'index': i}
                 })
-        return [s.strip() for s in value if s and str(s).strip()]
+            stripped = item.strip()
+            if not stripped:
+                continue  # Skip empty strings
+            if max_length and len(stripped) > max_length:
+                raise serializers.ValidationError({
+                    field_name: _('Item "%(item)s" exceeds maximum length of %(max)s characters.') % {
+                        'item': stripped[:50], 'max': max_length
+                    }
+                })
+            result.append(stripped)
+        return result
 
     def to_internal_value(self, data):
         """Handle facility_types, ewp_activities, gpds in write format."""
@@ -376,14 +391,17 @@ class MonitoringActivitySerializer(UserContextSerializerMixin, MonitoringActivit
             validated_data['facility_types'] = facility_types
         if ewp_activities_raw is not None:
             validated_data['ewp_activities'] = self._validate_string_list(
-                ewp_activities_raw, 'ewp_activities'
+                ewp_activities_raw, 'ewp_activities', max_length=255
             )
         if gpds_raw is not None:
-            validated_data['gpds'] = self._validate_string_list(gpds_raw, 'gpds')
+            validated_data['gpds'] = self._validate_string_list(gpds_raw, 'gpds', max_length=25)
         return validated_data
 
     def _resolve_ewp_activities(self, wbs_list):
-        """Resolve list of WBS strings to DummyEWPActivityModel instances (get_or_create)."""
+        """
+        Resolve list of WBS strings to DummyEWPActivityModel instances.
+        Assumes wbs_list is already validated (stripped, non-empty, length-checked).
+        """
         if not wbs_list:
             return []
         instances = []
@@ -393,7 +411,10 @@ class MonitoringActivitySerializer(UserContextSerializerMixin, MonitoringActivit
         return instances
 
     def _resolve_gpds(self, gpd_ref_list):
-        """Resolve list of gpd_ref strings to DummyGPDModel instances (get_or_create)."""
+        """
+        Resolve list of gpd_ref strings to DummyGPDModel instances.
+        Assumes gpd_ref_list is already validated (stripped, non-empty, length-checked).
+        """
         if not gpd_ref_list:
             return []
         instances = []

@@ -96,6 +96,7 @@ class Question(models.Model):
         ('partner', _('Partner')),
         ('output', _('Output')),
         ('intervention', _('PD/SPD')),
+        ('ewp_activity', _('Key Intervention')),
     )
 
     answer_type = models.CharField(max_length=15, choices=ANSWER_TYPES, verbose_name=_('Answer Type'))
@@ -126,6 +127,7 @@ class Question(models.Model):
             cls.LEVELS.partner: 'partner',
             cls.LEVELS.output: 'cp_output',
             cls.LEVELS.intervention: 'intervention',
+            cls.LEVELS.ewp_activity: 'ewp_activity',
         }[level]
 
     @property
