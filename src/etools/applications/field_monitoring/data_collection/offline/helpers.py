@@ -14,7 +14,7 @@ from etools.applications.field_monitoring.data_collection.models import (
     StartedChecklist,
 )
 from etools.applications.field_monitoring.data_collection.offline.blueprint import get_blueprint_for_activity_and_method
-from etools.applications.field_monitoring.fm_settings.models import Method, Question
+from etools.applications.field_monitoring.fm_settings.models import Method
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
 from etools.applications.offline.errors import BadValueError
 from etools.applications.users.models import User

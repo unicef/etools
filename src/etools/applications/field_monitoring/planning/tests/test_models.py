@@ -269,11 +269,11 @@ class TestMonitoringActivityQuestionsFlow(BaseTenantTestCase):
 
 class TestNewEntityTypes(BaseTenantTestCase):
     """Test ewp_activities and gpds functionality."""
-    
+
     def setUp(self):
         super().setUp()
         self.section = SectionFactory()
-        
+
         # Create questions for different levels
         self.ewp_question = QuestionFactory(
             level=Question.LEVELS.ewp_activity,
@@ -283,52 +283,52 @@ class TestNewEntityTypes(BaseTenantTestCase):
             level=Question.LEVELS.intervention,
             sections=[self.section]
         )
-    
+
     def test_ewp_activity_questions_generated(self):
         """Test that questions are generated for ewp_activities."""
         from etools.applications.field_monitoring.planning.models import DummyEWPActivityModel
-        
+
         ewp_activity = DummyEWPActivityModel.objects.create(wbs='ACT-001-2024')
-        
+
         activity = MonitoringActivityFactory(
             status=MonitoringActivity.STATUSES.draft
         )
         activity.sections.set([self.section])
         activity.ewp_activities.set([ewp_activity])
-        
+
         activity.prepare_questions_structure()
-        
+
         # Should create activity questions for ewp_activity level
         ewp_questions = activity.questions.filter(ewp_activity=ewp_activity)
         self.assertEqual(ewp_questions.count(), 1)
         self.assertEqual(ewp_questions.first().question, self.ewp_question)
-    
+
     def test_gpd_questions_use_intervention_level(self):
         """Test that gPDs use intervention-level questions."""
         from etools.applications.field_monitoring.planning.models import DummyGPDModel
-        
+
         gpd = DummyGPDModel.objects.create(gpd_ref='GPD-2024-001')
-        
+
         activity = MonitoringActivityFactory(
             status=MonitoringActivity.STATUSES.draft
         )
         activity.sections.set([self.section])
         activity.gpds.set([gpd])
-        
+
         activity.prepare_questions_structure()
-        
+
         # Should create activity questions using intervention level
         gpd_questions = activity.questions.filter(gpd=gpd)
         self.assertEqual(gpd_questions.count(), 1)
         self.assertEqual(gpd_questions.first().question, self.intervention_question)
-    
+
     def test_gpds_and_interventions_share_question_level(self):
         """Test that both interventions and gPDs use the same question pool."""
         from etools.applications.field_monitoring.planning.models import DummyGPDModel
-        
+
         intervention = InterventionFactory()
         gpd = DummyGPDModel.objects.create(gpd_ref='GPD-2024-002')
-        
+
         activity = MonitoringActivityFactory(
             status=MonitoringActivity.STATUSES.draft
         )
@@ -336,112 +336,112 @@ class TestNewEntityTypes(BaseTenantTestCase):
         activity.interventions.set([intervention])
         activity.gpds.set([gpd])
         activity.partners.set([intervention.agreement.partner])
-        
+
         activity.prepare_questions_structure()
-        
+
         # Both should get questions from intervention level
         intervention_q = activity.questions.filter(intervention=intervention)
         gpd_q = activity.questions.filter(gpd=gpd)
-        
+
         self.assertEqual(intervention_q.count(), 1)
         self.assertEqual(gpd_q.count(), 1)
         self.assertEqual(
             intervention_q.first().question,
             gpd_q.first().question
         )
-    
+
     def test_overall_findings_created_for_new_entities(self):
         """Test that overall findings are created for ewp_activities and gpds."""
         from etools.applications.field_monitoring.planning.models import DummyEWPActivityModel, DummyGPDModel
-        
+
         ewp_activity = DummyEWPActivityModel.objects.create(wbs='ACT-002-2024')
         gpd = DummyGPDModel.objects.create(gpd_ref='GPD-2024-003')
-        
+
         activity = MonitoringActivityFactory(
             status=MonitoringActivity.STATUSES.draft
         )
         activity.sections.set([self.section])
         activity.ewp_activities.set([ewp_activity])
         activity.gpds.set([gpd])
-        
+
         activity.prepare_questions_structure()
         activity.prepare_activity_overall_findings()
-        
+
         # Check overall findings were created
         ewp_finding = activity.overall_findings.filter(ewp_activity=ewp_activity)
         gpd_finding = activity.overall_findings.filter(gpd=gpd)
-        
+
         self.assertEqual(ewp_finding.count(), 1)
         self.assertEqual(gpd_finding.count(), 1)
 
 
 class TestEntityValidation(BaseTenantTestCase):
     """Test validation for ewp_activities and gpds."""
-    
+
     def test_wbs_length_validation(self):
         """Test that WBS numbers exceeding 255 characters are rejected."""
         serializer = MonitoringActivitySerializer()
-        
+
         # Test too long WBS
         long_wbs = 'A' * 256
         with self.assertRaises(Exception) as context:
             serializer._validate_string_list([long_wbs], 'ewp_activities', max_length=255)
         self.assertIn('exceeds maximum length', str(context.exception))
-    
+
     def test_gpd_length_validation(self):
         """Test that GPD references exceeding 25 characters are rejected."""
         serializer = MonitoringActivitySerializer()
-        
+
         # Test too long GPD ref
         long_gpd = 'G' * 26
         with self.assertRaises(Exception) as context:
             serializer._validate_string_list([long_gpd], 'gpds', max_length=25)
         self.assertIn('exceeds maximum length', str(context.exception))
-    
+
     def test_empty_strings_filtered_out(self):
         """Test that empty/whitespace strings are filtered out."""
         serializer = MonitoringActivitySerializer()
-        
+
         result = serializer._validate_string_list(
             ['  ', 'ACT-001', '', '  \n  ', 'ACT-002'],
             'ewp_activities',
             max_length=255
         )
-        
+
         # Only non-empty items should remain
         self.assertEqual(result, ['ACT-001', 'ACT-002'])
-    
+
     def test_whitespace_stripped(self):
         """Test that leading/trailing whitespace is stripped."""
         serializer = MonitoringActivitySerializer()
-        
+
         result = serializer._validate_string_list(
             ['  ACT-001  ', '\nGPD-123\t'],
             'ewp_activities',
             max_length=255
         )
-        
+
         self.assertEqual(result, ['ACT-001', 'GPD-123'])
-    
+
     def test_wbs_uniqueness(self):
         """Test that duplicate WBS numbers cannot be created."""
         DummyEWPActivityModel.objects.create(wbs='ACT-001')
-        
+
         # Should reuse existing instead of creating duplicate
         obj1, created1 = DummyEWPActivityModel.objects.get_or_create(wbs='ACT-001')
         self.assertFalse(created1)
-        
+
         # Total count should be 1
         self.assertEqual(DummyEWPActivityModel.objects.filter(wbs='ACT-001').count(), 1)
-    
+
     def test_gpd_uniqueness(self):
         """Test that duplicate GPD refs cannot be created."""
         DummyGPDModel.objects.create(gpd_ref='GPD-001')
-        
+
         # Should reuse existing instead of creating duplicate
         obj1, created1 = DummyGPDModel.objects.get_or_create(gpd_ref='GPD-001')
         self.assertFalse(created1)
-        
+
         # Total count should be 1
         self.assertEqual(DummyGPDModel.objects.filter(gpd_ref='GPD-001').count(), 1)
 

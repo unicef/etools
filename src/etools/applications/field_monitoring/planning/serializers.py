@@ -361,7 +361,7 @@ class MonitoringActivitySerializer(UserContextSerializerMixin, MonitoringActivit
             return value
         if not isinstance(value, list):
             raise serializers.ValidationError({field_name: _('Must be a list.')})
-        
+
         result = []
         for i, item in enumerate(value):
             if not isinstance(item, str):
