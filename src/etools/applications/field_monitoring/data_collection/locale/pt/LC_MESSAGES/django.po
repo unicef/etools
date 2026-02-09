@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-09-04 09:09+0000\n"
+"POT-Creation-Date: 2026-02-09 12:44+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -102,17 +102,15 @@ msgstr "Observações Gerais"
 msgid "Please enter general observations here"
 msgstr "Insira observações gerais aqui"
 
-#, python-format
-msgid "Unable to find %(level)s with id %(target_id)s"
+#, fuzzy, python-format
+#| msgid "Unable to find %(level)s with id %(target_id)s"
+msgid "Unable to find %(field)s with id %(target_id)s"
 msgstr "Não foi possível encontrar %(level)s com id %(target_id)s"
 
-#, python-format
-msgid ""
-"Unable to find finding for question %(question_id)s for %(level)s "
-"%(target_id)s"
-msgstr ""
-"Não foi possível encontrar a resposta para a pergunta %(question_id)s para "
-"%(level)s %(target_id)s"
+#, fuzzy, python-format
+#| msgid "Unable to find finding for question %(question_id)s for %(level)s %(target_id)s"
+msgid "Unable to find finding for question %(question_id)s for %(field)s %(target_id)s"
+msgstr "Não foi possível encontrar a resposta para a pergunta %(question_id)s para %(level)s %(target_id)s"
 
 msgid "Ensure this field has no more than 100 characters."
 msgstr "Certifique-se de que este campo não tenha mais de 100 caracteres."
@@ -125,9 +123,7 @@ msgstr "A fonte da informação é obrigatória"
 
 #, python-format
 msgid "Workspace code provided is not a valid business_area_code: %s"
-msgstr ""
-"O código do espaço de trabalho fornecido não é um business_area_code válido: "
-"%s"
+msgstr "O código do espaço de trabalho fornecido não é um business_area_code válido: %s"
 
 msgid "Workspace is required"
 msgstr "O espaço de trabalho é obrigatório"

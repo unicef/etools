@@ -317,6 +317,13 @@ msgstr "История"
 msgid "Team members removal not allowed"
 msgstr ""
 
+msgid "Must be a list."
+msgstr "Должен быть список."
+
+#, python-format
+msgid "Item at index %(index)s must be a string."
+msgstr "Элемент с индексом %(index)s должен быть строкой."
+
 msgid "Document Type"
 msgstr "Тип документа"
 
