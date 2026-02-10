@@ -139,6 +139,7 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
             "Sections",
             "Locations",
             "Contingency PD",
+            "Humanitarian SPD",
             "Cluster",
             "UNICEF Focal Points",
             "CSO Authorized Officials",
@@ -195,6 +196,7 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
             '',
             '',
             str("Yes" if self.intervention.contingency_pd else "No"),
+            str("Yes" if self.intervention.humanitarian_flag else "No"),
             '',
             '',
             '',
@@ -256,8 +258,8 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertEqual(len(dataset._get_headers()), 102)
-        self.assertEqual(len(dataset[0]), 102)
+        self.assertEqual(len(dataset._get_headers()), 103)
+        self.assertEqual(len(dataset[0]), 103)
 
 
 class TestInterventionAmendmentModelExport(BaseInterventionModelExportTestCase):
