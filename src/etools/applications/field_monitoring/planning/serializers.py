@@ -208,11 +208,11 @@ class MonitoringActivityLightSerializer(serializers.ModelSerializer):
 
     def get_ewp_activities(self, obj):
         """Return eWP activity WBS codes as list of strings."""
-        return list(obj.ewp_activities.values_list('wbs', flat=True))
+        return [item.wbs for item in obj.ewp_activities.all()]
 
     def get_gpds(self, obj):
         """Return GPD refs as list of strings."""
-        return list(obj.gpds.values_list('gpd_ref', flat=True))
+        return [item.gpd_ref for item in obj.gpds.all()]
 
     def get_overlapping_entities(self, obj):
         request = self.context.get("request")

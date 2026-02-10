@@ -182,8 +182,9 @@ class MonitoringActivitiesViewSet(
                 'facility_type_relations',
                 queryset=MonitoringActivityFacilityType.objects.select_related('facility_type'),
             ),
-            'team_members', 'partners', 'partners__organization',
-            'report_reviewers', 'interventions', 'cp_outputs',
+            'team_members',
+            Prefetch('partners', queryset=PartnerOrganization.objects.select_related('organization')),
+            'interventions', 'cp_outputs',
             'sections', 'visit_goals',
             'ewp_activities', 'gpds',
         )\
@@ -341,10 +342,14 @@ class MonitoringActivitiesViewSet(
 
     @action(detail=False, methods=['get'], url_path='export', renderer_classes=(MonitoringActivityCSVRenderer,))
     def export(self, request, *args, **kwargs):
-        activities = self.filter_queryset(self.get_queryset()).prefetch_related(
-            'sections',
-            'offices',
-        )
+        activities = self.filter_queryset(self.get_queryset())\
+            .prefetch_related(None)\
+            .prefetch_related(
+                'team_members',
+                Prefetch('partners', queryset=PartnerOrganization.objects.select_related('organization')),
+                'interventions', 'cp_outputs',
+                'sections', 'offices',
+            )
 
         serializer = MonitoringActivityExportSerializer(activities, many=True)
         return Response(serializer.data, headers={

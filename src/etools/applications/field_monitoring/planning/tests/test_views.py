@@ -130,7 +130,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             MonitoringActivityFactory(monitor_type='staff'),
         ]
 
-        with self.assertNumQueries(18):
+        with self.assertNumQueries(11):
             self._test_list(self.unicef_user, activities, data={'page': 1, 'page_size': 10})
 
     def test_list_as_tpm_user(self):
@@ -145,7 +145,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             MonitoringActivityFactory(
                 monitor_type='staff', status='assigned')
         ]
-        with self.assertNumQueries(16):
+        with self.assertNumQueries(11):
             self._test_list(tpm_staff, [activities[0], activities[1]], data={'page': 1, 'page_size': 10})
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
@@ -1030,7 +1030,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             for _ in range(20)
         ]
 
-        with self.assertNumQueries(20):
+        with self.assertNumQueries(15):
             response = self.make_request_to_viewset(self.unicef_user, action='export', method='get', data={'page': 1, 'page_size': 100})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('Content-Disposition', response.headers)
