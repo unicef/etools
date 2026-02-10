@@ -492,6 +492,7 @@ class TransferCheckinSerializer(TransferBaseSerializer):
                 short_transfer.save()
                 short_transfer.refresh_from_db()
                 self.checkin_newtransfer_items(orig_items_dict, short_items, short_transfer)
+                short_transfer.hide_if_no_visible_items()
                 notify_wastage_transfer.delay(connection.schema_name, TransferNotificationSerializer(short_transfer).data, attachment_url, action='short_checkin')
 
             if surplus_items:
@@ -508,10 +509,12 @@ class TransferCheckinSerializer(TransferBaseSerializer):
                 surplus_transfer.save()
                 surplus_transfer.refresh_from_db()
                 self.checkin_newtransfer_items(orig_items_dict, surplus_items, surplus_transfer)
+                surplus_transfer.hide_if_no_visible_items()
                 notify_wastage_transfer.delay(connection.schema_name, TransferNotificationSerializer(surplus_transfer).data, attachment_url, action='surplus_checkin')
 
             instance = super().update(instance, validated_data)
             instance.items.exclude(material__partner_material__partner_organization=instance.partner_organization).update(hidden=True)
+            instance.hide_if_no_visible_items()
             excluded_item_ids = [item['id'] for item in short_items + surplus_items]
             items_to_update = instance.items.exclude(id__in=excluded_item_ids)
             self.update_base_quantity_and_base_uom(items_to_update)
