@@ -611,9 +611,10 @@ class TPMConcernSerializer(UserContextSerializerMixin, SnapshotModelSerializer, 
 
 class DuplicateMonitoringActivitySerializer(serializers.Serializer):
     with_checklist = serializers.BooleanField(required=True)
-    
+
+
 class FMPartnerOrganizationListSerializer(MinimalPartnerOrganizationListSerializer):
     organization_type = serializers.CharField(source='organization.organization_type', read_only=True)
-    
+
     class Meta(MinimalPartnerOrganizationListSerializer.Meta):
         fields = MinimalPartnerOrganizationListSerializer.Meta.fields + ('organization_type',)

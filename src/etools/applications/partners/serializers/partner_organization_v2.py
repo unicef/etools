@@ -163,14 +163,14 @@ class PartnerOrgPSEADetailsSerializer(serializers.ModelSerializer):
 
 
 class MinimalPartnerOrganizationListSerializer(serializers.ModelSerializer):
-    
+
     class Meta:
         model = PartnerOrganization
         fields = (
             "id",
             "name",
         )
-    
+
 
 class PartnerOrganizationMonitoringListSerializer(serializers.ModelSerializer):
     prog_visit_mr = serializers.CharField(source='min_req_programme_visits')
