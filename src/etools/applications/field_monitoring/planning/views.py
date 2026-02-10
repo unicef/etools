@@ -56,6 +56,7 @@ from etools.applications.field_monitoring.planning.models import (
     FacilityType,
     MonitoringActivity,
     MonitoringActivityActionPoint,
+    MonitoringActivityFacilityType,
     TPMConcern,
     VisitGoal,
     YearPlan,
@@ -63,6 +64,7 @@ from etools.applications.field_monitoring.planning.models import (
 from etools.applications.field_monitoring.planning.serializers import (
     CPOutputListSerializer,
     DuplicateMonitoringActivitySerializer,
+    FMPartnerOrganizationListSerializer,
     FacilityTypeSerializer,
     FMUserSerializer,
     InterventionWithLinkedInstancesSerializer,
@@ -76,7 +78,6 @@ from etools.applications.field_monitoring.planning.serializers import (
 )
 from etools.applications.field_monitoring.views import FMBaseViewSet, LinkedAttachmentsViewSet
 from etools.applications.partners.models import Intervention, PartnerOrganization
-from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.reports.models import Result, ResultType
 from etools.applications.tpm.models import ThirdPartyMonitor
 from etools.applications.users.models import Realm
@@ -176,9 +177,16 @@ class MonitoringActivitiesViewSet(
         .annotate(checklists_count=Count('checklists'))\
         .select_related('tpm_partner', 'tpm_partner__organization',
                         'visit_lead', 'location', 'location_site')\
-        .prefetch_related('team_members', 'partners', 'partners__organization',
-                          'report_reviewers', 'interventions', 'cp_outputs',
-                          'sections', 'visit_goals', 'facility_types')\
+        .prefetch_related(
+            Prefetch(
+                'facility_type_relations',
+                queryset=MonitoringActivityFacilityType.objects.select_related('facility_type'),
+            ),
+            'team_members', 'partners', 'partners__organization',
+            'report_reviewers', 'interventions', 'cp_outputs',
+            'sections', 'visit_goals',
+            'ewp_activities', 'gpds',
+        )\
         .order_by("-id")
     serializer_class = MonitoringActivitySerializer
     serializer_action_classes = {
@@ -431,7 +439,7 @@ class PartnersViewSet(
     viewsets.GenericViewSet,
 ):
     queryset = PartnerOrganization.objects.filter(deleted_flag=False).exclude(name='').order_by('name')
-    serializer_class = MinimalPartnerOrganizationListSerializer
+    serializer_class = FMPartnerOrganizationListSerializer
 
 
 class ActivityAttachmentsViewSet(LinkedAttachmentsViewSet):

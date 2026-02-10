@@ -201,8 +201,9 @@ class MonitoringActivityLightSerializer(serializers.ModelSerializer):
     def get_facility_types(self, obj):
         """
         Return facility types with their durations from the through model.
+        Uses prefetched facility_type_relations from the view queryset.
         """
-        facility_type_relations = obj.facility_type_relations.select_related('facility_type').all()
+        facility_type_relations = obj.facility_type_relations.all()
         return MonitoringActivityFacilityTypeSerializer(facility_type_relations, many=True).data
 
     def get_ewp_activities(self, obj):
@@ -610,3 +611,9 @@ class TPMConcernSerializer(UserContextSerializerMixin, SnapshotModelSerializer, 
 
 class DuplicateMonitoringActivitySerializer(serializers.Serializer):
     with_checklist = serializers.BooleanField(required=True)
+    
+class FMPartnerOrganizationListSerializer(MinimalPartnerOrganizationListSerializer):
+    organization_type = serializers.CharField(source='organization.organization_type', read_only=True)
+    
+    class Meta(MinimalPartnerOrganizationListSerializer.Meta):
+        fields = MinimalPartnerOrganizationListSerializer.Meta.fields + ('organization_type',)

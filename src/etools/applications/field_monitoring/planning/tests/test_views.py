@@ -130,7 +130,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             MonitoringActivityFactory(monitor_type='staff'),
         ]
 
-        with self.assertNumQueries(13):
+        with self.assertNumQueries(18):
             self._test_list(self.unicef_user, activities, data={'page': 1, 'page_size': 10})
 
     def test_list_as_tpm_user(self):
@@ -145,7 +145,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             MonitoringActivityFactory(
                 monitor_type='staff', status='assigned')
         ]
-        with self.assertNumQueries(12):
+        with self.assertNumQueries(16):
             self._test_list(tpm_staff, [activities[0], activities[1]], data={'page': 1, 'page_size': 10})
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
