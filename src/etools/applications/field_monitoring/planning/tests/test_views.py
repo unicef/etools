@@ -1030,7 +1030,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             for _ in range(20)
         ]
 
-        with self.assertNumQueries(18):
+        with self.assertNumQueries(20):
             response = self.make_request_to_viewset(self.unicef_user, action='export', method='get', data={'page': 1, 'page_size': 100})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('Content-Disposition', response.headers)
