@@ -239,8 +239,7 @@ class TransferAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
     inlines = (ProofTransferAttachmentInline, ItemInline)
 
     def get_queryset(self, request):
-        qs = super(TransferAdmin, self).get_queryset(request)
-        qs = qs.select_related(
+        qs = models.Transfer.all_objects.select_related(
             'partner_organization', 'partner_organization__organization', 'origin_transfer',
             'origin_point', 'destination_point', 'from_partner_organization__organization', 'recipient_partner_organization__organization',
         ).prefetch_related('items')
