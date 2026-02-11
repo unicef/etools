@@ -46,7 +46,7 @@ def _normalize_active(value: Any) -> bool:
 
 
 def _parse_admin_level(value: Any) -> Optional[int]:
-    """Parse Admin Level to small integer."""
+    """Parse Admin Level to small integer """
     if value is None or (isinstance(value, str) and not value.strip()):
         return None
     try:
