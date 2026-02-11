@@ -52,7 +52,7 @@ def _parse_admin_level(value: Any) -> Optional[int]:
     try:
         return int(float(value))
     except (TypeError, ValueError):
-        raise ValueError(f"Admin Level must be a number- got: {value!r}")
+        raise ValueError(f"Admin Level must be a number; got: {value!r}")
 
 
 def validate_row(row_idx: int, raw: Dict[str, Any]) -> Tuple[Optional[Dict[str, Any]], Optional[str]]:
