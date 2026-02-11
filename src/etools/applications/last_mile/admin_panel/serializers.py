@@ -10,7 +10,6 @@ from rest_framework_gis.fields import GeometryField
 from etools.applications.last_mile import models
 from etools.applications.last_mile.admin_panel.constants import (
     ALERT_TYPES,
-    L_CONSIGNEE_ALREADY_EXISTS,
     REQUIRED_SECONDARY_TYPE,
     STOCK_EXISTS_UNDER_LOCATION,
 )
@@ -379,6 +378,7 @@ class PointOfInterestCustomSerializer(serializers.ModelSerializer):
     l_consignee_code = serializers.CharField(
         required=False,
         allow_null=True,
+        allow_blank=True,
     )
 
     def validate_secondary_type(self, value):
@@ -387,9 +387,7 @@ class PointOfInterestCustomSerializer(serializers.ModelSerializer):
         return value
 
     def validate_l_consignee_code(self, value):
-        if models.PointOfInterest.all_objects.filter(l_consignee_code=value).exists():
-            raise ValidationError(L_CONSIGNEE_ALREADY_EXISTS)
-        return value
+        return AdminPanelValidator().validate_l_consignee_code(value)
 
     def validate_is_active(self, value):
         if self.instance and not value and self.instance.is_active:
