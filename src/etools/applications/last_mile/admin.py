@@ -4,6 +4,7 @@ from decimal import Decimal
 from django.contrib import admin
 from django.contrib.gis import forms
 from django.contrib.gis.geos import Point
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import transaction
 from django.db.models import CharField, Count, F, Prefetch, Value
 from django.db.models.functions import Coalesce
@@ -12,9 +13,11 @@ from django.utils.dateparse import parse_datetime
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 
+from rest_framework.exceptions import ValidationError as DRFValidationError
 from unicef_attachments.admin import AttachmentSingleInline
 
 from etools.applications.last_mile import models
+from etools.applications.last_mile.admin_panel.validators import AdminPanelValidator
 from etools.applications.organizations.models import Organization
 from etools.applications.partners.admin import AttachmentInlineAdminMixin
 from etools.applications.partners.models import PartnerOrganization
@@ -38,8 +41,22 @@ class TransferEvidenceAttachmentInline(AttachmentSingleInline):
     code = 'transfer_evidence'
 
 
+class PointOfInterestForm(forms.ModelForm):
+    class Meta:
+        model = models.PointOfInterest
+        fields = '__all__'
+
+    def clean_l_consignee_code(self):
+        value = self.cleaned_data.get('l_consignee_code')
+        try:
+            return AdminPanelValidator().validate_l_consignee_code(value)
+        except DRFValidationError as e:
+            raise DjangoValidationError(e.detail)
+
+
 @admin.register(models.PointOfInterest)
 class PointOfInterestAdmin(XLSXImportMixin, admin.ModelAdmin):
+    form = PointOfInterestForm
     readonly_fields = ('partner_names', 'created_by', 'approved_by')
     list_display = ('name', 'parent', 'poi_type', 'p_code', 'l_consignee_code')
     list_select_related = ('parent', 'approved_by', 'created_by')
@@ -222,8 +239,7 @@ class TransferAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
     inlines = (ProofTransferAttachmentInline, ItemInline)
 
     def get_queryset(self, request):
-        qs = super(TransferAdmin, self).get_queryset(request)
-        qs = qs.select_related(
+        qs = models.Transfer.all_objects.select_related(
             'partner_organization', 'partner_organization__organization', 'origin_transfer',
             'origin_point', 'destination_point', 'from_partner_organization__organization', 'recipient_partner_organization__organization',
         ).prefetch_related('items')
