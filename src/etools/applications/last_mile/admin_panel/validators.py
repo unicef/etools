@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework.exceptions import ValidationError
@@ -14,6 +15,8 @@ from etools.applications.last_mile.admin_panel.constants import (
     INVALID_ORGANIZATION_ID,
     INVALID_QUANTITY,
     ITEMS_NOT_PROVIDED,
+    L_CONSIGNEE_ALREADY_EXISTS,
+    L_CONSIGNEE_CODE_INVALID,
     LAST_MILE_PROFILE_NOT_FOUND,
     ORGANIZATION_DOES_NOT_EXIST,
     PARTNER_NOT_UNDER_LOCATION,
@@ -164,3 +167,17 @@ class AdminPanelValidator:
             raise ValidationError(_(PRIMARY_TYPE_NOT_FOUND))
 
         return primary_type_id_int
+
+    def validate_l_consignee_code(self, value):
+        if not value:
+            return value
+        try:
+            if not str(value).startswith('L') and not len(value) == 10:
+                raise ValidationError(_(L_CONSIGNEE_CODE_INVALID))
+        except ValueError:
+            raise ValidationError(_(L_CONSIGNEE_CODE_INVALID))
+        if PointOfInterest.all_objects.filter(l_consignee_code=value, is_active=True).exclude(
+            Q(l_consignee_code="") | Q(l_consignee_code=None) | Q(l_consignee_code__isnull=True)
+        ).exists():
+            raise ValidationError(_(L_CONSIGNEE_ALREADY_EXISTS))
+        return value

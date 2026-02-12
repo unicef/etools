@@ -10,12 +10,13 @@ from etools.applications.users.models import Realm
 class LMSMPermissionsService:
 
     LMSM_CO_ADMIN = "LMSM CO Admin"
+    LMSM_CO_VIEWER = "LMSM CO Viewer"
     LMSM_HQ_ADMIN = "LMSM HQ Admin"
     LMSM_ADMIN_PANEL = "LMSM Admin Panel"
     IP_LM_EDITOR = "IP LM Editor"
     LMSMAPI = "LMSMApi"
     IP_LM_VIEWR = "IP LM Viewer"
-    LMSM_GROUPS = [LMSM_CO_ADMIN, LMSM_HQ_ADMIN, IP_LM_EDITOR, LMSMAPI, IP_LM_VIEWR, LMSM_ADMIN_PANEL]
+    LMSM_GROUPS = [LMSM_CO_ADMIN, LMSM_HQ_ADMIN, IP_LM_EDITOR, LMSMAPI, IP_LM_VIEWR, LMSM_ADMIN_PANEL, LMSM_CO_VIEWER]
 
     def assign_permissions_for_co_admin(self, user):
         permissions = Permission.objects.filter(codename__in=LIST_INTERESTED_LASTMILE_PERMS_WITHOUT_APPROVE)
