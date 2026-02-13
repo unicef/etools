@@ -798,7 +798,11 @@ class MonitoringActivity(
         return self.overall_findings.annotate_for_activity_export()
 
     def get_export_activity_questions_overall_findings(self):
-        for activity_question in self.questions.filter_for_activity_export():
+        # Use prefetched questions when available (e.g. from visit_pdf view)
+        qs = self.questions.all()
+        for activity_question in qs:
+            if not activity_question.is_enabled:
+                continue
             finding_dict = dict(
                 entity_name=activity_question.entity_name,
                 question_text=activity_question.text
@@ -807,19 +811,17 @@ class MonitoringActivity(
             if activity_question.overall_finding.value and \
                     activity_question.question.answer_type in ['likert_scale', 'multiple_choice']:
                 try:
+                    opts_by_val = {o.value: o for o in activity_question.question.options.all()}
                     if activity_question.question.answer_type == 'likert_scale':
-                        option = activity_question.question.options.get(
-                            value=activity_question.overall_finding.value
-                        )
-                        finding_dict['value'] = option.label
+                        opt = opts_by_val.get(activity_question.overall_finding.value)
+                        finding_dict['value'] = opt.label if opt else activity_question.overall_finding.value
 
                     elif activity_question.question.answer_type == 'multiple_choice':
                         values = activity_question.overall_finding.value or []
-                        options = activity_question.question.options.filter(value__in=values)
-                        labels = [opt.label for opt in options]
-                        finding_dict['value'] = ", ".join(labels)
+                        labels = [opts_by_val[v].label for v in values if v in opts_by_val]
+                        finding_dict['value'] = ", ".join(labels) if labels else activity_question.overall_finding.value
 
-                except Option.DoesNotExist:
+                except (Option.DoesNotExist, TypeError, KeyError):
                     logger.error(
                         f"No option found for finding value(s) "
                         f"{activity_question.overall_finding.value}"
@@ -831,39 +833,42 @@ class MonitoringActivity(
             yield finding_dict
 
     def get_export_checklist_findings(self):
+        from collections import defaultdict
+
         for started_checklist in self.checklists.all():
             checklist_dict = dict(method=started_checklist.method.name,
                                   source=started_checklist.information_source,
                                   team_member=started_checklist.author.full_name,
                                   overall=[])
-            checklist_overall_findings = started_checklist.overall_findings.annotate_for_activity_export()
-            checklist_findings = started_checklist.findings.filter_for_activity_export()
+            # Use prefetched overall_findings and findings when available (e.g. from visit_pdf view)
+            checklist_overall_findings = list(started_checklist.overall_findings.all())
+            checklist_findings_qs = started_checklist.findings.all()
+            # Group by entity_name to avoid N+1 from .filter(entity_name=cof.entity_name)
+            findings_by_entity = defaultdict(list)
+            for finding in checklist_findings_qs:
+                findings_by_entity[finding.entity_name].append(finding)
 
             for cof in checklist_overall_findings:
                 overall_dict = dict(narrative_finding=cof.narrative_finding,
                                     entity_name=cof.entity_name,
                                     findings=[])
-                for finding in checklist_findings\
-                        .filter(entity_name=cof.entity_name)\
-                        .select_related('activity_question', 'activity_question__question'):
-
+                for finding in findings_by_entity.get(cof.entity_name, []):
                     finding_dict = dict(question_text=finding.activity_question.text)
                     if finding.value and \
                        finding.activity_question.question.answer_type in \
                        ['likert_scale', 'multiple_choice']:
                         try:
-                            if finding.activity_question.question.answer_type == 'likert_scale':
-                                option = finding.activity_question.question.options.get(value=finding.value)
-                                finding_dict['value'] = option.label
-
-                            elif finding.activity_question.question.answer_type == 'multiple_choice':
+                            question = finding.activity_question.question
+                            opts = list(question.options.all())
+                            opts_by_val = {o.value: o for o in opts}
+                            if question.answer_type == 'likert_scale':
+                                opt = opts_by_val.get(finding.value)
+                                finding_dict['value'] = opt.label if opt else finding.value
+                            elif question.answer_type == 'multiple_choice':
                                 values = finding.value or []
-                                options = finding.activity_question.question.options.filter(value__in=values)
-                                labels = [opt.label for opt in options]
-                                finding_dict['value'] = ", ".join(labels)
-
-                        except Option.DoesNotExist:
-                            logger.error(f"No option found for finding value(s) {finding.value}")
+                                labels = [opts_by_val[v].label for v in values if v in opts_by_val]
+                                finding_dict['value'] = ", ".join(labels) if labels else finding.value
+                        except (Option.DoesNotExist, TypeError):
                             finding_dict['value'] = finding.value
                     else:
                         finding_dict['value'] = finding.value
@@ -874,10 +879,9 @@ class MonitoringActivity(
             yield checklist_dict
 
     def get_export_action_points(self, request):
-        for ap in (MonitoringActivityActionPoint.objects.prefetch_related(
-                Prefetch('comments', ActionPointComment.objects.prefetch_related(
-                    Prefetch('supporting_document', Attachment.objects.select_related('uploaded_by'))
-                ))).filter(monitoring_activity=self).order_by('due_date')):
+        # Use reverse relation to benefit from view's Prefetch when available
+        action_points = self.actionpoint_set.all().order_by('due_date')
+        for ap in action_points:
             ap_dict = dict(
                 reference_number=ap.reference_number,
                 description=ap.description,
@@ -893,7 +897,8 @@ class MonitoringActivity(
                 comments=[]
             )
             for comment in ap.comments.all():
-                doc = comment.supporting_document.all().first()
+                docs = list(comment.supporting_document.all())
+                doc = docs[0] if docs else None
                 comment_dict = dict(
                     comment=comment.comment,
                     submit_date=comment.submit_date,
@@ -906,7 +911,7 @@ class MonitoringActivity(
             yield ap_dict
 
     def get_export_reported_attachments(self, request):
-        for att in self.report_attachments.all().select_related('file_type'):
+        for att in self.report_attachments.all():
             att_dict = dict(date_uploaded=att.created,
                             doc_type=att.file_type.label,
                             filename=att.filename,
@@ -914,7 +919,7 @@ class MonitoringActivity(
             yield att_dict
 
     def get_export_related_attachments(self, request):
-        for att in self.attachments.all().select_related('file_type'):
+        for att in self.attachments.all():
             att_dict = dict(date_uploaded=att.created,
                             doc_type=att.file_type.label,
                             filename=att.filename,
@@ -922,31 +927,42 @@ class MonitoringActivity(
             yield att_dict
 
     def get_export_checklist_attachments(self, request):
+        from etools.applications.field_monitoring.data_collection.models import ChecklistOverallFinding
+
+        # Build cof_id -> (checklist, cof) and collect all cof IDs for one bulk Attachment query
+        cof_to_checklist_and_cof = {}
         for checklist in self.checklists.all():
-            checklist_overall_findings = checklist.overall_findings.all()
+            for cof in checklist.overall_findings.all():
+                cof_to_checklist_and_cof[cof.id] = (checklist, cof)
 
-            attachment_qs = Attachment.objects.filter(
-                content_type__app_label=checklist_overall_findings.model._meta.app_label,
-                content_type__model=checklist_overall_findings.model._meta.model_name,
-                object_id__in=checklist_overall_findings.values_list('id', flat=True)
-            ).order_by('object_id')
+        if not cof_to_checklist_and_cof:
+            return
 
-            for att in attachment_qs:
-                att_dict = dict(method=checklist.method.name,
-                                data_collector=checklist.author.full_name,
-                                method_type=checklist.information_source,
-                                date_uploaded=att.created,
-                                doc_type=att.file_type.label,
-                                filename=att.filename,
-                                url_path=request.build_absolute_uri(att.file.url) if att.file else "-")
-                checklist_overall_finding = checklist_overall_findings.get(id=att.object_id)
-                related_to = (checklist_overall_finding.partner or checklist_overall_finding.cp_output or
-                              checklist_overall_finding.intervention)
-                if related_to:
-                    att_dict['related_to'] = related_to._meta.verbose_name.title()
-                    att_dict['related_name'] = getattr(related_to, 'name', '') or getattr(related_to, 'reference_number', '')
+        all_attachments = Attachment.objects.filter(
+            content_type__app_label=ChecklistOverallFinding._meta.app_label,
+            content_type__model=ChecklistOverallFinding._meta.model_name,
+            object_id__in=cof_to_checklist_and_cof.keys()
+        ).select_related('file_type').order_by('object_id')
 
-                yield att_dict
+        for att in all_attachments:
+            try:
+                checklist, checklist_overall_finding = cof_to_checklist_and_cof[int(att.object_id)]
+            except KeyError:
+                continue
+            att_dict = dict(method=checklist.method.name,
+                            data_collector=checklist.author.full_name,
+                            method_type=checklist.information_source,
+                            date_uploaded=att.created,
+                            doc_type=att.file_type.label,
+                            filename=att.filename,
+                            url_path=request.build_absolute_uri(att.file.url) if att.file else "-")
+            related_to = (checklist_overall_finding.partner or checklist_overall_finding.cp_output or
+                          checklist_overall_finding.intervention)
+            if related_to:
+                att_dict['related_to'] = related_to._meta.verbose_name.title()
+                att_dict['related_name'] = getattr(related_to, 'name', '') or getattr(related_to, 'reference_number', '')
+
+            yield att_dict
 
 
 class MonitoringActivityActionPointManager(models.Manager):

@@ -1,16 +1,20 @@
 import logging
 import re
+import time
 from datetime import date
 
 from django.contrib.auth import get_user_model
+from django.core.cache import cache
 from django.db import connection, transaction
 from django.db.models import Count, F, Prefetch, Q
-from django.http import Http404
+from django.http import Http404, HttpResponse
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
 from django_filters.rest_framework import DjangoFilterBackend
 from easy_pdf.rendering import render_to_pdf_response
+
+from etools.applications.field_monitoring.planning.pdf_renderer import build_visit_pdf
 from etools_validator.mixins import ValidatorViewMixin
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
@@ -51,7 +55,20 @@ from etools.applications.field_monitoring.planning.filters import (
     UserTPMPartnerFilter,
     UserTypeFilter,
 )
+from unicef_attachments.models import Attachment
+
+from etools.applications.action_points.models import ActionPointComment
+from etools.applications.field_monitoring.data_collection.models import (
+    ActivityOverallFinding,
+    ActivityQuestion,
+    ChecklistOverallFinding,
+    Finding,
+    StartedChecklist,
+)
 from etools.applications.field_monitoring.planning.mixins import EmptyQuerysetForExternal
+from etools.applications.field_monitoring.planning.query_logging import log_db_queries
+
+logger = logging.getLogger(__name__)
 from etools.applications.field_monitoring.planning.models import (
     FacilityType,
     MonitoringActivity,
@@ -202,6 +219,75 @@ class MonitoringActivitiesViewSet(
     def get_queryset(self):
         queryset = super().get_queryset()
 
+        # PDF export: heavy prefetch to avoid N+1 (target <3s)
+        if getattr(self, 'action', None) == 'visit_pdf':
+            queryset = queryset.select_related(
+                'location__parent', 'location_site__parent', 'visit_lead',
+            ).prefetch_related(
+                'offices',
+                'partners',
+                'sections',
+                'team_members',
+                'cp_outputs',
+                'interventions',
+                Prefetch(
+                    'overall_findings',
+                    queryset=ActivityOverallFinding.objects.annotate_for_activity_export().select_related(
+                        'partner', 'cp_output', 'intervention', 'partner__organization',
+                    ),
+                ),
+                Prefetch(
+                    'checklists',
+                    queryset=StartedChecklist.objects.select_related('method', 'author').prefetch_related(
+                        Prefetch(
+                            'overall_findings',
+                            queryset=ChecklistOverallFinding.objects.annotate_for_activity_export().select_related(
+                                'partner', 'cp_output', 'intervention',
+                                'partner__organization',
+                            ),
+                        ),
+                        Prefetch(
+                            'findings',
+                            queryset=Finding.objects.filter_for_activity_export().select_related(
+                                'activity_question', 'activity_question__question',
+                                'activity_question__partner', 'activity_question__cp_output',
+                                'activity_question__partner__organization',
+                            ).prefetch_related('activity_question__question__options'),
+                        ),
+                    ),
+                ),
+                Prefetch(
+                    'questions',
+                    queryset=ActivityQuestion.objects.filter_for_activity_export().select_related(
+                        'question', 'partner', 'cp_output', 'partner__organization',
+                    ).prefetch_related('question__options', 'overall_finding'),
+                ),
+                Prefetch(
+                    'report_attachments',
+                    queryset=Attachment.objects.select_related('file_type'),
+                ),
+                Prefetch(
+                    'attachments',
+                    queryset=Attachment.objects.select_related('file_type'),
+                ),
+                Prefetch(
+                    'actionpoint_set',
+                    queryset=MonitoringActivityActionPoint.objects.select_related(
+                        'assigned_to', 'assigned_by', 'section', 'office', 'category',
+                    ).prefetch_related(
+                        Prefetch(
+                            'comments',
+                            queryset=ActionPointComment.objects.select_related('user').prefetch_related(
+                                Prefetch(
+                                    'supporting_document',
+                                    queryset=Attachment.objects.select_related('file_type', 'uploaded_by'),
+                                ),
+                            ),
+                        ),
+                    ).order_by('due_date'),
+                ),
+            )
+
         if not self.request.user.is_unicef_user():
             # we should hide activities before assignment
             # if reject reason available activity should be visible (draft + reject_reason = rejected)
@@ -271,7 +357,10 @@ class MonitoringActivitiesViewSet(
 
     @action(detail=True, methods=['get'], url_path='pdf')
     def visit_pdf(self, request, *args, **kwargs):
-        ma = self.get_object()
+        logger.warning("[FM PDF] Start querying DB")
+        t0 = time.perf_counter()
+        with log_db_queries("visit_pdf_get_object"):
+            ma = self.get_object()
 
         def _sanitize_html(value):
             if not isinstance(value, str):
@@ -306,30 +395,56 @@ class MonitoringActivitiesViewSet(
                         if 'value' in finding:
                             finding['value'] = _sanitize_html(finding['value'])
             return data_list
-        context = {
-            "workspace": connection.tenant.name,
-            "ma": ma,
-            "field_offices": ', '.join(ma.offices.all().values_list('name', flat=True)),
-            "location": f'{str(ma.location)}{" -- {}".format(ma.location.parent.name) if ma.location.parent else ""}',
-            "sections": ', '.join(ma.sections.all().values_list('name', flat=True)),
-            "partners": ', '.join([partner.name for partner in ma.partners.all()]),
-            "team_members": ', '.join([member.full_name for member in ma.team_members.all()]),
-            "cp_outputs": ', '.join([cp_out.name for cp_out in ma.cp_outputs.all()]),
-            "interventions": ', '.join([str(intervention) for intervention in ma.interventions.all()]),
-            "overall_findings": _sanitize_overall_findings(list(ma.activity_overall_findings().values('entity_name', 'narrative_finding', 'on_track'))),
-            "summary_findings": _sanitize_summary_findings(list(ma.get_export_activity_questions_overall_findings())),
-            "data_collected": _sanitize_data_collected(list(ma.get_export_checklist_findings())),
-            "action_points": ma.get_export_action_points(request),
-            "related_attachments": ma.get_export_related_attachments(request),
-            "reported_attachments": ma.get_export_reported_attachments(request),
-            "checklist_attachments": ma.get_export_checklist_attachments(request),
-            "mission_completion_date": ma.get_completion_date(),
 
-        }
-        return render_to_pdf_response(
-            request, "fm/visit_pdf.html", context=context,
-            filename="visit_{}.pdf".format(ma.reference_number)
+        with log_db_queries("visit_pdf_context"):
+            context = {
+                "workspace": connection.tenant.name,
+                "ma": ma,
+                "field_offices": ', '.join(ma.offices.all().values_list('name', flat=True)),
+                "location": f'{str(ma.location)}{" -- {}".format(ma.location.parent.name) if ma.location.parent else ""}',
+                "sections": ', '.join(ma.sections.all().values_list('name', flat=True)),
+                "partners": ', '.join([partner.name for partner in ma.partners.all()]),
+                "team_members": ', '.join([member.full_name for member in ma.team_members.all()]),
+                "cp_outputs": ', '.join([cp_out.name for cp_out in ma.cp_outputs.all()]),
+                "interventions": ', '.join([str(intervention) for intervention in ma.interventions.all()]),
+                "overall_findings": _sanitize_overall_findings([
+                    {'entity_name': o.entity_name, 'narrative_finding': o.narrative_finding, 'on_track': o.on_track}
+                    for o in ma.overall_findings.all()
+                ]),
+                "summary_findings": _sanitize_summary_findings(list(ma.get_export_activity_questions_overall_findings())),
+                "data_collected": _sanitize_data_collected(list(ma.get_export_checklist_findings())),
+                "action_points": ma.get_export_action_points(request),
+                "related_attachments": ma.get_export_related_attachments(request),
+                "reported_attachments": ma.get_export_reported_attachments(request),
+                "checklist_attachments": ma.get_export_checklist_attachments(request),
+                "mission_completion_date": ma.get_completion_date(),
+            }
+        db_elapsed = time.perf_counter() - t0
+        logger.warning("[FM PDF] Finish DB (%.2fs)", db_elapsed)
+
+        # Cache PDF by activity (5 min TTL); invalidates when activity modified changes
+        modified_ts = ma.modified.isoformat() if hasattr(ma, 'modified') and ma.modified else ''
+        cache_key = f"fm_visit_pdf:{connection.tenant.schema_name}:{ma.id}:{modified_ts}"
+        cached_pdf = cache.get(cache_key)
+        if cached_pdf is not None:
+            logger.warning("[FM PDF] Cache HIT, returning cached PDF")
+            response = HttpResponse(cached_pdf, content_type='application/pdf')
+            response['Content-Disposition'] = f'attachment; filename="visit_{ma.reference_number}.pdf"'
+            return response
+
+        logger.warning("[FM PDF] Start PDF generation (ReportLab)")
+        t1 = time.perf_counter()
+        with log_db_queries("visit_pdf_render"):
+            pdf_bytes = build_visit_pdf(context)
+        pdf_elapsed = time.perf_counter() - t1
+        logger.warning("[FM PDF] Finish PDF generation (%.2fs)", pdf_elapsed)
+
+        cache.set(cache_key, pdf_bytes, timeout=300)
+        response = HttpResponse(pdf_bytes, content_type="application/pdf")
+        response["Content-Disposition"] = 'attachment; filename="visit_{}.pdf"'.format(
+            ma.reference_number
         )
+        return response
 
     @action(detail=False, methods=['get'], url_path='export', renderer_classes=(MonitoringActivityCSVRenderer,))
     def export(self, request, *args, **kwargs):
