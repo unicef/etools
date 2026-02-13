@@ -154,6 +154,106 @@ class FMInterventionListSerializer(MinimalInterventionListSerializer):
         )
 
 
+def _location_list_to_nested(data):
+    """Convert flat location JSON (from Subquery) to nested {parent: {...}} API format."""
+    if data is None:
+        return None
+    parent = None
+    if data.get('parent_id') is not None:
+        parent = {
+            'id': data['parent_id'],
+            'name': data.get('parent_name'),
+            'p_code': data.get('parent_p_code'),
+        }
+    return {
+        'id': data.get('id'),
+        'name': data.get('name'),
+        'p_code': data.get('p_code'),
+        'admin_level': data.get('admin_level'),
+        'is_active': data.get('is_active'),
+        'parent': parent,
+    }
+
+
+class MonitoringActivityListSerializer(serializers.ModelSerializer):
+    """List serializer using annotated *_list fields (single-query)."""
+    tpm_partner = SeparatedReadWriteField(read_field=TPMPartnerSerializer())
+    location = serializers.SerializerMethodField(read_only=True)
+    location_site = serializers.SerializerMethodField(read_only=True)
+    visit_lead = SeparatedReadWriteField(read_field=MinimalUserSerializer())
+
+    team_members = serializers.SerializerMethodField(read_only=True)
+    partners = serializers.SerializerMethodField(read_only=True)
+    interventions = serializers.SerializerMethodField(read_only=True)
+    cp_outputs = serializers.SerializerMethodField(read_only=True)
+    ewp_activities = serializers.SerializerMethodField(read_only=True)
+    gpds = serializers.SerializerMethodField(read_only=True)
+    sections = serializers.SerializerMethodField(read_only=True)
+    visit_goals = serializers.SerializerMethodField(read_only=True)
+    facility_types = serializers.SerializerMethodField(read_only=True)
+    overlapping_entities = serializers.SerializerMethodField(read_only=True)
+    checklists_count = serializers.ReadOnlyField()
+
+    class Meta:
+        model = MonitoringActivity
+        fields = (
+            'id', 'reference_number',
+            'monitor_type', 'remote_monitoring', 'tpm_partner',
+            'visit_lead', 'team_members',
+            'location', 'location_site',
+            'partners', 'interventions', 'cp_outputs', 'ewp_activities', 'gpds',
+            'start_date', 'end_date',
+            'checklists_count',
+            'reject_reason', 'report_reject_reason', 'cancel_reason',
+            'status',
+            'sections',
+            'overlapping_entities',
+            'visit_goals',
+            'objective',
+            'facility_types'
+        )
+
+    def _get_list_json(self, obj, attr):
+        val = getattr(obj, attr, None)
+        return val if isinstance(val, list) else []
+
+    def get_team_members(self, obj):
+        return self._get_list_json(obj, 'team_members_list')
+
+    def get_partners(self, obj):
+        return self._get_list_json(obj, 'partners_list')
+
+    def get_interventions(self, obj):
+        return self._get_list_json(obj, 'interventions_list')
+
+    def get_cp_outputs(self, obj):
+        return self._get_list_json(obj, 'cp_outputs_list')
+
+    def get_ewp_activities(self, obj):
+        return self._get_list_json(obj, 'ewp_activities_list') or []
+
+    def get_gpds(self, obj):
+        return self._get_list_json(obj, 'gpds_list') or []
+
+    def get_sections(self, obj):
+        return self._get_list_json(obj, 'sections_list')
+
+    def get_visit_goals(self, obj):
+        return self._get_list_json(obj, 'visit_goals_list')
+
+    def get_facility_types(self, obj):
+        return self._get_list_json(obj, 'facility_types_list')
+
+    def get_overlapping_entities(self, obj):
+        return None
+
+    def get_location(self, obj):
+        return _location_list_to_nested(getattr(obj, 'location_list', None))
+
+    def get_location_site(self, obj):
+        return _location_list_to_nested(getattr(obj, 'location_site_list', None))
+
+
 class MonitoringActivityLightSerializer(serializers.ModelSerializer):
     tpm_partner = SeparatedReadWriteField(read_field=TPMPartnerSerializer())
     location = SeparatedReadWriteField(read_field=LocationSerializer())

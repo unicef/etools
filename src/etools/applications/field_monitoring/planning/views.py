@@ -2,9 +2,12 @@ import logging
 import re
 from datetime import date
 
+from django.apps import apps
 from django.contrib.auth import get_user_model
 from django.db import connection, transaction
-from django.db.models import Count, F, Prefetch, Q
+from django.db.models import Count, F, JSONField, OuterRef, Prefetch, Q, Subquery, Value
+from django.db.models.functions import Coalesce, JSONObject
+from django.contrib.postgres.aggregates import JSONBAgg
 from django.http import Http404
 from django.utils import timezone
 from django.utils.translation import gettext as _
@@ -53,6 +56,8 @@ from etools.applications.field_monitoring.planning.filters import (
 )
 from etools.applications.field_monitoring.planning.mixins import EmptyQuerysetForExternal
 from etools.applications.field_monitoring.planning.models import (
+    DummyEWPActivityModel,
+    DummyGPDModel,
     FacilityType,
     MonitoringActivity,
     MonitoringActivityActionPoint,
@@ -70,6 +75,7 @@ from etools.applications.field_monitoring.planning.serializers import (
     InterventionWithLinkedInstancesSerializer,
     MonitoringActivityActionPointSerializer,
     MonitoringActivityLightSerializer,
+    MonitoringActivityListSerializer,
     MonitoringActivitySerializer,
     TemplatedQuestionSerializer,
     TPMConcernSerializer,
@@ -78,9 +84,137 @@ from etools.applications.field_monitoring.planning.serializers import (
 )
 from etools.applications.field_monitoring.views import FMBaseViewSet, LinkedAttachmentsViewSet
 from etools.applications.partners.models import Intervention, PartnerOrganization
-from etools.applications.reports.models import Result, ResultType
+from etools.applications.reports.models import Result, ResultType, Section
 from etools.applications.tpm.models import ThirdPartyMonitor
 from etools.applications.users.models import Realm
+
+
+def _get_list_queryset_annotated(queryset):
+    """Single-query list: annotate M2M data via Subquery+JSONBAgg (uses through tables)."""
+    PartnersThrough = MonitoringActivity.partners.through
+    TeamThrough = MonitoringActivity.team_members.through
+    InterventionsThrough = MonitoringActivity.interventions.through
+    CPOutputsThrough = MonitoringActivity.cp_outputs.through
+    SectionsThrough = MonitoringActivity.sections.through
+    VisitGoalsThrough = MonitoringActivity.visit_goals.through
+    EWPThrough = MonitoringActivity.ewp_activities.through
+    GPDsThrough = MonitoringActivity.gpds.through
+
+    empty_json = Value('[]', output_field=JSONField())
+
+    partners_subq = PartnersThrough.objects.filter(monitoringactivity_id=OuterRef('pk')).values(
+        'monitoringactivity_id'
+    ).annotate(
+        arr=JSONBAgg(JSONObject(id=F('partnerorganization_id'), name=F('partnerorganization__organization__name')))
+    ).values('arr')
+
+    team_subq = TeamThrough.objects.filter(monitoringactivity_id=OuterRef('pk')).values(
+        'monitoringactivity_id'
+    ).annotate(
+        arr=JSONBAgg(JSONObject(
+            id=F('user_id'),
+            name=Coalesce(F('user__first_name'), F('user__last_name')),
+            first_name=F('user__first_name'),
+            middle_name=F('user__middle_name'),
+            last_name=F('user__last_name'),
+            is_active=F('user__is_active'),
+        ))
+    ).values('arr')
+
+    interventions_subq = InterventionsThrough.objects.filter(monitoringactivity_id=OuterRef('pk')).values(
+        'monitoringactivity_id'
+    ).annotate(
+        arr=JSONBAgg(JSONObject(
+            id=F('intervention_id'),
+            title=F('intervention__title'),
+            number=F('intervention__number'),
+            document_type=F('intervention__document_type'),
+        ))
+    ).values('arr')
+
+    cp_outputs_subq = CPOutputsThrough.objects.filter(monitoringactivity_id=OuterRef('pk')).values(
+        'monitoringactivity_id'
+    ).annotate(
+        arr=JSONBAgg(JSONObject(id=F('result_id'), name=F('result__name')))
+    ).values('arr')
+
+    sections_subq = SectionsThrough.objects.filter(monitoringactivity_id=OuterRef('pk')).values(
+        'monitoringactivity_id'
+    ).annotate(
+        arr=JSONBAgg(JSONObject(id=F('section_id'), name=F('section__name')))
+    ).values('arr')
+
+    visit_goals_subq = VisitGoalsThrough.objects.filter(monitoringactivity_id=OuterRef('pk')).values(
+        'monitoringactivity_id'
+    ).annotate(
+        arr=JSONBAgg(JSONObject(id=F('visitgoal_id'), name=F('visitgoal__name'), info=F('visitgoal__info')))
+    ).values('arr')
+
+    facility_types_subq = MonitoringActivityFacilityType.objects.filter(
+        monitoring_activity_id=OuterRef('pk')
+    ).values('monitoring_activity_id').annotate(
+        arr=JSONBAgg(JSONObject(id=F('facility_type_id'), durations=F('facility_type_durations')))
+    ).values('arr')
+
+    ewp_subq = EWPThrough.objects.filter(monitoringactivity_id=OuterRef('pk')).values(
+        'monitoringactivity_id'
+    ).annotate(arr=JSONBAgg(F('dummyewpactivitymodel__wbs'))).values('arr')
+
+    gpds_subq = GPDsThrough.objects.filter(monitoringactivity_id=OuterRef('pk')).values(
+        'monitoringactivity_id'
+    ).annotate(arr=JSONBAgg(F('dummygpdmodel__gpd_ref'))).values('arr')
+
+    # Subquery for location/location_site - avoids N+1 by embedding JSON in main query.
+    # apps.get_model inside function avoids module-level import side effects.
+    Location = apps.get_model('locations', 'Location')
+    LocationSite = apps.get_model('field_monitoring_settings', 'LocationSite')
+
+    location_subq = Location.objects.filter(
+        pk=OuterRef('location_id')
+    ).annotate(
+        j=JSONObject(
+            id=F('pk'),
+            name=F('name'),
+            p_code=F('p_code'),
+            admin_level=F('admin_level'),
+            is_active=F('is_active'),
+            parent_id=F('parent__id'),
+            parent_name=F('parent__name'),
+            parent_p_code=F('parent__p_code'),
+        )
+    ).values('j')[:1]
+
+    location_site_subq = LocationSite.objects.filter(
+        pk=OuterRef('location_site_id')
+    ).annotate(
+        j=JSONObject(
+            id=F('pk'),
+            name=F('name'),
+            p_code=F('p_code'),
+            is_active=F('is_active'),
+            parent_id=F('parent__id'),
+            parent_name=F('parent__name'),
+            parent_p_code=F('parent__p_code'),
+        )
+    ).values('j')[:1]
+
+    return queryset.prefetch_related(None).annotate(
+        checklists_count=Count('checklists'),
+        partners_list=Coalesce(Subquery(partners_subq), empty_json),
+        team_members_list=Coalesce(Subquery(team_subq), empty_json),
+        interventions_list=Coalesce(Subquery(interventions_subq), empty_json),
+        cp_outputs_list=Coalesce(Subquery(cp_outputs_subq), empty_json),
+        sections_list=Coalesce(Subquery(sections_subq), empty_json),
+        visit_goals_list=Coalesce(Subquery(visit_goals_subq), empty_json),
+        facility_types_list=Coalesce(Subquery(facility_types_subq), empty_json),
+        ewp_activities_list=Coalesce(Subquery(ewp_subq), empty_json),
+        gpds_list=Coalesce(Subquery(gpds_subq), empty_json),
+        location_list=Subquery(location_subq),
+        location_site_list=Subquery(location_site_subq),
+    ).select_related(
+        'tpm_partner', 'tpm_partner__organization',
+        'visit_lead',
+    )
 
 
 class YearPlanViewSet(
@@ -176,7 +310,8 @@ class MonitoringActivitiesViewSet(
     queryset = MonitoringActivity.objects\
         .annotate(checklists_count=Count('checklists'))\
         .select_related('tpm_partner', 'tpm_partner__organization',
-                        'visit_lead', 'location', 'location_site')\
+                        'visit_lead', 'location', 'location__parent',
+                        'location_site', 'location_site__parent')\
         .prefetch_related(
             Prefetch(
                 'facility_type_relations',
@@ -191,7 +326,7 @@ class MonitoringActivitiesViewSet(
         .order_by("-id")
     serializer_class = MonitoringActivitySerializer
     serializer_action_classes = {
-        'list': MonitoringActivityLightSerializer
+        'list': MonitoringActivityListSerializer
     }
     permission_classes = FMBaseViewSet.permission_classes + [
         IsReadAction |
@@ -210,6 +345,11 @@ class MonitoringActivitiesViewSet(
 
     def get_queryset(self):
         queryset = super().get_queryset()
+
+        if self.action == 'list':
+            queryset = _get_list_queryset_annotated(queryset)
+        elif self.action not in ('export',):
+            queryset = queryset.prefetch_related('report_reviewers', 'offices').select_related('reviewed_by')
 
         if not self.request.user.is_unicef_user():
             # we should hide activities before assignment
