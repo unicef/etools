@@ -128,7 +128,7 @@ class AdminPanelValidator:
             raise ValidationError(_(TRANSFER_HAS_NO_ITEMS))
 
     def validate_transfer_type(self, transfer: Transfer):
-        if transfer.transfer_type == Transfer.HANDOVER:
+        if transfer.transfer_type in [Transfer.HANDOVER, Transfer.UNICEF_HANDOVER]:
             raise ValidationError(_(TRANSFER_TYPE_HANDOVER_NOT_ALLOWED))
 
     def validate_uom(self, uom: str):

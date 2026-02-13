@@ -23,6 +23,7 @@ from etools.applications.last_mile.filters import POIFilter, TransferFilter
 from etools.applications.last_mile.permissions import IsIPLMEditorOrViewerReadOnly, IsLMSMGroup
 from etools.applications.last_mile.tasks import notify_upload_waybill
 from etools.applications.locations.models import Location
+from etools.applications.organizations.models import Organization, OrganizationType
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.utils.pbi_auth import get_access_token, get_embed_token, get_embed_url, TokenRetrieveException
@@ -327,7 +328,7 @@ class TransferViewSet(
         completed_filters |= Q(Q(origin_point=location) & ~Q(destination_point=location))
         completed_filters |= Q(destination_point=location,
                                transfer_type__in=[models.Transfer.WASTAGE, models.Transfer.DISPENSE])
-        completed_filters |= Q(origin_point=location, transfer_type=models.Transfer.HANDOVER)
+        completed_filters |= Q(origin_point=location, transfer_type__in=[models.Transfer.HANDOVER, models.Transfer.UNICEF_HANDOVER])
         qs = self.get_queryset(handover=True).filter(Q(status=models.Transfer.COMPLETED) | Q(from_partner_organization=partner)).filter(completed_filters).filter(
             Q(partner_organization=partner) | Q(from_partner_organization=partner)
         )
@@ -426,6 +427,96 @@ class ItemUpdateViewSet(mixins.UpdateModelMixin, mixins.RetrieveModelMixin, Gene
         serializer.save()
 
         return Response(status=status.HTTP_200_OK)
+
+
+UNICEF_VENDOR_NUMBER = '000'
+
+
+class UnicefPartnerView(APIView):
+    permission_classes = [IsIPLMEditorOrViewerReadOnly]
+
+    def get_unicef_partner(self):
+        try:
+            return PartnerOrganization.all_partners.get(
+                organization__vendor_number=UNICEF_VENDOR_NUMBER
+            )
+        except PartnerOrganization.DoesNotExist:
+            org, _ = Organization.objects.get_or_create(
+                vendor_number=UNICEF_VENDOR_NUMBER,
+                defaults={
+                    'name': 'UNICEF',
+                    'organization_type': OrganizationType.UN_AGENCY,
+                }
+            )
+            return PartnerOrganization.all_partners.create(
+                organization=org,
+                hidden=True,
+            )
+
+    def get(self, request, *args, **kwargs):
+        partner = self.get_unicef_partner()
+        serializer = MinimalPartnerOrganizationListSerializer(partner)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class UnicefLocationsView(ListAPIView):
+    permission_classes = [IsIPLMEditorOrViewerReadOnly]
+    serializer_class = serializers.PointOfInterestSerializer
+    pagination_class = DynamicPageNumberPagination
+
+    def get_queryset(self):
+        return models.PointOfInterest.objects.filter(
+            partner_organizations__organization__vendor_number=UNICEF_VENDOR_NUMBER,
+            is_active=True,
+        ).select_related('parent', 'poi_type').defer(
+            'parent__point', 'parent__geom', 'point'
+        ).order_by('name', 'id')
+
+
+class UnicefHandoverCheckoutView(APIView):
+    permission_classes = [IsIPLMEditorOrViewerReadOnly]
+
+    def post(self, request, *args, **kwargs):
+        data = request.data
+
+        transfer_type = data.get('transfer_type')
+        if transfer_type != models.Transfer.UNICEF_HANDOVER:
+            raise ValidationError(
+                _('Only UNICEF_HANDOVER transfer type is allowed for this endpoint.')
+            )
+        destination_point_id = data.get('destination_point')
+        if not destination_point_id:
+            raise ValidationError(_('destination_point is required.'))
+        origin_point_id = data.get('origin_point')
+        if not origin_point_id:
+            raise ValidationError(_('origin_point is required.'))
+
+        origin_poi = get_object_or_404(models.PointOfInterest, pk=origin_point_id)
+
+        checkout_serializer = serializers.TransferCheckOutSerializer(
+            data=data,
+            context={
+                'request': request,
+                'location': origin_poi,
+            }
+        )
+        checkout_serializer.is_valid(raise_exception=True)
+        checkout_serializer.save()
+
+        transfer = checkout_serializer.instance
+
+        transfer.status = models.Transfer.COMPLETED
+        transfer.destination_check_in_at = transfer.origin_check_out_at
+        transfer.save(update_fields=[
+            'status', 'destination_check_in_at',
+        ])
+
+        return Response(
+            serializers.TransferSerializer(
+                transfer, context={'partner': request.user.partner}
+            ).data,
+            status=status.HTTP_200_OK
+        )
 
 
 class PowerBIDataView(APIView):
