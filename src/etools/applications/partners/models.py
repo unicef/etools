@@ -531,11 +531,11 @@ class PartnerOrganization(TimeStampedModel):
                                      blank=True, null=True, on_delete=models.SET_NULL)
 
     tracker = FieldTracker()
-    all_partners = PartnerOrganizationAllManager()
     objects = PartnerOrganizationManager()
+    all_partners = PartnerOrganizationAllManager()
 
     class Meta:
-        base_manager_name = 'all_partners'
+        base_manager_name = 'objects'
 
     def __str__(self):
         return self.organization.name if self.organization and self.organization.name else self.vendor_number
