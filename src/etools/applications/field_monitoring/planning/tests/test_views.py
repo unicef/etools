@@ -1924,3 +1924,512 @@ class MonitoringActivityActionPointLocationValidationTestCase(FMBaseTestCaseMixi
             data={'location': self.inactive_location.id}
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+
+class EmailRecipientsViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
+    """Tests for email_recipients endpoint."""
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_email_recipients_returns_staff_users(self):
+        """Test that email_recipients returns staff users with email addresses."""
+        # Create users with emails
+        UserFactory(
+            first_name='John',
+            last_name='Doe',
+            email='john.doe@example.com',
+            unicef_user=True,
+            is_active=True
+        )
+        UserFactory(
+            first_name='Jane',
+            last_name='Smith',
+            email='jane.smith@example.com',
+            unicef_user=True,
+            is_active=True
+        )
+        # User without email should not appear
+        # Note: We can't create multiple users with empty email due to unique constraint
+        # So we just create one and verify it's excluded
+        UserFactory(
+            first_name='No',
+            last_name='Email',
+            email='',  # Empty email - will be excluded by the view's filter
+            unicef_user=True,
+            is_active=True
+        )
+
+        url = reverse('field_monitoring_planning:activities-email-recipients')
+        response = self.forced_auth_req('get', url, user=self.unicef_user)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsInstance(response.data, list)
+
+        # Check that users with emails are included
+        recipient_emails = [r['id'] for r in response.data]
+        self.assertIn('john.doe@example.com', recipient_emails)
+        self.assertIn('jane.smith@example.com', recipient_emails)
+
+        # Check structure
+        for recipient in response.data:
+            self.assertIn('id', recipient)
+            self.assertIn('name', recipient)
+            self.assertIn('type', recipient)
+            self.assertIn(recipient['type'], ['user', 'partner'])
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_email_recipients_returns_partners(self):
+        """Test that email_recipients returns partners with email addresses."""
+        PartnerFactory(
+            organization__name='Partner One',
+            email='partner1@example.com',
+            hidden=False,
+            deleted_flag=False
+        )
+        PartnerFactory(
+            organization__name='Partner Two',
+            email='partner2@example.com',
+            hidden=False,
+            deleted_flag=False
+        )
+        # Partner without email should not appear
+        PartnerFactory(
+            organization__name='No Email Partner',
+            email='',
+            hidden=False,
+            deleted_flag=False
+        )
+        # Hidden partner should not appear
+        PartnerFactory(
+            organization__name='Hidden Partner',
+            email='hidden@example.com',
+            hidden=True,
+            deleted_flag=False
+        )
+        # Deleted partner should not appear
+        PartnerFactory(
+            organization__name='Deleted Partner',
+            email='deleted@example.com',
+            hidden=False,
+            deleted_flag=True
+        )
+
+        url = reverse('field_monitoring_planning:activities-email-recipients')
+        response = self.forced_auth_req('get', url, user=self.unicef_user)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        recipient_emails = [r['id'] for r in response.data]
+        self.assertIn('partner1@example.com', recipient_emails)
+        self.assertIn('partner2@example.com', recipient_emails)
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_email_recipients_excludes_users_without_names(self):
+        """Test that users without first_name or last_name are excluded."""
+        # User with both names
+        UserFactory(
+            first_name='Full',
+            last_name='Name',
+            email='full@example.com',
+            unicef_user=True,
+            is_active=True
+        )
+        # User without first_name
+        UserFactory(
+            first_name='',
+            last_name='Last',
+            email='nofirst@example.com',
+            unicef_user=True,
+            is_active=True
+        )
+        # User without last_name
+        UserFactory(
+            first_name='First',
+            last_name='',
+            email='nolast@example.com',
+            unicef_user=True,
+            is_active=True
+        )
+
+        url = reverse('field_monitoring_planning:activities-email-recipients')
+        response = self.forced_auth_req('get', url, user=self.unicef_user)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        recipient_emails = [r['id'] for r in response.data]
+        self.assertIn('full@example.com', recipient_emails)
+        self.assertNotIn('nofirst@example.com', recipient_emails)
+        self.assertNotIn('nolast@example.com', recipient_emails)
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_email_recipients_format(self):
+        """Test that recipient format is correct."""
+        UserFactory(
+            first_name='Test',
+            last_name='User',
+            email='test@example.com',
+            unicef_user=True,
+            is_active=True
+        )
+        PartnerFactory(
+            organization__name='Test Partner',
+            email='partner@example.com',
+            hidden=False,
+            deleted_flag=False
+        )
+
+        url = reverse('field_monitoring_planning:activities-email-recipients')
+        response = self.forced_auth_req('get', url, user=self.unicef_user)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Find user recipient
+        user_recipient = next((r for r in response.data if r['id'] == 'test@example.com'), None)
+        self.assertIsNotNone(user_recipient)
+        self.assertEqual(user_recipient['type'], 'user')
+        self.assertIn('Test User', user_recipient['name'])
+        self.assertIn('test@example.com', user_recipient['name'])
+
+        # Find partner recipient
+        partner_recipient = next((r for r in response.data if r['id'] == 'partner@example.com'), None)
+        self.assertIsNotNone(partner_recipient)
+        self.assertEqual(partner_recipient['type'], 'partner')
+        self.assertIn('Test Partner', partner_recipient['name'])
+        self.assertIn('partner@example.com', partner_recipient['name'])
+
+
+class SendEmailViewTestCase(FMBaseTestCaseMixin, BaseTenantTestCase):
+    """Tests for send_email endpoint."""
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        from django.core.management import call_command
+        call_command('update_notifications')
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    @patch('etools.applications.field_monitoring.planning.views.render_to_pdf')
+    @patch('etools.applications.field_monitoring.planning.views.mail')
+    def test_send_email_success(self, mock_mail, mock_render_pdf):
+        """Test successful email sending for completed activity."""
+        from unicef_notification.models import EmailTemplate
+
+        # Create or update email template
+        EmailTemplate.objects.update_or_create(
+            name='fm/activity/send-report',
+            defaults={
+                'subject': 'Test Subject {{ activity.reference_number }}',
+                'html_content': 'Test Body {{ message }}',
+                'content': 'Test Body Plain {{ message }}'
+            }
+        )
+
+        # Create completed activity
+        activity = MonitoringActivityFactory(status=MonitoringActivity.STATUS_COMPLETED)
+        visit_lead = UserFactory(unicef_user=True)
+        activity.visit_lead = visit_lead
+        activity.save()
+
+        # Mock PDF generation
+        mock_render_pdf.return_value = b'fake pdf content'
+
+        url = reverse(
+            'field_monitoring_planning:activities-send-email',
+            kwargs={'pk': activity.pk}
+        )
+        data = {
+            'recipients': ['recipient1@example.com', 'recipient2@example.com'],
+            'message': 'Test message'
+        }
+
+        response = self.forced_auth_req('post', url, user=visit_lead, data=data)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('detail', response.data)
+        self.assertIn('recipients', response.data)
+        self.assertEqual(len(response.data['recipients']), 2)
+
+        # Verify PDF was generated
+        mock_render_pdf.assert_called_once()
+        call_args = mock_render_pdf.call_args
+        self.assertEqual(call_args[0][0], "fm/visit_pdf.html")
+        self.assertIn('ma', call_args[0][1])
+
+        # Verify emails were sent
+        self.assertEqual(mock_mail.send.call_count, 2)
+        # Check that each recipient got an email
+        call_args_list = mock_mail.send.call_args_list
+        recipients_sent = []
+        for call in call_args_list:
+            recipients_sent.extend(call[1]['recipients'])
+        self.assertIn('recipient1@example.com', recipients_sent)
+        self.assertIn('recipient2@example.com', recipients_sent)
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_send_email_only_completed_status(self):
+        """Test that email can only be sent for completed activities."""
+        activity = MonitoringActivityFactory(status=MonitoringActivity.STATUS_DRAFT)
+        visit_lead = UserFactory(unicef_user=True)
+        activity.visit_lead = visit_lead
+        activity.save()
+
+        url = reverse(
+            'field_monitoring_planning:activities-send-email',
+            kwargs={'pk': activity.pk}
+        )
+        data = {
+            'recipients': ['recipient@example.com'],
+            'message': 'Test message'
+        }
+
+        response = self.forced_auth_req('post', url, user=visit_lead, data=data)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('detail', response.data)
+        self.assertIn('completed', str(response.data['detail']).lower())
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    @patch('etools.applications.field_monitoring.planning.views.render_to_pdf')
+    def test_send_email_pdf_generation_failure(self, mock_render_pdf):
+        """Test handling of PDF generation failure."""
+        activity = MonitoringActivityFactory(status=MonitoringActivity.STATUS_COMPLETED)
+        visit_lead = UserFactory(unicef_user=True)
+        activity.visit_lead = visit_lead
+        activity.save()
+
+        # Mock PDF generation failure
+        mock_render_pdf.side_effect = Exception('PDF generation failed')
+
+        url = reverse(
+            'field_monitoring_planning:activities-send-email',
+            kwargs={'pk': activity.pk}
+        )
+        data = {
+            'recipients': ['recipient@example.com'],
+            'message': 'Test message'
+        }
+
+        response = self.forced_auth_req('post', url, user=visit_lead, data=data)
+
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        self.assertIn('detail', response.data)
+        self.assertIn('PDF', str(response.data['detail']))
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    @patch('etools.applications.field_monitoring.planning.views.render_to_pdf')
+    @patch('etools.applications.field_monitoring.planning.views.mail')
+    def test_send_email_without_message(self, mock_mail, mock_render_pdf):
+        """Test sending email without optional message."""
+        from unicef_notification.models import EmailTemplate
+
+        # Create or update email template
+        EmailTemplate.objects.update_or_create(
+            name='fm/activity/send-report',
+            defaults={
+                'subject': 'Test Subject',
+                'html_content': 'Test Body',
+                'content': 'Test Body Plain'
+            }
+        )
+
+        activity = MonitoringActivityFactory(status=MonitoringActivity.STATUS_COMPLETED)
+        visit_lead = UserFactory(unicef_user=True)
+        activity.visit_lead = visit_lead
+        activity.save()
+
+        mock_render_pdf.return_value = b'fake pdf content'
+
+        url = reverse(
+            'field_monitoring_planning:activities-send-email',
+            kwargs={'pk': activity.pk}
+        )
+        data = {
+            'recipients': ['recipient@example.com']
+        }
+
+        response = self.forced_auth_req('post', url, user=visit_lead, data=data)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        mock_mail.send.assert_called_once()
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_send_email_invalid_recipients(self):
+        """Test validation of recipient emails."""
+        activity = MonitoringActivityFactory(status=MonitoringActivity.STATUS_COMPLETED)
+        visit_lead = UserFactory(unicef_user=True)
+        activity.visit_lead = visit_lead
+        activity.save()
+
+        url = reverse(
+            'field_monitoring_planning:activities-send-email',
+            kwargs={'pk': activity.pk}
+        )
+        data = {
+            'recipients': ['invalid-email', 'also-invalid'],
+            'message': 'Test message'
+        }
+
+        response = self.forced_auth_req('post', url, user=visit_lead, data=data)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_send_email_empty_recipients(self):
+        """Test that empty recipients list is rejected."""
+        activity = MonitoringActivityFactory(status=MonitoringActivity.STATUS_COMPLETED)
+        visit_lead = UserFactory(unicef_user=True)
+        activity.visit_lead = visit_lead
+        activity.save()
+
+        url = reverse(
+            'field_monitoring_planning:activities-send-email',
+            kwargs={'pk': activity.pk}
+        )
+        data = {
+            'recipients': [],
+            'message': 'Test message'
+        }
+
+        response = self.forced_auth_req('post', url, user=visit_lead, data=data)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    @patch('etools.applications.field_monitoring.planning.views.render_to_pdf')
+    @patch('etools.applications.field_monitoring.planning.views.mail')
+    def test_send_email_permissions(self, mock_mail, mock_render_pdf):
+        """Test that authorized users can send emails.
+
+        The permission allows: IsFieldMonitor | IsVisitLead | IsTeamMember |
+        IsMonitoringVisitApprover | IsUNICEFUser. This means any UNICEF user can send.
+        Non-UNICEF users who can't see the activity get 404 (queryset filtering).
+        """
+        from unicef_notification.models import EmailTemplate
+
+        EmailTemplate.objects.update_or_create(
+            name='fm/activity/send-report',
+            defaults={
+                'subject': 'Test Subject',
+                'html_content': 'Test Body',
+                'content': 'Test Body Plain'
+            }
+        )
+
+        activity = MonitoringActivityFactory(status=MonitoringActivity.STATUS_COMPLETED)
+        visit_lead = UserFactory(unicef_user=True)
+        team_member = UserFactory(unicef_user=True)
+        # The permission allows: IsFieldMonitor | IsVisitLead | IsTeamMember | IsMonitoringVisitApprover | IsUNICEFUser
+        # This means ANY UNICEF user can send emails. Let's test the different authorized scenarios:
+        regular_unicef_user = UserFactory(unicef_user=True, realms__data=[])  # UNICEF user but no special groups
+
+        activity.visit_lead = visit_lead
+        activity.team_members.add(team_member)
+        activity.save()
+
+        mock_render_pdf.return_value = b'fake pdf content'
+
+        url = reverse(
+            'field_monitoring_planning:activities-send-email',
+            kwargs={'pk': activity.pk}
+        )
+        data = {
+            'recipients': ['recipient@example.com'],
+            'message': 'Test message'
+        }
+
+        # Visit lead should be able to send
+        response = self.forced_auth_req('post', url, user=visit_lead, data=data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('detail', response.data)
+        self.assertIn('recipients', response.data)
+
+        # Team member should be able to send
+        response = self.forced_auth_req('post', url, user=team_member, data=data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('detail', response.data)
+        self.assertIn('recipients', response.data)
+
+        # Regular UNICEF user should also be able to send (IsUNICEFUser permission allows it)
+        response = self.forced_auth_req('post', url, user=regular_unicef_user, data=data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('detail', response.data)
+        self.assertIn('recipients', response.data)
+
+        # Test that a non-UNICEF user who is not visit_lead/team_member cannot see the activity
+        # (they get 404 because get_queryset filters them out before permission check)
+        non_unicef_user = UserFactory(realms__data=[], email='nonunicef@test.com')
+        response = self.forced_auth_req('post', url, user=non_unicef_user, data=data)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    @patch('etools.applications.field_monitoring.planning.views.render_to_pdf')
+    @patch('etools.applications.field_monitoring.planning.views.mail')
+    def test_send_email_email_template_not_found(self, mock_mail, mock_render_pdf):
+        """Test handling when email template is not found."""
+        from unicef_notification.models import EmailTemplate
+
+        # Ensure the template doesn't exist
+        EmailTemplate.objects.filter(name='fm/activity/send-report').delete()
+
+        activity = MonitoringActivityFactory(status=MonitoringActivity.STATUS_COMPLETED)
+        visit_lead = UserFactory(unicef_user=True)
+        activity.visit_lead = visit_lead
+        activity.save()
+
+        mock_render_pdf.return_value = b'fake pdf content'
+
+        url = reverse(
+            'field_monitoring_planning:activities-send-email',
+            kwargs={'pk': activity.pk}
+        )
+        data = {
+            'recipients': ['recipient@example.com'],
+            'message': 'Test message'
+        }
+
+        response = self.forced_auth_req('post', url, user=visit_lead, data=data)
+
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        self.assertIn('detail', response.data)
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    @patch('etools.applications.field_monitoring.planning.views.render_to_pdf')
+    @patch('etools.applications.field_monitoring.planning.views.mail')
+    def test_send_email_individual_emails_sent(self, mock_mail, mock_render_pdf):
+        """Test that individual emails are sent to each recipient."""
+        from unicef_notification.models import EmailTemplate
+
+        # Ensure email template exists
+        EmailTemplate.objects.update_or_create(
+            name='fm/activity/send-report',
+            defaults={
+                'subject': 'Test Subject',
+                'html_content': 'Test Body',
+                'content': 'Test Body Plain'
+            }
+        )
+
+        activity = MonitoringActivityFactory(status=MonitoringActivity.STATUS_COMPLETED)
+        visit_lead = UserFactory(unicef_user=True)
+        activity.visit_lead = visit_lead
+        activity.save()
+
+        mock_render_pdf.return_value = b'fake pdf content'
+
+        url = reverse(
+            'field_monitoring_planning:activities-send-email',
+            kwargs={'pk': activity.pk}
+        )
+        data = {
+            'recipients': ['recipient1@example.com', 'recipient2@example.com', 'recipient3@example.com'],
+            'message': 'Test message'
+        }
+
+        response = self.forced_auth_req('post', url, user=visit_lead, data=data)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # Verify that 3 separate emails were sent (one per recipient)
+        self.assertEqual(mock_mail.send.call_count, 3)
+
+        # Verify each call has a single recipient
+        for call in mock_mail.send.call_args_list:
+            recipients = call[1]['recipients']
+            self.assertEqual(len(recipients), 1)
+            self.assertIn(recipients[0], data['recipients'])

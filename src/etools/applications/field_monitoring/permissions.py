@@ -100,6 +100,14 @@ class IsVisitLead(BasePermission):
         return request.user == obj.visit_lead
 
 
+class IsUNICEFUser(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.is_unicef_user()
+
+    def has_object_permission(self, request, view, obj):
+        return request.user.is_unicef_user()
+
+
 def activity_field_is_editable_permission(field):
     """
     Check the user is able to edit selected monitoring activity field.

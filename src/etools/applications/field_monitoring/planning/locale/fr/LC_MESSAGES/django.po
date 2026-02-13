@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-29 13:11+0000\n"
+"POT-Creation-Date: 2026-02-12 13:51+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -299,6 +299,9 @@ msgstr ""
 msgid "TPM Concerns"
 msgstr ""
 
+msgid "One or more email addresses are invalid."
+msgstr "Une ou plusieurs adresses e-mail ne sont pas valides."
+
 msgid "History"
 msgstr "Historique"
 
@@ -352,6 +355,18 @@ msgstr "Justification du suivi annuel sur le terrain"
 
 msgid "Templates"
 msgstr "Modèles"
+
+msgid "Report can only be sent by email when status is completed."
+msgstr "Le rapport ne peut être envoyé par e-mail que lorsque le statut est terminé."
+
+msgid "Failed to generate PDF report."
+msgstr "Échec de la génération du rapport PDF."
+
+msgid "Report sent successfully by email."
+msgstr "Rapport envoyé avec succès par e-mail."
+
+msgid "Failed to send email. Please try again later."
+msgstr "Échec de l'envoi de l'e-mail. Veuillez réessayer plus tard."
 
 msgid "Attachments"
 msgstr "Pièces jointes"
