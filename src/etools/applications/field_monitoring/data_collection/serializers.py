@@ -113,7 +113,7 @@ class ChecklistOverallFindingSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ChecklistOverallFinding
-        fields = ('id', 'partner', 'cp_output', 'intervention', 'narrative_finding', 'attachments')
+        fields = ('id', 'partner', 'cp_output', 'intervention', 'narrative_finding_raw', 'attachments')
         read_only_fields = ('partner', 'cp_output', 'intervention')
 
 
@@ -133,7 +133,7 @@ class CompletedChecklistOverallFindingSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ChecklistOverallFinding
-        fields = ('author', 'method', 'checklist', 'information_source', 'narrative_finding')
+        fields = ('author', 'method', 'checklist', 'information_source', 'narrative_finding_raw')
 
 
 class ActivityOverallFindingSerializer(serializers.ModelSerializer):
@@ -144,7 +144,7 @@ class ActivityOverallFindingSerializer(serializers.ModelSerializer):
         model = ActivityOverallFinding
         fields = (
             'id', 'partner', 'cp_output', 'intervention',
-            'narrative_finding', 'on_track',
+            'narrative_finding_raw', 'on_track',
             'attachments', 'findings'
         )
         read_only_fields = ('partner', 'cp_output', 'intervention')
