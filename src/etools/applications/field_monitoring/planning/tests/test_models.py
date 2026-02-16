@@ -46,6 +46,10 @@ from etools.applications.reports.models import CountryProgramme, ResultType
 from etools.applications.reports.tests.factories import CountryProgrammeFactory, ResultFactory, SectionFactory
 from etools.applications.tpm.tests.factories import TPMPartnerFactory, TPMUserFactory
 from etools.libraries.pythonlib.datetime import get_quarter
+from etools.applications.field_monitoring.data_collection.models import Finding, StartedChecklist
+from etools.applications.field_monitoring.fm_settings.tests.factories import MethodFactory
+from etools.applications.field_monitoring.tests.factories import UserFactory
+from etools.applications.field_monitoring.planning.models import DummyEWPActivityModel
 
 
 class TestMonitoringActivityValidations(BaseTenantTestCase):
@@ -322,6 +326,98 @@ class TestNewEntityTypes(BaseTenantTestCase):
         ewp_questions = activity.questions.filter(ewp_activity=ewp_activity)
         self.assertEqual(ewp_questions.count(), 1)
         self.assertEqual(ewp_questions.first().question, self.ewp_question)
+
+    def test_checklist_finds_ewp_activity_questions(self):
+        """
+        When an activity has Key Interventions (ewp_activities), the generated ActivityQuestions
+        should be used to populate checklist findings.
+
+        Note: we create StartedChecklist via bulk_create to avoid calling its overridden save(),
+        so we can exercise prepare_findings() without creating overall findings.
+        """
+
+        method = MethodFactory()
+        self.ewp_question.methods.add(method)
+        # Ensure generated ActivityQuestion is enabled (uses base template).
+        QuestionTemplateFactory(question=self.ewp_question)
+
+        ewp_activity = DummyEWPActivityModel.objects.create(wbs='ACT-CHK-001-2024')
+        activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.draft)
+        activity.sections.set([self.section])
+        activity.ewp_activities.set([ewp_activity])
+        activity.prepare_questions_structure()
+
+        aq_qs = activity.questions.filter(ewp_activity=ewp_activity, question=self.ewp_question, is_enabled=True)
+        self.assertEqual(aq_qs.count(), 1)
+
+        author = UserFactory()
+        checklist = StartedChecklist(
+            monitoring_activity=activity,
+            method=method,
+            information_source='test',
+            author=author,
+        )
+        StartedChecklist.objects.bulk_create([checklist])
+        checklist = StartedChecklist.objects.get(
+            monitoring_activity=activity,
+            method=method,
+            author=author,
+        )
+
+        checklist.prepare_findings()
+
+        self.assertEqual(Finding.objects.filter(started_checklist=checklist).count(), 1)
+        finding = Finding.objects.get(started_checklist=checklist)
+        self.assertEqual(finding.activity_question.question, self.ewp_question)
+        self.assertEqual(finding.activity_question.ewp_activity, ewp_activity)
+
+    def test_checklist_finds_gpd_questions_from_intervention_level(self):
+        """
+        When an activity has gPDs, the generated ActivityQuestions (intervention-level question pool)
+        should be used to populate checklist findings for the gPD.
+
+        Note: we create StartedChecklist via bulk_create to avoid calling its overridden save(),
+        so we can exercise prepare_findings() without creating overall findings.
+        """
+        from etools.applications.field_monitoring.data_collection.models import Finding, StartedChecklist
+        from etools.applications.field_monitoring.fm_settings.tests.factories import MethodFactory
+        from etools.applications.field_monitoring.tests.factories import UserFactory
+        from etools.applications.field_monitoring.planning.models import DummyGPDModel
+
+        method = MethodFactory()
+        self.intervention_question.methods.add(method)
+        # Ensure generated ActivityQuestion is enabled (uses base template).
+        QuestionTemplateFactory(question=self.intervention_question)
+
+        gpd = DummyGPDModel.objects.create(gpd_ref='GPD-CHK-001')
+        activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.draft)
+        activity.sections.set([self.section])
+        activity.gpds.set([gpd])
+        activity.prepare_questions_structure()
+
+        aq_qs = activity.questions.filter(gpd=gpd, question=self.intervention_question, is_enabled=True)
+        self.assertEqual(aq_qs.count(), 1)
+
+        author = UserFactory()
+        checklist = StartedChecklist(
+            monitoring_activity=activity,
+            method=method,
+            information_source='test',
+            author=author,
+        )
+        StartedChecklist.objects.bulk_create([checklist])
+        checklist = StartedChecklist.objects.get(
+            monitoring_activity=activity,
+            method=method,
+            author=author,
+        )
+
+        checklist.prepare_findings()
+
+        self.assertEqual(Finding.objects.filter(started_checklist=checklist).count(), 1)
+        finding = Finding.objects.get(started_checklist=checklist)
+        self.assertEqual(finding.activity_question.question, self.intervention_question)
+        self.assertEqual(finding.activity_question.gpd, gpd)
 
     def test_gpd_questions_use_intervention_level(self):
         """Test that gPDs use intervention-level questions."""

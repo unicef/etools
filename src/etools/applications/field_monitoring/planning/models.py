@@ -510,9 +510,13 @@ class MonitoringActivity(
 
         for relation, level, target_field in self.RELATIONS_MAPPING:
             for target in getattr(self, relation).all():
-                target_questions = applicable_questions.filter(level=level).prefetch_templates(
-                    level, target_id=target.id
+                # key interventions (ewp_activities) have their own checklist/questions
+                # so they use their own question level (ewp_activity)
+                q_level = level
+                target_questions = applicable_questions.filter(level=q_level).prefetch_templates(
+                    q_level, target_id=target.id
                 )
+
                 for target_question in target_questions:
                     activity_question = ActivityQuestion(
                         question=target_question, monitoring_activity=self,
