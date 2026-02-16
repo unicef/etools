@@ -947,6 +947,21 @@ msgstr "Гуманитарный"
 msgid "Date first sent to Partner"
 msgstr "Дата первой отправки партнеру"
 
+msgid "Open selection"
+msgstr "Открытый выбор"
+
+msgid "Direct selection"
+msgstr "Прямой выбор"
+
+msgid "Partner Selection Modality"
+msgstr "Способ выбора партнера"
+
+msgid ""
+"Select how the partner was selected in UNPP (Open selection or Direct "
+"selection)."
+msgstr ""
+"Выберите, как был выбран партнер в UNPP (Открытый выбор или Прямой выбор)."
+
 msgid "Context"
 msgstr "Контекст"
 

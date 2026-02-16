@@ -86,6 +86,7 @@ class BaseInterventionModelExportTestCase(BaseTenantTestCase):
             partner_authorized_officer_signatory=partnerstaff,
             country_programme=agreement.country_programme,
             cfei_number='cfei',
+            partner_selection_modality=Intervention.SELECTION_MODALITY_OPEN,
         )
         cls.intervention.country_programmes.add(agreement.country_programme)
 
@@ -258,8 +259,8 @@ class TestInterventionModelExport(BaseInterventionModelExportTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dataset = Dataset().load(response.content.decode('utf-8'), 'csv')
         self.assertEqual(dataset.height, 1)
-        self.assertEqual(len(dataset._get_headers()), 103)
-        self.assertEqual(len(dataset[0]), 103)
+        self.assertEqual(len(dataset._get_headers()), 104)
+        self.assertEqual(len(dataset[0]), 104)
 
 
 class TestInterventionAmendmentModelExport(BaseInterventionModelExportTestCase):
