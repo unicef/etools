@@ -444,7 +444,7 @@ class PowerBIDataView(APIView):
 
     def get(self, request, *args, **kwargs):
         user = request.user
-        if user.is_lmsm_admin:
+        if user.is_lmsm_admin_or_co_viewer and user.profile.organization.name == "UNICEF":
             report_id = settings.PBI_CONFIG["REPORT_ID_ADMIN"]
         else:
             report_id = settings.PBI_CONFIG["REPORT_ID"]

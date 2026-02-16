@@ -435,6 +435,9 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
         resp = self.forced_auth_req('patch', url, user=self.user, data=payload)
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('Invalid status transition', str(resp.data))
+        # Ensure we show human-friendly labels, not raw status codes
+        self.assertIn('IP Contacted', str(resp.data))
+        self.assertIn('Final Report', str(resp.data))
 
         # Verify status didn't change
         audit.refresh_from_db()

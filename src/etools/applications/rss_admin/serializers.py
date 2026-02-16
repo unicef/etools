@@ -412,6 +412,7 @@ class EngagementStatusUpdateMixin:
             return None
 
         old_status = instance.status
+        status_labels = dict(Engagement.STATUSES)
 
         # Remove status from validated_data - we'll handle it via FSM
         validated_data.pop('status', None)
@@ -432,8 +433,10 @@ class EngagementStatusUpdateMixin:
         transition_method = transition_map.get(transition_key)
 
         if not transition_method:
+            old_label = str(status_labels.get(old_status, old_status))
+            new_label = str(status_labels.get(new_status, new_status))
             raise serializers.ValidationError({
-                'status': [f'Invalid status transition from {old_status} to {new_status}']
+                'status': [f'Invalid status transition from {old_label} to {new_label}']
             })
 
         # send_back and cancel require comments - validate before trying FSM transition

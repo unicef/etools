@@ -42,7 +42,7 @@ Field no,Field Name,Group,Condition,Status,Action,Allowed
 3.3.3,capacity_development,*,unlocked,Draft,Required,FALSE
 3.3.3,accountability_to_affected_populations,Unicef Focal Point,unicef_court,Draft,Edit,TRUE
 3.3.3,accountability_to_affected_populations,Partner User,partner_court,Draft,Edit,TRUE
-3.3.3,accountability_to_affected_populations,*,unlocked,Draft,Required,FALSE
+3.3.3,accountability_to_affected_populations,*,,*,Required,FALSE
 3.3.3,cash_transfer_modalities,*,,*,View,TRUE
 3.3.3,cash_transfer_modalities,Unicef Focal Point,contingency_on,Review,Edit,TRUE
 3.3.3,cash_transfer_modalities,Unicef Focal Point,unlocked,Draft,Edit,TRUE
