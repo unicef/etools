@@ -154,6 +154,13 @@ class FMInterventionListSerializer(MinimalInterventionListSerializer):
         )
 
 
+class FMPartnerOrganizationListSerializer(MinimalPartnerOrganizationListSerializer):
+    organization_type = serializers.CharField(source='organization.organization_type', read_only=True)
+
+    class Meta(MinimalPartnerOrganizationListSerializer.Meta):
+        fields = MinimalPartnerOrganizationListSerializer.Meta.fields + ('organization_type',)
+
+
 class MonitoringActivityLightSerializer(serializers.ModelSerializer):
     tpm_partner = SeparatedReadWriteField(read_field=TPMPartnerSerializer())
     location = SeparatedReadWriteField(read_field=LocationSerializer())
@@ -161,7 +168,7 @@ class MonitoringActivityLightSerializer(serializers.ModelSerializer):
 
     visit_lead = SeparatedReadWriteField(read_field=MinimalUserSerializer())
     team_members = SeparatedReadWriteField(read_field=MinimalUserSerializer(many=True))
-    partners = SeparatedReadWriteField(read_field=MinimalPartnerOrganizationListSerializer(many=True))
+    partners = SeparatedReadWriteField(read_field=FMPartnerOrganizationListSerializer(many=True))
     interventions = SeparatedReadWriteField(read_field=FMInterventionListSerializer(many=True))
     cp_outputs = SeparatedReadWriteField(read_field=MinimalOutputListSerializer(many=True))
     ewp_activities = serializers.SerializerMethodField(read_only=True)
@@ -611,10 +618,3 @@ class TPMConcernSerializer(UserContextSerializerMixin, SnapshotModelSerializer, 
 
 class DuplicateMonitoringActivitySerializer(serializers.Serializer):
     with_checklist = serializers.BooleanField(required=True)
-
-
-class FMPartnerOrganizationListSerializer(MinimalPartnerOrganizationListSerializer):
-    organization_type = serializers.CharField(source='organization.organization_type', read_only=True)
-
-    class Meta(MinimalPartnerOrganizationListSerializer.Meta):
-        fields = MinimalPartnerOrganizationListSerializer.Meta.fields + ('organization_type',)
