@@ -79,6 +79,26 @@ class TestMonitoringActivityValidations(BaseTenantTestCase):
                                              tpm_partner=None)
         self.assertTrue(ActivityValid(activity, user=self.user).is_valid)
 
+    def test_checklist_requires_at_least_one_entity(self):
+        """
+        Checklist transition requires at least one of:
+        partners, cp_outputs, interventions, ewp_activities, or gpds.
+        """
+        activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.checklist)
+        self.assertFalse(ActivityValid(activity, user=self.user).is_valid)
+
+    def test_checklist_accepts_ewp_activities_instead_of_cp_outputs(self):
+        activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.checklist)
+        ewp = DummyEWPActivityModel.objects.create(wbs='ACT-VALID-001')
+        activity.ewp_activities.add(ewp)
+        self.assertTrue(ActivityValid(activity, user=self.user).is_valid)
+
+    def test_checklist_accepts_gpds_instead_of_interventions(self):
+        activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.checklist)
+        gpd = DummyGPDModel.objects.create(gpd_ref='GPD-VALID-001')
+        activity.gpds.add(gpd)
+        self.assertTrue(ActivityValid(activity, user=self.user).is_valid)
+
     def test_staff_member_from_assigned_partner(self):
         tpm_partner = TPMPartnerFactory()
         activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.draft, monitor_type='tpm',
