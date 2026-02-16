@@ -23,7 +23,7 @@ from etools.applications.last_mile.filters import POIFilter, TransferFilter
 from etools.applications.last_mile.permissions import IsIPLMEditorOrViewerReadOnly, IsLMSMGroup
 from etools.applications.last_mile.tasks import notify_upload_waybill
 from etools.applications.locations.models import Location
-from etools.applications.organizations.models import Organization, OrganizationType
+from etools.applications.organizations.models import Organization
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.utils.pbi_auth import get_access_token, get_embed_token, get_embed_url, TokenRetrieveException
@@ -441,12 +441,8 @@ class UnicefPartnerView(APIView):
                 organization__vendor_number=UNICEF_VENDOR_NUMBER
             )
         except PartnerOrganization.DoesNotExist:
-            org, _ = Organization.objects.get_or_create(
-                vendor_number=UNICEF_VENDOR_NUMBER,
-                defaults={
-                    'name': 'UNICEF',
-                    'organization_type': OrganizationType.UN_AGENCY,
-                }
+            org = Organization.objects.get(
+                Q(vendor_number=UNICEF_VENDOR_NUMBER) | Q(pk=1)
             )
             return PartnerOrganization.all_partners.create(
                 organization=org,
@@ -490,6 +486,8 @@ class UnicefHandoverCheckoutView(APIView):
         origin_point_id = data.get('origin_point')
         if not origin_point_id:
             raise ValidationError(_('origin_point is required.'))
+        if not data.get('partner_id'):
+            raise ValidationError(_('partner_id is required.'))
 
         origin_poi = get_object_or_404(models.PointOfInterest, pk=origin_point_id)
 
