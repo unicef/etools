@@ -21,7 +21,7 @@ from etools.applications.field_monitoring.fm_settings.serializers import (
     FMCommonAttachmentSerializer,
     QuestionSerializer,
 )
-from etools.applications.field_monitoring.planning.models import MonitoringActivity
+from etools.applications.field_monitoring.planning.models import DummyEWPActivityModel, DummyGPDModel, MonitoringActivity
 from etools.applications.partners.serializers.interventions_v2 import MinimalInterventionListSerializer
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.reports.serializers.v2 import MinimalOutputListSerializer
@@ -34,10 +34,28 @@ class ActivityDataCollectionSerializer(serializers.ModelSerializer):
         fields = ('id',)
 
 
+class MinimalEWPActivitySerializer(serializers.ModelSerializer):
+    """Minimal representation for Key Intervention / eWP activity targets."""
+
+    class Meta:
+        model = DummyEWPActivityModel
+        fields = ('id', 'wbs')
+
+
+class MinimalGPDSerializer(serializers.ModelSerializer):
+    """Minimal representation for GPD targets."""
+
+    class Meta:
+        model = DummyGPDModel
+        fields = ('id', 'gpd_ref')
+
+
 class ActivityQuestionSerializer(serializers.ModelSerializer):
     partner = MinimalPartnerOrganizationListSerializer(read_only=True)
     cp_output = MinimalOutputListSerializer(read_only=True)
     intervention = MinimalInterventionListSerializer(read_only=True)
+    ewp_activity = MinimalEWPActivitySerializer(read_only=True)
+    gpd = MinimalGPDSerializer(read_only=True)
 
     question = QuestionSerializer(read_only=True)
 
@@ -48,6 +66,7 @@ class ActivityQuestionSerializer(serializers.ModelSerializer):
             'text', 'is_hact',
             'is_enabled', 'specific_details',
             'partner', 'intervention', 'cp_output',
+            'ewp_activity', 'gpd',
         )
 
 

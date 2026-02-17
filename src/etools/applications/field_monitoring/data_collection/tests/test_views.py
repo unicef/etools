@@ -21,6 +21,7 @@ from etools.applications.field_monitoring.tests.base import APIViewSetTestCase, 
 from etools.applications.field_monitoring.tests.factories import UserFactory
 from etools.applications.partners.tests.factories import InterventionFactory, PartnerFactory
 from etools.applications.reports.tests.factories import ResultFactory
+from etools.applications.field_monitoring.planning.models import DummyEWPActivityModel, DummyGPDModel
 
 
 class TestActivityReportAttachmentsView(FMBaseTestCaseMixin, APIViewSetTestCase):
@@ -153,11 +154,16 @@ class TestActivityQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
     def test_list(self):
         ActivityQuestionFactory(partner=PartnerFactory())  # hidden one
 
+        ewp = DummyEWPActivityModel.objects.create(wbs='WBS-TEST-001')
+        gpd = DummyGPDModel.objects.create(gpd_ref='GPD-TEST-001')
+
         questions = [
             ActivityQuestionFactory(monitoring_activity=self.activity, partner=PartnerFactory()),
             ActivityQuestionFactory(monitoring_activity=self.activity, partner=PartnerFactory()),
             ActivityQuestionFactory(monitoring_activity=self.activity, cp_output=ResultFactory()),
             ActivityQuestionFactory(monitoring_activity=self.activity, intervention=InterventionFactory()),
+            ActivityQuestionFactory(monitoring_activity=self.activity, ewp_activity=ewp),
+            ActivityQuestionFactory(monitoring_activity=self.activity, gpd=gpd),
         ]
 
         with self.assertNumQueries(6):
@@ -172,6 +178,17 @@ class TestActivityQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
             [r['id'] for r in response.data['results']],
             [q.pk for q in questions]
         )
+
+        # Ensure new entity fields are exposed in response
+        ewp_row = next(r for r in response.data['results'] if r['ewp_activity'] is not None)
+        self.assertEqual(ewp_row['ewp_activity']['id'], ewp.id)
+        self.assertEqual(ewp_row['ewp_activity']['wbs'], 'WBS-TEST-001')
+        self.assertIsNone(ewp_row['gpd'])
+
+        gpd_row = next(r for r in response.data['results'] if r['gpd'] is not None)
+        self.assertEqual(gpd_row['gpd']['id'], gpd.id)
+        self.assertEqual(gpd_row['gpd']['gpd_ref'], 'GPD-TEST-001')
+        self.assertIsNone(gpd_row['ewp_activity'])
 
     def test_update(self):
         question = ActivityQuestionFactory(is_enabled=True, monitoring_activity__status='checklist')

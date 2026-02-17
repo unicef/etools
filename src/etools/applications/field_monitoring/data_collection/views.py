@@ -155,14 +155,19 @@ class ActivityQuestionsViewSet(
         IsReadAction | (IsEditAction & activity_field_is_editable_permission('activity_question_set'))
     ]
     queryset = ActivityQuestion.objects.select_related(
-        'question', 'partner', 'partner__organization', 'cp_output', 'intervention'
+        'question',
+        'partner', 'partner__organization',
+        'cp_output',
+        'intervention',
+        'ewp_activity',
+        'gpd',
     ).prefetch_related(
         'cp_output__result_type',
         'question__methods',
         'question__sections',
         'question__options',
     ).order_by(
-        'partner_id', 'cp_output_id', 'intervention_id', 'id'
+        'partner_id', 'cp_output_id', 'intervention_id', 'ewp_activity_id', 'gpd_id', 'id'
     )
     serializer_class = ActivityQuestionSerializer
     filter_backends = (DjangoFilterBackend,)
