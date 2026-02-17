@@ -52,7 +52,7 @@ from etools.applications.partners.utils import send_agreement_suspended_notifica
 from etools.applications.permissions2.conditions import ObjectStatusCondition
 from etools.applications.permissions2.views import PermittedSerializerMixin
 from etools.applications.rss_admin.admin_logging import extract_requested_changes, get_changed_fields, log_change
-from etools.applications.rss_admin.filters import MonitoringActivityRssFilterSet
+from etools.applications.rss_admin.filters import LogEntryFilterSet, MonitoringActivityRssFilterSet
 from etools.applications.rss_admin.importers import LocationSiteImporter
 from etools.applications.rss_admin.permissions import IsRssAdmin
 from etools.applications.rss_admin.serializers import (
@@ -94,15 +94,20 @@ class AdminLogEntriesMixin:
       To keep the API response stable, we return a paginated-shaped payload even when pagination is not applied.
     """
 
-    def _get_admin_log_entries(self, obj):
+    def _get_admin_log_entries(self, obj, request=None):
         if hasattr(obj, 'get_subclass'):
             obj = obj.get_subclass()
 
         content_type = ContentType.objects.get_for_model(obj.__class__)
-        return LogEntry.objects.filter(
+        queryset = LogEntry.objects.filter(
             content_type=content_type,
             object_id=str(obj.pk),
         ).select_related('user', 'content_type').order_by('-action_time')
+
+        if request:
+            queryset = LogEntryFilterSet(request.query_params, queryset=queryset).qs
+
+        return queryset
 
     def _paginate_and_respond_consistently(self, queryset, serializer_class):
         page = self.paginate_queryset(queryset)
@@ -119,7 +124,7 @@ class AdminLogEntriesMixin:
         })
 
 
-class PartnerOrganizationRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSet, FilterQueryMixin):
+class PartnerOrganizationRssViewSet(AdminLogEntriesMixin, QueryStringFilterMixin, viewsets.ModelViewSet, FilterQueryMixin):
     queryset = PartnerOrganization.objects.all()
     serializer_class = PartnerOrganizationRssSerializer
     permission_classes = (IsRssAdmin,)
@@ -185,6 +190,18 @@ class PartnerOrganizationRssViewSet(QueryStringFilterMixin, viewsets.ModelViewSe
         status_code = status.HTTP_201_CREATED if created else status.HTTP_200_OK
         return Response(PartnerOrganizationRssSerializer(partner, context={'request': request}).data, status=status_code)
 
+    @action(detail=True, methods=['get'], url_path='logs')
+    def logs(self, request, pk=None):
+        """Retrieve paginated change logs for this partner organization.
+
+        Supports filtering via search, action_time_gte, action_time_lte query params.
+        """
+        # Get object using base queryset without filter_backends (search/ordering shouldn't affect detail lookup)
+        queryset = self.get_queryset()
+        obj = get_object_or_404(queryset.model.objects.all(), pk=pk)
+        log_entries = self._get_admin_log_entries(obj, request=request)
+        return self._paginate_and_respond_consistently(log_entries, LogEntrySerializer)
+
 
 class AgreementRssViewSet(AdminLogEntriesMixin, QueryStringFilterMixin, viewsets.ModelViewSet, FilterQueryMixin):
     queryset = Agreement.objects.all()
@@ -239,20 +256,14 @@ class AgreementRssViewSet(AdminLogEntriesMixin, QueryStringFilterMixin, viewsets
 
     @action(detail=True, methods=['get'], url_path='logs')
     def logs(self, request, pk=None):
-        """Retrieve change logs for this agreement.
+        """Retrieve paginated change logs for this agreement.
 
-        Returns paginated list of LogEntry records for this agreement.
-        Supports standard pagination parameters: page, page_size.
-
-        Response structure:
-        {
-            "count": <total_count>,
-            "next": <url_to_next_page_or_null>,
-            "previous": <url_to_previous_page_or_null>,
-            "results": [<log_entries>]
-        }
+        Supports filtering via search, action_time_gte, action_time_lte query params.
         """
-        log_entries = self._get_admin_log_entries(self.get_object())
+        # Get object using base queryset without filter_backends
+        queryset = self.get_queryset()
+        obj = get_object_or_404(queryset.model.objects.all(), pk=pk)
+        log_entries = self._get_admin_log_entries(obj, request=request)
         return self._paginate_and_respond_consistently(log_entries, LogEntrySerializer)
 
 
@@ -450,20 +461,14 @@ class ProgrammeDocumentRssViewSet(AdminLogEntriesMixin, QueryStringFilterMixin, 
 
     @action(detail=True, methods=['get'], url_path='logs')
     def logs(self, request, pk=None):
-        """Retrieve change logs for this programme document.
+        """Retrieve paginated change logs for this programme document.
 
-        Returns paginated list of LogEntry records for this programme document.
-        Supports standard pagination parameters: page, page_size.
-
-        Response structure:
-        {
-            "count": <total_count>,
-            "next": <url_to_next_page_or_null>,
-            "previous": <url_to_previous_page_or_null>,
-            "results": [<log_entries>]
-        }
+        Supports filtering via search, action_time_gte, action_time_lte query params.
         """
-        log_entries = self._get_admin_log_entries(self.get_object())
+        # Get object using base queryset without filter_backends
+        queryset = self.get_queryset()
+        obj = get_object_or_404(queryset.model.objects.all(), pk=pk)
+        log_entries = self._get_admin_log_entries(obj, request=request)
         return self._paginate_and_respond_consistently(log_entries, LogEntrySerializer)
 
 
@@ -716,24 +721,19 @@ class EngagementRssViewSet(AdminLogEntriesMixin,
 
     @action(detail=True, methods=['get'], url_path='logs')
     def logs(self, request, pk=None):
-        """Retrieve change logs for this engagement.
+        """Retrieve paginated change logs for this engagement.
 
-        Returns paginated list of LogEntry records for this engagement.
-        Supports standard pagination parameters: page, page_size.
-
-        Response structure:
-        {
-            "count": <total_count>,
-            "next": <url_to_next_page_or_null>,
-            "previous": <url_to_previous_page_or_null>,
-            "results": [<log_entries>]
-        }
+        Supports filtering via search, action_time_gte, action_time_lte query params.
         """
-        log_entries = self._get_admin_log_entries(self.get_object())
+        # Get object using base queryset without filter_backends
+        queryset = self.get_queryset()
+        obj = get_object_or_404(queryset.model.objects.all(), pk=pk)
+        log_entries = self._get_admin_log_entries(obj, request=request)
         return self._paginate_and_respond_consistently(log_entries, LogEntrySerializer)
 
 
-class ActionPointRssViewSet(mixins.ListModelMixin,
+class ActionPointRssViewSet(AdminLogEntriesMixin,
+                            mixins.ListModelMixin,
                             mixins.RetrieveModelMixin,
                             mixins.UpdateModelMixin,
                             viewsets.GenericViewSet):
@@ -817,6 +817,18 @@ class ActionPointRssViewSet(mixins.ListModelMixin,
         serializer.save()
         return Response(ActionPointRssDetailSerializer(action_point, context={'request': request}).data, status=status.HTTP_200_OK)
 
+    @action(detail=True, methods=['get'], url_path='logs')
+    def logs(self, request, pk=None):
+        """Retrieve paginated change logs for this action point.
+
+        Supports filtering via search, action_time_gte, action_time_lte query params.
+        """
+        # Get object using base queryset without filter_backends
+        queryset = self.get_queryset()
+        obj = get_object_or_404(queryset.model.objects.all(), pk=pk)
+        log_entries = self._get_admin_log_entries(obj, request=request)
+        return self._paginate_and_respond_consistently(log_entries, LogEntrySerializer)
+
 
 class LocationSiteAdminViewSet(viewsets.ViewSet):
     permission_classes = (IsRssAdmin,)
@@ -840,7 +852,7 @@ class LocationSiteAdminViewSet(viewsets.ViewSet):
         return Response(result, status=status.HTTP_200_OK)
 
 
-class MonitoringActivityRssViewSet(viewsets.ModelViewSet):
+class MonitoringActivityRssViewSet(AdminLogEntriesMixin, viewsets.ModelViewSet):
     queryset = MonitoringActivity.objects\
         .annotate(checklists_count=Count('checklists'))\
         .select_related('tpm_partner', 'tpm_partner__organization',
@@ -892,6 +904,18 @@ class MonitoringActivityRssViewSet(viewsets.ModelViewSet):
 
         aof = FieldMonitoringService.set_on_track(activity=activity, partner=partner, on_track=on_track)
         return Response({'detail': 'Monitoring status updated', 'on_track': aof.on_track}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['get'], url_path='logs')
+    def logs(self, request, pk=None):
+        """Retrieve paginated change logs for this monitoring activity.
+
+        Supports filtering via search, action_time_gte, action_time_lte query params.
+        """
+        # Get object using base queryset without filter_backends
+        queryset = self.get_queryset()
+        obj = get_object_or_404(queryset.model.objects.all(), pk=pk)
+        log_entries = self._get_admin_log_entries(obj, request=request)
+        return self._paginate_and_respond_consistently(log_entries, LogEntrySerializer)
 
 
 class BulkUpdateMixin:
