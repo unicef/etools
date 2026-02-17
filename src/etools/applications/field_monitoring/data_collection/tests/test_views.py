@@ -400,12 +400,12 @@ class TestChecklistOverallFindingsView(ChecklistDataCollectionTestMixin, APIView
 
     def test_update_team_member(self):
         self._test_update(self.team_member, self.overall_finding, {
-            'narrative_finding': 'some test text'
+            'narrative_finding_raw': 'some test text'
         })
 
     def test_update_visit_lead(self):
         self._test_update(self.visit_lead, self.overall_finding, {
-            'narrative_finding': 'some test text'
+            'narrative_finding_raw': 'some test text'
         })
 
     def test_update_fm_user(self):
@@ -581,7 +581,7 @@ class TestChecklistFindingsView(ChecklistDataCollectionTestMixin, APIViewSetTest
         finding.save()
 
         overall_finding = self.started_checklist.overall_findings.first()
-        overall_finding.narrative_finding = 'ok'
+        overall_finding.narrative_finding_raw = 'ok'
         overall_finding.save()
 
         self.activity.port_findings_to_summary()
@@ -607,10 +607,10 @@ class TestChecklistFindingsView(ChecklistDataCollectionTestMixin, APIViewSetTest
         finding.save()
 
         overall_finding = self.started_checklist.overall_findings.first()
-        overall_finding.narrative_finding = 'ok'
+        overall_finding.narrative_finding_raw = 'ok'
         overall_finding.save()
         second_overall_finding = second_checklist.overall_findings.first()
-        second_overall_finding.narrative_finding = 'fine'
+        second_overall_finding.narrative_finding_raw = 'fine'
         second_overall_finding.save()
 
         self.activity.port_findings_to_summary()
@@ -660,7 +660,7 @@ class TestActivityOverallFindingsView(ChecklistDataCollectionTestMixin, APIViewS
 
     def test_update_visit_lead(self):
         response = self._test_update(self.visit_lead, self.overall_finding, {
-            'narrative_finding': 'some test text',
+            'narrative_finding_raw': 'some test text',
             'on_track': True
         })
         self.assertEqual(response.data['on_track'], True)

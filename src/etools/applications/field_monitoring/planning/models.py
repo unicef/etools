@@ -784,14 +784,14 @@ class MonitoringActivity(
 
         for overall_finding in self.overall_findings.all():
             narrative_findings = ChecklistOverallFinding.objects.filter(
-                ~Q(narrative_finding=''),
+                ~Q(narrative_finding_raw=''),
                 started_checklist__monitoring_activity=self,
                 partner=overall_finding.partner,
                 cp_output=overall_finding.cp_output,
                 intervention=overall_finding.intervention,
-            ).values_list('narrative_finding', flat=True)
+            ).values_list('narrative_finding_raw', flat=True)
             if len(narrative_findings) == 1:
-                overall_finding.narrative_finding = narrative_findings[0]
+                overall_finding.narrative_finding_raw = narrative_findings[0]
                 overall_finding.save()
 
     def send_rejection_note(self, old_instance):
