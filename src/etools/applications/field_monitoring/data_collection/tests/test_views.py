@@ -652,6 +652,42 @@ class TestActivityOverallFindingsView(ChecklistDataCollectionTestMixin, APIViewS
         self.assertIn('findings', response.data['results'][0])
         self.assertNotEqual(response.data['results'][0]['findings'], [])
         self.assertEqual(response.data['results'][0]['findings'][0]['checklist'], checklist.id)
+        # New target fields should be exposed (null for this fixture)
+        self.assertIn('ewp_activity', response.data['results'][0])
+        self.assertIn('gpd', response.data['results'][0])
+        self.assertIsNone(response.data['results'][0]['ewp_activity'])
+        self.assertIsNone(response.data['results'][0]['gpd'])
+
+    def test_list_includes_ewp_activity_and_gpd(self):
+        from etools.applications.field_monitoring.data_collection.models import ActivityOverallFinding
+        from etools.applications.field_monitoring.planning.models import DummyEWPActivityModel as EWPActivity
+        from etools.applications.field_monitoring.planning.models import DummyGPDModel as GPD
+
+        ewp = EWPActivity.objects.create(wbs='WBS-OVERALL-001')
+        gpd = GPD.objects.create(gpd_ref='GPD-OVERALL-001')
+
+        # Create extra overall findings for new targets
+        of_ewp = ActivityOverallFinding.objects.create(
+            monitoring_activity=self.activity,
+            narrative_finding='ewp',
+            ewp_activity=ewp,
+        )
+        of_gpd = ActivityOverallFinding.objects.create(
+            monitoring_activity=self.activity,
+            narrative_finding='gpd',
+            gpd=gpd,
+        )
+
+        response = self._test_list(self.unicef_user, [self.overall_finding, of_ewp, of_gpd])
+        rows = response.data['results']
+
+        ewp_row = next(r for r in rows if r['ewp_activity'] is not None)
+        self.assertEqual(ewp_row['ewp_activity']['id'], ewp.id)
+        self.assertEqual(ewp_row['ewp_activity']['wbs'], 'WBS-OVERALL-001')
+
+        gpd_row = next(r for r in rows if r['gpd'] is not None)
+        self.assertEqual(gpd_row['gpd']['id'], gpd.id)
+        self.assertEqual(gpd_row['gpd']['gpd_ref'], 'GPD-OVERALL-001')
 
     def test_update_unicef(self):
         self._test_update(self.unicef_user, self.overall_finding, {}, expected_status=status.HTTP_403_FORBIDDEN)

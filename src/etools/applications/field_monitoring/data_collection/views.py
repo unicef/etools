@@ -286,8 +286,10 @@ class ActivityOverallFindingsViewSet(
     permission_classes = FMBaseViewSet.permission_classes + [
         IsReadAction | (IsEditAction & activity_field_is_editable_permission('activity_overall_finding'))
     ]
-    queryset = ActivityOverallFinding.objects.prefetch_related(
-        'partner', 'cp_output', 'intervention',
+    queryset = ActivityOverallFinding.objects.select_related(
+        'monitoring_activity',
+        'partner', 'cp_output', 'intervention', 'ewp_activity', 'gpd',
+    ).prefetch_related(
         'monitoring_activity__checklists__overall_findings__attachments',
         'monitoring_activity__checklists__author',
     )
