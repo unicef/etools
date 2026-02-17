@@ -280,6 +280,8 @@ class InterventionPermissions(PMPPermissions):
                               "sites",
                               "reporting_requirements",  # these last two fields avoids errors on existing SSFA valid
                               "reference_number_year",
+                              "partner_selection_modality",
+                              "cfei_number",
                               "other_details"]
         ps = self.permission_structure
         my_permissions = {}

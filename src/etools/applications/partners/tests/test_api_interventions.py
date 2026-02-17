@@ -148,6 +148,7 @@ class TestInterventionsAPI(BaseTenantTestCase):
             "partner_accepted",
             "partner_authorized_officer_signatory_id",
             "partner_focal_points",
+            "partner_selection_modality",
             "pd_outputs",
             "planned_budget",
             "planned_visits",
