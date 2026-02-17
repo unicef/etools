@@ -21,7 +21,8 @@ from etools.applications.field_monitoring.tests.base import APIViewSetTestCase, 
 from etools.applications.field_monitoring.tests.factories import UserFactory
 from etools.applications.partners.tests.factories import InterventionFactory, PartnerFactory
 from etools.applications.reports.tests.factories import ResultFactory
-from etools.applications.field_monitoring.planning.models import DummyEWPActivityModel, DummyGPDModel
+from etools.applications.field_monitoring.planning.models import DummyEWPActivityModel as EWPActivity
+from etools.applications.field_monitoring.planning.models import DummyGPDModel as GPD
 
 
 class TestActivityReportAttachmentsView(FMBaseTestCaseMixin, APIViewSetTestCase):
@@ -154,8 +155,8 @@ class TestActivityQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
     def test_list(self):
         ActivityQuestionFactory(partner=PartnerFactory())  # hidden one
 
-        ewp = DummyEWPActivityModel.objects.create(wbs='WBS-TEST-001')
-        gpd = DummyGPDModel.objects.create(gpd_ref='GPD-TEST-001')
+        ewp = EWPActivity.objects.create(wbs='WBS-TEST-001')
+        gpd = GPD.objects.create(gpd_ref='GPD-TEST-001')
 
         questions = [
             ActivityQuestionFactory(monitoring_activity=self.activity, partner=PartnerFactory()),
