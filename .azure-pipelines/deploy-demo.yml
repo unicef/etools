@@ -1,0 +1,77 @@
+trigger: none
+pr: none
+
+parameters:
+  - name: imageTag
+    displayName: Docker image tag to deploy
+    type: string
+    default: staging
+
+variables:
+  DOCKER_IMAGE: unicef/etools
+
+stages:
+- stage: DeployDemo
+  displayName: Deploy to Demo (Rancher)
+
+  variables:
+    - group: rke-cluster-etstgtrn
+    - name: DEMO_DEPLOYMENTS
+      value: |
+        beater-demo
+        web-demo
+        worker-demo 
+        worker-vision-demo
+
+  jobs:
+  - deployment: Deploy
+    displayName: Deploy to demo
+    environment: demo
+    pool:
+      vmImage: ubuntu-latest
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+            - script: |
+                echo "Checking image existence:"
+                echo "$(DOCKER_IMAGE):${{ parameters.imageTag }}"
+                docker manifest inspect \
+                  $(DOCKER_IMAGE):${{ parameters.imageTag }} \
+                  > /dev/null
+              displayName: Validate image exists
+
+            - task: KubectlInstaller@0
+              displayName: Install kubectl
+              inputs:
+                kubectlVersion: 'v1.16.2'
+
+            - script: |
+                mkdir -p ~/.kube
+                echo "$(KUBECONFIG_B64)" | base64 -d > ~/.kube/config
+                chmod 600 ~/.kube/config
+                kubectl config use-context rke-cluster-etstgtrn
+              displayName: Configure kubeconfig
+
+            - script: |
+                echo "$(DEMO_DEPLOYMENTS)" | while read APP; do
+                  if [ -n "$APP" ]; then
+                    echo "Updating $APP..."
+                    kubectl -n etools-demo \
+                      set image deployment/$APP \
+                      $APP=$(DOCKER_IMAGE):${{ parameters.imageTag }}
+                  fi
+                done
+              displayName: Deploy applications
+
+            - script: |
+                echo "$(DEMO_DEPLOYMENTS)" | while read APP; do
+                  if [ -n "$APP" ]; then
+                    echo "Waiting rollout for $APP..."
+                    kubectl rollout status deployment/$APP \
+                      -n etools-demo \
+                      --timeout=300s
+                  fi
+                done
+              displayName: Wait for pods to start
+
