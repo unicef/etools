@@ -76,6 +76,7 @@ PRIMARY_TYPE_NOT_FOUND = 'primary_type_not_found'
 EXPIRY_DATE_MANDATORY_WHEN_BATCH_ID_IS_PROVIDED = 'expiry_date_mandatory_when_batch_id_is_provided'
 BATCH_ID_MANDATORY_WHEN_EXPIRY_DATE_IS_PROVIDED = 'batch_id_mandatory_when_expiry_date_is_provided'
 L_CONSIGNEE_ALREADY_EXISTS = 'l_consignee_already_exists'
+L_CONSIGNEE_CODE_INVALID = 'l_consignee_code_invalid'
 
 LIST_INTERESTED_LASTMILE_PERMS = [
     USER_ADMIN_PANEL_PERMISSION,
@@ -99,5 +100,6 @@ LIST_INTERESTED_LASTMILE_PERMS_WITHOUT_APPROVE = [
 LMSM_ADMIN_GROUPS = [
     "LMSM CO Admin",
     "LMSM HQ Admin",
-    "LMSM Admin Panel"
+    "LMSM Admin Panel",
+    "LMSM CO Viewer"
 ]

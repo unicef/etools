@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-08 11:54+0000\n"
+"POT-Creation-Date: 2026-01-23 07:14+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -244,6 +244,11 @@ msgstr "Bureau de l'UNICEF"
 
 msgid "Contingency PD?"
 msgstr "PD de contingence ?"
+
+#, fuzzy
+#| msgid "Humanitarian"
+msgid "Humanitarian SPD"
+msgstr "Humanitaire"
 
 msgid "Cluster"
 msgstr "Cluster"
@@ -948,6 +953,22 @@ msgstr "Humanitaire"
 
 msgid "Date first sent to Partner"
 msgstr "Date du premier envoi au partenaire"
+
+msgid "Open selection"
+msgstr "Sélection ouverte"
+
+msgid "Direct selection"
+msgstr "Sélection directe"
+
+msgid "Partner Selection Modality"
+msgstr "Modalité de sélection du partenaire"
+
+msgid ""
+"Select how the partner was selected in UNPP (Open selection or Direct "
+"selection)."
+msgstr ""
+"Sélectionnez comment le partenaire a été choisi dans UNPP (Sélection ouverte "
+"ou Sélection directe)."
 
 msgid "Context"
 msgstr "Contexte"

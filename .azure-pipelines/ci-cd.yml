@@ -1,0 +1,396 @@
+trigger:
+  branches:
+    include:
+      - develop
+      - staging
+      - master
+  tags:
+    include:
+      - '*'
+
+pr:
+  branches:
+    include:
+      - '*'
+
+variables:
+  DOCKER_BASE_IMAGE: unicef/etools-base
+  DOCKER_APP_IMAGE: unicef/etools
+
+stages:
+# BaseImage stage builds OS + Python dependencies layer.
+# It is Content-Addressed via pdm.lock + Dockerfile-base hash.
+# (this ensures the base image rebuilds ONLY when dependencies change)
+# AppImage builds on top of this layer and contains only application code.
+# This design avoids reinstalling dependencies on every commit and speeds up CI/CD.
+- stage: BaseImage
+  displayName: Base Image build and push
+  jobs:
+  - job: Base
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+      - checkout: self
+
+      - script: |
+          BASE_TAG="$(md5sum pdm.lock | cut -c1-6)$(md5sum Dockerfile-base | cut -c1-6)"
+          echo "Computed BASE_TAG=$BASE_TAG"
+          echo "##vso[task.setvariable variable=BASE_TAG;isOutput=true]$BASE_TAG"
+        name: vars
+        displayName: Compute BASE_TAG for content-addressed versioning
+
+      - script: |
+          if docker manifest inspect $(DOCKER_BASE_IMAGE):$(vars.BASE_TAG) > /dev/null 2>&1; then
+            echo "##vso[task.setvariable variable=BASE_IMAGE_EXISTS]true"
+          else
+            echo "##vso[task.setvariable variable=BASE_IMAGE_EXISTS]false"
+          fi
+        displayName: Check if base image exists
+
+      - task: Docker@2
+        displayName: Build and push image
+        condition: eq(variables.BASE_IMAGE_EXISTS, 'false')
+        inputs:
+          command: buildAndPush
+          repository: $(DOCKER_BASE_IMAGE)
+          dockerfile: Dockerfile-base
+          containerRegistry: dockerhub
+          tags: |
+            $(vars.BASE_TAG)
+
+      - script: |
+          docker pull $(DOCKER_BASE_IMAGE):$(vars.BASE_TAG)
+
+          if [ "$(Build.SourceBranchName)" = "develop" ]; then
+            docker tag $(DOCKER_BASE_IMAGE):$(vars.BASE_TAG) $(DOCKER_BASE_IMAGE):latestet
+            docker push $(DOCKER_BASE_IMAGE):latestet
+          elif [ "$(Build.SourceBranchName)" = "master" ]; then
+            docker tag $(DOCKER_BASE_IMAGE):$(vars.BASE_TAG) $(DOCKER_BASE_IMAGE):latest_prodet
+            docker push $(DOCKER_BASE_IMAGE):latest_prodet
+          fi
+        condition: eq(variables.BASE_IMAGE_EXISTS, 'false')
+        displayName: Tag and push latest aliases
+
+- stage: Test
+  displayName: Run tests
+  condition: |
+    and(
+      succeeded(),
+      eq(variables['Build.Reason'], 'PullRequest')
+    )
+
+  dependsOn: BaseImage
+  variables:
+    BASE_TAG: $[ stageDependencies.BaseImage.Base.outputs['vars.BASE_TAG'] ]
+
+  jobs:
+  - job: Tests
+    displayName: Run tox tests
+    pool:
+      vmImage: ubuntu-latest
+
+    steps:
+      - checkout: self
+        fetchDepth: 0
+
+      - script: |
+          docker run -d \
+            --name pg \
+            -e POSTGRES_USER=postgres \
+            -e POSTGRES_PASSWORD=postgres \
+            -e POSTGRES_DB=tox_test \
+            -p 5432:5432 \
+            cimg/postgres:12.9-postgis
+        displayName: Start Postgres
+
+      - script: |
+          docker run -d \
+            --name redis \
+            -p 6379:6379 \
+            redis
+        displayName: Start Redis
+
+      - script: |
+          until docker exec pg pg_isready -U postgres; do
+            echo "Waiting for postgres..."
+            sleep 2
+          done
+        displayName: Wait for Postgres
+
+      - script: |
+          docker run --rm \
+            --network host \
+            -e PGHOST=127.0.0.1 \
+            -e DATABASE_URL="postgis://postgres:postgres@127.0.0.1:5432/tox_test" \
+            -e DEPLOY_BRANCHES="develop|staging|master" \
+            -e PATH="/etools/__pypackages__/3.12/bin:$PATH" \
+            -e GIT_DISCOVERY_ACROSS_FILESYSTEM=1 \
+            -v $(Build.SourcesDirectory):/code \
+            -w /code \
+            unicef/etools-base:$(BASE_TAG) \
+            bash -c "
+              git config --global --add safe.directory /code &&
+              tox -e d42
+            "
+        displayName: Run tox tests
+        timeoutInMinutes: 60
+
+      - script: |
+          docker rm -f pg redis
+        condition: always()
+        displayName: Cleanup containers
+
+- stage: AppImage
+  displayName: Application Image build and push
+  condition: |
+    and(
+      succeeded(),
+      ne(variables['Build.Reason'], 'PullRequest')
+    )
+
+  dependsOn: BaseImage
+  variables:
+    BASE_TAG: $[ stageDependencies.BaseImage.Base.outputs['vars.BASE_TAG'] ]
+
+  jobs:
+    - job: App
+      pool:
+        vmImage: ubuntu-latest
+      steps:
+        - checkout: self
+          fetchDepth: 0
+
+        # SAFE_BRANCH is derived from Build.SourceBranchName.
+        # - On branch builds: it is the branch name (sanitized)
+        # - On tag builds: it is the *tag name* (sanitized)
+        # SAFE_BRANCH is used everywhere, so we NEVER use Build.SourceBranchName directly to avoid invalid Docker tags
+        - script: |
+            SAFE_BRANCH=$(echo "$(Build.SourceBranchName)" \
+              | tr '/' '-' \
+              | tr -cd 'a-zA-Z0-9._-')
+            BUILD_DATE=$(date -u +%Y%m%d)
+            BRANCH_DATE_TAG="${SAFE_BRANCH}${BUILD_DATE}"
+            echo "##vso[task.setvariable variable=SAFE_BRANCH;isOutput=true]$SAFE_BRANCH"
+            echo "##vso[task.setvariable variable=BRANCH_DATE_TAG;isOutput=true]$BRANCH_DATE_TAG"
+          name: sanitize
+          displayName: Sanitize branch name
+
+        - task: Docker@2
+          displayName: Build image
+          inputs:
+            command: build
+            repository: $(DOCKER_APP_IMAGE)
+            dockerfile: Dockerfile
+            containerRegistry: dockerhub
+            buildContext: .
+            arguments: |
+              --build-arg BASE_TAG=$(BASE_TAG)
+            tags: |
+              $(sanitize.SAFE_BRANCH)
+              $(sanitize.BRANCH_DATE_TAG)
+              $(Build.SourceVersion)
+
+        - task: Docker@2
+          displayName: Push image
+          inputs:
+            command: push
+            repository: $(DOCKER_APP_IMAGE)
+            containerRegistry: dockerhub
+            tags: |
+              $(sanitize.SAFE_BRANCH)
+              $(sanitize.BRANCH_DATE_TAG)
+              $(Build.SourceVersion)
+
+- stage: DeployDevelop
+  displayName: Deploy to Develop (Rancher)
+  dependsOn: AppImage
+  condition: |
+    and(
+      succeeded(),
+      eq(variables['Build.SourceBranch'], 'refs/heads/develop')
+    )
+
+  variables:
+    - group: rke-cluster-devtst
+    - name: DEV_DEPLOYMENTS
+      value: |
+        beater-dev
+        web-dev
+        worker-dev 
+        worker-vision-dev
+
+  jobs:
+  - deployment: Deploy
+    displayName: Deploy to develop
+    environment: dev
+    pool:
+      vmImage: ubuntu-latest
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+
+            - task: KubectlInstaller@0
+              displayName: Install kubectl
+              inputs:
+                kubectlVersion: 'v1.16.2'
+
+            - script: |
+                mkdir -p ~/.kube
+                echo "$(KUBECONFIG_B64)" | base64 -d > ~/.kube/config
+                chmod 600 ~/.kube/config
+                kubectl config use-context rke-cluster-devtst
+              displayName: Configure kubeconfig
+
+            - script: |
+                echo "$(DEV_DEPLOYMENTS)" | while read APP; do
+                  if [ -n "$APP" ]; then
+                    echo "Updating $APP..."
+                    kubectl -n etools-dev \
+                      set image deployment/$APP \
+                      $APP=$(DOCKER_APP_IMAGE):$(Build.SourceVersion)
+                  fi
+                done
+              displayName: Deploy applications
+
+            - script: |
+                echo "$(DEV_DEPLOYMENTS)" | while read APP; do
+                  if [ -n "$APP" ]; then
+                    echo "Waiting rollout for $APP..."
+                    kubectl rollout status deployment/$APP \
+                      -n etools-dev \
+                      --timeout=300s
+                  fi
+                done
+              displayName: Wait for pods to start
+
+- stage: DeployStaging
+  displayName: Deploy to Staging (Rancher)
+  dependsOn: AppImage
+  condition: |
+    and(
+      succeeded(),
+      eq(variables['Build.SourceBranch'], 'refs/heads/staging')
+    )
+
+  variables:
+    - group: rke-cluster-etstgtrn
+    - name: STAGING_DEPLOYMENTS
+      value: |
+        beater-staging
+        web-staging
+        worker-staging 
+        worker-vision-staging
+
+  jobs:
+  - deployment: Deploy
+    displayName: Deploy to staging
+    environment: staging
+    pool:
+      vmImage: ubuntu-latest
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+
+            - task: KubectlInstaller@0
+              displayName: Install kubectl
+              inputs:
+                kubectlVersion: 'v1.16.2'
+
+            - script: |
+                mkdir -p ~/.kube
+                echo "$(KUBECONFIG_B64)" | base64 -d > ~/.kube/config
+                chmod 600 ~/.kube/config
+                kubectl config use-context rke-cluster-etstgtrn
+              displayName: Configure kubeconfig
+
+            - script: |
+                echo "$(STAGING_DEPLOYMENTS)" | while read APP; do
+                  if [ -n "$APP" ]; then
+                    echo "Updating $APP..."
+                    kubectl -n etools-staging \
+                      set image deployment/$APP \
+                      $APP=$(DOCKER_APP_IMAGE):$(Build.SourceVersion)
+                  fi
+                done
+              displayName: Deploy applications
+
+            - script: |
+                echo "$(STAGING_DEPLOYMENTS)" | while read APP; do
+                  if [ -n "$APP" ]; then
+                    echo "Waiting rollout for $APP..."
+                    kubectl rollout status deployment/$APP \
+                      -n etools-staging \
+                      --timeout=300s
+                  fi
+                done
+              displayName: Wait for pods to start
+
+- stage: DeployProd
+  displayName: Deploy to Production (Rancher)
+  dependsOn: AppImage
+  condition: |
+    and(
+      succeeded(),
+      startsWith(variables['Build.SourceBranch'], 'refs/tags/')
+    )
+
+  variables:
+    - group: rke-cluster-etools
+    - name: SAFE_BRANCH
+      value: $[ stageDependencies.AppImage.App.outputs['sanitize.SAFE_BRANCH'] ]
+    - name: PROD_DEPLOYMENTS
+      value: |
+        beater-prod 
+        web-prd-1
+        worker-prd
+        worker-vision-prd-1
+        worker-vision-prod-scale
+
+  jobs:
+  - deployment: Deploy
+    displayName: Deploy to production
+    environment: prod
+    pool:
+      vmImage: ubuntu-latest
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+
+            - task: KubectlInstaller@0
+              displayName: Install kubectl
+              inputs:
+                kubectlVersion: 'v1.16.2'
+
+            - script: |
+                mkdir -p ~/.kube
+                echo "$(KUBECONFIG_B64)" | base64 -d > ~/.kube/config
+                chmod 600 ~/.kube/config
+                kubectl config use-context rke-cluster-etools
+              displayName: Configure kubeconfig
+
+            # Deploy sanitized tag (SAFE_BRANCH). For tag-triggered runs, SAFE_BRANCH == sanitized Git tag
+            - script: |
+                echo "$(PROD_DEPLOYMENTS)" | while read APP; do
+                  if [ -n "$APP" ]; then
+                    echo "Updating $APP..."
+                    kubectl -n etools-prod \
+                      set image deployment/$APP \
+                      $APP=$(DOCKER_APP_IMAGE):$(SAFE_BRANCH)
+                  fi
+                done
+              displayName: Deploy applications
+
+            - script: |
+                echo "$(PROD_DEPLOYMENTS)" | while read APP; do
+                  if [ -n "$APP" ]; then
+                    echo "Waiting rollout for $APP..."
+                    kubectl rollout status deployment/$APP \
+                      -n etools-prod \
+                      --timeout=300s
+                  fi
+                done
+              displayName: Wait for pods to start
+

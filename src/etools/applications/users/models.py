@@ -295,13 +295,19 @@ class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
         self.save(update_fields=['is_active'])
 
     @cached_property
-    def is_lmsm_admin(self):
+    def is_lmsm_admin_or_co_viewer(self):
         return self.realms.filter(
             country=connection.tenant,
             organization=self.profile.organization,
             group__name__in=LMSM_ADMIN_GROUPS,
             is_active=True
         ).exists()
+
+    def get_organizations(self):
+        if hasattr(self, 'realms'):
+            qs = Organization.objects.filter(realms__in=self.realms.filter(country=connection.tenant)).distinct()
+            return qs or []
+        return []
 
     @transaction.atomic
     def save(self, *args, **kwargs):

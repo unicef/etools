@@ -559,6 +559,78 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(loss_item_2.quantity, 6)
         self.assertIn(self.incoming, loss_item_2.transfers_history.all())
 
+    @override_settings(RUTF_MATERIALS=['1234'])
+    def test_checkin_all_items_hidden_transfer_hidden(self):
+        other_material = MaterialFactory(number='9999', original_uom='EA')
+        incoming = TransferFactory(
+            partner_organization=self.partner,
+            destination_point=self.warehouse,
+            transfer_type=models.Transfer.DELIVERY,
+            status=models.Transfer.PENDING
+        )
+        item_1 = ItemFactory(quantity=10, transfer=incoming, material=other_material)
+        item_2 = ItemFactory(quantity=20, transfer=incoming, material=other_material)
+
+        checkin_data = {
+            "comment": "",
+            "proof_file": self.attachment.pk,
+            "items": [
+                {"id": item_1.pk, "quantity": item_1.quantity},
+                {"id": item_2.pk, "quantity": item_2.quantity},
+            ],
+            "destination_check_in_at": timezone.now()
+        }
+        url = reverse('last_mile:transfers-new-check-in', args=(self.warehouse.pk, incoming.pk))
+        response = self.forced_auth_req('patch', url, user=self.partner_staff, data=checkin_data)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        incoming.refresh_from_db()
+        self.assertEqual(incoming.status, models.Transfer.COMPLETED)
+        self.assertTrue(incoming.is_hidden)
+
+        self.assertEqual(incoming.items.count(), 0)
+        self.assertEqual(models.Item.all_objects.filter(transfer=incoming).count(), 2)
+
+        url = reverse('last_mile:transfers-checked-in', args=(self.warehouse.pk,))
+        response = self.forced_auth_req('get', url, user=self.partner_staff)
+        transfer_ids = [t['id'] for t in response.data['results']]
+        self.assertNotIn(incoming.pk, transfer_ids)
+
+    @override_settings(RUTF_MATERIALS=['1234'])
+    def test_checkin_partial_all_hidden_short_transfer_hidden(self):
+        other_material = MaterialFactory(number='8888', original_uom='EA')
+        incoming = TransferFactory(
+            partner_organization=self.partner,
+            destination_point=self.warehouse,
+            transfer_type=models.Transfer.DELIVERY,
+            status=models.Transfer.PENDING
+        )
+        item_1 = ItemFactory(quantity=10, transfer=incoming, material=other_material)
+        ItemFactory(quantity=20, transfer=incoming, material=other_material)
+
+        checkin_data = {
+            "comment": "",
+            "proof_file": self.attachment.pk,
+            "items": [
+                {"id": item_1.pk, "quantity": 5},
+            ],
+            "destination_check_in_at": timezone.now()
+        }
+        url = reverse('last_mile:transfers-new-check-in', args=(self.warehouse.pk, incoming.pk))
+        response = self.forced_auth_req('patch', url, user=self.partner_staff, data=checkin_data)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        incoming.refresh_from_db()
+        self.assertTrue(incoming.is_hidden)
+
+        short_transfer = models.Transfer.all_objects.filter(
+            transfer_type=models.Transfer.WASTAGE,
+            transfer_subtype=models.Transfer.SHORT,
+            origin_transfer=incoming
+        ).first()
+        self.assertIsNotNone(short_transfer)
+        self.assertTrue(short_transfer.is_hidden)
+
     def test_checkout_validation(self):
         destination = PointOfInterestFactory()
         item = ItemFactory(quantity=11, transfer=self.outgoing)

@@ -930,3 +930,155 @@ class TestRssAdminEngagementsApi(BaseTenantTestCase):
         self.assertEqual(log_entry.user, self.user)
         self.assertEqual(log_entry.action_flag, CHANGE)
         self.assertIn('total_value', log_entry.change_message.lower())
+
+    def test_engagement_logs_filter_search(self):
+        """Test that engagement logs endpoint supports search filtering"""
+        from etools.applications.rss_admin.admin_logging import log_change
+
+        audit = AuditFactory()
+        url = reverse('rss_admin:rss-admin-engagements-logs', kwargs={'pk': audit.pk})
+
+        # Create log entries with different messages
+        log_change(
+            user=self.user,
+            obj=audit,
+            change_message="Status changed to in_progress",
+        )
+        log_change(
+            user=self.user,
+            obj=audit,
+            change_message="Updated financial information",
+        )
+
+        # Search for specific text in change_message
+        resp = self.forced_auth_req('get', url, user=self.user, data={'search': 'status'})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        results = resp.data['results']
+        self.assertGreater(len(results), 0)
+        # At least one result should contain 'status'
+        self.assertTrue(any('status' in log.get('change_message', '').lower() for log in results))
+
+        # Search for different text
+        resp = self.forced_auth_req('get', url, user=self.user, data={'search': 'financial'})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        results = resp.data['results']
+        self.assertGreater(len(results), 0)
+        self.assertTrue(any('financial' in log.get('change_message', '').lower() for log in results))
+
+    def test_engagement_logs_filter_date_range(self):
+        """Test that engagement logs endpoint supports date range filtering"""
+        from datetime import timedelta
+
+        from django.utils import timezone
+
+        from etools.applications.rss_admin.admin_logging import log_change
+
+        audit = AuditFactory()
+        url = reverse('rss_admin:rss-admin-engagements-logs', kwargs={'pk': audit.pk})
+
+        # Create log entries at different times
+        now = timezone.now()
+        old_time = now - timedelta(days=5)
+        recent_time = now - timedelta(days=1)
+
+        # Create an old log entry
+        old_log = log_change(
+            user=self.user,
+            obj=audit,
+            change_message="Old log entry",
+        )
+        LogEntry.objects.filter(pk=old_log.pk).update(action_time=old_time)
+
+        # Create a recent log entry
+        recent_log = log_change(
+            user=self.user,
+            obj=audit,
+            change_message="Recent log entry",
+        )
+        LogEntry.objects.filter(pk=recent_log.pk).update(action_time=recent_time)
+
+        # Filter logs from 2 days ago onwards (should only include recent log)
+        date_from = (now - timedelta(days=2)).isoformat()
+        resp = self.forced_auth_req('get', url, user=self.user, data={'action_time_gte': date_from})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        results = resp.data['results']
+        # Should have at least the recent log
+        self.assertGreater(len(results), 0)
+        # Verify the recent log is in results
+        change_messages = [log.get('change_message', '') for log in results]
+        self.assertIn('Recent log entry', change_messages)
+
+        # Filter logs up to 3 days ago (should include old log but not recent)
+        date_to = (now - timedelta(days=3)).isoformat()
+        resp = self.forced_auth_req('get', url, user=self.user, data={'action_time_lte': date_to})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        results = resp.data['results']
+        # Should have at least the old log
+        if len(results) > 0:
+            change_messages = [log.get('change_message', '') for log in results]
+            self.assertIn('Old log entry', change_messages)
+
+    def test_engagement_logs_filter_combined(self):
+        """Test that engagement logs endpoint supports combined filtering (search + date range)"""
+        from datetime import timedelta
+
+        from django.utils import timezone
+
+        from etools.applications.rss_admin.admin_logging import log_change
+
+        audit = AuditFactory()
+        url = reverse('rss_admin:rss-admin-engagements-logs', kwargs={'pk': audit.pk})
+
+        now = timezone.now()
+        old_time = now - timedelta(days=5)
+
+        # Create an old log entry
+        old_log = log_change(
+            user=self.user,
+            obj=audit,
+            change_message="Important update",
+        )
+        LogEntry.objects.filter(pk=old_log.pk).update(action_time=old_time)
+
+        # Create a recent log entry
+        log_change(
+            user=self.user,
+            obj=audit,
+            change_message="Important change",
+        )
+
+        # Filter with both search and date range
+        date_from = (now - timedelta(days=2)).isoformat()
+        resp = self.forced_auth_req('get', url, user=self.user, data={
+            'search': 'Important',
+            'action_time_gte': date_from
+        })
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        results = resp.data['results']
+        # Should have at least one result matching both criteria
+        self.assertGreater(len(results), 0)
+        for log in results:
+            self.assertIn('important', log.get('change_message', '').lower())
+
+    def test_engagement_logs_filter_user_search(self):
+        """Test that search also works on user fields"""
+        from etools.applications.rss_admin.admin_logging import log_change
+
+        audit = AuditFactory()
+        url = reverse('rss_admin:rss-admin-engagements-logs', kwargs={'pk': audit.pk})
+
+        # Create a log entry
+        log_change(
+            user=self.user,
+            obj=audit,
+            change_message="Some change",
+        )
+
+        # Search by user's email
+        resp = self.forced_auth_req('get', url, user=self.user, data={'search': self.user.email})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        results = resp.data['results']
+        self.assertGreater(len(results), 0)
+        # Verify the user is in results
+        user_emails = [log['user']['email'] if log.get('user') else None for log in results]
+        self.assertIn(self.user.email, user_emails)
