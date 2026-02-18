@@ -34,6 +34,11 @@ urlpatterns = [
         name="vision-ingest-transfers"
     ),
     path(
+        'import-pois/',
+        view=views_ext.VisionIngestPointOfInterestApiView.as_view(http_method_names=['post'],),
+        name="vision-ingest-pois"
+    ),
+    path(
         'export-data/',
         view=views_ext.VisionLMSMExport.as_view(http_method_names=['get'],),
         name="vision-export-data"
