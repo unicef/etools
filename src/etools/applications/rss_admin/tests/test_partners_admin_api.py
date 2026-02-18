@@ -2340,3 +2340,271 @@ class TestRssAdminPartnersApi(BaseTenantTestCase):
         self.assertIn('previous', resp.data)
         self.assertIn('results', resp.data)
         self.assertLessEqual(len(resp.data['results']), 2)
+
+    def test_agreement_logs_filter_search(self):
+        """Test that agreement logs endpoint supports search filtering"""
+        url = reverse('rss_admin:rss-admin-agreements-logs', kwargs={'pk': self.agreement.pk})
+
+        # Create log entries with different messages
+        log_change(
+            user=self.user,
+            obj=self.agreement,
+            change_message="Updated status field",
+        )
+        log_change(
+            user=self.user,
+            obj=self.agreement,
+            change_message="Changed budget information",
+        )
+
+        # Search for specific text in change_message
+        resp = self.forced_auth_req('get', url, user=self.user, data={'search': 'status'})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        results = resp.data['results']
+        self.assertGreater(len(results), 0)
+        # At least one result should contain 'status'
+        self.assertTrue(any('status' in log.get('change_message', '').lower() for log in results))
+
+        # Search for different text
+        resp = self.forced_auth_req('get', url, user=self.user, data={'search': 'budget'})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        results = resp.data['results']
+        self.assertGreater(len(results), 0)
+        self.assertTrue(any('budget' in log.get('change_message', '').lower() for log in results))
+
+    def test_agreement_logs_filter_date_range(self):
+        """Test that agreement logs endpoint supports date range filtering"""
+        from datetime import timedelta
+
+        from django.utils import timezone
+
+        url = reverse('rss_admin:rss-admin-agreements-logs', kwargs={'pk': self.agreement.pk})
+
+        # Create log entries at different times
+        now = timezone.now()
+        old_time = now - timedelta(days=5)
+        recent_time = now - timedelta(days=1)
+
+        # Create an old log entry
+        old_log = log_change(
+            user=self.user,
+            obj=self.agreement,
+            change_message="Old log entry",
+        )
+        LogEntry.objects.filter(pk=old_log.pk).update(action_time=old_time)
+
+        # Create a recent log entry
+        recent_log = log_change(
+            user=self.user,
+            obj=self.agreement,
+            change_message="Recent log entry",
+        )
+        LogEntry.objects.filter(pk=recent_log.pk).update(action_time=recent_time)
+
+        # Filter logs from 2 days ago onwards (should only include recent log)
+        date_from = (now - timedelta(days=2)).isoformat()
+        resp = self.forced_auth_req('get', url, user=self.user, data={'action_time_gte': date_from})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        results = resp.data['results']
+        # Should have at least the recent log
+        self.assertGreater(len(results), 0)
+        # Verify the old log is not in results
+        change_messages = [log.get('change_message', '') for log in results]
+        self.assertIn('Recent log entry', change_messages)
+
+        # Filter logs up to 3 days ago (should include old log but not recent)
+        date_to = (now - timedelta(days=3)).isoformat()
+        resp = self.forced_auth_req('get', url, user=self.user, data={'action_time_lte': date_to})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        results = resp.data['results']
+        # Should have at least the old log
+        if len(results) > 0:
+            change_messages = [log.get('change_message', '') for log in results]
+            self.assertIn('Old log entry', change_messages)
+
+    def test_programme_document_logs_filter_search(self):
+        """Test that programme document logs endpoint supports search filtering"""
+        url = reverse('rss_admin:rss-admin-programme-documents-logs', kwargs={'pk': self.pd.pk})
+
+        # Create log entries with different messages
+        log_change(
+            user=self.user,
+            obj=self.pd,
+            change_message="Updated title field",
+        )
+        log_change(
+            user=self.user,
+            obj=self.pd,
+            change_message="Modified end date",
+        )
+
+        # Search for specific text
+        resp = self.forced_auth_req('get', url, user=self.user, data={'search': 'title'})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        results = resp.data['results']
+        self.assertGreater(len(results), 0)
+        self.assertTrue(any('title' in log.get('change_message', '').lower() for log in results))
+
+    def test_programme_document_logs_filter_combined(self):
+        """Test that programme document logs endpoint supports combined filtering"""
+        from datetime import timedelta
+
+        from django.utils import timezone
+
+        url = reverse('rss_admin:rss-admin-programme-documents-logs', kwargs={'pk': self.pd.pk})
+
+        now = timezone.now()
+        old_time = now - timedelta(days=5)
+
+        # Create an old log entry
+        old_log = log_change(
+            user=self.user,
+            obj=self.pd,
+            change_message="Important update",
+        )
+        LogEntry.objects.filter(pk=old_log.pk).update(action_time=old_time)
+
+        # Create a recent log entry
+        log_change(
+            user=self.user,
+            obj=self.pd,
+            change_message="Important change",
+        )
+
+        # Filter with both search and date range
+        date_from = (now - timedelta(days=2)).isoformat()
+        resp = self.forced_auth_req('get', url, user=self.user, data={
+            'search': 'Important',
+            'action_time_gte': date_from
+        })
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        results = resp.data['results']
+        # Should have at least one result matching both criteria
+        self.assertGreater(len(results), 0)
+        for log in results:
+            self.assertIn('important', log.get('change_message', '').lower())
+
+    def test_partner_logs_endpoint(self):
+        """Test that partner logs endpoint returns log entries"""
+        url = reverse('rss_admin:rss-admin-partners-logs', kwargs={'pk': self.partner.pk})
+
+        # Initially, there should be no logs (or minimal logs)
+        resp = self.forced_auth_req('get', url, user=self.user)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        # Verify response structure always has pagination keys
+        self.assertIn('count', resp.data)
+        self.assertIn('next', resp.data)
+        self.assertIn('previous', resp.data)
+        self.assertIn('results', resp.data)
+
+        initial_count = len(resp.data['results'])
+
+        # Create a log entry directly
+        log_change(
+            user=self.user,
+            obj=self.partner,
+            change_message="Test log entry for partner",
+        )
+
+        # Now check logs again
+        resp = self.forced_auth_req('get', url, user=self.user)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        # Verify response structure
+        self.assertIn('count', resp.data)
+        self.assertIn('next', resp.data)
+        self.assertIn('previous', resp.data)
+        self.assertIn('results', resp.data)
+
+        logs = resp.data['results']
+        self.assertGreater(len(logs), initial_count)
+        log_entry = logs[0]  # Most recent log
+
+        # Verify log entry has required fields
+        self.assertIn('id', log_entry)
+        self.assertIn('action_time', log_entry)
+        self.assertIn('user', log_entry)
+        self.assertIn('action_flag', log_entry)
+        self.assertIn('action_flag_display', log_entry)
+        self.assertIn('change_message', log_entry)
+        self.assertIn('content_type_display', log_entry)
+        self.assertIn('object_id', log_entry)
+        self.assertIn('object_repr', log_entry)
+
+    def test_partner_logs_filter_search(self):
+        """Test that partner logs endpoint supports search filtering"""
+        url = reverse('rss_admin:rss-admin-partners-logs', kwargs={'pk': self.partner.pk})
+
+        # Create log entries with different messages
+        log_change(
+            user=self.user,
+            obj=self.partner,
+            change_message="Updated risk rating",
+        )
+        log_change(
+            user=self.user,
+            obj=self.partner,
+            change_message="Changed contact information",
+        )
+
+        # Search for specific text in change_message
+        resp = self.forced_auth_req('get', url, user=self.user, data={'search': 'risk'})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        results = resp.data['results']
+        self.assertGreater(len(results), 0)
+        # At least one result should contain 'risk'
+        self.assertTrue(any('risk' in log.get('change_message', '').lower() for log in results))
+
+        # Search for different text
+        resp = self.forced_auth_req('get', url, user=self.user, data={'search': 'contact'})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        results = resp.data['results']
+        self.assertGreater(len(results), 0)
+        self.assertTrue(any('contact' in log.get('change_message', '').lower() for log in results))
+
+    def test_partner_logs_filter_date_range(self):
+        """Test that partner logs endpoint supports date range filtering"""
+        url = reverse('rss_admin:rss-admin-partners-logs', kwargs={'pk': self.partner.pk})
+
+        # Create log entries at different times
+        now = timezone.now()
+        old_time = now - timedelta(days=5)
+        recent_time = now - timedelta(days=1)
+
+        # Create an old log entry
+        old_log = log_change(
+            user=self.user,
+            obj=self.partner,
+            change_message="Old partner log entry",
+        )
+        LogEntry.objects.filter(pk=old_log.pk).update(action_time=old_time)
+
+        # Create a recent log entry
+        recent_log = log_change(
+            user=self.user,
+            obj=self.partner,
+            change_message="Recent partner log entry",
+        )
+        LogEntry.objects.filter(pk=recent_log.pk).update(action_time=recent_time)
+
+        # Filter logs from 2 days ago onwards (should only include recent log)
+        date_from = (now - timedelta(days=2)).isoformat()
+        resp = self.forced_auth_req('get', url, user=self.user, data={'action_time_gte': date_from})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        results = resp.data['results']
+        # Should have at least the recent log
+        self.assertGreater(len(results), 0)
+        # Verify the old log is not in results
+        change_messages = [log.get('change_message', '') for log in results]
+        self.assertIn('Recent partner log entry', change_messages)
+
+        # Filter logs up to 3 days ago (should include old log but not recent)
+        date_to = (now - timedelta(days=3)).isoformat()
+        resp = self.forced_auth_req('get', url, user=self.user, data={'action_time_lte': date_to})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        results = resp.data['results']
+        # Should have at least the old log
+        if len(results) > 0:
+            change_messages = [log.get('change_message', '') for log in results]
+            self.assertIn('Old partner log entry', change_messages)

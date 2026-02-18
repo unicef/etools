@@ -1,9 +1,11 @@
 from datetime import date, timedelta
 from io import BytesIO
 
+from django.contrib.admin.models import LogEntry
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import override_settings
 from django.urls import reverse
+from django.utils import timezone
 
 import openpyxl
 from rest_framework import status
@@ -21,6 +23,7 @@ from etools.applications.field_monitoring.planning.models import MonitoringActiv
 from etools.applications.field_monitoring.planning.tests.factories import MonitoringActivityFactory
 from etools.applications.partners.tests.factories import InterventionFactory, PartnerFactory
 from etools.applications.reports.tests.factories import OfficeFactory, ResultFactory, SectionFactory
+from etools.applications.rss_admin.admin_logging import log_change
 from etools.applications.users.tests.factories import UserFactory
 
 
@@ -993,3 +996,120 @@ class TestRssAdminFieldMonitoringApi(BaseTenantTestCase):
         self.assertEqual(rss_admin_count, 10)
         self.assertEqual(etools_count, 10)
         self.assertEqual(rss_admin_count, etools_count)
+
+    def test_monitoring_activity_logs_endpoint(self):
+        """Test that monitoring activity logs endpoint returns log entries"""
+        activity = MonitoringActivityFactory()
+        url = reverse('rss_admin:rss-admin-monitoring-activities-logs', kwargs={'pk': activity.pk})
+
+        # Initially, there should be no logs (or minimal logs)
+        resp = self.forced_auth_req('get', url, user=self.user)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        # Verify response structure always has pagination keys
+        self.assertIn('count', resp.data)
+        self.assertIn('next', resp.data)
+        self.assertIn('previous', resp.data)
+        self.assertIn('results', resp.data)
+
+        initial_count = len(resp.data['results'])
+
+        # Create a log entry directly
+        log_change(
+            user=self.user,
+            obj=activity,
+            change_message="Test log entry for monitoring activity",
+        )
+
+        # Now check logs again
+        resp = self.forced_auth_req('get', url, user=self.user)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        # Verify response structure
+        self.assertIn('count', resp.data)
+        self.assertIn('next', resp.data)
+        self.assertIn('previous', resp.data)
+        self.assertIn('results', resp.data)
+
+        logs = resp.data['results']
+        self.assertGreater(len(logs), initial_count)
+        log_entry = logs[0]  # Most recent log
+
+        # Verify log entry has required fields
+        self.assertIn('id', log_entry)
+        self.assertIn('action_time', log_entry)
+        self.assertIn('user', log_entry)
+        self.assertIn('action_flag', log_entry)
+        self.assertIn('action_flag_display', log_entry)
+        self.assertIn('change_message', log_entry)
+        self.assertIn('content_type_display', log_entry)
+        self.assertIn('object_id', log_entry)
+        self.assertIn('object_repr', log_entry)
+
+    def test_monitoring_activity_logs_filter_search(self):
+        """Test that monitoring activity logs endpoint supports search filtering"""
+        activity = MonitoringActivityFactory()
+        url = reverse('rss_admin:rss-admin-monitoring-activities-logs', kwargs={'pk': activity.pk})
+
+        # Create log entries with different messages
+        log_change(
+            user=self.user,
+            obj=activity,
+            change_message="Updated visit status",
+        )
+        log_change(
+            user=self.user,
+            obj=activity,
+            change_message="Changed location information",
+        )
+
+        # Search for specific text in change_message
+        resp = self.forced_auth_req('get', url, user=self.user, data={'search': 'visit'})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        results = resp.data['results']
+        self.assertGreater(len(results), 0)
+        # At least one result should contain 'visit'
+        self.assertTrue(any('visit' in log.get('change_message', '').lower() for log in results))
+
+        # Search for different text
+        resp = self.forced_auth_req('get', url, user=self.user, data={'search': 'location'})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        results = resp.data['results']
+        self.assertGreater(len(results), 0)
+        self.assertTrue(any('location' in log.get('change_message', '').lower() for log in results))
+
+    def test_monitoring_activity_logs_filter_combined(self):
+        """Test that monitoring activity logs endpoint supports combined filtering"""
+        activity = MonitoringActivityFactory()
+        url = reverse('rss_admin:rss-admin-monitoring-activities-logs', kwargs={'pk': activity.pk})
+
+        now = timezone.now()
+        old_time = now - timedelta(days=5)
+
+        # Create an old log entry
+        old_log = log_change(
+            user=self.user,
+            obj=activity,
+            change_message="Critical update",
+        )
+        LogEntry.objects.filter(pk=old_log.pk).update(action_time=old_time)
+
+        # Create a recent log entry
+        log_change(
+            user=self.user,
+            obj=activity,
+            change_message="Critical change",
+        )
+
+        # Filter with both search and date range
+        date_from = (now - timedelta(days=2)).isoformat()
+        resp = self.forced_auth_req('get', url, user=self.user, data={
+            'search': 'Critical',
+            'action_time_gte': date_from
+        })
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        results = resp.data['results']
+        # Should have at least one result matching both criteria
+        self.assertGreater(len(results), 0)
+        for log in results:
+            self.assertIn('critical', log.get('change_message', '').lower())
