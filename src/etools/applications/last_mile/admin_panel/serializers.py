@@ -567,8 +567,13 @@ class PointOfInterestExportSerializer(serializers.ModelSerializer):
     def get_primary_type(self, obj):
         return obj.poi_type.name if obj.poi_type else None
 
+    def _get_cached_partners(self, obj):
+        if not hasattr(obj, '_cached_partners'):
+            obj._cached_partners = list(obj.partner_organizations.all())
+        return obj._cached_partners
+
     def get_implementing_partner(self, obj):
-        partners = obj.partner_organizations.all().prefetch_related('organization')
+        partners = self._get_cached_partners(obj)
         return ",".join([f"{partner.organization.vendor_number} - {partner.organization.name}" if partner.organization else partner.name if partner.name else "-" for partner in partners])
 
     def get_lat(self, obj):
@@ -579,7 +584,7 @@ class PointOfInterestExportSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        partners = instance.partner_organizations.all().prefetch_related('organization')
+        partners = self._get_cached_partners(instance)
         implementing_partner_names = ",".join([f"{partner.organization.name}" if partner.organization else partner.name if partner.name else "-" for partner in partners])
         implementing_partner_numbers = ",".join([f"{partner.organization.vendor_number}" if partner.organization else partner.name if partner.name else "-" for partner in partners])
         data.update({

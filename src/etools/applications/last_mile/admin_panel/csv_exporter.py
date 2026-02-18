@@ -51,22 +51,29 @@ class BaseCSVExporter:
             rows_values = self._extract_values_bulk(all_rows, list(headers.keys()))
             yield self._write_csv_rows_bulk(rows_values)
 
+    def _paginate_queryset(self, queryset) -> Iterator[list]:
+        """Paginate queryset in chunks, preserving prefetch_related.
+
+        Unlike .iterator(), this evaluates each chunk as a separate
+        queryset slice so prefetch_related lookups are properly applied.
+        """
+        offset = 0
+        while True:
+            chunk = list(queryset[offset:offset + self.chunk_size])
+            if not chunk:
+                break
+            yield chunk
+            offset += self.chunk_size
+
     def _iterate_with_chunking(
         self, queryset, serializer_class: Any, headers: Dict[str, str], use_row_expansion: bool = False
     ) -> Iterator[str]:
-        chunk = []
         process_method = (
             self._process_chunk_with_row_expansion if use_row_expansion
             else self._process_chunk_with_batch_serialization
         )
 
-        for item in queryset.iterator(chunk_size=self.chunk_size):
-            chunk.append(item)
-            if len(chunk) >= self.chunk_size:
-                yield from process_method(chunk, serializer_class, headers)
-                chunk = []
-
-        if chunk:
+        for chunk in self._paginate_queryset(queryset):
             yield from process_method(chunk, serializer_class, headers)
 
 
@@ -156,14 +163,7 @@ class LocationsCSVExporter(BaseCSVExporter):
                 yield from self._iterate_with_chunking(queryset, serializer_class, standard_headers)
 
     def _chunk_queryset(self, queryset):
-        chunk = []
-        for item in queryset.iterator(chunk_size=self.chunk_size):
-            chunk.append(item)
-            if len(chunk) >= self.chunk_size:
-                yield chunk
-                chunk = []
-        if chunk:
-            yield chunk
+        yield from self._paginate_queryset(queryset)
 
     def _optimize_queryset(self, queryset):
         queryset = queryset.distinct()
