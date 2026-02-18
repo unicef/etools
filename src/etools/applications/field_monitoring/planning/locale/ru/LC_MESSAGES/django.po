@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-29 13:11+0000\n"
+"POT-Creation-Date: 2026-02-12 13:51+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -299,6 +299,9 @@ msgstr ""
 msgid "TPM Concerns"
 msgstr ""
 
+msgid "One or more email addresses are invalid."
+msgstr "Один или несколько адресов электронной почты недействительны."
+
 msgid "History"
 msgstr "История"
 
@@ -352,6 +355,18 @@ msgstr "Обоснование ежегодного полевого монит�
 
 msgid "Templates"
 msgstr "Шаблоны"
+
+msgid "Report can only be sent by email when status is completed."
+msgstr "Отчет может быть отправлен по электронной почте только когда статус завершен."
+
+msgid "Failed to generate PDF report."
+msgstr "Не удалось создать PDF-отчет."
+
+msgid "Report sent successfully by email."
+msgstr "Отчет успешно отправлен по электронной почте."
+
+msgid "Failed to send email. Please try again later."
+msgstr "Не удалось отправить электронное письмо. Пожалуйста, попробуйте еще раз позже."
 
 msgid "Attachments"
 msgstr "Вложения"

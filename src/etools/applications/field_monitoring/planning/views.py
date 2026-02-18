@@ -1,22 +1,27 @@
 import logging
 import re
 from datetime import date
+from io import BytesIO
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import connection, transaction
 from django.db.models import Count, F, Prefetch, Q
 from django.http import Http404
+from django.template import Context, Template
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
 from django_filters.rest_framework import DjangoFilterBackend
-from easy_pdf.rendering import render_to_pdf_response
+from easy_pdf.rendering import render_to_pdf, render_to_pdf_response
 from etools_validator.mixins import ValidatorViewMixin
+from post_office import mail
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.response import Response
+from unicef_notification.models import EmailTemplate
 from unicef_restlib.views import NestedViewSetMixin
 from unicef_snapshot.models import Activity as HistoryActivity
 
@@ -32,6 +37,7 @@ from etools.applications.field_monitoring.permissions import (
     IsObjectAction,
     IsReadAction,
     IsTeamMember,
+    IsUNICEFUser,
     IsVisitLead,
 )
 from etools.applications.field_monitoring.planning.actions.duplicate_monitoring_activity import (
@@ -69,6 +75,8 @@ from etools.applications.field_monitoring.planning.serializers import (
     MonitoringActivityActionPointSerializer,
     MonitoringActivityLightSerializer,
     MonitoringActivitySerializer,
+    RecipientOptionSerializer,
+    SendReportEmailSerializer,
     TemplatedQuestionSerializer,
     TPMConcernSerializer,
     VisitGoalSerializer,
@@ -269,10 +277,18 @@ class MonitoringActivitiesViewSet(
             filename="visit_letter_{}.pdf".format(ma.reference_number)
         )
 
-    @action(detail=True, methods=['get'], url_path='pdf')
-    def visit_pdf(self, request, *args, **kwargs):
-        ma = self.get_object()
+    def _get_pdf_context(self, ma, request):
+        """
+        Generate PDF context for monitoring activity report.
+        Reusable method for both PDF export and email sending.
 
+        Args:
+            ma: MonitoringActivity instance
+            request: HTTP request object
+
+        Returns:
+            dict: Context dictionary for PDF template
+        """
         def _sanitize_html(value):
             if not isinstance(value, str):
                 return value
@@ -306,7 +322,8 @@ class MonitoringActivitiesViewSet(
                         if 'value' in finding:
                             finding['value'] = _sanitize_html(finding['value'])
             return data_list
-        context = {
+
+        return {
             "workspace": connection.tenant.name,
             "ma": ma,
             "field_offices": ', '.join(ma.offices.all().values_list('name', flat=True)),
@@ -324,12 +341,160 @@ class MonitoringActivitiesViewSet(
             "reported_attachments": ma.get_export_reported_attachments(request),
             "checklist_attachments": ma.get_export_checklist_attachments(request),
             "mission_completion_date": ma.get_completion_date(),
-
         }
+
+    @action(detail=True, methods=['get'], url_path='pdf')
+    def visit_pdf(self, request, *args, **kwargs):
+        ma = self.get_object()
+        context = self._get_pdf_context(ma, request)
         return render_to_pdf_response(
             request, "fm/visit_pdf.html", context=context,
             filename="visit_{}.pdf".format(ma.reference_number)
         )
+
+    @action(detail=False, methods=['get'], url_path='email-recipients')
+    def email_recipients(self, request, *args, **kwargs):
+        """Get list of available email recipients (staff users and partners)."""
+        recipients = []
+
+        # Get staff users (UNICEF users) with email addresses
+        # Use the same approach as FMUsersViewSet
+        qs_context = {
+            "country": connection.tenant
+        }
+        context_realms_qs = Realm.objects.filter(**qs_context)
+
+        staff_users = get_user_model().objects\
+            .base_qs()\
+            .filter(
+                realms__in=context_realms_qs,
+                email__isnull=False,
+                is_active=True,
+                first_name__isnull=False,
+                last_name__isnull=False)\
+            .exclude(email='')\
+            .exclude(first_name='')\
+            .exclude(last_name='')\
+            .distinct()\
+            .values('id', 'first_name', 'last_name', 'email')
+
+        for user in staff_users:
+            full_name = f"{user['first_name']} {user['last_name']}".strip()
+
+            recipients.append({
+                'id': user['email'],
+                'name': f"{full_name} ({user['email']})",
+                'type': 'user'
+            })
+
+        # Get partners with email addresses
+        # PartnerOrganization has an email field directly
+        partners = PartnerOrganization.objects.filter(
+            hidden=False,
+            deleted_flag=False,
+            email__isnull=False
+        ).exclude(email='').select_related('organization')
+
+        for partner in partners:
+            # PartnerOrganization has an email field directly
+            email = partner.email
+            if email:
+                recipients.append({
+                    'id': email,
+                    'name': f"{partner.name or partner.title or f"Partner {partner.id}"} ({email})",
+                    'type': 'partner'
+                })
+
+        serializer = RecipientOptionSerializer(recipients, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(
+        detail=True,
+        methods=['post'],
+        url_path='send-email',
+        permission_classes=[
+            IsEditAction & IsObjectAction & (
+                IsFieldMonitor | IsVisitLead | IsTeamMember | IsMonitoringVisitApprover | IsUNICEFUser
+            )
+        ]
+    )
+    def send_email(self, request, *args, **kwargs):
+        """Send completed report by email with PDF attachment."""
+        ma = self.get_object()
+
+        # Check if report is completed
+        if ma.status != MonitoringActivity.STATUS_COMPLETED:
+            return Response(
+                {'detail': _('Report can only be sent by email when status is completed.')},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        serializer = SendReportEmailSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        recipient_emails = serializer.validated_data['recipients']
+        message = serializer.validated_data.get('message', '')
+
+        # Generate PDF in memory using shared context method
+        pdf_context = self._get_pdf_context(ma, request)
+
+        try:
+            pdf_content = render_to_pdf("fm/visit_pdf.html", pdf_context)
+        except Exception:
+            return Response(
+                {'detail': _('Failed to generate PDF report.')},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+        # Send email with attachment using post_office
+        # This ensures emails are tracked in post_office database
+        try:
+            email_template = EmailTemplate.objects.get(name='fm/activity/send-report')
+            subject_template = Template(email_template.subject)
+            body_template = Template(email_template.html_content or email_template.content)
+
+            # Send individual emails to each recipient for privacy
+            # Each recipient gets their own email with personalized context
+            filename = f"visit_{ma.reference_number}.pdf"
+
+            # Prepare email context
+            email_context = {
+                'message': message or "",
+                'activity': ma.get_mail_context(user=request.user),
+            }
+
+            context = Context(email_context)
+            subject = subject_template.render(context)
+            body = body_template.render(context)
+
+            # Create a BytesIO object for the PDF attachment
+            # Reset to beginning of file for post_office
+            pdf_file = BytesIO(pdf_content)
+            pdf_file.seek(0)
+
+            for recipient_email in recipient_emails:
+                # Send email using post_office.mail.send()
+                # This stores emails in post_office database for tracking
+                # Use html_message for HTML content, message for plain text
+                mail.send(
+                    recipients=[recipient_email],
+                    sender=settings.DEFAULT_FROM_EMAIL,
+                    subject=subject,
+                    html_message=body,
+                    attachments={filename: pdf_file},
+                    priority='now'
+                )
+
+            return Response({
+                'detail': _('Report sent successfully by email.'),
+                'recipients': recipient_emails
+            }, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response(
+                {'detail': _('Failed to send email. Please try again later.') + str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     @action(detail=False, methods=['get'], url_path='export', renderer_classes=(MonitoringActivityCSVRenderer,))
     def export(self, request, *args, **kwargs):
