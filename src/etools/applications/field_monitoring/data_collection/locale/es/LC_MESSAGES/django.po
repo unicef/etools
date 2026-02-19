@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-09-04 09:09+0000\n"
+"POT-Creation-Date: 2026-02-09 12:44+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -102,17 +102,15 @@ msgstr "Observaciones generales"
 msgid "Please enter general observations here"
 msgstr "Por favor ingrese aquí sus observaciones generales"
 
-#, python-format
-msgid "Unable to find %(level)s with id %(target_id)s"
+#, fuzzy, python-format
+#| msgid "Unable to find %(level)s with id %(target_id)s"
+msgid "Unable to find %(field)s with id %(target_id)s"
 msgstr "No se encuentra %(level)s con id %(target_id)s"
 
-#, python-format
-msgid ""
-"Unable to find finding for question %(question_id)s for %(level)s "
-"%(target_id)s"
-msgstr ""
-"No se encuentra la conclusión para la pregunta %(question_id)s para "
-"%(level)s %(target_id)s"
+#, fuzzy, python-format
+#| msgid "Unable to find finding for question %(question_id)s for %(level)s %(target_id)s"
+msgid "Unable to find finding for question %(question_id)s for %(field)s %(target_id)s"
+msgstr "No se encuentra la conclusión para la pregunta %(question_id)s para %(level)s %(target_id)s"
 
 msgid "Ensure this field has no more than 100 characters."
 msgstr "Asegúrate de que este campo no tenga más de 100 caracteres"
@@ -125,9 +123,7 @@ msgstr "Se Requiere una Fuente de Información"
 
 #, python-format
 msgid "Workspace code provided is not a valid business_area_code: %s"
-msgstr ""
-"El código de espacio de trabajo proporcionado no es un código de área de "
-"negocio válido: %s"
+msgstr "El código de espacio de trabajo proporcionado no es un código de área de negocio válido: %s"
 
 msgid "Workspace is required"
 msgstr ""
@@ -136,8 +132,7 @@ msgid "User is required"
 msgstr "Se requiere usuario"
 
 msgid "Unable to fill checklists for current activity"
-msgstr ""
-"No se pueden rellenar las listas de verificación de la actividad actual"
+msgstr "No se pueden rellenar las listas de verificación de la actividad actual"
 
 msgid "Unable to submit data. Please report to admins."
 msgstr ""

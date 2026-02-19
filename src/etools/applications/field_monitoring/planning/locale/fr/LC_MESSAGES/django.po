@@ -2,13 +2,13 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-# 
+#
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-29 13:11+0000\n"
+"POT-Creation-Date: 2026-02-10 08:33+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -155,6 +155,12 @@ msgstr "Produit du CP"
 msgid "Intervention"
 msgstr "Intervention"
 
+msgid "eWP Activity"
+msgstr ""
+
+msgid "GPD"
+msgstr ""
+
 msgid "Question"
 msgstr "Question"
 
@@ -254,6 +260,12 @@ msgstr ""
 msgid "Field Office"
 msgstr "Bureau de terrain"
 
+msgid "eWP activities"
+msgstr ""
+
+msgid "GDPs"
+msgstr ""
+
 msgid "Activity Attachments"
 msgstr "Pièces jointes d'activité"
 
@@ -303,6 +315,17 @@ msgid "History"
 msgstr "Historique"
 
 msgid "Team members removal not allowed"
+msgstr ""
+
+msgid "Must be a list."
+msgstr ""
+
+#, python-format
+msgid "Item at index %(index)s must be a string."
+msgstr ""
+
+#, python-format
+msgid "Item \"%(item)s\" exceeds maximum length of %(max)s characters."
 msgstr ""
 
 msgid "Document Type"

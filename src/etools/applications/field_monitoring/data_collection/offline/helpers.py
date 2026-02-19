@@ -14,7 +14,7 @@ from etools.applications.field_monitoring.data_collection.models import (
     StartedChecklist,
 )
 from etools.applications.field_monitoring.data_collection.offline.blueprint import get_blueprint_for_activity_and_method
-from etools.applications.field_monitoring.fm_settings.models import Method, Question
+from etools.applications.field_monitoring.fm_settings.models import Method
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
 from etools.applications.offline.errors import BadValueError
 from etools.applications.users.models import User
@@ -39,21 +39,19 @@ def _link_attachments(attachments_data: List[Dict], overall_finding: ChecklistOv
 
 
 def _save_values_to_checklist(value: dict, checklist: StartedChecklist) -> None:
-    for level in dict(MonitoringActivity.RELATIONS_MAPPING).values():
-        level_values = value.get(level)
+    for relation, level, target_field in MonitoringActivity.RELATIONS_MAPPING:
+        level_values = value.get(target_field)
         if not level_values:
             continue
-
-        relation_name = Question.get_target_relation_name(level)
 
         for target_id, target_value in level_values.items():
             try:
                 overall_finding = checklist.overall_findings.filter(
-                    **{relation_name: target_id}
+                    **{target_field: target_id}
                 ).prefetch_related('attachments').get()
             except ChecklistOverallFinding.DoesNotExist:
-                raise BadValueError(_('Unable to find %(level)s with id %(target_id)s') %
-                                    {'level': level, 'target_id': target_id})
+                raise BadValueError(_('Unable to find %(field)s with id %(target_id)s') %
+                                    {'field': target_field, 'target_id': target_id})
 
             overall_finding.narrative_finding = target_value.get('overall', '')
             overall_finding.save()
@@ -66,14 +64,14 @@ def _save_values_to_checklist(value: dict, checklist: StartedChecklist) -> None:
             for question_id, question_value in questions.items():
                 try:
                     finding = checklist.findings.get(
-                        **{f'activity_question__{relation_name}': target_id},
+                        **{f'activity_question__{target_field}': target_id},
                         activity_question__question=question_id
                     )
                 except Finding.DoesNotExist:
                     raise BadValueError(
-                        _('Unable to find finding for question %(question_id)s for %(level)s %(target_id)s') %
+                        _('Unable to find finding for question %(question_id)s for %(field)s %(target_id)s') %
                         {'question_id': question_id,
-                         'level': level,
+                         'field': target_field,
                          'target_id': target_id})
                 finding.value = question_value
                 finding.save()
@@ -122,14 +120,12 @@ def get_checklist_form_value(checklist: StartedChecklist) -> dict:
     if method.use_information_source:
         value['information_source'] = {'name': checklist.information_source}
 
-    for level in dict(MonitoringActivity.RELATIONS_MAPPING).values():
-        relation_name = Question.get_target_relation_name(level)
-
+    for relation, level, target_field in MonitoringActivity.RELATIONS_MAPPING:
         level_value = {}
         for overall_finding in checklist.overall_findings.filter(
-            **{f'{relation_name}__isnull': False}
-        ).select_related(relation_name).prefetch_related('attachments'):
-            target_id = getattr(overall_finding, f'{relation_name}_id')
+            **{f'{target_field}__isnull': False}
+        ).select_related(target_field).prefetch_related('attachments'):
+            target_id = getattr(overall_finding, f'{target_field}_id')
             target_value = {
                 'overall': overall_finding.narrative_finding,
                 'attachments': [
@@ -145,13 +141,13 @@ def get_checklist_form_value(checklist: StartedChecklist) -> dict:
             }
 
             for finding in checklist.findings.filter(
-                **{f'activity_question__{relation_name}': target_id}
+                **{f'activity_question__{target_field}': target_id}
             ).values('value', 'activity_question__question_id'):
                 target_value['questions'][str(finding['activity_question__question_id'])] = finding['value']
 
             level_value[str(target_id)] = target_value
 
         if level_value:
-            value[level] = level_value
+            value[target_field] = level_value
 
     return value
