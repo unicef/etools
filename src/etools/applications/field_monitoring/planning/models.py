@@ -80,9 +80,15 @@ class YearPlan(TimeStampedModel):
 class EWPActivity(models.Model):
     wbs = models.CharField(max_length=255, unique=True)
 
+    def __str__(self):
+        return self.wbs
+
 
 class GPD(models.Model):
     gpd_ref = models.CharField(max_length=25, unique=True)
+
+    def __str__(self):
+        return self.gpd_ref
 
 
 class QuestionTargetMixin(models.Model):

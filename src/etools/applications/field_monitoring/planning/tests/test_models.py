@@ -555,6 +555,16 @@ class TestEntityValidation(BaseTenantTestCase):
         # Total count should be 1
         self.assertEqual(GPD.objects.filter(gpd_ref='GPD-001').count(), 1)
 
+    def test_ewp_activity_str(self):
+        """EWPActivity.__str__ should return the wbs value (used as blueprint title)."""
+        ewp = EWPActivity.objects.create(wbs='WBS-STR-001')
+        self.assertEqual(str(ewp), 'WBS-STR-001')
+
+    def test_gpd_str(self):
+        """GPD.__str__ should return the gpd_ref value (used as blueprint title)."""
+        gpd = GPD.objects.create(gpd_ref='GPD-STR-001')
+        self.assertEqual(str(gpd), 'GPD-STR-001')
+
 
 class TestMonitoringActivityGroups(BaseTenantTestCase):
     @classmethod
