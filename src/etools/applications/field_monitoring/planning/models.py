@@ -77,11 +77,11 @@ class YearPlan(TimeStampedModel):
         return 'Year Plan for {}'.format(self.year)
 
 
-class DummyEWPActivityModel(models.Model):
+class EWPActivity(models.Model):
     wbs = models.CharField(max_length=255, unique=True)
 
 
-class DummyGPDModel(models.Model):
+class GPD(models.Model):
     gpd_ref = models.CharField(max_length=25, unique=True)
 
 
@@ -92,9 +92,9 @@ class QuestionTargetMixin(models.Model):
                                   on_delete=models.CASCADE, related_name='+')
     intervention = models.ForeignKey(Intervention, blank=True, null=True, verbose_name=_('Intervention'),
                                      on_delete=models.CASCADE, related_name='+')
-    ewp_activity = models.ForeignKey(DummyEWPActivityModel, null=True, blank=True, verbose_name=_('eWP Activity'),
+    ewp_activity = models.ForeignKey(EWPActivity, null=True, blank=True, verbose_name=_('eWP Activity'),
                                      on_delete=models.PROTECT, related_name='+')
-    gpd = models.ForeignKey(DummyGPDModel, null=True, blank=True, verbose_name=_('GPD'),
+    gpd = models.ForeignKey(GPD, null=True, blank=True, verbose_name=_('GPD'),
                             on_delete=models.PROTECT, related_name='+')
 
     @property
@@ -352,9 +352,9 @@ class MonitoringActivity(
                                         blank=True)
 
     # GPD m2m for activities and gpds
-    ewp_activities = models.ManyToManyField(DummyEWPActivityModel, verbose_name=_('eWP activities'),
+    ewp_activities = models.ManyToManyField(EWPActivity, verbose_name=_('eWP activities'),
                                             related_name='monitoring_activities', blank=True)
-    gpds = models.ManyToManyField(DummyGPDModel, verbose_name=_('GDPs'),
+    gpds = models.ManyToManyField(GPD, verbose_name=_('GDPs'),
                                   related_name='monitoring_activities', blank=True)
 
     start_date = models.DateField(verbose_name=_('Start Date'), blank=True, null=True)
@@ -789,6 +789,8 @@ class MonitoringActivity(
                 partner=overall_finding.partner,
                 cp_output=overall_finding.cp_output,
                 intervention=overall_finding.intervention,
+                ewp_activity=overall_finding.ewp_activity,
+                gpd=overall_finding.gpd,
             ).values_list('narrative_finding', flat=True)
             if len(narrative_findings) == 1:
                 overall_finding.narrative_finding = narrative_findings[0]

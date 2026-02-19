@@ -259,10 +259,10 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_update_ewp_activities_and_gpds_empty_clears(self):
         """PATCH with empty ewp_activities and gpds clears the relations."""
-        from etools.applications.field_monitoring.planning.models import DummyEWPActivityModel, DummyGPDModel
+        from etools.applications.field_monitoring.planning.models import EWPActivity, GPD
 
-        ewp = DummyEWPActivityModel.objects.create(wbs='WBS-OLD')
-        gpd = DummyGPDModel.objects.create(gpd_ref='GPD-OLD')
+        ewp = EWPActivity.objects.create(wbs='WBS-OLD')
+        gpd = GPD.objects.create(gpd_ref='GPD-OLD')
         activity = MonitoringActivityFactory(monitor_type='staff')
         activity.ewp_activities.add(ewp)
         activity.gpds.add(gpd)

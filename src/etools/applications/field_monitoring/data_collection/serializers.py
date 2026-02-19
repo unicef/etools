@@ -21,11 +21,7 @@ from etools.applications.field_monitoring.fm_settings.serializers import (
     FMCommonAttachmentSerializer,
     QuestionSerializer,
 )
-from etools.applications.field_monitoring.planning.models import (
-    DummyEWPActivityModel as EWPActivity,
-    DummyGPDModel as GPD,
-    MonitoringActivity,
-)
+from etools.applications.field_monitoring.planning.models import EWPActivity, GPD, MonitoringActivity
 from etools.applications.partners.serializers.interventions_v2 import MinimalInterventionListSerializer
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.reports.serializers.v2 import MinimalOutputListSerializer
@@ -136,8 +132,12 @@ class ChecklistOverallFindingSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ChecklistOverallFinding
-        fields = ('id', 'partner', 'cp_output', 'intervention', 'narrative_finding', 'attachments')
-        read_only_fields = ('partner', 'cp_output', 'intervention')
+        fields = (
+            'id',
+            'partner', 'cp_output', 'intervention', 'ewp_activity', 'gpd',
+            'narrative_finding', 'attachments'
+        )
+        read_only_fields = ('partner', 'cp_output', 'intervention', 'ewp_activity', 'gpd')
 
 
 class FindingSerializer(serializers.ModelSerializer):
@@ -162,8 +162,6 @@ class CompletedChecklistOverallFindingSerializer(serializers.ModelSerializer):
 class ActivityOverallFindingSerializer(serializers.ModelSerializer):
     attachments = serializers.SerializerMethodField()
     findings = serializers.SerializerMethodField()
-    ewp_activity = MinimalEWPActivityListSerializer(read_only=True)
-    gpd = MinimalGPDListSerializer(read_only=True)
 
     class Meta:
         model = ActivityOverallFinding

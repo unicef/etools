@@ -236,9 +236,9 @@ class ChecklistOverallFindingsViewSet(
     permission_classes = FMBaseViewSet.permission_classes + [
         IsReadAction | (IsEditAction & activity_field_is_editable_permission('started_checklist_set'))
     ]
-    queryset = ChecklistOverallFinding.objects.prefetch_related(
-        'partner', 'cp_output', 'intervention', 'attachments'
-    )
+    queryset = ChecklistOverallFinding.objects.select_related(
+        'partner', 'cp_output', 'intervention', 'ewp_activity', 'gpd',
+    ).prefetch_related('attachments')
     serializer_class = ChecklistOverallFindingSerializer
 
 

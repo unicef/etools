@@ -14,6 +14,8 @@ from etools.applications.field_monitoring.data_collection.models import (
     ActivityOverallFinding,
     ActivityQuestion,
     ActivityQuestionOverallFinding,
+    Finding,
+    StartedChecklist,
 )
 from etools.applications.field_monitoring.data_collection.tests.factories import (
     ActivityQuestionFactory,
@@ -22,13 +24,9 @@ from etools.applications.field_monitoring.data_collection.tests.factories import
     StartedChecklistFactory,
 )
 from etools.applications.field_monitoring.fm_settings.models import Question
-from etools.applications.field_monitoring.fm_settings.tests.factories import QuestionFactory
+from etools.applications.field_monitoring.fm_settings.tests.factories import MethodFactory, QuestionFactory
 from etools.applications.field_monitoring.planning.activity_validation.validator import ActivityValid
-from etools.applications.field_monitoring.planning.models import (
-    DummyEWPActivityModel,
-    DummyGPDModel,
-    MonitoringActivity,
-)
+from etools.applications.field_monitoring.planning.models import EWPActivity, GPD, MonitoringActivity
 from etools.applications.field_monitoring.planning.serializers import MonitoringActivitySerializer
 from etools.applications.field_monitoring.planning.tests.factories import (
     MonitoringActivityActionPointFactory,
@@ -46,10 +44,6 @@ from etools.applications.reports.models import CountryProgramme, ResultType
 from etools.applications.reports.tests.factories import CountryProgrammeFactory, ResultFactory, SectionFactory
 from etools.applications.tpm.tests.factories import TPMPartnerFactory, TPMUserFactory
 from etools.libraries.pythonlib.datetime import get_quarter
-from etools.applications.field_monitoring.data_collection.models import Finding, StartedChecklist
-from etools.applications.field_monitoring.fm_settings.tests.factories import MethodFactory
-from etools.applications.field_monitoring.tests.factories import UserFactory
-from etools.applications.field_monitoring.planning.models import DummyEWPActivityModel
 
 
 class TestMonitoringActivityValidations(BaseTenantTestCase):
@@ -93,13 +87,13 @@ class TestMonitoringActivityValidations(BaseTenantTestCase):
 
     def test_checklist_accepts_ewp_activities_instead_of_cp_outputs(self):
         activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.checklist)
-        ewp = DummyEWPActivityModel.objects.create(wbs='ACT-VALID-001')
+        ewp = EWPActivity.objects.create(wbs='ACT-VALID-001')
         activity.ewp_activities.add(ewp)
         self.assertTrue(ActivityValid(activity, user=self.user).is_valid)
 
     def test_checklist_accepts_gpds_instead_of_interventions(self):
         activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.checklist)
-        gpd = DummyGPDModel.objects.create(gpd_ref='GPD-VALID-001')
+        gpd = GPD.objects.create(gpd_ref='GPD-VALID-001')
         activity.gpds.add(gpd)
         self.assertTrue(ActivityValid(activity, user=self.user).is_valid)
 
@@ -310,9 +304,9 @@ class TestNewEntityTypes(BaseTenantTestCase):
 
     def test_ewp_activity_questions_generated(self):
         """Test that questions are generated for ewp_activities."""
-        from etools.applications.field_monitoring.planning.models import DummyEWPActivityModel
+        from etools.applications.field_monitoring.planning.models import EWPActivity
 
-        ewp_activity = DummyEWPActivityModel.objects.create(wbs='ACT-001-2024')
+        ewp_activity = EWPActivity.objects.create(wbs='ACT-001-2024')
 
         activity = MonitoringActivityFactory(
             status=MonitoringActivity.STATUSES.draft
@@ -341,7 +335,7 @@ class TestNewEntityTypes(BaseTenantTestCase):
         # Ensure generated ActivityQuestion is enabled (uses base template).
         QuestionTemplateFactory(question=self.ewp_question)
 
-        ewp_activity = DummyEWPActivityModel.objects.create(wbs='ACT-CHK-001-2024')
+        ewp_activity = EWPActivity.objects.create(wbs='ACT-CHK-001-2024')
         activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.draft)
         activity.sections.set([self.section])
         activity.ewp_activities.set([ewp_activity])
@@ -381,15 +375,15 @@ class TestNewEntityTypes(BaseTenantTestCase):
         """
         from etools.applications.field_monitoring.data_collection.models import Finding, StartedChecklist
         from etools.applications.field_monitoring.fm_settings.tests.factories import MethodFactory
+        from etools.applications.field_monitoring.planning.models import GPD
         from etools.applications.field_monitoring.tests.factories import UserFactory
-        from etools.applications.field_monitoring.planning.models import DummyGPDModel
 
         method = MethodFactory()
         self.intervention_question.methods.add(method)
         # Ensure generated ActivityQuestion is enabled (uses base template).
         QuestionTemplateFactory(question=self.intervention_question)
 
-        gpd = DummyGPDModel.objects.create(gpd_ref='GPD-CHK-001')
+        gpd = GPD.objects.create(gpd_ref='GPD-CHK-001')
         activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.draft)
         activity.sections.set([self.section])
         activity.gpds.set([gpd])
@@ -421,9 +415,9 @@ class TestNewEntityTypes(BaseTenantTestCase):
 
     def test_gpd_questions_use_intervention_level(self):
         """Test that gPDs use intervention-level questions."""
-        from etools.applications.field_monitoring.planning.models import DummyGPDModel
+        from etools.applications.field_monitoring.planning.models import GPD
 
-        gpd = DummyGPDModel.objects.create(gpd_ref='GPD-2024-001')
+        gpd = GPD.objects.create(gpd_ref='GPD-2024-001')
 
         activity = MonitoringActivityFactory(
             status=MonitoringActivity.STATUSES.draft
@@ -440,10 +434,10 @@ class TestNewEntityTypes(BaseTenantTestCase):
 
     def test_gpds_and_interventions_share_question_level(self):
         """Test that both interventions and gPDs use the same question pool."""
-        from etools.applications.field_monitoring.planning.models import DummyGPDModel
+        from etools.applications.field_monitoring.planning.models import GPD
 
         intervention = InterventionFactory()
-        gpd = DummyGPDModel.objects.create(gpd_ref='GPD-2024-002')
+        gpd = GPD.objects.create(gpd_ref='GPD-2024-002')
 
         activity = MonitoringActivityFactory(
             status=MonitoringActivity.STATUSES.draft
@@ -468,10 +462,10 @@ class TestNewEntityTypes(BaseTenantTestCase):
 
     def test_overall_findings_created_for_new_entities(self):
         """Test that overall findings are created for ewp_activities and gpds."""
-        from etools.applications.field_monitoring.planning.models import DummyEWPActivityModel, DummyGPDModel
+        from etools.applications.field_monitoring.planning.models import EWPActivity, GPD
 
-        ewp_activity = DummyEWPActivityModel.objects.create(wbs='ACT-002-2024')
-        gpd = DummyGPDModel.objects.create(gpd_ref='GPD-2024-003')
+        ewp_activity = EWPActivity.objects.create(wbs='ACT-002-2024')
+        gpd = GPD.objects.create(gpd_ref='GPD-2024-003')
 
         activity = MonitoringActivityFactory(
             status=MonitoringActivity.STATUSES.draft
@@ -541,25 +535,25 @@ class TestEntityValidation(BaseTenantTestCase):
 
     def test_wbs_uniqueness(self):
         """Test that duplicate WBS numbers cannot be created."""
-        DummyEWPActivityModel.objects.create(wbs='ACT-001')
+        EWPActivity.objects.create(wbs='ACT-001')
 
         # Should reuse existing instead of creating duplicate
-        obj1, created1 = DummyEWPActivityModel.objects.get_or_create(wbs='ACT-001')
+        obj1, created1 = EWPActivity.objects.get_or_create(wbs='ACT-001')
         self.assertFalse(created1)
 
         # Total count should be 1
-        self.assertEqual(DummyEWPActivityModel.objects.filter(wbs='ACT-001').count(), 1)
+        self.assertEqual(EWPActivity.objects.filter(wbs='ACT-001').count(), 1)
 
     def test_gpd_uniqueness(self):
         """Test that duplicate GPD refs cannot be created."""
-        DummyGPDModel.objects.create(gpd_ref='GPD-001')
+        GPD.objects.create(gpd_ref='GPD-001')
 
         # Should reuse existing instead of creating duplicate
-        obj1, created1 = DummyGPDModel.objects.get_or_create(gpd_ref='GPD-001')
+        obj1, created1 = GPD.objects.get_or_create(gpd_ref='GPD-001')
         self.assertFalse(created1)
 
         # Total count should be 1
-        self.assertEqual(DummyGPDModel.objects.filter(gpd_ref='GPD-001').count(), 1)
+        self.assertEqual(GPD.objects.filter(gpd_ref='GPD-001').count(), 1)
 
 
 class TestMonitoringActivityGroups(BaseTenantTestCase):

@@ -20,9 +20,9 @@ from etools.applications.field_monitoring.fm_settings.models import Question
 from etools.applications.field_monitoring.fm_settings.serializers import LocationSiteSerializer, QuestionSerializer
 from etools.applications.field_monitoring.planning.activity_validation.permissions import ActivityPermissions
 from etools.applications.field_monitoring.planning.models import (
-    DummyEWPActivityModel,
-    DummyGPDModel,
+    EWPActivity,
     FacilityType,
+    GPD,
     MonitoringActivity,
     MonitoringActivityActionPoint,
     MonitoringActivityFacilityType,
@@ -407,27 +407,27 @@ class MonitoringActivitySerializer(UserContextSerializerMixin, MonitoringActivit
 
     def _resolve_ewp_activities(self, wbs_list):
         """
-        Resolve list of WBS strings to DummyEWPActivityModel instances.
+        Resolve list of WBS strings to EWPActivity instances.
         Assumes wbs_list is already validated (stripped, non-empty, length-checked).
         """
         if not wbs_list:
             return []
         instances = []
         for wbs in wbs_list:
-            obj, _ = DummyEWPActivityModel.objects.get_or_create(wbs=wbs)
+            obj, _ = EWPActivity.objects.get_or_create(wbs=wbs)
             instances.append(obj)
         return instances
 
     def _resolve_gpds(self, gpd_ref_list):
         """
-        Resolve list of gpd_ref strings to DummyGPDModel instances.
+        Resolve list of gpd_ref strings to GPD instances.
         Assumes gpd_ref_list is already validated (stripped, non-empty, length-checked).
         """
         if not gpd_ref_list:
             return []
         instances = []
         for gpd_ref in gpd_ref_list:
-            obj, _ = DummyGPDModel.objects.get_or_create(gpd_ref=gpd_ref)
+            obj, _ = GPD.objects.get_or_create(gpd_ref=gpd_ref)
             instances.append(obj)
         return instances
 
