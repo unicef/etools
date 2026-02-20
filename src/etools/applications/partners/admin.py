@@ -378,6 +378,7 @@ class InterventionAdmin(
                 'unicef_review_type',
                 'capacity_development',
                 'accountability_to_affected_populations',
+                'partner_selection_modality',
                 'other_info',
                 'other_partners_involved',
                 'technical_guidance',
@@ -616,6 +617,9 @@ class PartnerAdmin(ExtraUrlMixin, ExportMixin, RestrictedEditAdmin):
             partner.save()
             partners += 1
         self.message_user(request, '{} partners were shown'.format(partners))
+
+    def get_queryset(self, request):
+        return PartnerOrganization.all_partners.all()
 
     def has_module_permission(self, request):
         return request.user.is_superuser or request.user.groups.filter(name='Country Office Administrator').exists()

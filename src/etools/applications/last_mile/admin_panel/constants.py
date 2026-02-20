@@ -100,5 +100,6 @@ LIST_INTERESTED_LASTMILE_PERMS_WITHOUT_APPROVE = [
 LMSM_ADMIN_GROUPS = [
     "LMSM CO Admin",
     "LMSM HQ Admin",
-    "LMSM Admin Panel"
+    "LMSM Admin Panel",
+    "LMSM CO Viewer"
 ]

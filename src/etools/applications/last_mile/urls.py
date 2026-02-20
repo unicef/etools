@@ -53,4 +53,19 @@ urlpatterns = [
         view=views.InventoryItemListView.as_view(http_method_names=['get'],),
         name='inventory-item-list',
     ),
+    path(
+        'unicef/partner/',
+        view=views.UnicefPartnerView.as_view(),
+        name='unicef-partner',
+    ),
+    path(
+        'unicef/locations/',
+        view=views.UnicefLocationsView.as_view(),
+        name='unicef-locations',
+    ),
+    path(
+        'unicef/new-handover/checkout/',
+        view=views.UnicefHandoverCheckoutView.as_view(),
+        name='unicef-new-handover-checkout',
+    ),
 ]
