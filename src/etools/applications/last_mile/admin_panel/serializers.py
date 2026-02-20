@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 from django.contrib.auth import get_user_model
 from django.contrib.gis.geos import Point
 from django.db import connection, transaction
@@ -565,8 +567,13 @@ class PointOfInterestExportSerializer(serializers.ModelSerializer):
     def get_primary_type(self, obj):
         return obj.poi_type.name if obj.poi_type else None
 
+    def _get_cached_partners(self, obj):
+        if not hasattr(obj, '_cached_partners'):
+            obj._cached_partners = list(obj.partner_organizations.all())
+        return obj._cached_partners
+
     def get_implementing_partner(self, obj):
-        partners = obj.partner_organizations.all().prefetch_related('organization')
+        partners = self._get_cached_partners(obj)
         return ",".join([f"{partner.organization.vendor_number} - {partner.organization.name}" if partner.organization else partner.name if partner.name else "-" for partner in partners])
 
     def get_lat(self, obj):
@@ -577,7 +584,7 @@ class PointOfInterestExportSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        partners = instance.partner_organizations.all().prefetch_related('organization')
+        partners = self._get_cached_partners(instance)
         implementing_partner_names = ",".join([f"{partner.organization.name}" if partner.organization else partner.name if partner.name else "-" for partner in partners])
         implementing_partner_numbers = ",".join([f"{partner.organization.vendor_number}" if partner.organization else partner.name if partner.name else "-" for partner in partners])
         data.update({
@@ -617,6 +624,48 @@ class PointOfInterestExportSerializer(serializers.ModelSerializer):
                 rows.append(row)
 
         return rows or [base]
+
+    @classmethod
+    def bulk_generate_rows(cls, instances):
+        poi_ids = [poi.id for poi in instances]
+
+        transfers_qs = (
+            models.Transfer.all_objects
+            .filter(destination_point_id__in=poi_ids)
+            .select_related('destination_point')
+            .prefetch_related('items')
+        )
+
+        transfers_by_poi = defaultdict(list)
+        for transfer in transfers_qs:
+            transfers_by_poi[transfer.destination_point_id].append(transfer)
+
+        all_rows = []
+        serializer = cls()
+
+        for instance in instances:
+            base = serializer.base_representation(instance)
+            poi_transfers = transfers_by_poi.get(instance.id, [])
+
+            if poi_transfers:
+                for transfer in poi_transfers:
+                    for item in transfer.items.all():
+                        row = dict(base)
+                        row.update({
+                            "transfer_name": transfer.name,
+                            "transfer_ref": getattr(transfer, "unicef_release_order", None),
+                            "item_id": item.id,
+                            "item_name": getattr(item, "description", None),
+                            "item_qty": getattr(item, "quantity", None),
+                            "item_batch_number": getattr(item, "batch_id", None),
+                            "item_expiry_date": getattr(item, "expiry_date", None),
+                            'approval_status': transfer.approval_status,
+                        })
+                        all_rows.append(row)
+            else:
+                all_rows.append(base)
+
+        return all_rows
 
     class Meta:
         model = models.PointOfInterest
