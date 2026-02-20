@@ -1,0 +1,74 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static %}
+
+{% block extrastyle %}{{ block.super }}
+<style>
+
+    .location-import-submit-row input[type="submit"],
+    .location-import-submit-row a.button {
+        min-height: 2.25rem;
+        display: inline-flex;
+        align-items: center;
+        box-sizing: border-box;
+        margin-top: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block bodyclass %}{{ block.super }} app-{{ opts.app_label }} model-{{ opts.model_name }} change-form{% endblock %}
+
+{% if not is_popup %}
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+    &rsaquo;
+    <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+    &rsaquo;
+    <a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+    &rsaquo;
+    <a href="{{ import_url }}">{% trans 'Import' %}</a>
+    &rsaquo; {{ title }}
+</div>
+{% endblock %}
+{% endif %}
+
+{% block content %}
+<div id="content-main">
+    <p>{% blocktrans with count=rows|length %}Preview: {{ count }} row(s) will be imported (create if new P Code, update if exists).{% endblocktrans %}</p>
+    <div class="results">
+        <table id="result_list">
+            <thead>
+                <tr>
+                    <th>{% trans 'Name' %}</th>
+                    <th>{% trans 'Admin Level' %}</th>
+                    <th>{% trans 'Admin Level Name' %}</th>
+                    <th>{% trans 'P Code' %}</th>
+                    <th>{% trans 'Active' %}</th>
+                    <th>{% trans 'Parent' %}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in rows %}
+                <tr>
+                    <td>{{ row.name }}</td>
+                    <td>{{ row.admin_level|default:"" }}</td>
+                    <td>{{ row.admin_level_name|default:"" }}</td>
+                    <td>{{ row.p_code }}</td>
+                    <td>{{ row.is_active|yesno:"Yes,No" }}</td>
+                    <td>{{ row.parent_p_code|default:"" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <form action="" method="post">
+        {% csrf_token %}
+        <input type="hidden" name="confirm" value="1">
+        <div class="submit-row location-import-submit-row">
+            <input type="submit" value="{% trans 'Import' %}" class="default">
+            <a href="{{ import_url }}" class="button">{% trans 'Back to upload' %}</a>
+            <a href="{% url opts|admin_urlname:'changelist' %}" class="button cancel-link">{% trans 'Cancel' %}</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
