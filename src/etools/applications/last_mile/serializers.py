@@ -668,6 +668,23 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
         return self.instance
 
 
+class UnicefHandoverCheckoutSerializer(TransferCheckOutSerializer):
+    destination_point = serializers.IntegerField(required=True)
+    partner_id = serializers.IntegerField(required=True, allow_null=False)
+
+    def validate_transfer_type(self, value):
+        if value != models.Transfer.UNICEF_HANDOVER:  # Kept for future if we want to allow other transfer types
+            raise ValidationError(_('Only UNICEF_HANDOVER transfer type is allowed for this endpoint.'))
+        return value
+
+    def create(self, validated_data):
+        instance = super().create(validated_data)
+        instance.status = models.Transfer.COMPLETED
+        instance.destination_check_in_at = instance.origin_check_out_at
+        instance.save(update_fields=['status', 'destination_check_in_at'])
+        return instance
+
+
 class TransferEvidenceSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):
     comment = serializers.CharField(required=True, allow_blank=False, allow_null=False)
     evidence_file = AttachmentSingleFileField(required=True, allow_null=False)

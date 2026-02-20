@@ -22,6 +22,7 @@ from etools.applications.last_mile import models, serializers
 from etools.applications.last_mile.filters import POIFilter, TransferFilter
 from etools.applications.last_mile.permissions import IsIPLMEditorOrViewerReadOnly, IsLMSMGroup
 from etools.applications.last_mile.tasks import notify_upload_waybill
+from etools.applications.last_mile.validators import TransferCheckOutValidator
 from etools.applications.locations.models import Location
 from etools.applications.organizations.models import Organization
 from etools.applications.partners.models import PartnerOrganization
@@ -473,45 +474,22 @@ class UnicefHandoverCheckoutView(APIView):
     permission_classes = [IsIPLMEditorOrViewerReadOnly]
 
     def post(self, request, *args, **kwargs):
-        data = request.data
+        TransferCheckOutValidator().validate_origin_point(request.data.get('origin_point'))
+        origin_poi = get_object_or_404(models.PointOfInterest, pk=request.data.get('origin_point'))
 
-        transfer_type = data.get('transfer_type')
-        if transfer_type != models.Transfer.UNICEF_HANDOVER:
-            raise ValidationError(
-                _('Only UNICEF_HANDOVER transfer type is allowed for this endpoint.')
-            )
-        destination_point_id = data.get('destination_point')
-        if not destination_point_id:
-            raise ValidationError(_('destination_point is required.'))
-        origin_point_id = data.get('origin_point')
-        if not origin_point_id:
-            raise ValidationError(_('origin_point is required.'))
-        if not data.get('partner_id'):
-            raise ValidationError(_('partner_id is required.'))
-
-        origin_poi = get_object_or_404(models.PointOfInterest, pk=origin_point_id)
-
-        checkout_serializer = serializers.TransferCheckOutSerializer(
-            data=data,
+        serializer = serializers.UnicefHandoverCheckoutSerializer(
+            data=request.data,
             context={
                 'request': request,
                 'location': origin_poi,
             }
         )
-        checkout_serializer.is_valid(raise_exception=True)
-        checkout_serializer.save()
-
-        transfer = checkout_serializer.instance
-
-        transfer.status = models.Transfer.COMPLETED
-        transfer.destination_check_in_at = transfer.origin_check_out_at
-        transfer.save(update_fields=[
-            'status', 'destination_check_in_at',
-        ])
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
 
         return Response(
             serializers.TransferSerializer(
-                transfer, context={'partner': request.user.partner}
+                serializer.instance, context={'partner': request.user.partner}
             ).data,
             status=status.HTTP_200_OK
         )

@@ -19,3 +19,7 @@ class TransferCheckOutValidator:
     def validate_handover(self, transfer_type: str, partner_id: int) -> None:
         if transfer_type in [Transfer.HANDOVER, Transfer.UNICEF_HANDOVER] and not partner_id:
             raise ValidationError(_('A Handover to a partner requires a partner id.'))
+
+    def validate_origin_point(self, origin_point: int) -> None:
+        if not origin_point:
+            raise ValidationError(_('origin_point is required.'))
