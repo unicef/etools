@@ -46,6 +46,16 @@ class PointOfInterestForm(forms.ModelForm):
         model = models.PointOfInterest
         fields = '__all__'
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['partner_organizations'].queryset = PartnerOrganization.all_partners.all()
+        if self.instance and self.instance.pk:
+            self.initial['partner_organizations'] = list(
+                self.instance.partner_organizations.through.objects
+                .filter(pointofinterest_id=self.instance.pk)
+                .values_list('partnerorganization_id', flat=True)
+            )
+
     def clean_l_consignee_code(self):
         value = self.cleaned_data.get('l_consignee_code')
         try:

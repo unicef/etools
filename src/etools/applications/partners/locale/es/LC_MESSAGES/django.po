@@ -945,6 +945,22 @@ msgstr "Humanitario"
 msgid "Date first sent to Partner"
 msgstr "Fecha del primer envío al socio"
 
+msgid "Open selection"
+msgstr "Selección abierta"
+
+msgid "Direct selection"
+msgstr "Selección directa"
+
+msgid "Partner Selection Modality"
+msgstr "Modalidad de selección de socios"
+
+msgid ""
+"Select how the partner was selected in UNPP (Open selection or Direct "
+"selection)."
+msgstr ""
+"Seleccione cómo se eligió al socio en UNPP (Selección abierta o Selección "
+"directa)."
+
 msgid "Context"
 msgstr "Contexto"
 
