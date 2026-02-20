@@ -175,14 +175,19 @@ class TransferIngestService:
 
     def _prepare_transfers_and_group_items(self, validated_data: List[Dict[str, Any]]):
         poi_map = {}
-        active_pois = models.PointOfInterest.objects.filter(
-            is_active=True,
-            status=models.PointOfInterest.ApprovalStatus.APPROVED
-        ).prefetch_related('partner_organizations')
+        needed_codes = {
+            row['transfer_data']['l_consignee_code']
+            for row in validated_data
+            if row['transfer_data'].get('l_consignee_code')
+        }
 
-        for poi in active_pois:
-            if poi.l_consignee_code:
-                poi_map[poi.l_consignee_code] = poi
+        active_pois = models.PointOfInterest.all_objects.filter(
+            is_active=True,
+            status=models.PointOfInterest.ApprovalStatus.APPROVED,
+            l_consignee_code__in=needed_codes
+        ).only('id', 'l_consignee_code', 'name').prefetch_related('partner_organizations')
+
+        poi_map = {poi.l_consignee_code: poi for poi in active_pois}
 
         origin_poi = models.PointOfInterest.objects.get_unicef_warehouses()
 
