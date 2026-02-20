@@ -1078,6 +1078,33 @@ class TestRssAdminFieldMonitoringApi(BaseTenantTestCase):
         self.assertGreater(len(results), 0)
         self.assertTrue(any('location' in log.get('change_message', '').lower() for log in results))
 
+    def test_monitoring_activity_logs_filter_search_full_name(self):
+        """Searching by full name (first + last) must return results.
+
+        Previously the raw value was passed directly to icontains, so 'John Doe'
+        would not match a user whose first_name='John' and last_name='Doe'.
+        """
+        activity = MonitoringActivityFactory()
+        url = reverse('rss_admin:rss-admin-monitoring-activities-logs', kwargs={'pk': activity.pk})
+
+        author = UserFactory(first_name='John', last_name='Doe')
+        other = UserFactory(first_name='Jane', last_name='Smith')
+
+        log_change(user=author, obj=activity, change_message="Changed by John")
+        log_change(user=other, obj=activity, change_message="Changed by Jane")
+
+        # Full-name search should match only the entry by John Doe
+        resp = self.forced_auth_req('get', url, user=self.user, data={'search': 'John Doe'})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        results = resp.data['results']
+        self.assertEqual(len(results), 1)
+        self.assertIn('John', results[0]['change_message'])
+
+        # Searching a name that belongs to no user should return nothing
+        resp = self.forced_auth_req('get', url, user=self.user, data={'search': 'Jane Doe'})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(resp.data['results']), 0)
+
     def test_monitoring_activity_logs_filter_combined(self):
         """Test that monitoring activity logs endpoint supports combined filtering"""
         activity = MonitoringActivityFactory()
