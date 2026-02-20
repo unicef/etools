@@ -181,7 +181,7 @@ class TransferIngestService:
             if row['transfer_data'].get('l_consignee_code')
         }
 
-        active_pois = models.PointOfInterest.objects.filter(
+        active_pois = models.PointOfInterest.all_objects.filter(
             is_active=True,
             status=models.PointOfInterest.ApprovalStatus.APPROVED,
             l_consignee_code__in=needed_codes
