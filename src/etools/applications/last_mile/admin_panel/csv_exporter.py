@@ -52,11 +52,6 @@ class BaseCSVExporter:
             yield self._write_csv_rows_bulk(rows_values)
 
     def _paginate_queryset(self, queryset) -> Iterator[list]:
-        """Paginate queryset in chunks, preserving prefetch_related.
-
-        Unlike .iterator(), this evaluates each chunk as a separate
-        queryset slice so prefetch_related lookups are properly applied.
-        """
         offset = 0
         while True:
             chunk = list(queryset[offset:offset + self.chunk_size])

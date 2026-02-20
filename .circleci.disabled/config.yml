@@ -123,4 +123,3 @@ workflows:
                 - staging
                 - master
                 - ch39409-backend
-                - LMSM_Improve_export_locations
