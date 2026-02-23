@@ -537,14 +537,17 @@ class ProofFileDeleteView(APIView):
     permission_classes = [IsIPLMEditorOrViewerReadOnly]
 
     def delete(self, request, pk):
-        transfer_ct = ContentType.objects.get_for_model(models.Transfer)
-        attachment = get_object_or_404(
-            Attachment.objects.filter(
-                code='proof_of_transfer',
-                content_type=transfer_ct,
-            ),
-            pk=pk,
-        )
-        get_object_or_404(models.Transfer, pk=attachment.object_id, partner_organization=request.user.partner)
+        attachment = get_object_or_404(Attachment, pk=pk)
+
+        if attachment.content_type_id and attachment.object_id:
+            transfer_ct = ContentType.objects.get_for_model(models.Transfer)
+            if attachment.content_type_id != transfer_ct.pk:
+                raise PermissionDenied
+            get_object_or_404(
+                models.Transfer, pk=attachment.object_id, partner_organization=request.user.partner
+            )
+        elif attachment.uploaded_by != request.user:
+            raise PermissionDenied
+
         attachment.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)

@@ -1163,16 +1163,24 @@ class TestProofFileDeleteView(BaseTenantTestCase):
         response = self.forced_auth_req('delete', url, user=self.partner_staff)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-    def test_delete_non_proof_attachment_returns_404(self):
+    def test_delete_unlinked_attachment_by_uploader(self):
         attachment = AttachmentFactory(
-            file=SimpleUploadedFile('waybill.pdf', b'waybill content'),
-            code='waybill_file',
+            file=SimpleUploadedFile('proof.pdf', b'proof content'),
+            uploaded_by=self.partner_staff,
         )
-        attachment.content_object = self.transfer
-        attachment.save()
         url = reverse('last_mile:proof-file-delete', args=(attachment.pk,))
         response = self.forced_auth_req('delete', url, user=self.partner_staff)
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(Attachment.objects.filter(pk=attachment.pk).exists())
+
+    def test_delete_unlinked_attachment_by_other_user_returns_403(self):
+        attachment = AttachmentFactory(
+            file=SimpleUploadedFile('proof.pdf', b'proof content'),
+            uploaded_by=self.other_partner_staff,
+        )
+        url = reverse('last_mile:proof-file-delete', args=(attachment.pk,))
+        response = self.forced_auth_req('delete', url, user=self.partner_staff)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
         self.assertTrue(Attachment.objects.filter(pk=attachment.pk).exists())
 
     def test_delete_other_partners_proof_returns_404(self):
