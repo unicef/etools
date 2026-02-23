@@ -314,7 +314,7 @@ class TestTransferView(BaseTenantTestCase):
         checkin_data = {
             "name": "checked in transfer",
             "comment": "",
-            "proof_file": self.attachment.pk,
+            "proof_files": [self.attachment.pk],
             "items": [
                 {"id": item_1.pk, "quantity": item_1.quantity},
                 {"id": item_2.pk, "quantity": item_2.quantity},
@@ -329,7 +329,9 @@ class TestTransferView(BaseTenantTestCase):
         self.incoming.refresh_from_db()
         self.assertEqual(self.incoming.status, models.Transfer.COMPLETED)
         self.assertEqual("RUTF", response.data['items'][0]['material']['material_type_translate'])
-        self.assertIn(self.attachment.filename, response.data['proof_file'])
+        self.assertIsInstance(response.data['proof_files'], list)
+        self.assertEqual(len(response.data['proof_files']), 1)
+        self.assertIn(self.attachment.filename, response.data['proof_files'][0])
         self.assertEqual(self.incoming.name, checkin_data['name'])
         self.assertEqual(self.incoming.items.count(), len(response.data['items']))
         self.assertEqual(self.incoming.initial_items[0]['quantity'], item_1.quantity)
@@ -384,7 +386,7 @@ class TestTransferView(BaseTenantTestCase):
 
         checkin_data = {
             "comment": "",
-            "proof_file": self.attachment.pk,
+            "proof_files": [self.attachment.pk],
             "items": [
                 {"id": item_1.pk, "quantity": 11},
                 {"id": item_3.pk, "quantity": 3},
@@ -401,7 +403,8 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(incoming.initial_items[2]['quantity'], item_3.quantity)
         self.assertEqual(incoming.status, models.Transfer.COMPLETED)
         self.assertEqual("RUTF", response.data['items'][0]['material']['material_type_translate'])
-        self.assertIn(response.data['proof_file'], self.attachment.file.path)
+        self.assertIsInstance(response.data['proof_files'], list)
+        self.assertEqual(len(response.data['proof_files']), 1)
 
         self.assertIn(f'DW @ {checkin_data["destination_check_in_at"].strftime("%y-%m-%d")}', incoming.name)
         self.assertEqual(incoming.items.count(), len(response.data['items']))
@@ -456,7 +459,7 @@ class TestTransferView(BaseTenantTestCase):
         checkin_data = {
             "name": "checked in transfer",
             "comment": "",
-            "proof_file": self.attachment.pk,
+            "proof_files": [self.attachment.pk],
             "items": [
                 {"id": item_1.pk, "quantity": 11},
                 {"id": item_2.pk, "quantity": 23},
@@ -471,7 +474,8 @@ class TestTransferView(BaseTenantTestCase):
         self.incoming.refresh_from_db()
         self.assertEqual(self.incoming.status, models.Transfer.COMPLETED)
         self.assertEqual("RUTF", response.data['items'][0]['material']['material_type_translate'])
-        self.assertIn(response.data['proof_file'], self.attachment.file.path)
+        self.assertIsInstance(response.data['proof_files'], list)
+        self.assertEqual(len(response.data['proof_files']), 1)
         self.assertEqual(self.incoming.name, checkin_data['name'])
         self.assertEqual(self.incoming.items.count(), len(response.data['items']))
         self.assertEqual(self.incoming.items.get(pk=item_1.pk).quantity, 11)
@@ -518,7 +522,7 @@ class TestTransferView(BaseTenantTestCase):
         checkin_data = {
             "name": "checked in transfer",
             "comment": "",
-            "proof_file": self.attachment.pk,
+            "proof_files": [self.attachment.pk],
 
             "items": [
                 {"id": item_1.pk, "quantity": 5},  # 1 RUFT
@@ -534,7 +538,8 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(self.incoming.status, models.Transfer.COMPLETED)
         response.data['items'] = sorted(response.data['items'], key=lambda x: x['id'])
         self.assertEqual("RUTF", response.data['items'][0]['material']['material_type_translate'])
-        self.assertIn(response.data['proof_file'], self.attachment.file.path)
+        self.assertIsInstance(response.data['proof_files'], list)
+        self.assertEqual(len(response.data['proof_files']), 1)
         self.assertEqual(self.incoming.name, checkin_data['name'])
         self.assertEqual(self.incoming.items.count(), len(response.data['items']))
         self.assertEqual(self.incoming.items.count(), 2)
@@ -573,7 +578,7 @@ class TestTransferView(BaseTenantTestCase):
 
         checkin_data = {
             "comment": "",
-            "proof_file": self.attachment.pk,
+            "proof_files": [self.attachment.pk],
             "items": [
                 {"id": item_1.pk, "quantity": item_1.quantity},
                 {"id": item_2.pk, "quantity": item_2.quantity},
@@ -610,7 +615,7 @@ class TestTransferView(BaseTenantTestCase):
 
         checkin_data = {
             "comment": "",
-            "proof_file": self.attachment.pk,
+            "proof_files": [self.attachment.pk],
             "items": [
                 {"id": item_1.pk, "quantity": 5},
             ],
@@ -639,7 +644,7 @@ class TestTransferView(BaseTenantTestCase):
             "transfer_type": models.Transfer.DISTRIBUTION,
             "destination_point": destination.pk,
             "comment": "",
-            "proof_file": self.attachment.pk,
+            "proof_files": [self.attachment.pk],
             "items": [
                 {"id": item.pk, "quantity": 12}
             ],
@@ -657,7 +662,7 @@ class TestTransferView(BaseTenantTestCase):
         checkout_data = {
             "transfer_type": models.Transfer.DISTRIBUTION,
             "comment": "",
-            "proof_file": self.attachment.pk,
+            "proof_files": [self.attachment.pk],
             "items": [
                 {"id": item.pk, "quantity": 10}
             ],
@@ -675,7 +680,7 @@ class TestTransferView(BaseTenantTestCase):
         checkout_data = {
             "transfer_type": models.Transfer.DELIVERY,
             "comment": "",
-            "proof_file": self.attachment.pk,
+            "proof_files": [self.attachment.pk],
             "items": [
                 {"id": item.pk, "quantity": 10}
             ],
@@ -696,7 +701,7 @@ class TestTransferView(BaseTenantTestCase):
             "transfer_type": models.Transfer.DISTRIBUTION,
             "destination_point": self.hospital.pk,
             "comment": "",
-            "proof_file": self.attachment.pk,
+            "proof_files": [self.attachment.pk],
             "items": [
                 {"id": item_1.pk, "quantity": 11},
                 {"id": item_3.pk, "quantity": 3},
@@ -710,7 +715,8 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['status'], models.Transfer.PENDING)
         self.assertEqual(response.data['transfer_type'], models.Transfer.DISTRIBUTION)
-        self.assertIn(response.data['proof_file'], self.attachment.file.path)
+        self.assertIsInstance(response.data['proof_files'], list)
+        self.assertEqual(len(response.data['proof_files']), 1)
 
         checkout_transfer = models.Transfer.objects.get(pk=response.data['id'])
         self.assertEqual(checkout_transfer.destination_point, self.hospital)
@@ -759,7 +765,7 @@ class TestTransferView(BaseTenantTestCase):
             "transfer_type": models.Transfer.WASTAGE,
             "destination_point": destination.pk,
             "comment": "",
-            "proof_file": self.attachment.pk,
+            "proof_files": [self.attachment.pk],
             "items": [
                 {"id": item_1.pk, "quantity": 9, "wastage_type": models.Item.EXPIRED},
             ],
@@ -774,7 +780,8 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['status'], models.Transfer.COMPLETED)
         self.assertEqual(response.data['transfer_type'], models.Transfer.WASTAGE)
-        self.assertIn(response.data['proof_file'], self.attachment.file.path)
+        self.assertIsInstance(response.data['proof_files'], list)
+        self.assertEqual(len(response.data['proof_files']), 1)
 
         wastage_transfer = models.Transfer.objects.get(pk=response.data['id'])
         self.assertEqual(wastage_transfer.destination_point, destination)
@@ -818,7 +825,7 @@ class TestTransferView(BaseTenantTestCase):
             "transfer_type": models.Transfer.DISPENSE,
             "destination_point": destination.pk,
             "comment": "",
-            "proof_file": self.attachment.pk,
+            "proof_files": [self.attachment.pk],
             "items": [
                 {"id": item_1.pk, "quantity": 9}
             ],
@@ -836,7 +843,8 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['status'], models.Transfer.COMPLETED)
         self.assertEqual(response.data['transfer_type'], models.Transfer.DISPENSE)
-        self.assertIn(response.data['proof_file'], self.attachment.file.path)
+        self.assertIsInstance(response.data['proof_files'], list)
+        self.assertEqual(len(response.data['proof_files']), 1)
 
         dispense_transfer = models.Transfer.objects.get(pk=response.data['id'])
         self.assertEqual(dispense_transfer.destination_point, destination)
@@ -858,7 +866,7 @@ class TestTransferView(BaseTenantTestCase):
             "transfer_type": models.Transfer.HANDOVER,
             "destination_point": destination.pk,
             "comment": "",
-            "proof_file": self.attachment.pk,
+            "proof_files": [self.attachment.pk],
             "partner_id": agreement.partner.id,
             "items": [
                 {"id": item_1.pk, "quantity": 9},
@@ -872,7 +880,8 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['status'], models.Transfer.PENDING)
         self.assertEqual(response.data['transfer_type'], models.Transfer.HANDOVER)
-        self.assertIn(response.data['proof_file'], self.attachment.file.path)
+        self.assertIsInstance(response.data['proof_files'], list)
+        self.assertEqual(len(response.data['proof_files']), 1)
 
         handover_transfer = models.Transfer.objects.get(pk=response.data['id'])
         self.assertEqual(handover_transfer.partner_organization, agreement.partner)
@@ -894,7 +903,7 @@ class TestTransferView(BaseTenantTestCase):
             "transfer_type": models.Transfer.HANDOVER,
             "destination_point": destination.pk,
             "comment": "",
-            "proof_file": self.attachment.pk,
+            "proof_files": [self.attachment.pk],
             "partner_id": self.partner.id,
             "items": [
                 {"id": item_1.pk, "quantity": 9},
@@ -920,7 +929,7 @@ class TestTransferView(BaseTenantTestCase):
         checkout_data = {
             "transfer_type": models.Transfer.WASTAGE,
             "comment": "",
-            "proof_file": self.attachment.pk,
+            "proof_files": [self.attachment.pk],
             "items": [
                 {"id": item_1.pk, "quantity": 9, "wastage_type": models.Item.EXPIRED},
             ],
@@ -932,7 +941,8 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['status'], models.Transfer.COMPLETED)
         self.assertEqual(response.data['transfer_type'], models.Transfer.WASTAGE)
-        self.assertIn(response.data['proof_file'], self.attachment.file.path)
+        self.assertIsInstance(response.data['proof_files'], list)
+        self.assertEqual(len(response.data['proof_files']), 1)
 
         wastage_transfer = models.Transfer.objects.get(pk=response.data['id'])
         self.assertEqual(wastage_transfer.destination_point, None)
@@ -943,7 +953,7 @@ class TestTransferView(BaseTenantTestCase):
         checkout_data = {
             "transfer_type": models.Transfer.DISPENSE,
             "comment": "",
-            "proof_file": self.attachment.pk,
+            "proof_files": [self.attachment.pk],
             "items": [
                 {"id": item_1.pk, "quantity": 9}
             ],
@@ -955,7 +965,8 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['status'], models.Transfer.COMPLETED)
         self.assertEqual(response.data['transfer_type'], models.Transfer.DISPENSE)
-        self.assertIn(response.data['proof_file'], self.attachment.file.path)
+        self.assertIsInstance(response.data['proof_files'], list)
+        self.assertEqual(len(response.data['proof_files']), 1)
 
         dispense_transfer = models.Transfer.objects.get(pk=response.data['id'])
         self.assertEqual(dispense_transfer.destination_point, None)
@@ -975,7 +986,7 @@ class TestTransferView(BaseTenantTestCase):
         response = self.forced_auth_req('post', url, user=self.partner_staff, data=checkout_data)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('The proof file is required.', response.data)
+        self.assertIn('At least one proof file is required.', response.data)
 
     def test_checkout_without_proof_file_dispense(self):
         item_1 = ItemFactory(quantity=11, transfer=self.checked_in)
@@ -992,7 +1003,62 @@ class TestTransferView(BaseTenantTestCase):
         response = self.forced_auth_req('post', url, user=self.partner_staff, data=checkout_data)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('The proof file is required.', response.data)
+        self.assertIn('At least one proof file is required.', response.data)
+
+    def test_checkout_with_multiple_proof_files(self):
+        attachment2 = AttachmentFactory(
+            file=SimpleUploadedFile('proof_file2.pdf', b'Proof File 2'),
+            code='proof_of_transfer'
+        )
+        item_1 = ItemFactory(quantity=11, transfer=self.checked_in, material=self.material)
+        PartnerMaterialFactory(material=self.material, partner_organization=self.partner)
+
+        checkout_data = {
+            "transfer_type": models.Transfer.WASTAGE,
+            "comment": "",
+            "proof_files": [self.attachment.pk, attachment2.pk],
+            "items": [
+                {"id": item_1.pk, "quantity": 9, "wastage_type": models.Item.EXPIRED},
+            ],
+            "origin_check_out_at": timezone.now()
+        }
+        url = reverse('last_mile:transfers-new-check-out', args=(self.warehouse.pk,))
+        response = self.forced_auth_req('post', url, user=self.partner_staff, data=checkout_data)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsInstance(response.data['proof_files'], list)
+        self.assertEqual(len(response.data['proof_files']), 2)
+
+    def test_checkin_with_multiple_proof_files(self):
+        # Use a fresh transfer to avoid polluting self.incoming.initial_items
+        # (the post_save signal on Item modifies transfer.initial_items in memory)
+        incoming = TransferFactory(
+            partner_organization=self.partner,
+            destination_point=self.warehouse,
+            transfer_type=models.Transfer.DELIVERY
+        )
+        attachment2 = AttachmentFactory(
+            file=SimpleUploadedFile('proof_file2.pdf', b'Proof File 2'),
+            code='proof_of_transfer'
+        )
+        item_1 = ItemFactory(quantity=11, transfer=incoming, material=self.material, uom='EA')
+        PartnerMaterialFactory(material=self.material, partner_organization=self.partner)
+
+        checkin_data = {
+            "name": "multi proof checkin",
+            "comment": "",
+            "proof_files": [self.attachment.pk, attachment2.pk],
+            "items": [
+                {"id": item_1.pk, "quantity": item_1.quantity},
+            ],
+            "destination_check_in_at": timezone.now()
+        }
+        url = reverse('last_mile:transfers-new-check-in', args=(self.warehouse.pk, incoming.pk))
+        response = self.forced_auth_req('patch', url, user=self.partner_staff, data=checkin_data)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsInstance(response.data['proof_files'], list)
+        self.assertEqual(len(response.data['proof_files']), 2)
 
     @skip('disabling feature for now')
     def test_mark_completed(self):
@@ -1400,7 +1466,7 @@ class TestItemAuditLogViewWorkflow(BaseTenantTestCase):
         checkin_data = {
             "name": "Audit Test Check-in",
             "comment": "Testing audit trail",
-            "proof_file": attachment.pk,
+            "proof_files": [attachment.pk],
             "items": [
                 {"id": item_1.pk, "quantity": 95},
                 {"id": item_2.pk, "quantity": 200}
@@ -1433,7 +1499,7 @@ class TestItemAuditLogViewWorkflow(BaseTenantTestCase):
             "transfer_type": models.Transfer.DISTRIBUTION,
             "destination_point": self.hospital.pk,
             "comment": "Distribution for audit test",
-            "proof_file": attachment_delivery.pk,
+            "proof_files": [attachment_delivery.pk],
             "items": [
                 {"id": item_1.pk, "quantity": 50},
                 {"id": item_2.pk, "quantity": 100}
@@ -1543,7 +1609,7 @@ class TestUnicefHandoverCheckoutView(BaseTenantTestCase):
             "origin_point": self.origin.pk,
             "destination_point": self.destination.pk,
             "comment": "",
-            "proof_file": self.attachment.pk,
+            "proof_files": [self.attachment.pk],
             "partner_id": self.recipient_partner.id,
             "items": items,
             "origin_check_out_at": timezone.now(),
@@ -1637,13 +1703,13 @@ class TestUnicefHandoverCheckoutView(BaseTenantTestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_rejects_missing_proof_file(self):
+    def test_rejects_missing_proof_files(self):
         item = ItemFactory(quantity=10, transfer=self.checked_in, material=self.material)
 
         data = self._build_checkout_data(
             items=[{"id": item.pk, "quantity": 5}],
         )
-        del data['proof_file']
+        del data['proof_files']
         response = self.forced_auth_req('post', self.url, user=self.partner_staff, data=data)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
