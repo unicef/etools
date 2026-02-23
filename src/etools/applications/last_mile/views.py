@@ -384,7 +384,7 @@ class TransferViewSet(
             serializer_class=serializers.TransferEvidenceSerializer)
     def upload_evidence(self, request, **kwargs):
         transfer = self.get_object()
-        if transfer.transfer_type != models.Transfer.WASTAGE:
+        if transfer.transfer_type not in [models.Transfer.WASTAGE, models.Transfer.DISPENSE]:
             raise ValidationError(_('Evidence files are only for wastage transfers.'))
 
         serializer = self.serializer_class(data=request.data)

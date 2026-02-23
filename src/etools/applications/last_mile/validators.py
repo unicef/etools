@@ -12,9 +12,9 @@ class TransferCheckOutValidator:
         if tranfer_type not in [Transfer.WASTAGE, Transfer.DISPENSE, Transfer.HANDOVER, Transfer.UNICEF_HANDOVER] and not destination_point:
             raise ValidationError(_('Destination location is mandatory at checkout.'))
 
-    def validate_proof_file(self, proof_file: int) -> None:
-        if not proof_file:
-            raise ValidationError(_('The proof file is required.'))
+    def validate_proof_files(self, proof_files) -> None:
+        if not proof_files or (isinstance(proof_files, list) and len(proof_files) == 0):
+            raise ValidationError(_('At least one proof file is required.'))
 
     def validate_handover(self, transfer_type: str, partner_id: int) -> None:
         if transfer_type in [Transfer.HANDOVER, Transfer.UNICEF_HANDOVER] and not partner_id:
