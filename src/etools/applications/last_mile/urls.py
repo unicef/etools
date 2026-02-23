@@ -68,4 +68,9 @@ urlpatterns = [
         view=views.UnicefHandoverCheckoutView.as_view(),
         name='unicef-new-handover-checkout',
     ),
+    path(
+        'proof-files/<int:pk>/',
+        view=views.ProofFileDeleteView.as_view(),
+        name='proof-file-delete',
+    ),
 ]
