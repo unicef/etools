@@ -1,6 +1,7 @@
 from functools import cache
 
 from django.conf import settings
+from django.contrib.contenttypes.models import ContentType
 from django.db import connection
 from django.db.models import F, Prefetch, Q
 from django.shortcuts import get_object_or_404
@@ -16,6 +17,7 @@ from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet, ModelViewSet, ReadOnlyModelViewSet
+from unicef_attachments.models import Attachment
 from unicef_restlib.pagination import DynamicPageNumberPagination
 
 from etools.applications.last_mile import models, serializers
@@ -396,7 +398,7 @@ class TransferViewSet(
     @action(detail=True, methods=['get'], serializer_class=serializers.TransferEvidenceListSerializer)
     def evidence(self, request, **kwargs):
         transfer = self.get_object()
-        if transfer.transfer_type != models.Transfer.WASTAGE:
+        if transfer.transfer_type not in [models.Transfer.WASTAGE, models.Transfer.DISPENSE]:
             raise ValidationError(_('Evidence files are only for wastage transfers.'))
         qs = transfer.transfer_evidences.all()
         page = self.paginate_queryset(qs)
@@ -529,3 +531,20 @@ class PowerBIDataView(APIView):
             "vendor_number": user.profile.organization.vendor_number
         }
         return Response(resp_data, status=status.HTTP_200_OK)
+
+
+class ProofFileDeleteView(APIView):
+    permission_classes = [IsIPLMEditorOrViewerReadOnly]
+
+    def delete(self, request, pk):
+        transfer_ct = ContentType.objects.get_for_model(models.Transfer)
+        attachment = get_object_or_404(
+            Attachment.objects.filter(
+                code='proof_of_transfer',
+                content_type=transfer_ct,
+            ),
+            pk=pk,
+        )
+        get_object_or_404(models.Transfer, pk=attachment.object_id, partner_organization=request.user.partner)
+        attachment.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

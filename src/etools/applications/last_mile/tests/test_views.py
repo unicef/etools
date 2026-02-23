@@ -10,6 +10,7 @@ from django.utils import timezone
 
 from rest_framework import status
 from rest_framework.reverse import reverse
+from unicef_attachments.models import Attachment
 from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.attachments.tests.factories import AttachmentFactory
@@ -1114,6 +1115,90 @@ class TestTransferView(BaseTenantTestCase):
         self.assertEqual(item_1.conversion_factor, 1.0)
         self.assertEqual(item_2.conversion_factor, None)
         self.assertEqual(item_3.conversion_factor, 1.0)
+
+
+class TestProofFileDeleteView(BaseTenantTestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.partner = PartnerFactory(organization=OrganizationFactory(name='Partner'))
+        cls.other_partner = PartnerFactory(organization=OrganizationFactory(name='Other Partner'))
+        cls.partner_staff = UserFactory(
+            realms__data=['IP LM Editor'],
+            profile__organization=cls.partner.organization,
+        )
+        cls.viewer = UserFactory(
+            realms__data=['IP LM Viewer'],
+            profile__organization=cls.partner.organization,
+        )
+        cls.other_partner_staff = UserFactory(
+            realms__data=['IP LM Editor'],
+            profile__organization=cls.other_partner.organization,
+        )
+        cls.warehouse = PointOfInterestFactory(partner_organizations=[cls.partner], private=True)
+        cls.transfer = TransferFactory(
+            partner_organization=cls.partner,
+            destination_point=cls.warehouse,
+            status=models.Transfer.COMPLETED,
+        )
+
+    def _create_proof_attachment(self, transfer):
+        attachment = AttachmentFactory(
+            file=SimpleUploadedFile('proof.pdf', b'proof content'),
+            code='proof_of_transfer',
+        )
+        attachment.content_object = transfer
+        attachment.save()
+        return attachment
+
+    def test_delete_proof_file(self):
+        attachment = self._create_proof_attachment(self.transfer)
+        url = reverse('last_mile:proof-file-delete', args=(attachment.pk,))
+        response = self.forced_auth_req('delete', url, user=self.partner_staff)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(Attachment.objects.filter(pk=attachment.pk).exists())
+
+    def test_delete_nonexistent_attachment(self):
+        url = reverse('last_mile:proof-file-delete', args=(999999,))
+        response = self.forced_auth_req('delete', url, user=self.partner_staff)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_delete_non_proof_attachment_returns_404(self):
+        attachment = AttachmentFactory(
+            file=SimpleUploadedFile('waybill.pdf', b'waybill content'),
+            code='waybill_file',
+        )
+        attachment.content_object = self.transfer
+        attachment.save()
+        url = reverse('last_mile:proof-file-delete', args=(attachment.pk,))
+        response = self.forced_auth_req('delete', url, user=self.partner_staff)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertTrue(Attachment.objects.filter(pk=attachment.pk).exists())
+
+    def test_delete_other_partners_proof_returns_404(self):
+        other_transfer = TransferFactory(
+            partner_organization=self.other_partner,
+            status=models.Transfer.COMPLETED,
+        )
+        attachment = self._create_proof_attachment(other_transfer)
+        url = reverse('last_mile:proof-file-delete', args=(attachment.pk,))
+        response = self.forced_auth_req('delete', url, user=self.partner_staff)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertTrue(Attachment.objects.filter(pk=attachment.pk).exists())
+
+    def test_viewer_cannot_delete(self):
+        attachment = self._create_proof_attachment(self.transfer)
+        url = reverse('last_mile:proof-file-delete', args=(attachment.pk,))
+        response = self.forced_auth_req('delete', url, user=self.viewer)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertTrue(Attachment.objects.filter(pk=attachment.pk).exists())
+
+    def test_unauthenticated_cannot_delete(self):
+        attachment = self._create_proof_attachment(self.transfer)
+        url = reverse('last_mile:proof-file-delete', args=(attachment.pk,))
+        response = self.forced_auth_req('delete', url, user=UserFactory())
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertTrue(Attachment.objects.filter(pk=attachment.pk).exists())
 
 
 class TestItemUpdateViewSet(BaseTenantTestCase):
