@@ -87,11 +87,6 @@ stages:
         succeeded(),
         eq(variables['Build.Reason'], 'PullRequest')
       )
-    # condition: |
-    #   and(
-    #     succeeded(),
-    #     startsWith(variables['Build.SourceBranch'], 'refs/pull/')
-    #   )
     pool:
       vmImage: ubuntu-latest
 
