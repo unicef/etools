@@ -1192,3 +1192,16 @@ class AuditConfiguration(TimeStampedModel, models.Model):
         verbose_name = 'Audit Configuration'
         verbose_name_plural = 'Audit Configurations'
         ordering = ['-is_active', 'name']
+
+
+class TransferIngestAlert(models.Model):
+    release_order = models.CharField(max_length=255)
+    consignee_code = models.CharField(max_length=255)
+    vendor_number = models.CharField(max_length=255)
+    reason = models.CharField(max_length=512)
+    country_name = models.CharField(max_length=255)
+    notified = models.BooleanField(default=False)
+    created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created']

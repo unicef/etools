@@ -4,7 +4,7 @@ from django.utils.html import strip_tags
 from rest_framework import serializers
 from rest_framework.exceptions import APIException
 
-from etools.applications.last_mile.models import PointOfInterest
+from etools.applications.last_mile.models import PointOfInterest, TransferIngestAlert
 from etools.applications.last_mile.services_ext import IngestReportDTO
 
 User = get_user_model()
@@ -151,6 +151,12 @@ class MaterialIngestResultSerializer(serializers.Serializer):
 
     def get_skipped_count(self, obj) -> int:
         return len(obj.skipped_existing_in_db) + len(obj.skipped_duplicate_in_payload)
+
+
+class TransferIngestAlertSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TransferIngestAlert
+        fields = ['release_order', 'consignee_code', 'vendor_number', 'created']
 
 
 class UserListSerializer(serializers.ModelSerializer):

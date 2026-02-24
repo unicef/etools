@@ -158,6 +158,7 @@ class TransferIngestService:
         self.processed_release_orders = set()
         self.items_by_release_order = {}
         self.validator_ext = ValidatorEXT()
+        self._ingest_alerts = []
 
     def ingest_validated_data(self, validated_data: List[Dict[str, Any]]) -> IngestReportDTO:
         self._prepare_transfers_and_group_items(validated_data)
@@ -217,10 +218,19 @@ class TransferIngestService:
                         continue
                     transfer_data['destination_point'] = destination_poi
                 else:
+                    reason = "Consignee Code does not exist"
                     self.report.skipped_transfers.append({
                         "release_order": release_order,
-                        "reason": "Consignee Code does not exist"
+                        "reason": reason
                     })
+                    country_name = connection.tenant.name if hasattr(connection, 'tenant') else ''
+                    self._ingest_alerts.append(models.TransferIngestAlert(
+                        release_order=release_order,
+                        consignee_code=l_consignee_code,
+                        vendor_number=vendor_number,
+                        reason=reason,
+                        country_name=country_name,
+                    ))
                     continue
 
             if release_order not in self.processed_release_orders:
@@ -236,6 +246,9 @@ class TransferIngestService:
                 self.processed_release_orders.add(release_order)
 
             self.items_by_release_order.setdefault(release_order, []).append(item_data)
+
+        if self._ingest_alerts:
+            models.TransferIngestAlert.objects.bulk_create(self._ingest_alerts)
 
     def _build_item_instance(
         self,

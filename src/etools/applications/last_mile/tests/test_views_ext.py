@@ -1,6 +1,7 @@
 import json
 from datetime import timedelta
 from decimal import Decimal
+from unittest import mock
 
 from django.contrib.auth.models import Group
 from django.db import connection
@@ -22,6 +23,7 @@ from rest_framework import status
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.environment.tests.factories import TenantSwitchFactory
 from etools.applications.last_mile import models
+from etools.applications.last_mile.tasks import _notify_transfer_ingest_alerts
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.users.models import Country, Realm
@@ -2403,6 +2405,43 @@ class TestLConsigneeCodeFunctionality(BaseTenantTestCase):
             response.data["details"]["skipped_transfers"][0]["reason"],
             "Consignee Code does not exist"
         )
+
+        alert = models.TransferIngestAlert.objects.get()
+        self.assertEqual(alert.release_order, "RO-L004")
+        self.assertEqual(alert.consignee_code, "L-NONEXISTENT")
+        self.assertEqual(alert.vendor_number, "IP12345")
+        self.assertFalse(alert.notified)
+
+    @mock.patch("etools.applications.last_mile.tasks.send_notification")
+    def test_notify_transfer_ingest_alerts_sends_email(self, mock_send):
+        group, _ = Group.objects.get_or_create(name="LMSM Transfer Alert")
+        recipient = UserFactory()
+        tenant_schema = connection.tenant.schema_name
+        country = Country.objects.get(schema_name=tenant_schema)
+        Realm.objects.create(
+            user=recipient,
+            country=country,
+            organization=recipient.profile.organization,
+            group=group,
+        )
+
+        models.TransferIngestAlert.objects.create(
+            release_order="RO-ALERT-1",
+            consignee_code="L-MISSING",
+            vendor_number="IP12345",
+            reason="Consignee Code does not exist",
+            country_name=country.name,
+        )
+
+        _notify_transfer_ingest_alerts(country.name, tenant_schema)
+
+        mock_send.assert_called_once()
+        call_kwargs = mock_send.call_args[1]
+        self.assertIn(recipient.email, call_kwargs["recipients"])
+        self.assertIn("Transfer Ingest Alert", call_kwargs["subject"])
+
+        alert = models.TransferIngestAlert.objects.get()
+        self.assertTrue(alert.notified)
 
     def test_incoming_transfers_warehouse_with_l_code(self):
         transfer_matching = TransferFactory(
