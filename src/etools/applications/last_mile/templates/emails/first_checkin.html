@@ -228,7 +228,7 @@
                                  </td>
                                  <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                            box-sizing:border-box;padding:10px;">
-                                     {% if attachment_url %}<a href="{{ attachment_url }}" target="_blank">Download Waybill</a>{% else %}N/A{% endif %}<br>
+                                     {% for url in attachment_urls %}<a href="{{ url }}" target="_blank">Download Waybill{% if attachment_urls|length > 1 %} {{ forloop.counter }}{% endif %}</a>{% if not forloop.last %}<br>{% endif %}{% empty %}N/A{% endfor %}<br>
                                  </td>
                               </tr>
                           </table><br/>
