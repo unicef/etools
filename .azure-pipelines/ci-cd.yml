@@ -26,7 +26,7 @@ stages:
       vmImage: ubuntu-latest
     steps:
       - checkout: self
-
+      - script: echo "Build.Reason=$(Build.Reason)"
       - script: |
           BASE_TAG="$(md5sum pdm.lock | cut -c1-6)$(md5sum Dockerfile-base | cut -c1-6)"
           echo "Computed BASE_TAG=$BASE_TAG"
@@ -83,7 +83,7 @@ stages:
     steps:
       - checkout: self
         fetchDepth: 0
-
+      - script: echo "Build.Reason=$(Build.Reason)"
       - script: |
           docker run -d \
             --name pg \
@@ -144,7 +144,7 @@ stages:
       steps:
         - checkout: self
           fetchDepth: 0
-
+        - script: echo "Build.Reason=$(Build.Reason)"
         # SAFE_BRANCH is derived from Build.SourceBranchName.
         # - On branch builds: it is the branch name (sanitized)
         # - On tag builds: it is the *tag name* (sanitized)
@@ -214,7 +214,7 @@ stages:
       runOnce:
         deploy:
           steps:
-
+            - script: echo "Build.Reason=$(Build.Reason)"
             - task: KubectlInstaller@0
               displayName: Install kubectl
               inputs:
