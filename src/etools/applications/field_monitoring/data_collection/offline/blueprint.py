@@ -55,12 +55,13 @@ def get_blueprint_for_activity_and_method(activity: 'MonitoringActivity', method
         )
         blueprint.metadata.validations['information_source_max_length'] = MaxLengthTextValidation(100)
 
-    for relation, level in activity.RELATIONS_MAPPING:
-        level_block = Group(level, styling=['abstract'], required=False)
+    for relation, level, target_field in activity.RELATIONS_MAPPING:
+        # Use target_field as group name to keep data structures distinct
+        level_block = Group(target_field, styling=['abstract'], required=False)
 
         for target in getattr(activity, relation).all():
             target_questions = activity.questions.filter(
-                **{Question.get_target_relation_name(level): target},
+                **{target_field: target},
                 is_enabled=True, question__methods=method
             )
             if not target_questions.exists():

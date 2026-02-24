@@ -77,6 +77,20 @@ class YearPlan(TimeStampedModel):
         return 'Year Plan for {}'.format(self.year)
 
 
+class EWPActivity(models.Model):
+    wbs = models.CharField(max_length=255, unique=True)
+
+    def __str__(self):
+        return self.wbs
+
+
+class GPD(models.Model):
+    gpd_ref = models.CharField(max_length=25, unique=True)
+
+    def __str__(self):
+        return self.gpd_ref
+
+
 class QuestionTargetMixin(models.Model):
     partner = models.ForeignKey(PartnerOrganization, blank=True, null=True, verbose_name=_('Partner'),
                                 on_delete=models.CASCADE, related_name='+')
@@ -84,6 +98,10 @@ class QuestionTargetMixin(models.Model):
                                   on_delete=models.CASCADE, related_name='+')
     intervention = models.ForeignKey(Intervention, blank=True, null=True, verbose_name=_('Intervention'),
                                      on_delete=models.CASCADE, related_name='+')
+    ewp_activity = models.ForeignKey(EWPActivity, null=True, blank=True, verbose_name=_('eWP Activity'),
+                                     on_delete=models.PROTECT, related_name='+')
+    gpd = models.ForeignKey(GPD, null=True, blank=True, verbose_name=_('GPD'),
+                            on_delete=models.PROTECT, related_name='+')
 
     @property
     def related_to(self):
@@ -287,10 +305,13 @@ class MonitoringActivity(
 
     AUTO_TRANSITIONS = {}
 
+    # Format: (m2m_field_name, question_level, target_field_name)
     RELATIONS_MAPPING = (
-        ('partners', 'partner'),
-        ('cp_outputs', 'output'),
-        ('interventions', 'intervention'),
+        ('partners', 'partner', 'partner'),
+        ('cp_outputs', 'output', 'cp_output'),
+        ('interventions', 'intervention', 'intervention'),
+        ('ewp_activities', 'ewp_activity', 'ewp_activity'),
+        ('gpds', 'intervention', 'gpd'),  # gPDs use intervention level but gpd field
     )
 
     number = models.CharField(
@@ -335,6 +356,12 @@ class MonitoringActivity(
                                            blank=True, verbose_name=_('PD/SPD'))
     cp_outputs = models.ManyToManyField(Result, verbose_name=_('Outputs'), related_name='monitoring_activities',
                                         blank=True)
+
+    # GPD m2m for activities and gpds
+    ewp_activities = models.ManyToManyField(EWPActivity, verbose_name=_('eWP activities'),
+                                            related_name='monitoring_activities', blank=True)
+    gpds = models.ManyToManyField(GPD, verbose_name=_('GDPs'),
+                                  related_name='monitoring_activities', blank=True)
 
     start_date = models.DateField(verbose_name=_('Start Date'), blank=True, null=True)
     end_date = models.DateField(verbose_name=_('End Date'), blank=True, null=True)
@@ -487,11 +514,15 @@ class MonitoringActivity(
 
         questions = []
 
-        for relation, level in self.RELATIONS_MAPPING:
+        for relation, level, target_field in self.RELATIONS_MAPPING:
             for target in getattr(self, relation).all():
-                target_questions = applicable_questions.filter(level=level).prefetch_templates(
-                    level, target_id=target.id
+                # key interventions (ewp_activities) have their own checklist/questions
+                # so they use their own question level (ewp_activity)
+                q_level = level
+                target_questions = applicable_questions.filter(level=q_level).prefetch_templates(
+                    q_level, target_id=target.id
                 )
+
                 for target_question in target_questions:
                     activity_question = ActivityQuestion(
                         question=target_question, monitoring_activity=self,
@@ -502,7 +533,7 @@ class MonitoringActivity(
                     if target_question.template:
                         activity_question.specific_details = target_question.template.specific_details
 
-                    setattr(activity_question, Question.get_target_relation_name(level), target)
+                    setattr(activity_question, target_field, target)
 
                     questions.append(activity_question)
 
@@ -516,14 +547,14 @@ class MonitoringActivity(
             from etools.applications.field_monitoring.data_collection.models import ActivityOverallFinding
 
             findings = []
-            for relation, level in self.RELATIONS_MAPPING:
+            for relation, level, target_field in self.RELATIONS_MAPPING:
                 for target in getattr(self, relation).all():
-                    if not self.questions.filter(**{Question.get_target_relation_name(level): target}).exists():
+                    if not self.questions.filter(**{target_field: target}).exists():
                         continue
 
                     finding = ActivityOverallFinding(monitoring_activity=self)
 
-                    setattr(finding, Question.get_target_relation_name(level), target)
+                    setattr(finding, target_field, target)
 
                     findings.append(finding)
 
@@ -765,6 +796,8 @@ class MonitoringActivity(
                 partner=overall_finding.partner,
                 cp_output=overall_finding.cp_output,
                 intervention=overall_finding.intervention,
+                ewp_activity=overall_finding.ewp_activity,
+                gpd=overall_finding.gpd,
             ).values_list('narrative_finding', flat=True)
             if len(narrative_findings) == 1:
                 # Same: do not overwrite existing narrative.

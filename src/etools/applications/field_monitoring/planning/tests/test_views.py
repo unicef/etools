@@ -130,7 +130,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             MonitoringActivityFactory(monitor_type='staff'),
         ]
 
-        with self.assertNumQueries(13):
+        with self.assertNumQueries(11):
             self._test_list(self.unicef_user, activities, data={'page': 1, 'page_size': 10})
 
     def test_list_as_tpm_user(self):
@@ -145,7 +145,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             MonitoringActivityFactory(
                 monitor_type='staff', status='assigned')
         ]
-        with self.assertNumQueries(12):
+        with self.assertNumQueries(11):
             self._test_list(tpm_staff, [activities[0], activities[1]], data={'page': 1, 'page_size': 10})
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
@@ -243,6 +243,36 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         }
         response = self._test_update(self.fm_user, activity, data=data, expected_status=status.HTTP_200_OK)
         self.assertNotEqual(response.data['cp_outputs'], [])
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_update_ewp_activities_and_gpds(self):
+        """PATCH with ewp_activities and gpds (arrays of strings) sets M2M and returns them in response."""
+        activity = MonitoringActivityFactory(monitor_type='staff')
+        data = {
+            'ewp_activities': ['WBS-2024-01', 'WBS-2024-02'],
+            'gpds': ['GPD-001', 'GPD-002'],
+        }
+        response = self._test_update(self.fm_user, activity, data=data, expected_status=status.HTTP_200_OK)
+        self.assertEqual(sorted(response.data['ewp_activities']), ['WBS-2024-01', 'WBS-2024-02'])
+        self.assertEqual(sorted(response.data['gpds']), ['GPD-001', 'GPD-002'])
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_update_ewp_activities_and_gpds_empty_clears(self):
+        """PATCH with empty ewp_activities and gpds clears the relations."""
+        from etools.applications.field_monitoring.planning.models import EWPActivity, GPD
+
+        ewp = EWPActivity.objects.create(wbs='WBS-OLD')
+        gpd = GPD.objects.create(gpd_ref='GPD-OLD')
+        activity = MonitoringActivityFactory(monitor_type='staff')
+        activity.ewp_activities.add(ewp)
+        activity.gpds.add(gpd)
+        data = {'ewp_activities': [], 'gpds': []}
+        response = self._test_update(self.fm_user, activity, data=data, expected_status=status.HTTP_200_OK)
+        self.assertEqual(response.data['ewp_activities'], [])
+        self.assertEqual(response.data['gpds'], [])
+        activity.refresh_from_db()
+        self.assertEqual(activity.ewp_activities.count(), 0)
+        self.assertEqual(activity.gpds.count(), 0)
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_update_draft_success(self):
@@ -1000,7 +1030,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             for _ in range(20)
         ]
 
-        with self.assertNumQueries(18):
+        with self.assertNumQueries(15):
             response = self.make_request_to_viewset(self.unicef_user, action='export', method='get', data={'page': 1, 'page_size': 100})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('Content-Disposition', response.headers)
