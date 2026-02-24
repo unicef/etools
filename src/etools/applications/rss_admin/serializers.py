@@ -412,7 +412,9 @@ class EngagementStatusUpdateMixin:
             return None
 
         old_status = instance.status
-        status_labels = dict(Engagement.STATUSES)
+        # Render both FSM status codes and display-status codes as human labels in errors.
+        fsm_status_labels = dict(Engagement.STATUSES)
+        display_status_labels = dict(Engagement.DISPLAY_STATUSES)
 
         # Remove status from validated_data - we'll handle it via FSM
         validated_data.pop('status', None)
@@ -433,8 +435,8 @@ class EngagementStatusUpdateMixin:
         transition_method = transition_map.get(transition_key)
 
         if not transition_method:
-            old_label = str(status_labels.get(old_status, old_status))
-            new_label = str(status_labels.get(new_status, new_status))
+            old_label = str(fsm_status_labels.get(old_status, display_status_labels.get(old_status, old_status)))
+            new_label = str(fsm_status_labels.get(new_status, display_status_labels.get(new_status, new_status)))
             raise serializers.ValidationError({
                 'status': [f'Invalid status transition from {old_label} to {new_label}']
             })

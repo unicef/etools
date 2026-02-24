@@ -948,6 +948,20 @@ msgstr "إنساني"
 msgid "Date first sent to Partner"
 msgstr "تاريخ الإرسال الأول إلى الشريك"
 
+msgid "Open selection"
+msgstr "اختيار مفتوح"
+
+msgid "Direct selection"
+msgstr "اختيار مباشر"
+
+msgid "Partner Selection Modality"
+msgstr "طريقة اختيار الشريك"
+
+msgid ""
+"Select how the partner was selected in UNPP (Open selection or Direct "
+"selection)."
+msgstr "حدد كيف تم اختيار الشريك في UNPP (اختيار مفتوح أو اختيار مباشر)."
+
 msgid "Context"
 msgstr "سياق"
 
