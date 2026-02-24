@@ -75,19 +75,19 @@ stages:
 - stage: Test
   displayName: Run tests
   dependsOn: BaseImage
+  # Tests only on PR to Develop. Staging and Master assume tested code
+  condition: |
+    and(
+      succeeded(),
+      eq(variables['Build.Reason'], 'PullRequest'),
+      eq(variables['System.PullRequest.TargetBranch'], 'develop')
+    )
   variables:
     BASE_TAG: $[ stageDependencies.BaseImage.Base.outputs['vars.BASE_TAG'] ]
 
   jobs:
   - job: Tests
     displayName: Run tox tests
-    # Tests only on develop. Staging and Master assume tested code
-    condition: |
-      and(
-        succeeded(),
-        eq(variables['Build.Reason'], 'PullRequest'),
-        eq(variables['System.PullRequest.TargetBranch'], 'develop')
-      )
     pool:
       vmImage: ubuntu-latest
 
@@ -144,12 +144,12 @@ stages:
 
 - stage: AppImage
   displayName: Application Image build and push
+  dependsOn: BaseImage
   condition: |
     and(
       succeeded(),
       ne(variables['Build.Reason'], 'PullRequest')
     )
-  dependsOn: BaseImage
   variables:
     BASE_TAG: $[ stageDependencies.BaseImage.Base.outputs['vars.BASE_TAG'] ]
 
