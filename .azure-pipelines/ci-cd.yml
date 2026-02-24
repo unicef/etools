@@ -79,7 +79,7 @@ stages:
     condition: |
       and(
         succeeded(),
-        ne(variables['Build.Reason'], 'PullRequest')
+        eq(variables['Build.Reason'], 'PullRequest')
       )
     pool:
       vmImage: ubuntu-latest
@@ -137,6 +137,11 @@ stages:
 
 - stage: AppImage
   displayName: Application Image build and push
+  condition: |
+    and(
+      succeeded(),
+      ne(variables['Build.Reason'], 'PullRequest')
+    )
   dependsOn: BaseImage
   variables:
     BASE_TAG: $[ stageDependencies.BaseImage.Base.outputs['vars.BASE_TAG'] ]
