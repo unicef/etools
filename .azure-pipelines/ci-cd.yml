@@ -118,7 +118,7 @@ stages:
             -e GIT_DISCOVERY_ACROSS_FILESYSTEM=1 \
             -v $(Build.SourcesDirectory):/code \
             -w /code \
-            unicef/etools-base:$(BASE_TAG) \
+            $(DOCKER_BASE_IMAGE):$(BASE_TAG) \
             bash -c "
               git config --global --add safe.directory /code &&
               tox -e d42
