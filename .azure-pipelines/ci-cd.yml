@@ -76,7 +76,11 @@ stages:
   - job: Tests
     displayName: Run tox tests
     # Tests only on develop. Staging and Master assume tested code
-    condition: eq(variables['Build.SourceBranch'], 'refs/heads/develop')
+    condition: |
+      and(
+        succeeded(),
+        ne(variables['Build.Reason'], 'PullRequest')
+      )
     pool:
       vmImage: ubuntu-latest
 
