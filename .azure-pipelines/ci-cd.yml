@@ -18,11 +18,6 @@ variables:
   DOCKER_APP_IMAGE: unicef/etools
 
 stages:
-# BaseImage stage builds OS + Python dependencies layer.
-# It is Content-Addressed via pdm.lock + Dockerfile-base hash.
-# (this ensures the base image rebuilds ONLY when dependencies change)
-# AppImage builds on top of this layer and contains only application code.
-# This design avoids reinstalling dependencies on every commit and speeds up CI/CD.
 - stage: BaseImage
   displayName: Base Image build and push
   jobs:
@@ -73,12 +68,6 @@ stages:
 
 - stage: Test
   displayName: Run tests
-  condition: |
-    and(
-      succeeded(),
-      eq(variables['Build.Reason'], 'PullRequest')
-    )
-
   dependsOn: BaseImage
   variables:
     BASE_TAG: $[ stageDependencies.BaseImage.Base.outputs['vars.BASE_TAG'] ]
@@ -86,6 +75,8 @@ stages:
   jobs:
   - job: Tests
     displayName: Run tox tests
+    # Tests only on develop. Staging and Master assume tested code
+    condition: eq(variables['Build.SourceBranch'], 'refs/heads/develop')
     pool:
       vmImage: ubuntu-latest
 
@@ -133,7 +124,7 @@ stages:
               tox -e d42
             "
         displayName: Run tox tests
-        timeoutInMinutes: 60
+        timeoutInMinutes: 30
 
       - script: |
           docker rm -f pg redis
@@ -142,12 +133,6 @@ stages:
 
 - stage: AppImage
   displayName: Application Image build and push
-  condition: |
-    and(
-      succeeded(),
-      ne(variables['Build.Reason'], 'PullRequest')
-    )
-
   dependsOn: BaseImage
   variables:
     BASE_TAG: $[ stageDependencies.BaseImage.Base.outputs['vars.BASE_TAG'] ]
@@ -339,7 +324,7 @@ stages:
   variables:
     - group: rke-cluster-etools
     - name: SAFE_BRANCH
-      value: $[ stageDependencies.AppImage.App.outputs['sanitize.SAFE_BRANCH'] ]
+      value: $[ stageDependencies.BuildAndPush.Docker.outputs['sanitize.SAFE_BRANCH'] ]    
     - name: PROD_DEPLOYMENTS
       value: |
         beater-prod 

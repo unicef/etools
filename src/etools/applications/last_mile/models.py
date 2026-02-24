@@ -391,6 +391,7 @@ class Transfer(TimeStampedModel, models.Model):
     DELIVERY = 'DELIVERY'
     DISTRIBUTION = 'DISTRIBUTION'
     HANDOVER = 'HANDOVER'
+    UNICEF_HANDOVER = 'UNICEF_HANDOVER'
     WASTAGE = 'WASTAGE'
     DISPENSE = 'DISPENSE'
 
@@ -412,7 +413,9 @@ class Transfer(TimeStampedModel, models.Model):
         (DISTRIBUTION, _('Distribution')),
         (HANDOVER, _('Handover')),
         (WASTAGE, _('Wastage')),
-        (DISPENSE, _('Dispense'))
+        (DISPENSE, _('Dispense')),
+        (UNICEF_HANDOVER, _('UNICEF Handover')),
+
     )
     TRANSFER_SUBTYPE = (
         (SHORT, _('Short')),
@@ -566,7 +569,12 @@ class Transfer(TimeStampedModel, models.Model):
         ordering = ("-id",)
 
     def __str__(self):
-        return f'{self.id} {self.partner_organization.name}: {self.name if self.name else self.unicef_release_order}'
+        try:
+            partner_name = self.partner_organization.name
+        except PartnerOrganization.DoesNotExist:
+            partner = PartnerOrganization.all_partners.filter(pk=self.partner_organization_id).first()
+            partner_name = partner.name if partner else 'N/A'
+        return f'{self.id} {partner_name}: {self.name if self.name else self.unicef_release_order}'
 
     def hide_if_no_visible_items(self):
         if not self.items.filter(hidden=False).exists():
