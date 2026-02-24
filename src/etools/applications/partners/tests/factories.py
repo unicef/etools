@@ -130,6 +130,8 @@ class InterventionFactory(factory.django.DjangoModelFactory):
     accountability_to_affected_populations = "accountability_to_affected_populations"
     other_partners_involved = "other_partners_involved"
     other_details = "other_details"
+    cfei_number = "CEF/XXX/2026/001"
+    partner_selection_modality = Intervention.SELECTION_MODALITY_OPEN
 
     @factory.post_generation
     def country_programmes(self, create, extracted, **kwargs):

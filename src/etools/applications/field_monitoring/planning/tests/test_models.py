@@ -14,6 +14,8 @@ from etools.applications.field_monitoring.data_collection.models import (
     ActivityOverallFinding,
     ActivityQuestion,
     ActivityQuestionOverallFinding,
+    Finding,
+    StartedChecklist,
 )
 from etools.applications.field_monitoring.data_collection.tests.factories import (
     ActivityQuestionFactory,
@@ -22,13 +24,9 @@ from etools.applications.field_monitoring.data_collection.tests.factories import
     StartedChecklistFactory,
 )
 from etools.applications.field_monitoring.fm_settings.models import Question
-from etools.applications.field_monitoring.fm_settings.tests.factories import QuestionFactory
+from etools.applications.field_monitoring.fm_settings.tests.factories import MethodFactory, QuestionFactory
 from etools.applications.field_monitoring.planning.activity_validation.validator import ActivityValid
-from etools.applications.field_monitoring.planning.models import (
-    DummyEWPActivityModel,
-    DummyGPDModel,
-    MonitoringActivity,
-)
+from etools.applications.field_monitoring.planning.models import EWPActivity, GPD, MonitoringActivity
 from etools.applications.field_monitoring.planning.serializers import MonitoringActivitySerializer
 from etools.applications.field_monitoring.planning.tests.factories import (
     MonitoringActivityActionPointFactory,
@@ -77,6 +75,26 @@ class TestMonitoringActivityValidations(BaseTenantTestCase):
     def test_empty_partner_for_tpm_activity_in_draft(self):
         activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.draft, monitor_type='tpm',
                                              tpm_partner=None)
+        self.assertTrue(ActivityValid(activity, user=self.user).is_valid)
+
+    def test_checklist_requires_at_least_one_entity(self):
+        """
+        Checklist transition requires at least one of:
+        partners, cp_outputs, interventions, ewp_activities, or gpds.
+        """
+        activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.checklist)
+        self.assertFalse(ActivityValid(activity, user=self.user).is_valid)
+
+    def test_checklist_accepts_ewp_activities_instead_of_cp_outputs(self):
+        activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.checklist)
+        ewp = EWPActivity.objects.create(wbs='ACT-VALID-001')
+        activity.ewp_activities.add(ewp)
+        self.assertTrue(ActivityValid(activity, user=self.user).is_valid)
+
+    def test_checklist_accepts_gpds_instead_of_interventions(self):
+        activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.checklist)
+        gpd = GPD.objects.create(gpd_ref='GPD-VALID-001')
+        activity.gpds.add(gpd)
         self.assertTrue(ActivityValid(activity, user=self.user).is_valid)
 
     def test_staff_member_from_assigned_partner(self):
@@ -185,6 +203,90 @@ class TestMonitoringActivityValidations(BaseTenantTestCase):
         self.assertEqual(activity.completion_date, existing_date)
 
 
+class TestMonitoringActivityPortFindingsToSummary(BaseTenantTestCase):
+    def test_port_findings_to_summary_does_not_overwrite_existing_summary_values(self):
+        """
+        When moving an activity into report finalization, we prefill summary from checklist.
+        This must not overwrite existing user-edited summary values (e.g. "on-track" flipping back).
+        """
+        partner = PartnerFactory()
+        activity = MonitoringActivityFactory(partners=[partner])
+
+        # One enabled question + its summary overall finding already set (user edit).
+        question = QuestionFactory(level=Question.LEVELS.partner, is_active=True)
+        activity_question = ActivityQuestionFactory(
+            monitoring_activity=activity,
+            question=question,
+            partner=partner,
+            is_enabled=True,
+        )
+        aq_of = ActivityQuestionOverallFinding.objects.create(activity_question=activity_question, value='on-track')
+
+        # Checklist answer exists but must NOT override the existing summary.
+        checklist = StartedChecklistFactory(monitoring_activity=activity)
+        FindingFactory(started_checklist=checklist, activity_question=activity_question, value='constrained')
+
+        # Activity overall finding narrative already set (user edit); checklist has a single narrative too.
+        aof = ActivityOverallFinding.objects.create(
+            monitoring_activity=activity,
+            partner=partner,
+            narrative_finding='User narrative',
+            on_track=True,
+        )
+        ChecklistOverallFindingFactory(
+            started_checklist=checklist,
+            partner=partner,
+            narrative_finding='Checklist narrative',
+        )
+
+        # Run the prefill logic.
+        old_instance = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.data_collection)
+        activity.port_findings_to_summary(old_instance=old_instance)
+
+        # Assert summary stays intact.
+        aq_of.refresh_from_db()
+        self.assertEqual(aq_of.value, 'on-track')
+        aof.refresh_from_db()
+        self.assertEqual(aof.narrative_finding, 'User narrative')
+
+    def test_port_findings_to_summary_prefills_when_summary_is_empty(self):
+        """Sanity check: if summary is empty, it should be populated from checklist."""
+        partner = PartnerFactory()
+        activity = MonitoringActivityFactory(partners=[partner])
+
+        question = QuestionFactory(level=Question.LEVELS.partner, is_active=True)
+        activity_question = ActivityQuestionFactory(
+            monitoring_activity=activity,
+            question=question,
+            partner=partner,
+            is_enabled=True,
+        )
+        aq_of = ActivityQuestionOverallFinding.objects.create(activity_question=activity_question, value=None)
+
+        checklist = StartedChecklistFactory(monitoring_activity=activity)
+        FindingFactory(started_checklist=checklist, activity_question=activity_question, value='constrained')
+
+        aof = ActivityOverallFinding.objects.create(
+            monitoring_activity=activity,
+            partner=partner,
+            narrative_finding='',
+            on_track=None,
+        )
+        ChecklistOverallFindingFactory(
+            started_checklist=checklist,
+            partner=partner,
+            narrative_finding='Checklist narrative',
+        )
+
+        old_instance = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.data_collection)
+        activity.port_findings_to_summary(old_instance=old_instance)
+
+        aq_of.refresh_from_db()
+        self.assertEqual(aq_of.value, 'constrained')
+        aof.refresh_from_db()
+        self.assertEqual(aof.narrative_finding, 'Checklist narrative')
+
+
 class TestMonitoringActivityQuestionsFlow(BaseTenantTestCase):
     def setUp(self):
         super().setUp()
@@ -286,9 +388,9 @@ class TestNewEntityTypes(BaseTenantTestCase):
 
     def test_ewp_activity_questions_generated(self):
         """Test that questions are generated for ewp_activities."""
-        from etools.applications.field_monitoring.planning.models import DummyEWPActivityModel
+        from etools.applications.field_monitoring.planning.models import EWPActivity
 
-        ewp_activity = DummyEWPActivityModel.objects.create(wbs='ACT-001-2024')
+        ewp_activity = EWPActivity.objects.create(wbs='ACT-001-2024')
 
         activity = MonitoringActivityFactory(
             status=MonitoringActivity.STATUSES.draft
@@ -303,11 +405,103 @@ class TestNewEntityTypes(BaseTenantTestCase):
         self.assertEqual(ewp_questions.count(), 1)
         self.assertEqual(ewp_questions.first().question, self.ewp_question)
 
+    def test_checklist_finds_ewp_activity_questions(self):
+        """
+        When an activity has Key Interventions (ewp_activities), the generated ActivityQuestions
+        should be used to populate checklist findings.
+
+        Note: we create StartedChecklist via bulk_create to avoid calling its overridden save(),
+        so we can exercise prepare_findings() without creating overall findings.
+        """
+
+        method = MethodFactory()
+        self.ewp_question.methods.add(method)
+        # Ensure generated ActivityQuestion is enabled (uses base template).
+        QuestionTemplateFactory(question=self.ewp_question)
+
+        ewp_activity = EWPActivity.objects.create(wbs='ACT-CHK-001-2024')
+        activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.draft)
+        activity.sections.set([self.section])
+        activity.ewp_activities.set([ewp_activity])
+        activity.prepare_questions_structure()
+
+        aq_qs = activity.questions.filter(ewp_activity=ewp_activity, question=self.ewp_question, is_enabled=True)
+        self.assertEqual(aq_qs.count(), 1)
+
+        author = UserFactory()
+        checklist = StartedChecklist(
+            monitoring_activity=activity,
+            method=method,
+            information_source='test',
+            author=author,
+        )
+        StartedChecklist.objects.bulk_create([checklist])
+        checklist = StartedChecklist.objects.get(
+            monitoring_activity=activity,
+            method=method,
+            author=author,
+        )
+
+        checklist.prepare_findings()
+
+        self.assertEqual(Finding.objects.filter(started_checklist=checklist).count(), 1)
+        finding = Finding.objects.get(started_checklist=checklist)
+        self.assertEqual(finding.activity_question.question, self.ewp_question)
+        self.assertEqual(finding.activity_question.ewp_activity, ewp_activity)
+
+    def test_checklist_finds_gpd_questions_from_intervention_level(self):
+        """
+        When an activity has gPDs, the generated ActivityQuestions (intervention-level question pool)
+        should be used to populate checklist findings for the gPD.
+
+        Note: we create StartedChecklist via bulk_create to avoid calling its overridden save(),
+        so we can exercise prepare_findings() without creating overall findings.
+        """
+        from etools.applications.field_monitoring.data_collection.models import Finding, StartedChecklist
+        from etools.applications.field_monitoring.fm_settings.tests.factories import MethodFactory
+        from etools.applications.field_monitoring.planning.models import GPD
+        from etools.applications.field_monitoring.tests.factories import UserFactory
+
+        method = MethodFactory()
+        self.intervention_question.methods.add(method)
+        # Ensure generated ActivityQuestion is enabled (uses base template).
+        QuestionTemplateFactory(question=self.intervention_question)
+
+        gpd = GPD.objects.create(gpd_ref='GPD-CHK-001')
+        activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.draft)
+        activity.sections.set([self.section])
+        activity.gpds.set([gpd])
+        activity.prepare_questions_structure()
+
+        aq_qs = activity.questions.filter(gpd=gpd, question=self.intervention_question, is_enabled=True)
+        self.assertEqual(aq_qs.count(), 1)
+
+        author = UserFactory()
+        checklist = StartedChecklist(
+            monitoring_activity=activity,
+            method=method,
+            information_source='test',
+            author=author,
+        )
+        StartedChecklist.objects.bulk_create([checklist])
+        checklist = StartedChecklist.objects.get(
+            monitoring_activity=activity,
+            method=method,
+            author=author,
+        )
+
+        checklist.prepare_findings()
+
+        self.assertEqual(Finding.objects.filter(started_checklist=checklist).count(), 1)
+        finding = Finding.objects.get(started_checklist=checklist)
+        self.assertEqual(finding.activity_question.question, self.intervention_question)
+        self.assertEqual(finding.activity_question.gpd, gpd)
+
     def test_gpd_questions_use_intervention_level(self):
         """Test that gPDs use intervention-level questions."""
-        from etools.applications.field_monitoring.planning.models import DummyGPDModel
+        from etools.applications.field_monitoring.planning.models import GPD
 
-        gpd = DummyGPDModel.objects.create(gpd_ref='GPD-2024-001')
+        gpd = GPD.objects.create(gpd_ref='GPD-2024-001')
 
         activity = MonitoringActivityFactory(
             status=MonitoringActivity.STATUSES.draft
@@ -324,10 +518,10 @@ class TestNewEntityTypes(BaseTenantTestCase):
 
     def test_gpds_and_interventions_share_question_level(self):
         """Test that both interventions and gPDs use the same question pool."""
-        from etools.applications.field_monitoring.planning.models import DummyGPDModel
+        from etools.applications.field_monitoring.planning.models import GPD
 
         intervention = InterventionFactory()
-        gpd = DummyGPDModel.objects.create(gpd_ref='GPD-2024-002')
+        gpd = GPD.objects.create(gpd_ref='GPD-2024-002')
 
         activity = MonitoringActivityFactory(
             status=MonitoringActivity.STATUSES.draft
@@ -352,10 +546,10 @@ class TestNewEntityTypes(BaseTenantTestCase):
 
     def test_overall_findings_created_for_new_entities(self):
         """Test that overall findings are created for ewp_activities and gpds."""
-        from etools.applications.field_monitoring.planning.models import DummyEWPActivityModel, DummyGPDModel
+        from etools.applications.field_monitoring.planning.models import EWPActivity, GPD
 
-        ewp_activity = DummyEWPActivityModel.objects.create(wbs='ACT-002-2024')
-        gpd = DummyGPDModel.objects.create(gpd_ref='GPD-2024-003')
+        ewp_activity = EWPActivity.objects.create(wbs='ACT-002-2024')
+        gpd = GPD.objects.create(gpd_ref='GPD-2024-003')
 
         activity = MonitoringActivityFactory(
             status=MonitoringActivity.STATUSES.draft
@@ -425,25 +619,35 @@ class TestEntityValidation(BaseTenantTestCase):
 
     def test_wbs_uniqueness(self):
         """Test that duplicate WBS numbers cannot be created."""
-        DummyEWPActivityModel.objects.create(wbs='ACT-001')
+        EWPActivity.objects.create(wbs='ACT-001')
 
         # Should reuse existing instead of creating duplicate
-        obj1, created1 = DummyEWPActivityModel.objects.get_or_create(wbs='ACT-001')
+        obj1, created1 = EWPActivity.objects.get_or_create(wbs='ACT-001')
         self.assertFalse(created1)
 
         # Total count should be 1
-        self.assertEqual(DummyEWPActivityModel.objects.filter(wbs='ACT-001').count(), 1)
+        self.assertEqual(EWPActivity.objects.filter(wbs='ACT-001').count(), 1)
 
     def test_gpd_uniqueness(self):
         """Test that duplicate GPD refs cannot be created."""
-        DummyGPDModel.objects.create(gpd_ref='GPD-001')
+        GPD.objects.create(gpd_ref='GPD-001')
 
         # Should reuse existing instead of creating duplicate
-        obj1, created1 = DummyGPDModel.objects.get_or_create(gpd_ref='GPD-001')
+        obj1, created1 = GPD.objects.get_or_create(gpd_ref='GPD-001')
         self.assertFalse(created1)
 
         # Total count should be 1
-        self.assertEqual(DummyGPDModel.objects.filter(gpd_ref='GPD-001').count(), 1)
+        self.assertEqual(GPD.objects.filter(gpd_ref='GPD-001').count(), 1)
+
+    def test_ewp_activity_str(self):
+        """EWPActivity.__str__ should return the wbs value (used as blueprint title)."""
+        ewp = EWPActivity.objects.create(wbs='WBS-STR-001')
+        self.assertEqual(str(ewp), 'WBS-STR-001')
+
+    def test_gpd_str(self):
+        """GPD.__str__ should return the gpd_ref value (used as blueprint title)."""
+        gpd = GPD.objects.create(gpd_ref='GPD-STR-001')
+        self.assertEqual(str(gpd), 'GPD-STR-001')
 
 
 class TestMonitoringActivityGroups(BaseTenantTestCase):

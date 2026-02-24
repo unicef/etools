@@ -583,6 +583,7 @@ class InterventionDetailSerializer(
             "accountability_to_affected_populations",
             "cash_transfer_modalities",
             "cfei_number",
+            "partner_selection_modality",
             "cluster_names",
             "confidential",
             "context",
@@ -684,7 +685,7 @@ class InterventionDetailSerializer(
             "unicef_court",
             "unicef_focal_points",
             "unicef_signatory",
-            "original_intervention",
+            "original_intervention"
         )
 
     def get_intervention(self):

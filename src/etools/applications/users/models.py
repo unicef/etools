@@ -295,7 +295,7 @@ class User(TimeStampedModel, AbstractBaseUser, PermissionsMixin):
         self.save(update_fields=['is_active'])
 
     @cached_property
-    def is_lmsm_admin(self):
+    def is_lmsm_admin_or_co_viewer(self):
         return self.realms.filter(
             country=connection.tenant,
             organization=self.profile.organization,

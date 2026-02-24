@@ -22,7 +22,9 @@ from etools.applications.last_mile import models, serializers
 from etools.applications.last_mile.filters import POIFilter, TransferFilter
 from etools.applications.last_mile.permissions import IsIPLMEditorOrViewerReadOnly, IsLMSMGroup
 from etools.applications.last_mile.tasks import notify_upload_waybill
+from etools.applications.last_mile.validators import TransferCheckOutValidator
 from etools.applications.locations.models import Location
+from etools.applications.organizations.models import Organization
 from etools.applications.partners.models import PartnerOrganization
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.utils.pbi_auth import get_access_token, get_embed_token, get_embed_url, TokenRetrieveException
@@ -327,7 +329,7 @@ class TransferViewSet(
         completed_filters |= Q(Q(origin_point=location) & ~Q(destination_point=location))
         completed_filters |= Q(destination_point=location,
                                transfer_type__in=[models.Transfer.WASTAGE, models.Transfer.DISPENSE])
-        completed_filters |= Q(origin_point=location, transfer_type=models.Transfer.HANDOVER)
+        completed_filters |= Q(origin_point=location, transfer_type__in=[models.Transfer.HANDOVER, models.Transfer.UNICEF_HANDOVER])
         qs = self.get_queryset(handover=True).filter(Q(status=models.Transfer.COMPLETED) | Q(from_partner_organization=partner)).filter(completed_filters).filter(
             Q(partner_organization=partner) | Q(from_partner_organization=partner)
         )
@@ -428,6 +430,71 @@ class ItemUpdateViewSet(mixins.UpdateModelMixin, mixins.RetrieveModelMixin, Gene
         return Response(status=status.HTTP_200_OK)
 
 
+UNICEF_VENDOR_NUMBER = '000'
+
+
+class UnicefPartnerView(APIView):
+    permission_classes = [IsIPLMEditorOrViewerReadOnly]
+
+    def get_unicef_partner(self):
+        try:
+            return PartnerOrganization.all_partners.get(
+                organization__vendor_number=UNICEF_VENDOR_NUMBER
+            )
+        except PartnerOrganization.DoesNotExist:
+            org = Organization.objects.get(
+                Q(vendor_number=UNICEF_VENDOR_NUMBER) | Q(pk=1)
+            )
+            return PartnerOrganization.all_partners.create(
+                organization=org,
+                hidden=True,
+            )
+
+    def get(self, request, *args, **kwargs):
+        partner = self.get_unicef_partner()
+        serializer = MinimalPartnerOrganizationListSerializer(partner)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class UnicefLocationsView(ListAPIView):
+    permission_classes = [IsIPLMEditorOrViewerReadOnly]
+    serializer_class = serializers.PointOfInterestSerializer
+    pagination_class = DynamicPageNumberPagination
+
+    def get_queryset(self):
+        return models.PointOfInterest.objects.filter(
+            partner_organizations__organization__vendor_number=UNICEF_VENDOR_NUMBER,
+            is_active=True,
+        ).select_related('parent', 'poi_type').defer(
+            'parent__point', 'parent__geom', 'point'
+        ).order_by('name', 'id')
+
+
+class UnicefHandoverCheckoutView(APIView):
+    permission_classes = [IsIPLMEditorOrViewerReadOnly]
+
+    def post(self, request, *args, **kwargs):
+        TransferCheckOutValidator().validate_origin_point(request.data.get('origin_point'))
+        origin_poi = get_object_or_404(models.PointOfInterest, pk=request.data.get('origin_point'))
+
+        serializer = serializers.UnicefHandoverCheckoutSerializer(
+            data=request.data,
+            context={
+                'request': request,
+                'location': origin_poi,
+            }
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(
+            serializers.TransferSerializer(
+                serializer.instance, context={'partner': request.user.partner}
+            ).data,
+            status=status.HTTP_200_OK
+        )
+
+
 class PowerBIDataView(APIView):
     permission_classes = [IsLMSMGroup]
 
@@ -444,7 +511,7 @@ class PowerBIDataView(APIView):
 
     def get(self, request, *args, **kwargs):
         user = request.user
-        if user.is_lmsm_admin and user.profile.organization.name == "UNICEF":
+        if user.is_lmsm_admin_or_co_viewer and user.profile.organization.name == "UNICEF":
             report_id = settings.PBI_CONFIG["REPORT_ID_ADMIN"]
         else:
             report_id = settings.PBI_CONFIG["REPORT_ID"]

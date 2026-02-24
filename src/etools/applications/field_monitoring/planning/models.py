@@ -77,12 +77,18 @@ class YearPlan(TimeStampedModel):
         return 'Year Plan for {}'.format(self.year)
 
 
-class DummyEWPActivityModel(models.Model):
+class EWPActivity(models.Model):
     wbs = models.CharField(max_length=255, unique=True)
 
+    def __str__(self):
+        return self.wbs
 
-class DummyGPDModel(models.Model):
+
+class GPD(models.Model):
     gpd_ref = models.CharField(max_length=25, unique=True)
+
+    def __str__(self):
+        return self.gpd_ref
 
 
 class QuestionTargetMixin(models.Model):
@@ -92,9 +98,9 @@ class QuestionTargetMixin(models.Model):
                                   on_delete=models.CASCADE, related_name='+')
     intervention = models.ForeignKey(Intervention, blank=True, null=True, verbose_name=_('Intervention'),
                                      on_delete=models.CASCADE, related_name='+')
-    ewp_activity = models.ForeignKey(DummyEWPActivityModel, null=True, blank=True, verbose_name=_('eWP Activity'),
+    ewp_activity = models.ForeignKey(EWPActivity, null=True, blank=True, verbose_name=_('eWP Activity'),
                                      on_delete=models.PROTECT, related_name='+')
-    gpd = models.ForeignKey(DummyGPDModel, null=True, blank=True, verbose_name=_('GPD'),
+    gpd = models.ForeignKey(GPD, null=True, blank=True, verbose_name=_('GPD'),
                             on_delete=models.PROTECT, related_name='+')
 
     @property
@@ -352,9 +358,9 @@ class MonitoringActivity(
                                         blank=True)
 
     # GPD m2m for activities and gpds
-    ewp_activities = models.ManyToManyField(DummyEWPActivityModel, verbose_name=_('eWP activities'),
+    ewp_activities = models.ManyToManyField(EWPActivity, verbose_name=_('eWP activities'),
                                             related_name='monitoring_activities', blank=True)
-    gpds = models.ManyToManyField(DummyGPDModel, verbose_name=_('GDPs'),
+    gpds = models.ManyToManyField(GPD, verbose_name=_('GDPs'),
                                   related_name='monitoring_activities', blank=True)
 
     start_date = models.DateField(verbose_name=_('Start Date'), blank=True, null=True)
@@ -510,9 +516,13 @@ class MonitoringActivity(
 
         for relation, level, target_field in self.RELATIONS_MAPPING:
             for target in getattr(self, relation).all():
-                target_questions = applicable_questions.filter(level=level).prefetch_templates(
-                    level, target_id=target.id
+                # key interventions (ewp_activities) have their own checklist/questions
+                # so they use their own question level (ewp_activity)
+                q_level = level
+                target_questions = applicable_questions.filter(level=q_level).prefetch_templates(
+                    q_level, target_id=target.id
                 )
+
                 for target_question in target_questions:
                     activity_question = ActivityQuestion(
                         question=target_question, monitoring_activity=self,
@@ -775,8 +785,9 @@ class MonitoringActivity(
             answers_count=Count('findings', filter=Q(findings__value__isnull=False)),
         ).filter(answers_count=1).prefetch_related('findings')
         for question in valid_questions:
-            question.overall_finding.value = question.findings.all()[0].value
-            question.overall_finding.save()
+            if question.overall_finding.value is None:
+                question.overall_finding.value = question.findings.all()[0].value
+                question.overall_finding.save(update_fields=['value'])
 
         for overall_finding in self.overall_findings.all():
             narrative_findings = ChecklistOverallFinding.objects.filter(
@@ -785,10 +796,14 @@ class MonitoringActivity(
                 partner=overall_finding.partner,
                 cp_output=overall_finding.cp_output,
                 intervention=overall_finding.intervention,
+                ewp_activity=overall_finding.ewp_activity,
+                gpd=overall_finding.gpd,
             ).values_list('narrative_finding_raw', flat=True)
             if len(narrative_findings) == 1:
-                overall_finding.narrative_finding_raw = narrative_findings[0]
-                overall_finding.save()
+                # Same: do not overwrite existing narrative.
+                if not overall_finding.narrative_finding:
+                    overall_finding.narrative_finding_raw = narrative_findings[0]
+                    overall_finding.save(update_fields=['narrative_finding_raw'])
 
     def send_rejection_note(self, old_instance):
         if old_instance and old_instance.status == self.STATUSES.submitted:
