@@ -2372,6 +2372,38 @@ class TestLConsigneeCodeFunctionality(BaseTenantTestCase):
         self.assertIsNone(transfer.l_consignee_code)
         self.assertIsNone(transfer.destination_point)
 
+    def test_ingest_rejects_transfer_with_nonexistent_consignee_code(self):
+        url = reverse("last_mile:vision-ingest-transfers")
+        payload = [
+            {
+                "Event": "LD",
+                "ReleaseOrder": "RO-L004",
+                "ImplementingPartner": "IP12345",
+                "PONumber": "PO-444",
+                "MaterialNumber": "MAT-001",
+                "ReleaseOrderItem": "40",
+                "ItemDescription": "Test item",
+                "Quantity": 100,
+                "UOM": "BOX",
+                "BatchNumber": "B4",
+                "ConsigneeCode": "L-NONEXISTENT"
+            }
+        ]
+
+        response = self.forced_auth_req(
+            method="post", url=url, data=payload, user=self.api_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(models.Transfer.objects.count(), 0)
+        self.assertEqual(response.data["transfers_created"], 0)
+        self.assertEqual(response.data["skipped_count"], 1)
+        self.assertEqual(len(response.data["details"]["skipped_transfers"]), 1)
+        self.assertEqual(
+            response.data["details"]["skipped_transfers"][0]["reason"],
+            "Consignee Code does not exist"
+        )
+
     def test_incoming_transfers_warehouse_with_l_code(self):
         transfer_matching = TransferFactory(
             l_consignee_code="L-WH-001",

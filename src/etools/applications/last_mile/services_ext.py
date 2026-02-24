@@ -216,6 +216,12 @@ class TransferIngestService:
                         })
                         continue
                     transfer_data['destination_point'] = destination_poi
+                else:
+                    self.report.skipped_transfers.append({
+                        "release_order": release_order,
+                        "reason": "Consignee Code does not exist"
+                    })
+                    continue
 
             if release_order not in self.processed_release_orders:
                 try:
