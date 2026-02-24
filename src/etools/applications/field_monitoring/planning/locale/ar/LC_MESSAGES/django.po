@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-29 13:11+0000\n"
+"POT-Creation-Date: 2026-02-12 13:51+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -299,6 +299,9 @@ msgstr ""
 msgid "TPM Concerns"
 msgstr ""
 
+msgid "One or more email addresses are invalid."
+msgstr "عنوان بريد إلكتروني واحد أو أكثر غير صالح."
+
 msgid "History"
 msgstr "السجل التاريخي"
 
@@ -352,6 +355,18 @@ msgstr "الأساس المنطقي السنوي للرصد الميداني"
 
 msgid "Templates"
 msgstr "النماذج"
+
+msgid "Report can only be sent by email when status is completed."
+msgstr "يمكن إرسال التقرير بالبريد الإلكتروني فقط عندما تكون الحالة مكتملة."
+
+msgid "Failed to generate PDF report."
+msgstr "فشل في إنشاء تقرير PDF."
+
+msgid "Report sent successfully by email."
+msgstr "تم إرسال التقرير بنجاح بالبريد الإلكتروني."
+
+msgid "Failed to send email. Please try again later."
+msgstr "فشل في إرسال البريد الإلكتروني. يرجى المحاولة مرة أخرى لاحقًا."
 
 msgid "Attachments"
 msgstr "المرفقات"
