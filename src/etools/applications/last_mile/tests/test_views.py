@@ -1510,3 +1510,187 @@ class TestItemAuditLogViewWorkflow(BaseTenantTestCase):
 
         all_item_audits = models.ItemAuditLog.objects.filter(item_id=item.id).order_by('created')
         self.assertEqual(all_item_audits.count(), len(operations))
+
+
+class TestUnicefHandoverCheckoutView(BaseTenantTestCase):
+    fixtures = ('poi_type.json',)
+
+    url = reverse('last_mile:unicef-new-handover-checkout')
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.partner = PartnerFactory(organization=OrganizationFactory(name='Partner'))
+        cls.recipient_partner = PartnerFactory(organization=OrganizationFactory(name='Recipient'))
+        cls.partner_staff = UserFactory(
+            realms__data=['IP LM Editor'],
+            profile__organization=cls.partner.organization,
+        )
+        cls.origin = PointOfInterestFactory(partner_organizations=[cls.partner], private=True, poi_type_id=1)
+        cls.destination = PointOfInterestFactory(partner_organizations=[cls.partner], private=True, poi_type_id=3)
+
+        cls.checked_in = TransferFactory(
+            partner_organization=cls.partner,
+            status=models.Transfer.COMPLETED,
+            destination_point=cls.origin,
+        )
+        cls.material = MaterialFactory(number='UHO_MAT', original_uom='EA')
+        cls.attachment = AttachmentFactory(
+            file=SimpleUploadedFile('proof_file.pdf', b'Proof File'), code='proof_of_transfer')
+
+    def _build_checkout_data(self, items, **overrides):
+        data = {
+            "transfer_type": models.Transfer.UNICEF_HANDOVER,
+            "origin_point": self.origin.pk,
+            "destination_point": self.destination.pk,
+            "comment": "",
+            "proof_file": self.attachment.pk,
+            "partner_id": self.recipient_partner.id,
+            "items": items,
+            "origin_check_out_at": timezone.now(),
+        }
+        data.update(overrides)
+        return data
+
+    def test_unicef_handover_checkout_success(self):
+        item = ItemFactory(quantity=10, transfer=self.checked_in, material=self.material)
+
+        data = self._build_checkout_data(
+            items=[{"id": item.pk, "quantity": 10}],
+        )
+        response = self.forced_auth_req('post', self.url, user=self.partner_staff, data=data)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['transfer_type'], models.Transfer.UNICEF_HANDOVER)
+        self.assertEqual(response.data['status'], models.Transfer.COMPLETED)
+
+        transfer = models.Transfer.objects.get(pk=response.data['id'])
+        self.assertEqual(transfer.origin_point, self.origin)
+        self.assertEqual(transfer.destination_point, self.destination)
+        self.assertEqual(transfer.status, models.Transfer.COMPLETED)
+        self.assertEqual(transfer.destination_check_in_at, transfer.origin_check_out_at)
+        self.assertEqual(transfer.recipient_partner_organization, self.recipient_partner)
+        self.assertEqual(transfer.from_partner_organization, self.partner)
+        self.assertEqual(transfer.items.count(), 1)
+        self.assertEqual(transfer.items.first().quantity, 10)
+        self.assertIn(
+            f'UHO @ {data["origin_check_out_at"].strftime("%y-%m-%d")}',
+            transfer.name,
+        )
+
+    def test_unicef_handover_partial_quantity(self):
+        item = ItemFactory(quantity=20, transfer=self.checked_in, material=self.material)
+
+        data = self._build_checkout_data(
+            items=[{"id": item.pk, "quantity": 8}],
+        )
+        response = self.forced_auth_req('post', self.url, user=self.partner_staff, data=data)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        transfer = models.Transfer.objects.get(pk=response.data['id'])
+        self.assertEqual(transfer.status, models.Transfer.COMPLETED)
+        self.assertEqual(transfer.items.first().quantity, 8)
+
+        item.refresh_from_db()
+        self.assertEqual(item.quantity, 12)
+
+    def test_rejects_non_unicef_handover_type(self):
+        item = ItemFactory(quantity=10, transfer=self.checked_in, material=self.material)
+
+        data = self._build_checkout_data(
+            items=[{"id": item.pk, "quantity": 5}],
+            transfer_type=models.Transfer.HANDOVER,
+        )
+        response = self.forced_auth_req('post', self.url, user=self.partner_staff, data=data)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_rejects_missing_origin_point(self):
+        item = ItemFactory(quantity=10, transfer=self.checked_in, material=self.material)
+
+        data = self._build_checkout_data(
+            items=[{"id": item.pk, "quantity": 5}],
+        )
+        del data['origin_point']
+        response = self.forced_auth_req('post', self.url, user=self.partner_staff, data=data)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_rejects_missing_destination_point(self):
+        item = ItemFactory(quantity=10, transfer=self.checked_in, material=self.material)
+
+        data = self._build_checkout_data(
+            items=[{"id": item.pk, "quantity": 5}],
+        )
+        del data['destination_point']
+        response = self.forced_auth_req('post', self.url, user=self.partner_staff, data=data)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_rejects_missing_partner_id(self):
+        item = ItemFactory(quantity=10, transfer=self.checked_in, material=self.material)
+
+        data = self._build_checkout_data(
+            items=[{"id": item.pk, "quantity": 5}],
+        )
+        del data['partner_id']
+        response = self.forced_auth_req('post', self.url, user=self.partner_staff, data=data)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_rejects_missing_proof_file(self):
+        item = ItemFactory(quantity=10, transfer=self.checked_in, material=self.material)
+
+        data = self._build_checkout_data(
+            items=[{"id": item.pk, "quantity": 5}],
+        )
+        del data['proof_file']
+        response = self.forced_auth_req('post', self.url, user=self.partner_staff, data=data)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_rejects_quantity_exceeding_available(self):
+        item = ItemFactory(quantity=5, transfer=self.checked_in, material=self.material)
+
+        data = self._build_checkout_data(
+            items=[{"id": item.pk, "quantity": 10}],
+        )
+        response = self.forced_auth_req('post', self.url, user=self.partner_staff, data=data)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_multiple_items(self):
+        item_1 = ItemFactory(quantity=15, transfer=self.checked_in, material=self.material)
+        material_2 = MaterialFactory(number='UHO_MAT2', original_uom='EA')
+        item_2 = ItemFactory(quantity=25, transfer=self.checked_in, material=material_2)
+
+        data = self._build_checkout_data(
+            items=[
+                {"id": item_1.pk, "quantity": 10},
+                {"id": item_2.pk, "quantity": 20},
+            ],
+        )
+        response = self.forced_auth_req('post', self.url, user=self.partner_staff, data=data)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        transfer = models.Transfer.objects.get(pk=response.data['id'])
+        self.assertEqual(transfer.status, models.Transfer.COMPLETED)
+        self.assertEqual(transfer.items.count(), 2)
+
+        item_1.refresh_from_db()
+        item_2.refresh_from_db()
+        self.assertEqual(item_1.quantity, 5)
+        self.assertEqual(item_2.quantity, 5)
+
+    def test_viewer_cannot_checkout(self):
+        viewer = UserFactory(
+            realms__data=['IP LM Viewer'],
+            profile__organization=self.partner.organization,
+        )
+        item = ItemFactory(quantity=10, transfer=self.checked_in, material=self.material)
+
+        data = self._build_checkout_data(
+            items=[{"id": item.pk, "quantity": 5}],
+        )
+        response = self.forced_auth_req('post', self.url, user=viewer, data=data)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
