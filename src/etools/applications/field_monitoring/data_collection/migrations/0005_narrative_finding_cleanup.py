@@ -1,11 +1,10 @@
-# Generated manually on 2026-02-12
-# Data migration to migrate existing narrative_finding to narrative_finding_raw
-# and clean the narrative_finding column
+# Generated manually on 2026-02-25
+# Add narrative_finding_raw field and migrate existing data
 
 import re
 from html.parser import HTMLParser
 
-from django.db import migrations
+from django.db import migrations, models
 
 
 class HTMLTagStripper(HTMLParser):
@@ -25,9 +24,7 @@ class HTMLTagStripper(HTMLParser):
 
 
 def clean_narrative_finding(text):
-    """
-    Clean HTML and MS Word formatting tags from narrative finding text.
-    """
+    """Clean HTML and MS Word formatting tags from narrative finding text."""
     if not text:
         return ''
     
@@ -36,21 +33,17 @@ def clean_narrative_finding(text):
     try:
         stripper.feed(text)
         cleaned = stripper.get_data()
-    except Exception:
-        # If HTML parsing fails, fall back to regex
+    except (ValueError, TypeError):
         cleaned = text
     
-    # Remove common MS Word XML tags and styling
+    # Remove MS Word XML tags
     cleaned = re.sub(r'</?w:[^>]+>', '', cleaned)
-    
     # Remove remaining HTML/XML tags
     cleaned = re.sub(r'<[^>]+>', '', cleaned)
-    
-    # Remove MS Word specific characters and artifacts
+    # Remove HTML entities
     cleaned = re.sub(r'&nbsp;', ' ', cleaned)
     cleaned = re.sub(r'&[a-zA-Z]+;', '', cleaned)
-    
-    # Clean up excessive whitespace
+    # Clean up whitespace
     cleaned = re.sub(r'\s+', ' ', cleaned)
     cleaned = cleaned.strip()
     
@@ -58,7 +51,7 @@ def clean_narrative_finding(text):
 
 
 def migrate_findings(model_class):
-    """Generic migration function for narrative findings"""
+    """Migrate narrative findings to raw field and clean."""
     findings = list(model_class.objects.all())
     for finding in findings:
         if finding.narrative_finding:
@@ -73,45 +66,48 @@ def migrate_findings(model_class):
         )
 
 
-def migrate_checklist_overall_findings(apps, schema_editor):
-    """Migrate ChecklistOverallFinding narrative_finding data"""
+def migrate_data_forward(apps, schema_editor):
+    """Migrate existing narrative_finding data."""
     ChecklistOverallFinding = apps.get_model('field_monitoring_data_collection', 'ChecklistOverallFinding')
-    migrate_findings(ChecklistOverallFinding)
-
-
-def migrate_activity_overall_findings(apps, schema_editor):
-    """Migrate ActivityOverallFinding narrative_finding data"""
     ActivityOverallFinding = apps.get_model('field_monitoring_data_collection', 'ActivityOverallFinding')
+    
+    migrate_findings(ChecklistOverallFinding)
     migrate_findings(ActivityOverallFinding)
 
 
-def reverse_findings(model_class):
-    """Generic reverse function for narrative findings"""
-    findings = list(model_class.objects.all())
-    for finding in findings:
-        if finding.narrative_finding_raw:
-            finding.narrative_finding = finding.narrative_finding_raw
-    
-    if findings:
-        model_class.objects.bulk_update(findings, ['narrative_finding'], batch_size=500)
-
-
-def reverse_migration(apps, schema_editor):
-    """Reverse migration - restore narrative_finding from narrative_finding_raw"""
+def reverse_data(apps, schema_editor):
+    """Restore narrative_finding from narrative_finding_raw."""
     ChecklistOverallFinding = apps.get_model('field_monitoring_data_collection', 'ChecklistOverallFinding')
     ActivityOverallFinding = apps.get_model('field_monitoring_data_collection', 'ActivityOverallFinding')
     
-    reverse_findings(ChecklistOverallFinding)
-    reverse_findings(ActivityOverallFinding)
+    for model_class in [ChecklistOverallFinding, ActivityOverallFinding]:
+        findings = list(model_class.objects.all())
+        for finding in findings:
+            if finding.narrative_finding_raw:
+                finding.narrative_finding = finding.narrative_finding_raw
+        
+        if findings:
+            model_class.objects.bulk_update(findings, ['narrative_finding'], batch_size=500)
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('field_monitoring_data_collection', '0005_add_narrative_finding_raw'),
+        ('field_monitoring_data_collection', '0003_activityoverallfinding_ewp_activity_and_more'),
     ]
 
     operations = [
-        migrations.RunPython(migrate_checklist_overall_findings, reverse_migration),
-        migrations.RunPython(migrate_activity_overall_findings, reverse_migration),
+        # Add narrative_finding_raw field
+        migrations.AddField(
+            model_name='activityoverallfinding',
+            name='narrative_finding_raw',
+            field=models.TextField(blank=True, verbose_name='Narrative Finding Raw'),
+        ),
+        migrations.AddField(
+            model_name='checklistoverallfinding',
+            name='narrative_finding_raw',
+            field=models.TextField(blank=True, verbose_name='Narrative Finding Raw'),
+        ),
+        # Migrate existing data
+        migrations.RunPython(migrate_data_forward, reverse_data),
     ]
