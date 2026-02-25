@@ -7,6 +7,22 @@ from unicef_djangolib.fields import CodedGenericRelation
 
 from etools.applications.field_monitoring.fm_settings.models import Method, Question
 from etools.applications.field_monitoring.planning.models import MonitoringActivity, QuestionTargetMixin
+from etools.applications.field_monitoring.data_collection.utils import clean_narrative_finding
+
+
+class NarrativeFindingCleanMixin(models.Model):
+    """Mixin to auto-clean narrative_finding from narrative_finding_raw on save."""
+    
+    class Meta:
+        abstract = True
+    
+    def save(self, *args, **kwargs):
+        # Clean narrative_finding from narrative_finding_raw
+        if self.narrative_finding_raw:
+            self.narrative_finding = clean_narrative_finding(self.narrative_finding_raw)
+        else:
+            self.narrative_finding = ''
+        super().save(*args, **kwargs)
 
 
 class ActivityQuestionQuerySet(models.QuerySet):
@@ -165,9 +181,10 @@ class ChecklistOverallFindingQuerySet(models.QuerySet):
             output_field=models.TextField()))
 
 
-class ChecklistOverallFinding(QuestionTargetMixin, models.Model):
+class ChecklistOverallFinding(NarrativeFindingCleanMixin, QuestionTargetMixin, models.Model):
     started_checklist = models.ForeignKey(StartedChecklist, related_name='overall_findings',
                                           verbose_name=_('Checklist'), on_delete=models.CASCADE)
+    narrative_finding_raw = models.TextField(blank=True, verbose_name=_('Narrative Finding Raw'))
     narrative_finding = models.TextField(blank=True, verbose_name=_('Narrative Finding'))
     attachments = CodedGenericRelation(Attachment, code='attachments', verbose_name=_('Attachments'), blank=True)
 
@@ -190,9 +207,10 @@ class ActivityOverallFindingQuerySet(models.QuerySet):
             output_field=models.TextField()))
 
 
-class ActivityOverallFinding(QuestionTargetMixin, models.Model):
+class ActivityOverallFinding(NarrativeFindingCleanMixin, QuestionTargetMixin, models.Model):
     monitoring_activity = models.ForeignKey(MonitoringActivity, related_name='overall_findings',
                                             verbose_name=_('Activity'), on_delete=models.CASCADE)
+    narrative_finding_raw = models.TextField(blank=True, verbose_name=_('Narrative Finding Raw'))
     narrative_finding = models.TextField(blank=True, verbose_name=_('Narrative Finding'))
     on_track = models.BooleanField(null=True, blank=True)
 

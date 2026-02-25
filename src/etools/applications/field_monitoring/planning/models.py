@@ -791,19 +791,19 @@ class MonitoringActivity(
 
         for overall_finding in self.overall_findings.all():
             narrative_findings = ChecklistOverallFinding.objects.filter(
-                ~Q(narrative_finding=''),
+                ~Q(narrative_finding_raw=''),
                 started_checklist__monitoring_activity=self,
                 partner=overall_finding.partner,
                 cp_output=overall_finding.cp_output,
                 intervention=overall_finding.intervention,
                 ewp_activity=overall_finding.ewp_activity,
                 gpd=overall_finding.gpd,
-            ).values_list('narrative_finding', flat=True)
+            ).values_list('narrative_finding_raw', flat=True)
             if len(narrative_findings) == 1:
                 # Same: do not overwrite existing narrative.
                 if not overall_finding.narrative_finding:
-                    overall_finding.narrative_finding = narrative_findings[0]
-                    overall_finding.save(update_fields=['narrative_finding'])
+                    overall_finding.narrative_finding_raw = narrative_findings[0]
+                    overall_finding.save(update_fields=['narrative_finding_raw'])
 
     def send_rejection_note(self, old_instance):
         if old_instance and old_instance.status == self.STATUSES.submitted:

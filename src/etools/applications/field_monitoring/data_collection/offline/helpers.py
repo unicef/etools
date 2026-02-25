@@ -53,7 +53,7 @@ def _save_values_to_checklist(value: dict, checklist: StartedChecklist) -> None:
                 raise BadValueError(_('Unable to find %(field)s with id %(target_id)s') %
                                     {'field': target_field, 'target_id': target_id})
 
-            overall_finding.narrative_finding = target_value.get('overall', '')
+            overall_finding.narrative_finding_raw = target_value.get('overall', '')
             overall_finding.save()
 
             attachments = target_value.get('attachments', [])
@@ -127,7 +127,7 @@ def get_checklist_form_value(checklist: StartedChecklist) -> dict:
         ).select_related(target_field).prefetch_related('attachments'):
             target_id = getattr(overall_finding, f'{target_field}_id')
             target_value = {
-                'overall': overall_finding.narrative_finding,
+                'overall': overall_finding.narrative_finding_raw,
                 'attachments': [
                     {
                         'attachment': str(attachment.pk),

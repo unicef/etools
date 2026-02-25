@@ -44,7 +44,7 @@ class FindingFactory(factory.django.DjangoModelFactory):
 
 class ChecklistOverallFindingFactory(factory.django.DjangoModelFactory):
     started_checklist = factory.SubFactory(StartedChecklistFactory)
-    narrative_finding = factory.fuzzy.FuzzyText()
+    narrative_finding_raw = factory.fuzzy.FuzzyText()
 
     class Meta:
         model = ChecklistOverallFinding
