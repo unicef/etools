@@ -261,6 +261,33 @@ class ActionPointRssAdminTestCase(BaseTenantTestCase):
         self.assertGreater(len(results), 0)
         self.assertTrue(any('assigned' in log.get('change_message', '').lower() for log in results))
 
+    def test_action_point_logs_filter_search_full_name(self):
+        """Searching by full name (first + last) must return results.
+
+        Previously the raw value was passed directly to icontains, so 'John Doe'
+        would not match a user whose first_name='John' and last_name='Doe'.
+        """
+        action_point = ActionPointFactory(assigned_to=UserFactory())
+        url = reverse('rss_admin:rss-admin-action-points-logs', kwargs={'pk': action_point.pk})
+
+        author = UserFactory(first_name='John', last_name='Doe')
+        other = UserFactory(first_name='Jane', last_name='Smith')
+
+        log_change(user=author, obj=action_point, change_message="Changed by John")
+        log_change(user=other, obj=action_point, change_message="Changed by Jane")
+
+        # Full-name search should match only the entry by John Doe
+        resp = self.forced_auth_req('get', url, user=self.rss_admin, data={'search': 'John Doe'})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        results = resp.data['results']
+        self.assertEqual(len(results), 1)
+        self.assertIn('John', results[0]['change_message'])
+
+        # Searching a name that belongs to no user should return nothing
+        resp = self.forced_auth_req('get', url, user=self.rss_admin, data={'search': 'Jane Doe'})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(resp.data['results']), 0)
+
     def test_action_point_logs_filter_combined(self):
         """Test that action point logs endpoint supports combined filtering"""
         action_point = ActionPointFactory(assigned_to=UserFactory())

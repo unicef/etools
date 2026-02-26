@@ -1,6 +1,8 @@
 from copy import copy
 from datetime import datetime
 
+from django.core.exceptions import ValidationError as DjangoValidationError
+from django.core.validators import validate_email
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
@@ -37,6 +39,44 @@ from etools.applications.reports.serializers.v1 import SectionSerializer
 from etools.applications.reports.serializers.v2 import MinimalOutputListSerializer, OfficeSerializer
 from etools.applications.tpm.tpmpartners.models import TPMPartner
 from etools.applications.users.serializers import MinimalUserSerializer
+
+
+class RecipientOptionSerializer(serializers.Serializer):
+    """Serializer for recipient options in email sending."""
+    id = serializers.CharField()
+    name = serializers.CharField()
+    type = serializers.ChoiceField(
+        choices=[('user', 'User'), ('partner', 'Partner')]
+    )
+
+
+class SendReportEmailSerializer(serializers.Serializer):
+    """Serializer for sending report by email."""
+    recipients = serializers.ListField(
+        child=serializers.CharField(),
+        min_length=1
+    )
+    message = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        max_length=1000
+    )
+
+    def validate_recipients(self, value):
+        invalid_emails = []
+
+        for email in value:
+            try:
+                validate_email(email)
+            except DjangoValidationError:
+                invalid_emails.append(email)
+
+        if invalid_emails:
+            raise serializers.ValidationError(
+                _('One or more email addresses are invalid.')
+            )
+
+        return value
 
 
 class YearPlanSerializer(SnapshotModelSerializer):

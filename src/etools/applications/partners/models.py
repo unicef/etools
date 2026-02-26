@@ -227,7 +227,7 @@ class PartnerOrganizationQuerySet(models.QuerySet):
         return self.not_programmatic_visit_compliant().not_spot_check_compliant(*args, **kwargs)
 
 
-class PartnerOrganizationManager(models.Manager.from_queryset(PartnerOrganizationQuerySet)):
+class PartnerOrganizationAllManager(models.Manager.from_queryset(PartnerOrganizationQuerySet)):
 
     def get_queryset(self):
         return super().get_queryset()\
@@ -237,6 +237,13 @@ class PartnerOrganizationManager(models.Manager.from_queryset(PartnerOrganizatio
             .annotate(partner_type=F('organization__organization_type')) \
             .annotate(cso_type=F('organization__cso_type')) \
             .order_by('organization__name')
+
+
+class PartnerOrganizationManager(PartnerOrganizationAllManager):
+
+    def get_queryset(self):
+        return super().get_queryset()\
+            .exclude(organization__vendor_number='000')
 
 
 class PartnerOrganization(TimeStampedModel):
@@ -525,6 +532,7 @@ class PartnerOrganization(TimeStampedModel):
 
     tracker = FieldTracker()
     objects = PartnerOrganizationManager()
+    all_partners = PartnerOrganizationAllManager()
 
     class Meta:
         base_manager_name = 'objects'
