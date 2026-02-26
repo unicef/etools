@@ -82,7 +82,7 @@ class CsvImporter:
         return True, "Success"
 
     def _process_location_row(self, row_data, user):
-        ip_numbers_str, location_name, primary_type_name, latitude, longitude, p_code_location, *_ = row_data
+        ip_numbers_str, location_name, primary_type_name, secondary_type_name, latitude, longitude, p_code_location, *_ = row_data
 
         try:
             ip_numbers = json.loads(ip_numbers_str) if ip_numbers_str else []
@@ -93,6 +93,7 @@ class CsvImporter:
             'ip_numbers': ip_numbers,
             'location_name': location_name,
             'primary_type_name': primary_type_name,
+            'secondary_type_name': secondary_type_name,
             'latitude': latitude,
             'longitude': longitude,
             'p_code_location': p_code_location,
