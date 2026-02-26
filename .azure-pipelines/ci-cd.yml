@@ -93,7 +93,6 @@ stages:
 
     steps:
       - checkout: self
-        fetchDepth: 0
 
       - script: |
           docker run -d \
@@ -135,7 +134,7 @@ stages:
               tox -e d42
             "
         displayName: Run tox tests
-        timeoutInMinutes: 30
+        timeoutInMinutes: 60
 
       - script: |
           docker rm -f pg redis

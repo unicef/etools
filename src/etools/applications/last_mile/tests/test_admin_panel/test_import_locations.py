@@ -31,9 +31,11 @@ class TestLocationAdminViewSetImport(BaseTenantTestCase):
             perms=[USER_ADMIN_PANEL_PERMISSION, LOCATIONS_ADMIN_PANEL_PERMISSION]
         )
 
-        cls.poi_type_health = PointOfInterestTypeFactory(name="Health Facility")
-        cls.poi_type_school = PointOfInterestTypeFactory(name="School")
-        cls.poi_type_other = PointOfInterestTypeFactory(name="Other")
+        cls.poi_type_health = PointOfInterestTypeFactory(name="Health Facility", type_role="PRIMARY")
+        cls.poi_type_school = PointOfInterestTypeFactory(name="School", type_role="PRIMARY")
+        cls.poi_type_other = PointOfInterestTypeFactory(name="Other", type_role="PRIMARY")
+        cls.poi_secondary_type_clinic = PointOfInterestTypeFactory(name="Clinic", type_role="SECONDARY")
+        cls.poi_secondary_type_pharmacy = PointOfInterestTypeFactory(name="Pharmacy", type_role="SECONDARY")
 
         cls.org1 = OrganizationFactory(name="IP Org 1", vendor_number="IP_VN_001")
         cls.partner_org1 = PartnerFactory(organization=cls.org1)
@@ -70,10 +72,10 @@ class TestLocationAdminViewSetImport(BaseTenantTestCase):
     def test_import_locations_successful(self):
         self.assertEqual(PointOfInterest.objects.count(), 1)
         data_rows = [
-            [json.dumps(["IP_VN_001"]), "New Clinic A", "Health Facility", 43.1, 25.1, "PCODE_A"],
-            [json.dumps(["IP_VN_001", "IP_VN_002"]), "New School B", "School", 43.2, 25.2, "PCODE_B"],
-            [json.dumps([]), "Warehouse C", "Other", 43.3, 25.3, "PCODE_C"],
-            ["", "Distribution Point D", "Other", 43.4, 25.4, "PCODE_D"],
+            [json.dumps(["IP_VN_001"]), "New Clinic A", "Health Facility", "Clinic", 43.1, 25.1, "PCODE_A"],
+            [json.dumps(["IP_VN_001", "IP_VN_002"]), "New School B", "School", "", 43.2, 25.2, "PCODE_B"],
+            [json.dumps([]), "Warehouse C", "Other", None, 43.3, 25.3, "PCODE_C"],
+            ["", "Distribution Point D", "Other", "Pharmacy", 43.4, 25.4, "PCODE_D"],
         ]
         xlsx_file = self._create_locations_xlsx_file(data_rows)
         xlsx_file.name = "success_locations_import.xlsx"
@@ -93,6 +95,7 @@ class TestLocationAdminViewSetImport(BaseTenantTestCase):
         loc_a = PointOfInterest.objects.get(p_code="PCODE_A")
         self.assertEqual(loc_a.name, "New Clinic A")
         self.assertEqual(loc_a.poi_type, self.poi_type_health)
+        self.assertEqual(loc_a.secondary_type, self.poi_secondary_type_clinic)
         self.assertEqual(loc_a.point.y, 43.1)  # Latitude
         self.assertEqual(loc_a.point.x, 25.1)  # Longitude
         self.assertFalse(loc_a.is_active)
@@ -103,13 +106,16 @@ class TestLocationAdminViewSetImport(BaseTenantTestCase):
         loc_b = PointOfInterest.objects.get(p_code="PCODE_B")
         self.assertEqual(loc_b.name, "New School B")
         self.assertEqual(loc_b.poi_type, self.poi_type_school)
+        self.assertIsNone(loc_b.secondary_type)
         self.assertIn(self.partner_org1, loc_b.partner_organizations.all())
         self.assertIn(self.partner_org2, loc_b.partner_organizations.all())
         self.assertEqual(loc_b.partner_organizations.count(), 2)
 
         loc_c = PointOfInterest.objects.get(p_code="PCODE_C")
+        self.assertIsNone(loc_c.secondary_type)
         self.assertEqual(loc_c.partner_organizations.count(), 0)
         loc_d = PointOfInterest.objects.get(p_code="PCODE_D")
+        self.assertEqual(loc_d.secondary_type, self.poi_secondary_type_pharmacy)
         self.assertEqual(loc_d.partner_organizations.count(), 0)
 
     def test_import_locations_no_file_provided(self):
@@ -127,13 +133,13 @@ class TestLocationAdminViewSetImport(BaseTenantTestCase):
     def test_import_locations_with_some_invalid_rows_returns_error_file(self):
         initial_poi_count = PointOfInterest.objects.count()
         data_rows = [
-            [json.dumps(["IP_VN_001"]), "Valid Location 1", "School", 5.5, 6.6, "PCODE_VALID1"],  # Valid
-            ["", "Another Name", "School", 7.7, 8.8, "PCODE_EXISTING"],  # Invalid: Duplicate P-Code
-            ["", "Existing General Hospital", "Health Facility", 1.1, 2.2, "PCODE_DUPE_NAME"],  # Invalid: Duplicate Name
-            ["", "Bad Type Loc", "NonExistentType", 3.3, 4.4, "PCODE_BAD_TYPE"],  # Invalid: POI Type
-            ["", "Bad Coords", "School", "not-a-latitude", 5.5, "PCODE_BAD_COORDS"],  # Invalid: Latitude
-            ["not-a-json", "Bad IP JSON", "School", 6.6, 7.7, "PCODE_BAD_JSON"],  # Invalid: IP Numbers JSON format
-            [json.dumps(["NON_EXISTENT_VN"]), "Bad IP", "Other", 8.8, 9.9, "PCODE_BAD_IP"],  # Invalid: Vendor number
+            [json.dumps(["IP_VN_001"]), "Valid Location 1", "School", "", 5.5, 6.6, "PCODE_VALID1"],  # Valid
+            ["", "Another Name", "School", "", 7.7, 8.8, "PCODE_EXISTING"],  # Invalid: Duplicate P-Code
+            ["", "Existing General Hospital", "Health Facility", "", 1.1, 2.2, "PCODE_DUPE_NAME"],  # Invalid: Duplicate Name
+            ["", "Bad Type Loc", "NonExistentType", "", 3.3, 4.4, "PCODE_BAD_TYPE"],  # Invalid: POI Type
+            ["", "Bad Coords", "School", "", "not-a-latitude", 5.5, "PCODE_BAD_COORDS"],  # Invalid: Latitude
+            ["not-a-json", "Bad IP JSON", "School", "", 6.6, 7.7, "PCODE_BAD_JSON"],  # Invalid: IP Numbers JSON format
+            [json.dumps(["NON_EXISTENT_VN"]), "Bad IP", "Other", "", 8.8, 9.9, "PCODE_BAD_IP"],  # Invalid: Vendor number
         ]
         xlsx_file = self._create_locations_xlsx_file(data_rows)
         xlsx_file.name = "partial_fail_locations_import.xlsx"
@@ -214,8 +220,8 @@ class TestLocationAdminViewSetImport(BaseTenantTestCase):
         """
         initial_poi_count = PointOfInterest.objects.count()
         data_rows = [
-            ["", "First with Dupe P-Code", "School", 10.1, 10.2, "PCODE_INTERNAL_DUPE"],
-            ["", "Second with Dupe P-Code", "School", 11.1, 11.2, "PCODE_INTERNAL_DUPE"],
+            ["", "First with Dupe P-Code", "School", "", 10.1, 10.2, "PCODE_INTERNAL_DUPE"],
+            ["", "Second with Dupe P-Code", "School", "", 11.1, 11.2, "PCODE_INTERNAL_DUPE"],
         ]
         xlsx_file = self._create_locations_xlsx_file(data_rows)
         xlsx_file.name = "internal_dupe_pcode.xlsx"
@@ -248,7 +254,7 @@ class TestLocationAdminViewSetImport(BaseTenantTestCase):
         are caught by the serializer's default validation.
         """
         data_rows = [
-            ["", "", "", 20.1, 20.2, ""],
+            ["", "", "", "", 20.1, 20.2, ""],
         ]
         xlsx_file = self._create_locations_xlsx_file(data_rows)
         xlsx_file.name = "missing_required.xlsx"
@@ -279,7 +285,7 @@ class TestLocationAdminViewSetImport(BaseTenantTestCase):
         mock_poi_create.side_effect = IntegrityError("Forced database error for testing.")
 
         data_rows = [
-            ["", "Location that will fail", "School", 30.1, 30.2, "PCODE_DB_FAIL"],
+            ["", "Location that will fail", "School", "", 30.1, 30.2, "PCODE_DB_FAIL"],
         ]
         xlsx_file = self._create_locations_xlsx_file(data_rows)
         xlsx_file.name = "db_error.xlsx"
@@ -304,3 +310,59 @@ class TestLocationAdminViewSetImport(BaseTenantTestCase):
         error_message = sheet.cell(row=3, column=errors_col_idx).value
 
         self.assertEqual(error_message, "Forced database error for testing.")
+
+    def test_import_locations_with_invalid_secondary_type(self):
+        initial_poi_count = PointOfInterest.objects.count()
+        data_rows = [
+            ["", "Loc NonExistent Secondary", "School", "NonExistentSecondary", 1.1, 2.2, "PCODE_BAD_SEC1"],
+            ["", "Loc Primary As Secondary", "School", "Health Facility", 3.3, 4.4, "PCODE_BAD_SEC2"],
+        ]
+        xlsx_file = self._create_locations_xlsx_file(data_rows)
+        xlsx_file.name = "invalid_secondary_type.xlsx"
+
+        response = self.forced_auth_req(
+            'post',
+            self.import_url,
+            user=self.admin_user,
+            data={'file': xlsx_file},
+            request_format='multipart'
+        )
+
+        self.assertIsInstance(response, HttpResponse)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(PointOfInterest.objects.count(), initial_poi_count)
+
+        returned_file_content = io.BytesIO(response.content)
+        workbook = openpyxl.load_workbook(returned_file_content)
+        sheet = workbook.active
+        errors_col_idx = sheet.max_column
+
+        self.assertIn("Secondary point of interest type does not exist", sheet.cell(row=3, column=errors_col_idx).value)
+        self.assertIn("Point of interest type is not a secondary type", sheet.cell(row=4, column=errors_col_idx).value)
+
+    def test_import_locations_with_secondary_type_as_primary_type(self):
+        initial_poi_count = PointOfInterest.objects.count()
+        data_rows = [
+            ["", "Loc Secondary As Primary", "Clinic", "", 1.1, 2.2, "PCODE_SEC_AS_PRI"],
+        ]
+        xlsx_file = self._create_locations_xlsx_file(data_rows)
+        xlsx_file.name = "secondary_as_primary.xlsx"
+
+        response = self.forced_auth_req(
+            'post',
+            self.import_url,
+            user=self.admin_user,
+            data={'file': xlsx_file},
+            request_format='multipart'
+        )
+
+        self.assertIsInstance(response, HttpResponse)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(PointOfInterest.objects.count(), initial_poi_count)
+
+        returned_file_content = io.BytesIO(response.content)
+        workbook = openpyxl.load_workbook(returned_file_content)
+        sheet = workbook.active
+        errors_col_idx = sheet.max_column
+
+        self.assertIn("Point of interest type is not a primary type", sheet.cell(row=3, column=errors_col_idx).value)
