@@ -93,7 +93,6 @@ stages:
 
     steps:
       - checkout: self
-        fetchDepth: 0
 
       - script: |
           docker run -d \
