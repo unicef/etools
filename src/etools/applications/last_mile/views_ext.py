@@ -14,6 +14,8 @@ from etools.applications.last_mile.serializers_ext import (
     IngestRowSerializer,
     MaterialIngestResultSerializer,
     MaterialIngestSerializer,
+    POIIngestResultSerializer,
+    PointOfInterestIngestSerializer,
     TransferIngestResultSerializer,
     UserListSerializer,
 )
@@ -22,6 +24,7 @@ from etools.applications.last_mile.services_ext import (
     InvalidDateFormatError,
     InvalidModelTypeError,
     MaterialIngestService,
+    PointOfInterestIngestService,
     TransferIngestService,
 )
 from etools.applications.last_mile.utils_ext import stream_queryset_as_json
@@ -39,6 +42,22 @@ class VisionIngestMaterialsApiView(APIView):
         )
 
         output_serializer = MaterialIngestResultSerializer(ingest_result)
+
+        return Response(output_serializer.data, status=status.HTTP_200_OK)
+
+
+class VisionIngestPointOfInterestApiView(APIView):
+    permission_classes = (LMSMAPIPermission,)
+
+    def post(self, request):
+        input_serializer = PointOfInterestIngestSerializer(data=request.data, many=True)
+        input_serializer.is_valid(raise_exception=True)
+
+        ingest_result = PointOfInterestIngestService().ingest_pois(
+            validated_data=input_serializer.validated_data, user=request.user
+        )
+
+        output_serializer = POIIngestResultSerializer(ingest_result)
 
         return Response(output_serializer.data, status=status.HTTP_200_OK)
 

@@ -1,12 +1,17 @@
+import json
+import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Dict, List
 
-from django.db import connection
+from django.contrib.gis.geos import Point
+from django.db import connection, transaction
 from django.db.models import QuerySet, Value
 
 from etools.applications.last_mile import models
 from etools.applications.last_mile.validator_ext import ItemValidator, ValidatorEXT
+from etools.applications.organizations.models import Organization
+from etools.applications.partners.models import PartnerOrganization
 
 
 @dataclass
@@ -14,6 +19,13 @@ class IngestResultDTO:
     created_count: int
     skipped_existing_in_db: List[str]
     skipped_duplicate_in_payload: List[str]
+
+
+@dataclass
+class POIIngestResultDTO:
+    created_count: int = 0
+    updated_count: int = 0
+    skipped_pois: List[Dict[str, Any]] = field(default_factory=list)
 
 
 class MaterialIngestService:
@@ -93,6 +105,120 @@ class MaterialIngestService:
             skipped_existing_in_db=skipped_due_to_db_duplicate,
             skipped_duplicate_in_payload=skipped_due_to_payload_duplicate
         )
+
+
+class PointOfInterestIngestService:
+
+    @transaction.atomic
+    def ingest_pois(self, validated_data: List[Dict[str, Any]], user) -> POIIngestResultDTO:
+        report = POIIngestResultDTO()
+
+        for idx, row in enumerate(validated_data):
+            name = row['name']
+            vendor_number = row['partner_org_vendor_no']
+            poi_type_name = row.get('poi_type', '')
+            private = row.get('private', False)
+            latitude = row.get('latitude', '')
+            longitude = row.get('longitude', '')
+            p_code = row.get('p_code', '')
+
+            try:
+                point = Point(float(longitude), float(latitude))
+            except (TypeError, ValueError):
+                logging.error(f'row# {idx} Long/Lat Format error: {longitude}, {latitude}. skipping row..')
+                report.skipped_pois.append({
+                    "reason": f"Invalid coordinates: longitude={longitude}, latitude={latitude}",
+                    "data": {"name": name, "p_code": p_code}
+                })
+                continue
+
+            l_consignee_code = row.get('l_consignee_code', '')
+            description = row.get('description', '')
+            secondary_type_name = row.get('secondary_type', '')
+
+            if l_consignee_code:
+                if not l_consignee_code.startswith('L') or len(l_consignee_code) != 10:
+                    report.skipped_pois.append({
+                        "reason": f"Invalid L-Consignee code format: '{l_consignee_code}'. Must start with 'L' and be 10 characters.",
+                        "data": {"name": name, "p_code": p_code}
+                    })
+                    continue
+
+                # Check uniqueness: exclude the POI being updated (same p_code)
+                exclude_kwargs = {'p_code': p_code} if p_code else {}
+                duplicate_qs = models.PointOfInterest.all_objects.filter(
+                    l_consignee_code=l_consignee_code, is_active=True
+                ).exclude(**exclude_kwargs)
+                if duplicate_qs.exists():
+                    report.skipped_pois.append({
+                        "reason": f"L-Consignee code '{l_consignee_code}' is already assigned to another active POI.",
+                        "data": {"name": name, "p_code": p_code}
+                    })
+                    continue
+
+            poi_type_obj = None
+            if poi_type_name:
+                poi_type_obj, _ = models.PointOfInterestType.objects.get_or_create(
+                    name=poi_type_name,
+                    defaults={'category': poi_type_name.lower().replace(' ', '_'), 'type_role': models.PointOfInterestType.TypeRole.PRIMARY}
+                )
+
+            secondary_type_obj = None
+            if secondary_type_name:
+                secondary_type_obj, _ = models.PointOfInterestType.objects.get_or_create(
+                    name=secondary_type_name,
+                    defaults={
+                        'category': secondary_type_name.lower().replace(' ', '_'),
+                        'type_role': models.PointOfInterestType.TypeRole.SECONDARY,
+                    }
+                )
+
+            try:
+                org = Organization.objects.select_related('partner').filter(vendor_number=vendor_number).get()
+                partner_org_obj = org.partner
+            except (Organization.DoesNotExist, PartnerOrganization.DoesNotExist):
+                logging.error(f"The Organization with vendor number '{vendor_number}' does not exist.")
+                report.skipped_pois.append({
+                    "reason": f"Organization with vendor number '{vendor_number}' does not exist",
+                    "data": {"name": name, "p_code": p_code}
+                })
+                continue
+
+            defaults = {
+                'private': private,
+                'point': point,
+                'name': name,
+                'status': models.PointOfInterest.ApprovalStatus.APPROVED,
+                'created_by': user,
+                'review_notes': f'Location created by {user.get_full_name()} on {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}. Payload received: {json.dumps(row)}',
+            }
+            if poi_type_obj:
+                defaults['poi_type'] = poi_type_obj
+            if secondary_type_obj:
+                defaults['secondary_type'] = secondary_type_obj
+            if l_consignee_code:
+                defaults['l_consignee_code'] = l_consignee_code
+            if description:
+                defaults['description'] = description
+
+            if p_code:
+                poi_obj, created = models.PointOfInterest.all_objects.update_or_create(
+                    p_code=p_code,
+                    defaults=defaults
+                )
+            else:
+                poi_obj = models.PointOfInterest(**defaults)
+                poi_obj.save()
+                created = True
+
+            poi_obj.partner_organizations.add(partner_org_obj)
+
+            if created:
+                report.created_count += 1
+            else:
+                report.updated_count += 1
+
+        return report
 
 
 class ExportError(Exception):

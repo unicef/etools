@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-29 13:11+0000\n"
+"POT-Creation-Date: 2026-02-12 13:51+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -299,6 +299,9 @@ msgstr ""
 msgid "TPM Concerns"
 msgstr ""
 
+msgid "One or more email addresses are invalid."
+msgstr "Um ou mais endereços de e-mail são inválidos."
+
 msgid "History"
 msgstr "História"
 
@@ -352,6 +355,18 @@ msgstr "Justificativa do Monitoramento de Campo Anual"
 
 msgid "Templates"
 msgstr "Modelos"
+
+msgid "Report can only be sent by email when status is completed."
+msgstr "O relatório só pode ser enviado por e-mail quando o status estiver concluído."
+
+msgid "Failed to generate PDF report."
+msgstr "Falha ao gerar relatório PDF."
+
+msgid "Report sent successfully by email."
+msgstr "Relatório enviado com sucesso por e-mail."
+
+msgid "Failed to send email. Please try again later."
+msgstr "Falha ao enviar e-mail. Por favor, tente novamente mais tarde."
 
 msgid "Attachments"
 msgstr "Anexos"

@@ -1078,6 +1078,124 @@ class TestRssAdminFieldMonitoringApi(BaseTenantTestCase):
         self.assertGreater(len(results), 0)
         self.assertTrue(any('location' in log.get('change_message', '').lower() for log in results))
 
+    def test_monitoring_activity_logs_filter_search_full_name(self):
+        """Searching by full name (first + last) must return results.
+
+        Previously the raw value was passed directly to icontains, so 'John Doe'
+        would not match a user whose first_name='John' and last_name='Doe'.
+        """
+        activity = MonitoringActivityFactory()
+        url = reverse('rss_admin:rss-admin-monitoring-activities-logs', kwargs={'pk': activity.pk})
+
+        author = UserFactory(first_name='John', last_name='Doe')
+        other = UserFactory(first_name='Jane', last_name='Smith')
+
+        log_change(user=author, obj=activity, change_message="Changed by John")
+        log_change(user=other, obj=activity, change_message="Changed by Jane")
+
+        # Full-name search should match only the entry by John Doe
+        resp = self.forced_auth_req('get', url, user=self.user, data={'search': 'John Doe'})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        results = resp.data['results']
+        self.assertEqual(len(results), 1)
+        self.assertIn('John', results[0]['change_message'])
+
+        # Searching a name that belongs to no user should return nothing
+        resp = self.forced_auth_req('get', url, user=self.user, data={'search': 'Jane Doe'})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(resp.data['results']), 0)
+
+    def _setup_completed_activity_with_hact(self):
+        """Helper: create a completed activity with an answered HACT question.
+
+        Simulates the state after a real completion: the partner's PV counter
+        has been incremented by update_one_hact_value() (via update_one=True).
+        Returns (activity, partner, aq).
+        """
+        partner = PartnerFactory()
+        activity = MonitoringActivityFactory(
+            status=MonitoringActivity.STATUS_COMPLETED,
+            partners=[partner],
+            end_date=date.today(),
+            completion_date=date.today(),
+        )
+        question = QuestionFactory(is_hact=True, level='partner', is_active=True)
+        aq = ActivityQuestionFactory(
+            monitoring_activity=activity,
+            question=question,
+            partner=partner,
+            is_enabled=True,
+        )
+        ActivityQuestionOverallFinding.objects.create(activity_question=aq, value=True)
+
+        # Simulate what update_one_hact_value() would have done on completion.
+        partner.update_programmatic_visits(event_date=activity.end_date, update_one=True)
+
+        return activity, partner, aq
+
+    def test_revert_completed_to_submitted_clears_completion_date_and_recalculates_hact(self):
+        """PATCH status completed -> submitted must clear completion_date and recalculate HACT."""
+        activity, partner, _aq = self._setup_completed_activity_with_hact()
+
+        # Sanity: partner counter was incremented on completion.
+        partner.refresh_from_db()
+        self.assertEqual(partner.hact_values['programmatic_visits']['completed']['total'], 1)
+
+        url = reverse('rss_admin:rss-admin-monitoring-activities-detail', kwargs={'pk': activity.pk})
+        resp = self.forced_auth_req('patch', url, user=self.user, data={'status': MonitoringActivity.STATUS_SUBMITTED})
+        self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
+
+        activity.refresh_from_db()
+        self.assertEqual(activity.status, MonitoringActivity.STATUS_SUBMITTED)
+        self.assertIsNone(activity.completion_date)
+
+        # HACT counter must be recalculated back to 0 (activity is no longer completed).
+        partner.refresh_from_db()
+        self.assertEqual(partner.hact_values['programmatic_visits']['completed']['total'], 0)
+
+    def test_revert_completed_to_any_other_status_recalculates_hact(self):
+        """PATCH status completed -> data_collection must also recalculate HACT."""
+        activity, partner, _aq = self._setup_completed_activity_with_hact()
+
+        partner.refresh_from_db()
+        self.assertEqual(partner.hact_values['programmatic_visits']['completed']['total'], 1)
+
+        url = reverse('rss_admin:rss-admin-monitoring-activities-detail', kwargs={'pk': activity.pk})
+        resp = self.forced_auth_req(
+            'patch', url, user=self.user,
+            data={'status': MonitoringActivity.STATUS_DATA_COLLECTION},
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
+
+        activity.refresh_from_db()
+        self.assertEqual(activity.status, MonitoringActivity.STATUS_DATA_COLLECTION)
+        self.assertIsNone(activity.completion_date)
+
+        partner.refresh_from_db()
+        self.assertEqual(partner.hact_values['programmatic_visits']['completed']['total'], 0)
+
+    def test_non_completed_status_change_does_not_touch_hact(self):
+        """PATCH status between non-completed statuses must not alter HACT counts."""
+        partner = PartnerFactory()
+        # Manually bump the counter to a known value.
+        partner.hact_values['programmatic_visits']['completed']['total'] = 3
+        partner.save()
+
+        activity = MonitoringActivityFactory(
+            status=MonitoringActivity.STATUS_SUBMITTED,
+            partners=[partner],
+        )
+
+        url = reverse('rss_admin:rss-admin-monitoring-activities-detail', kwargs={'pk': activity.pk})
+        resp = self.forced_auth_req(
+            'patch', url, user=self.user,
+            data={'status': MonitoringActivity.STATUS_REPORT_FINALIZATION},
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK, resp.data)
+
+        partner.refresh_from_db()
+        self.assertEqual(partner.hact_values['programmatic_visits']['completed']['total'], 3)
+
     def test_monitoring_activity_logs_filter_combined(self):
         """Test that monitoring activity logs endpoint supports combined filtering"""
         activity = MonitoringActivityFactory()
