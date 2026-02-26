@@ -1265,6 +1265,7 @@ class LocationImportSerializer(serializers.Serializer):
     p_code_location = serializers.CharField()
     location_name = serializers.CharField()
     primary_type_name = serializers.CharField()
+    secondary_type_name = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     latitude = serializers.CharField()
     longitude = serializers.CharField()
     ip_numbers = serializers.SlugRelatedField(
@@ -1301,6 +1302,18 @@ class LocationImportSerializer(serializers.Serializer):
         poi_type = models.PointOfInterestType.objects.filter(name=value).first()
         if not poi_type:
             raise serializers.ValidationError("Point of interest type does not exist")
+        if poi_type.type_role != models.PointOfInterestType.TypeRole.PRIMARY:
+            raise serializers.ValidationError("Point of interest type is not a primary type")
+        return poi_type
+
+    def validate_secondary_type_name(self, value):
+        if not value:
+            return None
+        poi_type = models.PointOfInterestType.objects.filter(name=value).first()
+        if not poi_type:
+            raise serializers.ValidationError("Secondary point of interest type does not exist")
+        if poi_type.type_role != models.PointOfInterestType.TypeRole.SECONDARY:
+            raise serializers.ValidationError("Point of interest type is not a secondary type")
         return poi_type
 
     def validate_latitude(self, value):
@@ -1320,6 +1333,7 @@ class LocationImportSerializer(serializers.Serializer):
         p_code_location = validated_data.pop('p_code_location')
         location_name = validated_data.pop('location_name')
         primary_type_name = validated_data.pop('primary_type_name')
+        secondary_type_name = validated_data.pop('secondary_type_name', None)
         latitude = validated_data.pop('latitude')
         longitude = validated_data.pop('longitude')
         try:
@@ -1328,6 +1342,7 @@ class LocationImportSerializer(serializers.Serializer):
                     p_code=p_code_location,
                     name=location_name,
                     poi_type=primary_type_name,
+                    secondary_type=secondary_type_name,
                     point=Point(longitude, latitude),
                     created_by=created_by,
                     is_active=False,
