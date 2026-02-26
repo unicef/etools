@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-01-08 11:54+0000\n"
+"POT-Creation-Date: 2026-01-23 07:14+0000\n"
 "Language: ru\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -241,6 +241,11 @@ msgstr "Офис ЮНИСЕФ"
 
 msgid "Contingency PD?"
 msgstr "ПД на случай ЧС?"
+
+#, fuzzy
+#| msgid "Humanitarian"
+msgid "Humanitarian SPD"
+msgstr "Гуманитарный"
 
 msgid "Cluster"
 msgstr "Кластер"
@@ -941,6 +946,21 @@ msgstr "Гуманитарный"
 
 msgid "Date first sent to Partner"
 msgstr "Дата первой отправки партнеру"
+
+msgid "Open selection"
+msgstr "Открытый выбор"
+
+msgid "Direct selection"
+msgstr "Прямой выбор"
+
+msgid "Partner Selection Modality"
+msgstr "Способ выбора партнера"
+
+msgid ""
+"Select how the partner was selected in UNPP (Open selection or Direct "
+"selection)."
+msgstr ""
+"Выберите, как был выбран партнер в UNPP (Открытый выбор или Прямой выбор)."
 
 msgid "Context"
 msgstr "Контекст"

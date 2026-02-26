@@ -3,6 +3,7 @@ import itertools
 from django.contrib.admin.models import ADDITION, CHANGE, DELETION, LogEntry
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError as DjangoValidationError
+from django.db import models
 
 from rest_framework import serializers
 from unicef_attachments.fields import AttachmentSingleFileField
@@ -326,10 +327,76 @@ class EngagementStatusUpdateMixin:
 
         - `cancelled -> partner_contacted`
         - `final -> cancelled`
+        - `partner_contacted -> report_submitted` (with RSS Admin specific validation)
 
         This is separate from `_handle_display_status_patch` because these are real workflow state
         changes (FSM/DB status changes), not merely changes to the computed progress stage.
         """
+        # Handle submit transition with RSS Admin specific validation
+        if (instance.status == Engagement.STATUSES.partner_contacted and
+                new_status == Engagement.STATUSES.report_submitted):
+            validated_data.pop('status', None)
+
+            errors = {}
+
+            # Common required date fields for all engagement types (from EngagementSubmitReportRequiredFieldsCheck)
+            required_date_fields = [
+                'date_of_field_visit',
+                'date_of_draft_report_to_ip',
+                'date_of_comments_by_ip',
+                'date_of_draft_report_to_unicef',
+                'date_of_comments_by_unicef',
+            ]
+            for field in required_date_fields:
+                if not getattr(instance, field, None):
+                    errors[field] = ['This field is required.']
+
+            # Common required: Report attachments (from EngagementHasReportAttachmentsCheck)
+            if not instance.report_attachments.filter(file_type__name='report').exists():
+                errors['report_attachments'] = ['You should attach report.']
+
+            # Engagement type specific validations
+            if instance.engagement_type == Engagement.TYPES.audit:
+                # Required: Currency of Report (from serializer extra_kwargs)
+                if not instance.currency_of_report:
+                    errors['currency_of_report'] = ['This field is required.']
+
+                # Required: Audit Opinion (from AuditSubmitReportRequiredFieldsCheck)
+                if not instance.audit_opinion:
+                    errors['audit_opinion'] = ['This field is required.']
+
+            elif instance.engagement_type == Engagement.TYPES.sc:
+                # Required: Currency of Report (SpotCheckSerializer keeps it from EngagementSerializer)
+                if not instance.currency_of_report:
+                    errors['currency_of_report'] = ['This field is required.']
+
+                # Required: Internal Controls (from SPSubmitReportRequiredFieldsCheck)
+                if not instance.internal_controls:
+                    errors['internal_controls'] = ['This field is required.']
+
+            elif instance.engagement_type == Engagement.TYPES.sa:
+                # SpecialAudit: No currency_of_report (removed from serializer)
+                # Required: Specific Procedures (from SpecialAuditSubmitRelatedModelsCheck)
+                if instance.specific_procedures.filter(
+                    models.Q(finding__isnull=True) | models.Q(finding='')
+                ).exists():
+                    errors['specific_procedures'] = ['You should provide results of performing specific procedures.']
+
+            # MicroAssessment: Risk categories validation is complex and handled by transition conditions
+            # No additional simple field validation needed here
+
+            if errors:
+                raise serializers.ValidationError(errors)
+
+            # Update other fields first
+            instance = self._base_update(instance, validated_data)
+
+            # Execute the submit transition
+            instance.submit()
+            instance.save()
+            instance.refresh_from_db()
+            return instance
+
         # Allow reopening cancelled -> partner_contacted (requires send_back_comment)
         if instance.status == Engagement.STATUSES.cancelled and new_status == Engagement.DISPLAY_STATUSES.partner_contacted:
             validated_data.pop('status', None)
@@ -412,7 +479,9 @@ class EngagementStatusUpdateMixin:
             return None
 
         old_status = instance.status
-        status_labels = dict(Engagement.STATUSES)
+        # Render both FSM status codes and display-status codes as human labels in errors.
+        fsm_status_labels = dict(Engagement.STATUSES)
+        display_status_labels = dict(Engagement.DISPLAY_STATUSES)
 
         # Remove status from validated_data - we'll handle it via FSM
         validated_data.pop('status', None)
@@ -433,8 +502,8 @@ class EngagementStatusUpdateMixin:
         transition_method = transition_map.get(transition_key)
 
         if not transition_method:
-            old_label = str(status_labels.get(old_status, old_status))
-            new_label = str(status_labels.get(new_status, new_status))
+            old_label = str(fsm_status_labels.get(old_status, display_status_labels.get(old_status, old_status)))
+            new_label = str(fsm_status_labels.get(new_status, display_status_labels.get(new_status, new_status)))
             raise serializers.ValidationError({
                 'status': [f'Invalid status transition from {old_label} to {new_label}']
             })

@@ -178,6 +178,7 @@ class TestStockManagementViewSet(BaseTenantTestCase):
                     "quantity": 10,
                     "uom": "CAR",
                     "item_name": "BatchX",
+                    "expiry_date": "2022-01-01",
                 }
             ],
         }
@@ -251,6 +252,7 @@ class TestStockManagementViewSet(BaseTenantTestCase):
                     "quantity": 5,
                     "uom": "BAG",
                     "item_name": "BatchY",
+                    "expiry_date": "2022-01-01",
                 }
             ],
         }
@@ -491,6 +493,7 @@ class TestStockManagementViewSet(BaseTenantTestCase):
                     "quantity": 10,
                     "uom": "CAR",
                     "item_name": "BatchExtra",
+                    "expiry_date": "2023-01-01",
                     "extra_item_field": "ignored too",
                 }
             ],
@@ -674,6 +677,7 @@ class TestStockManagementViewSet(BaseTenantTestCase):
                     "quantity": 10,
                     "uom": "CAR",
                     "item_name": "批次أ-测试-🏷️",
+                    "expiry_date": "2023-01-01",
                 }
             ],
         }
@@ -701,6 +705,7 @@ class TestStockManagementViewSet(BaseTenantTestCase):
                     "quantity": 10,
                     "uom": "CAR",
                     "item_name": max_length_batch,
+                    "expiry_date": "2023-01-01",
                 }
             ],
         }
@@ -751,18 +756,21 @@ class TestStockManagementViewSet(BaseTenantTestCase):
                     "quantity": 10,
                     "uom": "CAR",
                     "item_name": "Batch1",
+                    "expiry_date": "2023-01-01",
                 },
                 {
                     "material": material.pk,
                     "quantity": 20,
                     "uom": "CAR",
                     "item_name": "Batch2",
+                    "expiry_date": "2023-01-01",
                 },
                 {
                     "material": material.pk,
                     "quantity": 30,
                     "uom": "CAR",
                     "item_name": "Batch3",
+                    "expiry_date": "2023-01-01",
                 },
             ],
         }
@@ -787,6 +795,7 @@ class TestStockManagementViewSet(BaseTenantTestCase):
                     "quantity": i + 1,
                     "uom": "CAR",
                     "item_name": f"BatchLarge{i:03d}",
+                    "expiry_date": "2023-01-01",
                 }
             )
 
@@ -807,10 +816,10 @@ class TestStockManagementViewSet(BaseTenantTestCase):
         material = MaterialFactory()
 
         incomplete_items = [
-            {"material": material.pk, "quantity": 10, "uom": "CAR"},
-            {"material": material.pk, "uom": "CAR", "item_name": "Batch1"},
-            {"quantity": 10, "uom": "CAR", "item_name": "Batch2"},
-            {"material": material.pk, "quantity": 10, "item_name": "Batch3"},
+            {"material": material.pk, "quantity": 10, "uom": ""},
+            {"material": material.pk, "uom": "CAR", "item_name": "Batch1", "expiry_date": "2023-01-01"},
+            {"quantity": 10, "uom": "", "item_name": "Batch2", "expiry_date": "2023-01-01"},
+            {"material": material.pk, "quantity": -1, "item_name": "Batch3", "expiry_date": "2023-01-01"},
         ]
 
         for i, item in enumerate(incomplete_items):
@@ -828,18 +837,35 @@ class TestStockManagementViewSet(BaseTenantTestCase):
                 f"Should fail for incomplete item: {item}",
             )
 
-    def test_create_transfer_item_with_empty_string_fields(self):
+    def test_create_transfer_with_batch_or_expiry_data(self):
         destination = PointOfInterestFactory(
-            partner_organizations=[self.partner], name="Empty String Dest"
+            partner_organizations=[self.partner], name="Dest transfer"
         )
         material = MaterialFactory()
 
-        empty_field_items = [
-            {"material": material.pk, "quantity": 10, "uom": "CAR", "item_name": ""},
-            {"material": material.pk, "quantity": 10, "uom": "", "item_name": "Batch1"},
-        ]
+        correct_item = {
+            "material": material.pk,
+            "quantity": 1,
+            "uom": "CAR",
+            "item_name": "BatchLarge",
+            "expiry_date": "2023-01-01",
+        }
 
-        for item in empty_field_items:
+        only_batch_id = {
+            "material": material.pk,
+            "quantity": 1,
+            "uom": "CAR",
+            "expiry_date": "2023-01-01",
+        }
+
+        only_expiry_date = {
+            "material": material.pk,
+            "quantity": 1,
+            "uom": "CAR",
+            "expiry_date": "2023-01-01",
+        }
+
+        for index, item in enumerate([correct_item, only_batch_id, only_expiry_date]):
             payload = {
                 "partner_organization": self.partner.pk,
                 "location": destination.pk,
@@ -848,7 +874,36 @@ class TestStockManagementViewSet(BaseTenantTestCase):
             response = self.forced_auth_req(
                 "post", self.url, user=self.partner_staff, data=payload
             )
-            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+            if index == 0:
+                self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+            elif index == 1 or index == 2:
+                self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+                self.assertIn("batch_id_mandatory_when_expiry_date_is_provided", str(response.data).lower())
+
+    def test_create_transfer_item_with_empty_string_fields(self):
+        destination = PointOfInterestFactory(
+            partner_organizations=[self.partner], name="Empty String Dest"
+        )
+        material = MaterialFactory()
+
+        empty_field_items = [
+            {"material": material.pk, "quantity": 10, "uom": "CAR", "item_name": ""},
+            {"material": material.pk, "quantity": 10, "uom": "", "item_name": "Batch1", "expiry_date": "2023-01-01"},
+        ]
+
+        for index, item in enumerate(empty_field_items):
+            payload = {
+                "partner_organization": self.partner.pk,
+                "location": destination.pk,
+                "items": [item],
+            }
+            response = self.forced_auth_req(
+                "post", self.url, user=self.partner_staff, data=payload
+            )
+            if index == 0:
+                self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+            else:
+                self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_search_with_unicode_characters(self):
         poi = PointOfInterestFactory(name="Unicode Search POI")
@@ -925,12 +980,14 @@ class TestStockManagementViewSet(BaseTenantTestCase):
                     "quantity": 10,
                     "uom": "CAR",
                     "item_name": "DuplicateBatch",
+                    "expiry_date": "2023-01-01",
                 },
                 {
                     "material": material.pk,
                     "quantity": 20,
                     "uom": "CAR",
                     "item_name": "DuplicateBatch",
+                    "expiry_date": "2023-01-01",
                 },
             ],
         }
@@ -1080,6 +1137,7 @@ class TestStockManagementViewSet(BaseTenantTestCase):
                     "quantity": 10,
                     "uom": "CAR",
                     "item_name": "BatchPending",
+                    "expiry_date": "2022-01-01",
                 }
             ],
         }
@@ -1124,6 +1182,7 @@ class TestStockManagementViewSet(BaseTenantTestCase):
                     "quantity": 10,
                     "uom": "CAR",
                     "item_name": "PendingBatch",
+                    "expiry_date": "2022-01-01",
                 }
             ],
         }

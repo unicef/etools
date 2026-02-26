@@ -311,7 +311,7 @@ class TransferSerializer(serializers.ModelSerializer):
 
     def get_items(self, obj):
         partner = self.context.get('partner')
-        if obj.transfer_type == obj.HANDOVER and obj.from_partner_organization == partner and obj.initial_items:
+        if obj.transfer_type in [obj.HANDOVER, obj.UNICEF_HANDOVER] and obj.from_partner_organization == partner and obj.initial_items:
             return obj.initial_items
         return ItemSerializer(obj.items.all(), many=True).data
 
@@ -340,6 +340,7 @@ class TransferBaseSerializer(AttachmentSerializerMixin, serializers.ModelSeriali
     def get_transfer_name(validated_data, transfer_type=None):
         prefix_mapping = {
             "HANDOVER": "HO",
+            "UNICEF_HANDOVER": "UHO",
             "WASTAGE": "W",
             "DELIVERY": "DW",
             "DISTRIBUTION": "DD",
@@ -492,6 +493,7 @@ class TransferCheckinSerializer(TransferBaseSerializer):
                 short_transfer.save()
                 short_transfer.refresh_from_db()
                 self.checkin_newtransfer_items(orig_items_dict, short_items, short_transfer)
+                short_transfer.hide_if_no_visible_items()
                 notify_wastage_transfer.delay(connection.schema_name, TransferNotificationSerializer(short_transfer).data, attachment_url, action='short_checkin')
 
             if surplus_items:
@@ -508,10 +510,12 @@ class TransferCheckinSerializer(TransferBaseSerializer):
                 surplus_transfer.save()
                 surplus_transfer.refresh_from_db()
                 self.checkin_newtransfer_items(orig_items_dict, surplus_items, surplus_transfer)
+                surplus_transfer.hide_if_no_visible_items()
                 notify_wastage_transfer.delay(connection.schema_name, TransferNotificationSerializer(surplus_transfer).data, attachment_url, action='surplus_checkin')
 
             instance = super().update(instance, validated_data)
             instance.items.exclude(material__partner_material__partner_organization=instance.partner_organization).update(hidden=True)
+            instance.hide_if_no_visible_items()
             excluded_item_ids = [item['id'] for item in short_items + surplus_items]
             items_to_update = instance.items.exclude(id__in=excluded_item_ids)
             self.update_base_quantity_and_base_uom(items_to_update)
@@ -622,7 +626,7 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
         return attachment_url
 
     def _create_partner_transfer(self, partner_id: int, validated_data: dict):
-        if validated_data['transfer_type'] == models.Transfer.HANDOVER:
+        if validated_data['transfer_type'] in [models.Transfer.HANDOVER, models.Transfer.UNICEF_HANDOVER]:
             validated_data['recipient_partner_organization_id'] = partner_id
             validated_data['from_partner_organization_id'] = self.context['request'].user.profile.organization.partner.pk
 
@@ -662,6 +666,23 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
             notify_dispensing_transfer.delay(connection.schema_name, TransferNotificationSerializer(self.instance).data, attachment_url)
 
         return self.instance
+
+
+class UnicefHandoverCheckoutSerializer(TransferCheckOutSerializer):
+    destination_point = serializers.IntegerField(required=True)
+    partner_id = serializers.IntegerField(required=True, allow_null=False)
+
+    def validate_transfer_type(self, value):
+        if value != models.Transfer.UNICEF_HANDOVER:  # Kept for future if we want to allow other transfer types
+            raise ValidationError(_('Only UNICEF_HANDOVER transfer type is allowed for this endpoint.'))
+        return value
+
+    def create(self, validated_data):
+        instance = super().create(validated_data)
+        instance.status = models.Transfer.COMPLETED
+        instance.destination_check_in_at = instance.origin_check_out_at
+        instance.save(update_fields=['status', 'destination_check_in_at'])
+        return instance
 
 
 class TransferEvidenceSerializer(AttachmentSerializerMixin, serializers.ModelSerializer):

@@ -51,58 +51,70 @@ def get_access_token():
         raise TokenRetrieveException('Error retrieving Access token\n' + str(ex))
 
 
-@cache_result(timeout=1800, key='lmsm_pbi_embed_url')
 def get_embed_url(pbi_headers, report_id=None):
-    logger.debug('Embed url not found in cache, Getting Embed Url')
-    workspace_id = pbi_config['WORKSPACE_ID']
     if not report_id:
         report_id = pbi_config['REPORT_ID']
 
-    url_to_call = f'https://api.powerbi.com/v1.0/myorg/groups/{workspace_id}/reports/{report_id}'
+    cache_key = f'pbi_embed_url_{report_id}'
 
-    retry_times = 9
-    while retry_times > 0:
-        try:
-            api_response = requests.get(url_to_call, headers=pbi_headers)
-        except requests.exceptions.ConnectionError:
-            retry_times -= 1
-            time.sleep(0.3)
-            continue
-        else:
-            if api_response.status_code == 200:
-                r = api_response.json()
-                return r["embedUrl"], r["datasetId"]
+    @cache_result(timeout=1800, key=cache_key)
+    def _get_embed_url_cached():
+        logger.debug('Embed url not found in cache, Getting Embed Url')
+        workspace_id = pbi_config['WORKSPACE_ID']
+
+        url_to_call = f'https://api.powerbi.com/v1.0/myorg/groups/{workspace_id}/reports/{report_id}'
+
+        retry_times = 9
+        while retry_times > 0:
+            try:
+                api_response = requests.get(url_to_call, headers=pbi_headers)
+            except requests.exceptions.ConnectionError:
+                retry_times -= 1
+                time.sleep(0.3)
+                continue
             else:
-                logger.debug(api_response.text)
-                raise TokenRetrieveException('Error retrieving Embed URL')
-    raise TokenRetrieveException('Connection error when retrieving Embed url\n')
+                if api_response.status_code == 200:
+                    r = api_response.json()
+                    return r["embedUrl"], r["datasetId"]
+                else:
+                    logger.debug(api_response.text)
+                    raise TokenRetrieveException('Error retrieving Embed URL')
+        raise TokenRetrieveException('Connection error when retrieving Embed url\n')
+
+    return _get_embed_url_cached()
 
 
-@cache_result(timeout=1800, key='lmsm_pbi_embed_token')
 def get_embed_token(dataset_id, pbi_headers, report_id=None):
-    logger.debug('Token not found in cache, Getting Embed Token')
-    workspace_id = pbi_config['WORKSPACE_ID']
     if not report_id:
         report_id = pbi_config['REPORT_ID']
 
-    embed_token_api = 'https://api.powerbi.com/v1.0/myorg/GenerateToken'
-    request_body = {
-        "datasets": [{'id': dataset_id}],
-        "reports": [{'id': report_id}],
-        "targetWorkspaces": [{'id': workspace_id}]
-    }
-    retry_times = 3
-    while retry_times > 0:
-        try:
-            api_response = requests.post(embed_token_api, json=request_body, headers=pbi_headers)
-        except requests.exceptions.ConnectionError:
-            retry_times -= 1
-            time.sleep(0.3)
-            continue
-        else:
-            if api_response.status_code == 200:
-                return api_response.json()["token"]
-            else:
-                raise TokenRetrieveException('Error retrieving Embed Token')
+    cache_key = f'pbi_embed_token_{report_id}_{dataset_id}'
 
-    raise TokenRetrieveException('Connection error when retrieving Embed Token\n')
+    @cache_result(timeout=1800, key=cache_key)
+    def _get_embed_token_cached():
+        logger.debug('Token not found in cache, Getting Embed Token')
+        workspace_id = pbi_config['WORKSPACE_ID']
+
+        embed_token_api = 'https://api.powerbi.com/v1.0/myorg/GenerateToken'
+        request_body = {
+            "datasets": [{'id': dataset_id}],
+            "reports": [{'id': report_id}],
+            "targetWorkspaces": [{'id': workspace_id}]
+        }
+        retry_times = 3
+        while retry_times > 0:
+            try:
+                api_response = requests.post(embed_token_api, json=request_body, headers=pbi_headers)
+            except requests.exceptions.ConnectionError:
+                retry_times -= 1
+                time.sleep(0.3)
+                continue
+            else:
+                if api_response.status_code == 200:
+                    return api_response.json()["token"]
+                else:
+                    raise TokenRetrieveException('Error retrieving Embed Token')
+
+        raise TokenRetrieveException('Connection error when retrieving Embed Token\n')
+
+    return _get_embed_token_cached()

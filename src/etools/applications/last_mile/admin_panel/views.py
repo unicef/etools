@@ -112,10 +112,8 @@ class UserViewSet(ExportMixin,
         realms_prefetch = Prefetch(
             'realms',
             queryset=Realm.objects.filter(
-                is_active=True,
-                country__schema_name=schema_name,
-                group__name__in=ALERT_TYPES.keys()
-            ).select_related('group')
+                country__schema_name=schema_name
+            ).select_related('group', 'organization')
         )
 
         created_by_prefetch = Prefetch(
@@ -276,7 +274,7 @@ class LocationsViewSet(mixins.ListModelMixin,
     pagination_class = DynamicPageNumberPagination
     adminValidator = AdminPanelValidator()
 
-    queryset = models.PointOfInterest.all_objects.select_related(
+    queryset = models.PointOfInterest.all_objects.exclude(pk=1).select_related(  # We exclude UNICEF Warehouse
         "parent",
         "poi_type",
         "secondary_type",
@@ -310,22 +308,23 @@ class LocationsViewSet(mixins.ListModelMixin,
                 'parent__parent__parent__parent__geom'
             )
 
-        pending_subquery = models.Item.objects.filter(
-            transfer__destination_point_id=OuterRef('id'),
-            transfer__approval_status=models.Transfer.ApprovalStatus.PENDING,
-            hidden=False
-        ).values('transfer__destination_point_id').annotate(count=Count('id')).values('count')
+        if self.action != 'list_export_csv':
+            pending_subquery = models.Item.objects.filter(
+                transfer__destination_point_id=OuterRef('id'),
+                transfer__approval_status=models.Transfer.ApprovalStatus.PENDING,
+                hidden=False
+            ).values('transfer__destination_point_id').annotate(count=Count('id')).values('count')
 
-        approved_subquery = models.Item.objects.filter(
-            transfer__destination_point_id=OuterRef('id'),
-            transfer__approval_status=models.Transfer.ApprovalStatus.APPROVED,
-            hidden=False
-        ).values('transfer__destination_point_id').annotate(count=Count('id')).values('count')
+            approved_subquery = models.Item.objects.filter(
+                transfer__destination_point_id=OuterRef('id'),
+                transfer__approval_status=models.Transfer.ApprovalStatus.APPROVED,
+                hidden=False
+            ).values('transfer__destination_point_id').annotate(count=Count('id')).values('count')
 
-        self.queryset = self.queryset.annotate(
-            pending_approval=Coalesce(Subquery(pending_subquery, output_field=IntegerField()), Value(0)),
-            approved=Coalesce(Subquery(approved_subquery, output_field=IntegerField()), Value(0))
-        )
+            self.queryset = self.queryset.annotate(
+                pending_approval=Coalesce(Subquery(pending_subquery, output_field=IntegerField()), Value(0)),
+                approved=Coalesce(Subquery(approved_subquery, output_field=IntegerField()), Value(0))
+            )
 
         return self.queryset
 
@@ -719,6 +718,12 @@ class PointOfInterestTypeListView(mixins.ListModelMixin, mixins.CreateModelMixin
     permission_classes = [IsLMSMAdmin]
 
     def get_queryset(self):
+        only_primary_type = self.request.query_params.get('only_primary_type')
+        if only_primary_type == "1":
+            return models.PointOfInterestType.objects.filter(type_role=models.PointOfInterestType.TypeRole.PRIMARY).order_by('id')
+        only_secondary_type = self.request.query_params.get('only_secondary_type')
+        if only_secondary_type == "1":
+            return models.PointOfInterestType.objects.filter(type_role=models.PointOfInterestType.TypeRole.SECONDARY).order_by('id')
         return models.PointOfInterestType.objects.all().order_by('id')
 
     @action(
@@ -735,10 +740,11 @@ class PointOfInterestTypeListView(mixins.ListModelMixin, mixins.CreateModelMixin
         allowed_secondary_ids = models.PointOfInterestTypeMapping.get_allowed_secondary_types(primary_type_id)
 
         if not allowed_secondary_ids:
-            queryset = models.PointOfInterestType.objects.all().order_by('name')
+            queryset = models.PointOfInterestType.objects.filter(type_role=models.PointOfInterestType.TypeRole.SECONDARY).order_by('name')
         else:
             queryset = models.PointOfInterestType.objects.filter(
-                id__in=allowed_secondary_ids
+                id__in=allowed_secondary_ids,
+                type_role=models.PointOfInterestType.TypeRole.SECONDARY
             ).order_by('name')
 
         serializer = self.get_serializer(queryset, many=True)

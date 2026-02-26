@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 from django.contrib.auth import get_user_model
 from django.contrib.gis.geos import Point
 from django.db import connection, transaction
@@ -27,6 +29,12 @@ from etools.applications.partners.models import PartnerOrganization
 from etools.applications.users.models import Country, Group, Realm, UserProfile
 from etools.applications.users.serializers import MinimalUserSerializer, SimpleUserSerializer
 from etools.applications.users.validators import EmailValidator, LowerCaseEmailValidator
+
+
+class SimpleOrganizationWithVendorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Organization
+        fields = ('id', 'name', 'vendor_number')
 
 
 class SimplePointOfInterestSerializer(serializers.ModelSerializer):
@@ -64,10 +72,16 @@ class UserAdminSerializer(SimpleUserSerializer):
     point_of_interests = serializers.SerializerMethodField(read_only=True)
     last_mile_profile = LastMileProfileSerializer(read_only=True)
     alert_types = serializers.SerializerMethodField(read_only=True)
+    organizations = serializers.SerializerMethodField(read_only=True)
 
     def get_alert_types(self, obj):
         realms = getattr(obj, 'realms', [])
         return SimpleRealmSerializer(realms, many=True, read_only=True).data
+
+    def get_organizations(self, obj):
+        organizations = obj.get_organizations()
+
+        return SimpleOrganizationWithVendorSerializer(organizations, many=True).data
 
     class Meta:
         model = get_user_model()
@@ -87,6 +101,7 @@ class UserAdminSerializer(SimpleUserSerializer):
             'point_of_interests',
             'last_mile_profile',
             'alert_types',
+            'organizations',
         )
 
     def get_point_of_interests(self, obj):
@@ -123,6 +138,12 @@ class UserAdminExportSerializer(serializers.ModelSerializer):
 
 
 class UserProfileCreationSerializer(serializers.ModelSerializer):
+    organizations = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=Organization.objects.all(),
+        required=False,
+        write_only=True
+    )
 
     class Meta:
         model = UserProfile
@@ -181,6 +202,10 @@ class UserAdminCreateSerializer(serializers.ModelSerializer):
         data['point_of_interests'] = []
         if (hasattr(instance.profile, 'organization') and instance.profile.organization and hasattr(instance.profile.organization, 'partner') and instance.profile.organization.partner):
             data['point_of_interests'] = [poi.id for poi in instance.profile.organization.partner.points_of_interest.all()]
+
+        organizations = instance.get_organizations()
+        data['organizations'] = SimpleOrganizationWithVendorSerializer(organizations, many=True).data
+
         return data
 
 
@@ -192,6 +217,12 @@ class UserAdminUpdateSerializer(serializers.ModelSerializer):
         queryset=Organization.objects.all(),
         source='profile.organization',
         required=False
+    )
+    organizations = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=Organization.objects.all(),
+        required=False,
+        write_only=True
     )
     country = serializers.PrimaryKeyRelatedField(
         queryset=Country.objects.all(),
@@ -215,6 +246,7 @@ class UserAdminUpdateSerializer(serializers.ModelSerializer):
             'is_active',
             'password',
             'organization',
+            'organizations',
             'country',
             'point_of_interests',
         )
@@ -287,6 +319,15 @@ class UserAdminUpdateSerializer(serializers.ModelSerializer):
                 profile.organization = profile_data.get('organization')
                 if not Realm.objects.filter(user=instance, country=country, organization=profile_data.get('organization')).exists():
                     Realm.objects.filter(user=instance, country=country, organization=old_organization).update(organization=profile_data.get('organization'))
+            elif validated_data.get('organizations'):
+                # Delete old realms
+                Realm.objects.filter(user=instance, country=country).delete()
+                # Create new realms
+                new_realms = []
+                IP_LM_EDITOR_GROUP = Group.objects.get(name="IP LM Editor")
+                for org in validated_data.get('organizations'):
+                    new_realms.append(Realm(user=instance, country=country, organization=org, group=IP_LM_EDITOR_GROUP))
+                Realm.objects.bulk_create(new_realms)
             if 'country' in profile_data:
                 profile.country = country
             profile.save()
@@ -298,6 +339,10 @@ class UserAdminUpdateSerializer(serializers.ModelSerializer):
         data['point_of_interests'] = []
         if (hasattr(instance.profile, 'organization') and instance.profile.organization and hasattr(instance.profile.organization, 'partner') and instance.profile.organization.partner):
             data['point_of_interests'] = [poi.id for poi in instance.profile.organization.partner.points_of_interest.all()]
+
+        organizations = instance.get_organizations()
+        data['organizations'] = SimpleOrganizationWithVendorSerializer(organizations, many=True).data
+
         return data
 
 
@@ -335,12 +380,16 @@ class PointOfInterestCustomSerializer(serializers.ModelSerializer):
     l_consignee_code = serializers.CharField(
         required=False,
         allow_null=True,
+        allow_blank=True,
     )
 
     def validate_secondary_type(self, value):
         if not self.instance and not value:
             raise ValidationError(REQUIRED_SECONDARY_TYPE)
         return value
+
+    def validate_l_consignee_code(self, value):
+        return AdminPanelValidator().validate_l_consignee_code(value)
 
     def validate_is_active(self, value):
         if self.instance and not value and self.instance.is_active:
@@ -518,8 +567,13 @@ class PointOfInterestExportSerializer(serializers.ModelSerializer):
     def get_primary_type(self, obj):
         return obj.poi_type.name if obj.poi_type else None
 
+    def _get_cached_partners(self, obj):
+        if not hasattr(obj, '_cached_partners'):
+            obj._cached_partners = list(obj.partner_organizations.all())
+        return obj._cached_partners
+
     def get_implementing_partner(self, obj):
-        partners = obj.partner_organizations.all().prefetch_related('organization')
+        partners = self._get_cached_partners(obj)
         return ",".join([f"{partner.organization.vendor_number} - {partner.organization.name}" if partner.organization else partner.name if partner.name else "-" for partner in partners])
 
     def get_lat(self, obj):
@@ -530,7 +584,7 @@ class PointOfInterestExportSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        partners = instance.partner_organizations.all().prefetch_related('organization')
+        partners = self._get_cached_partners(instance)
         implementing_partner_names = ",".join([f"{partner.organization.name}" if partner.organization else partner.name if partner.name else "-" for partner in partners])
         implementing_partner_numbers = ",".join([f"{partner.organization.vendor_number}" if partner.organization else partner.name if partner.name else "-" for partner in partners])
         data.update({
@@ -570,6 +624,48 @@ class PointOfInterestExportSerializer(serializers.ModelSerializer):
                 rows.append(row)
 
         return rows or [base]
+
+    @classmethod
+    def bulk_generate_rows(cls, instances):
+        poi_ids = [poi.id for poi in instances]
+
+        transfers_qs = (
+            models.Transfer.all_objects
+            .filter(destination_point_id__in=poi_ids)
+            .select_related('destination_point')
+            .prefetch_related('items')
+        )
+
+        transfers_by_poi = defaultdict(list)
+        for transfer in transfers_qs:
+            transfers_by_poi[transfer.destination_point_id].append(transfer)
+
+        all_rows = []
+        serializer = cls()
+
+        for instance in instances:
+            base = serializer.base_representation(instance)
+            poi_transfers = transfers_by_poi.get(instance.id, [])
+
+            if poi_transfers:
+                for transfer in poi_transfers:
+                    for item in transfer.items.all():
+                        row = dict(base)
+                        row.update({
+                            "transfer_name": transfer.name,
+                            "transfer_ref": getattr(transfer, "unicef_release_order", None),
+                            "item_id": item.id,
+                            "item_name": getattr(item, "description", None),
+                            "item_qty": getattr(item, "quantity", None),
+                            "item_batch_number": getattr(item, "batch_id", None),
+                            "item_expiry_date": getattr(item, "expiry_date", None),
+                            'approval_status': transfer.approval_status,
+                        })
+                        all_rows.append(row)
+            else:
+                all_rows.append(base)
+
+        return all_rows
 
     class Meta:
         model = models.PointOfInterest
@@ -844,7 +940,7 @@ class TransferItemSerializer(serializers.ModelSerializer):
 
 
 class TransferItemDetailSerializer(serializers.Serializer):
-    item_name = serializers.CharField(required=True)
+    item_name = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     material = serializers.PrimaryKeyRelatedField(
         queryset=models.Material.objects.all(),
         required=True
@@ -1162,7 +1258,7 @@ class StockManagementImportSerializer(serializers.Serializer):
     material_number = serializers.CharField()
     quantity = serializers.IntegerField()
     uom = serializers.CharField()
-    expiration_date = serializers.DateTimeField()
+    expiration_date = serializers.DateTimeField(required=False, allow_null=True)
     batch_id = serializers.CharField(required=False, allow_null=True)
     p_code = serializers.CharField()
 
@@ -1218,6 +1314,7 @@ class LocationImportSerializer(serializers.Serializer):
     p_code_location = serializers.CharField()
     location_name = serializers.CharField()
     primary_type_name = serializers.CharField()
+    secondary_type_name = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     latitude = serializers.CharField()
     longitude = serializers.CharField()
     ip_numbers = serializers.SlugRelatedField(
@@ -1254,6 +1351,18 @@ class LocationImportSerializer(serializers.Serializer):
         poi_type = models.PointOfInterestType.objects.filter(name=value).first()
         if not poi_type:
             raise serializers.ValidationError("Point of interest type does not exist")
+        if poi_type.type_role != models.PointOfInterestType.TypeRole.PRIMARY:
+            raise serializers.ValidationError("Point of interest type is not a primary type")
+        return poi_type
+
+    def validate_secondary_type_name(self, value):
+        if not value:
+            return None
+        poi_type = models.PointOfInterestType.objects.filter(name=value).first()
+        if not poi_type:
+            raise serializers.ValidationError("Secondary point of interest type does not exist")
+        if poi_type.type_role != models.PointOfInterestType.TypeRole.SECONDARY:
+            raise serializers.ValidationError("Point of interest type is not a secondary type")
         return poi_type
 
     def validate_latitude(self, value):
@@ -1273,6 +1382,7 @@ class LocationImportSerializer(serializers.Serializer):
         p_code_location = validated_data.pop('p_code_location')
         location_name = validated_data.pop('location_name')
         primary_type_name = validated_data.pop('primary_type_name')
+        secondary_type_name = validated_data.pop('secondary_type_name', None)
         latitude = validated_data.pop('latitude')
         longitude = validated_data.pop('longitude')
         try:
@@ -1281,6 +1391,7 @@ class LocationImportSerializer(serializers.Serializer):
                     p_code=p_code_location,
                     name=location_name,
                     poi_type=primary_type_name,
+                    secondary_type=secondary_type_name,
                     point=Point(longitude, latitude),
                     created_by=created_by,
                     is_active=False,

@@ -34,6 +34,11 @@ urlpatterns = [
         name="vision-ingest-transfers"
     ),
     path(
+        'import-pois/',
+        view=views_ext.VisionIngestPointOfInterestApiView.as_view(http_method_names=['post'],),
+        name="vision-ingest-pois"
+    ),
+    path(
         'export-data/',
         view=views_ext.VisionLMSMExport.as_view(http_method_names=['get'],),
         name="vision-export-data"
@@ -52,5 +57,20 @@ urlpatterns = [
         'points-of-interest/<int:poi_pk>/items/',
         view=views.InventoryItemListView.as_view(http_method_names=['get'],),
         name='inventory-item-list',
+    ),
+    path(
+        'unicef/partner/',
+        view=views.UnicefPartnerView.as_view(),
+        name='unicef-partner',
+    ),
+    path(
+        'unicef/locations/',
+        view=views.UnicefLocationsView.as_view(),
+        name='unicef-locations',
+    ),
+    path(
+        'unicef/new-handover/checkout/',
+        view=views.UnicefHandoverCheckoutView.as_view(),
+        name='unicef-new-handover-checkout',
     ),
 ]
