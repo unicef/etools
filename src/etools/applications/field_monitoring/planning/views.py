@@ -349,6 +349,7 @@ class MonitoringActivitiesViewSet(
                 Prefetch('partners', queryset=PartnerOrganization.objects.select_related('organization')),
                 'interventions', 'cp_outputs',
                 'sections', 'offices',
+                'ewp_activities', 'gpds',
         )
 
         serializer = MonitoringActivityExportSerializer(activities, many=True)
