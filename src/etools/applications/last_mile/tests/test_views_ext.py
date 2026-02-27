@@ -2411,10 +2411,60 @@ class TestLConsigneeCodeFunctionality(BaseTenantTestCase):
         self.assertEqual(alert.release_order, "RO-L004")
         self.assertEqual(alert.consignee_code, "L-NONEXISTENT")
         self.assertEqual(alert.vendor_number, "IP12345")
+        self.assertEqual(alert.alert_type, models.TransferIngestAlert.CONSIGNEE_CODE_NOT_FOUND)
+        self.assertFalse(alert.notified)
+
+    def test_ingest_rejects_transfer_when_partner_not_linked(self):
+        other_partner_org = OrganizationFactory(vendor_number="IP-OTHER-999")
+        other_partner = PartnerFactory(organization=other_partner_org)
+
+        poi_other_partner = PointOfInterestFactory(
+            name="Other Partner POI",
+            l_consignee_code="L-OTHER-PARTNER",
+            poi_type=self.warehouse_type,
+            status=models.PointOfInterest.ApprovalStatus.APPROVED,
+            is_active=True,
+        )
+        poi_other_partner.partner_organizations.add(other_partner)
+
+        url = reverse("last_mile:vision-ingest-transfers")
+        payload = [
+            {
+                "Event": "LD",
+                "ReleaseOrder": "RO-L005",
+                "ImplementingPartner": "IP12345",
+                "PONumber": "PO-555",
+                "MaterialNumber": "MAT-001",
+                "ReleaseOrderItem": "50",
+                "ItemDescription": "Test item",
+                "Quantity": 100,
+                "UOM": "BOX",
+                "BatchNumber": "B5",
+                "ConsigneeCode": "L-OTHER-PARTNER",
+            }
+        ]
+
+        response = self.forced_auth_req(
+            method="post", url=url, data=payload, user=self.api_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(models.Transfer.objects.count(), 0)
+        self.assertEqual(response.data["skipped_count"], 1)
+        self.assertIn(
+            "is not linked to partner organization",
+            response.data["details"]["skipped_transfers"][0]["reason"],
+        )
+
+        alert = models.TransferIngestAlert.objects.get()
+        self.assertEqual(alert.release_order, "RO-L005")
+        self.assertEqual(alert.consignee_code, "L-OTHER-PARTNER")
+        self.assertEqual(alert.vendor_number, "IP12345")
+        self.assertEqual(alert.alert_type, models.TransferIngestAlert.PARTNER_NOT_LINKED)
         self.assertFalse(alert.notified)
 
     @mock.patch("etools.applications.last_mile.tasks.send_notification")
-    def test_notify_transfer_ingest_alerts_sends_email(self, mock_send):
+    def test_notify_consignee_code_not_found_sends_email(self, mock_send):
         group, _ = Group.objects.get_or_create(name="LMSM Transfer Alert")
         recipient = UserFactory()
         tenant_schema = connection.tenant.schema_name
@@ -2430,6 +2480,7 @@ class TestLConsigneeCodeFunctionality(BaseTenantTestCase):
             release_order="RO-ALERT-1",
             consignee_code="L-MISSING",
             vendor_number="IP12345",
+            alert_type=models.TransferIngestAlert.CONSIGNEE_CODE_NOT_FOUND,
             reason="Consignee Code does not exist",
             country_name=country.name,
         )
@@ -2439,10 +2490,119 @@ class TestLConsigneeCodeFunctionality(BaseTenantTestCase):
         mock_send.assert_called_once()
         call_kwargs = mock_send.call_args[1]
         self.assertIn(recipient.email, call_kwargs["recipients"])
-        self.assertIn("Transfer Ingest Alert", call_kwargs["subject"])
+        self.assertIn("Consignee Code Not Found", call_kwargs["subject"])
+        self.assertEqual(
+            call_kwargs["html_content_filename"],
+            "emails/transfer_ingest_alert_code_not_found.html",
+        )
 
         alert = models.TransferIngestAlert.objects.get()
         self.assertTrue(alert.notified)
+
+    @mock.patch("etools.applications.last_mile.tasks.send_notification")
+    def test_notify_partner_not_linked_sends_email(self, mock_send):
+        group, _ = Group.objects.get_or_create(name="LMSM Transfer Alert")
+        recipient = UserFactory()
+        tenant_schema = connection.tenant.schema_name
+        country = Country.objects.get(schema_name=tenant_schema)
+        Realm.objects.create(
+            user=recipient,
+            country=country,
+            organization=recipient.profile.organization,
+            group=group,
+        )
+
+        models.TransferIngestAlert.objects.create(
+            release_order="RO-ALERT-2",
+            consignee_code="L-UNLINKED",
+            vendor_number="IP67890",
+            alert_type=models.TransferIngestAlert.PARTNER_NOT_LINKED,
+            reason="Partner not linked to destination",
+            country_name=country.name,
+        )
+
+        _notify_transfer_ingest_alerts(country.name, tenant_schema)
+
+        mock_send.assert_called_once()
+        call_kwargs = mock_send.call_args[1]
+        self.assertIn(recipient.email, call_kwargs["recipients"])
+        self.assertIn("Partner Not Linked", call_kwargs["subject"])
+        self.assertEqual(
+            call_kwargs["html_content_filename"],
+            "emails/transfer_ingest_alert_partner_not_linked.html",
+        )
+
+        alert = models.TransferIngestAlert.objects.get()
+        self.assertTrue(alert.notified)
+
+    @mock.patch("etools.applications.last_mile.tasks.send_notification")
+    def test_notify_both_alert_types_sends_separate_emails(self, mock_send):
+        group, _ = Group.objects.get_or_create(name="LMSM Transfer Alert")
+        recipient = UserFactory()
+        tenant_schema = connection.tenant.schema_name
+        country = Country.objects.get(schema_name=tenant_schema)
+        Realm.objects.create(
+            user=recipient,
+            country=country,
+            organization=recipient.profile.organization,
+            group=group,
+        )
+
+        models.TransferIngestAlert.objects.create(
+            release_order="RO-ALERT-A",
+            consignee_code="L-MISSING",
+            vendor_number="IP12345",
+            alert_type=models.TransferIngestAlert.CONSIGNEE_CODE_NOT_FOUND,
+            reason="Consignee Code does not exist",
+            country_name=country.name,
+        )
+        models.TransferIngestAlert.objects.create(
+            release_order="RO-ALERT-B",
+            consignee_code="L-UNLINKED",
+            vendor_number="IP67890",
+            alert_type=models.TransferIngestAlert.PARTNER_NOT_LINKED,
+            reason="Partner not linked to destination",
+            country_name=country.name,
+        )
+
+        _notify_transfer_ingest_alerts(country.name, tenant_schema)
+
+        self.assertEqual(mock_send.call_count, 2)
+
+        subjects = [call[1]["subject"] for call in mock_send.call_args_list]
+        self.assertTrue(any("Consignee Code Not Found" in s for s in subjects))
+        self.assertTrue(any("Partner Not Linked" in s for s in subjects))
+
+        self.assertTrue(
+            models.TransferIngestAlert.objects.filter(notified=False).count() == 0
+        )
+
+    @mock.patch("etools.applications.last_mile.tasks.send_notification")
+    def test_notify_skips_already_notified_alerts(self, mock_send):
+        group, _ = Group.objects.get_or_create(name="LMSM Transfer Alert")
+        recipient = UserFactory()
+        tenant_schema = connection.tenant.schema_name
+        country = Country.objects.get(schema_name=tenant_schema)
+        Realm.objects.create(
+            user=recipient,
+            country=country,
+            organization=recipient.profile.organization,
+            group=group,
+        )
+
+        models.TransferIngestAlert.objects.create(
+            release_order="RO-OLD",
+            consignee_code="L-OLD",
+            vendor_number="IP12345",
+            alert_type=models.TransferIngestAlert.CONSIGNEE_CODE_NOT_FOUND,
+            reason="Consignee Code does not exist",
+            country_name=country.name,
+            notified=True,
+        )
+
+        _notify_transfer_ingest_alerts(country.name, tenant_schema)
+
+        mock_send.assert_not_called()
 
     def test_incoming_transfers_warehouse_with_l_code(self):
         transfer_matching = TransferFactory(
