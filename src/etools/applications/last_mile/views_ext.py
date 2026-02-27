@@ -134,8 +134,6 @@ class VisionIngestTransfersApiView(APIView):
     permission_classes = (LMSMAPIPermission,)
 
     def post(self, request):
-        from etools.applications.core.util_scripts import set_country
-        set_country("somalia")
 
         # Filter for relevant events before any processing (At the moment we care only about LD events)
         relevant_data = [row for row in request.data if row.get('Event') == 'LD']
