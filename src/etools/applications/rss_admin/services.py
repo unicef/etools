@@ -159,6 +159,17 @@ class EngagementService:
 
 class FieldMonitoringService:
     @staticmethod
+    def recalculate_hact(activity):
+        """Recalculate HACT programmatic visit counts for partners of this activity.
+
+        Called after reverting a completed activity so the counts no longer include it.
+        """
+        aq_qs = activity.questions.filter(question__is_hact=True).filter(overall_finding__value__isnull=False)
+        partner_orgs = [aq.partner for aq in aq_qs.select_related('partner') if aq.partner]
+        for partner in partner_orgs:
+            partner.update_programmatic_visits()
+
+    @staticmethod
     def save_hact_answer(*, activity, partner, value):
         aq = ActivityQuestion.objects.filter(
             monitoring_activity=activity,

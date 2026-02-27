@@ -16,16 +16,23 @@ class LogEntryFilterSet(filters.FilterSet):
         }
 
     def filter_search(self, queryset, name, value):
-        """Search across multiple text fields"""
+        """Search across multiple text fields.
+
+        Each whitespace-separated token must match at least one field (AND across
+        tokens, OR across fields), so searching "John Doe" correctly finds entries
+        where first_name="John" and last_name="Doe".
+        """
         from django.db.models import Q
-        return queryset.filter(
-            Q(change_message__icontains=value) |
-            Q(object_repr__icontains=value) |
-            Q(user__first_name__icontains=value) |
-            Q(user__last_name__icontains=value) |
-            Q(user__email__icontains=value) |
-            Q(user__username__icontains=value)
-        )
+        for token in value.split():
+            queryset = queryset.filter(
+                Q(change_message__icontains=token) |
+                Q(object_repr__icontains=token) |
+                Q(user__first_name__icontains=token) |
+                Q(user__last_name__icontains=token) |
+                Q(user__email__icontains=token) |
+                Q(user__username__icontains=token)
+            )
+        return queryset
 
 
 class MonitoringActivityRssFilterSet(filters.FilterSet):

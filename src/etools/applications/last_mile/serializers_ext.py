@@ -5,7 +5,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import APIException
 
 from etools.applications.last_mile.models import PointOfInterest, TransferIngestAlert
-from etools.applications.last_mile.services_ext import IngestReportDTO
+from etools.applications.last_mile.services_ext import IngestReportDTO, POIIngestResultDTO
 
 User = get_user_model()
 
@@ -157,6 +157,46 @@ class TransferIngestAlertSerializer(serializers.ModelSerializer):
     class Meta:
         model = TransferIngestAlert
         fields = ['release_order', 'consignee_code', 'vendor_number', 'created']
+
+
+class PointOfInterestIngestSerializer(serializers.Serializer):
+    LocationName = serializers.CharField(source='name', max_length=254)
+    IPNumber = serializers.CharField(source='partner_org_vendor_no', max_length=255)
+    PrimaryType = serializers.CharField(source='poi_type', max_length=255)
+    IsPrivate = serializers.BooleanField(source='private', default=False)
+    Latitude = serializers.CharField(source='latitude', max_length=50)
+    Longitude = serializers.CharField(source='longitude', max_length=50)
+    PCode = serializers.CharField(source='p_code', required=False, allow_blank=True, default='')
+    ConsigneeCode = serializers.CharField(source='l_consignee_code', required=False, allow_blank=True, default='')
+    Description = serializers.CharField(source='description', required=False, allow_blank=True, default='')
+    SecondaryType = serializers.CharField(source='secondary_type', required=False, allow_blank=True, default='')
+
+    def to_internal_value(self, data):
+        ret = super().to_internal_value(data)
+        for key, value in ret.items():
+            if isinstance(value, str):
+                ret[key] = strip_tags(value).strip()
+        return ret
+
+
+class SkippedPOISerializer(serializers.Serializer):
+    reason = serializers.CharField()
+    data = serializers.DictField(required=False)
+
+
+class POIIngestDetailsSerializer(serializers.Serializer):
+    skipped_pois = SkippedPOISerializer(many=True)
+
+
+class POIIngestResultSerializer(serializers.Serializer):
+    status = serializers.CharField(default="Completed")
+    created_count = serializers.IntegerField()
+    updated_count = serializers.IntegerField()
+    skipped_count = serializers.SerializerMethodField()
+    details = POIIngestDetailsSerializer(source='*')
+
+    def get_skipped_count(self, obj: 'POIIngestResultDTO') -> int:
+        return len(obj.skipped_pois)
 
 
 class UserListSerializer(serializers.ModelSerializer):

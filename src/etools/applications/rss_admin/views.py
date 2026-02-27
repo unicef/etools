@@ -880,6 +880,15 @@ class MonitoringActivityRssViewSet(AdminLogEntriesMixin, viewsets.ModelViewSet):
             return MonitoringActivityLightSerializer
         return MonitoringActivitySerializer
 
+    def perform_update(self, serializer):
+        old_status = serializer.instance.status
+        instance = serializer.save()
+
+        if old_status == MonitoringActivity.STATUS_COMPLETED and instance.status != MonitoringActivity.STATUS_COMPLETED:
+            instance.completion_date = None
+            instance.save(update_fields=['completion_date'])
+            FieldMonitoringService.recalculate_hact(instance)
+
     @action(detail=True, methods=['post'], url_path='answer-hact')
     def answer_hact(self, request, pk=None):
         activity = self.get_object()
