@@ -333,14 +333,24 @@ class TransferIngestService:
 
             if l_consignee_code:
                 destination_poi = poi_map.get(l_consignee_code)
+                country_name = connection.tenant.name if hasattr(connection, 'tenant') else ''
 
                 if destination_poi:
                     partner_ids = {po.id for po in destination_poi.partner_organizations.all()}
                     if organization.partner.id not in partner_ids:
+                        reason = f"Destination point '{destination_poi.name}' (L-consignee code: {l_consignee_code}) is not linked to partner organization '{organization.partner.name}'"
                         self.report.skipped_transfers.append({
                             "release_order": release_order,
-                            "reason": f"Destination point '{destination_poi.name}' (L-consignee code: {l_consignee_code}) is not linked to partner organization '{organization.partner.name}'"
+                            "reason": reason
                         })
+                        self._ingest_alerts.append(models.TransferIngestAlert(
+                            release_order=release_order,
+                            consignee_code=l_consignee_code,
+                            vendor_number=vendor_number,
+                            alert_type=models.TransferIngestAlert.PARTNER_NOT_LINKED,
+                            reason=reason,
+                            country_name=country_name,
+                        ))
                         continue
                     transfer_data['destination_point'] = destination_poi
                 else:
@@ -349,11 +359,11 @@ class TransferIngestService:
                         "release_order": release_order,
                         "reason": reason
                     })
-                    country_name = connection.tenant.name if hasattr(connection, 'tenant') else ''
                     self._ingest_alerts.append(models.TransferIngestAlert(
                         release_order=release_order,
                         consignee_code=l_consignee_code,
                         vendor_number=vendor_number,
+                        alert_type=models.TransferIngestAlert.CONSIGNEE_CODE_NOT_FOUND,
                         reason=reason,
                         country_name=country_name,
                     ))

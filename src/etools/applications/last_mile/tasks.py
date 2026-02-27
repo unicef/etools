@@ -94,23 +94,42 @@ def notify_transfer_ingest_alerts():
         _notify_transfer_ingest_alerts(country.name, country.schema_name)
 
 
+ALERT_EMAIL_CONFIG = {
+    models.TransferIngestAlert.CONSIGNEE_CODE_NOT_FOUND: {
+        'subject': 'LMSM: Consignee Code Not Found — {country_name}',
+        'template': 'emails/transfer_ingest_alert_code_not_found.html',
+    },
+    models.TransferIngestAlert.PARTNER_NOT_LINKED: {
+        'subject': 'LMSM: Partner Not Linked to Destination — {country_name}',
+        'template': 'emails/transfer_ingest_alert_partner_not_linked.html',
+    },
+}
+
+
 def _notify_transfer_ingest_alerts(country_name, schema_name):
-    alerts = models.TransferIngestAlert.objects.filter(notified=False)
-    if not alerts.exists():
+    unnotified = models.TransferIngestAlert.objects.filter(notified=False)
+    if not unnotified.exists():
         return
 
     recipients = User.objects.get_email_recipients_with_group('LMSM Transfer Alert', schema_name)
     if not recipients:
         return
 
-    alert_list = TransferIngestAlertSerializer(alerts, many=True).data
+    recipient_list = list(recipients)
 
-    send_notification(
-        recipients=list(recipients),
-        from_address=settings.DEFAULT_FROM_EMAIL,
-        subject=f'LMSM: Transfer Ingest Alert — {country_name}',
-        html_content_filename='emails/transfer_ingest_alert.html',
-        context={'alerts': alert_list, 'country_name': country_name}
-    )
+    for alert_type, config in ALERT_EMAIL_CONFIG.items():
+        alerts = unnotified.filter(alert_type=alert_type)
+        if not alerts.exists():
+            continue
 
-    alerts.update(notified=True)
+        alert_list = TransferIngestAlertSerializer(alerts, many=True).data
+
+        send_notification(
+            recipients=recipient_list,
+            from_address=settings.DEFAULT_FROM_EMAIL,
+            subject=config['subject'].format(country_name=country_name),
+            html_content_filename=config['template'],
+            context={'alerts': alert_list, 'country_name': country_name}
+        )
+
+        alerts.update(notified=True)

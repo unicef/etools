@@ -892,10 +892,10 @@ class ItemAuditLogAdmin(admin.ModelAdmin):
 
 @admin.register(models.TransferIngestAlert)
 class TransferIngestAlertAdmin(admin.ModelAdmin):
-    list_display = ('release_order', 'consignee_code', 'vendor_number', 'country_name', 'notified', 'created')
-    list_filter = ('notified', 'country_name')
+    list_display = ('release_order', 'consignee_code', 'vendor_number', 'alert_type', 'country_name', 'notified', 'created')
+    list_filter = ('notified', 'alert_type', 'country_name')
     search_fields = ('release_order', 'consignee_code', 'vendor_number')
-    readonly_fields = ('release_order', 'consignee_code', 'vendor_number', 'reason', 'country_name', 'created')
+    readonly_fields = ('release_order', 'consignee_code', 'vendor_number', 'alert_type', 'reason', 'country_name', 'created')
     ordering = ('-created',)
     date_hierarchy = 'created'
 

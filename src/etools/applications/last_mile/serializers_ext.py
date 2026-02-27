@@ -154,9 +154,11 @@ class MaterialIngestResultSerializer(serializers.Serializer):
 
 
 class TransferIngestAlertSerializer(serializers.ModelSerializer):
+    alert_type_display = serializers.CharField(source='get_alert_type_display', read_only=True)
+
     class Meta:
         model = TransferIngestAlert
-        fields = ['release_order', 'consignee_code', 'vendor_number', 'created']
+        fields = ['release_order', 'consignee_code', 'vendor_number', 'alert_type', 'alert_type_display', 'reason', 'created']
 
 
 class PointOfInterestIngestSerializer(serializers.Serializer):

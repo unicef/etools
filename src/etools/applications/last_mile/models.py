@@ -1195,9 +1195,17 @@ class AuditConfiguration(TimeStampedModel, models.Model):
 
 
 class TransferIngestAlert(TimeStampedModel, models.Model):
+    CONSIGNEE_CODE_NOT_FOUND = 'consignee_code_not_found'
+    PARTNER_NOT_LINKED = 'partner_not_linked'
+    ALERT_TYPE_CHOICES = (
+        (CONSIGNEE_CODE_NOT_FOUND, _('Consignee Code does not exist')),
+        (PARTNER_NOT_LINKED, _('Partner not linked to destination')),
+    )
+
     release_order = models.CharField(max_length=255)
     consignee_code = models.CharField(max_length=255)
     vendor_number = models.CharField(max_length=255)
+    alert_type = models.CharField(max_length=50, choices=ALERT_TYPE_CHOICES)
     reason = models.CharField(max_length=512)
     country_name = models.CharField(max_length=255)
     notified = models.BooleanField(default=False)

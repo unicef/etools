@@ -4,7 +4,7 @@
   <head>
     <meta name="viewport" content="width=device-width">
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <title>Transfer Ingest Alert</title>
+    <title>Transfer Ingest Alert — Consignee Code Not Found</title>
     <style type="text/css">
       @media only screen and (max-width: 620px) {
         table[class=body] .wrapper,
@@ -36,13 +36,6 @@
   <body style="background-color:#EEEEEE;font-family:sans-serif;-webkit-font-smoothing:antialiased;
                font-size:14px;line-height:1.4;margin:0;padding:0;-ms-text-size-adjust:100%;
                -webkit-text-size-adjust:100%;">
-
-<h1 style="color:#0099FF;font-family:sans-serif;line-height:1.4;margin:0;margin-bottom:24px;margin-top:8px;font-size:22px;font-weight:normal;">Last Mile Supply Monitoring Solution</h1>
-<p style="font-family:sans-serif;font-size:14px;font-weight:normal;margin:0;margin-bottom:24px;">
-  <strong style="font-weight:bold;">Dear colleague,</strong><br><br>
-  This is to inform you that <strong>{{ alerts|length }}</strong> transfer(s) were rejected during ingestion in workspace <strong>{{ country_name }}</strong> due to invalid Consignee Codes.<br>
-  The following transfers were submitted with Consignee Codes that do not match any active Point of Interest.
-</p>
 
     <table border="0" cellpadding="0" cellspacing="0" class="body"
            style="border-collapse:separate;mso-table-lspace:0pt;mso-table-rspace:0pt;
@@ -85,9 +78,13 @@
                          mso-table-rspace:0pt;width:100%;">
                     <tr>
                       <td style="font-family:sans-serif;font-size:14px;vertical-align:top;">
-                          <h3>Rejected Transfers — Invalid Consignee Code</h3>
-                          <p><strong>Workspace:</strong> {{ country_name }} | <strong>Total rejected:</strong> {{ alerts|length }}</p>
-                          <table border="1" style="border-collapse:collapse;width:100%;">
+                          <p style="font-family:sans-serif;font-size:14px;font-weight:normal;margin:0;margin-bottom:16px;">Dear Admin,</p>
+
+                          <p style="font-family:sans-serif;font-size:14px;font-weight:normal;margin:0;margin-bottom:16px;">
+                            This message is to inform you that the following Release Order(s) handed over to the IP were not displayed in the LMSM app because the LConsignee number has not been assigned to a LMSM location.
+                          </p>
+
+                          <table border="1" style="border-collapse:collapse;width:100%;margin-bottom:16px;">
                             <tr>
                               <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                                         box-sizing:border-box;max-height:56px;margin:0;
@@ -97,7 +94,7 @@
                               <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                                         box-sizing:border-box;max-height:56px;margin:0;
                                                         padding:10px;overflow:hidden;background-color:#0099FF;">
-                                  <span style="color: white;font-weight: bold;">Consignee Code</span>
+                                  <span style="color: white;font-weight: bold;">LConsignee</span>
                               </td>
                               <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
                                                         box-sizing:border-box;max-height:56px;margin:0;
@@ -127,8 +124,14 @@
                             </tr>
                             {% endfor %}
                           </table>
-                          <br/><br/>
-                          Please note that this is an automatically generated message and replies to this email address are not monitored.
+
+                          <p style="font-family:sans-serif;font-size:14px;font-weight:normal;margin:0;margin-bottom:16px;">
+                            To address this issue, please go to the Location section in the Admin Module, and indicate the relevant LConsignee number in the intended Location and then save it.
+                            The Release Order will appear in the inventory of the intended location next time the Release Orders will be pushed from VISION into the LMSM Solution.
+                          </p>
+
+                          <p style="font-family:sans-serif;font-size:14px;font-weight:normal;margin:0;margin-bottom:8px;">Best Regards,</p>
+                          <p style="font-family:sans-serif;font-size:14px;font-weight:normal;margin:0;">The LMSM Global Team</p>
                       </td>
                     </tr>
                   </table>
