@@ -89,6 +89,23 @@ from etools.applications.reports.models import Result, ResultType
 from etools.applications.tpm.models import ThirdPartyMonitor
 from etools.applications.users.models import Realm
 
+# HTML sanitization for xhtml2pdf: removals then replacements. Order matters.
+_PDF_HTML_REMOVALS = [
+    (re.compile(r'<\s*img[^>]*?>', re.I), ''),  # drop <img>
+    (re.compile(r'\sstyle="[^"]*?url\([^)]*\)[^"]*?"', re.I), ''),  # style with url()
+    (re.compile(r"\sstyle='[^']*?url\([^)]*\)[^']*?'", re.I), ''),
+    (re.compile(r'url\([^)]*\)', re.I), ''),  # bare url() in CSS
+    (re.compile(r'\sstyle="[^"]*?linear-gradient[^"]*?"', re.I), ''),  # NotImplemented
+    (re.compile(r"\sstyle='[^']*?linear-gradient[^']*?'", re.I), ''),
+    (re.compile(r'\s+type\s*=\s*"(?!circle|disk|square)[^"]*"', re.I), ''),  # list type
+    (re.compile(r"\s+type\s*=\s*'(?!circle|disk|square)[^']*'", re.I), ''),
+]
+_PDF_HTML_REPLACEMENTS = [
+    (re.compile(r'rgba\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*[\d.]+\s*\)', re.I), r'rgb(\1,\2,\3)'),
+    (re.compile(r'font-weight\s*:\s*(?:bold|[789]\d{2})\s*', re.I), 'font-weight:bold '),
+    (re.compile(r'font-weight\s*:\s*(?!bold|[789]\d{2})[^;]*', re.I), 'font-weight:normal'),
+]
+
 
 class YearPlanViewSet(
     FMBaseViewSet,
@@ -290,15 +307,13 @@ class MonitoringActivitiesViewSet(
             dict: Context dictionary for PDF template
         """
         def _sanitize_html(value):
+            """Make HTML safe for xhtml2pdf: strip unsupported content, normalize CSS."""
             if not isinstance(value, str):
                 return value
-            # remove <img ...> tags
-            value = re.sub(r'<\s*img[^>]*?>', '', value, flags=re.IGNORECASE)
-            # remove style attributes that contain url(...)
-            value = re.sub(r'\sstyle=\"[^\"]*?url\([^)]*\)[^\"]*?\"', '', value, flags=re.IGNORECASE)
-            value = re.sub(r"\sstyle='[^']*?url\([^)]*\)[^']*?'", '', value, flags=re.IGNORECASE)
-            # remove bare url(...) occurrences inside inline CSS
-            value = re.sub(r'url\([^)]*\)', '', value, flags=re.IGNORECASE)
+            for pattern, repl in _PDF_HTML_REMOVALS:
+                value = pattern.sub(repl, value)
+            for pattern, repl in _PDF_HTML_REPLACEMENTS:
+                value = pattern.sub(repl, value)
             return value
 
         def _sanitize_overall_findings(findings):
@@ -401,7 +416,7 @@ class MonitoringActivitiesViewSet(
             if email:
                 recipients.append({
                     'id': email,
-                    'name': f"{partner.name or partner.title or f"Partner {partner.id}"} ({email})",
+                    'name': f"{partner.name or partner.title or f'Partner {partner.id}'} ({email})",
                     'type': 'partner'
                 })
 
