@@ -284,6 +284,7 @@ class TransferIngestService:
         self.processed_release_orders = set()
         self.items_by_release_order = {}
         self.validator_ext = ValidatorEXT()
+        self._ingest_alerts = []
 
     def ingest_validated_data(self, validated_data: List[Dict[str, Any]]) -> IngestReportDTO:
         self._prepare_transfers_and_group_items(validated_data)
@@ -332,16 +333,41 @@ class TransferIngestService:
 
             if l_consignee_code:
                 destination_poi = poi_map.get(l_consignee_code)
+                country_name = connection.tenant.name if hasattr(connection, 'tenant') else ''
 
                 if destination_poi:
                     partner_ids = {po.id for po in destination_poi.partner_organizations.all()}
                     if organization.partner.id not in partner_ids:
+                        reason = f"Destination point '{destination_poi.name}' (L-consignee code: {l_consignee_code}) is not linked to partner organization '{organization.partner.name}'"
                         self.report.skipped_transfers.append({
                             "release_order": release_order,
-                            "reason": f"Destination point '{destination_poi.name}' (L-consignee code: {l_consignee_code}) is not linked to partner organization '{organization.partner.name}'"
+                            "reason": reason
                         })
+                        self._ingest_alerts.append(models.TransferIngestAlert(
+                            release_order=release_order,
+                            consignee_code=l_consignee_code,
+                            vendor_number=vendor_number,
+                            alert_type=models.TransferIngestAlert.PARTNER_NOT_LINKED,
+                            reason=reason,
+                            country_name=country_name,
+                        ))
                         continue
                     transfer_data['destination_point'] = destination_poi
+                else:
+                    reason = "Consignee Code does not exist"
+                    self.report.skipped_transfers.append({
+                        "release_order": release_order,
+                        "reason": reason
+                    })
+                    self._ingest_alerts.append(models.TransferIngestAlert(
+                        release_order=release_order,
+                        consignee_code=l_consignee_code,
+                        vendor_number=vendor_number,
+                        alert_type=models.TransferIngestAlert.CONSIGNEE_CODE_NOT_FOUND,
+                        reason=reason,
+                        country_name=country_name,
+                    ))
+                    continue
 
             if release_order not in self.processed_release_orders:
                 try:
@@ -356,6 +382,9 @@ class TransferIngestService:
                 self.processed_release_orders.add(release_order)
 
             self.items_by_release_order.setdefault(release_order, []).append(item_data)
+
+        if self._ingest_alerts:
+            models.TransferIngestAlert.objects.bulk_create(self._ingest_alerts)
 
     def _build_item_instance(
         self,

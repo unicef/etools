@@ -1,0 +1,169 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>Transfer Ingest Alert — Consignee Code Not Found</title>
+    <style type="text/css">
+      @media only screen and (max-width: 620px) {
+        table[class=body] .wrapper,
+        table[class=body] .article {
+          padding: 16px !important; }
+        table[class=body] .content {
+          padding: 10px !important; }
+        table[class=body] .container {
+          padding: 0 !important;
+          width: 100% !important; }
+        table[class=body] .main {
+          border-left-width: 0 !important;
+          border-radius: 0 !important;
+          border-right-width: 0 !important; }
+      }
+      @media all {
+        .ExternalClass {
+          width: 100%; }
+        .ExternalClass,
+        .ExternalClass p,
+        .ExternalClass span,
+        .ExternalClass font,
+        .ExternalClass td,
+        .ExternalClass div {
+          line-height: 100%; }
+      }
+    </style>
+  </head>
+  <body style="background-color:#EEEEEE;font-family:sans-serif;-webkit-font-smoothing:antialiased;
+               font-size:14px;line-height:1.4;margin:0;padding:0;-ms-text-size-adjust:100%;
+               -webkit-text-size-adjust:100%;">
+
+    <table border="0" cellpadding="0" cellspacing="0" class="body"
+           style="border-collapse:separate;mso-table-lspace:0pt;mso-table-rspace:0pt;
+           background-color:#EEEEEE;width:100%;">
+      <tr>
+        <td style="font-family:sans-serif;font-size:14px;vertical-align:top;">&nbsp;</td>
+        <td class="container" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                     display:block;max-width:580px;padding:10px;width:580px;
+                                     margin:0 auto !important;width:auto !important;">
+          <div class="content" style="box-sizing:border-box;display:block;margin:0 auto;
+                                      max-width:580px;padding:10px 0;">
+            <table border="0" cellpadding="0" cellspacing="0" class="main"
+                   style="border-collapse:separate;mso-table-lspace:0pt;mso-table-rspace:0pt;
+                   background:#FFFFFF;border-radius:3px;width:100%;
+                   box-shadow:0 0 2px rgba(0,0,0,.12), 0 2px 2px rgba(0,0,0,.24);">
+              <tr>
+                <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                          box-sizing:border-box;width:100%;max-height:56px;margin:0;
+                                          padding:16px 20px 12px;overflow:hidden;
+                                          background-color:#233944;border-radius:3px 3px 0 0;">
+                  <table border="0" cellpadding="0" cellspacing="0"
+                         style="border-collapse:separate;mso-table-lspace:0pt;
+                         mso-table-rspace:0pt;width:100%;">
+                    <tr>
+                      <td style="font-family:sans-serif;font-size:14px;vertical-align:top;">
+                        <a href="https://etools.unicef.org" target="_blank"
+                           style="color:#0099FF;text-decoration:none;">
+                          <span style="color: white;text-decoration: none;">eTools</span>
+                        </a>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              <tr>
+                <td class="wrapper" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                           box-sizing:border-box;padding:20px;">
+                  <table border="0" cellpadding="0" cellspacing="0"
+                         style="border-collapse:separate;mso-table-lspace:0pt;
+                         mso-table-rspace:0pt;width:100%;">
+                    <tr>
+                      <td style="font-family:sans-serif;font-size:14px;vertical-align:top;">
+                          <p style="font-family:sans-serif;font-size:14px;font-weight:normal;margin:0;margin-bottom:16px;">Dear Admin,</p>
+
+                          <p style="font-family:sans-serif;font-size:14px;font-weight:normal;margin:0;margin-bottom:16px;">
+                            This message is to inform you that the following Release Order(s) handed over to the IP were not displayed in the LMSM app because the LConsignee number has not been assigned to a LMSM location.
+                          </p>
+
+                          <table border="1" style="border-collapse:collapse;width:100%;margin-bottom:16px;">
+                            <tr>
+                              <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                                        box-sizing:border-box;max-height:56px;margin:0;
+                                                        padding:10px;overflow:hidden;background-color:#0099FF;">
+                                  <span style="color: white;font-weight: bold;">Release Order</span>
+                              </td>
+                              <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                                        box-sizing:border-box;max-height:56px;margin:0;
+                                                        padding:10px;overflow:hidden;background-color:#0099FF;">
+                                  <span style="color: white;font-weight: bold;">LConsignee</span>
+                              </td>
+                              <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                                        box-sizing:border-box;max-height:56px;margin:0;
+                                                        padding:10px;overflow:hidden;background-color:#0099FF;">
+                                  <span style="color: white;font-weight: bold;">Vendor Number</span>
+                              </td>
+                              <td class="header" style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                                                        box-sizing:border-box;max-height:56px;margin:0;
+                                                        padding:10px;overflow:hidden;background-color:#0099FF;">
+                                  <span style="color: white;font-weight: bold;">Date</span>
+                              </td>
+                            </tr>
+                            {% for alert in alerts %}
+                            <tr>
+                              <td style="font-family:sans-serif;font-size:14px;vertical-align:top;padding:10px;">
+                                {{ alert.release_order }}
+                              </td>
+                              <td style="font-family:sans-serif;font-size:14px;vertical-align:top;padding:10px;">
+                                {{ alert.consignee_code }}
+                              </td>
+                              <td style="font-family:sans-serif;font-size:14px;vertical-align:top;padding:10px;">
+                                {{ alert.vendor_number }}
+                              </td>
+                              <td style="font-family:sans-serif;font-size:14px;vertical-align:top;padding:10px;">
+                                {{ alert.created }}
+                              </td>
+                            </tr>
+                            {% endfor %}
+                          </table>
+
+                          <p style="font-family:sans-serif;font-size:14px;font-weight:normal;margin:0;margin-bottom:16px;">
+                            To address this issue, please go to the Location section in the Admin Module, and indicate the relevant LConsignee number in the intended Location and then save it.
+                            The Release Order will appear in the inventory of the intended location next time the Release Orders will be pushed from VISION into the LMSM Solution.
+                          </p>
+
+                          <p style="font-family:sans-serif;font-size:14px;font-weight:normal;margin:0;margin-bottom:8px;">Best Regards,</p>
+                          <p style="font-family:sans-serif;font-size:14px;font-weight:normal;margin:0;">The LMSM Global Team</p>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              <tr>
+                <td class="footer"
+                    style="font-family:sans-serif;font-size:14px;vertical-align:top;
+                    box-sizing:border-box;width:100%;max-height:56px;padding:14px 20px 14px;
+                    overflow:hidden;background-color:#E5F4FF;border-radius:0 0 3px 3px;">
+                  <table border="0" cellpadding="0" cellspacing="0"
+                         style="border-collapse:separate;mso-table-lspace:0pt;
+                         mso-table-rspace:0pt;width:100%;">
+                    <tr>
+                      <td style="font-family:sans-serif;font-size:14px;vertical-align:top;">
+                        <a href="https://unicef.org" target="_blank"
+                           style="color:#0099FF;text-decoration:underline;">
+                           <img src='https://etools.unicef.org/pmp/assets/images/UNICEF_logo.webp'
+                                alt="Unicef" class="logo-unicef" width="101" height="24"
+                                style="border:none;-ms-interpolation-mode:bicubic;max-width:100%;
+                                       display:block;margin:0;padding:0;width:101px;height:24px;"/>
+                       </a>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </div>
+        </td>
+        <td style="font-family:sans-serif;font-size:14px;vertical-align:top;">&nbsp;</td>
+      </tr>
+    </table>
+  </body>
+</html>

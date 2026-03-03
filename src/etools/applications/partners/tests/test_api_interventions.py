@@ -759,6 +759,55 @@ class TestInterventionsAPI(BaseTenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), Intervention.objects.count())
 
+    def test_filtering_humanitarian_flag(self):
+        response = self.forced_auth_req(
+            "get",
+            reverse('partners_api:intervention-list'),
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 3)
+
+        self.intervention.humanitarian_flag = True
+        self.intervention.save()
+        self.assertEqual(
+            Intervention.objects.filter(humanitarian_flag=True).count(),
+            1,
+        )
+
+        response = self.forced_auth_req(
+            "get",
+            reverse('partners_api:intervention-list'),
+            user=self.unicef_staff,
+            data={"humanitarian_flag": True}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            len(response.data),
+            Intervention.objects.filter(humanitarian_flag=True).count(),
+        )
+
+        response = self.forced_auth_req(
+            "get",
+            reverse('partners_api:intervention-list'),
+            user=self.unicef_staff,
+            data={"humanitarian_flag": False}
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(
+            len(response.data),
+            Intervention.objects.filter(humanitarian_flag=False).count(),
+        )
+
+        # assert all interventions returned if filter is not applied
+        response = self.forced_auth_req(
+            "get",
+            reverse('partners_api:intervention-list'),
+            user=self.unicef_staff,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), Intervention.objects.count())
+
     def test_filtering_grants(self):
         grant_number = "GE001"
         FundsReservationItemFactory(
