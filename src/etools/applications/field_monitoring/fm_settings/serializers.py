@@ -78,7 +78,7 @@ class QuestionLightSerializer(serializers.ModelSerializer):
         model = Question
         fields = (
             'id', 'answer_type', 'choices_size', 'level',
-            'methods', 'category', 'sections', 'text',
+            'methods', 'category', 'sections', 'text', 'tooltip',
             'is_hact', 'is_active', 'is_custom', 'order', 'show_mandatory_warning'
         )
 
@@ -110,8 +110,10 @@ class QuestionSerializer(QuestionLightSerializer):
         return instance
 
     def update(self, instance, validated_data):
-        # For non-custom questions the only option we have is to modify is_active and order
-        custom_changes_allowed = not validated_data or all(i in ["is_active", "order"] for i in validated_data.keys())
+        # For non-custom questions only is_active, order and tooltip can be modified
+        custom_changes_allowed = not validated_data or all(
+            i in ["is_active", "order", "tooltip"] for i in validated_data.keys()
+        )
         if not instance.is_custom and not custom_changes_allowed:
             raise ValidationError(_("The system provided questions cannot be edited."))
 
@@ -143,7 +145,7 @@ class QuestionExportSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Question
-        fields = ['id', 'text', 'level', 'answer_type', 'category', 'is_active', 'is_hact']
+        fields = ['id', 'text', 'tooltip', 'level', 'answer_type', 'category', 'is_active', 'is_hact']
 
 
 class BulkOrderUpdateListSerializer(serializers.ListSerializer):
