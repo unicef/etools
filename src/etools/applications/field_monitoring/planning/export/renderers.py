@@ -42,3 +42,24 @@ class MonitoringActivityCSVRenderer(ListSeperatorCSVRenderMixin, FriendlyCSVRend
         'interventions': _('PD/SPD'),
         'cp_outputs': _('Outputs'),
     }
+
+
+class MonitoringActivityAdminCSVRenderer(ListSeperatorCSVRenderMixin, FriendlyCSVRenderer):
+    header = [
+        'reference_number',
+        'monitored_partners',
+        'remote_monitoring',
+        'methods',
+        'attachments',
+        'action_points',
+        'overall_finding_ratings'
+    ]
+    labels = {
+        'reference_number': _('Ref. #'),
+        'monitored_partners': _('Monitored Partner'),
+        'remote_monitoring': _('Involves Remote Monitoring'),
+        'methods': _('Data Collection methods applied '),
+        'attachments': _('Attachments uploaded'),
+        'action_points': _('Action Points opened'),
+        'overall_finding_ratings': _('Overall finding ratings'),
+    }
