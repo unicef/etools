@@ -36,7 +36,9 @@ from etools.applications.field_monitoring.planning.actions.duplicate_monitoring_
 from etools.applications.field_monitoring.planning.models import MonitoringActivity, YearPlan
 from etools.applications.field_monitoring.planning.serializers import MonitoringActivityLightSerializer
 from etools.applications.field_monitoring.planning.tests.factories import (
+    EWPActivityFactory,
     FacilityTypeFactory,
+    GPDFactory,
     MonitoringActivityActionPointFactory,
     MonitoringActivityFactory,
     QuestionTemplateFactory,
@@ -208,7 +210,6 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         activity = MonitoringActivityFactory(monitor_type='staff', team_members=[UserFactory(unicef_user=True)])
         visit_goal = VisitGoalFactory()
         activity.visit_goals.add(visit_goal)
-
         response = self._test_retrieve(self.fm_user, activity)
 
         # check permissions are added correctly
@@ -1017,6 +1018,8 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         MonitoringActivityFactory(status='assigned')
         MonitoringActivityFactory(status='completed')
         MonitoringActivityFactory(status='cancelled')
+        ewp = EWPActivityFactory(wbs='WBS-2024-01')
+        gpd = GPDFactory(gpd_ref='GPD-001')
         [
             MonitoringActivityFactory(
                 interventions=[InterventionFactory()],
@@ -1026,11 +1029,13 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
                 sections=[SectionFactory()],
                 team_members=[UserFactory()],
                 visit_lead=UserFactory(),
+                ewp_activities=[ewp],
+                gpds=[gpd],
             )
             for _ in range(20)
         ]
 
-        with self.assertNumQueries(15):
+        with self.assertNumQueries(17):
             response = self.make_request_to_viewset(self.unicef_user, action='export', method='get', data={'page': 1, 'page_size': 100})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('Content-Disposition', response.headers)
