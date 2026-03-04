@@ -888,3 +888,19 @@ class ItemAuditLogAdmin(admin.ModelAdmin):
                     setattr(item, field_name, Decimal(str(field_value)))
                 else:
                     setattr(item, field_name, field_value)
+
+
+@admin.register(models.TransferIngestAlert)
+class TransferIngestAlertAdmin(admin.ModelAdmin):
+    list_display = ('release_order', 'consignee_code', 'vendor_number', 'alert_type', 'country_name', 'notified', 'created')
+    list_filter = ('notified', 'alert_type', 'country_name')
+    search_fields = ('release_order', 'consignee_code', 'vendor_number')
+    readonly_fields = ('release_order', 'consignee_code', 'vendor_number', 'alert_type', 'reason', 'country_name', 'created')
+    ordering = ('-created',)
+    date_hierarchy = 'created'
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
