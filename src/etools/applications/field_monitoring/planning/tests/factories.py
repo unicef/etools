@@ -8,7 +8,9 @@ from etools.applications.action_points.categories.models import Category
 from etools.applications.action_points.tests.factories import ActionPointCategoryFactory, ActionPointFactory
 from etools.applications.field_monitoring.fm_settings.tests.factories import QuestionFactory
 from etools.applications.field_monitoring.planning.models import (
+    EWPActivity,
     FacilityType,
+    GPD,
     MonitoringActivity,
     MonitoringActivityGroup,
     QuestionTemplate,
@@ -33,6 +35,20 @@ class YearPlanFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = YearPlan
         django_get_or_create = ('year',)
+
+
+class EWPActivityFactory(factory.django.DjangoModelFactory):
+    wbs = factory.Sequence(lambda n: 'WBS-2024-{:02d}'.format(n))
+
+    class Meta:
+        model = EWPActivity
+
+
+class GPDFactory(factory.django.DjangoModelFactory):
+    gpd_ref = factory.Sequence(lambda n: 'GPD-{:03d}'.format(n))
+
+    class Meta:
+        model = GPD
 
 
 class BaseMonitoringActivityFactory(factory.django.DjangoModelFactory):
@@ -85,6 +101,16 @@ class BaseMonitoringActivityFactory(factory.django.DjangoModelFactory):
     def interventions(self, created, extracted, **kwargs):
         if extracted:
             self.interventions.add(*extracted)
+
+    @factory.post_generation
+    def ewp_activities(self, created, extracted, **kwargs):
+        if extracted:
+            self.ewp_activities.add(*extracted)
+
+    @factory.post_generation
+    def gpds(self, created, extracted, **kwargs):
+        if extracted:
+            self.gpds.add(*extracted)
 
     @factory.post_generation
     def questions(self, created, extracted, count=0, **kwargs):
