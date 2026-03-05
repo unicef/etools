@@ -690,3 +690,358 @@ class TestMonitoringActivityExport(BaseTenantTestCase):
             self.assertEqual(actual['doc_type'], expected_att.file_type.label)
             self.assertEqual(actual['filename'], expected_att.filename)
             self.assertEqual(actual['url_path'], request.build_absolute_uri(expected_att.file.url) if expected_att.file else "-")
+
+
+class TestStatusTransitionDataPreservation(BaseTenantTestCase):
+
+    def setUp(self):
+        super().setUp()
+        self.partner = PartnerFactory()
+        self.section = SectionFactory()
+        self.question = QuestionFactory(
+            level=Question.LEVELS.partner, sections=[self.section], is_active=True
+        )
+        QuestionTemplateFactory(question=self.question)
+
+    def _create_activity_with_findings(self):
+        activity = MonitoringActivityFactory(
+            status=MonitoringActivity.STATUSES.draft,
+            sections=[self.section],
+            partners=[self.partner],
+        )
+        # Draft -> Checklist: creates questions
+        activity.prepare_questions_structure()
+        activity.status = MonitoringActivity.STATUSES.checklist
+        activity.save()
+
+        # Checklist -> Review: creates overall findings
+        activity.prepare_activity_overall_findings()
+        activity.prepare_questions_overall_findings()
+        activity.status = MonitoringActivity.STATUSES.review
+        activity.save()
+
+        return activity
+
+    def test_prepare_activity_overall_findings_preserves_existing_data(self):
+        activity = self._create_activity_with_findings()
+
+        finding = activity.overall_findings.first()
+        self.assertIsNotNone(finding)
+        finding.narrative_finding = 'Important user narrative'
+        finding.on_track = True
+        finding.save()
+
+        # Re-run prepare (simulates backward then forward through review)
+        activity.prepare_activity_overall_findings()
+
+        finding.refresh_from_db()
+        self.assertEqual(finding.narrative_finding, 'Important user narrative')
+        self.assertTrue(finding.on_track)
+
+    def test_prepare_questions_overall_findings_preserves_existing_values(self):
+        activity = self._create_activity_with_findings()
+
+        # Populate question findings with user answers
+        aq_finding = ActivityQuestionOverallFinding.objects.filter(
+            activity_question__monitoring_activity=activity
+        ).first()
+        self.assertIsNotNone(aq_finding)
+        aq_finding.value = 'user-answer'
+        aq_finding.save()
+
+        # Re-run prepare (simulates backward then forward through review)
+        activity.prepare_questions_overall_findings()
+
+        aq_finding.refresh_from_db()
+        self.assertEqual(aq_finding.value, 'user-answer')
+
+    def test_prepare_questions_structure_preserves_existing_questions(self):
+        activity = self._create_activity_with_findings()
+        original_question_ids = set(activity.questions.values_list('pk', flat=True))
+        self.assertTrue(len(original_question_ids) > 0)
+
+        # Populate overall findings with values
+        for aq_finding in ActivityQuestionOverallFinding.objects.filter(
+            activity_question__monitoring_activity=activity
+        ):
+            aq_finding.value = 'answer-data'
+            aq_finding.save()
+
+        # Simulate backward to draft, then forward to checklist
+        activity.status = MonitoringActivity.STATUSES.draft
+        activity.save()
+
+        activity.prepare_questions_structure(old_status=MonitoringActivity.STATUSES.draft)
+
+        # Questions should be preserved (same PKs)
+        new_question_ids = set(activity.questions.values_list('pk', flat=True))
+        self.assertEqual(original_question_ids, new_question_ids)
+
+        # Overall findings should still have their values
+        for aq_finding in ActivityQuestionOverallFinding.objects.filter(
+            activity_question__monitoring_activity=activity
+        ):
+            self.assertEqual(aq_finding.value, 'answer-data')
+
+    def test_backward_to_checklist_then_forward_to_review_preserves_findings(self):
+        activity = self._create_activity_with_findings()
+
+        finding = activity.overall_findings.first()
+        finding.narrative_finding = 'Completed narrative'
+        finding.on_track = False
+        finding.save()
+
+        aq_finding = ActivityQuestionOverallFinding.objects.filter(
+            activity_question__monitoring_activity=activity
+        ).first()
+        aq_finding.value = 'completed-value'
+        aq_finding.save()
+
+        # Simulate backward to checklist (no side effects on findings)
+        activity.status = MonitoringActivity.STATUSES.checklist
+        activity.save()
+
+        # Forward to review (triggers prepare_activity_overall_findings + prepare_questions_overall_findings)
+        activity.prepare_activity_overall_findings()
+        activity.prepare_questions_overall_findings()
+        activity.status = MonitoringActivity.STATUSES.review
+        activity.save()
+
+        # Findings must be preserved
+        finding.refresh_from_db()
+        self.assertEqual(finding.narrative_finding, 'Completed narrative')
+        self.assertFalse(finding.on_track)
+
+        aq_finding.refresh_from_db()
+        self.assertEqual(aq_finding.value, 'completed-value')
+
+    def test_backward_to_draft_then_forward_preserves_findings(self):
+        activity = self._create_activity_with_findings()
+
+        # Populate findings
+        finding = activity.overall_findings.first()
+        finding.narrative_finding = 'Full cycle narrative'
+        finding.on_track = True
+        finding.save()
+
+        aq_finding = ActivityQuestionOverallFinding.objects.filter(
+            activity_question__monitoring_activity=activity
+        ).first()
+        aq_finding.value = 'full-cycle-value'
+        aq_finding.save()
+
+        # Backward to draft
+        activity.status = MonitoringActivity.STATUSES.draft
+        activity.save()
+
+        # Forward: draft -> checklist (prepare_questions_structure)
+        activity.prepare_questions_structure(old_status=MonitoringActivity.STATUSES.draft)
+        activity.status = MonitoringActivity.STATUSES.checklist
+        activity.save()
+
+        # Forward: checklist -> review (prepare overall findings)
+        activity.prepare_activity_overall_findings()
+        activity.prepare_questions_overall_findings()
+        activity.status = MonitoringActivity.STATUSES.review
+        activity.save()
+
+        # Findings must be preserved
+        finding.refresh_from_db()
+        self.assertEqual(finding.narrative_finding, 'Full cycle narrative')
+        self.assertTrue(finding.on_track)
+
+        aq_finding.refresh_from_db()
+        self.assertEqual(aq_finding.value, 'full-cycle-value')
+
+    def test_new_partner_added_creates_additional_findings(self):
+        activity = self._create_activity_with_findings()
+
+        finding = activity.overall_findings.first()
+        finding.narrative_finding = 'Existing partner narrative'
+        finding.on_track = True
+        finding.save()
+        original_finding_count = activity.overall_findings.count()
+
+        # Add a new partner
+        new_partner = PartnerFactory()
+        activity.partners.add(new_partner)
+
+        # Create a question for the new partner
+        ActivityQuestionFactory(
+            monitoring_activity=activity,
+            question=self.question,
+            partner=new_partner,
+            is_enabled=True,
+        )
+
+        activity.prepare_activity_overall_findings()
+
+        # Existing finding preserved
+        finding.refresh_from_db()
+        self.assertEqual(finding.narrative_finding, 'Existing partner narrative')
+        self.assertTrue(finding.on_track)
+
+        # New finding created for new partner
+        self.assertEqual(activity.overall_findings.count(), original_finding_count + 1)
+        new_finding = activity.overall_findings.filter(partner=new_partner).first()
+        self.assertIsNotNone(new_finding)
+        self.assertEqual(new_finding.narrative_finding, '')  # New finding starts empty
+
+    def test_removed_partner_deletes_orphan_findings(self):
+        second_partner = PartnerFactory()
+        activity = MonitoringActivityFactory(
+            status=MonitoringActivity.STATUSES.draft,
+            sections=[self.section],
+            partners=[self.partner, second_partner],
+        )
+        activity.prepare_questions_structure()
+        activity.status = MonitoringActivity.STATUSES.checklist
+        activity.save()
+
+        activity.prepare_activity_overall_findings()
+        activity.prepare_questions_overall_findings()
+
+        self.assertEqual(activity.overall_findings.count(), 2)
+
+        # Remove second partner
+        activity.partners.remove(second_partner)
+        activity.questions.filter(partner=second_partner).delete()
+
+        # Re-run prepare
+        activity.prepare_activity_overall_findings()
+
+        # Only first partner's finding remains
+        self.assertEqual(activity.overall_findings.count(), 1)
+        self.assertEqual(activity.overall_findings.first().partner, self.partner)
+
+    def test_prepare_questions_overall_findings_handles_disabled_questions(self):
+        activity = self._create_activity_with_findings()
+        initial_count = ActivityQuestionOverallFinding.objects.filter(
+            activity_question__monitoring_activity=activity
+        ).count()
+        self.assertTrue(initial_count > 0)
+
+        # Disable all questions
+        activity.questions.update(is_enabled=False)
+
+        activity.prepare_questions_overall_findings()
+
+        self.assertEqual(
+            ActivityQuestionOverallFinding.objects.filter(
+                activity_question__monitoring_activity=activity
+            ).count(),
+            0
+        )
+
+        # Re-enable questions
+        activity.questions.update(is_enabled=True)
+
+        activity.prepare_questions_overall_findings()
+
+        self.assertEqual(
+            ActivityQuestionOverallFinding.objects.filter(
+                activity_question__monitoring_activity=activity
+            ).count(),
+            initial_count
+        )
+
+    def test_prepare_questions_structure_with_partially_populated_data(self):
+        activity = self._create_activity_with_findings()
+
+        aq_findings = ActivityQuestionOverallFinding.objects.filter(
+            activity_question__monitoring_activity=activity
+        )
+        if aq_findings.count() > 0:
+            first_finding = aq_findings.first()
+            first_finding.value = 'partial-data'
+            first_finding.save()
+
+        # Simulate backward to draft, then forward
+        activity.status = MonitoringActivity.STATUSES.draft
+        activity.save()
+        activity.prepare_questions_structure(old_status=MonitoringActivity.STATUSES.draft)
+
+        # The finding with data should be preserved
+        first_finding.refresh_from_db()
+        self.assertEqual(first_finding.value, 'partial-data')
+
+    def test_multiple_backward_forward_cycles_preserve_data(self):
+        activity = self._create_activity_with_findings()
+
+        finding = activity.overall_findings.first()
+        finding.narrative_finding = 'Cycle test narrative'
+        finding.save()
+
+        # Cycle 1: review -> checklist -> review
+        activity.status = MonitoringActivity.STATUSES.checklist
+        activity.save()
+        activity.prepare_activity_overall_findings()
+        activity.prepare_questions_overall_findings()
+        activity.status = MonitoringActivity.STATUSES.review
+        activity.save()
+
+        finding.refresh_from_db()
+        self.assertEqual(finding.narrative_finding, 'Cycle test narrative')
+
+        # Cycle 2: review -> checklist -> review
+        activity.status = MonitoringActivity.STATUSES.checklist
+        activity.save()
+        activity.prepare_activity_overall_findings()
+        activity.prepare_questions_overall_findings()
+        activity.status = MonitoringActivity.STATUSES.review
+        activity.save()
+
+        finding.refresh_from_db()
+        self.assertEqual(finding.narrative_finding, 'Cycle test narrative')
+
+    def test_prepare_questions_structure_skips_when_not_from_draft(self):
+        activity = self._create_activity_with_findings()
+        original_question_ids = set(activity.questions.values_list('pk', flat=True))
+
+        # Call with old_status=review (simulates reverting from review to checklist)
+        activity.prepare_questions_structure(old_status=MonitoringActivity.STATUSES.review)
+
+        new_question_ids = set(activity.questions.values_list('pk', flat=True))
+        self.assertEqual(original_question_ids, new_question_ids)
+
+    def test_hact_not_double_counted_on_repeated_completion(self):
+        activity = MonitoringActivityFactory(
+            status=MonitoringActivity.STATUSES.draft,
+            sections=[self.section],
+            partners=[self.partner],
+            end_date=date.today(),
+        )
+        aq = ActivityQuestionFactory(
+            monitoring_activity=activity,
+            question__is_hact=True,
+            question__level='partner',
+            partner=self.partner,
+            is_enabled=True,
+        )
+        ActivityQuestionOverallFinding.objects.create(activity_question=aq, value='on-track')
+
+        self.partner.refresh_from_db()
+        initial_pv = self.partner.hact_values['programmatic_visits']['completed']['total']
+
+        # First completion: should count
+        old_instance = MonitoringActivityFactory(
+            status=MonitoringActivity.STATUSES.submitted, completion_date=None
+        )
+        activity.status = MonitoringActivity.STATUSES.completed
+        activity.save()
+        activity.update_one_hact_value(old_instance=old_instance)
+
+        self.partner.refresh_from_db()
+        after_first = self.partner.hact_values['programmatic_visits']['completed']['total']
+        self.assertEqual(after_first, initial_pv + 1)
+
+        # Second completion: should NOT count (completion_date already set on old_instance)
+        old_instance_2 = MonitoringActivityFactory(
+            status=MonitoringActivity.STATUSES.submitted,
+            completion_date=activity.completion_date,
+        )
+        activity.update_one_hact_value(old_instance=old_instance_2)
+
+        self.partner.refresh_from_db()
+        after_second = self.partner.hact_values['programmatic_visits']['completed']['total']
+        self.assertEqual(after_second, after_first, "HACT count should not increment on second completion")
