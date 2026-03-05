@@ -122,6 +122,21 @@ msgstr "ПД/СПД"
 msgid "Outputs"
 msgstr "выходы"
 
+msgid "Monitored Partner"
+msgstr ""
+
+msgid "Data Collection methods applied "
+msgstr ""
+
+msgid "Attachments uploaded"
+msgstr ""
+
+msgid "Action Points opened"
+msgstr ""
+
+msgid "Overall finding ratings"
+msgstr ""
+
 msgid "Prioritization Criteria"
 msgstr "Критерии приоритизации"
 

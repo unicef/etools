@@ -122,6 +122,21 @@ msgstr "PD/SSFA"
 msgid "Outputs"
 msgstr "Produits"
 
+msgid "Monitored Partner"
+msgstr ""
+
+msgid "Data Collection methods applied "
+msgstr ""
+
+msgid "Attachments uploaded"
+msgstr ""
+
+msgid "Action Points opened"
+msgstr ""
+
+msgid "Overall finding ratings"
+msgstr ""
+
 msgid "Prioritization Criteria"
 msgstr "Critères de priorisation"
 

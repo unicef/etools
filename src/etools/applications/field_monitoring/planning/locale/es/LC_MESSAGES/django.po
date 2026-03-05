@@ -122,6 +122,21 @@ msgstr "PD/SPD"
 msgid "Outputs"
 msgstr "Productos"
 
+msgid "Monitored Partner"
+msgstr ""
+
+msgid "Data Collection methods applied "
+msgstr ""
+
+msgid "Attachments uploaded"
+msgstr ""
+
+msgid "Action Points opened"
+msgstr "Categoría de Punto de Acción"
+
+msgid "Overall finding ratings"
+msgstr ""
+
 msgid "Prioritization Criteria"
 msgstr "Criterios de Priorización"
 
@@ -244,7 +259,6 @@ msgstr "N.° de referencia"
 
 msgid "Involves Remote Monitoring"
 msgstr ""
-
 msgid "Report Reviewers"
 msgstr ""
 
