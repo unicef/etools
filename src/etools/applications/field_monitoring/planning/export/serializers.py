@@ -20,7 +20,6 @@ class MonitoringActivityExportSerializer(serializers.Serializer):
     interventions = CommaSeparatedExportField()
     cp_outputs = CommaSeparatedExportField()
     ewp_activities = CommaSeparatedExportField(export_attr='wbs')
-    gpds = CommaSeparatedExportField(export_attr='gpd_ref')
     mission_completion_date = serializers.SerializerMethodField()
 
     def get_ref_link(self, obj):

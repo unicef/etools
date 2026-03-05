@@ -55,11 +55,19 @@ def get_blueprint_for_activity_and_method(activity: 'MonitoringActivity', method
         )
         blueprint.metadata.validations['information_source_max_length'] = MaxLengthTextValidation(100)
 
-    for relation, level, target_field in activity.RELATIONS_MAPPING:
-        # Use target_field as group name to keep data structures distinct
+    # Build (target_field, iterable) pairs — cp_outputs uses _get_effective_cp_outputs()
+    # to include cp_outputs linked via ewp_activities, not just the direct M2M.
+    target_iterables = [
+        ('partner', activity.partners.all()),
+        ('intervention', activity.interventions.all()),
+        ('cp_output', activity._get_effective_cp_outputs()),
+        ('ewp_activity', activity.ewp_activities.all()),
+    ]
+
+    for target_field, targets in target_iterables:
         level_block = Group(target_field, styling=['abstract'], required=False)
 
-        for target in getattr(activity, relation).all():
+        for target in targets:
             target_questions = activity.questions.filter(
                 **{target_field: target},
                 is_enabled=True, question__methods=method

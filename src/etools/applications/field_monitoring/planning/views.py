@@ -53,6 +53,7 @@ from etools.applications.field_monitoring.planning.filters import (
 )
 from etools.applications.field_monitoring.planning.mixins import EmptyQuerysetForExternal
 from etools.applications.field_monitoring.planning.models import (
+    EWPActivity,
     FacilityType,
     MonitoringActivity,
     MonitoringActivityActionPoint,
@@ -186,7 +187,7 @@ class MonitoringActivitiesViewSet(
             Prefetch('partners', queryset=PartnerOrganization.objects.select_related('organization')),
             'interventions', 'cp_outputs',
             'sections', 'visit_goals',
-            'ewp_activities', 'gpds',
+            Prefetch('ewp_activities', queryset=EWPActivity.objects.select_related('cp_output')),
         )\
         .order_by("-id")
     serializer_class = MonitoringActivitySerializer
@@ -349,7 +350,7 @@ class MonitoringActivitiesViewSet(
                 Prefetch('partners', queryset=PartnerOrganization.objects.select_related('organization')),
                 'interventions', 'cp_outputs',
                 'sections', 'offices',
-                'ewp_activities', 'gpds',
+                Prefetch('ewp_activities', queryset=EWPActivity.objects.select_related('cp_output')),
         )
 
         serializer = MonitoringActivityExportSerializer(activities, many=True)

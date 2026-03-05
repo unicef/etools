@@ -88,6 +88,10 @@ class ActionPoint(TimeStampedModel):
                                   on_delete=models.CASCADE)
     intervention = models.ForeignKey('partners.Intervention', verbose_name=_('PD/SPD'), blank=True, null=True,
                                      on_delete=models.CASCADE)
+    ewp_activity = models.ForeignKey(
+        'field_monitoring_planning.EWPActivity', verbose_name=_('Key Intervention'), blank=True, null=True,
+        on_delete=models.SET_NULL,
+    )
     engagement = models.ForeignKey('audit.Engagement', verbose_name=_('Engagement'), blank=True, null=True,
                                    related_name='action_points', on_delete=models.CASCADE)
     psea_assessment = models.ForeignKey('psea.Assessment', verbose_name=_('PSEA Assessment'), blank=True, null=True,

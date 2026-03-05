@@ -7,7 +7,7 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('field_monitoring_planning', '0012_dummyewpactivitymodel_dummygpdmodel_and_more'),
+        ('field_monitoring_planning', '0014_remove_gpd_add_ewpactivity_cp_output'),
         ('field_monitoring_data_collection', '0002_initial'),
     ]
 
@@ -15,31 +15,16 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='activityoverallfinding',
             name='ewp_activity',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, related_name='+', to='field_monitoring_planning.dummyewpactivitymodel', verbose_name='eWP Activity'),
-        ),
-        migrations.AddField(
-            model_name='activityoverallfinding',
-            name='gpd',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, related_name='+', to='field_monitoring_planning.dummygpdmodel', verbose_name='GPD'),
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, related_name='+', to='field_monitoring_planning.ewpactivity', verbose_name='eWP Activity'),
         ),
         migrations.AddField(
             model_name='activityquestion',
             name='ewp_activity',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, related_name='+', to='field_monitoring_planning.dummyewpactivitymodel', verbose_name='eWP Activity'),
-        ),
-        migrations.AddField(
-            model_name='activityquestion',
-            name='gpd',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, related_name='+', to='field_monitoring_planning.dummygpdmodel', verbose_name='GPD'),
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, related_name='+', to='field_monitoring_planning.ewpactivity', verbose_name='eWP Activity'),
         ),
         migrations.AddField(
             model_name='checklistoverallfinding',
             name='ewp_activity',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, related_name='+', to='field_monitoring_planning.dummyewpactivitymodel', verbose_name='eWP Activity'),
-        ),
-        migrations.AddField(
-            model_name='checklistoverallfinding',
-            name='gpd',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, related_name='+', to='field_monitoring_planning.dummygpdmodel', verbose_name='GPD'),
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, related_name='+', to='field_monitoring_planning.ewpactivity', verbose_name='eWP Activity'),
         ),
     ]

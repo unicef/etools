@@ -23,7 +23,6 @@ class MonitoringActivityCSVRenderer(ListSeperatorCSVRenderMixin, FriendlyCSVRend
         'interventions',
         'cp_outputs',
         'ewp_activities',
-        'gpds',
     ]
     labels = {
         'reference_number': _('Ref. #'),
@@ -40,9 +39,8 @@ class MonitoringActivityCSVRenderer(ListSeperatorCSVRenderMixin, FriendlyCSVRend
         'team_members': _('Team Members'),
         'tpm_partner': _('TPM Partner'),
         'visit_lead': _('Person Responsible'),
-        'partners': _('Partners'),
+        'partners': _('CSO Partners'),
         'interventions': _('PD/SPD'),
         'cp_outputs': _('Outputs'),
         'ewp_activities': _('Key Intervention'),
-        'gpds': _('GPD'),
     }

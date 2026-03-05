@@ -21,7 +21,7 @@ from etools.applications.field_monitoring.fm_settings.serializers import (
     FMCommonAttachmentSerializer,
     QuestionSerializer,
 )
-from etools.applications.field_monitoring.planning.models import EWPActivity, GPD, MonitoringActivity
+from etools.applications.field_monitoring.planning.models import EWPActivity, MonitoringActivity
 from etools.applications.partners.serializers.interventions_v2 import MinimalInterventionListSerializer
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
 from etools.applications.reports.serializers.v2 import MinimalOutputListSerializer
@@ -37,17 +37,11 @@ class ActivityDataCollectionSerializer(serializers.ModelSerializer):
 class MinimalEWPActivityListSerializer(serializers.ModelSerializer):
     """Minimal representation for Key Intervention / eWP activity targets."""
 
+    cp_output = MinimalOutputListSerializer(read_only=True)
+
     class Meta:
         model = EWPActivity
-        fields = ('id', 'wbs')
-
-
-class MinimalGPDListSerializer(serializers.ModelSerializer):
-    """Minimal representation for GPD targets."""
-
-    class Meta:
-        model = GPD
-        fields = ('id', 'gpd_ref')
+        fields = ('id', 'wbs', 'cp_output')
 
 
 class ActivityQuestionSerializer(serializers.ModelSerializer):
@@ -55,7 +49,6 @@ class ActivityQuestionSerializer(serializers.ModelSerializer):
     cp_output = MinimalOutputListSerializer(read_only=True)
     intervention = MinimalInterventionListSerializer(read_only=True)
     ewp_activity = MinimalEWPActivityListSerializer(read_only=True)
-    gpd = MinimalGPDListSerializer(read_only=True)
 
     question = QuestionSerializer(read_only=True)
 
@@ -66,7 +59,7 @@ class ActivityQuestionSerializer(serializers.ModelSerializer):
             'text', 'is_hact',
             'is_enabled', 'specific_details',
             'partner', 'intervention', 'cp_output',
-            'ewp_activity', 'gpd',
+            'ewp_activity',
         )
 
 
@@ -134,10 +127,10 @@ class ChecklistOverallFindingSerializer(serializers.ModelSerializer):
         model = ChecklistOverallFinding
         fields = (
             'id',
-            'partner', 'cp_output', 'intervention', 'ewp_activity', 'gpd',
+            'partner', 'cp_output', 'intervention', 'ewp_activity',
             'narrative_finding_raw', 'attachments'
         )
-        read_only_fields = ('partner', 'cp_output', 'intervention', 'ewp_activity', 'gpd')
+        read_only_fields = ('partner', 'cp_output', 'intervention', 'ewp_activity')
 
 
 class FindingSerializer(serializers.ModelSerializer):
@@ -168,10 +161,10 @@ class ActivityOverallFindingSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'partner', 'cp_output', 'intervention',
             'narrative_finding_raw', 'on_track',
-            'ewp_activity', 'gpd',
+            'ewp_activity',
             'attachments', 'findings'
         )
-        read_only_fields = ('partner', 'cp_output', 'intervention', 'ewp_activity', 'gpd')
+        read_only_fields = ('partner', 'cp_output', 'intervention', 'ewp_activity')
 
     def _get_checklist_overall_findings(self, obj):
         return [
@@ -184,8 +177,7 @@ class ActivityOverallFindingSerializer(serializers.ModelSerializer):
                 finding.partner_id == obj.partner_id and
                 finding.cp_output_id == obj.cp_output_id and
                 finding.intervention_id == obj.intervention_id and
-                finding.ewp_activity_id == obj.ewp_activity_id and
-                finding.gpd_id == obj.gpd_id
+                finding.ewp_activity_id == obj.ewp_activity_id
             )
         ]
 

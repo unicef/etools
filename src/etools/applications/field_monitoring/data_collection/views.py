@@ -159,15 +159,14 @@ class ActivityQuestionsViewSet(
         'partner', 'partner__organization',
         'cp_output',
         'intervention',
-        'ewp_activity',
-        'gpd',
+        'ewp_activity', 'ewp_activity__cp_output', 'ewp_activity__cp_output__result_type',
     ).prefetch_related(
         'cp_output__result_type',
         'question__methods',
         'question__sections',
         'question__options',
     ).order_by(
-        'partner_id', 'cp_output_id', 'intervention_id', 'ewp_activity_id', 'gpd_id', 'id'
+        'partner_id', 'cp_output_id', 'intervention_id', 'ewp_activity_id', 'id'
     )
     serializer_class = ActivityQuestionSerializer
     filter_backends = (DjangoFilterBackend,)
@@ -237,7 +236,7 @@ class ChecklistOverallFindingsViewSet(
         IsReadAction | (IsEditAction & activity_field_is_editable_permission('started_checklist_set'))
     ]
     queryset = ChecklistOverallFinding.objects.select_related(
-        'partner', 'cp_output', 'intervention', 'ewp_activity', 'gpd',
+        'partner', 'cp_output', 'intervention', 'ewp_activity',
     ).prefetch_related('attachments')
     serializer_class = ChecklistOverallFindingSerializer
 
@@ -288,7 +287,7 @@ class ActivityOverallFindingsViewSet(
     ]
     queryset = ActivityOverallFinding.objects.select_related(
         'monitoring_activity',
-        'partner', 'cp_output', 'intervention', 'ewp_activity', 'gpd',
+        'partner', 'cp_output', 'intervention', 'ewp_activity',
     ).prefetch_related(
         'monitoring_activity__checklists__overall_findings__attachments',
         'monitoring_activity__checklists__author',
