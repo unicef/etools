@@ -518,6 +518,11 @@ class EngagementStatusUpdateMixin:
             if not comment:
                 raise serializers.ValidationError({'cancel_comment': ['This field is required when cancelling']})
 
+        # currency_of_report is required for audit/sc submit but has no FSM condition — check it explicitly.
+        if transition_method == 'submit' and instance.engagement_type in (Engagement.TYPES.audit, Engagement.TYPES.sc):
+            if not instance.currency_of_report:
+                raise serializers.ValidationError({'currency_of_report': ['This field is required.']})
+
         try:
             method = getattr(instance, transition_method)
 
@@ -545,6 +550,10 @@ class EngagementStatusUpdateMixin:
                     instance.refresh_from_db()
 
         except Exception as e:
+            # FSM conditions raise ValidationError with a field-keyed dict — re-raise as-is
+            # so the response has field-level errors instead of a generic status message.
+            if isinstance(e, serializers.ValidationError) and isinstance(getattr(e, 'detail', None), dict):
+                raise
             raise serializers.ValidationError({
                 'status': [f"Unable to change status. {self._friendly_transition_error(e)}"]
             })
