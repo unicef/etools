@@ -7,7 +7,7 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('field_monitoring_planning', '0014_remove_gpd_add_ewpactivity_cp_output'),
+        ('field_monitoring_planning', '0013_rename_dummy_models'),
         ('field_monitoring_data_collection', '0002_initial'),
     ]
 
