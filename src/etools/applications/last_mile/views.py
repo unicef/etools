@@ -283,7 +283,7 @@ class TransferViewSet(
                 Q(l_consignee_code=location.l_consignee_code) |
                 Q(destination_point=location)
             )
-        elif location.poi_type.category == 'warehouse':
+        elif location.is_warehouse():
             # Warehouse can receive transfers without L-Consignee code or with destination set to this warehouse
             qs = qs.filter(
                 Q(destination_point=location) |

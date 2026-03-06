@@ -5,7 +5,8 @@ ALERT_TYPES = {
     "LMSM Alert Receipt": "Acknowledgement by IP",
     "Waybill Recipient": "Waybill Recipient",
     "LMSM User Creation Report": "LMSM User Creation Report",
-    "LMSM Dispensing Notification": "Dispensing Notification"
+    "LMSM Dispensing Notification": "Dispensing Notification",
+    "LMSM Transfer Alert": "Transfer Ingest Alert"
 }
 
 TRANSFER_MANUAL_CREATION_NAME = "INITIAL STOCK UPLOAD @"

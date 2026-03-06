@@ -138,5 +138,12 @@
       "name": "LMSM CO Viewer",
       "permissions": []
     }
+  },
+  {
+    "model": "auth.group",
+    "fields": {
+      "name": "LMSM Transfer Alert",
+      "permissions": []
+    }
   }
 ]
