@@ -7,18 +7,15 @@ from unicef_djangolib.fields import CodedGenericRelation
 
 from etools.applications.field_monitoring.data_collection.utils import clean_narrative_finding
 from etools.applications.field_monitoring.fm_settings.models import Method, Question
-from etools.applications.field_monitoring.planning.mixins import (
-    STANDARD_TARGET_MAPPINGS,
-    QuestionTargetMixin,
-)
+from etools.applications.field_monitoring.planning.mixins import QuestionTargetMixin, STANDARD_TARGET_MAPPINGS
 
 
 class NarrativeFindingCleanMixin(models.Model):
     """Mixin to auto-clean narrative_finding from narrative_finding_raw on save."""
-    
+
     class Meta:
         abstract = True
-    
+
     def save(self, *args, **kwargs):
         # Clean narrative_finding from narrative_finding_raw
         if self.narrative_finding_raw:
@@ -131,8 +128,10 @@ class StartedChecklist(models.Model):
             finding.cp_output = cp_output
             findings.append(finding)
 
-        # EWP activities
+        # EWP activities without a cp_output (those with one are covered by the cp_output finding)
         for ewp_activity in activity.ewp_activities.all():
+            if ewp_activity.cp_output_id:
+                continue
             if not _has_enabled_questions('ewp_activity', ewp_activity):
                 continue
             finding = ChecklistOverallFinding(started_checklist=self)

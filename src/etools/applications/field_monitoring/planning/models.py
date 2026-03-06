@@ -22,22 +22,21 @@ from etools.applications.action_points.models import ActionPoint, ActionPointCom
 from etools.applications.core.permissions import import_permissions
 from etools.applications.core.urlresolvers import build_frontend_url
 from etools.applications.environment.notifications import send_notification_with_template
-from etools.applications.field_monitoring.data_collection.offline.synchronizer import (
-    MonitoringActivityOfflineSynchronizer,
-)
-from etools.applications.field_monitoring.fm_settings.models import LocationSite, Method, Option, Question
 from etools.applications.field_monitoring.data_collection.models import (
     ActivityOverallFinding,
     ActivityQuestion,
     ActivityQuestionOverallFinding,
     ChecklistOverallFinding,
 )
+from etools.applications.field_monitoring.data_collection.offline.synchronizer import (
+    MonitoringActivityOfflineSynchronizer,
+)
+from etools.applications.field_monitoring.fm_settings.models import LocationSite, Method, Option, Question
 from etools.applications.field_monitoring.planning.mixins import (
-    ACTIVITY_TARGET_FIELDS,
-    STANDARD_TARGET_MAPPINGS,
     EWPActivity,
     ProtectUnknownTransitionsMeta,
     QuestionTargetMixin,
+    STANDARD_TARGET_MAPPINGS,
 )
 from etools.applications.field_monitoring.planning.transitions.permissions import (
     user_is_field_monitor_permission,
@@ -518,12 +517,15 @@ class MonitoringActivity(
                 questions.append(self._build_activity_question(tq, 'cp_output', cp_output))
 
         # EWP activities: ewp_activity-level questions per activity
-        for ewp_activity in self.ewp_activities.all():
+        for ewp_activity in self.ewp_activities.select_related('cp_output').all():
             target_questions = applicable_questions.filter(level='ewp_activity').prefetch_templates(
                 'ewp_activity', target_id=ewp_activity.id
             )
             for tq in target_questions:
-                questions.append(self._build_activity_question(tq, 'ewp_activity', ewp_activity))
+                aq = self._build_activity_question(tq, 'ewp_activity', ewp_activity)
+                if ewp_activity.cp_output_id:
+                    aq.cp_output_id = ewp_activity.cp_output_id
+                questions.append(aq)
 
         ActivityQuestion.objects.bulk_create(questions)
 
@@ -551,8 +553,10 @@ class MonitoringActivity(
                 finding.cp_output = cp_output
                 findings.append(finding)
 
-            # EWP activities
+            # EWP activities without a cp_output (those with one are covered by the cp_output finding)
             for ewp_activity in self.ewp_activities.all():
+                if ewp_activity.cp_output_id:
+                    continue
                 if not self.questions.filter(ewp_activity=ewp_activity).exists():
                     continue
                 finding = ActivityOverallFinding(monitoring_activity=self)

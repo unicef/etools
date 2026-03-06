@@ -497,7 +497,7 @@ class TestNewEntityTypes(BaseTenantTestCase):
         activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.draft)
         activity.sections.set([self.section])
         activity.cp_outputs.set([cp_output])       # direct
-        activity.ewp_activities.set([ewp_activity]) # indirect, same cp_output
+        activity.ewp_activities.set([ewp_activity])  # indirect, same cp_output
 
         activity.prepare_questions_structure()
 
@@ -512,7 +512,7 @@ class TestNewEntityTypes(BaseTenantTestCase):
         """
         An ewp_activity linked to a cp_output must produce:
         - one set of output-level questions for the cp_output
-        - one set of ewp_activity-level questions for the ewp_activity
+        - one set of ewp_activity-level questions for the ewp_activity, also stamped with cp_output
         """
         cp_output = ResultFactory(result_type__name=ResultType.OUTPUT)
         output_question = QuestionFactory(level=Question.LEVELS.output, sections=[self.section])
@@ -526,7 +526,36 @@ class TestNewEntityTypes(BaseTenantTestCase):
         activity.prepare_questions_structure()
 
         self.assertEqual(activity.questions.filter(cp_output=cp_output, question=output_question).count(), 1)
-        self.assertEqual(activity.questions.filter(ewp_activity=ewp_activity, question=self.ewp_question).count(), 1)
+        ewp_q = activity.questions.filter(ewp_activity=ewp_activity, question=self.ewp_question).get()
+        self.assertEqual(ewp_q.cp_output_id, cp_output.pk)
+
+    def test_ewp_activity_with_cp_output_uses_cp_output_overall_finding(self):
+        """An ewp_activity with a cp_output must not get a standalone overall finding."""
+        cp_output = ResultFactory(result_type__name=ResultType.OUTPUT)
+        ewp_activity = EWPActivity.objects.create(wbs='OF-WITH-CP-001', cp_output=cp_output)
+
+        activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.draft)
+        activity.sections.set([self.section])
+        activity.ewp_activities.set([ewp_activity])
+
+        activity.prepare_questions_structure()
+        activity.prepare_activity_overall_findings()
+
+        self.assertFalse(activity.overall_findings.filter(ewp_activity=ewp_activity).exists())
+        self.assertTrue(activity.overall_findings.filter(cp_output=cp_output).exists())
+
+    def test_ewp_activity_without_cp_output_gets_standalone_overall_finding(self):
+        """An ewp_activity without a cp_output must still get its own standalone overall finding."""
+        ewp_activity = EWPActivity.objects.create(wbs='OF-NO-CP-001', cp_output=None)
+
+        activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.draft)
+        activity.sections.set([self.section])
+        activity.ewp_activities.set([ewp_activity])
+
+        activity.prepare_questions_structure()
+        activity.prepare_activity_overall_findings()
+
+        self.assertTrue(activity.overall_findings.filter(ewp_activity=ewp_activity).exists())
 
     def test_ewp_activity_unique_wbs_null_cp_output(self):
         """

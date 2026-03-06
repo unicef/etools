@@ -61,7 +61,7 @@ def get_blueprint_for_activity_and_method(activity: 'MonitoringActivity', method
         ('partner', activity.partners.all()),
         ('intervention', activity.interventions.all()),
         ('cp_output', activity._get_effective_cp_outputs()),
-        ('ewp_activity', activity.ewp_activities.all()),
+        ('ewp_activity', activity.ewp_activities.filter(cp_output__isnull=True)),
     ]
 
     for target_field, targets in target_iterables:
