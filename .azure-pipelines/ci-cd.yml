@@ -242,12 +242,14 @@ stages:
               displayName: Configure kubeconfig
 
             - script: |
+                IMAGE="$(DOCKER_APP_IMAGE):$(Build.SourceVersion)"
+                echo "Deploying image: $IMAGE"
                 echo "$(DEV_DEPLOYMENTS)" | while read APP; do
                   if [ -n "$APP" ]; then
                     echo "Updating $APP..."
                     kubectl -n etools-dev \
                       set image deployment/$APP \
-                      $APP=$(DOCKER_APP_IMAGE):$(Build.SourceVersion)
+                      $APP=$IMAGE
                   fi
                 done
               displayName: Deploy applications
@@ -305,12 +307,14 @@ stages:
               displayName: Configure kubeconfig
 
             - script: |
+                IMAGE="$(DOCKER_APP_IMAGE):$(Build.SourceVersion)"
+                echo "Deploying image: $IMAGE"
                 echo "$(STAGING_DEPLOYMENTS)" | while read APP; do
                   if [ -n "$APP" ]; then
                     echo "Updating $APP..."
                     kubectl -n etools-staging \
                       set image deployment/$APP \
-                      $APP=$(DOCKER_APP_IMAGE):$(Build.SourceVersion)
+                      $APP=$IMAGE
                   fi
                 done
               displayName: Deploy applications
@@ -372,12 +376,14 @@ stages:
 
             # Deploy sanitized tag (SAFE_BRANCH). For tag-triggered runs, SAFE_BRANCH == sanitized Git tag
             - script: |
+                IMAGE="$(DOCKER_APP_IMAGE):$(SAFE_BRANCH)"
+                echo "Deploying image: $IMAGE"
                 echo "$(PROD_DEPLOYMENTS)" | while read APP; do
                   if [ -n "$APP" ]; then
                     echo "Updating $APP..."
                     kubectl -n etools-prod \
                       set image deployment/$APP \
-                      $APP=$(DOCKER_APP_IMAGE):$(SAFE_BRANCH)
+                      $APP=$IMAGE
                   fi
                 done
               displayName: Deploy applications
