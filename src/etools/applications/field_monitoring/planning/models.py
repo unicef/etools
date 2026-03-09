@@ -277,7 +277,7 @@ class MonitoringActivity(
             lambda i, old_instance=None, user=None: i.send_submit_notice(),
         ],
         STATUSES.completed: [
-            lambda i, old_instance=None, user=None: i.update_one_hact_value(),
+            lambda i, old_instance=None, user=None: i.update_one_hact_value(old_instance),
             lambda i, old_instance=None, user=None: i.remember_reviewed_by(old_instance, user),
         ],
         STATUSES.cancelled: [
@@ -474,9 +474,6 @@ class MonitoringActivity(
             # do nothing if we just moved back from review
             return
 
-        # cleanup
-        self.questions.all().delete()
-
         from etools.applications.field_monitoring.data_collection.models import ActivityQuestion
 
         applicable_questions = Question.objects.filter(is_active=True).distinct()
@@ -485,49 +482,84 @@ class MonitoringActivity(
                 Q(sections__in=self.sections.values_list('pk', flat=True)) |
                 Q(sections__isnull=True))
 
-        questions = []
-
+        expected = {}
         for relation, level in self.RELATIONS_MAPPING:
+            target_field = Question.get_target_relation_name(level)
             for target in getattr(self, relation).all():
                 target_questions = applicable_questions.filter(level=level).prefetch_templates(
                     level, target_id=target.id
                 )
                 for target_question in target_questions:
-                    activity_question = ActivityQuestion(
-                        question=target_question, monitoring_activity=self,
-                        text=target_question.text, is_hact=target_question.is_hact,
-                        is_enabled=target_question.template.is_active if target_question.template else False
-                    )
+                    key = [target_question.pk, None, None, None]
+                    field_index = {'partner': 1, 'cp_output': 2, 'intervention': 3}[target_field]
+                    key[field_index] = target.pk
+                    expected[tuple(key)] = target_question
 
-                    if target_question.template:
-                        activity_question.specific_details = target_question.template.specific_details
+        existing = {}
+        for aq in self.questions.all():
+            key = (aq.question_id, aq.partner_id, aq.cp_output_id, aq.intervention_id)
+            existing[key] = aq
 
-                    setattr(activity_question, Question.get_target_relation_name(level), target)
+        keys_to_remove = set(existing.keys()) - set(expected.keys())
+        if keys_to_remove:
+            ids_to_remove = [existing[k].pk for k in keys_to_remove]
+            self.questions.filter(pk__in=ids_to_remove).delete()
 
-                    questions.append(activity_question)
+        keys_to_add = sorted(set(expected.keys()) - set(existing.keys()))
+        new_questions = []
+        for key in keys_to_add:
+            target_question = expected[key]
+            _, partner_id, cp_output_id, intervention_id = key
+            activity_question = ActivityQuestion(
+                question=target_question, monitoring_activity=self,
+                text=target_question.text, is_hact=target_question.is_hact,
+                is_enabled=target_question.template.is_active if target_question.template else False,
+                partner_id=partner_id, cp_output_id=cp_output_id, intervention_id=intervention_id,
+            )
+            if target_question.template:
+                activity_question.specific_details = target_question.template.specific_details
+            new_questions.append(activity_question)
 
-        ActivityQuestion.objects.bulk_create(questions)
+        if new_questions:
+            ActivityQuestion.objects.bulk_create(new_questions)
 
     @transaction.atomic()
     def prepare_activity_overall_findings(self):
         try:
-            self.overall_findings.all().delete()
-
             from etools.applications.field_monitoring.data_collection.models import ActivityOverallFinding
 
-            findings = []
+            expected_keys = set()
             for relation, level in self.RELATIONS_MAPPING:
+                target_field = Question.get_target_relation_name(level)
                 for target in getattr(self, relation).all():
-                    if not self.questions.filter(**{Question.get_target_relation_name(level): target}).exists():
+                    if not self.questions.filter(**{target_field: target}).exists():
                         continue
+                    key = [None, None, None]
+                    field_index = {'partner': 0, 'cp_output': 1, 'intervention': 2}[target_field]
+                    key[field_index] = target.pk
+                    expected_keys.add(tuple(key))
 
-                    finding = ActivityOverallFinding(monitoring_activity=self)
+            existing_keys = set()
+            for finding in self.overall_findings.all():
+                key = (finding.partner_id, finding.cp_output_id, finding.intervention_id)
+                existing_keys.add(key)
 
-                    setattr(finding, Question.get_target_relation_name(level), target)
+            keys_to_remove = existing_keys - expected_keys
+            for partner_id, cp_output_id, intervention_id in keys_to_remove:
+                self.overall_findings.filter(
+                    partner_id=partner_id, cp_output_id=cp_output_id, intervention_id=intervention_id,
+                ).delete()
 
-                    findings.append(finding)
+            keys_to_add = sorted(expected_keys - existing_keys)
+            new_findings = []
+            for partner_id, cp_output_id, intervention_id in keys_to_add:
+                new_findings.append(ActivityOverallFinding(
+                    monitoring_activity=self,
+                    partner_id=partner_id, cp_output_id=cp_output_id, intervention_id=intervention_id,
+                ))
 
-            ActivityOverallFinding.objects.bulk_create(findings)
+            if new_findings:
+                ActivityOverallFinding.objects.bulk_create(new_findings)
         except Exception as ex:  # noqa
             logger.exception(f'Generating ActivityOverallFinding for Monitoring Activity id {self.pk} failed. Error: {ex}')
             capture_exception(ex)
@@ -537,13 +569,28 @@ class MonitoringActivity(
         try:
             from etools.applications.field_monitoring.data_collection.models import ActivityQuestionOverallFinding
 
-            # cleanup
-            ActivityQuestionOverallFinding.objects.filter(activity_question__monitoring_activity=self).delete()
+            enabled_question_ids = set(
+                self.questions.filter(is_enabled=True).values_list('pk', flat=True)
+            )
 
-            ActivityQuestionOverallFinding.objects.bulk_create([
-                ActivityQuestionOverallFinding(activity_question=question)
-                for question in self.questions.filter(is_enabled=True)
-            ])
+            existing_question_ids = set(
+                ActivityQuestionOverallFinding.objects.filter(
+                    activity_question__monitoring_activity=self
+                ).values_list('activity_question_id', flat=True)
+            )
+
+            orphan_ids = existing_question_ids - enabled_question_ids
+            if orphan_ids:
+                ActivityQuestionOverallFinding.objects.filter(
+                    activity_question_id__in=orphan_ids
+                ).delete()
+
+            new_question_ids = sorted(enabled_question_ids - existing_question_ids)
+            if new_question_ids:
+                ActivityQuestionOverallFinding.objects.bulk_create([
+                    ActivityQuestionOverallFinding(activity_question_id=qid)
+                    for qid in new_question_ids
+                ])
         except Exception as ex:  # noqa
             logger.exception(f'Generating ActivityQuestionOverallFinding for Monitoring Activity id {self.pk} failed. Error: {ex}')
             capture_exception(ex)
@@ -726,11 +773,14 @@ class MonitoringActivity(
             ).values_list('question__methods', flat=True)
         )
 
-    def update_one_hact_value(self):
+    def update_one_hact_value(self, old_instance=None):
         """
-            Every time an activity transitions to completed, all Partners associated with that activity
-            will increase the completed PV count if applicable
+            Every time an activity transitions to completed for the first time, all Partners
+            associated with that activity will increase the completed PV count if applicable.
+            Skip if already counted (detected via completion_date being set on old_instance).
         """
+        if old_instance and old_instance.completion_date:
+            return
 
         aq_qs = self.questions.filter(question__is_hact=True).filter(overall_finding__value__isnull=False)
         partner_orgs = [aq.partner for aq in aq_qs.all() if aq.partner]
