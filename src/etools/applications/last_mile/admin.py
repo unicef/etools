@@ -14,7 +14,7 @@ from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework.exceptions import ValidationError as DRFValidationError
-from unicef_attachments.admin import AttachmentInline, AttachmentSingleInline
+from unicef_attachments.admin import AttachmentSingleInline
 
 from etools.applications.last_mile import models
 from etools.applications.last_mile.admin_panel.validators import AdminPanelValidator
@@ -26,7 +26,7 @@ from etools.libraries.djangolib.admin import RestrictedEditAdminMixin, XLSXImpor
 from etools.libraries.djangolib.utils import is_user_in_groups
 
 
-class ProofTransferAttachmentInline(AttachmentInline):
+class ProofTransferAttachmentInline(AttachmentSingleInline):
     verbose_name_plural = "Proof of Transfer"
     code = 'proof_of_transfer'
 
