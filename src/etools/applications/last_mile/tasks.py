@@ -13,12 +13,6 @@ from etools.applications.users.models import Country, User
 from etools.config.celery import app
 
 
-def _ensure_list(value):
-    if isinstance(value, str):
-        return [value]
-    return list(value) if value else []
-
-
 @app.task
 def notify_upload_waybill(tenant_name, destination_pk, waybill_pk, waybill_url):
 
@@ -41,13 +35,12 @@ def notify_upload_waybill(tenant_name, destination_pk, waybill_pk, waybill_url):
 
 
 @app.task
-def notify_wastage_transfer(tenant_name, transfer, proof_full_urls, action='wastage_checkout'):
+def notify_wastage_transfer(tenant_name, transfer, proof_full_url, action='wastage_checkout'):
     action_map = {
         'wastage_checkout': 'checked-out as wastage',
         'short_checkin': 'checked-in as short',
         'surplus_checkin': 'checked-in as surplus'
     }
-    proof_full_urls = _ensure_list(proof_full_urls)
     with schema_context(tenant_name):
         recipients = User.objects.get_email_recipients_with_group('LMSM Focal Point', tenant_name)
         send_notification(
@@ -55,13 +48,12 @@ def notify_wastage_transfer(tenant_name, transfer, proof_full_urls, action='wast
             from_address=settings.DEFAULT_FROM_EMAIL,
             subject=f"LMSM app: New items {action_map[action]} by {transfer.get('partner_organization', {}).get('name')}",
             html_content_filename='emails/wastage_transfer.html',
-            context={'transfer': transfer, 'action': action, 'header': action_map[action], 'proof_full_urls': proof_full_urls}
+            context={'transfer': transfer, 'action': action, 'header': action_map[action], 'proof_full_url': proof_full_url}
         )
 
 
 @app.task
-def notify_dispensing_transfer(tenant_name, transfer, proof_full_urls):
-    proof_full_urls = _ensure_list(proof_full_urls)
+def notify_dispensing_transfer(tenant_name, transfer, proof_full_url):
     with schema_context(tenant_name):
         recipients = User.objects.get_email_recipients_with_group('LMSM Dispensing Notification', tenant_name)
         send_notification(
@@ -69,13 +61,12 @@ def notify_dispensing_transfer(tenant_name, transfer, proof_full_urls):
             from_address=settings.DEFAULT_FROM_EMAIL,
             subject=f"LMSM app: New items checkout-out as dispensing by {transfer.get('partner_organization', {}).get('name')}",
             html_content_filename='emails/dispense_transfer.html',
-            context={'transfer': transfer, 'proof_full_urls': proof_full_urls}
+            context={'transfer': transfer, 'proof_full_url': proof_full_url}
         )
 
 
 @app.task
-def notify_first_checkin_transfer(tenant_name, transfer_pk, attachment_urls):
-    attachment_urls = _ensure_list(attachment_urls)
+def notify_first_checkin_transfer(tenant_name, transfer_pk, attachment_url):
     with schema_context(tenant_name):
         transfer = models.Transfer.objects.get(pk=transfer_pk)
 
@@ -86,7 +77,7 @@ def notify_first_checkin_transfer(tenant_name, transfer_pk, attachment_urls):
             from_address=settings.DEFAULT_FROM_EMAIL,
             subject='Acknowledged by IP',
             html_content_filename='emails/first_checkin.html',
-            context={'transfer': transfer, 'attachment_urls': attachment_urls}
+            context={'transfer': transfer, "attachment_url": attachment_url}
         )
 
 
