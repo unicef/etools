@@ -516,16 +516,24 @@ class MonitoringActivity(
             for tq in target_questions:
                 questions.append(self._build_activity_question(tq, 'cp_output', cp_output))
 
-        # EWP activities: ewp_activity-level questions per activity
+        # EWP activities: ewp_activity-level questions per activity.
+        # KIs with a cp_output: one question per (cp_output, question_template), deduplicated across KIs.
+        # KIs without a cp_output: one question per (ewp_activity, question_template).
+        seen_cp_output_ewp_q = set()
+
         for ewp_activity in self.ewp_activities.select_related('cp_output').all():
             target_questions = applicable_questions.filter(level='ewp_activity').prefetch_templates(
                 'ewp_activity', target_id=ewp_activity.id
             )
             for tq in target_questions:
-                aq = self._build_activity_question(tq, 'ewp_activity', ewp_activity)
                 if ewp_activity.cp_output_id:
-                    aq.cp_output_id = ewp_activity.cp_output_id
-                questions.append(aq)
+                    key = (ewp_activity.cp_output_id, tq.id)
+                    if key in seen_cp_output_ewp_q:
+                        continue
+                    seen_cp_output_ewp_q.add(key)
+                    questions.append(self._build_activity_question(tq, 'cp_output', ewp_activity.cp_output))
+                else:
+                    questions.append(self._build_activity_question(tq, 'ewp_activity', ewp_activity))
 
         ActivityQuestion.objects.bulk_create(questions)
 

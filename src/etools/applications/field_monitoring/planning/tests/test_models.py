@@ -511,23 +511,27 @@ class TestNewEntityTypes(BaseTenantTestCase):
     def test_ewp_activity_with_cp_output_generates_both_question_levels(self):
         """
         An ewp_activity linked to a cp_output must produce:
-        - one set of output-level questions for the cp_output
-        - one set of ewp_activity-level questions for the ewp_activity, also stamped with cp_output
+        - one output-level question tagged to cp_output
+        - one ewp_activity-level question tagged to cp_output only (no ewp_activity FK)
+        Multiple KIs sharing the same cp_output must not duplicate the ewp questions.
         """
         cp_output = ResultFactory(result_type__name=ResultType.OUTPUT)
         output_question = QuestionFactory(level=Question.LEVELS.output, sections=[self.section])
 
-        ewp_activity = EWPActivity.objects.create(wbs='BOTH-LEVELS-001', cp_output=cp_output)
+        ewp1 = EWPActivity.objects.create(wbs='BOTH-LEVELS-001', cp_output=cp_output)
+        ewp2 = EWPActivity.objects.create(wbs='BOTH-LEVELS-002', cp_output=cp_output)
 
         activity = MonitoringActivityFactory(status=MonitoringActivity.STATUSES.draft)
         activity.sections.set([self.section])
-        activity.ewp_activities.set([ewp_activity])
+        activity.ewp_activities.set([ewp1, ewp2])
 
         activity.prepare_questions_structure()
 
         self.assertEqual(activity.questions.filter(cp_output=cp_output, question=output_question).count(), 1)
-        ewp_q = activity.questions.filter(ewp_activity=ewp_activity, question=self.ewp_question).get()
-        self.assertEqual(ewp_q.cp_output_id, cp_output.pk)
+        # ewp questions deduplicated: one per (cp_output, question_template), tagged to cp_output
+        self.assertEqual(
+            activity.questions.filter(cp_output=cp_output, ewp_activity__isnull=True, question=self.ewp_question).count(), 1
+        )
 
     def test_ewp_activity_with_cp_output_uses_cp_output_overall_finding(self):
         """An ewp_activity with a cp_output must not get a standalone overall finding."""

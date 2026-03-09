@@ -38,7 +38,6 @@ from etools.applications.field_monitoring.planning.serializers import Monitoring
 from etools.applications.field_monitoring.planning.tests.factories import (
     EWPActivityFactory,
     FacilityTypeFactory,
-    GPDFactory,
     MonitoringActivityActionPointFactory,
     MonitoringActivityFactory,
     QuestionTemplateFactory,
@@ -1035,7 +1034,6 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         MonitoringActivityFactory(status='completed')
         MonitoringActivityFactory(status='cancelled')
         ewp = EWPActivityFactory(wbs='WBS-2024-01')
-        gpd = GPDFactory(gpd_ref='GPD-001')
         [
             MonitoringActivityFactory(
                 interventions=[InterventionFactory()],
@@ -1046,7 +1044,6 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
                 team_members=[UserFactory()],
                 visit_lead=UserFactory(),
                 ewp_activities=[ewp],
-                gpds=[gpd],
             )
             for _ in range(20)
         ]

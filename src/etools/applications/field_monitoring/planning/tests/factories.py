@@ -10,7 +10,6 @@ from etools.applications.field_monitoring.fm_settings.tests.factories import Que
 from etools.applications.field_monitoring.planning.models import (
     EWPActivity,
     FacilityType,
-    GPD,
     MonitoringActivity,
     MonitoringActivityGroup,
     QuestionTemplate,
@@ -42,13 +41,6 @@ class EWPActivityFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = EWPActivity
-
-
-class GPDFactory(factory.django.DjangoModelFactory):
-    gpd_ref = factory.Sequence(lambda n: 'GPD-{:03d}'.format(n))
-
-    class Meta:
-        model = GPD
 
 
 class BaseMonitoringActivityFactory(factory.django.DjangoModelFactory):
