@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-08-18 06:45+0000\n"
+"POT-Creation-Date: 2026-03-03 11:00+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -162,6 +162,12 @@ msgstr "Categoría"
 msgid "Question Text"
 msgstr "Texto de la pregunta"
 
+msgid "Tooltip"
+msgstr "Información sobre herramientas"
+
+msgid "Brief guidance or definition shown on hover (max 500 characters)."
+msgstr "Orientación breve o definición mostrada al pasar el cursor (máximo 500 caracteres)."
+
 msgid "Count as HACT"
 msgstr "Cuenta como HACT"
 
@@ -229,9 +235,7 @@ msgid "Maximum one related object should be provided"
 msgstr "Debe proporcionarse un máximo de un objeto relacionado"
 
 msgid "HACT questions can only be related at the Partner Organization Level"
-msgstr ""
-"Las preguntas del HACT solo se pueden relacionar a nivel del socio "
-"implementador"
+msgstr "Las preguntas del HACT solo se pueden relacionar a nivel del socio implementador"
 
 msgid "Only one hact question can be active at any time."
 msgstr "Solo una pregunta de HACT puede estar activa en cualquier momento."
