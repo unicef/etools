@@ -256,14 +256,14 @@
       <table class="all-cells-border mt-20">
         <tbody>
           <tr>
-            <td colspan="4" class="b-navy">{% translate "Workplan Budget" %}</td>
+            <td colspan="6" class="b-navy">{% translate "Workplan Budget" %}</td>
           </tr>
           <tr>
-            <td class="b-gray w-p30">{% translate "Result Level" %}</td>
+            <td class="b-gray w-p20">{% translate "Result Level" %}</td>
             <td class="b-gray w-p40">{% translate "Result/activity" %}</td>
             <td class="b-gray w-p30">{% translate "Timeframe" %}</td>
-            <td class="b-gray w-p10">{% translate "Total (CSO + UNICEF)" %}[{{ gdd.planned_budget.currency }}]</td>
-            <td class="b-gray w-p10">{% translate "CSO contribution" %}</td>
+            <td class="b-gray w-p20">{% translate "Total (Goverment + UNICEF)" %}[{{ gdd.planned_budget.currency }}]</td>
+            <td class="b-gray w-p10">{% translate "Government contribution" %}</td>
             <td class="b-gray w-p10">{% translate "UNICEF contribution" %}</td>
          </tr>
           {% for result_link in gdd.result_links.all %}
@@ -287,6 +287,10 @@
                   <td>{{ activity.cso_cash|add:activity.unicef_cash | currency }}</td>
                   <td>{{ activity.cso_cash | currency }}</td>
                   <td>{{ activity.unicef_cash | currency }}</td>
+                </tr>
+                <tr>
+                  <td>Other Notes</td>
+                  <td colspan="5">{{ activity.other_notes }}</td>
                 </tr>
               {% endfor %}
             {% endfor %}
