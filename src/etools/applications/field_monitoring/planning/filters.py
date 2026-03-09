@@ -21,6 +21,7 @@ class MonitoringActivitiesFilterSet(filters.FilterSet):
     cp_outputs__in = M2MInFilter(field_name="cp_outputs")
     sections__in = M2MInFilter(field_name="sections")
     offices__in = M2MInFilter(field_name="offices")
+    is_programatic_visit = filters.BooleanFilter(field_name='is_programatic_visit')
 
     class Meta:
         model = MonitoringActivity
