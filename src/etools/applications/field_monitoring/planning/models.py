@@ -505,7 +505,7 @@ class MonitoringActivity(
             ids_to_remove = [existing[k].pk for k in keys_to_remove]
             self.questions.filter(pk__in=ids_to_remove).delete()
 
-        keys_to_add = set(expected.keys()) - set(existing.keys())
+        keys_to_add = sorted(set(expected.keys()) - set(existing.keys()))
         new_questions = []
         for key in keys_to_add:
             target_question = expected[key]
@@ -550,7 +550,7 @@ class MonitoringActivity(
                     partner_id=partner_id, cp_output_id=cp_output_id, intervention_id=intervention_id,
                 ).delete()
 
-            keys_to_add = expected_keys - existing_keys
+            keys_to_add = sorted(expected_keys - existing_keys)
             new_findings = []
             for partner_id, cp_output_id, intervention_id in keys_to_add:
                 new_findings.append(ActivityOverallFinding(
@@ -585,7 +585,7 @@ class MonitoringActivity(
                     activity_question_id__in=orphan_ids
                 ).delete()
 
-            new_question_ids = enabled_question_ids - existing_question_ids
+            new_question_ids = sorted(enabled_question_ids - existing_question_ids)
             if new_question_ids:
                 ActivityQuestionOverallFinding.objects.bulk_create([
                     ActivityQuestionOverallFinding(activity_question_id=qid)
