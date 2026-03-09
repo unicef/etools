@@ -1,6 +1,13 @@
 from django.contrib import admin
+from django.http import HttpResponse
+from django.utils import timezone
+
+from admin_extra_urls.decorators import button
+from admin_extra_urls.mixins import ExtraUrlMixin
 
 from etools.applications.action_points.admin import ActionPointAdmin
+from etools.applications.field_monitoring.planning.export.renderers import MonitoringActivityAdminCSVRenderer
+from etools.applications.field_monitoring.planning.export.serializers import MonitoringActivityAdminExportSerializer
 from etools.applications.field_monitoring.planning.models import (
     FacilityType,
     MonitoringActivity,
@@ -66,7 +73,7 @@ class MonitoringActivityFacilityTypeAdmin(admin.ModelAdmin):
 
 
 @admin.register(MonitoringActivity)
-class MonitoringActivityAdmin(admin.ModelAdmin):
+class MonitoringActivityAdmin(ExtraUrlMixin, admin.ModelAdmin):
     list_display = (
         'reference_number', 'monitor_type', 'tpm_partner', 'visit_lead',
         'location', 'location_site', 'start_date', 'end_date', 'status'
@@ -93,6 +100,18 @@ class MonitoringActivityAdmin(admin.ModelAdmin):
                 'partners',
                 'interventions',
                 'cp_outputs'
+        )
+
+    @button(label="Export csv data", details=False)
+    def export_all(self, request):
+        activities = (self.get_queryset(request)
+                      .prefetch_related('partners', 'overall_findings', 'checklists',
+                                        'attachments', 'report_attachments'))
+
+        serializer = MonitoringActivityAdminExportSerializer(activities, many=True)
+        return HttpResponse(
+            content=MonitoringActivityAdminCSVRenderer().render(serializer.data),
+            headers={'Content-Disposition': f'attachment;filename=monitoring_activities_{timezone.now()}.csv'}
         )
 
 
