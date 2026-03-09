@@ -1684,17 +1684,14 @@ class MonitoringActivityActionPointsViewTestCase(FMBaseTestCaseMixin, APIViewSet
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_create_action_point_with_ewp_activity(self):
         """
-        Creating an action point with an ewp_activity FK must succeed, and the
-        read response must return ewp_activity as a nested object where cp_output
-        is itself a nested {id, name} dict — not a bare integer.
+        Creating an action point must accept a WBS string for ewp_activity (not a PK),
+        and the read response must return ewp_activity as a nested {id, wbs, cp_output} object.
         """
-        from etools.applications.field_monitoring.planning.models import EWPActivity
-
         cp_output = ResultFactory(result_type__name=ResultType.OUTPUT)
-        ewp = EWPActivity.objects.create(wbs='WBS-AP-TEST-001', cp_output=cp_output)
+        ewp = EWPActivityFactory(wbs='WBS-AP-TEST-001', cp_output=cp_output)
 
         data = dict(self.create_data)
-        data['ewp_activity'] = ewp.pk
+        data['ewp_activity'] = ewp.wbs
 
         response = self._test_create(self.fm_user, data=data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -1703,7 +1700,6 @@ class MonitoringActivityActionPointsViewTestCase(FMBaseTestCaseMixin, APIViewSet
         self.assertIsNotNone(ap_ewp)
         self.assertEqual(ap_ewp['id'], ewp.pk)
         self.assertEqual(ap_ewp['wbs'], ewp.wbs)
-        # cp_output must be nested {id, name}, not a bare integer
         self.assertIsInstance(ap_ewp['cp_output'], dict)
         self.assertEqual(ap_ewp['cp_output']['id'], cp_output.pk)
         self.assertIn('name', ap_ewp['cp_output'])

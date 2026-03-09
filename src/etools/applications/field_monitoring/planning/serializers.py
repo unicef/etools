@@ -566,7 +566,11 @@ class MonitoringActivityActionPointSerializer(ActionPointBaseSerializer):
         label=_('Related CP Output'), read_field=MinimalOutputListSerializer(), required=False,
     )
     ewp_activity = SeparatedReadWriteField(
-        label=_('Related Key Intervention'), read_field=EWPActivitySerializer(), required=False,
+        label=_('Related Key Intervention'),
+        read_field=EWPActivitySerializer(),
+        write_field=serializers.SlugRelatedField(
+            slug_field='wbs', queryset=EWPActivity.objects.all(), required=False, allow_null=True,
+        ),
     )
 
     section = SeparatedReadWriteField(
