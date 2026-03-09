@@ -412,7 +412,7 @@ class TestIsProgramaticVisitFilter(FMBaseTestCaseMixin, APIViewSetTestCase, Base
         )
         programmatic.update_is_programatic_visit()
 
-        non_programmatic = MonitoringActivityFactory(status='completed')
+        MonitoringActivityFactory(status='completed')
 
         self._test_list(
             self.unicef_user, [programmatic],

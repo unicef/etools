@@ -205,6 +205,7 @@ class MonitoringActivitiesQuerySet(models.QuerySet):
             # has_finding_for_partner=True,
         )
 
+
 class MonitoringActivityMeta(ProtectUnknownTransitionsMeta, ModelBase):
     pass
 
