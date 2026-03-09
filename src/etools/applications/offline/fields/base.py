@@ -78,6 +78,7 @@ class BaseField(ValidatedStructure):
         placeholder='',
         default_value=None,
         options_key=None,
+        tooltip='',
         **kwargs
     ):
         super().__init__(name, **kwargs)
@@ -88,6 +89,7 @@ class BaseField(ValidatedStructure):
         self.placeholder = placeholder
         self.default_value = default_value
         self.options_key = options_key
+        self.tooltip = tooltip or ''
 
     def to_dict(self, **kwargs):
         return super().to_dict(
@@ -98,6 +100,7 @@ class BaseField(ValidatedStructure):
             placeholder=str(self.placeholder),
             default_value=self.default_value,
             options_key=self.options_key,
+            tooltip=str(self.tooltip),
             **kwargs
         )
 

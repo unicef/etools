@@ -1,12 +1,15 @@
 from django.conf import settings
+from django.db import connection
 
 from django_tenants.utils import schema_context
 from unicef_attachments.models import Attachment
 from unicef_notification.utils import send_notification
 
+from etools.applications.environment.models import TenantSwitch
 from etools.applications.environment.notifications import send_notification_with_template
 from etools.applications.last_mile import models
-from etools.applications.users.models import User
+from etools.applications.last_mile.serializers_ext import TransferIngestAlertSerializer
+from etools.applications.users.models import Country, User
 from etools.config.celery import app
 
 
@@ -85,3 +88,57 @@ def notify_first_checkin_transfer(tenant_name, transfer_pk, attachment_urls):
             html_content_filename='emails/first_checkin.html',
             context={'transfer': transfer, 'attachment_urls': attachment_urls}
         )
+
+
+@app.task
+def notify_transfer_ingest_alerts():
+    disabled_country_ids = TenantSwitch.objects.filter(
+        name='lmsm_disabled', active=True
+    ).values_list('countries__id', flat=True)
+
+    for country in Country.objects.exclude(
+        schema_name='public'
+    ).exclude(id__in=disabled_country_ids).all():
+        connection.set_tenant(country)
+        _notify_transfer_ingest_alerts(country.name, country.schema_name)
+
+
+ALERT_EMAIL_CONFIG = {
+    models.TransferIngestAlert.CONSIGNEE_CODE_NOT_FOUND: {
+        'subject': 'LMSM: Consignee Code Not Found — {country_name}',
+        'template': 'emails/transfer_ingest_alert_code_not_found.html',
+    },
+    models.TransferIngestAlert.PARTNER_NOT_LINKED: {
+        'subject': 'LMSM: Partner Not Linked to Destination — {country_name}',
+        'template': 'emails/transfer_ingest_alert_partner_not_linked.html',
+    },
+}
+
+
+def _notify_transfer_ingest_alerts(country_name, schema_name):
+    unnotified = models.TransferIngestAlert.objects.filter(notified=False)
+    if not unnotified.exists():
+        return
+
+    recipients = User.objects.get_email_recipients_with_group('LMSM Transfer Alert', schema_name)
+    if not recipients:
+        return
+
+    recipient_list = list(recipients)
+
+    for alert_type, config in ALERT_EMAIL_CONFIG.items():
+        alerts = unnotified.filter(alert_type=alert_type)
+        if not alerts.exists():
+            continue
+
+        alert_list = TransferIngestAlertSerializer(alerts, many=True).data
+
+        send_notification(
+            recipients=recipient_list,
+            from_address=settings.DEFAULT_FROM_EMAIL,
+            subject=config['subject'].format(country_name=country_name),
+            html_content_filename=config['template'],
+            context={'alerts': alert_list, 'country_name': country_name}
+        )
+
+        alerts.update(notified=True)

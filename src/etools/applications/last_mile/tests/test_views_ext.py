@@ -1,6 +1,7 @@
 import json
 from datetime import timedelta
 from decimal import Decimal
+from unittest import mock
 
 from django.contrib.auth.models import Group
 from django.db import connection
@@ -18,10 +19,12 @@ from applications.last_mile.tests.factories import (
 )
 from freezegun import freeze_time
 from rest_framework import status
+from unicef_locations.tests.factories import LocationFactory
 
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.environment.tests.factories import TenantSwitchFactory
 from etools.applications.last_mile import models
+from etools.applications.last_mile.tasks import _notify_transfer_ingest_alerts
 from etools.applications.organizations.tests.factories import OrganizationFactory
 from etools.applications.partners.tests.factories import PartnerFactory
 from etools.applications.users.models import Country, Realm
@@ -2372,6 +2375,235 @@ class TestLConsigneeCodeFunctionality(BaseTenantTestCase):
         self.assertIsNone(transfer.l_consignee_code)
         self.assertIsNone(transfer.destination_point)
 
+    def test_ingest_rejects_transfer_with_nonexistent_consignee_code(self):
+        url = reverse("last_mile:vision-ingest-transfers")
+        payload = [
+            {
+                "Event": "LD",
+                "ReleaseOrder": "RO-L004",
+                "ImplementingPartner": "IP12345",
+                "PONumber": "PO-444",
+                "MaterialNumber": "MAT-001",
+                "ReleaseOrderItem": "40",
+                "ItemDescription": "Test item",
+                "Quantity": 100,
+                "UOM": "BOX",
+                "BatchNumber": "B4",
+                "ConsigneeCode": "L-NONEXISTENT"
+            }
+        ]
+
+        response = self.forced_auth_req(
+            method="post", url=url, data=payload, user=self.api_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(models.Transfer.objects.count(), 0)
+        self.assertEqual(response.data["transfers_created"], 0)
+        self.assertEqual(response.data["skipped_count"], 1)
+        self.assertEqual(len(response.data["details"]["skipped_transfers"]), 1)
+        self.assertEqual(
+            response.data["details"]["skipped_transfers"][0]["reason"],
+            "Consignee Code does not exist"
+        )
+
+        alert = models.TransferIngestAlert.objects.get()
+        self.assertEqual(alert.release_order, "RO-L004")
+        self.assertEqual(alert.consignee_code, "L-NONEXISTENT")
+        self.assertEqual(alert.vendor_number, "IP12345")
+        self.assertEqual(alert.alert_type, models.TransferIngestAlert.CONSIGNEE_CODE_NOT_FOUND)
+        self.assertFalse(alert.notified)
+
+    def test_ingest_rejects_transfer_when_partner_not_linked(self):
+        other_partner_org = OrganizationFactory(vendor_number="IP-OTHER-999")
+        other_partner = PartnerFactory(organization=other_partner_org)
+
+        poi_other_partner = PointOfInterestFactory(
+            name="Other Partner POI",
+            l_consignee_code="L-OTHER-PARTNER",
+            poi_type=self.warehouse_type,
+            status=models.PointOfInterest.ApprovalStatus.APPROVED,
+            is_active=True,
+        )
+        poi_other_partner.partner_organizations.add(other_partner)
+
+        url = reverse("last_mile:vision-ingest-transfers")
+        payload = [
+            {
+                "Event": "LD",
+                "ReleaseOrder": "RO-L005",
+                "ImplementingPartner": "IP12345",
+                "PONumber": "PO-555",
+                "MaterialNumber": "MAT-001",
+                "ReleaseOrderItem": "50",
+                "ItemDescription": "Test item",
+                "Quantity": 100,
+                "UOM": "BOX",
+                "BatchNumber": "B5",
+                "ConsigneeCode": "L-OTHER-PARTNER",
+            }
+        ]
+
+        response = self.forced_auth_req(
+            method="post", url=url, data=payload, user=self.api_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(models.Transfer.objects.count(), 0)
+        self.assertEqual(response.data["skipped_count"], 1)
+        self.assertIn(
+            "is not linked to partner organization",
+            response.data["details"]["skipped_transfers"][0]["reason"],
+        )
+
+        alert = models.TransferIngestAlert.objects.get()
+        self.assertEqual(alert.release_order, "RO-L005")
+        self.assertEqual(alert.consignee_code, "L-OTHER-PARTNER")
+        self.assertEqual(alert.vendor_number, "IP12345")
+        self.assertEqual(alert.alert_type, models.TransferIngestAlert.PARTNER_NOT_LINKED)
+        self.assertFalse(alert.notified)
+
+    @mock.patch("etools.applications.last_mile.tasks.send_notification")
+    def test_notify_consignee_code_not_found_sends_email(self, mock_send):
+        group, _ = Group.objects.get_or_create(name="LMSM Transfer Alert")
+        recipient = UserFactory()
+        tenant_schema = connection.tenant.schema_name
+        country = Country.objects.get(schema_name=tenant_schema)
+        Realm.objects.create(
+            user=recipient,
+            country=country,
+            organization=recipient.profile.organization,
+            group=group,
+        )
+
+        models.TransferIngestAlert.objects.create(
+            release_order="RO-ALERT-1",
+            consignee_code="L-MISSING",
+            vendor_number="IP12345",
+            alert_type=models.TransferIngestAlert.CONSIGNEE_CODE_NOT_FOUND,
+            reason="Consignee Code does not exist",
+            country_name=country.name,
+        )
+
+        _notify_transfer_ingest_alerts(country.name, tenant_schema)
+
+        mock_send.assert_called_once()
+        call_kwargs = mock_send.call_args[1]
+        self.assertIn(recipient.email, call_kwargs["recipients"])
+        self.assertIn("Consignee Code Not Found", call_kwargs["subject"])
+        self.assertEqual(
+            call_kwargs["html_content_filename"],
+            "emails/transfer_ingest_alert_code_not_found.html",
+        )
+
+        alert = models.TransferIngestAlert.objects.get()
+        self.assertTrue(alert.notified)
+
+    @mock.patch("etools.applications.last_mile.tasks.send_notification")
+    def test_notify_partner_not_linked_sends_email(self, mock_send):
+        group, _ = Group.objects.get_or_create(name="LMSM Transfer Alert")
+        recipient = UserFactory()
+        tenant_schema = connection.tenant.schema_name
+        country = Country.objects.get(schema_name=tenant_schema)
+        Realm.objects.create(
+            user=recipient,
+            country=country,
+            organization=recipient.profile.organization,
+            group=group,
+        )
+
+        models.TransferIngestAlert.objects.create(
+            release_order="RO-ALERT-2",
+            consignee_code="L-UNLINKED",
+            vendor_number="IP67890",
+            alert_type=models.TransferIngestAlert.PARTNER_NOT_LINKED,
+            reason="Partner not linked to destination",
+            country_name=country.name,
+        )
+
+        _notify_transfer_ingest_alerts(country.name, tenant_schema)
+
+        mock_send.assert_called_once()
+        call_kwargs = mock_send.call_args[1]
+        self.assertIn(recipient.email, call_kwargs["recipients"])
+        self.assertIn("Partner Not Linked", call_kwargs["subject"])
+        self.assertEqual(
+            call_kwargs["html_content_filename"],
+            "emails/transfer_ingest_alert_partner_not_linked.html",
+        )
+
+        alert = models.TransferIngestAlert.objects.get()
+        self.assertTrue(alert.notified)
+
+    @mock.patch("etools.applications.last_mile.tasks.send_notification")
+    def test_notify_both_alert_types_sends_separate_emails(self, mock_send):
+        group, _ = Group.objects.get_or_create(name="LMSM Transfer Alert")
+        recipient = UserFactory()
+        tenant_schema = connection.tenant.schema_name
+        country = Country.objects.get(schema_name=tenant_schema)
+        Realm.objects.create(
+            user=recipient,
+            country=country,
+            organization=recipient.profile.organization,
+            group=group,
+        )
+
+        models.TransferIngestAlert.objects.create(
+            release_order="RO-ALERT-A",
+            consignee_code="L-MISSING",
+            vendor_number="IP12345",
+            alert_type=models.TransferIngestAlert.CONSIGNEE_CODE_NOT_FOUND,
+            reason="Consignee Code does not exist",
+            country_name=country.name,
+        )
+        models.TransferIngestAlert.objects.create(
+            release_order="RO-ALERT-B",
+            consignee_code="L-UNLINKED",
+            vendor_number="IP67890",
+            alert_type=models.TransferIngestAlert.PARTNER_NOT_LINKED,
+            reason="Partner not linked to destination",
+            country_name=country.name,
+        )
+
+        _notify_transfer_ingest_alerts(country.name, tenant_schema)
+
+        self.assertEqual(mock_send.call_count, 2)
+
+        subjects = [call[1]["subject"] for call in mock_send.call_args_list]
+        self.assertTrue(any("Consignee Code Not Found" in s for s in subjects))
+        self.assertTrue(any("Partner Not Linked" in s for s in subjects))
+
+        self.assertTrue(
+            models.TransferIngestAlert.objects.filter(notified=False).count() == 0
+        )
+
+    @mock.patch("etools.applications.last_mile.tasks.send_notification")
+    def test_notify_skips_already_notified_alerts(self, mock_send):
+        group, _ = Group.objects.get_or_create(name="LMSM Transfer Alert")
+        recipient = UserFactory()
+        tenant_schema = connection.tenant.schema_name
+        country = Country.objects.get(schema_name=tenant_schema)
+        Realm.objects.create(
+            user=recipient,
+            country=country,
+            organization=recipient.profile.organization,
+            group=group,
+        )
+
+        models.TransferIngestAlert.objects.create(
+            release_order="RO-OLD",
+            consignee_code="L-OLD",
+            vendor_number="IP12345",
+            alert_type=models.TransferIngestAlert.CONSIGNEE_CODE_NOT_FOUND,
+            reason="Consignee Code does not exist",
+            country_name=country.name,
+            notified=True,
+        )
+
+        _notify_transfer_ingest_alerts(country.name, tenant_schema)
+
+        mock_send.assert_not_called()
+
     def test_incoming_transfers_warehouse_with_l_code(self):
         transfer_matching = TransferFactory(
             l_consignee_code="L-WH-001",
@@ -2595,3 +2827,574 @@ class TestLConsigneeCodeFunctionality(BaseTenantTestCase):
 
         transfer.refresh_from_db()
         self.assertEqual(transfer.status, models.Transfer.PENDING)
+
+
+class TestVisionIngestPOIsApiView(BaseTenantTestCase):
+    url = reverse("last_mile:vision-ingest-pois")
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        LocationFactory(admin_level=0)
+        cls.api_user = UserFactory(is_superuser=True)
+        cls.unauthorized_user = UserFactory(is_superuser=False)
+
+        cls.partner_org1 = OrganizationFactory(vendor_number="POI-IP-001")
+        cls.partner1 = PartnerFactory(organization=cls.partner_org1)
+
+        cls.partner_org2 = OrganizationFactory(vendor_number="POI-IP-002")
+        cls.partner2 = PartnerFactory(organization=cls.partner_org2)
+
+    def test_unauthenticated_request_fails(self):
+        payload = [
+            {
+                "LocationName": "Test Location",
+                "IPNumber": "POI-IP-001",
+                "PrimaryType": "Clinic",
+                "IsPrivate": False,
+                "Latitude": "1.234",
+                "Longitude": "5.678",
+            }
+        ]
+        response = self.forced_auth_req(
+            method="post", url=self.url, data=payload, user=self.unauthorized_user
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_successful_ingest_creates_pois(self):
+        initial_count = models.PointOfInterest.all_objects.count()
+        payload = [
+            {
+                "LocationName": "Health Center Alpha",
+                "IPNumber": "POI-IP-001",
+                "PrimaryType": "Clinic",
+                "IsPrivate": False,
+                "Latitude": "1.234",
+                "Longitude": "32.567",
+            },
+            {
+                "LocationName": "Warehouse Beta",
+                "IPNumber": "POI-IP-002",
+                "PrimaryType": "Warehouse",
+                "IsPrivate": True,
+                "Latitude": "0.315",
+                "Longitude": "32.581",
+            },
+        ]
+
+        response = self.forced_auth_req(
+            method="post", url=self.url, data=payload, user=self.api_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["created_count"], 2)
+        self.assertEqual(response.data["updated_count"], 0)
+        self.assertEqual(response.data["skipped_count"], 0)
+        self.assertEqual(models.PointOfInterest.all_objects.count(), initial_count + 2)
+
+        poi1 = models.PointOfInterest.all_objects.get(name="Health Center Alpha")
+        self.assertFalse(poi1.private)
+        self.assertEqual(poi1.poi_type.name, "Clinic")
+        self.assertIn(self.partner1, poi1.partner_organizations.all())
+
+        poi2 = models.PointOfInterest.all_objects.get(name="Warehouse Beta")
+        self.assertTrue(poi2.private)
+        self.assertEqual(poi2.poi_type.name, "Warehouse")
+        self.assertIn(self.partner2, poi2.partner_organizations.all())
+
+    def test_pcode_auto_generated_when_not_provided(self):
+        payload = [
+            {
+                "LocationName": "Auto PCode Location",
+                "IPNumber": "POI-IP-001",
+                "PrimaryType": "Clinic",
+                "IsPrivate": False,
+                "Latitude": "1.000",
+                "Longitude": "32.000",
+            }
+        ]
+
+        response = self.forced_auth_req(
+            method="post", url=self.url, data=payload, user=self.api_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["created_count"], 1)
+
+        poi = models.PointOfInterest.all_objects.get(name="Auto PCode Location")
+        self.assertTrue(poi.p_code.startswith("tes"))
+        self.assertEqual(len(poi.p_code), 12)
+
+    def test_explicit_pcode_is_used(self):
+        payload = [
+            {
+                "LocationName": "Explicit PCode Location",
+                "IPNumber": "POI-IP-001",
+                "PrimaryType": "Clinic",
+                "IsPrivate": False,
+                "Latitude": "1.111",
+                "Longitude": "32.111",
+                "PCode": "EXPLICIT001",
+            }
+        ]
+
+        response = self.forced_auth_req(
+            method="post", url=self.url, data=payload, user=self.api_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(
+            models.PointOfInterest.all_objects.filter(p_code="EXPLICIT001").exists()
+        )
+
+    def test_skips_rows_with_invalid_coordinates(self):
+        payload = [
+            {
+                "LocationName": "Bad Coords Location",
+                "IPNumber": "POI-IP-001",
+                "PrimaryType": "Clinic",
+                "IsPrivate": False,
+                "Latitude": "not_a_number",
+                "Longitude": "also_bad",
+            }
+        ]
+
+        response = self.forced_auth_req(
+            method="post", url=self.url, data=payload, user=self.api_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["created_count"], 0)
+        self.assertEqual(response.data["skipped_count"], 1)
+        self.assertIn("Invalid coordinates", response.data["details"]["skipped_pois"][0]["reason"])
+
+    def test_skips_rows_with_nonexistent_vendor_number(self):
+        payload = [
+            {
+                "LocationName": "Unknown Vendor Location",
+                "IPNumber": "NONEXISTENT-VENDOR",
+                "PrimaryType": "Clinic",
+                "IsPrivate": False,
+                "Latitude": "1.500",
+                "Longitude": "32.500",
+            }
+        ]
+
+        response = self.forced_auth_req(
+            method="post", url=self.url, data=payload, user=self.api_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["created_count"], 0)
+        self.assertEqual(response.data["skipped_count"], 1)
+        self.assertIn("does not exist", response.data["details"]["skipped_pois"][0]["reason"])
+
+    def test_updates_existing_poi_when_pcode_matches(self):
+        payload_create = [
+            {
+                "LocationName": "Original Name",
+                "IPNumber": "POI-IP-001",
+                "PrimaryType": "Clinic",
+                "IsPrivate": False,
+                "Latitude": "1.200",
+                "Longitude": "32.200",
+                "PCode": "UPDATE-TEST-001",
+            }
+        ]
+
+        self.forced_auth_req(
+            method="post", url=self.url, data=payload_create, user=self.api_user
+        )
+
+        payload_update = [
+            {
+                "LocationName": "Updated Name",
+                "IPNumber": "POI-IP-001",
+                "PrimaryType": "Warehouse",
+                "IsPrivate": True,
+                "Latitude": "2.000",
+                "Longitude": "33.000",
+                "PCode": "UPDATE-TEST-001",
+            }
+        ]
+
+        response = self.forced_auth_req(
+            method="post", url=self.url, data=payload_update, user=self.api_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["created_count"], 0)
+        self.assertEqual(response.data["updated_count"], 1)
+
+        poi = models.PointOfInterest.all_objects.get(p_code="UPDATE-TEST-001")
+        self.assertEqual(poi.name, "Updated Name")
+        self.assertTrue(poi.private)
+        self.assertEqual(poi.poi_type.name, "Warehouse")
+
+    def test_poi_type_get_or_create(self):
+        payload = [
+            {
+                "LocationName": "New Type Location",
+                "IPNumber": "POI-IP-001",
+                "PrimaryType": "Mobile Health Unit",
+                "IsPrivate": False,
+                "Latitude": "1.300",
+                "Longitude": "32.300",
+            }
+        ]
+
+        self.assertFalse(
+            models.PointOfInterestType.objects.filter(name="Mobile Health Unit").exists()
+        )
+
+        response = self.forced_auth_req(
+            method="post", url=self.url, data=payload, user=self.api_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["created_count"], 1)
+
+        poi_type = models.PointOfInterestType.objects.get(name="Mobile Health Unit")
+        self.assertEqual(poi_type.category, "mobile_health_unit")
+
+    def test_empty_payload(self):
+        response = self.forced_auth_req(
+            method="post", url=self.url, data=[], user=self.api_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["created_count"], 0)
+        self.assertEqual(response.data["updated_count"], 0)
+        self.assertEqual(response.data["skipped_count"], 0)
+
+    def test_html_tags_are_stripped(self):
+        payload = [
+            {
+                "LocationName": "<b>Bold Name</b>",
+                "IPNumber": "POI-IP-001",
+                "PrimaryType": "<i>Clinic</i>",
+                "IsPrivate": False,
+                "Latitude": "1.400",
+                "Longitude": "32.400",
+                "PCode": "HTML-STRIP-TEST",
+            }
+        ]
+
+        response = self.forced_auth_req(
+            method="post", url=self.url, data=payload, user=self.api_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        poi = models.PointOfInterest.all_objects.get(p_code="HTML-STRIP-TEST")
+        self.assertEqual(poi.name, "Bold Name")
+        self.assertEqual(poi.poi_type.name, "Clinic")
+
+    def test_partner_organization_added_to_poi(self):
+        payload = [
+            {
+                "LocationName": "Multi Partner Location",
+                "IPNumber": "POI-IP-001",
+                "PrimaryType": "Clinic",
+                "IsPrivate": False,
+                "Latitude": "1.600",
+                "Longitude": "32.600",
+                "PCode": "PARTNER-ADD-TEST",
+            }
+        ]
+
+        self.forced_auth_req(
+            method="post", url=self.url, data=payload, user=self.api_user
+        )
+
+        # Add another partner to the same POI
+        payload2 = [
+            {
+                "LocationName": "Multi Partner Location",
+                "IPNumber": "POI-IP-002",
+                "PrimaryType": "Clinic",
+                "IsPrivate": False,
+                "Latitude": "1.600",
+                "Longitude": "32.600",
+                "PCode": "PARTNER-ADD-TEST",
+            }
+        ]
+
+        response = self.forced_auth_req(
+            method="post", url=self.url, data=payload2, user=self.api_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        poi = models.PointOfInterest.all_objects.get(p_code="PARTNER-ADD-TEST")
+        self.assertEqual(poi.partner_organizations.count(), 2)
+        self.assertIn(self.partner1, poi.partner_organizations.all())
+        self.assertIn(self.partner2, poi.partner_organizations.all())
+
+    def test_missing_required_field_returns_400(self):
+        payload = [
+            {
+                "IPNumber": "POI-IP-001",
+                "PrimaryType": "Clinic",
+                "Latitude": "1.000",
+                "Longitude": "32.000",
+            }
+        ]
+
+        response = self.forced_auth_req(
+            method="post", url=self.url, data=payload, user=self.api_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_missing_primary_type_returns_400(self):
+        payload = [
+            {
+                "LocationName": "No Type Location",
+                "IPNumber": "POI-IP-001",
+                "IsPrivate": False,
+                "Latitude": "1.700",
+                "Longitude": "32.700",
+                "PCode": "NO-TYPE-TEST",
+            }
+        ]
+
+        response = self.forced_auth_req(
+            method="post", url=self.url, data=payload, user=self.api_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_blank_primary_type_returns_400(self):
+        payload = [
+            {
+                "LocationName": "No Type Location",
+                "IPNumber": "POI-IP-001",
+                "PrimaryType": "",
+                "IsPrivate": False,
+                "Latitude": "1.700",
+                "Longitude": "32.700",
+                "PCode": "NO-TYPE-TEST",
+            }
+        ]
+
+        response = self.forced_auth_req(
+            method="post", url=self.url, data=payload, user=self.api_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_consignee_code_and_description_saved(self):
+        payload = [
+            {
+                "LocationName": "Consignee Location",
+                "IPNumber": "POI-IP-001",
+                "PrimaryType": "Clinic",
+                "IsPrivate": False,
+                "Latitude": "1.800",
+                "Longitude": "32.800",
+                "PCode": "CONSIGNEE-TEST",
+                "ConsigneeCode": "L123456789",
+                "Description": "A health center in the north",
+            }
+        ]
+
+        response = self.forced_auth_req(
+            method="post", url=self.url, data=payload, user=self.api_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["created_count"], 1)
+
+        poi = models.PointOfInterest.all_objects.get(p_code="CONSIGNEE-TEST")
+        self.assertEqual(poi.l_consignee_code, "L123456789")
+        self.assertEqual(poi.description, "A health center in the north")
+
+    def test_invalid_consignee_code_format_skips_row(self):
+        payload = [
+            {
+                "LocationName": "Bad Consignee",
+                "IPNumber": "POI-IP-001",
+                "PrimaryType": "Clinic",
+                "IsPrivate": False,
+                "Latitude": "1.900",
+                "Longitude": "32.900",
+                "PCode": "BAD-CONSIGNEE",
+                "ConsigneeCode": "INVALID",
+            }
+        ]
+
+        response = self.forced_auth_req(
+            method="post", url=self.url, data=payload, user=self.api_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["created_count"], 0)
+        self.assertEqual(response.data["skipped_count"], 1)
+        self.assertIn("Invalid L-Consignee code format", response.data["details"]["skipped_pois"][0]["reason"])
+
+    def test_consignee_code_not_starting_with_l_skips_row(self):
+        payload = [
+            {
+                "LocationName": "Wrong Prefix",
+                "IPNumber": "POI-IP-001",
+                "PrimaryType": "Clinic",
+                "IsPrivate": False,
+                "Latitude": "1.950",
+                "Longitude": "32.950",
+                "PCode": "WRONG-PREFIX",
+                "ConsigneeCode": "X123456789",
+            }
+        ]
+
+        response = self.forced_auth_req(
+            method="post", url=self.url, data=payload, user=self.api_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["created_count"], 0)
+        self.assertEqual(response.data["skipped_count"], 1)
+
+    def test_duplicate_consignee_code_skips_row(self):
+        # First create a POI with a consignee code
+        payload1 = [
+            {
+                "LocationName": "First Consignee POI",
+                "IPNumber": "POI-IP-001",
+                "PrimaryType": "Clinic",
+                "IsPrivate": False,
+                "Latitude": "2.100",
+                "Longitude": "33.100",
+                "PCode": "FIRST-CONSIGNEE",
+                "ConsigneeCode": "L000000001",
+            }
+        ]
+
+        self.forced_auth_req(
+            method="post", url=self.url, data=payload1, user=self.api_user
+        )
+
+        # Try to create another POI with the same consignee code
+        payload2 = [
+            {
+                "LocationName": "Duplicate Consignee POI",
+                "IPNumber": "POI-IP-002",
+                "PrimaryType": "Clinic",
+                "IsPrivate": False,
+                "Latitude": "2.200",
+                "Longitude": "33.200",
+                "PCode": "SECOND-CONSIGNEE",
+                "ConsigneeCode": "L000000001",
+            }
+        ]
+
+        response = self.forced_auth_req(
+            method="post", url=self.url, data=payload2, user=self.api_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["created_count"], 0)
+        self.assertEqual(response.data["skipped_count"], 1)
+        self.assertIn("already assigned", response.data["details"]["skipped_pois"][0]["reason"])
+
+    def test_same_consignee_code_allowed_on_update_of_same_poi(self):
+        payload = [
+            {
+                "LocationName": "Consignee Update POI",
+                "IPNumber": "POI-IP-001",
+                "PrimaryType": "Clinic",
+                "IsPrivate": False,
+                "Latitude": "2.300",
+                "Longitude": "33.300",
+                "PCode": "CONSIGNEE-UPDATE",
+                "ConsigneeCode": "L000000002",
+            }
+        ]
+
+        self.forced_auth_req(
+            method="post", url=self.url, data=payload, user=self.api_user
+        )
+
+        # Update the same POI (same PCode) with the same consignee code
+        payload_update = [
+            {
+                "LocationName": "Consignee Update POI Renamed",
+                "IPNumber": "POI-IP-001",
+                "PrimaryType": "Clinic",
+                "IsPrivate": True,
+                "Latitude": "2.300",
+                "Longitude": "33.300",
+                "PCode": "CONSIGNEE-UPDATE",
+                "ConsigneeCode": "L000000002",
+            }
+        ]
+
+        response = self.forced_auth_req(
+            method="post", url=self.url, data=payload_update, user=self.api_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["updated_count"], 1)
+        self.assertEqual(response.data["skipped_count"], 0)
+
+        poi = models.PointOfInterest.all_objects.get(p_code="CONSIGNEE-UPDATE")
+        self.assertEqual(poi.name, "Consignee Update POI Renamed")
+        self.assertTrue(poi.private)
+
+    def test_secondary_type_created_with_secondary_role(self):
+        payload = [
+            {
+                "LocationName": "Secondary Type Location",
+                "IPNumber": "POI-IP-001",
+                "PrimaryType": "Clinic",
+                "SecondaryType": "Rural Health Post",
+                "IsPrivate": False,
+                "Latitude": "2.400",
+                "Longitude": "33.400",
+                "PCode": "SEC-TYPE-TEST",
+            }
+        ]
+
+        response = self.forced_auth_req(
+            method="post", url=self.url, data=payload, user=self.api_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["created_count"], 1)
+
+        poi = models.PointOfInterest.all_objects.get(p_code="SEC-TYPE-TEST")
+        self.assertEqual(poi.poi_type.name, "Clinic")
+        self.assertEqual(poi.secondary_type.name, "Rural Health Post")
+        self.assertEqual(poi.secondary_type.type_role, models.PointOfInterestType.TypeRole.SECONDARY)
+        self.assertEqual(poi.secondary_type.category, "rural_health_post")
+
+    def test_all_optional_fields_together(self):
+        payload = [
+            {
+                "LocationName": "Full Location",
+                "IPNumber": "POI-IP-001",
+                "PrimaryType": "Warehouse",
+                "SecondaryType": "Cold Storage",
+                "IsPrivate": True,
+                "Latitude": "2.500",
+                "Longitude": "33.500",
+                "PCode": "FULL-TEST",
+                "ConsigneeCode": "L000000003",
+                "Description": "Full warehouse with cold storage",
+            }
+        ]
+
+        response = self.forced_auth_req(
+            method="post", url=self.url, data=payload, user=self.api_user
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["created_count"], 1)
+
+        poi = models.PointOfInterest.all_objects.get(p_code="FULL-TEST")
+        self.assertEqual(poi.name, "Full Location")
+        self.assertTrue(poi.private)
+        self.assertEqual(poi.l_consignee_code, "L000000003")
+        self.assertEqual(poi.description, "Full warehouse with cold storage")
+        self.assertEqual(poi.poi_type.name, "Warehouse")
+        self.assertEqual(poi.secondary_type.name, "Cold Storage")
+        self.assertEqual(poi.secondary_type.type_role, models.PointOfInterestType.TypeRole.SECONDARY)

@@ -23,7 +23,8 @@
         "help_text": "",
         "placeholder": "",
         "default_value": null,
-        "options_key": null
+        "options_key": null,
+        "tooltip": ""
       },
       {
         "type": "group",
@@ -47,7 +48,8 @@
             "help_text": "",
             "placeholder": "",
             "default_value": null,
-            "options_key": null
+            "options_key": null,
+            "tooltip": ""
           },
           {
             "type": "group",
@@ -73,7 +75,8 @@
                 "help_text": "",
                 "placeholder": "",
                 "default_value": null,
-                "options_key": null
+                "options_key": null,
+                "tooltip": ""
               },
               {
                 "type": "field",
@@ -88,7 +91,8 @@
                 "help_text": "",
                 "placeholder": "",
                 "default_value": null,
-                "options_key": null
+                "options_key": null,
+                "tooltip": ""
               }
             ]
           },
@@ -105,7 +109,8 @@
             "help_text": "",
             "placeholder": "",
             "default_value": null,
-            "options_key": "groups"
+            "options_key": "groups",
+            "tooltip": ""
           }
         ]
       }

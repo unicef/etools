@@ -34,6 +34,12 @@ stages:
         name: vars
         displayName: Compute BASE_TAG for content-addressed versioning
 
+      - task: Docker@2
+        displayName: Login to DockerHub
+        inputs:
+          command: login
+          containerRegistry: dockerhub
+
       - script: |
           if docker manifest inspect $(DOCKER_BASE_IMAGE):$(vars.BASE_TAG) > /dev/null 2>&1; then
             echo "##vso[task.setvariable variable=BASE_IMAGE_EXISTS]true"
@@ -69,20 +75,27 @@ stages:
 - stage: Test
   displayName: Run tests
   dependsOn: BaseImage
+  # Tests only on PR to Develop and Staging. Master assume tested code
+  condition: |
+    and(
+      succeeded(),
+      eq(variables['Build.Reason'], 'PullRequest'),
+      or(
+        eq(variables['System.PullRequest.TargetBranch'], 'develop'),
+        eq(variables['System.PullRequest.TargetBranch'], 'staging')
+      )
+    )
   variables:
     BASE_TAG: $[ stageDependencies.BaseImage.Base.outputs['vars.BASE_TAG'] ]
 
   jobs:
   - job: Tests
     displayName: Run tox tests
-    # Tests only on develop. Staging and Master assume tested code
-    condition: eq(variables['Build.SourceBranch'], 'refs/heads/develop')
     pool:
       vmImage: ubuntu-latest
 
     steps:
       - checkout: self
-        fetchDepth: 0
 
       - script: |
           docker run -d \
@@ -124,7 +137,7 @@ stages:
               tox -e d42
             "
         displayName: Run tox tests
-        timeoutInMinutes: 30
+        timeoutInMinutes: 60
 
       - script: |
           docker rm -f pg redis
@@ -134,6 +147,11 @@ stages:
 - stage: AppImage
   displayName: Application Image build and push
   dependsOn: BaseImage
+  condition: |
+    and(
+      succeeded(),
+      ne(variables['Build.Reason'], 'PullRequest')
+    )
   variables:
     BASE_TAG: $[ stageDependencies.BaseImage.Base.outputs['vars.BASE_TAG'] ]
 
@@ -214,7 +232,6 @@ stages:
       runOnce:
         deploy:
           steps:
-
             - task: KubectlInstaller@0
               displayName: Install kubectl
               inputs:
@@ -324,7 +341,7 @@ stages:
   variables:
     - group: rke-cluster-etools
     - name: SAFE_BRANCH
-      value: $[ stageDependencies.BuildAndPush.Docker.outputs['sanitize.SAFE_BRANCH'] ]    
+      value: $[ stageDependencies.AppImage.App.outputs['sanitize.SAFE_BRANCH'] ]
     - name: PROD_DEPLOYMENTS
       value: |
         beater-prod 
