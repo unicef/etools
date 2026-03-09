@@ -29,3 +29,41 @@ class MonitoringActivityExportSerializer(serializers.Serializer):
         if completion_date:
             return completion_date.strftime('%Y/%m/%d')
         return None
+
+
+class MonitoringActivityAdminExportSerializer(serializers.Serializer):
+    reference_number = serializers.CharField()
+    monitored_partners = serializers.SerializerMethodField()
+    remote_monitoring = serializers.SerializerMethodField()
+    methods = serializers.SerializerMethodField()
+    attachments = serializers.SerializerMethodField()
+    action_points = serializers.SerializerMethodField()
+    overall_finding_ratings = serializers.SerializerMethodField()
+
+    def get_monitored_partners(self, obj):
+        return ', '.join(obj.partners.all().values_list('name', flat=True))
+
+    def get_remote_monitoring(self, obj):
+        if obj.remote_monitoring:
+            return 'Yes'
+        return 'No'
+
+    def get_methods(self, obj):
+        return ', '.join(obj.checklists.all().values_list('method__name', flat=True))
+
+    def get_attachments(self, obj):
+        return 'Yes' if obj.attachments.exists() or obj.report_attachments.exists() else 'No'
+
+    def get_action_points(self, obj):
+        return 'Yes' if obj.actionpoint_set.exists() else 'No'
+
+    def get_overall_finding_ratings(self, obj):
+        ratings = ''
+        for on_track in obj.overall_findings.all().values_list('on_track', flat=True):
+            if on_track:
+                ratings += 'On Track, '
+            elif on_track is None:
+                ratings += 'Not Monitored, '
+            else:
+                ratings += 'Off Track, '
+        return ratings
