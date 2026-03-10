@@ -8,11 +8,11 @@ from django.db import connection, migrations, models
 
 
 SEED_DATA = {
-    'PHARMACY':              {'label': 'pharmacy',             'applicability': [1]},
-    'MOBILE_OTP':            {'label': 'mobile_otp',           'applicability': [1]},
-    'DISPENSING_UNIT':       {'label': 'dispensing_unite',      'applicability': [1, 2]},
-    'HOUSEHOLD_MOBILE_TEAM': {'label': 'householdMobileTeam',  'applicability': [2]},
-    'OTHER':                 {'label': 'other',                 'applicability': [1, 2]},
+    'PHARMACY':              {'label': 'pharmacy',             'applicability': [1],    'order': 10, 'is_active': True},
+    'MOBILE_OTP':            {'label': 'mobile_otp',           'applicability': [1],    'order': 20, 'is_active': True},
+    'DISPENSING_UNIT':       {'label': 'dispensing_unite',      'applicability': [1, 2], 'order': 30, 'is_active': True},
+    'HOUSEHOLD_MOBILE_TEAM': {'label': 'householdMobileTeam',  'applicability': [2],    'order': 40, 'is_active': True},
+    'OTHER':                 {'label': 'other',                 'applicability': [1, 2], 'order': 100, 'is_active': False},
 }
 
 
@@ -24,7 +24,7 @@ def seed_and_migrate_dispensing_types(apps, schema_editor):
     for name, attrs in SEED_DATA.items():
         obj, _ = DispensingPointType.objects.get_or_create(
             name=name,
-            defaults={'label': attrs['label'], 'applicability': attrs['applicability']}
+            defaults={'label': attrs['label'], 'applicability': attrs['applicability'], 'order': attrs['order'], 'is_active': attrs['is_active']}
         )
         created_types[name] = obj
 
@@ -40,7 +40,7 @@ def seed_and_migrate_dispensing_types(apps, schema_editor):
     if country.country_short_code == 'MOZ':
         DispensingPointType.objects.get_or_create(
             name='COMMUNITY_HEALTH_WORKER',
-            defaults={'label': 'communityHealthWorker', 'applicability': [1, 2]}
+            defaults={'label': 'communityHealthWorker', 'applicability': [1, 2], 'order': 90}
         )
 
 
@@ -71,11 +71,12 @@ class Migration(migrations.Migration):
                 ('label', models.CharField(help_text="SimpleLocalize translation key, e.g. 'pharmacy'", max_length=64, verbose_name='Translation Key')),
                 ('applicability', django.contrib.postgres.fields.ArrayField(base_field=models.IntegerField(), default=list, help_text='1 = batched items, 2 = non-batched. E.g. [1,2] means both.', size=None, verbose_name='Applicability')),
                 ('is_active', models.BooleanField(default=True)),
+                ('order', models.PositiveIntegerField(default=0, help_text='Display order. Lower numbers appear first.')),
             ],
             options={
                 'verbose_name': 'Dispensing Point Type',
                 'verbose_name_plural': 'Dispensing Point Types',
-                'ordering': ['name'],
+                'ordering': ['order', 'name'],
             },
         ),
         # 2. Add temporary FK field alongside existing CharField

@@ -666,8 +666,9 @@ class PointOfInterestTypeMappingAdmin(admin.ModelAdmin):
 
 @admin.register(models.DispensingPointType)
 class DispensingPointTypeAdmin(admin.ModelAdmin):
-    list_display = ('name', 'label', 'applicability', 'is_active', 'created', 'modified')
+    list_display = ('name', 'label', 'applicability', 'order', 'is_active', 'created', 'modified')
     list_filter = ('is_active',)
+    list_editable = ('order',)
     search_fields = ('name', 'label')
 
 

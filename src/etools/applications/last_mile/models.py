@@ -150,11 +150,15 @@ class DispensingPointType(TimeStampedModel, models.Model):
         help_text=_("1 = batched items, 2 = non-batched. E.g. [1,2] means both.")
     )
     is_active = models.BooleanField(default=True)
+    order = models.PositiveIntegerField(
+        default=0,
+        help_text=_("Display order. Lower numbers appear first.")
+    )
 
     objects = BaseExportQuerySet.as_manager()
 
     class Meta:
-        ordering = ['name']
+        ordering = ['order', 'name']
         verbose_name = _('Dispensing Point Type')
         verbose_name_plural = _('Dispensing Point Types')
 

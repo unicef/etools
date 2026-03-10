@@ -35,7 +35,7 @@ class DispensingPointTypeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.DispensingPointType
-        fields = ('id', 'name', 'label', 'applicability', 'display_name')
+        fields = ('id', 'name', 'label', 'applicability', 'display_name', 'order')
 
     def get_display_name(self, obj):
         return str(obj)

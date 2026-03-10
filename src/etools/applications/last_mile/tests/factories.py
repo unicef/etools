@@ -13,6 +13,7 @@ class DispensingPointTypeFactory(factory.django.DjangoModelFactory):
     label = factory.Sequence(lambda n: 'dispensing_type_{}'.format(n))
     applicability = [1, 2]
     is_active = True
+    order = factory.Sequence(lambda n: n * 10)
 
     class Meta:
         model = models.DispensingPointType
