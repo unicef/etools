@@ -22,11 +22,22 @@ from etools.applications.action_points.models import ActionPoint, ActionPointCom
 from etools.applications.core.permissions import import_permissions
 from etools.applications.core.urlresolvers import build_frontend_url
 from etools.applications.environment.notifications import send_notification_with_template
+from etools.applications.field_monitoring.data_collection.models import (
+    ActivityOverallFinding,
+    ActivityQuestion,
+    ActivityQuestionOverallFinding,
+    ChecklistOverallFinding,
+)
 from etools.applications.field_monitoring.data_collection.offline.synchronizer import (
     MonitoringActivityOfflineSynchronizer,
 )
 from etools.applications.field_monitoring.fm_settings.models import LocationSite, Method, Option, Question
-from etools.applications.field_monitoring.planning.mixins import ProtectUnknownTransitionsMeta
+from etools.applications.field_monitoring.planning.mixins import (
+    EWPActivity,
+    ProtectUnknownTransitionsMeta,
+    QuestionTargetMixin,
+    STANDARD_TARGET_MAPPINGS,
+)
 from etools.applications.field_monitoring.planning.transitions.permissions import (
     user_is_field_monitor_permission,
     user_is_pme_or_approver_or_reviewer_permission,
@@ -75,40 +86,6 @@ class YearPlan(TimeStampedModel):
 
     def __str__(self):
         return 'Year Plan for {}'.format(self.year)
-
-
-class EWPActivity(models.Model):
-    wbs = models.CharField(max_length=255, unique=True)
-
-    def __str__(self):
-        return self.wbs
-
-
-class GPD(models.Model):
-    gpd_ref = models.CharField(max_length=25, unique=True)
-
-    def __str__(self):
-        return self.gpd_ref
-
-
-class QuestionTargetMixin(models.Model):
-    partner = models.ForeignKey(PartnerOrganization, blank=True, null=True, verbose_name=_('Partner'),
-                                on_delete=models.CASCADE, related_name='+')
-    cp_output = models.ForeignKey(Result, blank=True, null=True, verbose_name=_('CP Output'),
-                                  on_delete=models.CASCADE, related_name='+')
-    intervention = models.ForeignKey(Intervention, blank=True, null=True, verbose_name=_('Intervention'),
-                                     on_delete=models.CASCADE, related_name='+')
-    ewp_activity = models.ForeignKey(EWPActivity, null=True, blank=True, verbose_name=_('eWP Activity'),
-                                     on_delete=models.PROTECT, related_name='+')
-    gpd = models.ForeignKey(GPD, null=True, blank=True, verbose_name=_('GPD'),
-                            on_delete=models.PROTECT, related_name='+')
-
-    @property
-    def related_to(self):
-        return self.partner or self.cp_output or self.intervention
-
-    class Meta:
-        abstract = True
 
 
 class QuestionTemplate(QuestionTargetMixin, models.Model):
@@ -197,8 +174,6 @@ class MonitoringActivityFacilityType(models.Model):
 
 class MonitoringActivitiesQuerySet(models.QuerySet):
     def filter_hact_for_partner(self, partner_id: int):
-        from etools.applications.field_monitoring.data_collection.models import ActivityQuestionOverallFinding
-
         question_sq = ActivityQuestionOverallFinding.objects.filter(
             activity_question__monitoring_activity_id=OuterRef('id'),
             activity_question__is_hact=True,
@@ -305,15 +280,6 @@ class MonitoringActivity(
 
     AUTO_TRANSITIONS = {}
 
-    # Format: (m2m_field_name, question_level, target_field_name)
-    RELATIONS_MAPPING = (
-        ('partners', 'partner', 'partner'),
-        ('cp_outputs', 'output', 'cp_output'),
-        ('interventions', 'intervention', 'intervention'),
-        ('ewp_activities', 'ewp_activity', 'ewp_activity'),
-        ('gpds', 'intervention', 'gpd'),  # gPDs use intervention level but gpd field
-    )
-
     number = models.CharField(
         verbose_name=_('Reference Number'),
         max_length=64,
@@ -350,18 +316,14 @@ class MonitoringActivity(
     location_site = models.ForeignKey(LocationSite, blank=True, null=True, verbose_name=_('Site'),
                                       related_name='monitoring_activities', on_delete=models.CASCADE)
 
-    partners = models.ManyToManyField(PartnerOrganization, verbose_name=_('Partner'),
+    partners = models.ManyToManyField(PartnerOrganization, verbose_name=_('CSO Partner'),
                                       related_name='monitoring_activities', blank=True)
     interventions = models.ManyToManyField(Intervention, related_name='monitoring_activities',
                                            blank=True, verbose_name=_('PD/SPD'))
     cp_outputs = models.ManyToManyField(Result, verbose_name=_('Outputs'), related_name='monitoring_activities',
                                         blank=True)
-
-    # GPD m2m for activities and gpds
-    ewp_activities = models.ManyToManyField(EWPActivity, verbose_name=_('eWP activities'),
+    ewp_activities = models.ManyToManyField(EWPActivity, verbose_name=_('Key Interventions'),
                                             related_name='monitoring_activities', blank=True)
-    gpds = models.ManyToManyField(GPD, verbose_name=_('GDPs'),
-                                  related_name='monitoring_activities', blank=True)
 
     start_date = models.DateField(verbose_name=_('Start Date'), blank=True, null=True)
     end_date = models.DateField(verbose_name=_('End Date'), blank=True, null=True)
@@ -496,6 +458,30 @@ class MonitoringActivity(
                 user=recipient
             )
 
+    def _get_effective_cp_outputs(self):
+        """
+        Return all unique cp_output instances for this activity:
+        direct cp_outputs M2M + cp_outputs linked via ewp_activities (deduplicating).
+        """
+        direct = list(self.cp_outputs.all())
+        seen_ids = {cp.pk for cp in direct}
+        for ewp in self.ewp_activities.select_related('cp_output').filter(cp_output__isnull=False):
+            if ewp.cp_output_id not in seen_ids:
+                seen_ids.add(ewp.cp_output_id)
+                direct.append(ewp.cp_output)
+        return direct
+
+    def _build_activity_question(self, target_question, target_field, target):
+        aq = ActivityQuestion(
+            question=target_question, monitoring_activity=self,
+            text=target_question.text, is_hact=target_question.is_hact,
+            is_enabled=target_question.template.is_active if target_question.template else False,
+        )
+        if target_question.template:
+            aq.specific_details = target_question.template.specific_details
+        setattr(aq, target_field, target)
+        return aq
+
     def prepare_questions_structure(self, old_status=STATUSES.draft):
         if old_status != self.STATUSES.draft:
             # do nothing if we just moved back from review
@@ -503,8 +489,6 @@ class MonitoringActivity(
 
         # cleanup
         self.questions.all().delete()
-
-        from etools.applications.field_monitoring.data_collection.models import ActivityQuestion
 
         applicable_questions = Question.objects.filter(is_active=True).distinct()
         if self.sections.exists():
@@ -514,28 +498,42 @@ class MonitoringActivity(
 
         questions = []
 
-        for relation, level, target_field in self.RELATIONS_MAPPING:
+        # Partners and interventions — standard mapping
+        for relation, level, target_field in STANDARD_TARGET_MAPPINGS:
             for target in getattr(self, relation).all():
-                # key interventions (ewp_activities) have their own checklist/questions
-                # so they use their own question level (ewp_activity)
-                q_level = level
-                target_questions = applicable_questions.filter(level=q_level).prefetch_templates(
-                    q_level, target_id=target.id
+                target_questions = applicable_questions.filter(level=level).prefetch_templates(
+                    level, target_id=target.id
                 )
+                for tq in target_questions:
+                    questions.append(self._build_activity_question(tq, target_field, target))
 
-                for target_question in target_questions:
-                    activity_question = ActivityQuestion(
-                        question=target_question, monitoring_activity=self,
-                        text=target_question.text, is_hact=target_question.is_hact,
-                        is_enabled=target_question.template.is_active if target_question.template else False
-                    )
+        # CP Outputs: one set of output-level questions per unique cp_output
+        # (covers direct M2M + cp_outputs derived from ewp_activities)
+        for cp_output in self._get_effective_cp_outputs():
+            target_questions = applicable_questions.filter(level='output').prefetch_templates(
+                'output', target_id=cp_output.id
+            )
+            for tq in target_questions:
+                questions.append(self._build_activity_question(tq, 'cp_output', cp_output))
 
-                    if target_question.template:
-                        activity_question.specific_details = target_question.template.specific_details
+        # EWP activities: ewp_activity-level questions per activity.
+        # KIs with a cp_output: one question per (cp_output, question_template), deduplicated across KIs.
+        # KIs without a cp_output: one question per (ewp_activity, question_template).
+        seen_cp_output_ewp_q = set()
 
-                    setattr(activity_question, target_field, target)
-
-                    questions.append(activity_question)
+        for ewp_activity in self.ewp_activities.select_related('cp_output').all():
+            target_questions = applicable_questions.filter(level='ewp_activity').prefetch_templates(
+                'ewp_activity', target_id=ewp_activity.id
+            )
+            for tq in target_questions:
+                if ewp_activity.cp_output_id:
+                    key = (ewp_activity.cp_output_id, tq.id)
+                    if key in seen_cp_output_ewp_q:
+                        continue
+                    seen_cp_output_ewp_q.add(key)
+                    questions.append(self._build_activity_question(tq, 'cp_output', ewp_activity.cp_output))
+                else:
+                    questions.append(self._build_activity_question(tq, 'ewp_activity', ewp_activity))
 
         ActivityQuestion.objects.bulk_create(questions)
 
@@ -544,19 +542,34 @@ class MonitoringActivity(
         try:
             self.overall_findings.all().delete()
 
-            from etools.applications.field_monitoring.data_collection.models import ActivityOverallFinding
-
             findings = []
-            for relation, level, target_field in self.RELATIONS_MAPPING:
+
+            # Partners and interventions
+            for relation, level, target_field in STANDARD_TARGET_MAPPINGS:
                 for target in getattr(self, relation).all():
                     if not self.questions.filter(**{target_field: target}).exists():
                         continue
-
                     finding = ActivityOverallFinding(monitoring_activity=self)
-
                     setattr(finding, target_field, target)
-
                     findings.append(finding)
+
+            # CP Outputs (direct + from ewp_activities)
+            for cp_output in self._get_effective_cp_outputs():
+                if not self.questions.filter(cp_output=cp_output).exists():
+                    continue
+                finding = ActivityOverallFinding(monitoring_activity=self)
+                finding.cp_output = cp_output
+                findings.append(finding)
+
+            # EWP activities without a cp_output (those with one are covered by the cp_output finding)
+            for ewp_activity in self.ewp_activities.all():
+                if ewp_activity.cp_output_id:
+                    continue
+                if not self.questions.filter(ewp_activity=ewp_activity).exists():
+                    continue
+                finding = ActivityOverallFinding(monitoring_activity=self)
+                finding.ewp_activity = ewp_activity
+                findings.append(finding)
 
             ActivityOverallFinding.objects.bulk_create(findings)
         except Exception as ex:  # noqa
@@ -566,8 +579,6 @@ class MonitoringActivity(
     @transaction.atomic
     def prepare_questions_overall_findings(self):
         try:
-            from etools.applications.field_monitoring.data_collection.models import ActivityQuestionOverallFinding
-
             # cleanup
             ActivityQuestionOverallFinding.objects.filter(activity_question__monitoring_activity=self).delete()
 
@@ -778,7 +789,6 @@ class MonitoringActivity(
         MonitoringActivityOfflineSynchronizer(self).close_blueprints()
 
     def port_findings_to_summary(self, old_instance=None):
-        from etools.applications.field_monitoring.data_collection.models import ChecklistOverallFinding
         if old_instance and old_instance.status == self.STATUSES.submitted:
             return
         valid_questions = self.questions.annotate(
@@ -797,13 +807,12 @@ class MonitoringActivity(
                 cp_output=overall_finding.cp_output,
                 intervention=overall_finding.intervention,
                 ewp_activity=overall_finding.ewp_activity,
-                gpd=overall_finding.gpd,
             ).values_list('narrative_finding_raw', flat=True)
             if len(narrative_findings) == 1:
                 # Same: do not overwrite existing narrative.
-                if not overall_finding.narrative_finding:
+                if not overall_finding.narrative_finding_raw:
                     overall_finding.narrative_finding_raw = narrative_findings[0]
-                    overall_finding.save(update_fields=['narrative_finding_raw'])
+                    overall_finding.save(update_fields=['narrative_finding_raw', 'narrative_finding'])
 
     def send_rejection_note(self, old_instance):
         if old_instance and old_instance.status == self.STATUSES.submitted:

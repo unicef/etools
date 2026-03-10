@@ -26,6 +26,7 @@ from etools.applications.permissions2.utils import get_model_target
 class Command(BaseCommand):
     action_point_pmp_relations = [
         'action_points.actionpoint.cp_output',
+        'action_points.actionpoint.ewp_activity',
         'action_points.actionpoint.partner',
         'action_points.actionpoint.intervention',
         'action_points.actionpoint.location',

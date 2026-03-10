@@ -16,7 +16,7 @@ from etools.applications.field_monitoring.data_collection.tests.factories import
     StartedChecklistFactory,
 )
 from etools.applications.field_monitoring.fm_settings.tests.factories import MethodFactory
-from etools.applications.field_monitoring.planning.models import EWPActivity, GPD
+from etools.applications.field_monitoring.planning.models import EWPActivity
 from etools.applications.field_monitoring.planning.tests.factories import MonitoringActivityFactory
 from etools.applications.field_monitoring.tests.base import APIViewSetTestCase, FMBaseTestCaseMixin
 from etools.applications.field_monitoring.tests.factories import UserFactory
@@ -154,8 +154,8 @@ class TestActivityQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
     def test_list(self):
         ActivityQuestionFactory(partner=PartnerFactory())  # hidden one
 
-        ewp = EWPActivity.objects.create(wbs='WBS-TEST-001')
-        gpd = GPD.objects.create(gpd_ref='GPD-TEST-001')
+        cp_output = ResultFactory()
+        ewp = EWPActivity.objects.create(wbs='WBS-TEST-001', cp_output=cp_output)
 
         questions = [
             ActivityQuestionFactory(monitoring_activity=self.activity, partner=PartnerFactory()),
@@ -163,7 +163,6 @@ class TestActivityQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
             ActivityQuestionFactory(monitoring_activity=self.activity, cp_output=ResultFactory()),
             ActivityQuestionFactory(monitoring_activity=self.activity, intervention=InterventionFactory()),
             ActivityQuestionFactory(monitoring_activity=self.activity, ewp_activity=ewp),
-            ActivityQuestionFactory(monitoring_activity=self.activity, gpd=gpd),
         ]
 
         with self.assertNumQueries(6):
@@ -179,16 +178,26 @@ class TestActivityQuestionsView(FMBaseTestCaseMixin, BaseTenantTestCase):
             [q.pk for q in questions]
         )
 
-        # Ensure new entity fields are exposed in response
+        # ewp_activity must include id, wbs and the nested cp_output object
         ewp_row = next(r for r in response.data['results'] if r['ewp_activity'] is not None)
         self.assertEqual(ewp_row['ewp_activity']['id'], ewp.id)
         self.assertEqual(ewp_row['ewp_activity']['wbs'], 'WBS-TEST-001')
-        self.assertIsNone(ewp_row['gpd'])
+        self.assertIsInstance(ewp_row['ewp_activity']['cp_output'], dict)
+        self.assertEqual(ewp_row['ewp_activity']['cp_output']['id'], cp_output.id)
 
-        gpd_row = next(r for r in response.data['results'] if r['gpd'] is not None)
-        self.assertEqual(gpd_row['gpd']['id'], gpd.id)
-        self.assertEqual(gpd_row['gpd']['gpd_ref'], 'GPD-TEST-001')
-        self.assertIsNone(gpd_row['ewp_activity'])
+    def test_list_ewp_activity_null_cp_output(self):
+        """ewp_activity without a cp_output must serialize cp_output as null."""
+        ewp = EWPActivity.objects.create(wbs='WBS-NO-CP')
+        question = ActivityQuestionFactory(monitoring_activity=self.activity, ewp_activity=ewp)
+
+        response = self.forced_auth_req(
+            'get',
+            reverse('field_monitoring_data_collection:activity-questions-list', args=(self.activity.pk,)),
+            user=self.unicef_user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        ewp_row = next(r for r in response.data['results'] if r['id'] == question.pk)
+        self.assertIsNone(ewp_row['ewp_activity']['cp_output'])
 
     def test_update(self):
         question = ActivityQuestionFactory(is_enabled=True, monitoring_activity__status='checklist')
@@ -394,29 +403,21 @@ class TestChecklistOverallFindingsView(ChecklistDataCollectionTestMixin, APIView
     def test_list(self):
         with self.assertNumQueries(5):
             response = self._test_list(self.unicef_user, self.started_checklist.overall_findings.all())
-        # New target fields should be present (null for this fixture)
+        # ewp_activity field should be present (null for this fixture)
         self.assertIn('ewp_activity', response.data['results'][0])
-        self.assertIn('gpd', response.data['results'][0])
 
-    def test_list_includes_ewp_activity_and_gpd(self):
+    def test_list_includes_ewp_activity(self):
         from etools.applications.field_monitoring.data_collection.tests.factories import ChecklistOverallFindingFactory
-        from etools.applications.field_monitoring.planning.models import EWPActivity, GPD
 
         ewp = EWPActivity.objects.create(wbs='WBS-CHECKLIST-OVERALL-001')
-        gpd = GPD.objects.create(gpd_ref='GPD-CHECKLIST-OVERALL-001')
 
-        # Create explicit checklist overall findings for new targets
         ChecklistOverallFindingFactory(started_checklist=self.started_checklist, ewp_activity=ewp)
-        ChecklistOverallFindingFactory(started_checklist=self.started_checklist, gpd=gpd)
 
         response = self._test_list(self.unicef_user, self.started_checklist.overall_findings.all())
         rows = response.data['results']
 
         ewp_row = next(r for r in rows if r['ewp_activity'] is not None)
         self.assertEqual(ewp_row['ewp_activity'], ewp.id)
-
-        gpd_row = next(r for r in rows if r['gpd'] is not None)
-        self.assertEqual(gpd_row['gpd'], gpd.id)
 
     def test_update_unicef(self):
         self._test_update(self.unicef_user, self.overall_finding, {}, expected_status=status.HTTP_403_FORBIDDEN)
@@ -645,38 +646,26 @@ class TestChecklistFindingsView(ChecklistDataCollectionTestMixin, APIViewSetTest
         activity_overall_finding = self.activity.overall_findings.first()
         self.assertEqual(activity_overall_finding.narrative_finding, '')
 
-    def test_activity_answers_porting_narrative_for_ewp_activity_and_gpd(self):
+    def test_activity_answers_porting_narrative_for_ewp_activity(self):
         from etools.applications.field_monitoring.data_collection.models import (
             ActivityOverallFinding,
             ChecklistOverallFinding,
         )
-        from etools.applications.field_monitoring.planning.models import EWPActivity, GPD
 
         ewp = EWPActivity.objects.create(wbs='WBS-PORT-001')
-        gpd = GPD.objects.create(gpd_ref='GPD-PORT-001')
 
-        # Activity overall findings for the new targets (narrative initially empty)
         of_ewp = ActivityOverallFinding.objects.create(monitoring_activity=self.activity, ewp_activity=ewp)
-        of_gpd = ActivityOverallFinding.objects.create(monitoring_activity=self.activity, gpd=gpd)
 
-        # Checklist overall findings that should be ported to the activity summary
         ChecklistOverallFinding.objects.create(
             started_checklist=self.started_checklist,
             ewp_activity=ewp,
-            narrative_finding='ewp narrative',
-        )
-        ChecklistOverallFinding.objects.create(
-            started_checklist=self.started_checklist,
-            gpd=gpd,
-            narrative_finding='gpd narrative',
+            narrative_finding_raw='ewp narrative',
         )
 
         self.activity.port_findings_to_summary()
 
         of_ewp.refresh_from_db()
-        of_gpd.refresh_from_db()
         self.assertEqual(of_ewp.narrative_finding, 'ewp narrative')
-        self.assertEqual(of_gpd.narrative_finding, 'gpd narrative')
 
 
 class TestActivityOverallFindingsView(ChecklistDataCollectionTestMixin, APIViewSetTestCase):
@@ -707,39 +696,26 @@ class TestActivityOverallFindingsView(ChecklistDataCollectionTestMixin, APIViewS
         self.assertIn('findings', response.data['results'][0])
         self.assertNotEqual(response.data['results'][0]['findings'], [])
         self.assertEqual(response.data['results'][0]['findings'][0]['checklist'], checklist.id)
-        # New target fields should be exposed (null for this fixture)
+        # ewp_activity field should be exposed (null for this fixture)
         self.assertIn('ewp_activity', response.data['results'][0])
-        self.assertIn('gpd', response.data['results'][0])
         self.assertIsNone(response.data['results'][0]['ewp_activity'])
-        self.assertIsNone(response.data['results'][0]['gpd'])
 
-    def test_list_includes_ewp_activity_and_gpd(self):
+    def test_list_includes_ewp_activity(self):
         from etools.applications.field_monitoring.data_collection.models import ActivityOverallFinding
-        from etools.applications.field_monitoring.planning.models import EWPActivity, GPD
 
         ewp = EWPActivity.objects.create(wbs='WBS-OVERALL-001')
-        gpd = GPD.objects.create(gpd_ref='GPD-OVERALL-001')
 
-        # Create extra overall findings for new targets
         of_ewp = ActivityOverallFinding.objects.create(
             monitoring_activity=self.activity,
             narrative_finding='ewp',
             ewp_activity=ewp,
         )
-        of_gpd = ActivityOverallFinding.objects.create(
-            monitoring_activity=self.activity,
-            narrative_finding='gpd',
-            gpd=gpd,
-        )
 
-        response = self._test_list(self.unicef_user, [self.overall_finding, of_ewp, of_gpd])
+        response = self._test_list(self.unicef_user, [self.overall_finding, of_ewp])
         rows = response.data['results']
 
         ewp_row = next(r for r in rows if r['ewp_activity'] is not None)
         self.assertEqual(ewp_row['ewp_activity'], ewp.id)
-
-        gpd_row = next(r for r in rows if r['gpd'] is not None)
-        self.assertEqual(gpd_row['gpd'], gpd.id)
 
     def test_update_unicef(self):
         self._test_update(self.unicef_user, self.overall_finding, {}, expected_status=status.HTTP_403_FORBIDDEN)

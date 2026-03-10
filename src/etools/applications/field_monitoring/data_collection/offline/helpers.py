@@ -15,6 +15,7 @@ from etools.applications.field_monitoring.data_collection.models import (
 )
 from etools.applications.field_monitoring.data_collection.offline.blueprint import get_blueprint_for_activity_and_method
 from etools.applications.field_monitoring.fm_settings.models import Method
+from etools.applications.field_monitoring.planning.mixins import ACTIVITY_TARGET_FIELDS
 from etools.applications.field_monitoring.planning.models import MonitoringActivity
 from etools.applications.offline.errors import BadValueError
 from etools.applications.users.models import User
@@ -39,7 +40,7 @@ def _link_attachments(attachments_data: List[Dict], overall_finding: ChecklistOv
 
 
 def _save_values_to_checklist(value: dict, checklist: StartedChecklist) -> None:
-    for relation, level, target_field in MonitoringActivity.RELATIONS_MAPPING:
+    for target_field in ACTIVITY_TARGET_FIELDS:
         level_values = value.get(target_field)
         if not level_values:
             continue
@@ -120,7 +121,7 @@ def get_checklist_form_value(checklist: StartedChecklist) -> dict:
     if method.use_information_source:
         value['information_source'] = {'name': checklist.information_source}
 
-    for relation, level, target_field in MonitoringActivity.RELATIONS_MAPPING:
+    for target_field in ACTIVITY_TARGET_FIELDS:
         level_value = {}
         for overall_finding in checklist.overall_findings.filter(
             **{f'{target_field}__isnull': False}

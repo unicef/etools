@@ -410,6 +410,43 @@ class TestActionPointViewSet(TestExportMixin, ActionPointsTestCaseMixin, BaseTen
             args=[action_point.id],
         )
 
+    def test_ewp_activity_field_present_on_retrieve(self):
+        """GET /api/action-points/action-points/{id}/ must include ewp_activity as {id, wbs}."""
+        from etools.applications.field_monitoring.planning.mixins import EWPActivity
+
+        ewp = EWPActivity.objects.create(wbs='WBS-AP-GLOBAL-001')
+        action_point = ActionPointFactory(status='open', ewp_activity=ewp)
+
+        response = self.forced_auth_req(
+            'get',
+            reverse('action-points:action-points-detail', args=[action_point.id]),
+            user=self.unicef_user,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('ewp_activity', response.data)
+        self.assertEqual(response.data['ewp_activity']['id'], ewp.pk)
+        self.assertEqual(response.data['ewp_activity']['wbs'], ewp.wbs)
+
+    def test_ewp_activity_set_via_wbs_on_patch(self):
+        """PATCH with ewp_activity WBS string must resolve and persist the FK."""
+        from etools.applications.field_monitoring.planning.mixins import EWPActivity
+
+        ewp = EWPActivity.objects.create(wbs='WBS-AP-PATCH-001')
+        action_point = ActionPointFactory(status='open')
+
+        response = self.forced_auth_req(
+            'patch',
+            reverse('action-points:action-points-detail', args=[action_point.id]),
+            data={'ewp_activity': ewp.wbs},
+            user=self.pme_user,
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['ewp_activity']['wbs'], ewp.wbs)
+        from etools.applications.action_points.models import ActionPoint as AP
+        self.assertEqual(AP.objects.get(pk=action_point.pk).ewp_activity_id, ewp.pk)
+
 
 class TestActionPointsViewMetadata(ActionPointsTestCaseMixin):
     @classmethod

@@ -19,7 +19,6 @@ def at_least_one_item_added(i):
         i.interventions.exists(),
         i.cp_outputs.exists(),
         i.ewp_activities.exists(),
-        i.gpds.exists(),
     ]):
         raise StateValidationError([_('At least one Partner, CP Output or PD/SPD should be added')])
     return True

@@ -22,7 +22,6 @@ from etools.applications.field_monitoring.planning.activity_validation.permissio
 from etools.applications.field_monitoring.planning.models import (
     EWPActivity,
     FacilityType,
-    GPD,
     MonitoringActivity,
     MonitoringActivityActionPoint,
     MonitoringActivityFacilityType,
@@ -172,7 +171,6 @@ class MonitoringActivityLightSerializer(serializers.ModelSerializer):
     interventions = SeparatedReadWriteField(read_field=FMInterventionListSerializer(many=True))
     cp_outputs = SeparatedReadWriteField(read_field=MinimalOutputListSerializer(many=True))
     ewp_activities = serializers.SerializerMethodField(read_only=True)
-    gpds = serializers.SerializerMethodField(read_only=True)
     sections = SeparatedReadWriteField(read_field=SectionSerializer(many=True), required=False)
 
     overlapping_entities = serializers.SerializerMethodField(read_only=True)
@@ -193,7 +191,7 @@ class MonitoringActivityLightSerializer(serializers.ModelSerializer):
             'monitor_type', 'remote_monitoring', 'tpm_partner',
             'visit_lead', 'team_members',
             'location', 'location_site',
-            'partners', 'interventions', 'cp_outputs', 'ewp_activities', 'gpds',
+            'partners', 'interventions', 'cp_outputs', 'ewp_activities',
             'start_date', 'end_date',
             'checklists_count',
             'reject_reason', 'report_reject_reason', 'cancel_reason',
@@ -214,12 +212,20 @@ class MonitoringActivityLightSerializer(serializers.ModelSerializer):
         return MonitoringActivityFacilityTypeSerializer(facility_type_relations, many=True).data
 
     def get_ewp_activities(self, obj):
-        """Return eWP activity WBS codes as list of strings."""
-        return [item.wbs for item in obj.ewp_activities.all()]
-
-    def get_gpds(self, obj):
-        """Return GPD refs as list of strings."""
-        return [item.gpd_ref for item in obj.gpds.all()]
+        """Return KI/Activities grouped by cp_output: [{cp_output: {id, name}, activities: [wbs, ...]}]."""
+        grouped = {}
+        grouped_order = []
+        for item in obj.ewp_activities.all():
+            key = item.cp_output_id
+            if key not in grouped:
+                grouped[key] = {
+                    'cp_output': {'id': item.cp_output.pk, 'name': item.cp_output.name}
+                    if item.cp_output else None,
+                    'activities': [],
+                }
+                grouped_order.append(key)
+            grouped[key]['activities'].append(item.wbs)
+        return [grouped[k] for k in grouped_order]
 
     def get_overlapping_entities(self, obj):
         request = self.context.get("request")
@@ -389,60 +395,63 @@ class MonitoringActivitySerializer(UserContextSerializerMixin, MonitoringActivit
         return result
 
     def to_internal_value(self, data):
-        """Handle facility_types, ewp_activities, gpds in write format."""
+        """Handle facility_types and ewp_activities in write format."""
         data_copy = data.copy()
         facility_types = data_copy.pop('facility_types', None)
         ewp_activities_raw = data_copy.pop('ewp_activities', None)
-        gpds_raw = data_copy.pop('gpds', None)
         validated_data = super().to_internal_value(data_copy)
         if facility_types is not None:
             validated_data['facility_types'] = facility_types
         if ewp_activities_raw is not None:
-            validated_data['ewp_activities'] = self._validate_string_list(
-                ewp_activities_raw, 'ewp_activities', max_length=255
-            )
-        if gpds_raw is not None:
-            validated_data['gpds'] = self._validate_string_list(gpds_raw, 'gpds', max_length=25)
+            validated_data['ewp_activities'] = self._validate_ewp_activities(ewp_activities_raw)
         return validated_data
 
-    def _resolve_ewp_activities(self, wbs_list):
+    def _validate_ewp_activities(self, value):
         """
-        Resolve list of WBS strings to EWPActivity instances.
-        Assumes wbs_list is already validated (stripped, non-empty, length-checked).
+        Validate ewp_activities input: list of {cp_output: int|null, activities: [str]}.
+        Returns the validated list as-is for later resolution.
         """
-        if not wbs_list:
-            return []
-        instances = []
-        for wbs in wbs_list:
-            obj, _ = EWPActivity.objects.get_or_create(wbs=wbs)
-            instances.append(obj)
-        return instances
+        if not isinstance(value, list):
+            raise serializers.ValidationError({'ewp_activities': _('Must be a list.')})
+        result = []
+        for i, item in enumerate(value):
+            if not isinstance(item, dict):
+                raise serializers.ValidationError(
+                    {'ewp_activities': _('Item at index %(i)s must be an object.') % {'i': i}}
+                )
+            cp_output_id = item.get('cp_output')
+            activities = item.get('activities', [])
+            if not isinstance(activities, list):
+                raise serializers.ValidationError(
+                    {'ewp_activities': _('activities at index %(i)s must be a list.') % {'i': i}}
+                )
+            validated_activities = self._validate_string_list(activities, 'ewp_activities', max_length=255)
+            result.append({'cp_output': cp_output_id, 'activities': validated_activities})
+        return result
 
-    def _resolve_gpds(self, gpd_ref_list):
+    def _resolve_ewp_activities(self, grouped_list):
         """
-        Resolve list of gpd_ref strings to GPD instances.
-        Assumes gpd_ref_list is already validated (stripped, non-empty, length-checked).
+        Resolve [{cp_output: id|null, activities: [wbs]}] to EWPActivity instances.
         """
-        if not gpd_ref_list:
+        if not grouped_list:
             return []
         instances = []
-        for gpd_ref in gpd_ref_list:
-            obj, _ = GPD.objects.get_or_create(gpd_ref=gpd_ref)
-            instances.append(obj)
+        for group in grouped_list:
+            cp_output_id = group.get('cp_output') or None
+            for wbs in group.get('activities', []):
+                obj, _ = EWPActivity.objects.get_or_create(wbs=wbs, cp_output_id=cp_output_id)
+                instances.append(obj)
         return instances
 
     def create(self, validated_data):
         facility_types_data = validated_data.pop('facility_types', None)
         ewp_activities_data = validated_data.pop('ewp_activities', None)
-        gpds_data = validated_data.pop('gpds', None)
         instance = super().create(validated_data)
 
         if facility_types_data:
             self._update_facility_types(instance, facility_types_data)
         if ewp_activities_data is not None:
             instance.ewp_activities.set(self._resolve_ewp_activities(ewp_activities_data))
-        if gpds_data is not None:
-            instance.gpds.set(self._resolve_gpds(gpds_data))
 
         return instance
 
@@ -452,15 +461,12 @@ class MonitoringActivitySerializer(UserContextSerializerMixin, MonitoringActivit
 
         facility_types_data = validated_data.pop('facility_types', None)
         ewp_activities_data = validated_data.pop('ewp_activities', None)
-        gpds_data = validated_data.pop('gpds', None)
         instance = super().update(instance, validated_data)
 
         if facility_types_data is not None:
             self._update_facility_types(instance, facility_types_data)
         if ewp_activities_data is not None:
             instance.ewp_activities.set(self._resolve_ewp_activities(ewp_activities_data))
-        if gpds_data is not None:
-            instance.gpds.set(self._resolve_gpds(gpds_data))
 
         return instance
 
@@ -539,6 +545,14 @@ class InterventionWithLinkedInstancesSerializer(FMInterventionListSerializer):
         return f'[{_(obj.status.capitalize()).upper()}] {obj.number} {obj.title}'
 
 
+class EWPActivitySerializer(serializers.ModelSerializer):
+    cp_output = MinimalOutputListSerializer(read_only=True)
+
+    class Meta:
+        model = EWPActivity
+        fields = ('id', 'wbs', 'cp_output')
+
+
 class MonitoringActivityActionPointSerializer(ActionPointBaseSerializer):
     reference_number = serializers.ReadOnlyField(label=_('Reference No.'))
 
@@ -550,6 +564,13 @@ class MonitoringActivityActionPointSerializer(ActionPointBaseSerializer):
     )
     cp_output = SeparatedReadWriteField(
         label=_('Related CP Output'), read_field=MinimalOutputListSerializer(), required=False,
+    )
+    ewp_activity = SeparatedReadWriteField(
+        label=_('Related Key Intervention'),
+        read_field=EWPActivitySerializer(),
+        write_field=serializers.SlugRelatedField(
+            slug_field='wbs', queryset=EWPActivity.objects.all(), required=False, allow_null=True,
+        ),
     )
 
     section = SeparatedReadWriteField(
@@ -572,7 +593,7 @@ class MonitoringActivityActionPointSerializer(ActionPointBaseSerializer):
     class Meta(ActionPointBaseSerializer.Meta):
         model = MonitoringActivityActionPoint
         fields = ActionPointBaseSerializer.Meta.fields + [
-            'partner', 'intervention', 'cp_output', 'history', 'url',
+            'partner', 'intervention', 'cp_output', 'ewp_activity', 'history', 'url',
         ]
         extra_kwargs = copy(ActionPointBaseSerializer.Meta.extra_kwargs)
         extra_kwargs.update({

@@ -5,17 +5,17 @@ from django.utils.translation import gettext_lazy as _
 from unicef_attachments.models import Attachment
 from unicef_djangolib.fields import CodedGenericRelation
 
-from etools.applications.field_monitoring.fm_settings.models import Method, Question
-from etools.applications.field_monitoring.planning.models import MonitoringActivity, QuestionTargetMixin
 from etools.applications.field_monitoring.data_collection.utils import clean_narrative_finding
+from etools.applications.field_monitoring.fm_settings.models import Method, Question
+from etools.applications.field_monitoring.planning.mixins import QuestionTargetMixin, STANDARD_TARGET_MAPPINGS
 
 
 class NarrativeFindingCleanMixin(models.Model):
     """Mixin to auto-clean narrative_finding from narrative_finding_raw on save."""
-    
+
     class Meta:
         abstract = True
-    
+
     def save(self, *args, **kwargs):
         # Clean narrative_finding from narrative_finding_raw
         if self.narrative_finding_raw:
@@ -38,7 +38,8 @@ class ActivityQuestionQuerySet(models.QuerySet):
 
 
 class ActivityQuestion(QuestionTargetMixin, models.Model):
-    monitoring_activity = models.ForeignKey(MonitoringActivity, related_name='questions', verbose_name=_('Activity'),
+    monitoring_activity = models.ForeignKey('field_monitoring_planning.MonitoringActivity',
+                                            related_name='questions', verbose_name=_('Activity'),
                                             on_delete=models.CASCADE)
     question = models.ForeignKey(Question, related_name='activity_questions', verbose_name=_('Question'),
                                  on_delete=models.CASCADE)
@@ -70,12 +71,14 @@ class ActivityQuestion(QuestionTargetMixin, models.Model):
             is_enabled=self.is_enabled,
             cp_output=self.cp_output,
             partner=self.partner,
-            intervention=self.intervention
+            intervention=self.intervention,
+            ewp_activity=self.ewp_activity,
         )
 
 
 class StartedChecklist(models.Model):
-    monitoring_activity = models.ForeignKey(MonitoringActivity, related_name='checklists', verbose_name=_('Activity'),
+    monitoring_activity = models.ForeignKey('field_monitoring_planning.MonitoringActivity',
+                                            related_name='checklists', verbose_name=_('Activity'),
                                             on_delete=models.PROTECT)
     method = models.ForeignKey(Method, related_name='checklists', verbose_name=_('Methods'), on_delete=models.PROTECT)
     information_source = models.CharField(max_length=100, verbose_name=_('Information Source'), blank=True)
@@ -99,19 +102,41 @@ class StartedChecklist(models.Model):
         ])
 
     def prepare_overall_findings(self):
+        activity = self.monitoring_activity
         findings = []
-        for relation, level, target_field in self.monitoring_activity.RELATIONS_MAPPING:
-            for target in getattr(self.monitoring_activity, relation).all():
-                if not self.monitoring_activity.questions.filter(
-                    **{target_field: target},
-                    is_enabled=True, question__methods=self.method
-                ).exists():
-                    continue
 
+        def _has_enabled_questions(target_field, target):
+            return activity.questions.filter(
+                **{target_field: target},
+                is_enabled=True, question__methods=self.method
+            ).exists()
+
+        # Partners and interventions
+        for relation, _level, target_field in STANDARD_TARGET_MAPPINGS:
+            for target in getattr(activity, relation).all():
+                if not _has_enabled_questions(target_field, target):
+                    continue
                 finding = ChecklistOverallFinding(started_checklist=self)
                 setattr(finding, target_field, target)
-
                 findings.append(finding)
+
+        # CP Outputs (direct M2M + cp_outputs derived from ewp_activities)
+        for cp_output in activity._get_effective_cp_outputs():
+            if not _has_enabled_questions('cp_output', cp_output):
+                continue
+            finding = ChecklistOverallFinding(started_checklist=self)
+            finding.cp_output = cp_output
+            findings.append(finding)
+
+        # EWP activities without a cp_output (those with one are covered by the cp_output finding)
+        for ewp_activity in activity.ewp_activities.all():
+            if ewp_activity.cp_output_id:
+                continue
+            if not _has_enabled_questions('ewp_activity', ewp_activity):
+                continue
+            finding = ChecklistOverallFinding(started_checklist=self)
+            finding.ewp_activity = ewp_activity
+            findings.append(finding)
 
         ChecklistOverallFinding.objects.bulk_create(findings)
 
@@ -208,7 +233,8 @@ class ActivityOverallFindingQuerySet(models.QuerySet):
 
 
 class ActivityOverallFinding(NarrativeFindingCleanMixin, QuestionTargetMixin, models.Model):
-    monitoring_activity = models.ForeignKey(MonitoringActivity, related_name='overall_findings',
+    monitoring_activity = models.ForeignKey('field_monitoring_planning.MonitoringActivity',
+                                            related_name='overall_findings',
                                             verbose_name=_('Activity'), on_delete=models.CASCADE)
     narrative_finding_raw = models.TextField(blank=True, verbose_name=_('Narrative Finding Raw'))
     narrative_finding = models.TextField(blank=True, verbose_name=_('Narrative Finding'))

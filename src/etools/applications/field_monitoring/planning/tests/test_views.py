@@ -38,7 +38,6 @@ from etools.applications.field_monitoring.planning.serializers import Monitoring
 from etools.applications.field_monitoring.planning.tests.factories import (
     EWPActivityFactory,
     FacilityTypeFactory,
-    GPDFactory,
     MonitoringActivityActionPointFactory,
     MonitoringActivityFactory,
     QuestionTemplateFactory,
@@ -132,7 +131,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             MonitoringActivityFactory(monitor_type='staff'),
         ]
 
-        with self.assertNumQueries(11):
+        with self.assertNumQueries(10):
             self._test_list(self.unicef_user, activities, data={'page': 1, 'page_size': 10})
 
     def test_list_as_tpm_user(self):
@@ -147,7 +146,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             MonitoringActivityFactory(
                 monitor_type='staff', status='assigned')
         ]
-        with self.assertNumQueries(11):
+        with self.assertNumQueries(10):
             self._test_list(tpm_staff, [activities[0], activities[1]], data={'page': 1, 'page_size': 10})
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
@@ -182,7 +181,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             ),
             value='ok',
         )
-        ActivityOverallFinding.objects.create(partner=partner, narrative_finding='test',
+        ActivityOverallFinding.objects.create(partner=partner, narrative_finding_raw='test',
                                               monitoring_activity=activity1)
 
         # not completed
@@ -197,7 +196,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             ),
             value='ok',
         )
-        ActivityOverallFinding.objects.create(partner=partner, narrative_finding='test',
+        ActivityOverallFinding.objects.create(partner=partner, narrative_finding_raw='test',
                                               monitoring_activity=activity2)
 
         # not hact
@@ -246,34 +245,50 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         self.assertNotEqual(response.data['cp_outputs'], [])
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
-    def test_update_ewp_activities_and_gpds(self):
-        """PATCH with ewp_activities and gpds (arrays of strings) sets M2M and returns them in response."""
+    def test_update_ewp_activities(self):
+        """PATCH with ewp_activities as [{cp_output, activities}] sets M2M and returns grouped response.
+
+        The read representation must include cp_output as a nested {id, name} object,
+        not a bare integer.
+        """
+        cp_output = ResultFactory(result_type__name=ResultType.OUTPUT)
         activity = MonitoringActivityFactory(monitor_type='staff')
         data = {
-            'ewp_activities': ['WBS-2024-01', 'WBS-2024-02'],
-            'gpds': ['GPD-001', 'GPD-002'],
+            'ewp_activities': [
+                {'cp_output': cp_output.pk, 'activities': ['WBS-2024-01', 'WBS-2024-02']},
+            ],
         }
         response = self._test_update(self.fm_user, activity, data=data, expected_status=status.HTTP_200_OK)
-        self.assertEqual(sorted(response.data['ewp_activities']), ['WBS-2024-01', 'WBS-2024-02'])
-        self.assertEqual(sorted(response.data['gpds']), ['GPD-001', 'GPD-002'])
+        self.assertEqual(len(response.data['ewp_activities']), 1)
+        group = response.data['ewp_activities'][0]
+        # cp_output must be a nested object with at least id and name — not a bare integer
+        self.assertIsInstance(group['cp_output'], dict)
+        self.assertEqual(group['cp_output']['id'], cp_output.pk)
+        self.assertIn('name', group['cp_output'])
+        self.assertEqual(sorted(group['activities']), ['WBS-2024-01', 'WBS-2024-02'])
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
-    def test_update_ewp_activities_and_gpds_empty_clears(self):
-        """PATCH with empty ewp_activities and gpds clears the relations."""
-        from etools.applications.field_monitoring.planning.models import EWPActivity, GPD
+    def test_update_ewp_activities_null_cp_output(self):
+        """PATCH with cp_output=null is accepted and returned as null."""
+        activity = MonitoringActivityFactory(monitor_type='staff')
+        data = {'ewp_activities': [{'cp_output': None, 'activities': ['WBS-NULL-01']}]}
+        response = self._test_update(self.fm_user, activity, data=data, expected_status=status.HTTP_200_OK)
+        self.assertEqual(len(response.data['ewp_activities']), 1)
+        self.assertIsNone(response.data['ewp_activities'][0]['cp_output'])
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_update_ewp_activities_empty_clears(self):
+        """PATCH with empty ewp_activities clears the relation."""
+        from etools.applications.field_monitoring.planning.models import EWPActivity
 
         ewp = EWPActivity.objects.create(wbs='WBS-OLD')
-        gpd = GPD.objects.create(gpd_ref='GPD-OLD')
         activity = MonitoringActivityFactory(monitor_type='staff')
         activity.ewp_activities.add(ewp)
-        activity.gpds.add(gpd)
-        data = {'ewp_activities': [], 'gpds': []}
+        data = {'ewp_activities': []}
         response = self._test_update(self.fm_user, activity, data=data, expected_status=status.HTTP_200_OK)
         self.assertEqual(response.data['ewp_activities'], [])
-        self.assertEqual(response.data['gpds'], [])
         activity.refresh_from_db()
         self.assertEqual(activity.ewp_activities.count(), 0)
-        self.assertEqual(activity.gpds.count(), 0)
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_update_draft_success(self):
@@ -633,7 +648,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
 
         StartedChecklistFactory(monitoring_activity=activity)
         goto('report_finalization', visit_lead)
-        ActivityOverallFinding.objects.create(monitoring_activity=activity, narrative_finding='test')
+        ActivityOverallFinding.objects.create(monitoring_activity=activity, narrative_finding_raw='test')
         goto('data_collection', visit_lead)
         goto('report_finalization', visit_lead)
         goto('submitted', visit_lead, {'report_reviewers': [UserFactory(report_reviewer=True).id]},
@@ -738,7 +753,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             monitor_type='tpm', status='report_finalization',
             visit_lead=visit_lead, team_members=[visit_lead], tpm_partner=tpm_partner,
         )
-        ActivityOverallFinding.objects.create(monitoring_activity=activity, narrative_finding='test')
+        ActivityOverallFinding.objects.create(monitoring_activity=activity, narrative_finding_raw='test')
 
         self._test_update(
             activity.visit_lead,
@@ -753,7 +768,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
     def test_submit_staff_report_reviewer_required(self):
         activity = MonitoringActivityFactory(
             monitor_type='staff', status='report_finalization', report_reviewers__count=0)
-        ActivityOverallFinding.objects.create(monitoring_activity=activity, narrative_finding='test')
+        ActivityOverallFinding.objects.create(monitoring_activity=activity, narrative_finding_raw='test')
 
         self._test_update(
             activity.visit_lead,
@@ -766,7 +781,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_submit_report_reviewer_unicef_user_ok(self):
         activity = MonitoringActivityFactory(monitor_type='staff', status='report_finalization')
-        ActivityOverallFinding.objects.create(monitoring_activity=activity, narrative_finding='test')
+        ActivityOverallFinding.objects.create(monitoring_activity=activity, narrative_finding_raw='test')
 
         self._test_update(
             activity.visit_lead,
@@ -778,7 +793,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_submit_report_reviewer_pme_ok(self):
         activity = MonitoringActivityFactory(monitor_type='staff', status='report_finalization')
-        ActivityOverallFinding.objects.create(monitoring_activity=activity, narrative_finding='test')
+        ActivityOverallFinding.objects.create(monitoring_activity=activity, narrative_finding_raw='test')
 
         self._test_update(
             activity.visit_lead,
@@ -790,7 +805,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_submit_report_reviewer_group_ok(self):
         activity = MonitoringActivityFactory(monitor_type='staff', status='report_finalization')
-        ActivityOverallFinding.objects.create(monitoring_activity=activity, narrative_finding='test')
+        ActivityOverallFinding.objects.create(monitoring_activity=activity, narrative_finding_raw='test')
 
         self._test_update(
             activity.visit_lead,
@@ -802,7 +817,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_submitted_staff_report_reviewer_not_editable(self):
         activity = MonitoringActivityFactory(monitor_type='staff', status='submitted')
-        ActivityOverallFinding.objects.create(monitoring_activity=activity, narrative_finding='test')
+        ActivityOverallFinding.objects.create(monitoring_activity=activity, narrative_finding_raw='test')
 
         self._test_update(
             activity.visit_lead,
@@ -847,7 +862,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
     def test_report_reject_reviewed_by_set(self):
         activity = MonitoringActivityFactory(monitor_type='staff', status='submitted')
         StartedChecklistFactory(monitoring_activity=activity)
-        ActivityOverallFinding.objects.create(monitoring_activity=activity, narrative_finding='test')
+        ActivityOverallFinding.objects.create(monitoring_activity=activity, narrative_finding_raw='test')
         approver = UserFactory(approver=True)
 
         self.assertIsNone(activity.reviewed_by)
@@ -864,7 +879,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         report_reviewer = UserFactory(unicef_user=True)
         activity = MonitoringActivityFactory(monitor_type='staff', status='submitted', report_reviewers=[report_reviewer])
         StartedChecklistFactory(monitoring_activity=activity)
-        ActivityOverallFinding.objects.create(monitoring_activity=activity, narrative_finding='narrative')
+        ActivityOverallFinding.objects.create(monitoring_activity=activity, narrative_finding_raw='narrative')
 
         self.assertIsNone(activity.reviewed_by)
         self._test_update(
@@ -979,7 +994,7 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
             ),
             value='ok',
         )
-        ActivityOverallFinding.objects.create(partner=partner, narrative_finding='test',
+        ActivityOverallFinding.objects.create(partner=partner, narrative_finding_raw='test',
                                               monitoring_activity=activity)
         response = self.make_request_to_viewset(
             self.fm_user, action='visit-pdf', method='get', instance=activity)
@@ -1019,7 +1034,6 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
         MonitoringActivityFactory(status='completed')
         MonitoringActivityFactory(status='cancelled')
         ewp = EWPActivityFactory(wbs='WBS-2024-01')
-        gpd = GPDFactory(gpd_ref='GPD-001')
         [
             MonitoringActivityFactory(
                 interventions=[InterventionFactory()],
@@ -1030,12 +1044,11 @@ class ActivitiesViewTestCase(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenant
                 team_members=[UserFactory()],
                 visit_lead=UserFactory(),
                 ewp_activities=[ewp],
-                gpds=[gpd],
             )
             for _ in range(20)
         ]
 
-        with self.assertNumQueries(17):
+        with self.assertNumQueries(16):
             response = self.make_request_to_viewset(self.unicef_user, action='export', method='get', data={'page': 1, 'page_size': 100})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('Content-Disposition', response.headers)
@@ -1667,6 +1680,29 @@ class MonitoringActivityActionPointsViewTestCase(FMBaseTestCaseMixin, APIViewSet
     def test_create_wrong_activity_status(self):
         self.activity = MonitoringActivityFactory(status='draft')
         self._test_create(self.fm_user, data={}, expected_status=status.HTTP_403_FORBIDDEN)
+
+    @override_settings(UNICEF_USER_EMAIL="@example.com")
+    def test_create_action_point_with_ewp_activity(self):
+        """
+        Creating an action point must accept a WBS string for ewp_activity (not a PK),
+        and the read response must return ewp_activity as a nested {id, wbs, cp_output} object.
+        """
+        cp_output = ResultFactory(result_type__name=ResultType.OUTPUT)
+        ewp = EWPActivityFactory(wbs='WBS-AP-TEST-001', cp_output=cp_output)
+
+        data = dict(self.create_data)
+        data['ewp_activity'] = ewp.wbs
+
+        response = self._test_create(self.fm_user, data=data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        ap_ewp = response.data['ewp_activity']
+        self.assertIsNotNone(ap_ewp)
+        self.assertEqual(ap_ewp['id'], ewp.pk)
+        self.assertEqual(ap_ewp['wbs'], ewp.wbs)
+        self.assertIsInstance(ap_ewp['cp_output'], dict)
+        self.assertEqual(ap_ewp['cp_output']['id'], cp_output.pk)
+        self.assertIn('name', ap_ewp['cp_output'])
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
     def test_data_collection_status_permissions(self):
