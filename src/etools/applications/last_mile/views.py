@@ -36,6 +36,12 @@ class PointOfInterestTypeViewSet(ReadOnlyModelViewSet):
     serializer_class = serializers.PointOfInterestTypeSerializer
 
 
+class DispensingPointTypeViewSet(ReadOnlyModelViewSet):
+    permission_classes = [IsIPLMEditorOrViewerReadOnly]
+    queryset = models.DispensingPointType.objects.filter(is_active=True)
+    serializer_class = serializers.DispensingPointTypeSerializer
+
+
 class POIQuerysetMixin:
     def get_poi_queryset(self, exclude_partner_prefetch=False):
         partner = self.request.user.partner
