@@ -2,13 +2,13 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-# 
+#
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-02-12 13:51+0000\n"
+"POT-Creation-Date: 2026-03-05 15:38+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -121,6 +121,24 @@ msgstr "ПД/СПД"
 
 msgid "Outputs"
 msgstr "выходы"
+
+msgid "Monitored Partner"
+msgstr ""
+
+msgid "Involves Remote Monitoring"
+msgstr ""
+
+msgid "Data Collection methods applied "
+msgstr ""
+
+msgid "Attachments uploaded"
+msgstr ""
+
+msgid "Action Points opened"
+msgstr ""
+
+msgid "Overall finding ratings"
+msgstr ""
 
 msgid "Prioritization Criteria"
 msgstr "Критерии приоритизации"
@@ -241,9 +259,6 @@ msgstr "Отменено"
 
 msgid "Reference Number"
 msgstr "Ссылочный номер"
-
-msgid "Involves Remote Monitoring"
-msgstr ""
 
 msgid "Report Reviewers"
 msgstr ""
