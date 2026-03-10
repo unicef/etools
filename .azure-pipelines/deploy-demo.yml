@@ -56,10 +56,14 @@ stages:
             - script: |
                 echo "$(DEMO_DEPLOYMENTS)" | while read APP; do
                   if [ -n "$APP" ]; then
+                    IMAGE="$(DOCKER_IMAGE):${{ parameters.imageTag }}"
+                    echo "Deploying image: $IMAGE"
                     echo "Updating $APP..."
                     kubectl -n etools-demo \
                       set image deployment/$APP \
-                      $APP=$(DOCKER_IMAGE):${{ parameters.imageTag }}
+                      $APP=$IMAGE
+                    kubectl -n etools-demo \
+                      rollout restart deployment/$APP
                   fi
                 done
               displayName: Deploy applications
