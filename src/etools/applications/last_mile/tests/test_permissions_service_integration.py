@@ -5,7 +5,7 @@ from django.contrib.contenttypes.models import ContentType
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.last_mile.admin_panel.constants import (
     LIST_INTERESTED_LASTMILE_PERMS,
-    LIST_INTERESTED_LASTMILE_PERMS_WITHOUT_APPROVE,
+    LIST_INTERESTED_LASTMILE_PERMS_CO_ADMIN,
 )
 from etools.applications.last_mile.services.permissions_service import LMSMPermissionsService
 from etools.applications.organizations.tests.factories import OrganizationFactory
@@ -47,11 +47,11 @@ class TestLMSMPermissionsServiceIntegration(BaseTenantTestCase):
         self.service.assign_permissions_for_co_admin(self.user)
 
         user_perms = set(self.user.user_permissions.values_list('codename', flat=True))
-        expected_perms = set(LIST_INTERESTED_LASTMILE_PERMS_WITHOUT_APPROVE)
+        expected_perms = set(LIST_INTERESTED_LASTMILE_PERMS_CO_ADMIN)
 
         self.assertEqual(user_perms, expected_perms)
 
-        approve_perms = set(LIST_INTERESTED_LASTMILE_PERMS) - set(LIST_INTERESTED_LASTMILE_PERMS_WITHOUT_APPROVE)
+        approve_perms = set(LIST_INTERESTED_LASTMILE_PERMS) - set(LIST_INTERESTED_LASTMILE_PERMS_CO_ADMIN)
         for perm_codename in approve_perms:
             self.assertFalse(
                 self.user.user_permissions.filter(codename=perm_codename).exists(),
@@ -91,7 +91,7 @@ class TestLMSMPermissionsServiceIntegration(BaseTenantTestCase):
 
         # Check permissions were assigned
         user_perms = set(self.user.user_permissions.values_list('codename', flat=True))
-        expected_perms = set(LIST_INTERESTED_LASTMILE_PERMS_WITHOUT_APPROVE)
+        expected_perms = set(LIST_INTERESTED_LASTMILE_PERMS_CO_ADMIN)
 
         self.assertEqual(user_perms, expected_perms)
 
@@ -131,7 +131,7 @@ class TestLMSMPermissionsServiceIntegration(BaseTenantTestCase):
 
         self.user.refresh_from_db()
         user_perms = set(self.user.user_permissions.values_list('codename', flat=True))
-        expected_perms = set(LIST_INTERESTED_LASTMILE_PERMS_WITHOUT_APPROVE)
+        expected_perms = set(LIST_INTERESTED_LASTMILE_PERMS_CO_ADMIN)
 
         self.assertEqual(user_perms, expected_perms)
 
@@ -163,7 +163,7 @@ class TestLMSMPermissionsServiceIntegration(BaseTenantTestCase):
 
         self.user.refresh_from_db()
         user_perms = set(self.user.user_permissions.values_list('codename', flat=True))
-        self.assertEqual(user_perms, set(LIST_INTERESTED_LASTMILE_PERMS_WITHOUT_APPROVE))
+        self.assertEqual(user_perms, set(LIST_INTERESTED_LASTMILE_PERMS_CO_ADMIN))
 
         Realm.objects.create(
             user=self.user,
@@ -203,7 +203,7 @@ class TestLMSMPermissionsServiceIntegration(BaseTenantTestCase):
 
         self.user.refresh_from_db()
         user_perms = set(self.user.user_permissions.values_list('codename', flat=True))
-        self.assertEqual(user_perms, set(LIST_INTERESTED_LASTMILE_PERMS_WITHOUT_APPROVE))
+        self.assertEqual(user_perms, set(LIST_INTERESTED_LASTMILE_PERMS_CO_ADMIN))
 
     def test_complex_scenario_multiple_realm_changes(self):
         self.assertEqual(self.user.user_permissions.count(), 0)
@@ -219,7 +219,7 @@ class TestLMSMPermissionsServiceIntegration(BaseTenantTestCase):
         self.user.refresh_from_db()
         self.assertEqual(
             set(self.user.user_permissions.values_list('codename', flat=True)),
-            set(LIST_INTERESTED_LASTMILE_PERMS_WITHOUT_APPROVE)
+            set(LIST_INTERESTED_LASTMILE_PERMS_CO_ADMIN)
         )
 
         hq_realm = Realm.objects.create(
@@ -285,7 +285,7 @@ class TestLMSMPermissionsServiceIntegration(BaseTenantTestCase):
         user1_perms = set(user1.user_permissions.values_list('codename', flat=True))
         user2_perms = set(user2.user_permissions.values_list('codename', flat=True))
 
-        self.assertEqual(user1_perms, set(LIST_INTERESTED_LASTMILE_PERMS_WITHOUT_APPROVE))
+        self.assertEqual(user1_perms, set(LIST_INTERESTED_LASTMILE_PERMS_CO_ADMIN))
         self.assertEqual(user2_perms, set(LIST_INTERESTED_LASTMILE_PERMS))
 
         realm1.is_active = False
@@ -306,7 +306,7 @@ class TestLMSMPermissionsServiceIntegration(BaseTenantTestCase):
         self.service.assign_permissions_for_co_admin(self.user)
 
         user_perms = list(self.user.user_permissions.values_list('codename', flat=True))
-        expected_perms = LIST_INTERESTED_LASTMILE_PERMS_WITHOUT_APPROVE
+        expected_perms = LIST_INTERESTED_LASTMILE_PERMS_CO_ADMIN
 
         self.assertEqual(len(user_perms), len(expected_perms))
 
@@ -356,13 +356,13 @@ class TestLMSMPermissionsServiceIntegration(BaseTenantTestCase):
 
         self.user.refresh_from_db()
         user_perms = set(self.user.user_permissions.values_list('codename', flat=True))
-        self.assertEqual(user_perms, set(LIST_INTERESTED_LASTMILE_PERMS_WITHOUT_APPROVE))
+        self.assertEqual(user_perms, set(LIST_INTERESTED_LASTMILE_PERMS_CO_ADMIN))
 
         realm1.delete()
 
         self.user.refresh_from_db()
         user_perms = set(self.user.user_permissions.values_list('codename', flat=True))
-        self.assertEqual(user_perms, set(LIST_INTERESTED_LASTMILE_PERMS_WITHOUT_APPROVE))
+        self.assertEqual(user_perms, set(LIST_INTERESTED_LASTMILE_PERMS_CO_ADMIN))
 
         realm2.delete()
 
