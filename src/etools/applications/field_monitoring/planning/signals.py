@@ -1,10 +1,5 @@
 from django.db.models.signals import m2m_changed, post_save
 from django.dispatch import receiver
-
-from etools.applications.field_monitoring.data_collection.models import (
-    ActivityOverallFinding,
-    ActivityQuestionOverallFinding,
-)
 from etools.applications.field_monitoring.data_collection.offline.synchronizer import (
     MonitoringActivityOfflineSynchronizer,
 )
@@ -40,5 +35,3 @@ def update_blueprints_visibility_on_visit_lead_changed(instance, created, **kwar
 def action_point_updated_receiver(instance, created, **kwargs):
     if created:
         instance.send_email(instance.assigned_to, 'fm/action_point_assigned', cc=[instance.assigned_by.email])
-
-
