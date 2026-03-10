@@ -279,7 +279,7 @@ class MonitoringActivity(
         STATUSES.completed: [
             lambda i, old_instance=None, user=None: i.update_one_hact_value(),
             lambda i, old_instance=None, user=None: i.remember_reviewed_by(old_instance, user),
-            lambda i, old_instance=None, user=None: i.update_is_programatic_visit(),
+            lambda i, old_instance=None, user=None: i.update_is_programmatic_visit(),
         ],
         STATUSES.cancelled: [
             lambda i, old_instance=None, user=None: i.close_offline_blueprints(old_instance),
@@ -341,7 +341,7 @@ class MonitoringActivity(
     end_date = models.DateField(verbose_name=_('End Date'), blank=True, null=True)
     completion_date = models.DateField(verbose_name=_('Mission completion date'), blank=True, null=True)
 
-    is_programatic_visit = models.BooleanField(
+    is_programmatic_visit = models.BooleanField(
         default=False,
         verbose_name=_('Programmatic Visit'),
         help_text=_(
@@ -748,9 +748,9 @@ class MonitoringActivity(
         for partner_org in partner_orgs:
             partner_org.update_programmatic_visits(event_date=self.end_date, update_one=True)
 
-    def update_is_programatic_visit(self):
+    def update_is_programmatic_visit(self):
         """
-        Set is_programatic_visit from current data. A visit is programmatic when:
+        Set is_programmatic_visit from current data. A visit is programmatic when:
         - status is completed
         - start_date and end_date are in the same year
         - HACT question is answered (at least one ActivityQuestionOverallFinding with is_hact=True, value not null)
@@ -761,9 +761,11 @@ class MonitoringActivity(
             ActivityQuestionOverallFinding,
         )
 
+        if self.is_programmatic_visit:
+            return
         if self.status != self.STATUS_COMPLETED:
-            new_value = False
-        elif not self.start_date or not self.end_date:
+            return
+        if not self.start_date or not self.end_date:
             new_value = False
         elif self.start_date.year != self.end_date.year:
             new_value = False
@@ -776,12 +778,13 @@ class MonitoringActivity(
             on_track_answered = ActivityOverallFinding.objects.filter(
                 monitoring_activity=self,
                 on_track__isnull=False,
+                partner__isnull=False,
             ).exists()
             new_value = hact_answered and on_track_answered
 
-        if self.is_programatic_visit != new_value:
-            MonitoringActivity.objects.filter(pk=self.pk).update(is_programatic_visit=new_value)
-            self.is_programatic_visit = new_value
+        if self.is_programmatic_visit != new_value:
+            self.is_programmatic_visit = new_value
+            self.save()
 
     def init_offline_blueprints(self):
         MonitoringActivityOfflineSynchronizer(self).initialize_blueprints()

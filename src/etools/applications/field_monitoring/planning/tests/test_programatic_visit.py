@@ -19,7 +19,7 @@ from etools.applications.partners.tests.factories import PartnerFactory
 
 
 class TestUpdateIsProgramaticVisit(BaseTenantTestCase):
-    """Tests for MonitoringActivity.update_is_programatic_visit()"""
+    """Tests for MonitoringActivity.update_is_programmatic_visit()"""
 
     @classmethod
     def setUpTestData(cls):
@@ -61,10 +61,10 @@ class TestUpdateIsProgramaticVisit(BaseTenantTestCase):
         self._add_hact_finding(activity)
         self._add_on_track_finding(activity)
 
-        activity.update_is_programatic_visit()
+        activity.update_is_programmatic_visit()
 
         activity.refresh_from_db()
-        self.assertTrue(activity.is_programatic_visit)
+        self.assertTrue(activity.is_programmatic_visit)
 
     def test_false_when_not_completed(self):
         activity = MonitoringActivityFactory(
@@ -76,10 +76,10 @@ class TestUpdateIsProgramaticVisit(BaseTenantTestCase):
         self._add_hact_finding(activity)
         self._add_on_track_finding(activity)
 
-        activity.update_is_programatic_visit()
+        activity.update_is_programmatic_visit()
 
         activity.refresh_from_db()
-        self.assertFalse(activity.is_programatic_visit)
+        self.assertFalse(activity.is_programmatic_visit)
 
     def test_false_when_no_start_date(self):
         activity = self._make_completed_activity()
@@ -88,10 +88,10 @@ class TestUpdateIsProgramaticVisit(BaseTenantTestCase):
         activity.start_date = None
         activity.save(update_fields=['start_date'])
 
-        activity.update_is_programatic_visit()
+        activity.update_is_programmatic_visit()
 
         activity.refresh_from_db()
-        self.assertFalse(activity.is_programatic_visit)
+        self.assertFalse(activity.is_programmatic_visit)
 
     def test_false_when_no_end_date(self):
         activity = self._make_completed_activity()
@@ -100,10 +100,10 @@ class TestUpdateIsProgramaticVisit(BaseTenantTestCase):
         activity.end_date = None
         activity.save(update_fields=['end_date'])
 
-        activity.update_is_programatic_visit()
+        activity.update_is_programmatic_visit()
 
         activity.refresh_from_db()
-        self.assertFalse(activity.is_programatic_visit)
+        self.assertFalse(activity.is_programmatic_visit)
 
     def test_false_when_different_years(self):
         activity = self._make_completed_activity(
@@ -113,19 +113,19 @@ class TestUpdateIsProgramaticVisit(BaseTenantTestCase):
         self._add_hact_finding(activity)
         self._add_on_track_finding(activity)
 
-        activity.update_is_programatic_visit()
+        activity.update_is_programmatic_visit()
 
         activity.refresh_from_db()
-        self.assertFalse(activity.is_programatic_visit)
+        self.assertFalse(activity.is_programmatic_visit)
 
     def test_false_when_no_hact_finding(self):
         activity = self._make_completed_activity()
         self._add_on_track_finding(activity)
 
-        activity.update_is_programatic_visit()
+        activity.update_is_programmatic_visit()
 
         activity.refresh_from_db()
-        self.assertFalse(activity.is_programatic_visit)
+        self.assertFalse(activity.is_programmatic_visit)
 
     def test_false_when_hact_finding_value_is_null(self):
         activity = self._make_completed_activity()
@@ -141,19 +141,19 @@ class TestUpdateIsProgramaticVisit(BaseTenantTestCase):
         )
         self._add_on_track_finding(activity)
 
-        activity.update_is_programatic_visit()
+        activity.update_is_programmatic_visit()
 
         activity.refresh_from_db()
-        self.assertFalse(activity.is_programatic_visit)
+        self.assertFalse(activity.is_programmatic_visit)
 
     def test_false_when_no_on_track_finding(self):
         activity = self._make_completed_activity()
         self._add_hact_finding(activity)
 
-        activity.update_is_programatic_visit()
+        activity.update_is_programmatic_visit()
 
         activity.refresh_from_db()
-        self.assertFalse(activity.is_programatic_visit)
+        self.assertFalse(activity.is_programmatic_visit)
 
     def test_false_when_on_track_is_null(self):
         activity = self._make_completed_activity()
@@ -165,36 +165,36 @@ class TestUpdateIsProgramaticVisit(BaseTenantTestCase):
             on_track=None,
         )
 
-        activity.update_is_programatic_visit()
+        activity.update_is_programmatic_visit()
 
         activity.refresh_from_db()
-        self.assertFalse(activity.is_programatic_visit)
+        self.assertFalse(activity.is_programmatic_visit)
 
     def test_on_track_false_still_counts(self):
         activity = self._make_completed_activity()
         self._add_hact_finding(activity)
         self._add_on_track_finding(activity, on_track=False)
 
-        activity.update_is_programatic_visit()
+        activity.update_is_programmatic_visit()
 
         activity.refresh_from_db()
-        self.assertTrue(activity.is_programatic_visit)
+        self.assertTrue(activity.is_programmatic_visit)
 
     def test_reverts_to_false_when_condition_removed(self):
         activity = self._make_completed_activity()
         hact = self._add_hact_finding(activity)
         self._add_on_track_finding(activity)
 
-        activity.update_is_programatic_visit()
+        activity.update_is_programmatic_visit()
         activity.refresh_from_db()
-        self.assertTrue(activity.is_programatic_visit)
+        self.assertTrue(activity.is_programmatic_visit)
 
         hact.value = None
         hact.save()
 
-        activity.update_is_programatic_visit()
+        activity.update_is_programmatic_visit()
         activity.refresh_from_db()
-        self.assertFalse(activity.is_programatic_visit)
+        self.assertFalse(activity.is_programmatic_visit)
 
     def test_non_hact_question_does_not_count(self):
         activity = self._make_completed_activity()
@@ -210,14 +210,14 @@ class TestUpdateIsProgramaticVisit(BaseTenantTestCase):
         )
         self._add_on_track_finding(activity)
 
-        activity.update_is_programatic_visit()
+        activity.update_is_programmatic_visit()
 
         activity.refresh_from_db()
-        self.assertFalse(activity.is_programatic_visit)
+        self.assertFalse(activity.is_programmatic_visit)
 
 
 class TestIsProgramaticVisitSignals(BaseTenantTestCase):
-    """Tests for post_save signals that trigger update_is_programatic_visit."""
+    """Tests for post_save signals that trigger update_is_programmatic_visit."""
 
     @classmethod
     def setUpTestData(cls):
@@ -237,7 +237,7 @@ class TestIsProgramaticVisitSignals(BaseTenantTestCase):
             narrative_finding='test',
             on_track=True,
         )
-        self.assertFalse(activity.is_programatic_visit)
+        self.assertFalse(activity.is_programmatic_visit)
 
         aq = ActivityQuestionFactory(
             monitoring_activity=activity,
@@ -251,7 +251,7 @@ class TestIsProgramaticVisitSignals(BaseTenantTestCase):
         )
 
         activity.refresh_from_db()
-        self.assertTrue(activity.is_programatic_visit)
+        self.assertTrue(activity.is_programmatic_visit)
 
     def test_on_track_finding_save_triggers_update_on_completed_activity(self):
         activity = MonitoringActivityFactory(
@@ -271,7 +271,7 @@ class TestIsProgramaticVisitSignals(BaseTenantTestCase):
             value='answered',
         )
         activity.refresh_from_db()
-        self.assertFalse(activity.is_programatic_visit)
+        self.assertFalse(activity.is_programmatic_visit)
 
         ActivityOverallFinding.objects.create(
             monitoring_activity=activity,
@@ -281,7 +281,7 @@ class TestIsProgramaticVisitSignals(BaseTenantTestCase):
         )
 
         activity.refresh_from_db()
-        self.assertTrue(activity.is_programatic_visit)
+        self.assertTrue(activity.is_programmatic_visit)
 
     def test_signal_does_not_trigger_on_non_completed_activity(self):
         activity = MonitoringActivityFactory(
@@ -308,11 +308,11 @@ class TestIsProgramaticVisitSignals(BaseTenantTestCase):
         )
 
         activity.refresh_from_db()
-        self.assertFalse(activity.is_programatic_visit)
+        self.assertFalse(activity.is_programmatic_visit)
 
 
 class TestIsProgramaticVisitCompletedTransition(BaseTenantTestCase):
-    """Tests that the completed transition side effect calls update_is_programatic_visit."""
+    """Tests that the completed transition side effect calls update_is_programmatic_visit."""
 
     @classmethod
     def setUpTestData(cls):
@@ -343,7 +343,7 @@ class TestIsProgramaticVisitCompletedTransition(BaseTenantTestCase):
             on_track=True,
         )
 
-        self.assertFalse(activity.is_programatic_visit)
+        self.assertFalse(activity.is_programmatic_visit)
 
         # Simulate transition: set status to completed and save so side effects see completed status.
         # get() so old_instance is the pre-transition state for side effects that need it.
@@ -356,10 +356,10 @@ class TestIsProgramaticVisitCompletedTransition(BaseTenantTestCase):
         ):
             side_effect(activity, old_instance=old_instance)
 
-        # remember_reviewed_by does a full save() and can overwrite is_programatic_visit;
-        # update_is_programatic_visit runs last and does .update(), so re-read from DB.
+        # remember_reviewed_by does a full save() and can overwrite is_programmatic_visit;
+        # update_is_programmatic_visit runs last and does .update(), so re-read from DB.
         activity.refresh_from_db()
-        self.assertTrue(activity.is_programatic_visit)
+        self.assertTrue(activity.is_programmatic_visit)
 
     def test_transition_to_completed_leaves_flag_false_when_missing_data(self):
         activity = MonitoringActivityFactory(
@@ -376,11 +376,11 @@ class TestIsProgramaticVisitCompletedTransition(BaseTenantTestCase):
             side_effect(activity, old_instance=old_instance)
 
         activity.refresh_from_db()
-        self.assertFalse(activity.is_programatic_visit)
+        self.assertFalse(activity.is_programmatic_visit)
 
 
 class TestIsProgramaticVisitFilter(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenantTestCase):
-    """Tests for the is_programatic_visit filter on the activities list endpoint."""
+    """Tests for the is_programmatic_visit filter on the activities list endpoint."""
 
     base_view = 'field_monitoring_planning:activities'
 
@@ -389,7 +389,7 @@ class TestIsProgramaticVisitFilter(FMBaseTestCaseMixin, APIViewSetTestCase, Base
         call_command('update_notifications')
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
-    def test_filter_is_programatic_visit_true(self):
+    def test_filter_is_programmatic_visit_true(self):
         partner = PartnerFactory()
         programmatic = MonitoringActivityFactory(
             status='completed',
@@ -410,17 +410,17 @@ class TestIsProgramaticVisitFilter(FMBaseTestCaseMixin, APIViewSetTestCase, Base
             monitoring_activity=programmatic,
             partner=partner, narrative_finding='ok', on_track=True,
         )
-        programmatic.update_is_programatic_visit()
+        programmatic.update_is_programmatic_visit()
 
         MonitoringActivityFactory(status='completed')
 
         self._test_list(
             self.unicef_user, [programmatic],
-            data={'is_programatic_visit': 'true', 'page': 1, 'page_size': 10},
+            data={'is_programmatic_visit': 'true', 'page': 1, 'page_size': 10},
         )
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
-    def test_filter_is_programatic_visit_false(self):
+    def test_filter_is_programmatic_visit_false(self):
         partner = PartnerFactory()
         programmatic = MonitoringActivityFactory(
             status='completed',
@@ -441,13 +441,13 @@ class TestIsProgramaticVisitFilter(FMBaseTestCaseMixin, APIViewSetTestCase, Base
             monitoring_activity=programmatic,
             partner=partner, narrative_finding='ok', on_track=True,
         )
-        programmatic.update_is_programatic_visit()
+        programmatic.update_is_programmatic_visit()
 
         non_programmatic = MonitoringActivityFactory(status='completed')
 
         self._test_list(
             self.unicef_user, [non_programmatic],
-            data={'is_programatic_visit': 'false', 'page': 1, 'page_size': 10},
+            data={'is_programmatic_visit': 'false', 'page': 1, 'page_size': 10},
         )
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
@@ -472,7 +472,7 @@ class TestIsProgramaticVisitFilter(FMBaseTestCaseMixin, APIViewSetTestCase, Base
             monitoring_activity=programmatic,
             partner=partner, narrative_finding='ok', on_track=True,
         )
-        programmatic.update_is_programatic_visit()
+        programmatic.update_is_programmatic_visit()
 
         non_programmatic = MonitoringActivityFactory(status='completed')
 
@@ -483,7 +483,7 @@ class TestIsProgramaticVisitFilter(FMBaseTestCaseMixin, APIViewSetTestCase, Base
 
 
 class TestIsProgramaticVisitSerializer(FMBaseTestCaseMixin, APIViewSetTestCase, BaseTenantTestCase):
-    """Tests that is_programatic_visit appears in the serializer output."""
+    """Tests that is_programmatic_visit appears in the serializer output."""
 
     base_view = 'field_monitoring_planning:activities'
 
@@ -492,7 +492,7 @@ class TestIsProgramaticVisitSerializer(FMBaseTestCaseMixin, APIViewSetTestCase, 
         call_command('update_notifications')
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
-    def test_list_includes_is_programatic_visit_field(self):
+    def test_list_includes_is_programmatic_visit_field(self):
         MonitoringActivityFactory(status='completed')
         response = self.forced_auth_req(
             'get',
@@ -503,10 +503,10 @@ class TestIsProgramaticVisitSerializer(FMBaseTestCaseMixin, APIViewSetTestCase, 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         results = response.data['results']
         self.assertTrue(len(results) > 0)
-        self.assertIn('is_programatic_visit', results[0])
+        self.assertIn('is_programmatic_visit', results[0])
 
     @override_settings(UNICEF_USER_EMAIL="@example.com")
-    def test_is_programatic_visit_value_reflects_db(self):
+    def test_is_programmatic_visit_value_reflects_db(self):
         partner = PartnerFactory()
         activity = MonitoringActivityFactory(
             status='completed',
@@ -527,7 +527,7 @@ class TestIsProgramaticVisitSerializer(FMBaseTestCaseMixin, APIViewSetTestCase, 
             monitoring_activity=activity,
             partner=partner, narrative_finding='ok', on_track=True,
         )
-        activity.update_is_programatic_visit()
+        activity.update_is_programmatic_visit()
 
         response = self.forced_auth_req(
             'get',
@@ -537,4 +537,4 @@ class TestIsProgramaticVisitSerializer(FMBaseTestCaseMixin, APIViewSetTestCase, 
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         result = next(r for r in response.data['results'] if r['id'] == activity.pk)
-        self.assertTrue(result['is_programatic_visit'])
+        self.assertTrue(result['is_programmatic_visit'])

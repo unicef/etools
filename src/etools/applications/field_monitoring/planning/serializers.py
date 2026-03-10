@@ -207,7 +207,7 @@ class MonitoringActivityLightSerializer(serializers.ModelSerializer):
     overlapping_entities = serializers.SerializerMethodField(read_only=True)
 
     checklists_count = serializers.ReadOnlyField()
-    is_programatic_visit = serializers.ReadOnlyField()
+    is_programmatic_visit = serializers.ReadOnlyField()
 
     visit_goals = SeparatedReadWriteField(
         read_field=VisitGoalSerializer(many=True),
@@ -226,7 +226,7 @@ class MonitoringActivityLightSerializer(serializers.ModelSerializer):
             'partners', 'interventions', 'cp_outputs',
             'start_date', 'end_date',
             'checklists_count',
-            'is_programatic_visit',
+            'is_programmatic_visit',
             'reject_reason', 'report_reject_reason', 'cancel_reason',
             'status',
             'sections',

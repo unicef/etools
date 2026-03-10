@@ -42,14 +42,3 @@ def action_point_updated_receiver(instance, created, **kwargs):
         instance.send_email(instance.assigned_to, 'fm/action_point_assigned', cc=[instance.assigned_by.email])
 
 
-@receiver(post_save, sender=ActivityQuestionOverallFinding)
-def update_is_programatic_visit_on_hact_finding_save(sender, instance, **kwargs):
-    activity = instance.activity_question.monitoring_activity
-    if activity.status == MonitoringActivity.STATUS_COMPLETED:
-        activity.update_is_programatic_visit()
-
-
-@receiver(post_save, sender=ActivityOverallFinding)
-def update_is_programatic_visit_on_summary_finding_save(sender, instance, **kwargs):
-    if instance.monitoring_activity.status == MonitoringActivity.STATUS_COMPLETED:
-        instance.monitoring_activity.update_is_programatic_visit()

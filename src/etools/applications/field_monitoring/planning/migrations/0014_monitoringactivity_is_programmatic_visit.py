@@ -1,10 +1,10 @@
-# Generated manually for is_programatic_visit database field
+# Generated manually for is_programmatic_visit database field
 
 from django.db import migrations, models
 
 
-def backfill_is_programatic_visit(apps, schema_editor):
-    """Set is_programatic_visit for existing completed activities."""
+def backfill_is_programmatic_visit(apps, schema_editor):
+    """Set is_programmatic_visit for existing completed activities."""
     MonitoringActivity = apps.get_model('field_monitoring_planning', 'MonitoringActivity')
     ActivityQuestionOverallFinding = apps.get_model(
         'field_monitoring_data_collection', 'ActivityQuestionOverallFinding'
@@ -14,13 +14,17 @@ def backfill_is_programatic_visit(apps, schema_editor):
     )
     ActivityQuestion = apps.get_model('field_monitoring_data_collection', 'ActivityQuestion')
 
-    completed = MonitoringActivity.objects.filter(status='completed')
+    completed = MonitoringActivity.objects.filter(status='completed').all
+    activities_to_update = []
+
     for activity in completed:
         if not activity.start_date or not activity.end_date:
-            MonitoringActivity.objects.filter(pk=activity.pk).update(is_programatic_visit=False)
+            activity.is_programmatic_visit = False
+            activities_to_update.append(activity)
             continue
         if activity.start_date.year != activity.end_date.year:
-            MonitoringActivity.objects.filter(pk=activity.pk).update(is_programatic_visit=False)
+            activity.is_programmatic_visit = False
+            activities_to_update.append(activity)
             continue
 
         hact_question_ids = ActivityQuestion.objects.filter(
@@ -34,9 +38,14 @@ def backfill_is_programatic_visit(apps, schema_editor):
         on_track_answered = ActivityOverallFinding.objects.filter(
             monitoring_activity_id=activity.pk,
             on_track__isnull=False,
+            partner__isnull=False,
         ).exists()
         new_value = hact_answered and on_track_answered
-        MonitoringActivity.objects.filter(pk=activity.pk).update(is_programatic_visit=new_value)
+        activity.is_programmatic_visit = new_value
+        activities_to_update.append(activity)
+
+    if activities_to_update:
+        MonitoringActivity.objects.bulk_update(activities_to_update, ['is_programmatic_visit'])
 
 
 def noop_reverse(apps, schema_editor):
@@ -52,12 +61,12 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AddField(
             model_name='monitoringactivity',
-            name='is_programatic_visit',
+            name='is_programmatic_visit',
             field=models.BooleanField(
                 default=False,
                 help_text='True when status is completed, start/end date are in the same year, HACT question is answered, and summary on-track is answered.',
                 verbose_name='Programmatic Visit',
             ),
         ),
-        migrations.RunPython(backfill_is_programatic_visit, noop_reverse),
+        migrations.RunPython(backfill_is_programmatic_visit, noop_reverse),
     ]
