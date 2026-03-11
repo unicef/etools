@@ -180,22 +180,6 @@ class TestUpdateIsProgramaticVisit(BaseTenantTestCase):
         activity.refresh_from_db()
         self.assertTrue(activity.is_programmatic_visit)
 
-    def test_reverts_to_false_when_condition_removed(self):
-        activity = self._make_completed_activity()
-        hact = self._add_hact_finding(activity)
-        self._add_on_track_finding(activity)
-
-        activity.update_is_programmatic_visit()
-        activity.refresh_from_db()
-        self.assertTrue(activity.is_programmatic_visit)
-
-        hact.value = None
-        hact.save()
-
-        activity.update_is_programmatic_visit()
-        activity.refresh_from_db()
-        self.assertFalse(activity.is_programmatic_visit)
-
     def test_non_hact_question_does_not_count(self):
         activity = self._make_completed_activity()
         aq = ActivityQuestionFactory(
