@@ -9,6 +9,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework_gis.fields import GeometryField
 
+from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.last_mile import models
 from etools.applications.last_mile.admin_panel.constants import (
     ALERT_TYPES,
@@ -75,12 +76,13 @@ class UserAdminSerializer(SimpleUserSerializer):
     organizations = serializers.SerializerMethodField(read_only=True)
 
     def get_alert_types(self, obj):
-        realms = getattr(obj, 'realms', [])
+        realms = getattr(obj, 'alert_realms', [])
         return SimpleRealmSerializer(realms, many=True, read_only=True).data
 
     def get_organizations(self, obj):
         organizations = obj.get_organizations()
-
+        if organizations and tenant_switch_is_active('lmsm_dummy_partners_only'):
+            organizations = organizations.filter(name__regex=r'^Partner \d{1,3} LMSM$')
         return SimpleOrganizationWithVendorSerializer(organizations, many=True).data
 
     class Meta:
