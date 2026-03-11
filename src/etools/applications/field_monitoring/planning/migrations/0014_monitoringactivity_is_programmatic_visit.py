@@ -14,7 +14,7 @@ def backfill_is_programmatic_visit(apps, schema_editor):
     )
     ActivityQuestion = apps.get_model('field_monitoring_data_collection', 'ActivityQuestion')
 
-    completed = MonitoringActivity.objects.filter(status='completed').all
+    completed = list(MonitoringActivity.objects.filter(status='completed'))
     activities_to_update = []
 
     for activity in completed:
