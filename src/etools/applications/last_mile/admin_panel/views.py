@@ -696,6 +696,8 @@ class OrganizationListView(mixins.ListModelMixin, GenericViewSet):
         queryset = Organization.objects.all() \
             .select_related('partner', 'auditorfirm', 'tpmpartner') \
             .prefetch_related('auditorfirm__purchase_orders', 'tpmpartner__countries')
+        if tenant_switch_is_active('lmsm_dummy_partners_only'):
+            queryset = queryset.filter(name__regex=r'^Partner \d{1,3} LMSM$')
 
         with_partner = Q(partner__isnull=False, partner__hidden=False)
 
