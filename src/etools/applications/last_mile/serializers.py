@@ -30,6 +30,17 @@ class PointOfInterestTypeSerializer(serializers.ModelSerializer):
         exclude = ['created', 'modified']
 
 
+class DispensingPointTypeSerializer(serializers.ModelSerializer):
+    display_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = models.DispensingPointType
+        fields = ('id', 'name', 'label', 'applicability', 'display_name', 'order')
+
+    def get_display_name(self, obj):
+        return str(obj)
+
+
 class PointOfInterestSerializer(serializers.ModelSerializer):
     poi_type = PointOfInterestTypeSerializer(read_only=True)
     country = serializers.SerializerMethodField(read_only=True)
@@ -308,6 +319,7 @@ class TransferSerializer(serializers.ModelSerializer):
     checked_out_by = MinimalUserSerializer(read_only=True)
     partner_organization = MinimalPartnerOrganizationListSerializer(read_only=True)
     items = serializers.SerializerMethodField()
+    dispense_type = serializers.SlugRelatedField(slug_field='name', read_only=True)
 
     def get_items(self, obj):
         partner = self.context.get('partner')
@@ -533,6 +545,12 @@ class TransferCheckOutSerializer(TransferBaseSerializer):
     name = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     transfer_type = serializers.ChoiceField(choices=models.Transfer.TRANSFER_TYPE, required=True)
     items = ItemCheckoutSerializer(many=True, required=True)
+    dispense_type = serializers.SlugRelatedField(
+        slug_field='name',
+        queryset=models.DispensingPointType.objects.filter(is_active=True),
+        required=False,
+        allow_null=True,
+    )
 
     origin_check_out_at = serializers.DateTimeField(required=True)
     destination_point = serializers.IntegerField(required=False)
@@ -709,6 +727,7 @@ class TransferNotificationSerializer(serializers.ModelSerializer):
     origin_point = PointOfInterestNotificationSerializer()
     checked_in_by = MinimalUserSerializer()
     checked_out_by = MinimalUserSerializer()
+    dispense_type = serializers.SlugRelatedField(slug_field='name', read_only=True)
 
     class Meta:
         model = models.Transfer

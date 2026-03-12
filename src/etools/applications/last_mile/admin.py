@@ -207,12 +207,13 @@ class TransferInLine(RestrictedEditAdminMixin, admin.TabularInline):
             'recipient_partner_organization',
             'recipient_partner_organization__organization',
             'origin_point',
-            'destination_point'
+            'destination_point',
+            'dispense_type',
         ).only(
             # Specify only the fields we need to minimize data transfer
             'id', 'name', 'status', 'transfer_type', 'transfer_subtype', 'unicef_release_order',
             'partner_organization_id', 'from_partner_organization_id', 'recipient_partner_organization_id',
-            'origin_point_id', 'destination_point_id', 'dispense_type', 'transfer_history_id',
+            'origin_point_id', 'destination_point_id', 'dispense_type_id', 'transfer_history_id',
             # Partner organization fields
             'partner_organization__id', 'partner_organization__organization_id',
             'partner_organization__organization__name',
@@ -222,7 +223,9 @@ class TransferInLine(RestrictedEditAdminMixin, admin.TabularInline):
             'recipient_partner_organization__organization__name',
             # Point of interest fields
             'origin_point__id', 'origin_point__name',
-            'destination_point__id', 'destination_point__name'
+            'destination_point__id', 'destination_point__name',
+            # Dispensing point type fields
+            'dispense_type__id', 'dispense_type__name',
         )
         return qs
 
@@ -659,6 +662,14 @@ class PointOfInterestTypeMappingAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         return super().get_queryset(request).select_related('primary_type', 'secondary_type')
+
+
+@admin.register(models.DispensingPointType)
+class DispensingPointTypeAdmin(admin.ModelAdmin):
+    list_display = ('name', 'label', 'applicability', 'order', 'is_active', 'created', 'modified')
+    list_filter = ('is_active',)
+    list_editable = ('order',)
+    search_fields = ('name', 'label')
 
 
 @admin.register(models.AuditConfiguration)
