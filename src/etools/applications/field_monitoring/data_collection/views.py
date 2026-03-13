@@ -38,7 +38,10 @@ from etools.applications.field_monitoring.data_collection.serializers import (
     FindingSerializer,
 )
 from etools.applications.field_monitoring.fm_settings.models import Method
-from etools.applications.field_monitoring.fm_settings.serializers import FMCommonAttachmentSerializer, MethodSerializer
+from etools.applications.field_monitoring.fm_settings.serializers import (
+    FMCommonAttachmentSerializer,
+    MethodSerializer,
+)
 from etools.applications.field_monitoring.permissions import (
     activity_field_is_editable_permission,
     IsEditAction,
@@ -242,7 +245,7 @@ class ChecklistOverallAttachmentsViewSet(LinkedAttachmentsViewSet):
         IsReadAction | (IsEditAction & activity_field_is_editable_permission('started_checklist_set'))
     ]
     related_model = ChecklistOverallFinding
-    serializer_class = FMCommonAttachmentSerializer
+    serializer_class = ChecklistAttachmentSerializer
     attachment_code = 'attachments'
 
 

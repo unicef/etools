@@ -1,0 +1,50 @@
+[
+    {
+        "model": "field_monitoring_settings.fmdocumenttypedescription",
+        "pk": 1,
+        "fields": {
+            "name": "pre_visit_planning",
+            "description": "These help frame the objectives and references to read before and carry during the visit.\n\nExamples include:\n\u2022 Visit Terms of Reference (ToR)\n\u2022 Monitoring checklist or tool (aligned with program indicators)\n\u2022 Workplan / Itinerary\n\u2022 Maps / Site lists / Location details\n\u2022 Previous monitoring reports for the same location or workplan activity/output\n\u2022 Previous Partner reports for triangulation"
+        }
+    },
+    {
+        "model": "field_monitoring_settings.fmdocumenttypedescription",
+        "pk": 2,
+        "fields": {
+            "name": "administrative_compliance",
+            "description": "To verify adherence to donor, organizational, and regulatory requirements.\n\nExamples include:\n\u2022 Partner agreements / MoUs / Previous Programme Document/Simplified Programme Document (PD/SPD) for the same partner\n\u2022 Procurement documents (POs, invoices, delivery notes)\n\u2022 Asset or inventory registers\n\u2022 Compliance checklists (if applicable)"
+        }
+    },
+    {
+        "model": "field_monitoring_settings.fmdocumenttypedescription",
+        "pk": 3,
+        "fields": {
+            "name": "field_data_collection",
+            "description": "Tools used on-site to record findings in addition to the FM checklist.\n\nExamples include:\n\u2022 Interview or FGD guides used\n\u2022 Enumerator/monitoring forms (digital or paper) including additional checklists used\n\u2022 Attendance sheets (for activities or training sessions)\n\u2022 Quality assurance (QA/QC) checklists beyond FMM checklist"
+        }
+    },
+    {
+        "model": "field_monitoring_settings.fmdocumenttypedescription",
+        "pk": 4,
+        "fields": {
+            "name": "evidence_verification",
+            "description": "Proof that activities took place as reported. To assess progress and alignment with program goals.\n\nExamples include:\n\u2022 Photographs with metadata (e.g., date, GPS)\n\u2022 GPS coordinates / maps\n\u2022 Signed beneficiary confirmations (when appropriate)\n\u2022 Delivery records / Distribution lists\n\u2022 Receipts, vouchers, or tokens\n\u2022 Infrastructure assessment sheets\n\u2022 Before/after photos (for construction or rehabilitation work)\n\u2022 Activity reports from partners\n\u2022 Training materials used in the field\n\u2022 Curricula or technical guidelines\n\u2022 Monitoring & Evaluation (M&E) indicator tables\n\u2022 Gender, protection, or safeguarding documentation"
+        }
+    },
+    {
+        "model": "field_monitoring_settings.fmdocumenttypedescription",
+        "pk": 5,
+        "fields": {
+            "name": "risk_safeguarding_protection",
+            "description": "Especially important for donor\u2011funded or protection\u2011sensitive programs.\n\nExamples include:\n\u2022 Incident reporting forms (not capturing beneficiary identity but trigger document)\n\u2022 Safeguarding compliance checklists\n\u2022 Protection mainstreaming tool\n\u2022 Risk assessment forms\n\u2022 PSEA (Protection from Sexual Exploitation and Abuse) guidance"
+        }
+    },
+    {
+        "model": "field_monitoring_settings.fmdocumenttypedescription",
+        "pk": 6,
+        "fields": {
+            "name": "post_visit_documentation",
+            "description": "To close the loop and document follow\u2011up.\n\nExamples include:\n\u2022 Field monitoring report (if anything beyond what the FMM report captures)\n\u2022 Action point tracker (with responsibility + deadline)\n\u2022 Partner feedback form\n\u2022 Follow\u2011up verification plan\n\u2022 Corrective action documentation"
+        }
+    }
+]

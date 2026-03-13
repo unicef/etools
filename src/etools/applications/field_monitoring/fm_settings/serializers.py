@@ -322,7 +322,11 @@ class LinkedAttachmentBaseSerializer(BaseAttachmentSerializer):
 
 
 class FMCommonAttachmentSerializer(LinkedAttachmentBaseSerializer):
-    file_type = FileTypeModelChoiceField(queryset=FileType.objects.filter(code='fm_common'), required=True)
+    """FM attachment serializer using fm_common document types."""
+    file_type = FileTypeModelChoiceField(
+        queryset=FileType.objects.filter(code='fm_common'),
+        required=True
+    )
     file_type_name = serializers.CharField(
         source='file_type.label',
         read_only=True
