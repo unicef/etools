@@ -2,7 +2,6 @@ from copy import copy
 
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
-from django.db.models import Q
 from django.http import Http404, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404
 
@@ -16,6 +15,7 @@ from unicef_attachments.models import Attachment, AttachmentLink
 from unicef_restlib.pagination import DynamicPageNumberPagination
 from unicef_restlib.views import MultiSerializerViewSetMixin, NestedViewSetMixin, SafeTenantViewSetMixin
 
+from etools.applications.field_monitoring.fm_settings.models import FMDocumentTypeDescription
 from etools.applications.field_monitoring.fm_settings.serializers import LinkedAttachmentBaseSerializer
 
 
@@ -35,7 +35,18 @@ class AttachmentFileTypesViewMixin:
         if 'file_type' not in declared_fields:
             raise Http404
 
-        return Response(data=declared_fields['file_type'].queryset.filter(~Q(label__in=["SOP", "Other"])).values('id', 'label'))
+        descriptions = dict(
+            FMDocumentTypeDescription.objects.values_list('name', 'description')
+        )
+        qs = declared_fields['file_type'].queryset
+        # Show only types that have a description entry; this excludes legacy fm_common entries
+        # (e.g. evidence_verification_legacy) from the dropdown while keeping them in the DB
+        # so existing attachments still display the correct label.
+        qs = qs.filter(name__in=descriptions.keys())
+        data = list(qs.values('id', 'label', 'name'))
+        for row in data:
+            row['description'] = descriptions.get(row.pop('name'), '')
+        return Response(data=data)
 
 
 class LinkedAttachmentsViewSet(

@@ -242,7 +242,7 @@ class ChecklistOverallAttachmentsViewSet(LinkedAttachmentsViewSet):
         IsReadAction | (IsEditAction & activity_field_is_editable_permission('started_checklist_set'))
     ]
     related_model = ChecklistOverallFinding
-    serializer_class = FMCommonAttachmentSerializer
+    serializer_class = ChecklistAttachmentSerializer
     attachment_code = 'attachments'
 
 
