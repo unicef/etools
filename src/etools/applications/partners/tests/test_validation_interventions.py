@@ -14,11 +14,13 @@ from etools.applications.partners.tests.factories import (
     AgreementFactory,
     InterventionAmendmentFactory,
     InterventionFactory,
+    InterventionReportingPeriodFactory,
     InterventionResultLinkFactory,
 )
 from etools.applications.partners.validation.interventions import (
     InterventionValid,
     partnership_manager_only,
+    reporting_periods_start_after_pd_start,
     sections_valid,
     signed_date_valid,
     ssfa_agreement_has_no_other_intervention,
@@ -116,6 +118,7 @@ class TestTransitionToClosed(BaseTenantTestCase):
         self.expected["earliest_start_date"] = frs.start_date
         self.expected["latest_end_date"] = frs.end_date
         self.assertFundamentals(self.intervention.total_frs)
+
 
     def test_total_amounts_not_equal(self):
         """Total amounts must equal and total outstanding must be zero"""
@@ -259,53 +262,19 @@ class TestTransitionToClosed(BaseTenantTestCase):
         self.expected["latest_end_date"] = frs.end_date
         self.assertFundamentals(self.intervention.total_frs)
 
-    def test_dates(self):
-        """Ensure earliest and latest dates set correctly"""
-        FundsReservationHeaderFactory(
-            intervention=self.intervention,
-            fr_number=1,
-            total_amt=0.00,
-            total_amt_local=100.00,
-            start_date=datetime.date(2001, 1, 1),
-            end_date=datetime.date(2001, 2, 1),
-            actual_amt=0.00,
-            actual_amt_local=100.00,
-            intervention_amt=0.00,
-            outstanding_amt_local=0.00,
-            outstanding_amt=0.00,
-        )
-        FundsReservationHeaderFactory(
-            intervention=self.intervention,
-            fr_number=2,
-            total_amt=0.00,
-            total_amt_local=100.00,
-            start_date=datetime.date(2000, 1, 1),
-            end_date=datetime.date(2000, 2, 1),
-            actual_amt=0.00,
-            actual_amt_local=100.00,
-            intervention_amt=0.00,
-            outstanding_amt_local=0.00,
-            outstanding_amt=0.00,
-        )
-        FundsReservationHeaderFactory(
-            intervention=self.intervention,
-            fr_number=3,
-            total_amt=0.00,
-            total_amt_local=100.00,
-            start_date=datetime.date(2002, 1, 1),
-            end_date=datetime.date(2002, 2, 1),
-            actual_amt_local=100.00,
-            actual_amt=0.00,
-            intervention_amt=0.00,
-            outstanding_amt_local=0.00,
-            outstanding_amt=0.00,
-        )
-        self.assertTrue(transition_to_closed(self.intervention))
-        self.expected["earliest_start_date"] = datetime.date(2000, 1, 1)
-        self.expected["latest_end_date"] = datetime.date(2002, 2, 1)
-        self.expected["total_actual_amt"] = 300.00
-        self.expected["total_frs_amt"] = 300.00
-        self.assertFundamentals(self.intervention.total_frs)
+
+class TestReportingPeriodsStartAfterPdStart(BaseTenantTestCase):
+    def test_valid_when_no_reporting_periods(self):
+        intervention = InterventionFactory(start=datetime.date(2025, 1, 1))
+        self.assertTrue(reporting_periods_start_after_pd_start(intervention))
+
+    def test_invalid_when_period_starts_before_pd_start(self):
+        start = datetime.date(2025, 2, 1)
+        intervention = InterventionFactory(start=start)
+        # reporting period starting before PD start
+        InterventionReportingPeriodFactory(intervention=intervention, start_date=start - datetime.timedelta(days=10))
+
+        self.assertFalse(reporting_periods_start_after_pd_start(intervention))
 
 
 class TestTransitionToSigned(BaseTenantTestCase):

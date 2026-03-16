@@ -268,6 +268,16 @@ def document_type_pca_valid(i):
     return True
 
 
+def reporting_periods_start_after_pd_start(i):
+    """
+    Ensure no reporting period starts before the PD start date.
+    Used in state_* validators (signature, signed, active).
+    """
+    if not i.start:
+        return True
+    return not i.reporting_periods.filter(start_date__lt=i.start).exists()
+
+
 # validation id 2
 def ssfa_agreement_has_no_other_intervention(i):
     """
@@ -427,6 +437,10 @@ class InterventionValid(CompleteValidation):
         self.check_rigid_fields(intervention, related=True)
         if not review_was_accepted(intervention):
             raise StateValidationError([_('Review needs to be approved')])
+        if not reporting_periods_start_after_pd_start(intervention):
+            raise StateValidationError([
+                _('Reporting Period Start Date cannot be before the PD start date')
+            ])
         return True
 
     def state_signed_valid(self, intervention, user=None):
@@ -438,6 +452,10 @@ class InterventionValid(CompleteValidation):
             raise StateValidationError([_('All PD Outputs need to be associated to a CP Output')])
         if intervention.contingency_pd is False and intervention.total_unicef_budget == 0:
             raise StateValidationError([_('UNICEF Cash $ or UNICEF Supplies $ should not be 0')])
+        if not reporting_periods_start_after_pd_start(intervention):
+            raise StateValidationError([
+                _('Reporting Period Start Date cannot be before the PD start date')
+            ])
         return True
 
     def state_suspended_valid(self, intervention, user=None):
@@ -459,6 +477,10 @@ class InterventionValid(CompleteValidation):
             raise StateValidationError([_('Today is not after the start date')])
         if intervention.total_unicef_budget == 0:
             raise StateValidationError([_('UNICEF Cash $ or UNICEF Supplies $ should not be 0')])
+        if not reporting_periods_start_after_pd_start(intervention):
+            raise StateValidationError([
+                _('Reporting Period Start Date cannot be before the PD start date')
+            ])
         return True
 
     def state_ended_valid(self, intervention, user=None):
