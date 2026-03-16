@@ -8,6 +8,7 @@ from etools.applications.attachments.tests.factories import (
     AttachmentFileTypeFactory,
     AttachmentLinkFactory,
 )
+from etools.applications.field_monitoring.fm_settings.models import FMDocumentTypeDescription
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.field_monitoring.data_collection.models import ActivityQuestionOverallFinding
 from etools.applications.field_monitoring.data_collection.tests.factories import (
@@ -127,6 +128,7 @@ class TestActivityReportAttachmentsView(FMBaseTestCaseMixin, APIViewSetTestCase)
     def test_file_types(self):
         wrong_file_type = AttachmentFileTypeFactory()
         file_type = AttachmentFileTypeFactory(code='fm_common')
+        FMDocumentTypeDescription.objects.create(name=file_type.name, description='test description')
 
         response = self.make_request_to_viewset(self.unicef_user, action='file-types')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -495,6 +497,7 @@ class TestOverallFindingAttachmentsView(ChecklistDataCollectionTestMixin, APIVie
     def test_file_types(self):
         wrong_file_type = AttachmentFileTypeFactory()
         file_type = AttachmentFileTypeFactory(code='fm_common')
+        FMDocumentTypeDescription.objects.create(name=file_type.name, description='test description')
 
         response = self.make_request_to_viewset(self.unicef_user, action='file-types')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -738,6 +741,7 @@ class TestActivityChecklistOverallAttachments(ChecklistDataCollectionTestMixin, 
     def test_file_types(self):
         wrong_file_type = AttachmentFileTypeFactory()
         file_type = AttachmentFileTypeFactory(code='fm_common')
+        FMDocumentTypeDescription.objects.create(name=file_type.name, description='test description')
 
         response = self.make_request_to_viewset(self.unicef_user, action='file-types')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
