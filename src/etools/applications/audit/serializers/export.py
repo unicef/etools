@@ -1,9 +1,14 @@
 import itertools
 from collections import OrderedDict
+from copy import copy
 
 from django.contrib.auth import get_user_model
+from django.core.files.temp import NamedTemporaryFile
 from django.utils.translation import gettext as _
 
+from openpyxl import Workbook
+from openpyxl.styles import Alignment, Font, PatternFill
+from openpyxl.utils import get_column_letter
 from rest_framework import serializers
 from unicef_attachments.serializers import AttachmentPDFSerializer
 from unicef_restlib.fields import CommaSeparatedExportField
@@ -399,3 +404,112 @@ class MicroAssessmentDetailCSVSerializer(EngagementBaseDetailCSVSerializer):
 class SpecialAuditDetailCSVSerializer(EngagementBaseDetailCSVSerializer):
     total_value = CurrencyReadOnlyField()
     total_value_local = CurrencyReadOnlyField()
+
+
+class MicroAssessmentRisksXLSRenderer:
+    def __init__(self, micro_assessment: dict):
+        self.micro_assessment = micro_assessment
+        self.color_blue = '00305496'
+
+        self.fill_blue = ['fill', PatternFill(fill_type='solid', fgColor=self.color_blue)]
+
+        self.font_default = Font(
+            name='Calibri', size=11, bold=False, italic=False, vertAlign=None,
+            underline='none', strike=False, color='FF000000'
+        )
+
+        self.font_white_bold = ['font', copy(self.font_default)]
+        self.font_white_bold[1].color = '00FFFFFF'
+        self.font_white_bold[1].bold = True
+
+        self.font_bold = ['font', copy(self.font_default)]
+        self.font_bold[1].bold = True
+
+        self.align_right = ["alignment", Alignment(horizontal='right')]
+
+    def apply_styles_to_cells(self, worksheet, start_row=1, start_column=1, end_row=1, end_column=1, styles=None):
+        start_row, end_row = min(start_row, end_row), max(start_row, end_row)
+        start_column, end_column = min(start_column, end_column), max(start_column, end_column)
+        for i in range(start_row, end_row + 1):
+            for j in range(start_column, end_column + 1):
+                cell = worksheet[f'{get_column_letter(j)}{i}']
+                for name, style in styles:
+                    setattr(cell, name, style)
+
+    def auto_format_cell_width(self, worksheet):
+        for letter in range(1, worksheet.max_column):
+            maximum_value = 0
+            for cell in worksheet[get_column_letter(letter)]:
+                val_to_check = len(str(cell.value))
+                if val_to_check > maximum_value:
+                    maximum_value = val_to_check
+            worksheet.column_dimensions[get_column_letter(letter)].width = maximum_value + 1
+
+    def sheet_header(self, worksheet, header_title):
+        worksheet.append([header_title])
+        worksheet.merge_cells(start_row=worksheet.max_row, start_column=1, end_row=worksheet.max_row, end_column=2)
+        self.apply_styles_to_cells(worksheet, worksheet.max_row, 1, worksheet.max_row, 1, [self.font_bold])
+        worksheet.append([
+            _('Micro Assessment Reference'),
+            self.micro_assessment['reference_number'],
+            _('Status'),
+            str(self.micro_assessment['status_display'])
+        ])
+        worksheet.append([
+            _('Partner'),
+            self.micro_assessment['partner']['name'],
+
+        ])
+        worksheet.append([
+            _('Auditor Firm: '), self.micro_assessment['agreement']['auditor_firm']['name'],
+            _('Vendor Number'), self.micro_assessment['agreement']['auditor_firm']['vendor_number']
+        ])
+        self.apply_styles_to_cells(worksheet, 2, 1, worksheet.max_row, 1, [self.font_bold])
+        self.apply_styles_to_cells(worksheet, 2, 3, worksheet.max_row, 3, [self.font_bold])
+        self.apply_styles_to_cells(worksheet, worksheet.max_row - 2, 4, worksheet.max_row, 4, [self.align_right])
+        worksheet.append([''])
+
+    def render_risks(self, worksheet):
+        worksheet.append([
+            _('Header'),
+            _('Test Subject Areas Risk Assessments(user input)'),
+            _('Questionnaire Risk Assessments (calculated risk)'),
+        ])
+        self.apply_styles_to_cells(
+            worksheet, worksheet.max_row, 1, worksheet.max_row, 3, [self.fill_blue, self.font_white_bold]
+        )
+        idx = 0
+        for tsa, qa in zip(self.micro_assessment['test_subject_areas']['children'],
+                           self.micro_assessment['questionnaire']['children']):
+            worksheet.append([
+                tsa['header'],
+                str(tsa['blueprints'][0]['risk']['value_display']),
+                str(qa['risk_rating']).capitalize(),
+            ])
+            idx += 1
+
+        worksheet.append([''])
+        self.apply_styles_to_cells(
+            worksheet, worksheet.max_row - idx, 2, worksheet.max_row, 4, [self.align_right]
+        )
+        self.auto_format_cell_width(worksheet)
+
+    def render(self):
+        workbook = Workbook()
+
+        if workbook.active:
+            # remove default sheet
+            workbook.remove(workbook.active)
+
+        _sheet = workbook.create_sheet(_('Micro Assessment Comparison on Risks'))
+        _sheet.sheet_properties.tabColor = '00B0F0'
+
+        self.sheet_header(_sheet, _('Micro Assessment Comparison on Risks'))
+        self.render_risks(_sheet)
+
+        with NamedTemporaryFile() as tmp:
+            workbook.save(tmp.name)
+            tmp.seek(0)
+            data = tmp.read()
+
+        return data

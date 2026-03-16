@@ -1,5 +1,9 @@
 from django.contrib import admin
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
 
+from admin_extra_urls.decorators import button
+from admin_extra_urls.mixins import ExtraUrlMixin
 from ordered_model.admin import OrderedModelAdmin
 
 from etools.applications.action_points.admin import ActionPointAdmin
@@ -22,6 +26,7 @@ from etools.applications.audit.models import (
     SpotCheckFinancialFinding,
     TestSubjectAreas,
 )
+from etools.applications.audit.serializers.export import MicroAssessmentPDFSerializer, MicroAssessmentRisksXLSRenderer
 
 
 @admin.register(Engagement)
@@ -77,8 +82,15 @@ class FaceFormAdmin(admin.ModelAdmin):
 
 
 @admin.register(MicroAssessment)
-class MicroAssessmentAdmin(EngagementAdmin):
-    pass
+class MicroAssessmentAdmin(ExtraUrlMixin, EngagementAdmin):
+
+    @button()
+    def export_risks_comparison(self, request, pk):
+        micro_assessment = get_object_or_404(MicroAssessment, **{'pk': pk})
+        data = MicroAssessmentPDFSerializer(micro_assessment).data
+        return HttpResponse(content=MicroAssessmentRisksXLSRenderer(data).render(), headers={
+            'Content-Disposition': 'attachment;filename={}-risks.xlsx'.format(str(data['reference_number']))
+        })
 
 
 @admin.register(Audit)
