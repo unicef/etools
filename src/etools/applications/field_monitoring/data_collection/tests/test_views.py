@@ -8,7 +8,6 @@ from etools.applications.attachments.tests.factories import (
     AttachmentFileTypeFactory,
     AttachmentLinkFactory,
 )
-from etools.applications.field_monitoring.fm_settings.models import FMDocumentTypeDescription
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.field_monitoring.data_collection.models import ActivityQuestionOverallFinding
 from etools.applications.field_monitoring.data_collection.tests.factories import (
@@ -16,6 +15,7 @@ from etools.applications.field_monitoring.data_collection.tests.factories import
     FindingFactory,
     StartedChecklistFactory,
 )
+from etools.applications.field_monitoring.fm_settings.models import FMDocumentTypeDescription
 from etools.applications.field_monitoring.fm_settings.tests.factories import MethodFactory
 from etools.applications.field_monitoring.planning.tests.factories import MonitoringActivityFactory
 from etools.applications.field_monitoring.tests.base import APIViewSetTestCase, FMBaseTestCaseMixin
