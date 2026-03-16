@@ -119,7 +119,6 @@ class TestTransitionToClosed(BaseTenantTestCase):
         self.expected["latest_end_date"] = frs.end_date
         self.assertFundamentals(self.intervention.total_frs)
 
-
     def test_total_amounts_not_equal(self):
         """Total amounts must equal and total outstanding must be zero"""
         frs = FundsReservationHeaderFactory(
