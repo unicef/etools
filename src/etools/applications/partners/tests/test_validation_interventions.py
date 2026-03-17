@@ -14,7 +14,6 @@ from etools.applications.partners.tests.factories import (
     AgreementFactory,
     InterventionAmendmentFactory,
     InterventionFactory,
-    InterventionReportingPeriodFactory,
     InterventionResultLinkFactory,
 )
 from etools.applications.partners.validation.interventions import (
@@ -33,7 +32,12 @@ from etools.applications.partners.validation.interventions import (
     transition_to_suspended,
     transition_to_terminated,
 )
-from etools.applications.reports.tests.factories import AppliedIndicatorFactory, LowerResultFactory, SectionFactory
+from etools.applications.reports.tests.factories import (
+    AppliedIndicatorFactory,
+    LowerResultFactory,
+    ReportingRequirementFactory,
+    SectionFactory,
+)
 from etools.applications.users.tests.factories import UserFactory
 
 
@@ -270,8 +274,14 @@ class TestReportingPeriodsStartAfterPdStart(BaseTenantTestCase):
     def test_invalid_when_period_starts_before_pd_start(self):
         start = datetime.date(2025, 2, 1)
         intervention = InterventionFactory(start=start)
-        # reporting period starting before PD start
-        InterventionReportingPeriodFactory(intervention=intervention, start_date=start - datetime.timedelta(days=10))
+        # reporting requirement starting before PD start
+        ReportingRequirementFactory(
+            intervention=intervention,
+            report_type="QPR",
+            start_date=start - datetime.timedelta(days=10),
+            end_date=start + datetime.timedelta(days=10),
+            due_date=start + datetime.timedelta(days=40),
+        )
 
         self.assertFalse(reporting_periods_start_after_pd_start(intervention))
 
