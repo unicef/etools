@@ -16,6 +16,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework.exceptions import ValidationError as DRFValidationError
 from unicef_attachments.admin import AttachmentSingleInline
 
+from etools.applications.audit_log.mixins import AuditModelAdmin
 from etools.applications.last_mile import models
 from etools.applications.last_mile.admin_panel.validators import AdminPanelValidator
 from etools.applications.organizations.models import Organization
@@ -65,7 +66,7 @@ class PointOfInterestForm(forms.ModelForm):
 
 
 @admin.register(models.PointOfInterest)
-class PointOfInterestAdmin(XLSXImportMixin, admin.ModelAdmin):
+class PointOfInterestAdmin(XLSXImportMixin, AuditModelAdmin, admin.ModelAdmin):
     form = PointOfInterestForm
     readonly_fields = ('partner_names', 'created_by', 'approved_by')
     list_display = ('name', 'parent', 'poi_type', 'p_code', 'l_consignee_code')
@@ -237,7 +238,7 @@ class TransferInLine(RestrictedEditAdminMixin, admin.TabularInline):
 
 
 @admin.register(models.Transfer)
-class TransferAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
+class TransferAdmin(AttachmentInlineAdminMixin, AuditModelAdmin, admin.ModelAdmin):
     list_display = (
         'display_name', 'partner_organization', 'status', 'transfer_type',
         'transfer_subtype', 'origin_point', 'destination_point', 'l_consignee_code', 'from_partner_organization', 'recipient_partner_organization'
@@ -269,7 +270,7 @@ class TransferAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
 
 
 @admin.register(models.Material)
-class MaterialAdmin(admin.ModelAdmin):
+class MaterialAdmin(AuditModelAdmin, admin.ModelAdmin):
     list_display = (
         'number', 'short_description', 'original_uom'
     )
@@ -281,7 +282,7 @@ class MaterialAdmin(admin.ModelAdmin):
 
 
 @admin.register(models.Profile)
-class ProfileAdmin(admin.ModelAdmin):
+class ProfileAdmin(AuditModelAdmin, admin.ModelAdmin):
     list_display = ('user', 'status', 'created_by', 'created_on', 'approved_by')
     raw_id_fields = ('user', 'created_by', 'approved_by')
     list_filter = ('status',)
@@ -299,7 +300,7 @@ class ProfileAdmin(admin.ModelAdmin):
 
 
 @admin.register(models.UserPointsOfInterest)
-class UserPointsOfInterestAdmin(admin.ModelAdmin):
+class UserPointsOfInterestAdmin(AuditModelAdmin, admin.ModelAdmin):
     list_display = ('user', 'point_of_interest')
     raw_id_fields = ('user', 'point_of_interest')
     search_fields = ('user__username', 'user__email', 'user__first_name', 'user__last_name', 'point_of_interest__pcode', 'point_of_interest__name')
@@ -307,7 +308,7 @@ class UserPointsOfInterestAdmin(admin.ModelAdmin):
 
 
 @admin.register(models.Item)
-class ItemAdmin(XLSXImportMixin, admin.ModelAdmin):
+class ItemAdmin(XLSXImportMixin, AuditModelAdmin, admin.ModelAdmin):
     list_display = ('id', 'batch_id', 'material', 'wastage_type', 'transfer')
     raw_id_fields = ('transfer', 'material', 'origin_transfer')
     list_filter = ('wastage_type', 'hidden')
@@ -517,13 +518,13 @@ class ItemAdmin(XLSXImportMixin, admin.ModelAdmin):
 
 
 @admin.register(models.TransferEvidence)
-class TransferEvidenceAdmin(AttachmentInlineAdminMixin, admin.ModelAdmin):
+class TransferEvidenceAdmin(AttachmentInlineAdminMixin, AuditModelAdmin, admin.ModelAdmin):
     raw_id_fields = ('transfer', 'user')
     inlines = [TransferEvidenceAttachmentInline]
 
 
 @admin.register(models.TransferHistory)
-class TransferHistoryAdmin(admin.ModelAdmin):
+class TransferHistoryAdmin(AuditModelAdmin, admin.ModelAdmin):
     list_display = ('origin_transfer_name', 'list_sub_transfers')
     readonly_fields = ('origin_transfer_id', 'origin_transfer_link')
     search_fields = ('origin_transfer__name',)
@@ -588,7 +589,7 @@ class TransferHistoryAdmin(admin.ModelAdmin):
 
 
 @admin.register(models.ItemTransferHistory)
-class ItemTransferHistoryAdmin(admin.ModelAdmin):
+class ItemTransferHistoryAdmin(AuditModelAdmin, admin.ModelAdmin):
     list_display = ('item_batch_id', 'transfer_unicef_release_order', 'transfer_count', 'view_items_link')
     search_fields = ('transfer__name', 'transfer__partner_organization__organization__name', 'transfer__destination_point__name', 'item__batch_id')
 
@@ -635,14 +636,14 @@ class ItemTransferHistoryAdmin(admin.ModelAdmin):
 
 
 @admin.register(models.PartnerMaterial)
-class PartnerMaterialAdmin(admin.ModelAdmin):
+class PartnerMaterialAdmin(AuditModelAdmin, admin.ModelAdmin):
     list_display = ('material', 'partner_organization')
     search_fields = ('material__short_description', 'partner_organization__organization__name')
     list_filter = ('material',)
 
 
 @admin.register(models.PointOfInterestType)
-class PointOfInterestTypeAdmin(admin.ModelAdmin):
+class PointOfInterestTypeAdmin(AuditModelAdmin, admin.ModelAdmin):
     list_display = ('name', 'category', 'type_role', 'created', 'modified')
     list_filter = ('category', 'type_role')
     search_fields = ('name', 'category')
@@ -651,7 +652,7 @@ class PointOfInterestTypeAdmin(admin.ModelAdmin):
 
 
 @admin.register(models.PointOfInterestTypeMapping)
-class PointOfInterestTypeMappingAdmin(admin.ModelAdmin):
+class PointOfInterestTypeMappingAdmin(AuditModelAdmin, admin.ModelAdmin):
     list_display = ('primary_type', 'secondary_type', 'created', 'modified')
     list_filter = ('primary_type', 'secondary_type')
     search_fields = ('primary_type__name', 'secondary_type__name')
@@ -662,7 +663,7 @@ class PointOfInterestTypeMappingAdmin(admin.ModelAdmin):
 
 
 @admin.register(models.AuditConfiguration)
-class AuditConfigurationAdmin(admin.ModelAdmin):
+class AuditConfigurationAdmin(AuditModelAdmin, admin.ModelAdmin):
     list_display = ('name', 'is_enabled', 'track_system_users', 'max_entries_per_item', 'is_active', 'created', 'modified')
     list_filter = ('is_enabled', 'track_system_users', 'is_active')
     search_fields = ('name',)
@@ -698,7 +699,7 @@ class AuditConfigurationAdmin(admin.ModelAdmin):
 
 
 @admin.register(models.ItemAuditLog)
-class ItemAuditLogAdmin(admin.ModelAdmin):
+class ItemAuditLogAdmin(AuditModelAdmin, admin.ModelAdmin):
     list_display = ('item_id', 'action', 'user', 'created', 'changed_fields_display', 'transfer_display', 'view_item_link')
     list_filter = ('action',)
     search_fields = ('item_id', 'user__email', 'user__first_name', 'user__last_name', 'transfer_info', 'material_info', 'critical_changes')
@@ -891,7 +892,7 @@ class ItemAuditLogAdmin(admin.ModelAdmin):
 
 
 @admin.register(models.TransferIngestAlert)
-class TransferIngestAlertAdmin(admin.ModelAdmin):
+class TransferIngestAlertAdmin(AuditModelAdmin, admin.ModelAdmin):
     list_display = ('release_order', 'consignee_code', 'vendor_number', 'alert_type', 'country_name', 'notified', 'created')
     list_filter = ('notified', 'alert_type', 'country_name')
     search_fields = ('release_order', 'consignee_code', 'vendor_number')
