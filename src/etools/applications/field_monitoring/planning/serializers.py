@@ -33,7 +33,7 @@ from etools.applications.field_monitoring.planning.models import (
 from etools.applications.field_monitoring.utils.fsm import get_available_transitions
 from etools.applications.partners.serializers.interventions_v2 import MinimalInterventionListSerializer
 from etools.applications.partners.serializers.partner_organization_v2 import MinimalPartnerOrganizationListSerializer
-from etools.applications.reports.models import ResultType
+from etools.applications.reports.models import Result, ResultType
 from etools.applications.reports.serializers.v1 import SectionSerializer
 from etools.applications.reports.serializers.v2 import MinimalOutputListSerializer, OfficeSerializer
 from etools.applications.tpm.tpmpartners.models import TPMPartner
@@ -413,6 +413,7 @@ class MonitoringActivitySerializer(UserContextSerializerMixin, MonitoringActivit
         """
         if not isinstance(value, list):
             raise serializers.ValidationError({'ewp_activities': _('Must be a list.')})
+
         result = []
         for i, item in enumerate(value):
             if not isinstance(item, dict):
@@ -425,9 +426,42 @@ class MonitoringActivitySerializer(UserContextSerializerMixin, MonitoringActivit
                 raise serializers.ValidationError(
                     {'ewp_activities': _('activities at index %(i)s must be a list.') % {'i': i}}
                 )
-            validated_activities = self._validate_string_list(activities, 'ewp_activities', max_length=255)
+
+            validated_activities = self._validate_string_list(
+                activities,
+                'ewp_activities',
+                max_length=255,
+            )
+            self._assert_known_activity_wbs(validated_activities)
+
             result.append({'cp_output': cp_output_id, 'activities': validated_activities})
         return result
+
+    def _assert_known_activity_wbs(self, wbs_list):
+        """
+        Ensure each WBS in wbs_list corresponds to a synced Activity Result.
+        Kept separate to avoid bloating _validate_ewp_activities.
+        """
+        # Work on unique values and do a single DB query.
+        unique_wbs = sorted(set(wbs_list))
+        if not unique_wbs:
+            return
+
+        existing = set(
+            Result.objects.filter(
+                wbs__in=unique_wbs,
+                result_type__name=ResultType.ACTIVITY,
+            ).values_list('wbs', flat=True)
+        )
+        missing = [w for w in unique_wbs if w not in existing]
+
+        if missing:
+            raise serializers.ValidationError({
+                'ewp_activities': _(
+                    'Unknown activity WBS codes: %(codes)s. '
+                    'Please select valid WBS Activities Lv4.'
+                ) % {'codes': ', '.join(sorted(set(missing)))}
+            })
 
     def _resolve_ewp_activities(self, grouped_list):
         """
@@ -435,13 +469,37 @@ class MonitoringActivitySerializer(UserContextSerializerMixin, MonitoringActivit
         """
         if not grouped_list:
             return []
+
         instances = []
         for group in grouped_list:
             cp_output_id = group.get('cp_output') or None
             for wbs in group.get('activities', []):
-                obj, _ = EWPActivity.objects.get_or_create(wbs=wbs, cp_output_id=cp_output_id)
+                activity_obj = self._get_activity_for_wbs(wbs)
+                obj, _ = EWPActivity.objects.get_or_create(
+                    wbs=wbs,
+                    cp_output_id=cp_output_id,
+                    defaults={'activity': activity_obj},
+                )
+                # If it existed without activity linked yet, link it now.
+                if activity_obj and obj.activity_id is None:
+                    obj.activity = activity_obj
+                    obj.save(update_fields=['activity'])
                 instances.append(obj)
         return instances
+
+    def _get_activity_for_wbs(self, wbs):
+        """
+        Return the Activity-type Result for a given WBS, if any.
+        Kept small and focused so callers stay simple.
+        """
+        return (
+            Result.objects.filter(
+                wbs=wbs,
+                result_type__name=ResultType.ACTIVITY,
+            )
+            .order_by('id')
+            .first()
+        )
 
     def create(self, validated_data):
         facility_types_data = validated_data.pop('facility_types', None)

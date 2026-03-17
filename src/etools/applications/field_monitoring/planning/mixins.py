@@ -4,13 +4,22 @@ from django.utils.translation import gettext_lazy as _
 from django_fsm import transition as transition_wrapper
 
 from etools.applications.partners.models import Intervention, PartnerOrganization
-from etools.applications.reports.models import Result
+from etools.applications.reports.models import Result, ResultType
 
 
 class EWPActivity(models.Model):
     wbs = models.CharField(max_length=255)
     cp_output = models.ForeignKey(Result, null=True, blank=True, verbose_name=_('CP Output'),
                                   on_delete=models.SET_NULL, related_name='ewp_activities')
+    activity = models.ForeignKey(
+        Result,
+        null=True,
+        blank=True,
+        verbose_name=_('Activity'),
+        on_delete=models.PROTECT,
+        related_name='fm_ewp_activities',
+        limit_choices_to={'result_type__name': ResultType.ACTIVITY},
+    )
 
     class Meta:
         app_label = 'field_monitoring_planning'

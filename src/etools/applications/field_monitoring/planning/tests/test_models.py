@@ -639,6 +639,44 @@ class TestEntityValidation(BaseTenantTestCase):
         with self.assertRaises(Exception):
             serializer._validate_ewp_activities([{'cp_output': None, 'activities': 'not-a-list'}])
 
+    def test_ewp_activity_rejects_unknown_wbs(self):
+        """
+        _validate_ewp_activities must reject WBS codes that are not backed
+        by a synced Activity-type Result (Vision/Insight Activity).
+        """
+        serializer = MonitoringActivitySerializer()
+        with self.assertRaises(Exception):
+            serializer._validate_ewp_activities(
+                [{'cp_output': None, 'activities': ['NON-EXISTENT-WBS-001']}]
+            )
+
+    def test_ewp_activity_accepts_known_activity_wbs_and_links_fk(self):
+        """
+        When a valid Activity-type Result exists for the given WBS, resolving
+        ewp_activities should create/link an EWPActivity with its activity FK set.
+        """
+        # Create an Activity-type Result that mimics a WBS Activity Lv4 from Vision/Insight.
+        activity_result = ResultFactory(result_type__name=ResultType.ACTIVITY, wbs='VALID-WBS-001')
+        serializer = MonitoringActivitySerializer()
+
+        validated = serializer._validate_ewp_activities(
+            [{'cp_output': None, 'activities': ['VALID-WBS-001']}]
+        )
+        # Sanity: validation should pass and preserve structure.
+        self.assertEqual(
+            validated,
+            [{'cp_output': None, 'activities': ['VALID-WBS-001']}],
+        )
+
+        # Resolution must create or reuse an EWPActivity and link its activity FK.
+        instances = serializer._resolve_ewp_activities(validated)
+        self.assertEqual(len(instances), 1)
+        ewp = instances[0]
+        ewp.refresh_from_db()
+        self.assertEqual(ewp.wbs, 'VALID-WBS-001')
+        self.assertIsNone(ewp.cp_output_id)
+        self.assertEqual(ewp.activity_id, activity_result.id)
+
 
 class TestMonitoringActivityGroups(BaseTenantTestCase):
     @classmethod
