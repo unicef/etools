@@ -2922,7 +2922,7 @@ class TestVisionIngestPOIsApiView(BaseTenantTestCase):
         self.assertEqual(response.data["created_count"], 1)
 
         poi = models.PointOfInterest.all_objects.get(name="Auto PCode Location")
-        self.assertTrue(poi.p_code.startswith("tes"))
+        self.assertTrue(poi.p_code.startswith("TST"))
         self.assertEqual(len(poi.p_code), 12)
 
     def test_explicit_pcode_is_used(self):
