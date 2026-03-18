@@ -2,7 +2,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import connection
 
 from etools.applications.audit_log.models import AuditLogEntry
-from etools.applications.audit_log.service import AUDIT_LOG_SWITCH, audit_log
+from etools.applications.audit_log.service import audit_log, AUDIT_LOG_SWITCH
 from etools.applications.core.tests.cases import BaseTenantTestCase
 from etools.applications.environment.tests.factories import TenantSwitchFactory
 from etools.applications.partners.models import PartnerOrganization
