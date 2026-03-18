@@ -6,6 +6,27 @@ from django.utils.translation import gettext_lazy as _
 
 from model_utils.models import TimeStampedModel
 
+from etools.applications.audit_log.constants import GROUP_TO_AUDIT_APP_LABELS
+
+
+def get_allowed_app_labels(user):
+    user_group_names = set(user.groups.values_list('name', flat=True))
+    allowed = set()
+    for group_name in user_group_names:
+        allowed.update(GROUP_TO_AUDIT_APP_LABELS.get(group_name, []))
+    return allowed
+
+
+class AuditLogQuerySet(models.QuerySet):
+
+    def for_user(self, user):
+        if user.is_superuser:
+            return self
+        allowed = get_allowed_app_labels(user)
+        if not allowed:
+            return self.none()
+        return self.filter(content_type__app_label__in=allowed)
+
 
 class AuditLogEntry(TimeStampedModel, models.Model):
     ACTION_CREATE = 'CREATE'
@@ -66,6 +87,8 @@ class AuditLogEntry(TimeStampedModel, models.Model):
         verbose_name=_("Description"),
         help_text=_("Optional human-readable description of the change"),
     )
+
+    objects = AuditLogQuerySet.as_manager()
 
     class Meta:
         ordering = ['-created']

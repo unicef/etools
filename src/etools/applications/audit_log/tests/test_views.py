@@ -6,8 +6,9 @@ from rest_framework.reverse import reverse
 from etools.applications.audit_log.models import AuditLogEntry
 from etools.applications.audit_log.tests.factories import AuditLogEntryFactory
 from etools.applications.core.tests.cases import BaseTenantTestCase
+from etools.applications.last_mile.models import Transfer
 from etools.applications.partners.models import PartnerOrganization
-from etools.applications.users.tests.factories import UserFactory
+from etools.applications.users.tests.factories import SimpleUserFactory, UserFactory
 
 
 class TestAuditLogEntryViewSet(BaseTenantTestCase):
@@ -123,3 +124,84 @@ class TestAuditLogEntryViewSet(BaseTenantTestCase):
         results = response.data['results']
         dates = [r['created'] for r in results]
         self.assertEqual(dates, sorted(dates, reverse=True))
+
+
+class TestAuditLogScopedAccess(BaseTenantTestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.partners_ct = ContentType.objects.get_for_model(PartnerOrganization)
+        cls.last_mile_ct = ContentType.objects.get_for_model(Transfer)
+
+        cls.partner_entry = AuditLogEntryFactory(
+            content_type=cls.partners_ct,
+            object_id='10',
+            action=AuditLogEntry.ACTION_CREATE,
+        )
+        cls.last_mile_entry = AuditLogEntryFactory(
+            content_type=cls.last_mile_ct,
+            object_id='20',
+            action=AuditLogEntry.ACTION_CREATE,
+        )
+
+    def test_lmsm_user_sees_only_last_mile_entries(self):
+        lmsm_user = UserFactory(realms__data=['LMSM HQ Admin'])
+        self.client.force_login(lmsm_user)
+        url = reverse('audit_log:audit-log-entries-list')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 1)
+        self.assertEqual(response.data['results'][0]['object_id'], '20')
+
+    def test_unicef_user_sees_partners_entries(self):
+        unicef_user = UserFactory()  # default UNICEF User realm
+        self.client.force_login(unicef_user)
+        url = reverse('audit_log:audit-log-entries-list')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        object_ids = {r['object_id'] for r in response.data['results']}
+        self.assertIn('10', object_ids)
+
+    def test_unmapped_group_sees_nothing(self):
+        user = SimpleUserFactory()
+        self.client.force_login(user)
+        url = reverse('audit_log:audit-log-entries-list')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 0)
+
+    def test_superuser_sees_all(self):
+        superuser = UserFactory(is_superuser=True)
+        self.client.force_login(superuser)
+        url = reverse('audit_log:audit-log-entries-list')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertGreaterEqual(response.data['count'], 2)
+
+    def test_scoping_combined_with_query_params(self):
+        lmsm_user = UserFactory(realms__data=['LMSM HQ Admin'])
+        self.client.force_login(lmsm_user)
+        url = reverse('audit_log:audit-log-entries-list')
+        # Request partners entries — should be blocked by scoping
+        response = self.client.get(url, {
+            'app_label': 'partners',
+            'model': 'partnerorganization',
+        })
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['count'], 0)
+
+    def test_for_user_queryset_api(self):
+        """Test the reusable AuditLogEntry.objects.for_user() manager method directly."""
+        lmsm_user = UserFactory(realms__data=['LMSM HQ Admin'])
+        qs = AuditLogEntry.objects.for_user(lmsm_user)
+        self.assertEqual(qs.count(), 1)
+        self.assertEqual(qs.first().object_id, '20')
+
+    def test_for_user_chainable(self):
+        """for_user() can be chained with other queryset filters."""
+        unicef_user = UserFactory()
+        qs = AuditLogEntry.objects.filter(
+            action=AuditLogEntry.ACTION_CREATE,
+        ).for_user(unicef_user)
+        object_ids = set(qs.values_list('object_id', flat=True))
+        self.assertIn('10', object_ids)

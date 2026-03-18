@@ -6,13 +6,15 @@ from rest_framework.filters import OrderingFilter
 from rest_framework.permissions import IsAuthenticated
 from unicef_restlib.pagination import DynamicPageNumberPagination
 
+from etools.applications.audit_log.mixins import ScopedAuditLogMixin
 from etools.applications.audit_log.models import AuditLogEntry
 from etools.applications.audit_log.serializers import AuditLogEntrySerializer
 
 
-class AuditLogEntryViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
+class AuditLogEntryViewSet(ScopedAuditLogMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
     """
     Read-only API for querying audit log entries.
+    Entries are scoped to the user's group membership via ScopedAuditLogMixin.
 
     Query params:
         content_type: ContentType ID
@@ -28,9 +30,10 @@ class AuditLogEntryViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     filter_backends = (DjangoFilterBackend, OrderingFilter)
     ordering_fields = ['created', 'action']
     ordering = ['-created']
+    queryset = AuditLogEntry.objects.select_related('user', 'content_type')
 
     def get_queryset(self):
-        qs = AuditLogEntry.objects.select_related('user', 'content_type')
+        qs = super().get_queryset()
 
         model = self.request.query_params.get('model')
         app_label = self.request.query_params.get('app_label')

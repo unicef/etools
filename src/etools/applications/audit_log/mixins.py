@@ -1,6 +1,25 @@
 from etools.applications.audit_log.service import audit_log, bulk_audit_log
 
 
+class ScopedAuditLogMixin:
+    """DRF viewset mixin that scopes AuditLogEntry querysets to the current user.
+
+    Applies ``AuditLogEntry.objects.for_user(request.user)`` so users only
+    see audit entries for app_labels allowed by their group membership.
+
+    Usage::
+
+        from etools.applications.audit_log.mixins import ScopedAuditLogMixin
+
+        class MyAuditViewSet(ScopedAuditLogMixin, mixins.ListModelMixin, viewsets.GenericViewSet):
+            ...
+    """
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        return qs.for_user(self.request.user)
+
+
 def _get_m2m_field_names(model):
     return [
         f.name for f in model._meta.get_fields()
