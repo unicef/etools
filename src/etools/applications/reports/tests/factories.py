@@ -123,9 +123,17 @@ class ReportingRequirementFactory(factory.django.DjangoModelFactory):
         model = models.ReportingRequirement
 
     report_type = fuzzy.FuzzyChoice(models.ReportingRequirement.TYPE_CHOICES)
-    end_date = fuzzy.FuzzyDate(datetime.date(2001, 1, 1))
-    due_date = fuzzy.FuzzyDate(datetime.date(2001, 1, 1))
-    start_date = fuzzy.FuzzyDate(datetime.date(2001, 1, 1))
+    # `start_date`/`end_date` are nullable on the model. Keeping them null by default avoids
+    # unintended failures in validators when PD start dates shift (e.g. in amendment tests).
+    start_date = None
+    end_date = None
+    due_date = factory.LazyAttribute(
+        lambda o: (
+            (o.intervention.start + datetime.timedelta(days=30))
+            if getattr(o, "intervention", None) and getattr(o.intervention, "start", None)
+            else fuzzy.FuzzyDate(datetime.date(2001, 1, 1)).fuzz()
+        )
+    )
 
 
 class SpecialReportingRequirementFactory(factory.django.DjangoModelFactory):
