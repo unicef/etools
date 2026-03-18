@@ -18,6 +18,7 @@ from unicef_rest_export.renderers import ExportCSVRenderer
 from unicef_rest_export.views import ExportMixin
 from unicef_restlib.pagination import DynamicPageNumberPagination
 
+from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.last_mile import models
 from etools.applications.last_mile.admin_panel.constants import ALERT_TYPES
 from etools.applications.last_mile.admin_panel.csv_exporter import (
@@ -112,8 +113,10 @@ class UserViewSet(ExportMixin,
         realms_prefetch = Prefetch(
             'realms',
             queryset=Realm.objects.filter(
-                country__schema_name=schema_name
-            ).select_related('group', 'organization')
+                country__schema_name=schema_name,
+                group__name__in=ALERT_TYPES.keys()
+            ).select_related('group', 'organization'),
+            to_attr='alert_realms'
         )
 
         created_by_prefetch = Prefetch(
@@ -952,7 +955,10 @@ class PartnerOrganizationListView(mixins.ListModelMixin, GenericViewSet):
     permission_classes = [IsLMSMAdmin]
 
     def get_queryset(self):
-        return PartnerOrganization.objects.all().order_by('id')
+        qs = PartnerOrganization.objects.all().order_by('id')
+        if tenant_switch_is_active('lmsm_dummy_partners_only'):
+            qs = qs.filter(organization__name__regex=r'^Partner \d{1,3} LMSM$')
+        return qs
 
 
 class UserPermissionsListView(mixins.ListModelMixin, GenericViewSet):
