@@ -1,4 +1,71 @@
+from django.db import models
+
 from etools.applications.audit_log.service import audit_log, bulk_audit_log
+
+
+def _is_model_instance(obj):
+    return isinstance(obj, models.Model)
+
+
+class AuditLogViewSetMixin:
+    """DRF viewset mixin that automatically logs create, update, and delete operations.
+
+    Hooks into ``perform_create``, ``perform_update``, and ``perform_destroy``
+    to record audit log entries with old/new diffs.  Also tracks M2M changes.
+
+    Safely skips logging when the serializer returns a non-model instance
+    (e.g. a dict from a custom ``create()``).
+
+    Usage::
+
+        from etools.applications.audit_log.mixins import AuditLogViewSetMixin
+
+        class MyViewSet(AuditLogViewSetMixin, ModelViewSet):
+            ...
+    """
+
+    def perform_create(self, serializer):
+        super().perform_create(serializer)
+        if _is_model_instance(serializer.instance):
+            audit_log(serializer.instance, 'CREATE', user=self.request.user)
+
+    def perform_update(self, serializer):
+        instance = serializer.instance
+        if not _is_model_instance(instance):
+            super().perform_update(serializer)
+            return
+
+        old_instance = type(instance).objects.get(pk=instance.pk)
+        m2m_fields = _get_m2m_field_names(type(instance))
+        old_m2m = _snapshot_m2m(instance, m2m_fields) if m2m_fields else {}
+
+        super().perform_update(serializer)
+
+        audit_log(instance, 'UPDATE', user=self.request.user, old_instance=old_instance)
+
+        if m2m_fields:
+            instance.refresh_from_db()
+            new_m2m = _snapshot_m2m(instance, m2m_fields)
+            changed_fields = []
+            old_values = {}
+            new_values = {}
+            for field in m2m_fields:
+                if old_m2m[field] != new_m2m[field]:
+                    changed_fields.append(field)
+                    old_values[field] = sorted(old_m2m[field])
+                    new_values[field] = sorted(new_m2m[field])
+            if changed_fields:
+                audit_log(
+                    instance, 'UPDATE', user=self.request.user,
+                    changed_fields=changed_fields,
+                    old_values=old_values,
+                    new_values=new_values,
+                    description='M2M fields changed',
+                )
+
+    def perform_destroy(self, instance):
+        audit_log(instance, 'DELETE', user=self.request.user)
+        super().perform_destroy(instance)
 
 
 class ScopedAuditLogMixin:

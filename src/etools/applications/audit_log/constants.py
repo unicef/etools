@@ -3,7 +3,7 @@
 # Groups not listed here get no audit log visibility.
 GROUP_TO_AUDIT_APP_LABELS = {
     # LMSM
-    "LMSM HQ Admin": ["last_mile"],
+    "LMSM HQ Admin": ["last_mile", "users"],
 
     # RSS Admin (broad)
     "RSS": ["partners", "audit", "action_points", "field_monitoring", "tpm"],

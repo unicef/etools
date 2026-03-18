@@ -14,6 +14,11 @@ AUDIT_LOG_SWITCH = 'audit_log_enabled'
 
 SKIPPED_FIELDS = frozenset({'id', 'created', 'modified', 'proof_file', 'waybill_file'})
 
+SENSITIVE_KEYWORDS = frozenset({
+    'password', 'passwd', 'secret', 'token', 'api_key', 'apikey',
+    'access_key', 'private_key', 'auth_key', 'credential',
+})
+
 
 def audit_log(instance, action, user=None, old_instance=None,
               changed_fields=None, old_values=None, new_values=None,
@@ -56,7 +61,10 @@ def _audit_log(instance, action, user, old_instance,
 
     elif action == AuditLogEntry.ACTION_UPDATE:
         if changed_fields is not None or old_values is not None or new_values is not None:
-            pass  # use explicit values as-is
+            if changed_fields:
+                changed_fields = [f for f in changed_fields if not _is_sensitive(f)]
+            old_values = _scrub_sensitive(old_values)
+            new_values = _scrub_sensitive(new_values)
         elif old_instance:
             concrete = _get_concrete_fields(type(instance), fields)
             changed_fields, old_values, new_values = _compute_diff(
@@ -86,26 +94,41 @@ def _audit_log(instance, action, user, old_instance,
         )
 
 
-def bulk_audit_log(queryset, action, user=None, description=''):
+def bulk_audit_log(instances, action, user=None, description=''):
+    """Log audit entries for multiple instances in a single bulk_create.
+
+    Args:
+        instances: A queryset or list of model instances.
+        action: 'CREATE', 'UPDATE', 'DELETE', or 'SOFT_DELETE'.
+        user: Who made the change.
+        description: Optional description.
+    """
     if not tenant_switch_is_active(AUDIT_LOG_SWITCH):
         return
     try:
-        if not queryset.exists():
-            return
-        model_class = queryset.model
+        if hasattr(instances, 'exists'):
+            if not instances.exists():
+                return
+            model_class = instances.model
+        else:
+            if not instances:
+                return
+            model_class = type(instances[0])
         ct = ContentType.objects.get_for_model(model_class)
         user = user or get_current_user()
         concrete = _get_concrete_fields(model_class)
         entries = []
-        for obj in queryset:
+        for obj in instances:
             old_values = _serialize_fields(obj, concrete) if action in (
                 AuditLogEntry.ACTION_DELETE, AuditLogEntry.ACTION_SOFT_DELETE,
             ) else None
+            new_values = _serialize_fields(obj, concrete) if action == AuditLogEntry.ACTION_CREATE else None
             entries.append(AuditLogEntry(
                 content_type=ct,
                 object_id=str(obj.pk),
                 action=action,
                 old_values=old_values,
+                new_values=new_values,
                 user=user,
                 description=description,
             ))
@@ -115,10 +138,56 @@ def bulk_audit_log(queryset, action, user=None, description=''):
         logger.exception("Failed to bulk create audit logs for %s", model_class.__name__)
 
 
+def bulk_audit_log_with_values(entries_data, user=None):
+    """Log multiple audit entries with per-instance explicit values in a single bulk_create.
+
+    Args:
+        entries_data: List of dicts, each with keys:
+            instance, action, changed_fields, old_values, new_values, description.
+        user: Who made the changes. Falls back to get_current_user().
+    """
+    if not tenant_switch_is_active(AUDIT_LOG_SWITCH):
+        return
+    try:
+        if not entries_data:
+            return
+        user = user or get_current_user()
+        entries = []
+        for data in entries_data:
+            instance = data['instance']
+            entries.append(AuditLogEntry(
+                content_type=ContentType.objects.get_for_model(instance),
+                object_id=str(instance.pk),
+                action=data['action'],
+                changed_fields=data.get('changed_fields'),
+                old_values=data.get('old_values'),
+                new_values=data.get('new_values'),
+                user=user,
+                description=data.get('description', ''),
+            ))
+        with transaction.atomic():
+            AuditLogEntry.objects.bulk_create(entries)
+    except Exception:
+        logger.exception("Failed to bulk create audit logs with values")
+
+
+def _is_sensitive(field_name):
+    name_lower = field_name.lower()
+    return any(kw in name_lower for kw in SENSITIVE_KEYWORDS)
+
+
 def _get_concrete_fields(model_class, fields=None):
     if fields:
-        return set(fields)
-    return {f.attname for f in model_class._meta.get_fields() if hasattr(f, 'attname') and hasattr(f, 'column') and not getattr(f, 'many_to_many', False)} - SKIPPED_FIELDS
+        return {f for f in fields if not _is_sensitive(f)}
+    return {
+        f.attname for f in model_class._meta.get_fields()
+        if hasattr(f, 'attname') and hasattr(f, 'column') and not getattr(f, 'many_to_many', False) and not _is_sensitive(f.attname)} - SKIPPED_FIELDS
+
+
+def _scrub_sensitive(fields_dict):
+    if fields_dict is None:
+        return None
+    return {k: v for k, v in fields_dict.items() if not _is_sensitive(k)}
 
 
 def _serialize_value(value):

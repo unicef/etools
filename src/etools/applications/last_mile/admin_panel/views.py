@@ -18,6 +18,8 @@ from unicef_rest_export.renderers import ExportCSVRenderer
 from unicef_rest_export.views import ExportMixin
 from unicef_restlib.pagination import DynamicPageNumberPagination
 
+from etools.applications.audit_log.mixins import AuditLogViewSetMixin
+from etools.applications.audit_log.service import audit_log, bulk_audit_log_with_values
 from etools.applications.environment.helpers import tenant_switch_is_active
 from etools.applications.last_mile import models
 from etools.applications.last_mile.admin_panel.constants import ALERT_TYPES
@@ -87,7 +89,8 @@ from etools.applications.partners.models import PartnerOrganization
 from etools.applications.users.models import Group, Realm
 
 
-class UserViewSet(ExportMixin,
+class UserViewSet(AuditLogViewSetMixin,
+                  ExportMixin,
                   mixins.ListModelMixin,
                   mixins.CreateModelMixin,
                   mixins.RetrieveModelMixin,
@@ -225,7 +228,8 @@ class UserViewSet(ExportMixin,
         return Response({"valid": valid}, status=status.HTTP_200_OK)
 
 
-class UpdateUserProfileViewSet(mixins.RetrieveModelMixin,
+class UpdateUserProfileViewSet(AuditLogViewSetMixin,
+                               mixins.RetrieveModelMixin,
                                mixins.UpdateModelMixin,
                                viewsets.GenericViewSet):
     permission_classes = [IsLMSMAdmin]
@@ -250,11 +254,24 @@ class UpdateUserProfileViewSet(mixins.RetrieveModelMixin,
     def bulk_update(self, request, *args, **kwargs):
         serializer_data = BulkUpdateLastMileProfileStatusSerializer(data=request.data)
         serializer_data.is_valid(raise_exception=True)
+        users = list(serializer_data.validated_data['user_ids'])
+        new_status = serializer_data.validated_data['status']
+        old_statuses = {u.pk: getattr(u, 'last_mile_profile', None) and u.last_mile_profile.status for u in users}
         serializer_data.update(serializer_data.validated_data, request.user)
+        bulk_audit_log_with_values([
+            {
+                'instance': u, 'action': 'UPDATE',
+                'changed_fields': ['profile_status'],
+                'old_values': {'profile_status': old_statuses.get(u.pk)},
+                'new_values': {'profile_status': new_status},
+                'description': f'Bulk profile review: {new_status}',
+            } for u in users
+        ], user=request.user)
         return Response(serializer_data.data, status=status.HTTP_200_OK)
 
 
-class LocationsViewSet(mixins.ListModelMixin,
+class LocationsViewSet(AuditLogViewSetMixin,
+                       mixins.ListModelMixin,
                        mixins.CreateModelMixin,
                        mixins.RetrieveModelMixin,
                        mixins.UpdateModelMixin,
@@ -430,7 +447,19 @@ class LocationsViewSet(mixins.ListModelMixin,
     def bulk_review(self, request, *args, **kwargs):
         serializer_data = BulkReviewPointOfInterestSerializer(data=request.data)
         serializer_data.is_valid(raise_exception=True)
+        pois = list(serializer_data.validated_data['points_of_interest'])
+        new_status = serializer_data.validated_data['status']
+        old_statuses = {poi.pk: poi.status for poi in pois}
         serializer_data.update(serializer_data.validated_data, request.user)
+        bulk_audit_log_with_values([
+            {
+                'instance': poi, 'action': 'UPDATE',
+                'changed_fields': ['status'],
+                'old_values': {'status': old_statuses.get(poi.pk)},
+                'new_values': {'status': new_status},
+                'description': f'Bulk location review: {new_status}',
+            } for poi in pois
+        ], user=request.user)
         return Response(serializer_data.data, status=status.HTTP_200_OK)
 
 
@@ -460,7 +489,8 @@ class PointOfInterestsLightViewSet(mixins.ListModelMixin,
         "parent__parent__parent__parent__admin_level").prefetch_related('partner_organizations').all().order_by('id')
 
 
-class UserLocationsViewSet(mixins.ListModelMixin,
+class UserLocationsViewSet(AuditLogViewSetMixin,
+                           mixins.ListModelMixin,
                            mixins.RetrieveModelMixin,
                            mixins.UpdateModelMixin,
                            GenericViewSet):
@@ -510,7 +540,8 @@ class UserLocationsViewSet(mixins.ListModelMixin,
         return response
 
 
-class AlertNotificationViewSet(mixins.ListModelMixin,
+class AlertNotificationViewSet(AuditLogViewSetMixin,
+                               mixins.ListModelMixin,
                                mixins.CreateModelMixin,
                                mixins.RetrieveModelMixin,
                                mixins.UpdateModelMixin,
@@ -597,7 +628,7 @@ class AlertNotificationViewSet(mixins.ListModelMixin,
         return response
 
 
-class TransferItemViewSet(mixins.ListModelMixin, GenericViewSet, mixins.CreateModelMixin):
+class TransferItemViewSet(AuditLogViewSetMixin, mixins.ListModelMixin, GenericViewSet, mixins.CreateModelMixin):
     permission_classes = [IsLMSMAdmin]
     serializer_class = ItemTransferAdminSerializer
     pagination_class = DynamicPageNumberPagination
@@ -671,16 +702,31 @@ class TransferItemViewSet(mixins.ListModelMixin, GenericViewSet, mixins.CreateMo
     def bulk_review(self, request, *args, **kwargs):
         serializer_data = BulkReviewTransferSerializer(data=request.data)
         serializer_data.is_valid(raise_exception=True)
+        items = list(serializer_data.validated_data['items'])
+        new_status = serializer_data.validated_data['approval_status']
+        old_statuses = {item.pk: item.transfer.approval_status if item.transfer else None for item in items}
         serializer_data.update(serializer_data.validated_data, request.user)
+        logged_transfers = {}
+        for item in items:
+            if item.transfer_id and item.transfer_id not in logged_transfers:
+                logged_transfers[item.transfer_id] = {
+                    'instance': item.transfer, 'action': 'UPDATE',
+                    'changed_fields': ['approval_status'],
+                    'old_values': {'approval_status': old_statuses.get(item.pk)},
+                    'new_values': {'approval_status': new_status},
+                    'description': f'Bulk transfer review: {new_status}',
+                }
+        bulk_audit_log_with_values(list(logged_transfers.values()), user=request.user)
         return Response(serializer_data.data, status=status.HTTP_200_OK)
 
 
-class ItemStockManagementView(mixins.UpdateModelMixin, mixins.RetrieveModelMixin, mixins.DestroyModelMixin, GenericViewSet):
+class ItemStockManagementView(AuditLogViewSetMixin, mixins.UpdateModelMixin, mixins.RetrieveModelMixin, mixins.DestroyModelMixin, GenericViewSet):
     permission_classes = [IsLMSMAdmin]
     serializer_class = ItemStockManagementUpdateSerializer
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
+        audit_log(instance, 'SOFT_DELETE', user=request.user)
         instance.hide()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -716,7 +762,7 @@ class ParentLocationListView(mixins.ListModelMixin, GenericViewSet):
         return Location.objects.all().order_by('id')
 
 
-class PointOfInterestTypeListView(mixins.ListModelMixin, mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, GenericViewSet):
+class PointOfInterestTypeListView(AuditLogViewSetMixin, mixins.ListModelMixin, mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, GenericViewSet):
     serializer_class = PointOfInterestTypeAdminSerializer
     permission_classes = [IsLMSMAdmin]
 
@@ -995,7 +1041,15 @@ class TransferReverseView(mixins.ListModelMixin, GenericViewSet):
     @action(detail=True, methods=['put'], url_path='reverse')
     def reverse(self, request, pk=None):
         transfer = self.get_object()
+        old_status = transfer.status
         serializer = self.get_serializer(transfer, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+        reversed_transfer = serializer.save()
+        audit_log(
+            reversed_transfer, 'UPDATE', user=request.user,
+            changed_fields=['status'],
+            old_values={'status': old_status},
+            new_values={'status': reversed_transfer.status},
+            description='Transfer reversed',
+        )
         return Response(serializer.data)
