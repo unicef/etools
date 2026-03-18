@@ -2,13 +2,18 @@ import logging
 from datetime import date
 
 from django.utils.translation import gettext as _
-from etools.applications.partners.permissions import InterventionPermissions
-from etools.applications.reports.models import InterventionActivity, Section
-from etools_validator.exceptions import (BasicValidationError,
-                                         DetailedStateValidationError,
-                                         StateValidationError, TransitionError)
+
+from etools_validator.exceptions import (
+    BasicValidationError,
+    DetailedStateValidationError,
+    StateValidationError,
+    TransitionError,
+)
 from etools_validator.utils import check_required_fields, check_rigid_fields
 from etools_validator.validation import CompleteValidation
+
+from etools.applications.partners.permissions import InterventionPermissions
+from etools.applications.reports.models import InterventionActivity, Section
 
 logger = logging.getLogger('partners.interventions.validation')
 
@@ -162,8 +167,7 @@ def transition_to_signature(i):
 
 
 def transition_to_signed(i):
-    from etools.applications.partners.models import (Agreement,
-                                                     InterventionAmendment)
+    from etools.applications.partners.models import Agreement, InterventionAmendment
 
     if i.has_active_amendment(InterventionAmendment.KIND_NORMAL):
         raise TransitionError([_('Cannot Transition status while adding an amendment')])
